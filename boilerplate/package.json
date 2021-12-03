@@ -10,8 +10,8 @@
     "link-all": "npm link @semapps/activitypub && npm link @semapps/ldp && npm link @semapps/webhooks"
   },
   "dependencies": {
-    "@activitypods/core": "0.1.0",
     "@activitypods/contacts": "0.1.0",
+    "@activitypods/core": "0.1.0",
     "@activitypods/events": "0.1.0",
     "@activitypods/messages": "0.1.0",
     "@semapps/backup": "0.4.0-alpha.0",

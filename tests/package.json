@@ -6,12 +6,12 @@
     "test": "jest --detectOpenHandles --verbose"
   },
   "dependencies": {
-    "@activitypods/core": "0.1.0",
     "@activitypods/contacts": "0.1.0",
+    "@activitypods/core": "0.1.0",
     "@activitypods/events": "0.1.0",
     "@activitypods/messages": "0.1.0",
-    "moleculer": "^0.14.18",
-    "dotenv-flow": "^3.2.0"
+    "dotenv-flow": "^3.2.0",
+    "moleculer": "^0.14.18"
   },
   "devDependencies": {
     "jest": "^27.4.0",

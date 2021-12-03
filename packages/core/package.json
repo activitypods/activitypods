@@ -15,8 +15,8 @@
     "@semapps/sparql-endpoint": "0.4.0-alpha.0",
     "@semapps/triplestore": "0.4.0-alpha.0",
     "@semapps/webacl": "0.4.0-alpha.0",
-    "@semapps/webid": "0.4.0-alpha.0",
     "@semapps/webfinger": "0.4.0-alpha.0",
+    "@semapps/webid": "0.4.0-alpha.0",
     "moleculer": "^0.14.18",
     "moleculer-web": "^0.10.0-beta1",
     "url-join": "^4.0.1"

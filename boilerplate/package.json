@@ -1,0 +1,35 @@
+{
+  "name": "boilerplate",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ActivityPods boilerplate",
+  "scripts": {
+    "dev": "moleculer-runner --repl --hot services/*.service.js apps/*.app.js",
+    "start": "moleculer-runner --instances=max services/*.service.js apps/*.app.js",
+    "test": "jest --detectOpenHandles --verbose",
+    "link-all": "npm link @semapps/activitypub && npm link @semapps/ldp && npm link @semapps/webhooks"
+  },
+  "dependencies": {
+    "@activitypods/core": "0.1.0",
+    "@activitypods/contacts": "0.1.0",
+    "@activitypods/events": "0.1.0",
+    "@activitypods/messages": "0.1.0",
+    "@semapps/backup": "0.4.0-alpha.0",
+    "@sentry/node": "^5.16.1",
+    "@sentry/utils": "^5.16.1",
+    "dotenv-flow": "^3.2.0",
+    "handlebars": "^4.7.7",
+    "ioredis": "^4.17.3",
+    "moleculer": "^0.14.18",
+    "moleculer-bull": "0.2.8",
+    "moleculer-cron": "^0.0.2",
+    "moleculer-mail": "^1.2.5",
+    "moleculer-repl": "^0.6.6",
+    "nodemailer-sendgrid": "^1.0.3",
+    "url-join": "^4.0.1"
+  },
+  "devDependencies": {
+    "jest": "^27.4.0",
+    "wait-for-expect": "^3.0.2"
+  }
+}

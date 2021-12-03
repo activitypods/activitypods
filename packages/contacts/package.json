@@ -1,0 +1,17 @@
+{
+  "name": "@activitypods/contacts",
+  "version": "0.1.0",
+  "description": "ActivityPods app for contacts exchange",
+  "license": "Apache-2.0",
+  "author": "Virtual Assembly",
+  "dependencies": {
+    "@semapps/activitypub": "0.4.0-alpha.0",
+    "@semapps/ldp": "0.4.0-alpha.0",
+    "@semapps/mime-types": "0.4.0-alpha.0",
+    "moleculer": "^0.14.18",
+    "moleculer-cron": "^0.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

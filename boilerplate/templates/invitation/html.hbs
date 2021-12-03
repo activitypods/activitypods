@@ -1,0 +1,47 @@
+<style>
+    p {
+        font-size: 16px;
+        font-family: "Roboto", "Open Sans", "sans-serif";
+        font-weight: normal;
+        line-height: 19px;
+    }
+    .button {
+        font-size: 16px;
+        font-family: "Roboto", "Open Sans", "sans-serif";
+        font-weight: bold;
+        text-transform: uppercase;
+        color: white !important;
+        padding: 12px 24px;
+        border-radius: 8px;
+        margin-right: 10px;
+        text-decoration: none;
+        border: 0;
+        background-color: #E2003B;
+        cursor: pointer;
+    }
+    .greybg {
+        display: inline-block;
+        padding: 15px;
+        background-color: #eaeaea;
+    }
+</style>
+<body>
+<div class="greybg">
+    <img src="{{ frontLogo }}" alt="{{ frontName }}" style="max-width: 100%;">
+    <p>
+        {{sender.pair:label}} vous invite à participer à un événement intitulé "{{event.pair:label}}":
+    </p>
+    <p>
+        <br />
+        <a href="{{eventFrontUri}}" class="button">
+            Voir l'événement
+        </a>
+        <br />
+    </p>
+    <p>
+        <em>
+            Cet événement est visible uniquement par les personnes invitées.<br />Pour le voir et y participer, vous devrez vous <strong>connecter avec votre compte</strong> sur {{frontName}}.
+        </em>
+    </p>
+</div>
+</body>

@@ -13,7 +13,7 @@ module.exports = {
   actions: {
     async announceUpdate(ctx) {
       const { eventUri } = ctx.params;
-      const event = await ctx.call('activitypub.object.get', { objectUri: eventUri });
+      const event = await ctx.call('activitypub.object.get', { objectUri: eventUri, actorUri: ctx.meta.webId });
       const organizer = await ctx.call('activitypub.actor.get', { actorUri: event['apods:organizedBy'] });
 
       const collection = await ctx.call('activitypub.collection.get', { collectionUri: event['apods:invitees'] });
@@ -67,12 +67,15 @@ module.exports = {
     after: {
       put(ctx, res) {
         this.actions.announceUpdate({ eventUri: res }, { parentCtx: ctx });
+        return res;
       },
       patch(ctx, res) {
         this.actions.announceUpdate({ eventUri: res }, { parentCtx: ctx });
+        return res;
       },
       async post(ctx, res) {
         await ctx.call('events.status.tagNewEvent', { eventUri: res });
+        return res;
       }
     }
   }

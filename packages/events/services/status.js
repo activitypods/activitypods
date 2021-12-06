@@ -19,9 +19,9 @@ module.exports = {
   actions: {
     async set(ctx) {
       const { eventUri, newStatus } = ctx.params;
-      let event = await ctx.call('event.get', { resourceUri: eventUri, accept: MIME_TYPES.JSON, webId: 'system' });
+      let event = await ctx.call('events.event.get', { resourceUri: eventUri, accept: MIME_TYPES.JSON, webId: 'system' });
 
-      await ctx.call('event.put', {
+      await ctx.call('events.event.put', {
         resource: { ...event, 'pair:hasStatus': newStatus },
         contentType: MIME_TYPES.JSON,
         webId: 'system'

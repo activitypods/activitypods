@@ -120,6 +120,16 @@ describe('Test contacts app', () => {
     await waitForExpect(async () => {
       await expect(broker.call('activitypub.collection.includes', { collectionUri: alice['apods:contacts'], itemUri: bob.id })).resolves.toBeTruthy()
     });
+
+    // Bob profile is cached in Alice dataset
+    await waitForExpect(async () => {
+      await expect(broker.call('triplestore.countTriplesOfSubject', { uri: alice.url, dataset: bob.username, webId: 'system' })).resolves.toBeTruthy()
+    });
+
+    // Alice profile is cached in Bob dataset
+    await waitForExpect(async () => {
+      await expect(broker.call('triplestore.countTriplesOfSubject', { uri: bob.url, dataset: alice.username, webId: 'system' })).resolves.toBeTruthy()
+    });
   });
 
   test('Craig reject Alice contact request', async () => {

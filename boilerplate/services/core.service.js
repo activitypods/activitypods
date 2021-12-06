@@ -13,6 +13,6 @@ module.exports = {
       user: CONFIG.JENA_USER,
       password: CONFIG.JENA_PASSWORD
     },
-    jsonContext: urlJoin(CONFIG.COMMON_DATA_URL, 'context.json')
+    // jsonContext: urlJoin(CONFIG.COMMON_DATA_URL, 'context.json')
   }
 };

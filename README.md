@@ -4,7 +4,7 @@
 
 > ActivityPub + Solid PODS = ❤️
 
-Check out [these slides](./proposal/proposal-english.pdf) ([french version]([these slides](./proposal/proposal-french.pdf))) for more information about this project !
+Check out [these slides](./proposal/proposal-english.pdf) ([french version](./proposal/proposal-french.pdf)) for more information about this project !
 
 ## Getting started
 

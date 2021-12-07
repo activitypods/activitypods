@@ -16,6 +16,12 @@ cd boilerplate
 yarn run dev
 ```
 
+## Available applications
+
+- [Contacts](packages/contacts/README.md)
+- Events
+- Messages
+
 ## Tests
 
 ```

@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "moleculer-runner --repl --hot services/*.service.js apps/*.app.js",
     "start": "moleculer-runner --instances=max services/*.service.js apps/*.app.js",
-    "test": "jest --detectOpenHandles --verbose",
-    "link-all": "npm link @semapps/activitypub && npm link @semapps/ldp && npm link @semapps/webhooks"
+    "test": "jest --detectOpenHandles --verbose"
   },
   "dependencies": {
     "@activitypods/contacts": "0.1.0",

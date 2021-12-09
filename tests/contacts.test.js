@@ -123,12 +123,12 @@ describe('Test contacts app', () => {
 
     // Bob profile is cached in Alice dataset
     await waitForExpect(async () => {
-      await expect(broker.call('triplestore.countTriplesOfSubject', { uri: alice.url, dataset: bob.username, webId: 'system' })).resolves.toBeTruthy()
+      await expect(broker.call('triplestore.countTriplesOfSubject', { uri: alice.url, dataset: bob.preferredUsername, webId: 'system' })).resolves.toBeTruthy()
     });
 
     // Alice profile is cached in Bob dataset
     await waitForExpect(async () => {
-      await expect(broker.call('triplestore.countTriplesOfSubject', { uri: bob.url, dataset: alice.username, webId: 'system' })).resolves.toBeTruthy()
+      await expect(broker.call('triplestore.countTriplesOfSubject', { uri: bob.url, dataset: alice.preferredUsername, webId: 'system' })).resolves.toBeTruthy()
     });
   });
 

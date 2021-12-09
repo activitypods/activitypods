@@ -1,9 +1,10 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
+const { OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
+const {CREATE_NOTE} = require("../patterns");
 
 module.exports = {
   name: 'messages.message',
-  mixins: [ControlledContainerMixin],
+  mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
   settings: {
     path: '/notes',
     acceptedTypes: [OBJECT_TYPES.NOTE],
@@ -11,10 +12,10 @@ module.exports = {
     newResourcesPermissions: {}
   },
   dependencies: ['notification'],
-  events: {
-    async 'activitypub.inbox.received'(ctx) {
-      const { activity, recipients } = ctx.params;
-      if( activity.type === ACTIVITY_TYPES.CREATE && activity.object.type === OBJECT_TYPES.NOTE ) {
+  activities: [
+    {
+      match: CREATE_NOTE,
+      async onReceive(ctx, activity, recipients) {
         for( let recipientUri of recipients ) {
           await ctx.call('notification.newMessage', {
             content: activity.object.content,
@@ -24,5 +25,5 @@ module.exports = {
         }
       }
     }
-  }
+  ]
 };

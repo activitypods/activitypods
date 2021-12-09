@@ -1,8 +1,10 @@
 const { defaultToArray, hasType } = require('@semapps/ldp');
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
+const { INVITE_EVENT, OFFER_INVITE_EVENT } = require('../patterns');
 
 module.exports = {
   name: 'events.invitation',
+  mixins: [ActivitiesHandlerMixin],
   dependencies: ['activitypub.registry', 'ldp', 'notification', 'webacl'],
   async started() {
     await this.broker.call('activitypub.registry.register', {
@@ -24,26 +26,6 @@ module.exports = {
     });
   },
   methods: {
-    // If the one making the Offer is the organizer, it means it is an authorization to share
-    async isOfferInviteByOrganizer(ctx, activity) {
-      if ( activity.type === ACTIVITY_TYPES.OFFER && activity.object.type === ACTIVITY_TYPES.INVITE ) {
-        const event = await ctx.call('activitypub.object.get', {
-          objectUri: activity.object.object,
-          actorUri: activity.actor
-        });
-        return activity.actor === event['apods:organizedBy'];
-      }
-    },
-    // If the target of the Offer is the organizer, it is a request to share the event with someone else
-    async isOfferInviteToOrganizer(ctx, activity) {
-      if ( activity.type === ACTIVITY_TYPES.OFFER && activity.object.type === ACTIVITY_TYPES.INVITE ) {
-        const event = await ctx.call('activitypub.object.get', {
-          objectUri: activity.object.object,
-          actorUri: activity.actor
-        });
-        return activity.target === event['apods:organizedBy'];
-      }
-    },
     getInviteesGroupSlug(eventUri) {
       return new URL(eventUri).pathname + '/invitees';
     },
@@ -51,14 +33,13 @@ module.exports = {
       return new URL(eventUri).pathname + '/inviters';
     }
   },
-  events: {
-    async 'activitypub.outbox.posted'(ctx) {
-      const { activity } = ctx.params;
-      console.log('activitypub.outbox.posted', activity);
-      if( activity.type === ACTIVITY_TYPES.INVITE ) {
-        const event = await ctx.call('activitypub.object.get', { objectUri: activity.object, actorUri: activity.actor });
+  activities: [
+    {
+      match: INVITE_EVENT,
+      async onEmit(ctx, activity, emitterUri) {
+        const event = activity.object;
 
-        if( activity.actor !== event['apods:organizedBy'] ) {
+        if( emitterUri !== event['apods:organizedBy'] ) {
           throw new Error('Only the organizer has the right to invite people to the event ' + event.id)
         }
 
@@ -72,72 +53,79 @@ module.exports = {
             webId: event['apods:organizedBy']
           })
         }
-      } else if ( await this.isOfferInviteByOrganizer(ctx, activity) ) {
-        const event = await ctx.call('activitypub.object.get', { objectUri: activity.object.object, actorUri: activity.actor });
-
-        // Add all inviters to the collection and WebACL group
-        for( let inviterUri of defaultToArray(activity.target) ) {
-          await ctx.call('activitypub.collection.attach', { collectionUri: event['apods:inviters'], item: inviterUri });
-
-          await ctx.call('webacl.group.addMember', {
-            groupSlug: this.getInvitersGroupSlug(event.id),
-            memberUri: inviterUri,
-            webId: event['apods:organizedBy']
-          })
-        }
-      }
-    },
-    async 'activitypub.inbox.received'(ctx) {
-      const { activity, recipients } = ctx.params;
-      // TODO check why we receive two activities with cc and to
-      console.log('activitypub.inbox.received', activity, recipients);
-      if( activity.type === ACTIVITY_TYPES.INVITE ) {
+      },
+      async onReceive(ctx, activity, recipients) {
         for( let recipientUri of recipients ) {
           // Cache remote event (we want to be able to fetch it with SPARQL)
           await ctx.call('activitypub.object.cacheRemote', {
-            objectUri: typeof activity.object === 'string' ? activity.object : activity.object.id,
+            objectUri: activity.object.id,
             actorUri: recipientUri
           });
 
           // Send notification email
           await ctx.call('notification.invitation', {
-            eventUri: typeof activity.object === 'string' ? activity.object : activity.object.id,
+            eventUri: activity.object.id,
             senderUri: activity.actor,
             recipientUri
           });
         }
-      } else if ( await this.isOfferInviteToOrganizer(ctx, activity) ) {
-        const event = await ctx.call('activitypub.object.get', { objectUri: activity.object.object, actorUri: activity.actor });
-        const organizer = await ctx.call('activitypub.actor.get', { actorUri: event['apods:organizedBy'] });
-
-        const isInviter = await ctx.call('activitypub.collection.includes', {
-          collectionUri: event['apods:inviters'],
-          itemUri: activity.actor
-        });
-
-        if( !isInviter ) {
-          throw new Error(`Actor ${activity.actor} was not given permission to invite to the event ${event.id}`);
-        }
-
-        await ctx.call('activitypub.outbox.post', {
-          collectionUri: organizer.outbox,
-          type: ACTIVITY_TYPES.INVITE,
-          actor: organizer.id,
-          object: event.id,
-          target: activity.object.target,
-          to: activity.object.target
-        });
-
-        // Inform the inviter that his invitation has been accepted (this is not used currently)
-        await ctx.call('activitypub.outbox.post', {
-          collectionUri: organizer.outbox,
-          type: ACTIVITY_TYPES.ACCEPT,
-          actor: organizer.id,
-          object: activity.id,
-          to: activity.actor
-        });
       }
     },
+    {
+      match: OFFER_INVITE_EVENT,
+      async onEmit(ctx, activity, emitterUri) {
+        const event = activity.object.object;
+        // If the emitter is the organizer, it means we want to give invitees the right to share this event
+        if (emitterUri === event['apods:organizedBy']) {
+          // Add all inviters to the collection and WebACL group
+          for (let inviterUri of defaultToArray(activity.target)) {
+            await ctx.call('activitypub.collection.attach', {collectionUri: event['apods:inviters'], item: inviterUri});
+
+            await ctx.call('webacl.group.addMember', {
+              groupSlug: this.getInvitersGroupSlug(event.id),
+              memberUri: inviterUri,
+              webId: event['apods:organizedBy']
+            })
+          }
+        }
+      },
+      async onReceive(ctx, activity) {
+        const event = activity.object.object;
+        const organizer = await ctx.call('activitypub.actor.get', { actorUri: event['apods:organizedBy'] });
+
+        // If the offer is directed to the organizer, it means we are an inviter and want him to invite one of our contacts
+        if( activity.target === organizer.id ) {
+          const isInviter = await ctx.call('activitypub.collection.includes', {
+            collectionUri: event['apods:inviters'],
+            itemUri: activity.actor
+          });
+
+          if( !isInviter ) {
+            throw new Error(`Actor ${activity.actor} was not given permission to invite to the event ${event.id}`);
+          }
+
+          await ctx.call('activitypub.outbox.post', {
+            collectionUri: organizer.outbox,
+            type: ACTIVITY_TYPES.INVITE,
+            actor: organizer.id,
+            object: event.id,
+            target: activity.object.target,
+            to: activity.object.target
+          });
+
+          // Inform the inviter that his invitation has been accepted (this is not used currently)
+          await ctx.call('activitypub.outbox.post', {
+            collectionUri: organizer.outbox,
+            type: ACTIVITY_TYPES.ACCEPT,
+            actor: organizer.id,
+            object: activity.id,
+            to: activity.actor
+          });
+        }
+      }
+    }
+  ],
+  events: {
     async 'ldp.resource.created'(ctx) {
       const { resourceUri, newData } = ctx.params;
 

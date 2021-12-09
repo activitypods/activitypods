@@ -1,6 +1,6 @@
 const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 
-export const OFFER_ADD_PROFILE_ACTIVITY = {
+const CONTACT_REQUEST = {
   type: ACTIVITY_TYPES.OFFER,
   object: {
     type: ACTIVITY_TYPES.ADD,
@@ -10,7 +10,7 @@ export const OFFER_ADD_PROFILE_ACTIVITY = {
   }
 };
 
-export const ACCEPT_OFFER_ADD_PROFILE_ACTIVITY = {
+const ACCEPT_CONTACT_REQUEST = {
   type: ACTIVITY_TYPES.ACCEPT,
   object: {
     type: ACTIVITY_TYPES.OFFER,
@@ -23,7 +23,7 @@ export const ACCEPT_OFFER_ADD_PROFILE_ACTIVITY = {
   }
 };
 
-export const REJECT_OFFER_ADD_PROFILE_ACTIVITY = {
+const REJECT_CONTACT_REQUEST = {
   type: ACTIVITY_TYPES.REJECT,
   object: {
     type: ACTIVITY_TYPES.OFFER,
@@ -34,4 +34,21 @@ export const REJECT_OFFER_ADD_PROFILE_ACTIVITY = {
       }
     }
   }
+};
+
+const ANNOUNCE_UPDATE_PROFILE = {
+  type: ACTIVITY_TYPES.ANNOUNCE,
+  object: {
+    type: ACTIVITY_TYPES.UPDATE,
+    object: {
+      type: OBJECT_TYPES.PROFILE
+    }
+  }
+};
+
+module.exports = {
+  CONTACT_REQUEST,
+  ACCEPT_CONTACT_REQUEST,
+  REJECT_CONTACT_REQUEST,
+  ANNOUNCE_UPDATE_PROFILE
 };

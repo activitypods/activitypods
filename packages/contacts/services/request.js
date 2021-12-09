@@ -1,9 +1,10 @@
-const { ACTIVITY_TYPES, ACTOR_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
-const { hasType } = require('@semapps/ldp');
+const { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { MIME_TYPES } = require("@semapps/mime-types");
+const { CONTACT_REQUEST, ACCEPT_CONTACT_REQUEST, REJECT_CONTACT_REQUEST } = require("../patterns");
 
 module.exports = {
   name: 'contacts.request',
+  mixins: [ActivitiesHandlerMixin],
   dependencies: ['activitypub.registry', 'webacl'],
   async started() {
     await this.broker.call('activitypub.registry.register', {
@@ -33,62 +34,23 @@ module.exports = {
       permissions: {}
     });
   },
-  events: {
-    async 'activitypub.outbox.posted'(ctx) {
-      const { activity } = ctx.params;
-      if( await this.isRequest(ctx, activity) ) {
+  activities: [
+    {
+      match: CONTACT_REQUEST,
+      async onEmit(ctx, activity, emitterUri) {
         // Give read right for my profile
         await ctx.call('webacl.resource.addRights', {
-          resourceUri: activity.object.object,
+          resourceUri: activity.object.object.id,
           additionalRights: {
             user: {
               uri: activity.target,
               read: true
             }
           },
-          webId: activity.actor
+          webId: emitterUri
         });
-      } else if( await this.isRequestAccept(ctx, activity) ) {
-        const sender = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
-        const acceptedActivity = await ctx.call('activitypub.activity.get', { resourceUri: activity.object, webId: 'system' });
-
-        // 1. Give read right for my profile
-        await ctx.call('webacl.resource.addRights', {
-          resourceUri: sender.url,
-          additionalRights: {
-            user: {
-              uri: activity.to,
-              read: true
-            }
-          },
-          webId: activity.actor
-        });
-
-        // 2. Cache the other actor's profile
-        await ctx.call('activitypub.object.cacheRemote', {
-          objectUri: acceptedActivity.object.object,
-          actorUri: activity.actor
-        });
-
-        // 3. Add the other actor to my contacts list
-        await ctx.call('activitypub.collection.attach', { collectionUri: sender['apods:contacts'], item: acceptedActivity.actor });
-
-        // 4. Remove the activity from my contact requests
-        await ctx.call('activitypub.collection.detach', { collectionUri: sender['apods:contactRequests'], item: activity.object });
-      } else if( await this.isRequestReject(ctx, activity) ) {
-        const rejectedActivity = await ctx.call('activitypub.activity.get', { resourceUri: activity.object, webId: 'system' });
-        const actor = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
-
-        // Add the actor to my rejected contacts list
-        await ctx.call('activitypub.collection.attach', { collectionUri: actor['apods:rejectedContacts'], item: rejectedActivity.actor });
-
-        // Remove the activity from my contact requests
-        await ctx.call('activitypub.collection.detach', { collectionUri: actor['apods:contactRequests'], item: rejectedActivity });
-      }
-    },
-    async 'activitypub.inbox.received'(ctx) {
-      const { activity, recipients } = ctx.params;
-      if( await this.isRequest(ctx, activity) ) {
+      },
+      async onReceive(ctx, activity, recipients) {
         for( let recipientUri of recipients ) {
           const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
@@ -124,24 +86,69 @@ module.exports = {
             recipientUri
           });
         }
-      } else if( await this.isRequestAccept(ctx, activity) ) {
+      }
+    },
+    {
+      match: ACCEPT_CONTACT_REQUEST,
+      async onEmit(ctx, activity, emitterUri) {
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+
+        // Give read right of my profile
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri: emitter.url,
+          additionalRights: {
+            user: {
+              uri: activity.to,
+              read: true
+            }
+          },
+          webId: emitterUri
+        });
+
+        // 2. Cache the other actor's profile
+        await ctx.call('activitypub.object.cacheRemote', {
+          objectUri: activity.object.object.object,
+          actorUri: activity.actor
+        });
+
+        // 3. Add the other actor to my contacts list
+        await ctx.call('activitypub.collection.attach', { collectionUri: emitter['apods:contacts'], item: activity.object.actor });
+
+        // 4. Remove the activity from my contact requests
+        await ctx.call('activitypub.collection.detach', { collectionUri: emitter['apods:contactRequests'], item: activity.object.id });
+      },
+      async onReceive(ctx, activity, recipients) {
         for( let recipientUri of recipients ) {
-          const sender = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
+          const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
           const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
           // Cache the other actor's profile (it should be visible now)
           await ctx.call('activitypub.object.cacheRemote', {
-            objectUri: sender.url,
+            objectUri: emitter.url,
             actorUri: activity.to
           });
 
           // Add the other actor to my contacts list
-          await ctx.call('activitypub.collection.attach', { collectionUri: recipient['apods:contacts'], item: sender.id });
+          await ctx.call('activitypub.collection.attach', { collectionUri: recipient['apods:contacts'], item: emitter.id });
 
           // TODO Send a notification
         }
       }
     },
+    {
+      match: REJECT_CONTACT_REQUEST,
+      async onEmit(ctx, activity, emitterUri) {
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+
+        // Add the actor to my rejected contacts list
+        await ctx.call('activitypub.collection.attach', { collectionUri: emitter['apods:rejectedContacts'], item: activity.object.actor });
+
+        // Remove the activity from my contact requests
+        await ctx.call('activitypub.collection.detach', { collectionUri: emitter['apods:contactRequests'], item: activity.object.id });
+      }
+    }
+  ],
+  events: {
     async 'event.status.finished'(ctx) {
       const { eventUri } = ctx.params;
       const event = await ctx.call('event.get', { resourceUri: eventUri, accept: MIME_TYPES.JSON, webId: 'system' });
@@ -171,33 +178,6 @@ module.exports = {
           });
         }
       }
-    }
-  },
-  methods: {
-    async isRequest(ctx, activity) {
-      if( activity.type === ACTIVITY_TYPES.OFFER && activity.object.type === ACTIVITY_TYPES.ADD ) {
-        const object = await ctx.call('activitypub.object.get', { objectUri: activity.object.object, actorUri: activity.actor });
-        return hasType(object, OBJECT_TYPES.PROFILE);
-      }
-      return false;
-    },
-    async isRequestAccept(ctx, activity) {
-      if( activity.type === ACTIVITY_TYPES.ACCEPT ) {
-        const acceptedActivity = await ctx.call('activitypub.activity.get', { resourceUri: activity.object, webId: 'system' });
-        return this.isRequest(ctx, acceptedActivity);
-      }
-      return false;
-    },
-    async isRequestReject(ctx, activity) {
-      if( activity.type === ACTIVITY_TYPES.REJECT ) {
-        const rejectedActivity = await ctx.call('activitypub.activity.get', { resourceUri: activity.object, webId: 'system' });
-        return this.isRequest(ctx, rejectedActivity);
-      }
-      return false;
-    },
-    async getContactRequestsUri(ctx, actorUri) {
-      const actor = await ctx.call('activitypub.actor.get', { actorUri });
-      return actor['apods:contactRequests'];
     }
   }
 };

@@ -1,4 +1,3 @@
-const path = require('path');
 const { ServiceBroker } = require('moleculer');
 const { WebAclMiddleware} = require('@semapps/webacl');
 const CONFIG = require('./config');

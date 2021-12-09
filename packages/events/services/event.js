@@ -1,9 +1,10 @@
 const { ControlledContainerMixin, hasType } = require('@semapps/ldp');
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
+const { ANNOUNCE_UPDATE_EVENT } = require("../patterns");
 
 module.exports = {
   name: 'events.event',
-  mixins: [ControlledContainerMixin],
+  mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
   settings: {
     path: '/events',
     acceptedTypes: ['pair:Event'],
@@ -31,28 +32,19 @@ module.exports = {
       }
     }
   },
-  methods:  {
-    async isEventUpdate(ctx, activity) {
-      if( activity.type === ACTIVITY_TYPES.ANNOUNCE && activity.object.type === ACTIVITY_TYPES.UPDATE ) {
-        const object = await ctx.call('activitypub.object.get', { objectUri: activity.object.object, actorUri: activity.actor });
-        return hasType(object, 'pair:Event');
-      }
-      return false;
-    }
-  },
-  events: {
-    async 'activitypub.inbox.received'(ctx) {
-      const { activity, recipients } = ctx.params;
-      if( await this.isEventUpdate(ctx, activity) ) {
+  activities: [
+    {
+      match: ANNOUNCE_UPDATE_EVENT,
+      async onReceive(ctx, activity, recipients) {
         for( let recipientUri of recipients ) {
           await ctx.call('activitypub.object.cacheRemote', {
-            objectUri: activity.object.object,
+            objectUri: activity.object.object.id,
             actorUri: recipientUri
           });
         }
       }
     }
-  },
+  ],
   hooks: {
     before: {
       post(ctx) {

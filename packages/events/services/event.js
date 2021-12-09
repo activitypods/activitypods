@@ -32,8 +32,8 @@ module.exports = {
       }
     }
   },
-  activities: [
-    {
+  activities: {
+    announceUpdateEvent: {
       match: ANNOUNCE_UPDATE_EVENT,
       async onReceive(ctx, activity, recipients) {
         for( let recipientUri of recipients ) {
@@ -44,7 +44,7 @@ module.exports = {
         }
       }
     }
-  ],
+  },
   hooks: {
     before: {
       post(ctx) {

@@ -34,8 +34,8 @@ module.exports = {
       permissions: {}
     });
   },
-  activities: [
-    {
+  activities: {
+    contactRequest: {
       match: CONTACT_REQUEST,
       async onEmit(ctx, activity, emitterUri) {
         // Give read right for my profile
@@ -51,11 +51,14 @@ module.exports = {
         });
       },
       async onReceive(ctx, activity, recipients) {
-        for( let recipientUri of recipients ) {
-          const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
+        for (let recipientUri of recipients) {
+          const recipient = await ctx.call('activitypub.actor.get', {actorUri: recipientUri});
 
           // If the request was already rejected, reject it again
-          if (await ctx.call('activitypub.collection.includes', { collectionUri: recipient['apods:rejectedContacts'], item: activity.actor })) {
+          if (await ctx.call('activitypub.collection.includes', {
+            collectionUri: recipient['apods:rejectedContacts'],
+            item: activity.actor
+          })) {
             await ctx.call('activitypub.outbox.post', {
               collectionUri: recipient.outbox,
               type: ACTIVITY_TYPES.REJECT,
@@ -67,8 +70,11 @@ module.exports = {
           }
 
           // Check that a request by the same actor is not already waiting (if so, ignore it)
-          const collection = await ctx.call('activitypub.collection.get', { collectionUri: recipient['apods:contactRequests'], webId: recipientUri });
-          if( collection
+          const collection = await ctx.call('activitypub.collection.get', {
+            collectionUri: recipient['apods:contactRequests'],
+            webId: recipientUri
+          });
+          if (collection
             && collection.items.length > 0
             && collection.items.find(a => a.actor === activity.actor)
           ) {
@@ -88,10 +94,10 @@ module.exports = {
         }
       }
     },
-    {
+    acceptContactRequest: {
       match: ACCEPT_CONTACT_REQUEST,
       async onEmit(ctx, activity, emitterUri) {
-        const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+        const emitter = await ctx.call('activitypub.actor.get', {actorUri: emitterUri});
 
         // Give read right of my profile
         await ctx.call('webacl.resource.addRights', {
@@ -112,15 +118,21 @@ module.exports = {
         });
 
         // 3. Add the other actor to my contacts list
-        await ctx.call('activitypub.collection.attach', { collectionUri: emitter['apods:contacts'], item: activity.object.actor });
+        await ctx.call('activitypub.collection.attach', {
+          collectionUri: emitter['apods:contacts'],
+          item: activity.object.actor
+        });
 
         // 4. Remove the activity from my contact requests
-        await ctx.call('activitypub.collection.detach', { collectionUri: emitter['apods:contactRequests'], item: activity.object.id });
+        await ctx.call('activitypub.collection.detach', {
+          collectionUri: emitter['apods:contactRequests'],
+          item: activity.object.id
+        });
       },
       async onReceive(ctx, activity, recipients) {
-        for( let recipientUri of recipients ) {
-          const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
-          const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
+        for (let recipientUri of recipients) {
+          const emitter = await ctx.call('activitypub.actor.get', {actorUri: activity.actor});
+          const recipient = await ctx.call('activitypub.actor.get', {actorUri: recipientUri});
 
           // Cache the other actor's profile (it should be visible now)
           await ctx.call('activitypub.object.cacheRemote', {
@@ -129,25 +141,34 @@ module.exports = {
           });
 
           // Add the other actor to my contacts list
-          await ctx.call('activitypub.collection.attach', { collectionUri: recipient['apods:contacts'], item: emitter.id });
+          await ctx.call('activitypub.collection.attach', {
+            collectionUri: recipient['apods:contacts'],
+            item: emitter.id
+          });
 
           // TODO Send a notification
         }
       }
     },
-    {
+    rejectContactRequest: {
       match: REJECT_CONTACT_REQUEST,
       async onEmit(ctx, activity, emitterUri) {
-        const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+        const emitter = await ctx.call('activitypub.actor.get', {actorUri: emitterUri});
 
         // Add the actor to my rejected contacts list
-        await ctx.call('activitypub.collection.attach', { collectionUri: emitter['apods:rejectedContacts'], item: activity.object.actor });
+        await ctx.call('activitypub.collection.attach', {
+          collectionUri: emitter['apods:rejectedContacts'],
+          item: activity.object.actor
+        });
 
         // Remove the activity from my contact requests
-        await ctx.call('activitypub.collection.detach', { collectionUri: emitter['apods:contactRequests'], item: activity.object.id });
+        await ctx.call('activitypub.collection.detach', {
+          collectionUri: emitter['apods:contactRequests'],
+          item: activity.object.id
+        });
       }
     }
-  ],
+  },
   events: {
     async 'event.status.finished'(ctx) {
       const { eventUri } = ctx.params;

@@ -48,7 +48,7 @@ module.exports = {
     },
     async joinOrLeave(ctx) {
       const { eventUri, userUri, joined } = ctx.params;
-      const event = await ctx.call('event.get', { resourceUri: eventUri }, { meta: { webId: 'system' }});
+      const event = await ctx.call('events.event.get', { resourceUri: eventUri }, { meta: { webId: 'system' }});
       const user = await this.getActorProfile(ctx, userUri, event['apods:organizedBy']);
 
       await this.queueMail(ctx, 'join-or-leave', {

@@ -33,18 +33,18 @@ module.exports = {
       return new URL(eventUri).pathname + '/inviters';
     }
   },
-  activities: [
-    {
+  activities: {
+    inviteEvent: {
       match: INVITE_EVENT,
       async onEmit(ctx, activity, emitterUri) {
         const event = activity.object;
 
-        if( emitterUri !== event['apods:organizedBy'] ) {
+        if (emitterUri !== event['apods:organizedBy']) {
           throw new Error('Only the organizer has the right to invite people to the event ' + event.id)
         }
 
         // Add all invitees to the collection and WebACL group
-        for( let inviteeUri of defaultToArray(activity.target) ) {
+        for (let inviteeUri of defaultToArray(activity.target)) {
           await ctx.call('activitypub.collection.attach', { collectionUri: event['apods:invitees'], item: inviteeUri });
 
           await ctx.call('webacl.group.addMember', {
@@ -55,7 +55,7 @@ module.exports = {
         }
       },
       async onReceive(ctx, activity, recipients) {
-        for( let recipientUri of recipients ) {
+        for (let recipientUri of recipients) {
           // Cache remote event (we want to be able to fetch it with SPARQL)
           await ctx.call('activitypub.object.cacheRemote', {
             objectUri: activity.object.id,
@@ -71,60 +71,70 @@ module.exports = {
         }
       }
     },
-    {
-      match: OFFER_INVITE_EVENT,
-      async onEmit(ctx, activity, emitterUri) {
-        const event = activity.object.object;
+    offerInviteByOrganizer: {
+      async match(activity) {
+        const dereferencedActivity = await this.matchPattern(OFFER_INVITE_EVENT, activity);
         // If the emitter is the organizer, it means we want to give invitees the right to share this event
-        if (emitterUri === event['apods:organizedBy']) {
-          // Add all inviters to the collection and WebACL group
-          for (let inviterUri of defaultToArray(activity.target)) {
-            await ctx.call('activitypub.collection.attach', {collectionUri: event['apods:inviters'], item: inviterUri});
+        if (dereferencedActivity && dereferencedActivity.actor === dereferencedActivity.object.object['apods:organizedBy']) {
+          return dereferencedActivity;
+        }
+      },
+      async onEmit(ctx, activity) {
+        const event = activity.object.object;
 
-            await ctx.call('webacl.group.addMember', {
-              groupSlug: this.getInvitersGroupSlug(event.id),
-              memberUri: inviterUri,
-              webId: event['apods:organizedBy']
-            })
-          }
+        // Add all inviters to the collection and WebACL group
+        for (let inviterUri of defaultToArray(activity.target)) {
+          await ctx.call('activitypub.collection.attach', {collectionUri: event['apods:inviters'], item: inviterUri});
+
+          await ctx.call('webacl.group.addMember', {
+            groupSlug: this.getInvitersGroupSlug(event.id),
+            memberUri: inviterUri,
+            webId: event['apods:organizedBy']
+          })
+        }
+      },
+    },
+    offerInviteToOrganizer: {
+      async match(activity) {
+        const dereferencedActivity = await this.matchPattern(OFFER_INVITE_EVENT, activity);
+        // If the offer is directed to the organizer, it means we are an inviter and want him to invite one of our contacts
+        if (dereferencedActivity && dereferencedActivity.target === dereferencedActivity.object.object['apods:organizedBy']) {
+          return dereferencedActivity;
         }
       },
       async onReceive(ctx, activity) {
         const event = activity.object.object;
-        const organizer = await ctx.call('activitypub.actor.get', { actorUri: event['apods:organizedBy'] });
+        const organizer = await ctx.call('activitypub.actor.get', {actorUri: event['apods:organizedBy']});
 
-        // If the offer is directed to the organizer, it means we are an inviter and want him to invite one of our contacts
-        if( activity.target === organizer.id ) {
-          const isInviter = await ctx.call('activitypub.collection.includes', {
-            collectionUri: event['apods:inviters'],
-            itemUri: activity.actor
-          });
+        const isInviter = await ctx.call('activitypub.collection.includes', {
+          collectionUri: event['apods:inviters'],
+          itemUri: activity.actor
+        });
 
-          if( !isInviter ) {
-            throw new Error(`Actor ${activity.actor} was not given permission to invite to the event ${event.id}`);
-          }
-
-          await ctx.call('activitypub.outbox.post', {
-            collectionUri: organizer.outbox,
-            type: ACTIVITY_TYPES.INVITE,
-            actor: organizer.id,
-            object: event.id,
-            target: activity.object.target,
-            to: activity.object.target
-          });
-
-          // Inform the inviter that his invitation has been accepted (this is not used currently)
-          await ctx.call('activitypub.outbox.post', {
-            collectionUri: organizer.outbox,
-            type: ACTIVITY_TYPES.ACCEPT,
-            actor: organizer.id,
-            object: activity.id,
-            to: activity.actor
-          });
+        if (!isInviter) {
+          throw new Error(`Actor ${activity.actor} was not given permission to invite to the event ${event.id}`);
         }
+
+        await ctx.call('activitypub.outbox.post', {
+          collectionUri: organizer.outbox,
+          type: ACTIVITY_TYPES.INVITE,
+          actor: organizer.id,
+          object: event.id,
+          target: activity.object.target,
+          to: activity.object.target
+        });
+
+        // Inform the inviter that his invitation has been accepted (this is not used currently)
+        await ctx.call('activitypub.outbox.post', {
+          collectionUri: organizer.outbox,
+          type: ACTIVITY_TYPES.ACCEPT,
+          actor: organizer.id,
+          object: activity.id,
+          to: activity.actor
+        });
       }
     }
-  ],
+  },
   events: {
     async 'ldp.resource.created'(ctx) {
       const { resourceUri, newData } = ctx.params;

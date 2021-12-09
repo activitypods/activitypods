@@ -16,11 +16,10 @@ module.exports = {
   actions: {
     async announceUpdate(ctx) {
       const { profileUri } = ctx.params;
-      const updatedProfile = await ctx.call('activitypub.proxy.query', { objectUri: profileUri });
-      const actor = await ctx.call('activitypub.actor.get', { actorUri: updatedProfile.describes });
+      const actor = await ctx.call('activitypub.actor.get', { actorUri: ctx.meta.webId });
       const contacts = await ctx.call('activitypub.collection.get', { collectionUri: actor['apods:contacts'], webId: actor.id });
 
-      if( contacts.length > 0 ) {
+      if( contacts.items.length > 0 ) {
         await ctx.call('activitypub.outbox.post', {
           collectionUri: actor.outbox,
           type: ACTIVITY_TYPES.ANNOUNCE,
@@ -29,7 +28,7 @@ module.exports = {
             type: ACTIVITY_TYPES.UPDATE,
             object: profileUri
           },
-          to: contacts
+          to: contacts.items
         });
       }
     }
@@ -64,11 +63,11 @@ module.exports = {
       });
     }
   },
-  activities: [
-    {
+  activities: {
+    announceUpdateProfile: {
       match: ANNOUNCE_UPDATE_PROFILE,
       async onReceive(ctx, activity, recipients) {
-        for( let recipientUri of recipients ) {
+        for (let recipientUri of recipients) {
           await ctx.call('activitypub.object.cacheRemote', {
             objectUri: activity.object.object.id,
             actorUri: recipientUri
@@ -76,7 +75,7 @@ module.exports = {
         }
       }
     }
-  ],
+  },
   hooks: {
     after: {
       put(ctx, res) {

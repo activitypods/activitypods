@@ -30,7 +30,8 @@ module.exports = {
   logger: {
     type: 'Console',
     options: {
-      formatter: 'short'
+      formatter: 'short',
+      level: 'info'
     }
   }
 };

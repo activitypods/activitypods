@@ -1,9 +1,9 @@
-const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
+const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 
 const INVITE_EVENT = {
   type: ACTIVITY_TYPES.INVITE,
   object: {
-    type: OBJECT_TYPES.EVENT
+    type: 'pair:Event'
   }
 };
 
@@ -12,7 +12,7 @@ const OFFER_INVITE_EVENT = {
   object: {
     type: ACTIVITY_TYPES.INVITE,
     object: {
-      type: OBJECT_TYPES.EVENT
+      type: 'pair:Event'
     }
   }
 };
@@ -20,14 +20,14 @@ const OFFER_INVITE_EVENT = {
 const JOIN_EVENT = {
   type: ACTIVITY_TYPES.JOIN,
   object: {
-    type: OBJECT_TYPES.EVENT
+    type: 'pair:Event'
   }
 };
 
 const LEAVE_EVENT = {
   type: ACTIVITY_TYPES.LEAVE,
   object: {
-    type: OBJECT_TYPES.EVENT
+    type: 'pair:Event'
   }
 };
 
@@ -36,7 +36,7 @@ const ANNOUNCE_UPDATE_EVENT = {
   object: {
     type: ACTIVITY_TYPES.UPDATE,
     object: {
-      type: OBJECT_TYPES.EVENT
+      type: 'pair:Event'
     }
   }
 };

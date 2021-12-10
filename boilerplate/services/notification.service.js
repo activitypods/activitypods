@@ -23,7 +23,7 @@ module.exports = {
   mixins: CONFIG.QUEUE_SERVICE_URL ? [NotificationService, QueueService(CONFIG.QUEUE_SERVICE_URL)] : [NotificationService],
   settings: {
     from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
-    transport: transportSMTP,
+    transport: transportAPI,
     templateFolder: path.join(__dirname, "../templates"),
     data: {
       frontName: CONFIG.FRONT_NAME,

@@ -1,0 +1,77 @@
+version: '3.5'
+services:
+  traefik:
+    image: traefik:v2.3
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=myemail@mydomain.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - ./data/letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  fuseki:
+    image: semapps/jena-fuseki-webacl
+    container_name: fuseki
+    volumes:
+      - ./data/fuseki:/fuseki
+    ports:
+      - "3030:3030"
+    expose:
+      - "3030"
+    environment:
+      ADMIN_PASSWORD: "mypassword"
+
+  middleware:
+    build: ./middleware
+    container_name: middleware
+    depends_on:
+      - fuseki
+      - redis
+    volumes:
+      - ./middleware/logs:/app/boilerplate/logs
+      - ./middleware/actors:/app/boilerplate/actors
+      - ./middleware/jwt:/app/boilerplate/jwt
+      - ./middleware/uploads:/app/boilerplate/uploads
+    expose:
+      - "3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pods.rule=Host(`mydomain.com`)"
+      - "traefik.http.routers.pods.entrypoints=websecure"
+      - "traefik.http.routers.pods.tls.certresolver=myresolver"
+
+  redis:
+    image: redis
+    container_name: redis
+    expose:
+      - "6379"
+    volumes:
+      - ./data/redis:/data
+    command: ["redis-server", "--appendonly", "yes"]
+
+  arena:
+    build: ./arena
+    container_name: arena
+    restart: always
+    volumes:
+      - ./arena/config:/opt/arena/src/server/config
+    depends_on:
+      - redis
+    ports:
+      - "4567:4567"
+    environment:
+      REDIS_HOST: 'redis'

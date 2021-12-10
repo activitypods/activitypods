@@ -1,0 +1,11 @@
+{
+  "queues": [
+    {
+      "name": "sendMail",
+      "hostId": "middleware",
+      "host": "redis",
+      "port": 6379,
+      "db": 1
+    }
+  ]
+}

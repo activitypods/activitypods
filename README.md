@@ -22,6 +22,10 @@ yarn run dev
 - Events
 - Messages
 
+## Deployment
+
+Follow the guide [here](deploy/README.md).
+
 ## Tests
 
 ```

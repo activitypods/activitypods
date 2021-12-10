@@ -19,8 +19,8 @@ yarn run dev
 ## Available applications
 
 - [Contacts](packages/contacts/README.md)
-- Events
-- Messages
+- [Events](packages/events/README.md)
+- [Messages](packages/messages/README.md)
 
 ## Deployment
 

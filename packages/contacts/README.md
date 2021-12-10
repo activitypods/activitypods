@@ -100,3 +100,26 @@ Attached to the actor:
 #### Recipients' side effects
 
 - None
+
+
+### Announce update profile
+
+```json
+{
+  "type": "Announce",
+  "object": {
+    "type": "Update",
+    "object": {
+      "type": "Profile"
+    }
+  }
+}
+```
+
+#### Emitter's side effects
+
+- None
+
+#### Recipients' side effects
+
+- The profile cached in the recipients' PODS is refreshed

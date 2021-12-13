@@ -759,6 +759,13 @@
       "@type" : "@id"
     },
 
+    "vcard:hasAddress": {
+      "@type": "@id"
+    },
+    "vcard:geo": {
+      "@type": "@id"
+    },
+
     "apods:closingDate": {
       "@type": "xsd:dateTime"
     },

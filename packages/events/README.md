@@ -6,14 +6,12 @@ An [ActivityPods](../../README.md) app to handle events, with invitation and reg
 
 - [EventService](services/event.js)
 - [InvitationService](services/invitation.js)
-- [PlaceService](services/place.js)
 - [RegistrationService](services/registration.js)
 - [StatusService](services/status.js)
 
 ## Containers
 
 - `/events` with the events created by the user or to whom he has been invited
-- `/places` with the addresses linked to the user
 
 ## Collections
 

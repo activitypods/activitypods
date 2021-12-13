@@ -8,7 +8,7 @@ module.exports = {
   mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
   settings: {
     path: '/profiles',
-    acceptedTypes: ['pair:Person', OBJECT_TYPES.PROFILE],
+    acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
     permissions: {},
     newResourcesPermissions: {}
   },
@@ -41,14 +41,15 @@ module.exports = {
       await this.waitForContainerCreation(containerUri);
 
       const profileUrl = await this.actions.post({
+        containerUri,
         resource: {
-          '@type': ['pair:Person', OBJECT_TYPES.PROFILE],
-          'pair:label': profileData.familyName ? `${profileData.name} ${profileData.familyName.toUpperCase()}` : profileData.name,
-          'pair:firstName': profileData.name,
-          'pair:lastName': profileData.familyName,
+          '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
+          'vcard:fn': profileData.familyName ? `${profileData.name} ${profileData.familyName.toUpperCase()}` : profileData.name,
+          'vcard:nickname': null,
+          'vcard:given-name': profileData.name,
+          'vcard:family-name': profileData.familyName,
           describes: webId,
         },
-        containerUri,
         contentType: MIME_TYPES.JSON,
         webId
       });

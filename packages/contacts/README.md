@@ -1,15 +1,17 @@
 # Contacts App
 
-An [ActivityPods](../../README.md) app to handle profile creation and contacts exchange
+An [ActivityPods](../../README.md) application to handle profile creation and contacts exchange
 
 ## Services
 
 - [ProfileService](services/profile.js)
 - [RequestService](services/request.js)
+- [LocationService](services/location.js)
 
 ## Containers
 
-- `/profiles` with the profile of the user and his contacts
+- `/profiles` with the profile of the user and his contacts (`vcard:Individual`, `as:Profile`)
+- `/locations` with the addresses linked to the user (`vcard:Location`)
 
 ## Collections
 
@@ -18,6 +20,10 @@ Attached to the actor:
 - `/contacts` with the list of actors whose contact has been accepted
 - `/contact-requests` with the list of contact requests activities received
 - `/rejected-contacts` with the list of actors whose contact has been rejected
+
+## Ontology
+
+As [recommended by the Solid project](https://github.com/solid/vocab#recommended-by-solid), the [vCard ontology](https://www.w3.org/TR/vcard-rdf/) is used to describe individuals as well as locations.
 
 ## Handled activities
 

@@ -1,6 +1,5 @@
 const EventService = require('./services/event');
 const InvitationService = require('./services/invitation');
-const PlaceService = require('./services/place');
 const RegistrationService = require('./services/registration');
 const StatusService = require('./services/status');
 
@@ -20,8 +19,6 @@ const EventsApp = {
     this.broker.createService(EventService);
 
     this.broker.createService(InvitationService);
-
-    this.broker.createService(PlaceService);
 
     this.broker.createService(RegistrationService);
 

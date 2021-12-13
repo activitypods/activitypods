@@ -99,6 +99,7 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
 {
     "@context": "https://www.w3.org/ns/activitystreams",
     "type": "Announce",
+    "actor": "http://localhost:3000/alice",
     "object": "http://localhost:3000/alice/data/events/61a0f897e5b88b06f85b1190",
     "to": "https://www.w3.org/ns/activitystreams#Public"
 }

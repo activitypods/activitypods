@@ -108,7 +108,7 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
 Since this activity is public, anyone will be able to view it on the outbox. But you could of course have sent it only to selected users, in which case it will have been sent to their inboxes.
 
 ```
-GET /alice/outbox HTTP/1.1
+GET /alice/outbox?page=1 HTTP/1.1
 Host: localhost:3000
 Accept: application/ld+json
 

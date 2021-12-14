@@ -30,7 +30,7 @@ module.exports = {
           throw new MoleculerError('Registrations for this event are closed', 403, 'FORBIDDEN');
         }
 
-        if( !await ctx.call('activitypub.collection.includes', { collectionUri: event['apods:invitees'], item: activity.actor }) ) {
+        if( !await ctx.call('activitypub.collection.includes', { collectionUri: event['apods:invitees'], itemUri: activity.actor }) ) {
           throw new MoleculerError('You have not been invited to this event', 400, 'BAD REQUEST');
         }
 

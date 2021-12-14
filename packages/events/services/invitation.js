@@ -1,5 +1,5 @@
 const { defaultToArray, hasType } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
+const { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { INVITE_EVENT, OFFER_INVITE_EVENT } = require('../patterns');
 
 module.exports = {
@@ -9,7 +9,7 @@ module.exports = {
   async started() {
     await this.broker.call('activitypub.registry.register', {
       path: '/invitees',
-      attachToTypes: ['pair:Event'],
+      attachToTypes: [OBJECT_TYPES.EVENT],
       attachPredicate: 'http://activitypods.org/ns/core#invitees',
       ordered: false,
       dereferenceItems: false,
@@ -18,7 +18,7 @@ module.exports = {
 
     await this.broker.call('activitypub.registry.register', {
       path: '/inviters',
-      attachToTypes: ['pair:Event'],
+      attachToTypes: [OBJECT_TYPES.EVENT],
       attachPredicate: 'http://activitypods.org/ns/core#inviters',
       ordered: false,
       dereferenceItems: false,
@@ -39,7 +39,7 @@ module.exports = {
       async onEmit(ctx, activity, emitterUri) {
         const event = activity.object;
 
-        if (emitterUri !== event['apods:organizedBy']) {
+        if (emitterUri !== event['dc:creator']) {
           throw new Error('Only the organizer has the right to invite people to the event ' + event.id)
         }
 
@@ -50,7 +50,7 @@ module.exports = {
           await ctx.call('webacl.group.addMember', {
             groupSlug: this.getInviteesGroupSlug(event.id),
             memberUri: inviteeUri,
-            webId: event['apods:organizedBy']
+            webId: event['dc:creator']
           })
         }
       },
@@ -75,7 +75,7 @@ module.exports = {
       async match(activity) {
         const dereferencedActivity = await this.matchPattern(OFFER_INVITE_EVENT, activity);
         // If the emitter is the organizer, it means we want to give invitees the right to share this event
-        if (dereferencedActivity && dereferencedActivity.actor === dereferencedActivity.object.object['apods:organizedBy']) {
+        if (dereferencedActivity && dereferencedActivity.actor === dereferencedActivity.object.object['dc:creator']) {
           return dereferencedActivity;
         }
       },
@@ -84,12 +84,12 @@ module.exports = {
 
         // Add all inviters to the collection and WebACL group
         for (let inviterUri of defaultToArray(activity.target)) {
-          await ctx.call('activitypub.collection.attach', {collectionUri: event['apods:inviters'], item: inviterUri});
+          await ctx.call('activitypub.collection.attach', { collectionUri: event['apods:inviters'], item: inviterUri });
 
           await ctx.call('webacl.group.addMember', {
             groupSlug: this.getInvitersGroupSlug(event.id),
             memberUri: inviterUri,
-            webId: event['apods:organizedBy']
+            webId: event['dc:creator']
           })
         }
       },
@@ -98,13 +98,13 @@ module.exports = {
       async match(activity) {
         const dereferencedActivity = await this.matchPattern(OFFER_INVITE_EVENT, activity);
         // If the offer is directed to the organizer, it means we are an inviter and want him to invite one of our contacts
-        if (dereferencedActivity && dereferencedActivity.target === dereferencedActivity.object.object['apods:organizedBy']) {
+        if (dereferencedActivity && dereferencedActivity.target === dereferencedActivity.object.object['dc:creator']) {
           return dereferencedActivity;
         }
       },
       async onReceive(ctx, activity) {
         const event = activity.object.object;
-        const organizer = await ctx.call('activitypub.actor.get', {actorUri: event['apods:organizedBy']});
+        const organizer = await ctx.call('activitypub.actor.get', {actorUri: event['dc:creator']});
 
         const isInviter = await ctx.call('activitypub.collection.includes', {
           collectionUri: event['apods:inviters'],
@@ -139,8 +139,13 @@ module.exports = {
     async 'ldp.resource.created'(ctx) {
       const { resourceUri, newData } = ctx.params;
 
-      if( hasType(newData, 'pair:Event') ) {
-        const organizer = await ctx.call('activitypub.actor.get', { actorUri: newData['apods:organizedBy'] });
+      if( hasType(newData, OBJECT_TYPES.EVENT) ) {
+        const event = await ctx.call('activitypub.object.awaitCreateComplete', { objectUri: resourceUri, predicates: ['dc:creator', 'apods:attendees'] });
+
+        const organizer = await ctx.call('activitypub.actor.get', { actorUri: event['dc:creator'] });
+
+        // Add the organiser to the list of attendees
+        await ctx.call('activitypub.collection.attach', { collectionUri: event['apods:attendees'], item: organizer.id });
 
         const { groupUri: inviteesGroupUri } = await ctx.call('webacl.group.create', { groupSlug: this.getInviteesGroupSlug(resourceUri), webId: organizer.id });
         await ctx.call('webacl.group.create', { groupSlug: this.getInvitersGroupSlug(resourceUri), webId: organizer.id });
@@ -169,9 +174,9 @@ module.exports = {
           webId: organizer.id
         });
 
-        // Give read right for the event's address
+        // Give read right for the event's location
         await ctx.call('webacl.resource.addRights', {
-          resourceUri: newData['pair:hostedIn'],
+          resourceUri: event.location,
           additionalRights: {
             group: {
               uri: inviteesGroupUri,

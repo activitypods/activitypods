@@ -1,3 +1,4 @@
+const AttendeesMatcherService = require('./services/attendees-matcher');
 const EventService = require('./services/event');
 const InvitationService = require('./services/invitation');
 const RegistrationService = require('./services/registration');
@@ -21,6 +22,8 @@ const EventsApp = {
     this.broker.createService(InvitationService);
 
     this.broker.createService(RegistrationService);
+
+    this.broker.createService(AttendeesMatcherService);
 
     this.broker.createService(StatusService, {
       settings: { status }

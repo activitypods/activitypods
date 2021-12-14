@@ -5,7 +5,7 @@ const ApiGatewayService = require('moleculer-web');
 const { AuthLocalService } = require('@semapps/auth');
 const FusekiAdminService = require('@semapps/fuseki-admin');
 const { JsonLdService } = require('@semapps/jsonld');
-const { LdpService } = require('@semapps/ldp');
+const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
 const { PodService } = require('@semapps/pod');
 const { SignatureService } = require('@semapps/signature');
 const { SparqlEndpointService } = require('@semapps/sparql-endpoint');
@@ -105,6 +105,7 @@ const CoreService = {
     });
 
     this.broker.createService(LdpService, {
+      mixins: [DocumentTaggerMixin],
       settings: {
         baseUrl,
         ontologies,

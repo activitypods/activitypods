@@ -766,35 +766,8 @@
       "@type": "@id"
     },
 
-    "apods:closingDate": {
+    "apods:closingTime": {
       "@type": "xsd:dateTime"
-    },
-    "apods:organizedBy": {
-      "@type" : "@id"
-    },
-    "apods:organizes": {
-      "@type" : "@id"
-    },
-    "apods:contactOf" : {
-      "@type" : "@id"
-    },
-    "apods:webId" : {
-      "@type" : "@id"
-    },
-    "apods:actor" : {
-      "@type" : "@id"
-    },
-    "apods:toContact" : {
-      "@type" : "@id"
-    },
-    "apods:toUser" : {
-      "@type" : "@id"
-    },
-    "apods:target" : {
-      "@type" : "@id"
-    },
-    "apods:mode" : {
-      "@type" : "@id"
     },
     "apods:contacts" : {
       "@type" : "@id"
@@ -809,6 +782,9 @@
       "@type" : "@id"
     },
     "apods:inviters" : {
+      "@type" : "@id"
+    },
+    "apods:attendees" : {
       "@type" : "@id"
     }
   }

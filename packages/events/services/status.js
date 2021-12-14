@@ -47,13 +47,14 @@ module.exports = {
         const results = await ctx.call('triplestore.query', {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
+            PREFIX as: <https://www.w3.org/ns/activitystreams#>
             PREFIX ldp: <http://www.w3.org/ns/ldp#>
             PREFIX pair:  <http://virtual-assembly.org/ontologies/pair#>
             SELECT ?eventUri
             WHERE {
-              ?eventUri a pair:Event .
-              ?eventUri pair:endDate ?endDate .
-              FILTER(NOW() < ?endDate) .
+              ?eventUri a as:Event .
+              ?eventUri as:endTime ?endTime .
+              FILTER(NOW() < ?endTime) .
               FILTER NOT EXISTS { ?eventUri pair:hasStatus <${this.settings.status.coming}> . }
             }
           `,
@@ -73,22 +74,24 @@ module.exports = {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
             PREFIX ldp: <http://www.w3.org/ns/ldp#>
+            PREFIX as: <https://www.w3.org/ns/activitystreams#>
             PREFIX pair:  <http://virtual-assembly.org/ontologies/pair#>
             SELECT ?eventUri
             WHERE {
-              ?eventUri a pair:Event .
-              ?eventUri pair:endDate ?endDate .
-              ?eventUri apods:closingDate ?closingDate .
-              ?eventUri apods:maxParticipants ?maxParticipants .
+              ?eventUri a as:Event .
+              ?eventUri as:endTime ?endTime .
+              ?eventUri apods:closingTime ?closingTime .
+              ?eventUri apods:maxAttendees ?maxAttendees .
               # Subquery to count participants
               {
-                SELECT (COUNT(?participants) AS ?numParticipants) ?eventUri
+                SELECT (COUNT(?attendees) AS ?numAttendees) ?eventUri
                 WHERE { 
-                  ?eventUri pair:involves ?participants
+                  ?eventUri apods:attendees ?attendeesCollectionUri
+                  ?attendeesCollectionUri as:items ?attendees
                 } 
                 GROUP BY ?eventUri
               }
-              FILTER(( NOW() > ?closingDate && NOW() < ?endDate ) || (NOW() < ?endDate && ?numParticipants >= ?maxParticipants)) .
+              FILTER(( NOW() > ?closingTime && NOW() < ?endTime ) || (NOW() < ?endTime && ?numAttendees >= ?maxAttendees)) .
               FILTER NOT EXISTS { ?eventUri pair:hasStatus <${this.settings.status.closed}> . }
             }
           `,
@@ -107,12 +110,12 @@ module.exports = {
         const results = await ctx.call('triplestore.query', {
           query: `
             PREFIX ldp: <http://www.w3.org/ns/ldp#>
-            PREFIX pair: <http://virtual-assembly.org/ontologies/pair#>
+            PREFIX as: <https://www.w3.org/ns/activitystreams#>
             SELECT ?eventUri
             WHERE {
-              ?eventUri a pair:Event .
-              ?eventUri pair:endDate ?endDate .
-              FILTER(NOW() > ?endDate) .
+              ?eventUri a as:Event .
+              ?eventUri as:endTime ?endTime .
+              FILTER(NOW() > ?endTime) .
               FILTER NOT EXISTS { ?eventUri pair:hasStatus <${this.settings.status.finished}> . }
             }
           `,

@@ -28,7 +28,7 @@ Attached to all events:
 {
   "type": "Invite",
   "object": {
-    "type": "pair:Event"
+    "type": "Event"
   }
 }
 ```
@@ -52,7 +52,7 @@ Attached to all events:
   "object": {
     "type": "Invite",
     "object": {
-      "type": "pair:Event"
+      "type": "Event"
     }
   }
 }
@@ -77,7 +77,7 @@ Attached to all events:
 {
   "type": "Join",
   "object": {
-    "type": "pair:Event"
+    "type": "Event"
   }
 }
 ```
@@ -98,7 +98,7 @@ Attached to all events:
 {
   "type": "Leave",
   "object": {
-    "type": "pair:Event"
+    "type": "Event"
   }
 }
 ```
@@ -121,7 +121,7 @@ Attached to all events:
   "object": {
     "type": "Update",
     "object": {
-      "type": "pair:Event"
+      "type": "Event"
     }
   }
 }

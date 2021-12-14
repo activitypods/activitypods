@@ -81,6 +81,32 @@ As [recommended by the Solid project](https://github.com/solid/vocab#recommended
 - The emitter is attached to the recipients' `/contacts` collection
 
 
+### Ignore contact request
+
+```json
+{
+  "type": "Ignore",
+  "object": {
+    "type": "Offer",
+    "object": {
+      "type": "Add",
+      "object": {
+        "type": "Profile"
+      }
+    }
+  }
+}
+```
+
+#### Emitter's side effects
+
+- The contact request activity is removed from the emitter's `/contact-requests` collection.
+
+#### Recipients' side effects
+
+- None
+
+
 ### Reject contact request
 
 ```json
@@ -100,7 +126,7 @@ As [recommended by the Solid project](https://github.com/solid/vocab#recommended
 
 #### Emitter's side effects
 
-- The recipients are attached to the emitter's `/rejected-contacts` collection
+- The recipients are attached to the emitter's `/rejected-contacts` collection (new contact requests will be automatically rejected)
 - The contact request activity is removed from the emitter's `/contact-requests` collection.
 
 #### Recipients' side effects

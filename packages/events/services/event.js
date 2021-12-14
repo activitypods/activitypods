@@ -1,5 +1,5 @@
-const { ControlledContainerMixin, hasType } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
+const { ControlledContainerMixin } = require('@semapps/ldp');
+const { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { ANNOUNCE_UPDATE_EVENT } = require("../patterns");
 
 module.exports = {
@@ -7,7 +7,7 @@ module.exports = {
   mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
   settings: {
     path: '/events',
-    acceptedTypes: ['pair:Event'],
+    acceptedTypes: [OBJECT_TYPES.EVENT],
     permissions: {},
     newResourcesPermissions: {}
   },
@@ -15,7 +15,7 @@ module.exports = {
     async announceUpdate(ctx) {
       const { eventUri } = ctx.params;
       const event = await ctx.call('activitypub.object.get', { objectUri: eventUri, actorUri: ctx.meta.webId });
-      const organizer = await ctx.call('activitypub.actor.get', { actorUri: event['apods:organizedBy'] });
+      const organizer = await ctx.call('activitypub.actor.get', { actorUri: event['dc:creator'] });
 
       const collection = await ctx.call('activitypub.collection.get', { collectionUri: event['apods:invitees'] });
       if (collection && collection.items) {
@@ -46,16 +46,6 @@ module.exports = {
     }
   },
   hooks: {
-    before: {
-      post(ctx) {
-        const { webId } = ctx.meta;
-        ctx.params.resource = {
-          ...ctx.params.resource,
-          'apods:organizedBy': webId,
-          'pair:involves': webId
-        };
-      }
-    },
     after: {
       put(ctx, res) {
         this.actions.announceUpdate({ eventUri: res }, { parentCtx: ctx });

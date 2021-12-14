@@ -84,7 +84,7 @@ Link: <http://www.w3.org/ns/ldp#Resource>; rel="type"
 
 > By default, this event is only visible by yourself (you can do a `GET`  with the JWT token).
 
-## Post an activity in the outbox
+### Post an activity in the outbox
 
 The created actor has everything needed to exchange with other ActivityPub actors.
 

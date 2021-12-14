@@ -769,6 +769,12 @@
     "apods:closingTime": {
       "@type": "xsd:dateTime"
     },
+    "apods:hasFormat": {
+      "@type" : "@id"
+    },
+    "apods:hasStatus": {
+      "@type" : "@id"
+    },
     "apods:contacts" : {
       "@type" : "@id"
     },

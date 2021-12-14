@@ -19,6 +19,7 @@ Attached to all events:
 
 - `/invitees` with the list of actors who have been invited to the event
 - `/inviters` with the list of actors who are allowed to invite to the event
+- `/attendees` with the list of actors who are attending the event (including the organizer)
 
 ## Handled activities
 
@@ -88,7 +89,7 @@ Attached to all events:
 
 #### Recipients' side effects
 
-- The recipients are added to the list of participants (`pair:involves`)
+- The recipients are added to the `/attendees` collection
 - A notification is sent to the organizer
 
 
@@ -109,7 +110,7 @@ Attached to all events:
 
 #### Recipients' side effects
 
-- The recipients are removed from the list of participants (`pair:involves`)
+- The recipients are removed from the `/attendees` collection
 - A notification is sent to the organizer
 
 

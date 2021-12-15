@@ -762,7 +762,10 @@
     "vcard:hasAddress": {
       "@type": "@id"
     },
-    "vcard:geo": {
+    "vcard:hasGeo": {
+      "@type": "@id"
+    },
+    "vcard:photo": {
       "@type": "@id"
     },
 

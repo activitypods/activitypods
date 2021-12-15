@@ -18,13 +18,12 @@ ADD https://api.github.com/repos/assemblee-virtuelle/activitypods/git/refs/heads
 
 RUN git clone https://github.com/assemblee-virtuelle/activitypods.git /app
 
+ADD boilerplate /app/boilerplate
+
 RUN yarn install
 RUN yarn run bootstrap
 
 WORKDIR /app/boilerplate
-
-COPY ecosystem.config.js /app/boilerplate
-COPY .env.local /app/boilerplate
 
 EXPOSE 3000
 

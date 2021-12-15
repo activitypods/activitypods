@@ -2,19 +2,14 @@ const CronMixin = require("moleculer-cron");
 const { MIME_TYPES } = require("@semapps/mime-types");
 const { defaultToArray } = require("@semapps/ldp")
 
+const EVENT_STATUS_COMING = 'apods:Coming';
+const EVENT_STATUS_FINISHED = 'apods:Finished';
+const EVENT_STATUS_OPEN = 'apods:Open';
+const EVENT_STATUS_CLOSED = 'apods:Closed';
+
 module.exports = {
   name: 'events.status',
   mixins: [CronMixin],
-  settings: {
-    status: {
-      // Event in the future or already finished ?
-      coming: null,
-      finished: null,
-      // Subscriptions open or not ?
-      open: null,
-      closed: null,
-    }
-  },
   dependencies: ['api', 'ldp', 'webacl'],
   actions: {
     async set(ctx) {
@@ -22,39 +17,39 @@ module.exports = {
       let event = await ctx.call('events.event.get', { resourceUri: eventUri, accept: MIME_TYPES.JSON, webId: 'system' });
 
       await ctx.call('events.event.put', {
-        resource: { ...event, 'pair:hasStatus': newStatus },
+        resource: { ...event, 'apods:hasStatus': newStatus },
         contentType: MIME_TYPES.JSON,
         webId: 'system'
       });
     },
     isFinished(ctx) {
       const { event } = ctx.params;
-      const status = defaultToArray(event['pair:hasStatus']) || [];
-      return status.includes(this.settings.status.finished)
+      const status = defaultToArray(event['apods:hasStatus']) || [];
+      return status.includes(EVENT_STATUS_FINISHED)
     },
     isClosed(ctx) {
       const { event } = ctx.params;
-      const status = defaultToArray(event['pair:hasStatus']) || [];
-      return status.includes(this.settings.status.closed)
+      const status = defaultToArray(event['apods:hasStatus']) || [];
+      return status.includes(EVENT_STATUS_CLOSED)
     },
     async tagNewEvent(ctx) {
       const { eventUri } = ctx.params;
       // TODO ensure that the event is indeed coming and open
-      await this.actions.set({ eventUri, newStatus: [this.settings.status.coming, this.settings.status.open] });
+      await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_COMING, EVENT_STATUS_OPEN] });
     },
     async tagComing(ctx) {
       for( let dataset of await ctx.call('pod.list') ) {
         const results = await ctx.call('triplestore.query', {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
+            PREFIX as: <https://www.w3.org/ns/activitystreams#>
             PREFIX ldp: <http://www.w3.org/ns/ldp#>
-            PREFIX pair:  <http://virtual-assembly.org/ontologies/pair#>
             SELECT ?eventUri
             WHERE {
-              ?eventUri a pair:Event .
-              ?eventUri pair:endDate ?endDate .
-              FILTER(NOW() < ?endDate) .
-              FILTER NOT EXISTS { ?eventUri pair:hasStatus <${this.settings.status.coming}> . }
+              ?eventUri a as:Event .
+              ?eventUri as:endTime ?endTime .
+              FILTER(NOW() < ?endTime) .
+              FILTER NOT EXISTS { ?eventUri apods:hasStatus ${EVENT_STATUS_COMING} . }
             }
           `,
           dataset,
@@ -62,7 +57,7 @@ module.exports = {
         });
 
         for (let eventUri of results.map(node => node.eventUri.value)) {
-          await this.actions.set({ eventUri, newStatus: [this.settings.status.coming, this.settings.status.open] })
+          await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_COMING, EVENT_STATUS_OPEN] })
           await ctx.emit('event.status.coming', { eventUri });
         }
       }
@@ -73,23 +68,24 @@ module.exports = {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
             PREFIX ldp: <http://www.w3.org/ns/ldp#>
-            PREFIX pair:  <http://virtual-assembly.org/ontologies/pair#>
+            PREFIX as: <https://www.w3.org/ns/activitystreams#>
             SELECT ?eventUri
             WHERE {
-              ?eventUri a pair:Event .
-              ?eventUri pair:endDate ?endDate .
-              ?eventUri apods:closingDate ?closingDate .
-              ?eventUri apods:maxParticipants ?maxParticipants .
+              ?eventUri a as:Event .
+              ?eventUri as:endTime ?endTime .
+              ?eventUri apods:closingTime ?closingTime .
+              ?eventUri apods:maxAttendees ?maxAttendees .
               # Subquery to count participants
               {
-                SELECT (COUNT(?participants) AS ?numParticipants) ?eventUri
+                SELECT (COUNT(?attendees) AS ?numAttendees) ?eventUri
                 WHERE { 
-                  ?eventUri pair:involves ?participants
+                  ?eventUri apods:attendees ?attendeesCollectionUri
+                  ?attendeesCollectionUri as:items ?attendees
                 } 
                 GROUP BY ?eventUri
               }
-              FILTER(( NOW() > ?closingDate && NOW() < ?endDate ) || (NOW() < ?endDate && ?numParticipants >= ?maxParticipants)) .
-              FILTER NOT EXISTS { ?eventUri pair:hasStatus <${this.settings.status.closed}> . }
+              FILTER(( NOW() > ?closingTime && NOW() < ?endTime ) || (NOW() < ?endTime && ?numAttendees >= ?maxAttendees)) .
+              FILTER NOT EXISTS { ?eventUri apods:hasStatus ${EVENT_STATUS_CLOSED} . }
             }
           `,
           dataset,
@@ -97,7 +93,7 @@ module.exports = {
         });
 
         for (let eventUri of results.map(node => node.eventUri.value)) {
-          await this.actions.set({ eventUri, newStatus: [this.settings.status.coming, this.settings.status.closed] })
+          await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_COMING, EVENT_STATUS_CLOSED] })
           await ctx.emit('event.status.closed', { eventUri });
         }
       }
@@ -106,14 +102,15 @@ module.exports = {
       for( let dataset of await ctx.call('pod.list') ) {
         const results = await ctx.call('triplestore.query', {
           query: `
+            PREFIX apods: <http://activitypods.org/ns/core#>
             PREFIX ldp: <http://www.w3.org/ns/ldp#>
-            PREFIX pair: <http://virtual-assembly.org/ontologies/pair#>
+            PREFIX as: <https://www.w3.org/ns/activitystreams#>
             SELECT ?eventUri
             WHERE {
-              ?eventUri a pair:Event .
-              ?eventUri pair:endDate ?endDate .
-              FILTER(NOW() > ?endDate) .
-              FILTER NOT EXISTS { ?eventUri pair:hasStatus <${this.settings.status.finished}> . }
+              ?eventUri a as:Event .
+              ?eventUri as:endTime ?endTime .
+              FILTER(NOW() > ?endTime) .
+              FILTER NOT EXISTS { ?eventUri apods:hasStatus ${EVENT_STATUS_FINISHED} . }
             }
           `,
           dataset,
@@ -121,7 +118,7 @@ module.exports = {
         });
 
         for( let eventUri of results.map(node => node.eventUri.value)) {
-          await this.actions.set({ eventUri, newStatus: [this.settings.status.finished, this.settings.status.closed]})
+          await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_FINISHED, EVENT_STATUS_CLOSED]})
           await ctx.emit('event.status.finished', { eventUri });
         }
       }

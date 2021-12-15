@@ -6,14 +6,12 @@ An [ActivityPods](../../README.md) app to handle events, with invitation and reg
 
 - [EventService](services/event.js)
 - [InvitationService](services/invitation.js)
-- [PlaceService](services/place.js)
 - [RegistrationService](services/registration.js)
 - [StatusService](services/status.js)
 
 ## Containers
 
 - `/events` with the events created by the user or to whom he has been invited
-- `/places` with the addresses linked to the user
 
 ## Collections
 
@@ -21,6 +19,7 @@ Attached to all events:
 
 - `/invitees` with the list of actors who have been invited to the event
 - `/inviters` with the list of actors who are allowed to invite to the event
+- `/attendees` with the list of actors who are attending the event (including the organizer)
 
 ## Handled activities
 
@@ -30,7 +29,7 @@ Attached to all events:
 {
   "type": "Invite",
   "object": {
-    "type": "pair:Event"
+    "type": "Event"
   }
 }
 ```
@@ -54,7 +53,7 @@ Attached to all events:
   "object": {
     "type": "Invite",
     "object": {
-      "type": "pair:Event"
+      "type": "Event"
     }
   }
 }
@@ -79,7 +78,7 @@ Attached to all events:
 {
   "type": "Join",
   "object": {
-    "type": "pair:Event"
+    "type": "Event"
   }
 }
 ```
@@ -90,7 +89,7 @@ Attached to all events:
 
 #### Recipients' side effects
 
-- The recipients are added to the list of participants (`pair:involves`)
+- The recipients are added to the `/attendees` collection
 - A notification is sent to the organizer
 
 
@@ -100,7 +99,7 @@ Attached to all events:
 {
   "type": "Leave",
   "object": {
-    "type": "pair:Event"
+    "type": "Event"
   }
 }
 ```
@@ -111,7 +110,7 @@ Attached to all events:
 
 #### Recipients' side effects
 
-- The recipients are removed from the list of participants (`pair:involves`)
+- The recipients are removed from the `/attendees` collection
 - A notification is sent to the organizer
 
 
@@ -123,7 +122,7 @@ Attached to all events:
   "object": {
     "type": "Update",
     "object": {
-      "type": "pair:Event"
+      "type": "Event"
     }
   }
 }

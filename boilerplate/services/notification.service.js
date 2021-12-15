@@ -49,10 +49,10 @@ module.exports = {
     async joinOrLeave(ctx) {
       const { eventUri, userUri, joined } = ctx.params;
       const event = await ctx.call('events.event.get', { resourceUri: eventUri }, { meta: { webId: 'system' }});
-      const user = await this.getActorProfile(ctx, userUri, event['apods:organizedBy']);
+      const user = await this.getActorProfile(ctx, userUri, event['dc:creator']);
 
       await this.queueMail(ctx, 'join-or-leave', {
-        to: event['apods:organizedBy'],
+        to: event['dc:creator'],
         data: {
           event,
           eventFrontUri: urlJoin(CONFIG.FRONT_URL, 'Event', encodeURIComponent(eventUri), 'show'),

@@ -759,34 +759,23 @@
       "@type" : "@id"
     },
 
-    "apods:closingDate": {
+    "vcard:hasAddress": {
+      "@type": "@id"
+    },
+    "vcard:hasGeo": {
+      "@type": "@id"
+    },
+    "vcard:photo": {
+      "@type": "@id"
+    },
+
+    "apods:closingTime": {
       "@type": "xsd:dateTime"
     },
-    "apods:organizedBy": {
+    "apods:hasFormat": {
       "@type" : "@id"
     },
-    "apods:organizes": {
-      "@type" : "@id"
-    },
-    "apods:contactOf" : {
-      "@type" : "@id"
-    },
-    "apods:webId" : {
-      "@type" : "@id"
-    },
-    "apods:actor" : {
-      "@type" : "@id"
-    },
-    "apods:toContact" : {
-      "@type" : "@id"
-    },
-    "apods:toUser" : {
-      "@type" : "@id"
-    },
-    "apods:target" : {
-      "@type" : "@id"
-    },
-    "apods:mode" : {
+    "apods:hasStatus": {
       "@type" : "@id"
     },
     "apods:contacts" : {
@@ -802,6 +791,9 @@
       "@type" : "@id"
     },
     "apods:inviters" : {
+      "@type" : "@id"
+    },
+    "apods:attendees" : {
       "@type" : "@id"
     }
   }

@@ -1,6 +1,5 @@
 const { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const { MIME_TYPES } = require("@semapps/mime-types");
-const { CONTACT_REQUEST, ACCEPT_CONTACT_REQUEST, REJECT_CONTACT_REQUEST } = require("../patterns");
+const { CONTACT_REQUEST, ACCEPT_CONTACT_REQUEST, REJECT_CONTACT_REQUEST, IGNORE_CONTACT_REQUEST} = require("../patterns");
 
 module.exports = {
   name: 'contacts.request',
@@ -150,6 +149,18 @@ module.exports = {
         }
       }
     },
+    ignoreContactRequest: {
+      match: IGNORE_CONTACT_REQUEST,
+      async onEmit(ctx, activity, emitterUri) {
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+
+        // Remove the activity from my contact requests
+        await ctx.call('activitypub.collection.detach', {
+          collectionUri: emitter['apods:contactRequests'],
+          item: activity.object.id
+        });
+      }
+    },
     rejectContactRequest: {
       match: REJECT_CONTACT_REQUEST,
       async onEmit(ctx, activity, emitterUri) {
@@ -166,38 +177,6 @@ module.exports = {
           collectionUri: emitter['apods:contactRequests'],
           item: activity.object.id
         });
-      }
-    }
-  },
-  events: {
-    async 'event.status.finished'(ctx) {
-      const { eventUri } = ctx.params;
-      const event = await ctx.call('event.get', { resourceUri: eventUri, accept: MIME_TYPES.JSON, webId: 'system' });
-      const participants = event['pair:involvedIn'];
-
-      for( let participantUri of participants ) {
-        const participant = await ctx.call('activitypub.actor.get', { actorUri: participantUri });
-
-        let potentialNewContacts = [];
-        for( let otherParticipantUri of participants ) {
-          const alreadyConnected = await ctx.call('activitypub.collection.includes', { collectionUri: participant['apods:contacts'], item: otherParticipantUri });
-          if( !alreadyConnected ) potentialNewContacts.push(otherParticipantUri);
-        }
-
-        if( potentialNewContacts.length > 0 ) {
-          await ctx.call('activitypub.outbox.post', {
-            collectionUri: participant.outbox,
-            type: ACTIVITY_TYPES.OFFER,
-            actor: participant.id,
-            object: {
-              type: ACTIVITY_TYPES.ADD,
-              object: participant.url,
-            },
-            content: "Nous avons participé au même événement: " + event['pair:label'],
-            target: potentialNewContacts,
-            to: potentialNewContacts
-          });
-        }
       }
     }
   }

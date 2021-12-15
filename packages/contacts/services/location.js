@@ -1,12 +1,12 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
 
 module.exports = {
-  name: 'events.place',
+  name: 'contacts.location',
   mixins: [ControlledContainerMixin],
   settings: {
-    path: '/places',
-    acceptedTypes: ['pair:Place'],
-    dereference: ['pair:hasPostalAddress'],
+    path: '/locations',
+    acceptedTypes: ['vcard:Location'],
+    dereference: ['vcard:hasAddress/vcard:hasGeo'],
     permissions: {},
     newResourcesPermissions: {}
   }

@@ -23,6 +23,19 @@ const ACCEPT_CONTACT_REQUEST = {
   }
 };
 
+const IGNORE_CONTACT_REQUEST = {
+  type: ACTIVITY_TYPES.IGNORE,
+  object: {
+    type: ACTIVITY_TYPES.OFFER,
+    object: {
+      type: ACTIVITY_TYPES.ADD,
+      object: {
+        type: OBJECT_TYPES.PROFILE
+      }
+    }
+  }
+};
+
 const REJECT_CONTACT_REQUEST = {
   type: ACTIVITY_TYPES.REJECT,
   object: {
@@ -49,6 +62,7 @@ const ANNOUNCE_UPDATE_PROFILE = {
 module.exports = {
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
+  IGNORE_CONTACT_REQUEST,
   REJECT_CONTACT_REQUEST,
   ANNOUNCE_UPDATE_PROFILE
 };

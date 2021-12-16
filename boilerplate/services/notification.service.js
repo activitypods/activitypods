@@ -96,7 +96,7 @@ module.exports = {
         try {
           return await ctx.call('ldp.resource.get', { resourceUri: actor.url, accept: MIME_TYPES.JSON, webId });
         } catch(e) {
-          return { 'pair:label': '@' + actor.preferredUsername };
+          return { 'vcard:given-name': '@' + actor.preferredUsername };
         }
       }
     },

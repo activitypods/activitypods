@@ -29,7 +29,7 @@
 <div class="greybg">
     <img src="{{ frontLogo }}" alt="{{ frontName }}" style="max-width: 100%;">
     <p>
-        <em>Le message suivant a été envoyé par {{sender.pair:label}} depuis <a href="{{frontUrl}}">{{frontName}}</a>&nbsp;:</em>
+        <em>Le message suivant a été envoyé par {{sender.vcard:given-name}} depuis <a href="{{frontUrl}}">{{frontName}}</a>&nbsp;:</em>
     </p>
     <p>
         {{{contentWithBr}}}
@@ -37,7 +37,7 @@
     <p>
         <br />
         <a href="{{profileFrontUri}}" class="button">
-            Ecrire à {{sender.pair:label}}
+            Ecrire à {{sender.vcard:given-name}}
         </a>
         <br />
     </p>

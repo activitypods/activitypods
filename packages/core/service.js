@@ -1,7 +1,6 @@
 const path = require("path");
 const urlJoin = require("url-join");
 const { ActivityPubService, ProxyService } = require('@semapps/activitypub');
-const ApiGatewayService = require('moleculer-web');
 const { AuthLocalService } = require('@semapps/auth');
 const FusekiAdminService = require('@semapps/fuseki-admin');
 const { JsonLdService } = require('@semapps/jsonld');
@@ -13,6 +12,7 @@ const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
+const ApiService = require('./services/api');
 const containers = require("./config/containers");
 const ontologies = require("./config/ontologies.json");
 
@@ -43,31 +43,7 @@ const CoreService = {
       }
     });
 
-    this.broker.createService(ApiGatewayService, {
-      settings: {
-        cors: {
-          origin: '*',
-          methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE', 'HEAD', 'OPTIONS'],
-          exposedHeaders: '*'
-        }
-      },
-      methods: {
-        authenticate(ctx, route, req, res) {
-          if( req.headers.signature ) {
-            return ctx.call('signature.authenticate', { route, req, res });
-          } else {
-            return ctx.call('auth.authenticate', { route, req, res });
-          }
-        },
-        authorize(ctx, route, req, res) {
-          if( req.headers.signature ) {
-            return ctx.call('signature.authorize', { route, req, res });
-          } else {
-            return ctx.call('auth.authorize', { route, req, res });
-          }
-        }
-      }
-    });
+    this.broker.createService(ApiService);
 
     this.broker.createService(AuthLocalService, {
       settings: {

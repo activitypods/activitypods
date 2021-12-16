@@ -138,7 +138,7 @@ describe('Test contacts app', () => {
       type: ACTIVITY_TYPES.REJECT,
       actor: craig.id,
       object: contactRequestToCraig.id,
-      to: craig.id
+      to: alice.id
     });
 
     await waitForExpect(async () => {

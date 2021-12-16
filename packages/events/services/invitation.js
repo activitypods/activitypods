@@ -51,7 +51,7 @@ module.exports = {
             groupSlug: this.getInviteesGroupSlug(event.id),
             memberUri: inviteeUri,
             webId: event['dc:creator']
-          })
+          });
         }
       },
       async onReceive(ctx, activity, recipients) {
@@ -90,7 +90,7 @@ module.exports = {
             groupSlug: this.getInvitersGroupSlug(event.id),
             memberUri: inviterUri,
             webId: event['dc:creator']
-          })
+          });
         }
       },
     },

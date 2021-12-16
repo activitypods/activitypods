@@ -104,7 +104,7 @@ As [recommended by the Solid project](https://github.com/solid/vocab#recommended
 
 #### Recipients' side effects
 
-- None
+- The emitter lose read access to the recipient's profile
 
 
 ### Reject contact request
@@ -131,7 +131,7 @@ As [recommended by the Solid project](https://github.com/solid/vocab#recommended
 
 #### Recipients' side effects
 
-- None
+- The emitter lose read access to the recipient's profile
 
 
 ### Announce update profile

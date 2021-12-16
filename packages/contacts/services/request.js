@@ -37,15 +37,10 @@ module.exports = {
     contactRequest: {
       match: CONTACT_REQUEST,
       async onEmit(ctx, activity, emitterUri) {
-        // Give read right for my profile
-        await ctx.call('webacl.resource.addRights', {
-          resourceUri: activity.object.object.id,
-          additionalRights: {
-            user: {
-              uri: activity.target,
-              read: true
-            }
-          },
+        // Add the user to the contacts WebACL group so he can see my profile
+        await ctx.call('webacl.group.addMember', {
+          groupSlug: new URL(emitterUri).pathname + '/contacts',
+          memberUri: activity.target,
           webId: emitterUri
         });
       },
@@ -98,15 +93,10 @@ module.exports = {
       async onEmit(ctx, activity, emitterUri) {
         const emitter = await ctx.call('activitypub.actor.get', {actorUri: emitterUri});
 
-        // Give read right of my profile
-        await ctx.call('webacl.resource.addRights', {
-          resourceUri: emitter.url,
-          additionalRights: {
-            user: {
-              uri: activity.to,
-              read: true
-            }
-          },
+        // 1. Add the other actor to the contacts WebACL group so he can see my profile
+        await ctx.call('webacl.group.addMember', {
+          groupSlug: new URL(emitterUri).pathname + '/contacts',
+          memberUri: activity.to,
           webId: emitterUri
         });
 
@@ -159,6 +149,16 @@ module.exports = {
           collectionUri: emitter['apods:contactRequests'],
           item: activity.object.id
         });
+      },
+      async onReceive(ctx, activity, recipients) {
+        for (let recipientUri of recipients) {
+          // Remove the user from the contacts WebACL group so he can't see my profile anymore
+          await ctx.call('webacl.group.removeMember', {
+            groupSlug: new URL(recipientUri).pathname + '/contacts',
+            memberUri: activity.actor,
+            webId: recipientUri
+          });
+        }
       }
     },
     rejectContactRequest: {
@@ -177,6 +177,16 @@ module.exports = {
           collectionUri: emitter['apods:contactRequests'],
           item: activity.object.id
         });
+      },
+      async onReceive(ctx, activity, recipients) {
+        for (let recipientUri of recipients) {
+          // Remove the emitter from the contacts WebACL group so he can't see the recipient's profile anymore
+          await ctx.call('webacl.group.removeMember', {
+            groupSlug: new URL(recipientUri).pathname + '/contacts',
+            memberUri: activity.actor,
+            webId: recipientUri
+          });
+        }
       }
     }
   }

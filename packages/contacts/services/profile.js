@@ -40,7 +40,7 @@ module.exports = {
 
       await this.waitForContainerCreation(containerUri);
 
-      const profileUrl = await this.actions.post({
+      const profileUri = await this.actions.post({
         containerUri,
         resource: {
           '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
@@ -57,9 +57,24 @@ module.exports = {
       await ctx.call('ldp.resource.patch', {
         resource: {
           '@id': webId,
-          url: profileUrl
+          url: profileUri
         },
         contentType: MIME_TYPES.JSON,
+        webId
+      });
+
+      // Create a WebACL group for the user's contact
+      const { groupUri: contactsGroupUri } = await ctx.call('webacl.group.create', { groupSlug: new URL(webId).pathname + '/contacts', webId });
+
+      // Authorize this group to view the user's profile
+      await ctx.call('webacl.resource.addRights', {
+        resourceUri: profileUri,
+        additionalRights: {
+          group: {
+            uri: contactsGroupUri,
+            read: true
+          }
+        },
         webId
       });
     }

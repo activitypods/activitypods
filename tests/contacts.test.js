@@ -1,13 +1,13 @@
 const waitForExpect = require('wait-for-expect');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const initialize = require('./initialize');
-const path = require("path");
+const path = require('path');
 
 jest.setTimeout(30000);
 
 let broker;
 
-const mockContactOffer = jest.fn(() => Promise.resolve("Fake Contact Offer"));
+const mockContactOffer = jest.fn(() => Promise.resolve('Fake Contact Offer'));
 
 beforeAll(async () => {
   broker = await initialize();
@@ -20,8 +20,8 @@ beforeAll(async () => {
   await broker.createService({
     name: 'notification',
     actions: {
-      contactOffer: mockContactOffer
-    }
+      contactOffer: mockContactOffer,
+    },
   });
 
   await broker.start();
@@ -32,7 +32,12 @@ afterAll(async () => {
 });
 
 describe('Test contacts app', () => {
-  let actors = [], alice, bob, craig, contactRequestToBob, contactRequestToCraig;
+  let actors = [],
+    alice,
+    bob,
+    craig,
+    contactRequestToBob,
+    contactRequestToCraig;
 
   test('Create 2 pods', async () => {
     for (let i = 1; i <= 3; i++) {
@@ -40,7 +45,10 @@ describe('Test contacts app', () => {
 
       const { webId } = await broker.call('auth.signup', actorData);
 
-      actors[i] = await broker.call('activitypub.actor.awaitCreateComplete', { actorUri: webId, additionalKeys: ['url'] });
+      actors[i] = await broker.call('activitypub.actor.awaitCreateComplete', {
+        actorUri: webId,
+        additionalKeys: ['url'],
+      });
 
       expect(actors[i].preferredUsername).toBe(actorData.username);
     }
@@ -59,25 +67,32 @@ describe('Test contacts app', () => {
         type: ACTIVITY_TYPES.ADD,
         object: alice.url,
       },
-      content: "Salut Bob, tu te rappelles de moi ?",
+      content: 'Salut Bob, tu te rappelles de moi ?',
       target: bob.id,
-      to: bob.id
+      to: bob.id,
     });
 
     await waitForExpect(() => {
-      expect(mockContactOffer).toHaveBeenCalledTimes(1)
+      expect(mockContactOffer).toHaveBeenCalledTimes(1);
     });
 
     await waitForExpect(async () => {
-      await expect(broker.call('webacl.resource.hasRights', {
-        resourceUri: alice.url,
-        rights: { read: true },
-        webId: bob.id
-      })).resolves.toMatchObject({ read: true });
+      await expect(
+        broker.call('webacl.resource.hasRights', {
+          resourceUri: alice.url,
+          rights: { read: true },
+          webId: bob.id,
+        })
+      ).resolves.toMatchObject({ read: true });
     });
 
     await waitForExpect(async () => {
-      await expect(broker.call('activitypub.collection.includes', { collectionUri: bob['apods:contactRequests'], itemUri: contactRequestToBob.id })).resolves.toBeTruthy()
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: bob['apods:contactRequests'],
+          itemUri: contactRequestToBob.id,
+        })
+      ).resolves.toBeTruthy();
     });
 
     contactRequestToCraig = await broker.call('activitypub.outbox.post', {
@@ -88,16 +103,18 @@ describe('Test contacts app', () => {
         type: ACTIVITY_TYPES.ADD,
         object: alice.url,
       },
-      content: "Salut Craig, ça fait longtemps !",
+      content: 'Salut Craig, ça fait longtemps !',
       target: craig.id,
-      to: craig.id
+      to: craig.id,
     });
 
     await waitForExpect(async () => {
-      await expect(broker.call('activitypub.collection.includes', {
-        collectionUri: bob['apods:contactRequests'],
-        itemUri: contactRequestToCraig.id
-      })).resolves.toBeFalsy()
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: bob['apods:contactRequests'],
+          itemUri: contactRequestToCraig.id,
+        })
+      ).resolves.toBeFalsy();
     });
   });
 
@@ -107,29 +124,50 @@ describe('Test contacts app', () => {
       type: ACTIVITY_TYPES.ACCEPT,
       actor: bob.id,
       object: contactRequestToBob.id,
-      to: alice.id
+      to: alice.id,
     });
 
     await waitForExpect(async () => {
-      await expect(broker.call('activitypub.collection.includes', { collectionUri: bob['apods:contactRequests'], itemUri: contactRequestToBob.id })).resolves.toBeFalsy()
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: bob['apods:contactRequests'],
+          itemUri: contactRequestToBob.id,
+        })
+      ).resolves.toBeFalsy();
     });
 
     await waitForExpect(async () => {
-      await expect(broker.call('activitypub.collection.includes', { collectionUri: bob['apods:contacts'], itemUri: alice.id })).resolves.toBeTruthy()
+      await expect(
+        broker.call('activitypub.collection.includes', { collectionUri: bob['apods:contacts'], itemUri: alice.id })
+      ).resolves.toBeTruthy();
     });
 
     await waitForExpect(async () => {
-      await expect(broker.call('activitypub.collection.includes', { collectionUri: alice['apods:contacts'], itemUri: bob.id })).resolves.toBeTruthy()
+      await expect(
+        broker.call('activitypub.collection.includes', { collectionUri: alice['apods:contacts'], itemUri: bob.id })
+      ).resolves.toBeTruthy();
     });
 
     // Bob profile is cached in Alice dataset
     await waitForExpect(async () => {
-      await expect(broker.call('triplestore.countTriplesOfSubject', { uri: alice.url, dataset: bob.preferredUsername, webId: 'system' })).resolves.toBeTruthy()
+      await expect(
+        broker.call('triplestore.countTriplesOfSubject', {
+          uri: alice.url,
+          dataset: bob.preferredUsername,
+          webId: 'system',
+        })
+      ).resolves.toBeTruthy();
     });
 
     // Alice profile is cached in Bob dataset
     await waitForExpect(async () => {
-      await expect(broker.call('triplestore.countTriplesOfSubject', { uri: bob.url, dataset: alice.preferredUsername, webId: 'system' })).resolves.toBeTruthy()
+      await expect(
+        broker.call('triplestore.countTriplesOfSubject', {
+          uri: bob.url,
+          dataset: alice.preferredUsername,
+          webId: 'system',
+        })
+      ).resolves.toBeTruthy();
     });
   });
 
@@ -139,15 +177,25 @@ describe('Test contacts app', () => {
       type: ACTIVITY_TYPES.REJECT,
       actor: craig.id,
       object: contactRequestToCraig.id,
-      to: alice.id
+      to: alice.id,
     });
 
     await waitForExpect(async () => {
-      await expect(broker.call('activitypub.collection.includes', { collectionUri: craig['apods:contactRequests'], itemUri: contactRequestToCraig.id })).resolves.toBeFalsy()
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: craig['apods:contactRequests'],
+          itemUri: contactRequestToCraig.id,
+        })
+      ).resolves.toBeFalsy();
     });
 
     await waitForExpect(async () => {
-      await expect(broker.call('activitypub.collection.includes', { collectionUri: craig['apods:rejectedContacts'], itemUri: alice.id })).resolves.toBeTruthy()
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: craig['apods:rejectedContacts'],
+          itemUri: alice.id,
+        })
+      ).resolves.toBeTruthy();
     });
   });
 });

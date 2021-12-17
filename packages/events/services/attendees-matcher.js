@@ -1,4 +1,4 @@
-const { MIME_TYPES } = require("@semapps/mime-types");
+const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 
 module.exports = {
@@ -9,12 +9,12 @@ module.exports = {
       const event = await ctx.call('events.event.get', {
         resourceUri: eventUri,
         accept: MIME_TYPES.JSON,
-        webId: 'system'
+        webId: 'system',
       });
 
       const collection = await ctx.call('activitypub.collection.get', {
         collectionUri: event['apods:attendees'],
-        webId: 'system'
+        webId: 'system',
       });
 
       for (let attendeeUri of collection.items) {
@@ -24,7 +24,7 @@ module.exports = {
         for (let otherAttendeeUri of collection.items) {
           const alreadyConnected = await ctx.call('activitypub.collection.includes', {
             collectionUri: attendee['apods:contacts'],
-            item: otherAttendeeUri
+            item: otherAttendeeUri,
           });
           if (!alreadyConnected) potentialNewContacts.push(otherAttendeeUri);
         }
@@ -40,10 +40,10 @@ module.exports = {
             },
             context: event.id,
             target: potentialNewContacts,
-            to: potentialNewContacts
+            to: potentialNewContacts,
           });
         }
       }
-    }
-  }
-}
+    },
+  },
+};

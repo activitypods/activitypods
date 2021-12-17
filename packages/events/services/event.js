@@ -8,7 +8,7 @@ module.exports = {
     path: '/events',
     acceptedTypes: [OBJECT_TYPES.EVENT],
     permissions: {},
-    newResourcesPermissions: {}
+    newResourcesPermissions: {},
   },
   dependencies: ['synchronizer'],
   async started() {
@@ -19,7 +19,7 @@ module.exports = {
       async post(ctx, res) {
         await ctx.call('events.status.tagNewEvent', { eventUri: res });
         return res;
-      }
-    }
-  }
+      },
+    },
+  },
 };

@@ -1,6 +1,6 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { OBJECT_TYPES } = require('@semapps/activitypub');
-const { MIME_TYPES } = require("@semapps/mime-types");
+const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
   name: 'contacts.profile',
@@ -9,7 +9,7 @@ module.exports = {
     path: '/profiles',
     acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
     permissions: {},
-    newResourcesPermissions: {}
+    newResourcesPermissions: {},
   },
   dependencies: ['activitypub', 'webacl', 'synchronizer'],
   async started() {
@@ -26,26 +26,31 @@ module.exports = {
         containerUri,
         resource: {
           '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
-          'vcard:fn': profileData.familyName ? `${profileData.name} ${profileData.familyName.toUpperCase()}` : profileData.name,
+          'vcard:fn': profileData.familyName
+            ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
+            : profileData.name,
           'vcard:given-name': profileData.name,
           'vcard:family-name': profileData.familyName,
           describes: webId,
         },
         contentType: MIME_TYPES.JSON,
-        webId
+        webId,
       });
 
       await ctx.call('ldp.resource.patch', {
         resource: {
           '@id': webId,
-          url: profileUri
+          url: profileUri,
         },
         contentType: MIME_TYPES.JSON,
-        webId
+        webId,
       });
 
       // Create a WebACL group for the user's contact
-      const { groupUri: contactsGroupUri } = await ctx.call('webacl.group.create', { groupSlug: new URL(webId).pathname + '/contacts', webId });
+      const { groupUri: contactsGroupUri } = await ctx.call('webacl.group.create', {
+        groupSlug: new URL(webId).pathname + '/contacts',
+        webId,
+      });
 
       // Authorize this group to view the user's profile
       await ctx.call('webacl.resource.addRights', {
@@ -53,11 +58,11 @@ module.exports = {
         additionalRights: {
           group: {
             uri: contactsGroupUri,
-            read: true
-          }
+            read: true,
+          },
         },
-        webId
+        webId,
       });
-    }
-  }
+    },
+  },
 };

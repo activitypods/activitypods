@@ -1,6 +1,6 @@
-const CronMixin = require("moleculer-cron");
-const { MIME_TYPES } = require("@semapps/mime-types");
-const { defaultToArray } = require("@semapps/ldp")
+const CronMixin = require('moleculer-cron');
+const { MIME_TYPES } = require('@semapps/mime-types');
+const { defaultToArray } = require('@semapps/ldp');
 
 const EVENT_STATUS_COMING = 'apods:Coming';
 const EVENT_STATUS_FINISHED = 'apods:Finished';
@@ -14,23 +14,27 @@ module.exports = {
   actions: {
     async set(ctx) {
       const { eventUri, newStatus } = ctx.params;
-      let event = await ctx.call('events.event.get', { resourceUri: eventUri, accept: MIME_TYPES.JSON, webId: 'system' });
+      let event = await ctx.call('events.event.get', {
+        resourceUri: eventUri,
+        accept: MIME_TYPES.JSON,
+        webId: 'system',
+      });
 
       await ctx.call('events.event.put', {
         resource: { ...event, 'apods:hasStatus': newStatus },
         contentType: MIME_TYPES.JSON,
-        webId: 'system'
+        webId: 'system',
       });
     },
     isFinished(ctx) {
       const { event } = ctx.params;
       const status = defaultToArray(event['apods:hasStatus']) || [];
-      return status.includes(EVENT_STATUS_FINISHED)
+      return status.includes(EVENT_STATUS_FINISHED);
     },
     isClosed(ctx) {
       const { event } = ctx.params;
       const status = defaultToArray(event['apods:hasStatus']) || [];
-      return status.includes(EVENT_STATUS_CLOSED)
+      return status.includes(EVENT_STATUS_CLOSED);
     },
     async tagNewEvent(ctx) {
       const { eventUri } = ctx.params;
@@ -38,7 +42,7 @@ module.exports = {
       await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_COMING, EVENT_STATUS_OPEN] });
     },
     async tagComing(ctx) {
-      for( let dataset of await ctx.call('pod.list') ) {
+      for (let dataset of await ctx.call('pod.list')) {
         const results = await ctx.call('triplestore.query', {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
@@ -53,17 +57,17 @@ module.exports = {
             }
           `,
           dataset,
-          webId: 'system'
+          webId: 'system',
         });
 
-        for (let eventUri of results.map(node => node.eventUri.value)) {
-          await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_COMING, EVENT_STATUS_OPEN] })
+        for (let eventUri of results.map((node) => node.eventUri.value)) {
+          await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_COMING, EVENT_STATUS_OPEN] });
           await ctx.emit('event.status.coming', { eventUri });
         }
       }
     },
     async tagClosed(ctx) {
-      for( let dataset of await ctx.call('pod.list') ) {
+      for (let dataset of await ctx.call('pod.list')) {
         const results = await ctx.call('triplestore.query', {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
@@ -89,17 +93,17 @@ module.exports = {
             }
           `,
           dataset,
-          webId: 'system'
+          webId: 'system',
         });
 
-        for (let eventUri of results.map(node => node.eventUri.value)) {
-          await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_COMING, EVENT_STATUS_CLOSED] })
+        for (let eventUri of results.map((node) => node.eventUri.value)) {
+          await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_COMING, EVENT_STATUS_CLOSED] });
           await ctx.emit('event.status.closed', { eventUri });
         }
       }
     },
     async tagFinished(ctx) {
-      for( let dataset of await ctx.call('pod.list') ) {
+      for (let dataset of await ctx.call('pod.list')) {
         const results = await ctx.call('triplestore.query', {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
@@ -114,25 +118,25 @@ module.exports = {
             }
           `,
           dataset,
-          webId: 'system'
+          webId: 'system',
         });
 
-        for( let eventUri of results.map(node => node.eventUri.value)) {
-          await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_FINISHED, EVENT_STATUS_CLOSED]})
+        for (let eventUri of results.map((node) => node.eventUri.value)) {
+          await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_FINISHED, EVENT_STATUS_CLOSED] });
           await ctx.emit('event.status.finished', { eventUri });
         }
       }
-    }
+    },
   },
   crons: [
     {
       cronTime: '*/15 * * * *',
-      onTick: function() {
+      onTick: function () {
         // this.call('event.status.tagComing');
         // this.call('event.status.tagClosed');
         // this.call('event.status.tagFinished');
       },
-      timeZone: 'Europe/Paris'
+      timeZone: 'Europe/Paris',
     },
-  ]
+  ],
 };

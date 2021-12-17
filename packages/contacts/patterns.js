@@ -5,9 +5,9 @@ const CONTACT_REQUEST = {
   object: {
     type: ACTIVITY_TYPES.ADD,
     object: {
-      type: OBJECT_TYPES.PROFILE
-    }
-  }
+      type: OBJECT_TYPES.PROFILE,
+    },
+  },
 };
 
 const ACCEPT_CONTACT_REQUEST = {
@@ -17,10 +17,10 @@ const ACCEPT_CONTACT_REQUEST = {
     object: {
       type: ACTIVITY_TYPES.ADD,
       object: {
-        type: OBJECT_TYPES.PROFILE
-      }
-    }
-  }
+        type: OBJECT_TYPES.PROFILE,
+      },
+    },
+  },
 };
 
 const IGNORE_CONTACT_REQUEST = {
@@ -30,10 +30,10 @@ const IGNORE_CONTACT_REQUEST = {
     object: {
       type: ACTIVITY_TYPES.ADD,
       object: {
-        type: OBJECT_TYPES.PROFILE
-      }
-    }
-  }
+        type: OBJECT_TYPES.PROFILE,
+      },
+    },
+  },
 };
 
 const REJECT_CONTACT_REQUEST = {
@@ -43,15 +43,15 @@ const REJECT_CONTACT_REQUEST = {
     object: {
       type: ACTIVITY_TYPES.ADD,
       object: {
-        type: OBJECT_TYPES.PROFILE
-      }
-    }
-  }
+        type: OBJECT_TYPES.PROFILE,
+      },
+    },
+  },
 };
 
 module.exports = {
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
   IGNORE_CONTACT_REQUEST,
-  REJECT_CONTACT_REQUEST
+  REJECT_CONTACT_REQUEST,
 };

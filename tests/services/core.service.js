@@ -1,4 +1,4 @@
-const path = require("path");
+const path = require('path');
 const { CoreService } = require('@activitypods/core');
 const CONFIG = require('../config');
 
@@ -10,7 +10,7 @@ module.exports = {
     fuseki: {
       url: CONFIG.SPARQL_ENDPOINT,
       user: CONFIG.JENA_USER,
-      password: CONFIG.JENA_PASSWORD
-    }
-  }
+      password: CONFIG.JENA_PASSWORD,
+    },
+  },
 };

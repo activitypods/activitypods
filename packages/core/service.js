@@ -1,5 +1,5 @@
-const path = require("path");
-const urlJoin = require("url-join");
+const path = require('path');
+const urlJoin = require('url-join');
 const { ActivityPubService, ProxyService } = require('@semapps/activitypub');
 const { AuthLocalService } = require('@semapps/auth');
 const FusekiAdminService = require('@semapps/fuseki-admin');
@@ -13,8 +13,8 @@ const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
 const ApiService = require('./services/api');
-const containers = require("./config/containers");
-const ontologies = require("./config/ontologies.json");
+const containers = require('./config/containers');
+const ontologies = require('./config/ontologies.json');
 
 const CoreService = {
   name: 'core',
@@ -24,9 +24,9 @@ const CoreService = {
     fuseki: {
       url: null,
       user: null,
-      password: null
+      password: null,
     },
-    jsonContext: null
+    jsonContext: null,
   },
   created() {
     let { baseUrl, baseDir, fuseki, jsonContext } = this.settings;
@@ -39,8 +39,8 @@ const CoreService = {
         baseUri: baseUrl,
         jsonContext: jsonContext || localJsonContext,
         containers,
-        podProvider: true
-      }
+        podProvider: true,
+      },
     });
 
     this.broker.createService(ApiService);
@@ -50,8 +50,8 @@ const CoreService = {
         baseUrl,
         jwtPath: path.resolve(baseDir, './jwt'),
         reservedUsernames: ['sparql', 'auth', 'common', 'data', 'settings', 'localData', 'testData'],
-        webIdSelection: ['nick']
-      }
+        webIdSelection: ['nick'],
+      },
     });
 
     this.broker.createService(FusekiAdminService, {
@@ -59,25 +59,27 @@ const CoreService = {
         url: fuseki.url,
         user: fuseki.user,
         password: fuseki.password,
-      }
+      },
     });
 
     this.broker.createService(JsonLdService, {
       settings: {
         baseUri: baseUrl,
-        localContextFiles: jsonContext ? undefined : [
-          {
-            path: '_system/context.json',
-            file: path.resolve(__dirname, './config/context.json')
-          }
-        ],
+        localContextFiles: jsonContext
+          ? undefined
+          : [
+              {
+                path: '_system/context.json',
+                file: path.resolve(__dirname, './config/context.json'),
+              },
+            ],
         remoteContextFiles: [
           {
             uri: 'https://www.w3.org/ns/activitystreams',
-            file: path.resolve(__dirname, './config/context-as.json')
-          }
-        ]
-      }
+            file: path.resolve(__dirname, './config/context-as.json'),
+          },
+        ],
+      },
     });
 
     this.broker.createService(LdpService, {
@@ -90,34 +92,34 @@ const CoreService = {
         defaultContainerOptions: {
           jsonContext: jsonContext || localJsonContext,
           permissions: {},
-          newResourcesPermissions: {}
-        }
-      }
+          newResourcesPermissions: {},
+        },
+      },
     });
 
     this.broker.createService(PodService, {
       settings: {
-        baseUrl
+        baseUrl,
       },
     });
 
     this.broker.createService(ProxyService, {
       settings: {
-        podProvider: true
+        podProvider: true,
       },
     });
 
     this.broker.createService(SignatureService, {
       settings: {
-        actorsKeyPairsDir: path.resolve(baseDir, './actors')
-      }
+        actorsKeyPairsDir: path.resolve(baseDir, './actors'),
+      },
     });
 
     this.broker.createService(SparqlEndpointService, {
       settings: {
         podProvider: true,
-        defaultAccept: 'application/ld+json'
-      }
+        defaultAccept: 'application/ld+json',
+      },
     });
 
     this.broker.createService(TripleStoreService, {
@@ -125,37 +127,37 @@ const CoreService = {
         sparqlEndpoint: fuseki.url,
         jenaUser: fuseki.user,
         jenaPassword: fuseki.password,
-      }
+      },
     });
 
     this.broker.createService(WebAclService, {
       settings: {
         baseUrl,
-        podProvider: true
-      }
+        podProvider: true,
+      },
     });
 
     this.broker.createService(WebfingerService, {
       settings: {
-        baseUrl
-      }
+        baseUrl,
+      },
     });
 
     this.broker.createService(WebIdService, {
       settings: {
         baseUrl,
-        podProvider: true
+        podProvider: true,
       },
       hooks: {
         before: {
           async create(ctx) {
             const { nick } = ctx.params;
             await ctx.call('pod.create', { username: nick });
-          }
-        }
-      }
+          },
+        },
+      },
     });
-  }
+  },
 };
 
 module.exports = CoreService;

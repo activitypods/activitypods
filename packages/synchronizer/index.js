@@ -1,3 +1,3 @@
 module.exports = {
-  SynchronizerApp: require('./app')
+  SynchronizerApp: require('./app'),
 };

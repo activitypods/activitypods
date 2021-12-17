@@ -13,23 +13,25 @@ const transportSMTP = {
   auth: {
     user: CONFIG.SMTP_USER,
     pass: CONFIG.SMTP_PASS,
-  }
+  },
 };
 
 const transportAPI = nodemailerSendgrid({ apiKey: CONFIG.SMTP_PASS });
 
 module.exports = {
   name: 'notification',
-  mixins: CONFIG.QUEUE_SERVICE_URL ? [NotificationService, QueueService(CONFIG.QUEUE_SERVICE_URL)] : [NotificationService],
+  mixins: CONFIG.QUEUE_SERVICE_URL
+    ? [NotificationService, QueueService(CONFIG.QUEUE_SERVICE_URL)]
+    : [NotificationService],
   settings: {
     from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
     transport: transportAPI,
-    templateFolder: path.join(__dirname, "../templates"),
+    templateFolder: path.join(__dirname, '../templates'),
     data: {
       frontName: CONFIG.FRONT_NAME,
       frontUrl: CONFIG.FRONT_URL,
-      frontLogo: CONFIG.FRONT_LOGO
-    }
+      frontLogo: CONFIG.FRONT_LOGO,
+    },
   },
   actions: {
     async invitation(ctx) {
@@ -42,13 +44,13 @@ module.exports = {
         data: {
           event,
           eventFrontUri: urlJoin(CONFIG.FRONT_URL, 'Event', encodeURIComponent(eventUri), 'show'),
-          sender
-        }
+          sender,
+        },
       });
     },
     async joinOrLeave(ctx) {
       const { eventUri, userUri, joined } = ctx.params;
-      const event = await ctx.call('events.event.get', { resourceUri: eventUri }, { meta: { webId: 'system' }});
+      const event = await ctx.call('events.event.get', { resourceUri: eventUri }, { meta: { webId: 'system' } });
       const user = await this.getActorProfile(ctx, userUri, event['dc:creator']);
 
       await this.queueMail(ctx, 'join-or-leave', {
@@ -57,8 +59,8 @@ module.exports = {
           event,
           eventFrontUri: urlJoin(CONFIG.FRONT_URL, 'Event', encodeURIComponent(eventUri), 'show'),
           user,
-          joined
-        }
+          joined,
+        },
       });
     },
     async contactOffer(ctx) {
@@ -70,8 +72,8 @@ module.exports = {
         data: {
           sender,
           message,
-          networkFrontUri: urlJoin(CONFIG.FRONT_URL, 'Profile')
-        }
+          networkFrontUri: urlJoin(CONFIG.FRONT_URL, 'Profile'),
+        },
       });
     },
     async newMessage(ctx) {
@@ -84,18 +86,18 @@ module.exports = {
           sender,
           profileFrontUri: urlJoin(CONFIG.FRONT_URL, 'Profile', encodeURIComponent(sender.id), 'show'),
           content,
-          contentWithBr: content.replace(/\r\n|\r|\n/g, '<br />')
-        }
+          contentWithBr: content.replace(/\r\n|\r|\n/g, '<br />'),
+        },
       });
-    }
+    },
   },
   methods: {
     async getActorProfile(ctx, actorUri, webId) {
       const actor = await ctx.call('activitypub.actor.get', { actorUri });
-      if( actor.url ) {
+      if (actor.url) {
         try {
           return await ctx.call('ldp.resource.get', { resourceUri: actor.url, accept: MIME_TYPES.JSON, webId });
-        } catch(e) {
+        } catch (e) {
           return { 'vcard:given-name': '@' + actor.preferredUsername };
         }
       }
@@ -104,12 +106,12 @@ module.exports = {
       const recipientAccount = await ctx.call('auth.account.findByWebId', { webId: payload.to });
       payload.to = recipientAccount.email;
       payload.template = template;
-      if( this.createJob ) {
+      if (this.createJob) {
         return this.createJob('sendMail', template, payload);
       } else {
         await ctx.call('notification.send', payload);
       }
-    }
+    },
   },
   queues: {
     sendMail: {
@@ -119,7 +121,7 @@ module.exports = {
         const result = await this.broker.call('notification.send', job.data);
         job.progress(100);
         return result;
-      }
-    }
-  }
+      },
+    },
+  },
 };

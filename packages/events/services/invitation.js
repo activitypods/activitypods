@@ -13,7 +13,7 @@ module.exports = {
       attachPredicate: 'http://activitypods.org/ns/core#invitees',
       ordered: false,
       dereferenceItems: false,
-      permissions: {}
+      permissions: {},
     });
 
     await this.broker.call('activitypub.registry.register', {
@@ -22,7 +22,7 @@ module.exports = {
       attachPredicate: 'http://activitypods.org/ns/core#inviters',
       ordered: false,
       dereferenceItems: false,
-      permissions: {}
+      permissions: {},
     });
   },
   methods: {
@@ -31,7 +31,7 @@ module.exports = {
     },
     getInvitersGroupSlug(eventUri) {
       return new URL(eventUri).pathname + '/inviters';
-    }
+    },
   },
   activities: {
     inviteEvent: {
@@ -40,7 +40,7 @@ module.exports = {
         const event = activity.object;
 
         if (emitterUri !== event['dc:creator']) {
-          throw new Error('Only the organizer has the right to invite people to the event ' + event.id)
+          throw new Error('Only the organizer has the right to invite people to the event ' + event.id);
         }
 
         // Add all invitees to the collection and WebACL group
@@ -50,7 +50,7 @@ module.exports = {
           await ctx.call('webacl.group.addMember', {
             groupSlug: this.getInviteesGroupSlug(event.id),
             memberUri: inviteeUri,
-            webId: event['dc:creator']
+            webId: event['dc:creator'],
           });
         }
       },
@@ -59,17 +59,17 @@ module.exports = {
           // Cache remote event (we want to be able to fetch it with SPARQL)
           await ctx.call('activitypub.object.cacheRemote', {
             objectUri: activity.object.id,
-            actorUri: recipientUri
+            actorUri: recipientUri,
           });
 
           // Send notification email
           await ctx.call('notification.invitation', {
             eventUri: activity.object.id,
             senderUri: activity.actor,
-            recipientUri
+            recipientUri,
           });
         }
-      }
+      },
     },
     offerInviteByOrganizer: {
       async match(activity) {
@@ -89,7 +89,7 @@ module.exports = {
           await ctx.call('webacl.group.addMember', {
             groupSlug: this.getInvitersGroupSlug(event.id),
             memberUri: inviterUri,
-            webId: event['dc:creator']
+            webId: event['dc:creator'],
           });
         }
       },
@@ -104,11 +104,11 @@ module.exports = {
       },
       async onReceive(ctx, activity) {
         const event = activity.object.object;
-        const organizer = await ctx.call('activitypub.actor.get', {actorUri: event['dc:creator']});
+        const organizer = await ctx.call('activitypub.actor.get', { actorUri: event['dc:creator'] });
 
         const isInviter = await ctx.call('activitypub.collection.includes', {
           collectionUri: event['apods:inviters'],
-          itemUri: activity.actor
+          itemUri: activity.actor,
         });
 
         if (!isInviter) {
@@ -121,7 +121,7 @@ module.exports = {
           actor: organizer.id,
           object: event.id,
           target: activity.object.target,
-          to: activity.object.target
+          to: activity.object.target,
         });
 
         // Inform the inviter that his invitation has been accepted (this is not used currently)
@@ -130,25 +130,37 @@ module.exports = {
           type: ACTIVITY_TYPES.ACCEPT,
           actor: organizer.id,
           object: activity.id,
-          to: activity.actor
+          to: activity.actor,
         });
-      }
-    }
+      },
+    },
   },
   events: {
     async 'ldp.resource.created'(ctx) {
       const { resourceUri, newData } = ctx.params;
 
-      if( hasType(newData, OBJECT_TYPES.EVENT) ) {
-        const event = await ctx.call('activitypub.object.awaitCreateComplete', { objectUri: resourceUri, predicates: ['dc:creator', 'apods:attendees'] });
+      if (hasType(newData, OBJECT_TYPES.EVENT)) {
+        const event = await ctx.call('activitypub.object.awaitCreateComplete', {
+          objectUri: resourceUri,
+          predicates: ['dc:creator', 'apods:attendees'],
+        });
 
         const organizer = await ctx.call('activitypub.actor.get', { actorUri: event['dc:creator'] });
 
         // Add the organiser to the list of attendees
-        await ctx.call('activitypub.collection.attach', { collectionUri: event['apods:attendees'], item: organizer.id });
+        await ctx.call('activitypub.collection.attach', {
+          collectionUri: event['apods:attendees'],
+          item: organizer.id,
+        });
 
-        const { groupUri: inviteesGroupUri } = await ctx.call('webacl.group.create', { groupSlug: this.getInviteesGroupSlug(resourceUri), webId: organizer.id });
-        await ctx.call('webacl.group.create', { groupSlug: this.getInvitersGroupSlug(resourceUri), webId: organizer.id });
+        const { groupUri: inviteesGroupUri } = await ctx.call('webacl.group.create', {
+          groupSlug: this.getInviteesGroupSlug(resourceUri),
+          webId: organizer.id,
+        });
+        await ctx.call('webacl.group.create', {
+          groupSlug: this.getInvitersGroupSlug(resourceUri),
+          webId: organizer.id,
+        });
 
         // Give read rights for the event
         await ctx.call('webacl.resource.addRights', {
@@ -156,10 +168,10 @@ module.exports = {
           additionalRights: {
             group: {
               uri: inviteesGroupUri,
-              read: true
-            }
+              read: true,
+            },
           },
-          webId: organizer.id
+          webId: organizer.id,
         });
 
         // Give read right for the organizer's profile
@@ -168,10 +180,10 @@ module.exports = {
           additionalRights: {
             group: {
               uri: inviteesGroupUri,
-              read: true
-            }
+              read: true,
+            },
           },
-          webId: organizer.id
+          webId: organizer.id,
         });
 
         // Give read right for the event's location
@@ -180,12 +192,12 @@ module.exports = {
           additionalRights: {
             group: {
               uri: inviteesGroupUri,
-              read: true
-            }
+              read: true,
+            },
           },
-          webId: organizer.id
+          webId: organizer.id,
         });
       }
-    }
-  }
+    },
+  },
 };

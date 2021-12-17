@@ -1,5 +1,5 @@
-const path = require("path");
-const urlJoin = require("url-join");
+const path = require('path');
+const urlJoin = require('url-join');
 const { CoreService } = require('@activitypods/core');
 const CONFIG = require('../config');
 
@@ -11,8 +11,8 @@ module.exports = {
     fuseki: {
       url: CONFIG.SPARQL_ENDPOINT,
       user: CONFIG.JENA_USER,
-      password: CONFIG.JENA_PASSWORD
+      password: CONFIG.JENA_PASSWORD,
     },
     // jsonContext: urlJoin(CONFIG.COMMON_DATA_URL, 'context.json')
-  }
+  },
 };

@@ -12,7 +12,7 @@ const EventsApp = {
       finished: null,
       open: null,
       closed: null,
-    }
+    },
   },
   async created() {
     let { status } = this.settings;
@@ -26,9 +26,9 @@ const EventsApp = {
     this.broker.createService(AttendeesMatcherService);
 
     this.broker.createService(StatusService, {
-      settings: { status }
+      settings: { status },
     });
-  }
+  },
 };
 
 module.exports = EventsApp;

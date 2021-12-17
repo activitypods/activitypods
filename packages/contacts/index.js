@@ -1,3 +1,3 @@
 module.exports = {
-  ContactsApp: require('./app')
+  ContactsApp: require('./app'),
 };

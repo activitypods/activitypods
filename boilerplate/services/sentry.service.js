@@ -10,14 +10,14 @@ module.exports = {
       environment: CONFIG.SENTRY_ENVIRONMENT,
     },
     scope: {
-      user: null
-    }
+      user: null,
+    },
   },
   actions: {
     sendError(ctx) {
       const { error, requestID, params, action, event } = ctx.params;
       if (this.isSentryReady()) {
-        Sentry.withScope(scope => {
+        Sentry.withScope((scope) => {
           scope.setTag('id', requestID);
 
           if (event) {
@@ -46,12 +46,12 @@ module.exports = {
           Sentry.captureException(error);
         });
       }
-    }
+    },
   },
   methods: {
     isSentryReady() {
       return Sentry.getCurrentHub().getClient() !== undefined;
-    }
+    },
   },
   started() {
     if (this.settings.dsn) {
@@ -63,5 +63,5 @@ module.exports = {
       await Sentry.flush();
       SentryUtils.getGlobalObject().__SENTRY__ = undefined;
     }
-  }
+  },
 };

@@ -8,6 +8,6 @@ module.exports = {
     acceptedTypes: ['vcard:Location'],
     dereference: ['vcard:hasAddress/vcard:hasGeo'],
     permissions: {},
-    newResourcesPermissions: {}
-  }
+    newResourcesPermissions: {},
+  },
 };

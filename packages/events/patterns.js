@@ -31,20 +31,9 @@ const LEAVE_EVENT = {
   }
 };
 
-const ANNOUNCE_UPDATE_EVENT = {
-  type: ACTIVITY_TYPES.ANNOUNCE,
-  object: {
-    type: ACTIVITY_TYPES.UPDATE,
-    object: {
-      type: OBJECT_TYPES.EVENT
-    }
-  }
-};
-
 module.exports = {
   INVITE_EVENT,
   OFFER_INVITE_EVENT,
   JOIN_EVENT,
-  LEAVE_EVENT,
-  ANNOUNCE_UPDATE_EVENT
+  LEAVE_EVENT
 };

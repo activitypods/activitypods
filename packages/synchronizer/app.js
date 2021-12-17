@@ -1,38 +1,36 @@
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { hasType } = require('@semapps/ldp');
+const { hasType, defaultToArray } = require('@semapps/ldp');
 
 module.exports = {
   name: 'synchronizer',
+  mixins: [ActivitiesHandlerMixin],
   settings: {
     watchedTypes: [],
   },
   actions: {
-    watchType(ctx) {
+    watch(ctx) {
       const { type } = ctx.params;
       this.settings.watchedTypes.push(type);
-    },
-    async announceUpdate(ctx) {
-      const { resourceUri, newData } = ctx.params;
-      const creator = await ctx.call('activitypub.actor.get', { actorUri: newData['dc:creator'] });
-      const permissions = await ctx.call('webacl.resource.getRights', { resourceUri, accept: MIME_TYPES.JSON, webId: 'system' });
+    }
+  },
+  methods: {
+    async getUsersWithReadAuthorization(ctx, resourceUri, webId) {
+      const authorizations = await ctx.call('webacl.resource.getRights', { resourceUri, accept: MIME_TYPES.JSON, webId });
+      const readAuthorization = authorizations['@graph'] && authorizations['@graph'].find(auth => auth['@id'] === '#Read');
 
-      const usersWithReadPermissions = permissions.map('')
-      const groupsWithReadPermissions = permissions.map('')
-      // Extract users from groups and add them to usersWithReadPermissions array
+      let usersWithReadAuthorization = [];
+      if( readAuthorization ) {
+        usersWithReadAuthorization = defaultToArray(readAuthorization['acl:agent']) || [];
+        const groupsWithReadAuthorization = defaultToArray(readAuthorization['acl:agentGroup']) || [];
 
-      if( usersWithReadPermissions.length > 0 ) {
-        await ctx.call('activitypub.outbox.post', {
-          collectionUri: creator.outbox,
-          type: ACTIVITY_TYPES.ANNOUNCE,
-          actor: creator.id,
-          object: {
-            type: ACTIVITY_TYPES.UPDATE,
-            object: resourceUri
-          },
-          to: usersWithReadPermissions
-        });
+        for( let groupUri of groupsWithReadAuthorization ) {
+          const members = await ctx.call('webacl.group.getMembers', { groupUri, webId });
+          if( members ) usersWithReadAuthorization.push(...members);
+        }
       }
+
+      return usersWithReadAuthorization;
     }
   },
   events: {
@@ -40,20 +38,35 @@ module.exports = {
       const { resourceUri, newData } = ctx.params;
       for( let type of this.settings.watchedTypes ) {
         if( hasType(newData, type) ) {
-          await this.actions.announceUpdate({ resourceUri }, { parentCtx: ctx });
+          const creator = await ctx.call('activitypub.actor.get', { actorUri: newData['dc:creator'] });
+          const usersWithReadAuthorization = await this.getUsersWithReadAuthorization(ctx, resourceUri, creator.id)
+
+          if( usersWithReadAuthorization.length > 0 ) {
+            await ctx.call('activitypub.outbox.post', {
+              collectionUri: creator.outbox,
+              type: ACTIVITY_TYPES.ANNOUNCE,
+              actor: creator.id,
+              object: {
+                type: ACTIVITY_TYPES.UPDATE,
+                object: resourceUri
+              },
+              to: usersWithReadAuthorization
+            });
+          }
         }
       }
     }
   },
   activities: {
-    announceUpdateEvent: {
+    announceUpdate: {
       async match(activity) {
+        if( this.settings.watchedTypes.length === 0 ) return false;
         const pattern = {
           type: ACTIVITY_TYPES.ANNOUNCE,
           object: {
             type: ACTIVITY_TYPES.UPDATE,
             object: {
-              type: this.watchedTypes
+              type: this.settings.watchedTypes
             }
           }
         };

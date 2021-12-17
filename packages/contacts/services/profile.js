@@ -1,37 +1,19 @@
 const { ControlledContainerMixin, } = require('@semapps/ldp');
-const { OBJECT_TYPES, ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
+const { OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require("@semapps/mime-types");
-const { ANNOUNCE_UPDATE_PROFILE } = require("../patterns");
 
 module.exports = {
   name: 'contacts.profile',
-  mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
+  mixins: [ControlledContainerMixin],
   settings: {
     path: '/profiles',
     acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
     permissions: {},
     newResourcesPermissions: {}
   },
-  dependencies: ['activitypub', 'webacl'],
-  actions: {
-    async announceUpdate(ctx) {
-      const { profileUri } = ctx.params;
-      const actor = await ctx.call('activitypub.actor.get', { actorUri: ctx.meta.webId });
-      const contacts = await ctx.call('activitypub.collection.get', { collectionUri: actor['apods:contacts'], webId: actor.id });
-
-      if( contacts.items.length > 0 ) {
-        await ctx.call('activitypub.outbox.post', {
-          collectionUri: actor.outbox,
-          type: ACTIVITY_TYPES.ANNOUNCE,
-          actor: actor.id,
-          object: {
-            type: ACTIVITY_TYPES.UPDATE,
-            object: profileUri
-          },
-          to: contacts.items
-        });
-      }
-    }
+  dependencies: ['activitypub', 'webacl', 'synchronizer'],
+  async started() {
+    await this.broker.call('synchronizer.watch', { type: OBJECT_TYPES.PROFILE });
   },
   events: {
     async 'auth.registered'(ctx) {
@@ -77,29 +59,6 @@ module.exports = {
         },
         webId
       });
-    }
-  },
-  activities: {
-    announceUpdateProfile: {
-      match: ANNOUNCE_UPDATE_PROFILE,
-      async onReceive(ctx, activity, recipients) {
-        for (let recipientUri of recipients) {
-          await ctx.call('activitypub.object.cacheRemote', {
-            objectUri: activity.object.object.id,
-            actorUri: recipientUri
-          });
-        }
-      }
-    }
-  },
-  hooks: {
-    after: {
-      put(ctx, res) {
-        this.actions.announceUpdate({ profileUri: res }, { parentCtx: ctx });
-      },
-      patch(ctx, res) {
-        this.actions.announceUpdate({ profileUri: res }, { parentCtx: ctx });
-      }
     }
   }
 };

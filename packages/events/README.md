@@ -21,6 +21,11 @@ Attached to all events:
 - `/inviters` with the list of actors who are allowed to invite to the event
 - `/attendees` with the list of actors who are attending the event (including the organizer)
 
+## Ontology
+
+- The [ActivityStreams](https://www.w3.org/TR/activitystreams-core/) ontology should be used to describe the events.
+- The [Dublin Core Metadata](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/#http://purl.org/dc/elements/1.1/creator) ontology's `creator` predicate is used to find who is the creator of the event.
+
 ## Handled activities
 
 ### Invite to event
@@ -112,26 +117,3 @@ Attached to all events:
 
 - The recipients are removed from the `/attendees` collection
 - A notification is sent to the organizer
-
-
-### Announce update event
-
-```json
-{
-  "type": "Announce",
-  "object": {
-    "type": "Update",
-    "object": {
-      "type": "Event"
-    }
-  }
-}
-```
-
-#### Emitter's side effects
-
-- None
-
-#### Recipients' side effects
-
-- The event cached in the recipients' PODS is refreshed

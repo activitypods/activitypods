@@ -12,6 +12,7 @@ Check out [these slides](./proposal/proposal-english.pdf) ([french version](./pr
 - [Contacts](packages/contacts/README.md)
 - [Events](packages/events/README.md)
 - [Messages](packages/messages/README.md)
+- [Synchronizer](packages/synchronizer/README.md)
 
 
 ## Getting started

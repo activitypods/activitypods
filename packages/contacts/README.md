@@ -8,6 +8,11 @@ An [ActivityPods](../../README.md) application to handle profile creation and co
 - [RequestService](services/request.js)
 - [LocationService](services/location.js)
 
+## Dependencies
+
+- [Core](../core/README.md)
+- [Synchronizer](../synchronizer/README.md)
+
 ## Containers
 
 - `/profiles` with the profile of the user and his contacts (`vcard:Individual`, `as:Profile`)

@@ -9,6 +9,11 @@ An [ActivityPods](../../README.md) app to handle events, with invitation and reg
 - [RegistrationService](services/registration.js)
 - [StatusService](services/status.js)
 
+## Dependencies
+
+- [Core](../core/README.md)
+- [Synchronizer](../synchronizer/README.md)
+
 ## Containers
 
 - `/events` with the events created by the user or to whom he has been invited

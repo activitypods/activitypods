@@ -6,6 +6,10 @@ An [ActivityPods](../../README.md) app to handle messages.
 
 - [MessageService](services/message.js)
 
+## Dependencies
+
+- [Core](../core/README.md)
+
 ## Containers
 
 - `/notes` with the messages sent by the user

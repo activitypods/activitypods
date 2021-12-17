@@ -1,4 +1,4 @@
-const { ControlledContainerMixin, } = require('@semapps/ldp');
+const { ControlledContainerMixin } = require('@semapps/ldp');
 const { OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require("@semapps/mime-types");
 
@@ -27,7 +27,6 @@ module.exports = {
         resource: {
           '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
           'vcard:fn': profileData.familyName ? `${profileData.name} ${profileData.familyName.toUpperCase()}` : profileData.name,
-          'vcard:nickname': null,
           'vcard:given-name': profileData.name,
           'vcard:family-name': profileData.familyName,
           describes: webId,

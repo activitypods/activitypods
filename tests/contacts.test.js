@@ -39,7 +39,7 @@ describe('Test contacts app', () => {
     contactRequestToBob,
     contactRequestToCraig;
 
-  test('Create 2 pods', async () => {
+  test('Create 3 pods', async () => {
     for (let i = 1; i <= 3; i++) {
       const actorData = require(`./data/actor${i}.json`);
 

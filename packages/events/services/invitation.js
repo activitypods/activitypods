@@ -174,29 +174,33 @@ module.exports = {
           webId: organizer.id,
         });
 
-        // Give read right for the organizer's profile
-        await ctx.call('webacl.resource.addRights', {
-          resourceUri: organizer.url,
-          additionalRights: {
-            group: {
-              uri: inviteesGroupUri,
-              read: true,
+        if( organizer.url ) {
+          // Give read right for the organizer's profile
+          await ctx.call('webacl.resource.addRights', {
+            resourceUri: organizer.url,
+            additionalRights: {
+              group: {
+                uri: inviteesGroupUri,
+                read: true,
+              },
             },
-          },
-          webId: organizer.id,
-        });
+            webId: organizer.id,
+          });
+        }
 
-        // Give read right for the event's location
-        await ctx.call('webacl.resource.addRights', {
-          resourceUri: event.location,
-          additionalRights: {
-            group: {
-              uri: inviteesGroupUri,
-              read: true,
+        if( event.location ) {
+          // Give read right for the event's location
+          await ctx.call('webacl.resource.addRights', {
+            resourceUri: event.location,
+            additionalRights: {
+              group: {
+                uri: inviteesGroupUri,
+                read: true,
+              },
             },
-          },
-          webId: organizer.id,
-        });
+            webId: organizer.id,
+          });
+        }
       }
     },
   },

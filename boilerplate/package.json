@@ -14,7 +14,7 @@
     "@activitypods/events": "0.2.0",
     "@activitypods/messages": "0.2.0",
     "@activitypods/synchronizer": "0.2.0",
-    "@semapps/backup": "0.4.0-alpha.3",
+    "@semapps/backup": "0.4.0-alpha.4",
     "@sentry/node": "^5.16.1",
     "@sentry/utils": "^5.16.1",
     "dotenv-flow": "^3.2.0",

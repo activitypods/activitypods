@@ -1,6 +1,6 @@
 {
   "name": "boilerplate",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "ActivityPods boilerplate",
   "scripts": {
@@ -9,11 +9,11 @@
     "test": "jest --detectOpenHandles --verbose"
   },
   "dependencies": {
-    "@activitypods/contacts": "0.1.0",
-    "@activitypods/core": "0.1.0",
-    "@activitypods/events": "0.1.0",
-    "@activitypods/messages": "0.1.0",
-    "@activitypods/synchronizer": "0.1.0",
+    "@activitypods/contacts": "0.2.0",
+    "@activitypods/core": "0.2.0",
+    "@activitypods/events": "0.2.0",
+    "@activitypods/messages": "0.2.0",
+    "@activitypods/synchronizer": "0.2.0",
     "@semapps/backup": "0.4.0-alpha.3",
     "@sentry/node": "^5.16.1",
     "@sentry/utils": "^5.16.1",

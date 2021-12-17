@@ -1,16 +1,16 @@
 {
   "name": "activitypods-tests",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "scripts": {
     "test": "jest --detectOpenHandles --verbose"
   },
   "dependencies": {
-    "@activitypods/contacts": "0.2.0",
-    "@activitypods/core": "0.2.0",
-    "@activitypods/events": "0.2.0",
-    "@activitypods/messages": "0.2.0",
-    "@activitypods/synchronizer": "0.2.0",
+    "@activitypods/contacts": "0.2.1",
+    "@activitypods/core": "0.2.1",
+    "@activitypods/events": "0.2.1",
+    "@activitypods/messages": "0.2.1",
+    "@activitypods/synchronizer": "0.2.1",
     "dotenv-flow": "^3.2.0",
     "moleculer": "^0.14.18"
   },

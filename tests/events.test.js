@@ -232,4 +232,111 @@ describe('Test contacts app', () => {
       ).resolves.toBeFalsy();
     });
   });
+
+  test('Event is coming', async () => {
+    const now = new Date();
+    let startTime = new Date(now), endTime = new Date(now);
+    startTime.setDate(now.getDate()+1);
+    endTime.setDate(now.getDate()+2);
+
+    await broker.call('ldp.resource.patch', {
+      resourceUri: eventUri,
+      resource: {
+        '@id': eventUri,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString()
+      },
+      contentType: MIME_TYPES.JSON,
+      webId: alice.id
+    });
+
+    await broker.call('events.status.tagComing');
+    await broker.call('events.status.tagClosed');
+    await broker.call('events.status.tagFinished');
+
+    await expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject({
+      'apods:hasStatus': expect.arrayContaining(['apods:Coming', 'apods:Open'])
+    });
+  });
+
+  test('Event is closed because registration are closed', async () => {
+    const now = new Date();
+    let startTime = new Date(now), endTime = new Date(now), closingTime = new Date(now);
+    startTime.setDate(now.getDate()+1);
+    endTime.setDate(now.getDate()+2);
+    closingTime.setDate(now.getDate()-1);
+
+    await broker.call('ldp.resource.patch', {
+      resourceUri: eventUri,
+      resource: {
+        '@id': eventUri,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        'apods:closingTime': closingTime.toISOString()
+      },
+      contentType: MIME_TYPES.JSON,
+      webId: alice.id
+    });
+
+    await broker.call('events.status.tagComing');
+    await broker.call('events.status.tagClosed');
+    await broker.call('events.status.tagFinished');
+
+    await expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject({
+      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming'])
+    });
+  });
+
+  test('Event is closed because max attendees is reached', async () => {
+    const now = new Date();
+    let startTime = new Date(now), endTime = new Date(now);
+    startTime.setDate(now.getDate()+2);
+    endTime.setDate(now.getDate()+3);
+
+    await broker.call('ldp.resource.patch', {
+      resourceUri: eventUri,
+      resource: {
+        '@id': eventUri,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        'apods:maxAttendees': 1,
+      },
+      contentType: MIME_TYPES.JSON,
+      webId: alice.id
+    });
+
+    await broker.call('events.status.tagComing');
+    await broker.call('events.status.tagClosed');
+    await broker.call('events.status.tagFinished');
+
+    await expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject({
+      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming'])
+    });
+  });
+
+  test('Event is finished', async () => {
+    const now = new Date();
+    let startTime = new Date(now), endTime = new Date(now);
+    startTime.setDate(now.getDate()-2);
+    endTime.setDate(now.getDate()-1);
+
+    await broker.call('ldp.resource.patch', {
+      resourceUri: eventUri,
+      resource: {
+        '@id': eventUri,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString()
+      },
+      contentType: MIME_TYPES.JSON,
+      webId: alice.id
+    });
+
+    await broker.call('events.status.tagComing');
+    await broker.call('events.status.tagClosed');
+    await broker.call('events.status.tagFinished');
+
+    await expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject({
+      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Finished'])
+    });
+  });
 });

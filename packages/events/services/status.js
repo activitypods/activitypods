@@ -77,13 +77,13 @@ module.exports = {
             WHERE {
               ?eventUri a as:Event .
               ?eventUri as:endTime ?endTime .
-              ?eventUri apods:closingTime ?closingTime .
-              ?eventUri apods:maxAttendees ?maxAttendees .
+              OPTIONAL { ?eventUri apods:closingTime ?closingTime }
+              OPTIONAL { ?eventUri apods:maxAttendees ?maxAttendees }
               # Subquery to count participants
               {
                 SELECT (COUNT(?attendees) AS ?numAttendees) ?eventUri
                 WHERE { 
-                  ?eventUri apods:attendees ?attendeesCollectionUri
+                  ?eventUri apods:attendees ?attendeesCollectionUri .
                   ?attendeesCollectionUri as:items ?attendees
                 } 
                 GROUP BY ?eventUri
@@ -132,9 +132,9 @@ module.exports = {
     {
       cronTime: '*/15 * * * *',
       onTick: function () {
-        // this.call('event.status.tagComing');
-        // this.call('event.status.tagClosed');
-        // this.call('event.status.tagFinished');
+        // this.call('events.status.tagComing');
+        // this.call('events.status.tagClosed');
+        // this.call('events.status.tagFinished');
       },
       timeZone: 'Europe/Paris',
     },

@@ -9,6 +9,7 @@ jest.setTimeout(30000);
 let broker;
 
 const mockInvitation = jest.fn(() => Promise.resolve('Fake Invitation'));
+const mockJoinOrLeave = jest.fn(() => Promise.resolve('Fake Join Or Leave'));
 
 beforeAll(async () => {
   broker = await initialize();
@@ -22,6 +23,7 @@ beforeAll(async () => {
     name: 'notification',
     actions: {
       invitation: mockInvitation,
+      joinOrLeave: mockJoinOrLeave
     },
   });
 
@@ -37,11 +39,11 @@ describe('Test contacts app', () => {
     alice,
     bob,
     craig,
-    contactRequestToBob,
-    contactRequestToCraig;
+    daisy,
+    eventUri;
 
-  test('Create 3 pods', async () => {
-    for (let i = 1; i <= 3; i++) {
+  test('Create 4 pods', async () => {
+    for (let i = 1; i <= 4; i++) {
       const actorData = require(`./data/actor${i}.json`);
 
       const { webId } = await broker.call('auth.signup', actorData);
@@ -54,10 +56,11 @@ describe('Test contacts app', () => {
     alice = actors[1];
     bob = actors[2];
     craig = actors[3];
+    daisy = actors[4];
   });
 
-  test('Alice invite Bob to her event', async () => {
-    const eventUri = await broker.call('ldp.container.post', {
+  test('Alice create an event', async () => {
+    eventUri  = await broker.call('ldp.container.post', {
       containerUri: alice.id + '/data/events',
       resource: {
         type: OBJECT_TYPES.EVENT,
@@ -76,17 +79,28 @@ describe('Test contacts app', () => {
       ).resolves.toBeTruthy();
     });
 
-    contactRequestToBob = await broker.call('activitypub.outbox.post', {
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: eventUri + '/attendees',
+          itemUri: alice.id,
+        })
+      ).resolves.toBeTruthy();
+    });
+  });
+
+  test('Alice invite Bob and Craig to her event', async () => {
+    await broker.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
       type: ACTIVITY_TYPES.INVITE,
       actor: alice.id,
       object: eventUri,
-      target: bob.id,
-      to: bob.id,
+      target: [bob.id, craig.id],
+      to: [bob.id, craig.id]
     });
 
     await waitForExpect(() => {
-      expect(mockInvitation).toHaveBeenCalledTimes(1);
+      expect(mockInvitation).toHaveBeenCalledTimes(2);
     });
 
     await waitForExpect(async () => {
@@ -102,6 +116,117 @@ describe('Test contacts app', () => {
       await expect(
         broker.call('activitypub.collection.includes', {
           collectionUri: eventUri + '/inviters',
+          itemUri: bob.id,
+        })
+      ).resolves.toBeFalsy();
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('webacl.resource.hasRights', {
+          resourceUri: eventUri,
+          rights: { read: true },
+          webId: bob.id,
+        })
+      ).resolves.toMatchObject({ read: true });
+    });
+
+    // Alice event is cached in Bob dataset
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('triplestore.countTriplesOfSubject', {
+          uri: eventUri,
+          dataset: bob.preferredUsername,
+          webId: 'system',
+        })
+      ).resolves.toBeTruthy();
+    });
+  });
+
+  test('Alice offer Craig to invite his contacts to her event', async () => {
+    await broker.call('activitypub.outbox.post', {
+      collectionUri: alice.outbox,
+      type: ACTIVITY_TYPES.OFFER,
+      actor: alice.id,
+      object: {
+        type: ACTIVITY_TYPES.INVITE,
+        object: eventUri
+      },
+      target: craig.id,
+      to: craig.id,
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: eventUri + '/inviters',
+          itemUri: craig.id,
+        })
+      ).resolves.toBeTruthy();
+    });
+  });
+
+  test('Craig invite Daisy to Alice event', async () => {
+    await broker.call('activitypub.outbox.post', {
+      collectionUri: craig.outbox,
+      type: ACTIVITY_TYPES.OFFER,
+      actor: craig.id,
+      object: {
+        type: ACTIVITY_TYPES.INVITE,
+        actor: alice.id,
+        object: eventUri,
+        target: daisy.id
+      },
+      target: alice.id,
+      to: alice.id,
+    });
+
+    await waitForExpect(() => {
+      expect(mockInvitation).toHaveBeenCalledTimes(2);
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: eventUri + '/invitees',
+          itemUri: daisy.id,
+        })
+      ).resolves.toBeTruthy();
+    });
+  });
+
+  test('Bob join Alice event', async () => {
+    await broker.call('activitypub.outbox.post', {
+      collectionUri: bob.outbox,
+      type: ACTIVITY_TYPES.JOIN,
+      actor: bob.id,
+      object: eventUri,
+      to: alice.id,
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: eventUri + '/attendees',
+          itemUri: bob.id,
+        })
+      ).resolves.toBeTruthy();
+    });
+  });
+
+  test('Bob leave Alice event', async () => {
+    await broker.call('activitypub.outbox.post', {
+      collectionUri: bob.outbox,
+      type: ACTIVITY_TYPES.LEAVE,
+      actor: bob.id,
+      object: eventUri,
+      to: alice.id,
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: eventUri + '/attendees',
           itemUri: bob.id,
         })
       ).resolves.toBeFalsy();

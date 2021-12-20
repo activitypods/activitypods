@@ -24,7 +24,7 @@ const initialize = async () => {
   });
 
   await clearDataset('settings');
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 4; i++) {
     const actorData = require(`./data/actor${i}.json`);
     await clearDataset(actorData.username);
   }

@@ -10,11 +10,13 @@ let broker;
 
 const mockInvitation = jest.fn(() => Promise.resolve('Fake Invitation'));
 const mockJoinOrLeave = jest.fn(() => Promise.resolve('Fake Join Or Leave'));
+const mockContactOffer = jest.fn(() => Promise.resolve('Fake Contact Offer'));
 
 beforeAll(async () => {
   broker = await initialize();
 
   await broker.loadService(path.resolve(__dirname, './services/core.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/events.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/synchronizer.app.js'));
 
@@ -23,7 +25,8 @@ beforeAll(async () => {
     name: 'notification',
     actions: {
       invitation: mockInvitation,
-      joinOrLeave: mockJoinOrLeave
+      joinOrLeave: mockJoinOrLeave,
+      contactOffer: mockContactOffer,
     },
   });
 
@@ -48,7 +51,7 @@ describe('Test contacts app', () => {
 
       const { webId } = await broker.call('auth.signup', actorData);
 
-      actors[i] = await broker.call('activitypub.actor.awaitCreateComplete', { actorUri: webId });
+      actors[i] = await broker.call('activitypub.actor.awaitCreateComplete', { actorUri: webId, additionalKeys: ['url'] });
 
       expect(actors[i].preferredUsername).toBe(actorData.username);
     }
@@ -57,6 +60,16 @@ describe('Test contacts app', () => {
     bob = actors[2];
     craig = actors[3];
     daisy = actors[4];
+
+    // Add Alice and Bob in each others contacts (this will be used for attendees matching)
+    await broker.call('activitypub.collection.attach', {
+      collectionUri: alice['apods:contacts'],
+      itemUri: bob.id
+    });
+    await broker.call('activitypub.collection.attach', {
+      collectionUri: bob['apods:contacts'],
+      itemUri: alice.id
+    });
   });
 
   test('Alice create an event', async () => {
@@ -195,11 +208,27 @@ describe('Test contacts app', () => {
     });
   });
 
-  test('Bob join Alice event', async () => {
+  test('Bob, Craig and Daisy join Alice event', async () => {
     await broker.call('activitypub.outbox.post', {
       collectionUri: bob.outbox,
       type: ACTIVITY_TYPES.JOIN,
       actor: bob.id,
+      object: eventUri,
+      to: alice.id,
+    });
+
+    await broker.call('activitypub.outbox.post', {
+      collectionUri: craig.outbox,
+      type: ACTIVITY_TYPES.JOIN,
+      actor: craig.id,
+      object: eventUri,
+      to: alice.id,
+    });
+
+    await broker.call('activitypub.outbox.post', {
+      collectionUri: daisy.outbox,
+      type: ACTIVITY_TYPES.JOIN,
+      actor: daisy.id,
       object: eventUri,
       to: alice.id,
     });
@@ -212,13 +241,24 @@ describe('Test contacts app', () => {
         })
       ).resolves.toBeTruthy();
     });
+
+    // Alice should see the profile of all the attendees, even if they are not on her contacts
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('webacl.resource.hasRights', {
+          resourceUri: daisy.url,
+          rights: { read: true },
+          webId: alice.id,
+        })
+      ).resolves.toMatchObject({ read: true });
+    });
   });
 
-  test('Bob leave Alice event', async () => {
+  test('Craig leave Alice event', async () => {
     await broker.call('activitypub.outbox.post', {
-      collectionUri: bob.outbox,
+      collectionUri: craig.outbox,
       type: ACTIVITY_TYPES.LEAVE,
-      actor: bob.id,
+      actor: craig.id,
       object: eventUri,
       to: alice.id,
     });
@@ -227,7 +267,7 @@ describe('Test contacts app', () => {
       await expect(
         broker.call('activitypub.collection.includes', {
           collectionUri: eventUri + '/attendees',
-          itemUri: bob.id,
+          itemUri: craig.id,
         })
       ).resolves.toBeFalsy();
     });
@@ -299,7 +339,7 @@ describe('Test contacts app', () => {
         '@id': eventUri,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
-        'apods:maxAttendees': 1,
+        'apods:maxAttendees': 3,
       },
       contentType: MIME_TYPES.JSON,
       webId: alice.id
@@ -314,7 +354,7 @@ describe('Test contacts app', () => {
     });
   });
 
-  test('Event is finished', async () => {
+  test('Event is finished and contact requests are sent', async () => {
     const now = new Date();
     let startTime = new Date(now), endTime = new Date(now);
     startTime.setDate(now.getDate()-2);
@@ -337,6 +377,46 @@ describe('Test contacts app', () => {
 
     await expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject({
       'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Finished'])
+    });
+
+    // Daisy should receive two contact requests from Alice and Bob
+    await waitForExpect(async () => {
+      await expect(broker.call('activitypub.collection.get', {
+        collectionUri: daisy['apods:contactRequests'],
+        webId: daisy.id
+      }))
+      .resolves
+      .toMatchObject({
+        items: expect.arrayContaining([
+          expect.objectContaining({
+            type: ACTIVITY_TYPES.OFFER,
+            actor: alice.id
+          }),
+          expect.objectContaining({
+            type: ACTIVITY_TYPES.OFFER,
+            actor: bob.id
+          })
+        ]),
+        totalItems: 2
+      })
+    });
+
+    // Bob should only receive a contact request from Daisy (Alice is already in his contacts)
+    await waitForExpect(async () => {
+      await expect(broker.call('activitypub.collection.get', {
+        collectionUri: bob['apods:contactRequests'],
+        webId: bob.id
+      }))
+        .resolves
+        .toMatchObject({
+          items: expect.arrayContaining([
+            expect.objectContaining({
+              type: ACTIVITY_TYPES.OFFER,
+              actor: daisy.id
+            })
+          ]),
+          totalItems: 1
+        })
     });
   });
 });

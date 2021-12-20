@@ -5,6 +5,7 @@ const {
   REJECT_CONTACT_REQUEST,
   IGNORE_CONTACT_REQUEST,
 } = require('../patterns');
+const { defaultToArray } = require("@semapps/ldp/utils");
 
 module.exports = {
   name: 'contacts.request',
@@ -43,11 +44,13 @@ module.exports = {
       match: CONTACT_REQUEST,
       async onEmit(ctx, activity, emitterUri) {
         // Add the user to the contacts WebACL group so he can see my profile
-        await ctx.call('webacl.group.addMember', {
-          groupSlug: new URL(emitterUri).pathname + '/contacts',
-          memberUri: activity.target,
-          webId: emitterUri,
-        });
+        for( let targetUri of defaultToArray(activity.target) ) {
+          await ctx.call('webacl.group.addMember', {
+            groupSlug: new URL(emitterUri).pathname + '/contacts',
+            memberUri: targetUri,
+            webId: emitterUri,
+          });
+        }
       },
       async onReceive(ctx, activity, recipients) {
         for (let recipientUri of recipients) {
@@ -57,7 +60,7 @@ module.exports = {
           if (
             await ctx.call('activitypub.collection.includes', {
               collectionUri: recipient['apods:rejectedContacts'],
-              item: activity.actor,
+              itemUri: activity.actor,
             })
           ) {
             await ctx.call('activitypub.outbox.post', {

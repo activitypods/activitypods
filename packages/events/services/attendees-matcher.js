@@ -21,10 +21,11 @@ module.exports = {
         const attendee = await ctx.call('activitypub.actor.get', { actorUri: attendeeUri });
 
         let potentialNewContacts = [];
-        for (let otherAttendeeUri of collection.items) {
+        for (let otherAttendeeUri of collection.items.filter(uri => uri !== attendeeUri)) {
+
           const alreadyConnected = await ctx.call('activitypub.collection.includes', {
             collectionUri: attendee['apods:contacts'],
-            item: otherAttendeeUri,
+            itemUri: otherAttendeeUri,
           });
           if (!alreadyConnected) potentialNewContacts.push(otherAttendeeUri);
         }

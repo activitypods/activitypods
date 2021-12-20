@@ -26,7 +26,7 @@ module.exports = {
         if( emitter.url ) {
           const organizerUri = activity.object['dc:creator'];
 
-          const rights = await broker.call('webacl.resource.hasRights', {
+          const rights = await ctx.call('webacl.resource.hasRights', {
             resourceUri: emitter.url,
             rights: { read: true },
             webId: organizerUri,

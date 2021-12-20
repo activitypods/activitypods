@@ -174,7 +174,7 @@ module.exports = {
           webId: organizer.id,
         });
 
-        if( organizer.url ) {
+        if (organizer.url) {
           // Give read right for the organizer's profile
           await ctx.call('webacl.resource.addRights', {
             resourceUri: organizer.url,
@@ -188,7 +188,7 @@ module.exports = {
           });
         }
 
-        if( event.location ) {
+        if (event.location) {
           // Give read right for the event's location
           await ctx.call('webacl.resource.addRights', {
             resourceUri: event.location,

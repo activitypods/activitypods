@@ -51,7 +51,10 @@ describe('Test contacts app', () => {
 
       const { webId } = await broker.call('auth.signup', actorData);
 
-      actors[i] = await broker.call('activitypub.actor.awaitCreateComplete', { actorUri: webId, additionalKeys: ['url'] });
+      actors[i] = await broker.call('activitypub.actor.awaitCreateComplete', {
+        actorUri: webId,
+        additionalKeys: ['url'],
+      });
 
       expect(actors[i].preferredUsername).toBe(actorData.username);
     }
@@ -64,23 +67,23 @@ describe('Test contacts app', () => {
     // Add Alice and Bob in each others contacts (this will be used for attendees matching)
     await broker.call('activitypub.collection.attach', {
       collectionUri: alice['apods:contacts'],
-      itemUri: bob.id
+      itemUri: bob.id,
     });
     await broker.call('activitypub.collection.attach', {
       collectionUri: bob['apods:contacts'],
-      itemUri: alice.id
+      itemUri: alice.id,
     });
   });
 
   test('Alice create an event', async () => {
-    eventUri  = await broker.call('ldp.container.post', {
+    eventUri = await broker.call('ldp.container.post', {
       containerUri: alice.id + '/data/events',
       resource: {
         type: OBJECT_TYPES.EVENT,
-        name: "Birthday party !!"
+        name: 'Birthday party !!',
       },
       contentType: MIME_TYPES.JSON,
-      webId: alice.id
+      webId: alice.id,
     });
 
     await waitForExpect(async () => {
@@ -109,7 +112,7 @@ describe('Test contacts app', () => {
       actor: alice.id,
       object: eventUri,
       target: [bob.id, craig.id],
-      to: [bob.id, craig.id]
+      to: [bob.id, craig.id],
     });
 
     await waitForExpect(() => {
@@ -163,7 +166,7 @@ describe('Test contacts app', () => {
       actor: alice.id,
       object: {
         type: ACTIVITY_TYPES.INVITE,
-        object: eventUri
+        object: eventUri,
       },
       target: craig.id,
       to: craig.id,
@@ -188,7 +191,7 @@ describe('Test contacts app', () => {
         type: ACTIVITY_TYPES.INVITE,
         actor: alice.id,
         object: eventUri,
-        target: daisy.id
+        target: daisy.id,
       },
       target: alice.id,
       to: alice.id,
@@ -275,36 +278,10 @@ describe('Test contacts app', () => {
 
   test('Event is coming', async () => {
     const now = new Date();
-    let startTime = new Date(now), endTime = new Date(now);
-    startTime.setDate(now.getDate()+1);
-    endTime.setDate(now.getDate()+2);
-
-    await broker.call('ldp.resource.patch', {
-      resourceUri: eventUri,
-      resource: {
-        '@id': eventUri,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString()
-      },
-      contentType: MIME_TYPES.JSON,
-      webId: alice.id
-    });
-
-    await broker.call('events.status.tagComing');
-    await broker.call('events.status.tagClosed');
-    await broker.call('events.status.tagFinished');
-
-    await expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject({
-      'apods:hasStatus': expect.arrayContaining(['apods:Coming', 'apods:Open'])
-    });
-  });
-
-  test('Event is closed because registration are closed', async () => {
-    const now = new Date();
-    let startTime = new Date(now), endTime = new Date(now), closingTime = new Date(now);
-    startTime.setDate(now.getDate()+1);
-    endTime.setDate(now.getDate()+2);
-    closingTime.setDate(now.getDate()-1);
+    let startTime = new Date(now),
+      endTime = new Date(now);
+    startTime.setDate(now.getDate() + 1);
+    endTime.setDate(now.getDate() + 2);
 
     await broker.call('ldp.resource.patch', {
       resourceUri: eventUri,
@@ -312,26 +289,60 @@ describe('Test contacts app', () => {
         '@id': eventUri,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
-        'apods:closingTime': closingTime.toISOString()
       },
       contentType: MIME_TYPES.JSON,
-      webId: alice.id
+      webId: alice.id,
     });
 
     await broker.call('events.status.tagComing');
     await broker.call('events.status.tagClosed');
     await broker.call('events.status.tagFinished');
 
-    await expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject({
-      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming'])
+    await expect(
+      broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
+    ).resolves.toMatchObject({
+      'apods:hasStatus': expect.arrayContaining(['apods:Coming', 'apods:Open']),
+    });
+  });
+
+  test('Event is closed because registration are closed', async () => {
+    const now = new Date();
+    let startTime = new Date(now),
+      endTime = new Date(now),
+      closingTime = new Date(now);
+    startTime.setDate(now.getDate() + 1);
+    endTime.setDate(now.getDate() + 2);
+    closingTime.setDate(now.getDate() - 1);
+
+    await broker.call('ldp.resource.patch', {
+      resourceUri: eventUri,
+      resource: {
+        '@id': eventUri,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        'apods:closingTime': closingTime.toISOString(),
+      },
+      contentType: MIME_TYPES.JSON,
+      webId: alice.id,
+    });
+
+    await broker.call('events.status.tagComing');
+    await broker.call('events.status.tagClosed');
+    await broker.call('events.status.tagFinished');
+
+    await expect(
+      broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
+    ).resolves.toMatchObject({
+      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming']),
     });
   });
 
   test('Event is closed because max attendees is reached', async () => {
     const now = new Date();
-    let startTime = new Date(now), endTime = new Date(now);
-    startTime.setDate(now.getDate()+2);
-    endTime.setDate(now.getDate()+3);
+    let startTime = new Date(now),
+      endTime = new Date(now);
+    startTime.setDate(now.getDate() + 2);
+    endTime.setDate(now.getDate() + 3);
 
     await broker.call('ldp.resource.patch', {
       resourceUri: eventUri,
@@ -342,81 +353,86 @@ describe('Test contacts app', () => {
         'apods:maxAttendees': 3,
       },
       contentType: MIME_TYPES.JSON,
-      webId: alice.id
+      webId: alice.id,
     });
 
     await broker.call('events.status.tagComing');
     await broker.call('events.status.tagClosed');
     await broker.call('events.status.tagFinished');
 
-    await expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject({
-      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming'])
+    await expect(
+      broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
+    ).resolves.toMatchObject({
+      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming']),
     });
   });
 
   test('Event is finished and contact requests are sent', async () => {
     const now = new Date();
-    let startTime = new Date(now), endTime = new Date(now);
-    startTime.setDate(now.getDate()-2);
-    endTime.setDate(now.getDate()-1);
+    let startTime = new Date(now),
+      endTime = new Date(now);
+    startTime.setDate(now.getDate() - 2);
+    endTime.setDate(now.getDate() - 1);
 
     await broker.call('ldp.resource.patch', {
       resourceUri: eventUri,
       resource: {
         '@id': eventUri,
         startTime: startTime.toISOString(),
-        endTime: endTime.toISOString()
+        endTime: endTime.toISOString(),
       },
       contentType: MIME_TYPES.JSON,
-      webId: alice.id
+      webId: alice.id,
     });
 
     await broker.call('events.status.tagComing');
     await broker.call('events.status.tagClosed');
     await broker.call('events.status.tagFinished');
 
-    await expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject({
-      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Finished'])
+    await expect(
+      broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
+    ).resolves.toMatchObject({
+      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Finished']),
     });
 
     // Daisy should receive two contact requests from Alice and Bob
     await waitForExpect(async () => {
-      await expect(broker.call('activitypub.collection.get', {
-        collectionUri: daisy['apods:contactRequests'],
-        webId: daisy.id
-      }))
-      .resolves
-      .toMatchObject({
+      await expect(
+        broker.call('activitypub.collection.get', {
+          collectionUri: daisy['apods:contactRequests'],
+          webId: daisy.id,
+        })
+      ).resolves.toMatchObject({
         items: expect.arrayContaining([
           expect.objectContaining({
             type: ACTIVITY_TYPES.OFFER,
-            actor: alice.id
+            actor: alice.id,
           }),
           expect.objectContaining({
             type: ACTIVITY_TYPES.OFFER,
-            actor: bob.id
-          })
+            actor: bob.id,
+          }),
         ]),
-        totalItems: 2
-      })
+        totalItems: 2,
+      });
     });
 
     // Bob should only receive a contact request from Daisy (Alice is already in his contacts)
     await waitForExpect(async () => {
-      await expect(broker.call('activitypub.collection.get', {
-        collectionUri: bob['apods:contactRequests'],
-        webId: bob.id
-      }))
-        .resolves
-        .toMatchObject({
-          items: expect.arrayContaining([
-            expect.objectContaining({
-              type: ACTIVITY_TYPES.OFFER,
-              actor: daisy.id
-            })
-          ]),
-          totalItems: 1
+      await expect(
+        broker.call('activitypub.collection.get', {
+          collectionUri: bob['apods:contactRequests'],
+          webId: bob.id,
         })
+      ).resolves.toMatchObject({
+        items: expect.arrayContaining([
+          expect.objectContaining({
+            type: ACTIVITY_TYPES.OFFER,
+            actor: daisy.id,
+          }),
+        ]),
+        totalItems: 1,
+      });
     });
   });
 });

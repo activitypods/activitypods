@@ -23,18 +23,18 @@ module.exports = {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri, webId: 'system' });
 
         // If the emitter has a profile, it means the contacts app is activated
-        if( emitter.url ) {
+        if (emitter.url) {
           const organizerUri = activity.object['dc:creator'];
 
           const rights = await ctx.call('webacl.resource.hasRights', {
             resourceUri: emitter.url,
             rights: { read: true },
             webId: organizerUri,
-          })
+          });
 
           // If the organizer cannot view my profile, give him the right
           // TODO if the organizer is added later through the contacts app, remove this right
-          if( rights && rights.read !== true ) {
+          if (rights && rights.read !== true) {
             await ctx.call('webacl.resource.addRights', {
               resourceUri: emitter.url,
               additionalRights: {

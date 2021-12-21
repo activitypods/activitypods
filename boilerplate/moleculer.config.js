@@ -1,4 +1,4 @@
-const CONFIG = require('./config');
+const CONFIG = require('./config/config');
 const { WebAclMiddleware, CacherMiddleware } = require('@semapps/webacl');
 
 // Use the cacher only if Redis is configured

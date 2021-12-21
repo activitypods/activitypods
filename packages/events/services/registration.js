@@ -16,6 +16,28 @@ module.exports = {
       permissions: {},
     });
   },
+  methods: {
+    async notifyJoinOrLeave(ctx, eventUri, userUri, joined) {
+      const userProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: userUri, webId: 'system' });
+      const event = await ctx.call('events.event.get', { resourceUri: eventUri, webId: 'system' });
+
+      const title = joined
+        ? `${userProfile['vcard:given-name']} s'est inscrit à votre événement "${event.name}"`
+        : `${userProfile['vcard:given-name']} s'est désinscrit de votre événement "${event.name}"`
+
+      await ctx.call('notification.notifyUser', {
+        to: event['dc:creator'],
+        key: 'join-or-leave',
+        payload: {
+          title,
+          actions: [{
+            name: 'Voir',
+            link: '/Event/' + encodeURIComponent(eventUri) + '/show',
+          }]
+        }
+      });
+    }
+  },
   activities: {
     joinEvent: {
       match: JOIN_EVENT,
@@ -71,11 +93,7 @@ module.exports = {
           item: activity.actor,
         });
 
-        await ctx.call('notification.joinOrLeave', {
-          eventUri: event.id,
-          userUri: activity.actor,
-          joined: true,
-        });
+        await this.notifyJoinOrLeave(ctx, event.id, activity.actor, true);
 
         // TODO send confirmation mail to participant
       },
@@ -101,11 +119,7 @@ module.exports = {
           item: activity.actor,
         });
 
-        await ctx.call('notification.joinOrLeave', {
-          eventUri: event.id,
-          userUri: activity.actor,
-          joined: false,
-        });
+        await this.notifyJoinOrLeave(ctx, event.id, activity.actor, false);
       },
     },
   },

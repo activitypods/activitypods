@@ -26,6 +26,20 @@ module.exports = {
     });
   },
   methods: {
+    async notifyInvitation(ctx, activity, recipientUri) {
+      const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: activity.actor, webId: 'system' });
+      await ctx.call('notification.notifyUser', {
+        to: recipientUri,
+        key: 'invitation',
+        payload: {
+          title: `${senderProfile['vcard:given-name']} vous invite à un événement "${activity.object.name}"`,
+          actions: [{
+            name: 'Voir',
+            link: '/Event/' + encodeURIComponent(activity.object.id) + '/show',
+          }]
+        }
+      });
+    },
     getInviteesGroupSlug(eventUri) {
       return new URL(eventUri).pathname + '/invitees';
     },
@@ -63,11 +77,7 @@ module.exports = {
           });
 
           // Send notification email
-          await ctx.call('notification.invitation', {
-            eventUri: activity.object.id,
-            senderUri: activity.actor,
-            recipientUri,
-          });
+          await this.notifyInvitation(ctx, activity, recipientUri);
         }
       },
     },

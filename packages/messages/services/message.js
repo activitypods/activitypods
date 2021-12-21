@@ -12,16 +12,29 @@ module.exports = {
     newResourcesPermissions: {},
   },
   dependencies: ['notification'],
+  methods: {
+    async notifyNewMessage(ctx, activity, recipientUri) {
+      const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: activity.actor, webId: 'system' });
+      await ctx.call('notification.notifyUser', {
+        to: recipientUri,
+        key: 'new-message',
+        payload: {
+          title: `${senderProfile['vcard:given-name']} vous a envoyé un message`,
+          body: activity.object.content,
+          actions: [{
+            name: 'Répondre',
+            link: '/Profile/' + encodeURIComponent(activity.actor) + '/show',
+          }]
+        },
+      });
+    }
+  },
   activities: {
     createNote: {
       match: CREATE_NOTE,
       async onReceive(ctx, activity, recipients) {
         for (let recipientUri of recipients) {
-          await ctx.call('notification.newMessage', {
-            content: activity.object.content,
-            senderUri: activity.actor,
-            recipientUri,
-          });
+          await this.notifyNewMessage(ctx, activity, recipientUri);
         }
       },
     },

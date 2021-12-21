@@ -29,12 +29,15 @@
 <div class="greybg">
     <img src="{{ frontLogo }}" alt="{{ frontName }}" style="max-width: 100%;">
     <p>
-        {{user.vcard:given-name}} s'est {{#if joined}}inscrit à{{else}}désinscrit de{{/if}} votre événement intitulé "{{event.name}}"
+        <em>{{title}}</em>
+    </p>
+    <p>
+        {{{bodyWithBr}}}
     </p>
     <p>
         <br />
-        <a href="{{eventFrontUri}}" class="button">
-            Voir l'événement
+        <a href="{{action.link}}" class="button">
+            {{action.name}}
         </a>
         <br />
     </p>

@@ -39,6 +39,24 @@ module.exports = {
       permissions: {},
     });
   },
+  methods: {
+    async notifyContactOffer(ctx, senderUri, recipientUri, message) {
+      const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: senderUri, webId: 'system' });
+
+      await ctx.call('notification.notifyUser', {
+        to: recipientUri,
+        key: 'contact-offer',
+        payload: {
+          title: `${senderProfile['vcard:given-name']} souhaiterait se connecter avec vous`,
+          body: message,
+          actions: [{
+            name: 'Mon réseau',
+            link: '/Profile',
+          }]
+        }
+      });
+    }
+  },
   activities: {
     contactRequest: {
       match: CONTACT_REQUEST,
@@ -87,11 +105,7 @@ module.exports = {
             item: activity,
           });
 
-          await ctx.call('notification.contactOffer', {
-            message: activity.content,
-            senderUri: activity.actor,
-            recipientUri,
-          });
+          await this.notifyContactOffer(ctx, activity.actor, recipientUri, activity.content);
         }
       },
     },

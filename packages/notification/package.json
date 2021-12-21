@@ -1,0 +1,15 @@
+{
+  "name": "@activitypods/notification",
+  "version": "0.2.1",
+  "description": "ActivityPods app for notifications",
+  "license": "Apache-2.0",
+  "author": "Virtual Assembly",
+  "dependencies": {
+    "handlebars": "^4.7.7",
+    "moleculer-mail": "^1.2.5",
+    "url-join": "^4.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -62,7 +62,7 @@ module.exports = {
 
         for (let eventUri of results.map((node) => node.eventUri.value)) {
           await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_COMING, EVENT_STATUS_OPEN] });
-          await ctx.emit('event.status.coming', { eventUri });
+          await ctx.emit('events.status.coming', { eventUri });
         }
       }
     },
@@ -98,7 +98,7 @@ module.exports = {
 
         for (let eventUri of results.map((node) => node.eventUri.value)) {
           await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_COMING, EVENT_STATUS_CLOSED] });
-          await ctx.emit('event.status.closed', { eventUri });
+          await ctx.emit('events.status.closed', { eventUri });
         }
       }
     },
@@ -123,7 +123,7 @@ module.exports = {
 
         for (let eventUri of results.map((node) => node.eventUri.value)) {
           await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_FINISHED, EVENT_STATUS_CLOSED] });
-          await ctx.emit('event.status.finished', { eventUri });
+          await ctx.emit('events.status.finished', { eventUri });
         }
       }
     },

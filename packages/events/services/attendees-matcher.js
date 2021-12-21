@@ -4,7 +4,7 @@ const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 module.exports = {
   name: 'events.attendees-matcher',
   events: {
-    async 'event.status.finished'(ctx) {
+    async 'events.status.finished'(ctx) {
       const { eventUri } = ctx.params;
       const event = await ctx.call('events.event.get', {
         resourceUri: eventUri,

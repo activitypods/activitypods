@@ -12,8 +12,7 @@ module.exports = {
       attachToTypes: [OBJECT_TYPES.EVENT],
       attachPredicate: 'http://activitypods.org/ns/core#attendees',
       ordered: false,
-      dereferenceItems: false,
-      permissions: {},
+      dereferenceItems: false
     });
   },
   methods: {

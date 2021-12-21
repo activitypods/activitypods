@@ -12,8 +12,7 @@ module.exports = {
       attachToTypes: [OBJECT_TYPES.EVENT],
       attachPredicate: 'http://activitypods.org/ns/core#invitees',
       ordered: false,
-      dereferenceItems: false,
-      permissions: {},
+      dereferenceItems: false
     });
 
     await this.broker.call('activitypub.registry.register', {
@@ -21,8 +20,7 @@ module.exports = {
       attachToTypes: [OBJECT_TYPES.EVENT],
       attachPredicate: 'http://activitypods.org/ns/core#inviters',
       ordered: false,
-      dereferenceItems: false,
-      permissions: {},
+      dereferenceItems: false
     });
   },
   methods: {
@@ -152,7 +150,7 @@ module.exports = {
       if (hasType(newData, OBJECT_TYPES.EVENT)) {
         const event = await ctx.call('activitypub.object.awaitCreateComplete', {
           objectUri: resourceUri,
-          predicates: ['dc:creator', 'apods:attendees'],
+          predicates: ['dc:creator', 'apods:attendees', 'apods:invitees', 'apods:inviters'],
         });
 
         const organizer = await ctx.call('activitypub.actor.get', { actorUri: event['dc:creator'] });
@@ -167,7 +165,7 @@ module.exports = {
           groupSlug: this.getInviteesGroupSlug(resourceUri),
           webId: organizer.id,
         });
-        await ctx.call('webacl.group.create', {
+        const { groupUri: invitersGroupUri } = await ctx.call('webacl.group.create', {
           groupSlug: this.getInvitersGroupSlug(resourceUri),
           webId: organizer.id,
         });
@@ -178,6 +176,30 @@ module.exports = {
           additionalRights: {
             group: {
               uri: inviteesGroupUri,
+              read: true,
+            },
+          },
+          webId: organizer.id,
+        });
+
+        // Give read rights to invitees for the list of attendees
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri: event['apods:attendees'],
+          additionalRights: {
+            group: {
+              uri: inviteesGroupUri,
+              read: true,
+            },
+          },
+          webId: organizer.id,
+        });
+
+        // Give read rights to inviters for the list of invitees
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri: event['apods:invitees'],
+          additionalRights: {
+            group: {
+              uri: invitersGroupUri,
               read: true,
             },
           },

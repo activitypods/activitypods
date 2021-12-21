@@ -17,8 +17,7 @@ module.exports = {
       attachToTypes: Object.values(ACTOR_TYPES),
       attachPredicate: 'http://activitypods.org/ns/core#contacts',
       ordered: false,
-      dereferenceItems: false,
-      permissions: {},
+      dereferenceItems: false
     });
 
     await this.broker.call('activitypub.registry.register', {
@@ -26,8 +25,7 @@ module.exports = {
       attachToTypes: Object.values(ACTOR_TYPES),
       attachPredicate: 'http://activitypods.org/ns/core#contactRequests',
       ordered: false,
-      dereferenceItems: true,
-      permissions: {},
+      dereferenceItems: true
     });
 
     await this.broker.call('activitypub.registry.register', {
@@ -35,8 +33,7 @@ module.exports = {
       attachToTypes: Object.values(ACTOR_TYPES),
       attachPredicate: 'http://activitypods.org/ns/core#rejectedContacts',
       ordered: false,
-      dereferenceItems: false,
-      permissions: {},
+      dereferenceItems: false
     });
   },
   methods: {

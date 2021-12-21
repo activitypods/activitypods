@@ -20,13 +20,6 @@ module.exports = {
     CacherMiddleware(cacherConfig), // Set the cacher before the WebAcl middleware
     WebAclMiddleware({ podProvider: true }),
   ],
-  errorHandler(error, { ctx, event, action }) {
-    if (ctx && ctx.call) {
-      const { requestID, params } = ctx;
-      ctx.call('sentry.sendError', { error, requestID, params, event, action });
-    }
-    throw error;
-  },
   logger: {
     type: 'Console',
     options: {

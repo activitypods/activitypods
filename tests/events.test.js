@@ -8,9 +8,7 @@ jest.setTimeout(30000);
 
 let broker;
 
-const mockInvitation = jest.fn(() => Promise.resolve('Fake Invitation'));
-const mockJoinOrLeave = jest.fn(() => Promise.resolve('Fake Join Or Leave'));
-const mockContactOffer = jest.fn(() => Promise.resolve('Fake Contact Offer'));
+const mockNotifyUser = jest.fn(() => Promise.resolve());
 
 beforeAll(async () => {
   broker = await initialize();
@@ -24,9 +22,7 @@ beforeAll(async () => {
   await broker.createService({
     name: 'notification',
     actions: {
-      invitation: mockInvitation,
-      joinOrLeave: mockJoinOrLeave,
-      contactOffer: mockContactOffer,
+      notifyUser: mockNotifyUser,
     },
   });
 
@@ -53,7 +49,7 @@ describe('Test contacts app', () => {
 
       actors[i] = await broker.call('activitypub.actor.awaitCreateComplete', {
         actorUri: webId,
-        additionalKeys: ['url'],
+        additionalKeys: ['url', 'apods:contacts', 'apods:contactRequests', 'apods:rejectedContacts'],
       });
 
       expect(actors[i].preferredUsername).toBe(actorData.username);
@@ -116,7 +112,7 @@ describe('Test contacts app', () => {
     });
 
     await waitForExpect(() => {
-      expect(mockInvitation).toHaveBeenCalledTimes(2);
+      expect(mockNotifyUser).toHaveBeenCalledTimes(2);
     });
 
     await waitForExpect(async () => {
@@ -198,7 +194,7 @@ describe('Test contacts app', () => {
     });
 
     await waitForExpect(() => {
-      expect(mockInvitation).toHaveBeenCalledTimes(2);
+      expect(mockNotifyUser).toHaveBeenCalledTimes(3);
     });
 
     await waitForExpect(async () => {

@@ -7,7 +7,7 @@ jest.setTimeout(30000);
 
 let broker;
 
-const mockContactOffer = jest.fn(() => Promise.resolve('Fake Contact Offer'));
+const mockNotifyUser = jest.fn(() => Promise.resolve());
 
 beforeAll(async () => {
   broker = await initialize();
@@ -20,7 +20,7 @@ beforeAll(async () => {
   await broker.createService({
     name: 'notification',
     actions: {
-      contactOffer: mockContactOffer,
+      notifyUser: mockNotifyUser,
     },
   });
 
@@ -47,7 +47,7 @@ describe('Test contacts app', () => {
 
       actors[i] = await broker.call('activitypub.actor.awaitCreateComplete', {
         actorUri: webId,
-        additionalKeys: ['url'],
+        additionalKeys: ['url', 'apods:contacts', 'apods:contactRequests', 'apods:rejectedContacts'],
       });
 
       expect(actors[i].preferredUsername).toBe(actorData.username);
@@ -73,7 +73,7 @@ describe('Test contacts app', () => {
     });
 
     await waitForExpect(() => {
-      expect(mockContactOffer).toHaveBeenCalledTimes(1);
+      expect(mockNotifyUser).toHaveBeenCalledTimes(1);
     });
 
     await waitForExpect(async () => {

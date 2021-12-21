@@ -55,6 +55,22 @@ module.exports = {
           }]
         }
       });
+    },
+    async notifyAcceptContactOffer(ctx, senderUri, recipientUri) {
+      const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: senderUri, webId: 'system' });
+
+      await ctx.call('notification.notifyUser', {
+        to: recipientUri,
+        key: 'contact-offer-accept',
+        payload: {
+          title: `${senderProfile['vcard:given-name']} fait maintenant partie de votre réseau`,
+          message: `${senderProfile['vcard:given-name']} a accepté votre demande de mise en relation. Vous pouvez maintenant l'inviter aux événements que vous organisez.`,
+          actions: [{
+            name: 'Mon réseau',
+            link: '/Profile',
+          }]
+        }
+      });
     }
   },
   activities: {
@@ -156,7 +172,7 @@ module.exports = {
             item: emitter.id,
           });
 
-          // TODO Send a notification
+          await this.notifyAcceptContactOffer(ctx, activity.actor, recipientUri);
         }
       },
     },

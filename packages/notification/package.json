@@ -1,6 +1,6 @@
 {
   "name": "@activitypods/notification",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "ActivityPods app for notifications",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",

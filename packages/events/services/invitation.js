@@ -33,7 +33,7 @@ module.exports = {
           title: `${senderProfile['vcard:given-name']} vous invite à un événement "${activity.object.name}"`,
           actions: [{
             name: 'Voir',
-            link: '/Event/' + encodeURIComponent(activity.object.id) + '/show',
+            link: '/e/' + encodeURIComponent(activity.object.id),
           }]
         }
       });

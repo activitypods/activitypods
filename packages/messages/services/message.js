@@ -23,7 +23,7 @@ module.exports = {
           body: activity.object.content,
           actions: [{
             name: 'Répondre',
-            link: '/Profile/' + encodeURIComponent(activity.actor) + '/show',
+            link: '/Profile/' + encodeURIComponent(senderProfile.id) + '/show',
           }]
         },
       });

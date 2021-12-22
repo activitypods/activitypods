@@ -31,7 +31,7 @@ module.exports = {
           title,
           actions: [{
             name: 'Voir',
-            link: '/Event/' + encodeURIComponent(eventUri) + '/show',
+            link: '/e/' + encodeURIComponent(eventUri),
           }]
         }
       });

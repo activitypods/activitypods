@@ -155,9 +155,17 @@ module.exports = {
 
         const organizer = await ctx.call('activitypub.actor.get', { actorUri: event['dc:creator'] });
 
-        // Add the organiser to the list of attendees
+        // Add the organiser to the list of attendees, invitees and inviters
         await ctx.call('activitypub.collection.attach', {
           collectionUri: event['apods:attendees'],
+          item: organizer.id,
+        });
+        await ctx.call('activitypub.collection.attach', {
+          collectionUri: event['apods:invitees'],
+          item: organizer.id,
+        });
+        await ctx.call('activitypub.collection.attach', {
+          collectionUri: event['apods:inviters'],
           item: organizer.id,
         });
 

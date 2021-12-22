@@ -47,7 +47,7 @@ Attached to all events:
 #### Emitter's side effects
 
 - The recipients are added to the `/invitees` collection.
-- The recipients are added to a WebACL group which can view the event.
+- The recipients are added to a WebACL group which can view the event and the `/attendees` collection.
 
 #### Recipients' side effects
 
@@ -73,7 +73,7 @@ Attached to all events:
 
 - If the offer is sent by the event organizer, it means he wants to give invitees the right to share this event
   - The recipients are added to the `/inviters` collection.
-  - The recipients are added to a WebACL group which can view the other invitees.
+  - The recipients are added to a WebACL group which can view the `/invitees` collection.
 
 #### Recipients' side effects
 

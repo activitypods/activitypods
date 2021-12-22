@@ -33,7 +33,7 @@ afterAll(async () => {
   await broker.stop();
 });
 
-describe('Test contacts app', () => {
+describe('Test events app', () => {
   let actors = [],
     alice,
     bob,
@@ -153,6 +153,16 @@ describe('Test contacts app', () => {
         })
       ).resolves.toBeTruthy();
     });
+
+    // An invitees has the right to see the list of attendees
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.get', {
+          collectionUri: eventUri + '/attendees',
+          webId: alice.id,
+        })
+      ).resolves.not.toBeNull();
+    });
   });
 
   test('Alice offer Craig to invite his contacts to her event', async () => {
@@ -175,6 +185,16 @@ describe('Test contacts app', () => {
           itemUri: craig.id,
         })
       ).resolves.toBeTruthy();
+    });
+
+    // An inviter has the right to see the list of invitees
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.get', {
+          collectionUri: eventUri + '/invitees',
+          webId: craig.id,
+        })
+      ).resolves.not.toBeNull();
     });
   });
 

@@ -26,7 +26,7 @@ module.exports = {
 
       await ctx.call('notification.notifyUser', {
         to: event['dc:creator'],
-        key: 'join-or-leave',
+        key: joined ? 'join-event' : 'leave-event',
         payload: {
           title,
           actions: [{

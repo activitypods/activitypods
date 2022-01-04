@@ -27,9 +27,10 @@ const CoreService = {
       password: null,
     },
     jsonContext: null,
+    queueServiceUrl: null
   },
   created() {
-    let { baseUrl, baseDir, fuseki, jsonContext } = this.settings;
+    let { baseUrl, baseDir, fuseki, jsonContext, queueServiceUrl } = this.settings;
 
     // If an external JSON context is not provided, we will use a local one
     const localJsonContext = urlJoin(baseUrl, '_system', 'context.json');
@@ -40,6 +41,10 @@ const CoreService = {
         jsonContext: jsonContext || localJsonContext,
         containers,
         podProvider: true,
+        dispatch: {
+          queueServiceUrl,
+          delay: process.env.NODE_ENV === 'test' ? 1000 : 30000 // Ensure onEmit side effects have time to run
+        }
       },
     });
 

@@ -7,6 +7,9 @@ const EVENT_STATUS_FINISHED = 'apods:Finished';
 const EVENT_STATUS_OPEN = 'apods:Open';
 const EVENT_STATUS_CLOSED = 'apods:Closed';
 
+const COMING_FINISHED_STATUSES = [EVENT_STATUS_COMING, EVENT_STATUS_FINISHED];
+const OPEN_CLOSED_STATUSES = [EVENT_STATUS_OPEN, EVENT_STATUS_CLOSED];
+
 module.exports = {
   name: 'events.status',
   mixins: [CronMixin],
@@ -14,14 +17,23 @@ module.exports = {
   actions: {
     async set(ctx) {
       const { eventUri, newStatus } = ctx.params;
-      let event = await ctx.call('events.event.get', {
+      const event = await ctx.call('events.event.get', {
         resourceUri: eventUri,
         accept: MIME_TYPES.JSON,
         webId: 'system',
       });
 
+      let otherStatus;
+      if( COMING_FINISHED_STATUSES.includes(newStatus) ) {
+        otherStatus = event['apods:hasStatus'] && defaultToArray(event['apods:hasStatus']).find(s => OPEN_CLOSED_STATUSES.includes(s));
+      } else if( OPEN_CLOSED_STATUSES.includes(newStatus) ) {
+        otherStatus = event['apods:hasStatus'] && defaultToArray(event['apods:hasStatus']).find(s => COMING_FINISHED_STATUSES.includes(s));
+      } else {
+        throw new Error('Invalid status ' + newStatus);
+      }
+
       await ctx.call('events.event.put', {
-        resource: { ...event, 'apods:hasStatus': newStatus },
+        resource: { ...event, 'apods:hasStatus': [newStatus, otherStatus] },
         contentType: MIME_TYPES.JSON,
         webId: 'system',
       });
@@ -38,8 +50,33 @@ module.exports = {
     },
     async tagNewEvent(ctx) {
       const { eventUri } = ctx.params;
+
       // TODO ensure that the event is indeed coming and open
-      await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_COMING, EVENT_STATUS_OPEN] });
+      await this.actions.set({ eventUri, newStatus: EVENT_STATUS_COMING });
+      await this.actions.set({ eventUri, newStatus: EVENT_STATUS_OPEN });
+    },
+    async tagUpdatedEvent(ctx) {
+      const { eventUri } = ctx.params;
+
+      const event = await ctx.call('events.event.get', {
+        resourceUri: eventUri,
+        accept: MIME_TYPES.JSON,
+        webId: 'system',
+      });
+
+      if( event['apods:maxAttendees'] ) {
+        // TODO add a activitypub.collection.count action
+        const attendeesCollection = await ctx.call('activitypub.collection.get', {
+          collectionUri: event['apods:attendees'],
+          webId: 'system',
+        });
+
+        if( !event['apods:hasStatus'].includes(EVENT_STATUS_CLOSED) && attendeesCollection.items.length >= event['apods:maxAttendees'] ) {
+          await this.actions.set({ eventUri, newStatus: EVENT_STATUS_CLOSED });
+        } else if( !event['apods:hasStatus'].includes(EVENT_STATUS_OPEN) && attendeesCollection.items.length < event['apods:maxAttendees'] ) {
+          await this.actions.set({ eventUri, newStatus: EVENT_STATUS_OPEN });
+        }
+      }
     },
     async tagComing(ctx) {
       for (let dataset of await ctx.call('pod.list')) {
@@ -61,7 +98,7 @@ module.exports = {
         });
 
         for (let eventUri of results.map((node) => node.eventUri.value)) {
-          await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_COMING, EVENT_STATUS_OPEN] });
+          await this.actions.set({ eventUri, newStatus: EVENT_STATUS_COMING });
           await ctx.emit('events.status.coming', { eventUri });
         }
       }
@@ -97,7 +134,7 @@ module.exports = {
         });
 
         for (let eventUri of results.map((node) => node.eventUri.value)) {
-          await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_COMING, EVENT_STATUS_CLOSED] });
+          await this.actions.set({ eventUri, newStatus: EVENT_STATUS_CLOSED });
           await ctx.emit('events.status.closed', { eventUri });
         }
       }
@@ -122,7 +159,8 @@ module.exports = {
         });
 
         for (let eventUri of results.map((node) => node.eventUri.value)) {
-          await this.actions.set({ eventUri, newStatus: [EVENT_STATUS_FINISHED, EVENT_STATUS_CLOSED] });
+          await this.actions.set({ eventUri, newStatus: EVENT_STATUS_FINISHED });
+          await this.actions.set({ eventUri, newStatus: EVENT_STATUS_CLOSED });
           await ctx.emit('events.status.finished', { eventUri });
         }
       }

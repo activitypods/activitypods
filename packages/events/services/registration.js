@@ -92,6 +92,9 @@ module.exports = {
           item: activity.actor,
         });
 
+        // Tag event as closed if max attendees has been reached
+        await ctx.call('events.status.tagUpdatedEvent', { eventUri: event.id });
+
         await this.notifyJoinOrLeave(ctx, event.id, activity.actor, true);
 
         // TODO send confirmation mail to participant
@@ -117,6 +120,9 @@ module.exports = {
           collectionUri: event['apods:attendees'],
           item: activity.actor,
         });
+
+        // Tag event as open if the number of attendees is now lower than max attendees
+        await ctx.call('events.status.tagUpdatedEvent', { eventUri: event.id });
 
         await this.notifyJoinOrLeave(ctx, event.id, activity.actor, false);
       },

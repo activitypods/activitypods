@@ -53,6 +53,23 @@ module.exports = {
         }
       });
     },
+    async notifyPostEventContactOffer(ctx, senderUri, recipientUri, eventUri) {
+      const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: senderUri, webId: 'system' });
+      const event = await ctx.call('events.event.get', { resourceUri: eventUri, webId: 'system' });
+
+      await ctx.call('notification.notifyUser', {
+        to: recipientUri,
+        key: 'post-event-contact-offer',
+        payload: {
+          title: `Ajoutez ${senderProfile['vcard:given-name']} à votre réseau`,
+          body: `Suite à l'événement ${event.name}, vous avez la possibilité d'ajouter ${senderProfile['vcard:given-name']} à vos contacts`,
+          actions: [{
+            name: 'Mon réseau',
+            link: '/Profile',
+          }]
+        }
+      });
+    },
     async notifyAcceptContactOffer(ctx, senderUri, recipientUri) {
       const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: senderUri, webId: 'system' });
 
@@ -118,7 +135,11 @@ module.exports = {
             item: activity,
           });
 
-          await this.notifyContactOffer(ctx, activity.actor, recipientUri, activity.content);
+          if( activity.context ) {
+            await this.notifyPostEventContactOffer(ctx, activity.actor, recipientUri, activity.context);
+          } else {
+            await this.notifyContactOffer(ctx, activity.actor, recipientUri, activity.content);
+          }
         }
       },
     },
@@ -153,23 +174,27 @@ module.exports = {
         });
       },
       async onReceive(ctx, activity, recipients) {
-        for (let recipientUri of recipients) {
-          const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
-          const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
+        // If there is a context, the contact offer was automatic (post event suggestion)
+        // so we don't want to automatically add the contact back if it was accepted
+        if( !activity.object.context ) {
+          for (let recipientUri of recipients) {
+            const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
+            const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
-          // Cache the other actor's profile (it should be visible now)
-          await ctx.call('activitypub.object.cacheRemote', {
-            objectUri: emitter.url,
-            actorUri: activity.to,
-          });
+            // Cache the other actor's profile (it should be visible now)
+            await ctx.call('activitypub.object.cacheRemote', {
+              objectUri: emitter.url,
+              actorUri: activity.to,
+            });
 
-          // Add the other actor to my contacts list
-          await ctx.call('activitypub.collection.attach', {
-            collectionUri: recipient['apods:contacts'],
-            item: emitter.id,
-          });
+            // Add the other actor to my contacts list
+            await ctx.call('activitypub.collection.attach', {
+              collectionUri: recipient['apods:contacts'],
+              item: emitter.id,
+            });
 
-          await this.notifyAcceptContactOffer(ctx, activity.actor, recipientUri);
+            await this.notifyAcceptContactOffer(ctx, activity.actor, recipientUri);
+          }
         }
       },
     },

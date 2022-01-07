@@ -76,6 +76,8 @@ describe('Test contacts app', () => {
       expect(mockNotifyUser).toHaveBeenCalledTimes(1);
     });
 
+    expect(mockNotifyUser.mock.calls[0][0].params.key).toBe('contact-offer');
+
     await waitForExpect(async () => {
       await expect(
         broker.call('webacl.resource.hasRights', {

@@ -72,7 +72,7 @@ describe('Test events app', () => {
   });
 
   test('Alice create an event', async () => {
-    eventUri = await broker.call('ldp.container.post', {
+    eventUri = await broker.call('events.event.post', {
       containerUri: alice.id + '/data/events',
       resource: {
         type: OBJECT_TYPES.EVENT,
@@ -114,6 +114,9 @@ describe('Test events app', () => {
     await waitForExpect(() => {
       expect(mockNotifyUser).toHaveBeenCalledTimes(2);
     });
+
+    expect(mockNotifyUser.mock.calls[0][0].params.key).toBe('invitation');
+    expect(mockNotifyUser.mock.calls[1][0].params.key).toBe('invitation');
 
     await waitForExpect(async () => {
       await expect(
@@ -217,6 +220,8 @@ describe('Test events app', () => {
       expect(mockNotifyUser).toHaveBeenCalledTimes(3);
     });
 
+    expect(mockNotifyUser.mock.calls[2][0].params.key).toBe('invitation');
+
     await waitForExpect(async () => {
       await expect(
         broker.call('activitypub.collection.includes', {
@@ -271,25 +276,14 @@ describe('Test events app', () => {
         })
       ).resolves.toMatchObject({ read: true });
     });
-  });
 
-  test('Craig leave Alice event', async () => {
-    await broker.call('activitypub.outbox.post', {
-      collectionUri: craig.outbox,
-      type: ACTIVITY_TYPES.LEAVE,
-      actor: craig.id,
-      object: eventUri,
-      to: alice.id,
+    await waitForExpect(() => {
+      expect(mockNotifyUser).toHaveBeenCalledTimes(6);
     });
 
-    await waitForExpect(async () => {
-      await expect(
-        broker.call('activitypub.collection.includes', {
-          collectionUri: eventUri + '/attendees',
-          itemUri: craig.id,
-        })
-      ).resolves.toBeFalsy();
-    });
+    expect(mockNotifyUser.mock.calls[3][0].params.key).toBe('join-event');
+    expect(mockNotifyUser.mock.calls[4][0].params.key).toBe('join-event');
+    expect(mockNotifyUser.mock.calls[5][0].params.key).toBe('join-event');
   });
 
   test('Event is coming', async () => {
@@ -299,7 +293,7 @@ describe('Test events app', () => {
     startTime.setDate(now.getDate() + 1);
     endTime.setDate(now.getDate() + 2);
 
-    await broker.call('ldp.resource.patch', {
+    await broker.call('events.event.patch', {
       resourceUri: eventUri,
       resource: {
         '@id': eventUri,
@@ -330,7 +324,7 @@ describe('Test events app', () => {
     endTime.setDate(now.getDate() + 2);
     closingTime.setDate(now.getDate() - 1);
 
-    await broker.call('ldp.resource.patch', {
+    await broker.call('events.event.patch', {
       resourceUri: eventUri,
       resource: {
         '@id': eventUri,
@@ -356,17 +350,20 @@ describe('Test events app', () => {
   test('Event is closed because max attendees is reached', async () => {
     const now = new Date();
     let startTime = new Date(now),
-      endTime = new Date(now);
+      endTime = new Date(now),
+      closingTime = new Date(now);
     startTime.setDate(now.getDate() + 2);
     endTime.setDate(now.getDate() + 3);
+    closingTime.setDate(now.getDate() + 3);
 
-    await broker.call('ldp.resource.patch', {
+    await broker.call('events.event.patch', {
       resourceUri: eventUri,
       resource: {
         '@id': eventUri,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
-        'apods:maxAttendees': 3,
+        'apods:closingTime': closingTime.toISOString(),
+        'apods:maxAttendees': 4,
       },
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
@@ -383,6 +380,42 @@ describe('Test events app', () => {
     });
   });
 
+  test('Event is open again because Craig left', async () => {
+    await broker.call('activitypub.outbox.post', {
+      collectionUri: craig.outbox,
+      type: ACTIVITY_TYPES.LEAVE,
+      actor: craig.id,
+      object: eventUri,
+      to: alice.id,
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: eventUri + '/attendees',
+          itemUri: craig.id,
+        })
+      ).resolves.toBeFalsy();
+    });
+
+    await waitForExpect(() => {
+      expect(mockNotifyUser).toHaveBeenCalledTimes(7);
+    });
+
+    expect(mockNotifyUser.mock.calls[6][0].params.key).toBe('leave-event');
+
+    // This shouldn't have an impact
+    await broker.call('events.status.tagComing');
+    await broker.call('events.status.tagClosed');
+    await broker.call('events.status.tagFinished');
+
+    await expect(
+      broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
+    ).resolves.toMatchObject({
+      'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
+    });
+  });
+
   test('Event is finished and contact requests are sent', async () => {
     const now = new Date();
     let startTime = new Date(now),
@@ -390,7 +423,7 @@ describe('Test events app', () => {
     startTime.setDate(now.getDate() - 2);
     endTime.setDate(now.getDate() - 1);
 
-    await broker.call('ldp.resource.patch', {
+    await broker.call('events.event.patch', {
       resourceUri: eventUri,
       resource: {
         '@id': eventUri,
@@ -450,5 +483,14 @@ describe('Test events app', () => {
         totalItems: 1,
       });
     });
+
+    await waitForExpect(() => {
+      expect(mockNotifyUser).toHaveBeenCalledTimes(11);
+    });
+
+    expect(mockNotifyUser.mock.calls[7][0].params.key).toBe('post-event-contact-offer');
+    expect(mockNotifyUser.mock.calls[8][0].params.key).toBe('post-event-contact-offer');
+    expect(mockNotifyUser.mock.calls[9][0].params.key).toBe('post-event-contact-offer');
+    expect(mockNotifyUser.mock.calls[10][0].params.key).toBe('post-event-contact-offer');
   });
 });

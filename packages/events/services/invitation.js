@@ -2,6 +2,8 @@ const { defaultToArray, hasType } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { INVITE_EVENT, OFFER_INVITE_EVENT } = require('../patterns');
 
+const delay = t => new Promise(resolve => setTimeout(resolve, t));
+
 module.exports = {
   name: 'events.invitation',
   mixins: [ActivitiesHandlerMixin],
@@ -67,6 +69,10 @@ module.exports = {
         }
       },
       async onReceive(ctx, activity, recipients) {
+        // Wait 10s to ensure all recipients have been given read rights to the event
+        // (Otherwise we may have a race condition with the onEmit function above)
+        await delay(process.env.NODE_ENV === 'test' ? 500 : 10000);
+
         for (let recipientUri of recipients) {
           // Cache remote event (we want to be able to fetch it with SPARQL)
           await ctx.call('activitypub.object.cacheRemote', {

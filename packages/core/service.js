@@ -42,8 +42,7 @@ const CoreService = {
         containers,
         podProvider: true,
         dispatch: {
-          queueServiceUrl,
-          delay: process.env.NODE_ENV === 'test' ? 1000 : 30000 // Ensure onEmit side effects have time to run
+          queueServiceUrl
         }
       },
     });

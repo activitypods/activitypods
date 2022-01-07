@@ -130,6 +130,20 @@ Accept: application/ld+json
 }
 ```
 
+## Linking to SemApps packages
+
+To modify packages on the [SemApps repository](https://github.com/assemblee-virtuelle/semapps) and see the changes before they are published, we recommend to use [`yarn link`](https://classic.yarnpkg.com/en/docs/cli/link/). The commands below will make this easier.
+
+```bash
+git clone git@github.com:assemblee-virtuelle/semapps.git
+git checkout next # ActivityPods currently use the packages published on the next branch
+cd /semapps/src/middleware
+yarn run link-all
+cd /ACTIVITYPODS_REPO
+yarn run link-semapps-packages
+```
+
+
 ## Deployment to production
 
 Follow the guide [here](deploy/README.md).

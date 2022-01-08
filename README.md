@@ -137,7 +137,7 @@ To modify packages on the [SemApps repository](https://github.com/assemblee-virt
 ```bash
 git clone git@github.com:assemblee-virtuelle/semapps.git
 git checkout next # ActivityPods currently use the packages published on the next branch
-cd /semapps/src/middleware
+cd semapps/src/middleware
 yarn run link-all
 cd /ACTIVITYPODS_REPO
 yarn run link-semapps-packages

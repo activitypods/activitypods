@@ -16,10 +16,25 @@ module.exports = {
   },
   hooks: {
     after: {
-      async post(ctx, res) {
-        await ctx.call('events.status.tagNewEvent', { eventUri: res });
+      async create(ctx, res) {
+        await ctx.call('events.status.tagNewEvent', { eventUri: res.resourceUri });
+        await ctx.call('events.invitation.giveRightsForNewEvent', { resourceUri: res.resourceUri });
         return res;
       },
+      async patch(ctx, res) {
+        await ctx.call('events.invitation.giveRightsForUpdatedEvent', res);
+        if( res.newData['apods:maxAttendees'] !== res.oldData['apods:maxAttendees'] ) {
+          await ctx.call('events.status.tagUpdatedEvent', { eventUri: res.resourceUri });
+        }
+        return res;
+      },
+      async put(ctx, res) {
+        await ctx.call('events.invitation.giveRightsForUpdatedEvent', res);
+        if( res.newData['apods:maxAttendees'] !== res.oldData['apods:maxAttendees'] ) {
+          await ctx.call('events.status.tagUpdatedEvent', { eventUri: res.resourceUri });
+        }
+        return res;
+      }
     },
   },
 };

@@ -18,7 +18,7 @@ module.exports = {
   events: {
     async 'auth.registered'(ctx) {
       const { webId, profileData } = ctx.params;
-      const containerUri = await this.getContainerUri(webId);
+      const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
       await this.waitForContainerCreation(containerUri);
 

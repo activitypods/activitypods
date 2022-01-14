@@ -39,7 +39,8 @@ describe('Test events app', () => {
     bob,
     craig,
     daisy,
-    eventUri;
+    eventUri,
+    locationUri;
 
   test('Create 4 pods', async () => {
     for (let i = 1; i <= 4; i++) {
@@ -72,11 +73,22 @@ describe('Test events app', () => {
   });
 
   test('Alice create an event', async () => {
+    locationUri = await broker.call('contacts.location.post', {
+      containerUri: alice.id + '/data/locations',
+      resource: {
+        type: 'vcard:Location',
+        'vcard:given-name': 'Alice place',
+      },
+      contentType: MIME_TYPES.JSON,
+      webId: alice.id,
+    });
+
     eventUri = await broker.call('events.event.post', {
       containerUri: alice.id + '/data/events',
       resource: {
         type: OBJECT_TYPES.EVENT,
         name: 'Birthday party !!',
+        location: locationUri
       },
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
@@ -146,6 +158,17 @@ describe('Test events app', () => {
       ).resolves.toMatchObject({ read: true });
     });
 
+    // An invitee has the right to see the event location
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('webacl.resource.hasRights', {
+          resourceUri: locationUri,
+          rights: { read: true },
+          webId: bob.id,
+        })
+      ).resolves.toMatchObject({ read: true });
+    });
+
     // Alice event is cached in Bob dataset
     await waitForExpect(async () => {
       await expect(
@@ -165,6 +188,55 @@ describe('Test events app', () => {
           webId: alice.id,
         })
       ).resolves.not.toBeNull();
+    });
+  });
+
+  test('Alice change the location of her event', async () => {
+    const newLocationUri = await broker.call('contacts.location.post', {
+      containerUri: alice.id + '/data/locations',
+      resource: {
+        type: 'vcard:Location',
+        'vcard:given-name': 'Alice other place',
+      },
+      contentType: MIME_TYPES.JSON,
+      webId: alice.id,
+    });
+
+    const oldData = await broker.call('events.event.get', {
+      resourceUri: eventUri,
+      webId: alice.id,
+    });
+
+    await broker.call('events.event.put', {
+      resourceUri: eventUri,
+      resource: {
+        ...oldData,
+        location: newLocationUri,
+      },
+      contentType: MIME_TYPES.JSON,
+      webId: alice.id,
+    });
+
+    // Ensure the invitees have the right to see the new location
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('webacl.resource.hasRights', {
+          resourceUri: newLocationUri,
+          rights: { read: true },
+          webId: bob.id,
+        })
+      ).resolves.toMatchObject({ read: true });
+    });
+
+    // Ensure the invitees cannot see the old location anymore
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('webacl.resource.hasRights', {
+          resourceUri: locationUri,
+          rights: { read: true },
+          webId: bob.id,
+        })
+      ).resolves.toMatchObject({ read: false });
     });
   });
 
@@ -404,6 +476,12 @@ describe('Test events app', () => {
 
     expect(mockNotifyUser.mock.calls[6][0].params.key).toBe('leave-event');
 
+    await expect(
+      broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
+    ).resolves.toMatchObject({
+      'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
+    });
+
     // This shouldn't have an impact
     await broker.call('events.status.tagComing');
     await broker.call('events.status.tagClosed');
@@ -413,6 +491,35 @@ describe('Test events app', () => {
       broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
     ).resolves.toMatchObject({
       'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
+    });
+  });
+
+  test('Event is closed again because Alice changed the max attendees number', async () => {
+    await broker.call('events.event.patch', {
+      resourceUri: eventUri,
+      resource: {
+        '@id': eventUri,
+        'apods:maxAttendees': 3,
+      },
+      contentType: MIME_TYPES.JSON,
+      webId: alice.id,
+    });
+
+    await expect(
+      broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
+    ).resolves.toMatchObject({
+      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming']),
+    });
+
+    // This shouldn't have an impact
+    await broker.call('events.status.tagComing');
+    await broker.call('events.status.tagClosed');
+    await broker.call('events.status.tagFinished');
+
+    await expect(
+      broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
+    ).resolves.toMatchObject({
+      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming']),
     });
   });
 

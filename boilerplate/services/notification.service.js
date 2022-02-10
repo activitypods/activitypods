@@ -13,7 +13,6 @@ module.exports = {
     data: {
       frontName: CONFIG.FRONT_NAME,
       frontUrl: CONFIG.FRONT_URL,
-      frontLogo: CONFIG.FRONT_LOGO,
     }
   }
 };

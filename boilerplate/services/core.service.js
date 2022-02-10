@@ -13,6 +13,9 @@ module.exports = {
       password: CONFIG.JENA_PASSWORD,
     },
     jsonContext: CONFIG.JSON_CONTEXT,
-    queueServiceUrl: CONFIG.QUEUE_SERVICE_URL
+    queueServiceUrl: CONFIG.QUEUE_SERVICE_URL,
+    auth: {
+      reservedUsernames: CONFIG.AUTH_RESERVED_USER_NAMES,
+    }
   },
 };

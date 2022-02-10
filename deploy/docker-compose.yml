@@ -64,7 +64,7 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
 
   arena:
-    build: ./arena
+    build: ./arena/Dockerfile
     container_name: arena
     restart: always
     volumes:

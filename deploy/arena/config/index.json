@@ -6,6 +6,20 @@
       "host": "redis",
       "port": 6379,
       "db": 1
+    },
+    {
+      "name": "remotePost",
+      "hostId": "middleware",
+      "host": "redis",
+      "port": 6379,
+      "db": 1
+    },
+    {
+      "name": "localPost",
+      "hostId": "middleware",
+      "host": "redis",
+      "port": 6379,
+      "db": 1
     }
   ]
 }

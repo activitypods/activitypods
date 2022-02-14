@@ -3,7 +3,7 @@ module.exports = {
     new_message: {
       title: '%{name} sent you a message',
       actions: {
-        answer: 'Answer',
+        answer: 'Reply',
       },
     },
   },

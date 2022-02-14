@@ -16,16 +16,19 @@ module.exports = {
     async notifyNewMessage(ctx, activity, recipientUri) {
       const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: activity.actor, webId: 'system' });
       await ctx.call('notification.notifyUser', {
-        to: recipientUri,
-        key: 'new-message',
+        recipientUri,
+        key: 'new_message',
         payload: {
-          title: `${senderProfile['vcard:given-name']} vous a envoyé un message`,
+          title: 'new_message.title',
           body: activity.object.content,
           actions: [{
-            name: 'Répondre',
+            name: 'new_message.actions.answer',
             link: '/Profile/' + encodeURIComponent(senderProfile.id) + '/show',
           }]
         },
+        vars: {
+          name: senderProfile['vcard:given-name']
+        }
       });
     }
   },

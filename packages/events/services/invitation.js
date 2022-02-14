@@ -153,14 +153,18 @@ module.exports = {
     async notifyInvitation(ctx, activity, recipientUri) {
       const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: activity.actor, webId: 'system' });
       await ctx.call('notification.notifyUser', {
-        to: recipientUri,
+        recipientUri,
         key: 'invitation',
         payload: {
-          title: `${senderProfile['vcard:given-name']} vous invite à un événement "${activity.object.name}"`,
+          title: 'invitation.title',
           actions: [{
-            name: 'Voir',
+            name: 'invitation.actions.view',
             link: '/e/' + encodeURIComponent(activity.object.id),
           }]
+        },
+        vars: {
+          userName: senderProfile['vcard:given-name'],
+          eventName: activity.object.name
         }
       });
     },

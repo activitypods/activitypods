@@ -19,20 +19,21 @@ module.exports = {
     async notifyJoinOrLeave(ctx, eventUri, userUri, joined) {
       const userProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: userUri, webId: 'system' });
       const event = await ctx.call('events.event.get', { resourceUri: eventUri, webId: 'system' });
-
-      const title = joined
-        ? `${userProfile['vcard:given-name']} s'est inscrit à votre événement "${event.name}"`
-        : `${userProfile['vcard:given-name']} s'est désinscrit de votre événement "${event.name}"`
+      const key = joined ? 'join_event' : 'leave_event';
 
       await ctx.call('notification.notifyUser', {
-        to: event['dc:creator'],
-        key: joined ? 'join-event' : 'leave-event',
+        recipientUri: event['dc:creator'],
+        key,
         payload: {
-          title,
+          title: key + '.title',
           actions: [{
-            name: 'Voir',
+            name: key + '.actions.view',
             link: '/e/' + encodeURIComponent(eventUri),
           }]
+        },
+        vars: {
+          userName: userProfile['vcard:given-name'],
+          eventName: event.name
         }
       });
     }

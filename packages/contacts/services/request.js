@@ -41,15 +41,18 @@ module.exports = {
       const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: senderUri, webId: 'system' });
 
       await ctx.call('notification.notifyUser', {
-        to: recipientUri,
-        key: 'contact-offer',
+        recipientUri,
+        key: 'contact_offer',
         payload: {
-          title: `${senderProfile['vcard:given-name']} souhaiterait se connecter avec vous`,
+          title: 'contact_offer.title',
           body: message,
           actions: [{
-            name: 'Mon réseau',
+            name: 'contact_offer.actions.view',
             link: '/Profile',
           }]
+        },
+        vars: {
+          name: senderProfile['vcard:given-name']
         }
       });
     },
@@ -58,15 +61,19 @@ module.exports = {
       const event = await ctx.call('events.event.get', { resourceUri: eventUri, webId: 'system' });
 
       await ctx.call('notification.notifyUser', {
-        to: recipientUri,
-        key: 'post-event-contact-offer',
+        recipientUri,
+        key: 'post_event_contact_offer',
         payload: {
-          title: `Ajoutez ${senderProfile['vcard:given-name']} à votre réseau`,
-          body: `Suite à l'événement ${event.name}, vous avez la possibilité d'ajouter ${senderProfile['vcard:given-name']} à vos contacts`,
+          title: 'post_event_contact_offer.title',
+          body: 'post_event_contact_offer.body',
           actions: [{
-            name: 'Mon réseau',
+            name: 'post_event_contact_offer.actions.view',
             link: '/Profile',
           }]
+        },
+        vars: {
+          userName: senderProfile['vcard:given-name'],
+          eventName: event.name
         }
       });
     },
@@ -74,15 +81,18 @@ module.exports = {
       const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: senderUri, webId: 'system' });
 
       await ctx.call('notification.notifyUser', {
-        to: recipientUri,
-        key: 'contact-offer-accept',
+        recipientUri,
+        key: 'contact_offer_accept',
         payload: {
-          title: `${senderProfile['vcard:given-name']} fait maintenant partie de votre réseau`,
-          message: `${senderProfile['vcard:given-name']} a accepté votre demande de mise en relation. Vous pouvez maintenant l'inviter aux événements que vous organisez.`,
+          title: 'contact_offer_accept.title',
+          body: 'contact_offer_accept.body',
           actions: [{
-            name: 'Mon réseau',
+            name: 'contact_offer_accept.actions.view',
             link: '/Profile',
           }]
+        },
+        vars: {
+          name: senderProfile['vcard:given-name']
         }
       });
     }

@@ -55,6 +55,7 @@ const CoreService = {
         jwtPath: path.resolve(baseDir, './jwt'),
         reservedUsernames: ['sparql', 'auth', 'common', 'data', 'settings', 'localData', 'testData'],
         webIdSelection: ['nick'],
+        accountSelection: ['preferredLocale', 'preferredFrontUrl', 'preferredFrontName'],
         ...this.settings.auth
       },
     });

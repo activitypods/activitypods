@@ -24,10 +24,14 @@ module.exports = {
       });
 
       let otherStatus;
-      if( COMING_FINISHED_STATUSES.includes(newStatus) ) {
-        otherStatus = event['apods:hasStatus'] && defaultToArray(event['apods:hasStatus']).find(s => OPEN_CLOSED_STATUSES.includes(s));
-      } else if( OPEN_CLOSED_STATUSES.includes(newStatus) ) {
-        otherStatus = event['apods:hasStatus'] && defaultToArray(event['apods:hasStatus']).find(s => COMING_FINISHED_STATUSES.includes(s));
+      if (COMING_FINISHED_STATUSES.includes(newStatus)) {
+        otherStatus =
+          event['apods:hasStatus'] &&
+          defaultToArray(event['apods:hasStatus']).find((s) => OPEN_CLOSED_STATUSES.includes(s));
+      } else if (OPEN_CLOSED_STATUSES.includes(newStatus)) {
+        otherStatus =
+          event['apods:hasStatus'] &&
+          defaultToArray(event['apods:hasStatus']).find((s) => COMING_FINISHED_STATUSES.includes(s));
       } else {
         throw new Error('Invalid status ' + newStatus);
       }
@@ -64,16 +68,22 @@ module.exports = {
         webId: 'system',
       });
 
-      if( event['apods:maxAttendees'] ) {
+      if (event['apods:maxAttendees']) {
         // TODO add a activitypub.collection.count action
         const attendeesCollection = await ctx.call('activitypub.collection.get', {
           collectionUri: event['apods:attendees'],
           webId: 'system',
         });
 
-        if( !event['apods:hasStatus'].includes(EVENT_STATUS_CLOSED) && attendeesCollection.items.length >= event['apods:maxAttendees'] ) {
+        if (
+          !event['apods:hasStatus'].includes(EVENT_STATUS_CLOSED) &&
+          attendeesCollection.items.length >= event['apods:maxAttendees']
+        ) {
           await this.actions.set({ eventUri, newStatus: EVENT_STATUS_CLOSED });
-        } else if( !event['apods:hasStatus'].includes(EVENT_STATUS_OPEN) && attendeesCollection.items.length < event['apods:maxAttendees'] ) {
+        } else if (
+          !event['apods:hasStatus'].includes(EVENT_STATUS_OPEN) &&
+          attendeesCollection.items.length < event['apods:maxAttendees']
+        ) {
           await this.actions.set({ eventUri, newStatus: EVENT_STATUS_OPEN });
         }
       }

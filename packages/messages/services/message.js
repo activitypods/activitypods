@@ -14,23 +14,28 @@ module.exports = {
   dependencies: ['notification'],
   methods: {
     async notifyNewMessage(ctx, activity, recipientUri) {
-      const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: activity.actor, webId: 'system' });
+      const senderProfile = await ctx.call('activitypub.actor.getProfile', {
+        actorUri: activity.actor,
+        webId: 'system',
+      });
       await ctx.call('notification.notifyUser', {
         recipientUri,
         key: 'new_message',
         payload: {
           title: 'new_message.title',
           body: activity.object.content,
-          actions: [{
-            name: 'new_message.actions.answer',
-            link: '/Profile/' + encodeURIComponent(senderProfile.id) + '/show',
-          }]
+          actions: [
+            {
+              name: 'new_message.actions.answer',
+              link: '/Profile/' + encodeURIComponent(senderProfile.id) + '/show',
+            },
+          ],
         },
         vars: {
-          name: senderProfile['vcard:given-name']
-        }
+          name: senderProfile['vcard:given-name'],
+        },
       });
-    }
+    },
   },
   activities: {
     createNote: {

@@ -27,7 +27,7 @@ const CoreService = {
       password: null,
     },
     jsonContext: null,
-    queueServiceUrl: null
+    queueServiceUrl: null,
   },
   created() {
     let { baseUrl, baseDir, fuseki, jsonContext, queueServiceUrl } = this.settings;
@@ -42,8 +42,8 @@ const CoreService = {
         containers,
         podProvider: true,
         dispatch: {
-          queueServiceUrl
-        }
+          queueServiceUrl,
+        },
       },
     });
 
@@ -56,7 +56,7 @@ const CoreService = {
         reservedUsernames: ['sparql', 'auth', 'common', 'data', 'settings', 'localData', 'testData'],
         webIdSelection: ['nick'],
         accountSelection: ['preferredLocale', 'preferredFrontUrl', 'preferredFrontName'],
-        ...this.settings.auth
+        ...this.settings.auth,
       },
     });
 

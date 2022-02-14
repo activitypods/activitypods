@@ -32,8 +32,8 @@ const EventsApp = {
     });
   },
   async started() {
-    await this.broker.call('notification.loadTranslations', { translations })
-  }
+    await this.broker.call('notification.loadTranslations', { translations });
+  },
 };
 
 module.exports = EventsApp;

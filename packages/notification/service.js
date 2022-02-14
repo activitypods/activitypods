@@ -23,11 +23,11 @@ module.exports = {
   actions: {
     async loadTranslations(ctx) {
       const { translations } = ctx.params;
-      for( let [locale, phrases] of Object.entries(translations) ) {
-        if( this.polyglots.has(locale) ) {
+      for (let [locale, phrases] of Object.entries(translations)) {
+        if (this.polyglots.has(locale)) {
           this.polyglots.get(locale).extend(phrases);
         } else {
-          this.polyglots.set(locale, new Polyglot({ phrases, locale, allowMissing: true }))
+          this.polyglots.set(locale, new Polyglot({ phrases, locale, allowMissing: true }));
         }
       }
     },
@@ -38,8 +38,8 @@ module.exports = {
       const preferredLocale = recipientAccount.preferredLocale || this.settings.defaults.locale;
       const preferredFrontUrl = recipientAccount.preferredFrontUrl || this.settings.defaults.frontUrl;
 
-      const action = payload.actions ? payload.actions[0] : {}
-      if( action.link ) action.link = urlJoin(preferredFrontUrl, action.link);
+      const action = payload.actions ? payload.actions[0] : {};
+      if (action.link) action.link = urlJoin(preferredFrontUrl, action.link);
       action.name = this.translate(action.name, preferredLocale, vars);
 
       const title = this.translate(payload.title, preferredLocale, vars);
@@ -51,10 +51,10 @@ module.exports = {
           title,
           body,
           bodyWithBr: body ? body.replace(/\r\n|\r|\n/g, '<br />') : undefined,
-          action
+          action,
         },
       });
-    }
+    },
   },
   methods: {
     async queueMail(ctx, key, payload) {
@@ -66,12 +66,12 @@ module.exports = {
       }
     },
     translate(key, locale, options = {}) {
-      if( this.polyglots.has(locale) ) {
+      if (this.polyglots.has(locale)) {
         return this.polyglots.get(locale).t(key, options);
       } else {
-        throw new Error(`Key ${key} not found with locale ${locale}`)
+        throw new Error(`Key ${key} not found with locale ${locale}`);
       }
-    }
+    },
   },
   queues: {
     sendMail: {
@@ -81,7 +81,7 @@ module.exports = {
         const result = await this.broker.call('notification.send', job.data);
         job.progress(100);
         return result;
-      }
-    }
-  }
+      },
+    },
+  },
 };

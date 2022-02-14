@@ -3,7 +3,7 @@ const { defaultToArray } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { INVITE_EVENT, OFFER_INVITE_EVENT } = require('../patterns');
 
-const delay = t => new Promise(resolve => setTimeout(resolve, t));
+const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
 
 module.exports = {
   name: 'events.invitation',
@@ -15,7 +15,7 @@ module.exports = {
       attachToTypes: [OBJECT_TYPES.EVENT],
       attachPredicate: 'http://activitypods.org/ns/core#invitees',
       ordered: false,
-      dereferenceItems: false
+      dereferenceItems: false,
     });
 
     await this.broker.call('activitypub.registry.register', {
@@ -23,7 +23,7 @@ module.exports = {
       attachToTypes: [OBJECT_TYPES.EVENT],
       attachPredicate: 'http://activitypods.org/ns/core#inviters',
       ordered: false,
-      dereferenceItems: false
+      dereferenceItems: false,
     });
   },
   actions: {
@@ -52,7 +52,7 @@ module.exports = {
       });
 
       const inviteesGroupUri = this.getInviteesGroupUri(resourceUri);
-      const invitersGroupUri = this.getInvitersGroupUri(resourceUri)
+      const invitersGroupUri = this.getInvitersGroupUri(resourceUri);
 
       await ctx.call('webacl.group.create', { groupUri: inviteesGroupUri, webId: organizer.id });
       await ctx.call('webacl.group.create', { groupUri: invitersGroupUri, webId: organizer.id });
@@ -125,7 +125,7 @@ module.exports = {
       const { resourceUri, newData, oldData } = ctx.params;
 
       // If the event location changed, give rights to new location and remove rights from old location
-      if( newData.location !== oldData.location ) {
+      if (newData.location !== oldData.location) {
         await ctx.call('webacl.resource.addRights', {
           resourceUri: newData.location,
           additionalRights: {
@@ -144,38 +144,43 @@ module.exports = {
               uri: this.getInviteesGroupUri(resourceUri),
               read: true,
             },
-          }
+          },
         });
       }
-    }
+    },
   },
   methods: {
     async notifyInvitation(ctx, activity, recipientUri) {
-      const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: activity.actor, webId: 'system' });
+      const senderProfile = await ctx.call('activitypub.actor.getProfile', {
+        actorUri: activity.actor,
+        webId: 'system',
+      });
       await ctx.call('notification.notifyUser', {
         recipientUri,
         key: 'invitation',
         payload: {
           title: 'invitation.title',
-          actions: [{
-            name: 'invitation.actions.view',
-            link: '/e/' + encodeURIComponent(activity.object.id),
-          }]
+          actions: [
+            {
+              name: 'invitation.actions.view',
+              link: '/e/' + encodeURIComponent(activity.object.id),
+            },
+          ],
         },
         vars: {
           userName: senderProfile['vcard:given-name'],
-          eventName: activity.object.name
-        }
+          eventName: activity.object.name,
+        },
       });
     },
     getInviteesGroupUri(eventUri) {
       const uri = new URL(eventUri);
-      uri.pathname = path.join('/_groups',  uri.pathname, '/invitees');
+      uri.pathname = path.join('/_groups', uri.pathname, '/invitees');
       return uri.toString();
     },
     getInvitersGroupUri(eventUri) {
       const uri = new URL(eventUri);
-      uri.pathname = path.join('/_groups',  uri.pathname, '/inviters');
+      uri.pathname = path.join('/_groups', uri.pathname, '/inviters');
       return uri.toString();
     },
   },
@@ -280,5 +285,5 @@ module.exports = {
         });
       },
     },
-  }
+  },
 };

@@ -13,6 +13,6 @@ module.exports = {
     defaults: {
       locale: CONFIG.NOTIFICATIONS_DEFAULT_LOCALE,
       frontUrl: CONFIG.NOTIFICATIONS_DEFAULT_FRONT_URL,
-    }
-  }
+    },
+  },
 };

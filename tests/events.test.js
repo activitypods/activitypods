@@ -88,7 +88,7 @@ describe('Test events app', () => {
       resource: {
         type: OBJECT_TYPES.EVENT,
         name: 'Birthday party !!',
-        location: locationUri
+        location: locationUri,
       },
       contentType: MIME_TYPES.JSON,
       webId: alice.id,

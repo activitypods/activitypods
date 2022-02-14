@@ -3,16 +3,16 @@ module.exports = {
     new_message: {
       title: '%{name} sent you a message',
       actions: {
-        answer: 'Answer'
-      }
-    }
+        answer: 'Answer',
+      },
+    },
   },
   fr: {
     new_message: {
       title: '%{name} vous a envoyé un message',
       actions: {
-        answer: 'Répondre'
-      }
-    }
-  }
+        answer: 'Répondre',
+      },
+    },
+  },
 };

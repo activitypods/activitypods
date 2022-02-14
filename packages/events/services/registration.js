@@ -12,7 +12,7 @@ module.exports = {
       attachToTypes: [OBJECT_TYPES.EVENT],
       attachPredicate: 'http://activitypods.org/ns/core#attendees',
       ordered: false,
-      dereferenceItems: false
+      dereferenceItems: false,
     });
   },
   methods: {
@@ -26,17 +26,19 @@ module.exports = {
         key,
         payload: {
           title: key + '.title',
-          actions: [{
-            name: key + '.actions.view',
-            link: '/e/' + encodeURIComponent(eventUri),
-          }]
+          actions: [
+            {
+              name: key + '.actions.view',
+              link: '/e/' + encodeURIComponent(eventUri),
+            },
+          ],
         },
         vars: {
           userName: userProfile['vcard:given-name'],
-          eventName: event.name
-        }
+          eventName: event.name,
+        },
       });
-    }
+    },
   },
   activities: {
     joinEvent: {

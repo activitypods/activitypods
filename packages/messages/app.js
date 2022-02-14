@@ -1,5 +1,5 @@
 const MessageService = require('./services/message');
-const translations = require("./translations");
+const translations = require('./translations');
 
 const MessagesApp = {
   name: 'messages',
@@ -9,7 +9,7 @@ const MessagesApp = {
   },
   async started() {
     await this.broker.call('notification.loadTranslations', { translations });
-  }
+  },
 };
 
 module.exports = MessagesApp;

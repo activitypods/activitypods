@@ -3,9 +3,11 @@ const EventService = require('./services/event');
 const InvitationService = require('./services/invitation');
 const RegistrationService = require('./services/registration');
 const StatusService = require('./services/status');
+const translations = require('./translations');
 
 const EventsApp = {
   name: 'events',
+  dependencies: ['notification'],
   settings: {
     status: {
       coming: null,
@@ -14,7 +16,7 @@ const EventsApp = {
       closed: null,
     },
   },
-  async created() {
+  created() {
     let { status } = this.settings;
 
     this.broker.createService(EventService);
@@ -28,6 +30,9 @@ const EventsApp = {
     this.broker.createService(StatusService, {
       settings: { status },
     });
+  },
+  async started() {
+    await this.broker.call('notification.loadTranslations', { translations });
   },
 };
 

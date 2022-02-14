@@ -16,7 +16,7 @@ module.exports = {
     queueServiceUrl: CONFIG.QUEUE_SERVICE_URL,
     auth: {
       reservedUsernames: CONFIG.AUTH_RESERVED_USER_NAMES,
-      accountsDataset: CONFIG.AUTH_ACCOUNTS_DATASET
-    }
+      accountsDataset: CONFIG.AUTH_ACCOUNTS_DATASET,
+    },
   },
 };

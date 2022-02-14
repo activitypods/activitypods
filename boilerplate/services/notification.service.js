@@ -10,9 +10,9 @@ module.exports = {
   settings: {
     from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
     transport,
-    data: {
-      frontName: CONFIG.FRONT_NAME,
-      frontUrl: CONFIG.FRONT_URL,
-    }
-  }
+    defaults: {
+      locale: CONFIG.NOTIFICATIONS_DEFAULT_LOCALE,
+      frontUrl: CONFIG.NOTIFICATIONS_DEFAULT_FRONT_URL,
+    },
+  },
 };

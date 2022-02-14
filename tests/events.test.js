@@ -88,7 +88,7 @@ describe('Test events app', () => {
       resource: {
         type: OBJECT_TYPES.EVENT,
         name: 'Birthday party !!',
-        location: locationUri
+        location: locationUri,
       },
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
@@ -353,9 +353,9 @@ describe('Test events app', () => {
       expect(mockNotifyUser).toHaveBeenCalledTimes(6);
     });
 
-    expect(mockNotifyUser.mock.calls[3][0].params.key).toBe('join-event');
-    expect(mockNotifyUser.mock.calls[4][0].params.key).toBe('join-event');
-    expect(mockNotifyUser.mock.calls[5][0].params.key).toBe('join-event');
+    expect(mockNotifyUser.mock.calls[3][0].params.key).toBe('join_event');
+    expect(mockNotifyUser.mock.calls[4][0].params.key).toBe('join_event');
+    expect(mockNotifyUser.mock.calls[5][0].params.key).toBe('join_event');
   });
 
   test('Event is coming', async () => {
@@ -474,7 +474,7 @@ describe('Test events app', () => {
       expect(mockNotifyUser).toHaveBeenCalledTimes(7);
     });
 
-    expect(mockNotifyUser.mock.calls[6][0].params.key).toBe('leave-event');
+    expect(mockNotifyUser.mock.calls[6][0].params.key).toBe('leave_event');
 
     await expect(
       broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
@@ -595,9 +595,9 @@ describe('Test events app', () => {
       expect(mockNotifyUser).toHaveBeenCalledTimes(11);
     });
 
-    expect(mockNotifyUser.mock.calls[7][0].params.key).toBe('post-event-contact-offer');
-    expect(mockNotifyUser.mock.calls[8][0].params.key).toBe('post-event-contact-offer');
-    expect(mockNotifyUser.mock.calls[9][0].params.key).toBe('post-event-contact-offer');
-    expect(mockNotifyUser.mock.calls[10][0].params.key).toBe('post-event-contact-offer');
+    expect(mockNotifyUser.mock.calls[7][0].params.key).toBe('post_event_contact_offer');
+    expect(mockNotifyUser.mock.calls[8][0].params.key).toBe('post_event_contact_offer');
+    expect(mockNotifyUser.mock.calls[9][0].params.key).toBe('post_event_contact_offer');
+    expect(mockNotifyUser.mock.calls[10][0].params.key).toBe('post_event_contact_offer');
   });
 });

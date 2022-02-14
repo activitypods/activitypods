@@ -7,6 +7,7 @@
   "dependencies": {
     "handlebars": "^4.7.7",
     "moleculer-mail": "^1.2.5",
+    "node-polyglot": "^2.4.2",
     "url-join": "^4.0.1"
   },
   "publishConfig": {

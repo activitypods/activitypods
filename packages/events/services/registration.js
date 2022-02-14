@@ -12,30 +12,33 @@ module.exports = {
       attachToTypes: [OBJECT_TYPES.EVENT],
       attachPredicate: 'http://activitypods.org/ns/core#attendees',
       ordered: false,
-      dereferenceItems: false
+      dereferenceItems: false,
     });
   },
   methods: {
     async notifyJoinOrLeave(ctx, eventUri, userUri, joined) {
       const userProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: userUri, webId: 'system' });
       const event = await ctx.call('events.event.get', { resourceUri: eventUri, webId: 'system' });
-
-      const title = joined
-        ? `${userProfile['vcard:given-name']} s'est inscrit à votre événement "${event.name}"`
-        : `${userProfile['vcard:given-name']} s'est désinscrit de votre événement "${event.name}"`
+      const key = joined ? 'join_event' : 'leave_event';
 
       await ctx.call('notification.notifyUser', {
-        to: event['dc:creator'],
-        key: joined ? 'join-event' : 'leave-event',
+        recipientUri: event['dc:creator'],
+        key,
         payload: {
-          title,
-          actions: [{
-            name: 'Voir',
-            link: '/e/' + encodeURIComponent(eventUri),
-          }]
-        }
+          title: key + '.title',
+          actions: [
+            {
+              name: key + '.actions.view',
+              link: '/e/' + encodeURIComponent(eventUri),
+            },
+          ],
+        },
+        vars: {
+          userName: userProfile['vcard:given-name'],
+          eventName: event.name,
+        },
       });
-    }
+    },
   },
   activities: {
     joinEvent: {

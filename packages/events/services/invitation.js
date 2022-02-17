@@ -32,7 +32,7 @@ module.exports = {
 
       const event = await ctx.call('activitypub.object.awaitCreateComplete', {
         objectUri: resourceUri,
-        predicates: ['dc:creator', 'apods:attendees', 'apods:invitees', 'apods:inviters'],
+        predicates: ['dc:creator', 'dc:modified', 'dc:created', 'apods:attendees', 'apods:invitees', 'apods:inviters'],
       });
 
       const organizer = await ctx.call('activitypub.actor.get', { actorUri: event['dc:creator'] });

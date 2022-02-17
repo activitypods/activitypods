@@ -17,10 +17,11 @@ module.exports = {
   actions: {
     async set(ctx) {
       const { eventUri, newStatus } = ctx.params;
-      const event = await ctx.call('events.event.get', {
-        resourceUri: eventUri,
-        accept: MIME_TYPES.JSON,
-        webId: 'system',
+
+      // Ensure event is complete (we may have concurrency bugs otherwise)
+      const event = await ctx.call('activitypub.object.awaitCreateComplete', {
+        objectUri: eventUri,
+        predicates: ['dc:creator', 'dc:modified', 'dc:created', 'apods:attendees', 'apods:invitees', 'apods:inviters'],
       });
 
       let otherStatus;

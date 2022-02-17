@@ -23,6 +23,7 @@ beforeAll(async () => {
     name: 'notification',
     actions: {
       notifyUser: mockNotifyUser,
+      loadTranslations: () => {}
     },
   });
 

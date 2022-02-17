@@ -16,7 +16,7 @@
     "@activitypods/synchronizer": "1.0.0",
     "dotenv-flow": "^3.2.0",
     "ioredis": "^4.17.3",
-    "moleculer": "^0.14.18",
+    "moleculer": "^0.14.19",
     "moleculer-bull": "0.2.8",
     "moleculer-cron": "^0.0.2",
     "moleculer-repl": "^0.6.6",

@@ -13,26 +13,41 @@ module.exports = {
   },
   dependencies: ['notification'],
   methods: {
+    async getContextName(ctx, activity, recipientUri) {
+      let contextName
+      if( activity.object.context ) {
+        try {
+          const contextObject = await ctx.call('activitypub.object.get', { objectUri: activity.object.context, actorUri: recipientUri });
+          contextName = contextObject.name;
+        } catch(e) {
+          // If context not found, ignore it...
+        }
+      }
+      return contextName;
+    },
     async notifyNewMessage(ctx, activity, recipientUri) {
       const senderProfile = await ctx.call('activitypub.actor.getProfile', {
         actorUri: activity.actor,
         webId: 'system',
       });
+      const contextName = await this.getContextName(ctx, activity, recipientUri);
+      const key = contextName ? 'new_message_with_context' : 'new_message';
       await ctx.call('notification.notifyUser', {
         recipientUri,
-        key: 'new_message',
+        key,
         payload: {
-          title: 'new_message.title',
+          title: key + '.title',
           body: activity.object.content,
           actions: [
             {
-              name: 'new_message.actions.answer',
+              name: key + '.actions.answer',
               link: '/Profile/' + encodeURIComponent(senderProfile.id) + '/show',
             },
           ],
         },
         vars: {
           name: senderProfile['vcard:given-name'],
+          contextName
         },
       });
     },

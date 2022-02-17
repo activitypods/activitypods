@@ -17,7 +17,7 @@
     "@semapps/webacl": "0.4.0-alpha.13",
     "@semapps/webfinger": "0.4.0-alpha.13",
     "@semapps/webid": "0.4.0-alpha.13",
-    "moleculer": "^0.14.18",
+    "moleculer": "^0.14.19",
     "moleculer-web": "^0.10.0-beta1",
     "url-join": "^4.0.1"
   },

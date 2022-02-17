@@ -6537,6 +6537,22 @@ moleculer@^0.14.17, moleculer@^0.14.18:
     node-fetch "^2.6.1"
     recursive-watch "^1.1.4"
 
+moleculer@^0.14.19:
+  version "0.14.19"
+  resolved "https://registry.yarnpkg.com/moleculer/-/moleculer-0.14.19.tgz#7fda6ace5e5394eeff0c31e0a93c0389ac95684f"
+  integrity sha512-XtZwfYHk2xP6mnTEf2h44OPh/ha0jMqK4bCCROMNRdngBZR2i3LKruZA1SeHUBW+1HtDh2GliAEG7a0rW9VZhg==
+  dependencies:
+    args "^5.0.1"
+    eventemitter2 "^6.4.5"
+    fastest-validator "^1.12.0"
+    glob "^7.2.0"
+    ipaddr.js "^2.0.1"
+    kleur "^4.1.4"
+    lodash "^4.17.21"
+    lru-cache "^6.0.0"
+    node-fetch "^2.6.1"
+    recursive-watch "^1.1.4"
+
 moment-timezone@^0.5.31, moment-timezone@^0.5.x:
   version "0.5.34"
   resolved "https://registry.yarnpkg.com/moment-timezone/-/moment-timezone-0.5.34.tgz#a75938f7476b88f155d3504a9343f7519d9a405c"

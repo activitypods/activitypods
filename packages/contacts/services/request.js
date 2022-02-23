@@ -98,7 +98,7 @@ module.exports = {
           ],
         },
         vars: {
-          name: senderProfile['vcard:given-name'],
+          userName: senderProfile['vcard:given-name'],
         },
       });
     },

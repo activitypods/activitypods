@@ -5,7 +5,7 @@ const { SynchronizerMixin } = require('@activitypods/synchronizer');
 
 module.exports = {
   name: 'contacts.profile',
-  mixins: [ControlledContainerMixin, SynchronizerMixin],
+  mixins: [SynchronizerMixin, ControlledContainerMixin],
   settings: {
     path: '/profiles',
     acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],

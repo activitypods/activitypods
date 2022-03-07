@@ -14,9 +14,9 @@ beforeAll(async () => {
   broker = await initialize();
 
   await broker.loadService(path.resolve(__dirname, './services/core.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/synchronizer.service.js'));
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/events.app.js'));
-  await broker.loadService(path.resolve(__dirname, './services/synchronizer.app.js'));
 
   // Mock notification service
   await broker.createService({
@@ -600,5 +600,47 @@ describe('Test events app', () => {
     expect(mockNotifyUser.mock.calls[8][0].params.key).toBe('post_event_contact_offer');
     expect(mockNotifyUser.mock.calls[9][0].params.key).toBe('post_event_contact_offer');
     expect(mockNotifyUser.mock.calls[10][0].params.key).toBe('post_event_contact_offer');
+  });
+
+  test('Alice delete her event', async () => {
+    await broker.call('events.event.delete', {
+      resourceUri: eventUri,
+      webId: alice.id,
+    });
+
+    // The deletion is announced to all invitees
+    await waitForExpect(async () => {
+      await expect(broker.call('activitypub.collection.get', {
+        collectionUri: alice.outbox,
+        page: 1,
+        webId: alice.id,
+      })).resolves.toMatchObject({
+        orderedItems: expect.arrayContaining([
+          expect.objectContaining({
+            type: ACTIVITY_TYPES.ANNOUNCE,
+            object: {
+              type: ACTIVITY_TYPES.DELETE,
+              object: eventUri
+            },
+            actor: alice.id,
+            to: expect.arrayContaining([bob.id, craig.id, daisy.id])
+          }),
+        ])
+      });
+    });
+
+    // The event is removed from Bob cache (and other invitees)
+    await waitForExpect(async () => {
+      await expect(broker.call('ldp.container.get', {
+        containerUri: bob.id + '/data/events',
+        webId: bob.id,
+      })).resolves.not.toMatchObject({
+        'ldp:contains': expect.arrayContaining([
+          expect.objectContaining({
+            id: eventUri
+          }),
+        ])
+      });
+    });
   });
 });

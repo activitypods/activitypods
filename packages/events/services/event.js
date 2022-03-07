@@ -1,18 +1,15 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
+const { SynchronizerMixin } = require('@activitypods/synchronizer');
 const { OBJECT_TYPES } = require('@semapps/activitypub');
 
 module.exports = {
   name: 'events.event',
-  mixins: [ControlledContainerMixin],
+  mixins: [SynchronizerMixin, ControlledContainerMixin],
   settings: {
     path: '/events',
     acceptedTypes: [OBJECT_TYPES.EVENT],
     permissions: {},
     newResourcesPermissions: {},
-  },
-  dependencies: ['synchronizer'],
-  async started() {
-    await this.broker.call('synchronizer.watch', { type: OBJECT_TYPES.EVENT });
   },
   hooks: {
     after: {

@@ -1,20 +1,18 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const { SynchronizerMixin } = require('@activitypods/synchronizer');
 
 module.exports = {
   name: 'contacts.profile',
-  mixins: [ControlledContainerMixin],
+  mixins: [ControlledContainerMixin, SynchronizerMixin],
   settings: {
     path: '/profiles',
     acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
     permissions: {},
     newResourcesPermissions: {},
   },
-  dependencies: ['activitypub', 'webacl', 'synchronizer'],
-  async started() {
-    await this.broker.call('synchronizer.watch', { type: OBJECT_TYPES.PROFILE });
-  },
+  dependencies: ['activitypub', 'webacl'],
   events: {
     async 'auth.registered'(ctx) {
       const { webId, profileData } = ctx.params;

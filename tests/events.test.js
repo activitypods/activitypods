@@ -608,6 +608,31 @@ describe('Test events app', () => {
       webId: alice.id,
     });
 
+    // The event is now a Tombstone
+    await waitForExpect(async () => {
+      await expect(broker.call('ldp.resource.get', {
+        resourceUri: eventUri,
+        webId: alice.id,
+      })).resolves.toMatchObject({
+        'type': 'Tombstone',
+        'as:formerType': 'Event'
+      });
+    });
+
+    // The event is removed from Alice container
+    await waitForExpect(async () => {
+      await expect(broker.call('ldp.container.get', {
+        containerUri: alice.id + '/data/events',
+        webId: alice.id,
+      })).resolves.not.toMatchObject({
+        'ldp:contains': expect.arrayContaining([
+          expect.objectContaining({
+            id: eventUri
+          }),
+        ])
+      });
+    });
+
     // The deletion is announced to all invitees
     await waitForExpect(async () => {
       await expect(broker.call('activitypub.collection.get', {

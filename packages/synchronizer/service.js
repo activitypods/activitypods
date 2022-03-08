@@ -53,6 +53,8 @@ module.exports = {
     }
   },
   methods: {
+    // When https://github.com/assemblee-virtuelle/semapps/issues/907 will be fixed,
+    // we will be able to use the 'system' webId (we will thus avoid a few errors)
     async getUsersWithReadAuthorization(ctx, resourceUri, webId) {
       const authorizations = await ctx.call('webacl.resource.getRights', {
         resourceUri,

@@ -1,4 +1,5 @@
 const { OBJECT_TYPES } = require('@semapps/activitypub');
+const { getContainerFromUri } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
@@ -29,6 +30,25 @@ module.exports = {
       });
 
       await ctx.call('synchronizer.announceDelete', { objectUri: ctx.params.resourceUri, oldData });
+
+      // Give anonymous read right since detached resources do not inherit rights from their containers
+      // This must be called after synchronizer.announceDelete, otherwise the creator will not be able to view the resource rights anymore
+      // TODO remove all write rights
+      await ctx.call('webacl.resource.addRights', {
+        resourceUri,
+        newRights: {
+          anon: {
+            read: true
+          }
+        },
+        webId: 'system'
+      });
+
+      await ctx.call('ldp.container.detach', {
+        containerUri: getContainerFromUri(resourceUri),
+        resourceUri,
+        webId
+      });
 
       const returnValues = {
         resourceUri,

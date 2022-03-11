@@ -1,4 +1,4 @@
-const { ControlledContainerMixin } = require('@semapps/ldp');
+const { ControlledContainerMixin, defaultToArray } = require('@semapps/ldp');
 const { OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { CREATE_NOTE } = require('../patterns');
 
@@ -55,6 +55,16 @@ module.exports = {
   activities: {
     createNote: {
       match: CREATE_NOTE,
+      async onEmit(ctx, activity, emitterUri) {
+        // Ensure the recipients are in the contacts WebACL group of the emitter so they can see his profile (and respond him)
+        for (let targetUri of defaultToArray(activity.to)) {
+          await ctx.call('webacl.group.addMember', {
+            groupSlug: new URL(emitterUri).pathname + '/contacts',
+            memberUri: targetUri,
+            webId: emitterUri,
+          });
+        }
+      },
       async onReceive(ctx, activity, recipients) {
         for (let recipientUri of recipients) {
           await this.notifyNewMessage(ctx, activity, recipientUri);

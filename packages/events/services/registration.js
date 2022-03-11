@@ -50,26 +50,12 @@ module.exports = {
         if (emitter.url) {
           const organizerUri = activity.object['dc:creator'];
 
-          const rights = await ctx.call('webacl.resource.hasRights', {
-            resourceUri: emitter.url,
-            rights: { read: true },
-            webId: organizerUri,
+          // Ensure the organizer is in the contacts WebACL group of the emitter so he can see his profile (and write to him)
+          await ctx.call('webacl.group.addMember', {
+            groupSlug: new URL(emitterUri).pathname + '/contacts',
+            memberUri: organizerUri,
+            webId: emitterUri,
           });
-
-          // If the organizer cannot view my profile, give him the right
-          // TODO if the organizer is added later through the contacts app, remove this right
-          if (rights && rights.read !== true) {
-            await ctx.call('webacl.resource.addRights', {
-              resourceUri: emitter.url,
-              additionalRights: {
-                user: {
-                  uri: organizerUri,
-                  read: true,
-                },
-              },
-              webId: emitter.id,
-            });
-          }
         }
       },
       async onReceive(ctx, activity) {

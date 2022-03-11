@@ -5,7 +5,7 @@ const {
   REJECT_CONTACT_REQUEST,
   IGNORE_CONTACT_REQUEST,
 } = require('../patterns');
-const { defaultToArray } = require('@semapps/ldp/utils');
+const { defaultToArray } = require('@semapps/ldp');
 
 module.exports = {
   name: 'contacts.request',

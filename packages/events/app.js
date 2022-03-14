@@ -8,17 +8,7 @@ const translations = require('./translations');
 const EventsApp = {
   name: 'events',
   dependencies: ['notification'],
-  settings: {
-    status: {
-      coming: null,
-      finished: null,
-      open: null,
-      closed: null,
-    },
-  },
   created() {
-    let { status } = this.settings;
-
     this.broker.createService(EventService);
 
     this.broker.createService(InvitationService);
@@ -27,9 +17,7 @@ const EventsApp = {
 
     this.broker.createService(AttendeesMatcherService);
 
-    this.broker.createService(StatusService, {
-      settings: { status },
-    });
+    this.broker.createService(StatusService);
   },
   async started() {
     await this.broker.call('notification.loadTranslations', { translations });

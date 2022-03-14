@@ -91,6 +91,7 @@ module.exports = {
     },
     async tagComing(ctx) {
       for (let dataset of await ctx.call('pod.list')) {
+        // TODO do not return cached events
         const results = await ctx.call('triplestore.query', {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
@@ -116,6 +117,7 @@ module.exports = {
     },
     async tagClosed(ctx) {
       for (let dataset of await ctx.call('pod.list')) {
+        // TODO do not return cached events
         const results = await ctx.call('triplestore.query', {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
@@ -152,6 +154,7 @@ module.exports = {
     },
     async tagFinished(ctx) {
       for (let dataset of await ctx.call('pod.list')) {
+        // TODO do not return cached events
         const results = await ctx.call('triplestore.query', {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>

@@ -7,12 +7,17 @@
 Check out [these slides](./proposal/proposal-english.pdf) ([french version](./proposal/proposal-french.pdf)) for more information about this project !
 
 
-## Available applications
+## Available apps
 
 - [Contacts](packages/contacts/README.md)
 - [Events](packages/events/README.md)
 - [Messages](packages/messages/README.md)
 - [Synchronizer](packages/synchronizer/README.md)
+
+
+## Frontends using ActivityPods
+
+- [WelcomeToMyPlace.org](https://github.com/assemblee-virtuelle/welcometomyplace)
 
 
 ## Getting started

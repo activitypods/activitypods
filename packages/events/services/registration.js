@@ -14,31 +14,36 @@ module.exports = {
       ordered: false,
       dereferenceItems: false,
     });
-  },
-  methods: {
-    async notifyJoinOrLeave(ctx, eventUri, userUri, joined) {
-      const userProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: userUri, webId: 'system' });
-      const event = await ctx.call('events.event.get', { resourceUri: eventUri, webId: 'system' });
-      const key = joined ? 'join_event' : 'leave_event';
 
-      await ctx.call('notification.notifyUser', {
-        recipientUri: event['dc:creator'],
-        key,
-        payload: {
-          title: key + '.title',
-          actions: [
-            {
-              name: key + '.actions.view',
-              link: '/e/' + encodeURIComponent(eventUri),
-            },
-          ],
+    await this.broker.call('activitypub.activity-mapping.addMapper', {
+      match: JOIN_EVENT,
+      mapping: {
+        title: {
+          en: `{{emitterProfile.vcard:given-name}} joined your event "{{activity.object.name}}"`,
+          fr: `{{emitterProfile.vcard:given-name}} s'est inscrit(e) à votre événement "{{activity.object.name}}"`
         },
-        vars: {
-          userName: userProfile['vcard:given-name'],
-          eventName: event.name,
+        actionName: {
+          en: 'View',
+          fr: 'Voir'
         },
-      });
-    },
+        actionLink: "{{activity.object.id}}"
+      }
+    });
+
+    await this.broker.call('activitypub.activity-mapping.addMapper', {
+      match: LEAVE_EVENT,
+      mapping: {
+        title: {
+          en: `{{emitterProfile.vcard:given-name}} left your event "{{activity.object.name}}"`,
+          fr: `{{emitterProfile.vcard:given-name}} s'est désinscrit(e) de votre événement "{{activity.object.name}}"`
+        },
+        actionName: {
+          en: 'View',
+          fr: 'Voir'
+        },
+        actionLink: "{{activity.object.id}}"
+      }
+    });
   },
   activities: {
     joinEvent: {
@@ -84,8 +89,6 @@ module.exports = {
         // Tag event as closed if max attendees has been reached
         await ctx.call('events.status.tagUpdatedEvent', { eventUri: event.id });
 
-        await this.notifyJoinOrLeave(ctx, event.id, activity.actor, true);
-
         // TODO send confirmation mail to participant
       },
     },
@@ -112,8 +115,6 @@ module.exports = {
 
         // Tag event as open if the number of attendees is now lower than max attendees
         await ctx.call('events.status.tagUpdatedEvent', { eventUri: event.id });
-
-        await this.notifyJoinOrLeave(ctx, event.id, activity.actor, false);
       },
     },
   },

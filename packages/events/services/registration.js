@@ -1,6 +1,7 @@
 const { MoleculerError } = require('moleculer').Errors;
 const { ActivitiesHandlerMixin, OBJECT_TYPES } = require('@semapps/activitypub');
 const { JOIN_EVENT, LEAVE_EVENT } = require('../patterns');
+const { JOIN_EVENT_MAPPING, LEAVE_EVENT_MAPPING } = require('../mappings');
 
 module.exports = {
   name: 'events.registration',
@@ -17,32 +18,12 @@ module.exports = {
 
     await this.broker.call('activitypub.activity-mapping.addMapper', {
       match: JOIN_EVENT,
-      mapping: {
-        title: {
-          en: `{{emitterProfile.vcard:given-name}} joined your event "{{activity.object.name}}"`,
-          fr: `{{emitterProfile.vcard:given-name}} s'est inscrit(e) à votre événement "{{activity.object.name}}"`
-        },
-        actionName: {
-          en: 'View',
-          fr: 'Voir'
-        },
-        actionLink: "{{activity.object.id}}"
-      }
+      mapping: JOIN_EVENT_MAPPING
     });
 
     await this.broker.call('activitypub.activity-mapping.addMapper', {
       match: LEAVE_EVENT,
-      mapping: {
-        title: {
-          en: `{{emitterProfile.vcard:given-name}} left your event "{{activity.object.name}}"`,
-          fr: `{{emitterProfile.vcard:given-name}} s'est désinscrit(e) de votre événement "{{activity.object.name}}"`
-        },
-        actionName: {
-          en: 'View',
-          fr: 'Voir'
-        },
-        actionLink: "{{activity.object.id}}"
-      }
+      mapping: LEAVE_EVENT_MAPPING
     });
   },
   activities: {

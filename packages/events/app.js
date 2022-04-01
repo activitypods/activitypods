@@ -18,10 +18,7 @@ const EventsApp = {
     this.broker.createService(AttendeesMatcherService);
 
     this.broker.createService(StatusService);
-  },
-  async started() {
-    await this.broker.call('notification.loadTranslations', { translations });
-  },
+  }
 };
 
 module.exports = EventsApp;

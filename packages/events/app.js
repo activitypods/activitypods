@@ -3,11 +3,9 @@ const EventService = require('./services/event');
 const InvitationService = require('./services/invitation');
 const RegistrationService = require('./services/registration');
 const StatusService = require('./services/status');
-const translations = require('./translations');
 
 const EventsApp = {
   name: 'events',
-  dependencies: ['notification'],
   created() {
     this.broker.createService(EventService);
 

@@ -1,12 +1,12 @@
 const { MoleculerError } = require('moleculer').Errors;
 const { ActivitiesHandlerMixin, OBJECT_TYPES } = require('@semapps/activitypub');
-const { JOIN_EVENT, LEAVE_EVENT } = require('../patterns');
-const { JOIN_EVENT_MAPPING, LEAVE_EVENT_MAPPING } = require('../mappings');
+const { JOIN_EVENT, LEAVE_EVENT } = require('../config/patterns');
+const { JOIN_EVENT_MAPPING, LEAVE_EVENT_MAPPING } = require('../config/mappings');
 
 module.exports = {
   name: 'events.registration',
   mixins: [ActivitiesHandlerMixin],
-  dependencies: ['activitypub.registry', 'ldp', 'notification', 'webacl'],
+  dependencies: ['activitypub.registry', 'ldp', 'webacl'],
   async started() {
     await this.broker.call('activitypub.registry.register', {
       path: '/attendees',

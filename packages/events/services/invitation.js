@@ -1,15 +1,15 @@
 const path = require('path');
 const { defaultToArray } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const { INVITE_EVENT, OFFER_INVITE_EVENT } = require('../patterns');
-const { INVITE_EVENT_MAPPING, OFFER_INVITE_EVENT_MAPPING } = require('../mappings');
+const { INVITE_EVENT, OFFER_INVITE_EVENT } = require('../config/patterns');
+const { INVITE_EVENT_MAPPING, OFFER_INVITE_EVENT_MAPPING } = require('../config/mappings');
 
 const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
 
 module.exports = {
   name: 'events.invitation',
   mixins: [ActivitiesHandlerMixin],
-  dependencies: ['activitypub.registry', 'ldp', 'notification', 'webacl'],
+  dependencies: ['activitypub.registry', 'ldp', 'webacl'],
   async started() {
     await this.broker.call('activitypub.registry.register', {
       path: '/invitees',

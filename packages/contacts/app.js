@@ -5,7 +5,6 @@ const translations = require('./translations');
 
 const ContactsApp = {
   name: 'contacts',
-  dependencies: ['notification'],
   created() {
     this.broker.createService(ProfileService);
 

@@ -50,9 +50,27 @@ const NEW_MESSAGE_ABOUT_EVENT_MAPPING = {
   actionLink: "{{emitterProfile.@id}}"
 };
 
+const POST_EVENT_CONTACT_REQUEST_MAPPING = {
+  key: 'post_event_contact_request',
+  title: {
+    en: `Add {{emitterProfile.vcard:given-name}} to your network`,
+    fr: `{{emitterProfile.vcard:given-name}} vous écrit au sujet de "{{activity.object.context.name}}"`
+  },
+  body: {
+    en: `Following the event {{activity.context.name}}, you have the possibility to add {{emitterProfile.vcard:given-name}} to your network.`,
+    fr: `Suite à l'événement {{activity.context.name}}, vous avez la possibilité d'ajouter {{emitterProfile.vcard:given-name}} à vos contacts.`
+  },
+  actionName: {
+    en: 'View',
+    fr: 'Voir'
+  },
+  actionLink: "{{emitterProfile.@id}}"
+};
+
 module.exports = {
   JOIN_EVENT_MAPPING,
   LEAVE_EVENT_MAPPING,
   INVITE_EVENT_MAPPING,
-  NEW_MESSAGE_ABOUT_EVENT_MAPPING
+  NEW_MESSAGE_ABOUT_EVENT_MAPPING,
+  POST_EVENT_CONTACT_REQUEST_MAPPING
 };

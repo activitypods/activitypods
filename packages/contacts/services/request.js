@@ -4,7 +4,11 @@ const {
   ACCEPT_CONTACT_REQUEST,
   REJECT_CONTACT_REQUEST,
   IGNORE_CONTACT_REQUEST,
-} = require('../patterns');
+} = require('../config/patterns');
+const {
+  CONTACT_REQUEST_MAPPING,
+  ACCEPT_CONTACT_REQUEST_MAPPING
+} = require('../config/mappings');
 const { defaultToArray } = require('@semapps/ldp');
 
 module.exports = {
@@ -35,73 +39,16 @@ module.exports = {
       ordered: false,
       dereferenceItems: false,
     });
-  },
-  methods: {
-    async notifyContactOffer(ctx, senderUri, recipientUri, message) {
-      const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: senderUri, webId: 'system' });
 
-      await ctx.call('notification.notifyUser', {
-        recipientUri,
-        key: 'contact_offer',
-        payload: {
-          title: 'contact_offer.title',
-          body: message,
-          actions: [
-            {
-              name: 'contact_offer.actions.view',
-              link: '/Profile',
-            },
-          ],
-        },
-        vars: {
-          userName: senderProfile['vcard:given-name'],
-        },
-      });
-    },
-    async notifyPostEventContactOffer(ctx, senderUri, recipientUri, eventUri) {
-      const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: senderUri, webId: 'system' });
-      const event = await ctx.call('events.event.get', { resourceUri: eventUri, webId: 'system' });
+    await this.broker.call('activitypub.activity-mapping.addMapper', {
+      match: CONTACT_REQUEST,
+      mapping: CONTACT_REQUEST_MAPPING
+    });
 
-      await ctx.call('notification.notifyUser', {
-        recipientUri,
-        key: 'post_event_contact_offer',
-        payload: {
-          title: 'post_event_contact_offer.title',
-          body: 'post_event_contact_offer.body',
-          actions: [
-            {
-              name: 'post_event_contact_offer.actions.view',
-              link: '/Profile',
-            },
-          ],
-        },
-        vars: {
-          userName: senderProfile['vcard:given-name'],
-          eventName: event.name,
-        },
-      });
-    },
-    async notifyAcceptContactOffer(ctx, senderUri, recipientUri) {
-      const senderProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: senderUri, webId: 'system' });
-
-      await ctx.call('notification.notifyUser', {
-        recipientUri,
-        key: 'contact_offer_accept',
-        payload: {
-          title: 'contact_offer_accept.title',
-          body: 'contact_offer_accept.body',
-          actions: [
-            {
-              name: 'contact_offer_accept.actions.view',
-              link: '/Profile',
-            },
-          ],
-        },
-        vars: {
-          userName: senderProfile['vcard:given-name'],
-        },
-      });
-    },
+    await this.broker.call('activitypub.activity-mapping.addMapper', {
+      match: ACCEPT_CONTACT_REQUEST,
+      mapping: ACCEPT_CONTACT_REQUEST_MAPPING
+    });
   },
   activities: {
     contactRequest: {
@@ -150,12 +97,6 @@ module.exports = {
             collectionUri: recipient['apods:contactRequests'],
             item: activity,
           });
-
-          if (activity.context) {
-            await this.notifyPostEventContactOffer(ctx, activity.actor, recipientUri, activity.context);
-          } else {
-            await this.notifyContactOffer(ctx, activity.actor, recipientUri, activity.content);
-          }
         }
       },
     },
@@ -208,8 +149,6 @@ module.exports = {
               collectionUri: recipient['apods:contacts'],
               item: emitter.id,
             });
-
-            await this.notifyAcceptContactOffer(ctx, activity.actor, recipientUri);
           }
         }
       },

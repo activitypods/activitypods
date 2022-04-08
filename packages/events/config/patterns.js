@@ -31,9 +31,34 @@ const LEAVE_EVENT = {
   },
 };
 
+const NEW_MESSAGE_ABOUT_EVENT = {
+  type: ACTIVITY_TYPES.CREATE,
+  object: {
+    type: OBJECT_TYPES.NOTE,
+    context: {
+      type: OBJECT_TYPES.EVENT
+    }
+  },
+};
+
+const POST_EVENT_CONTACT_REQUEST = {
+  type: ACTIVITY_TYPES.OFFER,
+  object: {
+    type: ACTIVITY_TYPES.ADD,
+    object: {
+      type: OBJECT_TYPES.PROFILE,
+    }
+  },
+  context: {
+    type: OBJECT_TYPES.EVENT
+  }
+};
+
 module.exports = {
   INVITE_EVENT,
   OFFER_INVITE_EVENT,
   JOIN_EVENT,
   LEAVE_EVENT,
+  NEW_MESSAGE_ABOUT_EVENT,
+  POST_EVENT_CONTACT_REQUEST
 };

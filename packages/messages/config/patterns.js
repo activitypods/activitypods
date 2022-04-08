@@ -1,6 +1,6 @@
 const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 
-const CREATE_NOTE = {
+const NEW_MESSAGE = {
   type: ACTIVITY_TYPES.CREATE,
   object: {
     type: OBJECT_TYPES.NOTE,
@@ -8,5 +8,5 @@ const CREATE_NOTE = {
 };
 
 module.exports = {
-  CREATE_NOTE,
+  NEW_MESSAGE,
 };

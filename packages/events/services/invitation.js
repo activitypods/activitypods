@@ -1,14 +1,15 @@
 const path = require('path');
 const { defaultToArray } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const { INVITE_EVENT, OFFER_INVITE_EVENT } = require('../patterns');
+const { INVITE_EVENT, OFFER_INVITE_EVENT } = require('../config/patterns');
+const { INVITE_EVENT_MAPPING } = require('../config/mappings');
 
 const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
 
 module.exports = {
   name: 'events.invitation',
   mixins: [ActivitiesHandlerMixin],
-  dependencies: ['activitypub.registry', 'ldp', 'notification', 'webacl'],
+  dependencies: ['activitypub.registry', 'activity-mapping', 'ldp', 'webacl'],
   async started() {
     await this.broker.call('activitypub.registry.register', {
       path: '/invitees',
@@ -24,6 +25,11 @@ module.exports = {
       attachPredicate: 'http://activitypods.org/ns/core#inviters',
       ordered: false,
       dereferenceItems: false,
+    });
+
+    await this.broker.call('activity-mapping.addMapper', {
+      match: INVITE_EVENT,
+      mapping: INVITE_EVENT_MAPPING
     });
   },
   actions: {
@@ -150,29 +156,6 @@ module.exports = {
     },
   },
   methods: {
-    async notifyInvitation(ctx, activity, recipientUri) {
-      const senderProfile = await ctx.call('activitypub.actor.getProfile', {
-        actorUri: activity.actor,
-        webId: 'system',
-      });
-      await ctx.call('notification.notifyUser', {
-        recipientUri,
-        key: 'invitation',
-        payload: {
-          title: 'invitation.title',
-          actions: [
-            {
-              name: 'invitation.actions.view',
-              link: '/e/' + encodeURIComponent(activity.object.id),
-            },
-          ],
-        },
-        vars: {
-          userName: senderProfile['vcard:given-name'],
-          eventName: activity.object.name,
-        },
-      });
-    },
     getInviteesGroupUri(eventUri) {
       const uri = new URL(eventUri);
       uri.pathname = path.join('/_groups', uri.pathname, '/invitees');
@@ -216,15 +199,12 @@ module.exports = {
             objectUri: activity.object.id,
             actorUri: recipientUri,
           });
-
-          // Send notification email
-          await this.notifyInvitation(ctx, activity, recipientUri);
         }
       },
     },
     offerInviteByOrganizer: {
       async match(activity) {
-        const dereferencedActivity = await this.matchPattern(OFFER_INVITE_EVENT, activity);
+        const dereferencedActivity = await this.matchActivity(OFFER_INVITE_EVENT, activity);
         // If the emitter is the organizer, it means we want to give invitees the right to share this event
         if (dereferencedActivity && dereferencedActivity.actor === dereferencedActivity.object.object['dc:creator']) {
           return dereferencedActivity;
@@ -247,7 +227,7 @@ module.exports = {
     },
     offerInviteToOrganizer: {
       async match(activity) {
-        const dereferencedActivity = await this.matchPattern(OFFER_INVITE_EVENT, activity);
+        const dereferencedActivity = await this.matchActivity(OFFER_INVITE_EVENT, activity);
         // If the offer is directed to the organizer, it means we are an inviter and want him to invite one of our contacts
         if (dereferencedActivity && dereferencedActivity.target === dereferencedActivity.object.object['dc:creator']) {
           return dereferencedActivity;

@@ -1,6 +1,6 @@
 const path = require('path');
 const urlJoin = require('url-join');
-const { ActivityPubService, ProxyService } = require('@semapps/activitypub');
+const { ActivityPubService, ActivityMappingService, ProxyService } = require('@semapps/activitypub');
 const { AuthLocalService } = require('@semapps/auth');
 const FusekiAdminService = require('@semapps/fuseki-admin');
 const { JsonLdService } = require('@semapps/jsonld');
@@ -107,6 +107,17 @@ const CoreService = {
       settings: {
         baseUrl,
       },
+    });
+
+    // Required for notifications
+    this.broker.createService(ActivityMappingService, {
+      settings: {
+        handlebars: {
+          helpers: {
+            encodeUri: uri => encodeURIComponent(uri)
+          }
+        }
+      }
     });
 
     this.broker.createService(ProxyService, {

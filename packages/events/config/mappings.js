@@ -24,19 +24,6 @@ const LEAVE_EVENT_MAPPING = {
   actionLink: "/e/{{encodeUri activity.object.id}}"
 };
 
-const INVITE_EVENT_MAPPING = {
-  key: 'invitation',
-  title: {
-    en: `{{emitterProfile.vcard:given-name}} invites you to an event "{{activity.object.name}}"`,
-    fr: `{{emitterProfile.vcard:given-name}} vous invite à un événement "{{activity.object.name}}"`
-  },
-  actionName: {
-    en: 'View',
-    fr: 'Voir'
-  },
-  actionLink: "/e/{{encodeUri activity.object.id}}"
-};
-
 const NEW_MESSAGE_ABOUT_EVENT_MAPPING = {
   key: 'new_message_about_event',
   title: {
@@ -70,7 +57,6 @@ const POST_EVENT_CONTACT_REQUEST_MAPPING = {
 module.exports = {
   JOIN_EVENT_MAPPING,
   LEAVE_EVENT_MAPPING,
-  INVITE_EVENT_MAPPING,
   NEW_MESSAGE_ABOUT_EVENT_MAPPING,
   POST_EVENT_CONTACT_REQUEST_MAPPING
 };

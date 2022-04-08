@@ -4,7 +4,7 @@ const CONTACT_REQUEST_MAPPING = {
     en: `{{emitterProfile.vcard:given-name}} would like to connect with you`,
     fr: `{{emitterProfile.vcard:given-name}} souhaiterait se connecter avec vous`
   },
-  body: `{{activity.content}}`,
+  description: `{{activity.content}}`,
   actionName: {
     en: 'View',
     fr: 'Voir'
@@ -18,7 +18,7 @@ const ACCEPT_CONTACT_REQUEST_MAPPING = {
     en: `{{emitterProfile.vcard:given-name}} is now part of your network`,
     fr: `{{emitterProfile.vcard:given-name}} fait maintenant partie de votre réseau`
   },
-  body: {
+  description: {
     en: `{{emitterProfile.vcard:given-name}} has accepted your contact requests. You can now invite him/her to the events you organize.`,
     fr: `{{emitterProfile.vcard:given-name}} a accepté votre demande de mise en relation. Vous pouvez maintenant l'inviter aux événements que vous organisez.`
   },

@@ -8,7 +8,7 @@ const JOIN_EVENT_MAPPING = {
     en: 'View',
     fr: 'Voir'
   },
-  actionLink: "/e/{{activity.object.id}}"
+  actionLink: "/e/{{encodeUri activity.object.id}}"
 };
 
 const LEAVE_EVENT_MAPPING = {

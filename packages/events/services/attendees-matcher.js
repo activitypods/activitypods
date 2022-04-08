@@ -5,8 +5,9 @@ const { POST_EVENT_CONTACT_REQUEST_MAPPING } = require("../config/mappings");
 
 module.exports = {
   name: 'events.attendees-matcher',
+  dependencies: ['activity-mapping'],
   async started() {
-    await this.broker.call('activitypub.activity-mapping.addMapper', {
+    await this.broker.call('activity-mapping.addMapper', {
       match: POST_EVENT_CONTACT_REQUEST,
       mapping: POST_EVENT_CONTACT_REQUEST_MAPPING,
       priority: 2 // Before regular contact requests

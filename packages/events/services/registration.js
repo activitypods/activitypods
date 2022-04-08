@@ -6,7 +6,7 @@ const { JOIN_EVENT_MAPPING, LEAVE_EVENT_MAPPING } = require('../config/mappings'
 module.exports = {
   name: 'events.registration',
   mixins: [ActivitiesHandlerMixin],
-  dependencies: ['activitypub.registry', 'ldp', 'webacl'],
+  dependencies: ['activitypub.registry', 'activity-mapping', 'ldp', 'webacl'],
   async started() {
     await this.broker.call('activitypub.registry.register', {
       path: '/attendees',
@@ -16,12 +16,12 @@ module.exports = {
       dereferenceItems: false,
     });
 
-    await this.broker.call('activitypub.activity-mapping.addMapper', {
+    await this.broker.call('activity-mapping.addMapper', {
       match: JOIN_EVENT,
       mapping: JOIN_EVENT_MAPPING
     });
 
-    await this.broker.call('activitypub.activity-mapping.addMapper', {
+    await this.broker.call('activity-mapping.addMapper', {
       match: LEAVE_EVENT,
       mapping: LEAVE_EVENT_MAPPING
     });

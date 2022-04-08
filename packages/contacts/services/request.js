@@ -14,7 +14,7 @@ const { defaultToArray } = require('@semapps/ldp');
 module.exports = {
   name: 'contacts.request',
   mixins: [ActivitiesHandlerMixin],
-  dependencies: ['activitypub.registry', 'webacl'],
+  dependencies: ['activitypub.registry', 'activity-mapping', 'webacl'],
   async started() {
     await this.broker.call('activitypub.registry.register', {
       path: '/contacts',
@@ -40,12 +40,12 @@ module.exports = {
       dereferenceItems: false,
     });
 
-    await this.broker.call('activitypub.activity-mapping.addMapper', {
+    await this.broker.call('activity-mapping.addMapper', {
       match: CONTACT_REQUEST,
       mapping: CONTACT_REQUEST_MAPPING
     });
 
-    await this.broker.call('activitypub.activity-mapping.addMapper', {
+    await this.broker.call('activity-mapping.addMapper', {
       match: ACCEPT_CONTACT_REQUEST,
       mapping: ACCEPT_CONTACT_REQUEST_MAPPING
     });

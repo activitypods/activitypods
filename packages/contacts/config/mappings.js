@@ -9,7 +9,7 @@ const CONTACT_REQUEST_MAPPING = {
     en: 'View',
     fr: 'Voir'
   },
-  actionLink: "{{emitterProfile.@id}}"
+  actionLink: "/Profile"
 };
 
 const ACCEPT_CONTACT_REQUEST_MAPPING = {
@@ -26,7 +26,7 @@ const ACCEPT_CONTACT_REQUEST_MAPPING = {
     en: 'View',
     fr: 'Voir'
   },
-  actionLink: "{{emitterProfile.@id}}"
+  actionLink: "/Profile/{{encodeUri emitterProfile.@id}}/show"
 };
 
 module.exports = {

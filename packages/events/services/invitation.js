@@ -2,14 +2,14 @@ const path = require('path');
 const { defaultToArray } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { INVITE_EVENT, OFFER_INVITE_EVENT } = require('../config/patterns');
-const { INVITE_EVENT_MAPPING, OFFER_INVITE_EVENT_MAPPING } = require('../config/mappings');
+const { INVITE_EVENT_MAPPING } = require('../config/mappings');
 
 const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
 
 module.exports = {
   name: 'events.invitation',
   mixins: [ActivitiesHandlerMixin],
-  dependencies: ['activitypub.registry', 'ldp', 'webacl'],
+  dependencies: ['activitypub.registry', 'activity-mapping', 'ldp', 'webacl'],
   async started() {
     await this.broker.call('activitypub.registry.register', {
       path: '/invitees',
@@ -27,10 +27,10 @@ module.exports = {
       dereferenceItems: false,
     });
 
-    await this.broker.call('activitypub.activity-mapping.addMapping', {
+    await this.broker.call('activity-mapping.addMapper', {
       match: INVITE_EVENT,
       mapping: INVITE_EVENT_MAPPING
-    })
+    });
   },
   actions: {
     async giveRightsForNewEvent(ctx) {
@@ -204,7 +204,7 @@ module.exports = {
     },
     offerInviteByOrganizer: {
       async match(activity) {
-        const dereferencedActivity = await this.matchPattern(OFFER_INVITE_EVENT, activity);
+        const dereferencedActivity = await this.matchActivity(OFFER_INVITE_EVENT, activity);
         // If the emitter is the organizer, it means we want to give invitees the right to share this event
         if (dereferencedActivity && dereferencedActivity.actor === dereferencedActivity.object.object['dc:creator']) {
           return dereferencedActivity;
@@ -227,7 +227,7 @@ module.exports = {
     },
     offerInviteToOrganizer: {
       async match(activity) {
-        const dereferencedActivity = await this.matchPattern(OFFER_INVITE_EVENT, activity);
+        const dereferencedActivity = await this.matchActivity(OFFER_INVITE_EVENT, activity);
         // If the offer is directed to the organizer, it means we are an inviter and want him to invite one of our contacts
         if (dereferencedActivity && dereferencedActivity.target === dereferencedActivity.object.object['dc:creator']) {
           return dereferencedActivity;

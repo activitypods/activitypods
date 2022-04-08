@@ -91,7 +91,7 @@ module.exports = {
             },
           },
         };
-        return await this.matchPattern(pattern, activity);
+        return await this.matchActivity(pattern, activity);
       },
       async onReceive(ctx, activity, recipients) {
         for (let recipientUri of recipients) {
@@ -114,7 +114,7 @@ module.exports = {
             },
           },
         };
-        return await this.matchPattern(pattern, activity);
+        return await this.matchActivity(pattern, activity);
       },
       async onReceive(ctx, activity, recipients) {
         for (let recipientUri of recipients) {

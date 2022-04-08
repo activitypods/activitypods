@@ -4,11 +4,12 @@ const NEW_MESSAGE_MAPPING = {
     en: `{{emitterProfile.vcard:given-name}} sent you a message`,
     fr: `{{emitterProfile.vcard:given-name}} vous a envoyé un message`
   },
+  description: '{{activity.object.content}}',
   actionName: {
     en: 'Reply',
     fr: 'Répondre'
   },
-  actionLink: "{{emitterProfile.@id}}"
+  actionLink: "/Profile/{{encodeUri emitterProfile.id}}/show"
 };
 
 module.exports = {

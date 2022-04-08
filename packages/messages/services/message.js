@@ -12,8 +12,9 @@ module.exports = {
     permissions: {},
     newResourcesPermissions: {},
   },
+  dependencies: ['activity-mapping'],
   async started() {
-    await this.broker.call('activitypub.activity-mapping.addMapper', {
+    await this.broker.call('activity-mapping.addMapper', {
       match: NEW_MESSAGE,
       mapping: NEW_MESSAGE_MAPPING
     });

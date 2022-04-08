@@ -8,7 +8,7 @@ const JOIN_EVENT_MAPPING = {
     en: 'View',
     fr: 'Voir'
   },
-  actionLink: "{{activity.object.id}}"
+  actionLink: "/e/{{activity.object.id}}"
 };
 
 const LEAVE_EVENT_MAPPING = {
@@ -21,7 +21,7 @@ const LEAVE_EVENT_MAPPING = {
     en: 'View',
     fr: 'Voir'
   },
-  actionLink: "{{activity.object.id}}"
+  actionLink: "/e/{{encodeUri activity.object.id}}"
 };
 
 const INVITE_EVENT_MAPPING = {
@@ -34,7 +34,7 @@ const INVITE_EVENT_MAPPING = {
     en: 'View',
     fr: 'Voir'
   },
-  actionLink: "{{activity.object.id}}"
+  actionLink: "/e/{{encodeUri activity.object.id}}"
 };
 
 const NEW_MESSAGE_ABOUT_EVENT_MAPPING = {
@@ -47,7 +47,7 @@ const NEW_MESSAGE_ABOUT_EVENT_MAPPING = {
     en: 'Reply',
     fr: 'Répondre'
   },
-  actionLink: "{{emitterProfile.@id}}"
+  actionLink: "/Profile/{{encodeUri emitterProfile.id}}/show"
 };
 
 const POST_EVENT_CONTACT_REQUEST_MAPPING = {
@@ -56,7 +56,7 @@ const POST_EVENT_CONTACT_REQUEST_MAPPING = {
     en: `Add {{emitterProfile.vcard:given-name}} to your network`,
     fr: `{{emitterProfile.vcard:given-name}} vous écrit au sujet de "{{activity.object.context.name}}"`
   },
-  body: {
+  description: {
     en: `Following the event {{activity.context.name}}, you have the possibility to add {{emitterProfile.vcard:given-name}} to your network.`,
     fr: `Suite à l'événement {{activity.context.name}}, vous avez la possibilité d'ajouter {{emitterProfile.vcard:given-name}} à vos contacts.`
   },
@@ -64,7 +64,7 @@ const POST_EVENT_CONTACT_REQUEST_MAPPING = {
     en: 'View',
     fr: 'Voir'
   },
-  actionLink: "{{emitterProfile.@id}}"
+  actionLink: "/Profile"
 };
 
 module.exports = {

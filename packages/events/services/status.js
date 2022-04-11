@@ -21,7 +21,7 @@ module.exports = {
       // Ensure event is complete (we may have concurrency bugs otherwise)
       const event = await ctx.call('activitypub.object.awaitCreateComplete', {
         objectUri: eventUri,
-        predicates: ['dc:creator', 'dc:modified', 'dc:created', 'apods:attendees', 'apods:announced', 'apods:announcers'],
+        predicates: ['dc:creator', 'dc:modified', 'dc:created', 'apods:attendees', 'apods:announces', 'apods:announcers'],
       });
 
       let otherStatus;

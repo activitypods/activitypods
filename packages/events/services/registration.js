@@ -1,6 +1,6 @@
 const { MoleculerError } = require('moleculer').Errors;
 const { ActivitiesHandlerMixin, OBJECT_TYPES } = require('@semapps/activitypub');
-const { getAnnouncedGroupUri } = require('@activitypods/announcer');
+const { getAnnouncesGroupUri } = require('@activitypods/announcer');
 const { JOIN_EVENT, LEAVE_EVENT } = require('../config/patterns');
 const { JOIN_EVENT_MAPPING, LEAVE_EVENT_MAPPING } = require('../config/mappings');
 
@@ -42,7 +42,7 @@ module.exports = {
         resourceUri: newData['apods:attendees'],
         additionalRights: {
           group: {
-            uri: getAnnouncedGroupUri(resourceUri),
+            uri: getAnnouncesGroupUri(resourceUri),
             read: true,
           },
         },
@@ -80,7 +80,7 @@ module.exports = {
 
         if (
           !(await ctx.call('activitypub.collection.includes', {
-            collectionUri: event['apods:announced'],
+            collectionUri: event['apods:announces'],
             itemUri: activity.actor,
           }))
         ) {

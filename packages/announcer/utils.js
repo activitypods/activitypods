@@ -1,10 +1,10 @@
-import path from "path";
+const path = require("path");
 
 const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
 
-const getAnnouncedGroupUri = eventUri => {
+const getAnnouncesGroupUri = eventUri => {
   const uri = new URL(eventUri);
-  uri.pathname = path.join('/_groups', uri.pathname, '/announced');
+  uri.pathname = path.join('/_groups', uri.pathname, '/announces');
   return uri.toString();
 };
 
@@ -16,6 +16,6 @@ const getAnnouncersGroupUri = eventUri => {
 
 module.exports = {
   delay,
-  getAnnouncedGroupUri,
+  getAnnouncesGroupUri,
   getAnnouncersGroupUri
 };

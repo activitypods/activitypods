@@ -1,8 +1,8 @@
-const { getAnnouncedGroupUri } = require('@activitypods/announcer');
+const { getAnnouncesGroupUri } = require('@activitypods/announcer');
 
 module.exports = {
   name: 'events.location',
-  action: {
+  actions: {
     async setNewRights(ctx) {
       const { resourceUri, newData } = ctx.params;
 
@@ -11,7 +11,7 @@ module.exports = {
         resourceUri: newData.location,
         additionalRights: {
           group: {
-            uri: getAnnouncedGroupUri(resourceUri),
+            uri: getAnnouncesGroupUri(resourceUri),
             read: true,
           },
         },
@@ -27,7 +27,7 @@ module.exports = {
           resourceUri: newData.location,
           additionalRights: {
             group: {
-              uri: getAnnouncedGroupUri(resourceUri),
+              uri: getAnnouncesGroupUri(resourceUri),
               read: true,
             },
           },
@@ -38,7 +38,7 @@ module.exports = {
           resourceUri: oldData.location,
           rights: {
             group: {
-              uri: getAnnouncedGroupUri(resourceUri),
+              uri: getAnnouncesGroupUri(resourceUri),
               read: true,
             },
           },

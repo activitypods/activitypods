@@ -5,6 +5,7 @@ const AnnouncerMixin = {
   settings: {
     mapping: defaultMapping
   },
+  dependencies: ['announcer', 'activity-mapping'],
   async started() {
     await this.broker.call('announcer.watch', { types: this.settings.acceptedTypes });
 

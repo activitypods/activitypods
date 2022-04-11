@@ -26,7 +26,7 @@ const ACCEPT_CONTACT_REQUEST_MAPPING = {
     en: 'View',
     fr: 'Voir'
   },
-  actionLink: "/Profile/{{encodeUri emitterProfile.@id}}/show"
+  actionLink: "/Profile/{{encodeUri emitterProfile.id}}/show"
 };
 
 module.exports = {

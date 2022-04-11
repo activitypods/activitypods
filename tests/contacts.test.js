@@ -7,7 +7,7 @@ jest.setTimeout(30000);
 
 let broker;
 
-const mockNotifyUser = jest.fn(() => Promise.resolve());
+const mockSendNotification = jest.fn(() => Promise.resolve());
 
 beforeAll(async () => {
   broker = await initialize();
@@ -18,10 +18,9 @@ beforeAll(async () => {
 
   // Mock notification service
   await broker.createService({
-    name: 'notification',
+    mixins: [require('./services/notification.service')],
     actions: {
-      notifyUser: mockNotifyUser,
-      loadTranslations: () => {}
+      send: mockSendNotification
     },
   });
 
@@ -74,10 +73,10 @@ describe('Test contacts app', () => {
     });
 
     await waitForExpect(() => {
-      expect(mockNotifyUser).toHaveBeenCalledTimes(1);
+      expect(mockSendNotification).toHaveBeenCalledTimes(1);
     });
 
-    expect(mockNotifyUser.mock.calls[0][0].params.key).toBe('contact_offer');
+    expect(mockSendNotification.mock.calls[0][0].params.data.key).toBe('contact_request');
 
     await waitForExpect(async () => {
       await expect(

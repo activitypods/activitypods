@@ -6,7 +6,7 @@
 
 Check out [these slides](./proposal/proposal-english.pdf) ([french version](./proposal/proposal-french.pdf)) for more information about this project !
 
-You can also [watch our presentation at Solid World](https://vimeo.com/691410463) (march 2022)
+You can also [watch our presentation at Solid World](https://vimeo.com/691410463) (starts at 19:00) or [join our dedicated chatroom](https://chat.lescommuns.org/channel/activitypods).
 
 
 ## Available apps

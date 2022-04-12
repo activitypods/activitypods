@@ -1,4 +1,4 @@
-[![SemApps](https://badgen.net/badge/Powered%20by/SemApps/28CDFB)](https://semapps.org)
+[![SemApps](https://badgen.net/badge/Powered%20by/SemApps/28CDFB)](https://semapps.org) [![Chat](https://badgen.net/badge/chat/on%20rocket.chat/orange)](https://chat.lescommuns.org/channel/activitypods)
 
 # ActivityPods
 

@@ -12,6 +12,7 @@
     "@activitypods/contacts": "1.0.0",
     "@activitypods/core": "1.0.0",
     "@activitypods/events": "1.0.0",
+    "@activitypods/marketplace": "1.0.0",
     "@activitypods/messages": "1.0.0",
     "@semapps/notifications": "0.4.0-alpha.18",
     "dotenv-flow": "^3.2.0",

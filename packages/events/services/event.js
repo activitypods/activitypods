@@ -11,7 +11,7 @@ module.exports = {
     acceptedTypes: [OBJECT_TYPES.EVENT],
     permissions: {},
     newResourcesPermissions: {},
-    mapping: {
+    notificationMapping: {
       title: {
         en: `{{emitterProfile.vcard:given-name}} invites you to an event "{{activity.object.name}}"`,
         fr: `{{emitterProfile.vcard:given-name}} vous invite à un événement "{{activity.object.name}}"`

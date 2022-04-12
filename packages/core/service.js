@@ -12,6 +12,8 @@ const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
+const { SynchronizerService } = require('@activitypods/synchronizer');
+const { AnnouncerService } = require('@activitypods/announcer');
 const ApiService = require('./services/api');
 const containers = require('./config/containers');
 const ontologies = require('./config/ontologies.json');
@@ -174,6 +176,9 @@ const CoreService = {
         },
       },
     });
+
+    this.broker.createService(SynchronizerService);
+    this.broker.createService(AnnouncerService);
   },
 };
 

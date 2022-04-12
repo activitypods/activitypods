@@ -7,7 +7,7 @@ When a watched object is updated or deleted, automatically send an activity to t
 
 ## Usage
 
-The easiest way to make use of the `SynchronizerService` is to import the `SynchronizerMixin` along with the `ControlledContainerMixin`.
+The `SynchronizerService` is included in the [`CoreService`](../core). The easiest way to make use of it is to import the `SynchronizerMixin` along with the `ControlledContainerMixin`.
 
 ```js
 const { ControlledContainerMixin } = require('@semapps/ldp');
@@ -33,29 +33,29 @@ module.exports = {
 Watch a new type of object.
 
 ##### Parameters
-| Property | Type | Default | Description                           |
-|----------| ---- | ------- |---------------------------------------|
-| `type`   | `String`  | **required** | The type of resource we want to watch |
+| Property | Type     | Default      | Description                           |
+|----------|----------|--------------|---------------------------------------|
+| `type`   | `String` | **required** | The type of resource we want to watch |
 
 ### `announceUpdate`
 
 Announce an object update to all actors who have the right to view this object.
 
 ##### Parameters
-| Property    | Type     | Default | Description                                |
-|-------------|----------| ------- |--------------------------------------------|
+| Property    | Type     | Default      | Description                                |
+|-------------|----------|--------------|--------------------------------------------|
 | `objectUri` | `String` | **required** | The URI of resource which has been updated |
-| `newData`   | `Object` | **required** | The content of the resource (in JSON-LD)  |
+| `newData`   | `Object` | **required** | The content of the resource (in JSON-LD)   |
 
 ### `announceDelete`
 
 Announce an object deletion to all actors who have the right to view this object.
 
 ##### Parameters
-| Property    | Type     | Default | Description                                                    |
-|-------------|----------| ------- |----------------------------------------------------------------|
-| `objectUri` | `String` | **required** | The URI of resource which has been deleted                     |
-| `oldData`   | `Object` | **required** | The content of the resource before it was deleted (in JSON-LD) |
+| Property    | Type     | Default      | Description                                                     |
+|-------------|----------|--------------|-----------------------------------------------------------------|
+| `objectUri` | `String` | **required** | The URI of resource which has been deleted                      |
+| `oldData`   | `Object` | **required** | The content of the resource before it was deleted (in JSON-LD)  |
 
 
 ## Handled activities

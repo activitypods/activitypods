@@ -1,18 +1,19 @@
 # Events App
 
-An [ActivityPods](../../README.md) app to handle events, with invitation and registration.
+An [ActivityPods](../../README.md) app to handle events.
 
 ## Services
 
+- [AttendeesMatcherService](services/attendees-matcher.js)
 - [EventService](services/event.js)
-- [InvitationService](services/invitation.js)
+- [LocationService](services/location.js)
+- [MessageService](services/message.js)
 - [RegistrationService](services/registration.js)
 - [StatusService](services/status.js)
 
 ## Dependencies
 
 - [Core](../core/README.md)
-- [Synchronizer](../synchronizer/README.md)
 
 ## Containers
 
@@ -22,8 +23,8 @@ An [ActivityPods](../../README.md) app to handle events, with invitation and reg
 
 Attached to all events:
 
-- `/invitees` with the list of actors who have been invited to the event
-- `/inviters` with the list of actors who are allowed to invite to the event
+- `/announces` with the list of actors who have been invited to the event
+- `/announcers` with the list of actors who are allowed to invite to the event
 - `/attendees` with the list of actors who are attending the event (including the organizer)
 
 ## Ontology
@@ -32,55 +33,6 @@ Attached to all events:
 - The [Dublin Core Metadata](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/#http://purl.org/dc/elements/1.1/creator) ontology's `creator` predicate is used to find who is the creator of the event.
 
 ## Handled activities
-
-### Invite to event
-
-```json
-{
-  "type": "Invite",
-  "object": {
-    "type": "Event"
-  }
-}
-```
-
-#### Emitter's side effects
-
-- The recipients are added to the `/invitees` collection.
-- The recipients are added to a WebACL group which can view the event and the `/attendees` collection.
-
-#### Recipients' side effects
-
-- The event is cached in the recipients' PODs
-- Notifications are sent to the recipients
-
-
-### Offer to invite to event
-
-```json
-{
-  "type": "Offer",
-  "object": {
-    "type": "Invite",
-    "object": {
-      "type": "Event"
-    }
-  }
-}
-```
-
-#### Emitter's side effects
-
-- If the offer is sent by the event organizer, it means he wants to give invitees the right to share this event
-  - The recipients are added to the `/inviters` collection.
-  - The recipients are added to a WebACL group which can view the `/invitees` collection.
-
-#### Recipients' side effects
-
-- If the offer is sent to the organizer, it means we are an inviter and want him to invite one of our contacts
-  - The organizer sends an invitation to the actor specified by the inviter
-  - The inviter is informed his invitation has been accepted (via an Accept activity)
-
 
 ### Join event
 

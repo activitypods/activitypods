@@ -26,7 +26,7 @@ module.exports = {
     type: 'Console',
     options: {
       formatter: 'short',
-      level: 'info',
+      level: 'debug',
     },
   },
 };

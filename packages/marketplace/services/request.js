@@ -8,7 +8,7 @@ module.exports = {
   settings: {
     path: '/requests',
     acceptedTypes: ['mp:Request', 'mp:PurchaseRequest', 'mp:RentRequest', 'mp:LoanRequest', 'mp:GiftRequest', 'mp:BarterRequest'],
-    dereference: ['mp:hasCondition'],
+    dereference: ['mp:hasTimeCondition', 'mp:hasGeoCondition', 'mp:hasReciprocityCondition'],
     permissions: {},
     newResourcesPermissions: {},
     notificationMapping: {

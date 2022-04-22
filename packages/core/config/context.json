@@ -796,6 +796,16 @@
     },
     "apods:attendees" : {
       "@type" : "@id"
+    },
+
+    "mp:offerOfResourceType": {
+      "@type" : "@id"
+    },
+    "mp:requestOfResourceType": {
+      "@type" : "@id"
+    },
+    "mp:expirationDate": {
+      "@type": "xsd:dateTime"
     }
   }
 }

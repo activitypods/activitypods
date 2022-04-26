@@ -65,6 +65,11 @@
     "url": "http://virtual-assembly.org/ontologies/pair#"
   },
   {
+    "prefix": "mp",
+    "owl": "",
+    "url": "http://virtual-assembly.org/ontologies/pair-mp#"
+  },
+  {
     "prefix": "apods",
     "owl": "",
     "url": "http://activitypods.org/ns/core#"

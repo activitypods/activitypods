@@ -2,6 +2,7 @@
   "@context": {
     "@vocab": "_:",
     "pair": "http://virtual-assembly.org/ontologies/pair#",
+    "mp": "http://virtual-assembly.org/ontologies/pair-mp#",
     "apods": "http://activitypods.org/ns/core#",
 
     "as": "https://www.w3.org/ns/activitystreams#",
@@ -795,6 +796,16 @@
     },
     "apods:attendees" : {
       "@type" : "@id"
+    },
+
+    "mp:offerOfResourceType": {
+      "@type" : "@id"
+    },
+    "mp:requestOfResourceType": {
+      "@type" : "@id"
+    },
+    "mp:expirationDate": {
+      "@type": "xsd:dateTime"
     }
   }
 }

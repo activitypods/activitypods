@@ -1,5 +1,6 @@
 const { MoleculerError } = require('moleculer').Errors;
 const { ActivitiesHandlerMixin, OBJECT_TYPES } = require('@semapps/activitypub');
+const { getAnnouncesGroupUri } = require('@activitypods/announcer');
 const { JOIN_EVENT, LEAVE_EVENT } = require('../config/patterns');
 const { JOIN_EVENT_MAPPING, LEAVE_EVENT_MAPPING } = require('../config/mappings');
 
@@ -26,6 +27,29 @@ module.exports = {
       mapping: LEAVE_EVENT_MAPPING
     });
   },
+  actions: {
+    async addCreatorToAttendees(ctx) {
+      const { resourceUri, newData } = ctx.params;
+      await ctx.call('activitypub.collection.attach', {
+        collectionUri: newData['apods:attendees'],
+        item: newData['dc:creator'],
+      });
+    },
+    async givePermissionsForAttendeesCollection(ctx) {
+      const { resourceUri, newData } = ctx.params;
+
+      await ctx.call('webacl.resource.addRights', {
+        resourceUri: newData['apods:attendees'],
+        additionalRights: {
+          group: {
+            uri: getAnnouncesGroupUri(resourceUri),
+            read: true,
+          },
+        },
+        webId: newData['dc:creator'],
+      });
+    }
+  },
   activities: {
     joinEvent: {
       match: JOIN_EVENT,
@@ -37,6 +61,7 @@ module.exports = {
           const organizerUri = activity.object['dc:creator'];
 
           // Ensure the organizer is in the contacts WebACL group of the emitter so he can see his profile (and write to him)
+          // TODO put this in the contacts app ?
           await ctx.call('webacl.group.addMember', {
             groupSlug: new URL(emitterUri).pathname + '/contacts',
             memberUri: organizerUri,
@@ -55,7 +80,7 @@ module.exports = {
 
         if (
           !(await ctx.call('activitypub.collection.includes', {
-            collectionUri: event['apods:invitees'],
+            collectionUri: event['apods:announces'],
             itemUri: activity.actor,
           }))
         ) {

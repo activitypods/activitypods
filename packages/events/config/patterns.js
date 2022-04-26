@@ -1,22 +1,5 @@
 const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 
-const INVITE_EVENT = {
-  type: ACTIVITY_TYPES.INVITE,
-  object: {
-    type: OBJECT_TYPES.EVENT,
-  },
-};
-
-const OFFER_INVITE_EVENT = {
-  type: ACTIVITY_TYPES.OFFER,
-  object: {
-    type: ACTIVITY_TYPES.INVITE,
-    object: {
-      type: OBJECT_TYPES.EVENT,
-    },
-  },
-};
-
 const JOIN_EVENT = {
   type: ACTIVITY_TYPES.JOIN,
   object: {
@@ -55,8 +38,6 @@ const POST_EVENT_CONTACT_REQUEST = {
 };
 
 module.exports = {
-  INVITE_EVENT,
-  OFFER_INVITE_EVENT,
   JOIN_EVENT,
   LEAVE_EVENT,
   NEW_MESSAGE_ABOUT_EVENT,

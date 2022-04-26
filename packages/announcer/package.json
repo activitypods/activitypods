@@ -1,13 +1,12 @@
 {
-  "name": "@activitypods/synchronizer",
+  "name": "@activitypods/announcer",
   "version": "1.0.0",
-  "description": "ActivityPods service to notify of objects' updates",
+  "description": "ActivityPods service to announce objects",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
   "dependencies": {
     "@semapps/activitypub": "0.4.0-alpha.18",
-    "@semapps/ldp": "0.4.0-alpha.18",
-    "@semapps/mime-types": "0.4.0-alpha.18"
+    "@semapps/ldp": "0.4.0-alpha.18"
   },
   "publishConfig": {
     "access": "public"

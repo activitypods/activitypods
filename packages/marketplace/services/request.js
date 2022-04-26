@@ -13,8 +13,24 @@ module.exports = {
     newResourcesPermissions: {},
     notificationMapping: {
       title: {
-        en: `{{emitterProfile.vcard:given-name}} published a classified "{{activity.object.name}}"`,
-        fr: `{{emitterProfile.vcard:given-name}} a publié une petite annonce "{{activity.object.name}}"`
+        en: `{{emitterProfile.vcard:given-name}} published a classified "{{activity.object.pair:label}}"`,
+        fr: `{{emitterProfile.vcard:given-name}} a publié une petite annonce "{{activity.object.pair:label}}"`
+      },
+    }
+  },
+  hooks: {
+    after: {
+      async create(ctx, res) {
+        await ctx.call('marketplace.location.setNewRights', res);
+        return res;
+      },
+      async patch(ctx, res) {
+        await ctx.call('marketplace.location.updateRights', res);
+        return res;
+      },
+      async put(ctx, res) {
+        await ctx.call('marketplace.location.updateRights', res);
+        return res;
       },
     }
   }

@@ -1,3 +1,4 @@
+const LocationService = require('./services/location');
 const MessageService = require('./services/message');
 const OfferService = require('./services/offer');
 const RequestService = require('./services/request');
@@ -5,6 +6,8 @@ const RequestService = require('./services/request');
 const MarketplaceApp = {
   name: 'marketplace',
   created() {
+    this.broker.createService(LocationService);
+
     this.broker.createService(MessageService);
 
     this.broker.createService(OfferService);

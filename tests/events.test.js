@@ -126,8 +126,8 @@ describe('Test events app', () => {
       expect(mockSendNotification).toHaveBeenCalledTimes(2);
     });
 
-    expect(mockSendNotification.mock.calls[0][0].params.data.key).toBe('announce');
-    expect(mockSendNotification.mock.calls[1][0].params.data.key).toBe('announce');
+    expect(mockSendNotification.mock.calls[0][0].params.data.key).toBe('new_event');
+    expect(mockSendNotification.mock.calls[1][0].params.data.key).toBe('new_event');
 
     await waitForExpect(async () => {
       await expect(
@@ -291,7 +291,7 @@ describe('Test events app', () => {
       expect(mockSendNotification).toHaveBeenCalledTimes(3);
     });
 
-    expect(mockSendNotification.mock.calls[2][0].params.data.key).toBe('announce');
+    expect(mockSendNotification.mock.calls[2][0].params.data.key).toBe('new_event');
 
     await waitForExpect(async () => {
       await expect(

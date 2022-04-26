@@ -15,6 +15,7 @@ const { WebIdService } = require('@semapps/webid');
 const { SynchronizerService } = require('@activitypods/synchronizer');
 const { AnnouncerService } = require('@activitypods/announcer');
 const ApiService = require('./services/api');
+const MigrationService = require('./services/migration');
 const containers = require('./config/containers');
 const ontologies = require('./config/ontologies.json');
 
@@ -179,6 +180,12 @@ const CoreService = {
 
     this.broker.createService(SynchronizerService);
     this.broker.createService(AnnouncerService);
+
+    this.broker.createService(MigrationService, {
+      settings: {
+        baseUrl
+      }
+    });
   },
 };
 

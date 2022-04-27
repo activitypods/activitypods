@@ -30,6 +30,7 @@ const NEW_MESSAGE_ABOUT_EVENT_MAPPING = {
     en: `{{emitterProfile.vcard:given-name}} writes you about "{{activity.object.context.name}}"`,
     fr: `{{emitterProfile.vcard:given-name}} vous écrit au sujet de "{{activity.object.context.name}}"`
   },
+  description: '{{activity.object.content}}',
   actionName: {
     en: 'Reply',
     fr: 'Répondre'

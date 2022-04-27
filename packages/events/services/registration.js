@@ -1,11 +1,13 @@
 const { MoleculerError } = require('moleculer').Errors;
 const { ActivitiesHandlerMixin, OBJECT_TYPES } = require('@semapps/activitypub');
-const { JOIN_EVENT, LEAVE_EVENT } = require('../patterns');
+const { getAnnouncesGroupUri } = require('@activitypods/announcer');
+const { JOIN_EVENT, LEAVE_EVENT } = require('../config/patterns');
+const { JOIN_EVENT_MAPPING, LEAVE_EVENT_MAPPING } = require('../config/mappings');
 
 module.exports = {
   name: 'events.registration',
   mixins: [ActivitiesHandlerMixin],
-  dependencies: ['activitypub.registry', 'ldp', 'notification', 'webacl'],
+  dependencies: ['activitypub.registry', 'activity-mapping', 'ldp', 'webacl'],
   async started() {
     await this.broker.call('activitypub.registry.register', {
       path: '/attendees',
@@ -14,31 +16,39 @@ module.exports = {
       ordered: false,
       dereferenceItems: false,
     });
-  },
-  methods: {
-    async notifyJoinOrLeave(ctx, eventUri, userUri, joined) {
-      const userProfile = await ctx.call('activitypub.actor.getProfile', { actorUri: userUri, webId: 'system' });
-      const event = await ctx.call('events.event.get', { resourceUri: eventUri, webId: 'system' });
-      const key = joined ? 'join_event' : 'leave_event';
 
-      await ctx.call('notification.notifyUser', {
-        recipientUri: event['dc:creator'],
-        key,
-        payload: {
-          title: key + '.title',
-          actions: [
-            {
-              name: key + '.actions.view',
-              link: '/e/' + encodeURIComponent(eventUri),
-            },
-          ],
-        },
-        vars: {
-          userName: userProfile['vcard:given-name'],
-          eventName: event.name,
-        },
+    await this.broker.call('activity-mapping.addMapper', {
+      match: JOIN_EVENT,
+      mapping: JOIN_EVENT_MAPPING
+    });
+
+    await this.broker.call('activity-mapping.addMapper', {
+      match: LEAVE_EVENT,
+      mapping: LEAVE_EVENT_MAPPING
+    });
+  },
+  actions: {
+    async addCreatorToAttendees(ctx) {
+      const { resourceUri, newData } = ctx.params;
+      await ctx.call('activitypub.collection.attach', {
+        collectionUri: newData['apods:attendees'],
+        item: newData['dc:creator'],
       });
     },
+    async givePermissionsForAttendeesCollection(ctx) {
+      const { resourceUri, newData } = ctx.params;
+
+      await ctx.call('webacl.resource.addRights', {
+        resourceUri: newData['apods:attendees'],
+        additionalRights: {
+          group: {
+            uri: getAnnouncesGroupUri(resourceUri),
+            read: true,
+          },
+        },
+        webId: newData['dc:creator'],
+      });
+    }
   },
   activities: {
     joinEvent: {
@@ -51,6 +61,7 @@ module.exports = {
           const organizerUri = activity.object['dc:creator'];
 
           // Ensure the organizer is in the contacts WebACL group of the emitter so he can see his profile (and write to him)
+          // TODO put this in the contacts app ?
           await ctx.call('webacl.group.addMember', {
             groupSlug: new URL(emitterUri).pathname + '/contacts',
             memberUri: organizerUri,
@@ -69,7 +80,7 @@ module.exports = {
 
         if (
           !(await ctx.call('activitypub.collection.includes', {
-            collectionUri: event['apods:invitees'],
+            collectionUri: event['apods:announces'],
             itemUri: activity.actor,
           }))
         ) {
@@ -83,8 +94,6 @@ module.exports = {
 
         // Tag event as closed if max attendees has been reached
         await ctx.call('events.status.tagUpdatedEvent', { eventUri: event.id });
-
-        await this.notifyJoinOrLeave(ctx, event.id, activity.actor, true);
 
         // TODO send confirmation mail to participant
       },
@@ -112,8 +121,6 @@ module.exports = {
 
         // Tag event as open if the number of attendees is now lower than max attendees
         await ctx.call('events.status.tagUpdatedEvent', { eventUri: event.id });
-
-        await this.notifyJoinOrLeave(ctx, event.id, activity.actor, false);
       },
     },
   },

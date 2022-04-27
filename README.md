@@ -14,7 +14,12 @@ You can also [watch our presentation at Solid World](https://vimeo.com/691410463
 - [Contacts](packages/contacts/README.md)
 - [Events](packages/events/README.md)
 - [Messages](packages/messages/README.md)
+
+
+## Utilities
+
 - [Synchronizer](packages/synchronizer/README.md)
+- [Announcer](packages/announcer/README.md)
 
 
 ## Frontends using ActivityPods

@@ -8,22 +8,20 @@ jest.setTimeout(30000);
 
 let broker;
 
-const mockNotifyUser = jest.fn(() => Promise.resolve());
+const mockSendNotification = jest.fn(() => Promise.resolve());
 
 beforeAll(async () => {
   broker = await initialize();
 
   await broker.loadService(path.resolve(__dirname, './services/core.service.js'));
-  await broker.loadService(path.resolve(__dirname, './services/synchronizer.service.js'));
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/events.app.js'));
 
   // Mock notification service
   await broker.createService({
-    name: 'notification',
+    mixins: [require('./services/notification.service')],
     actions: {
-      notifyUser: mockNotifyUser,
-      loadTranslations: () => {}
+      send: mockSendNotification
     },
   });
 
@@ -98,7 +96,7 @@ describe('Test events app', () => {
     await waitForExpect(async () => {
       await expect(
         broker.call('webacl.group.exist', {
-          groupSlug: new URL(eventUri).pathname + '/invitees',
+          groupSlug: new URL(eventUri).pathname + '/announces',
           webId: 'system',
         })
       ).resolves.toBeTruthy();
@@ -117,7 +115,7 @@ describe('Test events app', () => {
   test('Alice invite Bob and Craig to her event', async () => {
     await broker.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
-      type: ACTIVITY_TYPES.INVITE,
+      type: ACTIVITY_TYPES.ANNOUNCE,
       actor: alice.id,
       object: eventUri,
       target: [bob.id, craig.id],
@@ -125,16 +123,16 @@ describe('Test events app', () => {
     });
 
     await waitForExpect(() => {
-      expect(mockNotifyUser).toHaveBeenCalledTimes(2);
+      expect(mockSendNotification).toHaveBeenCalledTimes(2);
     });
 
-    expect(mockNotifyUser.mock.calls[0][0].params.key).toBe('invitation');
-    expect(mockNotifyUser.mock.calls[1][0].params.key).toBe('invitation');
+    expect(mockSendNotification.mock.calls[0][0].params.data.key).toBe('new_event');
+    expect(mockSendNotification.mock.calls[1][0].params.data.key).toBe('new_event');
 
     await waitForExpect(async () => {
       await expect(
         broker.call('activitypub.collection.includes', {
-          collectionUri: eventUri + '/invitees',
+          collectionUri: eventUri + '/announces',
           itemUri: bob.id,
         })
       ).resolves.toBeTruthy();
@@ -143,7 +141,7 @@ describe('Test events app', () => {
     await waitForExpect(async () => {
       await expect(
         broker.call('activitypub.collection.includes', {
-          collectionUri: eventUri + '/inviters',
+          collectionUri: eventUri + '/announcers',
           itemUri: bob.id,
         })
       ).resolves.toBeFalsy();
@@ -181,7 +179,7 @@ describe('Test events app', () => {
       ).resolves.toBeTruthy();
     });
 
-    // An invitees has the right to see the list of attendees
+    // Someone who was shared the event has the right to see the list of attendees
     await waitForExpect(async () => {
       await expect(
         broker.call('activitypub.collection.get', {
@@ -247,7 +245,7 @@ describe('Test events app', () => {
       type: ACTIVITY_TYPES.OFFER,
       actor: alice.id,
       object: {
-        type: ACTIVITY_TYPES.INVITE,
+        type: ACTIVITY_TYPES.ANNOUNCE,
         object: eventUri,
       },
       target: craig.id,
@@ -257,17 +255,17 @@ describe('Test events app', () => {
     await waitForExpect(async () => {
       await expect(
         broker.call('activitypub.collection.includes', {
-          collectionUri: eventUri + '/inviters',
+          collectionUri: eventUri + '/announcers',
           itemUri: craig.id,
         })
       ).resolves.toBeTruthy();
     });
 
-    // An inviter has the right to see the list of invitees
+    // An announcer has the right to see the list of announces
     await waitForExpect(async () => {
       await expect(
         broker.call('activitypub.collection.get', {
-          collectionUri: eventUri + '/invitees',
+          collectionUri: eventUri + '/announces',
           webId: craig.id,
         })
       ).resolves.not.toBeNull();
@@ -280,7 +278,7 @@ describe('Test events app', () => {
       type: ACTIVITY_TYPES.OFFER,
       actor: craig.id,
       object: {
-        type: ACTIVITY_TYPES.INVITE,
+        type: ACTIVITY_TYPES.ANNOUNCE,
         actor: alice.id,
         object: eventUri,
         target: daisy.id,
@@ -290,15 +288,15 @@ describe('Test events app', () => {
     });
 
     await waitForExpect(() => {
-      expect(mockNotifyUser).toHaveBeenCalledTimes(3);
+      expect(mockSendNotification).toHaveBeenCalledTimes(3);
     });
 
-    expect(mockNotifyUser.mock.calls[2][0].params.key).toBe('invitation');
+    expect(mockSendNotification.mock.calls[2][0].params.data.key).toBe('new_event');
 
     await waitForExpect(async () => {
       await expect(
         broker.call('activitypub.collection.includes', {
-          collectionUri: eventUri + '/invitees',
+          collectionUri: eventUri + '/announces',
           itemUri: daisy.id,
         })
       ).resolves.toBeTruthy();
@@ -351,12 +349,12 @@ describe('Test events app', () => {
     });
 
     await waitForExpect(() => {
-      expect(mockNotifyUser).toHaveBeenCalledTimes(6);
+      expect(mockSendNotification).toHaveBeenCalledTimes(6);
     });
 
-    expect(mockNotifyUser.mock.calls[3][0].params.key).toBe('join_event');
-    expect(mockNotifyUser.mock.calls[4][0].params.key).toBe('join_event');
-    expect(mockNotifyUser.mock.calls[5][0].params.key).toBe('join_event');
+    expect(mockSendNotification.mock.calls[3][0].params.data.key).toBe('join_event');
+    expect(mockSendNotification.mock.calls[4][0].params.data.key).toBe('join_event');
+    expect(mockSendNotification.mock.calls[5][0].params.data.key).toBe('join_event');
   });
 
   test('Event is coming', async () => {
@@ -472,10 +470,10 @@ describe('Test events app', () => {
     });
 
     await waitForExpect(() => {
-      expect(mockNotifyUser).toHaveBeenCalledTimes(7);
+      expect(mockSendNotification).toHaveBeenCalledTimes(7);
     });
 
-    expect(mockNotifyUser.mock.calls[6][0].params.key).toBe('leave_event');
+    expect(mockSendNotification.mock.calls[6][0].params.data.key).toBe('leave_event');
 
     await expect(
       broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
@@ -593,13 +591,13 @@ describe('Test events app', () => {
     });
 
     await waitForExpect(() => {
-      expect(mockNotifyUser).toHaveBeenCalledTimes(11);
+      expect(mockSendNotification).toHaveBeenCalledTimes(11);
     });
 
-    expect(mockNotifyUser.mock.calls[7][0].params.key).toBe('post_event_contact_offer');
-    expect(mockNotifyUser.mock.calls[8][0].params.key).toBe('post_event_contact_offer');
-    expect(mockNotifyUser.mock.calls[9][0].params.key).toBe('post_event_contact_offer');
-    expect(mockNotifyUser.mock.calls[10][0].params.key).toBe('post_event_contact_offer');
+    expect(mockSendNotification.mock.calls[7][0].params.data.key).toBe('post_event_contact_request');
+    expect(mockSendNotification.mock.calls[8][0].params.data.key).toBe('post_event_contact_request');
+    expect(mockSendNotification.mock.calls[9][0].params.data.key).toBe('post_event_contact_request');
+    expect(mockSendNotification.mock.calls[10][0].params.data.key).toBe('post_event_contact_request');
   });
 
   test('Alice delete her event', async () => {

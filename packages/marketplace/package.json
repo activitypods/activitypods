@@ -1,16 +1,14 @@
 {
-  "name": "@activitypods/events",
+  "name": "@activitypods/marketplace",
   "version": "1.0.0",
-  "description": "ActivityPods app for events",
+  "description": "ActivityPods app for marketplace (offers and requests)",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
   "dependencies": {
     "@activitypods/announcer": "1.0.0",
     "@activitypods/synchronizer": "1.0.0",
     "@semapps/activitypub": "0.4.0-alpha.19",
-    "@semapps/ldp": "0.4.0-alpha.19",
-    "@semapps/mime-types": "0.4.0-alpha.19",
-    "moleculer-cron": "^0.0.2"
+    "@semapps/ldp": "0.4.0-alpha.19"
   },
   "publishConfig": {
     "access": "public"

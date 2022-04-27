@@ -1,6 +1,6 @@
 const path = require('path');
 const urlJoin = require('url-join');
-const { ActivityPubService, ProxyService } = require('@semapps/activitypub');
+const { ActivityPubService, ActivityMappingService, ProxyService } = require('@semapps/activitypub');
 const { AuthLocalService } = require('@semapps/auth');
 const FusekiAdminService = require('@semapps/fuseki-admin');
 const { JsonLdService } = require('@semapps/jsonld');
@@ -12,7 +12,10 @@ const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
+const { SynchronizerService } = require('@activitypods/synchronizer');
+const { AnnouncerService } = require('@activitypods/announcer');
 const ApiService = require('./services/api');
+const MigrationService = require('./services/migration');
 const containers = require('./config/containers');
 const ontologies = require('./config/ontologies.json');
 
@@ -109,6 +112,17 @@ const CoreService = {
       },
     });
 
+    // Required for notifications
+    this.broker.createService(ActivityMappingService, {
+      settings: {
+        handlebars: {
+          helpers: {
+            encodeUri: uri => encodeURIComponent(uri)
+          }
+        }
+      }
+    });
+
     this.broker.createService(ProxyService, {
       settings: {
         podProvider: true,
@@ -162,6 +176,15 @@ const CoreService = {
           },
         },
       },
+    });
+
+    this.broker.createService(SynchronizerService);
+    this.broker.createService(AnnouncerService);
+
+    this.broker.createService(MigrationService, {
+      settings: {
+        baseUrl
+      }
     });
   },
 };

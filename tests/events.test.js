@@ -8,6 +8,8 @@ jest.setTimeout(30000);
 
 let broker;
 
+const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
+
 const mockSendNotification = jest.fn(() => Promise.resolve());
 
 beforeAll(async () => {
@@ -475,10 +477,12 @@ describe('Test events app', () => {
 
     expect(mockSendNotification.mock.calls[6][0].params.data.key).toBe('leave_event');
 
-    await expect(
-      broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
-    ).resolves.toMatchObject({
-      'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
+    await waitForExpect(() => {
+      expect(
+        broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
+      ).resolves.toMatchObject({
+        'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
+      });
     });
 
     // This shouldn't have an impact
@@ -486,10 +490,12 @@ describe('Test events app', () => {
     await broker.call('events.status.tagClosed');
     await broker.call('events.status.tagFinished');
 
-    await expect(
-      broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
-    ).resolves.toMatchObject({
-      'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
+    await waitForExpect(() => {
+      expect(
+        broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
+      ).resolves.toMatchObject({
+        'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
+      });
     });
   });
 
@@ -598,6 +604,26 @@ describe('Test events app', () => {
     expect(mockSendNotification.mock.calls[8][0].params.data.key).toBe('post_event_contact_request');
     expect(mockSendNotification.mock.calls[9][0].params.data.key).toBe('post_event_contact_request');
     expect(mockSendNotification.mock.calls[10][0].params.data.key).toBe('post_event_contact_request');
+  });
+
+  test('Daisy silently accept Bob automatic contact requests', async () => {
+    const { items: contactRequests } = await broker.call('activitypub.collection.get', {
+      collectionUri: bob['apods:contactRequests'],
+      webId: bob.id,
+    });
+
+    await broker.call('activitypub.outbox.post', {
+      collectionUri: daisy.outbox,
+      type: ACTIVITY_TYPES.ACCEPT,
+      actor: daisy.id,
+      object: contactRequests[0].id,
+      to: bob.id,
+    });
+
+    await delay(5000);
+
+    // Since this is a post-event contact add, no notification should be sent
+    expect(mockSendNotification).not.toHaveBeenCalledTimes(12);
   });
 
   test('Alice delete her event', async () => {

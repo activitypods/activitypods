@@ -117,6 +117,12 @@ describe('Test contacts app', () => {
         })
       ).resolves.toBeFalsy();
     });
+
+    await waitForExpect(() => {
+      expect(mockSendNotification).toHaveBeenCalledTimes(2);
+    });
+
+    expect(mockSendNotification.mock.calls[1][0].params.data.key).toBe('contact_request');
   });
 
   test('Bob accept Alice contact request', async () => {
@@ -170,6 +176,12 @@ describe('Test contacts app', () => {
         })
       ).resolves.toBeTruthy();
     });
+
+    await waitForExpect(() => {
+      expect(mockSendNotification).toHaveBeenCalledTimes(3);
+    });
+
+    expect(mockSendNotification.mock.calls[2][0].params.data.key).toBe('accept_contact_request');
   });
 
   test('Craig reject Alice contact request', async () => {

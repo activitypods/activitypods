@@ -1,6 +1,6 @@
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { POST_EVENT_CONTACT_REQUEST } = require("../config/patterns");
+const { POST_EVENT_CONTACT_REQUEST, POST_EVENT_ACCEPT_CONTACT_REQUEST} = require("../config/patterns");
 const { POST_EVENT_CONTACT_REQUEST_MAPPING } = require("../config/mappings");
 
 module.exports = {
@@ -11,6 +11,12 @@ module.exports = {
       match: POST_EVENT_CONTACT_REQUEST,
       mapping: POST_EVENT_CONTACT_REQUEST_MAPPING,
       priority: 2 // Before regular contact requests
+    });
+
+    await this.broker.call('activity-mapping.addMapper', {
+      match: POST_EVENT_ACCEPT_CONTACT_REQUEST,
+      mapping: false, // Ignore activity
+      priority: 2 // Before regular accept contact requests
     });
   },
   events: {

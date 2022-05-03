@@ -24,7 +24,9 @@ You can also [watch our presentation at Solid World](https://vimeo.com/691410463
 
 ## Frontends using ActivityPods
 
-- [WelcomeToMyPlace.org](https://github.com/assemblee-virtuelle/welcometomyplace)
+- [Welcome To My Place](https://github.com/assemblee-virtuelle/welcometomyplace)
+- [Bienvenue Chez Moi](https://bienvenuechezmoi.org)
+- [L'Entraide](https://lentraide.app)
 
 
 ## Getting started

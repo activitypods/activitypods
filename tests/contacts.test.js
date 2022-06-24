@@ -2,6 +2,7 @@ const waitForExpect = require('wait-for-expect');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const initialize = require('./initialize');
 const path = require('path');
+const urlJoin = require('url-join');
 
 jest.setTimeout(30000);
 
@@ -209,6 +210,34 @@ describe('Test contacts app', () => {
           itemUri: alice.id,
         })
       ).resolves.toBeTruthy();
+    });
+  });
+
+  test('Bob removes Alice from his contacts', async () => {
+    await broker.call('activitypub.outbox.post', {
+      collectionUri: bob.outbox,
+      type: ACTIVITY_TYPES.REMOVE,
+      actor: bob.id,
+      object: alice.id,
+      origin: bob['apods:contacts']
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: bob['apods:contacts'],
+          itemUri: alice.id,
+        })
+      ).resolves.toBeFalsy();
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('ldp.container.includes', {
+          containerUri: urlJoin(bob.url, 'data', 'profiles'),
+          resourceUri: alice.url,
+        })
+      ).resolves.toBeFalsy();
     });
   });
 });

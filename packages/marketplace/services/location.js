@@ -7,7 +7,7 @@ module.exports = {
       const { resourceUri, newData } = ctx.params;
       const newLocation = newData['mp:hasGeoCondition'] && newData['mp:hasGeoCondition']['pair:hasLocation'];
 
-      if( newLocation ) {
+      if (newLocation) {
         await ctx.call('webacl.resource.addRights', {
           resourceUri: newLocation,
           additionalRights: {
@@ -26,7 +26,7 @@ module.exports = {
       const newLocation = newData['mp:hasGeoCondition'] && newData['mp:hasGeoCondition']['pair:hasLocation'];
 
       if (newLocation !== oldLocation) {
-        if( newLocation ) {
+        if (newLocation) {
           await ctx.call('webacl.resource.addRights', {
             resourceUri: newLocation,
             additionalRights: {
@@ -39,7 +39,7 @@ module.exports = {
           });
         }
 
-        if( oldLocation ) {
+        if (oldLocation) {
           await ctx.call('webacl.resource.removeRights', {
             resourceUri: oldLocation,
             rights: {
@@ -51,6 +51,6 @@ module.exports = {
           });
         }
       }
-    }
-  }
+    },
+  },
 };

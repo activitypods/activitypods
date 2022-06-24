@@ -23,7 +23,7 @@ beforeAll(async () => {
   await broker.createService({
     mixins: [require('./services/notification.service')],
     actions: {
-      send: mockSendNotification
+      send: mockSendNotification,
     },
   });
 
@@ -478,11 +478,11 @@ describe('Test events app', () => {
     expect(mockSendNotification.mock.calls[6][0].params.data.key).toBe('leave_event');
 
     await waitForExpect(() => {
-      expect(
-        broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
-      ).resolves.toMatchObject({
-        'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
-      });
+      expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject(
+        {
+          'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
+        }
+      );
     });
 
     // This shouldn't have an impact
@@ -491,11 +491,11 @@ describe('Test events app', () => {
     await broker.call('events.status.tagFinished');
 
     await waitForExpect(() => {
-      expect(
-        broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
-      ).resolves.toMatchObject({
-        'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
-      });
+      expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject(
+        {
+          'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
+        }
+      );
     });
   });
 
@@ -634,61 +634,69 @@ describe('Test events app', () => {
 
     // The event is now a Tombstone
     await waitForExpect(async () => {
-      await expect(broker.call('ldp.resource.get', {
-        resourceUri: eventUri,
-        webId: alice.id,
-      })).resolves.toMatchObject({
-        'type': 'Tombstone',
-        'as:formerType': 'Event'
+      await expect(
+        broker.call('ldp.resource.get', {
+          resourceUri: eventUri,
+          webId: alice.id,
+        })
+      ).resolves.toMatchObject({
+        type: 'Tombstone',
+        'as:formerType': 'Event',
       });
     });
 
     // The event is removed from Alice container
     await waitForExpect(async () => {
-      await expect(broker.call('ldp.container.get', {
-        containerUri: alice.id + '/data/events',
-        webId: alice.id,
-      })).resolves.not.toMatchObject({
+      await expect(
+        broker.call('ldp.container.get', {
+          containerUri: alice.id + '/data/events',
+          webId: alice.id,
+        })
+      ).resolves.not.toMatchObject({
         'ldp:contains': expect.arrayContaining([
           expect.objectContaining({
-            id: eventUri
+            id: eventUri,
           }),
-        ])
+        ]),
       });
     });
 
     // The deletion is announced to all invitees
     await waitForExpect(async () => {
-      await expect(broker.call('activitypub.collection.get', {
-        collectionUri: alice.outbox,
-        page: 1,
-        webId: alice.id,
-      })).resolves.toMatchObject({
+      await expect(
+        broker.call('activitypub.collection.get', {
+          collectionUri: alice.outbox,
+          page: 1,
+          webId: alice.id,
+        })
+      ).resolves.toMatchObject({
         orderedItems: expect.arrayContaining([
           expect.objectContaining({
             type: ACTIVITY_TYPES.ANNOUNCE,
             object: {
               type: ACTIVITY_TYPES.DELETE,
-              object: eventUri
+              object: eventUri,
             },
             actor: alice.id,
-            to: expect.arrayContaining([bob.id, craig.id, daisy.id])
+            to: expect.arrayContaining([bob.id, craig.id, daisy.id]),
           }),
-        ])
+        ]),
       });
     });
 
     // The event is removed from Bob cache (and other invitees)
     await waitForExpect(async () => {
-      await expect(broker.call('ldp.container.get', {
-        containerUri: bob.id + '/data/events',
-        webId: bob.id,
-      })).resolves.not.toMatchObject({
+      await expect(
+        broker.call('ldp.container.get', {
+          containerUri: bob.id + '/data/events',
+          webId: bob.id,
+        })
+      ).resolves.not.toMatchObject({
         'ldp:contains': expect.arrayContaining([
           expect.objectContaining({
-            id: eventUri
+            id: eventUri,
           }),
-        ])
+        ]),
       });
     });
   });

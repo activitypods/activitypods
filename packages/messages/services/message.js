@@ -16,7 +16,7 @@ module.exports = {
   async started() {
     await this.broker.call('activity-mapping.addMapper', {
       match: NEW_MESSAGE,
-      mapping: NEW_MESSAGE_MAPPING
+      mapping: NEW_MESSAGE_MAPPING,
     });
   },
   activities: {
@@ -31,7 +31,7 @@ module.exports = {
             webId: emitterUri,
           });
         }
-      }
+      },
     },
   },
 };

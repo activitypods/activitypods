@@ -117,10 +117,10 @@ const CoreService = {
       settings: {
         handlebars: {
           helpers: {
-            encodeUri: uri => encodeURIComponent(uri)
-          }
-        }
-      }
+            encodeUri: (uri) => encodeURIComponent(uri),
+          },
+        },
+      },
     });
 
     this.broker.createService(ProxyService, {
@@ -183,8 +183,8 @@ const CoreService = {
 
     this.broker.createService(MigrationService, {
       settings: {
-        baseUrl
-      }
+        baseUrl,
+      },
     });
   },
 };

@@ -19,7 +19,7 @@ beforeAll(async () => {
   await broker.createService({
     mixins: [require('./services/notification.service')],
     actions: {
-      send: mockSendNotification
+      send: mockSendNotification,
     },
   });
 

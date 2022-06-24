@@ -1,5 +1,5 @@
 const urlJoin = require('url-join');
-const { getSlugFromUri } = require("@semapps/ldp");
+const { getSlugFromUri } = require('@semapps/ldp');
 
 function getAclUriFromResourceUri(baseUrl, resourceUri) {
   return urlJoin(baseUrl, resourceUri.replace(baseUrl, '_acl/'));
@@ -13,50 +13,52 @@ const replaceRules = {
 module.exports = {
   name: 'migration',
   settings: {
-    baseUrl: null
+    baseUrl: null,
   },
   actions: {
     async migrate(ctx) {
       const { version } = ctx.params;
 
-      if( version === '1.1.0' ) {
+      if (version === '1.1.0') {
         for (let dataset of await ctx.call('pod.list')) {
           const [account] = await ctx.call('auth.account.find', { query: { username: dataset } });
 
           // TODO compare if version is greater than account version
-          if( account.version !== version ) {
+          if (account.version !== version) {
             this.logger.info(`Migrating dataset ${dataset} to v${version}...`);
 
-            for( let [from, to] of Object.entries(replaceRules) ) {
+            for (let [from, to] of Object.entries(replaceRules)) {
               await ctx.call('migration.replacePredicate', {
                 oldPredicate: 'http://activitypods.org/ns/core#' + from,
                 newPredicate: 'http://activitypods.org/ns/core#' + to,
-                dataset
+                dataset,
               });
             }
 
-            const resources = await ctx.call('ldp.container.getUris', { containerUri: urlJoin(this.settings.baseUrl, dataset, 'data', 'events') });
+            const resources = await ctx.call('ldp.container.getUris', {
+              containerUri: urlJoin(this.settings.baseUrl, dataset, 'data', 'events'),
+            });
             for (let resourceUri of resources) {
               const resourceSlug = getSlugFromUri(resourceUri);
 
-              for( let [from, to] of Object.entries(replaceRules) ) {
+              for (let [from, to] of Object.entries(replaceRules)) {
                 await ctx.call('migration.moveResource', {
                   oldResourceUri: urlJoin(resourceUri, from),
                   newResourceUri: urlJoin(resourceUri, to),
-                  dataset
+                  dataset,
                 });
 
                 await ctx.call('migration.moveAclGroup', {
                   oldGroupUri: urlJoin(this.settings.baseUrl, '_groups', dataset, 'data', 'events', resourceSlug, from),
                   newGroupUri: urlJoin(this.settings.baseUrl, '_groups', dataset, 'data', 'events', resourceSlug, to),
-                  dataset
+                  dataset,
                 });
               }
             }
 
             await ctx.call('auth.account.update', {
               '@id': account['@id'],
-              version
+              version,
             });
 
             this.logger.info('Done !');
@@ -78,7 +80,7 @@ module.exports = {
           WHERE { ?s <${oldPredicate}> ?o . }
         `,
         dataset,
-        webId: 'system'
+        webId: 'system',
       });
     },
     async moveResource(ctx) {
@@ -93,7 +95,7 @@ module.exports = {
           WHERE { <${oldResourceUri}> ?p ?o }
         `,
         dataset,
-        webId: 'system'
+        webId: 'system',
       });
 
       await ctx.call('triplestore.update', {
@@ -103,7 +105,7 @@ module.exports = {
           WHERE { ?s ?p <${oldResourceUri}> }
         `,
         dataset,
-        webId: 'system'
+        webId: 'system',
       });
 
       await ctx.call('triplestore.update', {
@@ -114,7 +116,7 @@ module.exports = {
           WHERE { ?s ?p <${oldResourceUri}> }
         `,
         dataset,
-        webId: 'system'
+        webId: 'system',
       });
 
       await ctx.call('migration.moveAclRights', { newResourceUri, oldResourceUri, dataset });
@@ -132,7 +134,7 @@ module.exports = {
           WHERE { <${oldGroupUri}> ?p ?o }
         `,
         dataset,
-        webId: 'system'
+        webId: 'system',
       });
 
       await ctx.call('triplestore.update', {
@@ -143,7 +145,7 @@ module.exports = {
           WHERE { ?s ?p <${oldGroupUri}> }
         `,
         dataset,
-        webId: 'system'
+        webId: 'system',
       });
 
       await ctx.call('migration.moveAclRights', { newResourceUri: newGroupUri, oldResourceUri: oldGroupUri, dataset });
@@ -151,7 +153,7 @@ module.exports = {
     async moveAclRights(ctx) {
       const { oldResourceUri, newResourceUri, dataset } = ctx.params;
 
-      for( let right of ['Read', 'Append', 'Write', 'Control'] ) {
+      for (let right of ['Read', 'Append', 'Write', 'Control']) {
         const oldResourceAclUri = getAclUriFromResourceUri(this.settings.baseUrl, oldResourceUri) + '#' + right;
         const newResourceAclUri = getAclUriFromResourceUri(this.settings.baseUrl, newResourceUri) + '#' + right;
 
@@ -165,9 +167,9 @@ module.exports = {
             WHERE { <${oldResourceAclUri}> ?p ?o }
           `,
           dataset,
-          webId: 'system'
+          webId: 'system',
         });
       }
-    }
-  }
-}
+    },
+  },
+};

@@ -13,7 +13,7 @@ const MarketplaceApp = {
     this.broker.createService(OfferService);
 
     this.broker.createService(RequestService);
-  }
+  },
 };
 
 module.exports = MarketplaceApp;

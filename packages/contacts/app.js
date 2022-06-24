@@ -10,7 +10,7 @@ const ContactsApp = {
     this.broker.createService(LocationService);
 
     this.broker.createService(RequestService);
-  }
+  },
 };
 
 module.exports = ContactsApp;

@@ -5,11 +5,24 @@ const NEW_MESSAGE_ABOUT_OFFER_OR_REQUEST = {
   object: {
     type: OBJECT_TYPES.NOTE,
     context: {
-      type: ['mp:Offer', 'mp:SaleOffer', 'mp:RentOffer', 'mp:LoanOffer', 'mp:GiftOffer', 'mp:BarterOffer', 'mp:Request', 'mp:PurchaseRequest', 'mp:RentRequest', 'mp:LoanRequest', 'mp:GiftRequest', 'mp:BarterRequest']
-    }
+      type: [
+        'mp:Offer',
+        'mp:SaleOffer',
+        'mp:RentOffer',
+        'mp:LoanOffer',
+        'mp:GiftOffer',
+        'mp:BarterOffer',
+        'mp:Request',
+        'mp:PurchaseRequest',
+        'mp:RentRequest',
+        'mp:LoanRequest',
+        'mp:GiftRequest',
+        'mp:BarterRequest',
+      ],
+    },
   },
 };
 
 module.exports = {
-  NEW_MESSAGE_ABOUT_OFFER_OR_REQUEST
+  NEW_MESSAGE_ABOUT_OFFER_OR_REQUEST,
 };

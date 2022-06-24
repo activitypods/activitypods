@@ -15,16 +15,23 @@ module.exports = {
       key: 'new_event',
       title: {
         en: `{{emitterProfile.vcard:given-name}} invites you to an event "{{activity.object.name}}"`,
-        fr: `{{emitterProfile.vcard:given-name}} vous invite à un événement "{{activity.object.name}}"`
+        fr: `{{emitterProfile.vcard:given-name}} vous invite à un événement "{{activity.object.name}}"`,
       },
-    }
+    },
   },
   hooks: {
     after: {
       async create(ctx, res) {
         res.newData = await ctx.call('activitypub.object.awaitCreateComplete', {
           objectUri: res.resourceUri,
-          predicates: ['dc:creator', 'dc:modified', 'dc:created', 'apods:announces', 'apods:announcers', 'apods:attendees'],
+          predicates: [
+            'dc:creator',
+            'dc:modified',
+            'dc:created',
+            'apods:announces',
+            'apods:announcers',
+            'apods:attendees',
+          ],
         });
 
         await ctx.call('events.status.tagNewEvent', { eventUri: res.resourceUri });

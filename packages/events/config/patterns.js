@@ -19,8 +19,8 @@ const NEW_MESSAGE_ABOUT_EVENT = {
   object: {
     type: OBJECT_TYPES.NOTE,
     context: {
-      type: OBJECT_TYPES.EVENT
-    }
+      type: OBJECT_TYPES.EVENT,
+    },
   },
 };
 
@@ -30,11 +30,11 @@ const POST_EVENT_CONTACT_REQUEST = {
     type: ACTIVITY_TYPES.ADD,
     object: {
       type: OBJECT_TYPES.PROFILE,
-    }
+    },
   },
   context: {
-    type: OBJECT_TYPES.EVENT
-  }
+    type: OBJECT_TYPES.EVENT,
+  },
 };
 
 const POST_EVENT_ACCEPT_CONTACT_REQUEST = {
@@ -48,8 +48,8 @@ const POST_EVENT_ACCEPT_CONTACT_REQUEST = {
       },
     },
     context: {
-      type: OBJECT_TYPES.EVENT
-    }
+      type: OBJECT_TYPES.EVENT,
+    },
   },
 };
 
@@ -58,5 +58,5 @@ module.exports = {
   LEAVE_EVENT,
   NEW_MESSAGE_ABOUT_EVENT,
   POST_EVENT_CONTACT_REQUEST,
-  POST_EVENT_ACCEPT_CONTACT_REQUEST
+  POST_EVENT_ACCEPT_CONTACT_REQUEST,
 };

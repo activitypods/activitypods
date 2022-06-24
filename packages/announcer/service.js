@@ -93,7 +93,7 @@ module.exports = {
           webId: creator.id,
         });
       }
-    }
+    },
   },
   activities: {
     announce: {
@@ -117,7 +117,10 @@ module.exports = {
         // Add all targeted actors to the collection and WebACL group
         // TODO check if we could not use activity.to instead of activity.target (and change this everywhere)
         for (let actorUri of defaultToArray(activity.target)) {
-          await ctx.call('activitypub.collection.attach', { collectionUri: activity.object['apods:announces'], item: actorUri });
+          await ctx.call('activitypub.collection.attach', {
+            collectionUri: activity.object['apods:announces'],
+            item: actorUri,
+          });
 
           // TODO automatically synchronize the collection with the ACL group
           await ctx.call('webacl.group.addMember', {
@@ -151,7 +154,7 @@ module.exports = {
               object: {
                 type: this.settings.watchedTypes,
               },
-            }
+            },
           },
           activity
         );
@@ -163,7 +166,10 @@ module.exports = {
       async onEmit(ctx, activity) {
         // Add all announcers to the collection and WebACL group
         for (let actorUri of defaultToArray(activity.target)) {
-          await ctx.call('activitypub.collection.attach', { collectionUri: activity.object.object['apods:announcers'], item: actorUri });
+          await ctx.call('activitypub.collection.attach', {
+            collectionUri: activity.object.object['apods:announcers'],
+            item: actorUri,
+          });
 
           await ctx.call('webacl.group.addMember', {
             groupUri: getAnnouncersGroupUri(activity.object.object.id),
@@ -183,7 +189,7 @@ module.exports = {
               object: {
                 type: this.settings.watchedTypes,
               },
-            }
+            },
           },
           activity
         );
@@ -224,5 +230,5 @@ module.exports = {
         });
       },
     },
-  }
+  },
 };

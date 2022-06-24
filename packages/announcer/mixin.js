@@ -3,7 +3,7 @@ const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 
 const AnnouncerMixin = {
   settings: {
-    notificationMapping: defaultMapping
+    notificationMapping: defaultMapping,
   },
   dependencies: ['announcer', 'activity-mapping'],
   async started() {
@@ -13,10 +13,10 @@ const AnnouncerMixin = {
       match: {
         type: ACTIVITY_TYPES.ANNOUNCE,
         object: {
-          type: this.settings.acceptedTypes
+          type: this.settings.acceptedTypes,
         },
       },
-      mapping: this.settings.notificationMapping
+      mapping: this.settings.notificationMapping,
     });
   },
   hooks: {
@@ -24,9 +24,9 @@ const AnnouncerMixin = {
       async create(ctx, res) {
         await ctx.call('announcer.giveRightsAfterCreate', res);
         return res;
-      }
-    }
-  }
-}
+      },
+    },
+  },
+};
 
 module.exports = AnnouncerMixin;

@@ -1,5 +1,5 @@
 const { SingleMailNotificationsService } = require('@semapps/notifications');
-const CONFIG = require("../config");
+const CONFIG = require('../config');
 
 module.exports = {
   mixins: [SingleMailNotificationsService],
@@ -14,6 +14,6 @@ module.exports = {
         user: CONFIG.SMTP_USER,
         pass: CONFIG.SMTP_PASS,
       },
-    }
-  }
+    },
+  },
 };

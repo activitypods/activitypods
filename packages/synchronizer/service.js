@@ -50,7 +50,7 @@ module.exports = {
           to: usersWithReadAuthorization,
         });
       }
-    }
+    },
   },
   methods: {
     // When https://github.com/assemblee-virtuelle/semapps/issues/907 will be fixed,
@@ -76,7 +76,7 @@ module.exports = {
       }
 
       return usersWithReadAuthorization;
-    }
+    },
   },
   activities: {
     announceUpdate: {

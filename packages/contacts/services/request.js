@@ -5,10 +5,7 @@ const {
   REJECT_CONTACT_REQUEST,
   IGNORE_CONTACT_REQUEST,
 } = require('../config/patterns');
-const {
-  CONTACT_REQUEST_MAPPING,
-  ACCEPT_CONTACT_REQUEST_MAPPING
-} = require('../config/mappings');
+const { CONTACT_REQUEST_MAPPING, ACCEPT_CONTACT_REQUEST_MAPPING } = require('../config/mappings');
 const { defaultToArray } = require('@semapps/ldp');
 
 module.exports = {
@@ -42,12 +39,12 @@ module.exports = {
 
     await this.broker.call('activity-mapping.addMapper', {
       match: CONTACT_REQUEST,
-      mapping: CONTACT_REQUEST_MAPPING
+      mapping: CONTACT_REQUEST_MAPPING,
     });
 
     await this.broker.call('activity-mapping.addMapper', {
       match: ACCEPT_CONTACT_REQUEST,
-      mapping: ACCEPT_CONTACT_REQUEST_MAPPING
+      mapping: ACCEPT_CONTACT_REQUEST_MAPPING,
     });
   },
   activities: {

@@ -15,7 +15,7 @@ module.exports = {
       const oldData = await ctx.call('ldp.resource.get', {
         resourceUri,
         accept: MIME_TYPES.JSON,
-        webId
+        webId,
       });
 
       await ctx.call('ldp.resource.put', {
@@ -23,10 +23,10 @@ module.exports = {
           id: resourceUri,
           type: OBJECT_TYPES.TOMBSTONE,
           'as:formerType': oldData.type,
-          deleted: new Date().toISOString()
+          deleted: new Date().toISOString(),
         },
         contentType: MIME_TYPES.JSON,
-        webId
+        webId,
       });
 
       await ctx.call('synchronizer.announceDelete', { objectUri: ctx.params.resourceUri, oldData });
@@ -38,22 +38,22 @@ module.exports = {
         resourceUri,
         newRights: {
           anon: {
-            read: true
-          }
+            read: true,
+          },
         },
-        webId: 'system'
+        webId: 'system',
       });
 
       await ctx.call('ldp.container.detach', {
         containerUri: getContainerFromUri(resourceUri),
         resourceUri,
-        webId
+        webId,
       });
 
       const returnValues = {
         resourceUri,
         oldData,
-        webId
+        webId,
       };
 
       ctx.emit('ldp.resource.deleted', returnValues, { meta: { webId: null, dataset: null } });

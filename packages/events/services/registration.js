@@ -19,12 +19,12 @@ module.exports = {
 
     await this.broker.call('activity-mapping.addMapper', {
       match: JOIN_EVENT,
-      mapping: JOIN_EVENT_MAPPING
+      mapping: JOIN_EVENT_MAPPING,
     });
 
     await this.broker.call('activity-mapping.addMapper', {
       match: LEAVE_EVENT,
-      mapping: LEAVE_EVENT_MAPPING
+      mapping: LEAVE_EVENT_MAPPING,
     });
   },
   actions: {
@@ -48,7 +48,7 @@ module.exports = {
         },
         webId: newData['dc:creator'],
       });
-    }
+    },
   },
   activities: {
     joinEvent: {

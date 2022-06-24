@@ -7,7 +7,14 @@ module.exports = {
   mixins: [SynchronizerMixin, AnnouncerMixin, ControlledContainerMixin],
   settings: {
     path: '/requests',
-    acceptedTypes: ['mp:Request', 'mp:PurchaseRequest', 'mp:RentRequest', 'mp:LoanRequest', 'mp:GiftRequest', 'mp:BarterRequest'],
+    acceptedTypes: [
+      'mp:Request',
+      'mp:PurchaseRequest',
+      'mp:RentRequest',
+      'mp:LoanRequest',
+      'mp:GiftRequest',
+      'mp:BarterRequest',
+    ],
     dereference: ['mp:hasTimeCondition', 'mp:hasGeoCondition', 'mp:hasReciprocityCondition'],
     permissions: {},
     newResourcesPermissions: {},
@@ -15,10 +22,10 @@ module.exports = {
       key: 'new_request',
       title: {
         en: `{{emitterProfile.vcard:given-name}} published a classified "{{activity.object.pair:label}}"`,
-        fr: `{{emitterProfile.vcard:given-name}} a publié une petite annonce "{{activity.object.pair:label}}"`
+        fr: `{{emitterProfile.vcard:given-name}} a publié une petite annonce "{{activity.object.pair:label}}"`,
       },
-      actionLink: "/requests/{{encodeUri activity.object.id}}"
-    }
+      actionLink: '/requests/{{encodeUri activity.object.id}}',
+    },
   },
   hooks: {
     after: {
@@ -34,6 +41,6 @@ module.exports = {
         await ctx.call('marketplace.location.updateRights', res);
         return res;
       },
-    }
-  }
+    },
+  },
 };

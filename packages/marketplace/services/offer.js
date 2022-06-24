@@ -15,10 +15,10 @@ module.exports = {
       key: 'new_offer',
       title: {
         en: `{{emitterProfile.vcard:given-name}} published a classified "{{activity.object.pair:label}}"`,
-        fr: `{{emitterProfile.vcard:given-name}} a publié une petite annonce "{{activity.object.pair:label}}"`
+        fr: `{{emitterProfile.vcard:given-name}} a publié une petite annonce "{{activity.object.pair:label}}"`,
       },
-      actionLink: "/offers/{{encodeUri activity.object.id}}"
-    }
+      actionLink: '/offers/{{encodeUri activity.object.id}}',
+    },
   },
   hooks: {
     after: {
@@ -34,6 +34,6 @@ module.exports = {
         await ctx.call('marketplace.location.updateRights', res);
         return res;
       },
-    }
-  }
+    },
+  },
 };

@@ -1,11 +1,12 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
-const { OBJECT_TYPES } = require('@semapps/activitypub');
+const { OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { SynchronizerMixin } = require('@activitypods/synchronizer');
+const { REMOVE_CONTACT } = require("../config/patterns");
 
 module.exports = {
   name: 'contacts.profile',
-  mixins: [SynchronizerMixin, ControlledContainerMixin],
+  mixins: [SynchronizerMixin, ControlledContainerMixin, ActivitiesHandlerMixin],
   settings: {
     path: '/profiles',
     acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
@@ -63,4 +64,28 @@ module.exports = {
       });
     },
   },
+  activities: {
+    removeContact: {
+      match: REMOVE_CONTACT,
+      async onEmit(ctx, activity, emitterUri) {
+        if (!activity.origin)
+          throw new Error('The origin property is missing from the Remove activity');
+
+        if (!activity.origin.startsWith(emitterUri))
+          throw new Error(`Cannot remove from collection ${activity.origin} as it is not owned by the emitter`);
+
+        await ctx.call('activitypub.collection.detach', {
+          collectionUri: activity.origin,
+          item: activity.object.id,
+        });
+
+        const actor = await ctx.call('activitypub.actor.get', { actorUri: activity.object.id, webId: activity.object.id });
+
+        await ctx.call('activitypub.object.deleteFromCache', {
+          actorUri: emitterUri,
+          objectUri: actor.url,
+        });
+      }
+    },
+  }
 };

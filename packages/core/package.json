@@ -5,8 +5,6 @@
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
   "dependencies": {
-    "@activitypods/announcer": "1.1.0",
-    "@activitypods/synchronizer": "1.1.0",
     "@semapps/activitypub": "0.4.0-alpha.36",
     "@semapps/auth": "0.4.0-alpha.36",
     "@semapps/fuseki-admin": "0.4.0-alpha.36",

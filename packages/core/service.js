@@ -2,7 +2,6 @@ const path = require('path');
 const urlJoin = require('url-join');
 const { ActivityPubService, ActivityMappingService, ProxyService } = require('@semapps/activitypub');
 const { AuthLocalService } = require('@semapps/auth');
-const FusekiAdminService = require('@semapps/fuseki-admin');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
 const { PodService } = require('@semapps/pod');
@@ -24,7 +23,7 @@ const CoreService = {
   settings: {
     baseUrl: null,
     baseDir: null,
-    fuseki: {
+    triplestore: {
       url: null,
       user: null,
       password: null,
@@ -33,7 +32,7 @@ const CoreService = {
     queueServiceUrl: null,
   },
   created() {
-    let { baseUrl, baseDir, fuseki, jsonContext, queueServiceUrl } = this.settings;
+    let { baseUrl, baseDir, triplestore, jsonContext, queueServiceUrl } = this.settings;
 
     // If an external JSON context is not provided, we will use a local one
     const localJsonContext = urlJoin(baseUrl, '_system', 'context.json');
@@ -60,14 +59,6 @@ const CoreService = {
         webIdSelection: ['nick'],
         accountSelection: ['preferredLocale', 'preferredFrontUrl', 'preferredFrontName'],
         ...this.settings.auth,
-      },
-    });
-
-    this.broker.createService(FusekiAdminService, {
-      settings: {
-        url: fuseki.url,
-        user: fuseki.user,
-        password: fuseki.password,
       },
     });
 
@@ -144,9 +135,9 @@ const CoreService = {
 
     this.broker.createService(TripleStoreService, {
       settings: {
-        sparqlEndpoint: fuseki.url,
-        jenaUser: fuseki.user,
-        jenaPassword: fuseki.password,
+        url: triplestore.url,
+        user: triplestore.user,
+        password: triplestore.password,
       },
     });
 

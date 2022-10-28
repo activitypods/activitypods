@@ -1,6 +1,6 @@
 {
-  "short_name": "Welcome to my place",
-  "name": "Welcome to my place",
+  "short_name": "Pod Provider",
+  "name": "POD Provider",
   "icons": [
     {
       "src": "favicon.ico",
@@ -18,7 +18,7 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": "https://welcometomyplace.org",
+  "start_url": "http://localhost:4000",
   "display": "standalone",
   "theme_color": "#FF4F28",
   "background_color": "#ffffff"

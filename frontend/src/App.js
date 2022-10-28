@@ -10,8 +10,6 @@ import * as resources from './resources';
 
 import Layout from './layout/Layout';
 import theme from './config/theme';
-// import LocalLoginPage from './pages/LocalLoginPage/LocalLoginPage';
-import customRoutes from './customRoutes';
 
 const history = createBrowserHistory();
 
@@ -26,7 +24,6 @@ const App = () => (
     logoutButton={LogoutButton}
     layout={Layout}
     theme={theme}
-    customRoutes={customRoutes}
   >
     {Object.entries(resources).map(([key, resource]) => (
       <Resource key={key} name={key} {...resource.config} />

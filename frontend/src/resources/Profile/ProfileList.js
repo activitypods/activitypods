@@ -1,24 +1,18 @@
 import React from 'react';
-import { ListBase, Pagination, SimpleList } from 'react-admin';
-import { Container, Card, CardContent, CardHeader } from '@material-ui/core';
+import { SimpleList } from 'react-admin';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
+import List from "../../layout/List";
 
 const ProfileList = (props) => {
   const { identity } = useCheckAuthenticated();
   if (!identity?.id) return null;
   return (
-    <Container>
-      <Card>
-        <CardHeader title="Mon réseau" />
-        <CardContent>
-          <ListBase {...props}>
-            <SimpleList
-              primaryText={record => record['vcard:given-name']} />
-          </ListBase>
-          <Pagination />
-        </CardContent>
-      </Card>
-    </Container>
+    <List {...props}>
+      <SimpleList
+        linkType="show"
+        primaryText={record => record['vcard:given-name']}
+      />
+    </List>
   );
 };
 

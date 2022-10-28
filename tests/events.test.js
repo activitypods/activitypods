@@ -4,7 +4,7 @@ const { MIME_TYPES } = require('@semapps/mime-types');
 const initialize = require('./initialize');
 const path = require('path');
 
-jest.setTimeout(30000);
+jest.setTimeout(50000);
 
 let broker;
 
@@ -366,10 +366,14 @@ describe('Test events app', () => {
     startTime.setDate(now.getDate() + 1);
     endTime.setDate(now.getDate() + 2);
 
-    await broker.call('events.event.patch', {
+    const oldData = await broker.call('events.event.get', {
       resourceUri: eventUri,
+      webId: alice.id,
+    });
+
+    await broker.call('events.event.put', {
       resource: {
-        '@id': eventUri,
+        ...oldData,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
       },
@@ -397,10 +401,14 @@ describe('Test events app', () => {
     endTime.setDate(now.getDate() + 2);
     closingTime.setDate(now.getDate() - 1);
 
-    await broker.call('events.event.patch', {
+    const oldData = await broker.call('events.event.get', {
       resourceUri: eventUri,
+      webId: alice.id,
+    });
+
+    await broker.call('events.event.put', {
       resource: {
-        '@id': eventUri,
+        ...oldData,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
         'apods:closingTime': closingTime.toISOString(),
@@ -429,10 +437,14 @@ describe('Test events app', () => {
     endTime.setDate(now.getDate() + 3);
     closingTime.setDate(now.getDate() + 3);
 
-    await broker.call('events.event.patch', {
+    const oldData = await broker.call('events.event.get', {
       resourceUri: eventUri,
+      webId: alice.id,
+    });
+
+    await broker.call('events.event.patch', {
       resource: {
-        '@id': eventUri,
+        ...oldData,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
         'apods:closingTime': closingTime.toISOString(),
@@ -483,7 +495,7 @@ describe('Test events app', () => {
           'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
         }
       );
-    });
+    }, 6000);
 
     // This shouldn't have an impact
     await broker.call('events.status.tagComing');
@@ -500,10 +512,14 @@ describe('Test events app', () => {
   });
 
   test('Event is closed again because Alice changed the max attendees number', async () => {
-    await broker.call('events.event.patch', {
+    const oldData = await broker.call('events.event.get', {
       resourceUri: eventUri,
+      webId: alice.id,
+    });
+
+    await broker.call('events.event.put', {
       resource: {
-        '@id': eventUri,
+        ...oldData,
         'apods:maxAttendees': 3,
       },
       contentType: MIME_TYPES.JSON,
@@ -535,10 +551,14 @@ describe('Test events app', () => {
     startTime.setDate(now.getDate() - 2);
     endTime.setDate(now.getDate() - 1);
 
-    await broker.call('events.event.patch', {
+    const oldData = await broker.call('events.event.get', {
       resourceUri: eventUri,
+      webId: alice.id,
+    });
+
+    await broker.call('events.event.put', {
       resource: {
-        '@id': eventUri,
+        ...oldData,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
       },

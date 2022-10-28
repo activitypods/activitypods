@@ -63,10 +63,6 @@ module.exports = {
   },
   hooks: {
     after: {
-      async patch(ctx, res) {
-        await ctx.call('synchronizer.announceUpdate', { objectUri: res.resourceUri, newData: res.newData });
-        return res;
-      },
       async put(ctx, res) {
         await ctx.call('synchronizer.announceUpdate', { objectUri: res.resourceUri, newData: res.newData });
         return res;

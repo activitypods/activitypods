@@ -36,9 +36,16 @@ module.exports = {
         webId,
       });
 
-      await ctx.call('ldp.resource.patch', {
+      // TODO awaitCreateComplete to avoid race condition ?
+      const webIdData = await ctx.call('ldp.resource.get', {
+        resourceUri: webId,
+        accept: MIME_TYPES.JSON,
+        webId,
+      });
+
+      await ctx.call('ldp.resource.put', {
         resource: {
-          '@id': webId,
+          ...webIdData,
           url: profileUri,
         },
         contentType: MIME_TYPES.JSON,

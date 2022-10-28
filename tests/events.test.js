@@ -4,7 +4,7 @@ const { MIME_TYPES } = require('@semapps/mime-types');
 const initialize = require('./initialize');
 const path = require('path');
 
-jest.setTimeout(30000);
+jest.setTimeout(50000);
 
 let broker;
 
@@ -483,7 +483,7 @@ describe('Test events app', () => {
           'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
         }
       );
-    });
+    }, 6000);
 
     // This shouldn't have an impact
     await broker.call('events.status.tagComing');

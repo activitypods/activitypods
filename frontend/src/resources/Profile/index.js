@@ -13,7 +13,6 @@ export default {
   },
   dataModel: {
     types: ['vcard:Individual'],
-    list: {},
   },
   translations: {
     en: {
@@ -22,9 +21,7 @@ export default {
         'vcard:given-name': 'Surname',
         'vcard:family-name': 'Family name',
         'vcard:note': 'About you',
-        'vcard:photo': 'Picture',
-        'vcard:hasAddress': 'Address',
-        'foaf:tipjar': 'G1 account'
+        'vcard:photo': 'Picture'
       },
     },
     fr: {
@@ -33,9 +30,7 @@ export default {
         'vcard:given-name': 'Prénom',
         'vcard:family-name': 'Nom de famille',
         'vcard:note': 'En deux mots',
-        'vcard:photo': 'Photo',
-        'vcard:hasAddress': 'Adresse',
-        'foaf:tipjar': 'Compte G1'
+        'vcard:photo': 'Photo'
       },
     },
   },

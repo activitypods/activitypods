@@ -7,7 +7,6 @@ const dataServers = {
     sparqlEndpoint: null,
     containers: {
       pod: {
-        'as:Event': ['/events'],
         'vcard:Location': ['/locations'],
         'vcard:Individual': ['/profiles'],
       },

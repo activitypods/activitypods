@@ -41,6 +41,7 @@ describe('Test events app', () => {
     craig,
     daisy,
     eventUri,
+    event,
     locationUri;
 
   test('Create 4 pods', async () => {
@@ -92,6 +93,12 @@ describe('Test events app', () => {
         location: locationUri,
       },
       contentType: MIME_TYPES.JSON,
+      webId: alice.id,
+    });
+
+    event = await broker.call('events.event.get', {
+      resourceUri: eventUri,
+      accept: MIME_TYPES.JSON,
       webId: alice.id,
     });
 
@@ -203,17 +210,11 @@ describe('Test events app', () => {
       webId: alice.id,
     });
 
-    const oldData = await broker.call('events.event.get', {
-      resourceUri: eventUri,
-      webId: alice.id,
-    });
+    event.location = newLocationUri;
 
     await broker.call('events.event.put', {
       resourceUri: eventUri,
-      resource: {
-        ...oldData,
-        location: newLocationUri,
-      },
+      resource: event,
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
     });
@@ -366,13 +367,12 @@ describe('Test events app', () => {
     startTime.setDate(now.getDate() + 1);
     endTime.setDate(now.getDate() + 2);
 
-    await broker.call('events.event.patch', {
+    event.startTime = startTime.toISOString();
+    event.endTime = endTime.toISOString();
+
+    await broker.call('events.event.put', {
       resourceUri: eventUri,
-      resource: {
-        '@id': eventUri,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-      },
+      resource: event,
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
     });
@@ -397,14 +397,13 @@ describe('Test events app', () => {
     endTime.setDate(now.getDate() + 2);
     closingTime.setDate(now.getDate() - 1);
 
-    await broker.call('events.event.patch', {
+    event.startTime = startTime.toISOString();
+    event.endTime = endTime.toISOString();
+    event['apods:closingTime'] = closingTime.toISOString();
+
+    await broker.call('events.event.put', {
       resourceUri: eventUri,
-      resource: {
-        '@id': eventUri,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-        'apods:closingTime': closingTime.toISOString(),
-      },
+      resource: event,
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
     });
@@ -429,15 +428,14 @@ describe('Test events app', () => {
     endTime.setDate(now.getDate() + 3);
     closingTime.setDate(now.getDate() + 3);
 
-    await broker.call('events.event.patch', {
+    event.startTime = startTime.toISOString();
+    event.endTime = endTime.toISOString();
+    event['apods:closingTime'] = closingTime.toISOString();
+    event['apods:maxAttendees'] = 4;
+
+    await broker.call('events.event.put', {
       resourceUri: eventUri,
-      resource: {
-        '@id': eventUri,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-        'apods:closingTime': closingTime.toISOString(),
-        'apods:maxAttendees': 4,
-      },
+      resource: event,
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
     });
@@ -500,12 +498,11 @@ describe('Test events app', () => {
   });
 
   test('Event is closed again because Alice changed the max attendees number', async () => {
-    await broker.call('events.event.patch', {
+    event['apods:maxAttendees'] = 3;
+
+    await broker.call('events.event.put', {
       resourceUri: eventUri,
-      resource: {
-        '@id': eventUri,
-        'apods:maxAttendees': 3,
-      },
+      resource: event,
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
     });
@@ -535,13 +532,12 @@ describe('Test events app', () => {
     startTime.setDate(now.getDate() - 2);
     endTime.setDate(now.getDate() - 1);
 
-    await broker.call('events.event.patch', {
+    event.startTime = startTime.toISOString();
+    event.endTime = endTime.toISOString();
+
+    await broker.call('events.event.put', {
       resourceUri: eventUri,
-      resource: {
-        '@id': eventUri,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-      },
+      resource: event,
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
     });

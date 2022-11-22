@@ -40,13 +40,14 @@ module.exports = {
         await ctx.call('events.location.setNewRights', res);
         return res;
       },
-      async patch(ctx, res) {
-        await ctx.call('events.location.updateRights', res);
-        if (res.newData['apods:maxAttendees'] !== res.oldData['apods:maxAttendees']) {
-          await ctx.call('events.status.tagUpdatedEvent', { eventUri: res.resourceUri });
-        }
-        return res;
-      },
+      // TODO handle new PATCH method https://github.com/assemblee-virtuelle/activitypods/issues/42
+      // async patch(ctx, res) {
+      //   await ctx.call('events.location.updateRights', res);
+      //   if (res.newData['apods:maxAttendees'] !== res.oldData['apods:maxAttendees']) {
+      //     await ctx.call('events.status.tagUpdatedEvent', { eventUri: res.resourceUri });
+      //   }
+      //   return res;
+      // },
       async put(ctx, res) {
         await ctx.call('events.location.updateRights', res);
         if (res.newData['apods:maxAttendees'] !== res.oldData['apods:maxAttendees']) {

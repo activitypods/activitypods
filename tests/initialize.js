@@ -2,6 +2,21 @@ const { ServiceBroker } = require('moleculer');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const CONFIG = require('./config');
 
+const listDatasets = async () => {
+  const response = await fetch(CONFIG.SPARQL_ENDPOINT + '$/datasets', {
+    headers: {
+      Authorization: 'Basic ' + Buffer.from(CONFIG.JENA_USER + ':' + CONFIG.JENA_PASSWORD).toString('base64'),
+    },
+  });
+
+  if (response.ok) {
+    const json = await response.json();
+    return json.datasets.map(dataset => dataset['ds.name'].substring(1));
+  } else {
+    return [];
+  }
+}
+
 const clearDataset = (dataset) =>
   fetch(CONFIG.SPARQL_ENDPOINT + dataset + '/update', {
     method: 'POST',
@@ -23,10 +38,9 @@ const initialize = async () => {
     },
   });
 
-  await clearDataset('settings');
-  for (let i = 1; i <= 4; i++) {
-    const actorData = require(`./data/actor${i}.json`);
-    await clearDataset(actorData.username);
+  const datasets = await listDatasets();
+  for (let dataset of datasets) {
+    await clearDataset(dataset);
   }
 
   return broker;

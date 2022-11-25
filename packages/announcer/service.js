@@ -131,16 +131,20 @@ module.exports = {
         }
       },
       async onReceive(ctx, activity, recipients) {
-        // Wait 10s to ensure all recipients have been given read rights to the event
+        // Wait 1min to ensure all recipients have been given read rights to the event
         // (Otherwise we may have a race condition with the onEmit function above)
-        await delay(process.env.NODE_ENV === 'test' ? 500 : 10000);
+        await delay(process.env.NODE_ENV === 'test' ? 10000 : 60000);
 
         for (let recipientUri of recipients) {
-          // Cache remote object (we want to be able to fetch it with SPARQL)
-          await ctx.call('activitypub.object.cacheRemote', {
-            objectUri: activity.object.id,
-            actorUri: recipientUri,
-          });
+          try {
+            // Cache remote object (we want to be able to fetch it with SPARQL)
+            await ctx.call('activitypub.object.cacheRemote', {
+              objectUri: activity.object.id,
+              actorUri: recipientUri,
+            });
+          } catch(e) {
+            this.logger.warn(`Unable to fetch remote object ${activity.object.id} for actor ${recipientUri}. Message: ${e.message}`);
+          }
         }
       },
     },

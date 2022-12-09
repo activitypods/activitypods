@@ -17,7 +17,7 @@ const EditView = (props) => {
     <>
       <Grid container>
         <Grid item xs={8}>
-          <Typography variant="h3" color="primary" component="h1">
+          <Typography variant="h2" component="h1">
             {defaultTitle}
           </Typography>
         </Grid>

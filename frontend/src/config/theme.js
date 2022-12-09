@@ -2,18 +2,17 @@ import { createTheme } from '@material-ui/core/styles';
 
 const defaultTheme = createTheme();
 
-const font1 = '"Kaushan Script", "serif"';
-const font2 = '"Roboto", "Open Sans", "sans-serif"';
+const font2 = '"Open Sans", "sans-serif"';
 
 const theme = createTheme({
   palette: {
     primary: {
       main: '#c9e265',
       light: '#c3d57a',
-      contrastText: '#FFF',
+      contrastText: '#000',
     },
     secondary: {
-      main: '#203142',
+      main: '#314a62',
       contrastText: '#FFF',
     }
   },
@@ -41,7 +40,7 @@ const theme = createTheme({
       },
     },
     h4: {
-      fontFamily: font1,
+      fontFamily: font2,
       fontSize: 30,
       fontStyle: 'normal',
       fontWeight: 'normal',
@@ -52,10 +51,11 @@ const theme = createTheme({
       },
     },
     h6: {
-      fontFamily: font1,
-      fontSize: 24,
+      fontFamily: font2,
+      fontSize: 20,
       fontStyle: 'normal',
       fontWeight: 'normal',
+      letterSpacing: -1,
       lineHeight: 1.15,
     },
     subtitle1: {
@@ -106,7 +106,9 @@ const theme = createTheme({
     MuiButton: {
       contained: {
         borderRadius: 8,
-        padding: 12,
+        paddingLeft: 15,
+        paddingRight: 15,
+        height: 36,
         minWidth: 100
       },
     },

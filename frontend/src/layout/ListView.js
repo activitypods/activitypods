@@ -1,14 +1,15 @@
 import React from 'react';
 import { CreateButton, useListContext } from 'react-admin';
 import { Box, Typography, Grid } from '@material-ui/core';
+import SplitView from "./SplitView";
 
 const ListView = (props) => {
   const { defaultTitle, hasCreate } = useListContext(props);
   return(
-    <>
+    <SplitView aside={props.aside}>
       <Grid container>
         <Grid item xs={8}>
-          <Typography variant="h3" color="primary" component="h1">
+          <Typography variant="h2" component="h1">
             {defaultTitle}
           </Typography>
         </Grid>
@@ -21,7 +22,7 @@ const ListView = (props) => {
       <Box mt={1}>
         {props.children}
       </Box>
-    </>
+    </SplitView>
   )
 };
 

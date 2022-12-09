@@ -16,13 +16,13 @@ const EditView = (props) => {
     <>
       <Grid container>
         <Grid item xs={8}>
-          <Typography variant="h3" color="primary" component="h1">
+          <Typography variant="h2" component="h1">
             {React.cloneElement(props.title, { record })}
           </Typography>
         </Grid>
         <Grid item xs={4}>
-          <Box display="flex" alignItems="middle" justifyContent="right" pt={3}>
-            {props.actions.map((action, key) => React.cloneElement(action, { key, record }))}
+          <Box display="flex" alignItems="middle" justifyContent="right">
+            {props.actions.map((action, key) => React.cloneElement(action, { key, color: 'secondary', record }))}
           </Box>
         </Grid>
       </Grid>

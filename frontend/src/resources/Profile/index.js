@@ -25,12 +25,14 @@ export default {
       },
     },
     fr: {
-      name: 'Profil |||| Profils',
+      name: 'Profil |||| Mon réseau',
       fields: {
+        'describes': 'Identifiant',
         'vcard:given-name': 'Prénom',
         'vcard:family-name': 'Nom de famille',
         'vcard:note': 'En deux mots',
-        'vcard:photo': 'Photo'
+        'vcard:photo': 'Photo',
+        'dc:created': "Date d'inscription"
       },
     },
   },

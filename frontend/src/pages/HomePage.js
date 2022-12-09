@@ -6,28 +6,31 @@ import theme from '../config/theme';
 
 const useStyles = makeStyles(() => ({
   root: {
-    display: 'flex',
-    flexDirection: 'column',
+    // display: 'flex',
+    // flexDirection: 'column',
     minHeight: '100vh',
-    height: '1px',
-    alignItems: 'center',
-    justifyContent: 'center',
+    // height: '1px',
+    // alignItems: 'center',
+    // justifyContent: 'center',
     backgroundRepeat: 'no-repeat',
     backgroundSize: 'cover',
     backgroundImage: `radial-gradient(circle at 50% 14em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
   },
+  circle: {
+    borderRadius: '50%',
+    backgroundColor: 'white',
+    padding: 30,
+    height: 400,
+    width: 400,
+    position: 'absolute',
+    top: -100
+  },
   title: {
-    lineHeight: 1,
-    color: 'white',
+    fontWeight: '800',
+    paddingTop: 50
   },
   text: {
     color: 'white',
-  },
-  badge: {
-    top: 2,
-    [theme.breakpoints.down('xs')]: {
-      top: -3,
-    },
   },
   logo: {
     fontSize: 100,
@@ -50,21 +53,28 @@ const HomePage = ({ title }) => {
     <Redirect to="/Profile" />
   ) : (
     <ThemeProvider theme={theme}>
-      <Box className={classes.root}>
-        <Typography variant="h3" className={classes.title}>
-          {title}
-        </Typography>
-        <Box display="flex" flexDirection={xs ? 'column' : 'row'} pt={3} pb={3} alignItems="center">
-          <Link to="/login?signup">
-            <Button variant="contained" color="secondary" className={classes.button}>
-              {translate('auth.action.signup')}
-            </Button>
-          </Link>
-          <Link to="/login">
-            <Button variant="contained" color="secondary" className={classes.button}>
-              {translate('ra.auth.sign_in')}
-            </Button>
-          </Link>
+      <Box className={classes.root} display="flex" justifyContent="center">
+        <Box className={classes.circle} display="flex" alignItems="center" justifyContent="center">
+          <Box>
+            <Typography align="center" variant="h1" className={classes.title}>
+              {title}
+            </Typography>
+            <Typography align="center">
+              Votre hébergeur de PODs dans l'Oise !
+            </Typography>
+            <Box display="flex" flexDirection={xs ? 'column' : 'row'} pt={3} pb={3} alignItems="center" justifyContent="center">
+              <Link to="/login?signup">
+                <Button variant="contained" color="secondary" className={classes.button}>
+                  {translate('auth.action.signup')}
+                </Button>
+              </Link>
+              <Link to="/login">
+                <Button variant="contained" color="secondary" className={classes.button}>
+                  {translate('ra.auth.sign_in')}
+                </Button>
+              </Link>
+            </Box>
+          </Box>
         </Box>
       </Box>
     </ThemeProvider>

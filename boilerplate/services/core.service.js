@@ -1,4 +1,5 @@
 const path = require('path');
+const urlJoin = require('url-join');
 const { CoreService } = require('@activitypods/core');
 const CONFIG = require('../config/config');
 const transport = require('../config/transport');
@@ -22,6 +23,7 @@ module.exports = {
       issuer: CONFIG.AUTH_OIDC_ISSUER,
       clientId: CONFIG.AUTH_OIDC_CLIENT_ID,
       clientSecret: CONFIG.AUTH_OIDC_CLIENT_SECRET,
+      formUrl: urlJoin(CONFIG.FRONTEND_URL, 'login'),
       mail: {
         from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
         transport,

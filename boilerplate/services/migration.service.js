@@ -1,5 +1,6 @@
 const urlJoin = require('url-join');
 const { getSlugFromUri } = require('@semapps/ldp');
+const CONFIG = require('../config/config');
 
 function getAclUriFromResourceUri(baseUrl, resourceUri) {
   return urlJoin(baseUrl, resourceUri.replace(baseUrl, '_acl/'));
@@ -12,9 +13,6 @@ const replaceRules = {
 
 module.exports = {
   name: 'migration',
-  settings: {
-    baseUrl: null,
-  },
   actions: {
     async migrate(ctx) {
       const { version } = ctx.params;
@@ -36,7 +34,7 @@ module.exports = {
             }
 
             const resources = await ctx.call('ldp.container.getUris', {
-              containerUri: urlJoin(this.settings.baseUrl, dataset, 'data', 'events'),
+              containerUri: urlJoin(CONFIG.HOME_URL, dataset, 'data', 'events'),
             });
             for (let resourceUri of resources) {
               const resourceSlug = getSlugFromUri(resourceUri);
@@ -49,8 +47,8 @@ module.exports = {
                 });
 
                 await ctx.call('migration.moveAclGroup', {
-                  oldGroupUri: urlJoin(this.settings.baseUrl, '_groups', dataset, 'data', 'events', resourceSlug, from),
-                  newGroupUri: urlJoin(this.settings.baseUrl, '_groups', dataset, 'data', 'events', resourceSlug, to),
+                  oldGroupUri: urlJoin(CONFIG.HOME_URL, '_groups', dataset, 'data', 'events', resourceSlug, from),
+                  newGroupUri: urlJoin(CONFIG.HOME_URL, '_groups', dataset, 'data', 'events', resourceSlug, to),
                   dataset,
                 });
               }
@@ -154,8 +152,8 @@ module.exports = {
       const { oldResourceUri, newResourceUri, dataset } = ctx.params;
 
       for (let right of ['Read', 'Append', 'Write', 'Control']) {
-        const oldResourceAclUri = getAclUriFromResourceUri(this.settings.baseUrl, oldResourceUri) + '#' + right;
-        const newResourceAclUri = getAclUriFromResourceUri(this.settings.baseUrl, newResourceUri) + '#' + right;
+        const oldResourceAclUri = getAclUriFromResourceUri(CONFIG.HOME_URL, oldResourceUri) + '#' + right;
+        const newResourceAclUri = getAclUriFromResourceUri(CONFIG.HOME_URL, newResourceUri) + '#' + right;
 
         this.logger.info(`Moving ACL rights ${oldResourceAclUri} to ${newResourceAclUri}...`);
 

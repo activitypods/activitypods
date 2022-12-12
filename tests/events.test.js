@@ -16,6 +16,9 @@ beforeAll(async () => {
   broker = await initialize();
 
   await broker.loadService(path.resolve(__dirname, './services/core.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/announcer.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/synchronizer.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/events.app.js'));
 
@@ -75,7 +78,7 @@ describe('Test events app', () => {
   });
 
   test('Alice create an event', async () => {
-    locationUri = await broker.call('contacts.location.post', {
+    locationUri = await broker.call('profiles.location.post', {
       containerUri: alice.id + '/data/locations',
       resource: {
         type: 'vcard:Location',
@@ -178,6 +181,7 @@ describe('Test events app', () => {
     });
 
     // Alice event is cached in Bob dataset
+    // Timeout must be longer as there is a 10s delay before caching (see announcer service)
     await waitForExpect(async () => {
       await expect(
         broker.call('triplestore.countTriplesOfSubject', {
@@ -186,7 +190,7 @@ describe('Test events app', () => {
           webId: 'system',
         })
       ).resolves.toBeTruthy();
-    });
+    }, 20000);
 
     // Someone who was shared the event has the right to see the list of attendees
     await waitForExpect(async () => {
@@ -200,7 +204,7 @@ describe('Test events app', () => {
   });
 
   test('Alice change the location of her event', async () => {
-    const newLocationUri = await broker.call('contacts.location.post', {
+    const newLocationUri = await broker.call('profiles.location.post', {
       containerUri: alice.id + '/data/locations',
       resource: {
         type: 'vcard:Location',
@@ -292,7 +296,7 @@ describe('Test events app', () => {
 
     await waitForExpect(() => {
       expect(mockSendNotification).toHaveBeenCalledTimes(3);
-    });
+    }, 20000);
 
     expect(mockSendNotification.mock.calls[2][0].params.data.key).toBe('new_event');
 

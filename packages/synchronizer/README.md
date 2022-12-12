@@ -7,7 +7,7 @@ When a watched object is updated or deleted, automatically send an activity to t
 
 ## Usage
 
-The `SynchronizerService` is included in the [`CoreService`](../core). The easiest way to make use of it is to import the `SynchronizerMixin` along with the `ControlledContainerMixin`.
+The easiest way to make use of this service is to import the `SynchronizerMixin` along with the `ControlledContainerMixin`.
 
 ```js
 const { ControlledContainerMixin } = require('@semapps/ldp');

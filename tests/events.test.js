@@ -4,7 +4,7 @@ const { MIME_TYPES } = require('@semapps/mime-types');
 const initialize = require('./initialize');
 const path = require('path');
 
-jest.setTimeout(30000);
+jest.setTimeout(50000);
 
 let broker;
 
@@ -16,6 +16,9 @@ beforeAll(async () => {
   broker = await initialize();
 
   await broker.loadService(path.resolve(__dirname, './services/core.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/announcer.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/synchronizer.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/events.app.js'));
 
@@ -41,6 +44,7 @@ describe('Test events app', () => {
     craig,
     daisy,
     eventUri,
+    event,
     locationUri;
 
   test('Create 4 pods', async () => {
@@ -74,7 +78,7 @@ describe('Test events app', () => {
   });
 
   test('Alice create an event', async () => {
-    locationUri = await broker.call('contacts.location.post', {
+    locationUri = await broker.call('profiles.location.post', {
       containerUri: alice.id + '/data/locations',
       resource: {
         type: 'vcard:Location',
@@ -92,6 +96,12 @@ describe('Test events app', () => {
         location: locationUri,
       },
       contentType: MIME_TYPES.JSON,
+      webId: alice.id,
+    });
+
+    event = await broker.call('events.event.get', {
+      resourceUri: eventUri,
+      accept: MIME_TYPES.JSON,
       webId: alice.id,
     });
 
@@ -171,6 +181,7 @@ describe('Test events app', () => {
     });
 
     // Alice event is cached in Bob dataset
+    // Timeout must be longer as there is a 10s delay before caching (see announcer service)
     await waitForExpect(async () => {
       await expect(
         broker.call('triplestore.countTriplesOfSubject', {
@@ -179,7 +190,7 @@ describe('Test events app', () => {
           webId: 'system',
         })
       ).resolves.toBeTruthy();
-    });
+    }, 20000);
 
     // Someone who was shared the event has the right to see the list of attendees
     await waitForExpect(async () => {
@@ -193,7 +204,7 @@ describe('Test events app', () => {
   });
 
   test('Alice change the location of her event', async () => {
-    const newLocationUri = await broker.call('contacts.location.post', {
+    const newLocationUri = await broker.call('profiles.location.post', {
       containerUri: alice.id + '/data/locations',
       resource: {
         type: 'vcard:Location',
@@ -203,17 +214,11 @@ describe('Test events app', () => {
       webId: alice.id,
     });
 
-    const oldData = await broker.call('events.event.get', {
-      resourceUri: eventUri,
-      webId: alice.id,
-    });
+    event.location = newLocationUri;
 
     await broker.call('events.event.put', {
       resourceUri: eventUri,
-      resource: {
-        ...oldData,
-        location: newLocationUri,
-      },
+      resource: event,
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
     });
@@ -291,7 +296,7 @@ describe('Test events app', () => {
 
     await waitForExpect(() => {
       expect(mockSendNotification).toHaveBeenCalledTimes(3);
-    });
+    }, 20000);
 
     expect(mockSendNotification.mock.calls[2][0].params.data.key).toBe('new_event');
 
@@ -366,13 +371,12 @@ describe('Test events app', () => {
     startTime.setDate(now.getDate() + 1);
     endTime.setDate(now.getDate() + 2);
 
-    await broker.call('events.event.patch', {
+    event.startTime = startTime.toISOString();
+    event.endTime = endTime.toISOString();
+
+    await broker.call('events.event.put', {
       resourceUri: eventUri,
-      resource: {
-        '@id': eventUri,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-      },
+      resource: event,
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
     });
@@ -397,14 +401,13 @@ describe('Test events app', () => {
     endTime.setDate(now.getDate() + 2);
     closingTime.setDate(now.getDate() - 1);
 
-    await broker.call('events.event.patch', {
+    event.startTime = startTime.toISOString();
+    event.endTime = endTime.toISOString();
+    event['apods:closingTime'] = closingTime.toISOString();
+
+    await broker.call('events.event.put', {
       resourceUri: eventUri,
-      resource: {
-        '@id': eventUri,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-        'apods:closingTime': closingTime.toISOString(),
-      },
+      resource: event,
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
     });
@@ -429,15 +432,14 @@ describe('Test events app', () => {
     endTime.setDate(now.getDate() + 3);
     closingTime.setDate(now.getDate() + 3);
 
-    await broker.call('events.event.patch', {
+    event.startTime = startTime.toISOString();
+    event.endTime = endTime.toISOString();
+    event['apods:closingTime'] = closingTime.toISOString();
+    event['apods:maxAttendees'] = 4;
+
+    await broker.call('events.event.put', {
       resourceUri: eventUri,
-      resource: {
-        '@id': eventUri,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-        'apods:closingTime': closingTime.toISOString(),
-        'apods:maxAttendees': 4,
-      },
+      resource: event,
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
     });
@@ -483,7 +485,7 @@ describe('Test events app', () => {
           'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
         }
       );
-    });
+    }, 6000);
 
     // This shouldn't have an impact
     await broker.call('events.status.tagComing');
@@ -500,12 +502,11 @@ describe('Test events app', () => {
   });
 
   test('Event is closed again because Alice changed the max attendees number', async () => {
-    await broker.call('events.event.patch', {
+    event['apods:maxAttendees'] = 3;
+
+    await broker.call('events.event.put', {
       resourceUri: eventUri,
-      resource: {
-        '@id': eventUri,
-        'apods:maxAttendees': 3,
-      },
+      resource: event,
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
     });
@@ -535,13 +536,12 @@ describe('Test events app', () => {
     startTime.setDate(now.getDate() - 2);
     endTime.setDate(now.getDate() - 1);
 
-    await broker.call('events.event.patch', {
+    event.startTime = startTime.toISOString();
+    event.endTime = endTime.toISOString();
+
+    await broker.call('events.event.put', {
       resourceUri: eventUri,
-      resource: {
-        '@id': eventUri,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-      },
+      resource: event,
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
     });

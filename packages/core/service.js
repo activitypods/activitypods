@@ -1,8 +1,7 @@
 const path = require('path');
 const urlJoin = require('url-join');
 const { ActivityPubService, ActivityMappingService, ProxyService } = require('@semapps/activitypub');
-const { AuthLocalService } = require('@semapps/auth');
-const FusekiAdminService = require('@semapps/fuseki-admin');
+const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
 const { PodService } = require('@semapps/pod');
@@ -12,10 +11,7 @@ const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
-const { SynchronizerService } = require('@activitypods/synchronizer');
-const { AnnouncerService } = require('@activitypods/announcer');
 const ApiService = require('./services/api');
-const MigrationService = require('./services/migration');
 const containers = require('./config/containers');
 const ontologies = require('./config/ontologies.json');
 
@@ -24,16 +20,17 @@ const CoreService = {
   settings: {
     baseUrl: null,
     baseDir: null,
-    fuseki: {
+    triplestore: {
       url: null,
       user: null,
       password: null,
     },
     jsonContext: null,
     queueServiceUrl: null,
+    authType: 'local'
   },
   created() {
-    let { baseUrl, baseDir, fuseki, jsonContext, queueServiceUrl } = this.settings;
+    let { baseUrl, baseDir, triplestore, jsonContext, queueServiceUrl, authType } = this.settings;
 
     // If an external JSON context is not provided, we will use a local one
     const localJsonContext = urlJoin(baseUrl, '_system', 'context.json');
@@ -46,13 +43,18 @@ const CoreService = {
         podProvider: true,
         dispatch: {
           queueServiceUrl,
+          delay: process.env.NODE_ENV === 'test' ? 0 : 60000 // Wait 1min before dispatching posted activities (to avoid race conditions between onEmit and onReceive)
         },
       },
     });
 
-    this.broker.createService(ApiService);
+    this.broker.createService(ApiService, {
+      settings: {
+        ...this.settings.api
+      }
+    });
 
-    this.broker.createService(AuthLocalService, {
+    this.broker.createService(authType === 'local' ? AuthLocalService : AuthOIDCService, {
       settings: {
         baseUrl,
         jwtPath: path.resolve(baseDir, './jwt'),
@@ -60,14 +62,6 @@ const CoreService = {
         webIdSelection: ['nick'],
         accountSelection: ['preferredLocale', 'preferredFrontUrl', 'preferredFrontName'],
         ...this.settings.auth,
-      },
-    });
-
-    this.broker.createService(FusekiAdminService, {
-      settings: {
-        url: fuseki.url,
-        user: fuseki.user,
-        password: fuseki.password,
       },
     });
 
@@ -144,9 +138,9 @@ const CoreService = {
 
     this.broker.createService(TripleStoreService, {
       settings: {
-        sparqlEndpoint: fuseki.url,
-        jenaUser: fuseki.user,
-        jenaPassword: fuseki.password,
+        url: triplestore.url,
+        user: triplestore.user,
+        password: triplestore.password,
       },
     });
 
@@ -175,15 +169,6 @@ const CoreService = {
             await ctx.call('pod.create', { username: nick });
           },
         },
-      },
-    });
-
-    this.broker.createService(SynchronizerService);
-    this.broker.createService(AnnouncerService);
-
-    this.broker.createService(MigrationService, {
-      settings: {
-        baseUrl,
       },
     });
   },

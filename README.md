@@ -11,6 +11,7 @@ You can also [watch our presentation at Solid World](https://vimeo.com/691410463
 
 ## Available apps
 
+- [Profiles](packages/profiles/README.md)
 - [Contacts](packages/contacts/README.md)
 - [Events](packages/events/README.md)
 - [Messages](packages/messages/README.md)

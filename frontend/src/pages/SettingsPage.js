@@ -89,7 +89,6 @@ const SettingsPage = () => {
 			</Box>
 		</>
 	)
-
 };
 
 

@@ -1649,10 +1649,10 @@
   dependencies:
     "@types/node" "*"
 
-"@react-leaflet/core@^1.0.2", "@react-leaflet/core@^1.1.1":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@react-leaflet/core/-/core-1.1.1.tgz#827fd05bb542cf874116176d8ef48d5b12163f81"
-  integrity sha512-7PGLWa9MZ5x/cWy8EH2VzI4T8q5WpuHbixzCDXqixP/WyqwIrg5NDUPgYuFnB4IEIZF+6nA265mYzswFo/h1Pw==
+"@react-leaflet/core@^2.0.1":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@react-leaflet/core/-/core-2.1.0.tgz#383acd31259d7c9ae8fb1b02d5e18fe613c2a13d"
+  integrity sha512-Qk7Pfu8BSarKGqILj4x7bCSZ1pjuAPZ+qmRwH5S7mDS91VSbVVsJSrW4qA+GPrro8t69gFYVMWb1Zc4yFmPiVg==
 
 "@redux-saga/core@^1.2.1":
   version "1.2.1"
@@ -1698,34 +1698,35 @@
   resolved "https://registry.yarnpkg.com/@redux-saga/types/-/types-1.2.1.tgz#9403f51c17cae37edf870c6bc0c81c1ece5ccef8"
   integrity sha512-1dgmkh+3so0+LlBWRhGA33ua4MYr7tUOj+a9Si28vUi0IUFNbff1T3sgpeDJI/LaC75bBYnQ0A3wXjn0OrRNBA==
 
-"@semapps/activitypub-components@0.4.0-alpha.39":
-  version "0.4.0-alpha.39"
-  resolved "https://registry.yarnpkg.com/@semapps/activitypub-components/-/activitypub-components-0.4.0-alpha.39.tgz#64ddc7040f6c257afbe018e2ec0ad73240abb202"
-  integrity sha512-DSBXLsbrCw+t+NlYPSmaaADWtRXmxjR+9O196oedXXC5604NZP2Pmxiagut83dgA/rDBJBq/5/uYNJXBseoyzQ==
+"@semapps/activitypub-components@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@semapps/activitypub-components/-/activitypub-components-0.4.1.tgz#9ee725b8ecb45d7f26a68d55f9e692e77f2085fb"
+  integrity sha512-wH/5cQKIsYnN5jk8Ea3NYHzXkswz9ZbL1zjaKl+/DkM8mpuTt87j56E6kA8hMmPrwjVq5+yt/A4nJ/gVLYyD3g==
   dependencies:
-    "@semapps/auth-provider" "0.4.0-alpha.39"
-    "@semapps/field-components" "0.4.0-alpha.39"
-    "@semapps/semantic-data-provider" "0.4.0-alpha.39"
+    "@semapps/auth-provider" "0.4.1"
+    "@semapps/field-components" "0.4.1"
+    "@semapps/semantic-data-provider" "0.4.1"
     "@tiptap/core" "^2.0.0-beta.95"
     "@tiptap/extension-mention" "^2.0.0-beta.95"
+    "@tiptap/extension-placeholder" "^2.0.0-beta.95"
     "@tiptap/suggestion" "^2.0.0-beta.95"
     ra-richtext-tiptap "^0.0.1"
     tippy.js "^6.3.7"
 
-"@semapps/auth-provider@0.4.0-alpha.39":
-  version "0.4.0-alpha.39"
-  resolved "https://registry.yarnpkg.com/@semapps/auth-provider/-/auth-provider-0.4.0-alpha.39.tgz#1d903cd8dd982b8c25a96eb132a3e2649245e6d0"
-  integrity sha512-oJMriZ43fwKTz4JG4cRMVFphsuXcyenudW0jW/sqRlCxEjPkX0YoHPX6guEyQlwkeRR+8aednIykqD5PnC/o7g==
+"@semapps/auth-provider@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@semapps/auth-provider/-/auth-provider-0.4.1.tgz#79afc3ebb06a88744af647c0d3c97b4406ab991e"
+  integrity sha512-w1uyN1wpFi9JCR4EN8CtyXipsZd1LsZ/aDGGx1m0xkxB0cHo6E6H2VdRkk+myhgD/BZCwHUxZA6KbdTpV1f4HA==
   dependencies:
     "@material-ui/lab" "^4.0.0-alpha.57"
-    "@semapps/semantic-data-provider" "0.4.0-alpha.39"
+    "@semapps/semantic-data-provider" "0.4.1"
     jwt-decode "^3.0.0"
     url-join "^4.0.1"
 
-"@semapps/date-components@0.4.0-alpha.39":
-  version "0.4.0-alpha.39"
-  resolved "https://registry.yarnpkg.com/@semapps/date-components/-/date-components-0.4.0-alpha.39.tgz#40de06c8dbed23fcca944241fe7522e73d498d1c"
-  integrity sha512-s9+n9ssuNVW4ecH8YP35Jq3iJEAgxGTnaPuqHqbS2zsYJanSo/0d7zj3m0LAGMBzJc70lUB48aovnSSyLJfRHQ==
+"@semapps/date-components@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@semapps/date-components/-/date-components-0.4.1.tgz#a34e233ef3466f2e045c9cc08bee2615e036aea4"
+  integrity sha512-6oaNu+G5IcNp8xtcNHRfGOMUjva6oegjfENFsvFAWxWOv2W3KSn8+c23u/py7nYos/uqTpB+FXdPXuRN8ADLqQ==
   dependencies:
     "@date-io/core" "^1.3.6"
     "@date-io/date-fns" "^1.3.13"
@@ -1736,44 +1737,43 @@
     "@material-ui/pickers" "^3.2.10"
     date-fns "~2.8.1"
 
-"@semapps/field-components@0.4.0-alpha.39":
-  version "0.4.0-alpha.39"
-  resolved "https://registry.yarnpkg.com/@semapps/field-components/-/field-components-0.4.0-alpha.39.tgz#a532691a15f94d94eec0e54ea5936dcfc116c5c4"
-  integrity sha512-Wd+6E/YVZX0KDu4dvxDqNNU9qch3F78IZrfepcYc96bGpTjUaSrg0ieMdTEgFt8krCnKykaQf/x4HnR+S8Cenw==
+"@semapps/field-components@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@semapps/field-components/-/field-components-0.4.1.tgz#e33418a957f76fd7533edec8c49d2002f9fd052b"
+  integrity sha512-6h0Uc+Awan/k4OnZIRYuqohJdVwNrMCTbkaOl8JlXpxj8Ein+9w5i4IGSjlWO99PyXmVt8fXYtz+FZsJEouJUA==
   dependencies:
-    "@semapps/semantic-data-provider" "0.4.0-alpha.39"
+    "@semapps/semantic-data-provider" "0.4.1"
     lodash.debounce "^4.0.8"
     react-icons "^4.4.0"
 
-"@semapps/geo-components@0.4.0-alpha.39":
-  version "0.4.0-alpha.39"
-  resolved "https://registry.yarnpkg.com/@semapps/geo-components/-/geo-components-0.4.0-alpha.39.tgz#c3ac9dfbb994284e701a310a550b048483829fbd"
-  integrity sha512-EN2rYuAdjVAnfhjPLwgLgG0YsibRecmEGkSdaVqNwNYjBAVbIItpVjqohO7qsyMH8q/2Qqqg8LO8eiJZdgPNyg==
+"@semapps/geo-components@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@semapps/geo-components/-/geo-components-0.4.1.tgz#54e717080aea73deac590263332844706a7dd6fa"
+  integrity sha512-dWk+Mahiftw4CWXXw1Z6JdGsJPEwwfSqu9wS1CtMw6PdaySXM2ojw1d+Z6pYVfh+mrofgzrhRQ8hmyUEO4dcHA==
   dependencies:
     "@material-ui/lab" "^4.0.0-alpha.57"
     autosuggest-highlight "^3.1.1"
     lodash.throttle "^4.1.1"
-    react-leaflet "3.0.2"
-    react-leaflet-markercluster "^3.0.0-rc1"
+    react-leaflet "4.0.2"
 
-"@semapps/input-components@0.4.0-alpha.39":
-  version "0.4.0-alpha.39"
-  resolved "https://registry.yarnpkg.com/@semapps/input-components/-/input-components-0.4.0-alpha.39.tgz#ba1349493721df9d53bb3d769b2e55532f830de4"
-  integrity sha512-F1PR9HiLMC0YkTbNm4BvxY5CtGSJZsCVekWwv2kF3oHiexUTqENZ1M6R8aSdJMlWB6WlC1BUWTI3RRZTihhDwA==
+"@semapps/input-components@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@semapps/input-components/-/input-components-0.4.1.tgz#35769edf288dbd4842d39360d35d204208472fd4"
+  integrity sha512-AU5vcCGGSM3W2Gi0m2KulQilUdKDUjI+Mo+5QPPsFe+1hxwHVqEg+AIAjEwMrTH7OC7Ht1t9ttqaVn4lJCHjLA==
   dependencies:
-    "@semapps/semantic-data-provider" "0.4.0-alpha.39"
+    "@semapps/semantic-data-provider" "0.4.1"
 
-"@semapps/list-components@0.4.0-alpha.39":
-  version "0.4.0-alpha.39"
-  resolved "https://registry.yarnpkg.com/@semapps/list-components/-/list-components-0.4.0-alpha.39.tgz#7ea590078da7c1a8dada5aac792f15dac43f528b"
-  integrity sha512-XgYsbh1dY/4koEyMCNEgXFn8d/k35z3VbTsMwyzgIRdHeq+xGq5Ip1GpxFV/6aHv7PINefvn+xMmwIHd+UPNGg==
+"@semapps/list-components@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@semapps/list-components/-/list-components-0.4.1.tgz#4ba342a35a8402ea10ea8a84c8dfc65d1c8cf3dd"
+  integrity sha512-4iuzyQSe6ONk/J/wi8pw+S3YkGgqeJRdgk7/lXu/4s3w/RZT9prwUrh6T/NuVEMM+XcQxRkpDIRe3kHn7WhKGQ==
   dependencies:
     react-masonry-css "^1.0.14"
 
-"@semapps/semantic-data-provider@0.4.0-alpha.39":
-  version "0.4.0-alpha.39"
-  resolved "https://registry.yarnpkg.com/@semapps/semantic-data-provider/-/semantic-data-provider-0.4.0-alpha.39.tgz#0745a36d09c516ebce6848c69cbc82c27cb3b80e"
-  integrity sha512-dYvkR15lM7hjktlbFG0KMuoYMWX6riXidV0nXXhINdCC9fX20zSFPp/SkmIKLxnGtgZwNyM2dd6DPzzIty+PCA==
+"@semapps/semantic-data-provider@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@semapps/semantic-data-provider/-/semantic-data-provider-0.4.1.tgz#eb9553edfbad956694693f4917035a7fe38bc490"
+  integrity sha512-uTiMW9tcT7Kd4B/3QHRPhvdedFLgzfntg+2QUoSsRi2ATzxnPhqZ2lyXHDlP8Qi0bWQYjwb3rkPavSSsIsSmVA==
   dependencies:
     "@rdfjs/data-model" "^1.3.4"
     crypto-js "^4.1.1"
@@ -2033,6 +2033,11 @@
     prosemirror-model "^1.18.1"
     prosemirror-state "^1.4.1"
     prosemirror-view "^1.28.2"
+
+"@tiptap/extension-placeholder@^2.0.0-beta.95":
+  version "2.0.0-beta.207"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-placeholder/-/extension-placeholder-2.0.0-beta.207.tgz#ef25a365d7713b7422174e72de4ee979f3ec3f6d"
+  integrity sha512-ZlmW4yYwgVH7yRfp0ZA/ntcd+OQRM0HCuGKWug+bV3H5S14cTrFmQ3OY3r5tmDGKhMp6MpJ0jgXtP0CghM6Tqg==
 
 "@tiptap/extension-strike@^2.0.0-beta.199":
   version "2.0.0-beta.199"
@@ -5379,6 +5384,11 @@ final-form-arrays@^3.0.2:
   resolved "https://registry.yarnpkg.com/final-form-arrays/-/final-form-arrays-3.0.2.tgz#9f3bef778dec61432357744eb6f3abef7e7f3847"
   integrity sha512-TfO8aZNz3RrsZCDx8GHMQcyztDNpGxSSi9w4wpSNKlmv2PfFWVVM8P7Yj5tj4n0OWax+x5YwTLhT5BnqSlCi+w==
 
+final-form-calculate@^1.3.2:
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/final-form-calculate/-/final-form-calculate-1.3.2.tgz#a5e1908d1aa34eeec6faccdba3fd9516e7fd3d4f"
+  integrity sha512-pon2K9yNbyqmF8UTpDvxwhk+Hvqpl8Fm3qgwkHniNAmCQe+6YxB1aw4cBAHzmRc39jGl2bYsvKyabQOIWLtrPg==
+
 final-form@^4.20.4:
   version "4.20.7"
   resolved "https://registry.yarnpkg.com/final-form/-/final-form-4.20.7.tgz#e7e2eb5fd952951d4fe6153d46043da2d68b207e"
@@ -7517,16 +7527,6 @@ lcid@^2.0.0:
   integrity sha512-avPEb8P8EGnwXKClwsNUgryVjllcRqtMYa49NTsbQagYuT1DcXnl1915oxWjoyGrXR6zH/Y0Zc96xWsPcoDKeA==
   dependencies:
     invert-kv "^2.0.0"
-
-leaflet.markercluster@^1.4.1:
-  version "1.5.3"
-  resolved "https://registry.yarnpkg.com/leaflet.markercluster/-/leaflet.markercluster-1.5.3.tgz#9cdb52a4eab92671832e1ef9899669e80efc4056"
-  integrity sha512-vPTw/Bndq7eQHjLBVlWpnGeLa3t+3zGiuM7fJwCkiMFq+nmRuG3RI3f7f4N4TDX7T4NpbAXpR2+NTRSEGfCSeA==
-
-leaflet@^1.6.0:
-  version "1.9.2"
-  resolved "https://registry.yarnpkg.com/leaflet/-/leaflet-1.9.2.tgz#168b6c6ef1d4d1e8409bde2c4ad050c249c4dbe6"
-  integrity sha512-Kc77HQvWO+y9y2oIs3dn5h5sy2kr3j41ewdqCMEUA4N89lgfUUfOBy7wnnHEstDpefiGFObq12FdopGRMx4J7g==
 
 left-pad@^1.3.0:
   version "1.3.0"
@@ -10051,29 +10051,12 @@ react-is@^16.13.1, react-is@^16.5.2, react-is@^16.6.0, react-is@^16.7.0, react-i
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
-react-leaflet-markercluster@^3.0.0-rc1:
-  version "3.0.0-rc1"
-  resolved "https://registry.yarnpkg.com/react-leaflet-markercluster/-/react-leaflet-markercluster-3.0.0-rc1.tgz#4e45392d599fb410eac413aeee6cb52f51d0fc5c"
-  integrity sha512-wr8ERtx73sY0uVoQAM1v1vsA5Vsbdgyqc88h+Eo2kYRwNdkVTEOoUTnAh3CgGuOyP0Y9QLd2dKGupGkufpwryQ==
+react-leaflet@4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/react-leaflet/-/react-leaflet-4.0.2.tgz#ffa3d8dde9859459e3dc91436f84ffd56f39ec57"
+  integrity sha512-pDyIf50Ek/LZ0p4Qxw2D9LMOx+LytQs2R+MY3mhTUPGzubrpP4QAgbCv2qc0L9y0qVRgx7dHavWuPFkc/WCJCw==
   dependencies:
-    "@react-leaflet/core" "^1.0.2"
-    leaflet "^1.6.0"
-    leaflet.markercluster "^1.4.1"
-    react-leaflet "^3.0.0"
-
-react-leaflet@3.0.2:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/react-leaflet/-/react-leaflet-3.0.2.tgz#4133a0550efe7e24be272b9e24e72fa98b51b751"
-  integrity sha512-7JxMV9HOo94jFwn1z+gcHVcYWeMxD994YsLxX3yyWebGOsLxpYfiQgNI7RPZWcAtcBK8XYSRB6WUj8NNb9hgbw==
-  dependencies:
-    "@react-leaflet/core" "^1.0.2"
-
-react-leaflet@^3.0.0:
-  version "3.2.5"
-  resolved "https://registry.yarnpkg.com/react-leaflet/-/react-leaflet-3.2.5.tgz#bec0bfab9dd8c2b030ea630f7a0687a60322ca7d"
-  integrity sha512-Z3KZ+4SijsRbbrt2I1a3ZDY6+V6Pm91eYTdxTN18G6IOkFRsJo1BuSPLFnyFrlF3WDjQFPEcTPkEgD1VEeAoBg==
-  dependencies:
-    "@react-leaflet/core" "^1.1.1"
+    "@react-leaflet/core" "^2.0.1"
 
 react-masonry-css@^1.0.14:
   version "1.0.16"

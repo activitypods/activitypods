@@ -1,7 +1,7 @@
 import React from 'react';
 import { Admin, Resource } from 'react-admin';
 import { createBrowserHistory } from 'history';
-import { LogoutButton, LocalLoginPage } from '@semapps/auth-provider';
+import { LogoutButton } from '@semapps/auth-provider';
 
 import authProvider from './config/authProvider';
 import dataProvider from './config/dataProvider';
@@ -11,6 +11,7 @@ import * as resources from './resources';
 import Layout from './layout/Layout';
 import theme from './config/theme';
 import customRoutes from "./customRoutes";
+import LocalLoginPage from "./pages/LocalLoginPage/LocalLoginPage";
 
 const history = createBrowserHistory();
 

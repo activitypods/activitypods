@@ -29,10 +29,6 @@ module.exports = {
           locale: CONFIG.NOTIFICATIONS_DEFAULT_LOCALE,
           frontUrl: CONFIG.NOTIFICATIONS_DEFAULT_FRONT_URL,
         },
-      },
-      form: {
-        instanceName: CONFIG.INSTANCE_NAME,
-        path: '/form'
       }
     },
     api: {

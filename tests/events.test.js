@@ -16,6 +16,9 @@ beforeAll(async () => {
   broker = await initialize();
 
   await broker.loadService(path.resolve(__dirname, './services/core.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/announcer.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/synchronizer.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/events.app.js'));
 
@@ -75,7 +78,7 @@ describe('Test events app', () => {
   });
 
   test('Alice create an event', async () => {
-    locationUri = await broker.call('contacts.location.post', {
+    locationUri = await broker.call('profiles.location.post', {
       containerUri: alice.id + '/data/locations',
       resource: {
         type: 'vcard:Location',
@@ -200,7 +203,7 @@ describe('Test events app', () => {
   });
 
   test('Alice change the location of her event', async () => {
-    const newLocationUri = await broker.call('contacts.location.post', {
+    const newLocationUri = await broker.call('profiles.location.post', {
       containerUri: alice.id + '/data/locations',
       resource: {
         type: 'vcard:Location',

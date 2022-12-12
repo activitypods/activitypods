@@ -181,6 +181,7 @@ describe('Test events app', () => {
     });
 
     // Alice event is cached in Bob dataset
+    // Timeout must be longer as there is a 10s delay before caching (see announcer service)
     await waitForExpect(async () => {
       await expect(
         broker.call('triplestore.countTriplesOfSubject', {
@@ -189,7 +190,7 @@ describe('Test events app', () => {
           webId: 'system',
         })
       ).resolves.toBeTruthy();
-    });
+    }, 20000);
 
     // Someone who was shared the event has the right to see the list of attendees
     await waitForExpect(async () => {
@@ -295,7 +296,7 @@ describe('Test events app', () => {
 
     await waitForExpect(() => {
       expect(mockSendNotification).toHaveBeenCalledTimes(3);
-    });
+    }, 20000);
 
     expect(mockSendNotification.mock.calls[2][0].params.data.key).toBe('new_event');
 

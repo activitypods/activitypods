@@ -33,10 +33,11 @@ module.exports = {
         await ctx.call('marketplace.location.setNewRights', res);
         return res;
       },
-      async patch(ctx, res) {
-        await ctx.call('marketplace.location.updateRights', res);
-        return res;
-      },
+      // TODO handle new PATCH method https://github.com/assemblee-virtuelle/activitypods/issues/42
+      // async patch(ctx, res) {
+      //   await ctx.call('marketplace.location.updateRights', res);
+      //   return res;
+      // },
       async put(ctx, res) {
         await ctx.call('marketplace.location.updateRights', res);
         return res;

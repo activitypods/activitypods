@@ -1,5 +1,6 @@
+const { triple, namedNode } = require('@rdfjs/data-model');
 const { ControlledContainerMixin } = require('@semapps/ldp');
-const { OBJECT_TYPES } = require('@semapps/activitypub');
+const { OBJECT_TYPES, AS_PREFIX } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { SynchronizerMixin } = require('@activitypods/synchronizer');
 
@@ -51,11 +52,10 @@ module.exports = {
       }
 
       await ctx.call('ldp.resource.patch', {
-        resource: {
-          '@id': webId,
-          url: profileUri,
-        },
-        contentType: MIME_TYPES.JSON,
+        resourceUri: webId,
+        triplesToAdd: [
+          triple(namedNode(webId), namedNode(AS_PREFIX+'url'), namedNode(profileUri))
+        ],
         webId,
       });
 

@@ -6,17 +6,19 @@ module.exports = {
     async setNewRights(ctx) {
       const { resourceUri, newData } = ctx.params;
 
-      // Give read right for the event's location
-      await ctx.call('webacl.resource.addRights', {
-        resourceUri: newData.location,
-        additionalRights: {
-          group: {
-            uri: getAnnouncesGroupUri(resourceUri),
-            read: true,
+      // Give read right for the event's location (if it is set)
+      if (newData.location) {
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri: newData.location,
+          additionalRights: {
+            group: {
+              uri: getAnnouncesGroupUri(resourceUri),
+              read: true,
+            },
           },
-        },
-        webId: newData['dc:creator'],
-      });
+          webId: newData['dc:creator'],
+        });
+      }
     },
     async updateRights(ctx) {
       const { resourceUri, newData, oldData } = ctx.params;
@@ -42,6 +44,7 @@ module.exports = {
               read: true,
             },
           },
+          webId: newData['dc:creator'],
         });
       }
     },

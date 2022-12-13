@@ -1,6 +1,6 @@
 import React from 'react';
 import { Field, Form } from 'react-final-form';
-import { Button, CardActions, CircularProgress } from '@material-ui/core';
+import { Button, Box, CircularProgress } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useTranslate, useNotify, useSafeSetState, useAuthProvider } from 'react-admin';
 import TextInput from './TextInput';
@@ -112,12 +112,12 @@ const NewPasswordForm = (props) => {
               />
             </div>
           </div>
-          <CardActions>
-            <Button variant="contained" type="submit" color="primary" disabled={loading} className={classes.button}>
+          <Box pl={2} pr={2}>
+            <Button variant="contained" type="submit" color="secondary" disabled={loading} className={classes.button}>
               {loading && <CircularProgress className={classes.icon} size={18} thickness={2} />}
               {translate('app.action.set_new_password')}
             </Button>
-          </CardActions>
+          </Box>
         </form >
       )}
     />

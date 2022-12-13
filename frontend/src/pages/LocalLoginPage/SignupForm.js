@@ -4,7 +4,7 @@ import { Field, Form } from 'react-final-form';
 import createSlug from 'speakingurl';
 import { useTranslate, useNotify, useSafeSetState } from 'react-admin';
 import { useLocation } from 'react-router-dom';
-import { Button, CardActions, CircularProgress, makeStyles } from '@material-ui/core';
+import { Button, Box, CircularProgress, makeStyles } from '@material-ui/core';
 import { useSignup } from '@semapps/auth-provider';
 import TextInput from './TextInput';
 
@@ -58,7 +58,7 @@ const SignupForm = ({ redirectTo }) => {
           window.location.reload();
           window.location.href = '/initialize?redirect=' + encodeURIComponent(redirectTo || '/');
           setLoading(false);
-        }, 2000);
+        }, 4000);
         notify('auth.message.new_user_created', 'info');
       })
       .catch((error) => {
@@ -126,12 +126,12 @@ const SignupForm = ({ redirectTo }) => {
               />
             </div>
           </div>
-          <CardActions>
+          <Box pl={2} pr={2}>
             <Button variant="contained" type="submit" color="secondary" disabled={loading} className={classes.button}>
               {loading && <CircularProgress className={classes.icon} size={18} thickness={2} />}
               {translate('auth.action.signup')}
             </Button>
-          </CardActions>
+          </Box>
         </form>
       )}
     />

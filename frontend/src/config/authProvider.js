@@ -1,11 +1,8 @@
-import { authProvider as semappsAuthProvider } from '@semapps/auth-provider';
-import { httpClient } from '@semapps/semantic-data-provider';
+import { authProvider } from '@semapps/auth-provider';
+import dataProvider from "./dataProvider";
 
-const authProvider = semappsAuthProvider({
-  middlewareUri: process.env.REACT_APP_POD_PROVIDER_URL,
+export default authProvider({
+  dataProvider,
   localAccounts: true,
-  httpClient,
   checkPermissions: true,
 });
-
-export default authProvider;

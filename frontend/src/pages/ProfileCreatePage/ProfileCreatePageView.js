@@ -3,11 +3,19 @@ import {
   TextInput,
   SimpleForm,
   ImageInput,
-  ImageField,
-  useEditContext
+  useEditContext,
+  Toolbar,
+  SaveButton
 } from 'react-admin';
+import { ImageField } from "@semapps/field-components";
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import SimpleBox from "../../layout/SimpleBox";
+
+const ToolbarWithoutDelete = props => (
+  <Toolbar {...props} >
+    <SaveButton />
+  </Toolbar>
+);
 
 const ProfileCreatePageView = ({ location }) => {
   const searchParams = new URLSearchParams(location.search);
@@ -30,7 +38,7 @@ const ProfileCreatePageView = ({ location }) => {
       icon={<AccountCircleIcon />}
       text="Maintenant que votre compte est créé, veuillez créer votre profil. Celui-ci ne sera visible par défaut
             que des personnes que vous acceptez dans votre réseau.">
-      <SimpleForm {...editContext} redirect={redirect}>
+      <SimpleForm {...editContext} redirect={redirect} toolbar={<ToolbarWithoutDelete />}>
         <TextInput source="vcard:given-name" fullWidth />
         <TextInput source="vcard:note" fullWidth />
         <ImageInput source="vcard:photo" accept="image/*">

@@ -9,7 +9,7 @@ const ProfileCreatePage = (props) => {
   if (!identity) return null;
   return (
     <ThemeProvider theme={theme}>
-      <EditBase resource="Profile" basePath="/Profile" id={identity?.profileData?.id}>
+      <EditBase resource="Profile" basePath="/Profile" id={identity?.profileData?.id} mutationMode="pessimistic">
         <ProfileCreatePageView {...props} />
       </EditBase>
     </ThemeProvider >

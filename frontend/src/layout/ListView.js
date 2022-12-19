@@ -15,7 +15,7 @@ const ListView = (props) => {
         </Grid>
         <Grid item xs={4}>
           <Box display="flex" alignItems="middle" justifyContent="right" pt={3}>
-            {hasCreate && <CreateButton />}
+            {hasCreate && <CreateButton color="secondary" />}
           </Box>
         </Grid>
       </Grid>

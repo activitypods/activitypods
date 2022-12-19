@@ -17,7 +17,7 @@ const EditView = (props) => {
       <Grid container>
         <Grid item xs={8}>
           <Typography variant="h2" component="h1">
-            {React.cloneElement(props.title, { record })}
+            {props.title && React.cloneElement(props.title, { record })}
           </Typography>
         </Grid>
         <Grid item xs={4}>

@@ -54,6 +54,9 @@ const AppBar = ({ title, logout }) => {
             <Link href={"/Profile/" + encodeURIComponent(identity?.profileData?.id)} className={classes.link}>
               Mon profil
             </Link>
+            <Link href="/Location" className={classes.link}>
+              Mes adresses
+            </Link>
             <Link href="/settings" className={classes.link}>
               Paramètres
             </Link>

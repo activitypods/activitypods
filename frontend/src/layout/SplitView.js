@@ -4,7 +4,7 @@ import StickyBox from "./StickyBox";
 
 const SplitView = ({ aside, children }) => (
   <Grid container spacing={3}>
-    <Grid item xs={12} md={8} lg={9}>
+    <Grid item xs={12} md={aside ? 8 : 12} lg={aside ? 9 : 12}>
       {children}
     </Grid>
     {aside &&

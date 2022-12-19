@@ -1,8 +1,8 @@
 import React from 'react';
-import { useCreateContext } from 'react-admin';
+import { ListButton, useCreateContext } from 'react-admin';
 import { Box, Typography, Grid, Card } from '@material-ui/core';
 
-const EditView = (props) => {
+const CreateView = (props) => {
   const {
     basePath,
     defaultTitle,
@@ -50,4 +50,10 @@ const EditView = (props) => {
   )
 };
 
-export default EditView;
+CreateView.defaultProps = {
+  actions: [
+    <ListButton />
+  ]
+};
+
+export default CreateView;

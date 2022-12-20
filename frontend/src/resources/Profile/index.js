@@ -1,9 +1,11 @@
+import ProfileCreate from './ProfileCreate';
 import ProfileEdit from './ProfileEdit';
 import ProfileList from './ProfileList';
 import ProfileShow from './ProfileShow';
 
 export default {
   config: {
+    create: ProfileCreate,
     edit: ProfileEdit,
     list: ProfileList,
     show: ProfileShow,

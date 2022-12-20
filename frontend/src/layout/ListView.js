@@ -4,7 +4,7 @@ import { Box, Typography, Grid } from '@material-ui/core';
 import SplitView from "./SplitView";
 
 const ListView = (props) => {
-  const { defaultTitle, hasCreate } = useListContext(props);
+  const { defaultTitle } = useListContext(props);
   return(
     <SplitView aside={props.aside}>
       <Grid container>
@@ -15,7 +15,7 @@ const ListView = (props) => {
         </Grid>
         <Grid item xs={4}>
           <Box display="flex" alignItems="middle" justifyContent="right" pt={3}>
-            {hasCreate && <CreateButton color="secondary" />}
+            {props.actions.map((action, key) => React.cloneElement(action, { key, color: 'secondary' }))}
           </Box>
         </Grid>
       </Grid>
@@ -25,5 +25,11 @@ const ListView = (props) => {
     </SplitView>
   )
 };
+
+ListView.defaultProps = {
+  actions: [
+    <CreateButton />,
+  ]
+}
 
 export default ListView;

@@ -1,22 +1,23 @@
 import React from 'react';
-import { ListBase, useTranslate } from 'react-admin';
+import { CreateButton, ListBase, useTranslate } from 'react-admin';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import { AvatarWithLabelField } from '@semapps/field-components';
 import { GridList } from '@semapps/list-components';
 import List from "../../layout/List";
 import ProfileCard from "../../common/cards/ProfileCard";
 import ShareContactCard from "../../common/cards/ShareContactCard";
+import ContactRequestsBlock from "../../common/blocks/ContactRequestsBlock";
 
 const ProfileList = (props) => {
   const { identity } = useCheckAuthenticated();
   const translate = useTranslate();
   if (!identity?.id) return null;
   return (
-    <List aside={[
+    <List actions={[<CreateButton label="Ajouter un contact" />]} aside={[
       <ProfileCard />,
       <ShareContactCard />
     ]} {...props}>
-      {/*<ContactRequestsBlock />*/}
+      <ContactRequestsBlock />
       <ListBase
         resource="Profile"
         basePath="/Profile"

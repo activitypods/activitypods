@@ -14,7 +14,7 @@ const ListView = (props) => {
           </Typography>
         </Grid>
         <Grid item xs={4}>
-          <Box display="flex" alignItems="middle" justifyContent="right" pt={3}>
+          <Box display="flex" alignItems="middle" justifyContent="right">
             {props.actions.map((action, key) => React.cloneElement(action, { key, color: 'secondary' }))}
           </Box>
         </Grid>

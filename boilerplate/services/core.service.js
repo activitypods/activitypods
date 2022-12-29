@@ -9,6 +9,7 @@ module.exports = {
   settings: {
     baseUrl: CONFIG.HOME_URL,
     baseDir: path.resolve(__dirname, '..'),
+    frontendUrl: CONFIG.FRONTEND_URL,
     triplestore: {
       url: CONFIG.SPARQL_ENDPOINT,
       user: CONFIG.JENA_USER,
@@ -23,7 +24,6 @@ module.exports = {
       issuer: CONFIG.AUTH_OIDC_ISSUER,
       clientId: CONFIG.AUTH_OIDC_CLIENT_ID,
       clientSecret: CONFIG.AUTH_OIDC_CLIENT_SECRET,
-      formUrl: urlJoin(CONFIG.FRONTEND_URL, 'login'),
       mail: {
         from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
         transport,

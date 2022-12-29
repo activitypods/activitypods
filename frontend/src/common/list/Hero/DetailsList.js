@@ -21,7 +21,7 @@ const DetailsList = ({ basePath, children, record, resource }) => {
           <div key={field.props.source}>
             {field.props.addLabel ? (
               <Grid container spacing={3} className={classes.line}>
-                <Grid item xs={3}>
+                <Grid item xs={4} sm={3}>
                   <Typography color="textSecondary" align="right" variant="body2">
                     {translate(
                       ...getFieldLabelTranslationArgs({
@@ -32,7 +32,7 @@ const DetailsList = ({ basePath, children, record, resource }) => {
                     )}
                   </Typography>
                 </Grid>
-                <Grid item xs={9}>
+                <Grid item xs={8} sm={9}>
                   <Typography variant="body2">
                     {React.cloneElement(field, {
                       record,

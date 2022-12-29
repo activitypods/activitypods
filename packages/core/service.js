@@ -20,6 +20,7 @@ const CoreService = {
   settings: {
     baseUrl: null,
     baseDir: null,
+    frontendUrl: null,
     triplestore: {
       url: null,
       user: null,
@@ -30,7 +31,7 @@ const CoreService = {
     authType: 'local'
   },
   created() {
-    let { baseUrl, baseDir, triplestore, jsonContext, queueServiceUrl, authType } = this.settings;
+    let { baseUrl, baseDir, frontendUrl, triplestore, jsonContext, queueServiceUrl, authType } = this.settings;
 
     // If an external JSON context is not provided, we will use a local one
     const localJsonContext = urlJoin(baseUrl, '_system', 'context.json');
@@ -50,7 +51,8 @@ const CoreService = {
 
     this.broker.createService(ApiService, {
       settings: {
-        ...this.settings.api
+        ...this.settings.api,
+        frontendUrl
       }
     });
 
@@ -61,6 +63,7 @@ const CoreService = {
         reservedUsernames: ['sparql', 'auth', 'common', 'data', 'settings', 'localData', 'testData'],
         webIdSelection: ['nick'],
         accountSelection: ['preferredLocale', 'preferredFrontUrl', 'preferredFrontName'],
+        formUrl: frontendUrl ? urlJoin(frontendUrl, 'login') : undefined,
         ...this.settings.auth,
       },
     });

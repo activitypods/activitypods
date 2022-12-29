@@ -13,9 +13,17 @@ module.exports = {
     },
     routes: [
       {
+        name: 'favicon',
         path: '/favicon.ico',
         aliases: {
           'GET /': 'api.favicon',
+        },
+      },
+      {
+        name: 'redirectToFront',
+        path: '/',
+        aliases: {
+          'GET /': 'api.redirectToFront',
         },
       },
     ],
@@ -25,6 +33,10 @@ module.exports = {
       ctx.meta.$responseType = 'image/x-icon';
       return fs.readFileSync(path.resolve(__dirname, '../static/favicon.ico'));
     },
+    redirectToFront(ctx) {
+      ctx.meta.$statusCode = 302;
+      ctx.meta.$location = this.settings.frontendUrl;
+    }
   },
   methods: {
     authenticate(ctx, route, req, res) {

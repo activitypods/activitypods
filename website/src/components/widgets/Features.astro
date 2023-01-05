@@ -4,42 +4,42 @@ import { Icon } from 'astro-icon';
 const items = [
 	[
 		{
-			title: 'Astro + Tailwind CSS Integration',
+			title: 'JSON-LD and Turtle API',
 			description:
-				'A seamless integration between two great frameworks that offer high productivity, performance and versatility.',
-			icon: 'tabler:brand-tailwind',
+				'Every ActivityPod is compliant with the Linked Data Platform specs. You can retrieve, create and update data (resource or container) as JSON-LD or Turtle.',
+			icon: 'tabler:api',
 		},
 		{
-			title: 'Ready-to-use Components',
+			title: 'SPARQL endpoint',
 			description:
-				'Widgets made with Tailwind CSS ready to be used in Marketing Websites, SaaS, Blogs, Personal Profiles, Small Business...',
-			icon: 'tabler:components',
+				'Every ActivityPod comes with its own SPARQL endpoint. You can do advanced queries instead of going through whole lists of data.',
+			icon: 'ic:baseline-search',
 		},
 		{
-			title: 'Best Practices',
+			title: 'WAC permissions',
 			description:
-				'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sagittis, quam nec venenatis lobortis, mi risus tempus nulla.',
-			icon: 'tabler:list-check',
-		},
+				'You can define fine-grained read/write/control permissions for every container and resource in the ActivityPod, thanks to our support of the WAC standard.',
+			icon: 'ic:baseline-security',
+		}
 	],
 	[
 		{
-			title: 'Excellent Page Speed',
+			title: 'Proxy endpoint',
 			description:
-				'Having a good page speed impacts organic search ranking, improves user experience (UI/UX) and increase conversion rates.',
-			icon: 'tabler:rocket',
+				'An user can authenticate itself on any other ActivityPod using HTTP signature. Every ActivityPod has a proxy endpoint which signs the user requests with his private key.',
+			icon: 'eos-icons:proxy-outlined',
 		},
 		{
-			title: 'Search Engine Optimization (SEO)',
+			title: 'Inbox + Outbox',
 			description:
-				'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sagittis, quam nec venenatis lobortis, mi risus tempus nulla.',
-			icon: 'tabler:arrows-right-left',
+				'Every ActivityPod comes with an ActivityPub-compliant inbox and outbox to communicate with the fediverse. Side-effects (follow, like...) are automatically handled.',
+			icon: 'bi:mailbox',
 		},
 		{
-			title: 'Open to new ideas and contributions',
+			title: 'Notifications',
 			description:
-				'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sagittis, quam nec venenatis lobortis, mi risus tempus nulla.',
-			icon: 'tabler:bulb',
+				'When a user receives an ActivityPub activity, he can receive a properly-formatted notification by mail. Support for web push notification is coming soon.',
+			icon: 'ic:baseline-notification-important',
 		},
 	],
 ];
@@ -48,13 +48,12 @@ const items = [
 <section class="scroll-mt-16" id="features">
 	<div class="px-4 py-16 mx-auto max-w-6xl lg:px-8 lg:py-20">
 		<div class="mb-10 md:mx-auto sm:text-center md:mb-12 max-w-3xl">
-			<p class="text-base text-primary-600 dark:text-primary-200 font-semibold tracking-wide uppercase">Features</p>
+			<p class="text-base text-primary-600 dark:text-primary-200 font-semibold tracking-wide uppercase">Packed with Features</p>
 			<h2 class="text-4xl md:text-5xl font-bold leading-tighter tracking-tighter mb-4 font-heading">
-				What you get with <span class="whitespace-nowrap">AstroWind</span>
+				What users get with their Activity<span class="text-primary-500">Pods</span>
 			</h2>
 			<p class="max-w-3xl mx-auto sm:text-center text-xl text-gray-600 dark:text-slate-400">
-				Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque rem aperiam, eaque ipsa
-				quae.
+				Activity<span class="text-primary-500">Pods</span> come with a large set of features which include everything you need: data management, authorizations, communication with other PODs...
 			</p>
 		</div>
 		<div class="grid mx-auto space-y-6 md:grid-cols-2 md:space-y-0">
@@ -65,7 +64,7 @@ const items = [
 							<div class="flex flex-row max-w-md">
 								<div class="mb-4 mr-4">
 									<div class="flex items-center justify-center w-12 h-12 rounded-full bg-primary-500 dark:bg-primary-700">
-										{icon && <Icon name={icon} class="w-6 h-6 text-white icon-light" />}
+										{icon && <Icon name={icon} class="w-8 h-8 text-white icon-light" />}
 									</div>
 								</div>
 								<div>

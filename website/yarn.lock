@@ -475,6 +475,16 @@
   resolved "https://registry.yarnpkg.com/@fontsource/inter/-/inter-4.5.14.tgz#3944b809aa7bf27dacd20bdc04a49fb738959724"
   integrity sha512-JDC9AocdPLuGsASkvWw9hS5gtHE7K9dOwL98XLrk5yjYqxy4uVnScG58NUvFMJDVJRl/7c8Wnap6PEs+7Zvj1Q==
 
+"@fontsource/pt-sans-narrow@^4.5.11":
+  version "4.5.11"
+  resolved "https://registry.yarnpkg.com/@fontsource/pt-sans-narrow/-/pt-sans-narrow-4.5.11.tgz#0c4e20b97b2a53095aea1a3ac54d76db39abe910"
+  integrity sha512-w7qogcrlxs78fYoqk9ypuYYTfxn4uwtLH+Zj/tkAGtvPPC/7fBRmOYskAeqjbAqT1RkIIRYxWjeD6cY+RFJrAg==
+
+"@fontsource/pt-sans@^4.5.11":
+  version "4.5.11"
+  resolved "https://registry.yarnpkg.com/@fontsource/pt-sans/-/pt-sans-4.5.11.tgz#feee7bf8af118b4e6532533eb1fe6190c41802a7"
+  integrity sha512-w0Z11/B8PYcgM67fTSgZ9poFNJ8AdnglKlcH0aMdU7bBNfiHuKvZOxwUsynWpgghToh3GS4H2TizNnmi1wSEYg==
+
 "@gustavnikolaj/async-main-wrap@^3.0.1":
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/@gustavnikolaj/async-main-wrap/-/async-main-wrap-3.0.1.tgz#b838eb9dfaf9ed81bfc2b47f64d17a83bbcfc71b"

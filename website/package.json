@@ -43,5 +43,9 @@
   },
   "engines": {
     "node": "^14.15.0 || >=16.0.0"
+  },
+  "dependencies": {
+    "@fontsource/pt-sans": "^4.5.11",
+    "@fontsource/pt-sans-narrow": "^4.5.11"
   }
 }

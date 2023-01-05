@@ -1,61 +1,41 @@
 ---
 import { Icon } from 'astro-icon';
-import { Picture } from '@astrojs/image/components'
+import activitypods from '~/assets/images/activitypods.svg';
 ---
 
-<section>
+<section class="bg-gray-100 h-screen">
 	<div class="max-w-6xl mx-auto px-4 sm:px-6">
 		<div class="py-12 md:py-20">
-			<div class="text-center pb-10 md:pb-16 max-w-5xl mx-auto">
-				<h1 class="text-5xl md:text-[3.50rem] font-bold leading-tighter tracking-tighter mb-4 font-heading">
-					<span>ActivityPub</span> +
-					<span class="sm:whitespace-nowrap">Solid PODs</span
-					> =
-					❤️
+			<div class="text-center max-w-5xl mx-auto">
+				<img src={activitypods} alt="image description" class="max-w-sm mx-auto" />
+				<h1 class="text-5xl md:text-[3.50rem] font-bold leading-tighter mb-4 font-heading">
+					Creating decentralized social apps <br /> has never been easier
 				</h1>
 				<div class="max-w-3xl mx-auto">
 					<p class="text-xl text-gray-600 mb-8 dark:text-slate-400">
-						<span class="font-semibold decoration-1 decoration-primary-600 underline-offset-2">ActivityPods</span> brings the best of two technologies to 
-						designed following Best Practices, SEO, Accessibility, <span class="inline sm:hidden">...</span><span
-							class="hidden sm:inline"
-							>Dark Mode, Great Page Speed, image optimization, sitemap generation and more.</span
-						>
+						<strong><span class="text-black">Activity</span><span class="text-primary-500">Pods</span></strong> 
+						brings together two world-changing technologies, <strong><a href="#activitypub">Activity<span class="text-secondary-500">Pub</span></a></strong> and <strong>Solid <span class="text-primary-500">Pods</span></strong>, and empowers developers to create truly decentralized applications
 					</p>
 					<div class="max-w-xs sm:max-w-md m-auto flex flex-nowrap flex-col sm:flex-row sm:justify-center gap-4">
 						<div class="flex w-full sm:w-auto">
 							<a
 								class="btn btn-primary sm:mb-0 w-full"
-								href="https://github.com/onwidget/astrowind"
+								href="https://github.com/assemblee-virtuelle/activitypods"
 								target="_blank"
 								rel="noopener"
 							>
-								<Icon name="tabler:download" class="w-5 h-5 mr-1 -ml-1.5" /> Get template
+								<Icon name="tabler:rocket" class="w-5 h-5 mr-1 -ml-1.5" /> Get started
 							</a>
 						</div>
 						<div class="flex w-full sm:w-auto">
 							<a
 								class="btn w-full"
-								href="#features">Learn more</a
+								href="/roadmap">Learn more</a
 							>
 						</div>
 					</div>
 				</div>
 			</div>
-			{/*<div>
-				<div class="relative m-auto max-w-4xl">
-					<Picture
-						src={import('~/assets/images/hero.jpg')}
-						class="mx-auto rounded-md w-full"
-						widths={[400, 768, 1480]}
-						sizes="(max-width: 767px) 400px, (max-width: 1479px) 768px, 1480px"
-						alt="Hero Image"
-						aspectRatio={1480/833}
-						loading="eager"
-						width={1480}
-						height={833}
-					/>
-				</div>
-			</div>*/}
 		</div>
 	</div>
 </section>

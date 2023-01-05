@@ -12,7 +12,11 @@
 	}
 
 	.btn-primary {
-		@apply font-semibold bg-primary-600 text-white border-primary-600 hover:bg-primary-800 hover:border-primary-800 hover:text-white dark:text-white dark:bg-primary-700 dark:border-primary-700 dark:hover:border-primary-900 dark:hover:bg-primary-900;
+		@apply font-semibold bg-primary-500 text-white border-primary-500 hover:bg-primary-800 hover:border-primary-800 hover:text-white dark:text-white dark:bg-primary-700 dark:border-primary-700 dark:hover:border-primary-900 dark:hover:bg-primary-900;
+	}
+
+	.btn-secondary {
+		@apply font-semibold bg-secondary-500 text-white border-secondary-500 hover:bg-secondary-800 hover:border-secondary-800 hover:text-white dark:text-white dark:bg-secondary-700 dark:border-secondary-700 dark:hover:border-secondary-900 dark:hover:bg-secondary-900;
 	}
 }
 

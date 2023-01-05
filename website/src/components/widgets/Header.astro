@@ -8,10 +8,10 @@ import { getHomePermalink, getBlogPermalink, getPermalink, getRelativeLink } fro
 ---
 
 <header
-	class="sticky top-0 z-40 flex-none mx-auto w-full bg-white md:bg-white/90 dark:bg-slate-900 dark:md:bg-slate-900/90 md:backdrop-blur-sm"
+	class="sticky top-0 z-40 flex-none mx-auto w-full bg-gray-100 md:bg-gray-100 dark:bg-slate-900 dark:md:bg-slate-900/90 md:backdrop-blur-sm"
 	id="header"
 >
-	<div class="py-3 px-3 mx-auto w-full md:flex md:justify-between max-w-6xl md:px-4">
+	<div class="py-1 px-3 mx-auto w-full md:flex md:justify-between max-w-6xl md:px-4">
 		<div class="flex justify-between">
 			<a class="flex items-center" href={getHomePermalink()}>
 				<Logo />
@@ -26,6 +26,13 @@ import { getHomePermalink, getBlogPermalink, getPermalink, getRelativeLink } fro
 			aria-label="Main navigation"
 		>
 			<ul class="flex flex-col pt-8 md:pt-0 md:flex-row md:self-center w-full md:w-auto text-xl md:text-base">
+				<li>
+					<a
+						class="font-medium hover:text-gray-900 dark:hover:text-white px-4 py-3 flex items-center transition duration-150 ease-in-out"
+						href="/roadmap"
+						>Roadmap
+					</a>
+				</li>
 				<li class="dropdown">
 					<button
 						class="font-medium hover:text-gray-900 dark:hover:text-white px-4 py-3 flex items-center transition duration-150 ease-in-out"
@@ -37,7 +44,7 @@ import { getHomePermalink, getBlogPermalink, getPermalink, getRelativeLink } fro
 						<li class="">
 							<a
 								class="rounded-t md:hover:bg-gray-100 dark:hover:bg-gray-700 py-2 px-4 block whitespace-no-wrap"
-								href="#">Features</a>
+								href="/roadmap">Roadmap</a>
 						</li>
 						<li class="">
 							<a class="md:hover:bg-gray-100 dark:hover:bg-gray-700 py-2 px-4 block whitespace-no-wrap" href="#"

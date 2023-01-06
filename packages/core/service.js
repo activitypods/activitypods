@@ -45,8 +45,7 @@ const CoreService = {
         containers,
         podProvider: true,
         dispatch: {
-          queueServiceUrl,
-          delay: process.env.NODE_ENV === 'test' ? 0 : 60000 // Wait 1min before dispatching posted activities (to avoid race conditions between onEmit and onReceive)
+          queueServiceUrl
         },
       },
     });

@@ -2,7 +2,7 @@ import { createTheme } from '@material-ui/core/styles';
 
 const defaultTheme = createTheme();
 
-const font2 = '"Open Sans", "sans-serif"';
+const fontFamily = '"Open Sans", "sans-serif"';
 
 const theme = createTheme({
   palette: {
@@ -18,7 +18,7 @@ const theme = createTheme({
   },
   typography: {
     h1: {
-      fontFamily: font2,
+      fontFamily,
       fontSize: 48,
       fontStyle: 'normal',
       fontWeight: 'normal',
@@ -29,7 +29,7 @@ const theme = createTheme({
       },
     },
     h2: {
-      fontFamily: font2,
+      fontFamily,
       fontSize: 40,
       fontStyle: 'normal',
       fontWeight: 'normal',
@@ -40,7 +40,7 @@ const theme = createTheme({
       },
     },
     h4: {
-      fontFamily: font2,
+      fontFamily,
       fontSize: 30,
       fontStyle: 'normal',
       fontWeight: 'normal',
@@ -51,7 +51,7 @@ const theme = createTheme({
       },
     },
     h6: {
-      fontFamily: font2,
+      fontFamily,
       fontSize: 20,
       fontStyle: 'normal',
       fontWeight: 'normal',
@@ -59,12 +59,12 @@ const theme = createTheme({
       lineHeight: 1.15,
     },
     subtitle1: {
-      fontFamily: font2,
+      fontFamily,
       fontSize: 12,
       lineHeight: '14px',
     },
     subtitle2: {
-      fontFamily: font2,
+      fontFamily,
       fontSize: 12,
       fontStyle: 'normal',
       fontWeight: 'normal',
@@ -72,21 +72,21 @@ const theme = createTheme({
       textTransform: 'uppercase',
     },
     body1: {
-      fontFamily: font2,
+      fontFamily,
       fontSize: 16,
       fontStyle: 'normal',
       fontWeight: 'normal',
       lineHeight: '19px',
     },
     body2: {
-      fontFamily: font2,
+      fontFamily,
       fontSize: 14,
       fontStyle: 'normal',
       fontWeight: 'normal',
       lineHeight: '16px',
     },
     button: {
-      fontFamily: font2,
+      fontFamily,
       fontSize: 14,
       fontStyle: 'normal',
       fontWeight: 'normal',
@@ -123,6 +123,17 @@ const theme = createTheme({
         paddingRight: 0,
       },
     },
+    RaCreateButton: {
+      floating: {
+        backgroundColor: '#c9e265',
+        bottom: 80
+      }
+    },
+    RaToolbar: {
+      mobileToolbar: {
+        bottom: 56
+      }
+    }
   },
 });
 

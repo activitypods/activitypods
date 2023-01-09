@@ -23,7 +23,9 @@ export default {
         'vcard:given-name': 'Surname',
         'vcard:family-name': 'Family name',
         'vcard:note': 'About you',
-        'vcard:photo': 'Picture'
+        'vcard:photo': 'Picture',
+        'foaf:tipjar': 'Ğ1 account',
+        'dc:created': 'Account created'
       },
     },
     fr: {
@@ -34,6 +36,7 @@ export default {
         'vcard:family-name': 'Nom de famille',
         'vcard:note': 'En deux mots',
         'vcard:photo': 'Photo',
+        'foaf:tipjar': 'Compte Ğ1',
         'dc:created': "Date d'inscription"
       },
     },

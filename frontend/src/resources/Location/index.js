@@ -17,7 +17,7 @@ export default {
     types: ['vcard:Location'],
     list: {
       servers: 'pod',
-      dereference: ['vcard:hasAddress/vcard:hasGeo'],
+      blankNodes: ['vcard:hasAddress/vcard:hasGeo'],
     },
   },
   translations: {

@@ -19,6 +19,12 @@ const useStyles = makeStyles((theme) => ({
   icon: {
     marginTop: 5,
     marginRight: 5
+  },
+  title: {
+    [theme.breakpoints.down('sm')]: {
+      fontWeight: 'bold',
+      marginTop: 12
+    },
   }
 }));
 
@@ -29,7 +35,7 @@ const SimpleBox = ({ title, icon, text, children }) => {
       <Card className={classes.card}>
         <Box p={2} display="flex" justifyContent="start">
           {React.cloneElement(icon, { fontSize: "large", color: "secondary", className: classes.icon })}
-          <Typography variant="h4">{title}</Typography>
+          <Typography variant="h4" className={classes.title}>{title}</Typography>
         </Box>
         <Box pl={2} pr={2}>
           <Typography variant="body1">{text}</Typography>

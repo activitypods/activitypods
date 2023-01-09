@@ -17,7 +17,13 @@ const useStyles = makeStyles(() => ({
     height: 400,
     width: 400,
     position: 'absolute',
-    top: -100
+    top: -100,
+    [theme.breakpoints.down('xs')]: {
+      width: '100vw',
+      height: '100vw',
+      padding: 0,
+      top: -70,
+    },
   },
   title: {
     fontWeight: '800',
@@ -39,12 +45,22 @@ const useStyles = makeStyles(() => ({
     marginBottom: 15
   },
   steps: {
-    marginTop: 400
+    marginTop: 400,
+    [theme.breakpoints.down('xs')]: {
+      marginTop: 'calc(100vw - 30px)',
+    },
   },
   step: {
     position: 'relative',
     paddingLeft: 90,
     marginBottom: 25,
+    '& h4': {
+      [theme.breakpoints.down('xs')]: {
+        fontWeight: 'bold',
+        lineHeight: '1.2em',
+        marginBottom: 8
+      }
+    }
   },
   number: {
     position: 'absolute',
@@ -78,7 +94,7 @@ const HomePage = ({ title }) => {
               {title}
             </Typography>
             <Typography align="center">
-              Votre hébergeur de PODs dans l'Oise !
+              {process.env.REACT_APP_DESCRIPTION}
             </Typography>
             <Box display="flex" flexDirection={xs ? 'column' : 'row'} pt={3} pb={3} alignItems="center" justifyContent="center">
               <Link to="/login?signup">

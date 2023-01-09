@@ -15,7 +15,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const CopyButton = ({ text }) => {
+const CopyButton = ({ text, small }) => {
   const [copied, setCopied] = useState(false);
   const classes = useStyles();
   const translate = useTranslate();
@@ -23,7 +23,7 @@ const CopyButton = ({ text }) => {
     <span className={classes.wrapper}>
       <CopyToClipboard text={text} onCopy={() => setCopied(true)}>
         <Tooltip title={translate(copied ? 'app.message.copied_to_clipboard' : 'app.action.copy')} placement="top">
-          <IconButton size="small" className={classes.icon}>
+          <IconButton size="small" className={small ? classes.icon : undefined}>
             <FileCopyOutlinedIcon fontSize="inherit" />
           </IconButton>
         </Tooltip>

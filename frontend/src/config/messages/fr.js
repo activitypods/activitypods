@@ -54,6 +54,7 @@ module.exports = {
       message_profile_show_right: "Envoyer un message à %{username} lui donnera le droit de voir votre profil, pour lui permettre de vous répondre.",
       profile_visibility: "Votre profil n'est visible que des personnes que vous avez accepté dans votre réseau",
       share_contact: 'Pour vous connecter avec une personne que vous connaissez, vous pouvez lui envoyer le lien ci-dessous.',
+      location_comment: 'Indications supplémentaires pour aider à trouver ce lieu',
       g1_tipjar_field: 'Pour envoyer de la monnaie libre à cet utilisateur, copiez sa clé publique ci-dessous et utilisez-la dans le logiciel Cesium.',
       g1_tipjar_input: 'La clé publique de votre compte Ğ1. Permet aux autres membres du réseau de facilement vous envoyer de la monnaie libre.'
     },

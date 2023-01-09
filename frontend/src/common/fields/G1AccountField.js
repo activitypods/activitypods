@@ -5,7 +5,7 @@ import CopyButton from "../buttons/CopyButton";
 const G1AccountField = ({ record, source }) => {
   const publicKey = record && g1UrlToPublicKey(record[source]);
   return(
-    <span>{publicKey} <CopyButton text={publicKey} /></span>
+    <span>{publicKey} <CopyButton text={publicKey} small /></span>
   )
 };
 

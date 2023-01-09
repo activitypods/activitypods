@@ -67,7 +67,7 @@ const ContactField = ({ source, context, ...rest }) => {
             margin="dense"
             fullWidth
             multiline
-            minRows={5}
+            minRows={4}
           />
           <Box mt={1}>
             <Button type="submit" variant="contained" color="secondary" size="medium" endIcon={<SendIcon />} disabled={submitting}>

@@ -17,8 +17,8 @@ const ProfileShow = (props) => {
         <TextField source="vcard:given-name" />
         <UsernameField source="describes" />
         <TextField source="vcard:note" />
+        <G1AccountField source="foaf:tipjar" />
         <DateField source="dc:created" options={{ month: 'long', day: 'numeric', year: 'numeric' }} />
-        <G1AccountField source="foaf:tipjar" label={translate('app.block.g1_account')} />
       </Hero>
       <MainList>
         <ContactField source="describes" label={translate('app.action.send_message')} />

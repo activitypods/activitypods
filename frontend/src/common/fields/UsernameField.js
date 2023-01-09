@@ -7,7 +7,7 @@ const UsernameField = (props) => {
   const { source } = props;
   const record = useRecordContext(props);
   return record && record[source]
-    ? <span>{formatUsername(record[source])} <CopyButton text={formatUsername(record[source])} /></span>
+    ? <span>{formatUsername(record[source])} <CopyButton text={formatUsername(record[source])} small /></span>
     : null;
 }
 

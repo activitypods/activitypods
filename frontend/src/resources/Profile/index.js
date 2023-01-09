@@ -27,7 +27,7 @@ export default {
       },
     },
     fr: {
-      name: 'Profil |||| Mon réseau',
+      name: 'Profil |||| Profils',
       fields: {
         'describes': 'Identifiant',
         'vcard:given-name': 'Prénom',

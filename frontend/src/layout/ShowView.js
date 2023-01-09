@@ -6,7 +6,7 @@ import SplitView from "./SplitView";
 const ShowView = (props) => {
   const { record } = useShowContext(props);
   return(
-    <SplitView aside={props.aside}>
+    <SplitView asides={props.asides}>
       <Grid container>
         <Grid item xs={8}>
           <Typography variant="h2" component="h1">

@@ -12,7 +12,7 @@ import G1AccountField from "../../common/fields/G1AccountField";
 const ProfileShow = (props) => {
   const translate = useTranslate();
   return (
-    <Show title={<ProfileTitle />} aside={<ContactCard />} {...props}>
+    <Show title={<ProfileTitle />} asides={[<ContactCard />]} {...props}>
       <Hero image="vcard:photo">
         <TextField source="vcard:given-name" />
         <UsernameField source="describes" />

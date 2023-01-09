@@ -6,11 +6,11 @@ import SplitView from "./SplitView";
 const ListView = (props) => {
   const { defaultTitle } = useListContext(props);
   return(
-    <SplitView aside={props.aside}>
+    <SplitView asides={props.asides}>
       <Grid container>
         <Grid item xs={8}>
           <Typography variant="h2" component="h1">
-            {defaultTitle}
+            {props.title || defaultTitle}
           </Typography>
         </Grid>
         <Grid item xs={4}>

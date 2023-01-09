@@ -15,15 +15,17 @@ const ProfileList = (props) => {
   const xs = useMediaQuery(theme => theme.breakpoints.down('xs'), { noSsr: true });
   if (!identity?.id) return null;
   return (
-    <List actions={[<CreateButton label="Ajouter un contact" />]} aside={[
-      <ProfileCard />,
-      <ShareContactCard />
-    ]} {...props}>
+    <List
+      title={translate('app.page.contacts')}
+      actions={[<CreateButton label="app.action.add_contact" />]}
+      asides={[<ProfileCard />, <ShareContactCard />]}
+      {...props}
+    >
         {xs ?
           <SimpleList
             primaryText={record => record['vcard:given-name']}
             secondaryText={record => formatUsername(record.describes)}
-            leftAvatar={record => (<Avatar src={record['vcard:photo']}>{record['vcard:given-name'].toUpperCase()}</Avatar>)}
+            leftAvatar={record => (<Avatar src={record['vcard:photo']}>{record['vcard:given-name']?.toUpperCase()}</Avatar>)}
             linkType="show"
             rowStyle={(record, index) => ({
               paddingLeft: 8,

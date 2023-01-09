@@ -1,12 +1,6 @@
 import React from 'react';
-import { useGetIdentity } from "react-admin";
-import {
-  Box,
-  Container,
-  Breadcrumbs,
-  Link,
-  makeStyles
-} from "@material-ui/core";
+import { useGetIdentity, useTranslate, Link } from "react-admin";
+import { Box, Container, Breadcrumbs, makeStyles } from "@material-ui/core";
 
 const useStyles = makeStyles(theme => ({
   menuBar: {
@@ -23,24 +17,25 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const MenuBar = ({ title, logout }) => {
+const MenuBar = () => {
   const classes = useStyles();
+  const translate = useTranslate();
   const { identity } = useGetIdentity();
   return(
     <Box className={classes.menuBar}>
       <Container>
         <Breadcrumbs separator="|">
-          <Link href="/Profile" className={classes.link}>
-            Mon réseau
+          <Link to="/Profile" className={classes.link}>
+            {translate('app.page.contacts')}
           </Link>
-          <Link href={"/Profile/" + encodeURIComponent(identity?.profileData?.id)} className={classes.link}>
-            Mon profil
+          <Link to={"/Profile/" + encodeURIComponent(identity?.profileData?.id)} className={classes.link}>
+            {translate('app.page.profile')}
           </Link>
-          <Link href="/Location" className={classes.link}>
-            Mes adresses
+          <Link to="/Location" className={classes.link}>
+            {translate('app.page.addresses')}
           </Link>
-          <Link href="/settings" className={classes.link}>
-            Paramètres
+          <Link to="/settings" className={classes.link}>
+            {translate('app.page.settings')}
           </Link>
         </Breadcrumbs>
       </Container>

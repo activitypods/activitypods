@@ -1,10 +1,11 @@
 import React from 'react';
-import { ListButton, EditButton, useShowContext } from 'react-admin';
+import { ListButton, EditButton, useShowContext, usePermissionsOptimized } from 'react-admin';
 import { Box, Typography, Grid } from '@material-ui/core';
 import SplitView from "./SplitView";
 
 const ShowView = (props) => {
   const { record } = useShowContext(props);
+  const { permissions } = usePermissionsOptimized(record?.id);
   return(
     <SplitView asides={props.asides}>
       <Grid container>
@@ -15,7 +16,13 @@ const ShowView = (props) => {
         </Grid>
         <Grid item xs={4}>
           <Box display="flex" alignItems="middle" justifyContent="right">
-            {props.actions.map((action, i) => React.cloneElement(action, { record, color: 'secondary', key: i }))}
+            {props.actions
+              ? props.actions.map((action, i) => React.cloneElement(action, { record, color: 'secondary', key: i }))
+              : <>
+                  <ListButton color="secondary" />
+                  {permissions && permissions.some(p => p['acl:mode'] === 'acl:Write') && <EditButton color="secondary" />}
+                </>
+            }
           </Box>
         </Grid>
       </Grid>
@@ -24,13 +31,6 @@ const ShowView = (props) => {
       </Box>
     </SplitView>
   )
-};
-
-ShowView.defaultProps = {
-  actions: [
-    <ListButton />,
-    <EditButton />
-  ]
 };
 
 export default ShowView;

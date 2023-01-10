@@ -33,10 +33,8 @@ const theme = createTheme({
       fontSize: 40,
       fontStyle: 'normal',
       fontWeight: 'normal',
-      lineHeight: '58px',
       [defaultTheme.breakpoints.down('xs')]: {
         fontSize: 28,
-        lineHeight: '41px',
       },
     },
     h4: {

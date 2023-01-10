@@ -41,7 +41,7 @@ module.exports = {
       g1_account: 'Compte G1'
     },
     input: {
-      about_you: 'Quelques mots sur vous pour aider la personne à vous reconnaître',
+      about_you: 'Quelques mots sur vous',
       message: 'Message',
       user_id: 'Identifiant utilisateur',
       email: 'Email',

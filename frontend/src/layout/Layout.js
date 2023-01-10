@@ -14,7 +14,7 @@ const Layout = ({ logout, theme, children, title }) => {
       <AppBar title={title} logout={logout} />
       {!xs && <MenuBar />}
       <Container disableGutters={xs}>
-        <Box mt={{ xs: 1, sm: 2 }} m={{ xs: 2, sm: 0 }} mb={8}>{children}</Box>
+        <Box mt={{ xs: 2, sm: 2 }} m={{ xs: 2, sm: 0 }} mb={8}>{children}</Box>
       </Container>
       {xs && <BottomBar />}
       {/* Required for react-admin optimistic update */}

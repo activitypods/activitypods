@@ -13,10 +13,9 @@ const LocationList = (props) => {
         leftAvatar={() => <HomeIcon />}
         rowStyle={() => ({
           backgroundColor: 'white',
-          padding: 16,
-          marginBottom: 15,
-          boxShadow:
-            '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)',
+          padding: 8,
+          marginBottom: 8,
+          boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)',
         })}
       />
     </List>

@@ -15,7 +15,7 @@ const DetailsList = ({ basePath, children, record, resource }) => {
   const translate = useTranslate();
 
   return (
-    <Box>
+    <Box p={2}>
       {React.Children.map(children, field =>
         field && record[field.props.source] && React.isValidElement(field) ? (
           <div key={field.props.source}>

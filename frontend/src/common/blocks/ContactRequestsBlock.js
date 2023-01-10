@@ -1,5 +1,5 @@
-import React from 'react';
-import { linkToRecord, useQueryWithStore, useTranslate, Link } from 'react-admin';
+import React, { useCallback } from 'react';
+import { linkToRecord, useQueryWithStore, useTranslate, Link, useRefresh } from 'react-admin';
 import { makeStyles, Card, Avatar, Grid, Typography, Box, useMediaQuery } from '@material-ui/core';
 import { useCollection } from '@semapps/activitypub-components';
 import { formatUsername } from '../../utils';
@@ -105,7 +105,13 @@ const ContactRequest = ({ activity, refetch }) => {
 const ContactRequestsBlock = () => {
   const classes = useStyles();
   const translate = useTranslate();
+  const refresh = useRefresh();
   const { items: contactRequests, refetch } = useCollection('apods:contactRequests');
+
+  const refetchAndRefresh = useCallback(async () => {
+    await refetch();
+    refresh();
+  }, [refetch, refresh])
 
   if (contactRequests.length === 0) return null;
 
@@ -116,7 +122,7 @@ const ContactRequestsBlock = () => {
       </Box>
       {contactRequests.map((activity) => (
         <Box className={classes.list}>
-          <ContactRequest activity={activity} refetch={refetch} />
+          <ContactRequest activity={activity} refetch={refetchAndRefresh} />
         </Box>
       ))}
     </Card>

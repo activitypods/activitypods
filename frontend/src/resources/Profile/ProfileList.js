@@ -7,7 +7,8 @@ import { GridList } from '@semapps/list-components';
 import List from "../../layout/List";
 import ProfileCard from "../../common/cards/ProfileCard";
 import ShareContactCard from "../../common/cards/ShareContactCard";
-import {formatUsername} from "../../utils";
+import { formatUsername } from "../../utils";
+import ContactRequestsBlock from "../../common/blocks/ContactRequestsBlock";
 
 const ProfileList = (props) => {
   const { identity } = useCheckAuthenticated();
@@ -28,20 +29,25 @@ const ProfileList = (props) => {
             leftAvatar={record => (<Avatar src={record['vcard:photo']}>{record['vcard:given-name']?.toUpperCase()}</Avatar>)}
             linkType="show"
             rowStyle={(record, index) => ({
-              paddingLeft: 8,
-              paddingRight: 8,
-              backgroundColor: index % 2 ? '#efe' : 'white',
+              backgroundColor: 'white',
+              padding: 8,
+              marginBottom: 8,
+              boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)',
             })}
           />
+
           :
-          <GridList xs={4} sm={2} linkType="show">
-          <AvatarWithLabelField
-            label="vcard:given-name"
-            image="vcard:photo"
-            defaultLabel={translate('app.user.unknown')}
-            labelColor="grey.300"
-          />
-        </GridList>
+          <>
+            <ContactRequestsBlock />
+            <GridList xs={4} sm={2} linkType="show">
+              <AvatarWithLabelField
+                label="vcard:given-name"
+                image="vcard:photo"
+                defaultLabel={translate('app.user.unknown')}
+                labelColor="grey.300"
+              />
+            </GridList>
+          </>
         }
     </List>
   );

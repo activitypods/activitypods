@@ -6,7 +6,7 @@ import { useTranslate } from 'react-admin';
 
 const useStyles = makeStyles(theme => ({
   wrapper: {
-    position: 'relative',
+    // position: 'relative',
   },
   icon: {
     position: 'absolute',
@@ -15,7 +15,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const CopyButton = ({ text, small }) => {
+const CopyButton = ({ text, className }) => {
   const [copied, setCopied] = useState(false);
   const classes = useStyles();
   const translate = useTranslate();
@@ -23,7 +23,7 @@ const CopyButton = ({ text, small }) => {
     <span className={classes.wrapper}>
       <CopyToClipboard text={text} onCopy={() => setCopied(true)}>
         <Tooltip title={translate(copied ? 'app.message.copied_to_clipboard' : 'app.action.copy')} placement="top">
-          <IconButton size="small" className={small ? classes.icon : undefined}>
+          <IconButton size="small" className={className}>
             <FileCopyOutlinedIcon fontSize="inherit" />
           </IconButton>
         </Tooltip>

@@ -19,8 +19,8 @@ const ACCEPT_CONTACT_REQUEST_MAPPING = {
     fr: `{{{emitterProfile.vcard:given-name}}} fait maintenant partie de votre réseau`,
   },
   description: {
-    en: `{{{emitterProfile.vcard:given-name}}} has accepted your contact requests. You can now invite him/her to the events you organize.`,
-    fr: `{{{emitterProfile.vcard:given-name}}} a accepté votre demande de mise en relation. Vous pouvez maintenant l'inviter aux événements que vous organisez.`,
+    en: `{{{emitterProfile.vcard:given-name}}} has accepted your contact requests`,
+    fr: `{{{emitterProfile.vcard:given-name}}} a accepté votre demande de mise en relation`,
   },
   actionName: {
     en: 'View',

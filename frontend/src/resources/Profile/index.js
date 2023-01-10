@@ -14,7 +14,7 @@ export default {
     },
   },
   dataModel: {
-    types: ['vcard:Individual'],
+    types: ['vcard:Individual', 'as:Profile'],
   },
   translations: {
     en: {

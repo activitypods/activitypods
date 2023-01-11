@@ -9,7 +9,7 @@ const NEW_MESSAGE_ABOUT_OFFER_OR_REQUEST_MAPPING = {
     en: 'Reply',
     fr: 'Répondre',
   },
-  actionLink: '/Profile/{{encodeUri emitterProfile.id}}/show',
+  actionLink: '?type=as:Profile&uri={{encodeUri emitterProfile.id}}',
 };
 
 module.exports = {

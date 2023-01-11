@@ -178,7 +178,8 @@ const CoreService = {
     this.broker.createService(FrontAppsService, {
       settings: {
         baseUrl,
-        frontendUrl
+        frontendUrl,
+        ontologies
       }
     });
   },

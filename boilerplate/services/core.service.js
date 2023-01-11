@@ -1,5 +1,4 @@
 const path = require('path');
-const urlJoin = require('url-join');
 const { CoreService } = require('@activitypods/core');
 const CONFIG = require('../config/config');
 const transport = require('../config/transport');
@@ -28,8 +27,8 @@ module.exports = {
         from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
         transport,
         defaults: {
-          locale: CONFIG.NOTIFICATIONS_DEFAULT_LOCALE,
-          frontUrl: CONFIG.NOTIFICATIONS_DEFAULT_FRONT_URL,
+          locale: CONFIG.DEFAULT_LOCALE,
+          frontUrl: CONFIG.FRONTEND_URL,
         },
       }
     },

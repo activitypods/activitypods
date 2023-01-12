@@ -11,6 +11,7 @@ module.exports = {
   settings: {
     defaultLocale: CONFIG.DEFAULT_LOCALE,
     defaultFrontUrl: CONFIG.FRONTEND_URL,
+    color: CONFIG.FRONTEND_COLOR,
     // Moleculer-mail settings
     from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
     transport,

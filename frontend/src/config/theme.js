@@ -7,13 +7,10 @@ const fontFamily = '"Open Sans", "sans-serif"';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#c9e265',
-      light: '#c3d57a',
-      contrastText: '#000',
+      main: process.env.REACT_APP_COLOR_PRIMARY
     },
     secondary: {
-      main: '#314a62',
-      contrastText: '#FFF',
+      main: process.env.REACT_APP_COLOR_SECONDARY
     }
   },
   typography: {
@@ -123,7 +120,7 @@ const theme = createTheme({
     },
     RaCreateButton: {
       floating: {
-        backgroundColor: '#c9e265',
+        backgroundColor: process.env.REACT_APP_COLOR_PRIMARY,
         bottom: 80
       }
     },

@@ -6,19 +6,19 @@ module.exports = {
       accept: 'Accepter',
       accept_contact_request: 'Accepter la demande',
       add: 'Ajouter',
-      add_contact: 'Ajouter un contact',
+      add_contact: 'Envoyer la demande',
       copy: 'Copier dans votre presse-papier',
       edit_profile: 'Éditer mon profil',
       ignore: 'Ignorer',
       ignore_contact_request: 'Ignorer la demande',
-      login: 'Se connecter avec un compte',
+      login: 'Se connecter',
       reject: 'Refuser',
       reject_contact_request: 'Rejeter la demande',
       remove_contact: 'Retirer de mes contacts',
       send: 'Envoyer',
       send_message: 'Envoyer un message',
-      signup: 'Créer un nouveau compte',
-      reset_password: 'Réinitialisation du mot de passe',
+      signup: "S'inscrire",
+      reset_password: 'Mot de passe oublié ?',
       set_new_password: 'Definir un nouveau mot de passe',
     },
     page: {
@@ -30,6 +30,9 @@ module.exports = {
       addresses_short: 'Adresses',
       settings: 'Paramètres',
       settings_short: 'Paramètres',
+      add_contact: 'Demander une mise en relation',
+      create_profile: 'Créez votre profil',
+      authorize: 'Autorisation requise',
     },
     card: {
       add_contact: 'Ajouter un contact',
@@ -56,12 +59,18 @@ module.exports = {
       share_contact: 'Pour vous connecter avec une personne que vous connaissez, vous pouvez lui envoyer le lien ci-dessous.',
       location_comment: 'Indications supplémentaires pour aider à trouver ce lieu',
       g1_tipjar_field: 'Pour envoyer de la monnaie libre à cet utilisateur, copiez sa clé publique ci-dessous et utilisez-la dans le logiciel Cesium.',
-      g1_tipjar_input: 'La clé publique de votre compte Ğ1. Permet aux autres membres du réseau de facilement vous envoyer de la monnaie libre.'
+      g1_tipjar_input: 'La clé publique de votre compte Ğ1. Permet aux autres membres du réseau de facilement vous envoyer de la monnaie libre.',
+      login: 'Connectez-vous à votre espace personnel',
+      signup: 'Créez votre espace personnel',
+      reset_password: "Entrez votre adresse mail ci-dessous et nous vous enverrons un lien pour réinitialiser votre mot de passe",
+      create_profile: "Maintenant que votre compte est créé, veuillez créer votre profil. Celui-ci ne sera visible par défaut que des personnes que vous acceptez dans votre réseau.",
+      authorize: "Autorisez-vous le site %{appDomain} à accéder à votre POD ?"
     },
     message: {
       copied_to_clipboard: 'Copié !',
       no_condition: 'Aucune',
       you_participated_to_same_event: 'Vous avez participé à la même rencontre',
+      verified_app: "Application vérifiée",
     },
     notification: {
       contact_request_accepted: 'Demande de contact acceptée',
@@ -81,13 +90,34 @@ module.exports = {
       invalid_password: "Mot de passe incorrect",
       get_settings_error: "Une erreur s'est produite",
       update_settings_error: "Une erreur s'est produite",
+      verified_applications_load_failed: 'Impossible de charger la liste des applications vérifiées'
     },
     user: {
       unknown: 'Inconnu',
+      location: "Chez %{surname}"
     },
     validation: {
       email: "Doit être un email valide",
       confirmNewPassword: "Doit être le même que le nouveau champ de mot de passe"
     },
+    steps: {
+      title: 'Comment ça marche ?',
+      1: {
+        title: 'Je crée mon espace personnel (POD)',
+        text: "Un seul endroit pour toutes mes données, c'est pas trop tôt !"
+      },
+      2: {
+        title: 'Je me connecte aux applications compatibles',
+        text: "Rencontres, petites annonces... et beaucoup d'autres à venir !",
+      },
+      3: {
+        title: 'Mes données sont enregistrées sur mon POD',
+        text: "Les administrateurs des applications n'y ont pas accès.",
+      },
+      4: {
+        title: 'Je choisis avec qui je partage mes données',
+        text: "A tout moment, je sais qui voit mes données. Je peux révoquer les droits.",
+      }
+    }
   },
 };

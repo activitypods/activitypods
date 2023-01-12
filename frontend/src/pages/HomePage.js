@@ -111,28 +111,15 @@ const HomePage = ({ title }) => {
           </Box>
         </Box>
         <Box className={classes.steps}>
-          <Typography variant="h2" align="center" className={classes.stepsTitle}>Comment ça marche ?</Typography>
+          <Typography variant="h2" align="center" className={classes.stepsTitle}>{translate('app.steps.title')}</Typography>
           <Container>
-            <Box className={classes.step}>
-              <Avatar className={classes.number}>1</Avatar>
-              <Typography variant="h4">Je crée mon espace personnel (POD)</Typography>
-              <Typography>Un seul endroit pour toutes mes données, c'est pas trop tôt !</Typography>
-            </Box>
-            <Box className={classes.step}>
-              <Avatar className={classes.number}>2</Avatar>
-              <Typography variant="h4">Je me connecte aux applications compatibles</Typography>
-              <Typography>Rencontres, petites annonces... et beaucoup d'autres à venir !</Typography>
-            </Box>
-            <Box className={classes.step}>
-              <Avatar className={classes.number}>3</Avatar>
-              <Typography variant="h4">Mes données sont enregistrées sur mon POD</Typography>
-              <Typography>Les administrateurs des applications n'y ont pas accès.</Typography>
-            </Box>
-            <Box className={classes.step}>
-              <Avatar className={classes.number}>4</Avatar>
-              <Typography variant="h4">Je choisis avec qui je partage mes données</Typography>
-              <Typography>A tout moment, je sais qui voit mes données. Je peux révoquer les droits.</Typography>
-            </Box>
+            {[1,2,3,4].map(i => (
+              <Box className={classes.step} key={i}>
+                <Avatar className={classes.number}>{i}</Avatar>
+                <Typography variant="h4">{translate(`app.steps.${i}.title`)}</Typography>
+                <Typography>{translate(`app.steps.${i}.text`)}</Typography>
+              </Box>
+            ))}
           </Container>
        </Box>
       </Box>

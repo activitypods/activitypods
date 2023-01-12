@@ -20,6 +20,7 @@ export default {
     en: {
       name: 'Profile |||| Profiles',
       fields: {
+        'describes': 'User ID',
         'vcard:given-name': 'Surname',
         'vcard:family-name': 'Family name',
         'vcard:note': 'About you',

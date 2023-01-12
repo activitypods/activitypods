@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNotify } from 'react-admin';
+import { Link, useNotify, useTranslate } from 'react-admin';
 import { makeStyles, Typography, Box, Chip, Button } from '@material-ui/core';
 import WarningIcon from '@material-ui/icons/Warning';
 import DoneIcon from '@material-ui/icons/Done';
@@ -36,6 +36,7 @@ const AuthorizePageView = (props) => {
   const classes = useStyles(props);
   const [trustedApps, setTrustedApps] = useState(props.customTrustedApps || []);
   const notify = useNotify();
+  const translate = useTranslate();
 
   const searchParams = new URLSearchParams(props.location.search);
   const redirectTo = searchParams.get('redirect');
@@ -52,7 +53,7 @@ const AuthorizePageView = (props) => {
           const json = await results.json();
           setTrustedApps(json['ldp:contains']);
         } else {
-          notify('Impossible de charger la liste des applications vérifiées', 'error');
+          notify('app.notification.verified_applications_load_failed', 'error');
         }
       }
     })();
@@ -87,7 +88,7 @@ const AuthorizePageView = (props) => {
   }, [authorizedApps, appDomain, accessApp])
 
   return (
-    <SimpleBox title="Autorisation requise" icon={<WarningIcon />} text={<span>Autorisez-vous le site <u>{appDomain}</u> à accéder à votre POD ?</span>}>
+    <SimpleBox title={translate('app.page.authorize')} icon={<WarningIcon />} text={translate('app.helper.authorize', { appDomain })}>
       {trustedApp && (
         <Box p={2} pb={0}>
           <div className={classes.app}>
@@ -96,7 +97,7 @@ const AuthorizePageView = (props) => {
             <Typography variant="body2">{trustedApp['apods:description']}</Typography>
             <Chip
               size="small"
-              label="Application vérifiée"
+              label={translate('app.message.verified_app')}
               color="primary"
               onDelete={() => {}}
               deleteIcon={<DoneIcon />}
@@ -106,9 +107,9 @@ const AuthorizePageView = (props) => {
         </Box>
       )}
       <Box p={2} display="flex" justifyContent="end">
-        <Button variant="contained" color="secondary" className={classes.button} onClick={() => accessApp(true)}>Autoriser</Button>
+        <Button variant="contained" color="secondary" className={classes.button} onClick={() => accessApp(true)}>{translate('app.action.accept')}</Button>
         <Link to="/">
-          <Button variant="contained" className={classes.button}>Refuser</Button>
+          <Button variant="contained" className={classes.button}>{translate('app.action.reject')}</Button>
         </Link>
       </Box>
     </SimpleBox>

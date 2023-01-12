@@ -7,16 +7,19 @@ import { useCheckAuthenticated } from '@semapps/auth-provider';
 import useRequestContact from '../../hooks/useRequestContact';
 import SendIcon from '@material-ui/icons/Send';
 
-const AddContactToolbar = props => (
-  <Toolbar {...props} >
-    <SaveButton
-      icon={<SendIcon />}
-      label="Envoyer la demande"
-      variant="contained"
-      color="secondary"
-    />
-  </Toolbar>
-);
+const AddContactToolbar = props => {
+  const translate = useTranslate();
+  return (
+    <Toolbar {...props} >
+      <SaveButton
+        icon={<SendIcon />}
+        label={translate('app.action.add_contact')}
+        variant="contained"
+        color="secondary"
+      />
+    </Toolbar>
+  );
+}
 
 const ProfileCreate = () => {
   useCheckAuthenticated();
@@ -27,9 +30,7 @@ const ProfileCreate = () => {
 
   return (
     <>
-      <Typography variant="h2" component="h1">
-        Demander une mise en relation
-      </Typography>
+      <Typography variant="h2" component="h1">{translate('app.page.add_contact')}</Typography>
       <Box mt={1}>
         <Card>
           <SimpleForm initialValues={{ id: searchParams.get('id') }} save={requestContact} toolbar={<AddContactToolbar />}>

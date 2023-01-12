@@ -34,11 +34,11 @@ const LocalLoginPage = (props) => {
 
   const [title, text] = useMemo(() => {
     if (isSignup) {
-      return ['Inscription', "Créez votre espace personnel"];
+      return ['app.action.signup', 'app.helper.signup'];
     } else if (isLogin) {
-      return ['Connexion', "Connectez-vous à votre espace personnel"];
+      return ['app.action.login', 'app.helper.login'];
     } else if (isResetPassword) {
-      return ['Mot de passe oublié ?', 'Entrez votre adresse mail ci-dessous et nous vous enverrons un lien pour réinitialiser votre mot de passe'];
+      return ['app.action.reset_password', 'app.helper.reset_password'];
     }
   }, [isSignup, isLogin, isResetPassword])
 
@@ -62,7 +62,7 @@ const LocalLoginPage = (props) => {
   }
 
   return (
-    <SimpleBox title={title} icon={<LockIcon />} text={text}>
+    <SimpleBox title={translate(title)} icon={<LockIcon />} text={translate(text)}>
       {isSignup ? <SignupForm redirectTo={redirectTo} /> : null}
       {isResetPassword ? <ResetPasswordForm /> : null}
       {isNewPassword ? <NewPasswordForm location={props.location} /> : null}

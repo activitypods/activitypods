@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 const urlJoin = require('url-join');
-const { ControlledContainerMixin, useFullURI } = require('@semapps/ldp');
+const { ControlledContainerMixin, useFullURI, defaultToArray } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
@@ -104,29 +104,32 @@ module.exports = {
     async addMissingApps(ctx) {
       for (let dataset of await ctx.call('pod.list')) {
         this.logger.info('Adding front apps to dataset ' + dataset + '...');
+        const [account] = await ctx.call('auth.account.find', { query: { username: dataset } });
 
         for (let app of this.trustedApps) {
-          const appUri = urlJoin(this.settings.baseUrl, dataset, 'data', 'front-apps', app['apods:domainName']);
-          const exists = await ctx.call('ldp.resource.exist', {
-            resourceUri: appUri,
-            webId: 'system'
-          });
+          if (!app['apods:locales'] || defaultToArray(app['apods:locales']).includes(account.preferredLocale)) {
+            const appUri = urlJoin(this.settings.baseUrl, dataset, 'data', 'front-apps', app['apods:domainName']);
+            const exists = await ctx.call('ldp.resource.exist', {
+              resourceUri: appUri,
+              webId: 'system'
+            });
 
-          if (exists) {
-            this.logger.info(`${appUri} already exists, skipping...`);
-          } else {
-            await this.actions.post({
-              resource: {
-                type: 'apods:FrontAppRegistration',
-                'apods:domainName': app['apods:domainName'],
-                'apods:preferredForTypes': app['apods:handledTypes'],
-                'apods:application': app.id,
-              },
-              contentType: MIME_TYPES.JSON,
-              slug: app['apods:domainName'],
-              webId: urlJoin(this.settings.baseUrl, dataset)
-            }, { parentCtx: ctx });
-            this.logger.info(`${appUri} added!`);
+            if (exists) {
+              this.logger.info(`${appUri} already exists, skipping...`);
+            } else {
+              await this.actions.post({
+                resource: {
+                  type: 'apods:FrontAppRegistration',
+                  'apods:domainName': app['apods:domainName'],
+                  'apods:preferredForTypes': app['apods:handledTypes'],
+                  'apods:application': app.id,
+                },
+                contentType: MIME_TYPES.JSON,
+                slug: app['apods:domainName'],
+                webId: urlJoin(this.settings.baseUrl, dataset)
+              }, {parentCtx: ctx});
+              this.logger.info(`${appUri} added!`);
+            }
           }
         }
       }
@@ -134,25 +137,26 @@ module.exports = {
   },
   events: {
     async 'auth.registered'(ctx) {
-      const { webId } = ctx.params;
+      const { webId, accountData } = ctx.params;
       const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
       await this.waitForContainerCreation(containerUri);
 
       for (let app of this.trustedApps) {
-        // TODO more intelligent handling of preferredForTypes
-        // which take into account apps language and priority
-        await this.actions.post({
-          resource: {
-            type: 'apods:FrontAppRegistration',
-            'apods:domainName': app['apods:domainName'],
-            'apods:preferredForTypes': app['apods:handledTypes'],
-            'apods:application': app.id,
-          },
-          contentType: MIME_TYPES.JSON,
-          slug: app['apods:domainName'],
-          webId
-        }, { parentCtx: ctx });
+        // Only add applications which match the account preferred locale
+        if (!app['apods:locales'] || defaultToArray(app['apods:locales']).includes(accountData.preferredLocale)) {
+          await this.actions.post({
+            resource: {
+              type: 'apods:FrontAppRegistration',
+              'apods:domainName': app['apods:domainName'],
+              'apods:preferredForTypes': app['apods:handledTypes'],
+              'apods:application': app.id,
+            },
+            contentType: MIME_TYPES.JSON,
+            slug: app['apods:domainName'],
+            webId
+          }, { parentCtx: ctx });
+        }
       }
     }
   }

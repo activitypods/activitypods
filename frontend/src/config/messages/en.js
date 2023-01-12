@@ -6,7 +6,7 @@ module.exports = {
       accept: 'Accept',
       accept_contact_request: 'Accept contact request',
       add: 'Add',
-      add_contact: 'Add contact',
+      add_contact: 'Send request',
       copy: 'Copy to clipboard',
       edit_profile: 'Edit my profile',
       ignore: 'Ignore',
@@ -30,6 +30,9 @@ module.exports = {
       addresses_short: 'Addresses',
       settings: 'Settings',
       settings_short: 'Settings',
+      add_contact: 'Send a connection request',
+      create_profile: 'Create your profile',
+      authorize: 'Authorization required',
     },
     card: {
       add_contact: 'Add a contact',
@@ -56,12 +59,18 @@ module.exports = {
       share_contact: 'To connect with someone you know, you can send him the link below.',
       location_comment: 'Additional information to help find this place',
       g1_tipjar_field: 'To send G1 money to this user, copy his public key below and use it inside the Cesium software.',
-      g1_tipjar_input: 'The public key of your Ğ1 account. This will allow other members to easily send you money.'
+      g1_tipjar_input: 'The public key of your Ğ1 account. This will allow other members to easily send you money.',
+      login: 'Sign in to your personal space',
+      signup: 'Create your personal space',
+      reset_password: "Enter your email address below and we will send you a link to reset your password",
+      create_profile: "Now that your account is created, please create your profile. By default, your profile will only be visible to the people you accept into your network.",
+      authorize: "Do you allow the website %{appDomain} to access your POD?"
     },
     message: {
       copied_to_clipboard: 'Copied !',
       no_condition: 'None',
       you_participated_to_same_event: 'You participated to the same event',
+      verified_app: "Verified application",
     },
     notification: {
       contact_request_accepted: 'Contact request accepted',
@@ -81,13 +90,34 @@ module.exports = {
       invalid_password: "Invalid password",
       get_settings_error: 'An error occurred',
       update_settings_error: 'An error occurred',
+      verified_applications_load_failed: 'Unable to load the list of verified applications'
     },
     user: {
       unknown: 'Unknown',
+      location: "At %{surname}'s"
     },
     validation: {
       email: "Must be a valid email",
       confirmNewPassword: "Must be the same as new password field"
     },
+    steps: {
+      title: 'How does it work?',
+      1: {
+        title: 'I create my personal space (POD)',
+        text: "One place for all my data, it's about time!"
+      },
+      2: {
+        title: 'I connect to compatible applications',
+        text: "Meetings, classified ads... and many more to come!",
+      },
+      3: {
+        title: 'My data is securely stored on my POD',
+        text: "Applications' administrators do not have access to it.",
+      },
+      4: {
+        title: 'I choose who I share my data with',
+        text: "At any time, I know who sees my data. I can revoke the rights.",
+      }
+    }
   },
 };

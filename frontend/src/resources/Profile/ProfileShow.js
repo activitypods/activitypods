@@ -18,7 +18,7 @@ const ProfileShow = (props) => {
         <UsernameField source="describes" />
         <TextField source="vcard:note" />
         <G1AccountField source="foaf:tipjar" />
-        <DateField source="dc:created" options={{ month: 'long', day: 'numeric', year: 'numeric' }} />
+        <DateField source="dc:created" locales={process.env.REACT_APP_LANG} options={{ month: 'long', day: 'numeric', year: 'numeric' }} />
       </Hero>
       <MainList>
         <ContactField source="describes" label={translate('app.action.send_message')} />

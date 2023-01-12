@@ -48,9 +48,7 @@ const SignupForm = ({ redirectTo }) => {
     setLoading(true);
     signup({
       ...values,
-      preferredLocale: process.env.REACT_APP_LANG,
-      preferredFrontUrl: new URL(window.location.href).origin,
-      preferredFrontName: process.env.REACT_APP_NAME
+      preferredLocale: process.env.REACT_APP_LANG
     })
       .then((webId) => {
         setTimeout(() => {

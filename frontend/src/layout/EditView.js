@@ -22,7 +22,7 @@ const EditView = (props) => {
         </Grid>
         <Grid item xs={4}>
           <Box display="flex" alignItems="middle" justifyContent="right">
-            {props.actions.map((action, key) => React.cloneElement(action, { key, color: 'secondary', record }))}
+            {props.actions.map((action, key) => React.cloneElement(action, { key, color: 'text', record }))}
           </Box>
         </Grid>
       </Grid>

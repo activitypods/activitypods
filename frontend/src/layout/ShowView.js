@@ -17,7 +17,7 @@ const ShowView = (props) => {
         <Grid item xs={4}>
           <Box display="flex" alignItems="middle" justifyContent="right">
             {props.actions
-              ? props.actions.map((action, i) => React.cloneElement(action, { record, color: 'secondary', key: i }))
+              ? props.actions.map((action, i) => React.cloneElement(action, { record, color: 'text', key: i }))
               : <>
                   <ListButton color="secondary" />
                   {permissions && permissions.some(p => p['acl:mode'] === 'acl:Write') && <EditButton color="secondary" />}

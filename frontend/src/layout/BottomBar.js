@@ -24,9 +24,9 @@ const useStyles = makeStyles(theme => ({
     }
   },
   selected: {
-    color: theme.palette.secondary.main,
+    color: 'black',
     '& svg': {
-      fill: theme.palette.secondary.main,
+      fill: 'black',
     }
   }
 }));

@@ -19,8 +19,8 @@ const ShowView = (props) => {
             {props.actions
               ? props.actions.map((action, i) => React.cloneElement(action, { record, color: 'text', key: i }))
               : <>
-                  <ListButton color="secondary" />
-                  {permissions && permissions.some(p => p['acl:mode'] === 'acl:Write') && <EditButton color="secondary" />}
+                  <ListButton color="text" record={record} />
+                  {permissions && permissions.some(p => p['acl:mode'] === 'acl:Write') && <EditButton color="text" record={record} />}
                 </>
             }
           </Box>

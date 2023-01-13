@@ -30,10 +30,12 @@ module.exports = {
     }
 
     // POD provider app
-    this.trustedApps.push({
-      'apods:domainName': (new URL(this.settings.frontendUrl)).host,
-      'apods:handledTypes': ['http://www.w3.org/2006/vcard/ns#Individual', 'https://www.w3.org/ns/activitystreams#Profile', 'http://www.w3.org/2006/vcard/ns#Location'],
-    });
+    if (this.settings.frontendUrl) {
+      this.trustedApps.push({
+        'apods:domainName': (new URL(this.settings.frontendUrl)).host,
+        'apods:handledTypes': ['http://www.w3.org/2006/vcard/ns#Individual', 'https://www.w3.org/ns/activitystreams#Profile', 'http://www.w3.org/2006/vcard/ns#Location'],
+      });
+    }
 
     await this.broker.call('api.addRoute', {
       route: {

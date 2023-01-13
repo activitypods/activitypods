@@ -25,7 +25,6 @@ module.exports = {
 
       const profileUri = await this.actions.post({
         containerUri,
-        slug: 'me',
         resource: {
           '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
           'vcard:fn': profileData.familyName

@@ -8,7 +8,7 @@ const defaultMapping = {
     en: 'View',
     fr: 'Voir',
   },
-  actionLink: '/e/{{encodeUri activity.object.id}}',
+  actionLink: '?uri={{encodeUri activity.object.id}}',
 };
 
 module.exports = defaultMapping;

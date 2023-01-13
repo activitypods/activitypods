@@ -131,8 +131,9 @@ module.exports = {
         }
       },
       async onReceive(ctx, activity, recipients) {
-        // Ensure mass-announce tests work (on prod, we use the delay setting on the ActivityPub DispatchService)
-        await delay(process.env.NODE_ENV === 'test' ? 10000 : 0);
+        // Wait 1min30 to ensure all recipients have been given read rights to the event
+        // (Otherwise we may have a race condition with the onEmit function above)
+        await delay(process.env.NODE_ENV === 'test' ? 10000 : 90000);
 
         for (let recipientUri of recipients) {
           try {

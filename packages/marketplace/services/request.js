@@ -24,7 +24,7 @@ module.exports = {
         en: `{{emitterProfile.vcard:given-name}} published a classified "{{activity.object.pair:label}}"`,
         fr: `{{emitterProfile.vcard:given-name}} a publié une petite annonce "{{activity.object.pair:label}}"`,
       },
-      actionLink: '/requests/{{encodeUri activity.object.id}}',
+      actionLink: '?type=mp:Request&uri={{encodeUri activity.object.id}}',
     },
   },
   hooks: {

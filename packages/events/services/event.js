@@ -15,7 +15,7 @@ module.exports = {
       key: 'new_event',
       title: {
         en: `{{emitterProfile.vcard:given-name}} invites you to an event "{{activity.object.name}}"`,
-        fr: `{{emitterProfile.vcard:given-name}} vous invite à un événement "{{activity.object.name}}"`,
+        fr: `{{emitterProfile.vcard:given-name}} vous invite à une rencontre "{{activity.object.name}}"`,
       },
     },
   },

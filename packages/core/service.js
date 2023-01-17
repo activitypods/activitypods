@@ -1,17 +1,18 @@
 const path = require('path');
 const urlJoin = require('url-join');
-const { ActivityPubService, ActivityMappingService, ProxyService } = require('@semapps/activitypub');
+const { ActivityPubService, ActivityMappingService } = require('@semapps/activitypub');
 const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
 const { PodService } = require('@semapps/pod');
-const { SignatureService } = require('@semapps/signature');
+const { SignatureService, ProxyService } = require('@semapps/signature');
 const { SparqlEndpointService } = require('@semapps/sparql-endpoint');
 const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
 const ApiService = require('./services/api');
+const FrontAppsService = require('./services/front-apps');
 const containers = require('./config/containers');
 const ontologies = require('./config/ontologies.json');
 
@@ -20,6 +21,7 @@ const CoreService = {
   settings: {
     baseUrl: null,
     baseDir: null,
+    frontendUrl: null,
     triplestore: {
       url: null,
       user: null,
@@ -30,7 +32,7 @@ const CoreService = {
     authType: 'local'
   },
   created() {
-    let { baseUrl, baseDir, triplestore, jsonContext, queueServiceUrl, authType } = this.settings;
+    let { baseUrl, baseDir, frontendUrl, triplestore, jsonContext, queueServiceUrl, authType } = this.settings;
 
     // If an external JSON context is not provided, we will use a local one
     const localJsonContext = urlJoin(baseUrl, '_system', 'context.json');
@@ -42,15 +44,15 @@ const CoreService = {
         containers,
         podProvider: true,
         dispatch: {
-          queueServiceUrl,
-          delay: process.env.NODE_ENV === 'test' ? 0 : 60000 // Wait 1min before dispatching posted activities (to avoid race conditions between onEmit and onReceive)
+          queueServiceUrl
         },
       },
     });
 
     this.broker.createService(ApiService, {
       settings: {
-        ...this.settings.api
+        ...this.settings.api,
+        frontendUrl
       }
     });
 
@@ -61,6 +63,7 @@ const CoreService = {
         reservedUsernames: ['sparql', 'auth', 'common', 'data', 'settings', 'localData', 'testData'],
         webIdSelection: ['nick'],
         accountSelection: ['preferredLocale', 'preferredFrontUrl', 'preferredFrontName'],
+        formUrl: frontendUrl ? urlJoin(frontendUrl, 'login') : undefined,
         ...this.settings.auth,
       },
     });
@@ -170,6 +173,14 @@ const CoreService = {
           },
         },
       },
+    });
+
+    this.broker.createService(FrontAppsService, {
+      settings: {
+        baseUrl,
+        frontendUrl,
+        ontologies
+      }
     });
   },
 };

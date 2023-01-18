@@ -4,21 +4,13 @@ import { getCanonical, getHomePermalink } from '~/utils/permalinks';
 import Layout from '~/layouts/PageLayout.astro';
 
 import Hero from '~/components/widgets/Hero.astro';
-import Note from '~/components/widgets/Note.astro';
 import Features from '~/components/widgets/Features.astro';
-import Features2 from '~/components/widgets/Features2.astro';
-import Steps from '~/components/widgets/Steps.astro';
-import Choices from '~/components/widgets/Choices.astro';
-import HighlightedPosts from '~/components/blog/HighlightedPosts.astro';
-import FAQs from '~/components/widgets/FAQs.astro';
-import Stats from '~/components/widgets/Stats.astro';
-import Shortcomings from '~/components/widgets/Shortcomings.astro';
-import CallToAction from '~/components/widgets/CallToAction.astro';
 import Solid from '~/components/widgets/Solid.astro';
 import ActivityPub from '~/components/widgets/ActivityPub.astro';
 import ActivityPods from '~/components/widgets/ActivityPods.astro';
 import Choices2 from '~/components/widgets/Choices2.astro';
 import Developers from '~/components/widgets/Developers.astro';
+import Applications from '~/components/widgets/Applications.astro';
 
 const meta = {
 	title: SITE.title,
@@ -34,5 +26,6 @@ const meta = {
 	<ActivityPods />
 	<Choices2 />
 	<Features />
+	<Applications />
 	<Developers />
 </Layout>

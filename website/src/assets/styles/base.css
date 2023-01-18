@@ -21,9 +21,12 @@
 }
 
 .dropdown:hover .dropdown-menu {
-  display: block;
+	display: block;
 }
 
+.full-height {
+	height: calc(100vh - 60px);
+}
 
 [astro-icon].icon-light > * {
 	stroke-width: 1.2;

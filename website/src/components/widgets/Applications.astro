@@ -1,0 +1,37 @@
+---
+import { Picture } from "@astrojs/image/components";
+import welcomeToMyPlace from '../../assets/images/welcome-to-my-place.png'
+---
+
+<section class="px-4 py-12 mx-auto max-w-6xl">
+	<div class="flex flex-col mb-6 lg:justify-between lg:flex-row md:mb-8">
+		<h2 class="max-w-lg mb-2 text-3xl font-bold tracking-tight sm:text-4xl sm:leading-none group font-heading">
+			<span class="inline-block mb-1">Applications in production</span>
+		</h2>
+	</div>
+	<div class="grid gap-6 row-gap-5 md:grid-cols-2 -mb-6">
+		<article class="mb-6 transition">
+			<div class="relative h-0 pb-[56.25%] lg:h-64 overflow-hidden bg-gray-400 dark:bg-slate-700 rounded shadow-lg mb-6">
+				<Picture
+					src={welcomeToMyPlace}
+					class="object-cover w-full lg:h-64 rounded shadow-lg bg-gray-400 dark:bg-slate-700"
+					widths={[400, 900]}
+					sizes="(max-width: 900px) 400px, 900px"
+					alt="Welcome to my Place"
+					aspectRatio="16:9"
+				/>
+			</div>
+			<h3 class="mb-2 text-xl font-bold leading-snug sm:text-2xl font-heading">
+				<a
+					href="https://welcometomyplace.org"
+					class="hover:text-primary-600 underline underline-offset-4 decoration-1 decoration-dotted transition ease-in duration-200"
+				>
+					Welcome to my place
+				</a>
+			</h3>
+			<p class="text-gray-700 dark:text-gray-400">
+				An application to foster living together based on welcome, trust and mutual aid	
+			</p>
+		</article>
+	</div>
+</section>

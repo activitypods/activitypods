@@ -5,8 +5,8 @@ export const SITE = {
 	basePathname: '/',
 	trailingSlash: false,
 
-	title: 'ActivityPods - PODs powered with ActivityPub',
-	description: '🚀 AstroWind is a free and ready to start template to make your website using Astro and Tailwind CSS.',
+	title: 'ActivityPods - Personal data spaces powered with ActivityPub',
+	description: 'Brings together ActivityPub and Solid Pods and empowers developers to create truly decentralized applications.',
 
 	googleAnalyticsId: false, // or "G-XXXXXXXXXX",
 	googleSiteVerificationId: 'orcPxI47GSa-cRvY11tUe6iGg2IO_RPvnA1q95iEM3M',

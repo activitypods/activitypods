@@ -15,7 +15,7 @@ import trustedApps from "~/config/trusted-apps";
 		</div>
 		<div class="grid gap-6 row-gap-5 md:grid-cols-2 mx-4">
 			{trustedApps.filter(app => app['apods:locales'] === 'en').map(app => (
-				<article class="transition">
+				<article>
 					<div class="relative h-0 pb-[56.25%] lg:h-64 overflow-hidden bg-gray-400 dark:bg-slate-700 rounded shadow-lg mb-4">
 						<a href={'https://' + app['apods:domainName']} target="_blank">
 							<Picture
@@ -33,7 +33,7 @@ import trustedApps from "~/config/trusted-apps";
 							<a
 								href={'https://' + app['apods:domainName']}
 								target="_blank"
-								class="hover:text-primary-600 transition ease-in duration-200"
+								class="hover:text-primary-600"
 							>
 								{app['apods:name']}
 							</a>

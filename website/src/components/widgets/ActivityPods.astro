@@ -4,25 +4,37 @@ import activitypods from '~/assets/images/activitypods.svg';
 ---
 
 <section class="full-height min-h-[900px]">
-	<div class="container mx-auto pt-24">
+	<div class="container mx-auto py-24">
 		<p class="text-center text-base text-black dark:text-primary-200 font-semibold tracking-wide uppercase">The best of both worlds</p>
 		<img src={activitypods} alt="ActivityPods" class="w-48 sm:w-96 mx-auto" />
 		<h2 class="text-4xl font-bold text-black dark:text-slate-400 sm:text-6xl font-heading text-center mb-6">
 			Activity<span class="text-primary-500">Pods</span>
 		</h2>
-		<p class="max-w-3xl text-center text-xl text-gray-600 dark:text-slate-400 mb-6 mx-4 sm:mx-auto">
-			<span class="text-black dark:text-slate-400">Activity</span><span class="text-primary-500">Pods</span> is a framework to create ActivityPub-compatible applications
-			with all data stored in a single place. 
+		<p class="max-w-xl text-center text-xl text-gray-600 dark:text-slate-400 mb-6 mx-4 sm:mx-auto">
+			<span class="text-black dark:text-slate-400">Activity</span><span class="text-primary-500">Pods</span> is a framework to create ActivityPub-compatible apps
+			with all data stored in a single place: your Pod.
 		</p>
-		<p class="text-center">
-			<a
-			class="btn btn-primary sm:mb-0"
-			href="https://github.com/assemblee-virtuelle/activitypods"
-			target="_blank"
-			rel="noopener"
-		>
-			<Icon name="tabler:rocket" class="w-5 h-5 mr-1 -ml-1.5" /> Get started
-		</a>
-		</p>
+		<div class="max-w-xs sm:max-w-md m-auto flex flex-nowrap flex-col sm:flex-row sm:justify-center gap-4">
+			<div class="flex w-full sm:w-auto">
+				<a
+					class="btn btn-primary sm:mb-0 w-full"
+					href="https://mypod.store"
+					target="_blank"
+					rel="noopener"
+				>
+					<Icon name="tabler:rocket" class="w-5 h-5 mr-1 -ml-1.5" /> Create your Pod
+				</a>
+			</div>
+			<div class="flex w-full sm:w-auto">
+				<a
+					class="btn w-full"
+					href="https://github.com/assemblee-virtuelle/activitypods"
+					target="_blank"
+					rel="noopener"
+				>
+					<Icon name="tabler:brand-github" class="w-5 h-5 mr-1 -ml-1.5" /> Source code
+				</a>
+			</div>
+		</div>
 	</div>
 </section>

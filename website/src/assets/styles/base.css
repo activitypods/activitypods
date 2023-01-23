@@ -25,7 +25,10 @@
 }
 
 .full-height {
-	height: calc(100vh - 60px);
+	min-height: calc(100vh - 53px);
+	@media (min-width: 600px) {
+		min-height: calc(100vh - 70px);
+	}
 }
 
 [astro-icon].icon-light > * {

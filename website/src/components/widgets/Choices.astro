@@ -3,22 +3,22 @@ import { Icon } from 'astro-icon';
 
 const items = [
 	{
-		title: 'They choose where their data are stored',
+		title: 'Free to choose where their data are stored',
 		description:
 			'Users can choose a POD provider located close to them, or administered by an organisation they trust. Or they can host their POD themselves.',
 		icon: 'flat-color-icons:home',
 	},
 	{
-		title: 'They choose with whom they share their data',
+		title: 'Free to choose with whom they share their data',
 		description:
 			'By default, the data on their POD is accessible only by them. They choose with whom they want to share their data, and they can revoke this right at any time.',
-		icon: 'flat-color-icons:faq',
+		icon: 'flat-color-icons:share',
 	},
 	{
-		title: 'They choose the applications they want to use',
+		title: 'Free to choose the applications they like to use',
 		description:
-			'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore. incididunt ut labore et dolore',
-		icon: 'flat-color-icons:video-projector',
+			'Their data is not tied to an application. They can switch to another application if it better fits their needs, without losing their data or contacts.',
+		icon: 'flat-color-icons:selfie',
 	}
 ];
 ---
@@ -32,10 +32,10 @@ const items = [
 					Give users full choices
 				</h2>
 				<p class="max-w-3xl mx-auto text-center text-xl text-gray-600 dark:text-slate-400">
-					Provides frequently used components for building websites using Tailwind CSS
+					Nowadays, users want data freedom. Here is what ActivityPods give them:
 				</p>
 			</div>
-			<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start my-12 dark:text-white">
+			<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start my-8 dark:text-white">
 				{
 					items.map(({ title, description, icon }) => (
 						<div class="relative flex flex-col p-6 bg-white dark:bg-slate-900 rounded shadow-xl hover:shadow-lg transition dark:border dark:border-slate-800">

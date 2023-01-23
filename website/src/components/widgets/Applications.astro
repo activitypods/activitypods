@@ -6,27 +6,27 @@ import mutualAid from '../../assets/images/mutual-aid.png';
 import trustedApps from "~/config/trusted-apps";
 ---
 
-<section class="bg-slate-200 py-16">
+<section class="bg-slate-200 dark:bg-slate-800 py-16">
 	<div class="container mx-auto max-w-5xl">
 		<div class="flex flex-col mb-6 lg:justify-between lg:flex-row md:mb-4">
-			<h2 class="max-w-lg mb-1 text-3xl font-bold tracking-tight sm:text-4xl sm:leading-none group font-heading">
+			<h2 class="max-w-lg mb-1 mx-4 text-3xl font-bold tracking-tight sm:text-4xl sm:leading-none group font-heading">
 				<span class="inline-block mb-1">Applications in production</span>
 			</h2>
 		</div>
-		<div class="grid gap-6 row-gap-5 md:grid-cols-2 -mb-6">
+		<div class="grid gap-6 row-gap-5 md:grid-cols-2 mx-4">
 			{trustedApps.filter(app => app['apods:locales'] === 'en').map(app => (
-				<article class="mb-6 transition">
-					<div class="relative h-0 pb-[56.25%] lg:h-64 overflow-hidden bg-gray-400 dark:bg-slate-700 rounded shadow-lg mb-6">
+				<article class="transition">
+					<div class="relative h-0 pb-[56.25%] lg:h-64 overflow-hidden bg-gray-400 dark:bg-slate-700 rounded shadow-lg mb-4">
 						<a href={'https://' + app['apods:domainName']} target="_blank">
-						<Picture
-							src={app['apods:domainName'] === 'welcometomyplace.org' ? welcomeToMyPlace : mutualAid}
-							class="object-cover rounded shadow-lg bg-gray-400 dark:bg-slate-700"
-							widths={[800]}
-							sizes="(max-width: 800px) 400px, 900px"
-							alt={app['apods:name']}
-							aspectRatio="16:9"
-						/>
-					</a>
+							<Picture
+								src={app['apods:domainName'] === 'welcometomyplace.org' ? welcomeToMyPlace : mutualAid}
+								class="object-cover rounded shadow-lg bg-gray-400 dark:bg-slate-700"
+								widths={[800]}
+								sizes="(max-width: 800px) 400px, 900px"
+								alt={app['apods:name']}
+								aspectRatio="16:9"
+							/>
+						</a>
 					</div>
 					<div>
 						<h3 class="mb-2 text-xl font-bold leading-snug sm:text-2xl font-heading">

@@ -39,8 +39,10 @@ const LocalLoginPage = (props) => {
       return ['app.action.login', 'app.helper.login'];
     } else if (isResetPassword) {
       return ['app.action.reset_password', 'app.helper.reset_password'];
+    } else if (isNewPassword) {
+      return ['app.action.set_new_password', 'app.helper.set_new_password'];
     }
-  }, [isSignup, isLogin, isResetPassword])
+  }, [isSignup, isLogin, isResetPassword, isNewPassword])
 
   if (loading) {
     return null;

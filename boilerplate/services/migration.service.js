@@ -3,7 +3,7 @@ const { getSlugFromUri } = require('@semapps/ldp');
 const CONFIG = require('../config/config');
 
 function getAclUriFromResourceUri(baseUrl, resourceUri) {
-  return urlJoin(baseUrl, resourceUri.replace(baseUrl, '_acl/'));
+  return urlJoin(baseUrl, resourceUri.replace(baseUrl, baseUrl.endsWith('/') ? '_acl/' : '_acl'));
 }
 
 const replaceRules = {

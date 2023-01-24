@@ -63,6 +63,7 @@ module.exports = {
       login: 'Connectez-vous à votre espace personnel',
       signup: 'Créez votre espace personnel',
       reset_password: "Entrez votre adresse mail ci-dessous et nous vous enverrons un lien pour réinitialiser votre mot de passe",
+      set_new_password: "Veuillez entrer votre adresse mail et un nouveau mot de passe ci-dessous",
       create_profile: "Maintenant que votre compte est créé, veuillez créer votre profil. Celui-ci ne sera visible par défaut que des personnes que vous acceptez dans votre réseau.",
       authorize: "Autorisez-vous le site %{appDomain} à accéder à votre POD ?"
     },

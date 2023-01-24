@@ -63,6 +63,7 @@ module.exports = {
       login: 'Sign in to your personal space',
       signup: 'Create your personal space',
       reset_password: "Enter your email address below and we will send you a link to reset your password",
+      set_new_password: "Please enter your email address and a new password below",
       create_profile: "Now that your account is created, please create your profile. By default, your profile will only be visible to the people you accept into your network.",
       authorize: "Do you allow the website %{appDomain} to access your POD?"
     },

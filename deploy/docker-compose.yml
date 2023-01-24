@@ -54,6 +54,20 @@ services:
       - "traefik.http.routers.pods.entrypoints=websecure"
       - "traefik.http.routers.pods.tls.certresolver=myresolver"
 
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    depends_on:
+      - middleware
+    restart: always
+    expose:
+      - "4000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`app.mydomain.com`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+
   redis:
     image: redis
     container_name: redis

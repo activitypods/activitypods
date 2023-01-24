@@ -32,12 +32,27 @@ You can also [watch our presentation at Solid World](https://vimeo.com/691410463
 
 ## Getting started
 
+### Launch the triple store
+
+```
+docker-compose up -d fuseki
+```
+
+### Launch the boilerplate
+
 ```
 yarn install
 yarn run bootstrap
-docker-compose up -d fuseki
 cd boilerplate
 yarn run dev
+```
+
+### Launch the frontend
+
+```
+cd frontend
+yarn install
+yarn start
 ```
 
 
@@ -147,16 +162,28 @@ Accept: application/ld+json
 
 ## Linking to SemApps packages
 
-To modify packages on the [SemApps repository](https://github.com/assemblee-virtuelle/semapps) and see the changes before they are published, we recommend to use [`yarn link`](https://classic.yarnpkg.com/en/docs/cli/link/). The commands below will make this easier.
+To modify packages on the [SemApps repository](https://github.com/assemblee-virtuelle/semapps) and see the changes before they are published, we recommend to use [`yarn link`](https://classic.yarnpkg.com/en/docs/cli/link/).
+
+### Linking middleware packages
 
 ```bash
-git clone git@github.com:assemblee-virtuelle/semapps.git
-git checkout next # ActivityPods currently use the packages published on the next branch
-cd semapps/src/middleware
+cd /SEMAPPS_REPO/src/middleware
 yarn run link-all
 cd /ACTIVITYPODS_REPO
 yarn run link-semapps-packages
 ```
+
+### Linking frontend packages
+
+```bash
+cd /SEMAPPS_REPO/src/frontend
+yarn run link-all
+cd /ARCHIPELAGO_REPO/frontend
+yarn run link-semapps-packages
+```
+
+Additionally, frontend packages need to be rebuilt, or your changes will not be taken into account by Archipelago.
+You can use `yarn run build` to build a package once, or `yarn run dev` to rebuild a package on every change.
 
 
 ## Deployment to production
@@ -164,7 +191,7 @@ yarn run link-semapps-packages
 Follow the guide [here](deploy/README.md).
 
 
-## Tests
+## Integration tests
 
 ```
 yarn install

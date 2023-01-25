@@ -7,6 +7,6 @@ export default dataProvider({
   dataServers,
   resources: Object.fromEntries(Object.entries(resources).map(([k, v]) => [k, v.dataModel])),
   ontologies,
-  jsonContext: 'https://data.bienvenuechezmoi.org/context.json',
+  jsonContext: process.env.REACT_APP_JSON_CONTEXT,
   returnFailedResources: true,
 });

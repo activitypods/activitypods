@@ -5,15 +5,13 @@ import DetailsList from './DetailsList';
 
 const useStyles = makeStyles(theme => ({
   avatar: {
-    width: '100%',
-    height: '100%',
-    maxWidth: 200,
-    maxHeight: 200,
+    width: 200,
+    height: 200,
     [theme.breakpoints.down('xs')]: {
-      maxWidth: 120,
-      maxHeight: 120,
+      width: 120,
+      height: 120,
     },
-  },
+  }
 }));
 
 const Hero = ({ children, image, defaultImage }) => {

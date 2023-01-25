@@ -23,19 +23,21 @@ const ProfileList = (props) => {
       {...props}
     >
         {xs ?
-          <SimpleList
-            primaryText={record => record['vcard:given-name']}
-            secondaryText={record => formatUsername(record.describes)}
-            leftAvatar={record => (<Avatar src={record['vcard:photo']}>{record['vcard:given-name']?.toUpperCase()}</Avatar>)}
-            linkType="show"
-            rowStyle={(record, index) => ({
-              backgroundColor: 'white',
-              padding: 8,
-              marginBottom: 8,
-              boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)',
-            })}
-          />
-
+          <>
+            <ContactRequestsBlock />
+            <SimpleList
+              primaryText={record => record['vcard:given-name']}
+              secondaryText={record => formatUsername(record.describes)}
+              leftAvatar={record => (<Avatar src={record['vcard:photo']}>{record['vcard:given-name']?.toUpperCase()?.[0]}</Avatar>)}
+              linkType="show"
+              rowStyle={(record, index) => ({
+                backgroundColor: 'white',
+                padding: 8,
+                marginBottom: 8,
+                boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)',
+              })}
+            />
+          </>
           :
           <>
             <ContactRequestsBlock />

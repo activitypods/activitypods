@@ -12,6 +12,7 @@ module.exports = {
     defaultLocale: CONFIG.DEFAULT_LOCALE,
     defaultFrontUrl: CONFIG.FRONTEND_URL,
     color: CONFIG.FRONTEND_COLOR,
+    delay: 120000, // Wait 2min to ensure AnnouncerService has cached resources
     // Moleculer-mail settings
     from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
     transport,

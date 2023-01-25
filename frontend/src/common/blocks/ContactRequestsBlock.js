@@ -11,19 +11,18 @@ const useStyles = makeStyles((theme) => ({
   root: {
     marginTop: 5,
     marginBottom: 24,
+    [theme.breakpoints.down('sm')]: {
+      marginBottom: 0,
+    },
   },
   title: {
     borderBottom: '1px lightgrey solid',
     padding: 12,
   },
   list: {
-    padding: 10,
-    paddingLeft: 70,
+    padding: 4,
+    paddingLeft: 60,
     position: 'relative',
-    height: 55,
-    [theme.breakpoints.down('sm')]: {
-      height: 105,
-    },
   },
   name: {
     fontWeight: 'bold',
@@ -32,9 +31,9 @@ const useStyles = makeStyles((theme) => ({
     color: 'black'
   },
   avatar: {
-    width: 50,
-    height: 50,
-    left: 12,
+    width: 42,
+    height: 42,
+    left: 5,
     top: 12,
     position: 'absolute',
   },
@@ -43,6 +42,8 @@ const useStyles = makeStyles((theme) => ({
     [theme.breakpoints.down('sm')]: {
       margin: 0,
       marginRight: 6,
+      height: 30,
+      minWidth: 90
     },
   },
 }));
@@ -120,11 +121,13 @@ const ContactRequestsBlock = () => {
       <Box className={classes.title}>
         <Typography variant="body2">{translate('app.block.contact_requests')}</Typography>
       </Box>
-      {contactRequests.map((activity) => (
-        <Box className={classes.list}>
-          <ContactRequest activity={activity} refetch={refetchAndRefresh} />
-        </Box>
-      ))}
+      <Box p={1} pt={0}>
+        {contactRequests.map((activity) => (
+          <Box className={classes.list}>
+            <ContactRequest activity={activity} refetch={refetchAndRefresh} />
+          </Box>
+        ))}
+      </Box>
     </Card>
   );
 };

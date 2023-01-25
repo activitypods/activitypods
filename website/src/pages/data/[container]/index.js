@@ -31,7 +31,7 @@ export async function get({ params, request }) {
 
 export function getStaticPaths () {
     return [ 
-        { params: { container: "pod-providers"} },
-        { params: { container: "trusted-apps"} }
+        { params: { container: "pod-providers" } },
+        { params: { container: "trusted-apps" } }
     ]
 }

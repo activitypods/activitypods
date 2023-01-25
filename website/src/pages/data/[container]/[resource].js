@@ -17,7 +17,6 @@ const ldpResource = (url, resource) => ({
 
 
 export async function get({ params, request }) {
-    console.log(params);
     return {
         body: JSON.stringify(ldpResource(
             request.url,
@@ -29,6 +28,7 @@ export async function get({ params, request }) {
 export function getStaticPaths () {
     let paths = [];
     for (const key of Object.keys(containers)) {
+			paths.push({ params: { container: key } })
         for (const resource of containers[key] ) {
             paths.push({ params: { container: key, resource: resource['apods:domainName'] } })
         }

@@ -797,6 +797,12 @@
     "apods:attendees" : {
       "@type" : "@id"
     },
+    "apods:preferredForTypes": {
+      "@type": "@id"
+    },
+    "apods:application": {
+      "@type": "@id"
+    },
 
     "mp:offerOfResourceType": {
       "@type" : "@id"

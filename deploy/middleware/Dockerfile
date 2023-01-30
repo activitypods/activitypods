@@ -1,4 +1,4 @@
-FROM node:12.16-alpine
+FROM node:14-alpine
 
 # Default arguments
 ARG SELECTED_BRANCH=master
@@ -8,7 +8,7 @@ WORKDIR /app
 RUN node -v
 RUN npm -v
 
-RUN apk add --update --no-cache autoconf bash libtool automake python alpine-sdk openssh-keygen yarn nano
+RUN apk add --update --no-cache autoconf bash libtool automake python3 py3-pip alpine-sdk openssh-keygen yarn nano
 
 RUN yarn global add pm2
 

@@ -15,7 +15,7 @@ module.exports = {
       key: 'new_event',
       title: {
         en: `{{emitterProfile.vcard:given-name}} invites you to an event "{{activity.object.name}}"`,
-        fr: `{{emitterProfile.vcard:given-name}} vous invite à un événement "{{activity.object.name}}"`,
+        fr: `{{emitterProfile.vcard:given-name}} vous invite à une rencontre "{{activity.object.name}}"`,
       },
     },
   },
@@ -40,13 +40,14 @@ module.exports = {
         await ctx.call('events.location.setNewRights', res);
         return res;
       },
-      async patch(ctx, res) {
-        await ctx.call('events.location.updateRights', res);
-        if (res.newData['apods:maxAttendees'] !== res.oldData['apods:maxAttendees']) {
-          await ctx.call('events.status.tagUpdatedEvent', { eventUri: res.resourceUri });
-        }
-        return res;
-      },
+      // TODO handle new PATCH method https://github.com/assemblee-virtuelle/activitypods/issues/42
+      // async patch(ctx, res) {
+      //   await ctx.call('events.location.updateRights', res);
+      //   if (res.newData['apods:maxAttendees'] !== res.oldData['apods:maxAttendees']) {
+      //     await ctx.call('events.status.tagUpdatedEvent', { eventUri: res.resourceUri });
+      //   }
+      //   return res;
+      // },
       async put(ctx, res) {
         await ctx.call('events.location.updateRights', res);
         if (res.newData['apods:maxAttendees'] !== res.oldData['apods:maxAttendees']) {

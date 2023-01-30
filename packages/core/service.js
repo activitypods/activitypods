@@ -1,21 +1,18 @@
 const path = require('path');
 const urlJoin = require('url-join');
-const { ActivityPubService, ActivityMappingService, ProxyService } = require('@semapps/activitypub');
-const { AuthLocalService } = require('@semapps/auth');
-const FusekiAdminService = require('@semapps/fuseki-admin');
+const { ActivityPubService, ActivityMappingService } = require('@semapps/activitypub');
+const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
 const { PodService } = require('@semapps/pod');
-const { SignatureService } = require('@semapps/signature');
+const { SignatureService, ProxyService } = require('@semapps/signature');
 const { SparqlEndpointService } = require('@semapps/sparql-endpoint');
 const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
-const { SynchronizerService } = require('@activitypods/synchronizer');
-const { AnnouncerService } = require('@activitypods/announcer');
 const ApiService = require('./services/api');
-const MigrationService = require('./services/migration');
+const FrontAppsService = require('./services/front-apps');
 const containers = require('./config/containers');
 const ontologies = require('./config/ontologies.json');
 
@@ -24,16 +21,18 @@ const CoreService = {
   settings: {
     baseUrl: null,
     baseDir: null,
-    fuseki: {
+    frontendUrl: null,
+    triplestore: {
       url: null,
       user: null,
       password: null,
     },
     jsonContext: null,
     queueServiceUrl: null,
+    authType: 'local'
   },
   created() {
-    let { baseUrl, baseDir, fuseki, jsonContext, queueServiceUrl } = this.settings;
+    let { baseUrl, baseDir, frontendUrl, triplestore, jsonContext, queueServiceUrl, authType } = this.settings;
 
     // If an external JSON context is not provided, we will use a local one
     const localJsonContext = urlJoin(baseUrl, '_system', 'context.json');
@@ -50,24 +49,22 @@ const CoreService = {
       },
     });
 
-    this.broker.createService(ApiService);
+    this.broker.createService(ApiService, {
+      settings: {
+        ...this.settings.api,
+        frontendUrl
+      }
+    });
 
-    this.broker.createService(AuthLocalService, {
+    this.broker.createService(authType === 'local' ? AuthLocalService : AuthOIDCService, {
       settings: {
         baseUrl,
         jwtPath: path.resolve(baseDir, './jwt'),
         reservedUsernames: ['sparql', 'auth', 'common', 'data', 'settings', 'localData', 'testData'],
         webIdSelection: ['nick'],
-        accountSelection: ['preferredLocale', 'preferredFrontUrl', 'preferredFrontName'],
+        accountSelection: ['preferredLocale'],
+        formUrl: frontendUrl ? urlJoin(frontendUrl, 'login') : undefined,
         ...this.settings.auth,
-      },
-    });
-
-    this.broker.createService(FusekiAdminService, {
-      settings: {
-        url: fuseki.url,
-        user: fuseki.user,
-        password: fuseki.password,
       },
     });
 
@@ -144,9 +141,9 @@ const CoreService = {
 
     this.broker.createService(TripleStoreService, {
       settings: {
-        sparqlEndpoint: fuseki.url,
-        jenaUser: fuseki.user,
-        jenaPassword: fuseki.password,
+        url: triplestore.url,
+        user: triplestore.user,
+        password: triplestore.password,
       },
     });
 
@@ -178,13 +175,12 @@ const CoreService = {
       },
     });
 
-    this.broker.createService(SynchronizerService);
-    this.broker.createService(AnnouncerService);
-
-    this.broker.createService(MigrationService, {
+    this.broker.createService(FrontAppsService, {
       settings: {
         baseUrl,
-      },
+        frontendUrl,
+        ontologies
+      }
     });
   },
 };

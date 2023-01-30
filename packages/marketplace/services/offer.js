@@ -17,7 +17,7 @@ module.exports = {
         en: `{{emitterProfile.vcard:given-name}} published a classified "{{activity.object.pair:label}}"`,
         fr: `{{emitterProfile.vcard:given-name}} a publié une petite annonce "{{activity.object.pair:label}}"`,
       },
-      actionLink: '/offers/{{encodeUri activity.object.id}}',
+      actionLink: '?type=mp:Offer&uri={{encodeUri activity.object.id}}',
     },
   },
   hooks: {
@@ -26,10 +26,11 @@ module.exports = {
         await ctx.call('marketplace.location.setNewRights', res);
         return res;
       },
-      async patch(ctx, res) {
-        await ctx.call('marketplace.location.updateRights', res);
-        return res;
-      },
+      // TODO handle new PATCH method https://github.com/assemblee-virtuelle/activitypods/issues/42
+      // async patch(ctx, res) {
+      //   await ctx.call('marketplace.location.updateRights', res);
+      //   return res;
+      // },
       async put(ctx, res) {
         await ctx.call('marketplace.location.updateRights', res);
         return res;

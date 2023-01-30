@@ -8,7 +8,7 @@ const JOIN_EVENT_MAPPING = {
     en: 'View',
     fr: 'Voir',
   },
-  actionLink: '/e/{{encodeUri activity.object.id}}',
+  actionLink: '?type=as:Event&uri={{encodeUri activity.object.id}}',
 };
 
 const LEAVE_EVENT_MAPPING = {
@@ -21,7 +21,7 @@ const LEAVE_EVENT_MAPPING = {
     en: 'View',
     fr: 'Voir',
   },
-  actionLink: '/e/{{encodeUri activity.object.id}}',
+  actionLink: '?type=as:Event&uri={{encodeUri activity.object.id}}',
 };
 
 const NEW_MESSAGE_ABOUT_EVENT_MAPPING = {
@@ -35,7 +35,7 @@ const NEW_MESSAGE_ABOUT_EVENT_MAPPING = {
     en: 'Reply',
     fr: 'Répondre',
   },
-  actionLink: '/Profile/{{encodeUri emitterProfile.id}}/show',
+  actionLink: '?type=as:Profile&uri={{encodeUri emitterProfile.id}}',
 };
 
 const POST_EVENT_CONTACT_REQUEST_MAPPING = {
@@ -52,7 +52,7 @@ const POST_EVENT_CONTACT_REQUEST_MAPPING = {
     en: 'View',
     fr: 'Voir',
   },
-  actionLink: '/Profile',
+  actionLink: '?type=as:Profile',
 };
 
 module.exports = {

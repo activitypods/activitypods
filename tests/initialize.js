@@ -29,7 +29,7 @@ const clearDataset = (dataset) =>
 
 const initialize = async () => {
   const broker = new ServiceBroker({
-    middlewares: [WebAclMiddleware({ podProvider: true })],
+    middlewares: [WebAclMiddleware({ baseUrl: CONFIG.HOME_URL, podProvider: true })],
     logger: {
       type: 'Console',
       options: {

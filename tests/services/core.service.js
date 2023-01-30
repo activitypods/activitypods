@@ -7,7 +7,7 @@ module.exports = {
   settings: {
     baseUrl: CONFIG.HOME_URL,
     baseDir: path.resolve(__dirname, '..'),
-    fuseki: {
+    triplestore: {
       url: CONFIG.SPARQL_ENDPOINT,
       user: CONFIG.JENA_USER,
       password: CONFIG.JENA_PASSWORD,

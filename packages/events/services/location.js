@@ -44,6 +44,7 @@ module.exports = {
               read: true,
             },
           },
+          webId: newData['dc:creator'],
         });
       }
     },

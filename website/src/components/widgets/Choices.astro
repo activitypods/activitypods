@@ -1,0 +1,54 @@
+---
+import { Icon } from 'astro-icon';
+
+const items = [
+	{
+		title: 'Free to choose where their data are stored',
+		description:
+			'Users can choose a Pod provider located close to them, or administered by an organisation they trust. Or they can host their Pod themselves.',
+		icon: 'flat-color-icons:home',
+	},
+	{
+		title: 'Free to choose with whom they share their data',
+		description:
+			'By default, the data on their Pod is accessible only by them. They choose with whom they want to share their data, and they can revoke this right at any time.',
+		icon: 'flat-color-icons:share',
+	},
+	{
+		title: 'Free to choose the applications they like to use',
+		description:
+			'Their data is not tied to an application. They can switch to another application if it better fits their needs, without losing their data or contacts.',
+		icon: 'flat-color-icons:selfie',
+	}
+];
+---
+
+<section class="relative">
+	<div class="absolute inset-0 bg-slate-200 dark:bg-slate-800 pointer-events-none mb-32" aria-hidden="true"></div>
+	<div class="relative max-w-6xl mx-auto px-4 sm:px-6">
+		<div class="py-4 pt-8 sm:py-6 lg:py-8 lg:pt-12">
+			<div class="mb-8 text-center">
+				<h2 class="text-4xl md:text-5xl font-bold leading-tighter tracking-tighter mb-4 font-heading">
+					Give users full choices
+				</h2>
+				<p class="max-w-3xl mx-auto text-center text-xl text-gray-600 dark:text-slate-400">
+					Nowadays, users want data freedom. Here is what ActivityPods give them:
+				</p>
+			</div>
+			<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start my-8 dark:text-white">
+				{
+					items.map(({ title, description, icon }) => (
+						<div class="relative flex flex-col p-6 bg-white dark:bg-slate-900 rounded shadow-xl hover:shadow-lg transition dark:border dark:border-slate-800">
+							<div class="flex items-center mb-4">
+								<Icon name={icon} class="w-12 h-12" />
+
+								<div class="ml-4 text-xl font-bold">{title}</div>
+							</div>
+							<p class="text-gray-500 dark:text-gray-400 text-md">{description}</p>
+						</div>
+					))
+				}
+			</div>
+		</div>
+	</div>
+</section>

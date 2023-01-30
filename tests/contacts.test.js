@@ -14,6 +14,9 @@ beforeAll(async () => {
   broker = await initialize();
 
   await broker.loadService(path.resolve(__dirname, './services/core.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/announcer.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/synchronizer.service.js'));
+  await broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
 
   // Mock notification service

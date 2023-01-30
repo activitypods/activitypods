@@ -31,6 +31,7 @@ module.exports = {
       apps_short: 'Apps',
       settings: 'Settings',
       settings_short: 'Settings',
+      addresses: 'My addresses',
       settings_email: 'Update email address',
       settings_password: 'Update password',
       add_contact: 'Send a connection request',

@@ -29,6 +29,7 @@ module.exports = {
       profile_short: 'Profil',
       apps: 'Mes applications',
       apps_short: 'Applis',
+      addresses: 'Mes adresses',
       settings: 'Paramètres',
       settings_short: 'Paramètres',
       settings_email: 'Modifier mon mail',

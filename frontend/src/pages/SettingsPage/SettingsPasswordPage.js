@@ -1,38 +1,22 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { email, required, useAuthProvider, useNotify, useTranslate } from 'react-admin';
+import { required, useAuthProvider, useNotify, useTranslate } from 'react-admin';
 import { SimpleForm, TextInput } from 'react-admin';
 import { Box, Card, Typography } from '@material-ui/core';
 
-const validateEmail = [required(), email('app.validation.email')]
 const validateConfirmNewPassword = [(value, { newPassword, confirmNewPassword }) => {
 	if (!newPassword) return;
-
 	if (newPassword !== confirmNewPassword) {
 		return 'app.validation.confirmNewPassword'
 	}
 	return;
 }];
 
-const SettingsPage = () => {
+const SettingsPasswordPage = () => {
 	const translate = useTranslate();
 	const notify = useNotify();
 	const { identity } = useCheckAuthenticated();
 	const authProvider = useAuthProvider();
-
-	const [formDefaultValue, setFormDefaultValue] = useState({
-		email: "",
-		currentPassword: "",
-		newPassword: "",
-		confirmNewPassword: ""
-	})
-
-	useEffect(() => {
-		authProvider.getAccountSettings().then((res) => {
-			setFormDefaultValue({ ...formDefaultValue, email: res.email })
-		});
-		// eslint-disable-next-line
-	}, [setFormDefaultValue, authProvider])
 
 	const onSubmit = useCallback(
 		async (params) => {
@@ -52,18 +36,11 @@ const SettingsPage = () => {
 	return (
 		<>
 			<Typography variant="h2" component="h1">
-				{translate('app.page.settings')}
+				{translate('app.page.settings_password')}
 			</Typography>
 			<Box mt={1}>
 				<Card>
-					<SimpleForm initialValues={formDefaultValue} save={onSubmit}>
-						<TextInput
-							label={translate('app.input.email')}
-							source="email"
-							type="email"
-							validate={validateEmail}
-							fullWidth
-						/>
+					<SimpleForm save={onSubmit}>
 						<TextInput
 							label={translate('app.input.current_password')}
 							source="currentPassword"
@@ -92,4 +69,4 @@ const SettingsPage = () => {
 };
 
 
-export default SettingsPage;
+export default SettingsPasswordPage;

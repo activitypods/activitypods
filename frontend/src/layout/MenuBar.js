@@ -28,11 +28,11 @@ const MenuBar = () => {
           <Link to="/Profile" className={classes.link}>
             {translate('app.page.contacts')}
           </Link>
+          <Link to="/App" className={classes.link}>
+            {translate('app.page.apps')}
+          </Link>
           <Link to={"/Profile/" + encodeURIComponent(identity?.profileData?.id)} className={classes.link}>
             {translate('app.page.profile')}
-          </Link>
-          <Link to="/Location" className={classes.link}>
-            {translate('app.page.addresses')}
           </Link>
           <Link to="/settings" className={classes.link}>
             {translate('app.page.settings')}

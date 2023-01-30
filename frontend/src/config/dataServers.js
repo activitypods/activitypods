@@ -15,6 +15,9 @@ const dataServers = {
       },
     },
     uploadsContainer: '/files',
+  },
+  activitypods: {
+    baseUrl: 'https://data.activitypods.org/'
   }
 };
 

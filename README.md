@@ -1,32 +1,33 @@
 [![SemApps](https://badgen.net/badge/Powered%20by/SemApps/28CDFB)](https://semapps.org) [![Chat](https://badgen.net/badge/chat/on%20rocket.chat/orange)](https://chat.lescommuns.org/channel/activitypods)
 
+![activitypods-small](https://user-images.githubusercontent.com/17931931/215525902-6ae72fa9-fde0-43eb-a053-0ccfd4565ead.png)
 # ActivityPods
 
-> ActivityPub + Solid PODS = ❤️
+Check out [our website](https://activitypods.org) or [these slides](./proposal/proposal-english.pdf) ([french version](./proposal/proposal-french.pdf)) for more information about this project !
 
-Check out [these slides](./proposal/proposal-english.pdf) ([french version](./proposal/proposal-french.pdf)) for more information about this project !
-
-You can also [watch our presentation at Solid World](https://vimeo.com/691410463) (starts at 19:00) or [join our dedicated chatroom](https://chat.lescommuns.org/channel/activitypods).
-
-
-## Available apps
-
-- [Profiles](packages/profiles/README.md)
-- [Contacts](packages/contacts/README.md)
-- [Events](packages/events/README.md)
-- [Messages](packages/messages/README.md)
-
-
-## Utilities
-
-- [Synchronizer](packages/synchronizer/README.md)
-- [Announcer](packages/announcer/README.md)
-
-
-## Frontends using ActivityPods
+### Frontends using ActivityPods
 
 - [Welcome To My Place](https://github.com/assemblee-virtuelle/welcometomyplace) ([french version](https://bienvenuechezmoi.org))
 - [Mutual Aid](https://github.com/assemblee-virtuelle/mutual-aid.app) ([french version](https://lentraide.app))
+
+### Pods providers
+
+- [MyPod.store](https://mypod.store) (English)
+- [Armoise.co](https://armoise.co) (French, Oise area)
+- [Bocage.me](https://bocage.me) (French, Normandy area)
+
+### Available bots
+
+- [Profiles](packages/profiles/README.md)
+- [Contacts](packages/contacts/README.md)
+- [Messages](packages/messages/README.md)
+- [Events](packages/events/README.md)
+- [Marketplace](packages/marketplace)
+
+### Utilities
+
+- [Synchronizer](packages/synchronizer/README.md)
+- [Announcer](packages/announcer/README.md)
 
 
 ## Getting started

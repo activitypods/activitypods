@@ -20,6 +20,6 @@
   ],
   "start_url": "http://localhost:4000",
   "display": "standalone",
-  "theme_color": "#FF4F28",
+  "theme_color": "#353535",
   "background_color": "#ffffff"
 }

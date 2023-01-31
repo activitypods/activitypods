@@ -24,14 +24,21 @@ module.exports = {
         throw new Error('No account found for username ' + username);
       }
 
+      this.logger.info(`Sending ${accounts.length} newsletters...`);
+
       for (let account of accounts) {
-        await this.actions.send({
-          to: account.email,
-          template,
-          data: {
-            account
-          }
-        });
+        try {
+          await this.actions.send({
+            to: account.email,
+            template,
+            data: {
+              account
+            }
+          });
+          this.logger.info('Newsletter sent to ' + account.email);
+        } catch(e) {
+          this.logger.warn('Could not send newsletter to ' + account.email);
+        }
       }
     }
   }

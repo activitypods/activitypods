@@ -83,7 +83,7 @@ const AppList = (props) => {
   useCheckAuthenticated();
   const translate = useTranslate();
   return (
-    <List title={translate('app.page.apps')} actions={[]} {...props}>
+    <List title={translate('app.page.apps')} actions={[]} perPage={1000} {...props}>
       <AppCardList />
     </List>
   );

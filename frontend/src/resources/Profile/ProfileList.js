@@ -20,6 +20,7 @@ const ProfileList = (props) => {
       title={translate('app.page.contacts')}
       actions={[<CreateButton label="app.action.add_contact" />]}
       asides={[<ProfileCard />, <ShareContactCard />]}
+      perPage={1000}
       {...props}
     >
         {xs ?

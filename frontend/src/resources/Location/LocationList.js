@@ -6,7 +6,7 @@ import List from '../../layout/List';
 const LocationList = (props) => {
   const translate = useTranslate();
   return (
-    <List title={translate('app.page.addresses')} {...props}>
+    <List title={translate('app.page.addresses')} perPage={1000} {...props}>
       <SimpleList
         primaryText={(record) => record['vcard:given-name']}
         secondaryText={(record) => record['vcard:hasAddress']?.['vcard:given-name']}

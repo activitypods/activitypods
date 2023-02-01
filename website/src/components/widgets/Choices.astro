@@ -3,21 +3,21 @@ import { Icon } from 'astro-icon';
 
 const items = [
 	{
-		title: 'Free to choose where their data are stored',
-		description:
-			'Users can choose a Pod provider located close to them, or administered by an organisation they trust. Or they can host their Pod themselves.',
+		title: 'Freedom to choose where your data are stored',
+		oldMethod: 'In traditional architecture, you have no idea where or how your data are stored.',
+		newMethod: 'With ActivityPods, all your data are stored in your Pod. You can choose a Pod provider you trust, or host it yourself.',
 		icon: 'flat-color-icons:home',
 	},
 	{
-		title: 'Free to choose with whom they share their data',
-		description:
-			'By default, the data on their Pod is accessible only by them. They choose with whom they want to share their data, and they can revoke this right at any time.',
+		title: 'Freedom to share your data with anyone',
+		oldMethod: 'In traditional architecture, you can only share your data with users on the same app.',
+		newMethod: 'With ActivityPods, you can share your data with anyone on the Internet, thanks to the international ActivityPub protocol.',
 		icon: 'flat-color-icons:share',
 	},
 	{
-		title: 'Free to choose the applications they like to use',
-		description:
-			'Their data is not tied to an application. They can switch to another application if it better fits their needs, without losing their data or contacts.',
+		title: 'Freedom to choose which app handle your data',
+		oldMethod: 'In traditional architecture, your data are only understood by the app which created them.',
+		newMethod: 'With ActivityPods, since all data are stored using semantic web standards, they can be accessed and understood by many apps.',
 		icon: 'flat-color-icons:selfie',
 	}
 ];
@@ -29,22 +29,22 @@ const items = [
 		<div class="py-4 pt-8 sm:py-6 lg:py-8 lg:pt-12">
 			<div class="mb-8 text-center">
 				<h2 class="text-4xl md:text-5xl font-bold leading-tighter tracking-tighter mb-4 font-heading">
-					Give users full choices
+					Data freedom for your users
 				</h2>
-				<p class="max-w-3xl mx-auto text-center text-xl text-gray-600 dark:text-slate-400">
-					Nowadays, users want data freedom. Here is what ActivityPods give them:
+				<p class="max-w-2xl mx-auto text-center text-xl text-gray-600 dark:text-slate-400">
+					Richard Stallman famously defined the <a href="https://www.gnu.org/philosophy/free-sw.html" class="underline">4 freedoms</a> guaranteed by free softwares. Here are the 3 freedoms guaranteed by ActivityPods:
 				</p>
 			</div>
 			<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start my-8 dark:text-white">
 				{
-					items.map(({ title, description, icon }) => (
+					items.map(({ title, oldMethod, newMethod, icon }) => (
 						<div class="relative flex flex-col p-6 bg-white dark:bg-slate-900 rounded shadow-xl hover:shadow-lg transition dark:border dark:border-slate-800">
 							<div class="flex items-center mb-4">
 								<Icon name={icon} class="w-12 h-12" />
-
 								<div class="ml-4 text-xl font-bold">{title}</div>
 							</div>
-							<p class="text-gray-500 dark:text-gray-400 text-md">{description}</p>
+							<p class="text-gray-500 dark:text-gray-400 text-md pb-2">{oldMethod}</p>
+							<p class="text-gray-500 dark:text-gray-400 text-md">{newMethod}</p>
 						</div>
 					))
 				}

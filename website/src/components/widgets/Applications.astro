@@ -7,15 +7,21 @@ import trustedApps from "~/config/trusted-apps";
 ---
 
 <section class="bg-slate-200 dark:bg-slate-800 py-16">
-	<div class="container mx-auto max-w-5xl">
-		<div class="flex flex-col mb-6 lg:justify-between lg:flex-row md:mb-4">
-			<h2 class="max-w-lg mb-1 mx-4 text-3xl font-bold tracking-tight sm:text-4xl sm:leading-none group font-heading">
-				<span class="inline-block mb-1">Applications in production</span>
+	<div class="container sm:mx-auto max-w-5xl">
+		<div class="mb-6 lg:justify-between lg:flex-row md:mb-4 mx-4 sm:mx-0">
+			<h2 class="max-w-lg mb-3 text-3xl font-bold tracking-tight sm:text-4xl sm:leading-none group font-heading">
+				Applications in production
 			</h2>
+			<section class="bg-pink-200 dark:bg-slate-800">
+				<div class="max-w-6xl mx-auto py-3 px-2 text-md font-medium">
+				<Icon name="tabler:alert-triangle" class="w-5 h-5 inline-block align-text-bottom" />
+				Please note that data on the below apps are private-by-default. It means that you will not see anything, unless one of your contacts shared something with you. This is a voluntary choice made for these apps, but the ActivityPods architecture could also allow public data.
+				</div>
+			</section>
 		</div>
-		<div class="grid gap-6 row-gap-5 md:grid-cols-2 mx-4">
+		<div class="grid gap-6 row-gap-5 md:grid-cols-2">
 			{trustedApps.filter(app => app['apods:locales'] === 'en').map(app => (
-				<article>
+				<article class="mx-4 sm:mx-0">
 					<div class="relative h-0 pb-[56.25%] lg:h-64 overflow-hidden bg-gray-400 dark:bg-slate-700 rounded shadow-lg mb-4">
 						<a href={'https://' + app['apods:domainName']} target="_blank">
 							<Picture

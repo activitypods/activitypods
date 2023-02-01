@@ -12,8 +12,8 @@ import trustedApps from "~/config/trusted-apps";
 			<h2 class="max-w-lg mb-3 text-3xl font-bold tracking-tight sm:text-4xl sm:leading-none group font-heading">
 				Applications in production
 			</h2>
-			<section class="bg-pink-200 dark:bg-purple-900">
-				<div class="max-w-6xl mx-auto py-3 px-2 text-md font-medium">
+			<section class="bg-white dark:bg-purple-900">
+				<div class="max-w-6xl mx-auto p-3 text-md font-medium">
 					<Icon name="tabler:alert-triangle" class="w-5 h-5 inline-block align-text-bottom" />
 					Please note that data on the below apps are private-by-default. It means that you will not see anything, unless one of your contacts shared something with you. This is a voluntary choice made for these apps, but the ActivityPods architecture could also handle public data.
 				</div>
@@ -35,7 +35,7 @@ import trustedApps from "~/config/trusted-apps";
 						</a>
 					</div>
 					<div>
-						<h3 class="mb-2 text-xl font-bold leading-snug sm:text-2xl font-heading">
+						<h3 class="mb-1 text-xl font-bold leading-snug sm:text-2xl font-heading">
 							<a
 								href={'https://' + app['apods:domainName']}
 								target="_blank"

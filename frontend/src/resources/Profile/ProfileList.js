@@ -20,6 +20,7 @@ const ProfileList = (props) => {
       title={translate('app.page.contacts')}
       actions={[<CreateButton label="app.action.add_contact" />]}
       asides={[<ProfileCard />, <ShareContactCard />]}
+      sort={{ field: 'vcard:given-name', order: 'ASC' }}
       perPage={1000}
       {...props}
     >

@@ -838,8 +838,6 @@
     "author": { "@id": "schema:author", "@type": "@id" },
     "caption": { "@id": "schema:caption" },
     "claim": {"@id": "cred:claim", "@type": "@id"},
-    "created": { "@id": "dc:created", "@type": "xsd:dateTime" },
-    "creator": { "@id": "dc:creator", "@type": "@id" },
     "description": { "@id": "schema:description" },
     "email": { "@id": "schema:email" },
     "endorsement": {"@id": "cred:credential", "@type": "@id"},

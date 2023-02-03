@@ -1,14 +1,11 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
 module.exports = {
-  name: 'openbadges.badge',
+  name: 'openbadges.baked-badge',
   mixins: [ControlledContainerMixin],
   settings: {
-    path: '/badges',
+    path: '/baked-badges',
     acceptedTypes: [
-      'obi:BadgeClass',
-    ],
-    dereference: [],
-    permissions: {},
-    newResourcesPermissions: {},
+      'semapps:File',
+    ]
   }
 };

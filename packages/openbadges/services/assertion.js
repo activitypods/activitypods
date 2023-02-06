@@ -17,6 +17,13 @@ module.exports = {
     dereference: ['obi:recipient', 'obi:verify'],
     permissions: {},
     newResourcesPermissions: {},
+    notificationMapping: {
+      key: 'new_event',
+      title: {
+        en: `{{emitterProfile.vcard:given-name}} awarded you a badge`,
+        fr: `{{emitterProfile.vcard:given-name}} vous a accordé un badge`,
+      },
+    },
   },
   hooks: {
     after: {

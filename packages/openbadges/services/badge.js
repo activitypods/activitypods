@@ -4,9 +4,7 @@ module.exports = {
   mixins: [ControlledContainerMixin],
   settings: {
     path: '/badges',
-    acceptedTypes: [
-      'obi:BadgeClass',
-    ],
+    acceptedTypes: ['BadgeClass'],
     dereference: [],
     permissions: {},
     newResourcesPermissions: {},

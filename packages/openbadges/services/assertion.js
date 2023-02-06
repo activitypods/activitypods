@@ -2,6 +2,7 @@ const sharp = require("sharp");
 const pngitxt = require('png-itxt');
 const urlJoin = require('url-join');
 const { Readable } = require('stream');
+const { triple, namedNode } = require('@rdfjs/data-model');
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { AnnouncerMixin } = require('@activitypods/announcer');
@@ -12,9 +13,7 @@ module.exports = {
   mixins: [SynchronizerMixin, AnnouncerMixin, ControlledContainerMixin],
   settings: {
     path: '/assertions',
-    acceptedTypes: [
-      'obi:Assertion',
-    ],
+    acceptedTypes: ['Assertion'],
     dereference: ['obi:recipient', 'obi:verify'],
     permissions: {},
     newResourcesPermissions: {},
@@ -24,15 +23,11 @@ module.exports = {
       async create(ctx, res) {
         const { resourceUri: assertionUri, newData: assertion, webId } = res;
 
-        console.log('assertion', assertion);
-
         const badge = await ctx.call('ldp.resource.get', {
           resourceUri: assertion.badge,
           accept: MIME_TYPES.JSON,
           webId
         });
-
-        console.log('badge', badge)
 
         const badgeImage = await ctx.call('ldp.resource.get', {
           resourceUri: badge['schema:image'],
@@ -41,13 +36,11 @@ module.exports = {
           webId
         });
 
-        console.log('badgeImage', badgeImage)
+        const bakedBadgeContainerUri = urlJoin(webId, 'data', 'baked-badges');
 
         const bakedBadgeUri = await ctx.call('ldp.resource.generateId', {
-          containerUri: urlJoin(webId, 'data', 'baked-badges')
+          containerUri: bakedBadgeContainerUri
         })
-
-        console.log('bakedBadgeUri', bakedBadgeUri);
 
         const framedAssertion = await ctx.call('jsonld.frame', {
           input: {
@@ -62,31 +55,53 @@ module.exports = {
           }
         });
 
-        console.log('framedAssertion', framedAssertion);
-
         const buffer = await sharp('./' + badgeImage['semapps:localPath']).png().toBuffer();
         const readableStream = Readable.from(buffer);
         const bakedFileStream = await readableStream.pipe(pngitxt.set({ keyword: 'openbadge', value: JSON.stringify(framedAssertion)} ));
 
-        console.log('bakedFileStream', bakedFileStream);
+        // TODO see why we can't use ldp.container.post
 
-        await ctx.call('ldp.resource.upload', {
+        const bakedBadge = await ctx.call('ldp.resource.upload', {
           resourceUri: bakedBadgeUri,
           file: {
             encoding: badgeImage['semapps:encoding'],
-            mimeType: badgeImage['semapps:mimeType'],
+            mimetype: badgeImage['semapps:mimeType'],
             readableStream: bakedFileStream,
           }
-        })
+        });
 
-        // TODO PATCH assertion with image
+        await ctx.call('triplestore.insert', {
+          resource: `<${bakedBadgeContainerUri}> <http://www.w3.org/ns/ldp#contains> <${bakedBadgeUri}>`,
+          webId
+        });
+
+        await ctx.call('ldp.resource.create', {
+          resource: bakedBadge,
+          contentType: MIME_TYPES.JSON,
+          webId
+        });
+
+        await ctx.call('ldp.resource.patch', {
+          resourceUri: assertionUri,
+          triplesToAdd: [
+            triple(
+              namedNode(assertionUri),
+              namedNode('http://schema.org/image'),
+              namedNode(bakedBadgeUri)
+            )
+          ],
+          webId
+        });
+
+        const updatedAssertion = await ctx.call('ldp.resource.get', {
+          resourceUri: assertionUri,
+          accept: MIME_TYPES.JSON,
+          webId
+        });
 
         return {
           resourceUri: assertionUri,
-          newData: {
-            ...assertion,
-            'schema:image': bakedBadgeUri
-          },
+          newData: updatedAssertion,
           webId
         }
       },

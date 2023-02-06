@@ -4,8 +4,7 @@ module.exports = {
   mixins: [ControlledContainerMixin],
   settings: {
     path: '/baked-badges',
-    acceptedTypes: [
-      'semapps:File',
-    ]
+    acceptedTypes: ['semapps:File'],
+    newResourcesPermissions: { anon: { read: true } },
   }
 };

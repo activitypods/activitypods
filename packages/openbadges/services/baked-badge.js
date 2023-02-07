@@ -23,8 +23,6 @@ module.exports = {
         webId
       });
 
-      console.log('badge', badge);
-
       const badgeImage = await ctx.call('ldp.resource.get', {
         resourceUri: badge['schema:image'],
         forceSemantic: true,

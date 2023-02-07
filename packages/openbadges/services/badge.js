@@ -7,6 +7,6 @@ module.exports = {
     acceptedTypes: ['BadgeClass'],
     dereference: [],
     permissions: {},
-    newResourcesPermissions: {},
+    newResourcesPermissions: { anon: { read: true } },
   }
 };

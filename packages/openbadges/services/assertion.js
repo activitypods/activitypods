@@ -1,8 +1,4 @@
-const sharp = require("sharp");
-const pngitxt = require('png-itxt');
-const urlJoin = require('url-join');
-const { Readable } = require('stream');
-const { triple, namedNode } = require('@rdfjs/data-model');
+const { triple, namedNode, literal } = require('@rdfjs/data-model');
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { AnnouncerMixin } = require('@activitypods/announcer');
@@ -33,7 +29,28 @@ module.exports = {
         const bakedBadgeUri = await ctx.call('openbadges.baked-badge.bake', {
           assertion,
           webId
-        })
+        });
+
+        const issuer = await ctx.call('ldp.resource.get', {
+          resourceUri: assertion.issuer,
+          accept: MIME_TYPES.JSON,
+          webId
+        });
+
+        // If issuer doesn't have a schema:name, add it
+        if (!issuer['schema:name']) {
+          await ctx.call('ldp.resource.patch', {
+            resourceUri: assertion.issuer,
+            triplesToAdd: [
+              triple(
+                namedNode(assertion.issuer),
+                namedNode('http://schema.org/name'),
+                literal(issuer['vcard:given-name'])
+              )
+            ],
+            webId
+          });
+        }
 
         await ctx.call('ldp.resource.patch', {
           resourceUri: resourceUri,

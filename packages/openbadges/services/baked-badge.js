@@ -23,6 +23,8 @@ module.exports = {
         webId
       });
 
+      console.log('badge', badge);
+
       const badgeImage = await ctx.call('ldp.resource.get', {
         resourceUri: badge['schema:image'],
         forceSemantic: true,
@@ -51,7 +53,7 @@ module.exports = {
 
       const buffer = await sharp('./' + badgeImage['semapps:localPath']).png().toBuffer();
       const readableStream = Readable.from(buffer);
-      const bakedFileStream = await readableStream.pipe(pngitxt.set({ keyword: 'openbadge', value: JSON.stringify(framedAssertion)} ));
+      const bakedFileStream = await readableStream.pipe(pngitxt.set({ keyword: 'openbadges', value: JSON.stringify(framedAssertion)} ));
 
       // TODO see why we can't use ldp.container.post
 
@@ -76,6 +78,47 @@ module.exports = {
       });
 
       return bakedBadgeUri;
+    }
+  },
+  methods: {
+    readBadgeMetadata(stream) {
+      return new Promise((resolve, reject) => {
+        stream.pipe(pngitxt.getitxt('openbadges', (err, data) => {
+          if (err || !data) {
+            reject(err || 'No data found');
+          } else {
+            resolve(JSON.parse(data.value.replace(/\x00/,'')));
+          }
+        }))
+      });
+    }
+  },
+  hooks: {
+    before: {
+      async post(ctx) {
+        const { file } = ctx.params;
+        const { webId } = ctx.meta;
+
+        const assertion = await this.readBadgeMetadata(file.readableStream);
+
+        const assertionsContainerUri = urlJoin(webId, 'data', 'assertions');
+
+        console.log('assertion', assertion);
+
+        console.log('sparql', `
+            PREFIX ldp: <http://www.w3.org/ns/ldp#>
+            INSERT DATA { <${assertionsContainerUri}> ldp:contains <${assertion.id}>. };
+          `);
+
+        await ctx.call('ldp.container.patch', {
+          containerUri: assertionsContainerUri,
+          sparqlUpdate: `
+            PREFIX ldp: <http://www.w3.org/ns/ldp#>
+            INSERT DATA { <${assertionsContainerUri}> ldp:contains <${assertion.id}>. };
+          `,
+          webId
+        })
+      }
     }
   }
 };

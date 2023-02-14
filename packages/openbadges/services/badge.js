@@ -1,4 +1,5 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
+const {getAnnouncesGroupUri} = require("@activitypods/announcer");
 module.exports = {
   name: 'openbadges.badge',
   mixins: [ControlledContainerMixin],
@@ -18,5 +19,29 @@ module.exports = {
       ordered: false,
       dereferenceItems: false,
     });
+  },
+  hooks: {
+    after: {
+      async create(ctx, res) {
+        const { resourceUri } = res;
+
+        await ctx.call('activitypub.object.awaitCreateComplete', {
+          objectUri: resourceUri,
+          predicates: ['recipient']
+        });
+
+        // Give anonymous read right to recipient collection
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri,
+          additionalRights: {
+            anon: {
+              read: true,
+            },
+          },
+        });
+
+        return res;
+      }
+    }
   }
 };

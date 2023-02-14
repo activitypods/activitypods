@@ -10,7 +10,7 @@ module.exports = {
   settings: {
     path: '/assertions',
     acceptedTypes: ['Assertion'],
-    dereference: ['obi:recipient', 'obi:verify'],
+    dereference: ['obi:recipient', 'obi:verify', 'obi:evidence'],
     permissions: {},
     newResourcesPermissions: {},
     notificationMapping: {

@@ -21,9 +21,9 @@ module.exports = {
 
         const actor = await ctx.call('activitypub.actor.get', { actorUri: activity.object.id, webId: activity.object.id });
 
-        await ctx.call('activitypub.object.deleteFromCache', {
-          actorUri: emitterUri,
-          objectUri: actor.url,
+        await ctx.call('mirror.resource.delete', {
+          resourceUri: emitterUri,
+          webId: actor.url,
         });
       }
     },

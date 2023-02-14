@@ -95,9 +95,9 @@ module.exports = {
       },
       async onReceive(ctx, activity, recipients) {
         for (let recipientUri of recipients) {
-          await ctx.call('activitypub.object.cacheRemote', {
-            objectUri: activity.object.object.id,
-            actorUri: recipientUri,
+          await ctx.call('mirror.resource.store', {
+            resourceUri: activity.object.object.id,
+            webId: recipientUri,
           });
         }
       },
@@ -118,9 +118,9 @@ module.exports = {
       },
       async onReceive(ctx, activity, recipients) {
         for (let recipientUri of recipients) {
-          await ctx.call('activitypub.object.deleteFromCache', {
-            objectUri: activity.object.object.id,
-            actorUri: recipientUri,
+          await ctx.call('mirror.resource.delete', {
+            resourceUri: activity.object.object.id,
+            webId: recipientUri,
           });
         }
       },

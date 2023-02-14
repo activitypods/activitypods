@@ -1,5 +1,6 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
-const {getAnnouncesGroupUri} = require("@activitypods/announcer");
+const { getAnnouncesGroupUri } = require("@activitypods/announcer");
+
 module.exports = {
   name: 'openbadges.badge',
   mixins: [ControlledContainerMixin],

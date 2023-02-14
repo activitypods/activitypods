@@ -133,7 +133,7 @@ module.exports = {
       async onReceive(ctx, activity, recipients) {
         // Wait 1min30 to ensure all recipients have been given read rights to the event
         // (Otherwise we may have a race condition with the onEmit function above)
-        await delay(process.env.NODE_ENV === 'test' ? 10000 : 5000);
+        await delay(process.env.NODE_ENV === 'test' ? 10000 : 90000);
 
         for (let recipientUri of recipients) {
           try {

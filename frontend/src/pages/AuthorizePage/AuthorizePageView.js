@@ -1,9 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNotify, useTranslate } from 'react-admin';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link, useDataProvider, useTranslate, useGetList } from 'react-admin';
 import { makeStyles, Typography, Box, Chip, Button } from '@material-ui/core';
+import { useCheckAuthenticated } from '@semapps/auth-provider';
 import WarningIcon from '@material-ui/icons/Warning';
 import DoneIcon from '@material-ui/icons/Done';
 import SimpleBox from "../../layout/SimpleBox";
+import useTrustedApps from "../../hooks/useTrustedApps";
 
 const useStyles = makeStyles(() => ({
   app: {
@@ -27,6 +29,11 @@ const useStyles = makeStyles(() => ({
     marginTop: 8,
     backgroundColor: '#8bd78b',
   },
+  appUrl: {
+    marginTop: 5,
+    color: 'grey',
+    fontStyle: 'italic'
+  },
   button: {
     marginLeft: 10
   }
@@ -34,75 +41,74 @@ const useStyles = makeStyles(() => ({
 
 const AuthorizePageView = (props) => {
   const classes = useStyles(props);
-  const [trustedApps, setTrustedApps] = useState(props.customTrustedApps || []);
-  const notify = useNotify();
+  useCheckAuthenticated();
+  const [appData, setAppData] = useState({});
   const translate = useTranslate();
+  const dataProvider = useDataProvider();
+  const trustedApps = useTrustedApps();
+  const { data: registeredApps } = useGetList('App', { page: 1, perPage: 1000 });
 
   const searchParams = new URLSearchParams(props.location.search);
-  const redirectTo = searchParams.get('redirect');
+  const redirectTo = new URL(searchParams.get('redirect'));
+  const appDomain = redirectTo.host;
+  const appOrigin = redirectTo.origin;
+  const isTrustedApp = trustedApps.some(domain => domain === appDomain);
 
   useEffect(() => {
     (async () => {
-      if (trustedApps.length === 0) {
-        const results = await fetch('https://data.activitypods.org/trusted-apps', {
-          headers: {
-            Accept: 'application/ld+json'
-          }
-        });
-        if (results.ok) {
-          const json = await results.json();
-          setTrustedApps(json['ldp:contains']);
-        } else {
-          notify('app.notification.verified_applications_load_failed', 'error');
+      if (appOrigin) {
+        try {
+          const { data } = await dataProvider.getOne('AppDescription', { id: `${appOrigin}/application.json` });
+          setAppData(data);
+        } catch(e) {
+          // Do nothing if application.json file is not found
         }
       }
     })();
-  }, [trustedApps, setTrustedApps, notify]);
+  }, [dataProvider, appOrigin, setAppData]);
 
-  const appDomain = (new URL(redirectTo)).host;
-  const trustedApp = trustedApps.find(a => a['apods:domainName'] === appDomain);
-
-  const authorizedApps = useMemo(() => {
-    if (localStorage.getItem('authorized_apps')) {
-      return localStorage.getItem('authorized_apps').split(',')
-    } else {
-      return [];
-    }
-  }, [])
-
-  const accessApp = useCallback(remember => {
-    if (remember) {
-      localStorage.setItem('authorized_apps', [...authorizedApps, appDomain].join(','))
+  const accessApp = useCallback(async register => {
+    if (register) {
+      await dataProvider.create('App', {
+        data: {
+          type: 'apods:FrontAppRegistration',
+          'apods:application': `${redirectTo.origin}/application.json`,
+          'apods:domainName': redirectTo.host,
+          'apods:preferredForTypes': appData['apods:handledTypes']
+        }
+      });
     }
     const token = localStorage.getItem('token');
-    const url = new URL(redirectTo);
-    url.searchParams.set('token', token);
-    window.location.href = url.toString();
-  }, [authorizedApps, appDomain, redirectTo]);
+    redirectTo.searchParams.set('token', token);
+    window.location.href = redirectTo.toString();
+  }, [dataProvider, redirectTo, appData]);
 
-  // Automatically redirect if app is already autorized
+  // Automatically redirect if app is already registered
   useEffect(() => {
-    if (authorizedApps.some(domain => domain === appDomain)) {
+    if (registeredApps && Object.values(registeredApps).some(app => app['apods:domainName'] === appDomain)) {
       accessApp(false);
     }
-  }, [authorizedApps, appDomain, accessApp])
+  }, [registeredApps, appDomain, accessApp])
 
   return (
     <SimpleBox title={translate('app.page.authorize')} icon={<WarningIcon />} text={translate('app.helper.authorize', { appDomain })}>
-      {trustedApp && (
+      {appData && (
         <Box p={2} pb={0}>
           <div className={classes.app}>
-            <img src={trustedApp['apods:logo']} alt={trustedApp['apods:name']} className={classes.appIcon} />
-            <Typography variant="h4" className={classes.appTitle}>{trustedApp['apods:name']}</Typography>
-            <Typography variant="body2">{trustedApp['apods:description']}</Typography>
-            <Chip
-              size="small"
-              label={translate('app.message.verified_app')}
-              color="primary"
-              onDelete={() => {}}
-              deleteIcon={<DoneIcon />}
-              className={classes.appChip}
-            />
+            <img src={appData.image} alt={appData.name} className={classes.appIcon} />
+            <Typography variant="h4" className={classes.appTitle}>{appData.name}</Typography>
+            <Typography variant="body2">{appData.content}</Typography>
+            <Typography variant="body2" className={classes.appUrl}>{appOrigin}</Typography>
+            {isTrustedApp &&
+              <Chip
+                size="small"
+                label={translate('app.message.verified_app')}
+                color="primary"
+                onDelete={() => {}}
+                deleteIcon={<DoneIcon />}
+                className={classes.appChip}
+              />
+            }
           </div>
         </Box>
       )}

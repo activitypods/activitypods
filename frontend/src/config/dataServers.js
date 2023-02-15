@@ -12,6 +12,7 @@ const dataServers = {
       pod: {
         'vcard:Location': ['/locations'],
         'vcard:Individual': ['/profiles'],
+        'apods:FrontAppRegistration': ['/front-apps']
       },
     },
     uploadsContainer: '/files',

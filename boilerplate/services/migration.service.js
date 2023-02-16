@@ -14,6 +14,32 @@ const replaceRules = {
 module.exports = {
   name: 'migration',
   actions: {
+    async useApplicationJson(ctx) {
+      const appsDomains = [
+        'lentraide.app',
+        'bienvenuechezmoi.org',
+        'welcometomyplace.org',
+        'mutual-aid.app'
+      ];
+      for( let domain of appsDomains ) {
+        this.logger.info(`Moving app registrations for domain ${domain}...`)
+        await ctx.call('triplestore.update', {
+          query: `
+            DELETE {
+              ?appReg <http://activitypods.org/ns/core#application> <https://data.activitypods.org/trusted-apps/${domain}> .
+            }
+            INSERT {
+              ?appReg <http://activitypods.org/ns/core#application> <https://${domain}/application.json> .
+            }
+            WHERE {
+              ?appReg <http://activitypods.org/ns/core#application> <https://data.activitypods.org/trusted-apps/${domain}> .
+            }
+          `,
+          dataset: '*',
+          webId: 'system'
+        })
+      }
+    },
     async migrate(ctx) {
       const { version } = ctx.params;
 

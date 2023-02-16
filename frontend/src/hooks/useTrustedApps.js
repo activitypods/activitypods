@@ -1,28 +1,20 @@
 import { useEffect, useState } from "react";
-import { useNotify } from "react-admin";
-
+import { useQueryWithStore } from "react-admin";
 
 const useTrustedApps = () => {
   const [trustedApps, setTrustedApps] = useState([]);
-  const notify = useNotify();
+
+  const { loaded, data } = useQueryWithStore({
+    type: 'getList',
+    resource: 'TrustedApp',
+    payload: { pagination: { page: 1, perPage: 1000 } }
+  });
 
   useEffect(() => {
-    (async () => {
-      if (trustedApps.length === 0) {
-        const results = await fetch('https://data.activitypods.org/trusted-apps', {
-          headers: {
-            Accept: 'application/ld+json'
-          }
-        });
-        if (results.ok) {
-          const json = await results.json();
-          setTrustedApps(json['ldp:contains'].map(app => app['apods:domainName']));
-        } else {
-          notify('app.notification.verified_applications_load_failed', 'error');
-        }
-      }
-    })();
-  }, [trustedApps, setTrustedApps, notify]);
+    if (loaded) {
+      setTrustedApps(Object.values(data).map(app => app['apods:domainName']))
+    }
+  }, [loaded, data, setTrustedApps]);
 
   return trustedApps;
 };

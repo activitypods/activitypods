@@ -18,7 +18,8 @@ const dataServers = {
     uploadsContainer: '/files',
   },
   activitypods: {
-    baseUrl: 'https://data.activitypods.org/'
+    baseUrl: 'https://data.activitypods.org/',
+    noProxy: true // HTTP signature is not supported on that server
   }
 };
 

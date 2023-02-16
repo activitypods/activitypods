@@ -66,7 +66,7 @@ const AppCardList = () => {
 
   const deleteApp = useCallback(async appUri => {
     await dataProvider.delete('App', { id: appUri });
-    notify('Application supprimée', 'success');
+    notify('app.notification.app_uninstalled', { type: 'success' });
     refresh();
   }, [dataProvider, notify, refresh]);
 

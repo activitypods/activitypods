@@ -43,10 +43,11 @@ const AuthorizePageView = (props) => {
   const classes = useStyles(props);
   useCheckAuthenticated();
   const [appData, setAppData] = useState({});
+  const [showScreen, setShowScreen] = useState(false);
   const translate = useTranslate();
   const dataProvider = useDataProvider();
   const trustedApps = useTrustedApps();
-  const { data: registeredApps } = useGetList('App', { page: 1, perPage: 1000 });
+  const { data: registeredApps, loaded } = useGetList('App', { page: 1, perPage: 1000 });
 
   const searchParams = new URLSearchParams(props.location.search);
   const redirectTo = new URL(searchParams.get('redirect'));
@@ -83,12 +84,18 @@ const AuthorizePageView = (props) => {
     window.location.href = redirectTo.toString();
   }, [dataProvider, redirectTo, appData]);
 
-  // Automatically redirect if app is already registered
+  // Once all data are loaded, either redirect to app or show authorization screen
   useEffect(() => {
-    if (registeredApps && Object.values(registeredApps).some(app => app['apods:domainName'] === appDomain)) {
-      accessApp(false);
+    if (loaded) {
+      if (Object.values(registeredApps).some(app => app['apods:domainName'] === appDomain)) {
+        accessApp(false);
+      } else {
+        setShowScreen(true);
+      }
     }
-  }, [registeredApps, appDomain, accessApp])
+  }, [registeredApps, loaded, appDomain, accessApp, setShowScreen])
+
+  if (!showScreen) return null;
 
   return (
     <SimpleBox title={translate('app.page.authorize')} icon={<WarningIcon />} text={translate('app.helper.authorize', { appDomain })}>

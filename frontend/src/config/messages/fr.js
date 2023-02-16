@@ -102,7 +102,8 @@ module.exports = {
       invalid_password: "Mot de passe incorrect",
       get_settings_error: "Une erreur s'est produite",
       update_settings_error: "Une erreur s'est produite",
-      verified_applications_load_failed: 'Impossible de charger la liste des applications vérifiées'
+      verified_applications_load_failed: 'Impossible de charger la liste des applications vérifiées',
+      app_uninstalled: 'Application désinstallée'
     },
     user: {
       unknown: 'Inconnu',

@@ -17,7 +17,7 @@
     "@activitypods/messages": "1.1.0",
     "@activitypods/profiles": "1.1.0",
     "@activitypods/synchronizer": "1.1.0",
-    "@semapps/notifications": "0.4.3",
+    "@semapps/notifications": "0.4.4",
     "dotenv-flow": "^3.2.0",
     "ioredis": "^4.17.3",
     "moleculer": "^0.14.19",

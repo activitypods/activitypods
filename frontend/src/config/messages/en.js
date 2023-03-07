@@ -82,7 +82,7 @@ module.exports = {
       no_condition: 'None',
       you_participated_to_same_event: 'You participated to the same event',
       verified_app: "Verified application",
-      verified: "Verified",
+      verified: "Verified"
     },
     notification: {
       contact_request_accepted: 'Contact request accepted',
@@ -102,7 +102,8 @@ module.exports = {
       invalid_password: "Invalid password",
       get_settings_error: 'An error occurred',
       update_settings_error: 'An error occurred',
-      verified_applications_load_failed: 'Unable to load the list of verified applications'
+      verified_applications_load_failed: 'Unable to load the list of verified applications',
+      app_uninstalled: 'Application uninstalled'
     },
     user: {
       unknown: 'Unknown',

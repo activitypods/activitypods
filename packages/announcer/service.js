@@ -138,8 +138,8 @@ module.exports = {
         for (let recipientUri of recipients) {
           try {
             // Cache remote object (we want to be able to fetch it with SPARQL)
-            await ctx.call('mirror.resource.store', {
-              resourceUri: activity.object.id,
+            await ctx.call('ldp.remote.store', {
+              resource: activity.object,
               webId: recipientUri,
             });
           } catch(e) {

@@ -14,6 +14,7 @@ module.exports = {
     path: '/front-apps',
     acceptedTypes: ['apods:FrontAppRegistration'],
     dereference: [],
+    excludeFromMirror: true,
     permissions: {},
     newResourcesPermissions: {},
   },

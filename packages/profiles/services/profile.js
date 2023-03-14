@@ -2,11 +2,10 @@ const { triple, namedNode } = require('@rdfjs/data-model');
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { OBJECT_TYPES, AS_PREFIX } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { SynchronizerMixin } = require('@activitypods/synchronizer');
 
 module.exports = {
   name: 'profiles.profile',
-  mixins: [SynchronizerMixin, ControlledContainerMixin],
+  mixins: [ControlledContainerMixin],
   settings: {
     publicProfile: false,
     // ControlledContainerMixin settings

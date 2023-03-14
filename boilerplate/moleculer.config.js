@@ -1,4 +1,5 @@
 const { WebAclMiddleware, CacherMiddleware } = require('@semapps/webacl');
+const { ObjectsWatcherMiddleware } = require('@semapps/activitypub');
 const CONFIG = require('./config/config');
 const errorHandler = require('./config/errorHandler');
 
@@ -20,6 +21,7 @@ module.exports = {
   middlewares: [
     CacherMiddleware(cacherConfig), // Set the cacher before the WebAcl middleware
     WebAclMiddleware({ baseUrl: CONFIG.HOME_URL, podProvider: true }),
+    ObjectsWatcherMiddleware({ podProvider: true })
   ],
   errorHandler,
   logger: {

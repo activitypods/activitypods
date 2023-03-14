@@ -19,11 +19,9 @@ module.exports = {
           item: activity.object.id,
         });
 
-        const actor = await ctx.call('activitypub.actor.get', { actorUri: activity.object.id, webId: activity.object.id });
-
-        await ctx.call('mirror.resource.delete', {
-          resourceUri: emitterUri,
-          webId: actor.url,
+        await ctx.call('ldp.remote.delete', {
+          resourceUri: activity.object.url,
+          webId: emitterUri,
         });
       }
     },

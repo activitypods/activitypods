@@ -1,6 +1,6 @@
 const path = require('path');
 const urlJoin = require('url-join');
-const { ActivityPubService, ActivityMappingService } = require('@semapps/activitypub');
+const { ActivityPubService, ActivityMappingService, SynchronizerService } = require('@semapps/activitypub');
 const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
@@ -173,6 +173,12 @@ const CoreService = {
           },
         },
       },
+    });
+
+    this.broker.createService(SynchronizerService, {
+      settings: {
+        podProvider: true
+      }
     });
 
     this.broker.createService(FrontAppsService, {

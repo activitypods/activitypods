@@ -110,9 +110,9 @@ module.exports = {
         });
 
         // 2. Cache the other actor's profile
-        await ctx.call('mirror.resource.store', {
-          resourceUri: activity.object.object.object,
-          webId: activity.actor,
+        await ctx.call('ldp.remote.store', {
+          resource: activity.object.object.object,
+          webId: emitterUri,
         });
 
         // 3. Add the other actor to my contacts list
@@ -136,9 +136,9 @@ module.exports = {
             const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
             // Cache the other actor's profile (it should be visible now)
-            await ctx.call('mirror.resource.store', {
+            await ctx.call('ldp.remote.store', {
               resourceUri: emitter.url,
-              webId: activity.to,
+              webId: recipientUri,
             });
 
             // Add the other actor to my contacts list

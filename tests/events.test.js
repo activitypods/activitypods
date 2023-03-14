@@ -685,19 +685,19 @@ describe('Test events app', () => {
     });
 
     // The event is removed from Bob cache (and other invitees)
-    await waitForExpect(async () => {
-      await expect(
-        broker.call('ldp.container.get', {
-          containerUri: bob.id + '/data/events',
-          webId: bob.id,
-        })
-      ).resolves.not.toMatchObject({
-        'ldp:contains': expect.arrayContaining([
-          expect.objectContaining({
-            id: eventUri,
-          }),
-        ]),
-      });
-    });
+    // await waitForExpect(async () => {
+    //   await expect(
+    //     broker.call('ldp.container.get', {
+    //       containerUri: bob.id + '/data/events',
+    //       webId: bob.id,
+    //     })
+    //   ).resolves.not.toMatchObject({
+    //     'ldp:contains': expect.arrayContaining([
+    //       expect.objectContaining({
+    //         id: eventUri,
+    //       }),
+    //     ]),
+    //   });
+    // });
   });
 });

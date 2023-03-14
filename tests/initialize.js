@@ -3,6 +3,8 @@ const { WebAclMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/activitypub');
 const CONFIG = require('./config');
 
+Error.stackTraceLimit = Infinity;
+
 const listDatasets = async () => {
   const response = await fetch(CONFIG.SPARQL_ENDPOINT + '$/datasets', {
     headers: {

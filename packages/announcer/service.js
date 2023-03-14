@@ -97,9 +97,10 @@ module.exports = {
   },
   activities: {
     announce: {
-      async match(activity) {
+      async match(ctx, activity) {
         if (this.settings.watchedTypes.length === 0) return false;
         return await this.matchActivity(
+          ctx,
           {
             type: ACTIVITY_TYPES.ANNOUNCE,
             object: {

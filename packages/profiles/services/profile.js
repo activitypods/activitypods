@@ -20,7 +20,7 @@ module.exports = {
       const { webId, profileData } = ctx.params;
       const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
-      await this.waitForContainerCreation(containerUri);
+      await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
       const profileUri = await this.actions.post({
         containerUri,
@@ -35,7 +35,7 @@ module.exports = {
         },
         contentType: MIME_TYPES.JSON,
         webId,
-      });
+      }, { parentCtx: ctx });
 
       if (this.settings.publicProfile) {
         await ctx.call('webacl.resource.addRights', {

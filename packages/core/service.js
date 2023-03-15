@@ -177,7 +177,8 @@ const CoreService = {
 
     this.broker.createService(SynchronizerService, {
       settings: {
-        podProvider: true
+        podProvider: true,
+        synchronizeContainers: false,
       }
     });
 

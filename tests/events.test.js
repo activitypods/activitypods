@@ -477,21 +477,21 @@ describe('Test events app', () => {
 
     expect(mockSendNotification.mock.calls[6][0].params.data.key).toBe('leave_event');
 
-    await waitForExpect(() => {
-      expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject(
+    await waitForExpect(async () => {
+      await expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject(
         {
           'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
         }
       );
-    }, 6000);
+    }, 15000);
 
     // This shouldn't have an impact
     await broker.call('events.status.tagComing');
     await broker.call('events.status.tagClosed');
     await broker.call('events.status.tagFinished');
 
-    await waitForExpect(() => {
-      expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject(
+    await waitForExpect(async () => {
+      await expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject(
         {
           'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
         }
@@ -663,24 +663,20 @@ describe('Test events app', () => {
 
     // The deletion is announced to all invitees
     await waitForExpect(async () => {
-      await expect(
-        broker.call('activitypub.collection.get', {
-          collectionUri: alice.outbox,
-          page: 1,
-          webId: alice.id,
-        })
-      ).resolves.toMatchObject({
-        orderedItems: expect.arrayContaining([
-          expect.objectContaining({
-            type: ACTIVITY_TYPES.ANNOUNCE,
-            object: {
-              type: ACTIVITY_TYPES.DELETE,
-              object: eventUri,
-            },
-            actor: alice.id,
-            to: expect.arrayContaining([bob.id, craig.id, daisy.id]),
-          }),
-        ]),
+      // TODO new action to only get most recent item in collection
+      const outbox = await broker.call('activitypub.collection.get', {
+        collectionUri: alice.outbox,
+        page: 1,
+        webId: alice.id,
+      });
+      await expect(outbox.orderedItems[0]).toMatchObject({
+        type: ACTIVITY_TYPES.ANNOUNCE,
+        object: {
+          type: ACTIVITY_TYPES.DELETE,
+          object: eventUri,
+        },
+        actor: alice.id,
+        to: expect.arrayContaining([bob.id, craig.id, daisy.id]),
       });
     });
 

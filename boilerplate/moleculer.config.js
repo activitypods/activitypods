@@ -3,6 +3,8 @@ const { ObjectsWatcherMiddleware } = require('@semapps/activitypub');
 const CONFIG = require('./config/config');
 const errorHandler = require('./config/errorHandler');
 
+Error.stackTraceLimit = Infinity;
+
 // Use the cacher only if Redis is configured
 const cacherConfig = CONFIG.REDIS_CACHE_URL
   ? {

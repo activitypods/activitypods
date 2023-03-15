@@ -35,7 +35,7 @@ module.exports = {
         },
         contentType: MIME_TYPES.JSON,
         webId,
-      });
+      }, { parentCtx: ctx });
 
       if (this.settings.publicProfile) {
         await ctx.call('webacl.resource.addRights', {

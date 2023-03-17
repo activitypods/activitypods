@@ -3,7 +3,7 @@ const { AnnouncerMixin } = require('@activitypods/announcer');
 const { SynchronizerMixin } = require('@activitypods/synchronizer');
 
 module.exports = {
-  name: 'marketplace.offer',
+  name: 'marketplace.project',
   mixins: [SynchronizerMixin, AnnouncerMixin, ControlledContainerMixin],
   settings: {
     path: '/projects',

@@ -1,5 +1,5 @@
 const { WebAclMiddleware, CacherMiddleware } = require('@semapps/webacl');
-const { ObjectsWatcherMiddleware } = require('@semapps/activitypub');
+const { ObjectsWatcherMiddleware } = require('@semapps/sync');
 const CONFIG = require('./config/config');
 const errorHandler = require('./config/errorHandler');
 

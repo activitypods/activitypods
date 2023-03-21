@@ -1,6 +1,6 @@
 const { ServiceBroker } = require('moleculer');
 const { WebAclMiddleware } = require('@semapps/webacl');
-const { ObjectsWatcherMiddleware } = require('@semapps/activitypub');
+const { ObjectsWatcherMiddleware } = require('@semapps/sync');
 const CONFIG = require('./config');
 
 Error.stackTraceLimit = Infinity;

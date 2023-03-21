@@ -11,7 +11,6 @@ An [ActivityPods](../../README.md) application to handle contacts exchange and m
 
 - [CoreService](../core/README.md)
 - [ProfileService](../profiles/README.md)
-- [SynchronizerService](../synchronizer/README.md)
 
 ## Collections
 

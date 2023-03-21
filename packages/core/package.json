@@ -6,7 +6,6 @@
   "author": "Virtual Assembly",
   "dependencies": {
     "@activitypods/announcer": "1.1.0",
-    "@activitypods/synchronizer": "1.1.0",
     "@semapps/activitypub": "0.4.4",
     "@semapps/auth": "0.4.4",
     "@semapps/jsonld": "0.4.4",
@@ -14,6 +13,7 @@
     "@semapps/pod": "0.4.4",
     "@semapps/signature": "0.4.4",
     "@semapps/sparql-endpoint": "0.4.4",
+    "@semapps/sync": "0.4.4",
     "@semapps/triplestore": "0.4.4",
     "@semapps/webacl": "0.4.4",
     "@semapps/webfinger": "0.4.4",

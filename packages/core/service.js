@@ -1,11 +1,12 @@
 const path = require('path');
 const urlJoin = require('url-join');
-const { ActivityPubService, ActivityMappingService, SynchronizerService } = require('@semapps/activitypub');
+const { ActivityPubService, ActivityMappingService } = require('@semapps/activitypub');
 const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
 const { PodService } = require('@semapps/pod');
 const { SignatureService, ProxyService } = require('@semapps/signature');
+const { SynchronizerService } = require('@semapps/sync');
 const { SparqlEndpointService } = require('@semapps/sparql-endpoint');
 const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');

@@ -179,7 +179,9 @@ const CoreService = {
     this.broker.createService(SynchronizerService, {
       settings: {
         podProvider: true,
+        mirrorGraph: false,
         synchronizeContainers: false,
+        attachToLocalContainers: true
       }
     });
 

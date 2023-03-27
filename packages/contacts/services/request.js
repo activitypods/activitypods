@@ -1,3 +1,4 @@
+const urlJoin = require('url-join');
 const { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const {
   CONTACT_REQUEST,
@@ -115,13 +116,20 @@ module.exports = {
           webId: emitterUri,
         });
 
-        // 3. Add the other actor to my contacts list
+        // 3. Attach the other actor's profile to my profiles container
+        await ctx.call('ldp.container.attach', {
+          containerUri: urlJoin(emitterUri, 'data', 'profiles'),
+          resourceUri: activity.object.object.object.id,
+          webId: emitterUri
+        });
+
+        // 4. Add the other actor to my contacts list
         await ctx.call('activitypub.collection.attach', {
           collectionUri: emitter['apods:contacts'],
           item: activity.object.actor,
         });
 
-        // 4. Remove the activity from my contact requests
+        // 5. Remove the activity from my contact requests
         await ctx.call('activitypub.collection.detach', {
           collectionUri: emitter['apods:contactRequests'],
           item: activity.object.id,
@@ -139,6 +147,13 @@ module.exports = {
             await ctx.call('ldp.remote.store', {
               resourceUri: emitter.url,
               webId: recipientUri,
+            });
+
+            // Attach the other actor's profile to my profiles container
+            await ctx.call('ldp.container.attach', {
+              containerUri: urlJoin(recipientUri, 'data', 'profiles'),
+              resourceUri: emitter.url,
+              webId: recipientUri
             });
 
             // Add the other actor to my contacts list

@@ -169,6 +169,17 @@ describe('Test contacts app', () => {
       ).resolves.toBeTruthy();
     });
 
+    // Bob profile is attached to Alice /profiles container
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('ldp.container.includes', {
+          containerUri: urlJoin(alice.id, 'data', 'profiles'),
+          resourceUri: bob.url,
+          webId: alice.id
+        })
+      ).resolves.toBeTruthy();
+    });
+
     // Alice profile is cached in Bob dataset
     await waitForExpect(async () => {
       await expect(
@@ -176,6 +187,17 @@ describe('Test contacts app', () => {
           uri: bob.url,
           dataset: alice.preferredUsername,
           webId: 'system',
+        })
+      ).resolves.toBeTruthy();
+    });
+
+    // Alice profile is attached to Bob /profiles container
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('ldp.container.includes', {
+          containerUri: urlJoin(bob.id, 'data', 'profiles'),
+          resourceUri: alice.url,
+          webId: bob.id
         })
       ).resolves.toBeTruthy();
     });
@@ -236,7 +258,7 @@ describe('Test contacts app', () => {
     await waitForExpect(async () => {
       await expect(
         broker.call('ldp.container.includes', {
-          containerUri: urlJoin(bob.url, 'data', 'profiles'),
+          containerUri: urlJoin(bob.id, 'data', 'profiles'),
           resourceUri: alice.url,
         })
       ).resolves.toBeFalsy();

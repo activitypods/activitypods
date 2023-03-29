@@ -260,8 +260,56 @@ describe('Test contacts app', () => {
         broker.call('ldp.container.includes', {
           containerUri: urlJoin(bob.id, 'data', 'profiles'),
           resourceUri: alice.url,
+          webId: alice.id
         })
       ).resolves.toBeFalsy();
+    });
+  });
+
+  test('Bob requests Alice to remove all his data from her Pod', async () => {
+    const activity = await broker.call('activitypub.outbox.post', {
+      collectionUri: bob.outbox,
+      type: ACTIVITY_TYPES.OFFER,
+      actor: bob.id,
+      object: {
+        type: ACTIVITY_TYPES.DELETE,
+        object: bob.id
+      },
+      to: alice.id
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: alice['apods:contacts'],
+          itemUri: bob.id,
+        })
+      ).resolves.toBeFalsy();
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('ldp.container.includes', {
+          containerUri: urlJoin(alice.id, 'data', 'profiles'),
+          resourceUri: bob.url,
+          webId: alice.id
+        })
+      ).resolves.toBeFalsy();
+    });
+
+    await waitForExpect(async () => {
+      // TODO new action to only get most recent item in collection
+      const outbox = await broker.call('activitypub.collection.get', {
+        collectionUri: bob.inbox,
+        page: 1,
+        webId: bob.id,
+      });
+      await expect(outbox.orderedItems[0]).toMatchObject({
+        type: ACTIVITY_TYPES.ACCEPT,
+        object: activity.id,
+        actor: alice.id,
+        to: bob.id,
+      });
     });
   });
 });

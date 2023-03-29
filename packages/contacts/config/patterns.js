@@ -57,10 +57,21 @@ const REMOVE_CONTACT = {
   },
 };
 
+const OFFER_DELETE_ACTOR = {
+  type: ACTIVITY_TYPES.OFFER,
+  object: {
+    type: ACTIVITY_TYPES.DELETE,
+    object: {
+      type: ACTOR_TYPES.PERSON,
+    }
+  }
+};
+
 module.exports = {
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
   IGNORE_CONTACT_REQUEST,
   REJECT_CONTACT_REQUEST,
-  REMOVE_CONTACT
+  REMOVE_CONTACT,
+  OFFER_DELETE_ACTOR
 };

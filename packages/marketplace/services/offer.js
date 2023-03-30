@@ -23,6 +23,7 @@ module.exports = {
     after: {
       async create(ctx, res) {
         await ctx.call('marketplace.location.setNewRights', res);
+        await ctx.call('marketplace.project.setNewRights', res);
         return res;
       },
       // TODO handle new PATCH method https://github.com/assemblee-virtuelle/activitypods/issues/42

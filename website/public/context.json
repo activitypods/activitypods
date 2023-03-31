@@ -4,6 +4,7 @@
     "pair": "http://virtual-assembly.org/ontologies/pair#",
     "mp": "http://virtual-assembly.org/ontologies/pair-mp#",
     "apods": "http://activitypods.org/ns/core#",
+    "syreen": "http://syreen.fr/ns/core#",
 
     "as": "https://www.w3.org/ns/activitystreams#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

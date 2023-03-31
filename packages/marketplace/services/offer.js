@@ -1,4 +1,4 @@
-const { ControlledContainerMixin, getContainerFromUri } = require('@semapps/ldp');
+const { ControlledContainerMixin, hasType } = require('@semapps/ldp');
 const { AnnouncerMixin } = require('@activitypods/announcer');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
@@ -40,22 +40,20 @@ module.exports = {
   },
   events: {
     async 'webacl.resource.updated'(ctx) {
-      const { uri, webId, isContainer, addPublicRead, removePublicRead } = ctx.params;
+      const { uri, isContainer, addPublicRead, removePublicRead } = ctx.params;
       // If a resource has been published or unpublished
       if (!isContainer && (addPublicRead || removePublicRead)) {
-        // If this resource is an offer
-        const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
-        if (getContainerFromUri(uri) === containerUri) {
-          const offer = await ctx.call('ldp.resource.get', {
-            resourceUri: uri,
-            accept: MIME_TYPES.JSON,
-            webId: 'system'
-          });
+        const resource = await ctx.call('ldp.resource.get', {
+          resourceUri: uri,
+          accept: MIME_TYPES.JSON,
+          webId: 'system'
+        });
+        if (hasType(resource, 'mp:Offer')) {
           if (addPublicRead) {
-            const isProjectPublic = await ctx.call('webacl.resource.isPublic', { resourceUri: offer['pair:partOf'] });
+            const isProjectPublic = await ctx.call('webacl.resource.isPublic', { resourceUri: resource['pair:partOf'] });
             if (!isProjectPublic) {
               await ctx.call('webacl.resource.addRights', {
-                resourceUri: offer['pair:partOf'],
+                resourceUri: resource['pair:partOf'],
                 additionalRights: {
                   anon: {
                     read: true
@@ -66,7 +64,7 @@ module.exports = {
             }
           } else if (removePublicRead) {
             // Look if other offers on the project are public
-            const offersUris = await ctx.call('marketplace.project.getProjectOffers', { projectUri: offer['pair:partOf'] });
+            const offersUris = await ctx.call('marketplace.project.getProjectOffers', { projectUri: resource['pair:partOf'] });
             let oneOfferIsPublic = false;
             for (let offerUri of offersUris) {
               // Don't look for the current offer since we know it's not public anymore
@@ -82,7 +80,7 @@ module.exports = {
             // If no other offer of the project is public, unpublish the project
             if (!oneOfferIsPublic) {
               await ctx.call('webacl.resource.removeRights', {
-                resourceUri: offer['pair:partOf'],
+                resourceUri: resource['pair:partOf'],
                 rights: {
                   anon: {
                     read: true

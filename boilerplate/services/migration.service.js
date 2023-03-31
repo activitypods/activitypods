@@ -14,6 +14,27 @@ const replaceRules = {
 module.exports = {
   name: 'migration',
   actions: {
+    async fixSyreenPredicate(ctx) {
+      const predicates = ['phase', 'status', 'type', 'quantity', 'unit'];
+      for (let predicate of predicates) {
+        this.logger.info('Fixing predicate syreen:' + predicate);
+        await ctx.call('triplestore.update', {
+          query: `
+            DELETE {
+              ?subject <syreen:${predicate}> ?object
+            }
+            INSERT {
+              ?subject <http://syreen.fr/ns/core#${predicate}> ?object
+            }
+            WHERE {
+              ?subject <syreen:${predicate}> ?object
+            }
+          `,
+          dataset: '*',
+          webId: 'system'
+        });
+      }
+    },
     async useApplicationJson(ctx) {
       const appsDomains = [
         'lentraide.app',

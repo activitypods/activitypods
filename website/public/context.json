@@ -35,6 +35,13 @@
     "dc:creator" : {
       "@type" : "@id"
     },
+    
+    "skos:broader": {
+      "@type": "@id"
+    },
+    "skos:narrower": {
+      "@type": "@id"
+    },
 
     "pair:image": {
       "@type": "@id"
@@ -816,6 +823,10 @@
     },
     "mp:expirationDate": {
       "@type": "xsd:dateTime"
+    },
+
+    "syreen:hasUnit": {
+      "@type" : "@id"
     },
 
     "AlignmentObject": "schema:AlignmentObject",

@@ -829,10 +829,10 @@
       "@type" : "@id"
     },
     "syreen:costPricePublication": {
-      "@type" : "@boolean"
+      "@type" : "xsd:boolean"
     },
     "syreen:marketValuePublication": {
-      "@type" : "@boolean"
+      "@type" : "xsd:boolean"
     },
 
     "AlignmentObject": "schema:AlignmentObject",

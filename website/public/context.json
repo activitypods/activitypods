@@ -828,6 +828,12 @@
     "syreen:hasUnit": {
       "@type" : "@id"
     },
+    "syreen:costPricePublication": {
+      "@type" : "@boolean"
+    },
+    "syreen:marketValuePublication": {
+      "@type" : "@boolean"
+    },
 
     "AlignmentObject": "schema:AlignmentObject",
     "Endorsement": "cred:Credential",

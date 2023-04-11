@@ -1,5 +1,6 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { AnnouncerMixin, getAnnouncesGroupUri } = require('@activitypods/announcer');
+const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
   name: 'marketplace.project',
@@ -29,5 +30,21 @@ module.exports = {
         });
       }
     },
+    async getProjectOffers(ctx) {
+      const { projectUri } = ctx.params;
+
+      const result = await ctx.call('triplestore.query', {
+        query: `
+          SELECT ?offerUri 
+          WHERE {
+            ?offerUri <http://virtual-assembly.org/ontologies/pair#partOf> <${projectUri}>
+          }
+        `,
+        accept: MIME_TYPES.JSON,
+        webId: 'system'
+      });
+
+      return result.map(node => node.offerUri.value);
+    }
   }
 };

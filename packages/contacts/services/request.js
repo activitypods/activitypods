@@ -61,42 +61,40 @@ module.exports = {
           });
         }
       },
-      async onReceive(ctx, activity, recipients) {
-        for (let recipientUri of recipients) {
-          const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
+      async onReceive(ctx, activity, recipientUri) {
+        const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
-          // If the request was already rejected, reject it again
-          if (
-            await ctx.call('activitypub.collection.includes', {
-              collectionUri: recipient['apods:rejectedContacts'],
-              itemUri: activity.actor,
-            })
-          ) {
-            await ctx.call('activitypub.outbox.post', {
-              collectionUri: recipient.outbox,
-              type: ACTIVITY_TYPES.REJECT,
-              actor: recipient.id,
-              object: activity.id,
-              to: activity.actor,
-            });
-            continue;
-          }
-
-          // Check that a request by the same actor is not already waiting (if so, ignore it)
-          const collection = await ctx.call('activitypub.collection.get', {
-            collectionUri: recipient['apods:contactRequests'],
-            webId: recipientUri,
+        // If the request was already rejected, reject it again
+        if (
+          await ctx.call('activitypub.collection.includes', {
+            collectionUri: recipient['apods:rejectedContacts'],
+            itemUri: activity.actor,
+          })
+        ) {
+          await ctx.call('activitypub.outbox.post', {
+            collectionUri: recipient.outbox,
+            type: ACTIVITY_TYPES.REJECT,
+            actor: recipient.id,
+            object: activity.id,
+            to: activity.actor,
           });
-          if (collection && collection.items.length > 0 && collection.items.find((a) => a.actor === activity.actor)) {
-            continue;
-          }
-
-          await ctx.call('activitypub.collection.attach', {
-            collectionUri: recipient['apods:contactRequests'],
-            item: activity,
-          });
+          return;
         }
-      },
+
+        // Check that a request by the same actor is not already waiting (if so, ignore it)
+        const collection = await ctx.call('activitypub.collection.get', {
+          collectionUri: recipient['apods:contactRequests'],
+          webId: recipientUri,
+        });
+        if (collection && collection.items.length > 0 && collection.items.find((a) => a.actor === activity.actor)) {
+          return;
+        }
+
+        await ctx.call('activitypub.collection.attach', {
+          collectionUri: recipient['apods:contactRequests'],
+          item: activity,
+        });
+      }
     },
     acceptContactRequest: {
       match: ACCEPT_CONTACT_REQUEST,
@@ -135,33 +133,31 @@ module.exports = {
           item: activity.object.id,
         });
       },
-      async onReceive(ctx, activity, recipients) {
+      async onReceive(ctx, activity, recipientUri) {
         // If there is a context, the contact offer was automatic (post event suggestion)
         // so we don't want to automatically add the contact back if it was accepted
         if (!activity.object.context) {
-          for (let recipientUri of recipients) {
-            const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
-            const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
+          const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
+          const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
-            // Cache the other actor's profile (it should be visible now)
-            await ctx.call('ldp.remote.store', {
-              resourceUri: emitter.url,
-              webId: recipientUri,
-            });
+          // Cache the other actor's profile (it should be visible now)
+          await ctx.call('ldp.remote.store', {
+            resourceUri: emitter.url,
+            webId: recipientUri,
+          });
 
-            // Attach the other actor's profile to my profiles container
-            await ctx.call('ldp.container.attach', {
-              containerUri: urlJoin(recipientUri, 'data', 'profiles'),
-              resourceUri: emitter.url,
-              webId: recipientUri
-            });
+          // Attach the other actor's profile to my profiles container
+          await ctx.call('ldp.container.attach', {
+            containerUri: urlJoin(recipientUri, 'data', 'profiles'),
+            resourceUri: emitter.url,
+            webId: recipientUri
+          });
 
-            // Add the other actor to my contacts list
-            await ctx.call('activitypub.collection.attach', {
-              collectionUri: recipient['apods:contacts'],
-              item: emitter.id,
-            });
-          }
+          // Add the other actor to my contacts list
+          await ctx.call('activitypub.collection.attach', {
+            collectionUri: recipient['apods:contacts'],
+            item: emitter.id,
+          });
         }
       },
     },
@@ -176,15 +172,13 @@ module.exports = {
           item: activity.object.id,
         });
       },
-      async onReceive(ctx, activity, recipients) {
-        for (let recipientUri of recipients) {
-          // Remove the user from the contacts WebACL group so he can't see my profile anymore
-          await ctx.call('webacl.group.removeMember', {
-            groupSlug: new URL(recipientUri).pathname + '/contacts',
-            memberUri: activity.actor,
-            webId: recipientUri,
-          });
-        }
+      async onReceive(ctx, activity, recipientUri) {
+        // Remove the user from the contacts WebACL group so he can't see my profile anymore
+        await ctx.call('webacl.group.removeMember', {
+          groupSlug: new URL(recipientUri).pathname + '/contacts',
+          memberUri: activity.actor,
+          webId: recipientUri,
+        });
       },
     },
     rejectContactRequest: {
@@ -204,15 +198,13 @@ module.exports = {
           item: activity.object.id,
         });
       },
-      async onReceive(ctx, activity, recipients) {
-        for (let recipientUri of recipients) {
-          // Remove the emitter from the contacts WebACL group so he can't see the recipient's profile anymore
-          await ctx.call('webacl.group.removeMember', {
-            groupSlug: new URL(recipientUri).pathname + '/contacts',
-            memberUri: activity.actor,
-            webId: recipientUri,
-          });
-        }
+      async onReceive(ctx, activity, recipientUri) {
+        // Remove the emitter from the contacts WebACL group so he can't see the recipient's profile anymore
+        await ctx.call('webacl.group.removeMember', {
+          groupSlug: new URL(recipientUri).pathname + '/contacts',
+          memberUri: activity.actor,
+          webId: recipientUri,
+        });
       },
     },
   },

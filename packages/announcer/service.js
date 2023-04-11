@@ -97,9 +97,10 @@ module.exports = {
   },
   activities: {
     announce: {
-      async match(activity) {
+      async match(ctx, activity) {
         if (this.settings.watchedTypes.length === 0) return false;
         return await this.matchActivity(
+          ctx,
           {
             type: ACTIVITY_TYPES.ANNOUNCE,
             object: {
@@ -130,37 +131,32 @@ module.exports = {
           });
         }
       },
-      async onReceive(ctx, activity, recipients) {
-        // Wait 1min30 to ensure all recipients have been given read rights to the event
-        // (Otherwise we may have a race condition with the onEmit function above)
-        await delay(process.env.NODE_ENV === 'test' ? 10000 : 90000);
+      async onReceive(ctx, activity, recipientUri) {
+        try {
+          // Cache remote object (we want to be able to fetch it with SPARQL)
+          await ctx.call('ldp.remote.store', {
+            resource: activity.object,
+            webId: recipientUri,
+          });
 
-        for (let recipientUri of recipients) {
-          try {
-            // Cache remote object (we want to be able to fetch it with SPARQL)
-            await ctx.call('ldp.remote.store', {
-              resource: activity.object,
-              webId: recipientUri,
-            });
+          const container = await ctx.call('ldp.registry.getByType', { type: activity.object['@type'] || activity.object.type });
+          if (!container) throw new Error(`Cannot store resource of type "${activity.object.type || activity.object['@type']}", no matching containers were found!`);
+          const containerUri = await ctx.call('ldp.registry.getUri', { path: container.path, webId: recipientUri });
 
-            const container = await ctx.call('ldp.registry.getByType', { type: activity.object['@type'] || activity.object.type });
-            if (!container) throw new Error(`Cannot store resource of type "${activity.object.type || activity.object['@type']}", no matching containers were found!`);
-            const containerUri = await ctx.call('ldp.registry.getUri', { path: container.path, webId: recipientUri });
-
-            await ctx.call('ldp.container.attach', {
-              containerUri,
-              resourceUri: activity.object.id,
-              webId: recipientUri,
-            });
-          } catch(e) {
-            this.logger.warn(`Unable to cache remote object ${activity.object.id} for actor ${recipientUri}. Message: ${e.message}`);
-          }
+          await ctx.call('ldp.container.attach', {
+            containerUri,
+            resourceUri: activity.object.id,
+            webId: recipientUri,
+          });
+        } catch(e) {
+          this.logger.warn(`Unable to cache remote object ${activity.object.id} for actor ${recipientUri}. Message: ${e.message}`);
         }
       },
     },
     offerAnnounceByOrganizer: {
-      async match(activity) {
+      async match(ctx, activity) {
         const dereferencedActivity = await this.matchActivity(
+          ctx,
           {
             type: ACTIVITY_TYPES.OFFER,
             object: {
@@ -194,8 +190,9 @@ module.exports = {
       },
     },
     offerAnnounceToOrganizer: {
-      async match(activity) {
+      async match(ctx, activity) {
         const dereferencedActivity = await this.matchActivity(
+          ctx,
           {
             type: ACTIVITY_TYPES.OFFER,
             object: {

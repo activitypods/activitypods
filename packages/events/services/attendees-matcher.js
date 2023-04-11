@@ -1,5 +1,6 @@
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { getSlugFromUri } = require('@semapps/ldp');
 const { POST_EVENT_CONTACT_REQUEST, POST_EVENT_ACCEPT_CONTACT_REQUEST } = require('../config/patterns');
 const { POST_EVENT_CONTACT_REQUEST_MAPPING } = require('../config/mappings');
 
@@ -33,7 +34,13 @@ module.exports = {
         webId: 'system',
       });
 
+      // Save meta data before modifying them temporarily
+      const savedMeta = { ...ctx.meta };
+
       for (let attendeeUri of collection.items) {
+        ctx.meta.webId = attendeeUri;
+        ctx.meta.dataset = getSlugFromUri(attendeeUri);
+
         const attendee = await ctx.call('activitypub.actor.get', { actorUri: attendeeUri });
 
         let potentialNewContacts = [];
@@ -60,6 +67,9 @@ module.exports = {
           });
         }
       }
+
+      // Restore metadata
+      ctx.meta = savedMeta;
     },
   },
 };

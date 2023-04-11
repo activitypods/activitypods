@@ -143,7 +143,7 @@ module.exports = {
       const { webId, accountData } = ctx.params;
       const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
-      await this.waitForContainerCreation(containerUri);
+      await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
       for (let app of this.trustedApps) {
         // Only add applications which match the account preferred locale

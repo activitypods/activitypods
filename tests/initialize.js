@@ -1,6 +1,9 @@
+const path = require("path");
 const { ServiceBroker } = require('moleculer');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
+const { CoreService } = require("@activitypods/core");
+const { AnnouncerService } = require("@activitypods/announcer");
 const CONFIG = require('./config');
 
 Error.stackTraceLimit = Infinity;
@@ -30,9 +33,12 @@ const clearDataset = (dataset) =>
     },
   });
 
-const initialize = async () => {
+const initialize = async (port, accountsDataset) => {
+  const baseUrl = `http://localhost:${port}/`;
+
   const broker = new ServiceBroker({
-    middlewares: [WebAclMiddleware({ baseUrl: CONFIG.HOME_URL, podProvider: true }), ObjectsWatcherMiddleware({ podProvider: true })],
+    nodeID: 'server' + port,
+    middlewares: [WebAclMiddleware({ baseUrl, podProvider: true }), ObjectsWatcherMiddleware({ baseUrl, podProvider: true })],
     logger: {
       type: 'Console',
       options: {
@@ -41,12 +47,32 @@ const initialize = async () => {
     },
   });
 
-  const datasets = await listDatasets();
-  for (let dataset of datasets) {
-    await clearDataset(dataset);
-  }
+  await broker.createService(CoreService, {
+    settings: {
+      baseUrl,
+      baseDir: path.resolve(__dirname),
+      triplestore: {
+        url: CONFIG.SPARQL_ENDPOINT,
+        user: CONFIG.JENA_USER,
+        password: CONFIG.JENA_PASSWORD,
+      },
+      jsonContext: 'https://activitypods.org/context.json',
+      auth: {
+        accountsDataset
+      },
+      api: {
+        port
+      }
+    }
+  });
+
+  await broker.createService(AnnouncerService);
 
   return broker;
 };
 
-module.exports = initialize;
+module.exports = {
+  listDatasets,
+  clearDataset,
+  initialize
+};

@@ -290,7 +290,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
   });
 
   test('Bob requests Alice to remove all his data from her Pod', async () => {
-    const activity = await broker.call('activitypub.outbox.post', {
+    const activity = await bob.call('activitypub.outbox.post', {
       collectionUri: bob.outbox,
       type: ACTIVITY_TYPES.OFFER,
       actor: bob.id,
@@ -303,7 +303,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        alice.call('activitypub.collection.includes', {
           collectionUri: alice['apods:contacts'],
           itemUri: bob.id,
         })
@@ -312,20 +312,18 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('ldp.container.includes', {
+        alice.call('ldp.container.includes', {
           containerUri: urlJoin(alice.id, 'data', 'profiles'),
-          resourceUri: bob.url,
-          webId: alice.id
+          resourceUri: bob.url
         })
       ).resolves.toBeFalsy();
     });
 
     await waitForExpect(async () => {
       // TODO new action to only get most recent item in collection
-      const outbox = await broker.call('activitypub.collection.get', {
+      const outbox = await bob.call('activitypub.collection.get', {
         collectionUri: bob.inbox,
-        page: 1,
-        webId: bob.id,
+        page: 1
       });
       await expect(outbox.orderedItems[0]).toMatchObject({
         type: ACTIVITY_TYPES.ACCEPT,

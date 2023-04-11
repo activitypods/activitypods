@@ -5,7 +5,7 @@ module.exports = {
   actions: {
     async setNewRights(ctx) {
       const { resourceUri, newData } = ctx.params;
-      const newLocation = newData['mp:hasGeoCondition'] && newData['mp:hasGeoCondition']['pair:hasLocation'];
+      const newLocation = newData['pair:hasLocation'] || (newData['mp:hasGeoCondition'] && newData['mp:hasGeoCondition']['pair:hasLocation']);
 
       if (newLocation) {
         await ctx.call('webacl.resource.addRights', {
@@ -22,8 +22,8 @@ module.exports = {
     },
     async updateRights(ctx) {
       const { resourceUri, newData, oldData } = ctx.params;
-      const oldLocation = oldData['mp:hasGeoCondition'] && oldData['mp:hasGeoCondition']['pair:hasLocation'];
-      const newLocation = newData['mp:hasGeoCondition'] && newData['mp:hasGeoCondition']['pair:hasLocation'];
+      const oldLocation = oldData['pair:hasLocation'] || (oldData['mp:hasGeoCondition'] && oldData['mp:hasGeoCondition']['pair:hasLocation']);
+      const newLocation = newData['pair:hasLocation'] || (newData['mp:hasGeoCondition'] && newData['mp:hasGeoCondition']['pair:hasLocation']);
 
       if (newLocation !== oldLocation) {
         if (newLocation) {

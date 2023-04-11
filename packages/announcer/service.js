@@ -138,12 +138,22 @@ module.exports = {
         for (let recipientUri of recipients) {
           try {
             // Cache remote object (we want to be able to fetch it with SPARQL)
-            await ctx.call('activitypub.object.cacheRemote', {
-              objectUri: activity.object.id,
-              actorUri: recipientUri,
+            await ctx.call('ldp.remote.store', {
+              resource: activity.object,
+              webId: recipientUri,
+            });
+
+            const container = await ctx.call('ldp.registry.getByType', { type: activity.object['@type'] || activity.object.type });
+            if (!container) throw new Error(`Cannot store resource of type "${activity.object.type || activity.object['@type']}", no matching containers were found!`);
+            const containerUri = await ctx.call('ldp.registry.getUri', { path: container.path, webId: recipientUri });
+
+            await ctx.call('ldp.container.attach', {
+              containerUri,
+              resourceUri: activity.object.id,
+              webId: recipientUri,
             });
           } catch(e) {
-            this.logger.warn(`Unable to fetch remote object ${activity.object.id} for actor ${recipientUri}. Message: ${e.message}`);
+            this.logger.warn(`Unable to cache remote object ${activity.object.id} for actor ${recipientUri}. Message: ${e.message}`);
           }
         }
       },

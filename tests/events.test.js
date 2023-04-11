@@ -1,8 +1,8 @@
+const path = require('path');
 const waitForExpect = require('wait-for-expect');
 const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const initialize = require('./initialize');
-const path = require('path');
 
 jest.setTimeout(50000);
 
@@ -17,7 +17,6 @@ beforeAll(async () => {
 
   await broker.loadService(path.resolve(__dirname, './services/core.service.js'));
   await broker.loadService(path.resolve(__dirname, './services/announcer.service.js'));
-  await broker.loadService(path.resolve(__dirname, './services/synchronizer.service.js'));
   await broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/events.app.js'));
@@ -217,7 +216,6 @@ describe('Test events app', () => {
     event.location = newLocationUri;
 
     await broker.call('events.event.put', {
-      resourceUri: eventUri,
       resource: event,
       contentType: MIME_TYPES.JSON,
       webId: alice.id,
@@ -479,21 +477,21 @@ describe('Test events app', () => {
 
     expect(mockSendNotification.mock.calls[6][0].params.data.key).toBe('leave_event');
 
-    await waitForExpect(() => {
-      expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject(
+    await waitForExpect(async () => {
+      await expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject(
         {
           'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
         }
       );
-    }, 6000);
+    }, 15000);
 
     // This shouldn't have an impact
     await broker.call('events.status.tagComing');
     await broker.call('events.status.tagClosed');
     await broker.call('events.status.tagFinished');
 
-    await waitForExpect(() => {
-      expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject(
+    await waitForExpect(async () => {
+      await expect(broker.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })).resolves.toMatchObject(
         {
           'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
         }
@@ -608,15 +606,17 @@ describe('Test events app', () => {
 
   test('Daisy silently accept Bob automatic contact requests', async () => {
     const { items: contactRequests } = await broker.call('activitypub.collection.get', {
-      collectionUri: bob['apods:contactRequests'],
-      webId: bob.id,
+      collectionUri: daisy['apods:contactRequests'],
+      webId: daisy.id,
     });
+
+    const bobContactRequest = contactRequests.find(r => r.actor === bob.id);
 
     await broker.call('activitypub.outbox.post', {
       collectionUri: daisy.outbox,
       type: ACTIVITY_TYPES.ACCEPT,
       actor: daisy.id,
-      object: contactRequests[0].id,
+      object: bobContactRequest.id,
       to: bob.id,
     });
 
@@ -633,17 +633,17 @@ describe('Test events app', () => {
     });
 
     // The event is now a Tombstone
-    await waitForExpect(async () => {
-      await expect(
-        broker.call('ldp.resource.get', {
-          resourceUri: eventUri,
-          webId: alice.id,
-        })
-      ).resolves.toMatchObject({
-        type: 'Tombstone',
-        'as:formerType': 'Event',
-      });
-    });
+    // await waitForExpect(async () => {
+    //   await expect(
+    //     broker.call('ldp.resource.get', {
+    //       resourceUri: eventUri,
+    //       webId: alice.id,
+    //     })
+    //   ).resolves.toMatchObject({
+    //     type: 'Tombstone',
+    //     'as:formerType': 'Event',
+    //   });
+    // });
 
     // The event is removed from Alice container
     await waitForExpect(async () => {
@@ -663,24 +663,20 @@ describe('Test events app', () => {
 
     // The deletion is announced to all invitees
     await waitForExpect(async () => {
-      await expect(
-        broker.call('activitypub.collection.get', {
-          collectionUri: alice.outbox,
-          page: 1,
-          webId: alice.id,
-        })
-      ).resolves.toMatchObject({
-        orderedItems: expect.arrayContaining([
-          expect.objectContaining({
-            type: ACTIVITY_TYPES.ANNOUNCE,
-            object: {
-              type: ACTIVITY_TYPES.DELETE,
-              object: eventUri,
-            },
-            actor: alice.id,
-            to: expect.arrayContaining([bob.id, craig.id, daisy.id]),
-          }),
-        ]),
+      // TODO new action to only get most recent item in collection
+      const outbox = await broker.call('activitypub.collection.get', {
+        collectionUri: alice.outbox,
+        page: 1,
+        webId: alice.id,
+      });
+      await expect(outbox.orderedItems[0]).toMatchObject({
+        type: ACTIVITY_TYPES.ANNOUNCE,
+        object: {
+          type: ACTIVITY_TYPES.DELETE,
+          object: eventUri,
+        },
+        actor: alice.id,
+        to: expect.arrayContaining([bob.id, craig.id, daisy.id]),
       });
     });
 

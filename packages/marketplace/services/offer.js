@@ -1,10 +1,9 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { AnnouncerMixin } = require('@activitypods/announcer');
-const { SynchronizerMixin } = require('@activitypods/synchronizer');
 
 module.exports = {
   name: 'marketplace.offer',
-  mixins: [SynchronizerMixin, AnnouncerMixin, ControlledContainerMixin],
+  mixins: [AnnouncerMixin, ControlledContainerMixin],
   settings: {
     path: '/offers',
     acceptedTypes: ['mp:Offer', 'mp:SaleOffer', 'mp:RentOffer', 'mp:LoanOffer', 'mp:GiftOffer', 'mp:BarterOffer'],
@@ -24,6 +23,7 @@ module.exports = {
     after: {
       async create(ctx, res) {
         await ctx.call('marketplace.location.setNewRights', res);
+        await ctx.call('marketplace.project.setNewRights', res);
         return res;
       },
       // TODO handle new PATCH method https://github.com/assemblee-virtuelle/activitypods/issues/42

@@ -9,10 +9,6 @@ Automatically creates a `/data/profiles/me` profile on user registration.
 - [ProfileService](services/profile.js)
 - [EventService](services/location.js)
 
-## Dependencies
-
-- [SynchronizerService](../synchronizer/README.md)
-
 ## Containers
 
 - `/profiles` with the profile of the user and his contacts (`vcard:Individual`, `as:Profile`)

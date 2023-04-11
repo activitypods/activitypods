@@ -1,6 +1,9 @@
 const { ServiceBroker } = require('moleculer');
 const { WebAclMiddleware } = require('@semapps/webacl');
+const { ObjectsWatcherMiddleware } = require('@semapps/sync');
 const CONFIG = require('./config');
+
+Error.stackTraceLimit = Infinity;
 
 const listDatasets = async () => {
   const response = await fetch(CONFIG.SPARQL_ENDPOINT + '$/datasets', {
@@ -29,11 +32,11 @@ const clearDataset = (dataset) =>
 
 const initialize = async () => {
   const broker = new ServiceBroker({
-    middlewares: [WebAclMiddleware({ baseUrl: CONFIG.HOME_URL, podProvider: true })],
+    middlewares: [WebAclMiddleware({ baseUrl: CONFIG.HOME_URL, podProvider: true }), ObjectsWatcherMiddleware({ podProvider: true })],
     logger: {
       type: 'Console',
       options: {
-        level: 'error',
+        level: 'warn',
       },
     },
   });

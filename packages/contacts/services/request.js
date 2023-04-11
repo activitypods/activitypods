@@ -1,3 +1,4 @@
+const urlJoin = require('url-join');
 const { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const {
   CONTACT_REQUEST,
@@ -110,18 +111,25 @@ module.exports = {
         });
 
         // 2. Cache the other actor's profile
-        await ctx.call('activitypub.object.cacheRemote', {
-          objectUri: activity.object.object.object,
-          actorUri: activity.actor,
+        await ctx.call('ldp.remote.store', {
+          resource: activity.object.object.object,
+          webId: emitterUri,
         });
 
-        // 3. Add the other actor to my contacts list
+        // 3. Attach the other actor's profile to my profiles container
+        await ctx.call('ldp.container.attach', {
+          containerUri: urlJoin(emitterUri, 'data', 'profiles'),
+          resourceUri: activity.object.object.object.id,
+          webId: emitterUri
+        });
+
+        // 4. Add the other actor to my contacts list
         await ctx.call('activitypub.collection.attach', {
           collectionUri: emitter['apods:contacts'],
           item: activity.object.actor,
         });
 
-        // 4. Remove the activity from my contact requests
+        // 5. Remove the activity from my contact requests
         await ctx.call('activitypub.collection.detach', {
           collectionUri: emitter['apods:contactRequests'],
           item: activity.object.id,
@@ -136,9 +144,16 @@ module.exports = {
             const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
             // Cache the other actor's profile (it should be visible now)
-            await ctx.call('activitypub.object.cacheRemote', {
-              objectUri: emitter.url,
-              actorUri: activity.to,
+            await ctx.call('ldp.remote.store', {
+              resourceUri: emitter.url,
+              webId: recipientUri,
+            });
+
+            // Attach the other actor's profile to my profiles container
+            await ctx.call('ldp.container.attach', {
+              containerUri: urlJoin(recipientUri, 'data', 'profiles'),
+              resourceUri: emitter.url,
+              webId: recipientUri
             });
 
             // Add the other actor to my contacts list

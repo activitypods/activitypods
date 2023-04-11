@@ -26,7 +26,6 @@ Check out [our website](https://activitypods.org) or [these slides](./proposal/p
 
 ### Utilities
 
-- [Synchronizer](packages/synchronizer/README.md)
 - [Announcer](packages/announcer/README.md)
 
 

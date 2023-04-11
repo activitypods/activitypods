@@ -1,11 +1,10 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { AnnouncerMixin } = require('@activitypods/announcer');
-const { SynchronizerMixin } = require('@activitypods/synchronizer');
 const { OBJECT_TYPES } = require('@semapps/activitypub');
 
 module.exports = {
   name: 'events.event',
-  mixins: [SynchronizerMixin, AnnouncerMixin, ControlledContainerMixin],
+  mixins: [AnnouncerMixin, ControlledContainerMixin],
   settings: {
     path: '/events',
     acceptedTypes: [OBJECT_TYPES.EVENT],

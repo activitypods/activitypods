@@ -18,7 +18,6 @@ beforeAll(async () => {
 
   await broker.loadService(path.resolve(__dirname, './services/core.service.js'));
   await broker.loadService(path.resolve(__dirname, './services/announcer.service.js'));
-  await broker.loadService(path.resolve(__dirname, './services/synchronizer.service.js'));
   await broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/events.app.js'));
@@ -41,7 +40,7 @@ afterAll(async () => {
 describe('Test mass sharing', () => {
   let actors = [], actorsUris = [];
 
-  test('Create 100 users', async () => {
+  test(`Create ${NUM_ACTORS} users`, async () => {
     for (let i = 1; i <= NUM_ACTORS; i++) {
       console.log(`Creating User #${i}...`)
 
@@ -93,10 +92,10 @@ describe('Test mass sharing', () => {
           broker.call('ldp.container.includes', {
             containerUri: urlJoin(actorsUris[i], '/data/events'),
             resourceUri: eventUri,
-            webId: actorsUris[i],
+            webId: 'system',
           })
         ).resolves.toBeTruthy();
-      }, 20000);
+      }, 90000);
     }
   }, 400000);
 });

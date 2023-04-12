@@ -3,11 +3,11 @@ const { AnnouncerMixin, getAnnouncesGroupUri } = require('@activitypods/announce
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
-  name: 'marketplace.project',
+  name: 'syreen.project',
   mixins: [AnnouncerMixin, ControlledContainerMixin],
   settings: {
-    path: '/projects',
-    acceptedTypes: ['pair:Project'],
+    path: '/syreen/projects',
+    acceptedTypes: ['syreen:hasLocation'],
     dereference: [],
     permissions: {},
     newResourcesPermissions: {}

@@ -2,7 +2,7 @@
 
 An [ActivityPods](../../README.md) service to manager user's profile and locations.
 
-Automatically creates a `/data/profiles/me` profile on user registration.
+Automatically creates a profile on user registration.
 
 ## Services
 

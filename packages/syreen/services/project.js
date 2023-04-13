@@ -7,8 +7,8 @@ module.exports = {
   mixins: [AnnouncerMixin, ControlledContainerMixin],
   settings: {
     path: '/syreen/projects',
-    acceptedTypes: ['syreen:hasLocation'],
-    dereference: [],
+    acceptedTypes: ['syreen:Project'],
+    dereference: ['syreen:hasLocation'],
     permissions: {},
     newResourcesPermissions: {}
   },

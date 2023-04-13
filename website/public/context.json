@@ -825,7 +825,28 @@
       "@type": "xsd:dateTime"
     },
 
+    "syreen:hasPart": {
+      "@type" : "@id"
+    },
+    "syreen:partOf": {
+      "@type" : "@id"
+    },
+    "syreen:depictedBy": {
+      "@type": "@id"
+    },
+    "syreen:hasLocation": {
+      "@type" : "@id"
+    },
+    "syreen:hasCategory": {
+      "@type" : "@id"
+    },
     "syreen:hasUnit": {
+      "@type" : "@id"
+    },
+    "syreen:hasStage": {
+      "@type" : "@id"
+    },
+    "syreen:hasProjectType": {
       "@type" : "@id"
     },
     "syreen:costPricePublication": {

@@ -5,6 +5,7 @@ import Edit from '../../layout/Edit';
 import ProfileTitle from "./ProfileTitle";
 import { g1PublicKeyToUrl, g1UrlToPublicKey } from "../../utils";
 import BlockAnonymous from "../../common/BlockAnonymous";
+import LocationInput from "../../common/inputs/LocationInput";
 
 const ToolbarWithoutDelete = props => (
   <Toolbar {...props} >
@@ -30,6 +31,7 @@ export const ProfileEdit = (props) => {
             helperText={translate('app.helper.g1_tipjar_input')}
             fullWidth
           />
+          <LocationInput reference="Location" source="vcard:hasAddress" fullWidth />
         </SimpleForm>
       </Edit>
     </BlockAnonymous>

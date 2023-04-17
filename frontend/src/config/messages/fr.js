@@ -7,6 +7,7 @@ module.exports = {
       accept_contact_request: 'Accepter la demande',
       add: 'Ajouter',
       add_contact: 'Envoyer la demande',
+      add_location: 'Ajouter une adresse',
       copy: 'Copier dans votre presse-papier',
       edit_profile: 'Éditer mon profil',
       ignore: 'Ignorer',
@@ -103,7 +104,8 @@ module.exports = {
       get_settings_error: "Une erreur s'est produite",
       update_settings_error: "Une erreur s'est produite",
       verified_applications_load_failed: 'Impossible de charger la liste des applications vérifiées',
-      app_uninstalled: 'Application désinstallée'
+      app_uninstalled: 'Application désinstallée',
+      home_address_updated: 'Adresse du domicile mise à jour'
     },
     user: {
       unknown: 'Inconnu',

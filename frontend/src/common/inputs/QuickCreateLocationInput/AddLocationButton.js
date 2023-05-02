@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useForm } from 'react-final-form';
 import {
   required,
-  Button,
   SaveButton,
   TextInput,
   useCreate,
@@ -13,15 +12,17 @@ import {
   useGetIdentity,
   useGetList
 } from 'react-admin';
-import { Dialog, DialogTitle, DialogContent, DialogActions, makeStyles } from '@material-ui/core';
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, makeStyles } from '@material-ui/core';
 import IconCancel from '@material-ui/icons/Cancel';
 import AddIcon from '@material-ui/icons/Add';
 import { extractContext, LocationInput } from '@semapps/geo-components';
 
 const useStyles = makeStyles(theme => ({
   button: {
-    marginBottom: theme.spacing(2),
-    color: '#FFF',
+    margin: '12px 0 0 12px',
+    [theme.breakpoints.down('xs')]: {
+      margin: '-12px 0 12px 0'
+    }
   },
 }));
 
@@ -68,10 +69,10 @@ const AddLocationButton = ({ onChange, reference, source }) => {
         className={classes.button}
         variant="contained"
         onClick={() => setShowDialog(true)}
-        label={translate('app.action.add_location')}
         color="primary"
+        startIcon={<AddIcon />}
       >
-        <AddIcon />
+        {translate('app.action.add_location')}
       </Button>
       <Dialog
         fullWidth
@@ -119,11 +120,11 @@ const AddLocationButton = ({ onChange, reference, source }) => {
               </DialogContent>
               <DialogActions>
                 <Button
-                  label="ra.action.cancel"
                   onClick={() => setShowDialog(false)}
                   disabled={loading}
+                  startIcon={<IconCancel />}
                 >
-                  <IconCancel />
+                  {translate('ra.action.cancel')}
                 </Button>
                 <SaveButton
                   handleSubmitWithRedirect={handleSubmitWithRedirect}

@@ -91,7 +91,7 @@ const LocationList = (props) => {
   const translate = useTranslate();
   
   return (
-    <List title={translate('app.page.addresses')} pagination={false} {...props}>
+    <List title={translate('app.page.addresses')} pagination={false} perPage={1000} {...props}>
       <ListWithSwitches />
     </List>
   );

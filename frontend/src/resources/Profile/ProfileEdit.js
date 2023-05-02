@@ -5,6 +5,7 @@ import Edit from '../../layout/Edit';
 import ProfileTitle from "./ProfileTitle";
 import { g1PublicKeyToUrl, g1UrlToPublicKey } from "../../utils";
 import BlockAnonymous from "../../common/BlockAnonymous";
+import QuickCreateLocationInput from "../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput";
 
 const ToolbarWithoutDelete = props => (
   <Toolbar {...props} >
@@ -23,6 +24,7 @@ export const ProfileEdit = (props) => {
           <ImageInput source="vcard:photo" accept="image/*">
             <ImageField source="src" />
           </ImageInput>
+          <QuickCreateLocationInput reference="Location" source="vcard:hasAddress" />
           <TextInput
             source="foaf:tipjar"
             parse={v => g1PublicKeyToUrl(v)}

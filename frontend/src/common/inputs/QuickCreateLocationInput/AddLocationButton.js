@@ -11,6 +11,7 @@ import {
   FormWithRedirect,
   RecordContextProvider,
   useGetIdentity,
+  useGetList
 } from 'react-admin';
 import { Dialog, DialogTitle, DialogContent, DialogActions, makeStyles } from '@material-ui/core';
 import IconCancel from '@material-ui/icons/Cancel';
@@ -30,6 +31,7 @@ const AddLocationButton = ({ onChange, reference, source }) => {
   const { identity } = useGetIdentity();
   const [showDialog, setShowDialog] = useState(false);
   const [create, { loading }] = useCreate(reference);
+  const { ids: existingLocations } = useGetList(reference);
   const translate = useTranslate();
   const notify = useNotify();
   const form = useForm();
@@ -79,7 +81,7 @@ const AddLocationButton = ({ onChange, reference, source }) => {
         <DialogTitle>{translate('app.action.add_location')}</DialogTitle>
         <FormWithRedirect
           save={handleSubmit}
-          initialValues={{ 'vcard:given-name': translate('app.user.location', { surname: identity?.fullName })}}
+          initialValues={existingLocations.length === 0 ? { 'vcard:given-name': translate('app.user.location', { surname: identity?.fullName })} : undefined}
           render={({ handleSubmitWithRedirect, pristine, saving }) => (
             <>
               <DialogContent>

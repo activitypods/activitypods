@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { SelectInput } from 'react-admin';
 import { ReferenceInput } from '@semapps/input-components';
-import AddLocationButton from "../buttons/AddLocationButton";
+import AddLocationButton from "./AddLocationButton";
 
-const LocationInput = ({ reference, source, ...rest }) => {
+const QuickCreateLocationInput = ({ reference, source, ...rest }) => {
   // Needed to trigger orm change and enable save button :
   // https://codesandbox.io/s/react-admin-v3-advanced-recipes-quick-createpreview-voyci
   const [version, setVersion] = useState(0);
@@ -19,4 +19,4 @@ const LocationInput = ({ reference, source, ...rest }) => {
   );
 };
 
-export default LocationInput;
+export default QuickCreateLocationInput;

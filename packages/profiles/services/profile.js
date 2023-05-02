@@ -82,6 +82,7 @@ module.exports = {
   hooks: {
     before: {
       async put(ctx) {
+        // Update vcard:hasGeo if vcard:hasAddress is set
         if (ctx.params.resource['vcard:hasAddress']) {
           const location = await ctx.call('profiles.location.get', {
             resourceUri: ctx.params.resource['vcard:hasAddress'],
@@ -99,6 +100,8 @@ module.exports = {
         }
       }
     },
+  // TODO give permissions to read home address to all contacts ?
+  // The action webacl.group.getUri need to be published first
   //   after: {
   //     async put(ctx, res) {
   //       const { oldData, newData, webId } = res;

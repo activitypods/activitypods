@@ -11,7 +11,7 @@ const LocationInput = ({ reference, source, ...rest }) => {
 
   return (
     <div>
-      <ReferenceInput key={version} reference={reference} source={source} allowEmpty {...rest}>
+      <ReferenceInput key={version} reference={reference} source={source} {...rest}>
         <SelectInput optionText="vcard:given-name" resettable />
       </ReferenceInput>
       <AddLocationButton reference={reference} source={source} onChange={handleChange} />

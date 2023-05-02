@@ -53,7 +53,11 @@ const ListWithSwitches = () => {
         previousData: identity?.profileData
       })
       .then(() => {
-        notify('app.notification.home_address_updated',  'success');
+        if (id) {
+          notify('app.notification.home_address_updated',  { type: 'success' });
+        } else {
+          notify('app.notification.home_address_deleted',  { type: 'success' });
+        }
       });
   }, [setCheckedId, checkedId, dataProvider, identity, notify]);
 

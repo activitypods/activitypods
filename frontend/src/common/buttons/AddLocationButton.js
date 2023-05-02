@@ -9,7 +9,8 @@ import {
   useNotify,
   useTranslate,
   FormWithRedirect,
-  ResourceContextProvider,
+  RecordContextProvider,
+  useGetIdentity,
 } from 'react-admin';
 import { Dialog, DialogTitle, DialogContent, DialogActions, makeStyles } from '@material-ui/core';
 import IconCancel from '@material-ui/icons/Cancel';
@@ -26,6 +27,7 @@ const useStyles = makeStyles(theme => ({
 // https://codesandbox.io/s/react-admin-v3-advanced-recipes-quick-createpreview-voyci
 const AddLocationButton = ({ onChange, reference, source }) => {
   const classes = useStyles();
+  const { identity } = useGetIdentity();
   const [showDialog, setShowDialog] = useState(false);
   const [create, { loading }] = useCreate(reference);
   const translate = useTranslate();
@@ -56,8 +58,10 @@ const AddLocationButton = ({ onChange, reference, source }) => {
     );
   };
 
+  if (!identity) return null;
+
   return (
-    <>
+    <RecordContextProvider value={{}}>
       <Button
         className={classes.button}
         variant="contained"
@@ -74,14 +78,14 @@ const AddLocationButton = ({ onChange, reference, source }) => {
       >
         <DialogTitle>{translate('app.action.add_location')}</DialogTitle>
         <FormWithRedirect
-          resource={reference}
           save={handleSubmit}
-          autoComplete="off"
+          initialValues={{ 'vcard:given-name': translate('app.user.location', { surname: identity?.fullName })}}
           render={({ handleSubmitWithRedirect, pristine, saving }) => (
             <>
               <DialogContent>
-                <TextInput source="vcard:given-name" fullWidth autoComplete="off" />
+                <TextInput resource={reference} source="vcard:given-name" fullWidth />
                 <LocationInput
+                  resource={reference}
                   mapboxConfig={{
                     access_token: process.env.REACT_APP_MAPBOX_ACCESS_TOKEN,
                     types: ['place', 'address'],
@@ -103,13 +107,12 @@ const AddLocationButton = ({ onChange, reference, source }) => {
                   optionText={(resource) => resource['vcard:given-name']}
                   validate={[required()]}
                   fullWidth
-                  label='Adresse'
                 />
                 <TextInput
+                  resource={reference}
                   source="vcard:note"
                   fullWidth
                   helperText={translate('app.helper.location_comment')}
-                  label='Indications'
                 />
               </DialogContent>
               <DialogActions>
@@ -131,7 +134,7 @@ const AddLocationButton = ({ onChange, reference, source }) => {
           )}
         />
       </Dialog>
-    </>
+    </RecordContextProvider>
   );
 }
 

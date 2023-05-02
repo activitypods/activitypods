@@ -105,7 +105,8 @@ module.exports = {
       update_settings_error: "Une erreur s'est produite",
       verified_applications_load_failed: 'Impossible de charger la liste des applications vérifiées',
       app_uninstalled: 'Application désinstallée',
-      home_address_updated: 'Adresse du domicile mise à jour'
+      home_address_updated: 'Adresse du domicile mise à jour',
+      home_address_deleted: 'Adresse du domicile enlevée'
     },
     user: {
       unknown: 'Inconnu',

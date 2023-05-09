@@ -1,4 +1,5 @@
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { getSyreenGroupUri } = require('../utils')
 
 module.exports = {
   name: 'syreen.group',
@@ -23,15 +24,17 @@ module.exports = {
         );
       },
       async onReceive(ctx, activity, recipientUri) {
+        const groupUri = getSyreenGroupUri(recipientUri);
+
         const groupExist = await ctx.call('webacl.group.exist', {
-          groupSlug: new URL(recipientUri).pathname + '/syreen',
+          groupUri,
           webId: 'system', // We cannot use recipientUri or we get a 403
         });
 
         if (!groupExist) {
           // Create a local ACL group for Syreen members
-          const { groupUri } = await ctx.call('webacl.group.create', {
-            groupSlug: new URL(recipientUri).pathname + '/syreen',
+          await ctx.call('webacl.group.create', {
+            groupUri,
             webId: recipientUri,
           });
 
@@ -94,7 +97,7 @@ module.exports = {
       },
       async onReceive(ctx, activity, recipientUri) {
         await ctx.call('webacl.group.addMember', {
-          groupSlug: new URL(recipientUri).pathname + '/syreen',
+          groupUri: getSyreenGroupUri(recipientUri),
           memberUri: activity.object.actor,
           webId: recipientUri
         });
@@ -117,10 +120,43 @@ module.exports = {
       },
       async onReceive(ctx, activity, recipientUri) {
         await ctx.call('webacl.group.removeMember', {
-          groupSlug: new URL(recipientUri).pathname + '/syreen',
+          groupUri: getSyreenGroupUri(recipientUri),
           memberUri: activity.object.actor,
           webId: recipientUri
         });
+      }
+    },
+    announceToGroup: {
+      match(ctx, activity) {
+        return this.matchActivity(
+          ctx,
+          {
+            type: ACTIVITY_TYPES.ANNOUNCE,
+            to: this.settings.groupUri,
+          },
+          activity
+        );
+      },
+      async onEmit(ctx, activity, emitterUri) {
+        await ctx.call(
+          'webacl.resource.addRights',
+          {
+            resourceUri: activity.object,
+            additionalRights: {
+              group: {
+                uri: getSyreenGroupUri(emitterUri),
+                read: true,
+              },
+            },
+            webId: emitterUri
+          },
+          {
+            meta: {
+              // We don't want the user to announce directly to other group members
+              skipAnnounce: true
+            }
+          }
+        );
       }
     }
   }

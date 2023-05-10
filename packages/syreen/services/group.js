@@ -7,6 +7,17 @@ module.exports = {
   settings: {
     groupUri: null
   },
+  async started() {
+    // Don't send notifications when the offer comes from Syreen group
+    await this.broker.call('activity-mapping.addMapper', {
+      match: {
+        type: ACTIVITY_TYPES.ANNOUNCE,
+        actor: this.settings.groupUri,
+      },
+      mapping: false,
+      priority: 2
+    });
+  },
   activities: {
     acceptJoinGroup: {
       match(ctx, activity) {
@@ -67,16 +78,25 @@ module.exports = {
           }
 
           // Authorize this ACL group to view the recipient's profile
-          await ctx.call('webacl.resource.addRights', {
-            resourceUri: recipient.url,
-            additionalRights: {
-              group: {
-                uri: groupUri,
-                read: true,
+          await ctx.call(
+            'webacl.resource.addRights',
+            {
+              resourceUri: recipient.url,
+              additionalRights: {
+                group: {
+                  uri: groupUri,
+                  read: true,
+                },
               },
+              webId: recipientUri,
             },
-            webId: recipientUri,
-          });
+            {
+              meta: {
+                // We don't want the user to announce directly to other group members
+                skipObjectsWatcher: true
+              }
+            }
+          );
         }
       }
     },
@@ -133,6 +153,9 @@ module.exports = {
           {
             type: ACTIVITY_TYPES.ANNOUNCE,
             to: this.settings.groupUri,
+            object: {
+              type: 'syreen:Offer'
+            }
           },
           activity
         );
@@ -141,7 +164,7 @@ module.exports = {
         await ctx.call(
           'webacl.resource.addRights',
           {
-            resourceUri: activity.object,
+            resourceUri: activity.object.id,
             additionalRights: {
               group: {
                 uri: getSyreenGroupUri(emitterUri),
@@ -153,7 +176,28 @@ module.exports = {
           {
             meta: {
               // We don't want the user to announce directly to other group members
-              skipAnnounce: true
+              skipObjectsWatcher: true
+            }
+          }
+        );
+
+        // Also give read rights on the project
+        await ctx.call(
+          'webacl.resource.addRights',
+          {
+            resourceUri: activity.object['syreen:partOf'],
+            additionalRights: {
+              group: {
+                uri: getSyreenGroupUri(emitterUri),
+                read: true,
+              },
+            },
+            webId: emitterUri
+          },
+          {
+            meta: {
+              // We don't want the user to announce directly to other group members
+              skipObjectsWatcher: true
             }
           }
         );

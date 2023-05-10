@@ -849,10 +849,16 @@
     "syreen:hasProjectType": {
       "@type" : "@id"
     },
-    "syreen:costPricePublication": {
+    "syreen:startDate": {
+      "@type": "xsd:dateTime"
+    },
+    "syreen:endDate": {
+      "@type": "xsd:dateTime"
+    },
+    "syreen:publishMarketValue": {
       "@type" : "xsd:boolean"
     },
-    "syreen:marketValuePublication": {
+    "syreen:publishCostPrice": {
       "@type" : "xsd:boolean"
     },
 

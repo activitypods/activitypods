@@ -161,46 +161,41 @@ module.exports = {
         );
       },
       async onEmit(ctx, activity, emitterUri) {
-        await ctx.call(
-          'webacl.resource.addRights',
-          {
-            resourceUri: activity.object.id,
-            additionalRights: {
-              group: {
-                uri: getSyreenGroupUri(emitterUri),
-                read: true,
-              },
-            },
-            webId: emitterUri
-          },
-          {
-            meta: {
-              // We don't want the user to announce directly to other group members
-              skipObjectsWatcher: true
-            }
-          }
-        );
+        const project = await ctx.call('syreen.project.get', {
+          resourceUri: activity.object['syreen:partOf'],
+          webId: emitterUri
+        });
 
-        // Also give read rights on the project
-        await ctx.call(
-          'webacl.resource.addRights',
-          {
-            resourceUri: activity.object['syreen:partOf'],
-            additionalRights: {
-              group: {
-                uri: getSyreenGroupUri(emitterUri),
-                read: true,
+        const resourcesUris = [
+          activity.object.id, // Offer
+          activity.object['syreen:hasLocation'], // Offer location
+          project.id, // Project
+          project['syreen:hasLocation'] // Project location
+        ];
+
+        for (let resourceUri of resourcesUris) {
+          if (resourceUri) {
+            await ctx.call(
+              'webacl.resource.addRights',
+              {
+                resourceUri,
+                additionalRights: {
+                  group: {
+                    uri: getSyreenGroupUri(emitterUri),
+                    read: true,
+                  },
+                },
+                webId: emitterUri
               },
-            },
-            webId: emitterUri
-          },
-          {
-            meta: {
-              // We don't want the user to announce directly to other group members
-              skipObjectsWatcher: true
-            }
+              {
+                meta: {
+                  // We don't want the user to announce directly to other group members
+                  skipObjectsWatcher: true
+                }
+              }
+            );
           }
-        );
+        }
       }
     }
   }

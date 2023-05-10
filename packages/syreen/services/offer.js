@@ -24,8 +24,13 @@ module.exports = {
     after: {
       async create(ctx, res) {
         await ctx.call('syreen.project.setNewRights', res);
+        await ctx.call('syreen.location.setNewRights', res);
         return res;
-      }
+      },
+      async put(ctx, res) {
+        await ctx.call('syreen.location.updateRights', res);
+        return res;
+      },
     },
   },
   events: {

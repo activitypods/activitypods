@@ -12,6 +12,18 @@ module.exports = {
     permissions: {},
     newResourcesPermissions: {}
   },
+  hooks: {
+    after: {
+      async create(ctx, res) {
+        await ctx.call('syreen.location.setNewRights', res);
+        return res;
+      },
+      async put(ctx, res) {
+        await ctx.call('syreen.location.updateRights', res);
+        return res;
+      },
+    },
+  },
   actions: {
     async setNewRights(ctx) {
       const { resourceUri: offerUri, newData } = ctx.params;

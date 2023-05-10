@@ -1,4 +1,5 @@
 const GroupService = require('./services/group');
+const LocationService = require('./services/location');
 const OfferService = require('./services/offer');
 const ProjectService = require('./services/project');
 
@@ -18,6 +19,8 @@ const SyreenApp = {
         groupUri: this.settings.groupUri
       }
     });
+
+    this.broker.createService(LocationService);
 
     this.broker.createService(OfferService);
 

@@ -681,7 +681,6 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         collectionUri: alice.outbox,
         page: 1
       });
-      console.log('outbox', outbox);
       await expect(outbox.orderedItems[0]).toMatchObject({
         type: ACTIVITY_TYPES.ANNOUNCE,
         object: {

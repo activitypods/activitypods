@@ -27,7 +27,7 @@ module.exports = {
   actions: {
     async setNewRights(ctx) {
       const { resourceUri: offerUri, newData } = ctx.params;
-      const projectUri = newData['pair:partOf'];
+      const projectUri = newData['syreen:partOf'];
 
       if (projectUri) {
         await ctx.call('webacl.resource.addRights', {
@@ -49,7 +49,7 @@ module.exports = {
         query: `
           SELECT ?offerUri 
           WHERE {
-            ?offerUri <http://virtual-assembly.org/ontologies/pair#partOf> <${projectUri}>
+            ?offerUri <http://syreen.fr/ns/core#partOf> <${projectUri}>
           }
         `,
         accept: MIME_TYPES.JSON,

@@ -45,10 +45,10 @@ module.exports = {
         });
         if (hasType(resource, 'syreen:Offer')) {
           if (addPublicRead) {
-            const isProjectPublic = await ctx.call('webacl.resource.isPublic', { resourceUri: resource['pair:partOf'] });
+            const isProjectPublic = await ctx.call('webacl.resource.isPublic', { resourceUri: resource['syreen:partOf'] });
             if (!isProjectPublic) {
               await ctx.call('webacl.resource.addRights', {
-                resourceUri: resource['pair:partOf'],
+                resourceUri: resource['syreen:partOf'],
                 additionalRights: {
                   anon: {
                     read: true
@@ -59,7 +59,7 @@ module.exports = {
             }
           } else if (removePublicRead) {
             // Look if other offers on the project are public
-            const offersUris = await ctx.call('marketplace.project.getProjectOffers', { projectUri: resource['pair:partOf'] });
+            const offersUris = await ctx.call('syreen.project.getProjectOffers', { projectUri: resource['syreen:partOf'] });
             let oneOfferIsPublic = false;
             for (let offerUri of offersUris) {
               // Don't look for the current offer since we know it's not public anymore
@@ -75,7 +75,7 @@ module.exports = {
             // If no other offer of the project is public, unpublish the project
             if (!oneOfferIsPublic) {
               await ctx.call('webacl.resource.removeRights', {
-                resourceUri: resource['pair:partOf'],
+                resourceUri: resource['syreen:partOf'],
                 rights: {
                   anon: {
                     read: true

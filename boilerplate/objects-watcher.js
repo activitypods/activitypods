@@ -1,8 +1,6 @@
 const urlJoin = require("url-join");
 const { PUBLIC_URI, ACTIVITY_TYPES } = require("@semapps/activitypub");
 
-const delay = t => new Promise(resolve => setTimeout(resolve, t));
-
 const handledActions = [
   'ldp.container.post',
   'ldp.resource.put',
@@ -213,9 +211,15 @@ const ObjectsWatcherMiddleware = (config = {}) => {
 
             case 'webacl.resource.addRights': {
               if (ctx.params.additionalRights || ctx.params.addedRights) {
-                const newRecipientsBeforeDelay = await getRecipients(ctx, ctx.params.resourceUri);
-                console.log('before delay', newRecipientsBeforeDelay)
-                await delay(3000);
+                // Clear cache now otherwise getRecipients() may return the old cache rights
+                // TODO Use WebAclMiddleware instead of events to clear cache right without delay
+                // https://github.com/assemblee-virtuelle/semapps/issues/1127
+                if (containerUri) {
+                  await ctx.call('webacl.cache.invalidateResourceRights', { uri: containerUri, specificUriOnly: false });
+                } else {
+                  await ctx.call('webacl.cache.invalidateResourceRights', { uri: resourceUri, specificUriOnly: true });
+                }
+
                 const newRecipients = await getRecipients(ctx, ctx.params.resourceUri);
                 console.log('ow6', newRecipients)
                 const recipientsAdded = newRecipients.filter(u => !oldRecipients.includes(u));
@@ -234,6 +238,15 @@ const ObjectsWatcherMiddleware = (config = {}) => {
             }
 
             case 'webacl.resource.setRights': {
+              // Clear cache now otherwise getRecipients() may return the old cache rights
+              // TODO Use WebAclMiddleware instead of events to clear cache without delay
+              // https://github.com/assemblee-virtuelle/semapps/issues/1127
+              if (containerUri) {
+                await ctx.call('webacl.cache.invalidateResourceRights', { uri: containerUri, specificUriOnly: false });
+              } else {
+                await ctx.call('webacl.cache.invalidateResourceRights', { uri: resourceUri, specificUriOnly: true });
+              }
+
               const newRecipients = await getRecipients(ctx, ctx.params.resourceUri);
               const containers = await ctx.call('ldp.resource.getContainers', { resourceUri: ctx.params.resourceUri });
 

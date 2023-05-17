@@ -29,9 +29,11 @@ const ObjectsWatcherMiddleware = (config = {}) => {
 
   const getRecipients = async (ctx, resourceUri) => {
     const isPublic = await ctx.call('webacl.resource.isPublic', { resourceUri });
+    console.log('getRecipients', resourceUri, isPublic)
     const actor = await getActor(ctx, resourceUri);
     const usersWithReadRights = await ctx.call('webacl.resource.getUsersWithReadRights', { resourceUri });
     const recipients = usersWithReadRights.filter(u => u !== actor.id);
+    console.log('getRecipients2', actor.followers, usersWithReadRights, recipients);
     if (isPublic) {
       return [...recipients, actor.followers, PUBLIC_URI]
     } else {

@@ -1,5 +1,5 @@
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { getSyreenGroupUri } = require('../utils')
+const { getSyreenAclGroupUri } = require('../utils')
 
 module.exports = {
   name: 'syreen.group',
@@ -19,76 +19,74 @@ module.exports = {
     });
   },
   activities: {
-    acceptJoinGroup: {
+    joinGroup: {
       match(ctx, activity) {
         return this.matchActivity(
           ctx,
           {
-            type: ACTIVITY_TYPES.ACCEPT,
-            actor: this.settings.groupUri,
-            object: {
-              type: ACTIVITY_TYPES.JOIN,
-              object: this.settings.groupUri
-            }
+            type: ACTIVITY_TYPES.JOIN,
+            object: this.settings.groupUri
           },
           activity
         );
       },
-      async onReceive(ctx, activity, recipientUri) {
-        const groupUri = getSyreenGroupUri(recipientUri);
+      async onEmit(ctx, activity, emitterUri) {
+        const aclGroupUri = getSyreenAclGroupUri(emitterUri);
 
         const groupExist = await ctx.call('webacl.group.exist', {
-          groupUri,
+          groupUri: aclGroupUri,
           webId: 'system', // We cannot use recipientUri or we get a 403
         });
 
         if (!groupExist) {
           // Create a local ACL group for Syreen members
           await ctx.call('webacl.group.create', {
-            groupUri,
-            webId: recipientUri,
-          });
-
-          const recipient = await ctx.call('activitypub.actor.get', {
-            actorUri: recipientUri,
-            webId: recipientUri
+            groupUri: aclGroupUri,
+            webId: emitterUri,
           });
 
           const emitter = await ctx.call('activitypub.actor.get', {
-            actorUri: activity.actor,
-            webId: recipientUri
+            actorUri: emitterUri,
+            webId: emitterUri
+          });
+
+          await ctx.call('webacl.group.addMember', {
+            groupUri: aclGroupUri,
+            memberUri: this.settings.groupUri,
+            webId: emitterUri
+          });
+
+          const group = await ctx.call('activitypub.actor.get', {
+            actorUri: this.settings.groupUri
           });
 
           const groupFollowersCollection = await ctx.call('ldp.remote.get', {
-            resourceUri: emitter.followers,
-            webId: recipientUri
+            resourceUri: group.followers
           });
 
           if (groupFollowersCollection) {
             // Add current group members to ACL group
             for (let memberUri of groupFollowersCollection.items) {
               await ctx.call('webacl.group.addMember', {
-                groupUri,
+                groupUri: aclGroupUri,
                 memberUri,
-                webId: recipientUri
+                webId: emitterUri
               });
             }
-
-            // TODO Also add syreen group ??
           }
 
           // Authorize this ACL group to view the recipient's profile
           await ctx.call(
             'webacl.resource.addRights',
             {
-              resourceUri: recipient.url,
+              resourceUri: emitter.url,
               additionalRights: {
                 group: {
-                  uri: groupUri,
+                  uri: aclGroupUri,
                   read: true,
                 },
               },
-              webId: recipientUri,
+              webId: emitterUri,
             },
             {
               meta: {
@@ -117,7 +115,7 @@ module.exports = {
       },
       async onReceive(ctx, activity, recipientUri) {
         await ctx.call('webacl.group.addMember', {
-          groupUri: getSyreenGroupUri(recipientUri),
+          groupUri: getSyreenAclGroupUri(recipientUri),
           memberUri: activity.object.actor,
           webId: recipientUri
         });
@@ -140,7 +138,7 @@ module.exports = {
       },
       async onReceive(ctx, activity, recipientUri) {
         await ctx.call('webacl.group.removeMember', {
-          groupUri: getSyreenGroupUri(recipientUri),
+          groupUri: getSyreenAclGroupUri(recipientUri),
           memberUri: activity.object.actor,
           webId: recipientUri
         });
@@ -181,7 +179,7 @@ module.exports = {
                 resourceUri,
                 additionalRights: {
                   group: {
-                    uri: getSyreenGroupUri(emitterUri),
+                    uri: getSyreenAclGroupUri(emitterUri),
                     read: true,
                   },
                 },

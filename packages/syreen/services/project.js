@@ -3,19 +3,31 @@ const { AnnouncerMixin, getAnnouncesGroupUri } = require('@activitypods/announce
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
-  name: 'marketplace.project',
+  name: 'syreen.project',
   mixins: [AnnouncerMixin, ControlledContainerMixin],
   settings: {
-    path: '/projects',
-    acceptedTypes: ['pair:Project'],
-    dereference: [],
+    path: '/syreen/projects',
+    acceptedTypes: ['syreen:Project'],
+    dereference: ['syreen:hasLocation'],
     permissions: {},
     newResourcesPermissions: {}
+  },
+  hooks: {
+    after: {
+      async create(ctx, res) {
+        await ctx.call('syreen.location.setNewRights', res);
+        return res;
+      },
+      async put(ctx, res) {
+        await ctx.call('syreen.location.updateRights', res);
+        return res;
+      },
+    },
   },
   actions: {
     async setNewRights(ctx) {
       const { resourceUri: offerUri, newData } = ctx.params;
-      const projectUri = newData['pair:partOf'];
+      const projectUri = newData['syreen:partOf'];
 
       if (projectUri) {
         await ctx.call('webacl.resource.addRights', {
@@ -37,7 +49,7 @@ module.exports = {
         query: `
           SELECT ?offerUri 
           WHERE {
-            ?offerUri <http://virtual-assembly.org/ontologies/pair#partOf> <${projectUri}>
+            ?offerUri <http://syreen.fr/ns/core#partOf> <${projectUri}>
           }
         `,
         accept: MIME_TYPES.JSON,

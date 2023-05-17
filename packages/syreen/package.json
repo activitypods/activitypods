@@ -1,12 +1,13 @@
 {
-  "name": "@activitypods/announcer",
+  "name": "@activitypods/syreen",
   "version": "1.1.0",
-  "description": "ActivityPods service to announce objects",
+  "description": "ActivityPods app for app.syreen.fr",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
   "dependencies": {
     "@semapps/activitypub": "0.5.0-alpha.6",
-    "@semapps/ldp": "0.5.0-alpha.6"
+    "@semapps/ldp": "0.5.0-alpha.6",
+    "@semapps/mime-types": "0.5.0-alpha.6"
   },
   "publishConfig": {
     "access": "public"

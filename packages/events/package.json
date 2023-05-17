@@ -6,9 +6,9 @@
   "author": "Virtual Assembly",
   "dependencies": {
     "@activitypods/announcer": "1.1.0",
-    "@semapps/activitypub": "0.5.0-alpha.5",
-    "@semapps/ldp": "0.5.0-alpha.5",
-    "@semapps/mime-types": "0.5.0-alpha.5",
+    "@semapps/activitypub": "0.5.0-alpha.6",
+    "@semapps/ldp": "0.5.0-alpha.6",
+    "@semapps/mime-types": "0.5.0-alpha.6",
     "moleculer-cron": "^0.0.2"
   },
   "publishConfig": {

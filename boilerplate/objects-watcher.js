@@ -1,6 +1,8 @@
 const urlJoin = require("url-join");
 const { PUBLIC_URI, ACTIVITY_TYPES } = require("@semapps/activitypub");
 
+const delay = t => new Promise(resolve => setTimeout(resolve, t));
+
 const handledActions = [
   'ldp.container.post',
   'ldp.resource.put',
@@ -211,6 +213,9 @@ const ObjectsWatcherMiddleware = (config = {}) => {
 
             case 'webacl.resource.addRights': {
               if (ctx.params.additionalRights || ctx.params.addedRights) {
+                const newRecipientsBeforeDelay = await getRecipients(ctx, ctx.params.resourceUri);
+                console.log('before delay', newRecipientsBeforeDelay)
+                await delay(3000);
                 const newRecipients = await getRecipients(ctx, ctx.params.resourceUri);
                 console.log('ow6', newRecipients)
                 const recipientsAdded = newRecipients.filter(u => !oldRecipients.includes(u));

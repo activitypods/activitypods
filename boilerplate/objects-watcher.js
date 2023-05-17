@@ -82,7 +82,7 @@ const ObjectsWatcherMiddleware = (config = {}) => {
     localAction: (wrapWatcherMiddleware = (next, action) => {
       if (handledActions.includes(action.name)) {
         return async ctx => {
-          console.log('ow1', action.name, initialized, ctx.meta.skipObjectsWatcher)
+          console.log('ow1', action.name, ctx.params)
 
           // Don't handle actions until middleware is fully started
           // Otherwise, the creation of the relay actor calls the middleware before it started
@@ -210,9 +210,12 @@ const ObjectsWatcherMiddleware = (config = {}) => {
             case 'webacl.resource.addRights': {
               if (ctx.params.additionalRights || ctx.params.addedRights) {
                 const newRecipients = await getRecipients(ctx, ctx.params.resourceUri);
+                console.log('ow6', newRecipients)
                 const recipientsAdded = newRecipients.filter(u => !oldRecipients.includes(u));
+                console.log('ow7', recipientsAdded)
                 if (recipientsAdded.length > 0) {
                   const containers = await ctx.call('ldp.resource.getContainers', { resourceUri: ctx.params.resourceUri });
+                  console.log('containers', containers)
                   await announce(ctx, ctx.params.resourceUri, recipientsAdded, {
                     type: ACTIVITY_TYPES.CREATE,
                     object: ctx.params.resourceUri,

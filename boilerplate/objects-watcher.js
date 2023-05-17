@@ -13,7 +13,7 @@ const handledActions = [
 
 const ObjectsWatcherMiddleware = (config = {}) => {
   const { baseUrl, podProvider = false } = config;
-  let relayActor, watchedContainers = [], initialized = false;
+  let relayActor, watchedContainers = [], initialized = false, cacherActivated = false;
 
   if (!baseUrl) throw new Error('The baseUrl setting is missing from ObjectsWatcherMiddleware');
 
@@ -27,13 +27,23 @@ const ObjectsWatcherMiddleware = (config = {}) => {
     }
   }
 
+  const clearWebAclCache = async (ctx, resourceUri, containerUri) => {
+    if (cacherActivated) {
+      // TODO Use WebAclMiddleware instead of events to clear cache immediately
+      // https://github.com/assemblee-virtuelle/semapps/issues/1127
+      if (containerUri) {
+        await ctx.call('webacl.cache.invalidateResourceRights', { uri: containerUri, specificUriOnly: false });
+      } else {
+        await ctx.call('webacl.cache.invalidateResourceRights', { uri: resourceUri, specificUriOnly: true });
+      }
+    }
+  };
+
   const getRecipients = async (ctx, resourceUri) => {
     const isPublic = await ctx.call('webacl.resource.isPublic', { resourceUri });
-    console.log('getRecipients', resourceUri, isPublic)
     const actor = await getActor(ctx, resourceUri);
     const usersWithReadRights = await ctx.call('webacl.resource.getUsersWithReadRights', { resourceUri });
     const recipients = usersWithReadRights.filter(u => u !== actor.id);
-    console.log('getRecipients2', actor.followers, usersWithReadRights, recipients);
     if (isPublic) {
       return [...recipients, actor.followers, PUBLIC_URI]
     } else {
@@ -69,8 +79,6 @@ const ObjectsWatcherMiddleware = (config = {}) => {
   return ({
     name: 'ObjectsWatcherMiddleware',
     async started(broker) {
-      console.log('started', podProvider);
-
       if (!podProvider) {
         await broker.waitForServices('activitypub.relay');
         relayActor = await broker.call('activitypub.relay.getActor');
@@ -80,12 +88,12 @@ const ObjectsWatcherMiddleware = (config = {}) => {
       watchedContainers = Object.values(containers).filter(c => !c.excludeFromMirror);
 
       initialized = true;
+      cacherActivated = !!broker.cacher;
+      console.log('cacherActivated', cacherActivated);
     },
     localAction: (wrapWatcherMiddleware = (next, action) => {
       if (handledActions.includes(action.name)) {
         return async ctx => {
-          console.log('ow1', action.name, ctx.params)
-
           // Don't handle actions until middleware is fully started
           // Otherwise, the creation of the relay actor calls the middleware before it started
           if (!initialized) return await next(ctx);
@@ -122,15 +130,12 @@ const ObjectsWatcherMiddleware = (config = {}) => {
               break;
           }
 
-          console.log('ow2', resourceUri)
-
           // We never want to watch remote resources
           if (resourceUri && isRemoteUri(resourceUri, ctx.meta.dataset)) return await next(ctx);
 
           const containers = containerUri ? [containerUri] : await ctx.call('ldp.resource.getContainers', { resourceUri });
           if (!isWatched(containers)) return await next(ctx);
 
-          console.log('ow3', containers)
           /*
            * BEFORE HOOKS
            */
@@ -161,14 +166,10 @@ const ObjectsWatcherMiddleware = (config = {}) => {
               break;
           }
 
-          console.log('ow4', oldRecipients)
-
           /*
            * ACTION CALL
            */
           actionReturnValue = await next(ctx);
-
-          console.log('ow5', actionReturnValue)
 
           /*
            * AFTER HOOKS
@@ -212,21 +213,11 @@ const ObjectsWatcherMiddleware = (config = {}) => {
             case 'webacl.resource.addRights': {
               if (ctx.params.additionalRights || ctx.params.addedRights) {
                 // Clear cache now otherwise getRecipients() may return the old cache rights
-                // TODO Use WebAclMiddleware instead of events to clear cache right without delay
-                // https://github.com/assemblee-virtuelle/semapps/issues/1127
-                if (containerUri) {
-                  await ctx.call('webacl.cache.invalidateResourceRights', { uri: containerUri, specificUriOnly: false });
-                } else {
-                  await ctx.call('webacl.cache.invalidateResourceRights', { uri: resourceUri, specificUriOnly: true });
-                }
-
+                await clearWebAclCache(ctx, resourceUri, containerUri);
                 const newRecipients = await getRecipients(ctx, ctx.params.resourceUri);
-                console.log('ow6', newRecipients)
                 const recipientsAdded = newRecipients.filter(u => !oldRecipients.includes(u));
-                console.log('ow7', recipientsAdded)
                 if (recipientsAdded.length > 0) {
                   const containers = await ctx.call('ldp.resource.getContainers', { resourceUri: ctx.params.resourceUri });
-                  console.log('containers', containers)
                   await announce(ctx, ctx.params.resourceUri, recipientsAdded, {
                     type: ACTIVITY_TYPES.CREATE,
                     object: ctx.params.resourceUri,
@@ -239,14 +230,7 @@ const ObjectsWatcherMiddleware = (config = {}) => {
 
             case 'webacl.resource.setRights': {
               // Clear cache now otherwise getRecipients() may return the old cache rights
-              // TODO Use WebAclMiddleware instead of events to clear cache without delay
-              // https://github.com/assemblee-virtuelle/semapps/issues/1127
-              if (containerUri) {
-                await ctx.call('webacl.cache.invalidateResourceRights', { uri: containerUri, specificUriOnly: false });
-              } else {
-                await ctx.call('webacl.cache.invalidateResourceRights', { uri: resourceUri, specificUriOnly: true });
-              }
-
+              await clearWebAclCache(ctx, resourceUri, containerUri);
               const newRecipients = await getRecipients(ctx, ctx.params.resourceUri);
               const containers = await ctx.call('ldp.resource.getContainers', { resourceUri: ctx.params.resourceUri });
 
@@ -295,6 +279,8 @@ const ObjectsWatcherMiddleware = (config = {}) => {
             case 'webacl.resource.removeRights': {
               // If oldRecipients is not initialized, it means the resource has been deleted
               if (oldRecipients) {
+                // Clear cache now otherwise getRecipients() may return the old cache rights
+                await clearWebAclCache(ctx, resourceUri, containerUri);
                 const newRecipients = await getRecipients(ctx, ctx.params.resourceUri);
                 const recipientsRemoved = oldRecipients.filter(u => !newRecipients.includes(u));
                 if (recipientsRemoved.length > 0 && !newRecipients.includes(PUBLIC_URI)) {

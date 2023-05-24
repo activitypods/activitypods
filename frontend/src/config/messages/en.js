@@ -7,6 +7,7 @@ module.exports = {
       accept_contact_request: 'Accept contact request',
       add: 'Add',
       add_contact: 'Send request',
+      add_location: 'Add an address',
       copy: 'Copy to clipboard',
       edit_profile: 'Edit my profile',
       ignore: 'Ignore',
@@ -103,7 +104,9 @@ module.exports = {
       get_settings_error: 'An error occurred',
       update_settings_error: 'An error occurred',
       verified_applications_load_failed: 'Unable to load the list of verified applications',
-      app_uninstalled: 'Application uninstalled'
+      app_uninstalled: 'Application uninstalled',
+      home_address_updated: 'Home address updated',
+      home_address_deleted: 'Home address deleted'
     },
     user: {
       unknown: 'Unknown',

@@ -1,6 +1,6 @@
 const path = require('path');
 const urlJoin = require('url-join');
-const { ActivityPubService, ActivityMappingService } = require('@semapps/activitypub');
+const { ActivityPubService, ActivityMappingService, ACTOR_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
@@ -46,6 +46,10 @@ const CoreService = {
         podProvider: true,
         dispatch: {
           queueServiceUrl
+        },
+        like: {
+          attachToObjectTypes: [...Object.values(OBJECT_TYPES), 'pair:Skill'],
+          attachToActorTypes: Object.values(ACTOR_TYPES)
         },
       },
     });

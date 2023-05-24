@@ -825,13 +825,43 @@
       "@type": "xsd:dateTime"
     },
 
+    "syreen:hasPart": {
+      "@type" : "@id"
+    },
+    "syreen:actor": {
+      "@type" : "@id"
+    },
+    "syreen:partOf": {
+      "@type" : "@id"
+    },
+    "syreen:depictedBy": {
+      "@type": "@id"
+    },
+    "syreen:hasLocation": {
+      "@type" : "@id"
+    },
+    "syreen:hasCategory": {
+      "@type" : "@id"
+    },
     "syreen:hasUnit": {
       "@type" : "@id"
     },
-    "syreen:costPricePublication": {
+    "syreen:hasStage": {
+      "@type" : "@id"
+    },
+    "syreen:hasProjectType": {
+      "@type" : "@id"
+    },
+    "syreen:startDate": {
+      "@type": "xsd:dateTime"
+    },
+    "syreen:endDate": {
+      "@type": "xsd:dateTime"
+    },
+    "syreen:publishMarketValue": {
       "@type" : "xsd:boolean"
     },
-    "syreen:marketValuePublication": {
+    "syreen:publishCostPrice": {
       "@type" : "xsd:boolean"
     },
 

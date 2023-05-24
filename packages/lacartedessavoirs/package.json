@@ -1,0 +1,16 @@
+{
+  "name": "@activitypods/lacartedessavoirs",
+  "version": "1.1.0",
+  "description": "ActivityPods app for LaCarteDesSavoirs (skills map)",
+  "license": "Apache-2.0",
+  "author": "Virtual Assembly",
+  "dependencies": {
+    "@activitypods/announcer": "1.1.0",
+    "@activitypods/synchronizer": "1.1.0",
+    "@semapps/activitypub": "0.4.5",
+    "@semapps/ldp": "0.4.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -828,6 +828,9 @@
     "syreen:hasPart": {
       "@type" : "@id"
     },
+    "syreen:actor": {
+      "@type" : "@id"
+    },
     "syreen:partOf": {
       "@type" : "@id"
     },

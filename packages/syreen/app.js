@@ -1,3 +1,4 @@
+const AlertService = require('./services/alert');
 const GroupService = require('./services/group');
 const LocationService = require('./services/location');
 const OfferService = require('./services/offer');
@@ -7,12 +8,19 @@ const SyreenApp = {
   name: 'syreen',
   settings: {
     groupUri: null,
+    alertBotUri: null,
   },
   dependencies: ['ldp.registry'],
   created() {
     if (!this.settings.groupUri) {
       throw new Error('No groupUri setting defined for Syreen app !')
     }
+
+    this.broker.createService(AlertService, {
+      settings: {
+        alertBotUri: this.settings.alertBotUri
+      }
+    });
 
     this.broker.createService(GroupService, {
       settings: {

@@ -14,6 +14,21 @@ const replaceRules = {
 module.exports = {
   name: 'migration',
   actions: {
+    async giveReadRightsToSkillContainer(ctx) {
+      for (let dataset of await ctx.call('pod.list')) {
+        const [account] = await ctx.call('auth.account.find', { query: { username: dataset } });
+        if (account) {
+          this.logger.info(`Giving rights for ${account.webId}`);
+          await ctx.call(
+            'lacartedessavoirs.skill.giveReadRightsToContacts',
+            { webId: account.webId },
+            { meta: { dataset } }
+          );
+        } else {
+          this.logger.warn(`No account with dataset ${dataset}`);
+        }
+      }
+    },
     async useApplicationJson(ctx) {
       const appsDomains = [
         'lentraide.app',

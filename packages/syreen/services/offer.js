@@ -57,6 +57,16 @@ module.exports = {
                 webId: 'system'
               });
             }
+            // TODO remove public right on location when offer is not public anymore
+            await ctx.call('webacl.resource.addRights', {
+              resourceUri: resource['syreen:hasLocation'],
+              additionalRights: {
+                anon: {
+                  read: true
+                }
+              },
+              webId: 'system'
+            });
           } else if (removePublicRead) {
             // Look if other offers on the project are public
             const offersUris = await ctx.call('syreen.project.getProjectOffers', { projectUri: resource['syreen:partOf'] });

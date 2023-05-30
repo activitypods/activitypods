@@ -30,10 +30,10 @@ module.exports = {
           locale: CONFIG.DEFAULT_LOCALE,
           frontUrl: CONFIG.FRONTEND_URL,
         },
-      }
+      },
     },
     api: {
-      port: CONFIG.PORT
-    }
+      port: CONFIG.PORT,
+    },
   },
 };

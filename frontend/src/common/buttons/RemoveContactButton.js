@@ -18,7 +18,7 @@ const RemoveContactButton = ({ refetch, ...rest }) => {
         type: ACTIVITY_TYPES.REMOVE,
         actor: outbox.owner,
         object: record.describes,
-        origin: url
+        origin: url,
       });
       setTimeout(() => {
         refetch();

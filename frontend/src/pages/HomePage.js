@@ -1,5 +1,14 @@
 import React from 'react';
-import { Box, Button, makeStyles, Typography, ThemeProvider, useMediaQuery, Container, Avatar } from '@material-ui/core';
+import {
+  Box,
+  Button,
+  makeStyles,
+  Typography,
+  ThemeProvider,
+  useMediaQuery,
+  Container,
+  Avatar,
+} from '@material-ui/core';
 import { Link, useGetIdentity, useTranslate } from 'react-admin';
 import { Redirect } from 'react-router-dom';
 import theme from '../config/theme';
@@ -7,8 +16,8 @@ import theme from '../config/theme';
 const useStyles = makeStyles(() => ({
   '@global': {
     body: {
-      backgroundColor: theme.palette.primary.main
-    }
+      backgroundColor: theme.palette.primary.main,
+    },
   },
   circle: {
     borderRadius: '50%',
@@ -27,7 +36,7 @@ const useStyles = makeStyles(() => ({
   },
   title: {
     fontWeight: '800',
-    paddingTop: 50
+    paddingTop: 50,
   },
   text: {
     color: 'white',
@@ -42,7 +51,7 @@ const useStyles = makeStyles(() => ({
   stepsTitle: {
     color: 'white',
     fontWeight: 'bold',
-    marginBottom: 15
+    marginBottom: 15,
   },
   steps: {
     marginTop: 400,
@@ -58,9 +67,9 @@ const useStyles = makeStyles(() => ({
       [theme.breakpoints.down('xs')]: {
         fontWeight: 'bold',
         lineHeight: '1.2em',
-        marginBottom: 8
-      }
-    }
+        marginBottom: 8,
+      },
+    },
   },
   number: {
     position: 'absolute',
@@ -71,8 +80,8 @@ const useStyles = makeStyles(() => ({
     fontWeight: 'bold',
     color: theme.palette.primary.main,
     backgroundColor: 'white',
-    fontSize: 50
-  }
+    fontSize: 50,
+  },
 }));
 
 const HomePage = ({ title }) => {
@@ -93,10 +102,15 @@ const HomePage = ({ title }) => {
             <Typography align="center" variant="h1" className={classes.title}>
               {title}
             </Typography>
-            <Typography align="center">
-              {process.env.REACT_APP_DESCRIPTION}
-            </Typography>
-            <Box display="flex" flexDirection={xs ? 'column' : 'row'} pt={3} pb={3} alignItems="center" justifyContent="center">
+            <Typography align="center">{process.env.REACT_APP_DESCRIPTION}</Typography>
+            <Box
+              display="flex"
+              flexDirection={xs ? 'column' : 'row'}
+              pt={3}
+              pb={3}
+              alignItems="center"
+              justifyContent="center"
+            >
               <Link to="/login?signup">
                 <Button variant="contained" color="secondary" className={classes.button}>
                   {translate('auth.action.signup')}
@@ -111,9 +125,11 @@ const HomePage = ({ title }) => {
           </Box>
         </Box>
         <Box className={classes.steps}>
-          <Typography variant="h2" align="center" className={classes.stepsTitle}>{translate('app.steps.title')}</Typography>
+          <Typography variant="h2" align="center" className={classes.stepsTitle}>
+            {translate('app.steps.title')}
+          </Typography>
           <Container>
-            {[1,2,3,4].map(i => (
+            {[1, 2, 3, 4].map((i) => (
               <Box className={classes.step} key={i}>
                 <Avatar className={classes.number}>{i}</Avatar>
                 <Typography variant="h4">{translate(`app.steps.${i}.title`)}</Typography>
@@ -121,7 +137,7 @@ const HomePage = ({ title }) => {
               </Box>
             ))}
           </Container>
-       </Box>
+        </Box>
       </Box>
     </ThemeProvider>
   );

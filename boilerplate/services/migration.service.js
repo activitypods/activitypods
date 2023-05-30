@@ -30,14 +30,9 @@ module.exports = {
       }
     },
     async useApplicationJson(ctx) {
-      const appsDomains = [
-        'lentraide.app',
-        'bienvenuechezmoi.org',
-        'welcometomyplace.org',
-        'mutual-aid.app'
-      ];
-      for( let domain of appsDomains ) {
-        this.logger.info(`Moving app registrations for domain ${domain}...`)
+      const appsDomains = ['lentraide.app', 'bienvenuechezmoi.org', 'welcometomyplace.org', 'mutual-aid.app'];
+      for (let domain of appsDomains) {
+        this.logger.info(`Moving app registrations for domain ${domain}...`);
         await ctx.call('triplestore.update', {
           query: `
             DELETE {
@@ -51,8 +46,8 @@ module.exports = {
             }
           `,
           dataset: '*',
-          webId: 'system'
-        })
+          webId: 'system',
+        });
       }
     },
     async migrate(ctx) {

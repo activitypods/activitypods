@@ -12,15 +12,15 @@ const dataServers = {
       pod: {
         'vcard:Location': ['/locations'],
         'vcard:Individual': ['/profiles'],
-        'apods:FrontAppRegistration': ['/front-apps']
+        'apods:FrontAppRegistration': ['/front-apps'],
       },
     },
     uploadsContainer: '/files',
   },
   activitypods: {
     baseUrl: 'https://data.activitypods.org/',
-    noProxy: true // HTTP signature is not supported on that server
-  }
+    noProxy: true, // HTTP signature is not supported on that server
+  },
 };
 
 export default dataServers;

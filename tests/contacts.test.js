@@ -222,7 +222,7 @@ describe('Test contacts app', () => {
       type: ACTIVITY_TYPES.REMOVE,
       actor: bob.id,
       object: alice.id,
-      origin: bob['apods:contacts']
+      origin: bob['apods:contacts'],
     });
 
     await waitForExpect(async () => {

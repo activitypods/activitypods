@@ -796,6 +796,9 @@
     "apods:contactRequests" : {
       "@type" : "@id"
     },
+    "apods:ignored" : {
+      "@type" : "@id"
+    },
     "apods:rejectedContacts" : {
       "@type" : "@id"
     },

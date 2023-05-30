@@ -8,27 +8,24 @@ const AcceptContactRequestButton = ({ activity, refetch, children, ...rest }) =>
   const notify = useNotify();
   const translate = useTranslate();
 
-  const accept = useCallback(
-    async () => {
-      try {
-        await outbox.post({
-          type: ACTIVITY_TYPES.ACCEPT,
-          actor: outbox.owner,
-          object: activity.id,
-          to: activity.actor,
-        });
-        notify('app.notification.contact_request_accepted');
-        setTimeout(refetch, 3000);
-      } catch (e) {
-        notify(e.message, 'error');
-      }
-    },
-    [outbox, notify, refetch, activity]
-  );
+  const accept = useCallback(async () => {
+    try {
+      await outbox.post({
+        type: ACTIVITY_TYPES.ACCEPT,
+        actor: outbox.owner,
+        object: activity.id,
+        to: activity.actor,
+      });
+      notify('app.notification.contact_request_accepted');
+      setTimeout(refetch, 3000);
+    } catch (e) {
+      notify(e.message, 'error');
+    }
+  }, [outbox, notify, refetch, activity]);
 
   if (!activity) return null;
 
-  return(
+  return (
     <Button onClick={accept} {...rest}>
       {children || translate('app.action.accept_contact_request')}
     </Button>

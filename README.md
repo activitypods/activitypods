@@ -205,7 +205,7 @@ yarn run test
 
 ## Funding
 
-In 2023 this project was funded through the [NGI0 Entrust Fund](https://nlnet.nl/entrust), a fund
+This project is funded through the [NGI0 Entrust Fund](https://nlnet.nl/entrust), a fund
 established by [NLnet](https://nlnet.nl) with financial support from the European Commission's
 [Next Generation Internet](https://ngi.eu) program, under the aegis of DG Communications Networks,
 Content and Technology under grant agreement No 101069594. Learn more on the [NLnet project page](https://nlnet.nl/project/ActivityPods).

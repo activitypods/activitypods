@@ -5,7 +5,8 @@ module.exports = {
   name: 'syreen.group',
   mixins: [ActivitiesHandlerMixin],
   settings: {
-    groupUri: null
+    groupUri: null,
+    alertBotUri: null
   },
   async started() {
     // Don't send notifications when the offer comes from Syreen group
@@ -53,6 +54,13 @@ module.exports = {
           await ctx.call('webacl.group.addMember', {
             groupUri: aclGroupUri,
             memberUri: this.settings.groupUri,
+            webId: emitterUri
+          });
+
+          // Also add the alert bot to the ACL group in order to avoid errors with the ActivitiesHandlerMixin
+          await ctx.call('webacl.group.addMember', {
+            groupUri: aclGroupUri,
+            memberUri: this.settings.alertBotUri,
             webId: emitterUri
           });
 

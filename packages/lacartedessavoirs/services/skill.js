@@ -17,7 +17,7 @@ module.exports = {
 
       const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
-      await this.waitForContainerCreation(containerUri);
+      await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
       const contactsGroupUri = await ctx.call('webacl.group.getUri', { groupSlug: new URL(webId).pathname + '/contacts' });
 

@@ -24,7 +24,8 @@ const SyreenApp = {
 
     this.broker.createService(GroupService, {
       settings: {
-        groupUri: this.settings.groupUri
+        groupUri: this.settings.groupUri,
+        alertBotUri: this.settings.alertBotUri
       }
     });
 

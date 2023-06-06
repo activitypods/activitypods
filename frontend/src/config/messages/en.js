@@ -11,6 +11,7 @@ module.exports = {
       copy: 'Copy to clipboard',
       edit_profile: 'Edit my profile',
       ignore: 'Ignore',
+      ignore_contact: 'Ignore contact',
       ignore_contact_request: 'Ignore contact request',
       login: 'Login with an account',
       open_app: 'Open application',
@@ -22,6 +23,7 @@ module.exports = {
       signup: 'Signup',
       reset_password: 'Reset password',
       set_new_password: 'Set new password',
+      undo_ignore_contact: 'No longer ignore'
     },
     page: {
       contacts: 'My network',
@@ -94,6 +96,8 @@ module.exports = {
       contact_request_rejected: 'Contact request rejected',
       contact_request_sent: 'Contact request sent',
       contact_removed: 'Contact removed',
+      contact_ignored: 'Contact ignored',
+      contact_ignore_undone: 'Contact no longer ignored',
       login_to_connect_user: 'Please create an account to connect with %{username}',
       message_sent: 'Your message has been sent',
       message_send_error: 'Error while sending the message: %{error}',

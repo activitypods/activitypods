@@ -7,6 +7,7 @@ import RemoveContactButton from '../buttons/RemoveContactButton';
 import AcceptContactRequestButton from '../buttons/AcceptContactRequestButton';
 import RejectContactRequestButton from '../buttons/RejectContactRequestButton';
 import IgnoreContactRequestButton from '../buttons/IgnoreContactRequestButton';
+import IgnoreContactButton  from '../buttons/IgnoreContactButton';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -56,7 +57,7 @@ const useStyles = makeStyles((theme) => ({
 const ContactCard = () => {
   const classes = useStyles();
   const record = useRecordContext();
-  const { items: contacts, refetch: refetchContacts } = useCollection('apods:contacts');
+  const { url, items: contacts, refetch: refetchContacts } = useCollection('apods:contacts');
   const { items: contactRequests, refetch: refetchRequests } = useCollection('apods:contactRequests');
 
   const contactRequest = useMemo(
@@ -65,8 +66,10 @@ const ContactCard = () => {
   );
 
   const refetchAll = useCallback(async () => {
-    await refetchContacts();
-    await refetchRequests();
+    await Promise.all([
+      refetchContacts(),
+      refetchRequests(),
+    ]);
   }, [refetchContacts, refetchRequests]);
 
   if (!record) return null;
@@ -116,6 +119,13 @@ const ContactCard = () => {
                 />
               )}
             </>
+          )}
+          {!contactRequest && (
+            <IgnoreContactButton
+              variant="contained"
+              color="primary"
+              fullWidth
+            />
           )}
         </Box>
       )}

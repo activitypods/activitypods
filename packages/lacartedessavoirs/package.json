@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
   "dependencies": {
-    "@semapps/ldp": "0.5.0-alpha.6"
+    "@semapps/ldp": "0.5.0-alpha.7"
   },
   "publishConfig": {
     "access": "public"

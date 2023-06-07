@@ -31,3 +31,14 @@ services:
     - "1080:1080"
     - "1025:1025"
     restart: on-failure
+
+  redis:
+    image: redis
+    container_name: redis
+    expose:
+      - "6379"
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    command: ["redis-server", "--appendonly", "yes"]

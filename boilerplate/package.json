@@ -16,7 +16,7 @@
     "@activitypods/marketplace": "1.1.0",
     "@activitypods/messages": "1.1.0",
     "@activitypods/profiles": "1.1.0",
-    "@semapps/notifications": "0.5.0-alpha.8",
+    "@semapps/notifications": "0.5.0-alpha.9",
     "dotenv-flow": "^3.2.0",
     "ioredis": "^4.17.3",
     "moleculer": "^0.14.19",

@@ -15,11 +15,13 @@ module.exports = {
   hooks: {
     after: {
       async create(ctx, res) {
-        await ctx.call('syreen.location.setNewRights', res);
+        // Do not await to increase performances
+        ctx.call('syreen.location.setNewRights', res);
         return res;
       },
       async put(ctx, res) {
-        await ctx.call('syreen.location.updateRights', res);
+        // Do not await to increase performances
+        ctx.call('syreen.location.updateRights', res);
         return res;
       },
     },

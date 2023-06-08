@@ -59,9 +59,9 @@ module.exports = {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Add the actor to its ignore contacts list
-        await ctx.call('activitypub.collection.remove', {
+        await ctx.call('activitypub.collection.detach', {
           collectionUri: emitter['apods:ignoredContacts'],
-          item: activity.object,
+          item: activity.object.object,
         });
       },
     },

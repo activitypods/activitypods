@@ -57,7 +57,7 @@ const useStyles = makeStyles((theme) => ({
 const ContactCard = () => {
   const classes = useStyles();
   const record = useRecordContext();
-  const { url, items: contacts, refetch: refetchContacts } = useCollection('apods:contacts');
+  const { items: contacts, refetch: refetchContacts } = useCollection('apods:contacts');
   const { items: contactRequests, refetch: refetchRequests } = useCollection('apods:contactRequests');
 
   const contactRequest = useMemo(

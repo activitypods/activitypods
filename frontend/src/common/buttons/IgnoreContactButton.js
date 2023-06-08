@@ -9,7 +9,7 @@ const IgnoreContactButton = ({ ...rest }) => {
   const notify = useNotify();
   const translate = useTranslate();
   const { record } = useShowContext();
-  const { url, items: ignoredContacts, refetch: refetchIgnored } = useCollection('apods:ignored');
+  const { url, items: ignoredContacts, refetch: refetchIgnored } = useCollection('apods:ignoredContacts');
 
   const refetchAll = useCallback(
     async () => await refetchIgnored(),
@@ -60,7 +60,7 @@ const IgnoreContactButton = ({ ...rest }) => {
   }, [setDisabled, record, notify, refetchAll, outbox, url]);
 
   const isContactIgnored = useMemo(
-    () => ignoredContacts.find((activity) => record && activity.actor === record.describes),
+    () => !!ignoredContacts.find((ignored) => ignored === record?.describes),
     [ignoredContacts, record]
   );
 

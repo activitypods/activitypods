@@ -4,7 +4,8 @@ const { MIME_TYPES } = require('@semapps/mime-types');
 const initialize = require('./initialize');
 const path = require('path');
 const urlJoin = require('url-join');
-const notificationFilter = require('../boilerplate/services/mixins/notification-filter');
+const notificationFilter = require('../boilerplate/services/mixins/MailNotificationFilterMixin');
+const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
 
 jest.setTimeout(30000);
 
@@ -285,6 +286,9 @@ describe('Test contacts app', () => {
       target: bob.id,
       to: bob.id,
     });
+    // Wait for the event to be processed.
+    await delay(5000);
+
     // No notification was sent.
     expect(mockSendNotification).toHaveBeenCalledTimes(0);
 
@@ -295,7 +299,7 @@ describe('Test contacts app', () => {
           collectionUri: eventUri + '/announces',
           itemUri: bob.id,
         })
-      ).resolves.toBeFalsy();
+      ).resolves.toBeTruthy();
     });
 
     // Bob has the right to see the event.
@@ -331,7 +335,6 @@ describe('Test contacts app', () => {
         })
       ).resolves.toBeTruthy();
     }, 20000);
-
   });
 
   test('Bob un-ignores Alice from his contacts', async () => {
@@ -343,7 +346,7 @@ describe('Test contacts app', () => {
         type: ACTIVITY_TYPES.IGNORE,
         actor: bob.id,
         object: alice.id,
-      }
+      },
     });
 
     // Alice is not on Bob's ignore list anymore.

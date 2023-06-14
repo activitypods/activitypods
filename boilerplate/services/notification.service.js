@@ -4,7 +4,7 @@ const { SingleMailNotificationsService } = require('@semapps/notifications');
 const QueueService = require('moleculer-bull');
 const CONFIG = require('../config/config');
 const transport = require('../config/transport');
-const notificationFilter = require('./mixins/notification-filter');
+const notificationFilter = require('./mixins/MailNotificationFilterMixin');
 
 /**
  * Service for sending mails.

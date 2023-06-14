@@ -65,6 +65,30 @@ module.exports = {
         });
       },
     },
+    ignoreContact: {
+      match: IGNORE_CONTACT,
+      async onEmit(ctx, activity, emitterUri) {
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+
+        // Add the actor to the emitter's ignore contacts list.
+        await ctx.call('activitypub.collection.attach', {
+          collectionUri: emitter['apods:ignoredContacts'],
+          item: activity.object,
+        });
+      },
+    },
+    undoIgnoreContact: {
+      match: UNDO_IGNORE_CONTACT,
+      async onEmit(ctx, activity, emitterUri) {
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+
+        // Remove the actor from the emitter's ignore contacts list.
+        await ctx.call('activitypub.collection.detach', {
+          collectionUri: emitter['apods:ignoredContacts'],
+          item: activity.object,
+        });
+      },
+    },
 
   },
 };

@@ -463,7 +463,7 @@ describe('Test events app', () => {
       object: eventUri,
       to: alice.id,
     });
-
+    
     await waitForExpect(async () => {
       await expect(
         broker.call('activitypub.collection.includes', {

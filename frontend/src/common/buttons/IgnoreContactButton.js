@@ -11,11 +11,6 @@ const IgnoreContactButton = ({ ...rest }) => {
   const { record } = useShowContext();
   const { url, items: ignoredContacts, refetch: refetchIgnored } = useCollection('apods:ignoredContacts');
 
-  const refetchAll = useCallback(
-    async () => await refetchIgnored(),
-    [refetchIgnored]
-  );
-  
   const ignore = useCallback(async () => {
     setDisabled(true);
     try {
@@ -26,7 +21,7 @@ const IgnoreContactButton = ({ ...rest }) => {
         origin: url,
       });
       setTimeout(() => {
-        refetchAll();
+        refetchIgnored();
         notify('app.notification.contact_ignored');
         setDisabled(false);
       }, 3000);
@@ -34,22 +29,21 @@ const IgnoreContactButton = ({ ...rest }) => {
       notify(e.message, 'error');
       setDisabled(false);
     }
-  }, [setDisabled, record, notify, refetchAll, outbox, url]);
+  }, [setDisabled, record, notify, refetchIgnored, outbox, url]);
 
-  const undoIgnore =  useCallback(async () => {
+  const undoIgnore = useCallback(async () => {
     setDisabled(true);
     try {
       await outbox.post({
         type: ACTIVITY_TYPES.UNDO,
         object: {
-            type: ACTIVITY_TYPES.IGNORE,
-            actor: outbox.owner,
-            object: record.describes,
-            origin: url,
-        }
+          type: ACTIVITY_TYPES.IGNORE,
+          actor: outbox.owner,
+          object: record.describes,
+        },
       });
       setTimeout(() => {
-        refetchAll();
+        refetchIgnored();
         notify('app.notification.contact_ignore_undone');
         setDisabled(false);
       }, 3000);
@@ -57,7 +51,7 @@ const IgnoreContactButton = ({ ...rest }) => {
       notify(e.message, 'error');
       setDisabled(false);
     }
-  }, [setDisabled, record, notify, refetchAll, outbox, url]);
+  }, [setDisabled, record, notify, refetchIgnored, outbox, url]);
 
   const isContactIgnored = useMemo(
     () => !!ignoredContacts.find((ignored) => ignored === record?.describes),

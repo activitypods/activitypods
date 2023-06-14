@@ -7,7 +7,7 @@ import RemoveContactButton from '../buttons/RemoveContactButton';
 import AcceptContactRequestButton from '../buttons/AcceptContactRequestButton';
 import RejectContactRequestButton from '../buttons/RejectContactRequestButton';
 import IgnoreContactRequestButton from '../buttons/IgnoreContactRequestButton';
-import IgnoreContactButton  from '../buttons/IgnoreContactButton';
+import IgnoreContactButton from '../buttons/IgnoreContactButton';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -66,10 +66,7 @@ const ContactCard = () => {
   );
 
   const refetchAll = useCallback(async () => {
-    await Promise.all([
-      refetchContacts(),
-      refetchRequests(),
-    ]);
+    await Promise.all([refetchContacts(), refetchRequests()]);
   }, [refetchContacts, refetchRequests]);
 
   if (!record) return null;
@@ -120,13 +117,7 @@ const ContactCard = () => {
               )}
             </>
           )}
-          {!contactRequest && (
-            <IgnoreContactButton
-              variant="contained"
-              color="primary"
-              fullWidth
-            />
-          )}
+          {!contactRequest && <IgnoreContactButton variant="contained" color="primary" fullWidth />}
         </Box>
       )}
     </Card>

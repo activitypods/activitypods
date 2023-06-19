@@ -119,7 +119,19 @@ module.exports = {
             });
 
             if (exists) {
-              this.logger.info(`${appUri} already exists, skipping...`);
+              this.logger.info(`${appUri} already exists, updating...`);
+
+              await this.actions.put({
+                resource: {
+                  id: appUri,
+                  type: 'apods:FrontAppRegistration',
+                  'apods:domainName': app['apods:domainName'],
+                  'apods:preferredForTypes': app['apods:handledTypes'],
+                  'apods:application': app.id,
+                },
+                contentType: MIME_TYPES.JSON,
+                webId: urlJoin(this.settings.baseUrl, dataset)
+              }, { parentCtx: ctx });
             } else {
               await this.actions.post({
                 resource: {
@@ -132,6 +144,7 @@ module.exports = {
                 slug: app['apods:domainName'],
                 webId: urlJoin(this.settings.baseUrl, dataset)
               }, { parentCtx: ctx });
+
               this.logger.info(`${appUri} added!`);
             }
           }

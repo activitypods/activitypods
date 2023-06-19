@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import {useListContext, useTranslate, FunctionField, useDataProvider, useNotify, useRefresh} from 'react-admin';
+import { useListContext, useTranslate, FunctionField, useDataProvider, useNotify, useRefresh } from 'react-admin';
 import { makeStyles, Card, Typography, Grid, Button, Chip, useMediaQuery, IconButton } from "@material-ui/core";
 import { ReferenceField } from '@semapps/field-components';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
@@ -76,6 +76,9 @@ const AppCardList = () => {
         .filter(id => data[id]['apods:application'])
         .map(id => {
           const appUrl = `${data[id]['apods:domainName'].includes(':') ? 'http' : 'https'}://${data[id]['apods:domainName']}`;
+          const loginUrl = new URL('/auth', process.env.REACT_APP_POD_PROVIDER_URL);
+          loginUrl.searchParams.set('redirect', appUrl + '/login');
+
           const isTrustedApp = trustedApps.some(domain => domain === data[id]['apods:domainName']);
           return (
             <Grid item xs={12} sm={6} key={id}>
@@ -102,7 +105,7 @@ const AppCardList = () => {
                   />
                 }
                 <a
-                  href={appUrl}
+                  href={loginUrl.toString()}
                   target="_blank" rel="noopener noreferrer" className={classes.link}>
                   <Button variant="contained">{translate('app.action.open_app')}</Button>
                 </a>

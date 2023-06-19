@@ -127,7 +127,7 @@ module.exports = {
                   type: 'apods:FrontAppRegistration',
                   'apods:domainName': app['apods:domainName'],
                   'apods:preferredForTypes': app['apods:handledTypes'],
-                  'apods:application': app.id,
+                  'apods:application': app.type === 'apods:TrustedApps' ? `https://${app['apods:domainName']}/application.json` : undefined,
                 },
                 contentType: MIME_TYPES.JSON,
                 webId: urlJoin(this.settings.baseUrl, dataset)

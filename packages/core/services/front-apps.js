@@ -106,6 +106,7 @@ module.exports = {
     },
     async addMissingApps(ctx) {
       for (let dataset of await ctx.call('pod.list')) {
+        ctx.meta.dataset = dataset;
         this.logger.info('Adding front apps to dataset ' + dataset + '...');
         const [account] = await ctx.call('auth.account.find', { query: { username: dataset } });
 
@@ -130,7 +131,7 @@ module.exports = {
                 contentType: MIME_TYPES.JSON,
                 slug: app['apods:domainName'],
                 webId: urlJoin(this.settings.baseUrl, dataset)
-              }, {parentCtx: ctx});
+              }, { parentCtx: ctx });
               this.logger.info(`${appUri} added!`);
             }
           }

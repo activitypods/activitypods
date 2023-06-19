@@ -34,7 +34,7 @@ module.exports = {
     if (this.settings.frontendUrl) {
       this.trustedApps.push({
         'apods:domainName': (new URL(this.settings.frontendUrl)).host,
-        'apods:handledTypes': ['http://www.w3.org/2006/vcard/ns#Individual', 'https://www.w3.org/ns/activitystreams#Profile', 'http://www.w3.org/2006/vcard/ns#Location'],
+        'apods:handledTypes': ['http://www.w3.org/2006/vcard/ns#Individual', 'https://www.w3.org/ns/activitystreams#Profile', 'http://www.w3.org/2006/vcard/ns#Location', 'http://activitypods.org/ns/core#FrontAppRegistration'],
       });
     }
 

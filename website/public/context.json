@@ -843,6 +843,9 @@
     "syreen:hasCategory": {
       "@type" : "@id"
     },
+    "syreen:hasBatiprixCategory": {
+      "@type" : "@id"
+    },
     "syreen:hasUnit": {
       "@type" : "@id"
     },

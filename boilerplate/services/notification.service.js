@@ -17,8 +17,8 @@ const notificationFilter = require('./mixins/MailNotificationFilterMixin');
  */
 module.exports = {
   mixins: CONFIG.QUEUE_SERVICE_URL
-    ? [SingleMailNotificationsService, notificationFilter, QueueService(CONFIG.QUEUE_SERVICE_URL)]
-    : [SingleMailNotificationsService, notificationFilter],
+    ? [notificationFilter, SingleMailNotificationsService, QueueService(CONFIG.QUEUE_SERVICE_URL)]
+    : [notificationFilter, SingleMailNotificationsService],
   settings: {
     defaultLocale: CONFIG.DEFAULT_LOCALE,
     defaultFrontUrl: CONFIG.FRONTEND_URL,
@@ -34,5 +34,5 @@ module.exports = {
       // The search param allows to specify the URI, the type and the mode
       return urlJoin(recipientUri, 'openApp') + link;
     },
-  }
+  },
 };

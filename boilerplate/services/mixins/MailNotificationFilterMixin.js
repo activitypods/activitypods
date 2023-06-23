@@ -16,7 +16,7 @@ module.exports = {
         itemUri: activity.actor,
       });
       if (isIgnored) {
-        console.log('ignoring notification for', notification, activity);
+        this.logger.info(`Ignoring notification for activity ${activity.id} sent to ${recipientUri}.`);
       }
       return !isIgnored;
     },

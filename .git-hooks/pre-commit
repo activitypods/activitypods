@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 
-if [[ $SKIP_PRECOMMIT_PRETTIER ]]; then
+if [ $SKIP_PRECOMMIT_PRETTIER ]; then
     echo "=== Skipping pre-commit prettier run ==="
     exit 0
 fi
@@ -17,7 +17,7 @@ echo "prettifiying.."
 # Run prettier on all staged files.
 echo "$FILES" | xargs npx prettier --write --ignore-unknown
 
-if [[ $? != 0 ]]; then
+if [ $? != 0 ]; then
     echo "Something went wrong running prettier. Have you run \`npm install\` yet?
 You can skip prettier on commit by setting \$SKIP_PRECOMMIT_PRETTIER"
     exit 1

@@ -11,11 +11,11 @@ const listDatasets = async () => {
 
   if (response.ok) {
     const json = await response.json();
-    return json.datasets.map(dataset => dataset['ds.name'].substring(1));
+    return json.datasets.map((dataset) => dataset['ds.name'].substring(1));
   } else {
     return [];
   }
-}
+};
 
 const clearDataset = (dataset) =>
   fetch(CONFIG.SPARQL_ENDPOINT + dataset + '/update', {

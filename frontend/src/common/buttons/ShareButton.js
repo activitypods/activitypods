@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, useShowContext, useTranslate } from 'react-admin';
 import ShareIcon from '@material-ui/icons/Share';
 import { useCollection } from '@semapps/activitypub-components';
-import ShareDialog from "../ShareDialog/ShareDialog";
+import ShareDialog from '../ShareDialog/ShareDialog';
 
 const ShareButton = () => {
   const [shareOpen, setShareOpen] = useState(false);
@@ -18,7 +18,6 @@ const ShareButton = () => {
         </Button>
         {shareOpen && <ShareDialog resourceUri={record.id} close={() => setShareOpen(false)} />}
       </>
-
     );
   } else {
     return null;

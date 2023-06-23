@@ -10,8 +10,8 @@ import * as resources from './resources';
 
 import Layout from './layout/Layout';
 import theme from './config/theme';
-import customRoutes from "./customRoutes";
-import LocalLoginPage from "./pages/LocalLoginPage/LocalLoginPage";
+import customRoutes from './customRoutes';
+import LocalLoginPage from './pages/LocalLoginPage/LocalLoginPage';
 
 const history = createBrowserHistory();
 

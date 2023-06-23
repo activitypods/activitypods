@@ -1,12 +1,12 @@
 import React from 'react';
-import { Box, Card, makeStyles, Typography } from "@material-ui/core";
-import { Notification } from "react-admin";
+import { Box, Card, makeStyles, Typography } from '@material-ui/core';
+import { Notification } from 'react-admin';
 
 const useStyles = makeStyles((theme) => ({
   '@global': {
     body: {
-      backgroundColor: theme.palette.primary.main
-    }
+      backgroundColor: theme.palette.primary.main,
+    },
   },
   card: {
     minWidth: 300,
@@ -18,14 +18,14 @@ const useStyles = makeStyles((theme) => ({
   },
   icon: {
     marginTop: 5,
-    marginRight: 5
+    marginRight: 5,
   },
   title: {
     [theme.breakpoints.down('sm')]: {
       fontWeight: 'bold',
-      marginTop: 12
+      marginTop: 12,
     },
-  }
+  },
 }));
 
 const SimpleBox = ({ title, icon, text, children }) => {
@@ -34,8 +34,10 @@ const SimpleBox = ({ title, icon, text, children }) => {
     <Box display="flex" flexDirection="column" alignItems="center">
       <Card className={classes.card}>
         <Box p={2} display="flex" justifyContent="start">
-          {React.cloneElement(icon, { fontSize: "large", className: classes.icon })}
-          <Typography variant="h4" className={classes.title}>{title}</Typography>
+          {React.cloneElement(icon, { fontSize: 'large', className: classes.icon })}
+          <Typography variant="h4" className={classes.title}>
+            {title}
+          </Typography>
         </Box>
         <Box pl={2} pr={2}>
           <Typography variant="body1">{text}</Typography>

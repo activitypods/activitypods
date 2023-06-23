@@ -10,6 +10,6 @@ module.exports = {
     acceptedTypes: ['pair:Project'],
     dereference: [],
     permissions: {},
-    newResourcesPermissions: {}
-  }
+    newResourcesPermissions: {},
+  },
 };

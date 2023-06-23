@@ -1,14 +1,14 @@
 import React from 'react';
-import { ImageInput, SaveButton, SimpleForm, TextInput, Toolbar, useTranslate } from "react-admin";
-import { ImageField } from "@semapps/field-components";
+import { ImageInput, SaveButton, SimpleForm, TextInput, Toolbar, useTranslate } from 'react-admin';
+import { ImageField } from '@semapps/field-components';
 import Edit from '../../layout/Edit';
-import ProfileTitle from "./ProfileTitle";
-import { g1PublicKeyToUrl, g1UrlToPublicKey } from "../../utils";
-import BlockAnonymous from "../../common/BlockAnonymous";
-import QuickCreateLocationInput from "../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput";
+import ProfileTitle from './ProfileTitle';
+import { g1PublicKeyToUrl, g1UrlToPublicKey } from '../../utils';
+import BlockAnonymous from '../../common/BlockAnonymous';
+import QuickCreateLocationInput from '../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput';
 
-const ToolbarWithoutDelete = props => (
-  <Toolbar {...props} >
+const ToolbarWithoutDelete = (props) => (
+  <Toolbar {...props}>
     <SaveButton />
   </Toolbar>
 );
@@ -17,7 +17,11 @@ export const ProfileEdit = (props) => {
   const translate = useTranslate();
   return (
     <BlockAnonymous>
-      <Edit title={<ProfileTitle />} transform={(data) => ({ ...data, 'vcard:fn': data['vcard:given-name'] })} {...props}>
+      <Edit
+        title={<ProfileTitle />}
+        transform={(data) => ({ ...data, 'vcard:fn': data['vcard:given-name'] })}
+        {...props}
+      >
         <SimpleForm {...props} toolbar={<ToolbarWithoutDelete />}>
           <TextInput source="vcard:given-name" fullWidth />
           <TextInput source="vcard:note" fullWidth />
@@ -27,8 +31,8 @@ export const ProfileEdit = (props) => {
           <QuickCreateLocationInput reference="Location" source="vcard:hasAddress" />
           <TextInput
             source="foaf:tipjar"
-            parse={v => g1PublicKeyToUrl(v)}
-            format={v => g1UrlToPublicKey(v)}
+            parse={(v) => g1PublicKeyToUrl(v)}
+            format={(v) => g1UrlToPublicKey(v)}
             helperText={translate('app.helper.g1_tipjar_input')}
             fullWidth
           />
@@ -36,6 +40,6 @@ export const ProfileEdit = (props) => {
       </Edit>
     </BlockAnonymous>
   );
-}
+};
 
 export default ProfileEdit;

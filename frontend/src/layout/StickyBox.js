@@ -5,7 +5,7 @@ import { makeStyles } from '@material-ui/core';
 const useStyles = makeStyles((theme) => ({
   root: {
     marginTop: 5,
-  }
+  },
 }));
 
 const StickyBox = ({ children }) => {

@@ -1,11 +1,11 @@
 import React from 'react';
 import { CreateButton, useListContext } from 'react-admin';
 import { Box, Typography, Grid } from '@material-ui/core';
-import SplitView from "./SplitView";
+import SplitView from './SplitView';
 
 const ListView = (props) => {
   const { defaultTitle } = useListContext(props);
-  return(
+  return (
     <SplitView asides={props.asides}>
       <Grid container>
         <Grid item xs={8}>
@@ -19,17 +19,13 @@ const ListView = (props) => {
           </Box>
         </Grid>
       </Grid>
-      <Box mt={1}>
-        {props.children}
-      </Box>
+      <Box mt={1}>{props.children}</Box>
     </SplitView>
-  )
+  );
 };
 
 ListView.defaultProps = {
-  actions: [
-    <CreateButton />,
-  ]
-}
+  actions: [<CreateButton />],
+};
 
 export default ListView;

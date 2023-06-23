@@ -38,8 +38,8 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: 'white',
     textAlign: 'center',
     '& a': {
-      textDecoration: 'none'
-    }
+      textDecoration: 'none',
+    },
   },
   status: {
     marginTop: 8,

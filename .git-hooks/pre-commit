@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-if [ $SKIP_PRECOMMIT_PRETTIER ]; then
+if [ "$SKIP_PRECOMMIT_PRETTIER" = true ] || [ "$SKIP_PRECOMMIT_PRETTIER" = 1 ] ; then
     echo "=== Skipping pre-commit prettier run ==="
     exit 0
 fi

@@ -7,7 +7,7 @@ import LoginForm from './LoginForm';
 import SignupForm from './SignupForm';
 import ResetPasswordForm from './ResetPasswordForm';
 import NewPasswordForm from './NewPasswordForm';
-import SimpleBox from "../../layout/SimpleBox";
+import SimpleBox from '../../layout/SimpleBox';
 
 const useStyles = makeStyles((theme) => ({
   switch: {
@@ -42,19 +42,19 @@ const LocalLoginPage = (props) => {
     } else if (isNewPassword) {
       return ['app.action.set_new_password', 'app.helper.set_new_password'];
     }
-  }, [isSignup, isLogin, isResetPassword, isNewPassword])
+  }, [isSignup, isLogin, isResetPassword, isNewPassword]);
 
   if (loading) {
     return null;
   } else if (identity?.id) {
     const currentUrl = new URL(window.location.href).origin;
-    if( redirectTo ) {
-      if( redirectTo.startsWith(currentUrl) ) {
+    if (redirectTo) {
+      if (redirectTo.startsWith(currentUrl)) {
         window.location.href = redirectTo;
         return null;
-      } else if ( redirectTo.startsWith('/') ) {
+      } else if (redirectTo.startsWith('/')) {
         return <Redirect to={redirectTo} />;
-      } else if ( redirectTo.startsWith('http') ) {
+      } else if (redirectTo.startsWith('http')) {
         return <Redirect to={'/authorize?redirect=' + encodeURIComponent(redirectTo)} />;
       }
     } else {
@@ -75,25 +75,22 @@ const LocalLoginPage = (props) => {
             <Typography variant="body2">{translate('app.action.login')}</Typography>
           </Link>
         ) : null}
-        {isLogin
-          ?
-          (
-            <>
-              <div>
-                <Link to={'/login?signup=true&' + searchParams.toString()}>
-                  <Typography variant="body2">{translate('app.action.signup')}</Typography>
-                </Link>
-              </div>
-              <div>
-                <Link to={'/login?reset_password=true&' + searchParams.toString()}>
-                  <Typography variant="body2">{translate('app.action.reset_password')}</Typography>
-                </Link>
-              </div>
-            </>
-          ) : null
-        }
+        {isLogin ? (
+          <>
+            <div>
+              <Link to={'/login?signup=true&' + searchParams.toString()}>
+                <Typography variant="body2">{translate('app.action.signup')}</Typography>
+              </Link>
+            </div>
+            <div>
+              <Link to={'/login?reset_password=true&' + searchParams.toString()}>
+                <Typography variant="body2">{translate('app.action.reset_password')}</Typography>
+              </Link>
+            </div>
+          </>
+        ) : null}
       </div>
-    </SimpleBox >
+    </SimpleBox>
   );
 };
 

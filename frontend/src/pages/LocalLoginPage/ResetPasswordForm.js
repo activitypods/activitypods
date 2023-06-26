@@ -25,7 +25,7 @@ const useStyles = makeStyles(
 
 const ResetPasswordForm = (props) => {
   const [loading, setLoading] = useSafeSetState(false);
-  const authProvider = useAuthProvider()
+  const authProvider = useAuthProvider();
 
   const translate = useTranslate();
   const notify = useNotify();
@@ -43,7 +43,8 @@ const ResetPasswordForm = (props) => {
 
   const submit = (values) => {
     setLoading(true);
-    authProvider.resetPassword({ ...values })
+    authProvider
+      .resetPassword({ ...values })
       .then((res) => {
         setLoading(false);
         notify('app.notification.reset_password_submitted', 'info');
@@ -54,8 +55,8 @@ const ResetPasswordForm = (props) => {
           typeof error === 'string'
             ? error
             : typeof error === 'undefined' || !error.message
-              ? 'app.notification.reset_password_error'
-              : error.message,
+            ? 'app.notification.reset_password_error'
+            : error.message,
           {
             type: 'warning',
             messageArgs: {

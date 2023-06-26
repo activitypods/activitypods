@@ -3,17 +3,8 @@ import { ListButton, useCreateContext } from 'react-admin';
 import { Box, Typography, Grid, Card } from '@material-ui/core';
 
 const CreateView = (props) => {
-  const {
-    basePath,
-    defaultTitle,
-    record,
-    redirect,
-    resource,
-    save,
-    saving,
-    version,
-  } = useCreateContext(props);
-  return(
+  const { basePath, defaultTitle, record, redirect, resource, save, saving, version } = useCreateContext(props);
+  return (
     <>
       <Grid container>
         <Grid item xs={8}>
@@ -29,31 +20,26 @@ const CreateView = (props) => {
       </Grid>
       <Box mt={1}>
         <Card>
-          {record ? React.cloneElement(React.Children.only(props.children), {
-            basePath,
-            record,
-            redirect:
-              typeof props.children.props.redirect === 'undefined'
-                ? redirect
-                : props.children.props.redirect,
-            resource,
-            save:
-              typeof props.children.props.save === 'undefined'
-                ? save
-                : props.children.props.save,
-            saving,
-            version,
-          }) : null}
+          {record
+            ? React.cloneElement(React.Children.only(props.children), {
+                basePath,
+                record,
+                redirect:
+                  typeof props.children.props.redirect === 'undefined' ? redirect : props.children.props.redirect,
+                resource,
+                save: typeof props.children.props.save === 'undefined' ? save : props.children.props.save,
+                saving,
+                version,
+              })
+            : null}
         </Card>
       </Box>
     </>
-  )
+  );
 };
 
 CreateView.defaultProps = {
-  actions: [
-    <ListButton />
-  ]
+  actions: [<ListButton />],
 };
 
 export default CreateView;

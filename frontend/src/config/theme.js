@@ -7,11 +7,11 @@ const fontFamily = '"Open Sans", "sans-serif"';
 const theme = createTheme({
   palette: {
     primary: {
-      main: process.env.REACT_APP_COLOR_PRIMARY
+      main: process.env.REACT_APP_COLOR_PRIMARY,
     },
     secondary: {
-      main: process.env.REACT_APP_COLOR_SECONDARY
-    }
+      main: process.env.REACT_APP_COLOR_SECONDARY,
+    },
   },
   typography: {
     h1: {
@@ -104,7 +104,7 @@ const theme = createTheme({
         paddingLeft: 15,
         paddingRight: 15,
         height: 36,
-        minWidth: 100
+        minWidth: 100,
       },
     },
     MuiAlert: {
@@ -121,14 +121,14 @@ const theme = createTheme({
     RaCreateButton: {
       floating: {
         backgroundColor: process.env.REACT_APP_COLOR_PRIMARY,
-        bottom: 80
-      }
+        bottom: 80,
+      },
     },
     RaToolbar: {
       mobileToolbar: {
-        bottom: 56
-      }
-    }
+        bottom: 56,
+      },
+    },
   },
 });
 

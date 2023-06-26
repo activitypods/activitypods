@@ -1,8 +1,8 @@
 import React from 'react';
-import { useGetIdentity } from "react-admin";
+import { useGetIdentity } from 'react-admin';
 import { ThemeProvider } from '@material-ui/core';
-import AuthorizePageView from "./AuthorizePageView";
-import theme from "../../config/theme";
+import AuthorizePageView from './AuthorizePageView';
+import theme from '../../config/theme';
 
 const AuthorizePage = (props) => {
   const { identity } = useGetIdentity();
@@ -10,8 +10,8 @@ const AuthorizePage = (props) => {
   return (
     <ThemeProvider theme={theme}>
       <AuthorizePageView {...props} />
-    </ThemeProvider >
+    </ThemeProvider>
   );
-}
+};
 
 export default AuthorizePage;

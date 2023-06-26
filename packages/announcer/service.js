@@ -142,8 +142,10 @@ module.exports = {
               objectUri: activity.object.id,
               actorUri: recipientUri,
             });
-          } catch(e) {
-            this.logger.warn(`Unable to fetch remote object ${activity.object.id} for actor ${recipientUri}. Message: ${e.message}`);
+          } catch (e) {
+            this.logger.warn(
+              `Unable to fetch remote object ${activity.object.id} for actor ${recipientUri}. Message: ${e.message}`
+            );
           }
         }
       },

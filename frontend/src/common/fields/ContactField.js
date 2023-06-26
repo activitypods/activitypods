@@ -4,7 +4,7 @@ import { Box, TextField, Button } from '@material-ui/core';
 import { Form, Field } from 'react-final-form';
 import SendIcon from '@material-ui/icons/Send';
 import { useOutbox, useCollection, OBJECT_TYPES } from '@semapps/activitypub-components';
-import Alert from "@material-ui/lab/Alert";
+import Alert from '@material-ui/lab/Alert';
 
 const FinalFormTextField = ({ input: { name, onChange, value, ...restInput }, meta, ...rest }) => (
   <TextField
@@ -39,9 +39,10 @@ const ContactField = ({ source, context, ...rest }) => {
         attributedTo: outbox.owner,
         content: values.content,
         context: context ? record[context] : undefined,
-        to: isOwner && record.type === OBJECT_TYPES.EVENT
-          ? attendees.filter(userUri => userUri !== record[source])
-          : record[source],
+        to:
+          isOwner && record.type === OBJECT_TYPES.EVENT
+            ? attendees.filter((userUri) => userUri !== record[source])
+            : record[source],
       });
       notify('app.notification.message_sent', 'success');
     } catch (e) {
@@ -54,11 +55,13 @@ const ContactField = ({ source, context, ...rest }) => {
       onSubmit={onSubmit}
       render={({ handleSubmit, form, submitting }) => (
         <form onSubmit={(event) => handleSubmit(event).then(form.reset)}>
-          {!isOwner && contactsLoaded && !contacts.includes(record[source]) &&
+          {!isOwner && contactsLoaded && !contacts.includes(record[source]) && (
             <Box mb={1}>
-              <Alert severity="warning">{translate('app.helper.message_profile_show_right', { username: record?.['vcard:given-name']})}</Alert>
+              <Alert severity="warning">
+                {translate('app.helper.message_profile_show_right', { username: record?.['vcard:given-name'] })}
+              </Alert>
             </Box>
-          }
+          )}
           <Field
             name="content"
             component={FinalFormTextField}
@@ -70,7 +73,14 @@ const ContactField = ({ source, context, ...rest }) => {
             minRows={4}
           />
           <Box mt={1}>
-            <Button type="submit" variant="contained" color="secondary" size="medium" endIcon={<SendIcon />} disabled={submitting}>
+            <Button
+              type="submit"
+              variant="contained"
+              color="secondary"
+              size="medium"
+              endIcon={<SendIcon />}
+              disabled={submitting}
+            >
               {translate('app.action.send')}
             </Button>
           </Box>

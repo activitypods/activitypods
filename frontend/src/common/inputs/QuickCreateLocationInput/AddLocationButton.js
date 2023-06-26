@@ -10,19 +10,19 @@ import {
   FormWithRedirect,
   RecordContextProvider,
   useGetIdentity,
-  useGetList
+  useGetList,
 } from 'react-admin';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, makeStyles } from '@material-ui/core';
 import IconCancel from '@material-ui/icons/Cancel';
 import AddIcon from '@material-ui/icons/Add';
 import { extractContext, LocationInput } from '@semapps/geo-components';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   button: {
     margin: '12px 0 0 12px',
     [theme.breakpoints.down('xs')]: {
-      margin: '-12px 0 12px 0'
-    }
+      margin: '-12px 0 12px 0',
+    },
   },
 }));
 
@@ -37,13 +37,13 @@ const AddLocationButton = ({ onChange, reference, source }) => {
   const notify = useNotify();
   const form = useForm();
 
-  const handleSubmit = async values => {
+  const handleSubmit = async (values) => {
     // needed to filter current form values
     const filteredValues = {
       'vcard:given-name': values['vcard:given-name'],
       'vcard:hasAddress': values['vcard:hasAddress'],
       'vcard:note': values['vcard:note'],
-    }
+    };
     create(
       { payload: { data: filteredValues } },
       {
@@ -56,7 +56,7 @@ const AddLocationButton = ({ onChange, reference, source }) => {
         },
         onFailure: ({ error }) => {
           notify(error.message, 'error');
-        }
+        },
       }
     );
   };
@@ -74,15 +74,15 @@ const AddLocationButton = ({ onChange, reference, source }) => {
       >
         {translate('app.action.add_location')}
       </Button>
-      <Dialog
-        fullWidth
-        open={showDialog}
-        onClose={() => setShowDialog(false)}
-      >
+      <Dialog fullWidth open={showDialog} onClose={() => setShowDialog(false)}>
         <DialogTitle>{translate('app.action.add_location')}</DialogTitle>
         <FormWithRedirect
           save={handleSubmit}
-          initialValues={existingLocations.length === 0 ? { 'vcard:given-name': translate('app.user.location', { surname: identity?.fullName })} : undefined}
+          initialValues={
+            existingLocations.length === 0
+              ? { 'vcard:given-name': translate('app.user.location', { surname: identity?.fullName }) }
+              : undefined
+          }
           render={({ handleSubmitWithRedirect, pristine, saving }) => (
             <>
               <DialogContent>
@@ -98,8 +98,10 @@ const AddLocationButton = ({ onChange, reference, source }) => {
                   parse={(value) => ({
                     type: 'vcard:Address',
                     'vcard:given-name': value.place_name,
-                    'vcard:locality': value.place_type[0] === 'place' ? value.text : extractContext(value.context, 'place'),
-                    'vcard:street-address': value.place_type[0] === 'address' ? [value.address, value.text].join(' ') : undefined,
+                    'vcard:locality':
+                      value.place_type[0] === 'place' ? value.text : extractContext(value.context, 'place'),
+                    'vcard:street-address':
+                      value.place_type[0] === 'address' ? [value.address, value.text].join(' ') : undefined,
                     'vcard:postal-code': extractContext(value.context, 'postcode'),
                     'vcard:country-name': extractContext(value.context, 'country'),
                     'vcard:hasGeo': {
@@ -119,11 +121,7 @@ const AddLocationButton = ({ onChange, reference, source }) => {
                 />
               </DialogContent>
               <DialogActions>
-                <Button
-                  onClick={() => setShowDialog(false)}
-                  disabled={loading}
-                  startIcon={<IconCancel />}
-                >
+                <Button onClick={() => setShowDialog(false)} disabled={loading} startIcon={<IconCancel />}>
                   {translate('ra.action.cancel')}
                 </Button>
                 <SaveButton
@@ -139,6 +137,6 @@ const AddLocationButton = ({ onChange, reference, source }) => {
       </Dialog>
     </RecordContextProvider>
   );
-}
+};
 
 export default AddLocationButton;

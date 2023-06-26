@@ -1,17 +1,11 @@
 import React from 'react';
-import { UserMenu } from "react-admin";
+import { UserMenu } from 'react-admin';
 import { Link } from 'react-router-dom';
-import {
-  Box,
-  Container,
-  makeStyles,
-  Typography,
-  Grid,
-} from "@material-ui/core";
+import { Box, Container, makeStyles, Typography, Grid } from '@material-ui/core';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   topBar: {
-    backgroundColor: theme.palette.primary.main
+    backgroundColor: theme.palette.primary.main,
   },
   title: {
     fontWeight: '800',
@@ -24,13 +18,13 @@ const useStyles = makeStyles(theme => ({
     },
     '& a': {
       textDecoration: 'none !important',
-    }
-  }
+    },
+  },
 }));
 
 const AppBar = ({ title, logout }) => {
   const classes = useStyles();
-  return(
+  return (
     <Box className={classes.topBar}>
       <Container>
         <Grid container>
@@ -47,8 +41,7 @@ const AppBar = ({ title, logout }) => {
         </Grid>
       </Container>
     </Box>
-  )
+  );
 };
 
 export default AppBar;
-

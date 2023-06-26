@@ -39,17 +39,18 @@ afterAll(async () => {
 });
 
 describe('Test mass sharing', () => {
-  let actors = [], actorsUris = [];
+  let actors = [],
+    actorsUris = [];
 
   test('Create 100 users', async () => {
     for (let i = 1; i <= NUM_ACTORS; i++) {
-      console.log(`Creating User #${i}...`)
+      console.log(`Creating User #${i}...`);
 
       const { webId } = await broker.call('auth.signup', {
         username: `user${i}`,
         email: `user${i}@test.com`,
-        password: "test",
-        name: `User #${i}`
+        password: 'test',
+        name: `User #${i}`,
       });
 
       // actorsUris[i] = urlJoin(CONFIG.HOME_URL, `user${i}`);
@@ -75,7 +76,7 @@ describe('Test mass sharing', () => {
       webId: actorsUris[1],
     });
 
-    const recipients = actorsUris.filter(uri => uri !== actorsUris[1]);
+    const recipients = actorsUris.filter((uri) => uri !== actorsUris[1]);
 
     await broker.call('activitypub.outbox.post', {
       collectionUri: urlJoin(actorsUris[1], 'outbox'),

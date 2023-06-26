@@ -10,7 +10,9 @@ export const LocationCreate = (props) => {
   if (!identity) return null;
   return (
     <Create {...props}>
-      <LocationForm initialValues={{ 'vcard:given-name': translate('app.user.location', { surname: identity?.fullName })}} />
+      <LocationForm
+        initialValues={{ 'vcard:given-name': translate('app.user.location', { surname: identity?.fullName }) }}
+      />
     </Create>
   );
 };

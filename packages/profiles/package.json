@@ -6,9 +6,9 @@
   "author": "Virtual Assembly",
   "dependencies": {
     "@activitypods/synchronizer": "1.1.0",
-    "@semapps/activitypub": "0.4.5",
-    "@semapps/ldp": "0.4.5",
-    "@semapps/mime-types": "0.4.5"
+    "@semapps/activitypub": "0.4.6",
+    "@semapps/ldp": "0.4.6",
+    "@semapps/mime-types": "0.4.6"
   },
   "publishConfig": {
     "access": "public"

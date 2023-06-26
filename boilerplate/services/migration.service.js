@@ -14,6 +14,20 @@ const replaceRules = {
 module.exports = {
   name: 'migration',
   actions: {
+    async createAndAttachIgnoredContacts(ctx) {
+      const registeredCollections = await ctx.call('activitypub.registry.list');
+      const ignoredContactsCollection = registeredCollections.find(c => c.name === '/ignored-contacts');
+      for (let dataset of await ctx.call('pod.list')) {
+        ctx.meta.dataset = dataset;
+        const actorUri = urlJoin(CONFIG.HOME_URL, dataset);
+        this.logger.info(`Adding /ignored-contacts collection to actor ${actorUri}...`);
+        await ctx.call('activitypub.registry.createAndAttachCollection', {
+          objectUri: actorUri,
+          collection: ignoredContactsCollection,
+          webId: 'system'
+        });
+      }
+    },
     async giveReadRightsToSkillContainer(ctx) {
       for (let dataset of await ctx.call('pod.list')) {
         const [account] = await ctx.call('auth.account.find', { query: { username: dataset } });

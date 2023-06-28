@@ -11,7 +11,7 @@ module.exports = {
     // ControlledContainerMixin settings
     path: '/profiles',
     acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
-    dereference: ['vcard:hasGeo'],
+    dereference: ['vcard:hasGeo', 'vcard:hasTelephone'],
     permissions: {},
     newResourcesPermissions: {},
   },
@@ -23,20 +23,23 @@ module.exports = {
 
       await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
-      const profileUri = await this.actions.post({
-        containerUri,
-        resource: {
-          '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
-          'vcard:fn': profileData.familyName
-            ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
-            : profileData.name,
-          'vcard:given-name': profileData.name,
-          'vcard:family-name': profileData.familyName,
-          describes: webId,
+      const profileUri = await this.actions.post(
+        {
+          containerUri,
+          resource: {
+            '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
+            'vcard:fn': profileData.familyName
+              ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
+              : profileData.name,
+            'vcard:given-name': profileData.name,
+            'vcard:family-name': profileData.familyName,
+            describes: webId,
+          },
+          contentType: MIME_TYPES.JSON,
+          webId,
         },
-        contentType: MIME_TYPES.JSON,
-        webId,
-      }, { parentCtx: ctx });
+        { parentCtx: ctx }
+      );
 
       if (this.settings.publicProfile) {
         await ctx.call('webacl.resource.addRights', {
@@ -44,7 +47,7 @@ module.exports = {
           additionalRights: {
             anon: {
               read: true,
-            }
+            },
           },
           webId,
         });
@@ -52,9 +55,7 @@ module.exports = {
 
       await ctx.call('ldp.resource.patch', {
         resourceUri: webId,
-        triplesToAdd: [
-          triple(namedNode(webId), namedNode(AS_PREFIX+'url'), namedNode(profileUri))
-        ],
+        triplesToAdd: [triple(namedNode(webId), namedNode(AS_PREFIX + 'url'), namedNode(profileUri))],
         webId,
       });
 
@@ -85,54 +86,56 @@ module.exports = {
         if (ctx.params.resource['vcard:hasAddress']) {
           const location = await ctx.call('profiles.location.get', {
             resourceUri: ctx.params.resource['vcard:hasAddress'],
-            webId: ctx.params.webId
+            webId: ctx.params.webId,
           });
           if (location && location['vcard:hasAddress'] && location['vcard:hasAddress']['vcard:hasGeo']) {
             ctx.params.resource['vcard:hasGeo'] = location['vcard:hasAddress']['vcard:hasGeo'];
           } else {
-            this.logger.warn(`Could not fetch location ${ctx.params.resource['vcard:hasAddress']} when updating profile`);
+            this.logger.warn(
+              `Could not fetch location ${ctx.params.resource['vcard:hasAddress']} when updating profile`
+            );
           }
         } else {
           if (ctx.params.resource['vcard:hasGeo']) {
             delete ctx.params.resource['vcard:hasGeo'];
           }
         }
-      }
+      },
     },
-  // TODO give permissions to read home address to all contacts ?
-  // The action webacl.group.getUri need to be published first
-  //   after: {
-  //     async put(ctx, res) {
-  //       const { oldData, newData, webId } = res;
-  //       if (newData['vcard:hasAddress'] !== oldData['vcard:hasAddress']) {
-  //         const contactsGroupUri = await ctx.call('webacl.group.getUri', { groupSlug: new URL(webId).pathname + '/contacts' })
-  //         if (newData['vcard:hasAddress']) {
-  //           await ctx.call('webacl.resource.addRights', {
-  //             resourceUri: newData['vcard:hasAddress'],
-  //             additionalRights: {
-  //               group: {
-  //                 uri: contactsGroupUri,
-  //                 read: true,
-  //               },
-  //             },
-  //             webId,
-  //           });
-  //         }
-  //         if (oldData['vcard:hasAddress']) {
-  //           await ctx.call('webacl.resource.removeRights', {
-  //             resourceUri: oldData['vcard:hasAddress'],
-  //             rights: {
-  //               group: {
-  //                 uri: contactsGroupUri,
-  //                 read: true,
-  //               },
-  //             },
-  //             webId,
-  //           });
-  //         }
-  //       }
-  //       return res;
-  //     }
-  //   }
-  }
+    // TODO give permissions to read home address to all contacts ?
+    // The action webacl.group.getUri need to be published first
+    //   after: {
+    //     async put(ctx, res) {
+    //       const { oldData, newData, webId } = res;
+    //       if (newData['vcard:hasAddress'] !== oldData['vcard:hasAddress']) {
+    //         const contactsGroupUri = await ctx.call('webacl.group.getUri', { groupSlug: new URL(webId).pathname + '/contacts' })
+    //         if (newData['vcard:hasAddress']) {
+    //           await ctx.call('webacl.resource.addRights', {
+    //             resourceUri: newData['vcard:hasAddress'],
+    //             additionalRights: {
+    //               group: {
+    //                 uri: contactsGroupUri,
+    //                 read: true,
+    //               },
+    //             },
+    //             webId,
+    //           });
+    //         }
+    //         if (oldData['vcard:hasAddress']) {
+    //           await ctx.call('webacl.resource.removeRights', {
+    //             resourceUri: oldData['vcard:hasAddress'],
+    //             rights: {
+    //               group: {
+    //                 uri: contactsGroupUri,
+    //                 read: true,
+    //               },
+    //             },
+    //             webId,
+    //           });
+    //         }
+    //       }
+    //       return res;
+    //     }
+    //   }
+  },
 };

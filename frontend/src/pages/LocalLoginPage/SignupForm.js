@@ -60,7 +60,7 @@ const SignupForm = ({ redirectTo }) => {
     setLoading(true);
     signup({
       ...values,
-      preferredLocale: process.env.REACT_APP_LANG
+      preferredLocale: process.env.REACT_APP_LANG,
     })
       .then((webId) => {
         setTimeout(() => {
@@ -77,8 +77,8 @@ const SignupForm = ({ redirectTo }) => {
           typeof error === 'string'
             ? error
             : typeof error === 'undefined' || !error.message
-              ? 'ra.auth.sign_in_error'
-              : error.message,
+            ? 'ra.auth.sign_in_error'
+            : error.message,
           'warning',
           {
             _: typeof error === 'string' ? error : error && error.message ? error.message : undefined,
@@ -104,10 +104,10 @@ const SignupForm = ({ redirectTo }) => {
                 format={(value) =>
                   value
                     ? createSlug(value, {
-                      lang: 'fr',
-                      separator: '_',
-                      custom: ['.', '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-                    })
+                        lang: navigator.language.substring(0, 2),
+                        separator: '_',
+                        custom: ['.', '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                      })
                     : ''
                 }
                 disabled={loading}

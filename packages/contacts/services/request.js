@@ -64,6 +64,16 @@ module.exports = {
       async onReceive(ctx, activity, recipientUri) {
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
+        // If the actor is already in my contacts, ignore this request (may happen for automatic post-event requests)
+        if (
+          await ctx.call('activitypub.collection.includes', {
+            collectionUri: recipient['apods:contacts'],
+            itemUri: activity.actor,
+          })
+        ) {
+          return;
+        }
+
         // If the request was already rejected, reject it again
         if (
           await ctx.call('activitypub.collection.includes', {
@@ -94,7 +104,7 @@ module.exports = {
           collectionUri: recipient['apods:contactRequests'],
           item: activity,
         });
-      }
+      },
     },
     acceptContactRequest: {
       match: ACCEPT_CONTACT_REQUEST,
@@ -118,7 +128,7 @@ module.exports = {
         await ctx.call('ldp.container.attach', {
           containerUri: urlJoin(emitterUri, 'data', 'profiles'),
           resourceUri: activity.object.object.object.id,
-          webId: emitterUri
+          webId: emitterUri,
         });
 
         // 4. Add the other actor to my contacts list
@@ -150,7 +160,7 @@ module.exports = {
           await ctx.call('ldp.container.attach', {
             containerUri: urlJoin(recipientUri, 'data', 'profiles'),
             resourceUri: emitter.url,
-            webId: recipientUri
+            webId: recipientUri,
           });
 
           // Add the other actor to my contacts list

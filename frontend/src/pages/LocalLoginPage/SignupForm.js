@@ -104,7 +104,7 @@ const SignupForm = ({ redirectTo }) => {
                 format={(value) =>
                   value
                     ? createSlug(value, {
-                        lang: navigator.language.substring(0, 2),
+                        lang: process.env.REACT_APP_LANG?.substring(0, 2) || 'fr',
                         separator: '_',
                         custom: ['.', '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
                       })

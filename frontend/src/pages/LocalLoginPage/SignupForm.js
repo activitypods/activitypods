@@ -2,11 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Field, Form } from 'react-final-form';
 import createSlug from 'speakingurl';
-import { useTranslate, useNotify, useSafeSetState, email, required } from 'react-admin';
+import { useTranslate, useNotify, useSafeSetState, email } from 'react-admin';
 import { useLocation } from 'react-router-dom';
 import { Button, Box, CircularProgress, makeStyles } from '@material-ui/core';
 import { useSignup } from '@semapps/auth-provider';
-import TextInput from './TextInput';
+import TextInput from '../../common/inputs/TextInput';
 
 const useStyles = makeStyles((theme) => ({
   form: {

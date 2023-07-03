@@ -3,7 +3,7 @@ import { Field, Form } from 'react-final-form';
 import { Button, Box, CircularProgress } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useTranslate, useNotify, useSafeSetState, useAuthProvider } from 'react-admin';
-import TextInput from './TextInput';
+import TextInput from '../../common/inputs/TextInput';
 
 const useStyles = makeStyles(
   (theme) => ({
@@ -29,7 +29,7 @@ const NewPasswordForm = (props) => {
   const token = searchParams.get('token');
 
   const [loading, setLoading] = useSafeSetState(false);
-  const authProvider = useAuthProvider()
+  const authProvider = useAuthProvider();
 
   const translate = useTranslate();
   const notify = useNotify();
@@ -47,7 +47,8 @@ const NewPasswordForm = (props) => {
 
   const submit = (values) => {
     setLoading(true);
-    authProvider.setNewPassword({ ...values, token })
+    authProvider
+      .setNewPassword({ ...values, token })
       .then((res) => {
         setTimeout(() => {
           window.location.href = '/login';
@@ -61,8 +62,8 @@ const NewPasswordForm = (props) => {
           typeof error === 'string'
             ? error
             : typeof error === 'undefined' || !error.message
-              ? 'app.notification.reset_password_error'
-              : error.message,
+            ? 'app.notification.reset_password_error'
+            : error.message,
           {
             type: 'warning',
             messageArgs: {
@@ -118,7 +119,7 @@ const NewPasswordForm = (props) => {
               {translate('app.action.set_new_password')}
             </Button>
           </Box>
-        </form >
+        </form>
       )}
     />
   );

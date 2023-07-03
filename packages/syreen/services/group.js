@@ -19,6 +19,42 @@ module.exports = {
       priority: 2,
     });
   },
+  actions: {
+    async addMissingActors(ctx) {
+      for (let dataset of await ctx.call('pod.list')) {
+        ctx.meta.dataset = dataset;
+
+        const [account] = await ctx.call('auth.account.find', { query: { username: dataset } });
+        if (account) {
+          this.logger.info(`Checking for webId ${account.webId}...`);
+
+          const aclGroupUri = getSyreenAclGroupUri(account.webId);
+
+          const groupExist = await ctx.call('webacl.group.exist', {
+            groupUri: aclGroupUri,
+            webId: 'system', // We cannot use recipientUri or we get a 403
+          });
+
+          if (groupExist) {
+            this.logger.info(`Adding Syreen and AlertBot actors in ${aclGroupUri}...`);
+
+            await ctx.call('webacl.group.addMember', {
+              groupUri: aclGroupUri,
+              memberUri: this.settings.groupUri,
+              webId: account.webId,
+            });
+
+            // Also add the alert bot to the ACL group in order to avoid errors with the ActivitiesHandlerMixin
+            await ctx.call('webacl.group.addMember', {
+              groupUri: aclGroupUri,
+              memberUri: this.settings.alertBotUri,
+              webId: account.webId,
+            });
+          }
+        }
+      }
+    },
+  },
   activities: {
     joinGroup: {
       match(ctx, activity) {
@@ -34,6 +70,16 @@ module.exports = {
       async onEmit(ctx, activity, emitterUri) {
         const aclGroupUri = getSyreenAclGroupUri(emitterUri);
 
+        const emitter = await ctx.call('activitypub.actor.get', {
+          actorUri: emitterUri,
+          webId: emitterUri,
+        });
+
+        const emitterProfile = await ctx.call('activitypub.object.get', {
+          actorUri: emitter.url,
+          webId: emitterUri,
+        });
+
         const groupExist = await ctx.call('webacl.group.exist', {
           groupUri: aclGroupUri,
           webId: 'system', // We cannot use recipientUri or we get a 403
@@ -43,16 +89,6 @@ module.exports = {
           // Create a local ACL group for Syreen members
           await ctx.call('webacl.group.create', {
             groupUri: aclGroupUri,
-            webId: emitterUri,
-          });
-
-          const emitter = await ctx.call('activitypub.actor.get', {
-            actorUri: emitterUri,
-            webId: emitterUri,
-          });
-
-          const emitterProfile = await ctx.call('activitypub.object.get', {
-            actorUri: emitter.url,
             webId: emitterUri,
           });
 
@@ -87,49 +123,49 @@ module.exports = {
               });
             }
           }
-
-          // Authorize this ACL group to view the emitter's profile
-          await ctx.call(
-            'webacl.resource.addRights',
-            {
-              resourceUri: emitterProfile.id,
-              additionalRights: {
-                group: {
-                  uri: aclGroupUri,
-                  read: true,
-                },
-              },
-              webId: emitterUri,
-            },
-            {
-              meta: {
-                // We don't want the user to announce directly to other group members
-                skipObjectsWatcher: true,
-              },
-            }
-          );
-
-          // Also authorize the ACL group to view the emitter's home address
-          await ctx.call(
-            'webacl.resource.addRights',
-            {
-              resourceUri: emitterProfile['vcard:hasAddress'],
-              additionalRights: {
-                group: {
-                  uri: aclGroupUri,
-                  read: true,
-                },
-              },
-              webId: emitterUri,
-            },
-            {
-              meta: {
-                // We don't want the user to announce directly to other group members
-                skipObjectsWatcher: true,
-              },
-            }
-          );
         }
+
+        // Authorize this ACL group to view the emitter's profile
+        await ctx.call(
+          'webacl.resource.addRights',
+          {
+            resourceUri: emitter.url,
+            additionalRights: {
+              group: {
+                uri: aclGroupUri,
+                read: true,
+              },
+            },
+            webId: emitterUri,
+          },
+          {
+            meta: {
+              // We don't want the user to announce directly to other group members
+              skipObjectsWatcher: true,
+            },
+          }
+        );
+
+        // Also authorize the ACL group to view the emitter's home address
+        await ctx.call(
+          'webacl.resource.addRights',
+          {
+            resourceUri: emitterProfile['vcard:hasAddress'],
+            additionalRights: {
+              group: {
+                uri: aclGroupUri,
+                read: true,
+              },
+            },
+            webId: emitterUri,
+          },
+          {
+            meta: {
+              // We don't want the user to announce directly to other group members
+              skipObjectsWatcher: true,
+            },
+          }
+        );
       },
     },
     announceJoinGroup: {

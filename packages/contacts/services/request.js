@@ -64,6 +64,16 @@ module.exports = {
         for (let recipientUri of recipients) {
           const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
+          // If the actor is already in my contacts, ignore this request (may happen for automatic post-event requests)
+          if (
+            await ctx.call('activitypub.collection.includes', {
+              collectionUri: recipient['apods:contacts'],
+              itemUri: activity.actor,
+            })
+          ) {
+            continue;
+          }
+
           // If the request was already rejected, reject it again
           if (
             await ctx.call('activitypub.collection.includes', {

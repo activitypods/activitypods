@@ -76,7 +76,7 @@ module.exports = {
         });
 
         const emitterProfile = await ctx.call('activitypub.object.get', {
-          actorUri: emitter.url,
+          objectUri: emitter.url,
           webId: emitterUri,
         });
 

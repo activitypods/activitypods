@@ -3,7 +3,7 @@ import { Field, Form } from 'react-final-form';
 import { Button, CardActions, CircularProgress } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useTranslate, useLogin, useNotify, useSafeSetState } from 'react-admin';
-import TextInput from './TextInput';
+import TextInput from '../../common/inputs/TextInput';
 
 const useStyles = makeStyles(
   (theme) => ({

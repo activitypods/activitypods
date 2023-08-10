@@ -57,7 +57,7 @@ export const colorFromString = (value) => {
     )
   );
   // Scale it to fit FFFFFF
-  const scaled = Math.floor(stringNumber * 0x888888 + 0x888888);
+  const scaled = Math.floor(stringNumber * 0x999999 + 0x666666);
   // Convert to padded hex string.
   const hex = scaled.toString(16).padStart(6, '0');
   return '#' + hex;

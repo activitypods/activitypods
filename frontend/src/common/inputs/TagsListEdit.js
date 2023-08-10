@@ -31,7 +31,7 @@ const colors = ['lightblue', 'lightgreen', 'lightpink', 'lightyellow', 'lightgre
  */
 export const TagsListEdit = () => {
   const record = useRecordContext();
-  const entityId = record['id'];
+
   const relationshipPredicate = 'vcard:hasMember';
   const namePredicate = 'vcard:label';
   const colorPredicate = undefined;
@@ -43,9 +43,16 @@ export const TagsListEdit = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [disabled, setDisabled] = useState(false);
 
-  // TODO: Somehow adding / removing tags, removes all of them in the frontend until reload.
-
   const { data: tagRelationshipData, isLoading: isLoadingAllTags } = useGetList('Group');
+
+  const [update] = useUpdate();
+  //  const [create] = useCreate();
+
+  // TODO: render empty, when record is still missing.
+  if (!record) return null;
+  const entityId = record['id'];
+
+  // TODO: Somehow adding / removing tags, removes all of them in the frontend until reload.
 
   // Next, we convert tagRelationshipData into a common tag format.
   const tags = Object.values(tagRelationshipData).map((tagData) => ({
@@ -59,9 +66,6 @@ export const TagsListEdit = () => {
 
   const selectedTags = tags.filter((tag) => tag.owners.includes(entityId));
   const unselectedTags = tags.filter((tag) => !tag.owners.includes(entityId));
-
-  const [update] = useUpdate();
-  //  const [create] = useCreate();
 
   /**
    * @param {ReactDivMouseEvent} event

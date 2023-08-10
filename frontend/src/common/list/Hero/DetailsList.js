@@ -6,8 +6,8 @@ const useStyles = makeStyles(() => ({
   line: {
     borderBottom: '1px solid #e0e0e0',
     marginTop: -6,
-    marginBottom: 7
-  }
+    marginBottom: 7,
+  },
 }));
 
 const DetailsList = ({ basePath, children, record, resource }) => {
@@ -16,18 +16,18 @@ const DetailsList = ({ basePath, children, record, resource }) => {
 
   return (
     <Box p={2}>
-      {React.Children.map(children, field =>
+      {React.Children.map(children, (field) =>
         field && record[field.props.source] && React.isValidElement(field) ? (
           <div key={field.props.source}>
             {field.props.addLabel ? (
-              <Grid container spacing={3} className={classes.line}>
+              <Grid container spacing={3} className={classes.line} alignItems="center">
                 <Grid item xs={4} sm={3}>
                   <Typography color="textSecondary" align="right" variant="body2">
                     {translate(
                       ...getFieldLabelTranslationArgs({
                         label: field.props.label,
                         resource,
-                        source: field.props.source
+                        source: field.props.source,
                       })
                     )}
                   </Typography>
@@ -37,7 +37,7 @@ const DetailsList = ({ basePath, children, record, resource }) => {
                     {React.cloneElement(field, {
                       record,
                       resource,
-                      basePath
+                      basePath,
                     })}
                   </Typography>
                 </Grid>
@@ -48,7 +48,7 @@ const DetailsList = ({ basePath, children, record, resource }) => {
               React.cloneElement(field, {
                 record,
                 resource,
-                basePath
+                basePath,
               })
             )}
           </div>

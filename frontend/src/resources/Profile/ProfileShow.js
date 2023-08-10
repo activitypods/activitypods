@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, DateField, useTranslate } from 'react-admin';
+import { TextField, DateField, useTranslate, RecordContextProvider, useRecordContext } from 'react-admin';
 import Show from '../../layout/Show';
 import ProfileTitle from './ProfileTitle';
 import Hero from '../../common/list/Hero/Hero';
@@ -13,14 +13,13 @@ import { TagsListEdit } from '../../common/inputs/TagsListEdit';
 
 const ProfileShow = (props) => {
   const translate = useTranslate();
+
   return (
     <BlockAnonymous>
       <Show title={<ProfileTitle />} asides={[<ContactCard />]} {...props}>
         <Hero image="vcard:photo">
-          <div>
-            <label>Added to Groups</label>
-            <TagsListEdit></TagsListEdit>
-          </div>
+          <TagsListEdit source="id" addLabel={true} label={'Groups'} />
+
           <TextField source="vcard:given-name" />
           <UsernameField source="describes" />
           <TextField source="vcard:note" />
@@ -31,6 +30,7 @@ const ProfileShow = (props) => {
             options={{ month: 'long', day: 'numeric', year: 'numeric' }}
           />
         </Hero>
+
         <MainList>
           <ContactField source="describes" label={translate('app.action.send_message')} />
         </MainList>

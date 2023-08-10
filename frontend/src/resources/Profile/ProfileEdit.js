@@ -29,10 +29,6 @@ export const ProfileEdit = (props) => {
           <ImageInput source="vcard:photo" accept="image/*">
             <ImageField source="src" />
           </ImageInput>
-          <div>
-            <label>Added to Groups</label>
-            <TagsListEdit></TagsListEdit>
-          </div>
           <QuickCreateLocationInput reference="Location" source="vcard:hasAddress" />
           <TextInput
             source="foaf:tipjar"

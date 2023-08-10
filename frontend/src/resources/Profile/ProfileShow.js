@@ -18,7 +18,15 @@ const ProfileShow = (props) => {
     <BlockAnonymous>
       <Show title={<ProfileTitle />} asides={[<ContactCard />]} {...props}>
         <Hero image="vcard:photo">
-          <TagsListEdit source="id" addLabel={true} label={'Groups'} />
+          <TagsListEdit
+            source="id"
+            addLabel={true}
+            label={'Groups'}
+            relationshipPredicate="vcard:hasMember"
+            namePredicate="vcard:label"
+            avatarPredicate="vcard:photo"
+            tagResource="Group"
+          />
 
           <TextField source="vcard:given-name" />
           <UsernameField source="describes" />

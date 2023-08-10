@@ -1,6 +1,7 @@
 // Adopted from https://github.com/marmelab/react-admin/blob/master/examples/crm/src/contacts/TagsListEdit.tsx
 import React, { useState } from 'react';
-import { useCreate, useUpdate, useGetList, Identifier, useRecordContext } from 'react-admin';
+import { useUpdate, useGetList, Identifier, useRecordContext, useTranslate } from 'react-admin';
+import { Grid } from '@material-ui/core';
 
 import {
   Chip,
@@ -24,48 +25,67 @@ const colors = ['lightblue', 'lightgreen', 'lightpink', 'lightyellow', 'lightgre
  * @typedef {import('react').MouseEvent<HTMLDivElement>} ReactDivMouseEvent
  * @typedef {import('react').ChangeEvent<HTMLInputElement>} ReactInputChangeEvent
  * @typedef {import('react').FormEvent<HTMLFormElement>} ReactFormEvent
+ * @typedef {object} Tag
+ *  @property {Identifier} id
+ *  @property {string} name
+ *  @property {string} color
+ *  @property {string} avatar
+ *  @property {Identifier[]} owners
  */
 
 /**
  * @returns {JSX.Element | null}
  */
-export const TagsListEdit = () => {
-  const record = useRecordContext();
+export const TagsListEdit = (props) => {
+  const {
+    relationshipPredicate,
+    namePredicate,
+    colorPredicate,
+    avatarPredicate,
+    idPredicate,
+    tagResource,
+    showColors,
+    allowCreate,
+  } = {
+    idPredicate: 'id',
+    showColors: true,
+    avatarPredicate: undefined,
+    colorPredicate: undefined,
+    allowCreate: true,
+    ...props,
+  };
 
-  const relationshipPredicate = 'vcard:hasMember';
-  const namePredicate = 'vcard:label';
-  const colorPredicate = undefined;
-  const avatarPredicate = 'vcard:photo';
-  const idPredicate = 'id';
   const [open, setOpen] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState(colors[0]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [disabled, setDisabled] = useState(false);
-
-  const { data: tagRelationshipData, isLoading: isLoadingAllTags } = useGetList('Group');
+  const record = useRecordContext();
+  const { data: tagRelationshipData, isLoading: isLoadingAllTags } = useGetList(tagResource);
+  const translate = useTranslate();
 
   const [update] = useUpdate();
   //  const [create] = useCreate();
 
   // TODO: render empty, when record is still missing.
   if (!record) return null;
-  const entityId = record['id'];
+  const recordId = record['id'];
 
   // TODO: Somehow adding / removing tags, removes all of them in the frontend until reload.
 
   // Next, we convert tagRelationshipData into a common tag format.
+  /** @type {Tag[]} */
   const tags = Object.values(tagRelationshipData).map((tagData) => ({
     id: tagData[idPredicate],
     name: tagData[namePredicate],
     // The color or a color generated from the name.
-    color: tagData[colorPredicate] || colorFromString(tagData[namePredicate]),
+    color: tagData[colorPredicate] || (showColors && colorFromString(tagData[namePredicate])),
     avatar: tagData[avatarPredicate],
     owners: arrayFromLdField(tagData[relationshipPredicate]),
   }));
 
-  const selectedTags = tags.filter((tag) => tag.owners.includes(entityId));
-  const unselectedTags = tags.filter((tag) => !tag.owners.includes(entityId));
+  const selectedTags = tags.filter((tag) => tag.owners.includes(recordId));
+  const unselectedTags = tags.filter((tag) => !tag.owners.includes(recordId));
 
   /**
    * @param {ReactDivMouseEvent} event
@@ -82,8 +102,8 @@ export const TagsListEdit = () => {
    * @param {Identifier} id
    */
   const handleDeleteTag = (id) => {
-    const memberIds = tags.find((tag) => tag.id === id).owners.filter((memberId) => memberId !== entityId);
-    update('Group', id, {
+    const memberIds = tags.find((tag) => tag.id === id).owners.filter((memberId) => memberId !== recordId);
+    update(tagResource, id, {
       ...tagRelationshipData[id],
       [relationshipPredicate]: memberIds,
       'dc:modified': new Date().toISOString(),
@@ -94,8 +114,8 @@ export const TagsListEdit = () => {
    * @param {Identifier} id
    */
   const handleAddTag = (id) => {
-    const memberIds = [...tags.find((tag) => tag.id === id).owners, entityId];
-    update('Group', id, {
+    const memberIds = [...tags.find((tag) => tag.id === id).owners, recordId];
+    update(tagResource, id, {
       ...tagRelationshipData[id],
       [relationshipPredicate]: memberIds,
       'dc:modified': new Date().toISOString(),
@@ -110,13 +130,6 @@ export const TagsListEdit = () => {
   };
 
   /**
-   * @param {ReactInputChangeEvent} event
-   */
-  const handleNewTagNameChange = (event) => {
-    setNewTagName(event.target.value);
-  };
-
-  /**
    * @param {ReactFormEvent} event
    */
   const handleCreateTag = (event) => {
@@ -124,7 +137,7 @@ export const TagsListEdit = () => {
     setDisabled(true);
     /*
     create(
-      'Group',
+      resource,
       { data: { name: newTagName, color: newTagColor } },
       {
         onSuccess: (tag) => {
@@ -152,27 +165,30 @@ export const TagsListEdit = () => {
   if (isLoadingAllTags) return null;
   return (
     <>
-      {selectedTags.map((tag) => (
-        <Box mt={1} mb={1} key={tag.id}>
+      <Grid container spacing={1}>
+        {selectedTags.map((tag) => (
+          <Grid item mt={1} mb={1} key={tag.id}>
+            <Chip
+              size="small"
+              variant="outlined"
+              onDelete={() => handleDeleteTag(tag.id)}
+              label={tag.name}
+              style={{ backgroundColor: tag.color, border: 0 }}
+            />
+          </Grid>
+        ))}
+
+        <Grid item mt={1} mb={1}>
           <Chip
+            icon={<ControlPointIcon />}
             size="small"
             variant="outlined"
-            onDelete={() => handleDeleteTag(tag.id)}
-            label={tag.name}
-            style={{ backgroundColor: tag.color, border: 0 }}
+            onClick={handleOpen}
+            label={translate('ra.action.add')}
+            color="secondary"
           />
-        </Box>
-      ))}
-      <Box mt={1}>
-        <Chip
-          icon={<ControlPointIcon />}
-          size="small"
-          variant="outlined"
-          onClick={handleOpen}
-          label="Add tag"
-          color="primary"
-        />
-      </Box>
+        </Grid>
+      </Grid>
       <Menu open={Boolean(anchorEl)} onClose={handleClose} anchorEl={anchorEl}>
         {unselectedTags?.map((tag) => (
           <MenuItem key={tag.id} onClick={() => handleAddTag(tag.id)}>
@@ -188,52 +204,58 @@ export const TagsListEdit = () => {
             />
           </MenuItem>
         ))}
-        <MenuItem onClick={handleOpenCreateDialog}>
-          <Chip
-            icon={<EditIcon />}
-            size="small"
-            variant="outlined"
-            onClick={handleOpenCreateDialog}
-            color="primary"
-            label="Create new tag"
-          />
-        </MenuItem>
-      </Menu>
-      <Dialog open={open} onClose={() => setOpen(false)} aria-labelledby="form-dialog-title">
-        <form onSubmit={handleCreateTag}>
-          <DialogTitle id="form-dialog-title">Create a new tag</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              label="Tag name"
-              fullWidth
-              value={newTagName}
-              onChange={handleNewTagNameChange}
-              sx={{ mt: 1 }}
+        {allowCreate && (
+          <MenuItem onClick={handleOpenCreateDialog}>
+            <Chip
+              icon={<EditIcon />}
+              size="small"
+              variant="outlined"
+              onClick={handleOpenCreateDialog}
+              color="primary"
+              label={translate('ra.action.create')}
             />
-            <Box display="flex" flexWrap="wrap" width={230} mt={2}>
-              {colors.map((color) => (
-                <RoundButton
-                  key={color}
-                  color={color}
-                  selected={color === newTagColor}
-                  handleClick={() => {
-                    setNewTagColor(color);
-                  }}
-                />
-              ))}
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpen(false)} color="primary">
-              Cancel
-            </Button>
-            <Button type="submit" color="primary" disabled={disabled}>
-              Add tag
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+          </MenuItem>
+        )}
+      </Menu>
+      {allowCreate && (
+        <Dialog open={open} onClose={() => setOpen(false)} aria-labelledby="form-dialog-title">
+          <form onSubmit={handleCreateTag}>
+            <DialogTitle id="form-dialog-title">Create a new tag</DialogTitle>
+            <DialogContent>
+              <TextField
+                autoFocus
+                label="Tag name"
+                fullWidth
+                value={newTagName}
+                onChange={(event) => setNewTagName(event.target.value)}
+                sx={{ mt: 1 }}
+              />
+              {colorPredicate && (
+                <Box display="flex" flexWrap="wrap" width={230} mt={2}>
+                  {colors.map((color) => (
+                    <RoundButton
+                      key={color}
+                      color={color}
+                      selected={color === newTagColor}
+                      handleClick={() => {
+                        setNewTagColor(color);
+                      }}
+                    />
+                  ))}
+                </Box>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setOpen(false)} color="primary">
+                {translate('ra.action.cancel')}
+              </Button>
+              <Button type="submit" color="primary" disabled={disabled}>
+                {translate('ra.action.create')}
+              </Button>
+            </DialogActions>
+          </form>
+        </Dialog>
+      )}
     </>
   );
 };

@@ -1,6 +1,14 @@
 // Adopted from https://github.com/marmelab/react-admin/blob/master/examples/crm/src/contacts/TagsListEdit.tsx
-import React, { useState } from 'react';
-import { useUpdate, useGetList, Identifier, useRecordContext, useTranslate } from 'react-admin';
+import React, { useEffect, useState } from 'react';
+import {
+  useUpdate,
+  useGetList,
+  Identifier,
+  useRecordContext,
+  useTranslate,
+  useCreate,
+  LoadingIndicator,
+} from 'react-admin';
 import { Grid } from '@material-ui/core';
 
 import {
@@ -55,25 +63,38 @@ export const TagsListEdit = (props) => {
     ...props,
   };
 
-  const [open, setOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState(colors[0]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [disabled, setDisabled] = useState(false);
   const record = useRecordContext();
-  const { data: tagRelationshipData, isLoading: isLoadingAllTags } = useGetList(tagResource);
+  const recordId = record?.id;
+
+  const [cacheInvalidated, setCacheInvalidated] = useState(false);
+
+  const { data: tagData, loading: isLoadingAllTags, refetch, ids } = useGetList(tagResource);
+  const [tagRelationshipData, setTagData] = useState(tagData);
+
+  // TODO: Remove this once migrated to ra-4. See https://github.com/marmelab/react-admin/issues/6780
+  // Alternatively, maybe try useListController instead...
+  useEffect(() => {
+    // All of this is super wonky but at least it does not empty the tag list on updates.
+    if (!isLoadingAllTags && cacheInvalidated) {
+      new Promise((resolve) => setTimeout(resolve, 150)).then(() => {
+        setCacheInvalidated(false);
+        refetch();
+      });
+    }
+    setTagData(tagData);
+  }, [isLoadingAllTags, cacheInvalidated, refetch]);
+
   const translate = useTranslate();
 
   const [update] = useUpdate();
-  //  const [create] = useCreate();
+  const [create] = useCreate();
 
-  // TODO: render empty, when record is still missing.
-  if (!record) return null;
-  const recordId = record['id'];
-
-  // TODO: Somehow adding / removing tags, removes all of them in the frontend until reload.
-
-  // Next, we convert tagRelationshipData into a common tag format.
+  // Convert tagRelationshipData into a common tag format.
   /** @type {Tag[]} */
   const tags = Object.values(tagRelationshipData).map((tagData) => ({
     id: tagData[idPredicate],
@@ -106,8 +127,8 @@ export const TagsListEdit = (props) => {
     update(tagResource, id, {
       ...tagRelationshipData[id],
       [relationshipPredicate]: memberIds,
-      'dc:modified': new Date().toISOString(),
     });
+    setCacheInvalidated(true);
   };
 
   /**
@@ -118,13 +139,13 @@ export const TagsListEdit = (props) => {
     update(tagResource, id, {
       ...tagRelationshipData[id],
       [relationshipPredicate]: memberIds,
-      'dc:modified': new Date().toISOString(),
     });
+    setCacheInvalidated(true);
     setAnchorEl(null);
   };
 
   const handleOpenCreateDialog = () => {
-    setOpen(true);
+    setCreateDialogOpen(true);
     setAnchorEl(null);
     setDisabled(false);
   };
@@ -135,37 +156,28 @@ export const TagsListEdit = (props) => {
   const handleCreateTag = (event) => {
     event.preventDefault();
     setDisabled(true);
-    /*
     create(
-      resource,
-      { data: { name: newTagName, color: newTagColor } },
+      tagResource,
       {
-        onSuccess: (tag) => {
-          update(
-            'contacts',
-            {
-              id: record.id,
-              data: { tags: [...record.tags, tag.id] },
-              previousData: record,
-            },
-            {
-              onSuccess: () => {
-                setNewTagName('');
-                setNewTagColor(colors[0]);
-                setOpen(false);
-              },
-            }
-          );
+        [namePredicate]: newTagName,
+        [relationshipPredicate]: [recordId],
+        ...((colorPredicate && { [colorPredicate]: newTagColor }) || {}),
+      },
+      {
+        onSuccess: () => {
+          setAnchorEl(null);
+          setCreateDialogOpen(false);
+          refetch();
         },
       }
     );
-    */
   };
 
-  if (isLoadingAllTags) return null;
   return (
     <>
       <Grid container spacing={1}>
+        {isLoadingAllTags && <LoadingIndicator />}
+
         {selectedTags.map((tag) => (
           <Grid item mt={1} mb={1} key={tag.id}>
             <Chip
@@ -218,7 +230,7 @@ export const TagsListEdit = (props) => {
         )}
       </Menu>
       {allowCreate && (
-        <Dialog open={open} onClose={() => setOpen(false)} aria-labelledby="form-dialog-title">
+        <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} aria-labelledby="form-dialog-title">
           <form onSubmit={handleCreateTag}>
             <DialogTitle id="form-dialog-title">Create a new tag</DialogTitle>
             <DialogContent>
@@ -246,7 +258,7 @@ export const TagsListEdit = (props) => {
               )}
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setOpen(false)} color="primary">
+              <Button onClick={() => setCreateDialogOpen(false)} color="primary">
                 {translate('ra.action.cancel')}
               </Button>
               <Button type="submit" color="primary" disabled={disabled}>

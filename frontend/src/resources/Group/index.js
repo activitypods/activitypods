@@ -24,15 +24,9 @@ export default {
   translations: {
     en: {
       name: 'Group |||| Groups',
-      fields: {
-        'vcard:label': 'Name',
-      },
     },
     fr: {
-      name: 'Adresse |||| Adresses',
-      fields: {
-        'vcard:given-name': 'Nom du lieu',
-      },
+      name: 'Groupe |||| Groupes',
     },
   },
 };

@@ -15,7 +15,7 @@ const GroupList = (props) => {
         <SimpleList
           primaryText={<TextField source="vcard:label" />}
           secondaryText={(record) =>
-            `${translate('app.groups.members')}: ${arrayFromLdField(record['vcard:hasMember']).length}`
+            `${translate('app.group.members')}: ${arrayFromLdField(record['vcard:hasMember']).length}`
           }
           linkType={'edit'}
           // rowStyle={postRowStyle}

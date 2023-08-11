@@ -6,7 +6,6 @@ import ProfileTitle from './ProfileTitle';
 import { g1PublicKeyToUrl, g1UrlToPublicKey } from '../../utils';
 import BlockAnonymous from '../../common/BlockAnonymous';
 import QuickCreateLocationInput from '../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput';
-import { TagsListEdit } from '../../common/inputs/TagsListEdit';
 
 const ToolbarWithoutDelete = (props) => (
   <Toolbar {...props}>

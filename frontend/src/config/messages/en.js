@@ -23,8 +23,12 @@ module.exports = {
       reset_password: 'Reset password',
       set_new_password: 'Set new password',
     },
-    groups: {
+    group: {
       members: 'Members',
+      no_members: "The group doesn't have any member yet",
+      label: "Group's name",
+      remove_members: 'Remove selected',
+      profile_name: 'Name',
     },
     page: {
       contacts: 'My network',

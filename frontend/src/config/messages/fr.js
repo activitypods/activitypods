@@ -29,6 +29,8 @@ module.exports = {
       label: 'Nom du groupe',
       remove_members: 'Retirer sélection',
       profile_name: 'Nom',
+      group: 'Groupe',
+      profile: 'Profil',
     },
 
     page: {

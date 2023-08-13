@@ -29,6 +29,8 @@ module.exports = {
       label: "Group's name",
       remove_members: 'Remove selected',
       profile_name: 'Name',
+      profile: 'Profile',
+      group: 'Group',
     },
     page: {
       contacts: 'My network',

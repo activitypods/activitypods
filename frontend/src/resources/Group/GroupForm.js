@@ -13,7 +13,7 @@ import {
 } from 'react-admin';
 import { useField } from 'react-final-form';
 import { arrayFromLdField } from '../../utils';
-import { Avatar, makeStyles } from '@material-ui/core';
+import { Avatar } from '@material-ui/core';
 import PersonIcon from '@material-ui/icons/Person';
 import GroupIcon from '@material-ui/icons/Group';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -22,7 +22,7 @@ import UsernameField from '../../common/fields/UsernameField';
 
 import ResourceSelectWithTags from '../../common/inputs/ResourceSelectWithTags';
 
-export const GroupFormWrapped = (props) => {
+export const GroupFormContent = (props) => {
   const translate = useTranslate();
 
   const { record: group } = props;
@@ -54,7 +54,7 @@ export const GroupFormWrapped = (props) => {
   const { input: memberInput } = useField('vcard:hasMember');
   useEffect(() => {
     memberInput.onChange(memberIds);
-  }, [memberIds]);
+  }, [memberIds, memberInput]);
 
   return (
     <>
@@ -73,6 +73,8 @@ export const GroupFormWrapped = (props) => {
         renderTags={() => null}
         entityResource="Profile"
         tagResource="Group"
+        tagName={translate('app.group.group')}
+        resourceName={translate('app.group.profile')}
         value={memberIds}
         // We have a custom datagrid to render the selected users so don't show them here.
         onSelectionChange={onMemberChange}
@@ -128,14 +130,13 @@ export const GroupFormWrapped = (props) => {
 };
 
 const GroupForm = (props) => {
-  const { children } = props;
   return (
     <SimpleForm
       {...props}
       redirect="list"
       style={{ 'MuiIconButton-root': { paddingRight: '8px', backgroundColor: 'inherit' } }}
     >
-      <GroupFormWrapped {...props} />
+      <GroupFormContent {...props} />
     </SimpleForm>
   );
 };

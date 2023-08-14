@@ -7,8 +7,6 @@ import { arrayFromLdField } from '../../utils';
 const GroupList = (props) => {
   const translate = useTranslate();
 
-  // TODO: Styling
-
   return (
     <>
       <List {...props}>

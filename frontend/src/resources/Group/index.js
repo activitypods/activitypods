@@ -17,7 +17,6 @@ export default {
     types: ['vcard:Group'],
     list: {
       servers: 'pod',
-      //containers: { pod: ['/groups'] },
       blankNodes: ['vcard:hasMember'],
     },
   },

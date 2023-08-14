@@ -51,6 +51,7 @@ export const GroupFormContent = (props) => {
     setMemberIds(memberIds.filter((id) => !removeIds.includes(id)));
   };
 
+  // We use this, to store the memberIds in the form.
   const { input: memberInput } = useField('vcard:hasMember');
   useEffect(() => {
     memberInput.onChange(memberIds);
@@ -59,7 +60,7 @@ export const GroupFormContent = (props) => {
   return (
     <>
       <TextInput source="vcard:label" fullWidth label={translate('app.group.label')} />
-      {/* Custom title element for the list view */}
+
       <h3>{translate('app.group.members')}</h3>
       <ResourceSelectWithTags
         title="Add Members"
@@ -70,26 +71,27 @@ export const GroupFormContent = (props) => {
         avatarTagPredicate="vcard:hasPhoto"
         resourceDefaultIcon={<PersonIcon />}
         tagDefaultIcon={<GroupIcon />}
+        // We have a custom datagrid to render the selected users so don't show them here.
         renderTags={() => null}
         entityResource="Profile"
         tagResource="Group"
         tagName={translate('app.group.group')}
         resourceName={translate('app.group.profile')}
+        // The selected members.
         value={memberIds}
-        // We have a custom datagrid to render the selected users so don't show them here.
         onSelectionChange={onMemberChange}
         loading={loading}
         excludeIds={group.id && [group.id]}
       />
+      {/* We use a custom datagrid to render the selected users. `ids` gets the selected ones only. */}
       <ListContextProvider value={{ ...listControllerProps, ids: sortedMemberIds, data: memberData }}>
-        {/* Prevent the toolbar from taking space when it's collapsed */}
         <ListView
           title={translate('app.group.members')}
           loading={loading}
           exporter={false}
           hasCreate={false}
           sort={sort}
-          setSort={(field, order) => setSort({ field: field, order: sort.order === 'ASC' ? 'DESC' : 'ASC' })}
+          setSort={(field) => setSort({ field: field, order: sort.order === 'ASC' ? 'DESC' : 'ASC' })}
           actions={false}
           bulkActionButtons={
             <Button

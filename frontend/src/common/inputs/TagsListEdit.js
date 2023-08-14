@@ -1,14 +1,6 @@
 // Adopted from https://github.com/marmelab/react-admin/blob/master/examples/crm/src/contacts/TagsListEdit.tsx
-import React, { useEffect, useState } from 'react';
-import {
-  useUpdate,
-  useGetList,
-  Identifier,
-  useRecordContext,
-  useTranslate,
-  useCreate,
-  LoadingIndicator,
-} from 'react-admin';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useUpdate, useGetList, useRecordContext, useTranslate, useCreate, LoadingIndicator } from 'react-admin';
 import { Grid } from '@material-ui/core';
 
 import {
@@ -31,20 +23,26 @@ const colors = ['lightblue', 'lightgreen', 'lightpink', 'lightyellow', 'lightgre
 
 /**
  * @typedef {import('react').MouseEvent<HTMLDivElement>} ReactDivMouseEvent
- * @typedef {import('react').ChangeEvent<HTMLInputElement>} ReactInputChangeEvent
  * @typedef {import('react').FormEvent<HTMLFormElement>} ReactFormEvent
- * @typedef {object} Tag
- *  @property {Identifier} id
- *  @property {string} name
- *  @property {string} color
- *  @property {string} avatar
- *  @property {Identifier[]} owners
+ * @typedef {import('react-admin').Identifier} Identifier
+ *
+ * @typedef {Object} TagsListEditProps
+ * @property {string} relationshipPredicate Tag field name that contains the list of resource ids.
+ * @property {string} namePredicate Tag field name that contains the tag label to show.
+ * @property {string} [colorPredicate] Tag field name that contains the tag color, if present.
+ * @property {string} [avatarPredicate] Tag field name that contains the tag avatar URI, if present.
+ * @property {string} [idPredicate] Tag field name that contains the tag id, defaults to `id`.
+ * @property {string} tagResource The resource name of the tags that can be selected.
+ * @property {boolean} [showColors] Whether to show colors (based on tag name), even if the tag doesn't have one, default `true`.
+ * @property {boolean} [allowCreate] Whether to allow creating new tags, default `true`.
+ *
  */
 
 /**
+ * @param {TagsListEditProps} props
  * @returns {JSX.Element | null}
  */
-export const TagsListEdit = (props) => {
+const TagsListEdit = (props) => {
   const {
     relationshipPredicate,
     namePredicate,
@@ -54,49 +52,97 @@ export const TagsListEdit = (props) => {
     tagResource,
     showColors,
     allowCreate,
-  } = {
-    idPredicate: 'id',
-    showColors: true,
-    avatarPredicate: undefined,
-    colorPredicate: undefined,
-    allowCreate: true,
-    ...props,
-  };
+  } = props;
 
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  // For create new tag dialog.
+  const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState(colors[0]);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [disabled, setDisabled] = useState(false);
-  const record = useRecordContext();
-  const recordId = record?.id;
+  const [disabledCreateBtn, setDisabledCreateBtn] = useState(false);
 
-  const [cacheInvalidated, setCacheInvalidated] = useState(false);
-
-  const { data: tagData, loading: isLoadingAllTags, refetch, ids } = useGetList(tagResource);
-  const [tagRelationshipData, setTagData] = useState(tagData);
-
-  // TODO: Remove this once migrated to ra-4. See https://github.com/marmelab/react-admin/issues/6780
-  // Alternatively, maybe try useListController instead...
-  useEffect(() => {
-    // All of this is super wonky but at least it does not empty the tag list on updates.
-    if (!isLoadingAllTags && cacheInvalidated) {
-      new Promise((resolve) => setTimeout(resolve, 150)).then(() => {
-        setCacheInvalidated(false);
-        refetch();
-      });
-    }
-    setTagData(tagData);
-  }, [isLoadingAllTags, cacheInvalidated, refetch]);
+  // Anchor for the tag select menu.
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
 
   const translate = useTranslate();
 
+  const record = useRecordContext();
+  const recordId = record?.id;
+
   const [update] = useUpdate();
   const [create] = useCreate();
+  const [cacheInvalidated, setCacheInvalidated] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const { data: tagData, ids: tagIds, loading: isLoadingAllTags, refetch } = useGetList(tagResource);
+  const [tagDataState, setTagDataState] = useState({});
+
+  const [tagMemberships, setTagMemberships] = useState([]);
+  useEffect(() => {
+    // TODO: Remove condition, once migrated to ra-4. See https://github.com/marmelab/react-admin/issues/6780
+    //  The tagData is emptied on updates because the dataProvider cache is completely invalidated.
+    if (tagIds.length > 0) {
+      setTagDataState(tagData);
+      setTagMemberships(
+        Object.values(tagData)
+          .filter((tagData) => tagData[relationshipPredicate]?.includes(recordId))
+          .map((tagData) => tagData[idPredicate])
+      );
+    }
+  }, [tagDataState, tagData, tagIds, recordId, idPredicate, relationshipPredicate]);
+
+  const saveStateToDataProvider = useCallback(() => {
+    if (isUpdating || !cacheInvalidated) return;
+    setIsUpdating(true);
+
+    // Update all tag resources where the membership has been modified (added / removed).
+    Promise.all(
+      Object.values(tagDataState).map((tagData) => {
+        const originalTagMemberships = arrayFromLdField(tagData[relationshipPredicate]);
+        const isOriginallyIncluded = originalTagMemberships.includes(recordId);
+        const isNowIncluded = tagMemberships.includes(tagData[idPredicate]);
+
+        if (isOriginallyIncluded === isNowIncluded) {
+          // Nothing to do.
+          return Promise.resolve();
+        }
+        let newMembers;
+        if (isNowIncluded) {
+          newMembers = [...originalTagMemberships, recordId];
+        } else {
+          newMembers = originalTagMemberships.filter((memberId) => memberId !== recordId);
+        }
+        // Set the new members.
+        return update(tagResource, tagData[idPredicate], { ...tagData, [relationshipPredicate]: newMembers });
+      })
+    ).then(() => {
+      setCacheInvalidated(false);
+      setIsUpdating(false);
+    });
+  }, [
+    isUpdating,
+    recordId,
+    tagMemberships,
+    tagDataState,
+    cacheInvalidated,
+    relationshipPredicate,
+    idPredicate,
+    tagResource,
+    update,
+  ]);
+
+  // On unmount, save the state to the data provider
+  useEffect(() => () => saveStateToDataProvider(), [saveStateToDataProvider]);
+  // Also save on changes (cacheInvalidated) but only after a while...
+  useEffect(() => {
+    if (!isLoadingAllTags && cacheInvalidated && !isUpdating) {
+      new Promise((resolve) => setTimeout(resolve, 15_000)).then(() => {
+        saveStateToDataProvider();
+      });
+    }
+  }, [isLoadingAllTags, cacheInvalidated, isUpdating, saveStateToDataProvider]);
 
   // Convert tagRelationshipData into a common tag format.
-  /** @type {Tag[]} */
-  const tags = Object.values(tagRelationshipData).map((tagData) => ({
+  const tags = Object.values(tagDataState).map((tagData) => ({
     id: tagData[idPredicate],
     name: tagData[namePredicate],
     // The color or a color generated from the name.
@@ -105,29 +151,25 @@ export const TagsListEdit = (props) => {
     owners: arrayFromLdField(tagData[relationshipPredicate]),
   }));
 
-  const selectedTags = tags.filter((tag) => tag.owners.includes(recordId));
-  const unselectedTags = tags.filter((tag) => !tag.owners.includes(recordId));
+  const selectedTags = tags.filter((tag) => tagMemberships.includes(tag.id));
+  const unselectedTags = tags.filter((tag) => !tagMemberships.includes(tag.id));
 
   /**
    * @param {ReactDivMouseEvent} event
    */
   const handleOpen = (event) => {
-    setAnchorEl(event.currentTarget);
+    setMenuAnchorEl(event.currentTarget);
   };
 
   const handleClose = () => {
-    setAnchorEl(null);
+    setMenuAnchorEl(null);
   };
 
   /**
    * @param {Identifier} id
    */
   const handleDeleteTag = (id) => {
-    const memberIds = tags.find((tag) => tag.id === id).owners.filter((memberId) => memberId !== recordId);
-    update(tagResource, id, {
-      ...tagRelationshipData[id],
-      [relationshipPredicate]: memberIds,
-    });
+    setTagMemberships(tagMemberships.filter((tagId) => tagId !== id));
     setCacheInvalidated(true);
   };
 
@@ -135,19 +177,15 @@ export const TagsListEdit = (props) => {
    * @param {Identifier} id
    */
   const handleAddTag = (id) => {
-    const memberIds = [...tags.find((tag) => tag.id === id).owners, recordId];
-    update(tagResource, id, {
-      ...tagRelationshipData[id],
-      [relationshipPredicate]: memberIds,
-    });
+    setTagMemberships([...tagMemberships, id]);
     setCacheInvalidated(true);
-    setAnchorEl(null);
+    setMenuAnchorEl(null);
   };
 
   const handleOpenCreateDialog = () => {
     setCreateDialogOpen(true);
-    setAnchorEl(null);
-    setDisabled(false);
+    setMenuAnchorEl(null);
+    setDisabledCreateBtn(false);
   };
 
   /**
@@ -155,7 +193,7 @@ export const TagsListEdit = (props) => {
    */
   const handleCreateTag = (event) => {
     event.preventDefault();
-    setDisabled(true);
+    setDisabledCreateBtn(true);
     create(
       tagResource,
       {
@@ -165,7 +203,7 @@ export const TagsListEdit = (props) => {
       },
       {
         onSuccess: () => {
-          setAnchorEl(null);
+          setMenuAnchorEl(null);
           setCreateDialogOpen(false);
           refetch();
         },
@@ -201,7 +239,7 @@ export const TagsListEdit = (props) => {
           />
         </Grid>
       </Grid>
-      <Menu open={Boolean(anchorEl)} onClose={handleClose} anchorEl={anchorEl}>
+      <Menu open={Boolean(menuAnchorEl)} onClose={handleClose} anchorEl={menuAnchorEl}>
         {unselectedTags?.map((tag) => (
           <MenuItem key={tag.id} onClick={() => handleAddTag(tag.id)}>
             <Chip
@@ -230,7 +268,11 @@ export const TagsListEdit = (props) => {
         )}
       </Menu>
       {allowCreate && (
-        <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} aria-labelledby="form-dialog-title">
+        <Dialog
+          open={isCreateDialogOpen}
+          onClose={() => setCreateDialogOpen(false)}
+          aria-labelledby="form-dialog-title"
+        >
           <form onSubmit={handleCreateTag}>
             <DialogTitle id="form-dialog-title">Create a new tag</DialogTitle>
             <DialogContent>
@@ -261,7 +303,7 @@ export const TagsListEdit = (props) => {
               <Button onClick={() => setCreateDialogOpen(false)} color="primary">
                 {translate('ra.action.cancel')}
               </Button>
-              <Button type="submit" color="primary" disabled={disabled}>
+              <Button type="submit" color="primary" disabled={disabledCreateBtn}>
                 {translate('ra.action.create')}
               </Button>
             </DialogActions>
@@ -292,3 +334,13 @@ const RoundButton = (props) => (
     onClick={props.handleClick}
   />
 );
+
+TagsListEdit.defaultProps = {
+  idPredicate: 'id',
+  showColors: true,
+  avatarPredicate: undefined,
+  colorPredicate: undefined,
+  allowCreate: true,
+};
+
+export default TagsListEdit;

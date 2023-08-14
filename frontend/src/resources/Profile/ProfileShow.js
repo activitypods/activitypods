@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, DateField, useTranslate, RecordContextProvider, useRecordContext } from 'react-admin';
+import { TextField, DateField, useTranslate } from 'react-admin';
 import Show from '../../layout/Show';
 import ProfileTitle from './ProfileTitle';
 import Hero from '../../common/list/Hero/Hero';
@@ -9,7 +9,7 @@ import ContactField from '../../common/fields/ContactField';
 import MainList from '../../common/list/MainList/MainList';
 import G1AccountField from '../../common/fields/G1AccountField';
 import BlockAnonymous from '../../common/BlockAnonymous';
-import { TagsListEdit } from '../../common/inputs/TagsListEdit';
+import TagsListEdit from '../../common/inputs/TagsListEdit';
 
 const ProfileShow = (props) => {
   const translate = useTranslate();

@@ -19,13 +19,13 @@ import GroupIcon from '@material-ui/icons/Group';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { ReferenceField } from '@semapps/field-components';
 import UsernameField from '../../common/fields/UsernameField';
-
-import ResourceSelectWithTags from '../../common/inputs/ResourceSelectWithTags';
+import { ResourceSelectWithTags } from '@semapps/tag-components';
 
 export const GroupFormContent = (props) => {
   const translate = useTranslate();
 
   const { record: group } = props;
+  // Watch out: group['vcard:hasMember'] contains the actor URIs, not the profile URIs.
   const [memberIds, setMemberIds] = React.useState(arrayFromLdField(group['vcard:hasMember']));
   const [sort, setSort] = React.useState({ field: 'vcard:given-name', order: 'ASC' });
 
@@ -33,22 +33,24 @@ export const GroupFormContent = (props) => {
   const listControllerProps = useListController({ resource: 'Profile', basePath: '/profiles' });
   const unselectMemberIds = useUnselectAll('Profile');
 
-  const { data: memberData, ids, loading } = listControllerProps;
+  const { data: profileData, ids: profileIds, loading } = listControllerProps;
 
-  const sortedMemberIds = ids
-    .filter((id) => memberIds.includes(id))
+  const sortedProfileIds = profileIds
+    .filter((id) => memberIds.includes(profileData[id]?.['describes']))
     .sort(
       (id1, id2) =>
-        (memberData[id1]?.['vcard:given-name'] || '').localeCompare(memberData[id2]?.['vcard:given-name'] || '') *
+        (profileData[id1]?.['vcard:given-name'] || '').localeCompare(profileData[id2]?.['vcard:given-name'] || '') *
         (sort.order === 'ASC' ? 1 : -1)
     );
 
-  const onMemberChange = ({ ids }) => {
-    setMemberIds(ids);
+  const onMemberChange = ({ ids: newProfileIds }) => {
+    const changedMemberIds = newProfileIds.map((profileId) => profileData[profileId]?.describes);
+    setMemberIds(changedMemberIds);
   };
-  /** @param {Identifier[]} removeIds */
-  const onDeleteMembers = (removeIds) => {
-    setMemberIds(memberIds.filter((id) => !removeIds.includes(id)));
+  /** @param {Identifier[]} removeProfileIds */
+  const onDeleteMembers = (removeProfileIds) => {
+    const removeMemberIds = removeProfileIds.map((id) => profileData[id]?.describes);
+    setMemberIds(removeMemberIds);
   };
 
   // We use this, to store the memberIds in the form.
@@ -63,6 +65,7 @@ export const GroupFormContent = (props) => {
 
       <h3>{translate('app.group.members')}</h3>
       <ResourceSelectWithTags
+        // TODO: i18n
         title="Add Members"
         labelResourcePredicate="vcard:given-name"
         labelTagPredicate="vcard:label"
@@ -78,13 +81,13 @@ export const GroupFormContent = (props) => {
         tagName={translate('app.group.group')}
         resourceName={translate('app.group.profile')}
         // The selected members.
-        value={memberIds}
+        value={sortedProfileIds}
         onSelectionChange={onMemberChange}
         loading={loading}
         excludeIds={group.id && [group.id]}
       />
       {/* We use a custom datagrid to render the selected users. `ids` gets the selected ones only. */}
-      <ListContextProvider value={{ ...listControllerProps, ids: sortedMemberIds, data: memberData }}>
+      <ListContextProvider value={{ ...listControllerProps, ids: sortedProfileIds, data: profileData }}>
         <ListView
           title={translate('app.group.members')}
           loading={loading}

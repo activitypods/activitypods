@@ -66,7 +66,7 @@ module.exports = {
       confirm_new_password: 'Confirm new password',
     },
     helper: {
-      add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',
+      add_contact: 'To add a user to your network, you need to know his ID (format: @bob@server.com).',
       message_profile_show_right:
         'Sending a message to %{username} will give him/her the right to see your profile, in order to be able to respond.',
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',

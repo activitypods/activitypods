@@ -65,8 +65,7 @@ export const GroupFormContent = (props) => {
 
       <h3>{translate('app.group.members')}</h3>
       <ResourceSelectWithTags
-        // TODO: i18n
-        title="Add Members"
+        title={translate('app.group.add_members')}
         labelResourcePredicate="vcard:given-name"
         labelTagPredicate="vcard:label"
         relationshipPredicate="vcard:hasMember"

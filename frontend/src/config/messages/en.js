@@ -31,6 +31,7 @@ module.exports = {
       profile_name: 'Name',
       profile: 'Profile',
       group: 'Group',
+      add_members: 'Add members',
     },
     page: {
       contacts: 'My network',

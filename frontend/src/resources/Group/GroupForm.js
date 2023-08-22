@@ -50,7 +50,7 @@ export const GroupFormContent = (props) => {
   /** @param {Identifier[]} removeProfileIds */
   const onDeleteMembers = (removeProfileIds) => {
     const removeMemberIds = removeProfileIds.map((id) => profileData[id]?.describes);
-    setMemberIds(removeMemberIds);
+    setMemberIds(memberIds.filter((id) => !removeMemberIds.includes(id)));
   };
 
   // We use this, to store the memberIds in the form.
@@ -72,6 +72,7 @@ export const GroupFormContent = (props) => {
         relationshipPredicate="vcard:hasMember"
         avatarResourcePredicate="vcard:photo"
         avatarTagPredicate="vcard:hasPhoto"
+        ownerIdResourcePredicate="describes"
         resourceDefaultIcon={<PersonIcon />}
         tagDefaultIcon={<GroupIcon />}
         // We have a custom datagrid to render the selected users so don't show them here.
@@ -83,6 +84,8 @@ export const GroupFormContent = (props) => {
         // The selected members.
         value={sortedProfileIds}
         onSelectionChange={onMemberChange}
+        // The groups's appearance suffices, so we don't need to label.
+        groupBy={() => ''}
         loading={loading}
         excludeIds={group.id && [group.id]}
       />

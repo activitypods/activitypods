@@ -15,6 +15,7 @@ import React, { useEffect, useState } from 'react';
  * @property {string} [colorResourcePredicate] Resource field name that contains the resource color, if present.
  * @property {string} [avatarResourcePredicate] Resource field name that contains the resource avatar URI, if present.
  * @property {string} labelResourcePredicate Resource field name that contains the resource label to show.
+ * @property {string} [ownerIdResourcePredicate] Resource field name that contains the id as specified in the tag's relationship data.
  * @property {boolean} showColors Whether to color tags (based on the tag name), when the tag doesn't have one.
  * @property {JSX.Element} [resourceDefaultIcon] Icon to show for resources that don't have an avatar.
  * @property {JSX.Element} [tagDefaultIcon] Icon to show for tags that don't have an avatar.
@@ -49,6 +50,7 @@ const ResourceSelectWithTags = (props) => {
     avatarTagPredicate,
     avatarResourcePredicate,
     labelResourcePredicate,
+    ownerIdResourcePredicate,
     showColors,
     tagResource,
     entityResource,
@@ -73,6 +75,14 @@ const ResourceSelectWithTags = (props) => {
   const { data: tagData, isLoading: isLoadingTags } = useGetList(tagResource);
   const { data: resourceData, isLoading: isLoadingResources } = useGetList(entityResource);
 
+  // Create a map from the tag's owner id to the resource id. Helpful for mapping the tag's owners to corresponding resources.
+  const ownerToResourceIds = Object.fromEntries(
+    Object.entries(resourceData).map(([id, resource]) => [resource[ownerIdResourcePredicate], id])
+  );
+  const resourceToOwnerIds = Object.fromEntries(
+    Object.entries(resourceData).map(([id, resource]) => [id, resource[ownerIdResourcePredicate]])
+  );
+
   // Create list of all resources and tags, sorted by their label as autocomplete select options.
   // First, all tags are shown, then all resources.
   const options = [
@@ -92,7 +102,8 @@ const ResourceSelectWithTags = (props) => {
   const isTagSelected = (tag) => {
     const tagOwners = arrayFromLdField(tag[relationshipPredicate]);
     if (tagOwners.length === 0) return false;
-    return tagOwners.every((owner) => selectedResourceIds.includes(owner));
+    const selectedOwnerIds = selectedResourceIds.map((id) => resourceToOwnerIds[id]);
+    return tagOwners.every((ownerId) => selectedOwnerIds.includes(ownerId));
   };
 
   const handleChange = (event, values, reason, { option: optionId }) => {
@@ -103,13 +114,16 @@ const ResourceSelectWithTags = (props) => {
     // If the option is a tag, we need to add / remove all resources that have this tag.
     if (tagData[optionId]) {
       const clickedTag = tagData[optionId];
-      const tagOwners = arrayFromLdField(clickedTag[relationshipPredicate]);
+      const resourceIds = arrayFromLdField(clickedTag[relationshipPredicate]).map(
+        (ownersId) => ownerToResourceIds[ownersId]
+      );
+
       // If the tag was selected...
       // (We can't check `reason` here, because the tags are not part of the values list.)
       if (!isTagSelected(clickedTag)) {
-        newSelectedResourceIds.push(...tagOwners);
+        newSelectedResourceIds.push(...resourceIds);
       } else {
-        deselectedResourceIds.push(...tagOwners);
+        deselectedResourceIds.push(...resourceIds);
       }
       // If the option was a resource...
     } else if (resourceData[optionId]) {
@@ -230,6 +244,7 @@ const ResourceSelectWithTags = (props) => {
 ResourceSelectWithTags.defaultProps = {
   showColors: true,
   excludeIds: [],
+  ownerIdResourcePredicate: 'id',
 };
 
 export default ResourceSelectWithTags;

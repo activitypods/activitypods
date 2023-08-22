@@ -19,7 +19,7 @@ import GroupIcon from '@material-ui/icons/Group';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { ReferenceField } from '@semapps/field-components';
 import UsernameField from '../../common/fields/UsernameField';
-import { ResourceSelectWithTags } from '@semapps/tag-components';
+import ResourceSelectWithTags from '../../common/tags/ResourceSelectWithTags';
 
 export const GroupFormContent = (props) => {
   const translate = useTranslate();

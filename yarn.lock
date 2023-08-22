@@ -1749,12 +1749,12 @@
     moleculer "^0.14.18"
     negotiator "^0.6.2"
 
-"@semapps/notifications@0.5.0-alpha.9":
-  version "0.5.0-alpha.9"
-  resolved "https://registry.yarnpkg.com/@semapps/notifications/-/notifications-0.5.0-alpha.9.tgz#adf683acef79bcc4eeb1cfef8770f2bff9fd296b"
-  integrity sha512-mnhHMme0+CB1vhuuK9sfBrclaJwc3vHkZvmzgn06srfN5EoV0AJO0UL7QZgTbM0+gvjlB9MrinJzYxuSZrMxlg==
+"@semapps/notifications@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@semapps/notifications/-/notifications-0.5.1.tgz#2583e6b6cec050211b637ac819bf71e7b8009890"
+  integrity sha512-S9xjb7j6EgmRKEgd7LOCed20wZmB9Z7XMUwcrLjdsdztm6N5mKypcbnvSoKydXArXcxGGtIonqfJxj6yCDL6lg==
   dependencies:
-    "@semapps/ldp" "0.5.0-alpha.9"
+    "@semapps/ldp" "0.5.1"
     cron-parser "^4.3.0"
     expo-server-sdk "^3.4.0"
     moleculer "^0.14.18"

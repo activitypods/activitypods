@@ -9,7 +9,7 @@ import ContactField from '../../common/fields/ContactField';
 import MainList from '../../common/list/MainList/MainList';
 import G1AccountField from '../../common/fields/G1AccountField';
 import BlockAnonymous from '../../common/BlockAnonymous';
-import { TagsListEdit } from '@semapps/tag-components';
+import TagsListEdit from '../../common/tags/TagsListEdit';
 
 const ProfileShow = (props) => {
   const translate = useTranslate();

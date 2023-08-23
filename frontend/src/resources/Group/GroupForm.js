@@ -10,16 +10,28 @@ import {
   useTranslate,
   Button,
   useUnselectAll,
+  useRecordContext,
 } from 'react-admin';
 import { useField } from 'react-final-form';
 import { arrayFromLdField } from '../../utils';
-import { Avatar } from '@material-ui/core';
+import { Avatar, ListItemAvatar } from '@material-ui/core';
 import PersonIcon from '@material-ui/icons/Person';
 import GroupIcon from '@material-ui/icons/Group';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { ReferenceField } from '@semapps/field-components';
 import UsernameField from '../../common/fields/UsernameField';
 import ResourceSelectWithTags from '../../common/tags/ResourceSelectWithTags';
+
+const AvatarItem = ({ source, label }) => {
+  const record = useRecordContext();
+  return (
+    <ListItemAvatar>
+      <Avatar src={record[source]}>
+        <PersonIcon />
+      </Avatar>
+    </ListItemAvatar>
+  );
+};
 
 export const GroupFormContent = (props) => {
   const translate = useTranslate();
@@ -70,7 +82,7 @@ export const GroupFormContent = (props) => {
         labelTagPredicate="vcard:label"
         relationshipPredicate="vcard:hasMember"
         avatarResourcePredicate="vcard:photo"
-        avatarTagPredicate="vcard:hasPhoto"
+        avatarTagPredicate="vcard:photo"
         ownerIdResourcePredicate="describes"
         resourceDefaultIcon={<PersonIcon />}
         tagDefaultIcon={<GroupIcon />}
@@ -116,7 +128,7 @@ export const GroupFormContent = (props) => {
         >
           <Datagrid empty={<>{translate('app.group.no_members')}</>}>
             <ReferenceField label="Avatar" source="id" reference="Profile" basePath={'/Group'} sortable={false}>
-              <Avatar source="vcard:photo" label="Avatar" />
+              <AvatarItem source="vcard:photo" label="vcard:given-name" />
             </ReferenceField>
             <ReferenceField
               label={'Name'}

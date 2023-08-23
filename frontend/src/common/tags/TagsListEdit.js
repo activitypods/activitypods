@@ -30,7 +30,8 @@ const colors = ['lightblue', 'lightgreen', 'lightpink', 'lightyellow', 'lightgre
  * @property {string} namePredicate Tag field name that contains the tag label to show.
  * @property {string} [colorPredicate] Tag field name that contains the tag color, if present.
  * @property {string} [avatarPredicate] Tag field name that contains the tag avatar URI, if present.
- * @property {string} [idPredicate] Tag field name that contains the tag id, defaults to `id`.
+ * @property {string} [tagIdPredicate] Tag field name that contains the tag id, defaults to `id`.
+ * @property {string} [recordIdPredicate] Tag field name that contains the record's id, defaults to `id`.
  * @property {string} tagResource The resource name of the tags that can be selected.
  * @property {boolean} [showColors] Whether to show colors (based on tag name), even if the tag doesn't have one, default `true`.
  * @property {boolean} [allowCreate] Whether to allow creating new tags, default `true`.
@@ -47,7 +48,8 @@ const TagsListEdit = (props) => {
     namePredicate,
     colorPredicate,
     avatarPredicate,
-    idPredicate,
+    tagIdPredicate,
+    recordIdPredicate,
     tagResource,
     showColors,
     allowCreate,
@@ -65,7 +67,7 @@ const TagsListEdit = (props) => {
   const translate = useTranslate();
 
   const record = useRecordContext();
-  const recordId = record?.id;
+  const recordId = record[recordIdPredicate];
 
   const [update] = useUpdate();
   const [create] = useCreate();
@@ -84,10 +86,10 @@ const TagsListEdit = (props) => {
       setTagMemberships(
         Object.values(tagData)
           .filter((tagData) => tagData[relationshipPredicate]?.includes(recordId))
-          .map((tagData) => tagData[idPredicate])
+          .map((tagData) => tagData[tagIdPredicate])
       );
     }
-  }, [tagDataState, tagData, tagIds, recordId, idPredicate, relationshipPredicate]);
+  }, [tagDataState, tagData, tagIds, recordId, tagIdPredicate, relationshipPredicate]);
 
   const saveStateToDataProvider = useCallback(() => {
     if (isUpdating || !cacheInvalidated) return;
@@ -95,10 +97,10 @@ const TagsListEdit = (props) => {
 
     // Update all tag resources where the membership has been modified (added / removed).
     Promise.all(
-      Object.values(tagDataState).map((tagData) => {
-        const originalTagMemberships = arrayFromLdField(tagData[relationshipPredicate]);
+      Object.values(tagDataState).map((tagObject) => {
+        const originalTagMemberships = arrayFromLdField(tagObject[relationshipPredicate]);
         const isOriginallyIncluded = originalTagMemberships.includes(recordId);
-        const isNowIncluded = tagMemberships.includes(tagData[idPredicate]);
+        const isNowIncluded = tagMemberships.includes(tagObject[tagIdPredicate]);
 
         if (isOriginallyIncluded === isNowIncluded) {
           // Nothing to do.
@@ -111,8 +113,8 @@ const TagsListEdit = (props) => {
           newMembers = originalTagMemberships.filter((memberId) => memberId !== recordId);
         }
         // Set the new members.
-        return update(tagResource, tagData[idPredicate], {
-          ...tagData,
+        return update(tagResource, tagObject[tagIdPredicate], {
+          ...tagObject,
           [relationshipPredicate]: newMembers,
         });
       })
@@ -127,7 +129,7 @@ const TagsListEdit = (props) => {
     tagDataState,
     cacheInvalidated,
     relationshipPredicate,
-    idPredicate,
+    tagIdPredicate,
     tagResource,
     update,
   ]);
@@ -145,7 +147,7 @@ const TagsListEdit = (props) => {
 
   // Convert tagRelationshipData into a common tag format.
   const tags = Object.values(tagDataState).map((tagData) => ({
-    id: tagData[idPredicate],
+    id: tagData[tagIdPredicate],
     name: tagData[namePredicate],
     // The color or a color generated from the name.
     color: tagData[colorPredicate] || (showColors && colorFromString(tagData[namePredicate])),
@@ -338,7 +340,8 @@ const RoundButton = (props) => (
 );
 
 TagsListEdit.defaultProps = {
-  idPredicate: 'id',
+  recordIdPredicate: 'id',
+  tagIdPredicate: 'id',
   showColors: true,
   avatarPredicate: undefined,
   colorPredicate: undefined,

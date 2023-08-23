@@ -26,6 +26,7 @@ const ProfileShow = (props) => {
             namePredicate="vcard:label"
             avatarPredicate="vcard:photo"
             tagResource="Group"
+            recordIdPredicate="describes"
           />
 
           <TextField source="vcard:given-name" />

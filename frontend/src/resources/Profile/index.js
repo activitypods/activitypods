@@ -11,7 +11,7 @@ export default {
     show: ProfileShow,
     options: {
       label: 'Profiles',
-    },
+    }
   },
   dataModel: {
     types: ['vcard:Individual', 'as:Profile'],

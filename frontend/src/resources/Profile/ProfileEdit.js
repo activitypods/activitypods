@@ -1,5 +1,6 @@
 import React from 'react';
-import { ImageInput, SaveButton, SimpleForm, TextInput, Toolbar, useTranslate, ImageField } from 'react-admin';
+import { SaveButton, SimpleForm, TextInput, Toolbar, useTranslate, ImageField } from 'react-admin';
+import { ImageInput } from '@semapps/input-components';
 import Edit from '../../layout/Edit';
 import ProfileTitle from './ProfileTitle';
 import { g1PublicKeyToUrl, g1UrlToPublicKey } from '../../utils';

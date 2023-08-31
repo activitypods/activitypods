@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useListContext, useTranslate, useGetIdentity, useDataProvider, linkToRecord, useNotify } from 'react-admin';
+import { useListContext, useTranslate, useGetIdentity, useDataProvider, useCreatePath, useNotify } from 'react-admin';
 import {
   Switch,
   List as MUIList,
   ListItem,
+  ListItemButton,
   ListItemAvatar,
   ListItemSecondaryAction,
   ListItemText,
@@ -15,20 +16,19 @@ import PlaceIcon from '@mui/icons-material/Place';
 import List from '../../layout/List';
 
 const useStyles = makeStyles(() => ({
-  root: {
-    height: 63,
-  },
-  container: {
+  listItem: {
     backgroundColor: 'white',
     marginBottom: 8,
+    padding: 0,
     height: 63,
     boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)',
   }
 }));
 
 const ListWithSwitches = () => {
-  const { ids, data } = useListContext();
+  const { data } = useListContext();
   const [checkedId, setCheckedId] = useState();
+  const createPath = useCreatePath();
   const { identity } = useGetIdentity();
   const dataProvider = useDataProvider();
   const classes = useStyles();
@@ -63,24 +63,26 @@ const ListWithSwitches = () => {
 
   return (
     <MUIList>
-      {ids.map(id =>
-        <ListItem key={id} button onClick={() => navigate(linkToRecord('/Location', id, 'edit'), { replace: true })} classes={classes}>
-          <ListItemAvatar>
-            <Avatar>
-              <PlaceIcon />
-            </Avatar>
-          </ListItemAvatar>
-          <ListItemText
-            primary={data[id]['vcard:given-name']}
-            secondary={data[id]['vcard:hasAddress']?.['vcard:given-name']}
-          />
-          <ListItemSecondaryAction>
-            <Switch
-              edge="end"
-              onChange={e => setHomeAddress(id)}
-              checked={id === checkedId}
+      {data && data.map(record =>
+        <ListItem key={record.id} className={classes.listItem}>
+          <ListItemButton onClick={() => navigate(createPath({ resource: 'Location', id: record.id, type: 'edit' }))}>
+            <ListItemAvatar>
+              <Avatar>
+                <PlaceIcon />
+              </Avatar>
+            </ListItemAvatar>
+            <ListItemText
+              primary={record['vcard:given-name']}
+              secondary={record['vcard:hasAddress']?.['vcard:given-name']}
             />
-          </ListItemSecondaryAction>
+            <ListItemSecondaryAction>
+              <Switch
+                edge="end"
+                onChange={e => setHomeAddress(record.id)}
+                checked={record.id === checkedId}
+              />
+            </ListItemSecondaryAction>
+          </ListItemButton>
         </ListItem>
       )}
     </MUIList>

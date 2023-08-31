@@ -144,7 +144,7 @@ const theme = createTheme({
     MuiScopedCssBaseline: {
       styleOverrides: {
         root: {
-          backgroundColor: process.env.REACT_APP_COLOR_PRIMARY
+          backgroundColor: 'unset'
         }
       },
     },

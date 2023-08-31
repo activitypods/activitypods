@@ -3,7 +3,7 @@ import { useCheckAuthenticated } from '@semapps/auth-provider';
 import { useTranslate, useGetList, useAuthProvider } from 'react-admin';
 import { Box, Typography, List, ListItem, Avatar, ListItemAvatar, ListItemText, ListItemSecondaryAction, IconButton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import EmailIcon from '@mui/icons-material/Email';
 import PlaceIcon from '@mui/icons-material/Place';
 import LockIcon from '@mui/icons-material/Lock';
@@ -20,12 +20,12 @@ const useStyles = makeStyles(() => ({
 const SettingsPage = () => {
 	const translate = useTranslate();
 	const authProvider = useAuthProvider();
-	const history = useHistory();
+	const navigate = useNavigate();
 	const [accountSettings, setAccountSettings] = useState({});
 	useCheckAuthenticated();
 	const classes = useStyles();
 
-	const { ids } = useGetList('Location');
+	const { data } = useGetList('Location');
 
 	useEffect(() => {
 		authProvider.getAccountSettings().then((res) => setAccountSettings(res));
@@ -36,7 +36,7 @@ const SettingsPage = () => {
 			path: '/Location',
 			icon: <PlaceIcon />,
 			label: 'app.setting.addresses',
-			value: translate('app.setting.address', { smart_count: ids.length })
+			value: translate('app.setting.address', { smart_count: data ? data.length : 0 })
 		},
 		{
 			path: '/settings/email',
@@ -60,7 +60,7 @@ const SettingsPage = () => {
 			<Box mt={1}>
 				<List>
 					{settings.map(setting => (
-						<ListItem button onClick={() => history.push(setting.path)} className={classes.listItem}>
+						<ListItem button onClick={() => navigate(setting.path)} className={classes.listItem}>
 							<ListItemAvatar>
 								<Avatar>
 									{setting.icon}

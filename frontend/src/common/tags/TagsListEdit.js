@@ -74,22 +74,19 @@ const TagsListEdit = (props) => {
   const [cacheInvalidated, setCacheInvalidated] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const { data: tagData, ids: tagIds, loading: isLoadingAllTags, refetch } = useGetList(tagResource);
-  const [tagDataState, setTagDataState] = useState({});
+  const { data: tagData, isLoading: isLoadingAllTags, refetch } = useGetList(tagResource);
+  // const [tagDataState, setTagDataState] = useState({});
 
   const [tagMemberships, setTagMemberships] = useState([]);
   useEffect(() => {
-    // TODO: Remove condition, once migrated to ra-4. See https://github.com/marmelab/react-admin/issues/6780
-    //  The tagData is emptied on updates because the dataProvider cache is completely invalidated.
-    if (tagIds.length > 0) {
-      setTagDataState(tagData);
+    if (tagData?.length > 0) {
       setTagMemberships(
-        Object.values(tagData)
-          .filter((tagData) => tagData[relationshipPredicate]?.includes(recordId))
-          .map((tagData) => tagData[tagIdPredicate])
+        tagData
+          .filter((tagObject) => tagObject[relationshipPredicate]?.includes(recordId))
+          .map((tagObject) => tagObject[tagIdPredicate])
       );
     }
-  }, [tagDataState, tagData, tagIds, recordId, tagIdPredicate, relationshipPredicate]);
+  }, [tagData, recordId, tagIdPredicate, relationshipPredicate]);
 
   const saveStateToDataProvider = useCallback(() => {
     if (isUpdating || !cacheInvalidated) return;
@@ -97,7 +94,7 @@ const TagsListEdit = (props) => {
 
     // Update all tag resources where the membership has been modified (added / removed).
     Promise.all(
-      Object.values(tagDataState).map((tagObject) => {
+      tagData.map((tagObject) => {
         const originalTagMemberships = arrayFromLdField(tagObject[relationshipPredicate]);
         const isOriginallyIncluded = originalTagMemberships.includes(recordId);
         const isNowIncluded = tagMemberships.includes(tagObject[tagIdPredicate]);
@@ -126,7 +123,7 @@ const TagsListEdit = (props) => {
     isUpdating,
     recordId,
     tagMemberships,
-    tagDataState,
+    tagData,
     cacheInvalidated,
     relationshipPredicate,
     tagIdPredicate,
@@ -146,17 +143,17 @@ const TagsListEdit = (props) => {
   }, [isLoadingAllTags, cacheInvalidated, isUpdating, saveStateToDataProvider]);
 
   // Convert tagRelationshipData into a common tag format.
-  const tags = Object.values(tagDataState).map((tagData) => ({
-    id: tagData[tagIdPredicate],
-    name: tagData[namePredicate],
+  const tags = tagData && tagData.map((tagObject) => ({
+    id: tagObject[tagIdPredicate],
+    name: tagObject[namePredicate],
     // The color or a color generated from the name.
-    color: tagData[colorPredicate] || (showColors && colorFromString(tagData[namePredicate])),
-    avatar: tagData[avatarPredicate],
-    owners: arrayFromLdField(tagData[relationshipPredicate]),
+    color: tagObject[colorPredicate] || (showColors && colorFromString(tagObject[namePredicate])),
+    avatar: tagObject[avatarPredicate],
+    owners: arrayFromLdField(tagObject[relationshipPredicate]),
   }));
 
-  const selectedTags = tags.filter((tag) => tagMemberships.includes(tag.id));
-  const unselectedTags = tags.filter((tag) => !tagMemberships.includes(tag.id));
+  const selectedTags = tags?.filter((tag) => tagMemberships.includes(tag.id));
+  const unselectedTags = tags?.filter((tag) => !tagMemberships.includes(tag.id));
 
   /**
    * @param {ReactDivMouseEvent} event
@@ -220,7 +217,7 @@ const TagsListEdit = (props) => {
       <Grid container spacing={1}>
         {isLoadingAllTags && <LoadingIndicator />}
 
-        {selectedTags.map((tag) => (
+        {selectedTags?.map((tag) => (
           <Grid item mt={1} mb={1} key={tag.id}>
             <Chip
               size="small"

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Card, Typography, Avatar, Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { useGetIdentity, linkToRecord, useTranslate } from 'react-admin';
+import { useGetIdentity, useCreatePath, useTranslate } from 'react-admin';
 import { Link } from 'react-router-dom';
 import { formatUsername } from '../../utils';
 
@@ -50,6 +50,7 @@ const useStyles = makeStyles((theme) => ({
 
 const ProfileCard = () => {
   const classes = useStyles();
+  const createPath = useCreatePath();
   const { identity } = useGetIdentity();
   const translate = useTranslate();
   if (!identity) return null;
@@ -67,7 +68,7 @@ const ProfileCard = () => {
         <Typography align="center">{formatUsername(identity.id)}</Typography>
       </Box>
       <Box className={classes.button} pb={3} pr={3} pl={3}>
-        <Link to={linkToRecord('/Profile', identity?.webIdData?.url)}>
+        <Link to={createPath({ resource: 'Profile', id: identity?.webIdData?.url, type: 'edit' })}>
           <Button variant="contained" color="secondary" type="submit">
             {translate('app.action.edit_profile')}
           </Button>

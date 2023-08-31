@@ -4,32 +4,30 @@ import { Box, Typography, Grid, Card } from '@mui/material';
 
 const EditView = (props) => {
   const {
-    basePath,
     record,
     redirect,
     resource,
     save,
     saving,
-    version,
+    version
   } = useEditContext(props);
   return(
     <>
-      <Grid container>
+      <Grid container sx={{ mt: 2 }}>
         <Grid item xs={8}>
           <Typography variant="h2" component="h1">
-            {props.title && React.cloneElement(props.title, { record })}
+            {props.title}
           </Typography>
         </Grid>
         <Grid item xs={4}>
           <Box display="flex" alignItems="middle" justifyContent="right">
-            {props.actions.map((action, key) => React.cloneElement(action, { key, color: 'text', record }))}
+            {props.actions.map((action, key) => React.cloneElement(action, { key, color: 'primary' }))}
           </Box>
         </Grid>
       </Grid>
       <Box mt={1}>
         <Card>
           {record ? React.cloneElement(React.Children.only(props.children), {
-            basePath,
             record,
             redirect:
               typeof props.children.props.redirect === 'undefined'

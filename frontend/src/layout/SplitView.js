@@ -3,7 +3,7 @@ import { Grid, Hidden } from '@mui/material';
 import StickyBox from "./StickyBox";
 
 const SplitView = ({ asides, children }) => (
-  <Grid container spacing={3}>
+  <Grid container spacing={3} sx={{ mt: -1 }}>
     <Grid item xs={12} md={asides ? 8 : 12} lg={asides ? 9 : 12}>
       {children}
     </Grid>

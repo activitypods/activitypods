@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Button, Typography, ThemeProvider, useMediaQuery, Container, Avatar } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { Link, useGetIdentity, useTranslate } from 'react-admin';
-import { redirect } from 'react-router-dom';
+import { Link, useGetIdentity, useTranslate, useRedirect } from 'react-admin';
 import theme from '../config/theme';
 
 const useStyles = makeStyles(() => ({
@@ -78,13 +77,18 @@ const useStyles = makeStyles(() => ({
 
 const HomePage = () => {
   const classes = useStyles();
-  const { loading, identity } = useGetIdentity();
+  const { identity, isLoading } = useGetIdentity();
+  const redirect = useRedirect();
   const translate = useTranslate();
   const xs = useMediaQuery(() => theme.breakpoints.down('xs'), { noSsr: true });
 
-  if (loading) return null;
+  useEffect(() => {
+    if (identity?.id) {
+      redirect('/Profile');
+    }
+  }, [redirect, identity])
 
-  if (identity?.id) return redirect('/Profile');
+  if (isLoading) return null;
 
   return (
     <ThemeProvider theme={theme}>

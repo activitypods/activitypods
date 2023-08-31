@@ -32,7 +32,7 @@ const AddLocationButton = ({ onChange, reference, source }) => {
   const classes = useStyles();
   const { identity } = useGetIdentity();
   const [showDialog, setShowDialog] = useState(false);
-  const [create, { loading }] = useCreate(reference);
+  const [create, { isLoading }] = useCreate(reference);
   const { ids: existingLocations } = useGetList(reference);
   const translate = useTranslate();
   const notify = useNotify();
@@ -122,7 +122,7 @@ const AddLocationButton = ({ onChange, reference, source }) => {
               <DialogActions>
                 <Button
                   onClick={() => setShowDialog(false)}
-                  disabled={loading}
+                  disabled={isLoading}
                   startIcon={<IconCancel />}
                 >
                   {translate('ra.action.cancel')}
@@ -131,7 +131,7 @@ const AddLocationButton = ({ onChange, reference, source }) => {
                   handleSubmitWithRedirect={handleSubmitWithRedirect}
                   pristine={pristine}
                   saving={saving}
-                  disabled={loading}
+                  disabled={isLoading}
                 />
               </DialogActions>
             </>

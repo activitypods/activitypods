@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { linkToRecord, useTranslate, Link, useRefresh, useGetOne } from 'react-admin';
+import { useCreatePath, useTranslate, Link, useRefresh, useGetOne } from 'react-admin';
 import { Card, Avatar, Grid, Typography, Box, useMediaQuery } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useCollection } from '@semapps/activitypub-components';
@@ -52,6 +52,7 @@ const useStyles = makeStyles((theme) => ({
 const ContactRequest = ({ activity, refetch }) => {
   const classes = useStyles();
   const xs = useMediaQuery((theme) => theme.breakpoints.down('xs'), { noSsr: true });
+  const createPath = useCreatePath();
   const translate = useTranslate();
 
   let { data: profile, isLoading } = useGetOne(
@@ -65,13 +66,13 @@ const ContactRequest = ({ activity, refetch }) => {
 
   return (
     <>
-      <Link to={linkToRecord('/Profile', activity.object.object, 'show')}>
+      <Link to={createPath({ resource: 'Profile', id: activity.object.object, type: 'show' })}>
         <Avatar src={profile?.['vcard:photo']} className={classes.avatar} />
       </Link>
       <Grid container spacing={xs ? 2 : 2}>
         <Grid item xs={12} sm={8}>
           <div>
-            <Link to={linkToRecord('/Profile', activity.object.object, 'show')}>
+            <Link to={createPath({ resource: 'Profile', id: activity.object.object, type: 'show' })}>
               <Typography variant="body1" className={classes.name} component="span">
                 {profile?.['vcard:given-name']}
               </Typography>

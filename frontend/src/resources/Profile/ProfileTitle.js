@@ -1,6 +1,8 @@
 import React from 'react';
+import { useRecordContext } from 'react-admin';
 
-const ProfileTitle = ({ record }) => {
+const ProfileTitle = () => {
+  const record = useRecordContext();
   return <span>{record ? record['vcard:given-name'] : ''}</span>;
 };
 

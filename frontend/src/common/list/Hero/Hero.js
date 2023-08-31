@@ -5,6 +5,14 @@ import makeStyles from '@mui/styles/makeStyles';
 import DetailsList from './DetailsList';
 
 const useStyles = makeStyles(theme => ({
+  root: {
+    flexGrow: 1,
+    margin: theme.spacing(-1),
+    marginBottom: theme.spacing(2),
+    [theme.breakpoints.down('sm')]: {
+      margin: theme.spacing(2),
+    },
+  },
   avatar: {
     width: 200,
     height: 200,
@@ -15,22 +23,24 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const Hero = ({ children, image, defaultImage }) => {
+const Hero = ({ children, image }) => {
   const classes = useStyles();
-  const { basePath, loaded, record, resource } = useShowContext();
-  if (!loaded) return null;
+  const { record, isLoading } = useShowContext();
+  if (isLoading) return null;
 
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12} sm={3}>
-        <Avatar src={record[image]} className={classes.avatar} />
+    <div className={classes.root}>
+      <Grid container spacing={7}>
+        <Grid item xs={12} sm={3}>
+          <Avatar src={record[image]} className={classes.avatar} />
+        </Grid>
+        <Grid item xs={12} sm={9}>
+          <DetailsList>
+            {children}
+          </DetailsList>
+        </Grid>
       </Grid>
-      <Grid item xs={12} sm={9}>
-        <DetailsList record={record} resource={resource} basePath={basePath}>
-          {children}
-        </DetailsList>
-      </Grid>
-    </Grid>
+    </div>
   );
 };
 

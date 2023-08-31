@@ -2,7 +2,7 @@ import React from "react";
 import { useRecordContext } from 'react-admin';
 import { formatUsername } from "../../utils";
 import CopyButton from "../buttons/CopyButton";
-import {makeStyles} from "@material-ui/core";
+import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles((theme) => ({
   wrapper: {

@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useDataProvider, useTranslate, useGetList } from 'react-admin';
-import { makeStyles, Typography, Box, Chip, Button } from '@material-ui/core';
+import { Typography, Box, Chip, Button } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import WarningIcon from '@material-ui/icons/Warning';
-import DoneIcon from '@material-ui/icons/Done';
+import WarningIcon from '@mui/icons-material/Warning';
+import DoneIcon from '@mui/icons-material/Done';
 import SimpleBox from "../../layout/SimpleBox";
 import useTrustedApps from "../../hooks/useTrustedApps";
 

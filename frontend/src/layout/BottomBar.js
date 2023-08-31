@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useGetIdentity, useTranslate } from 'react-admin';
-import { BottomNavigation, BottomNavigationAction, Box, AppBar, makeStyles } from '@material-ui/core';
+import { BottomNavigation, BottomNavigationAction, Box, AppBar } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { Link, useLocation } from 'react-router-dom';
-import PeopleAltIcon from '@material-ui/icons/PeopleAlt';
-import AssignmentIndIcon from '@material-ui/icons/AssignmentInd';
-import GroupIcon from '@material-ui/icons/Group';
-import AppsIcon from '@material-ui/icons/Apps';
-import SettingsIcon from '@material-ui/icons/Settings';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import GroupIcon from '@mui/icons-material/Group';
+import AppsIcon from '@mui/icons-material/Apps';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const useStyles = makeStyles((theme) => ({
   box: {

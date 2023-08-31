@@ -1,6 +1,6 @@
 import React from 'react';
 import { ListButton, useCreateContext } from 'react-admin';
-import { Box, Typography, Grid, Card } from '@material-ui/core';
+import { Box, Typography, Grid, Card } from '@mui/material';
 
 const CreateView = (props) => {
   const {

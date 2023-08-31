@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, Card, makeStyles, Typography } from "@material-ui/core";
+import { Box, Card, Typography } from "@mui/material";
 import { Notification } from "react-admin";
+import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles((theme) => ({
   '@global': {

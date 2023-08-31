@@ -1,4 +1,4 @@
-import { createTheme } from '@material-ui/core/styles';
+import { createTheme } from '@mui/material/styles';
 
 const defaultTheme = createTheme();
 
@@ -89,46 +89,65 @@ const theme = createTheme({
       textTransform: 'uppercase',
     },
   },
-  overrides: {
+  components: {
     RaImageField: {
-      image: {
-        width: '100%',
-        margin: 0,
-        maxHeight: 200,
-        objectFit: 'cover',
-      },
+      styleOverrides: {
+        image: {
+          width: '100%',
+          margin: 0,
+          maxHeight: 200,
+          objectFit: 'cover',
+        },
+      }
     },
     MuiButton: {
-      contained: {
-        borderRadius: 8,
-        paddingLeft: 15,
-        paddingRight: 15,
-        height: 36,
-        minWidth: 100
-      },
+      styleOverrides: {
+        contained: {
+          borderRadius: 8,
+          paddingLeft: 15,
+          paddingRight: 15,
+          height: 36,
+          minWidth: 100
+        },
+      }
     },
     MuiAlert: {
-      message: {
-        paddingTop: 11,
-      },
+      styleOverrides: {
+        message: {
+          paddingTop: 11,
+        },
+      }
     },
     MuiIconButton: {
-      root: {
-        padding: 8,
-        paddingRight: 0,
-      },
+      styleOverrides: {
+        root: {
+          padding: 8,
+          paddingRight: 0,
+        },
+      }
     },
     RaCreateButton: {
-      floating: {
-        backgroundColor: process.env.REACT_APP_COLOR_PRIMARY,
-        bottom: 80
+      styleOverrides: {
+        floating: {
+          backgroundColor: process.env.REACT_APP_COLOR_PRIMARY,
+          bottom: 80
+        }
       }
     },
     RaToolbar: {
-      mobileToolbar: {
-        bottom: 56
+      styleOverrides: {
+        mobileToolbar: {
+          bottom: 56
+        }
       }
-    }
+    },
+    MuiScopedCssBaseline: {
+      styleOverrides: {
+        root: {
+          backgroundColor: process.env.REACT_APP_COLOR_PRIMARY
+        }
+      },
+    },
   },
 });
 

@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useListContext, useTranslate, useGetIdentity, useDataProvider, linkToRecord, useNotify } from 'react-admin';
 import {
-  makeStyles,
   Switch,
   List as MUIList,
   ListItem,
@@ -10,8 +9,9 @@ import {
   ListItemSecondaryAction,
   ListItemText,
   Avatar
-} from '@material-ui/core';
-import PlaceIcon from '@material-ui/icons/Place';
+} from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import PlaceIcon from '@mui/icons-material/Place';
 import List from '../../layout/List';
 
 const useStyles = makeStyles(() => ({
@@ -32,7 +32,7 @@ const ListWithSwitches = () => {
   const { identity } = useGetIdentity();
   const dataProvider = useDataProvider();
   const classes = useStyles();
-  const history = useHistory();
+  const navigate = useNavigate();
   const notify = useNotify();
 
   useEffect(() => {
@@ -64,7 +64,7 @@ const ListWithSwitches = () => {
   return (
     <MUIList>
       {ids.map(id =>
-        <ListItem key={id} button onClick={() => history.push(linkToRecord('/Location', id, 'edit'))} classes={classes}>
+        <ListItem key={id} button onClick={() => navigate(linkToRecord('/Location', id, 'edit'), { replace: true })} classes={classes}>
           <ListItemAvatar>
             <Avatar>
               <PlaceIcon />

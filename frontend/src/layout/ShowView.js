@@ -1,6 +1,6 @@
 import React from 'react';
 import { ListButton, EditButton, useShowContext, usePermissionsOptimized } from 'react-admin';
-import { Box, Typography, Grid } from '@material-ui/core';
+import { Box, Typography, Grid } from '@mui/material';
 import SplitView from './SplitView';
 
 const ShowView = (props) => {

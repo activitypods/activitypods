@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Hidden } from '@material-ui/core';
+import { Grid, Hidden } from '@mui/material';
 import StickyBox from "./StickyBox";
 
 const SplitView = ({ asides, children }) => (

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import { email, required, useAuthProvider, useNotify, useTranslate } from 'react-admin';
 import { SimpleForm, TextInput } from 'react-admin';
-import { Box, Card, Typography } from '@material-ui/core';
+import { Box, Card, Typography } from '@mui/material';
 
 const validateEmail = [required(), email('app.validation.email')]
 

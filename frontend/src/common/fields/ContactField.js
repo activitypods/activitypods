@@ -1,10 +1,9 @@
 import React from 'react';
 import { useNotify, useRecordContext, useTranslate, useGetIdentity } from 'react-admin';
-import { Box, TextField, Button } from '@material-ui/core';
+import { Box, TextField, Button, Alert } from '@mui/material';
 import { Form, Field } from 'react-final-form';
-import SendIcon from '@material-ui/icons/Send';
+import SendIcon from '@mui/icons-material/Send';
 import { useOutbox, useCollection, OBJECT_TYPES } from '@semapps/activitypub-components';
-import Alert from "@material-ui/lab/Alert";
 
 const FinalFormTextField = ({ input: { name, onChange, value, ...restInput }, meta, ...rest }) => (
   <TextField

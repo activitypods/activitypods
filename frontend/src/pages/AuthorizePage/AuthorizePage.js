@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGetIdentity } from "react-admin";
-import { ThemeProvider } from '@material-ui/core';
+import { ThemeProvider } from '@mui/material';
 import AuthorizePageView from "./AuthorizePageView";
 import theme from "../../config/theme";
 

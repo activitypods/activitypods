@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { createTheme, ThemeProvider } from '@material-ui/core';
+import { createTheme, ThemeProvider } from '@mui/material';
 import LocalLoginPageView from "./LocalLoginPageView";
 
 const LocalLoginPage = (props) => {

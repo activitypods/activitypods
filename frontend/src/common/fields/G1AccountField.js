@@ -1,7 +1,7 @@
 import React from 'react';
 import { g1UrlToPublicKey } from '../../utils';
 import CopyButton from "../buttons/CopyButton";
-import { makeStyles } from "@material-ui/core";
+import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles((theme) => ({
   wrapper: {

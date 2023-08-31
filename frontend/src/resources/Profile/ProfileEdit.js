@@ -1,11 +1,10 @@
 import React from 'react';
-import { ImageInput, SaveButton, SimpleForm, TextInput, Toolbar, useTranslate } from 'react-admin';
-import { ImageField } from '@semapps/field-components';
+import { ImageInput, SaveButton, SimpleForm, TextInput, Toolbar, useTranslate, ImageField } from 'react-admin';
 import Edit from '../../layout/Edit';
 import ProfileTitle from './ProfileTitle';
 import { g1PublicKeyToUrl, g1UrlToPublicKey } from '../../utils';
 import BlockAnonymous from '../../common/BlockAnonymous';
-import QuickCreateLocationInput from '../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput';
+// import QuickCreateLocationInput from '../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput';
 
 const ToolbarWithoutDelete = (props) => (
   <Toolbar {...props}>
@@ -28,7 +27,7 @@ export const ProfileEdit = (props) => {
           <ImageInput source="vcard:photo" accept="image/*">
             <ImageField source="src" />
           </ImageInput>
-          <QuickCreateLocationInput reference="Location" source="vcard:hasAddress" />
+          {/* <QuickCreateLocationInput reference="Location" source="vcard:hasAddress" /> */}
           <TextInput
             source="foaf:tipjar"
             parse={(v) => g1PublicKeyToUrl(v)}

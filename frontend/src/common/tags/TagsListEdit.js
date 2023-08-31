@@ -13,9 +13,9 @@ import {
   MenuItem,
   Menu,
   Grid,
-} from '@material-ui/core';
-import ControlPointIcon from '@material-ui/icons/ControlPoint';
-import EditIcon from '@material-ui/icons//Edit';
+} from '@mui/material';
+import ControlPointIcon from '@mui/icons-material/ControlPoint';
+import EditIcon from '@mui/icons-material//Edit';
 import { arrayFromLdField, colorFromString } from '../../utils';
 
 const colors = ['lightblue', 'lightgreen', 'lightpink', 'lightyellow', 'lightgrey'];

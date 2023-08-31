@@ -1,11 +1,12 @@
 import React, { useCallback } from 'react';
 import { useListContext, useTranslate, FunctionField, useDataProvider, useNotify, useRefresh } from 'react-admin';
-import { makeStyles, Card, Typography, Grid, Button, Chip, useMediaQuery, IconButton } from "@material-ui/core";
+import { Card, Typography, Grid, Button, Chip, useMediaQuery, IconButton } from "@mui/material";
+import makeStyles from '@mui/styles/makeStyles';
 import { ReferenceField } from '@semapps/field-components';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import List from "../../layout/List";
-import DoneIcon from "@material-ui/icons/Done";
-import DeleteIcon from '@material-ui/icons/Delete';
+import DoneIcon from "@mui/icons-material/Done";
+import DeleteIcon from '@mui/icons-material/Delete';
 import useTrustedApps from "../../hooks/useTrustedApps";
 
 const useStyles = makeStyles(theme => ({

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslate, SimpleList, TextField, DeleteWithUndoButton } from 'react-admin';
-import GroupIcon from '@material-ui/icons/Group';
+import GroupIcon from '@mui/icons-material/Group';
 import List from '../../layout/List';
 import { arrayFromLdField } from '../../utils';
 

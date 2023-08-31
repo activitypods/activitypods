@@ -1,6 +1,6 @@
 import React from 'react';
 import { CreateButton, useTranslate, SimpleList } from 'react-admin';
-import { Avatar, useMediaQuery } from "@material-ui/core";
+import { Avatar, useMediaQuery } from "@mui/material";
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import { AvatarWithLabelField } from '@semapps/field-components';
 import { GridList } from '@semapps/list-components';

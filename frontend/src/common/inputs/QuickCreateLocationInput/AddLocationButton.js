@@ -12,9 +12,10 @@ import {
   useGetIdentity,
   useGetList
 } from 'react-admin';
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions, makeStyles } from '@material-ui/core';
-import IconCancel from '@material-ui/icons/Cancel';
-import AddIcon from '@material-ui/icons/Add';
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import IconCancel from '@mui/icons-material/Cancel';
+import AddIcon from '@mui/icons-material/Add';
 import { extractContext, LocationInput } from '@semapps/geo-components';
 
 const useStyles = makeStyles(theme => ({

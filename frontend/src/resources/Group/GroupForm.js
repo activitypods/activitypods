@@ -14,10 +14,10 @@ import {
 } from 'react-admin';
 import { useField } from 'react-final-form';
 import { arrayFromLdField } from '../../utils';
-import { Avatar, ListItemAvatar } from '@material-ui/core';
-import PersonIcon from '@material-ui/icons/Person';
-import GroupIcon from '@material-ui/icons/Group';
-import DeleteIcon from '@material-ui/icons/Delete';
+import { Avatar, ListItemAvatar } from '@mui/material';
+import PersonIcon from '@mui/icons-material/Person';
+import GroupIcon from '@mui/icons-material/Group';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { ReferenceField } from '@semapps/field-components';
 import UsernameField from '../../common/fields/UsernameField';
 import ResourceSelectWithTags from '../../common/tags/ResourceSelectWithTags';

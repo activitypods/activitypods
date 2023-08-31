@@ -5,10 +5,11 @@ import {
   ImageInput,
   useEditContext,
   Toolbar,
-  SaveButton, useTranslate
+  SaveButton, 
+  useTranslate,
+  ImageField
 } from 'react-admin';
-import { ImageField } from "@semapps/field-components";
-import AccountCircleIcon from '@material-ui/icons/AccountCircle';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SimpleBox from "../../layout/SimpleBox";
 
 const ToolbarWithoutDelete = props => (

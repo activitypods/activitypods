@@ -5,7 +5,7 @@ import ProfileTitle from './ProfileTitle';
 import Hero from '../../common/list/Hero/Hero';
 import ContactCard from '../../common/cards/ContactCard';
 import UsernameField from '../../common/fields/UsernameField';
-import ContactField from '../../common/fields/ContactField';
+// import ContactField from '../../common/fields/ContactField';
 import MainList from '../../common/list/MainList/MainList';
 import G1AccountField from '../../common/fields/G1AccountField';
 import BlockAnonymous from '../../common/BlockAnonymous';
@@ -41,7 +41,7 @@ const ProfileShow = (props) => {
         </Hero>
 
         <MainList>
-          <ContactField source="describes" label={translate('app.action.send_message')} />
+          {/* <ContactField source="describes" label={translate('app.action.send_message')} /> */}
         </MainList>
       </Show>
     </BlockAnonymous>

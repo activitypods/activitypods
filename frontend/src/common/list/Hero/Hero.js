@@ -1,6 +1,7 @@
 import React from 'react';
 import { useShowContext } from 'react-admin';
-import { Grid, Avatar, makeStyles } from '@material-ui/core';
+import { Grid, Avatar } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import DetailsList from './DetailsList';
 
 const useStyles = makeStyles(theme => ({

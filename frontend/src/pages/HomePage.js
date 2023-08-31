@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Button, makeStyles, Typography, ThemeProvider, useMediaQuery, Container, Avatar } from '@material-ui/core';
+import { Box, Button, Typography, ThemeProvider, useMediaQuery, Container, Avatar } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { Link, useGetIdentity, useTranslate } from 'react-admin';
-import { Redirect } from 'react-router-dom';
+import { redirect } from 'react-router-dom';
 import theme from '../config/theme';
 
 const useStyles = makeStyles(() => ({
@@ -14,8 +15,8 @@ const useStyles = makeStyles(() => ({
     borderRadius: '50%',
     backgroundColor: 'white',
     padding: 30,
-    height: 400,
-    width: 400,
+    height: 460,
+    width: 460,
     position: 'absolute',
     top: -100,
     [theme.breakpoints.down('xs')]: {
@@ -75,7 +76,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const HomePage = ({ title }) => {
+const HomePage = () => {
   const classes = useStyles();
   const { loading, identity } = useGetIdentity();
   const translate = useTranslate();
@@ -83,15 +84,15 @@ const HomePage = ({ title }) => {
 
   if (loading) return null;
 
-  return identity?.id ? (
-    <Redirect to="/Profile" />
-  ) : (
+  if (identity?.id) return redirect('/Profile');
+
+  return (
     <ThemeProvider theme={theme}>
       <Box display="flex" justifyContent="center">
         <Box className={classes.circle} display="flex" alignItems="center" justifyContent="center">
           <Box>
             <Typography align="center" variant="h1" className={classes.title}>
-              {title}
+              {process.env.REACT_APP_NAME}
             </Typography>
             <Typography align="center">
               {process.env.REACT_APP_DESCRIPTION}

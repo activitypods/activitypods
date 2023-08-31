@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
-import { linkToRecord, useQueryWithStore, useTranslate, Link, useRefresh } from 'react-admin';
-import { makeStyles, Card, Avatar, Grid, Typography, Box, useMediaQuery } from '@material-ui/core';
+import { linkToRecord, useTranslate, Link, useRefresh, useGetOne } from 'react-admin';
+import { Card, Avatar, Grid, Typography, Box, useMediaQuery } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { useCollection } from '@semapps/activitypub-components';
 import { formatUsername } from '../../utils';
 import AcceptContactRequestButton from "../buttons/AcceptContactRequestButton";
@@ -53,13 +54,12 @@ const ContactRequest = ({ activity, refetch }) => {
   const xs = useMediaQuery((theme) => theme.breakpoints.down('xs'), { noSsr: true });
   const translate = useTranslate();
 
-  let { loading, data: profile } = useQueryWithStore({
-    type: 'getOne',
-    resource: 'Profile',
-    payload: { id: activity.object.object },
-  });
+  let { data: profile, isLoading } = useGetOne(
+    'Profile',
+    { id: activity.object.object },
+  );
 
-  if (loading) return null;
+  if (isLoading) return null;
 
   const message = activity.content || (activity.context ? translate('app.message.you_participated_to_same_event') : '');
 

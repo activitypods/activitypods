@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import { useTranslate, useGetList, useAuthProvider } from 'react-admin';
-import { Box, makeStyles, Typography, List, ListItem, Avatar, ListItemAvatar, ListItemText, ListItemSecondaryAction, IconButton } from '@material-ui/core';
+import { Box, Typography, List, ListItem, Avatar, ListItemAvatar, ListItemText, ListItemSecondaryAction, IconButton } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { useHistory } from 'react-router-dom';
-import EmailIcon from '@material-ui/icons/Email';
-import PlaceIcon from '@material-ui/icons/Place';
-import LockIcon from '@material-ui/icons/Lock';
-import EditIcon from '@material-ui/icons/Edit';
+import EmailIcon from '@mui/icons-material/Email';
+import PlaceIcon from '@mui/icons-material/Place';
+import LockIcon from '@mui/icons-material/Lock';
+import EditIcon from '@mui/icons-material/Edit';
 
 const useStyles = makeStyles(() => ({
 	listItem: {

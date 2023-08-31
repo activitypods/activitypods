@@ -1,6 +1,6 @@
 import React from 'react';
 import { ListButton, ShowButton, useEditContext } from 'react-admin';
-import { Box, Typography, Grid, Card } from '@material-ui/core';
+import { Box, Typography, Grid, Card } from '@mui/material';
 
 const EditView = (props) => {
   const {

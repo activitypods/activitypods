@@ -3,6 +3,6 @@ import dataProvider from "./dataProvider";
 
 export default authProvider({
   dataProvider,
-  localAccounts: true,
+  authType: 'local',
   checkPermissions: true,
 });

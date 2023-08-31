@@ -4,10 +4,10 @@ import { Link } from 'react-router-dom';
 import {
   Box,
   Container,
-  makeStyles,
   Typography,
   Grid,
-} from "@material-ui/core";
+} from "@mui/material";
+import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles(theme => ({
   topBar: {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useShowContext, Link, linkToRecord, Button, usePermissionsOptimized, useTranslate } from 'react-admin';
-import EditIcon from '@material-ui/icons/Edit';
+import EditIcon from '@mui/icons-material/Edit';
 
 const EditButton = () => {
   const { basePath, record } = useShowContext();

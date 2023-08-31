@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import { useGetIdentity, useTranslate } from 'react-admin';
-import { makeStyles, Typography } from '@material-ui/core';
-import LockIcon from '@material-ui/icons/Lock';
+import { Typography } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import LockIcon from '@mui/icons-material/Lock';
 import { Link, Redirect } from 'react-router-dom';
 import LoginForm from './LoginForm';
 import SignupForm from './SignupForm';

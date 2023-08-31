@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslate, getFieldLabelTranslationArgs, useShowContext } from 'react-admin';
-import { Box, makeStyles } from '@material-ui/core';
+import { Box } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import LargeLabel from './LargeLabel';
 
 const useStyles = makeStyles(theme => ({

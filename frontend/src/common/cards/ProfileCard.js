@@ -1,5 +1,6 @@
 import React from 'react';
-import { makeStyles, Box, Card, Typography, Avatar, Button } from '@material-ui/core';
+import { Box, Card, Typography, Avatar, Button } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { useGetIdentity, linkToRecord, useTranslate } from 'react-admin';
 import { Link } from 'react-router-dom';
 import { formatUsername } from '../../utils';

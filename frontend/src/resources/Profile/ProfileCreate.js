@@ -1,11 +1,10 @@
 import React from 'react';
 import { SimpleForm, TextInput, useTranslate, Toolbar, SaveButton } from 'react-admin';
-import { Box, Card, Typography } from '@material-ui/core';
-import Alert from '@material-ui/lab/Alert';
+import { Box, Card, Typography, Alert } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import useRequestContact from '../../hooks/useRequestContact';
-import SendIcon from '@material-ui/icons/Send';
+import SendIcon from '@mui/icons-material/Send';
 
 const AddContactToolbar = props => {
   const translate = useTranslate();

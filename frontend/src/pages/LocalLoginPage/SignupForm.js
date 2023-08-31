@@ -4,7 +4,8 @@ import { Field, Form } from 'react-final-form';
 import createSlug from 'speakingurl';
 import { useTranslate, useNotify, useSafeSetState, email } from 'react-admin';
 import { useLocation } from 'react-router-dom';
-import { Button, Box, CircularProgress, makeStyles } from '@material-ui/core';
+import { Button, Box, CircularProgress } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { useSignup } from '@semapps/auth-provider';
 import TextInput from '../../common/inputs/TextInput';
 

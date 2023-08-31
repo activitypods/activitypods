@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGetIdentity, useTranslate, Link } from 'react-admin';
-import { Box, Container, Breadcrumbs, makeStyles } from '@material-ui/core';
+import { Box, Container, Breadcrumbs } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles((theme) => ({
   menuBar: {

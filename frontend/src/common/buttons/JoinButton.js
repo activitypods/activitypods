@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useShowContext, useGetIdentity, useNotify, useRefresh, useTranslate } from 'react-admin';
 import { useCollection, useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 
 const JoinButton = (props) => {
   const [disabled, setDisabled] = useState(false);

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { RouteWithoutLayout } from "react-admin";
-import { createTheme, ThemeProvider } from '@material-ui/core';
+import { createTheme, ThemeProvider } from '@mui/material';
 
 const PageWithTheme = ({ theme, children, ...rest }) => {
   console.log('component', children)

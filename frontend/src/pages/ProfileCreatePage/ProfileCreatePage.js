@@ -1,5 +1,5 @@
 import React from 'react';
-import { ThemeProvider } from '@material-ui/core';
+import { ThemeProvider } from '@mui/material';
 import ProfileCreatePageView from "./ProfileCreatePageView";
 import theme from "../../config/theme";
 import {useGetIdentity, EditBase } from "react-admin";

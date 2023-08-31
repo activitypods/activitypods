@@ -1,6 +1,6 @@
 import React from 'react';
 import { Notification } from 'react-admin';
-import { Box, Container, ThemeProvider, useMediaQuery } from '@material-ui/core';
+import { Box, Container, ThemeProvider, useMediaQuery } from '@mui/material';
 import ScrollToTop from './ScrollToTop';
 import AppBar from "./AppBar";
 import MenuBar from "./MenuBar";

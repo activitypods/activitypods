@@ -1,5 +1,6 @@
 import React from 'react';
-import { makeStyles, Box, Card, Typography, Button, TextField } from '@material-ui/core';
+import { Box, Card, Typography, Button, TextField } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { Field, Form } from 'react-final-form';
 import { useTranslate } from 'react-admin';
 import useRequestContact from '../../hooks/useRequestContact';

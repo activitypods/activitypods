@@ -78,7 +78,7 @@ const ListWithSwitches = () => {
             <ListItemSecondaryAction>
               <Switch
                 edge="end"
-                onChange={e => setHomeAddress(record.id)}
+                onChange={e => { e.preventDefault(); setHomeAddress(record.id); }}
                 checked={record.id === checkedId}
               />
             </ListItemSecondaryAction>

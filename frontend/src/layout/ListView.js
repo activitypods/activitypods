@@ -3,24 +3,24 @@ import { CreateButton, useListContext } from 'react-admin';
 import { Box, Typography, Grid } from '@mui/material';
 import SplitView from "./SplitView";
 
-const ListView = (props) => {
-  const { defaultTitle } = useListContext(props);
+const ListView = ({ asides, actions, title, children }) => {
+  const { defaultTitle } = useListContext();
   return(
-    <SplitView asides={props.asides}>
+    <SplitView asides={asides}>
       <Grid container>
         <Grid item xs={8}>
           <Typography variant="h2" component="h1">
-            {props.title || defaultTitle}
+            {title || defaultTitle}
           </Typography>
         </Grid>
         <Grid item xs={4}>
           <Box display="flex" alignItems="middle" justifyContent="right">
-            {props.actions.map((action, key) => React.cloneElement(action, { key, color: 'primary' }))}
+            {actions.map((action, key) => React.cloneElement(action, { key, color: 'primary' }))}
           </Box>
         </Grid>
       </Grid>
       <Box mt={1}>
-        {props.children}
+        {children}
       </Box>
     </SplitView>
   )

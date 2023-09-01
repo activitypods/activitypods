@@ -16,10 +16,17 @@ import HomePage from './pages/HomePage';
 import SettingsPage from "./pages/SettingsPage/SettingsPage";
 import SettingsPasswordPage from "./pages/SettingsPage/SettingsPasswordPage";
 import SettingsEmailPage from "./pages/SettingsPage/SettingsEmailPage";
-// import ProfileCreatePage from "./pages/ProfileCreatePage/ProfileCreatePage";
-// import AuthorizePage from "./pages/AuthorizePage/AuthorizePage";
-// import UserPage from "./pages/UserPage";
-// import RedirectPage from "./pages/RedirectPage";
+import ProfileCreatePage from "./pages/ProfileCreatePage/ProfileCreatePage";
+import AuthorizePage from "./pages/AuthorizePage/AuthorizePage";
+import UserPage from "./pages/UserPage";
+import RedirectPage from "./pages/RedirectPage";
+
+const LoginPage = () => 
+  <LocalLoginPage 
+    allowUsername 
+    postSignupRedirect="/initialize" 
+    postLoginRedirect="/authorize" 
+  />;
 
 const App = () => (
   <StyledEngineProvider injectFirst>
@@ -29,7 +36,7 @@ const App = () => (
       authProvider={authProvider}
       dataProvider={dataProvider}
       i18nProvider={i18nProvider}
-      loginPage={LocalLoginPage}
+      loginPage={LoginPage}
       layout={Layout}
       theme={theme}
       store={memoryStore()}
@@ -39,10 +46,10 @@ const App = () => (
       ))}
       <CustomRoutes noLayout>
         <Route exact path="/" element={<HomePage />} />
-        {/* <Route exact path="/u/:id" element={<UserPage />} />
+        <Route exact path="/u/:id" element={<UserPage />} />
         <Route exact path="/r" element={<RedirectPage />} />
         <Route exact path="/initialize" element={<ProfileCreatePage />} />
-        <Route exact path="/authorize" element={<AuthorizePage />} /> */}
+        <Route exact path="/authorize" element={<AuthorizePage />} />
       </CustomRoutes>
       <CustomRoutes>
         <Route exact path="/settings" element={<SettingsPage />} />

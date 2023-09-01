@@ -12,7 +12,6 @@ import {
   TextField,
   MenuItem,
   Menu,
-  Grid,
 } from '@mui/material';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import EditIcon from '@mui/icons-material//Edit';
@@ -110,9 +109,13 @@ const TagsListEdit = (props) => {
           newMembers = originalTagMemberships.filter((memberId) => memberId !== recordId);
         }
         // Set the new members.
-        return update(tagResource, tagObject[tagIdPredicate], {
-          ...tagObject,
-          [relationshipPredicate]: newMembers,
+        return update(tagResource, {
+          id: tagObject[tagIdPredicate], 
+          data: {
+            ...tagObject,
+            [relationshipPredicate]: newMembers,
+          },
+          previousData: tagObject,
         });
       })
     ).then(() => {
@@ -198,9 +201,11 @@ const TagsListEdit = (props) => {
     create(
       tagResource,
       {
-        [namePredicate]: newTagName,
-        [relationshipPredicate]: [recordId],
-        ...((colorPredicate && { [colorPredicate]: newTagColor }) || {}),
+        data: {
+          [namePredicate]: newTagName,
+          [relationshipPredicate]: [recordId],
+          ...((colorPredicate && { [colorPredicate]: newTagColor }) || {}),
+        }
       },
       {
         onSuccess: () => {
@@ -214,40 +219,30 @@ const TagsListEdit = (props) => {
 
   return (
     <>
-      <Grid container spacing={1}>
-        {isLoadingAllTags && <LoadingIndicator />}
-
-        {selectedTags?.map((tag) => (
-          <Grid item mt={1} mb={1} key={tag.id}>
-            <Chip
-              size="small"
-              variant="outlined"
-              onDelete={() => handleDeleteTag(tag.id)}
-              label={tag.name}
-              style={{ backgroundColor: tag.color, border: 0 }}
-            />
-          </Grid>
-        ))}
-
-        <Grid item mt={1} mb={1}>
-          <Chip
-            icon={<ControlPointIcon />}
-            size="small"
-            variant="outlined"
-            onClick={handleOpen}
-            label={translate('ra.action.add')}
-            color="secondary"
-          />
-        </Grid>
-      </Grid>
+      {isLoadingAllTags && <LoadingIndicator />}
+      {selectedTags?.map((tag) => (
+        <Chip
+          key={tag.id}
+          size="small"
+          onDelete={() => handleDeleteTag(tag.id)}
+          label={tag.name}
+          sx={{ backgroundColor: tag.color, border: 0, mr: 1 }}
+        />
+      ))}
+      <Chip
+        icon={<ControlPointIcon />}
+        size="small"
+        onClick={handleOpen}
+        label={translate('ra.action.add')}
+        color="primary"
+      />
       <Menu open={Boolean(menuAnchorEl)} onClose={handleClose} anchorEl={menuAnchorEl}>
         {unselectedTags?.map((tag) => (
           <MenuItem key={tag.id} onClick={() => handleAddTag(tag.id)}>
             <Chip
               size="small"
-              variant="outlined"
               label={tag.name}
-              style={{
+              sx={{
                 backgroundColor: tag.color,
                 border: 0,
               }}
@@ -260,7 +255,6 @@ const TagsListEdit = (props) => {
             <Chip
               icon={<EditIcon />}
               size="small"
-              variant="outlined"
               onClick={handleOpenCreateDialog}
               color="primary"
               label={translate('ra.action.create')}

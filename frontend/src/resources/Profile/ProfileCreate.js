@@ -29,11 +29,11 @@ const ProfileCreate = () => {
 
   return (
     <>
-      <Typography variant="h2" component="h1">{translate('app.page.add_contact')}</Typography>
+      <Typography variant="h2" component="h1" sx={{ mt: 2 }}>{translate('app.page.add_contact')}</Typography>
       <Box mt={1}>
         <Card>
-          <SimpleForm initialValues={{ id: searchParams.get('id') }} save={requestContact} toolbar={<AddContactToolbar />}>
-            <Alert severity="info" fullWidth>{translate('app.helper.add_contact')}</Alert>
+          <SimpleForm defaultValues={{ id: searchParams.get('id') }} onSubmit={requestContact} toolbar={<AddContactToolbar />}>
+            <Alert severity="info" sx={{ width: '100%' }}>{translate('app.helper.add_contact')}</Alert>
             <br />
             <TextInput source="id" label={translate('app.input.user_id')} fullWidth />
             <TextInput source="content" label={translate('app.input.about_you')} fullWidth />

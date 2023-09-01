@@ -3,33 +3,33 @@ import { ListButton, EditButton, useShowContext, usePermissions } from 'react-ad
 import { Box, Typography, Grid } from '@mui/material';
 import SplitView from './SplitView';
 
-const ShowView = (props) => {
-  const { record } = useShowContext(props);
+const ShowView = ({ asides, title, actions, children }) => {
+  const { record } = useShowContext();
   const { permissions } = usePermissions(record?.id);
   return (
-    <SplitView asides={props.asides}>
+    <SplitView asides={asides}>
       <Grid container>
         <Grid item xs={8}>
           <Typography variant="h2" component="h1">
-            {React.cloneElement(props.title, { record })}
+            {title}
           </Typography>
         </Grid>
         <Grid item xs={4}>
           <Box display="flex" alignItems="middle" justifyContent="right">
-            {props.actions ? (
-              props.actions.map((action, i) => React.cloneElement(action, { color: 'primary', key: i }))
+            {actions ? (
+              actions.map((action, i) => React.cloneElement(action, { color: 'primary', key: i }))
             ) : (
               <>
-                <ListButton record={record} />
+                <ListButton />
                 {permissions && permissions.some((p) => p['acl:mode'] === 'acl:Write') && (
-                  <EditButton record={record} />
+                  <EditButton />
                 )}
               </>
             )}
           </Box>
         </Grid>
       </Grid>
-      <Box mt={1}>{props.children}</Box>
+      <Box mt={1}>{children}</Box>
     </SplitView>
   );
 };

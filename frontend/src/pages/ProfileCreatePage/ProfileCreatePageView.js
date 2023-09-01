@@ -2,13 +2,13 @@ import React, { useMemo } from 'react';
 import {
   TextInput,
   SimpleForm,
-  ImageInput,
-  useEditContext,
   Toolbar,
   SaveButton, 
   useTranslate,
   ImageField
 } from 'react-admin';
+import { ImageInput } from '@semapps/input-components';
+import { useSearchParams } from 'react-router-dom';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SimpleBox from "../../layout/SimpleBox";
 
@@ -18,10 +18,9 @@ const ToolbarWithoutDelete = props => (
   </Toolbar>
 );
 
-const ProfileCreatePageView = ({ location }) => {
-  const searchParams = new URLSearchParams(location.search);
-  const editContext = useEditContext();
+const ProfileCreatePageView = () => {
   const translate = useTranslate();
+  const [searchParams] = useSearchParams();
 
   const redirect = useMemo(() => {
     const redirectUrl = searchParams.get('redirect');
@@ -40,7 +39,7 @@ const ProfileCreatePageView = ({ location }) => {
       icon={<AccountCircleIcon />}
       text={translate('app.helper.create_profile')}
     >
-      <SimpleForm {...editContext} redirect={redirect} toolbar={<ToolbarWithoutDelete />}>
+      <SimpleForm redirect={redirect} toolbar={<ToolbarWithoutDelete />}>
         <TextInput source="vcard:given-name" fullWidth />
         <TextInput source="vcard:note" fullWidth />
         <ImageInput source="vcard:photo" accept="image/*">

@@ -46,7 +46,7 @@ const SettingsEmailPage = () => {
 			</Typography>
 			<Box mt={1}>
 				<Card>
-					<SimpleForm initialValues={formDefaultValue} save={onSubmit}>
+					<SimpleForm defaultValues={formDefaultValue} onSubmit={onSubmit}>
 						<TextInput
 							label={translate('app.input.email')}
 							source="email"

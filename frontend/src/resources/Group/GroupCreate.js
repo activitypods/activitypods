@@ -10,7 +10,7 @@ export const GroupCreate = (props) => {
   if (!identity) return null;
   return (
     <Create {...props}>
-      <GroupForm initialValues={{ 'vcard:label': translate('app.group.label') }} />
+      <GroupForm defaultValues={{ 'vcard:label': translate('app.group.label') }} />
     </Create>
   );
 };

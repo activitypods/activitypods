@@ -5,7 +5,7 @@ import Edit from '../../layout/Edit';
 import ProfileTitle from './ProfileTitle';
 import { g1PublicKeyToUrl, g1UrlToPublicKey } from '../../utils';
 import BlockAnonymous from '../../common/BlockAnonymous';
-// import QuickCreateLocationInput from '../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput';
+import QuickCreateLocationInput from '../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput';
 
 const ToolbarWithoutDelete = (props) => (
   <Toolbar {...props}>
@@ -13,22 +13,21 @@ const ToolbarWithoutDelete = (props) => (
   </Toolbar>
 );
 
-export const ProfileEdit = (props) => {
+export const ProfileEdit = () => {
   const translate = useTranslate();
   return (
     <BlockAnonymous>
       <Edit
         title={<ProfileTitle />}
         transform={(data) => ({ ...data, 'vcard:fn': data['vcard:given-name'] })}
-        {...props}
       >
-        <SimpleForm {...props} toolbar={<ToolbarWithoutDelete />}>
+        <SimpleForm toolbar={<ToolbarWithoutDelete />}>
           <TextInput source="vcard:given-name" fullWidth />
           <TextInput source="vcard:note" fullWidth />
           <ImageInput source="vcard:photo" accept="image/*">
             <ImageField source="src" />
           </ImageInput>
-          {/* <QuickCreateLocationInput reference="Location" source="vcard:hasAddress" /> */}
+          <QuickCreateLocationInput reference="Location" source="vcard:hasAddress" />
           <TextInput
             source="foaf:tipjar"
             parse={(v) => g1PublicKeyToUrl(v)}

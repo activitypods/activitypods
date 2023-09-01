@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useDataProvider, useTranslate, useGetList } from 'react-admin';
 import { Typography, Box, Chip, Button } from '@mui/material';
+import { useSearchParams } from 'react-router-dom';
 import makeStyles from '@mui/styles/makeStyles';
-import { useCheckAuthenticated } from '@semapps/auth-provider';
 import WarningIcon from '@mui/icons-material/Warning';
 import DoneIcon from '@mui/icons-material/Done';
+import { useCheckAuthenticated } from '@semapps/auth-provider';
 import SimpleBox from "../../layout/SimpleBox";
 import useTrustedApps from "../../hooks/useTrustedApps";
 
@@ -40,17 +41,17 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const AuthorizePageView = (props) => {
-  const classes = useStyles(props);
+const AuthorizePageView = () => {
+  const classes = useStyles();
   useCheckAuthenticated();
   const [appData, setAppData] = useState({});
   const [showScreen, setShowScreen] = useState(false);
   const translate = useTranslate();
   const dataProvider = useDataProvider();
   const trustedApps = useTrustedApps();
-  const { data: registeredApps, loaded } = useGetList('App', { page: 1, perPage: 1000 });
-
-  const searchParams = new URLSearchParams(props.location.search);
+  const [searchParams] = useSearchParams();
+  const { data: registeredApps, isLoading } = useGetList('App', { page: 1, perPage: 1000 });
+  
   const redirectTo = new URL(searchParams.get('redirect'));
   const appDomain = redirectTo.host;
   const appOrigin = redirectTo.origin;
@@ -87,14 +88,14 @@ const AuthorizePageView = (props) => {
 
   // Once all data are loaded, either redirect to app or show authorization screen
   useEffect(() => {
-    if (loaded) {
+    if (!isLoading) {
       if (Object.values(registeredApps).some(app => app['apods:domainName'] === appDomain)) {
         accessApp(false);
       } else {
         setShowScreen(true);
       }
     }
-  }, [registeredApps, loaded, appDomain, accessApp, setShowScreen])
+  }, [registeredApps, isLoading, appDomain, accessApp, setShowScreen])
 
   if (!showScreen) return null;
 

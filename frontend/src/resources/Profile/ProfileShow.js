@@ -18,17 +18,6 @@ const ProfileShow = () => {
     <BlockAnonymous>
       <Show title={<ProfileTitle />} asides={[<ContactCard />]}>
         <Hero image="vcard:photo">
-          <TagsListEdit
-            source="id"
-            addLabel={true}
-            label={'Groups'}
-            relationshipPredicate="vcard:hasMember"
-            namePredicate="vcard:label"
-            avatarPredicate="vcard:photo"
-            tagResource="Group"
-            recordIdPredicate="describes"
-          />
-
           <TextField source="vcard:given-name" />
           <UsernameField source="describes" />
           <TextField source="vcard:note" />
@@ -38,8 +27,17 @@ const ProfileShow = () => {
             locales={process.env.REACT_APP_LANG}
             options={{ month: 'long', day: 'numeric', year: 'numeric' }}
           />
+          <TagsListEdit
+            source="id"
+            addLabel
+            label="Groups"
+            relationshipPredicate="vcard:hasMember"
+            namePredicate="vcard:label"
+            avatarPredicate="vcard:photo"
+            tagResource="Group"
+            recordIdPredicate="describes"
+          />
         </Hero>
-
         <MainList>
           <ContactField source="describes" label={translate('app.action.send_message')} />
         </MainList>

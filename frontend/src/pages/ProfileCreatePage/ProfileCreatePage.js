@@ -4,13 +4,13 @@ import ProfileCreatePageView from "./ProfileCreatePageView";
 import theme from "../../config/theme";
 import {useGetIdentity, EditBase } from "react-admin";
 
-const ProfileCreatePage = (props) => {
+const ProfileCreatePage = () => {
   const { identity } = useGetIdentity();
   if (!identity) return null;
   return (
     <ThemeProvider theme={theme}>
       <EditBase resource="Profile" basePath="/Profile" id={identity?.profileData?.id} mutationMode="pessimistic">
-        <ProfileCreatePageView {...props} />
+        <ProfileCreatePageView />
       </EditBase>
     </ThemeProvider >
   );

@@ -21,9 +21,8 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const UsernameField = (props) => {
-  const { source } = props;
-  const record = useRecordContext(props);
+const UsernameField = ({ source, showCopyButton }) => {
+  const record = useRecordContext();
   const classes = useStyles();
 
   if (!record || !record[source]) return null;
@@ -32,14 +31,15 @@ const UsernameField = (props) => {
     <div className={classes.wrapper}>
       <div className={classes.text}>
         {formatUsername(record[source])}
-        <CopyButton text={formatUsername(record[source])} className={classes.copyButton} />
+        {showCopyButton && <CopyButton text={formatUsername(record[source])} className={classes.copyButton} />}
       </div>
     </div>
   );
 }
 
 UsernameField.defaultProps = {
-  addLabel: true
+  addLabel: true,
+  showCopyButton: true
 };
 
 export default UsernameField;

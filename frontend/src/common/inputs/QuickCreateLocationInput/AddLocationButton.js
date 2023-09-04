@@ -28,7 +28,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 // https://codesandbox.io/s/react-admin-v3-advanced-recipes-quick-createpreview-voyci
-const AddLocationButton = ({ onChange, reference, source }) => {
+const AddLocationButton = ({ reference, source }) => {
   const form = useFormContext();
   const classes = useStyles();
   const { identity } = useGetIdentity();
@@ -39,7 +39,6 @@ const AddLocationButton = ({ onChange, reference, source }) => {
   const notify = useNotify();
 
   const handleSubmit = async values => {
-    console.log('values', values);
     // needed to filter current form values
     const filteredValues = {
       'vcard:given-name': values['vcard:given-name'],
@@ -51,16 +50,13 @@ const AddLocationButton = ({ onChange, reference, source }) => {
       { data: filteredValues },
       {
         onSuccess: (data) => {
-          console.log('onSuccess', data);
           setShowDialog(false);
           // Update the initial input to target the newly created location
           // Set shouldDirty to true to activate the save button
           // See https://react-hook-form.com/docs/useform/setvalue
           form.setValue(source, data.id, { shouldDirty: true });
-          onChange();
         },
         onError: (error) => {
-          console.log('onError', error);
           notify(error.message, 'error');
         }
       }

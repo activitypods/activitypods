@@ -20,7 +20,7 @@ const ListWithSwitches = () => {
   const { data } = useListContext();
   const [checkedId, setCheckedId] = useState();
   const createPath = useCreatePath();
-  const { identity } = useGetIdentity();
+  const { identity, refetch: refetchIdentity } = useGetIdentity();
   const dataProvider = useDataProvider();
   const classes = useStyles();
   const navigate = useNavigate();
@@ -45,6 +45,7 @@ const ListWithSwitches = () => {
           previousData: identity?.profileData,
         })
         .then(() => {
+          refetchIdentity();
           if (id) {
             notify('app.notification.home_address_updated', { type: 'success' });
           } else {
@@ -52,7 +53,7 @@ const ListWithSwitches = () => {
           }
         });
     },
-    [setCheckedId, checkedId, dataProvider, identity, notify]
+    [setCheckedId, checkedId, dataProvider, identity, refetchIdentity, notify]
   );
 
   return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SaveButton, SimpleForm, TextInput, Toolbar, useTranslate, ImageField } from 'react-admin';
+import { SaveButton, SimpleForm, TextInput, Toolbar, useTranslate, ImageField, useGetIdentity, useUpdate, useNotify } from 'react-admin';
 import { ImageInput } from '@semapps/input-components';
 import Edit from '../../layout/Edit';
 import ProfileTitle from './ProfileTitle';
@@ -15,11 +15,24 @@ const ToolbarWithoutDelete = (props) => (
 
 export const ProfileEdit = () => {
   const translate = useTranslate();
+  const notify = useNotify();
+  const { refetch: refetchIdentity } = useGetIdentity();
+
   return (
     <BlockAnonymous>
       <Edit
         title={<ProfileTitle />}
         transform={(data) => ({ ...data, 'vcard:fn': data['vcard:given-name'] })}
+        mutationMode="pessimistic"
+        mutationOptions={{
+          onSuccess: () => {
+            notify('ra.notification.updated', {
+              messageArgs: { smart_count: 1 },
+              undoable: false
+            });
+            refetchIdentity();
+          }
+        }}
       >
         <SimpleForm toolbar={<ToolbarWithoutDelete />}>
           <TextInput source="vcard:given-name" fullWidth />

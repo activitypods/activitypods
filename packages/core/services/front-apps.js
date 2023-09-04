@@ -150,6 +150,9 @@ module.exports = {
           }
         }
       }
+    },
+    async list(ctx) {
+      return this.trustedApps;
     }
   },
   events: {

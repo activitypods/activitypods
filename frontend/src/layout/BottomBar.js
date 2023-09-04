@@ -5,7 +5,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import { Link, useLocation } from 'react-router-dom';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-import GroupIcon from '@mui/icons-material/Group';
+// import GroupIcon from '@mui/icons-material/Group';
 import AppsIcon from '@mui/icons-material/Apps';
 import SettingsIcon from '@mui/icons-material/Settings';
 
@@ -37,7 +37,7 @@ const BottomBar = () => {
   const classes = useStyles();
   const [value, setValue] = useState();
   const translate = useTranslate();
-  const { identity } = useGetIdentity();
+  const { data: identity } = useGetIdentity();
   const location = useLocation();
 
   useEffect(() => {
@@ -88,14 +88,14 @@ const BottomBar = () => {
             to={'/Profile/' + encodeURIComponent(identity?.profileData?.id)}
             classes={{ selected: classes.selected }}
           />
-          <BottomNavigationAction
+          {/* <BottomNavigationAction
             label={translate('app.page.groups_short')}
             value="groups"
             icon={<GroupIcon />}
             component={Link}
             to={'/Group'}
             classes={{ selected: classes.selected }}
-          />
+          /> */}
           <BottomNavigationAction
             label={translate('app.page.settings_short')}
             value="settings"

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SaveButton, SimpleForm, TextInput, Toolbar, useTranslate, ImageField, useGetIdentity, useUpdate, useNotify } from 'react-admin';
+import { SaveButton, SimpleForm, TextInput, Toolbar, useTranslate, ImageField, useGetIdentity, useNotify } from 'react-admin';
 import { ImageInput } from '@semapps/input-components';
 import Edit from '../../layout/Edit';
 import ProfileTitle from './ProfileTitle';

@@ -30,7 +30,7 @@ const useStyles = makeStyles((theme) => ({
 
 const ShareContactCard = () => {
   const classes = useStyles();
-  const { identity } = useGetIdentity();
+  const { data: identity } = useGetIdentity();
   const translate = useTranslate();
   const contactLink = identity && new URL(window.location.href).origin + '/u/' + formatUsername(identity?.id);
   return (

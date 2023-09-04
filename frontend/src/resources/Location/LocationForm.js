@@ -29,6 +29,7 @@ export const LocationForm = ({ defaultValues }) => {
         optionText={(resource) => resource['vcard:given-name']}
         validate={[required()]}
         fullWidth
+        variant="filled"
       />
       <TextInput
         source="vcard:note"

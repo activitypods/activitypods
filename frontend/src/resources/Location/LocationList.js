@@ -11,7 +11,6 @@ const useStyles = makeStyles(() => ({
     backgroundColor: 'white',
     marginBottom: 8,
     padding: 0,
-    height: 63,
     boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)',
   },
 }));
@@ -20,7 +19,7 @@ const ListWithSwitches = () => {
   const { data } = useListContext();
   const [checkedId, setCheckedId] = useState();
   const createPath = useCreatePath();
-  const { identity, refetch: refetchIdentity } = useGetIdentity();
+  const { data: identity, refetch: refetchIdentity } = useGetIdentity();
   const dataProvider = useDataProvider();
   const classes = useStyles();
   const navigate = useNavigate();
@@ -91,11 +90,11 @@ const ListWithSwitches = () => {
   );
 };
 
-const LocationList = (props) => {
+const LocationList = () => {
   const translate = useTranslate();
 
   return (
-    <List title={translate('app.page.addresses')} pagination={false} perPage={1000} {...props}>
+    <List title={translate('app.page.addresses')} pagination={false} perPage={1000}>
       <ListWithSwitches />
     </List>
   );

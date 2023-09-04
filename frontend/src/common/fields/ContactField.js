@@ -18,7 +18,7 @@ const ContactField = ({ source, context }) => {
   const notify = useNotify();
   const outbox = useOutbox();
   const translate = useTranslate();
-  const { identity } = useGetIdentity();
+  const { data: identity } = useGetIdentity();
   const { items: contacts, loaded: contactsLoaded } = useCollection('apods:contacts');
   const { items: attendees } = useCollection(record?.['apods:attendees']);
 

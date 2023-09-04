@@ -1,16 +1,24 @@
 import { createTheme } from '@mui/material/styles';
+import { defaultTheme as raTheme } from 'react-admin';
 
-const defaultTheme = createTheme();
+const muiTheme = createTheme();
 
 const fontFamily = '"Open Sans", "sans-serif"';
 
 const theme = createTheme({
+  ...raTheme,
   palette: {
     primary: {
       main: process.env.REACT_APP_COLOR_PRIMARY
     },
     secondary: {
       main: process.env.REACT_APP_COLOR_SECONDARY
+    },
+    black: {
+      main: '#000'
+    },
+    grey: {
+      main: '#BDBDBD'
     }
   },
   typography: {
@@ -20,7 +28,7 @@ const theme = createTheme({
       fontStyle: 'normal',
       fontWeight: 'normal',
       lineHeight: '70px',
-      [defaultTheme.breakpoints.down('xs')]: {
+      [muiTheme.breakpoints.down('sm')]: {
         fontSize: 32,
         lineHeight: '46px',
       },
@@ -30,7 +38,7 @@ const theme = createTheme({
       fontSize: 40,
       fontStyle: 'normal',
       fontWeight: 'normal',
-      [defaultTheme.breakpoints.down('xs')]: {
+      [muiTheme.breakpoints.down('sm')]: {
         fontSize: 28,
       },
     },
@@ -40,7 +48,7 @@ const theme = createTheme({
       fontStyle: 'normal',
       fontWeight: 'normal',
       lineHeight: '44px',
-      [defaultTheme.breakpoints.down('xs')]: {
+      [muiTheme.breakpoints.down('sm')]: {
         fontSize: 18,
         lineHeight: '26px',
       },
@@ -90,16 +98,7 @@ const theme = createTheme({
     },
   },
   components: {
-    RaImageField: {
-      styleOverrides: {
-        image: {
-          width: '100%',
-          margin: 0,
-          maxHeight: 200,
-          objectFit: 'cover',
-        },
-      }
-    },
+    ...raTheme.components,
     MuiButton: {
       styleOverrides: {
         contained: {
@@ -126,21 +125,6 @@ const theme = createTheme({
         },
       }
     },
-    RaCreateButton: {
-      styleOverrides: {
-        floating: {
-          backgroundColor: process.env.REACT_APP_COLOR_PRIMARY,
-          bottom: 80
-        }
-      }
-    },
-    RaToolbar: {
-      styleOverrides: {
-        mobileToolbar: {
-          bottom: 56
-        }
-      }
-    },
     MuiScopedCssBaseline: {
       styleOverrides: {
         root: {
@@ -148,6 +132,36 @@ const theme = createTheme({
         }
       },
     },
+    RaCreateButton: {
+      styleOverrides: {
+        root: {
+          '&.RaCreateButton-floating': {
+            backgroundColor: process.env.REACT_APP_COLOR_SECONDARY,
+            bottom: 80
+          }
+        }
+      }
+    },
+    RaToolbar: {
+      styleOverrides: {
+        root: {
+          "&.RaToolbar-mobileToolbar": {
+            bottom: 56
+          }
+        }
+      }
+    },
+    // Remove the large padding for the toolbar on mobile
+    RaSimpleForm: {
+      styleOverrides: {
+        root: {
+          [muiTheme.breakpoints.down('sm')]: {
+            paddingBottom: 0,
+            marginBottom: 68
+          },
+        }
+      }
+    }
   },
 });
 

@@ -14,7 +14,7 @@ const CreateView = ({ actions, children }) => {
         </Grid>
         <Grid item xs={4}>
           <Box display="flex" alignItems="middle" justifyContent="right">
-            {actions.map((action, i) => React.cloneElement(action, { color: 'primary', key: i }))}
+            {actions.map((action, i) => React.cloneElement(action, { color: 'black', key: i }))}
           </Box>
         </Grid>
       </Grid>

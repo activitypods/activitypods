@@ -13,7 +13,6 @@ import TagsListEdit from '../../common/tags/TagsListEdit';
 
 const ProfileShow = () => {
   const translate = useTranslate();
-
   return (
     <BlockAnonymous>
       <Show title={<ProfileTitle />} asides={[<ContactCard />]}>

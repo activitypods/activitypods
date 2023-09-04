@@ -6,7 +6,7 @@ import AuthorizePageView from "./AuthorizePageView";
 import theme from "../../config/theme";
 
 const AuthorizePage = () => {
-  const { identity } = useGetIdentity();
+  const { data: identity } = useGetIdentity();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 

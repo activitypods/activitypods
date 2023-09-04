@@ -13,7 +13,7 @@ const useStyles = makeStyles(theme => ({
     lineHeight: 0.8,
     paddingTop: '2rem',
 
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       paddingTop: '1.3rem',
       lineHeight: 0.8,
     },

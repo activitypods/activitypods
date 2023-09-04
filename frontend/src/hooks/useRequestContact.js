@@ -4,7 +4,7 @@ import { useCallback } from 'react';
 
 const useRequestContact = () => {
   const notify = useNotify();
-  const { identity } = useGetIdentity();
+  const { data: identity } = useGetIdentity();
   const webfinger = useWebfinger();
   const outbox = useOutbox();
 

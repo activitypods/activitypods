@@ -4,7 +4,7 @@ import { useGetIdentity, useNotify, useTranslate } from 'react-admin';
 
 const UserPage = () => {
   const params = useParams();
-  const { identity, isLoading } = useGetIdentity();
+  const { data: identity, isLoading } = useGetIdentity();
   const translate = useTranslate();
   const notify = useNotify();
   const navigate = useNavigate();

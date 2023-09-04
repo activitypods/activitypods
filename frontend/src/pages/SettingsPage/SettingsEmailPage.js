@@ -41,7 +41,7 @@ const SettingsEmailPage = () => {
 
 	return (
 		<>
-			<Typography variant="h2" component="h1">
+			<Typography variant="h2" component="h1" sx={{ mt: 2 }}>
 				{translate('app.page.settings_email')}
 			</Typography>
 			<Box mt={1}>

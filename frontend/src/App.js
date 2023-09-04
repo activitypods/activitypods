@@ -26,38 +26,40 @@ const LoginPage = () =>
     allowUsername 
     postSignupRedirect="/initialize" 
     postLoginRedirect="/authorize" 
+    additionalSignupValues={{ preferredLocale: process.env.REACT_APP_LANG }}
+    
   />;
 
 const App = () => (
   <StyledEngineProvider injectFirst>
-  <BrowserRouter>
-    <Admin
-      title={process.env.REACT_APP_NAME}
-      authProvider={authProvider}
-      dataProvider={dataProvider}
-      i18nProvider={i18nProvider}
-      loginPage={LoginPage}
-      layout={Layout}
-      theme={theme}
-      store={memoryStore()}
-    >
-      {Object.entries(resources).map(([key, resource]) => (
-        <Resource key={key} name={key} {...resource.config} />
-      ))}
-      <CustomRoutes noLayout>
-        <Route exact path="/" element={<HomePage />} />
-        <Route exact path="/u/:id" element={<UserPage />} />
-        <Route exact path="/r" element={<RedirectPage />} />
-        <Route exact path="/initialize" element={<ProfileCreatePage />} />
-        <Route exact path="/authorize" element={<AuthorizePage />} />
-      </CustomRoutes>
-      <CustomRoutes>
-        <Route exact path="/settings" element={<SettingsPage />} />
-        <Route exact path="/settings/email" element={<SettingsEmailPage />} />
-        <Route exact path="/settings/password" element={<SettingsPasswordPage />} />
-      </CustomRoutes>
-    </Admin>
-  </BrowserRouter>
+    <BrowserRouter>
+      <Admin
+        title={process.env.REACT_APP_NAME}
+        authProvider={authProvider}
+        dataProvider={dataProvider}
+        i18nProvider={i18nProvider}
+        loginPage={LoginPage}
+        layout={Layout}
+        theme={theme}
+        store={memoryStore()}
+      >
+        {Object.entries(resources).map(([key, resource]) => (
+          <Resource key={key} name={key} {...resource.config} />
+        ))}
+        <CustomRoutes noLayout>
+          <Route exact path="/" element={<HomePage />} />
+          <Route exact path="/u/:id" element={<UserPage />} />
+          <Route exact path="/r" element={<RedirectPage />} />
+          <Route exact path="/initialize" element={<ProfileCreatePage />} />
+          <Route exact path="/authorize" element={<AuthorizePage />} />
+        </CustomRoutes>
+        <CustomRoutes>
+          <Route exact path="/settings" element={<SettingsPage />} />
+          <Route exact path="/settings/email" element={<SettingsEmailPage />} />
+          <Route exact path="/settings/password" element={<SettingsPasswordPage />} />
+        </CustomRoutes>
+      </Admin>
+    </BrowserRouter>
   </StyledEngineProvider>
 );
 

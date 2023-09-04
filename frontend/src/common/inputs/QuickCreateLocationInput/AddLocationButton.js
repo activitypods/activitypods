@@ -21,7 +21,7 @@ import { extractContext, LocationInput } from '@semapps/geo-components';
 const useStyles = makeStyles(theme => ({
   button: {
     margin: '12px 0 0 12px',
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       margin: '-12px 0 12px 0'
     }
   },
@@ -31,7 +31,7 @@ const useStyles = makeStyles(theme => ({
 const AddLocationButton = ({ reference, source }) => {
   const form = useFormContext();
   const classes = useStyles();
-  const { identity } = useGetIdentity();
+  const { data: identity } = useGetIdentity();
   const [showDialog, setShowDialog] = useState(false);
   const [create, { isLoading }] = useCreate();
   const { data: existingLocations } = useGetList(reference);
@@ -111,6 +111,7 @@ const AddLocationButton = ({ reference, source }) => {
               optionText={(resource) => resource['vcard:given-name']}
               validate={[required()]}
               fullWidth
+              variant="filled"
             />
             <TextInput
               resource={reference}

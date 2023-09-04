@@ -51,7 +51,7 @@ const useStyles = makeStyles((theme) => ({
 const ProfileCard = () => {
   const classes = useStyles();
   const createPath = useCreatePath();
-  const { identity } = useGetIdentity();
+  const { data: identity } = useGetIdentity();
   const translate = useTranslate();
   if (!identity) return null;
   return (

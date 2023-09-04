@@ -8,7 +8,7 @@ const ShowView = ({ asides, title, actions, children }) => {
   const { permissions } = usePermissions(record?.id);
   return (
     <SplitView asides={asides}>
-      <Grid container>
+      <Grid container sx={{ mt: 2 }}>
         <Grid item xs={8}>
           <Typography variant="h2" component="h1">
             {title}
@@ -17,12 +17,12 @@ const ShowView = ({ asides, title, actions, children }) => {
         <Grid item xs={4}>
           <Box display="flex" alignItems="middle" justifyContent="right">
             {actions ? (
-              actions.map((action, i) => React.cloneElement(action, { color: 'primary', key: i }))
+              actions.map((action, i) => React.cloneElement(action, { color: 'black', key: i }))
             ) : (
               <>
-                <ListButton />
+                <ListButton color="black" />
                 {permissions && permissions.some((p) => p['acl:mode'] === 'acl:Write') && (
-                  <EditButton />
+                  <EditButton color="black" />
                 )}
               </>
             )}

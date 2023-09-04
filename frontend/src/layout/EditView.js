@@ -12,7 +12,7 @@ const EditView = ({ title, actions, children }) => (
       </Grid>
       <Grid item xs={4}>
         <Box display="flex" alignItems="middle" justifyContent="right">
-          {actions.map((action, key) => React.cloneElement(action, { key, color: 'primary' }))}
+          {actions.map((action, key) => React.cloneElement(action, { key, color: 'black' }))}
         </Box>
       </Grid>
     </Grid>

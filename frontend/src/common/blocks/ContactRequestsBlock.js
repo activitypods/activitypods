@@ -51,7 +51,7 @@ const useStyles = makeStyles((theme) => ({
 
 const ContactRequest = ({ activity, refetch }) => {
   const classes = useStyles();
-  const xs = useMediaQuery((theme) => theme.breakpoints.down('xs'), { noSsr: true });
+  const xs = useMediaQuery((theme) => theme.breakpoints.down('sm'), { noSsr: true });
   const createPath = useCreatePath();
   const translate = useTranslate();
 
@@ -124,7 +124,7 @@ const ContactRequestsBlock = () => {
       </Box>
       <Box p={1} pt={0}>
         {contactRequests.map((activity) => (
-          <Box className={classes.list}>
+          <Box className={classes.list} key={activity.id}>
             <ContactRequest activity={activity} refetch={refetchAndRefresh} />
           </Box>
         ))}

@@ -18,7 +18,7 @@ const useStyles = makeStyles(() => ({
     width: 460,
     position: 'absolute',
     top: -100,
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       width: '100vw',
       height: '100vw',
       padding: 0,
@@ -46,7 +46,7 @@ const useStyles = makeStyles(() => ({
   },
   steps: {
     marginTop: 400,
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       marginTop: 'calc(100vw - 30px)',
     },
   },
@@ -55,7 +55,7 @@ const useStyles = makeStyles(() => ({
     paddingLeft: 90,
     marginBottom: 25,
     '& h4': {
-      [theme.breakpoints.down('xs')]: {
+      [theme.breakpoints.down('sm')]: {
         fontWeight: 'bold',
         lineHeight: '1.2em',
         marginBottom: 8
@@ -77,10 +77,10 @@ const useStyles = makeStyles(() => ({
 
 const HomePage = () => {
   const classes = useStyles();
-  const { identity, isLoading } = useGetIdentity();
+  const { data: identity, isLoading } = useGetIdentity();
   const redirect = useRedirect();
   const translate = useTranslate();
-  const xs = useMediaQuery(() => theme.breakpoints.down('xs'), { noSsr: true });
+  const xs = useMediaQuery(() => theme.breakpoints.down('sm'), { noSsr: true });
 
   useEffect(() => {
     if (identity?.id) {

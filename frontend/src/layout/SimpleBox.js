@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, Card, Typography } from "@mui/material";
-import { Notification } from "react-admin";
 import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles((theme) => ({
@@ -43,7 +42,6 @@ const SimpleBox = ({ title, icon, text, children }) => {
         </Box>
         {children}
       </Card>
-      <Notification />
     </Box>
   );
 };

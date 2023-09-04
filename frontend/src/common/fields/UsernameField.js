@@ -16,8 +16,8 @@ const useStyles = makeStyles((theme) => ({
   },
   copyButton: {
     position: 'absolute',
-    top: -3,
-    right: -3
+    top: -8,
+    right: -8
   }
 }));
 

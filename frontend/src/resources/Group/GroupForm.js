@@ -20,7 +20,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { ReferenceField } from '@semapps/field-components';
 import UsernameField from '../../common/fields/UsernameField';
-// import ResourceSelectWithTags from '../../common/tags/ResourceSelectWithTags';
+import ResourceSelectWithTags from '../../common/tags/ResourceSelectWithTags';
 
 const AvatarItem = ({ source, label }) => {
   const record = useRecordContext();
@@ -36,8 +36,6 @@ const AvatarItem = ({ source, label }) => {
 export const GroupFormContent = () => {
   const translate = useTranslate();
   const form = useFormContext();
-
-  console.log('form', form.getValues())
 
   const group = useRecordContext();
   // Watch out: group['vcard:hasMember'] contains the actor URIs, not the profile URIs.
@@ -57,7 +55,6 @@ export const GroupFormContent = () => {
   };
   /** @param {Identifier[]} removeProfileIds */
   const onDeleteMembers = (removeProfileIds) => {
-    console.log('removeProfileIds', removeProfileIds);
     const removeMemberIds = removeProfileIds.map((id) => profileData.find(p => p.id === id)?.describes);
     setMemberIds(memberIds.filter((id) => !removeMemberIds.includes(id)));
   };
@@ -71,7 +68,7 @@ export const GroupFormContent = () => {
     <>
       <TextInput source="vcard:label" fullWidth label={translate('app.group.label')} />
       <h3>{translate('app.group.members')}</h3>
-      {/* <ResourceSelectWithTags
+      <ResourceSelectWithTags
         title={translate('app.group.add_members')}
         labelResourcePredicate="vcard:given-name"
         labelTagPredicate="vcard:label"
@@ -88,13 +85,13 @@ export const GroupFormContent = () => {
         tagName={translate('app.group.group')}
         resourceName={translate('app.group.profile')}
         // The selected members.
-        value={sortedProfileIds}
+        value={filteredProfileData?.map(p => p.id)}
         onSelectionChange={onMemberChange}
         // The groups's appearance suffices, so we don't need to label.
         groupBy={() => ''}
         loading={isLoading}
-        excludeIds={group.id && [group.id]}
-      /> */}
+        excludeIds={group ? [group.id] : []}
+      />
       {/* We use a custom datagrid to render the selected users. */}
       <ListContextProvider value={{ ...listControllerProps, data: filteredProfileData, total: filteredProfileData?.length }}>
         <ListView
@@ -105,11 +102,10 @@ export const GroupFormContent = () => {
           sx={{ width: '100%' }}
         >
           <Datagrid 
-            empty={translate('app.group.no_members')}
+            empty={<>{translate('app.group.no_members')}</>}
             bulkActionButtons={
               <Button
                 onClick={() => {
-                  console.log('delete', listControllerProps.selectedIds)
                   onDeleteMembers(listControllerProps.selectedIds);
                   unselectMemberIds();
                 }}

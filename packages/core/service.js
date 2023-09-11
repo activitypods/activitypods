@@ -49,7 +49,7 @@ const CoreService = {
         },
         like: {
           attachToObjectTypes: [...Object.values(OBJECT_TYPES), 'pair:Skill'],
-          attachToActorTypes: Object.values(ACTOR_TYPES)
+          attachToActorTypes: Object.values(ACTOR_TYPES),
         },
       },
     });
@@ -185,8 +185,8 @@ const CoreService = {
         podProvider: true,
         mirrorGraph: false,
         synchronizeContainers: false,
-        attachToLocalContainers: true
-      }
+        attachToLocalContainers: true,
+      },
     });
 
     this.broker.createService(FrontAppsService, {

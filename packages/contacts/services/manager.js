@@ -1,12 +1,12 @@
 const urlJoin = require('url-join');
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT, OFFER_DELETE_ACTOR } = require("../config/patterns");
+const { REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT, OFFER_DELETE_ACTOR } = require('../config/patterns');
 
 module.exports = {
   name: 'contacts.manager',
   mixins: [ActivitiesHandlerMixin],
-    dependencies: ['activitypub.registry', 'activity-mapping', 'webacl'],
+  dependencies: ['activitypub.registry', 'activity-mapping', 'webacl'],
 
   async started() {
     await this.broker.call('activitypub.registry.register', {
@@ -16,7 +16,6 @@ module.exports = {
       ordered: false,
       dereferenceItems: false,
     });
-
   },
   activities: {
     removeContact: {
@@ -108,7 +107,7 @@ module.exports = {
             }
           `,
           webId: 'system',
-          dataset
+          dataset,
         });
 
         // Get all cached resources from this Pod
@@ -122,13 +121,13 @@ module.exports = {
           `,
           accept: MIME_TYPES.JSON,
           webId: 'system',
-          dataset
+          dataset,
         });
 
-        for (let cachedResourceUri of result.map(node => node.resourceUri.value)) {
+        for (let cachedResourceUri of result.map((node) => node.resourceUri.value)) {
           await ctx.call('ldp.remote.delete', {
             resourceUri: cachedResourceUri,
-            webId: recipientUri
+            webId: recipientUri,
           });
         }
 
@@ -147,7 +146,7 @@ module.exports = {
             }
           `,
           webId: 'system',
-          dataset
+          dataset,
         });
 
         // Remove actor from all ACL groups
@@ -161,7 +160,7 @@ module.exports = {
             }
           `,
           webId: 'system',
-          dataset
+          dataset,
         });
 
         // Remove all rights of actor
@@ -175,7 +174,7 @@ module.exports = {
             }
           `,
           webId: 'system',
-          dataset
+          dataset,
         });
 
         // Confirm data suppression
@@ -185,7 +184,7 @@ module.exports = {
           object: activity.id,
           to: activity.actor,
         });
-      }
-    }
-  }
+      },
+    },
+  },
 };

@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { useListContext, useTranslate, FunctionField, useDataProvider, useNotify, useRefresh } from 'react-admin';
-import { makeStyles, Card, Typography, Grid, Button, Chip, useMediaQuery, IconButton } from "@material-ui/core";
+import { makeStyles, Card, Typography, Grid, Button, Chip, useMediaQuery, IconButton } from '@material-ui/core';
 import { ReferenceField } from '@semapps/field-components';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import List from '../../layout/List';
@@ -76,13 +76,15 @@ const AppCardList = () => {
   return (
     <Grid container spacing={xs ? 1 : 3}>
       {ids
-        .filter(id => data[id]['apods:application'])
-        .map(id => {
-          const appUrl = `${data[id]['apods:domainName'].includes(':') ? 'http' : 'https'}://${data[id]['apods:domainName']}`;
+        .filter((id) => data[id]['apods:application'])
+        .map((id) => {
+          const appUrl = `${data[id]['apods:domainName'].includes(':') ? 'http' : 'https'}://${
+            data[id]['apods:domainName']
+          }`;
           const loginUrl = new URL('/auth', process.env.REACT_APP_POD_PROVIDER_URL);
           loginUrl.searchParams.set('redirect', appUrl + '/login');
 
-          const isTrustedApp = trustedApps.some(domain => domain === data[id]['apods:domainName']);
+          const isTrustedApp = trustedApps.some((domain) => domain === data[id]['apods:domainName']);
           return (
             <Grid item xs={12} sm={6} key={id}>
               <Card className={classes.card}>
@@ -113,10 +115,8 @@ const AppCardList = () => {
                     deleteIcon={<DoneIcon />}
                     className={classes.appChip}
                   />
-                }
-                <a
-                  href={loginUrl.toString()}
-                  target="_blank" rel="noopener noreferrer" className={classes.link}>
+                )}
+                <a href={loginUrl.toString()} target="_blank" rel="noopener noreferrer" className={classes.link}>
                   <Button variant="contained">{translate('app.action.open_app')}</Button>
                 </a>
                 {!isTrustedApp && (

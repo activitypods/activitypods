@@ -1,9 +1,9 @@
-const path = require("path");
+const path = require('path');
 const { ServiceBroker } = require('moleculer');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
-const { CoreService } = require("@activitypods/core");
-const { AnnouncerService } = require("@activitypods/announcer");
+const { CoreService } = require('@activitypods/core');
+const { AnnouncerService } = require('@activitypods/announcer');
 const CONFIG = require('./config');
 
 Error.stackTraceLimit = Infinity;
@@ -38,7 +38,10 @@ const initialize = async (port, accountsDataset) => {
 
   const broker = new ServiceBroker({
     nodeID: 'server' + port,
-    middlewares: [WebAclMiddleware({ baseUrl, podProvider: true }), ObjectsWatcherMiddleware({ baseUrl, podProvider: true })],
+    middlewares: [
+      WebAclMiddleware({ baseUrl, podProvider: true }),
+      ObjectsWatcherMiddleware({ baseUrl, podProvider: true }),
+    ],
     logger: {
       type: 'Console',
       options: {
@@ -58,12 +61,12 @@ const initialize = async (port, accountsDataset) => {
       },
       jsonContext: 'https://activitypods.org/context.json',
       auth: {
-        accountsDataset
+        accountsDataset,
       },
       api: {
-        port
-      }
-    }
+        port,
+      },
+    },
   });
 
   await broker.createService(AnnouncerService);
@@ -74,5 +77,5 @@ const initialize = async (port, accountsDataset) => {
 module.exports = {
   listDatasets,
   clearDataset,
-  initialize
+  initialize,
 };

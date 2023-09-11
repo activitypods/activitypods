@@ -45,7 +45,6 @@ Attached to the actor:
 - The activity is added to the recipient's `/contact-requests` collection.
 - A notification is sent to the recipient
 
-
 ### Accept contact request
 
 ```json
@@ -75,7 +74,6 @@ Attached to the actor:
 - The emitter profile is cached in the recipients' PODs
 - The emitter is attached to the recipients' `/contacts` collection
 
-
 ### Ignore contact request
 
 ```json
@@ -100,7 +98,6 @@ Attached to the actor:
 #### Recipients' side effects
 
 - The emitter lose read access to the recipient's profile
-
 
 ### Reject contact request
 
@@ -128,7 +125,6 @@ Attached to the actor:
 
 - The emitter lose read access to the recipient's profile
 
-
 ### Ignore contact
 
 ```json
@@ -146,7 +142,7 @@ Attached to the actor:
 
 #### Recipients' side effects
 
-*none*
+_none_
 
 ### Undo ignore contact
 
@@ -168,4 +164,4 @@ Attached to the actor:
 
 #### Recipients' side effects
 
-*none*
+_none_

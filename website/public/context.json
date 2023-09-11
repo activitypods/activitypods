@@ -32,10 +32,10 @@
     "dc:modified": {
       "@type": "xsd:dateTime"
     },
-    "dc:creator" : {
-      "@type" : "@id"
+    "dc:creator": {
+      "@type": "@id"
     },
-    
+
     "skos:broader": {
       "@type": "@id"
     },
@@ -746,29 +746,29 @@
     "digestValue": "sec:digestValue",
     "domain": "sec:domain",
     "encryptionKey": "sec:encryptionKey",
-    "expiration": {"@id": "sec:expiration", "@type": "xsd:dateTime"},
-    "expires": {"@id": "sec:expiration", "@type": "xsd:dateTime"},
+    "expiration": { "@id": "sec:expiration", "@type": "xsd:dateTime" },
+    "expires": { "@id": "sec:expiration", "@type": "xsd:dateTime" },
     "initializationVector": "sec:initializationVector",
     "iterationCount": "sec:iterationCount",
     "nonce": "sec:nonce",
     "normalizationAlgorithm": "sec:normalizationAlgorithm",
-    "owner": {"@id": "sec:owner", "@type": "@id"},
+    "owner": { "@id": "sec:owner", "@type": "@id" },
     "password": "sec:password",
-    "privateKey": {"@id": "sec:privateKey", "@type": "@id"},
+    "privateKey": { "@id": "sec:privateKey", "@type": "@id" },
     "privateKeyPem": "sec:privateKeyPem",
-    "publicKey": {"@id": "sec:publicKey", "@type": "@id"},
+    "publicKey": { "@id": "sec:publicKey", "@type": "@id" },
     "publicKeyBase58": "sec:publicKeyBase58",
     "publicKeyPem": "sec:publicKeyPem",
     "publicKeyWif": "sec:publicKeyWif",
-    "publicKeyService": {"@id": "sec:publicKeyService", "@type": "@id"},
-    "revoked": {"@id": "sec:revoked", "@type": "xsd:dateTime"},
+    "publicKeyService": { "@id": "sec:publicKeyService", "@type": "@id" },
+    "revoked": { "@id": "sec:revoked", "@type": "xsd:dateTime" },
     "salt": "sec:salt",
     "signature": "sec:signature",
     "signatureAlgorithm": "sec:signingAlgorithm",
     "signatureValue": "sec:signatureValue",
 
     "void:sparqlEndpoint": {
-      "@type" : "@id"
+      "@type": "@id"
     },
 
     "vcard:hasAddress": {
@@ -785,31 +785,31 @@
       "@type": "xsd:dateTime"
     },
     "apods:hasFormat": {
-      "@type" : "@id"
+      "@type": "@id"
     },
     "apods:hasStatus": {
-      "@type" : "@id"
+      "@type": "@id"
     },
-    "apods:contacts" : {
-      "@type" : "@id"
+    "apods:contacts": {
+      "@type": "@id"
     },
-    "apods:contactRequests" : {
-      "@type" : "@id"
+    "apods:contactRequests": {
+      "@type": "@id"
     },
-    "apods:ignoredContacts" : {
-      "@type" : "@id"
+    "apods:ignoredContacts": {
+      "@type": "@id"
     },
-    "apods:rejectedContacts" : {
-      "@type" : "@id"
+    "apods:rejectedContacts": {
+      "@type": "@id"
     },
-    "apods:announces" : {
-      "@type" : "@id"
+    "apods:announces": {
+      "@type": "@id"
     },
-    "apods:announcers" : {
-      "@type" : "@id"
+    "apods:announcers": {
+      "@type": "@id"
     },
-    "apods:attendees" : {
-      "@type" : "@id"
+    "apods:attendees": {
+      "@type": "@id"
     },
     "apods:preferredForTypes": {
       "@type": "@id"
@@ -819,44 +819,44 @@
     },
 
     "mp:offerOfResourceType": {
-      "@type" : "@id"
+      "@type": "@id"
     },
     "mp:requestOfResourceType": {
-      "@type" : "@id"
+      "@type": "@id"
     },
     "mp:expirationDate": {
       "@type": "xsd:dateTime"
     },
 
     "syreen:hasPart": {
-      "@type" : "@id"
+      "@type": "@id"
     },
     "syreen:actor": {
-      "@type" : "@id"
+      "@type": "@id"
     },
     "syreen:partOf": {
-      "@type" : "@id"
+      "@type": "@id"
     },
     "syreen:depictedBy": {
       "@type": "@id"
     },
     "syreen:hasLocation": {
-      "@type" : "@id"
+      "@type": "@id"
     },
     "syreen:hasCategory": {
-      "@type" : "@id"
+      "@type": "@id"
     },
     "syreen:hasBatiprixCategory": {
-      "@type" : "@id"
+      "@type": "@id"
     },
     "syreen:hasUnit": {
-      "@type" : "@id"
+      "@type": "@id"
     },
     "syreen:hasStage": {
-      "@type" : "@id"
+      "@type": "@id"
     },
     "syreen:hasProjectType": {
-      "@type" : "@id"
+      "@type": "@id"
     },
     "syreen:startDate": {
       "@type": "xsd:dateTime"
@@ -885,10 +885,10 @@
 
     "author": { "@id": "schema:author", "@type": "@id" },
     "caption": { "@id": "schema:caption" },
-    "claim": {"@id": "cred:claim", "@type": "@id"},
+    "claim": { "@id": "cred:claim", "@type": "@id" },
     "description": { "@id": "schema:description" },
     "email": { "@id": "schema:email" },
-    "endorsement": {"@id": "cred:credential", "@type": "@id"},
+    "endorsement": { "@id": "cred:credential", "@type": "@id" },
     "genre": { "@id": "schema:genre" },
     "related": { "@id": "dc:relation", "@type": "@id" },
     "startsWith": { "@id": "http://purl.org/dqm-vocabulary/v1/dqm#startsWith" },

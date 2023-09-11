@@ -16,7 +16,7 @@ module.exports = {
   actions: {
     async createAndAttachIgnoredContacts(ctx) {
       const registeredCollections = await ctx.call('activitypub.registry.list');
-      const ignoredContactsCollection = registeredCollections.find(c => c.name === '/ignored-contacts');
+      const ignoredContactsCollection = registeredCollections.find((c) => c.name === '/ignored-contacts');
       for (let dataset of await ctx.call('pod.list')) {
         ctx.meta.dataset = dataset;
         const actorUri = urlJoin(CONFIG.HOME_URL, dataset);
@@ -24,7 +24,7 @@ module.exports = {
         await ctx.call('activitypub.registry.createAndAttachCollection', {
           objectUri: actorUri,
           collection: ignoredContactsCollection,
-          webId: 'system'
+          webId: 'system',
         });
       }
     },
@@ -60,7 +60,7 @@ module.exports = {
             }
           `,
           dataset: '*',
-          webId: 'system'
+          webId: 'system',
         });
       }
     },

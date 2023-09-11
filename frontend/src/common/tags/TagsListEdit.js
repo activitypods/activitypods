@@ -70,83 +70,64 @@ const TagsListEdit = (props) => {
 
   const [update] = useUpdate();
   const [create] = useCreate();
-  const [cacheInvalidated, setCacheInvalidated] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
 
   const { data: tagData, isLoading: isLoadingAllTags, refetch } = useGetList(tagResource);
-  // const [tagDataState, setTagDataState] = useState({});
+  // We maintain a separate state, to display updates immediately.
+  const [tagDataState, setTagDataState] = useState(tagData || []);
 
-  const [tagMemberships, setTagMemberships] = useState([]);
+  // On changes coming from the data provider, we update that state.
   useEffect(() => {
-    if (tagData?.length > 0) {
-      setTagMemberships(
-        tagData
-          .filter((tagObject) => tagObject[relationshipPredicate]?.includes(recordId))
-          .map((tagObject) => tagObject[tagIdPredicate])
-      );
-    }
-  }, [tagData, recordId, tagIdPredicate, relationshipPredicate]);
+    setTagDataState(tagData);
+  }, [setTagDataState, tagData]);
 
-  const saveStateToDataProvider = useCallback(() => {
-    if (isUpdating || !cacheInvalidated) return;
-    setIsUpdating(true);
+  // All tag ids that which the record has.
+  const tagMemberships =
+    tagDataState
+      ?.filter((tagObject) => tagObject[relationshipPredicate]?.includes(recordId))
+      .map((tagObject) => tagObject[tagIdPredicate]) || [];
 
-    // Update all tag resources where the membership has been modified (added / removed).
-    Promise.all(
-      tagData.map((tagObject) => {
+  const setMemberships = useCallback(
+    (newTagMemberships) => {
+      // First, compute the updated tag states.
+      const newTagData = tagDataState.map((tagObject) => {
         const originalTagMemberships = arrayFromLdField(tagObject[relationshipPredicate]);
-        const isOriginallyIncluded = originalTagMemberships.includes(recordId);
-        const isNowIncluded = tagMemberships.includes(tagObject[tagIdPredicate]);
+        const isOriginallyMember = originalTagMemberships.includes(recordId);
+        const isNowMember = newTagMemberships.includes(tagObject[tagIdPredicate]);
 
-        if (isOriginallyIncluded === isNowIncluded) {
+        if (isOriginallyMember === isNowMember) {
           // Nothing to do.
-          return Promise.resolve();
+          return { hasChanged: false, tagObject };
         }
+
         let newMembers;
-        if (isNowIncluded) {
+        if (isNowMember) {
           newMembers = [...originalTagMemberships, recordId];
         } else {
           newMembers = originalTagMemberships.filter((memberId) => memberId !== recordId);
         }
-        // Set the new members.
-        return update(tagResource, {
-          id: tagObject[tagIdPredicate], 
-          data: {
-            ...tagObject,
-            [relationshipPredicate]: newMembers,
-          },
-          previousData: tagObject,
-        });
-      })
-    ).then(() => {
-      setCacheInvalidated(false);
-      setIsUpdating(false);
-    });
-  }, [
-    isUpdating,
-    recordId,
-    tagMemberships,
-    tagData,
-    cacheInvalidated,
-    relationshipPredicate,
-    tagIdPredicate,
-    tagResource,
-    update,
-  ]);
-
-  // On unmount, save the state to the data provider
-  useEffect(() => () => saveStateToDataProvider(), [saveStateToDataProvider]);
-  // Also save on changes (cacheInvalidated) but only after a while...
-  useEffect(() => {
-    if (!isLoadingAllTags && cacheInvalidated && !isUpdating) {
-      new Promise((resolve) => setTimeout(resolve, 15_000)).then(() => {
-        saveStateToDataProvider();
+        return { hasChanged: true, tagObject: { ...tagObject, [relationshipPredicate]: newMembers } };
       });
-    }
-  }, [isLoadingAllTags, cacheInvalidated, isUpdating, saveStateToDataProvider]);
+
+      // Then, update the local state to show the user immediately.
+      setTagDataState(newTagData.map((obj) => obj.tagObject));
+
+      // Persist all tag resources changes where the membership has been modified (added / removed).
+      Promise.all(
+        newTagData
+          .filter((obj) => obj.hasChanged)
+          .map((obj) => {
+            return update(tagResource, {
+              id: obj.tagObject[tagIdPredicate],
+              data: obj.tagObject,
+            });
+          })
+      ).then(() => {});
+    },
+    [recordId, tagMemberships, tagDataState, relationshipPredicate, tagIdPredicate, tagResource, update]
+  );
 
   // Convert tagRelationshipData into a common tag format.
-  const tags = tagData && tagData.map((tagObject) => ({
+  const tags = tagDataState?.map((tagObject) => ({
     id: tagObject[tagIdPredicate],
     name: tagObject[namePredicate],
     // The color or a color generated from the name.
@@ -173,16 +154,14 @@ const TagsListEdit = (props) => {
    * @param {Identifier} id
    */
   const handleDeleteTag = (id) => {
-    setTagMemberships(tagMemberships.filter((tagId) => tagId !== id));
-    setCacheInvalidated(true);
+    setMemberships(tagMemberships.filter((tagId) => tagId !== id));
   };
 
   /**
    * @param {Identifier} id
    */
   const handleAddTag = (id) => {
-    setTagMemberships([...tagMemberships, id]);
-    setCacheInvalidated(true);
+    setMemberships([...tagMemberships, id]);
     setMenuAnchorEl(null);
   };
 
@@ -205,7 +184,7 @@ const TagsListEdit = (props) => {
           [namePredicate]: newTagName,
           [relationshipPredicate]: [recordId],
           ...((colorPredicate && { [colorPredicate]: newTagColor }) || {}),
-        }
+        },
       },
       {
         onSuccess: () => {
@@ -226,7 +205,7 @@ const TagsListEdit = (props) => {
           size="small"
           onDelete={() => handleDeleteTag(tag.id)}
           label={tag.name}
-          sx={{ backgroundColor: tag.color, border: 0, mr: 1 }}
+          sx={{ backgroundColor: tag.color, border: 0, mr: 1, mb: 1 }}
         />
       ))}
       <Chip
@@ -235,6 +214,7 @@ const TagsListEdit = (props) => {
         onClick={handleOpen}
         label={translate('ra.action.add')}
         color="primary"
+        sx={{ border: 0, mr: 1, mb: 1 }}
       />
       <Menu open={Boolean(menuAnchorEl)} onClose={handleClose} anchorEl={menuAnchorEl}>
         {unselectedTags?.map((tag) => (

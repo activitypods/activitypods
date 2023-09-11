@@ -71,8 +71,10 @@ const ResourceSelectWithTags = (props) => {
     setSelectedResources(props.value || []);
   }, [props.value]);
 
-  const { data: tagData, isLoading: isLoadingTags } = useGetList(tagResource);
-  const { data: resourceData, isLoading: isLoadingResources } = useGetList(entityResource);
+  const { data: tagDataRaw, isLoading: isLoadingTags } = useGetList(tagResource);
+  const { data: resourceDataRaw, isLoading: isLoadingResources } = useGetList(entityResource);
+  const tagData = Object.fromEntries((tagDataRaw || []).map((tag) => [tag.id, tag]));
+  const resourceData = Object.fromEntries((resourceDataRaw || []).map((r) => [r.id, r]));
 
   // Create a map from the tag's owner id to the resource id. Helpful for mapping the tag's owners to corresponding resources.
   const ownerToResourceIds = Object.fromEntries(

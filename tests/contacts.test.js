@@ -359,7 +359,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
         alice.call('webacl.resource.hasRights', {
           resourceUri: eventUri,
           rights: { read: true },
-          webId: bob.id
+          webId: bob.id,
         })
       ).resolves.toMatchObject({ read: true });
     });
@@ -370,7 +370,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
         alice.call('webacl.resource.hasRights', {
           resourceUri: locationUri,
           rights: { read: true },
-          webId: bob.id
+          webId: bob.id,
         })
       ).resolves.toMatchObject({ read: true });
     });

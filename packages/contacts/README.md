@@ -127,3 +127,45 @@ Attached to the actor:
 #### Recipients' side effects
 
 - The emitter lose read access to the recipient's profile
+
+
+### Ignore contact
+
+```json
+{
+  "type": "Ignore",
+  "object": {
+    "type": "Person"
+  }
+}
+```
+
+#### Emitter's side effects
+
+- The recipients are attached to the emitter's private `/ignored-contacts` collection. Notifications, except for direct messages (`Note`), are from thereon suppressed.
+
+#### Recipients' side effects
+
+*none*
+
+### Undo ignore contact
+
+```json
+{
+  "type": "Undo",
+  "object": {
+    "type": "Ignore",
+    "object": {
+      "type": "Person"
+    }
+  }
+}
+```
+
+#### Emitter's side effects
+
+- The referenced person is removed from the `ignored-contacts` collection.
+
+#### Recipients' side effects
+
+*none*

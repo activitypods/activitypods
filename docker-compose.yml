@@ -4,7 +4,7 @@ services:
     image: semapps/jena-fuseki-webacl
     container_name: fuseki
     volumes:
-      - ./data/fuseki:/fuseki
+      - ./data/fuseki:/fuseki:z
     ports:
       - "3030:3030"
     expose:
@@ -16,7 +16,7 @@ services:
     image: semapps/jena-fuseki-webacl
     container_name: fuseki_test
     volumes:
-      - ./data/fuseki_test:/fuseki
+      - ./data/fuseki_test:/fuseki:z
     ports:
       - "3040:3030"
     expose:

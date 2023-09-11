@@ -55,9 +55,9 @@ export const getHomePermalink = () => {
 };
 
 /** */
-export const getRelativeLink = (link = "") => {
+export const getRelativeLink = (link = '') => {
 	return createPath(basePathname, trimSlash(link));
-}
+};
 
 /** */
 export const getBlogPermalink = () => getPermalink(BLOG_BASE);

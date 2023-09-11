@@ -20,27 +20,27 @@ export default {
     en: {
       name: 'Profile |||| Profiles',
       fields: {
-        'describes': 'User ID',
+        describes: 'User ID',
         'vcard:given-name': 'Surname',
         'vcard:family-name': 'Family name',
         'vcard:note': 'About you',
         'vcard:photo': 'Picture',
         'vcard:hasAddress': 'Home address',
         'foaf:tipjar': 'Ğ1 account',
-        'dc:created': 'Account created'
+        'dc:created': 'Account created',
       },
     },
     fr: {
       name: 'Profil |||| Profils',
       fields: {
-        'describes': 'Identifiant',
+        describes: 'Identifiant',
         'vcard:given-name': 'Prénom',
         'vcard:family-name': 'Nom de famille',
         'vcard:note': 'En deux mots',
         'vcard:photo': 'Photo',
         'vcard:hasAddress': 'Adresse du domicile',
         'foaf:tipjar': 'Compte Ğ1',
-        'dc:created': "Date d'inscription"
+        'dc:created': "Date d'inscription",
       },
     },
   },

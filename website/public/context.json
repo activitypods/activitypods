@@ -796,6 +796,9 @@
     "apods:contactRequests" : {
       "@type" : "@id"
     },
+    "apods:ignoredContacts" : {
+      "@type" : "@id"
+    },
     "apods:rejectedContacts" : {
       "@type" : "@id"
     },
@@ -843,6 +846,9 @@
     "syreen:hasCategory": {
       "@type" : "@id"
     },
+    "syreen:hasBatiprixCategory": {
+      "@type" : "@id"
+    },
     "syreen:hasUnit": {
       "@type" : "@id"
     },
@@ -857,12 +863,6 @@
     },
     "syreen:endDate": {
       "@type": "xsd:dateTime"
-    },
-    "syreen:publishMarketValue": {
-      "@type" : "xsd:boolean"
-    },
-    "syreen:publishCostPrice": {
-      "@type" : "xsd:boolean"
     },
 
     "AlignmentObject": "schema:AlignmentObject",

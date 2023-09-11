@@ -20,7 +20,7 @@ module.exports = {
   },
   async started() {
     const res = await fetch('https://data.activitypods.org/trusted-apps', {
-      headers: { Accept: 'application/ld+json' }
+      headers: { Accept: 'application/ld+json' },
     });
 
     if (res.ok) {
@@ -45,9 +45,9 @@ module.exports = {
         authorization: false,
         authentication: false,
         aliases: {
-          'GET /': 'core.front-apps.open'
-        }
-      }
+          'GET /': 'core.front-apps.open',
+        },
+      },
     });
   },
   actions: {
@@ -98,7 +98,9 @@ module.exports = {
       const protocol = domainName.includes(':') ? 'http' : 'https';
       if (uri) {
         ctx.meta.$statusCode = 302;
-        ctx.meta.$location = `${protocol}://${domainName}/r/?type=${encodeURIComponent(type)}&uri=${encodeURIComponent(uri)}&mode=${mode || 'show'}`;
+        ctx.meta.$location = `${protocol}://${domainName}/r/?type=${encodeURIComponent(type)}&uri=${encodeURIComponent(
+          uri
+        )}&mode=${mode || 'show'}`;
       } else {
         ctx.meta.$statusCode = 302;
         ctx.meta.$location = `${protocol}://${domainName}/r/?type=${encodeURIComponent(type)}&mode=${mode || 'list'}`;
@@ -115,7 +117,7 @@ module.exports = {
             const appUri = urlJoin(this.settings.baseUrl, dataset, 'data', 'front-apps', app['apods:domainName']);
             const exists = await ctx.call('ldp.resource.exist', {
               resourceUri: appUri,
-              webId: 'system'
+              webId: 'system',
             });
 
             if (exists) {
@@ -150,7 +152,7 @@ module.exports = {
           }
         }
       }
-    }
+    },
   },
   events: {
     async 'auth.registered'(ctx) {
@@ -175,6 +177,6 @@ module.exports = {
           }, { parentCtx: ctx });
         }
       }
-    }
-  }
+    },
+  },
 };

@@ -4,14 +4,14 @@ import { IconButton, makeStyles, Tooltip } from '@material-ui/core';
 import FileCopyOutlinedIcon from '@material-ui/icons/FileCopyOutlined';
 import { useTranslate } from 'react-admin';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   wrapper: {
     // position: 'relative',
   },
   icon: {
     position: 'absolute',
     top: -2,
-    left: 5
+    left: 5,
   },
 }));
 

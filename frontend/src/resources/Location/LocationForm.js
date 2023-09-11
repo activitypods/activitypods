@@ -19,7 +19,8 @@ export const LocationForm = (props) => {
             type: 'vcard:Address',
             'vcard:given-name': value.place_name,
             'vcard:locality': value.place_type[0] === 'place' ? value.text : extractContext(value.context, 'place'),
-            'vcard:street-address': value.place_type[0] === 'address' ? [value.address, value.text].join(' ') : undefined,
+            'vcard:street-address':
+              value.place_type[0] === 'address' ? [value.address, value.text].join(' ') : undefined,
             'vcard:postal-code': extractContext(value.context, 'postcode'),
             'vcard:country-name': extractContext(value.context, 'country'),
             'vcard:hasGeo': {
@@ -31,14 +32,10 @@ export const LocationForm = (props) => {
           validate={[required()]}
           fullWidth
         />
-        <TextInput
-          source="vcard:note"
-          fullWidth
-          helperText={translate('app.helper.location_comment')}
-        />
+        <TextInput source="vcard:note" fullWidth helperText={translate('app.helper.location_comment')} />
       </SimpleForm>
     </>
   );
-}
+};
 
 export default LocationForm;

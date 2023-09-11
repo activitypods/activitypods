@@ -1,8 +1,11 @@
 const waitForExpect = require('wait-for-expect');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { MIME_TYPES } = require('@semapps/mime-types');
 const { initialize, clearDataset, listDatasets } = require('./initialize');
 const path = require('path');
 const urlJoin = require('url-join');
+const notificationFilter = require('../boilerplate/services/mixins/MailNotificationFilterMixin');
+const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
 
 jest.setTimeout(80000);
 
@@ -15,10 +18,11 @@ const initializeBroker = async (port, accountsDataset) => {
 
   await broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
+  await broker.loadService(path.resolve(__dirname, './services/events.app.js'));
 
   // Mock notification service
   await broker.createService({
-    mixins: [require('./services/notification.service')],
+    mixins: [notificationFilter, require('./services/notification.service')],
     actions: {
       send: mockSendNotification,
     },
@@ -36,7 +40,8 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     bob,
     craig,
     contactRequestToBob,
-    contactRequestToCraig;
+    contactRequestToCraig,
+    eventUri;
 
   beforeAll(async () => {
     const datasets = await listDatasets();
@@ -72,6 +77,10 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     bob = actors[2];
     craig = actors[3];
   }, 80001);
+
+  beforeEach(async () => {
+    mockSendNotification.mockClear();
+  });
 
   afterAll(async () => {
     if (mode === 'multi-server') {
@@ -226,10 +235,10 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     });
 
     await waitForExpect(() => {
-      expect(mockSendNotification).toHaveBeenCalledTimes(3);
+      expect(mockSendNotification).toHaveBeenCalledTimes(1);
     });
 
-    expect(mockSendNotification.mock.calls[2][0].params.data.key).toBe('accept_contact_request');
+    expect(mockSendNotification.mock.calls[0][0].params.data.key).toBe('accept_contact_request');
   }, 80000);
 
   test('Craig reject Alice contact request', async () => {
@@ -260,13 +269,165 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     });
   });
 
+  test('Alice creates an event', async () => {
+    locationUri = await broker.call('profiles.location.post', {
+      containerUri: alice.id + '/data/locations',
+      resource: {
+        type: 'vcard:Location',
+        'vcard:given-name': 'Alice place',
+      },
+      contentType: MIME_TYPES.JSON,
+      webId: alice.id,
+    });
+
+    eventUri = await broker.call('events.event.post', {
+      containerUri: alice.id + '/data/events',
+      resource: {
+        type: OBJECT_TYPES.EVENT,
+        name: 'Birthday party !!',
+        location: locationUri,
+      },
+      contentType: MIME_TYPES.JSON,
+      webId: alice.id,
+    });
+
+    // Event was created, Alice is attendee.
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: eventUri + '/attendees',
+          itemUri: alice.id,
+        })
+      ).resolves.toBeTruthy();
+    });
+  });
+
+  test('Bob ignores Alice', async () => {
+    await broker.call('activitypub.outbox.post', {
+      collectionUri: bob.outbox,
+      type: ACTIVITY_TYPES.IGNORE,
+      actor: bob.id,
+      object: alice.id,
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: bob['apods:ignoredContacts'],
+          itemUri: alice.id,
+        })
+      ).resolves.toBeTruthy();
+    });
+  });
+
+  test('Alice invites Bob to her event, Bob is not notified', async () => {
+    // Alice announces event.
+    await broker.call('activitypub.outbox.post', {
+      collectionUri: alice.outbox,
+      type: ACTIVITY_TYPES.ANNOUNCE,
+      actor: alice.id,
+      object: eventUri,
+      target: bob.id,
+      to: bob.id,
+    });
+    // Wait for the event to be processed.
+    await delay(5000);
+
+    // No notification was sent.
+    expect(mockSendNotification).toHaveBeenCalledTimes(0);
+
+    // No announcement is in Bob's collection.
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: eventUri + '/announces',
+          itemUri: bob.id,
+        })
+      ).resolves.toBeTruthy();
+    });
+
+    // Bob has the right to see the event.
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('webacl.resource.hasRights', {
+          resourceUri: eventUri,
+          rights: { read: true },
+          webId: bob.id,
+        })
+      ).resolves.toMatchObject({ read: true });
+    });
+
+    // Bob has the right to see the event location
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('webacl.resource.hasRights', {
+          resourceUri: locationUri,
+          rights: { read: true },
+          webId: bob.id,
+        })
+      ).resolves.toMatchObject({ read: true });
+    });
+
+    // Alice's event is cached in Bob dataset
+    // Timeout must be longer as there is a 10s delay before caching (see announcer service)
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('triplestore.countTriplesOfSubject', {
+          uri: eventUri,
+          dataset: bob.preferredUsername,
+          webId: 'system',
+        })
+      ).resolves.toBeTruthy();
+    }, 20000);
+  });
+
+  test('Bob un-ignores Alice from his contacts', async () => {
+    // Bob sends undo ignore activity to his outbox.
+    await broker.call('activitypub.outbox.post', {
+      collectionUri: bob.outbox,
+      type: ACTIVITY_TYPES.UNDO,
+      object: {
+        type: ACTIVITY_TYPES.IGNORE,
+        actor: bob.id,
+        object: alice.id,
+      },
+    });
+
+    // Alice is not on Bob's ignore list anymore.
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: bob['apods:ignoredContacts'],
+          itemUri: alice.id,
+        })
+      ).resolves.toBeFalsy();
+    });
+  });
+
+  test('Alice re-invites Bob to the event.', async () => {
+    // Alice announces the event, again.
+    await broker.call('activitypub.outbox.post', {
+      collectionUri: alice.outbox,
+      type: ACTIVITY_TYPES.ANNOUNCE,
+      actor: alice.id,
+      object: eventUri,
+      target: bob.id,
+      to: bob.id,
+    });
+    // A notification was now sent.
+    await waitForExpect(() => {
+      expect(mockSendNotification).toHaveBeenCalledTimes(1);
+    });
+    expect(mockSendNotification.mock.calls[0][0].params.data.key).toBe('new_event');
+  });
+
   test('Bob removes Alice from his contacts', async () => {
     await bob.call('activitypub.outbox.post', {
       collectionUri: bob.outbox,
       type: ACTIVITY_TYPES.REMOVE,
       actor: bob.id,
       object: alice.id,
-      origin: bob['apods:contacts']
+      origin: bob['apods:contacts'],
     });
 
     await waitForExpect(async () => {

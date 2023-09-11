@@ -480,7 +480,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       object: eventUri,
       to: alice.id,
     });
-
+    
     await waitForExpect(async () => {
       await expect(
         alice.call('activitypub.collection.includes', {

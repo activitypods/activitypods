@@ -81,7 +81,7 @@ module.exports = {
         // Remove the actor from the emitter's ignore contacts list.
         await ctx.call('activitypub.collection.detach', {
           collectionUri: emitter['apods:ignoredContacts'],
-          item: activity.object,
+          item: activity.object.object,
         });
       },
     },

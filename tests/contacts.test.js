@@ -1,5 +1,5 @@
 const waitForExpect = require('wait-for-expect');
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { initialize, clearDataset, listDatasets } = require('./initialize');
 const path = require('path');
@@ -41,6 +41,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     craig,
     contactRequestToBob,
     contactRequestToCraig,
+    locationUri,
     eventUri;
 
   beforeAll(async () => {
@@ -355,9 +356,10 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     // Bob has the right to see the event.
     await waitForExpect(async () => {
       await expect(
-        bob.call('webacl.resource.hasRights', {
+        alice.call('webacl.resource.hasRights', {
           resourceUri: eventUri,
           rights: { read: true },
+          webId: bob.id
         })
       ).resolves.toMatchObject({ read: true });
     });
@@ -365,9 +367,10 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     // Bob has the right to see the event location
     await waitForExpect(async () => {
       await expect(
-        bob.call('webacl.resource.hasRights', {
+        alice.call('webacl.resource.hasRights', {
           resourceUri: locationUri,
           rights: { read: true },
+          webId: bob.id
         })
       ).resolves.toMatchObject({ read: true });
     });

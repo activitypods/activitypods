@@ -31,9 +31,9 @@ const initializeBroker = async (port, accountsDataset) => {
   await broker.start();
 
   return broker;
-}
+};
 
-describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app', mode => {
+describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app', (mode) => {
   let actors = [],
     broker,
     alice,
@@ -66,11 +66,19 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
 
       const actorData = require(`./data/actor${i}.json`);
       const { webId } = await broker[i].call('auth.signup', actorData);
-      actors[i] = await broker[i].call('activitypub.actor.awaitCreateComplete', {
-        actorUri: webId,
-        additionalKeys: ['url', 'apods:contacts', 'apods:contactRequests', 'apods:rejectedContacts'],
-      }, { meta: { dataset: actorData.username }});
-      actors[i].call = (actionName, params, options = {}) => broker[i].call(actionName, params, { ...options, meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }});
+      actors[i] = await broker[i].call(
+        'activitypub.actor.awaitCreateComplete',
+        {
+          actorUri: webId,
+          additionalKeys: ['url', 'apods:contacts', 'apods:contactRequests', 'apods:rejectedContacts'],
+        },
+        { meta: { dataset: actorData.username } }
+      );
+      actors[i].call = (actionName, params, options = {}) =>
+        broker[i].call(actionName, params, {
+          ...options,
+          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername },
+        });
     }
 
     alice = actors[1];
@@ -207,7 +215,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
         alice.call('ldp.container.includes', {
           containerUri: urlJoin(alice.id, 'data', 'profiles'),
           resourceUri: bob.url,
-          webId: alice.id
+          webId: alice.id,
         })
       ).resolves.toBeTruthy();
     });
@@ -229,7 +237,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
         bob.call('ldp.container.includes', {
           containerUri: urlJoin(bob.id, 'data', 'profiles'),
           resourceUri: alice.url,
-          webId: bob.id
+          webId: bob.id,
         })
       ).resolves.toBeTruthy();
     });
@@ -270,17 +278,16 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
   });
 
   test('Alice creates an event', async () => {
-    locationUri = await broker.call('profiles.location.post', {
+    locationUri = await alice.call('profiles.location.post', {
       containerUri: alice.id + '/data/locations',
       resource: {
         type: 'vcard:Location',
         'vcard:given-name': 'Alice place',
       },
       contentType: MIME_TYPES.JSON,
-      webId: alice.id,
     });
 
-    eventUri = await broker.call('events.event.post', {
+    eventUri = await alice.call('events.event.post', {
       containerUri: alice.id + '/data/events',
       resource: {
         type: OBJECT_TYPES.EVENT,
@@ -288,13 +295,12 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
         location: locationUri,
       },
       contentType: MIME_TYPES.JSON,
-      webId: alice.id,
     });
 
     // Event was created, Alice is attendee.
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        alice.call('activitypub.collection.includes', {
           collectionUri: eventUri + '/attendees',
           itemUri: alice.id,
         })
@@ -303,7 +309,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
   });
 
   test('Bob ignores Alice', async () => {
-    await broker.call('activitypub.outbox.post', {
+    await bob.call('activitypub.outbox.post', {
       collectionUri: bob.outbox,
       type: ACTIVITY_TYPES.IGNORE,
       actor: bob.id,
@@ -312,7 +318,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        bob.call('activitypub.collection.includes', {
           collectionUri: bob['apods:ignoredContacts'],
           itemUri: alice.id,
         })
@@ -322,7 +328,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
 
   test('Alice invites Bob to her event, Bob is not notified', async () => {
     // Alice announces event.
-    await broker.call('activitypub.outbox.post', {
+    await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
       type: ACTIVITY_TYPES.ANNOUNCE,
       actor: alice.id,
@@ -336,10 +342,10 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     // No notification was sent.
     expect(mockSendNotification).toHaveBeenCalledTimes(0);
 
-    // No announcement is in Bob's collection.
+    // Bob is in the the announces collection
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        alice.call('activitypub.collection.includes', {
           collectionUri: eventUri + '/announces',
           itemUri: bob.id,
         })
@@ -349,10 +355,9 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     // Bob has the right to see the event.
     await waitForExpect(async () => {
       await expect(
-        broker.call('webacl.resource.hasRights', {
+        bob.call('webacl.resource.hasRights', {
           resourceUri: eventUri,
           rights: { read: true },
-          webId: bob.id,
         })
       ).resolves.toMatchObject({ read: true });
     });
@@ -360,10 +365,9 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     // Bob has the right to see the event location
     await waitForExpect(async () => {
       await expect(
-        broker.call('webacl.resource.hasRights', {
+        bob.call('webacl.resource.hasRights', {
           resourceUri: locationUri,
           rights: { read: true },
-          webId: bob.id,
         })
       ).resolves.toMatchObject({ read: true });
     });
@@ -372,10 +376,9 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     // Timeout must be longer as there is a 10s delay before caching (see announcer service)
     await waitForExpect(async () => {
       await expect(
-        broker.call('triplestore.countTriplesOfSubject', {
+        bob.call('triplestore.countTriplesOfSubject', {
           uri: eventUri,
           dataset: bob.preferredUsername,
-          webId: 'system',
         })
       ).resolves.toBeTruthy();
     }, 20000);
@@ -383,7 +386,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
 
   test('Bob un-ignores Alice from his contacts', async () => {
     // Bob sends undo ignore activity to his outbox.
-    await broker.call('activitypub.outbox.post', {
+    await bob.call('activitypub.outbox.post', {
       collectionUri: bob.outbox,
       type: ACTIVITY_TYPES.UNDO,
       object: {
@@ -396,7 +399,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     // Alice is not on Bob's ignore list anymore.
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        bob.call('activitypub.collection.includes', {
           collectionUri: bob['apods:ignoredContacts'],
           itemUri: alice.id,
         })
@@ -406,7 +409,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
 
   test('Alice re-invites Bob to the event.', async () => {
     // Alice announces the event, again.
-    await broker.call('activitypub.outbox.post', {
+    await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
       type: ACTIVITY_TYPES.ANNOUNCE,
       actor: alice.id,
@@ -444,7 +447,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
         bob.call('ldp.container.includes', {
           containerUri: urlJoin(bob.id, 'data', 'profiles'),
           resourceUri: alice.url,
-          webId: alice.id
+          webId: alice.id,
         })
       ).resolves.toBeFalsy();
     });
@@ -457,9 +460,9 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
       actor: bob.id,
       object: {
         type: ACTIVITY_TYPES.DELETE,
-        object: bob.id
+        object: bob.id,
       },
-      to: alice.id
+      to: alice.id,
     });
 
     await waitForExpect(async () => {
@@ -475,7 +478,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
       await expect(
         alice.call('ldp.container.includes', {
           containerUri: urlJoin(alice.id, 'data', 'profiles'),
-          resourceUri: bob.url
+          resourceUri: bob.url,
         })
       ).resolves.toBeFalsy();
     });
@@ -484,7 +487,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
       // TODO new action to only get most recent item in collection
       const outbox = await bob.call('activitypub.collection.get', {
         collectionUri: bob.inbox,
-        page: 1
+        page: 1,
       });
       await expect(outbox.orderedItems[0]).toMatchObject({
         type: ACTIVITY_TYPES.ACCEPT,

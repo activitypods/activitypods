@@ -20,9 +20,9 @@ const DetailsList = ({ basePath, children, record, resource }) => {
         field && record[field.props.source] && React.isValidElement(field) ? (
           <div key={field.props.source}>
             {field.props.addLabel ? (
-              <Grid container spacing={3} className={classes.line}>
+              <Grid container spacing={3} className={classes.line} alignItems="center">
                 <Grid item xs={4} sm={3}>
-                  <Typography color="textSecondary" align="right" variant="body2">
+                  <Typography color="textSecondary" align="right" variant="body2" component="div">
                     {translate(
                       ...getFieldLabelTranslationArgs({
                         label: field.props.label,
@@ -33,7 +33,7 @@ const DetailsList = ({ basePath, children, record, resource }) => {
                   </Typography>
                 </Grid>
                 <Grid item xs={8} sm={9}>
-                  <Typography variant="body2">
+                  <Typography variant="body2" component="div">
                     {React.cloneElement(field, {
                       record,
                       resource,

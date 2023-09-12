@@ -13,6 +13,7 @@ const dataServers = {
         'vcard:Location': ['/locations'],
         'vcard:Individual': ['/profiles'],
         'apods:FrontAppRegistration': ['/front-apps'],
+        'vcard:Group': ['/groups'],
       },
     },
     uploadsContainer: '/files',

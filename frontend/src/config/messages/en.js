@@ -25,6 +25,16 @@ module.exports = {
       set_new_password: 'Set new password',
       undo_ignore_contact: 'No longer ignore',
     },
+    group: {
+      members: 'Members',
+      no_members: "The group doesn't have any member yet",
+      label: "Group's name",
+      remove_members: 'Remove selected',
+      profile_name: 'Name',
+      profile: 'Profile',
+      group: 'Group',
+      add_members: 'Add members',
+    },
     page: {
       contacts: 'My network',
       contacts_short: 'Network',
@@ -32,6 +42,8 @@ module.exports = {
       profile_short: 'Profile',
       apps: 'My applications',
       apps_short: 'Apps',
+      groups: 'My groups',
+      groups_short: 'Groups',
       settings: 'Settings',
       settings_short: 'Settings',
       addresses: 'My addresses',
@@ -66,7 +78,7 @@ module.exports = {
       confirm_new_password: 'Confirm new password',
     },
     helper: {
-      add_contact: 'To add a user to your network, you need to know his ID (format: @bob@server.com).',
+      add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',
       message_profile_show_right:
         'Sending a message to %{username} will give him/her the right to see your profile, in order to be able to respond.',
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',

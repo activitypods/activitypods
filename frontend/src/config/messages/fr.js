@@ -25,6 +25,16 @@ module.exports = {
       set_new_password: 'Definir un nouveau mot de passe',
       undo_ignore_contact: 'Ne plus ignorer',
     },
+    group: {
+      members: 'Membres',
+      no_members: "Le groupe n'a pas encore de membres",
+      label: 'Nom du groupe',
+      remove_members: 'Retirer sélection',
+      profile_name: 'Nom',
+      group: 'Groupe',
+      profile: 'Profil',
+    },
+
     page: {
       contacts: 'Mon réseau',
       contacts_short: 'Réseau',
@@ -40,6 +50,8 @@ module.exports = {
       add_contact: 'Demander une mise en relation',
       create_profile: 'Créez votre profil',
       authorize: 'Autorisation requise',
+      groups: 'Mes groupes',
+      groups_short: 'Groupes',
     },
     setting: {
       email: 'Adresse mail',

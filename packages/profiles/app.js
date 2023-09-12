@@ -1,5 +1,6 @@
 const ProfileService = require('./services/profile');
 const LocationService = require('./services/location');
+const ContactGroupsService = require('./services/contactgroup');
 
 const ProfilesApp = {
   name: 'profiles',
@@ -14,6 +15,8 @@ const ProfilesApp = {
     });
 
     this.broker.createService(LocationService);
+
+    this.broker.createService(ContactGroupsService);
   },
 };
 

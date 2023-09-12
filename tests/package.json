@@ -11,7 +11,6 @@
     "@activitypods/events": "1.1.0",
     "@activitypods/messages": "1.1.0",
     "@activitypods/profiles": "1.1.0",
-    "@activitypods/synchronizer": "1.1.0",
     "dotenv-flow": "^3.2.0",
     "moleculer": "^0.14.19",
     "url-join": "^4.0.1"

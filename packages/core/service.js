@@ -6,6 +6,7 @@ const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
 const { PodService } = require('@semapps/pod');
 const { SignatureService, ProxyService } = require('@semapps/signature');
+const { SynchronizerService } = require('@semapps/sync');
 const { SparqlEndpointService } = require('@semapps/sparql-endpoint');
 const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');
@@ -48,7 +49,7 @@ const CoreService = {
         },
         like: {
           attachToObjectTypes: [...Object.values(OBJECT_TYPES), 'pair:Skill'],
-          attachToActorTypes: Object.values(ACTOR_TYPES)
+          attachToActorTypes: Object.values(ACTOR_TYPES),
         },
       },
     });
@@ -176,6 +177,15 @@ const CoreService = {
             await ctx.call('pod.create', { username: nick });
           },
         },
+      },
+    });
+
+    this.broker.createService(SynchronizerService, {
+      settings: {
+        podProvider: true,
+        mirrorGraph: false,
+        synchronizeContainers: false,
+        attachToLocalContainers: true,
       },
     });
 

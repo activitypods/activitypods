@@ -23,7 +23,7 @@ module.exports = {
       signup: 'Signup',
       reset_password: 'Reset password',
       set_new_password: 'Set new password',
-      undo_ignore_contact: 'No longer ignore'
+      undo_ignore_contact: 'No longer ignore',
     },
     page: {
       contacts: 'My network',

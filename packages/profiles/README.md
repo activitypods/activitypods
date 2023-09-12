@@ -2,16 +2,12 @@
 
 An [ActivityPods](../../README.md) service to manager user's profile and locations.
 
-Automatically creates a `/data/profiles/me` profile on user registration.
+Automatically creates a profile on user registration.
 
 ## Services
 
 - [ProfileService](services/profile.js)
 - [EventService](services/location.js)
-
-## Dependencies
-
-- [SynchronizerService](../synchronizer/README.md)
 
 ## Containers
 

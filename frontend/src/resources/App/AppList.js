@@ -81,6 +81,9 @@ const AppCardList = () => {
           const appUrl = `${data[id]['apods:domainName'].includes(':') ? 'http' : 'https'}://${
             data[id]['apods:domainName']
           }`;
+          const loginUrl = new URL('/auth', process.env.REACT_APP_POD_PROVIDER_URL);
+          loginUrl.searchParams.set('redirect', appUrl + '/login');
+
           const isTrustedApp = trustedApps.some((domain) => domain === data[id]['apods:domainName']);
           return (
             <Grid item xs={12} sm={6} key={id}>
@@ -113,7 +116,7 @@ const AppCardList = () => {
                     className={classes.appChip}
                   />
                 )}
-                <a href={appUrl} target="_blank" rel="noopener noreferrer" className={classes.link}>
+                <a href={loginUrl.toString()} target="_blank" rel="noopener noreferrer" className={classes.link}>
                   <Button variant="contained">{translate('app.action.open_app')}</Button>
                 </a>
                 {!isTrustedApp && (

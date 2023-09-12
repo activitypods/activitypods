@@ -73,5 +73,10 @@
     "prefix": "apods",
     "owl": "",
     "url": "http://activitypods.org/ns/core#"
+  },
+  {
+    "prefix": "syreen",
+    "owl": "",
+    "url": "http://syreen.fr/ns/core#"
   }
 ]

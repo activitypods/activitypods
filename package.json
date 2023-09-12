@@ -4,11 +4,12 @@
     "bootstrap": "lerna bootstrap",
     "version": "lerna version --force-publish='*' --exact",
     "publish": "lerna publish from-package --dist-tag latest",
-    "prettier": "prettier --single-quote --print-width 120 --write --ignore-path .gitignore '**/*.js'",
+    "prettier": "prettier --write '**/*.js'",
     "link-all": "lerna exec --parallel --scope @activitypods/** -- yarn link",
     "unlink-all": "lerna exec --parallel --scope @activitypods/** -- yarn unlink",
-    "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/mime-types @semapps/notifications @semapps/pod @semapps/signature @semapps/sparql-endpoint @semapps/triplestore @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
-    "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/mime-types @semapps/notifications @semapps/pod @semapps/signature @semapps/sparql-endpoint @semapps/triplestore @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid"
+    "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/mime-types @semapps/sync @semapps/notifications @semapps/pod @semapps/signature @semapps/sparql-endpoint @semapps/triplestore @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
+    "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/mime-types @semapps/sync @semapps/notifications @semapps/pod @semapps/signature @semapps/sparql-endpoint @semapps/triplestore @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
+    "preinstall": "git config core.hooksPath .git-hooks"
   },
   "devDependencies": {
     "lerna": "^4.0.0",

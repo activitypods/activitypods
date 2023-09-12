@@ -1,7 +1,7 @@
 {
-  "name": "@activitypods/profiles",
+  "name": "@activitypods/syreen",
   "version": "1.1.0",
-  "description": "ActivityPods app for users' profiles and locations",
+  "description": "ActivityPods app for app.syreen.fr",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
   "dependencies": {

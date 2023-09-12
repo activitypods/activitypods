@@ -23,7 +23,7 @@ module.exports = {
       signup: "S'inscrire",
       reset_password: 'Mot de passe oublié ?',
       set_new_password: 'Definir un nouveau mot de passe',
-      undo_ignore_contact: 'Ne plus ignorer'
+      undo_ignore_contact: 'Ne plus ignorer',
     },
     page: {
       contacts: 'Mon réseau',

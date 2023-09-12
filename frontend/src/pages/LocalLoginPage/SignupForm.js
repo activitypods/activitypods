@@ -2,11 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Field, Form } from 'react-final-form';
 import createSlug from 'speakingurl';
-import { useTranslate, useNotify, useSafeSetState } from 'react-admin';
+import { useTranslate, useNotify, useSafeSetState, email } from 'react-admin';
 import { useLocation } from 'react-router-dom';
 import { Button, Box, CircularProgress, makeStyles } from '@material-ui/core';
 import { useSignup } from '@semapps/auth-provider';
-import TextInput from './TextInput';
+import TextInput from '../../common/inputs/TextInput';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -32,12 +32,24 @@ const SignupForm = ({ redirectTo }) => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
 
+  const validateEmail = email('ra.validation.email');
   const validate = (values) => {
-    const errors = { email: undefined, password: undefined };
+    const errors = { username: undefined, email: undefined, password: undefined };
+
+    if (!values.username) {
+      errors.username = translate('ra.validation.required');
+    }
 
     if (!values.email) {
       errors.email = translate('ra.validation.required');
+    } else {
+      // If email is set, check if it's valid.
+      const emailValidationResult = validateEmail(values.email);
+      if (emailValidationResult) {
+        errors.email = translate(emailValidationResult.message);
+      }
     }
+
     if (!values.password) {
       errors.password = translate('ra.validation.required');
     }
@@ -92,7 +104,7 @@ const SignupForm = ({ redirectTo }) => {
                 format={(value) =>
                   value
                     ? createSlug(value, {
-                        lang: 'fr',
+                        lang: process.env.REACT_APP_LANG?.substring(0, 2) || 'fr',
                         separator: '_',
                         custom: ['.', '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
                       })

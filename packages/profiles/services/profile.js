@@ -2,17 +2,16 @@ const { triple, namedNode } = require('@rdfjs/data-model');
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { OBJECT_TYPES, AS_PREFIX } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { SynchronizerMixin } = require('@activitypods/synchronizer');
 
 module.exports = {
   name: 'profiles.profile',
-  mixins: [SynchronizerMixin, ControlledContainerMixin],
+  mixins: [ControlledContainerMixin],
   settings: {
     publicProfile: false,
     // ControlledContainerMixin settings
     path: '/profiles',
     acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
-    dereference: ['vcard:hasGeo'],
+    dereference: ['vcard:hasGeo', 'vcard:hasTelephone'],
     permissions: {},
     newResourcesPermissions: {},
   },
@@ -22,22 +21,25 @@ module.exports = {
       const { webId, profileData } = ctx.params;
       const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
-      await this.waitForContainerCreation(containerUri);
+      await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
-      const profileUri = await this.actions.post({
-        containerUri,
-        resource: {
-          '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
-          'vcard:fn': profileData.familyName
-            ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
-            : profileData.name,
-          'vcard:given-name': profileData.name,
-          'vcard:family-name': profileData.familyName,
-          describes: webId,
+      const profileUri = await this.actions.post(
+        {
+          containerUri,
+          resource: {
+            '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
+            'vcard:fn': profileData.familyName
+              ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
+              : profileData.name,
+            'vcard:given-name': profileData.name,
+            'vcard:family-name': profileData.familyName,
+            describes: webId,
+          },
+          contentType: MIME_TYPES.JSON,
+          webId,
         },
-        contentType: MIME_TYPES.JSON,
-        webId,
-      });
+        { parentCtx: ctx }
+      );
 
       if (this.settings.publicProfile) {
         await ctx.call('webacl.resource.addRights', {

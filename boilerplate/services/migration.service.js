@@ -16,7 +16,7 @@ module.exports = {
   actions: {
     async createAndAttachIgnoredContacts(ctx) {
       const registeredCollections = await ctx.call('activitypub.registry.list');
-      const ignoredContactsCollection = registeredCollections.find(c => c.name === '/ignored-contacts');
+      const ignoredContactsCollection = registeredCollections.find((c) => c.name === '/ignored-contacts');
       for (let dataset of await ctx.call('pod.list')) {
         ctx.meta.dataset = dataset;
         const actorUri = urlJoin(CONFIG.HOME_URL, dataset);
@@ -24,7 +24,7 @@ module.exports = {
         await ctx.call('activitypub.registry.createAndAttachCollection', {
           objectUri: actorUri,
           collection: ignoredContactsCollection,
-          webId: 'system'
+          webId: 'system',
         });
       }
     },
@@ -41,6 +41,27 @@ module.exports = {
         } else {
           this.logger.warn(`No account with dataset ${dataset}`);
         }
+      }
+    },
+    async fixSyreenPredicate(ctx) {
+      const predicates = ['phase', 'status', 'type', 'quantity', 'unit'];
+      for (let predicate of predicates) {
+        this.logger.info('Fixing predicate syreen:' + predicate);
+        await ctx.call('triplestore.update', {
+          query: `
+            DELETE {
+              ?subject <syreen:${predicate}> ?object
+            }
+            INSERT {
+              ?subject <http://syreen.fr/ns/core#${predicate}> ?object
+            }
+            WHERE {
+              ?subject <syreen:${predicate}> ?object
+            }
+          `,
+          dataset: '*',
+          webId: 'system',
+        });
       }
     },
     async useApplicationJson(ctx) {

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+
+if [ "$SKIP_PRECOMMIT_PRETTIER" = true ] || [ "$SKIP_PRECOMMIT_PRETTIER" = 1 ] ; then
+    echo "=== Skipping pre-commit prettier run ==="
+    exit 0
+fi
+
+
+echo "=== Running pre-commit prettier ==="
+
+# Select staged files.
+FILES=$(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g')
+[ -z "$FILES" ] && echo "=== Nothing to do ===" && exit 0
+
+echo "prettifiying.."
+# Run prettier on all staged files.
+echo "$FILES" | xargs npx prettier --write --ignore-unknown
+
+if [ $? != 0 ]; then
+    echo "Something went wrong running prettier. Have you run \`npm install\` yet?
+You can skip prettier on commit by setting \$SKIP_PRECOMMIT_PRETTIER"
+    exit 1
+fi
+
+# Add back the modified/prettified files to staging
+xargs git add "$FILES"
+
+
+echo "=== Prettier done ==="
+
+exit 0

@@ -14,6 +14,7 @@ module.exports = {
     path: '/front-apps',
     acceptedTypes: ['apods:FrontAppRegistration'],
     dereference: [],
+    excludeFromMirror: true,
     permissions: {},
     newResourcesPermissions: {},
   },
@@ -37,6 +38,7 @@ module.exports = {
           'http://www.w3.org/2006/vcard/ns#Individual',
           'https://www.w3.org/ns/activitystreams#Profile',
           'http://www.w3.org/2006/vcard/ns#Location',
+          'http://activitypods.org/ns/core#FrontAppRegistration',
         ],
       });
     }
@@ -111,6 +113,7 @@ module.exports = {
     },
     async addMissingApps(ctx) {
       for (let dataset of await ctx.call('pod.list')) {
+        ctx.meta.dataset = dataset;
         this.logger.info('Adding front apps to dataset ' + dataset + '...');
         const [account] = await ctx.call('auth.account.find', { query: { username: dataset } });
 
@@ -123,7 +126,25 @@ module.exports = {
             });
 
             if (exists) {
-              this.logger.info(`${appUri} already exists, skipping...`);
+              this.logger.info(`${appUri} already exists, updating...`);
+
+              await this.actions.put(
+                {
+                  resource: {
+                    id: appUri,
+                    type: 'apods:FrontAppRegistration',
+                    'apods:domainName': app['apods:domainName'],
+                    'apods:preferredForTypes': app['apods:handledTypes'],
+                    'apods:application':
+                      app.type === 'apods:TrustedApps'
+                        ? `https://${app['apods:domainName']}/application.json`
+                        : undefined,
+                  },
+                  contentType: MIME_TYPES.JSON,
+                  webId: urlJoin(this.settings.baseUrl, dataset),
+                },
+                { parentCtx: ctx }
+              );
             } else {
               await this.actions.post(
                 {
@@ -139,6 +160,7 @@ module.exports = {
                 },
                 { parentCtx: ctx }
               );
+
               this.logger.info(`${appUri} added!`);
             }
           }
@@ -151,7 +173,7 @@ module.exports = {
       const { webId, accountData } = ctx.params;
       const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
-      await this.waitForContainerCreation(containerUri);
+      await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
       for (let app of this.trustedApps) {
         // Only add applications which match the account preferred locale
@@ -162,7 +184,8 @@ module.exports = {
                 type: 'apods:FrontAppRegistration',
                 'apods:domainName': app['apods:domainName'],
                 'apods:preferredForTypes': app['apods:handledTypes'],
-                'apods:application': app.id,
+                'apods:application':
+                  app.type === 'apods:TrustedApps' ? `https://${app['apods:domainName']}/application.json` : undefined,
               },
               contentType: MIME_TYPES.JSON,
               slug: app['apods:domainName'],

@@ -1,15 +1,15 @@
 const { getAnnouncesGroupUri } = require('@activitypods/announcer');
 
 module.exports = {
-  name: 'marketplace.location',
+  name: 'syreen.location',
   actions: {
     async setNewRights(ctx) {
       const { resourceUri, newData } = ctx.params;
-      const newLocation = newData['pair:hasLocation'] || (newData['mp:hasGeoCondition'] && newData['mp:hasGeoCondition']['pair:hasLocation']);
 
-      if (newLocation) {
+      // Give read right for the event's location (if it is set)
+      if (newData['syreen:hasLocation']) {
         await ctx.call('webacl.resource.addRights', {
-          resourceUri: newLocation,
+          resourceUri: newData['syreen:hasLocation'],
           additionalRights: {
             group: {
               uri: getAnnouncesGroupUri(resourceUri),
@@ -22,13 +22,12 @@ module.exports = {
     },
     async updateRights(ctx) {
       const { resourceUri, newData, oldData } = ctx.params;
-      const oldLocation = oldData['pair:hasLocation'] || (oldData['mp:hasGeoCondition'] && oldData['mp:hasGeoCondition']['pair:hasLocation']);
-      const newLocation = newData['pair:hasLocation'] || (newData['mp:hasGeoCondition'] && newData['mp:hasGeoCondition']['pair:hasLocation']);
 
-      if (newLocation !== oldLocation) {
-        if (newLocation) {
+      // If event location has changed, remove rights on old location and add them to new one
+      if (newData['syreen:hasLocation'] !== oldData['syreen:hasLocation']) {
+        if (newData['syreen:hasLocation']) {
           await ctx.call('webacl.resource.addRights', {
-            resourceUri: newLocation,
+            resourceUri: newData['syreen:hasLocation'],
             additionalRights: {
               group: {
                 uri: getAnnouncesGroupUri(resourceUri),
@@ -39,15 +38,16 @@ module.exports = {
           });
         }
 
-        if (oldLocation) {
+        if (oldData['syreen:hasLocation']) {
           await ctx.call('webacl.resource.removeRights', {
-            resourceUri: oldLocation,
+            resourceUri: oldData['syreen:hasLocation'],
             rights: {
               group: {
                 uri: getAnnouncesGroupUri(resourceUri),
                 read: true,
               },
             },
+            webId: newData['dc:creator'],
           });
         }
       }

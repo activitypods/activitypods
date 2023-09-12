@@ -1,24 +1,21 @@
 const waitForExpect = require('wait-for-expect');
 const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const initialize = require('./initialize');
+const { initialize, clearDataset, listDatasets } = require('./initialize');
 const path = require('path');
 const urlJoin = require('url-join');
 const notificationFilter = require('../boilerplate/services/mixins/MailNotificationFilterMixin');
 const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
 
-jest.setTimeout(30000);
+jest.setTimeout(80000);
 
-let broker;
+const NUM_PODS = 3;
 
 const mockSendNotification = jest.fn(() => Promise.resolve());
 
-beforeAll(async () => {
-  broker = await initialize();
+const initializeBroker = async (port, accountsDataset) => {
+  const broker = await initialize(port, accountsDataset);
 
-  await broker.loadService(path.resolve(__dirname, './services/core.service.js'));
-  await broker.loadService(path.resolve(__dirname, './services/announcer.service.js'));
-  await broker.loadService(path.resolve(__dirname, './services/synchronizer.service.js'));
   await broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/events.app.js'));
@@ -32,46 +29,80 @@ beforeAll(async () => {
   });
 
   await broker.start();
-});
 
-beforeEach(async () => {
-  mockSendNotification.mockClear();
-});
+  return broker;
+};
 
-afterAll(async () => {
-  await broker.stop();
-});
-
-describe('Test contacts app', () => {
+describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app', (mode) => {
   let actors = [],
+    broker,
     alice,
     bob,
     craig,
     contactRequestToBob,
     contactRequestToCraig,
+    locationUri,
     eventUri;
 
-  test('Create 3 pods', async () => {
-    for (let i = 1; i <= 3; i++) {
+  beforeAll(async () => {
+    const datasets = await listDatasets();
+    for (let dataset of datasets) {
+      await clearDataset(dataset);
+    }
+
+    mockSendNotification.mockReset();
+
+    if (mode === 'single-server') {
+      broker = await initializeBroker(3000, 'settings');
+    } else {
+      broker = [];
+    }
+
+    for (let i = 1; i <= NUM_PODS; i++) {
+      if (mode === 'multi-server') {
+        broker[i] = await initializeBroker(3000 + i, 'settings' + i);
+      } else {
+        broker[i] = broker;
+      }
+
       const actorData = require(`./data/actor${i}.json`);
-
-      const { webId } = await broker.call('auth.signup', actorData);
-
-      actors[i] = await broker.call('activitypub.actor.awaitCreateComplete', {
-        actorUri: webId,
-        additionalKeys: ['url', 'apods:contacts', 'apods:contactRequests', 'apods:rejectedContacts'],
-      });
-
-      expect(actors[i].preferredUsername).toBe(actorData.username);
+      const { webId } = await broker[i].call('auth.signup', actorData);
+      actors[i] = await broker[i].call(
+        'activitypub.actor.awaitCreateComplete',
+        {
+          actorUri: webId,
+          additionalKeys: ['url', 'apods:contacts', 'apods:contactRequests', 'apods:rejectedContacts'],
+        },
+        { meta: { dataset: actorData.username } }
+      );
+      actors[i].call = (actionName, params, options = {}) =>
+        broker[i].call(actionName, params, {
+          ...options,
+          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername },
+        });
     }
 
     alice = actors[1];
     bob = actors[2];
     craig = actors[3];
+  }, 80001);
+
+  beforeEach(async () => {
+    mockSendNotification.mockClear();
+  });
+
+  afterAll(async () => {
+    if (mode === 'multi-server') {
+      for (let i = 1; i <= NUM_PODS; i++) {
+        await broker[i].stop();
+      }
+    } else {
+      await broker.stop();
+    }
   });
 
   test('Alice offers her contact to Bob and Craig', async () => {
-    contactRequestToBob = await broker.call('activitypub.outbox.post', {
+    contactRequestToBob = await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
       type: ACTIVITY_TYPES.OFFER,
       actor: alice.id,
@@ -92,7 +123,7 @@ describe('Test contacts app', () => {
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('webacl.resource.hasRights', {
+        alice.call('webacl.resource.hasRights', {
           resourceUri: alice.url,
           rights: { read: true },
           webId: bob.id,
@@ -102,14 +133,14 @@ describe('Test contacts app', () => {
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        bob.call('activitypub.collection.includes', {
           collectionUri: bob['apods:contactRequests'],
           itemUri: contactRequestToBob.id,
         })
       ).resolves.toBeTruthy();
     });
 
-    contactRequestToCraig = await broker.call('activitypub.outbox.post', {
+    contactRequestToCraig = await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
       type: ACTIVITY_TYPES.OFFER,
       actor: alice.id,
@@ -124,7 +155,7 @@ describe('Test contacts app', () => {
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        bob.call('activitypub.collection.includes', {
           collectionUri: bob['apods:contactRequests'],
           itemUri: contactRequestToCraig.id,
         })
@@ -136,10 +167,10 @@ describe('Test contacts app', () => {
     });
 
     expect(mockSendNotification.mock.calls[1][0].params.data.key).toBe('contact_request');
-  });
+  }, 80000);
 
   test('Bob accept Alice contact request', async () => {
-    await broker.call('activitypub.outbox.post', {
+    await bob.call('activitypub.outbox.post', {
       collectionUri: bob.outbox,
       type: ACTIVITY_TYPES.ACCEPT,
       actor: bob.id,
@@ -149,7 +180,7 @@ describe('Test contacts app', () => {
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        bob.call('activitypub.collection.includes', {
           collectionUri: bob['apods:contactRequests'],
           itemUri: contactRequestToBob.id,
         })
@@ -158,20 +189,20 @@ describe('Test contacts app', () => {
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', { collectionUri: bob['apods:contacts'], itemUri: alice.id })
+        bob.call('activitypub.collection.includes', { collectionUri: bob['apods:contacts'], itemUri: alice.id })
       ).resolves.toBeTruthy();
     });
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', { collectionUri: alice['apods:contacts'], itemUri: bob.id })
+        alice.call('activitypub.collection.includes', { collectionUri: alice['apods:contacts'], itemUri: bob.id })
       ).resolves.toBeTruthy();
     });
 
     // Bob profile is cached in Alice dataset
     await waitForExpect(async () => {
       await expect(
-        broker.call('triplestore.countTriplesOfSubject', {
+        alice.call('triplestore.countTriplesOfSubject', {
           uri: alice.url,
           dataset: bob.preferredUsername,
           webId: 'system',
@@ -179,13 +210,35 @@ describe('Test contacts app', () => {
       ).resolves.toBeTruthy();
     });
 
+    // Bob profile is attached to Alice /profiles container
+    await waitForExpect(async () => {
+      await expect(
+        alice.call('ldp.container.includes', {
+          containerUri: urlJoin(alice.id, 'data', 'profiles'),
+          resourceUri: bob.url,
+          webId: alice.id,
+        })
+      ).resolves.toBeTruthy();
+    });
+
     // Alice profile is cached in Bob dataset
     await waitForExpect(async () => {
       await expect(
-        broker.call('triplestore.countTriplesOfSubject', {
+        bob.call('triplestore.countTriplesOfSubject', {
           uri: bob.url,
           dataset: alice.preferredUsername,
           webId: 'system',
+        })
+      ).resolves.toBeTruthy();
+    });
+
+    // Alice profile is attached to Bob /profiles container
+    await waitForExpect(async () => {
+      await expect(
+        bob.call('ldp.container.includes', {
+          containerUri: urlJoin(bob.id, 'data', 'profiles'),
+          resourceUri: alice.url,
+          webId: bob.id,
         })
       ).resolves.toBeTruthy();
     });
@@ -195,10 +248,10 @@ describe('Test contacts app', () => {
     });
 
     expect(mockSendNotification.mock.calls[0][0].params.data.key).toBe('accept_contact_request');
-  });
+  }, 80000);
 
   test('Craig reject Alice contact request', async () => {
-    await broker.call('activitypub.outbox.post', {
+    await craig.call('activitypub.outbox.post', {
       collectionUri: craig.outbox,
       type: ACTIVITY_TYPES.REJECT,
       actor: craig.id,
@@ -208,7 +261,7 @@ describe('Test contacts app', () => {
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        craig.call('activitypub.collection.includes', {
           collectionUri: craig['apods:contactRequests'],
           itemUri: contactRequestToCraig.id,
         })
@@ -217,7 +270,7 @@ describe('Test contacts app', () => {
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        craig.call('activitypub.collection.includes', {
           collectionUri: craig['apods:rejectedContacts'],
           itemUri: alice.id,
         })
@@ -226,17 +279,16 @@ describe('Test contacts app', () => {
   });
 
   test('Alice creates an event', async () => {
-    locationUri = await broker.call('profiles.location.post', {
+    locationUri = await alice.call('profiles.location.post', {
       containerUri: alice.id + '/data/locations',
       resource: {
         type: 'vcard:Location',
         'vcard:given-name': 'Alice place',
       },
       contentType: MIME_TYPES.JSON,
-      webId: alice.id,
     });
 
-    eventUri = await broker.call('events.event.post', {
+    eventUri = await alice.call('events.event.post', {
       containerUri: alice.id + '/data/events',
       resource: {
         type: OBJECT_TYPES.EVENT,
@@ -244,13 +296,12 @@ describe('Test contacts app', () => {
         location: locationUri,
       },
       contentType: MIME_TYPES.JSON,
-      webId: alice.id,
     });
 
     // Event was created, Alice is attendee.
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        alice.call('activitypub.collection.includes', {
           collectionUri: eventUri + '/attendees',
           itemUri: alice.id,
         })
@@ -259,7 +310,7 @@ describe('Test contacts app', () => {
   });
 
   test('Bob ignores Alice', async () => {
-    await broker.call('activitypub.outbox.post', {
+    await bob.call('activitypub.outbox.post', {
       collectionUri: bob.outbox,
       type: ACTIVITY_TYPES.IGNORE,
       actor: bob.id,
@@ -268,7 +319,7 @@ describe('Test contacts app', () => {
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        bob.call('activitypub.collection.includes', {
           collectionUri: bob['apods:ignoredContacts'],
           itemUri: alice.id,
         })
@@ -278,7 +329,7 @@ describe('Test contacts app', () => {
 
   test('Alice invites Bob to her event, Bob is not notified', async () => {
     // Alice announces event.
-    await broker.call('activitypub.outbox.post', {
+    await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
       type: ACTIVITY_TYPES.ANNOUNCE,
       actor: alice.id,
@@ -292,10 +343,10 @@ describe('Test contacts app', () => {
     // No notification was sent.
     expect(mockSendNotification).toHaveBeenCalledTimes(0);
 
-    // No announcement is in Bob's collection.
+    // Bob is in the the announces collection
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        alice.call('activitypub.collection.includes', {
           collectionUri: eventUri + '/announces',
           itemUri: bob.id,
         })
@@ -305,7 +356,7 @@ describe('Test contacts app', () => {
     // Bob has the right to see the event.
     await waitForExpect(async () => {
       await expect(
-        broker.call('webacl.resource.hasRights', {
+        alice.call('webacl.resource.hasRights', {
           resourceUri: eventUri,
           rights: { read: true },
           webId: bob.id,
@@ -316,7 +367,7 @@ describe('Test contacts app', () => {
     // Bob has the right to see the event location
     await waitForExpect(async () => {
       await expect(
-        broker.call('webacl.resource.hasRights', {
+        alice.call('webacl.resource.hasRights', {
           resourceUri: locationUri,
           rights: { read: true },
           webId: bob.id,
@@ -328,10 +379,9 @@ describe('Test contacts app', () => {
     // Timeout must be longer as there is a 10s delay before caching (see announcer service)
     await waitForExpect(async () => {
       await expect(
-        broker.call('triplestore.countTriplesOfSubject', {
+        bob.call('triplestore.countTriplesOfSubject', {
           uri: eventUri,
           dataset: bob.preferredUsername,
-          webId: 'system',
         })
       ).resolves.toBeTruthy();
     }, 20000);
@@ -339,7 +389,7 @@ describe('Test contacts app', () => {
 
   test('Bob un-ignores Alice from his contacts', async () => {
     // Bob sends undo ignore activity to his outbox.
-    await broker.call('activitypub.outbox.post', {
+    await bob.call('activitypub.outbox.post', {
       collectionUri: bob.outbox,
       type: ACTIVITY_TYPES.UNDO,
       object: {
@@ -352,7 +402,7 @@ describe('Test contacts app', () => {
     // Alice is not on Bob's ignore list anymore.
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        bob.call('activitypub.collection.includes', {
           collectionUri: bob['apods:ignoredContacts'],
           itemUri: alice.id,
         })
@@ -362,7 +412,7 @@ describe('Test contacts app', () => {
 
   test('Alice re-invites Bob to the event.', async () => {
     // Alice announces the event, again.
-    await broker.call('activitypub.outbox.post', {
+    await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
       type: ACTIVITY_TYPES.ANNOUNCE,
       actor: alice.id,
@@ -378,7 +428,7 @@ describe('Test contacts app', () => {
   });
 
   test('Bob removes Alice from his contacts', async () => {
-    await broker.call('activitypub.outbox.post', {
+    await bob.call('activitypub.outbox.post', {
       collectionUri: bob.outbox,
       type: ACTIVITY_TYPES.REMOVE,
       actor: bob.id,
@@ -388,7 +438,7 @@ describe('Test contacts app', () => {
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        bob.call('activitypub.collection.includes', {
           collectionUri: bob['apods:contacts'],
           itemUri: alice.id,
         })
@@ -397,11 +447,57 @@ describe('Test contacts app', () => {
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('ldp.container.includes', {
-          containerUri: urlJoin(bob.url, 'data', 'profiles'),
+        bob.call('ldp.container.includes', {
+          containerUri: urlJoin(bob.id, 'data', 'profiles'),
           resourceUri: alice.url,
+          webId: alice.id,
         })
       ).resolves.toBeFalsy();
+    });
+  });
+
+  test('Bob requests Alice to remove all his data from her Pod', async () => {
+    const activity = await bob.call('activitypub.outbox.post', {
+      collectionUri: bob.outbox,
+      type: ACTIVITY_TYPES.OFFER,
+      actor: bob.id,
+      object: {
+        type: ACTIVITY_TYPES.DELETE,
+        object: bob.id,
+      },
+      to: alice.id,
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        alice.call('activitypub.collection.includes', {
+          collectionUri: alice['apods:contacts'],
+          itemUri: bob.id,
+        })
+      ).resolves.toBeFalsy();
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        alice.call('ldp.container.includes', {
+          containerUri: urlJoin(alice.id, 'data', 'profiles'),
+          resourceUri: bob.url,
+        })
+      ).resolves.toBeFalsy();
+    });
+
+    await waitForExpect(async () => {
+      // TODO new action to only get most recent item in collection
+      const outbox = await bob.call('activitypub.collection.get', {
+        collectionUri: bob.inbox,
+        page: 1,
+      });
+      await expect(outbox.orderedItems[0]).toMatchObject({
+        type: ACTIVITY_TYPES.ACCEPT,
+        object: activity.id,
+        actor: alice.id,
+        to: bob.id,
+      });
     });
   });
 });

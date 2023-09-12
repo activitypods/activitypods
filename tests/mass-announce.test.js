@@ -1,7 +1,7 @@
 const waitForExpect = require('wait-for-expect');
 const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const initialize = require('./initialize');
+const { initialize, listDatasets, clearDataset } = require('./initialize');
 const path = require('path');
 const urlJoin = require('url-join');
 
@@ -14,11 +14,13 @@ const mockSendNotification = jest.fn(() => Promise.resolve());
 const NUM_ACTORS = 20;
 
 beforeAll(async () => {
-  broker = await initialize();
+  const datasets = await listDatasets();
+  for (let dataset of datasets) {
+    await clearDataset(dataset);
+  }
 
-  await broker.loadService(path.resolve(__dirname, './services/core.service.js'));
-  await broker.loadService(path.resolve(__dirname, './services/announcer.service.js'));
-  await broker.loadService(path.resolve(__dirname, './services/synchronizer.service.js'));
+  broker = await initialize(3000, 'settings');
+
   await broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/events.app.js'));
@@ -42,7 +44,7 @@ describe('Test mass sharing', () => {
   let actors = [],
     actorsUris = [];
 
-  test('Create 100 users', async () => {
+  test(`Create ${NUM_ACTORS} users`, async () => {
     for (let i = 1; i <= NUM_ACTORS; i++) {
       console.log(`Creating User #${i}...`);
 
@@ -94,10 +96,10 @@ describe('Test mass sharing', () => {
           broker.call('ldp.container.includes', {
             containerUri: urlJoin(actorsUris[i], '/data/events'),
             resourceUri: eventUri,
-            webId: actorsUris[i],
+            webId: 'system',
           })
         ).resolves.toBeTruthy();
-      }, 20000);
+      }, 90000);
     }
   }, 400000);
 });

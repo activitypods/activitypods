@@ -7,10 +7,10 @@ import { useCheckAuthenticated } from '@semapps/auth-provider';
 import useRequestContact from '../../hooks/useRequestContact';
 import SendIcon from '@material-ui/icons/Send';
 
-const AddContactToolbar = props => {
+const AddContactToolbar = (props) => {
   const translate = useTranslate();
   return (
-    <Toolbar {...props} >
+    <Toolbar {...props}>
       <SaveButton
         icon={<SendIcon />}
         label={translate('app.action.add_contact')}
@@ -19,7 +19,7 @@ const AddContactToolbar = props => {
       />
     </Toolbar>
   );
-}
+};
 
 const ProfileCreate = () => {
   useCheckAuthenticated();
@@ -30,11 +30,19 @@ const ProfileCreate = () => {
 
   return (
     <>
-      <Typography variant="h2" component="h1">{translate('app.page.add_contact')}</Typography>
+      <Typography variant="h2" component="h1">
+        {translate('app.page.add_contact')}
+      </Typography>
       <Box mt={1}>
         <Card>
-          <SimpleForm initialValues={{ id: searchParams.get('id') }} save={requestContact} toolbar={<AddContactToolbar />}>
-            <Alert severity="info" fullWidth>{translate('app.helper.add_contact')}</Alert>
+          <SimpleForm
+            initialValues={{ id: searchParams.get('id') }}
+            save={requestContact}
+            toolbar={<AddContactToolbar />}
+          >
+            <Alert severity="info" fullWidth>
+              {translate('app.helper.add_contact')}
+            </Alert>
             <br />
             <TextInput source="id" label={translate('app.input.user_id')} fullWidth />
             <TextInput source="content" label={translate('app.input.about_you')} fullWidth />

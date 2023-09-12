@@ -1,5 +1,5 @@
 const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
-const {ACTOR_TYPES} = require("@semapps/activitypub/constants");
+const { ACTOR_TYPES } = require('@semapps/activitypub/constants');
 
 const CONTACT_REQUEST = {
   type: ACTIVITY_TYPES.OFFER,
@@ -57,14 +57,26 @@ const REMOVE_CONTACT = {
   },
 };
 
+const IGNORE_CONTACT = {
+  type: ACTIVITY_TYPES.IGNORE,
+  object: {
+    type: ACTOR_TYPES.PERSON,
+  },
+};
+
+const UNDO_IGNORE_CONTACT = {
+  type: ACTIVITY_TYPES.UNDO,
+  object: IGNORE_CONTACT,
+};
+
 const OFFER_DELETE_ACTOR = {
   type: ACTIVITY_TYPES.OFFER,
   object: {
     type: ACTIVITY_TYPES.DELETE,
     object: {
       type: ACTOR_TYPES.PERSON,
-    }
-  }
+    },
+  },
 };
 
 module.exports = {
@@ -73,5 +85,7 @@ module.exports = {
   IGNORE_CONTACT_REQUEST,
   REJECT_CONTACT_REQUEST,
   REMOVE_CONTACT,
-  OFFER_DELETE_ACTOR
+  IGNORE_CONTACT,
+  UNDO_IGNORE_CONTACT,
+  OFFER_DELETE_ACTOR,
 };

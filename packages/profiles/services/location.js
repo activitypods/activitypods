@@ -27,7 +27,7 @@ module.exports = {
           }
         `,
         accept: MIME_TYPES.JSON,
-        webId
+        webId,
       });
 
       return results.length > 0 ? results[0].homeLocation.value : null;
@@ -52,9 +52,9 @@ module.exports = {
             ?hasGeo vcard:longitude ?longitude .
           }
         `,
-        webId
+        webId,
       });
-    }
+    },
   },
   hooks: {
     after: {
@@ -65,7 +65,7 @@ module.exports = {
           await this.actions.clearHomeLocation({ webId: res.webId }, { parentCtx: ctx });
         }
         return res;
-      }
-    }
-  }
+      },
+    },
+  },
 };

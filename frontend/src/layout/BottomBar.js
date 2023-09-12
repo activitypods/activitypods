@@ -4,7 +4,6 @@ import { BottomNavigation, BottomNavigationAction, Box, AppBar, makeStyles } fro
 import { Link, useLocation } from 'react-router-dom';
 import PeopleAltIcon from '@material-ui/icons/PeopleAlt';
 import AssignmentIndIcon from '@material-ui/icons/AssignmentInd';
-import GroupIcon from '@material-ui/icons/Group';
 import AppsIcon from '@material-ui/icons/Apps';
 import SettingsIcon from '@material-ui/icons/Settings';
 
@@ -85,14 +84,6 @@ const BottomBar = () => {
             icon={<AssignmentIndIcon />}
             component={Link}
             to={'/Profile/' + encodeURIComponent(identity?.profileData?.id)}
-            classes={{ selected: classes.selected }}
-          />
-          <BottomNavigationAction
-            label={translate('app.page.groups_short')}
-            value="groups"
-            icon={<GroupIcon />}
-            component={Link}
-            to={'/Group'}
             classes={{ selected: classes.selected }}
           />
           <BottomNavigationAction

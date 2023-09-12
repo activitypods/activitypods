@@ -36,7 +36,7 @@ module.exports = {
     redirectToFront(ctx) {
       ctx.meta.$statusCode = 302;
       ctx.meta.$location = this.settings.frontendUrl;
-    }
+    },
   },
   methods: {
     authenticate(ctx, route, req, res) {

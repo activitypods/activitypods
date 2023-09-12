@@ -30,7 +30,7 @@ const CoreService = {
     },
     jsonContext: null,
     queueServiceUrl: null,
-    authType: 'local'
+    authType: 'local',
   },
   created() {
     let { baseUrl, baseDir, frontendUrl, triplestore, jsonContext, queueServiceUrl, authType } = this.settings;
@@ -45,11 +45,11 @@ const CoreService = {
         containers,
         podProvider: true,
         dispatch: {
-          queueServiceUrl
+          queueServiceUrl,
         },
         like: {
           attachToObjectTypes: [...Object.values(OBJECT_TYPES), 'pair:Skill'],
-          attachToActorTypes: Object.values(ACTOR_TYPES)
+          attachToActorTypes: Object.values(ACTOR_TYPES),
         },
       },
     });
@@ -57,8 +57,8 @@ const CoreService = {
     this.broker.createService(ApiService, {
       settings: {
         ...this.settings.api,
-        frontendUrl
-      }
+        frontendUrl,
+      },
     });
 
     this.broker.createService(authType === 'local' ? AuthLocalService : AuthOIDCService, {
@@ -185,16 +185,16 @@ const CoreService = {
         podProvider: true,
         mirrorGraph: false,
         synchronizeContainers: false,
-        attachToLocalContainers: true
-      }
+        attachToLocalContainers: true,
+      },
     });
 
     this.broker.createService(FrontAppsService, {
       settings: {
         baseUrl,
         frontendUrl,
-        ontologies
-      }
+        ontologies,
+      },
     });
   },
 };

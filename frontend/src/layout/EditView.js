@@ -3,16 +3,8 @@ import { ListButton, ShowButton, useEditContext } from 'react-admin';
 import { Box, Typography, Grid, Card } from '@material-ui/core';
 
 const EditView = (props) => {
-  const {
-    basePath,
-    record,
-    redirect,
-    resource,
-    save,
-    saving,
-    version,
-  } = useEditContext(props);
-  return(
+  const { basePath, record, redirect, resource, save, saving, version } = useEditContext(props);
+  return (
     <>
       <Grid container>
         <Grid item xs={8}>
@@ -28,34 +20,28 @@ const EditView = (props) => {
       </Grid>
       <Box mt={1}>
         <Card>
-          {record ? React.cloneElement(React.Children.only(props.children), {
-            basePath,
-            record,
-            redirect:
-              typeof props.children.props.redirect === 'undefined'
-                ? redirect
-                : props.children.props.redirect,
-            resource,
-            save:
-              typeof props.children.props.save === 'undefined'
-                ? save
-                : props.children.props.save,
-            saving,
-            undoable: props.undoable,
-            mutationMode: props.mutationMode,
-            version,
-          }) : null}
+          {record
+            ? React.cloneElement(React.Children.only(props.children), {
+                basePath,
+                record,
+                redirect:
+                  typeof props.children.props.redirect === 'undefined' ? redirect : props.children.props.redirect,
+                resource,
+                save: typeof props.children.props.save === 'undefined' ? save : props.children.props.save,
+                saving,
+                undoable: props.undoable,
+                mutationMode: props.mutationMode,
+                version,
+              })
+            : null}
         </Card>
       </Box>
     </>
-  )
+  );
 };
 
 EditView.defaultProps = {
-  actions: [
-    <ListButton />,
-    <ShowButton />
-  ]
+  actions: [<ListButton />, <ShowButton />],
 };
 
 export default EditView;

@@ -1,8 +1,8 @@
-import React from "react";
+import React from 'react';
 import { useRecordContext } from 'react-admin';
-import { formatUsername } from "../../utils";
-import CopyButton from "../buttons/CopyButton";
-import {makeStyles} from "@material-ui/core";
+import { formatUsername } from '../../utils';
+import CopyButton from '../buttons/CopyButton';
+import { makeStyles } from '@material-ui/core';
 
 const useStyles = makeStyles((theme) => ({
   wrapper: {
@@ -12,13 +12,13 @@ const useStyles = makeStyles((theme) => ({
     overflow: 'hidden',
     whiteSpace: 'nowrap',
     textOverflow: 'ellipsis',
-    marginRight: 15
+    marginRight: 15,
   },
   copyButton: {
     position: 'absolute',
     top: -3,
-    right: -3
-  }
+    right: -3,
+  },
 }));
 
 const UsernameField = (props) => {
@@ -28,7 +28,7 @@ const UsernameField = (props) => {
 
   if (!record || !record[source]) return null;
 
-  return(
+  return (
     <div className={classes.wrapper}>
       <div className={classes.text}>
         {formatUsername(record[source])}
@@ -36,10 +36,10 @@ const UsernameField = (props) => {
       </div>
     </div>
   );
-}
+};
 
 UsernameField.defaultProps = {
-  addLabel: true
+  addLabel: true,
 };
 
 export default UsernameField;

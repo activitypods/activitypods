@@ -20,7 +20,7 @@ module.exports = {
   },
   async started() {
     const res = await fetch('https://data.activitypods.org/trusted-apps', {
-      headers: { Accept: 'application/ld+json' }
+      headers: { Accept: 'application/ld+json' },
     });
 
     if (res.ok) {
@@ -33,8 +33,13 @@ module.exports = {
     // POD provider app
     if (this.settings.frontendUrl) {
       this.trustedApps.push({
-        'apods:domainName': (new URL(this.settings.frontendUrl)).host,
-        'apods:handledTypes': ['http://www.w3.org/2006/vcard/ns#Individual', 'https://www.w3.org/ns/activitystreams#Profile', 'http://www.w3.org/2006/vcard/ns#Location', 'http://activitypods.org/ns/core#FrontAppRegistration'],
+        'apods:domainName': new URL(this.settings.frontendUrl).host,
+        'apods:handledTypes': [
+          'http://www.w3.org/2006/vcard/ns#Individual',
+          'https://www.w3.org/ns/activitystreams#Profile',
+          'http://www.w3.org/2006/vcard/ns#Location',
+          'http://activitypods.org/ns/core#FrontAppRegistration',
+        ],
       });
     }
 
@@ -45,9 +50,9 @@ module.exports = {
         authorization: false,
         authentication: false,
         aliases: {
-          'GET /': 'core.front-apps.open'
-        }
-      }
+          'GET /': 'core.front-apps.open',
+        },
+      },
     });
   },
   actions: {
@@ -98,7 +103,9 @@ module.exports = {
       const protocol = domainName.includes(':') ? 'http' : 'https';
       if (uri) {
         ctx.meta.$statusCode = 302;
-        ctx.meta.$location = `${protocol}://${domainName}/r/?type=${encodeURIComponent(type)}&uri=${encodeURIComponent(uri)}&mode=${mode || 'show'}`;
+        ctx.meta.$location = `${protocol}://${domainName}/r/?type=${encodeURIComponent(type)}&uri=${encodeURIComponent(
+          uri
+        )}&mode=${mode || 'show'}`;
       } else {
         ctx.meta.$statusCode = 302;
         ctx.meta.$location = `${protocol}://${domainName}/r/?type=${encodeURIComponent(type)}&mode=${mode || 'list'}`;
@@ -115,42 +122,51 @@ module.exports = {
             const appUri = urlJoin(this.settings.baseUrl, dataset, 'data', 'front-apps', app['apods:domainName']);
             const exists = await ctx.call('ldp.resource.exist', {
               resourceUri: appUri,
-              webId: 'system'
+              webId: 'system',
             });
 
             if (exists) {
               this.logger.info(`${appUri} already exists, updating...`);
 
-              await this.actions.put({
-                resource: {
-                  id: appUri,
-                  type: 'apods:FrontAppRegistration',
-                  'apods:domainName': app['apods:domainName'],
-                  'apods:preferredForTypes': app['apods:handledTypes'],
-                  'apods:application': app.type === 'apods:TrustedApps' ? `https://${app['apods:domainName']}/application.json` : undefined,
+              await this.actions.put(
+                {
+                  resource: {
+                    id: appUri,
+                    type: 'apods:FrontAppRegistration',
+                    'apods:domainName': app['apods:domainName'],
+                    'apods:preferredForTypes': app['apods:handledTypes'],
+                    'apods:application':
+                      app.type === 'apods:TrustedApps'
+                        ? `https://${app['apods:domainName']}/application.json`
+                        : undefined,
+                  },
+                  contentType: MIME_TYPES.JSON,
+                  webId: urlJoin(this.settings.baseUrl, dataset),
                 },
-                contentType: MIME_TYPES.JSON,
-                webId: urlJoin(this.settings.baseUrl, dataset)
-              }, { parentCtx: ctx });
+                { parentCtx: ctx }
+              );
             } else {
-              await this.actions.post({
-                resource: {
-                  type: 'apods:FrontAppRegistration',
-                  'apods:domainName': app['apods:domainName'],
-                  'apods:preferredForTypes': app['apods:handledTypes'],
-                  'apods:application': app.id,
+              await this.actions.post(
+                {
+                  resource: {
+                    type: 'apods:FrontAppRegistration',
+                    'apods:domainName': app['apods:domainName'],
+                    'apods:preferredForTypes': app['apods:handledTypes'],
+                    'apods:application': app.id,
+                  },
+                  contentType: MIME_TYPES.JSON,
+                  slug: app['apods:domainName'],
+                  webId: urlJoin(this.settings.baseUrl, dataset),
                 },
-                contentType: MIME_TYPES.JSON,
-                slug: app['apods:domainName'],
-                webId: urlJoin(this.settings.baseUrl, dataset)
-              }, { parentCtx: ctx });
+                { parentCtx: ctx }
+              );
 
               this.logger.info(`${appUri} added!`);
             }
           }
         }
       }
-    }
+    },
   },
   events: {
     async 'auth.registered'(ctx) {
@@ -162,19 +178,23 @@ module.exports = {
       for (let app of this.trustedApps) {
         // Only add applications which match the account preferred locale
         if (!app['apods:locales'] || defaultToArray(app['apods:locales']).includes(accountData.preferredLocale)) {
-          await this.actions.post({
-            resource: {
-              type: 'apods:FrontAppRegistration',
-              'apods:domainName': app['apods:domainName'],
-              'apods:preferredForTypes': app['apods:handledTypes'],
-              'apods:application': app.type === 'apods:TrustedApps' ? `https://${app['apods:domainName']}/application.json` : undefined,
+          await this.actions.post(
+            {
+              resource: {
+                type: 'apods:FrontAppRegistration',
+                'apods:domainName': app['apods:domainName'],
+                'apods:preferredForTypes': app['apods:handledTypes'],
+                'apods:application':
+                  app.type === 'apods:TrustedApps' ? `https://${app['apods:domainName']}/application.json` : undefined,
+              },
+              contentType: MIME_TYPES.JSON,
+              slug: app['apods:domainName'],
+              webId,
             },
-            contentType: MIME_TYPES.JSON,
-            slug: app['apods:domainName'],
-            webId
-          }, { parentCtx: ctx });
+            { parentCtx: ctx }
+          );
         }
       }
-    }
-  }
+    },
+  },
 };

@@ -1,4 +1,4 @@
-const path = require("path");
+const path = require('path');
 const MailService = require('moleculer-mail');
 const CONFIG = require('../config/config');
 const transport = require('../config/transport');
@@ -10,15 +10,16 @@ module.exports = {
     templateFolder: path.join(__dirname, '../templates'),
     from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
     transport,
-    data: {}
+    data: {},
   },
   actions: {
     async sendNewsletter(ctx) {
       const { username, template } = ctx.params;
 
-      const accounts = username === 'all'
-        ? await ctx.call('auth.account.find')
-        : await ctx.call('auth.account.find', { query: { username } })
+      const accounts =
+        username === 'all'
+          ? await ctx.call('auth.account.find')
+          : await ctx.call('auth.account.find', { query: { username } });
 
       if (accounts.length === 0) {
         throw new Error('No account found for username ' + username);
@@ -32,14 +33,14 @@ module.exports = {
             to: account.email,
             template,
             data: {
-              account
-            }
+              account,
+            },
           });
           this.logger.info('Newsletter sent to ' + account.email);
-        } catch(e) {
+        } catch (e) {
           this.logger.warn('Could not send newsletter to ' + account.email);
         }
       }
-    }
-  }
-}
+    },
+  },
+};

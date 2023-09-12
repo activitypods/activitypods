@@ -1,10 +1,12 @@
-import { createTheme } from '@material-ui/core/styles';
+import { createTheme } from '@mui/material/styles';
+import { defaultTheme as raTheme } from 'react-admin';
 
-const defaultTheme = createTheme();
+const muiTheme = createTheme();
 
 const fontFamily = '"Open Sans", "sans-serif"';
 
 const theme = createTheme({
+  ...raTheme,
   palette: {
     primary: {
       main: process.env.REACT_APP_COLOR_PRIMARY,
@@ -20,7 +22,7 @@ const theme = createTheme({
       fontStyle: 'normal',
       fontWeight: 'normal',
       lineHeight: '70px',
-      [defaultTheme.breakpoints.down('xs')]: {
+      [muiTheme.breakpoints.down('sm')]: {
         fontSize: 32,
         lineHeight: '46px',
       },
@@ -30,7 +32,7 @@ const theme = createTheme({
       fontSize: 40,
       fontStyle: 'normal',
       fontWeight: 'normal',
-      [defaultTheme.breakpoints.down('xs')]: {
+      [muiTheme.breakpoints.down('sm')]: {
         fontSize: 28,
       },
     },
@@ -40,7 +42,7 @@ const theme = createTheme({
       fontStyle: 'normal',
       fontWeight: 'normal',
       lineHeight: '44px',
-      [defaultTheme.breakpoints.down('xs')]: {
+      [muiTheme.breakpoints.down('sm')]: {
         fontSize: 18,
         lineHeight: '26px',
       },
@@ -89,15 +91,8 @@ const theme = createTheme({
       textTransform: 'uppercase',
     },
   },
-  overrides: {
-    RaImageField: {
-      image: {
-        width: '100%',
-        margin: 0,
-        maxHeight: 200,
-        objectFit: 'cover',
-      },
-    },
+  components: {
+    ...raTheme.components,
     MuiButton: {
       contained: {
         borderRadius: 8,
@@ -108,14 +103,25 @@ const theme = createTheme({
       },
     },
     MuiAlert: {
-      message: {
-        paddingTop: 11,
+      styleOverrides: {
+        message: {
+          paddingTop: 11,
+        },
       },
     },
     MuiIconButton: {
-      root: {
-        padding: 8,
-        paddingRight: 0,
+      styleOverrides: {
+        root: {
+          padding: 8,
+          paddingRight: 0,
+        },
+      },
+    },
+    MuiScopedCssBaseline: {
+      styleOverrides: {
+        root: {
+          backgroundColor: 'unset',
+        },
       },
     },
     RaCreateButton: {

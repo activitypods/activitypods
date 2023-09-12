@@ -1,7 +1,8 @@
 import React from 'react';
 import { UserMenu } from 'react-admin';
 import { Link } from 'react-router-dom';
-import { Box, Container, makeStyles, Typography, Grid } from '@material-ui/core';
+import { Box, Container, Typography, Grid } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles((theme) => ({
   topBar: {
@@ -12,7 +13,7 @@ const useStyles = makeStyles((theme) => ({
     lineHeight: 0.8,
     paddingTop: '2rem',
 
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       paddingTop: '1.3rem',
       lineHeight: 0.8,
     },

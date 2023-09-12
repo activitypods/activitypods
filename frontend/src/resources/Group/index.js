@@ -1,7 +1,7 @@
 import GroupCreate from './GroupCreate';
 import GroupEdit from './GroupEdit';
 import GroupList from './GroupList';
-import GroupIcon from '@material-ui/icons/Group';
+import GroupIcon from '@mui/icons-material/Group';
 
 export default {
   config: {

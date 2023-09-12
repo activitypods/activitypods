@@ -1,5 +1,6 @@
 import React from 'react';
-import { makeStyles, Box, Card, Typography, TextField } from '@material-ui/core';
+import { Box, Card, Typography, TextField } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { useGetIdentity, useTranslate } from 'react-admin';
 import { formatUsername } from '../../utils';
 import CopyButton from '../buttons/CopyButton';
@@ -29,7 +30,7 @@ const useStyles = makeStyles((theme) => ({
 
 const ShareContactCard = () => {
   const classes = useStyles();
-  const { identity } = useGetIdentity();
+  const { data: identity } = useGetIdentity();
   const translate = useTranslate();
   const contactLink = identity && new URL(window.location.href).origin + '/u/' + formatUsername(identity?.id);
   return (

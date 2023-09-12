@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import { email, required, useAuthProvider, useNotify, useTranslate } from 'react-admin';
 import { SimpleForm, TextInput } from 'react-admin';
-import { Box, Card, Typography } from '@material-ui/core';
+import { Box, Card, Typography } from '@mui/material';
 
 const validateEmail = [required(), email('app.validation.email')];
 
@@ -40,12 +40,12 @@ const SettingsEmailPage = () => {
 
   return (
     <>
-      <Typography variant="h2" component="h1">
+      <Typography variant="h2" component="h1" sx={{ mt: 2 }}>
         {translate('app.page.settings_email')}
       </Typography>
       <Box mt={1}>
         <Card>
-          <SimpleForm initialValues={formDefaultValue} save={onSubmit}>
+          <SimpleForm defaultValues={formDefaultValue} onSubmit={onSubmit}>
             <TextInput
               label={translate('app.input.email')}
               source="email"

@@ -3,16 +3,14 @@ import { ListButton } from 'react-admin';
 import Edit from '../../layout/Edit';
 import GroupForm from './GroupForm';
 import BlockAnonymous from '../../common/BlockAnonymous';
+import GroupTitle from './GroupTitle';
 
-export const GroupEdit = (props) => {
-  const { record } = props;
-  return (
-    <BlockAnonymous>
-      <Edit title={<span>{record ? record['vcard:label'] : ''}</span>} actions={[<ListButton />]} {...props}>
-        <GroupForm />
-      </Edit>
-    </BlockAnonymous>
-  );
-};
+export const GroupEdit = () => (
+  <BlockAnonymous>
+    <Edit title={<GroupTitle />} actions={[<ListButton />]}>
+      <GroupForm />
+    </Edit>
+  </BlockAnonymous>
+);
 
 export default GroupEdit;

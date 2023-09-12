@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, useShowContext, useTranslate } from 'react-admin';
-import ShareIcon from '@material-ui/icons/Share';
+import ShareIcon from '@mui/icons-material/Share';
 import { useCollection } from '@semapps/activitypub-components';
 import ShareDialog from '../ShareDialog/ShareDialog';
 

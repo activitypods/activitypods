@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
-import { TextInput, SimpleForm, ImageInput, useEditContext, Toolbar, SaveButton, useTranslate } from 'react-admin';
-import { ImageField } from '@semapps/field-components';
-import AccountCircleIcon from '@material-ui/icons/AccountCircle';
+import React from 'react';
+import { TextInput, SimpleForm, Toolbar, SaveButton, useTranslate, ImageField } from 'react-admin';
+import { ImageInput } from '@semapps/input-components';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SimpleBox from '../../layout/SimpleBox';
 
 const ToolbarWithoutDelete = (props) => (
@@ -10,29 +10,15 @@ const ToolbarWithoutDelete = (props) => (
   </Toolbar>
 );
 
-const ProfileCreatePageView = ({ location }) => {
-  const searchParams = new URLSearchParams(location.search);
-  const editContext = useEditContext();
+const ProfileCreatePageView = () => {
   const translate = useTranslate();
-
-  const redirect = useMemo(() => {
-    const redirectUrl = searchParams.get('redirect');
-    if (!redirectUrl) {
-      return '/';
-    } else if (redirectUrl.startsWith('/')) {
-      return redirectUrl;
-    } else if (redirectUrl.startsWith('http')) {
-      return '/authorize?redirect=' + encodeURIComponent(redirectUrl);
-    }
-  }, [searchParams]);
-
   return (
     <SimpleBox
       title={translate('app.page.create_profile')}
       icon={<AccountCircleIcon />}
       text={translate('app.helper.create_profile')}
     >
-      <SimpleForm {...editContext} redirect={redirect} toolbar={<ToolbarWithoutDelete />}>
+      <SimpleForm toolbar={<ToolbarWithoutDelete />}>
         <TextInput source="vcard:given-name" fullWidth />
         <TextInput source="vcard:note" fullWidth />
         <ImageInput source="vcard:photo" accept="image/*">

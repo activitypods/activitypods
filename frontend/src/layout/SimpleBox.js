@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Card, makeStyles, Typography } from '@material-ui/core';
-import { Notification } from 'react-admin';
+import { Box, Card, Typography } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles((theme) => ({
   '@global': {
@@ -44,7 +44,6 @@ const SimpleBox = ({ title, icon, text, children }) => {
         </Box>
         {children}
       </Card>
-      <Notification />
     </Box>
   );
 };

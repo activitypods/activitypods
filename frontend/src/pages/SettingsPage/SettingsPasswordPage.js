@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import { required, useAuthProvider, useNotify, useTranslate } from 'react-admin';
 import { SimpleForm, TextInput } from 'react-admin';
-import { Box, Card, Typography } from '@material-ui/core';
+import { Box, Card, Typography } from '@mui/material';
 
 const validateConfirmNewPassword = [
   (value, { newPassword, confirmNewPassword }) => {

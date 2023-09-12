@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGetIdentity, useTranslate, Link } from 'react-admin';
-import { Box, Container, Breadcrumbs, makeStyles } from '@material-ui/core';
+import { Box, Container, Breadcrumbs } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles((theme) => ({
   menuBar: {
@@ -8,6 +9,9 @@ const useStyles = makeStyles((theme) => ({
     borderBottomColor: theme.palette.primary.main,
     borderBottomStyle: 'solid',
     borderBottomWidth: 4,
+    position: 'relative',
+    zIndex: 50,
+    
   },
   link: {
     fontSize: '14pt',
@@ -20,7 +24,7 @@ const useStyles = makeStyles((theme) => ({
 const MenuBar = () => {
   const classes = useStyles();
   const translate = useTranslate();
-  const { identity } = useGetIdentity();
+  const { data: identity } = useGetIdentity();
   return (
     <Box className={classes.menuBar}>
       <Container>

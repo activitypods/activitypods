@@ -1,7 +1,7 @@
 import Autocomplete from '@material-ui/lab/Autocomplete/Autocomplete';
 import { arrayFromLdField, colorFromString } from '../../utils';
 import { useGetList, useTranslate } from 'react-admin';
-import { Checkbox, ListItemAvatar, Avatar, Typography, TextField, Chip } from '@material-ui/core';
+import { Checkbox, ListItemAvatar, Avatar, Typography, TextField, Chip } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 /**

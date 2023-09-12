@@ -25,7 +25,7 @@ const useStyles = makeStyles((theme) => ({
   },
   title: {
     lineHeight: '25px',
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       lineHeight: '20px',
       fontSize: '1.3rem',
     },
@@ -55,10 +55,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const AppCardList = () => {
-  const { ids, data } = useListContext();
+  const { data } = useListContext();
   const classes = useStyles();
   const translate = useTranslate();
-  const xs = useMediaQuery((theme) => theme.breakpoints.down('xs'), { noSsr: true });
+  const xs = useMediaQuery((theme) => theme.breakpoints.down('sm'), { noSsr: true });
   const dataProvider = useDataProvider();
   const trustedApps = useTrustedApps();
   const notify = useNotify();
@@ -132,11 +132,11 @@ const AppCardList = () => {
   );
 };
 
-const AppList = (props) => {
+const AppList = () => {
   useCheckAuthenticated();
   const translate = useTranslate();
   return (
-    <List title={translate('app.page.apps')} actions={[]} perPage={1000} {...props}>
+    <List title={translate('app.page.apps')} actions={[]} perPage={1000}>
       <AppCardList />
     </List>
   );

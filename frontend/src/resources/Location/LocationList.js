@@ -1,38 +1,28 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useHistory } from 'react-router-dom';
-import { useListContext, useTranslate, useGetIdentity, useDataProvider, linkToRecord, useNotify } from 'react-admin';
-import {
-  makeStyles,
-  Switch,
-  List as MUIList,
-  ListItem,
-  ListItemAvatar,
-  ListItemSecondaryAction,
-  ListItemText,
-  Avatar,
-} from '@material-ui/core';
-import PlaceIcon from '@material-ui/icons/Place';
+import { useNavigate } from 'react-router-dom';
+import { useListContext, useTranslate, useGetIdentity, useDataProvider, useCreatePath, useNotify } from 'react-admin';
+import { Switch, List as MUIList, ListItem, ListItemButton, ListItemAvatar, ListItemText, Avatar } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import PlaceIcon from '@mui/icons-material/Place';
 import List from '../../layout/List';
 
 const useStyles = makeStyles(() => ({
-  root: {
-    height: 63,
-  },
-  container: {
+  listItem: {
     backgroundColor: 'white',
     marginBottom: 8,
-    height: 63,
+    padding: 0,
     boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)',
   },
 }));
 
 const ListWithSwitches = () => {
-  const { ids, data } = useListContext();
+  const { data } = useListContext();
   const [checkedId, setCheckedId] = useState();
-  const { identity } = useGetIdentity();
+  const createPath = useCreatePath();
+  const { data: identity, refetch: refetchIdentity } = useGetIdentity();
   const dataProvider = useDataProvider();
   const classes = useStyles();
-  const history = useHistory();
+  const navigate = useNavigate();
   const notify = useNotify();
 
   useEffect(() => {
@@ -54,6 +44,7 @@ const ListWithSwitches = () => {
           previousData: identity?.profileData,
         })
         .then(() => {
+          refetchIdentity();
           if (id) {
             notify('app.notification.home_address_updated', { type: 'success' });
           } else {
@@ -61,36 +52,49 @@ const ListWithSwitches = () => {
           }
         });
     },
-    [setCheckedId, checkedId, dataProvider, identity, notify]
+    [setCheckedId, checkedId, dataProvider, identity, refetchIdentity, notify]
   );
 
   return (
     <MUIList>
-      {ids.map((id) => (
-        <ListItem key={id} button onClick={() => history.push(linkToRecord('/Location', id, 'edit'))} classes={classes}>
-          <ListItemAvatar>
-            <Avatar>
-              <PlaceIcon />
-            </Avatar>
-          </ListItemAvatar>
-          <ListItemText
-            primary={data[id]['vcard:given-name']}
-            secondary={data[id]['vcard:hasAddress']?.['vcard:given-name']}
-          />
-          <ListItemSecondaryAction>
-            <Switch edge="end" onChange={(e) => setHomeAddress(id)} checked={id === checkedId} />
-          </ListItemSecondaryAction>
-        </ListItem>
-      ))}
+      {data &&
+        data.map((record) => (
+          <ListItem
+            key={record.id}
+            className={classes.listItem}
+            secondaryAction={
+              <Switch
+                edge="end"
+                onChange={(e) => {
+                  e.preventDefault();
+                  setHomeAddress(record.id);
+                }}
+                checked={record.id === checkedId}
+              />
+            }
+          >
+            <ListItemButton onClick={() => navigate(createPath({ resource: 'Location', id: record.id, type: 'edit' }))}>
+              <ListItemAvatar>
+                <Avatar>
+                  <PlaceIcon />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary={record['vcard:given-name']}
+                secondary={record['vcard:hasAddress']?.['vcard:given-name']}
+              />
+            </ListItemButton>
+          </ListItem>
+        ))}
     </MUIList>
   );
 };
 
-const LocationList = (props) => {
+const LocationList = () => {
   const translate = useTranslate();
 
   return (
-    <List title={translate('app.page.addresses')} pagination={false} perPage={1000} {...props}>
+    <List title={translate('app.page.addresses')} pagination={false} perPage={1000}>
       <ListWithSwitches />
     </List>
   );

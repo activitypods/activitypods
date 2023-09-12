@@ -1,6 +1,6 @@
 import React from 'react';
-import { ImageInput, SaveButton, SimpleForm, TextInput, Toolbar, useTranslate } from 'react-admin';
-import { ImageField } from '@semapps/field-components';
+import { SaveButton, SimpleForm, TextInput, Toolbar, useTranslate, ImageField, useGetIdentity, useNotify } from 'react-admin';
+import { ImageInput } from '@semapps/input-components';
 import Edit from '../../layout/Edit';
 import ProfileTitle from './ProfileTitle';
 import { g1PublicKeyToUrl, g1UrlToPublicKey } from '../../utils';
@@ -13,16 +13,28 @@ const ToolbarWithoutDelete = (props) => (
   </Toolbar>
 );
 
-export const ProfileEdit = (props) => {
+export const ProfileEdit = () => {
   const translate = useTranslate();
+  const notify = useNotify();
+  const { refetch: refetchIdentity } = useGetIdentity();
+
   return (
     <BlockAnonymous>
       <Edit
         title={<ProfileTitle />}
         transform={(data) => ({ ...data, 'vcard:fn': data['vcard:given-name'] })}
-        {...props}
+        mutationMode="pessimistic"
+        mutationOptions={{
+          onSuccess: () => {
+            notify('ra.notification.updated', {
+              messageArgs: { smart_count: 1 },
+              undoable: false
+            });
+            refetchIdentity();
+          }
+        }}
       >
-        <SimpleForm {...props} toolbar={<ToolbarWithoutDelete />}>
+        <SimpleForm toolbar={<ToolbarWithoutDelete />}>
           <TextInput source="vcard:given-name" fullWidth />
           <TextInput source="vcard:note" fullWidth />
           <ImageInput source="vcard:photo" accept="image/*">

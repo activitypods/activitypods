@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useShowContext, useNotify, useTranslate } from 'react-admin';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 import { useCollection, useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 
 const RemoveContactButton = ({ refetch, ...rest }) => {

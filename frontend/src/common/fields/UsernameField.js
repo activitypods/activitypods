@@ -2,7 +2,7 @@ import React from 'react';
 import { useRecordContext } from 'react-admin';
 import { formatUsername } from '../../utils';
 import CopyButton from '../buttons/CopyButton';
-import { makeStyles } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles((theme) => ({
   wrapper: {
@@ -16,14 +16,13 @@ const useStyles = makeStyles((theme) => ({
   },
   copyButton: {
     position: 'absolute',
-    top: -3,
-    right: -3,
+    top: -8,
+    right: -8,
   },
 }));
 
-const UsernameField = (props) => {
-  const { source } = props;
-  const record = useRecordContext(props);
+const UsernameField = ({ source, showCopyButton }) => {
+  const record = useRecordContext();
   const classes = useStyles();
 
   if (!record || !record[source]) return null;
@@ -32,7 +31,7 @@ const UsernameField = (props) => {
     <div className={classes.wrapper}>
       <div className={classes.text}>
         {formatUsername(record[source])}
-        <CopyButton text={formatUsername(record[source])} className={classes.copyButton} />
+        {showCopyButton && <CopyButton text={formatUsername(record[source])} className={classes.copyButton} />}
       </div>
     </div>
   );
@@ -40,6 +39,7 @@ const UsernameField = (props) => {
 
 UsernameField.defaultProps = {
   addLabel: true,
+  showCopyButton: true,
 };
 
 export default UsernameField;

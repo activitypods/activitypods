@@ -167,6 +167,9 @@ module.exports = {
         }
       }
     },
+    async list(ctx) {
+      return this.trustedApps;
+    },
   },
   events: {
     async 'auth.registered'(ctx) {

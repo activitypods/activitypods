@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import {
   SimpleForm,
   TextInput,
@@ -11,10 +11,11 @@ import {
   useUnselectAll,
   useRecordContext,
   useListController,
+  SimpleList,
 } from 'react-admin';
 import { useFormContext } from 'react-hook-form';
 import { arrayFromLdField } from '../../utils';
-import { Avatar, ListItemAvatar } from '@mui/material';
+import { Avatar, ListItemAvatar, useMediaQuery } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import GroupIcon from '@mui/icons-material/Group';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -38,33 +39,47 @@ const AvatarItem = ({ source, label }) => {
 
 export const GroupFormContent = () => {
   const translate = useTranslate();
-  const form = useFormContext();
+  const isSmall = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
   const group = useRecordContext();
   // Watch out: group['vcard:hasMember'] contains the actor URIs, not the profile URIs.
   const [memberIds, setMemberIds] = React.useState(arrayFromLdField(group?.['vcard:hasMember']));
 
-  // First, we get all profiles
   const listControllerProps = useListController({
     resource: 'Profile',
     disableSyncWithLocation: true,
   });
-  const unselectMemberIds = useUnselectAll('Profile');
   const { data: profileData, isLoading } = listControllerProps;
-  const profileToMemberId = Object.fromEntries(profileData?.map((p) => [p.id, p.describes]) || []);
+  const profileToMemberId = useMemo(
+    () => Object.fromEntries(profileData?.map((p) => [p.id, p.describes]) || []),
+    [profileData]
+  );
+  const filteredProfileData = useMemo(
+    () => profileData?.filter((p) => memberIds.includes(p?.['describes'])),
+    [profileData, memberIds]
+  );
 
-  const filteredProfileData = profileData?.filter((p) => memberIds.includes(p?.['describes']));
+  // We use the form context, to add add the group members to the form.
+  const form = useFormContext();
+
+  const unselectMemberIds = useUnselectAll('Profile');
 
   /** @param {{ ids: Identifier[] }} newProfileIds */
-  const onMemberChange = ({ ids: newProfileIds }) => {
-    const changedMemberIds = newProfileIds.map((profileId) => profileToMemberId[profileId]);
-    setMemberIds(changedMemberIds);
-  };
+  const onMemberChange = useCallback(
+    ({ ids: newProfileIds }) => {
+      const changedMemberIds = newProfileIds.map((profileId) => profileToMemberId[profileId]);
+      setMemberIds(changedMemberIds);
+    },
+    [profileToMemberId, setMemberIds]
+  );
   /** @param {Identifier[]} removeProfileIds */
-  const onDeleteMembers = (removeProfileIds) => {
-    const removeMemberIds = removeProfileIds.map((id) => profileData.find((p) => p.id === id)?.describes);
-    setMemberIds(memberIds.filter((id) => !removeMemberIds.includes(id)));
-  };
+  const onDeleteMembers = useCallback(
+    (removeProfileIds) => {
+      const removeMemberIds = removeProfileIds.map((id) => profileData.find((p) => p.id === id)?.describes);
+      setMemberIds(memberIds.filter((id) => !removeMemberIds.includes(id)));
+    },
+    [profileData, memberIds, setMemberIds]
+  );
 
   // We use this to store the memberIds in the form, since they don't have a dedicated component for this.
   useEffect(() => {
@@ -113,31 +128,60 @@ export const GroupFormContent = () => {
           sx={{ width: '100%' }}
           empty={<>{translate('app.group.no_members')}</>}
         >
-          <Datagrid
-            bulkActionButtons={
-              <>
-                <Button
-                  onClick={() => {
-                    onDeleteMembers(listControllerProps.selectedIds);
-                    unselectMemberIds();
-                  }}
-                  label={translate('app.group.remove_members')}
-                  disabled={isLoading}
-                  sx={{ color: 'red' }}
-                >
-                  {<DeleteIcon />}
-                </Button>
-              </>
-            }
-          >
-            <ReferenceField label="Avatar" source="id" reference="Profile" sortable={false} link="show">
-              <AvatarItem source="vcard:photo" label="vcard:given-name" />
-            </ReferenceField>
-            <ReferenceField label="Name" source="id" reference="Profile" sortBy="vcard:given-name" link="show">
-              <TextField source="vcard:given-name" label={translate('app.group.profile_name')} fullWidth />
-            </ReferenceField>
-            <UsernameField source="describes" label="Address" sortable={false} showCopyButton={false} />
-          </Datagrid>
+          {isSmall ? (
+            <SimpleList
+              empty={<>{translate('app.group.no_members')}</>}
+              // leftIcon={() => <PersonIcon />}
+              leftIcon={(props) => (
+                <ReferenceField label="Avatar" source="id" reference="Profile" basePath={'/Group'} sortable={false}>
+                  <AvatarItem source="vcard:photo" label="vcard:given-name" />
+                </ReferenceField>
+              )}
+              primaryText={() => (
+                <ReferenceField source="id" reference="Profile" basePath={'/Group'} sortBy="vcard:given-name">
+                  <TextField source="vcard:given-name" label={translate('app.group.profile_name')} fullWidth />
+                </ReferenceField>
+              )}
+              linkType={() => ''}
+            />
+          ) : (
+            <Datagrid
+              bulkActionButtons={
+                <>
+                  <Button
+                    onClick={() => {
+                      onDeleteMembers(listControllerProps.selectedIds);
+                      unselectMemberIds();
+                    }}
+                    label={translate('app.group.remove_members')}
+                    disabled={isLoading}
+                    sx={{ color: 'red' }}
+                  >
+                    {<DeleteIcon />}
+                  </Button>
+                </>
+              }
+            >
+              <ReferenceField label="" source="id" reference="Profile" sortable={false} link="show">
+                <AvatarItem source="vcard:photo" label="vcard:given-name" />
+              </ReferenceField>
+              <ReferenceField
+                label={translate('app.group.profile_name')}
+                source="id"
+                reference="Profile"
+                sortBy="vcard:given-name"
+                link="show"
+              >
+                <TextField source="vcard:given-name" label={translate('app.group.profile_name')} fullWidth />
+              </ReferenceField>
+              <UsernameField
+                source="describes"
+                label={translate('app.input.user_id')}
+                sortable={false}
+                showCopyButton={false}
+              />
+            </Datagrid>
+          )}
         </ListView>
       </ListContextProvider>
     </>

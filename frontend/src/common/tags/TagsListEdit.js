@@ -1,5 +1,5 @@
 // Adopted from https://github.com/marmelab/react-admin/blob/master/examples/crm/src/contacts/TagsListEdit.tsx
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useUpdate, useGetList, useRecordContext, useTranslate, useCreate, LoadingIndicator } from 'react-admin';
 import {
   Chip,
@@ -81,10 +81,13 @@ const TagsListEdit = (props) => {
   }, [setTagDataState, tagData]);
 
   // All tag ids that which the record has.
-  const tagMemberships =
-    tagDataState
-      ?.filter((tagObject) => tagObject[relationshipPredicate]?.includes(recordId))
-      .map((tagObject) => tagObject[tagIdPredicate]) || [];
+  const tagMemberships = useMemo(
+    () =>
+      tagDataState
+        ?.filter((tagObject) => tagObject[relationshipPredicate]?.includes(recordId))
+        .map((tagObject) => tagObject[tagIdPredicate]) || [],
+    [tagDataState, recordId, relationshipPredicate, tagIdPredicate]
+  );
 
   const setMemberships = useCallback(
     (newTagMemberships) => {
@@ -123,21 +126,25 @@ const TagsListEdit = (props) => {
           })
       ).then(() => {});
     },
-    [recordId, tagMemberships, tagDataState, relationshipPredicate, tagIdPredicate, tagResource, update]
+    [recordId, tagDataState, relationshipPredicate, tagIdPredicate, tagResource, update]
   );
 
   // Convert tagRelationshipData into a common tag format.
-  const tags = tagDataState?.map((tagObject) => ({
-    id: tagObject[tagIdPredicate],
-    name: tagObject[namePredicate],
-    // The color or a color generated from the name.
-    color: tagObject[colorPredicate] || (showColors && colorFromString(tagObject[namePredicate])),
-    avatar: tagObject[avatarPredicate],
-    owners: arrayFromLdField(tagObject[relationshipPredicate]),
-  }));
+  const tags = useMemo(
+    () =>
+      tagDataState?.map((tagObject) => ({
+        id: tagObject[tagIdPredicate],
+        name: tagObject[namePredicate],
+        // The color or a color generated from the name.
+        color: tagObject[colorPredicate] || (showColors && colorFromString(tagObject[namePredicate])),
+        avatar: tagObject[avatarPredicate],
+        owners: arrayFromLdField(tagObject[relationshipPredicate]),
+      })),
+    [avatarPredicate, colorPredicate, namePredicate, relationshipPredicate, showColors, tagDataState, tagIdPredicate]
+  );
 
-  const selectedTags = tags?.filter((tag) => tagMemberships.includes(tag.id));
-  const unselectedTags = tags?.filter((tag) => !tagMemberships.includes(tag.id));
+  const selectedTags = useMemo(() => tags?.filter((tag) => tagMemberships.includes(tag.id)), [tags, tagMemberships]);
+  const unselectedTags = useMemo(() => tags?.filter((tag) => !tagMemberships.includes(tag.id)), [tags, tagMemberships]);
 
   /**
    * @param {ReactDivMouseEvent} event

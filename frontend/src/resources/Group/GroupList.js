@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTranslate, SimpleList, TextField, DeleteWithUndoButton } from 'react-admin';
+import { useTranslate, SimpleList, TextField } from 'react-admin';
 import { Avatar } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
 import List from '../../layout/List';

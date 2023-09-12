@@ -8,6 +8,7 @@ import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 // import GroupIcon from '@mui/icons-material/Group';
 import AppsIcon from '@mui/icons-material/Apps';
 import SettingsIcon from '@mui/icons-material/Settings';
+import GroupIcon from '@mui/icons-material/Group';
 
 const useStyles = makeStyles((theme) => ({
   box: {
@@ -88,14 +89,14 @@ const BottomBar = () => {
             to={'/Profile/' + encodeURIComponent(identity?.profileData?.id)}
             classes={{ selected: classes.selected }}
           />
-          {/* <BottomNavigationAction
+          <BottomNavigationAction
             label={translate('app.page.groups_short')}
             value="groups"
             icon={<GroupIcon />}
             component={Link}
             to={'/Group'}
             classes={{ selected: classes.selected }}
-          /> */}
+          />
           <BottomNavigationAction
             label={translate('app.page.settings_short')}
             value="settings"

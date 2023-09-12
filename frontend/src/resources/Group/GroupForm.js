@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import {
   SimpleForm,
   TextInput,
@@ -11,16 +11,20 @@ import {
   useUnselectAll,
   useRecordContext,
   useListController,
+  SimpleList,
 } from 'react-admin';
-import { useFormContext } from "react-hook-form";
+import { useFormContext } from 'react-hook-form';
 import { arrayFromLdField } from '../../utils';
-import { Avatar, ListItemAvatar } from '@mui/material';
+import { Avatar, ListItemAvatar, useMediaQuery } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import GroupIcon from '@mui/icons-material/Group';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { ReferenceField } from '@semapps/field-components';
 import UsernameField from '../../common/fields/UsernameField';
-// import ResourceSelectWithTags from '../../common/tags/ResourceSelectWithTags';
+import ResourceSelectWithTags from '../../common/tags/ResourceSelectWithTags';
+
+const arraysEqual = (arr1, arr2) =>
+  arr1?.length === arr2?.length && arr1.every((value, index) => value === arr2[index]);
 
 const AvatarItem = ({ source, label }) => {
   const record = useRecordContext();
@@ -35,43 +39,60 @@ const AvatarItem = ({ source, label }) => {
 
 export const GroupFormContent = () => {
   const translate = useTranslate();
-  const form = useFormContext();
-
-  console.log('form', form.getValues())
+  const isSmall = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
   const group = useRecordContext();
   // Watch out: group['vcard:hasMember'] contains the actor URIs, not the profile URIs.
   const [memberIds, setMemberIds] = React.useState(arrayFromLdField(group?.['vcard:hasMember']));
-  const [sort, setSort] = React.useState({ field: 'vcard:given-name', order: 'ASC' });
 
-  // First, we get all profiles
-  const listControllerProps = useListController({ resource: 'Profile', sort });
-  const unselectMemberIds = useUnselectAll('Profile');
+  const listControllerProps = useListController({
+    resource: 'Profile',
+    disableSyncWithLocation: true,
+  });
   const { data: profileData, isLoading } = listControllerProps;
+  const profileToMemberId = useMemo(
+    () => Object.fromEntries(profileData?.map((p) => [p.id, p.describes]) || []),
+    [profileData]
+  );
+  const filteredProfileData = useMemo(
+    () => profileData?.filter((p) => memberIds.includes(p?.['describes'])),
+    [profileData, memberIds]
+  );
 
-  const filteredProfileData = profileData?.filter(p => memberIds.includes(p?.['describes']));
+  // We use the form context, to add add the group members to the form.
+  const form = useFormContext();
 
-  const onMemberChange = ({ ids: newProfileIds }) => {
-    const changedMemberIds = newProfileIds.map((profileId) => profileData[profileId]?.describes);
-    setMemberIds(changedMemberIds);
-  };
+  const unselectMemberIds = useUnselectAll('Profile');
+
+  /** @param {{ ids: Identifier[] }} newProfileIds */
+  const onMemberChange = useCallback(
+    ({ ids: newProfileIds }) => {
+      const changedMemberIds = newProfileIds.map((profileId) => profileToMemberId[profileId]);
+      setMemberIds(changedMemberIds);
+    },
+    [profileToMemberId, setMemberIds]
+  );
   /** @param {Identifier[]} removeProfileIds */
-  const onDeleteMembers = (removeProfileIds) => {
-    console.log('removeProfileIds', removeProfileIds);
-    const removeMemberIds = removeProfileIds.map((id) => profileData.find(p => p.id === id)?.describes);
-    setMemberIds(memberIds.filter((id) => !removeMemberIds.includes(id)));
-  };
+  const onDeleteMembers = useCallback(
+    (removeProfileIds) => {
+      const removeMemberIds = removeProfileIds.map((id) => profileData.find((p) => p.id === id)?.describes);
+      setMemberIds(memberIds.filter((id) => !removeMemberIds.includes(id)));
+    },
+    [profileData, memberIds, setMemberIds]
+  );
 
-  // We use this to store the memberIds in the form.
+  // We use this to store the memberIds in the form, since they don't have a dedicated component for this.
   useEffect(() => {
-    form.setValue('vcard:hasMember', memberIds, { shouldDirty: true });
+    if (!arraysEqual(memberIds, form.getValues()?.['vcard:hasMember'])) {
+      form.setValue('vcard:hasMember', memberIds, { shouldDirty: true });
+    }
   }, [memberIds, form]);
 
   return (
     <>
       <TextInput source="vcard:label" fullWidth label={translate('app.group.label')} />
       <h3>{translate('app.group.members')}</h3>
-      {/* <ResourceSelectWithTags
+      <ResourceSelectWithTags
         title={translate('app.group.add_members')}
         labelResourcePredicate="vcard:given-name"
         labelTagPredicate="vcard:label"
@@ -87,56 +108,80 @@ export const GroupFormContent = () => {
         tagResource="Group"
         tagName={translate('app.group.group')}
         resourceName={translate('app.group.profile')}
-        // The selected members.
-        value={sortedProfileIds}
+        // The selected member ids.
+        value={filteredProfileData?.map((p) => p.id) || []}
         onSelectionChange={onMemberChange}
         // The groups's appearance suffices, so we don't need to label.
         groupBy={() => ''}
         loading={isLoading}
-        excludeIds={group.id && [group.id]}
-      /> */}
+        excludeIds={group ? [group.id] : []}
+      />
       {/* We use a custom datagrid to render the selected users. */}
-      <ListContextProvider value={{ ...listControllerProps, data: filteredProfileData, total: filteredProfileData?.length }}>
+      <ListContextProvider
+        value={{ ...listControllerProps, data: filteredProfileData, total: filteredProfileData?.length }}
+      >
         <ListView
           title={translate('app.group.members')}
           hasCreate={false}
           actions={false}
           pagination={false}
           sx={{ width: '100%' }}
+          empty={<>{translate('app.group.no_members')}</>}
         >
-          <Datagrid 
-            empty={translate('app.group.no_members')}
-            bulkActionButtons={
-              <Button
-                onClick={() => {
-                  console.log('delete', listControllerProps.selectedIds)
-                  onDeleteMembers(listControllerProps.selectedIds);
-                  unselectMemberIds();
-                }}
-                label={translate('app.group.remove_members')}
-                disabled={isLoading}
-                sx={{ color: 'red' }}
-              >
-                {<DeleteIcon />}
-              </Button>
-            }  
-            rowClick="show"
-          >
-            <ReferenceField label="Avatar" source="id" reference="Profile" sortable={false} link="show">
-              <AvatarItem source="vcard:photo" label="vcard:given-name" />
-            </ReferenceField>
-            <ReferenceField
-              label="Name"
-              source="id"
-              reference="Profile"
-              sortBy="vcard:given-name"
-              sortByOrder={sort.order}
-              link="show"
+          {isSmall ? (
+            <SimpleList
+              empty={<>{translate('app.group.no_members')}</>}
+              // leftIcon={() => <PersonIcon />}
+              leftIcon={(props) => (
+                <ReferenceField label="Avatar" source="id" reference="Profile" basePath={'/Group'} sortable={false}>
+                  <AvatarItem source="vcard:photo" label="vcard:given-name" />
+                </ReferenceField>
+              )}
+              primaryText={() => (
+                <ReferenceField source="id" reference="Profile" basePath={'/Group'} sortBy="vcard:given-name">
+                  <TextField source="vcard:given-name" label={translate('app.group.profile_name')} fullWidth />
+                </ReferenceField>
+              )}
+              linkType={() => ''}
+            />
+          ) : (
+            <Datagrid
+              bulkActionButtons={
+                <>
+                  <Button
+                    onClick={() => {
+                      onDeleteMembers(listControllerProps.selectedIds);
+                      unselectMemberIds();
+                    }}
+                    label={translate('app.group.remove_members')}
+                    disabled={isLoading}
+                    sx={{ color: 'red' }}
+                  >
+                    {<DeleteIcon />}
+                  </Button>
+                </>
+              }
             >
-              <TextField source="vcard:given-name" label={translate('app.group.profile_name')} fullWidth />
-            </ReferenceField>
-            <UsernameField source="describes" label="Address" sortable={false} showCopyButton={false} />
-          </Datagrid>
+              <ReferenceField label="" source="id" reference="Profile" sortable={false} link="show">
+                <AvatarItem source="vcard:photo" label="vcard:given-name" />
+              </ReferenceField>
+              <ReferenceField
+                label={translate('app.group.profile_name')}
+                source="id"
+                reference="Profile"
+                sortBy="vcard:given-name"
+                link="show"
+              >
+                <TextField source="vcard:given-name" label={translate('app.group.profile_name')} fullWidth />
+              </ReferenceField>
+              <UsernameField
+                source="describes"
+                label={translate('app.input.user_id')}
+                sortable={false}
+                showCopyButton={false}
+              />
+            </Datagrid>
+          )}
         </ListView>
       </ListContextProvider>
     </>
@@ -147,7 +192,7 @@ const GroupForm = (props) => {
   return (
     <SimpleForm
       redirect="list"
-      style={{ 'MuiIconButton-root': { paddingRight: '8px', backgroundColor: 'inherit' } }}
+      style={{ MuiIconButtonRoot: { paddingRight: '8px', backgroundColor: 'inherit' } }}
       {...props}
     >
       <GroupFormContent />

@@ -33,6 +33,7 @@ module.exports = {
       profile_name: 'Nom',
       group: 'Groupe',
       profile: 'Profil',
+      add_members: 'Ajouter des membres',
     },
 
     page: {

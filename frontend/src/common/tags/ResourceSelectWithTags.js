@@ -1,8 +1,7 @@
-import Autocomplete from '@material-ui/lab/Autocomplete/Autocomplete';
-import { arrayFromLdField, colorFromString } from '../../utils';
-import { useGetList, useTranslate } from 'react-admin';
-import { Checkbox, ListItemAvatar, Avatar, Typography, TextField, Chip } from '@mui/material';
 import React, { useEffect, useState } from 'react';
+import { useGetList, useTranslate } from 'react-admin';
+import { Checkbox, ListItemAvatar, Avatar, Typography, TextField, Chip, Autocomplete } from '@mui/material';
+import { arrayFromLdField, colorFromString } from '../../utils';
 
 /**
  * @typedef {import('react-admin').Record} Record
@@ -39,7 +38,7 @@ import React, { useEffect, useState } from 'react';
  *
  * The tag resources need to have a relationship field that is a list of resource ids.
  *
- * @param {import('@material-ui/lab').AutocompleteProps & ResourceSelectWithTagsProps} props
+ * @param {import('@mui/material').AutocompleteProps & ResourceSelectWithTagsProps} props
  */
 const ResourceSelectWithTags = (props) => {
   const {
@@ -72,8 +71,10 @@ const ResourceSelectWithTags = (props) => {
     setSelectedResources(props.value || []);
   }, [props.value]);
 
-  const { data: tagData, isLoading: isLoadingTags } = useGetList(tagResource);
-  const { data: resourceData, isLoading: isLoadingResources } = useGetList(entityResource);
+  const { data: tagDataRaw, isLoading: isLoadingTags } = useGetList(tagResource);
+  const { data: resourceDataRaw, isLoading: isLoadingResources } = useGetList(entityResource);
+  const tagData = Object.fromEntries((tagDataRaw || []).map((tag) => [tag.id, tag]));
+  const resourceData = Object.fromEntries((resourceDataRaw || []).map((r) => [r.id, r]));
 
   // Create a map from the tag's owner id to the resource id. Helpful for mapping the tag's owners to corresponding resources.
   const ownerToResourceIds = Object.fromEntries(
@@ -127,9 +128,9 @@ const ResourceSelectWithTags = (props) => {
       }
       // If the option was a resource...
     } else if (resourceData[optionId]) {
-      if (reason === 'select-option') {
+      if (reason === 'selectOption') {
         newSelectedResourceIds.push(optionId);
-      } else if (reason === 'remove-option') {
+      } else if (reason === 'removeOption') {
         deselectedResourceIds.push(optionId);
       }
     }
@@ -146,10 +147,10 @@ const ResourceSelectWithTags = (props) => {
 
   const renderTagOption =
     renderTagOptionProp ||
-    function (tag, selected) {
+    function (props, tag, selected) {
       const tagColor = tag[colorTagPredicate] || (showColors && colorFromString(tag[labelTagPredicate]));
       return (
-        <>
+        <li {...props}>
           <Checkbox checked={selected} />
           {(tag[avatarTagPredicate] || tagDefaultIcon) && (
             <ListItemAvatar
@@ -176,17 +177,16 @@ const ResourceSelectWithTags = (props) => {
             style={{ backgroundColor: tagColor, marginLeft: '9px' }}
             label={tag[labelTagPredicate]}
           />
-        </>
+        </li>
       );
     };
 
   const renderResourceOption =
     renderResourceOptionProp ||
-    function (option, selected) {
+    function (props, option, selected) {
       return (
-        <>
+        <li {...props}>
           <Checkbox checked={selected} />
-
           {(option[avatarResourcePredicate] || resourceDefaultIcon) && (
             <ListItemAvatar
               style={{
@@ -209,7 +209,7 @@ const ResourceSelectWithTags = (props) => {
           <Typography variant="body2" color="textPrimary" style={{ marginLeft: '9px' }}>
             {option[labelResourcePredicate]}
           </Typography>
-        </>
+        </li>
       );
     };
 
@@ -224,18 +224,18 @@ const ResourceSelectWithTags = (props) => {
       renderInput={(params) => (
         <TextField {...params} variant="outlined" label={translate('auth.input.agent_select')} fullWidth />
       )}
-      renderOption={(optionId) => {
+      renderOption={(props, optionId) => {
         // If the option is a tag..
         if (tagData[optionId]) {
-          return renderTagOption(tagData[optionId], isTagSelected(tagData[optionId]));
+          return renderTagOption(props, tagData[optionId], isTagSelected(tagData[optionId]));
         } else if (resourceData[optionId]) {
-          return renderResourceOption(resourceData[optionId], selectedResourceIds.includes(optionId));
+          return renderResourceOption(props, resourceData[optionId], selectedResourceIds.includes(optionId));
         }
       }}
       loading={isLoadingTags || isLoadingResources}
       fullWidth
       disableCloseOnSelect
-      closeIcon={null}
+      clearIcon={null}
       {...restProps}
     />
   );

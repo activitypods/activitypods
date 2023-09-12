@@ -5,7 +5,7 @@ import SplitView from './SplitView';
 
 const ListView = ({ asides, actions, title, children }) => {
   const { defaultTitle } = useListContext();
-  return(
+  return (
     <SplitView asides={asides}>
       <Grid container sx={{ mt: 2 }}>
         <Grid item xs={8}>
@@ -21,13 +21,11 @@ const ListView = ({ asides, actions, title, children }) => {
       </Grid>
       {children}
     </SplitView>
-  )
+  );
 };
 
 ListView.defaultProps = {
-  actions: [
-    <CreateButton />,
-  ]
-}
+  actions: [<CreateButton />],
+};
 
 export default ListView;

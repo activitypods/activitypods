@@ -17,18 +17,13 @@ const EditView = ({ title, actions, children }) => (
       </Grid>
     </Grid>
     <Box mt={1}>
-      <Card>
-        {children}
-      </Card>
+      <Card>{children}</Card>
     </Box>
   </>
 );
 
 EditView.defaultProps = {
-  actions: [
-    <ListButton />,
-    <ShowButton />
-  ]
+  actions: [<ListButton />, <ShowButton />],
 };
 
 export default EditView;

@@ -1,7 +1,7 @@
-import React from "react";
+import React from 'react';
 import { useRecordContext } from 'react-admin';
-import { formatUsername } from "../../utils";
-import CopyButton from "../buttons/CopyButton";
+import { formatUsername } from '../../utils';
+import CopyButton from '../buttons/CopyButton';
 import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles((theme) => ({
@@ -12,13 +12,13 @@ const useStyles = makeStyles((theme) => ({
     overflow: 'hidden',
     whiteSpace: 'nowrap',
     textOverflow: 'ellipsis',
-    marginRight: 15
+    marginRight: 15,
   },
   copyButton: {
     position: 'absolute',
     top: -8,
-    right: -8
-  }
+    right: -8,
+  },
 }));
 
 const UsernameField = ({ source, showCopyButton }) => {
@@ -27,7 +27,7 @@ const UsernameField = ({ source, showCopyButton }) => {
 
   if (!record || !record[source]) return null;
 
-  return(
+  return (
     <div className={classes.wrapper}>
       <div className={classes.text}>
         {formatUsername(record[source])}
@@ -35,11 +35,11 @@ const UsernameField = ({ source, showCopyButton }) => {
       </div>
     </div>
   );
-}
+};
 
 UsernameField.defaultProps = {
   addLabel: true,
-  showCopyButton: true
+  showCopyButton: true,
 };
 
 export default UsernameField;

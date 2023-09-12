@@ -4,9 +4,9 @@ import { Card, Avatar, Grid, Typography, Box, useMediaQuery } from '@mui/materia
 import makeStyles from '@mui/styles/makeStyles';
 import { useCollection } from '@semapps/activitypub-components';
 import { formatUsername } from '../../utils';
-import AcceptContactRequestButton from "../buttons/AcceptContactRequestButton";
-import IgnoreContactRequestButton from "../buttons/IgnoreContactRequestButton";
-import RejectContactRequestButton from "../buttons/RejectContactRequestButton";
+import AcceptContactRequestButton from '../buttons/AcceptContactRequestButton';
+import IgnoreContactRequestButton from '../buttons/IgnoreContactRequestButton';
+import RejectContactRequestButton from '../buttons/RejectContactRequestButton';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -29,7 +29,7 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 'bold',
     lineHeight: 2,
     marginRight: 6,
-    color: 'black'
+    color: 'black',
   },
   avatar: {
     width: 42,
@@ -44,7 +44,7 @@ const useStyles = makeStyles((theme) => ({
       margin: 0,
       marginRight: 6,
       height: 30,
-      minWidth: 90
+      minWidth: 90,
     },
   },
 }));
@@ -55,10 +55,7 @@ const ContactRequest = ({ activity, refetch }) => {
   const createPath = useCreatePath();
   const translate = useTranslate();
 
-  let { data: profile, isLoading } = useGetOne(
-    'Profile',
-    { id: activity.object.object },
-  );
+  let { data: profile, isLoading } = useGetOne('Profile', { id: activity.object.object });
 
   if (isLoading) return null;
 
@@ -85,15 +82,33 @@ const ContactRequest = ({ activity, refetch }) => {
         </Grid>
         <Grid item xs={12} sm={4}>
           <Box display="flex" alignItems="middle" justifyContent={xs ? 'flex-start' : 'flex-end'}>
-            <AcceptContactRequestButton activity={activity} refetch={refetch} variant="contained" color="primary" className={classes.button} >
+            <AcceptContactRequestButton
+              activity={activity}
+              refetch={refetch}
+              variant="contained"
+              color="primary"
+              className={classes.button}
+            >
               {translate('app.action.accept')}
             </AcceptContactRequestButton>
             {activity.context ? (
-              <IgnoreContactRequestButton activity={activity} refetch={refetch} variant="contained" color="grey" className={classes.button}>
+              <IgnoreContactRequestButton
+                activity={activity}
+                refetch={refetch}
+                variant="contained"
+                color="grey"
+                className={classes.button}
+              >
                 {translate('app.action.ignore')}
               </IgnoreContactRequestButton>
             ) : (
-              <RejectContactRequestButton activity={activity} refetch={refetch} variant="contained" color="grey" className={classes.button}>
+              <RejectContactRequestButton
+                activity={activity}
+                refetch={refetch}
+                variant="contained"
+                color="grey"
+                className={classes.button}
+              >
                 {translate('app.action.reject')}
               </RejectContactRequestButton>
             )}
@@ -113,7 +128,7 @@ const ContactRequestsBlock = () => {
   const refetchAndRefresh = useCallback(async () => {
     await refetch();
     refresh();
-  }, [refetch, refresh])
+  }, [refetch, refresh]);
 
   if (contactRequests.length === 0) return null;
 

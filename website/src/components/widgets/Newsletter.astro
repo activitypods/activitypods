@@ -1,0 +1,51 @@
+---
+import { Icon } from "astro-icon";
+---
+
+<section class="relative not-prose">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6">
+    <div class="py-4 md:pb-12 md:pt-0">
+      <div
+        class="bg-slate-200 mx-auto text-center p-6 rounded-md shadow-xl dark:shadow-none dark:border dark:border-slate-600"
+      >
+        <h2
+          class="text-2xl md:text-4xl font-bold leading-tighter tracking-tighter font-heading"
+        >
+          ActivityPods Newsletter
+        </h2>
+        <p class="md:text-xl text-muted dark:text-slate-400 md:my-4">
+          Stay informed about the project. One mailing/month maximum.
+        </p>
+        <div class="mt-6 max-w-sm mx-auto">
+          <form
+            method="POST"
+            action="https://b144bca4.sibforms.com/serve/MUIFACPRgU1F3Rz0-tvMDL2o1EMDa1uCWS1iT-UXvpcWe7WHzqigCx1LLTFMDovNAqnYnbqDHbdNUHsvhkGo3-ueL3817Vetzj-xUtwRjtjAf49oXRR7KDpAZs_0qLJY5OFxvcQMlhB22GUmES-0vqMDNVGXACSiVT-iabLNaUCBlP9gQUO4n8EhFZJfW9b_jXuZucSCBSBztPwx"
+          >
+            <div class="md:flex md:flex-row">
+              <input type="hidden" name="email_address_check" value="" />
+              <input type="hidden" name="locale" value="en" />
+              <input type="hidden" name="html_type" value="simple" />
+              <input
+                type="text"
+                name="EMAIL"
+                autocomplete="off"
+                placeholder="Your email address"
+                required
+                class="w-full md:basis-3/4 rounded md:rounded-l-lg border border-skin-fill border-opacity-40 bg-skin-fill p-3 placeholder:italic placeholder:text-opacity-75 focus:border-skin-accent focus:outline-none"
+              />
+              <button
+                type="submit"
+                class="w-full md:!rounded-none md:!rounded-r-lg md:basis-1/4 btn btn-primary mb-4 sm:mb-0"
+              >
+                <Icon
+                  name="tabler:send"
+                  class="w-5 h-5 mr-1 -ml-1.5"
+                />Subscribe
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { SelectInput } from 'react-admin';
 import { ReferenceInput } from '@semapps/input-components';
-import AddLocationButton from "./AddLocationButton";
+import AddLocationButton from './AddLocationButton';
 
 const QuickCreateLocationInput = ({ reference, source, ...rest }) => (
   <div>

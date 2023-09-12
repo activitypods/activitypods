@@ -1,6 +1,7 @@
 [![SemApps](https://badgen.net/badge/Powered%20by/SemApps/28CDFB)](https://semapps.org) [![Chat](https://badgen.net/badge/chat/on%20rocket.chat/orange)](https://chat.lescommuns.org/channel/activitypods)
 
 ![activitypods-small](https://user-images.githubusercontent.com/17931931/215525902-6ae72fa9-fde0-43eb-a053-0ccfd4565ead.png)
+
 # ActivityPods
 
 Check out [our website](https://activitypods.org) or [these slides](./proposal/proposal-english.pdf) ([french version](./proposal/proposal-french.pdf)) for more information about this project !
@@ -30,7 +31,6 @@ Check out [our website](https://activitypods.org) or [these slides](./proposal/p
 
 - [Announcer](packages/announcer/README.md)
 
-
 ## Getting started
 
 ### Launch the triple store
@@ -56,7 +56,6 @@ yarn install
 yarn start
 ```
 
-
 ## Quick guide
 
 ### Create an actor with a POD
@@ -74,15 +73,15 @@ Content-Type: application/json
 }
 ```
 
-This will create an ActivityPub actor on http://localhost:3000/alice (viewable by everyone) and a Solid POD on http://localhost:3000/alice/data. 
+This will create an ActivityPub actor on http://localhost:3000/alice (viewable by everyone) and a Solid POD on http://localhost:3000/alice/data.
 
-You will receive in return a JWT token to authenticate the newly-created user on subsequent requests. 
+You will receive in return a JWT token to authenticate the newly-created user on subsequent requests.
 
 ```json
 {
-    "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "webId": "http://localhost:3000/alice",
-    "newUser": true
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "webId": "http://localhost:3000/alice",
+  "newUser": true
 }
 ```
 
@@ -114,7 +113,7 @@ Location: http://localhost:3000/alice/data/events/61a0f897e5b88b06f85b1190
 Link: <http://www.w3.org/ns/ldp#Resource>; rel="type"
 ```
 
-> By default, this event is only visible by yourself (you can do a `GET`  with the JWT token).
+> By default, this event is only visible by yourself (you can do a `GET` with the JWT token).
 
 ### Post an activity in the outbox
 
@@ -186,11 +185,9 @@ yarn run link-semapps-packages
 Additionally, frontend packages need to be rebuilt, or your changes will not be taken into account by Archipelago.
 You can use `yarn run build` to build a package once, or `yarn run dev` to rebuild a package on every change.
 
-
 ## Deployment to production
 
 Follow the guide [here](deploy/README.md).
-
 
 ## Integration tests
 
@@ -201,3 +198,13 @@ docker-compose up -d fuseki_test
 cd tests
 yarn run test
 ```
+
+## Funding
+
+This project is funded through the [NGI0 Entrust Fund](https://nlnet.nl/entrust), a fund
+established by [NLnet](https://nlnet.nl) with financial support from the European Commission's
+[Next Generation Internet](https://ngi.eu) program, under the aegis of DG Communications Networks,
+Content and Technology under grant agreement No 101069594. Learn more on the [NLnet project page](https://nlnet.nl/project/ActivityPods).
+
+[<img src="https://nlnet.nl/logo/banner.png" alt="NLNet foundation logo" width="300" />](https://nlnet.nl/)
+[<img src="https://nlnet.nl/image/logos/NGI0Entrust_tag.svg" alt="NGI Zero Entrust Logo" width="300" />](https://nlnet.nl/)

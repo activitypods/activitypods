@@ -8,8 +8,8 @@ import makeStyles from '@mui/styles/makeStyles';
 const useStyles = makeStyles(() => ({
   input: {
     marginTop: 0,
-    marginBottom: -20
-  }
+    marginBottom: -20,
+  },
 }));
 
 const ContactField = ({ source, context }) => {
@@ -33,9 +33,10 @@ const ContactField = ({ source, context }) => {
         attributedTo: outbox.owner,
         content: values.content,
         context: context ? record[context] : undefined,
-        to: isOwner && record.type === OBJECT_TYPES.EVENT
-          ? attendees.filter(userUri => userUri !== record[source])
-          : record[source],
+        to:
+          isOwner && record.type === OBJECT_TYPES.EVENT
+            ? attendees.filter((userUri) => userUri !== record[source])
+            : record[source],
       });
       notify('app.notification.message_sent', 'success');
     } catch (e) {
@@ -45,11 +46,13 @@ const ContactField = ({ source, context }) => {
 
   return (
     <Form onSubmit={onSubmit}>
-      {!isOwner && contactsLoaded && !contacts.includes(record[source]) &&
+      {!isOwner && contactsLoaded && !contacts.includes(record[source]) && (
         <Box mb={1}>
-          <Alert severity="warning">{translate('app.helper.message_profile_show_right', { username: record?.['vcard:given-name']})}</Alert>
+          <Alert severity="warning">
+            {translate('app.helper.message_profile_show_right', { username: record?.['vcard:given-name'] })}
+          </Alert>
         </Box>
-      }
+      )}
       <TextInput
         source="content"
         label={translate('app.input.message')}

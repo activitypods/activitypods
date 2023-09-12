@@ -1,9 +1,9 @@
 import React, { useMemo, useEffect } from 'react';
-import { useGetIdentity, EditBase, useNotify, useRedirect } from "react-admin";
+import { useGetIdentity, EditBase, useNotify, useRedirect } from 'react-admin';
 import { ThemeProvider } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
-import ProfileCreatePageView from "./ProfileCreatePageView";
-import theme from "../../config/theme";
+import ProfileCreatePageView from './ProfileCreatePageView';
+import theme from '../../config/theme';
 
 const ProfileCreatePage = () => {
   const notify = useNotify();
@@ -25,34 +25,34 @@ const ProfileCreatePage = () => {
   // Reload profile unless profile is created
   useEffect(() => {
     if (!identity?.profileData?.id) {
-      setTimeout(refetchIdentity, 1000)
+      setTimeout(refetchIdentity, 1000);
     }
-  }, [identity, refetchIdentity])
+  }, [identity, refetchIdentity]);
 
   if (!identity?.profileData?.id) return null;
 
   return (
     <ThemeProvider theme={theme}>
-      <EditBase 
-        resource="Profile" 
-        basePath="/Profile" 
-        id={identity?.profileData?.id} 
+      <EditBase
+        resource="Profile"
+        basePath="/Profile"
+        id={identity?.profileData?.id}
         mutationMode="pessimistic"
         mutationOptions={{
           onSuccess: () => {
             notify('ra.notification.updated', {
               messageArgs: { smart_count: 1 },
-              undoable: false
+              undoable: false,
             });
             refetchIdentity();
             redirect(redirectPath);
-          }
+          },
         }}
       >
         <ProfileCreatePageView />
       </EditBase>
-    </ThemeProvider >
+    </ThemeProvider>
   );
-}
+};
 
 export default ProfileCreatePage;

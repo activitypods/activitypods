@@ -7,8 +7,8 @@ import theme from '../config/theme';
 const useStyles = makeStyles(() => ({
   '@global': {
     body: {
-      backgroundColor: theme.palette.primary.main
-    }
+      backgroundColor: theme.palette.primary.main,
+    },
   },
   circle: {
     borderRadius: '50%',
@@ -27,7 +27,7 @@ const useStyles = makeStyles(() => ({
   },
   title: {
     fontWeight: '800',
-    paddingTop: 50
+    paddingTop: 50,
   },
   text: {
     color: 'white',
@@ -42,7 +42,7 @@ const useStyles = makeStyles(() => ({
   stepsTitle: {
     color: 'white',
     fontWeight: 'bold',
-    marginBottom: 15
+    marginBottom: 15,
   },
   steps: {
     marginTop: 400,
@@ -58,9 +58,9 @@ const useStyles = makeStyles(() => ({
       [theme.breakpoints.down('sm')]: {
         fontWeight: 'bold',
         lineHeight: '1.2em',
-        marginBottom: 8
-      }
-    }
+        marginBottom: 8,
+      },
+    },
   },
   number: {
     position: 'absolute',
@@ -71,8 +71,8 @@ const useStyles = makeStyles(() => ({
     fontWeight: 'bold',
     color: theme.palette.primary.main,
     backgroundColor: 'white',
-    fontSize: 50
-  }
+    fontSize: 50,
+  },
 }));
 
 const HomePage = () => {
@@ -86,7 +86,7 @@ const HomePage = () => {
     if (identity?.id) {
       redirect('/Profile');
     }
-  }, [redirect, identity])
+  }, [redirect, identity]);
 
   if (isLoading) return null;
 
@@ -98,10 +98,15 @@ const HomePage = () => {
             <Typography align="center" variant="h1" className={classes.title}>
               {process.env.REACT_APP_NAME}
             </Typography>
-            <Typography align="center">
-              {process.env.REACT_APP_DESCRIPTION}
-            </Typography>
-            <Box display="flex" flexDirection={xs ? 'column' : 'row'} pt={3} pb={3} alignItems="center" justifyContent="center">
+            <Typography align="center">{process.env.REACT_APP_DESCRIPTION}</Typography>
+            <Box
+              display="flex"
+              flexDirection={xs ? 'column' : 'row'}
+              pt={3}
+              pb={3}
+              alignItems="center"
+              justifyContent="center"
+            >
               <Link to="/login?signup">
                 <Button variant="contained" color="secondary" className={classes.button}>
                   {translate('auth.action.signup')}
@@ -116,9 +121,11 @@ const HomePage = () => {
           </Box>
         </Box>
         <Box className={classes.steps}>
-          <Typography variant="h2" align="center" className={classes.stepsTitle}>{translate('app.steps.title')}</Typography>
+          <Typography variant="h2" align="center" className={classes.stepsTitle}>
+            {translate('app.steps.title')}
+          </Typography>
           <Container>
-            {[1,2,3,4].map(i => (
+            {[1, 2, 3, 4].map((i) => (
               <Box className={classes.step} key={i}>
                 <Avatar className={classes.number}>{i}</Avatar>
                 <Typography variant="h4">{translate(`app.steps.${i}.title`)}</Typography>
@@ -126,7 +133,7 @@ const HomePage = () => {
               </Box>
             ))}
           </Container>
-       </Box>
+        </Box>
       </Box>
     </ThemeProvider>
   );

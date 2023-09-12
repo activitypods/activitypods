@@ -1,5 +1,5 @@
 import { authProvider } from '@semapps/auth-provider';
-import dataProvider from "./dataProvider";
+import dataProvider from './dataProvider';
 
 export default authProvider({
   dataProvider,

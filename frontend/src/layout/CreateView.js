@@ -4,7 +4,7 @@ import { Box, Typography, Grid, Card } from '@mui/material';
 
 const CreateView = ({ actions, children }) => {
   const { defaultTitle } = useCreateContext();
-  return(
+  return (
     <>
       <Grid container sx={{ mt: 2 }}>
         <Grid item xs={8}>
@@ -19,18 +19,14 @@ const CreateView = ({ actions, children }) => {
         </Grid>
       </Grid>
       <Box mt={1}>
-        <Card>
-          {children}
-        </Card>
+        <Card>{children}</Card>
       </Box>
     </>
-  )
+  );
 };
 
 CreateView.defaultProps = {
-  actions: [
-    <ListButton />
-  ]
+  actions: [<ListButton />],
 };
 
 export default CreateView;

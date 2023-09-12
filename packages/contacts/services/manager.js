@@ -1,17 +1,27 @@
 const urlJoin = require('url-join');
-const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { REMOVE_CONTACT, OFFER_DELETE_ACTOR } = require("../config/patterns");
+const { REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT, OFFER_DELETE_ACTOR } = require('../config/patterns');
 
 module.exports = {
   name: 'contacts.manager',
   mixins: [ActivitiesHandlerMixin],
+  dependencies: ['activitypub.registry', 'activity-mapping', 'webacl'],
+
+  async started() {
+    await this.broker.call('activitypub.registry.register', {
+      path: '/ignored-contacts',
+      attachToTypes: Object.values(ACTOR_TYPES),
+      attachPredicate: 'http://activitypods.org/ns/core#ignoredContacts',
+      ordered: false,
+      dereferenceItems: false,
+    });
+  },
   activities: {
     removeContact: {
       match: REMOVE_CONTACT,
       async onEmit(ctx, activity, emitterUri) {
-        if (!activity.origin)
-          throw new Error('The origin property is missing from the Remove activity');
+        if (!activity.origin) throw new Error('The origin property is missing from the Remove activity');
 
         if (!activity.origin.startsWith(emitterUri))
           throw new Error(`Cannot remove from collection ${activity.origin} as it is not owned by the emitter`);
@@ -25,7 +35,55 @@ module.exports = {
           resourceUri: activity.object.url,
           webId: emitterUri,
         });
-      }
+      },
+    },
+    ignoreContact: {
+      match: IGNORE_CONTACT,
+      async onEmit(ctx, activity, emitterUri) {
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+
+        // Add the actor to its ignore contacts list
+        await ctx.call('activitypub.collection.attach', {
+          collectionUri: emitter['apods:ignoredContacts'],
+          item: activity.object,
+        });
+      },
+    },
+    undoIngoreContact: {
+      match: UNDO_IGNORE_CONTACT,
+      async onEmit(ctx, activity, emitterUri) {
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+
+        // Add the actor to its ignore contacts list
+        await ctx.call('activitypub.collection.detach', {
+          collectionUri: emitter['apods:ignoredContacts'],
+          item: activity.object.object,
+        });
+      },
+    },
+    ignoreContact: {
+      match: IGNORE_CONTACT,
+      async onEmit(ctx, activity, emitterUri) {
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+
+        // Add the actor to the emitter's ignore contacts list.
+        await ctx.call('activitypub.collection.attach', {
+          collectionUri: emitter['apods:ignoredContacts'],
+          item: activity.object,
+        });
+      },
+    },
+    undoIgnoreContact: {
+      match: UNDO_IGNORE_CONTACT,
+      async onEmit(ctx, activity, emitterUri) {
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+
+        // Remove the actor from the emitter's ignore contacts list.
+        await ctx.call('activitypub.collection.detach', {
+          collectionUri: emitter['apods:ignoredContacts'],
+          item: activity.object.object,
+        });
+      },
     },
     deleteActor: {
       match: OFFER_DELETE_ACTOR,
@@ -49,7 +107,7 @@ module.exports = {
             }
           `,
           webId: 'system',
-          dataset
+          dataset,
         });
 
         // Get all cached resources from this Pod
@@ -63,13 +121,13 @@ module.exports = {
           `,
           accept: MIME_TYPES.JSON,
           webId: 'system',
-          dataset
+          dataset,
         });
 
-        for (let cachedResourceUri of result.map(node => node.resourceUri.value)) {
+        for (let cachedResourceUri of result.map((node) => node.resourceUri.value)) {
           await ctx.call('ldp.remote.delete', {
             resourceUri: cachedResourceUri,
-            webId: recipientUri
+            webId: recipientUri,
           });
         }
 
@@ -88,7 +146,7 @@ module.exports = {
             }
           `,
           webId: 'system',
-          dataset
+          dataset,
         });
 
         // Remove actor from all ACL groups
@@ -102,7 +160,7 @@ module.exports = {
             }
           `,
           webId: 'system',
-          dataset
+          dataset,
         });
 
         // Remove all rights of actor
@@ -116,7 +174,7 @@ module.exports = {
             }
           `,
           webId: 'system',
-          dataset
+          dataset,
         });
 
         // Confirm data suppression
@@ -126,7 +184,7 @@ module.exports = {
           object: activity.id,
           to: activity.actor,
         });
-      }
-    }
-  }
+      },
+    },
+  },
 };

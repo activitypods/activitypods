@@ -4,7 +4,7 @@ import { Grid, Avatar } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import DetailsList from './DetailsList';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
     margin: theme.spacing(-1),
@@ -20,7 +20,7 @@ const useStyles = makeStyles(theme => ({
       width: 120,
       height: 120,
     },
-  }
+  },
 }));
 
 const Hero = ({ children, image }) => {
@@ -35,9 +35,7 @@ const Hero = ({ children, image }) => {
           <Avatar src={record[image]} className={classes.avatar} />
         </Grid>
         <Grid item xs={12} sm={9}>
-          <DetailsList>
-            {children}
-          </DetailsList>
+          <DetailsList>{children}</DetailsList>
         </Grid>
       </Grid>
     </div>

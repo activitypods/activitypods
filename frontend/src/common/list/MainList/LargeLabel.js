@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   subTitle: {
     marginTop: theme.spacing(5),
     marginBottom: theme.spacing(1.5),
@@ -14,7 +14,7 @@ const useStyles = makeStyles(theme => ({
     paddingBottom: theme.spacing(0),
     paddingLeft: theme.spacing(2),
     paddingRight: theme.spacing(5),
-  }
+  },
 }));
 
 const LargeLabel = ({ children, ...rest }) => {

@@ -1,9 +1,9 @@
 import React from 'react';
-import { ListButton } from "react-admin";
+import { ListButton } from 'react-admin';
 import Edit from '../../layout/Edit';
 import LocationForm from './LocationForm';
-import LocationTitle from "./LocationTitle";
-import BlockAnonymous from "../../common/BlockAnonymous";
+import LocationTitle from './LocationTitle';
+import BlockAnonymous from '../../common/BlockAnonymous';
 
 export const LocationEdit = () => (
   <BlockAnonymous>

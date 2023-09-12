@@ -9,7 +9,7 @@ import {
   Form,
   RecordContextProvider,
   useGetIdentity,
-  useGetList
+  useGetList,
 } from 'react-admin';
 import { useFormContext } from 'react-hook-form';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
@@ -18,12 +18,12 @@ import IconCancel from '@mui/icons-material/Cancel';
 import AddIcon from '@mui/icons-material/Add';
 import { extractContext, LocationInput } from '@semapps/geo-components';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   button: {
     margin: '12px 0 0 12px',
     [theme.breakpoints.down('sm')]: {
-      margin: '-12px 0 12px 0'
-    }
+      margin: '-12px 0 12px 0',
+    },
   },
 }));
 
@@ -38,13 +38,13 @@ const AddLocationButton = ({ reference, source }) => {
   const translate = useTranslate();
   const notify = useNotify();
 
-  const handleSubmit = async values => {
+  const handleSubmit = async (values) => {
     // needed to filter current form values
     const filteredValues = {
       'vcard:given-name': values['vcard:given-name'],
       'vcard:hasAddress': values['vcard:hasAddress'],
       'vcard:note': values['vcard:note'],
-    }
+    };
     create(
       reference,
       { data: filteredValues },
@@ -58,7 +58,7 @@ const AddLocationButton = ({ reference, source }) => {
         },
         onError: (error) => {
           notify(error.message, 'error');
-        }
+        },
       }
     );
   };
@@ -76,15 +76,15 @@ const AddLocationButton = ({ reference, source }) => {
       >
         {translate('app.action.add_location')}
       </Button>
-      <Dialog
-        fullWidth
-        open={showDialog}
-        onClose={() => setShowDialog(false)}
-      >
+      <Dialog fullWidth open={showDialog} onClose={() => setShowDialog(false)}>
         <DialogTitle>{translate('app.action.add_location')}</DialogTitle>
         <Form
           onSubmit={handleSubmit}
-          defaultValues={existingLocations?.length === 0 ? { 'vcard:given-name': translate('app.user.location', { surname: identity?.fullName })} : undefined}
+          defaultValues={
+            existingLocations?.length === 0
+              ? { 'vcard:given-name': translate('app.user.location', { surname: identity?.fullName }) }
+              : undefined
+          }
         >
           <DialogContent>
             <TextInput resource={reference} source="vcard:given-name" fullWidth />
@@ -100,7 +100,8 @@ const AddLocationButton = ({ reference, source }) => {
                 type: 'vcard:Address',
                 'vcard:given-name': value.place_name,
                 'vcard:locality': value.place_type[0] === 'place' ? value.text : extractContext(value.context, 'place'),
-                'vcard:street-address': value.place_type[0] === 'address' ? [value.address, value.text].join(' ') : undefined,
+                'vcard:street-address':
+                  value.place_type[0] === 'address' ? [value.address, value.text].join(' ') : undefined,
                 'vcard:postal-code': extractContext(value.context, 'postcode'),
                 'vcard:country-name': extractContext(value.context, 'country'),
                 'vcard:hasGeo': {
@@ -121,11 +122,7 @@ const AddLocationButton = ({ reference, source }) => {
             />
           </DialogContent>
           <DialogActions>
-            <Button
-              onClick={() => setShowDialog(false)}
-              disabled={isLoading}
-              startIcon={<IconCancel />}
-            >
+            <Button onClick={() => setShowDialog(false)} disabled={isLoading} startIcon={<IconCancel />}>
               {translate('ra.action.cancel')}
             </Button>
             <SaveButton disabled={isLoading} />
@@ -134,6 +131,6 @@ const AddLocationButton = ({ reference, source }) => {
       </Dialog>
     </RecordContextProvider>
   );
-}
+};
 
 export default AddLocationButton;

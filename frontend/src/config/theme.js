@@ -9,17 +9,11 @@ const theme = createTheme({
   ...raTheme,
   palette: {
     primary: {
-      main: process.env.REACT_APP_COLOR_PRIMARY
+      main: process.env.REACT_APP_COLOR_PRIMARY,
     },
     secondary: {
-      main: process.env.REACT_APP_COLOR_SECONDARY
+      main: process.env.REACT_APP_COLOR_SECONDARY,
     },
-    black: {
-      main: '#000'
-    },
-    grey: {
-      main: '#BDBDBD'
-    }
   },
   typography: {
     h1: {
@@ -100,22 +94,20 @@ const theme = createTheme({
   components: {
     ...raTheme.components,
     MuiButton: {
-      styleOverrides: {
-        contained: {
-          borderRadius: 8,
-          paddingLeft: 15,
-          paddingRight: 15,
-          height: 36,
-          minWidth: 100
-        },
-      }
+      contained: {
+        borderRadius: 8,
+        paddingLeft: 15,
+        paddingRight: 15,
+        height: 36,
+        minWidth: 100,
+      },
     },
     MuiAlert: {
       styleOverrides: {
         message: {
           paddingTop: 11,
         },
-      }
+      },
     },
     MuiIconButton: {
       styleOverrides: {
@@ -123,45 +115,26 @@ const theme = createTheme({
           padding: 8,
           paddingRight: 0,
         },
-      }
+      },
     },
     MuiScopedCssBaseline: {
       styleOverrides: {
         root: {
-          backgroundColor: 'unset'
-        }
+          backgroundColor: 'unset',
+        },
       },
     },
     RaCreateButton: {
-      styleOverrides: {
-        root: {
-          '&.RaCreateButton-floating': {
-            backgroundColor: process.env.REACT_APP_COLOR_SECONDARY,
-            bottom: 80
-          }
-        }
-      }
+      floating: {
+        backgroundColor: process.env.REACT_APP_COLOR_PRIMARY,
+        bottom: 80,
+      },
     },
     RaToolbar: {
-      styleOverrides: {
-        root: {
-          "&.RaToolbar-mobileToolbar": {
-            bottom: 56
-          }
-        }
-      }
+      mobileToolbar: {
+        bottom: 56,
+      },
     },
-    // Remove the large padding for the toolbar on mobile
-    RaSimpleForm: {
-      styleOverrides: {
-        root: {
-          [muiTheme.breakpoints.down('sm')]: {
-            paddingBottom: 0,
-            marginBottom: 68
-          },
-        }
-      }
-    }
   },
 });
 

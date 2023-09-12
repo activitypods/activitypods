@@ -31,13 +31,9 @@ export const LocationForm = ({ defaultValues }) => {
         fullWidth
         variant="filled"
       />
-      <TextInput
-        source="vcard:note"
-        fullWidth
-        helperText={translate('app.helper.location_comment')}
-      />
+      <TextInput source="vcard:note" fullWidth helperText={translate('app.helper.location_comment')} />
     </SimpleForm>
   );
-}
+};
 
 export default LocationForm;

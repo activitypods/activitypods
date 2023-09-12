@@ -1,18 +1,11 @@
 import React from 'react';
-import {
-  TextInput,
-  SimpleForm,
-  Toolbar,
-  SaveButton, 
-  useTranslate,
-  ImageField
-} from 'react-admin';
+import { TextInput, SimpleForm, Toolbar, SaveButton, useTranslate, ImageField } from 'react-admin';
 import { ImageInput } from '@semapps/input-components';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import SimpleBox from "../../layout/SimpleBox";
+import SimpleBox from '../../layout/SimpleBox';
 
-const ToolbarWithoutDelete = props => (
-  <Toolbar {...props} >
+const ToolbarWithoutDelete = (props) => (
+  <Toolbar {...props}>
     <SaveButton />
   </Toolbar>
 );

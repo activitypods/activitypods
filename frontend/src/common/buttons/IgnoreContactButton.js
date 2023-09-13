@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useShowContext, useNotify, useTranslate } from 'react-admin';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 import { useCollection, useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 
 const IgnoreContactButton = ({ ...rest }) => {
@@ -51,7 +51,7 @@ const IgnoreContactButton = ({ ...rest }) => {
       notify(e.message, 'error');
       setDisabled(false);
     }
-  }, [setDisabled, record, notify, refetchIgnored, outbox, url]);
+  }, [setDisabled, record, notify, refetchIgnored, outbox]);
 
   const isContactIgnored = useMemo(
     () => !!ignoredContacts.find((ignored) => ignored === record?.describes),

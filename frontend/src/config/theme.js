@@ -1,10 +1,7 @@
 import { createTheme } from '@mui/material/styles';
 import { defaultTheme as raTheme } from 'react-admin';
-
 const muiTheme = createTheme();
-
 const fontFamily = '"Open Sans", "sans-serif"';
-
 const theme = createTheme({
   ...raTheme,
   palette: {
@@ -13,6 +10,12 @@ const theme = createTheme({
     },
     secondary: {
       main: process.env.REACT_APP_COLOR_SECONDARY,
+    },
+    black: {
+      main: '#000',
+    },
+    grey: {
+      main: '#BDBDBD',
     },
   },
   typography: {
@@ -94,12 +97,14 @@ const theme = createTheme({
   components: {
     ...raTheme.components,
     MuiButton: {
-      contained: {
-        borderRadius: 8,
-        paddingLeft: 15,
-        paddingRight: 15,
-        height: 36,
-        minWidth: 100,
+      styleOverrides: {
+        contained: {
+          borderRadius: 8,
+          paddingLeft: 15,
+          paddingRight: 15,
+          height: 36,
+          minWidth: 100,
+        },
       },
     },
     MuiAlert: {
@@ -125,14 +130,33 @@ const theme = createTheme({
       },
     },
     RaCreateButton: {
-      floating: {
-        backgroundColor: process.env.REACT_APP_COLOR_PRIMARY,
-        bottom: 80,
+      styleOverrides: {
+        root: {
+          '&.RaCreateButton-floating': {
+            backgroundColor: process.env.REACT_APP_COLOR_SECONDARY,
+            bottom: 80,
+          },
+        },
       },
     },
     RaToolbar: {
-      mobileToolbar: {
-        bottom: 56,
+      styleOverrides: {
+        root: {
+          '&.RaToolbar-mobileToolbar': {
+            bottom: 56,
+          },
+        },
+      },
+    },
+    // Remove the large padding for the toolbar on mobile
+    RaSimpleForm: {
+      styleOverrides: {
+        root: {
+          [muiTheme.breakpoints.down('sm')]: {
+            paddingBottom: 0,
+            marginBottom: 68,
+          },
+        },
       },
     },
   },

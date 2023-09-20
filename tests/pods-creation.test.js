@@ -1,7 +1,7 @@
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { initialize, clearDataset, listDatasets } = require('./initialize');
 const path = require('path');
 const urlJoin = require('url-join');
+const { MIME_TYPES } = require('@semapps/mime-types');
+const { initialize, clearDataset, listDatasets } = require('./initialize');
 
 jest.setTimeout(80000);
 

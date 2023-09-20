@@ -1,8 +1,8 @@
 const waitForExpect = require('wait-for-expect');
-const { initialize, clearDataset, listDatasets } = require('./initialize');
 const path = require('path');
 const urlJoin = require('url-join');
 const fetch = require('node-fetch');
+const { initialize, clearDataset, listDatasets } = require('./initialize');
 
 jest.setTimeout(50000);
 
@@ -161,7 +161,7 @@ describe('Test pods creation via API', () => {
   });
 
   test('Alice can post on her Pod', async () => {
-    const { headers } = await fetchServer(urlJoin(alice.id, 'data'), {
+    const { status, headers } = await fetchServer(urlJoin(alice.id, 'data'), {
       method: 'POST',
       body: {
         '@context': 'https://activitypods.org/context.json',
@@ -169,6 +169,8 @@ describe('Test pods creation via API', () => {
         'pair:label': 'ActivityPods',
       },
     });
+
+    expect(status).toBe(201);
 
     projectUri = headers.get('Location');
     expect(projectUri).not.toBeUndefined();

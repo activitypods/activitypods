@@ -22,6 +22,7 @@
     "@semapps/webid": "0.6.0-alpha.5",
     "moleculer": "^0.14.19",
     "moleculer-web": "^0.10.0-beta1",
+    "node-fetch": "2.7.0",
     "url-join": "^4.0.1"
   },
   "publishConfig": {

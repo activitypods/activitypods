@@ -25,6 +25,7 @@ const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
 const ApiService = require('./services/api');
 const FrontAppsService = require('./services/front-apps');
+const CapabilitiesService = require('./services/capabilities');
 const containers = require('./config/containers');
 
 const CoreService = {
@@ -204,6 +205,10 @@ const CoreService = {
         frontendUrl,
         ontologies
       }
+    });
+
+    this.broker.createService(CapabilitiesService, {
+      settings: { path: '/capabilities' }
     });
   }
 };

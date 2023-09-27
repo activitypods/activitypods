@@ -8,12 +8,12 @@ const SyreenApp = {
   name: 'syreen',
   settings: {
     groupUri: null,
-    alertBotUri: null,
+    alertBotUri: null
   },
   dependencies: ['ldp.registry'],
   created() {
     if (!this.settings.groupUri) {
-      throw new Error('No groupUri setting defined for Syreen app !')
+      throw new Error('No groupUri setting defined for Syreen app !');
     }
 
     this.broker.createService(AlertService, {
@@ -42,9 +42,9 @@ const SyreenApp = {
         anon: {
           read: true
         }
-      },
+      }
     });
-  },
+  }
 };
 
 module.exports = SyreenApp;

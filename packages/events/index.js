@@ -1,3 +1,3 @@
 module.exports = {
-  EventsApp: require('./app'),
+  EventsApp: require('./app')
 };

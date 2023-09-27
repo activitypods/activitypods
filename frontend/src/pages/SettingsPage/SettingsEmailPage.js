@@ -14,18 +14,18 @@ const SettingsEmailPage = () => {
 
   const [formDefaultValue, setFormDefaultValue] = useState({
     email: '',
-    currentPassword: '',
+    currentPassword: ''
   });
 
   useEffect(() => {
-    authProvider.getAccountSettings().then((res) => {
+    authProvider.getAccountSettings().then(res => {
       setFormDefaultValue({ ...formDefaultValue, email: res.email });
     });
     // eslint-disable-next-line
   }, [setFormDefaultValue, authProvider]);
 
   const onSubmit = useCallback(
-    async (params) => {
+    async params => {
       try {
         await authProvider.updateAccountSettings({ ...params });
         notify('auth.message.account_settings_updated', 'success');

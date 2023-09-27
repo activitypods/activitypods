@@ -3,7 +3,7 @@ import {
   useCheckAuthenticated,
   passwordScorer,
   PasswordStrengthIndicator,
-  validatePasswordStrength,
+  validatePasswordStrength
 } from '@semapps/auth-provider';
 import { required, useAuthProvider, useNotify, useTranslate } from 'react-admin';
 import { SimpleForm, TextInput } from 'react-admin';
@@ -16,7 +16,7 @@ const validateConfirmNewPassword = [
       return 'app.validation.confirmNewPassword';
     }
     return;
-  },
+  }
 ];
 
 const SettingsPasswordPage = () => {
@@ -28,7 +28,7 @@ const SettingsPasswordPage = () => {
   const [newPassword, setNewPassword] = React.useState('');
 
   const onSubmit = useCallback(
-    async (params) => {
+    async params => {
       try {
         await authProvider.updateAccountSettings({ ...params });
         notify('auth.message.account_settings_updated', 'success');
@@ -70,7 +70,7 @@ const SettingsPasswordPage = () => {
               source="newPassword"
               type="password"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              onChange={e => setNewPassword(e.target.value)}
               validate={[validatePasswordStrength()]}
               fullWidth
             />

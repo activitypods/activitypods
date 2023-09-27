@@ -8,8 +8,8 @@ import makeStyles from '@mui/styles/makeStyles';
 const useStyles = makeStyles(() => ({
   input: {
     marginTop: 0,
-    marginBottom: -20,
-  },
+    marginBottom: -20
+  }
 }));
 
 const ContactField = ({ source, context }) => {
@@ -26,7 +26,7 @@ const ContactField = ({ source, context }) => {
 
   const isOwner = identity?.id === record[source];
 
-  const onSubmit = async (values) => {
+  const onSubmit = async values => {
     try {
       await outbox.post({
         type: OBJECT_TYPES.NOTE,
@@ -35,8 +35,8 @@ const ContactField = ({ source, context }) => {
         context: context ? record[context] : undefined,
         to:
           isOwner && record.type === OBJECT_TYPES.EVENT
-            ? attendees.filter((userUri) => userUri !== record[source])
-            : record[source],
+            ? attendees.filter(userUri => userUri !== record[source])
+            : record[source]
       });
       notify('app.notification.message_sent', 'success');
     } catch (e) {
@@ -73,7 +73,7 @@ const ContactField = ({ source, context }) => {
 };
 
 ContactField.defaultProps = {
-  addLabel: true,
+  addLabel: true
 };
 
 export default ContactField;

@@ -1,3 +1,3 @@
 module.exports = {
-  MessagesApp: require('./app'),
+  MessagesApp: require('./app')
 };

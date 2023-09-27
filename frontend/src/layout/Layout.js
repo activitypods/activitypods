@@ -5,9 +5,9 @@ import AppBar from './AppBar';
 import MenuBar from './MenuBar';
 import BottomBar from './BottomBar';
 
-const Layout = (props) => {
+const Layout = props => {
   const { children, title } = props;
-  const xs = useMediaQuery((theme) => theme.breakpoints.down('sm'), { noSsr: true });
+  const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
   return (
     <>
       <ScrollToTop />

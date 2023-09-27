@@ -4,23 +4,23 @@ import { Grid, Avatar } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import DetailsList from './DetailsList';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   root: {
     flexGrow: 1,
     margin: theme.spacing(-1),
     marginBottom: theme.spacing(2),
     [theme.breakpoints.down('sm')]: {
-      margin: theme.spacing(2),
-    },
+      margin: theme.spacing(2)
+    }
   },
   avatar: {
     width: 200,
     height: 200,
     [theme.breakpoints.down('sm')]: {
       width: 120,
-      height: 120,
-    },
-  },
+      height: 120
+    }
+  }
 }));
 
 const Hero = ({ children, image }) => {

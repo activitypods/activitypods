@@ -5,10 +5,10 @@ import { Field, Form } from 'react-final-form';
 import { useTranslate } from 'react-admin';
 import useRequestContact from '../../hooks/useRequestContact';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   root: {
     marginTop: 5,
-    marginBottom: 24,
+    marginBottom: 24
   },
   title: {
     backgroundRepeat: 'no-repeat',
@@ -17,23 +17,23 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.primary.contrastText,
     padding: '10px 14px',
     [theme.breakpoints.down('sm')]: {
-      padding: '8px 16px',
-    },
+      padding: '8px 16px'
+    }
   },
   block: {
-    backgroundColor: 'white',
+    backgroundColor: 'white'
   },
   button: {
     backgroundColor: 'white',
-    textAlign: 'center',
+    textAlign: 'center'
   },
   status: {
     marginTop: 8,
-    color: theme.palette.primary.main,
+    color: theme.palette.primary.main
   },
   helper: {
-    marginBottom: 4,
-  },
+    marginBottom: 4
+  }
 }));
 
 const Input = ({ meta: { touched, error }, input: inputProps, ...props }) => (

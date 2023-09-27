@@ -23,7 +23,7 @@ const EditView = ({ title, actions, children }) => (
 );
 
 EditView.defaultProps = {
-  actions: [<ListButton />, <ShowButton />],
+  actions: [<ListButton />, <ShowButton />]
 };
 
 export default EditView;

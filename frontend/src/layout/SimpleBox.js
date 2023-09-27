@@ -2,30 +2,30 @@ import React from 'react';
 import { Box, Card, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   '@global': {
     body: {
-      backgroundColor: theme.palette.primary.main,
-    },
+      backgroundColor: theme.palette.primary.main
+    }
   },
   card: {
     minWidth: 300,
     maxWidth: 500,
     marginTop: '6em',
     [theme.breakpoints.down('sm')]: {
-      margin: '1em',
-    },
+      margin: '1em'
+    }
   },
   icon: {
     marginTop: 5,
-    marginRight: 5,
+    marginRight: 5
   },
   title: {
     [theme.breakpoints.down('sm')]: {
       fontWeight: 'bold',
-      marginTop: 12,
-    },
-  },
+      marginTop: 12
+    }
+  }
 }));
 
 const SimpleBox = ({ title, icon, text, children }) => {

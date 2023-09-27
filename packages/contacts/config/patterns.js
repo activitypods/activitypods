@@ -6,9 +6,9 @@ const CONTACT_REQUEST = {
   object: {
     type: ACTIVITY_TYPES.ADD,
     object: {
-      type: OBJECT_TYPES.PROFILE,
-    },
-  },
+      type: OBJECT_TYPES.PROFILE
+    }
+  }
 };
 
 const ACCEPT_CONTACT_REQUEST = {
@@ -18,10 +18,10 @@ const ACCEPT_CONTACT_REQUEST = {
     object: {
       type: ACTIVITY_TYPES.ADD,
       object: {
-        type: OBJECT_TYPES.PROFILE,
-      },
-    },
-  },
+        type: OBJECT_TYPES.PROFILE
+      }
+    }
+  }
 };
 
 const IGNORE_CONTACT_REQUEST = {
@@ -31,10 +31,10 @@ const IGNORE_CONTACT_REQUEST = {
     object: {
       type: ACTIVITY_TYPES.ADD,
       object: {
-        type: OBJECT_TYPES.PROFILE,
-      },
-    },
-  },
+        type: OBJECT_TYPES.PROFILE
+      }
+    }
+  }
 };
 
 const REJECT_CONTACT_REQUEST = {
@@ -44,29 +44,29 @@ const REJECT_CONTACT_REQUEST = {
     object: {
       type: ACTIVITY_TYPES.ADD,
       object: {
-        type: OBJECT_TYPES.PROFILE,
-      },
-    },
-  },
+        type: OBJECT_TYPES.PROFILE
+      }
+    }
+  }
 };
 
 const REMOVE_CONTACT = {
   type: ACTIVITY_TYPES.REMOVE,
   object: {
-    type: ACTOR_TYPES.PERSON,
-  },
+    type: ACTOR_TYPES.PERSON
+  }
 };
 
 const IGNORE_CONTACT = {
   type: ACTIVITY_TYPES.IGNORE,
   object: {
-    type: ACTOR_TYPES.PERSON,
-  },
+    type: ACTOR_TYPES.PERSON
+  }
 };
 
 const UNDO_IGNORE_CONTACT = {
   type: ACTIVITY_TYPES.UNDO,
-  object: IGNORE_CONTACT,
+  object: IGNORE_CONTACT
 };
 
 const OFFER_DELETE_ACTOR = {
@@ -74,9 +74,9 @@ const OFFER_DELETE_ACTOR = {
   object: {
     type: ACTIVITY_TYPES.DELETE,
     object: {
-      type: ACTOR_TYPES.PERSON,
-    },
-  },
+      type: ACTOR_TYPES.PERSON
+    }
+  }
 };
 
 module.exports = {
@@ -87,5 +87,5 @@ module.exports = {
   REMOVE_CONTACT,
   IGNORE_CONTACT,
   UNDO_IGNORE_CONTACT,
-  OFFER_DELETE_ACTOR,
+  OFFER_DELETE_ACTOR
 };

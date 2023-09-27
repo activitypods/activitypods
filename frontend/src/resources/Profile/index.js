@@ -10,11 +10,11 @@ export default {
     list: ProfileList,
     show: ProfileShow,
     options: {
-      label: 'Profiles',
-    },
+      label: 'Profiles'
+    }
   },
   dataModel: {
-    types: ['vcard:Individual', 'as:Profile'],
+    types: ['vcard:Individual', 'as:Profile']
   },
   translations: {
     en: {
@@ -27,8 +27,8 @@ export default {
         'vcard:photo': 'Picture',
         'vcard:hasAddress': 'Home address',
         'foaf:tipjar': 'Ğ1 account',
-        'dc:created': 'Account created',
-      },
+        'dc:created': 'Account created'
+      }
     },
     fr: {
       name: 'Profil |||| Profils',
@@ -40,8 +40,8 @@ export default {
         'vcard:photo': 'Photo',
         'vcard:hasAddress': 'Adresse du domicile',
         'foaf:tipjar': 'Compte Ğ1',
-        'dc:created': "Date d'inscription",
-      },
-    },
-  },
+        'dc:created': "Date d'inscription"
+      }
+    }
+  }
 };

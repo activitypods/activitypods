@@ -10,22 +10,22 @@ export default {
     create: GroupCreate,
     icon: GroupIcon,
     options: {
-      label: 'Group',
-    },
+      label: 'Group'
+    }
   },
   dataModel: {
     types: ['vcard:Group'],
     list: {
       servers: 'pod',
-      blankNodes: ['vcard:hasMember'],
-    },
+      blankNodes: ['vcard:hasMember']
+    }
   },
   translations: {
     en: {
-      name: 'Group |||| Groups',
+      name: 'Group |||| Groups'
     },
     fr: {
-      name: 'Groupe |||| Groupes',
-    },
-  },
+      name: 'Groupe |||| Groupes'
+    }
+  }
 };

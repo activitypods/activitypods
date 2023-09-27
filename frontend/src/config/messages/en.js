@@ -23,7 +23,7 @@ module.exports = {
       signup: 'Signup',
       reset_password: 'Reset password',
       set_new_password: 'Set new password',
-      undo_ignore_contact: 'No longer ignore',
+      undo_ignore_contact: 'No longer ignore'
     },
     group: {
       members: 'Members',
@@ -33,7 +33,7 @@ module.exports = {
       profile_name: 'Name',
       profile: 'Profile',
       group: 'Group',
-      add_members: 'Add members',
+      add_members: 'Add members'
     },
     page: {
       contacts: 'My network',
@@ -51,22 +51,22 @@ module.exports = {
       settings_password: 'Update password',
       add_contact: 'Send a connection request',
       create_profile: 'Create your profile',
-      authorize: 'Authorization required',
+      authorize: 'Authorization required'
     },
     setting: {
       email: 'Email address',
       password: 'Password',
       addresses: 'My addresses',
-      address: '1 address |||| %{smart_count} addresses',
+      address: '1 address |||| %{smart_count} addresses'
     },
     card: {
       add_contact: 'Add a contact',
       contact_requests: 'Contact requests',
-      share_contact: 'My contact link',
+      share_contact: 'My contact link'
     },
     block: {
       contact_requests: 'New contact requests',
-      g1_account: 'G1 account',
+      g1_account: 'G1 account'
     },
     input: {
       about_you: 'A few words about you',
@@ -75,7 +75,7 @@ module.exports = {
       email: 'Email',
       current_password: 'Current password',
       new_password: 'New password',
-      confirm_new_password: 'Confirm new password',
+      confirm_new_password: 'Confirm new password'
     },
     helper: {
       add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',
@@ -93,14 +93,14 @@ module.exports = {
       set_new_password: 'Please enter your email address and a new password below',
       create_profile:
         'Now that your account is created, please create your profile. By default, your profile will only be visible to the people you accept into your network.',
-      authorize: 'Do you allow the website %{appDomain} to access your POD?',
+      authorize: 'Do you allow the website %{appDomain} to access your POD?'
     },
     message: {
       copied_to_clipboard: 'Copied !',
       no_condition: 'None',
       you_participated_to_same_event: 'You participated to the same event',
       verified_app: 'Verified application',
-      verified: 'Verified',
+      verified: 'Verified'
     },
     notification: {
       contact_request_accepted: 'Contact request accepted',
@@ -125,36 +125,36 @@ module.exports = {
       verified_applications_load_failed: 'Unable to load the list of verified applications',
       app_uninstalled: 'Application uninstalled',
       home_address_updated: 'Home address updated',
-      home_address_deleted: 'Home address deleted',
+      home_address_deleted: 'Home address deleted'
     },
     user: {
       unknown: 'Unknown',
-      location: "At %{surname}'s",
+      location: "At %{surname}'s"
     },
     validation: {
       email: 'Must be a valid email',
       confirmNewPassword: 'Must be the same as new password field',
       password_strength: 'Password strength',
-      password_too_weak: 'Password too weak. Increase length or add special characters.',
+      password_too_weak: 'Password too weak. Increase length or add special characters.'
     },
     steps: {
       title: 'How does it work?',
       1: {
         title: 'I create my personal space (POD)',
-        text: "One place for all my data, it's about time!",
+        text: "One place for all my data, it's about time!"
       },
       2: {
         title: 'I connect to compatible applications',
-        text: 'Meetings, classified ads... and many more to come!',
+        text: 'Meetings, classified ads... and many more to come!'
       },
       3: {
         title: 'My data is securely stored on my POD',
-        text: "Applications' administrators do not have access to it.",
+        text: "Applications' administrators do not have access to it."
       },
       4: {
         title: 'I choose who I share my data with',
-        text: 'At any time, I know who sees my data. I can revoke the rights.',
-      },
-    },
-  },
+        text: 'At any time, I know who sees my data. I can revoke the rights.'
+      }
+    }
+  }
 };

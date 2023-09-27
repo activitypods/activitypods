@@ -11,7 +11,7 @@ import {
   DialogActions,
   TextField,
   MenuItem,
-  Menu,
+  Menu
 } from '@mui/material';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import EditIcon from '@mui/icons-material//Edit';
@@ -41,7 +41,7 @@ const colors = ['lightblue', 'lightgreen', 'lightpink', 'lightyellow', 'lightgre
  * @param {TagsListEditProps} props
  * @returns {JSX.Element | null}
  */
-const TagsListEdit = (props) => {
+const TagsListEdit = props => {
   const {
     relationshipPredicate,
     namePredicate,
@@ -51,7 +51,7 @@ const TagsListEdit = (props) => {
     recordIdPredicate,
     tagResource,
     showColors,
-    allowCreate,
+    allowCreate
   } = props;
 
   // For create new tag dialog.
@@ -84,15 +84,15 @@ const TagsListEdit = (props) => {
   const tagMemberships = useMemo(
     () =>
       tagDataState
-        ?.filter((tagObject) => tagObject[relationshipPredicate]?.includes(recordId))
-        .map((tagObject) => tagObject[tagIdPredicate]) || [],
+        ?.filter(tagObject => tagObject[relationshipPredicate]?.includes(recordId))
+        .map(tagObject => tagObject[tagIdPredicate]) || [],
     [tagDataState, recordId, relationshipPredicate, tagIdPredicate]
   );
 
   const setMemberships = useCallback(
-    (newTagMemberships) => {
+    newTagMemberships => {
       // First, compute the updated tag states.
-      const newTagData = tagDataState.map((tagObject) => {
+      const newTagData = tagDataState.map(tagObject => {
         const originalTagMemberships = arrayFromLdField(tagObject[relationshipPredicate]);
         const isOriginallyMember = originalTagMemberships.includes(recordId);
         const isNowMember = newTagMemberships.includes(tagObject[tagIdPredicate]);
@@ -106,22 +106,22 @@ const TagsListEdit = (props) => {
         if (isNowMember) {
           newMembers = [...originalTagMemberships, recordId];
         } else {
-          newMembers = originalTagMemberships.filter((memberId) => memberId !== recordId);
+          newMembers = originalTagMemberships.filter(memberId => memberId !== recordId);
         }
         return { hasChanged: true, tagObject: { ...tagObject, [relationshipPredicate]: newMembers } };
       });
 
       // Then, update the local state to show the user immediately.
-      setTagDataState(newTagData.map((obj) => obj.tagObject));
+      setTagDataState(newTagData.map(obj => obj.tagObject));
 
       // Persist all tag resources changes where the membership has been modified (added / removed).
       Promise.all(
         newTagData
-          .filter((obj) => obj.hasChanged)
-          .map((obj) => {
+          .filter(obj => obj.hasChanged)
+          .map(obj => {
             return update(tagResource, {
               id: obj.tagObject[tagIdPredicate],
-              data: obj.tagObject,
+              data: obj.tagObject
             });
           })
       ).then(() => {});
@@ -132,24 +132,24 @@ const TagsListEdit = (props) => {
   // Convert tagRelationshipData into a common tag format.
   const tags = useMemo(
     () =>
-      tagDataState?.map((tagObject) => ({
+      tagDataState?.map(tagObject => ({
         id: tagObject[tagIdPredicate],
         name: tagObject[namePredicate],
         // The color or a color generated from the name.
         color: tagObject[colorPredicate] || (showColors && colorFromString(tagObject[namePredicate])),
         avatar: tagObject[avatarPredicate],
-        owners: arrayFromLdField(tagObject[relationshipPredicate]),
+        owners: arrayFromLdField(tagObject[relationshipPredicate])
       })),
     [avatarPredicate, colorPredicate, namePredicate, relationshipPredicate, showColors, tagDataState, tagIdPredicate]
   );
 
-  const selectedTags = useMemo(() => tags?.filter((tag) => tagMemberships.includes(tag.id)), [tags, tagMemberships]);
-  const unselectedTags = useMemo(() => tags?.filter((tag) => !tagMemberships.includes(tag.id)), [tags, tagMemberships]);
+  const selectedTags = useMemo(() => tags?.filter(tag => tagMemberships.includes(tag.id)), [tags, tagMemberships]);
+  const unselectedTags = useMemo(() => tags?.filter(tag => !tagMemberships.includes(tag.id)), [tags, tagMemberships]);
 
   /**
    * @param {ReactDivMouseEvent} event
    */
-  const handleOpen = (event) => {
+  const handleOpen = event => {
     setMenuAnchorEl(event.currentTarget);
   };
 
@@ -160,14 +160,14 @@ const TagsListEdit = (props) => {
   /**
    * @param {Identifier} id
    */
-  const handleDeleteTag = (id) => {
-    setMemberships(tagMemberships.filter((tagId) => tagId !== id));
+  const handleDeleteTag = id => {
+    setMemberships(tagMemberships.filter(tagId => tagId !== id));
   };
 
   /**
    * @param {Identifier} id
    */
-  const handleAddTag = (id) => {
+  const handleAddTag = id => {
     setMemberships([...tagMemberships, id]);
     setMenuAnchorEl(null);
   };
@@ -181,7 +181,7 @@ const TagsListEdit = (props) => {
   /**
    * @param {ReactFormEvent} event
    */
-  const handleCreateTag = (event) => {
+  const handleCreateTag = event => {
     event.preventDefault();
     setDisabledCreateBtn(true);
     create(
@@ -190,15 +190,15 @@ const TagsListEdit = (props) => {
         data: {
           [namePredicate]: newTagName,
           [relationshipPredicate]: [recordId],
-          ...((colorPredicate && { [colorPredicate]: newTagColor }) || {}),
-        },
+          ...((colorPredicate && { [colorPredicate]: newTagColor }) || {})
+        }
       },
       {
         onSuccess: () => {
           setMenuAnchorEl(null);
           setCreateDialogOpen(false);
           refetch();
-        },
+        }
       }
     );
   };
@@ -206,7 +206,7 @@ const TagsListEdit = (props) => {
   return (
     <>
       {isLoadingAllTags && <LoadingIndicator />}
-      {selectedTags?.map((tag) => (
+      {selectedTags?.map(tag => (
         <Chip
           key={tag.id}
           size="small"
@@ -224,14 +224,14 @@ const TagsListEdit = (props) => {
         sx={{ border: 0, mr: 1, mb: 1 }}
       />
       <Menu open={Boolean(menuAnchorEl)} onClose={handleClose} anchorEl={menuAnchorEl}>
-        {unselectedTags?.map((tag) => (
+        {unselectedTags?.map(tag => (
           <MenuItem key={tag.id} onClick={() => handleAddTag(tag.id)}>
             <Chip
               size="small"
               label={tag.name}
               sx={{
                 backgroundColor: tag.color,
-                border: 0,
+                border: 0
               }}
               onClick={() => handleAddTag(tag.id)}
             />
@@ -263,12 +263,12 @@ const TagsListEdit = (props) => {
                 label="Tag name"
                 fullWidth
                 value={newTagName}
-                onChange={(event) => setNewTagName(event.target.value)}
+                onChange={event => setNewTagName(event.target.value)}
                 sx={{ mt: 1 }}
               />
               {colorPredicate && (
                 <Box display="flex" flexWrap="wrap" width={230} mt={2}>
-                  {colors.map((color) => (
+                  {colors.map(color => (
                     <RoundButton
                       key={color}
                       color={color}
@@ -300,7 +300,7 @@ const TagsListEdit = (props) => {
  * @param {RoundButtonProps} props
  * @returns {JSX.Element}
  */
-const RoundButton = (props) => (
+const RoundButton = props => (
   <Box
     component="button"
     type="button"
@@ -311,7 +311,7 @@ const RoundButton = (props) => (
       borderRadius: 15,
       border: props.selected ? '2px solid grey' : 'none',
       display: 'inline-block',
-      margin: 1,
+      margin: 1
     }}
     onClick={props.handleClick}
   />
@@ -323,7 +323,7 @@ TagsListEdit.defaultProps = {
   showColors: true,
   avatarPredicate: undefined,
   colorPredicate: undefined,
-  allowCreate: true,
+  allowCreate: true
 };
 
 export default TagsListEdit;

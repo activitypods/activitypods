@@ -18,7 +18,7 @@ const IgnoreContactButton = ({ ...rest }) => {
         type: ACTIVITY_TYPES.IGNORE,
         actor: outbox.owner,
         object: record.describes,
-        origin: url,
+        origin: url
       });
       setTimeout(() => {
         refetchIgnored();
@@ -39,8 +39,8 @@ const IgnoreContactButton = ({ ...rest }) => {
         object: {
           type: ACTIVITY_TYPES.IGNORE,
           actor: outbox.owner,
-          object: record.describes,
-        },
+          object: record.describes
+        }
       });
       setTimeout(() => {
         refetchIgnored();
@@ -54,7 +54,7 @@ const IgnoreContactButton = ({ ...rest }) => {
   }, [setDisabled, record, notify, refetchIgnored, outbox]);
 
   const isContactIgnored = useMemo(
-    () => !!ignoredContacts.find((ignored) => ignored === record?.describes),
+    () => !!ignoredContacts.find(ignored => ignored === record?.describes),
     [ignoredContacts, record]
   );
 

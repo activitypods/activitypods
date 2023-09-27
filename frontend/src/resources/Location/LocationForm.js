@@ -11,10 +11,10 @@ export const LocationForm = ({ defaultValues }) => {
         mapboxConfig={{
           access_token: process.env.REACT_APP_MAPBOX_ACCESS_TOKEN,
           types: ['place', 'address'],
-          country: ['fr', 'be', 'ch'],
+          country: ['fr', 'be', 'ch']
         }}
         source="vcard:hasAddress"
-        parse={(value) => ({
+        parse={value => ({
           type: 'vcard:Address',
           'vcard:given-name': value.place_name,
           'vcard:locality': value.place_type[0] === 'place' ? value.text : extractContext(value.context, 'place'),
@@ -23,10 +23,10 @@ export const LocationForm = ({ defaultValues }) => {
           'vcard:country-name': extractContext(value.context, 'country'),
           'vcard:hasGeo': {
             'vcard:longitude': value.center[0],
-            'vcard:latitude': value.center[1],
-          },
+            'vcard:latitude': value.center[1]
+          }
         })}
-        optionText={(resource) => resource['vcard:given-name']}
+        optionText={resource => resource['vcard:given-name']}
         validate={[required()]}
         fullWidth
         variant="filled"

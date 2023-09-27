@@ -7,7 +7,7 @@ const ContactsApp = {
     this.broker.createService(ManagerService);
 
     this.broker.createService(RequestService);
-  },
+  }
 };
 
 module.exports = ContactsApp;

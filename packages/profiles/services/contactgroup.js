@@ -8,6 +8,6 @@ module.exports = {
     path: '/groups',
     acceptedTypes: ['vcard:Group'],
     permissions: {},
-    newResourcesPermissions: {},
-  },
+    newResourcesPermissions: {}
+  }
 };

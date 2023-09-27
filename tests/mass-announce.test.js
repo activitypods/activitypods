@@ -29,8 +29,8 @@ beforeAll(async () => {
   await broker.createService({
     mixins: [require('./services/notification.service')],
     actions: {
-      send: mockSendNotification,
-    },
+      send: mockSendNotification
+    }
   });
 
   await broker.start();
@@ -52,7 +52,7 @@ describe('Test mass sharing', () => {
         username: `user${i}`,
         email: `user${i}@test.com`,
         password: 'test',
-        name: `User #${i}`,
+        name: `User #${i}`
       });
 
       // actorsUris[i] = urlJoin(CONFIG.HOME_URL, `user${i}`);
@@ -72,13 +72,13 @@ describe('Test mass sharing', () => {
       containerUri: urlJoin(actorsUris[1], 'data/events'),
       resource: {
         type: OBJECT_TYPES.EVENT,
-        name: 'Mass party !!',
+        name: 'Mass party !!'
       },
       contentType: MIME_TYPES.JSON,
-      webId: actorsUris[1],
+      webId: actorsUris[1]
     });
 
-    const recipients = actorsUris.filter((uri) => uri !== actorsUris[1]);
+    const recipients = actorsUris.filter(uri => uri !== actorsUris[1]);
 
     await broker.call('activitypub.outbox.post', {
       collectionUri: urlJoin(actorsUris[1], 'outbox'),
@@ -86,7 +86,7 @@ describe('Test mass sharing', () => {
       actor: actorsUris[1],
       object: eventUri,
       target: [recipients],
-      to: [recipients],
+      to: [recipients]
     });
 
     for (let i = 2; i <= NUM_ACTORS; i++) {
@@ -96,7 +96,7 @@ describe('Test mass sharing', () => {
           broker.call('ldp.container.includes', {
             containerUri: urlJoin(actorsUris[i], '/data/events'),
             resourceUri: eventUri,
-            webId: 'system',
+            webId: 'system'
           })
         ).resolves.toBeTruthy();
       }, 90000);

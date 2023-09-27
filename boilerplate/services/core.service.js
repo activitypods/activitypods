@@ -12,7 +12,7 @@ module.exports = {
     triplestore: {
       url: CONFIG.SPARQL_ENDPOINT,
       user: CONFIG.JENA_USER,
-      password: CONFIG.JENA_PASSWORD,
+      password: CONFIG.JENA_PASSWORD
     },
     jsonContext: CONFIG.JSON_CONTEXT,
     queueServiceUrl: CONFIG.QUEUE_SERVICE_URL,
@@ -28,12 +28,12 @@ module.exports = {
         transport,
         defaults: {
           locale: CONFIG.DEFAULT_LOCALE,
-          frontUrl: CONFIG.FRONTEND_URL,
-        },
-      },
+          frontUrl: CONFIG.FRONTEND_URL
+        }
+      }
     },
     api: {
-      port: CONFIG.PORT,
-    },
-  },
+      port: CONFIG.PORT
+    }
+  }
 };

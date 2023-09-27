@@ -11,8 +11,8 @@ const useStyles = makeStyles(() => ({
     backgroundColor: 'white',
     marginBottom: 8,
     padding: 0,
-    boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)',
-  },
+    boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)'
+  }
 }));
 
 const ListWithSwitches = () => {
@@ -30,7 +30,7 @@ const ListWithSwitches = () => {
   }, [setCheckedId, identity]);
 
   const setHomeAddress = useCallback(
-    (id) => {
+    id => {
       // If click on current address, no home address
       if (id === checkedId) id = undefined;
       setCheckedId(id);
@@ -39,9 +39,9 @@ const ListWithSwitches = () => {
           id: identity?.profileData?.id,
           data: {
             ...identity?.profileData,
-            'vcard:hasAddress': id,
+            'vcard:hasAddress': id
           },
-          previousData: identity?.profileData,
+          previousData: identity?.profileData
         })
         .then(() => {
           refetchIdentity();
@@ -58,14 +58,14 @@ const ListWithSwitches = () => {
   return (
     <MUIList>
       {data &&
-        data.map((record) => (
+        data.map(record => (
           <ListItem
             key={record.id}
             className={classes.listItem}
             secondaryAction={
               <Switch
                 edge="end"
-                onChange={(e) => {
+                onChange={e => {
                   e.preventDefault();
                   setHomeAddress(record.id);
                 }}

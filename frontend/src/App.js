@@ -13,22 +13,22 @@ import Layout from './layout/Layout';
 import theme from './config/theme';
 
 import HomePage from './pages/HomePage';
-import SettingsPage from "./pages/SettingsPage/SettingsPage";
-import SettingsPasswordPage from "./pages/SettingsPage/SettingsPasswordPage";
-import SettingsEmailPage from "./pages/SettingsPage/SettingsEmailPage";
-import ProfileCreatePage from "./pages/ProfileCreatePage/ProfileCreatePage";
-import AuthorizePage from "./pages/AuthorizePage/AuthorizePage";
-import UserPage from "./pages/UserPage";
-import RedirectPage from "./pages/RedirectPage";
+import SettingsPage from './pages/SettingsPage/SettingsPage';
+import SettingsPasswordPage from './pages/SettingsPage/SettingsPasswordPage';
+import SettingsEmailPage from './pages/SettingsPage/SettingsEmailPage';
+import ProfileCreatePage from './pages/ProfileCreatePage/ProfileCreatePage';
+import AuthorizePage from './pages/AuthorizePage/AuthorizePage';
+import UserPage from './pages/UserPage';
+import RedirectPage from './pages/RedirectPage';
 
-const LoginPage = () => 
-  <LocalLoginPage 
-    allowUsername 
-    postSignupRedirect="/initialize" 
-    postLoginRedirect="/authorize" 
+const LoginPage = () => (
+  <LocalLoginPage
+    allowUsername
+    postSignupRedirect="/initialize"
+    postLoginRedirect="/authorize"
     additionalSignupValues={{ preferredLocale: process.env.REACT_APP_LANG }}
-    
-  />;
+  />
+);
 
 const App = () => (
   <StyledEngineProvider injectFirst>

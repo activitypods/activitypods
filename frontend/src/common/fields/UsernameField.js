@@ -4,21 +4,21 @@ import { formatUsername } from '../../utils';
 import CopyButton from '../buttons/CopyButton';
 import makeStyles from '@mui/styles/makeStyles';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   wrapper: {
-    position: 'relative',
+    position: 'relative'
   },
   text: {
     overflow: 'hidden',
     whiteSpace: 'nowrap',
     textOverflow: 'ellipsis',
-    marginRight: 15,
+    marginRight: 15
   },
   copyButton: {
     position: 'absolute',
     top: -8,
-    right: -8,
-  },
+    right: -8
+  }
 }));
 
 const UsernameField = ({ source, showCopyButton }) => {
@@ -39,7 +39,7 @@ const UsernameField = ({ source, showCopyButton }) => {
 
 UsernameField.defaultProps = {
   addLabel: true,
-  showCopyButton: true,
+  showCopyButton: true
 };
 
 export default UsernameField;

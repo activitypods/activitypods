@@ -11,7 +11,7 @@ import {
   ListItemAvatar,
   ListItemText,
   ListItemSecondaryAction,
-  IconButton,
+  IconButton
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useNavigate } from 'react-router-dom';
@@ -25,8 +25,8 @@ const useStyles = makeStyles(() => ({
     backgroundColor: 'white',
     padding: 0,
     marginBottom: 8,
-    boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)',
-  },
+    boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)'
+  }
 }));
 
 const SettingsPage = () => {
@@ -40,7 +40,7 @@ const SettingsPage = () => {
   const { data } = useGetList('Location');
 
   useEffect(() => {
-    authProvider.getAccountSettings().then((res) => setAccountSettings(res));
+    authProvider.getAccountSettings().then(res => setAccountSettings(res));
   }, [setAccountSettings, authProvider]);
 
   const settings = [
@@ -48,20 +48,20 @@ const SettingsPage = () => {
       path: '/Location',
       icon: <PlaceIcon />,
       label: 'app.setting.addresses',
-      value: translate('app.setting.address', { smart_count: data ? data.length : 0 }),
+      value: translate('app.setting.address', { smart_count: data ? data.length : 0 })
     },
     {
       path: '/settings/email',
       icon: <EmailIcon />,
       label: 'app.setting.email',
-      value: accountSettings.email,
+      value: accountSettings.email
     },
     {
       path: '/settings/password',
       icon: <LockIcon />,
       label: 'app.setting.password',
-      value: '***************',
-    },
+      value: '***************'
+    }
   ];
 
   return (
@@ -71,7 +71,7 @@ const SettingsPage = () => {
       </Typography>
       <Box>
         <List>
-          {settings.map((setting) => (
+          {settings.map(setting => (
             <ListItem className={classes.listItem} key={setting.path}>
               <ListItemButton onClick={() => navigate(setting.path)}>
                 <ListItemAvatar>

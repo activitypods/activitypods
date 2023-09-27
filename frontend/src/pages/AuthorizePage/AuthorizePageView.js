@@ -14,31 +14,31 @@ const useStyles = makeStyles(() => ({
     padding: 15,
     paddingLeft: 70,
     position: 'relative',
-    border: '1px solid lightgrey',
+    border: '1px solid lightgrey'
   },
   appIcon: {
     position: 'absolute',
     top: 15,
     left: 15,
     width: 40,
-    height: 40,
+    height: 40
   },
   appTitle: {
     lineHeight: 1,
-    marginBottom: 8,
+    marginBottom: 8
   },
   appChip: {
     marginTop: 8,
-    backgroundColor: '#8bd78b',
+    backgroundColor: '#8bd78b'
   },
   appUrl: {
     marginTop: 5,
     color: 'grey',
-    fontStyle: 'italic',
+    fontStyle: 'italic'
   },
   button: {
-    marginLeft: 10,
-  },
+    marginLeft: 10
+  }
 }));
 
 const AuthorizePageView = () => {
@@ -55,7 +55,7 @@ const AuthorizePageView = () => {
   const redirectTo = new URL(searchParams.get('redirect'));
   const appDomain = redirectTo.host;
   const appOrigin = redirectTo.origin;
-  const isTrustedApp = trustedApps.some((domain) => domain === appDomain);
+  const isTrustedApp = trustedApps.some(domain => domain === appDomain);
 
   useEffect(() => {
     (async () => {
@@ -71,15 +71,15 @@ const AuthorizePageView = () => {
   }, [dataProvider, appOrigin, setAppData]);
 
   const accessApp = useCallback(
-    async (register) => {
+    async register => {
       if (register) {
         await dataProvider.create('App', {
           data: {
             type: 'apods:FrontAppRegistration',
             'apods:application': `${redirectTo.origin}/application.json`,
             'apods:domainName': redirectTo.host,
-            'apods:preferredForTypes': appData['apods:handledTypes'],
-          },
+            'apods:preferredForTypes': appData['apods:handledTypes']
+          }
         });
       }
       const token = localStorage.getItem('token');
@@ -92,7 +92,7 @@ const AuthorizePageView = () => {
   // Once all data are loaded, either redirect to app or show authorization screen
   useEffect(() => {
     if (!isLoading) {
-      if (Object.values(registeredApps).some((app) => app['apods:domainName'] === appDomain)) {
+      if (Object.values(registeredApps).some(app => app['apods:domainName'] === appDomain)) {
         accessApp(false);
       } else {
         setShowScreen(true);

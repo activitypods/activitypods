@@ -3,11 +3,11 @@ export default {
     types: ['apods:TrustedApps'],
     list: {
       servers: ['activitypods'],
-      fetchContainer: true,
+      fetchContainer: true
     },
     create: {
       // TODO check why this is necessary
-      server: 'activitypods',
-    },
-  },
+      server: 'activitypods'
+    }
+  }
 };

@@ -11,26 +11,26 @@ Error.stackTraceLimit = Infinity;
 const listDatasets = async () => {
   const response = await fetch(CONFIG.SPARQL_ENDPOINT + '$/datasets', {
     headers: {
-      Authorization: 'Basic ' + Buffer.from(CONFIG.JENA_USER + ':' + CONFIG.JENA_PASSWORD).toString('base64'),
-    },
+      Authorization: 'Basic ' + Buffer.from(CONFIG.JENA_USER + ':' + CONFIG.JENA_PASSWORD).toString('base64')
+    }
   });
 
   if (response.ok) {
     const json = await response.json();
-    return json.datasets.map((dataset) => dataset['ds.name'].substring(1));
+    return json.datasets.map(dataset => dataset['ds.name'].substring(1));
   } else {
     return [];
   }
 };
 
-const clearDataset = (dataset) =>
+const clearDataset = dataset =>
   fetch(CONFIG.SPARQL_ENDPOINT + dataset + '/update', {
     method: 'POST',
     body: 'update=CLEAR+ALL', // DROP+ALL is not working with WebACL datasets !
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: 'Basic ' + Buffer.from(CONFIG.JENA_USER + ':' + CONFIG.JENA_PASSWORD).toString('base64'),
-    },
+      Authorization: 'Basic ' + Buffer.from(CONFIG.JENA_USER + ':' + CONFIG.JENA_PASSWORD).toString('base64')
+    }
   });
 
 const initialize = async (port, accountsDataset) => {
@@ -40,14 +40,14 @@ const initialize = async (port, accountsDataset) => {
     nodeID: 'server' + port,
     middlewares: [
       WebAclMiddleware({ baseUrl, podProvider: true }),
-      ObjectsWatcherMiddleware({ baseUrl, podProvider: true }),
+      ObjectsWatcherMiddleware({ baseUrl, podProvider: true })
     ],
     logger: {
       type: 'Console',
       options: {
-        level: 'warn',
-      },
-    },
+        level: 'warn'
+      }
+    }
   });
 
   await broker.createService(CoreService, {
@@ -57,16 +57,16 @@ const initialize = async (port, accountsDataset) => {
       triplestore: {
         url: CONFIG.SPARQL_ENDPOINT,
         user: CONFIG.JENA_USER,
-        password: CONFIG.JENA_PASSWORD,
+        password: CONFIG.JENA_PASSWORD
       },
       jsonContext: 'https://activitypods.org/context.json',
       auth: {
-        accountsDataset,
+        accountsDataset
       },
       api: {
-        port,
-      },
-    },
+        port
+      }
+    }
   });
 
   await broker.createService(AnnouncerService);
@@ -77,5 +77,5 @@ const initialize = async (port, accountsDataset) => {
 module.exports = {
   listDatasets,
   clearDataset,
-  initialize,
+  initialize
 };

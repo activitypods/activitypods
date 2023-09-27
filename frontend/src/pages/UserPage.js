@@ -26,7 +26,7 @@ const UserPage = () => {
       navigate(contactFormUrl);
     } else if (!isLoading) {
       notify(translate('app.notification.login_to_connect_user', { username: params.id }));
-      navigate('/login?signup=true&redirect=' + encodeURIComponent(contactFormUrl))
+      navigate('/login?signup=true&redirect=' + encodeURIComponent(contactFormUrl));
     }
   }, [identity, isLoading, params.id, notify, translate, navigate]);
 

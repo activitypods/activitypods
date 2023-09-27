@@ -26,11 +26,11 @@ const CoreService = {
     triplestore: {
       url: null,
       user: null,
-      password: null,
+      password: null
     },
     jsonContext: null,
     queueServiceUrl: null,
-    authType: 'local',
+    authType: 'local'
   },
   created() {
     let { baseUrl, baseDir, frontendUrl, triplestore, jsonContext, queueServiceUrl, authType } = this.settings;
@@ -45,20 +45,20 @@ const CoreService = {
         containers,
         podProvider: true,
         dispatch: {
-          queueServiceUrl,
+          queueServiceUrl
         },
         like: {
           attachToObjectTypes: [...Object.values(OBJECT_TYPES), 'pair:Skill'],
-          attachToActorTypes: Object.values(ACTOR_TYPES),
-        },
-      },
+          attachToActorTypes: Object.values(ACTOR_TYPES)
+        }
+      }
     });
 
     this.broker.createService(ApiService, {
       settings: {
         ...this.settings.api,
-        frontendUrl,
-      },
+        frontendUrl
+      }
     });
 
     this.broker.createService(authType === 'local' ? AuthLocalService : AuthOIDCService, {
@@ -69,8 +69,8 @@ const CoreService = {
         webIdSelection: ['nick'],
         accountSelection: ['preferredLocale'],
         formUrl: frontendUrl ? urlJoin(frontendUrl, 'login') : undefined,
-        ...this.settings.auth,
-      },
+        ...this.settings.auth
+      }
     });
 
     this.broker.createService(JsonLdService, {
@@ -81,16 +81,16 @@ const CoreService = {
           : [
               {
                 path: '_system/context.json',
-                file: path.resolve(__dirname, './config/context.json'),
-              },
+                file: path.resolve(__dirname, './config/context.json')
+              }
             ],
         remoteContextFiles: [
           {
             uri: 'https://www.w3.org/ns/activitystreams',
-            file: path.resolve(__dirname, './config/context-as.json'),
-          },
-        ],
-      },
+            file: path.resolve(__dirname, './config/context-as.json')
+          }
+        ]
+      }
     });
 
     this.broker.createService(LdpService, {
@@ -103,15 +103,15 @@ const CoreService = {
         defaultContainerOptions: {
           jsonContext: jsonContext || localJsonContext,
           permissions: {},
-          newResourcesPermissions: {},
-        },
-      },
+          newResourcesPermissions: {}
+        }
+      }
     });
 
     this.broker.createService(PodService, {
       settings: {
-        baseUrl,
-      },
+        baseUrl
+      }
     });
 
     // Required for notifications
@@ -119,65 +119,65 @@ const CoreService = {
       settings: {
         handlebars: {
           helpers: {
-            encodeUri: (uri) => encodeURIComponent(uri),
-          },
-        },
-      },
+            encodeUri: uri => encodeURIComponent(uri)
+          }
+        }
+      }
     });
 
     this.broker.createService(ProxyService, {
       settings: {
-        podProvider: true,
-      },
+        podProvider: true
+      }
     });
 
     this.broker.createService(SignatureService, {
       settings: {
-        actorsKeyPairsDir: path.resolve(baseDir, './actors'),
-      },
+        actorsKeyPairsDir: path.resolve(baseDir, './actors')
+      }
     });
 
     this.broker.createService(SparqlEndpointService, {
       settings: {
         podProvider: true,
-        defaultAccept: 'application/ld+json',
-      },
+        defaultAccept: 'application/ld+json'
+      }
     });
 
     this.broker.createService(TripleStoreService, {
       settings: {
         url: triplestore.url,
         user: triplestore.user,
-        password: triplestore.password,
-      },
+        password: triplestore.password
+      }
     });
 
     this.broker.createService(WebAclService, {
       settings: {
         baseUrl,
-        podProvider: true,
-      },
+        podProvider: true
+      }
     });
 
     this.broker.createService(WebfingerService, {
       settings: {
-        baseUrl,
-      },
+        baseUrl
+      }
     });
 
     this.broker.createService(WebIdService, {
       settings: {
         baseUrl,
-        podProvider: true,
+        podProvider: true
       },
       hooks: {
         before: {
           async create(ctx) {
             const { nick } = ctx.params;
             await ctx.call('pod.create', { username: nick });
-          },
-        },
-      },
+          }
+        }
+      }
     });
 
     this.broker.createService(SynchronizerService, {
@@ -185,18 +185,18 @@ const CoreService = {
         podProvider: true,
         mirrorGraph: false,
         synchronizeContainers: false,
-        attachToLocalContainers: true,
-      },
+        attachToLocalContainers: true
+      }
     });
 
     this.broker.createService(FrontAppsService, {
       settings: {
         baseUrl,
         frontendUrl,
-        ontologies,
-      },
+        ontologies
+      }
     });
-  },
+  }
 };
 
 module.exports = CoreService;

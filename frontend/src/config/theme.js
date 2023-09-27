@@ -6,17 +6,17 @@ const theme = createTheme({
   ...raTheme,
   palette: {
     primary: {
-      main: process.env.REACT_APP_COLOR_PRIMARY,
+      main: process.env.REACT_APP_COLOR_PRIMARY
     },
     secondary: {
-      main: process.env.REACT_APP_COLOR_SECONDARY,
+      main: process.env.REACT_APP_COLOR_SECONDARY
     },
     black: {
-      main: '#000',
+      main: '#000'
     },
     grey: {
-      main: '#BDBDBD',
-    },
+      main: '#BDBDBD'
+    }
   },
   typography: {
     h1: {
@@ -27,8 +27,8 @@ const theme = createTheme({
       lineHeight: '70px',
       [muiTheme.breakpoints.down('sm')]: {
         fontSize: 32,
-        lineHeight: '46px',
-      },
+        lineHeight: '46px'
+      }
     },
     h2: {
       fontFamily,
@@ -36,8 +36,8 @@ const theme = createTheme({
       fontStyle: 'normal',
       fontWeight: 'normal',
       [muiTheme.breakpoints.down('sm')]: {
-        fontSize: 28,
-      },
+        fontSize: 28
+      }
     },
     h4: {
       fontFamily,
@@ -47,8 +47,8 @@ const theme = createTheme({
       lineHeight: '44px',
       [muiTheme.breakpoints.down('sm')]: {
         fontSize: 18,
-        lineHeight: '26px',
-      },
+        lineHeight: '26px'
+      }
     },
     h6: {
       fontFamily,
@@ -56,12 +56,12 @@ const theme = createTheme({
       fontStyle: 'normal',
       fontWeight: 'normal',
       letterSpacing: -1,
-      lineHeight: 1.15,
+      lineHeight: 1.15
     },
     subtitle1: {
       fontFamily,
       fontSize: 12,
-      lineHeight: '14px',
+      lineHeight: '14px'
     },
     subtitle2: {
       fontFamily,
@@ -69,21 +69,21 @@ const theme = createTheme({
       fontStyle: 'normal',
       fontWeight: 'normal',
       lineHeight: '14px',
-      textTransform: 'uppercase',
+      textTransform: 'uppercase'
     },
     body1: {
       fontFamily,
       fontSize: 16,
       fontStyle: 'normal',
       fontWeight: 'normal',
-      lineHeight: '19px',
+      lineHeight: '19px'
     },
     body2: {
       fontFamily,
       fontSize: 14,
       fontStyle: 'normal',
       fontWeight: 'normal',
-      lineHeight: '16px',
+      lineHeight: '16px'
     },
     button: {
       fontFamily,
@@ -91,8 +91,8 @@ const theme = createTheme({
       fontStyle: 'normal',
       fontWeight: 'normal',
       lineHeight: '14px',
-      textTransform: 'uppercase',
-    },
+      textTransform: 'uppercase'
+    }
   },
   components: {
     ...raTheme.components,
@@ -103,50 +103,50 @@ const theme = createTheme({
           paddingLeft: 15,
           paddingRight: 15,
           height: 36,
-          minWidth: 100,
-        },
-      },
+          minWidth: 100
+        }
+      }
     },
     MuiAlert: {
       styleOverrides: {
         message: {
-          paddingTop: 11,
-        },
-      },
+          paddingTop: 11
+        }
+      }
     },
     MuiIconButton: {
       styleOverrides: {
         root: {
           padding: 8,
-          paddingRight: 0,
-        },
-      },
+          paddingRight: 0
+        }
+      }
     },
     MuiScopedCssBaseline: {
       styleOverrides: {
         root: {
-          backgroundColor: 'unset',
-        },
-      },
+          backgroundColor: 'unset'
+        }
+      }
     },
     RaCreateButton: {
       styleOverrides: {
         root: {
           '&.RaCreateButton-floating': {
             backgroundColor: process.env.REACT_APP_COLOR_SECONDARY,
-            bottom: 80,
-          },
-        },
-      },
+            bottom: 80
+          }
+        }
+      }
     },
     RaToolbar: {
       styleOverrides: {
         root: {
           '&.RaToolbar-mobileToolbar': {
-            bottom: 56,
-          },
-        },
-      },
+            bottom: 56
+          }
+        }
+      }
     },
     // Remove the large padding for the toolbar on mobile
     RaSimpleForm: {
@@ -154,12 +154,12 @@ const theme = createTheme({
         root: {
           [muiTheme.breakpoints.down('sm')]: {
             paddingBottom: 0,
-            marginBottom: 68,
-          },
-        },
-      },
-    },
-  },
+            marginBottom: 68
+          }
+        }
+      }
+    }
+  }
 });
 
 export default theme;

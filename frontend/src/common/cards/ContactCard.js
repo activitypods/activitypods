@@ -10,10 +10,10 @@ import RejectContactRequestButton from '../buttons/RejectContactRequestButton';
 import IgnoreContactRequestButton from '../buttons/IgnoreContactRequestButton';
 import IgnoreContactButton from '../buttons/IgnoreContactButton';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   root: {
     marginTop: 5,
-    marginBottom: 24,
+    marginBottom: 24
   },
   title: {
     backgroundRepeat: 'no-repeat',
@@ -21,7 +21,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundImage: `radial-gradient(circle at 50% 14em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
     color: theme.palette.primary.contrastText,
     height: 85,
-    position: 'relative',
+    position: 'relative'
   },
   avatarWrapper: {
     position: 'absolute',
@@ -29,30 +29,30 @@ const useStyles = makeStyles((theme) => ({
     top: 0,
     left: 0,
     right: 0,
-    textAlign: 'center',
+    textAlign: 'center'
   },
   avatar: {
     width: 150,
-    height: 150,
+    height: 150
   },
   block: {
     backgroundColor: 'white',
     paddingTop: 80,
-    paddingBottom: 20,
+    paddingBottom: 20
   },
   button: {
     backgroundColor: 'white',
     textAlign: 'center',
     '& a': {
-      textDecoration: 'none',
+      textDecoration: 'none'
     },
     '& button': {
-      marginBottom: 8,
+      marginBottom: 8
     },
     '& button:last-of-type': {
-      marginBottom: 0,
-    },
-  },
+      marginBottom: 0
+    }
+  }
 }));
 
 const ContactCard = () => {
@@ -62,7 +62,7 @@ const ContactCard = () => {
   const { items: contactRequests, refetch: refetchRequests } = useCollection('apods:contactRequests');
 
   const contactRequest = useMemo(
-    () => contactRequests.find((activity) => record && activity.actor === record.describes),
+    () => contactRequests.find(activity => record && activity.actor === record.describes),
     [contactRequests, record]
   );
 

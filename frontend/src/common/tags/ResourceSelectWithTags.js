@@ -40,7 +40,7 @@ import { arrayFromLdField, colorFromString } from '../../utils';
  *
  * @param {import('@mui/material').AutocompleteProps & ResourceSelectWithTagsProps} props
  */
-const ResourceSelectWithTags = (props) => {
+const ResourceSelectWithTags = props => {
   const {
     relationshipPredicate,
     labelTagPredicate,
@@ -73,8 +73,8 @@ const ResourceSelectWithTags = (props) => {
 
   const { data: tagDataRaw, isLoading: isLoadingTags } = useGetList(tagResource);
   const { data: resourceDataRaw, isLoading: isLoadingResources } = useGetList(entityResource);
-  const tagData = Object.fromEntries((tagDataRaw || []).map((tag) => [tag.id, tag]));
-  const resourceData = Object.fromEntries((resourceDataRaw || []).map((r) => [r.id, r]));
+  const tagData = Object.fromEntries((tagDataRaw || []).map(tag => [tag.id, tag]));
+  const resourceData = Object.fromEntries((resourceDataRaw || []).map(r => [r.id, r]));
 
   // Create a map from the tag's owner id to the resource id. Helpful for mapping the tag's owners to corresponding resources.
   const ownerToResourceIds = Object.fromEntries(
@@ -89,22 +89,22 @@ const ResourceSelectWithTags = (props) => {
   const options = [
     ...Object.values(tagData)
       .sort((tag1, tag2) => (tag1[labelTagPredicate] || '').localeCompare(tag2[labelTagPredicate]))
-      .map((tag) => tag.id),
+      .map(tag => tag.id),
     ...Object.values(resourceData)
       .sort((resource1, resource2) =>
         (resource1[labelResourcePredicate] || '').localeCompare(resource2[labelResourcePredicate])
       )
-      .map((resource) => resource.id),
+      .map(resource => resource.id)
     // Exclude ids that should not be shown.
-  ].filter((id) => !excludeIds.includes(id));
+  ].filter(id => !excludeIds.includes(id));
 
   // We use this helper to identify selected tags, since those are not part
   // of the values list (i.e. selectedResourceIds).
-  const isTagSelected = (tag) => {
+  const isTagSelected = tag => {
     const tagOwners = arrayFromLdField(tag[relationshipPredicate]);
     if (tagOwners.length === 0) return false;
-    const selectedOwnerIds = selectedResourceIds.map((id) => resourceToOwnerIds[id]);
-    return tagOwners.every((ownerId) => selectedOwnerIds.includes(ownerId));
+    const selectedOwnerIds = selectedResourceIds.map(id => resourceToOwnerIds[id]);
+    return tagOwners.every(ownerId => selectedOwnerIds.includes(ownerId));
   };
 
   const handleChange = (event, values, reason, { option: optionId }) => {
@@ -116,7 +116,7 @@ const ResourceSelectWithTags = (props) => {
     if (tagData[optionId]) {
       const clickedTag = tagData[optionId];
       const resourceIds = arrayFromLdField(clickedTag[relationshipPredicate]).map(
-        (ownersId) => ownerToResourceIds[ownersId]
+        ownersId => ownerToResourceIds[ownersId]
       );
 
       // If the tag was selected...
@@ -136,9 +136,7 @@ const ResourceSelectWithTags = (props) => {
     }
 
     const allSelectedResourceIds = [
-      ...new Set(
-        [...selectedResourceIds, ...newSelectedResourceIds].filter((id) => !deselectedResourceIds.includes(id))
-      ),
+      ...new Set([...selectedResourceIds, ...newSelectedResourceIds].filter(id => !deselectedResourceIds.includes(id)))
     ];
 
     setSelectedResources(allSelectedResourceIds);
@@ -157,14 +155,14 @@ const ResourceSelectWithTags = (props) => {
               style={{
                 marginLeft: '9px',
                 marginRight: '9px',
-                minWidth: '40px',
+                minWidth: '40px'
               }}
             >
               <Avatar
                 src={tag[avatarTagPredicate]}
                 style={{
                   backgroundColor: tagColor,
-                  border: '1px solid #bdbdbd',
+                  border: '1px solid #bdbdbd'
                 }}
               >
                 {tagDefaultIcon}
@@ -192,14 +190,14 @@ const ResourceSelectWithTags = (props) => {
               style={{
                 marginLeft: '9px',
                 marginRight: '9px',
-                minWidth: '40px',
+                minWidth: '40px'
               }}
             >
               <Avatar
                 src={option[avatarResourcePredicate]}
                 style={{
                   backgroundColor: option[colorResourcePredicate],
-                  border: '1px solid #bdbdbd',
+                  border: '1px solid #bdbdbd'
                 }}
               >
                 {resourceDefaultIcon}
@@ -218,10 +216,10 @@ const ResourceSelectWithTags = (props) => {
       multiple
       options={options}
       value={selectedResourceIds}
-      groupBy={(option) => (tagData[option] ? tagName || tagResource : resourceName || entityResource)}
-      getOptionLabel={(id) => resourceData[id]?.[labelResourcePredicate] || tagData[id]?.[labelTagPredicate] || ''}
+      groupBy={option => (tagData[option] ? tagName || tagResource : resourceName || entityResource)}
+      getOptionLabel={id => resourceData[id]?.[labelResourcePredicate] || tagData[id]?.[labelTagPredicate] || ''}
       onChange={handleChange}
-      renderInput={(params) => (
+      renderInput={params => (
         <TextField {...params} variant="outlined" label={translate('auth.input.agent_select')} fullWidth />
       )}
       renderOption={(props, optionId) => {
@@ -244,7 +242,7 @@ const ResourceSelectWithTags = (props) => {
 ResourceSelectWithTags.defaultProps = {
   showColors: true,
   excludeIds: [],
-  ownerIdResourcePredicate: 'id',
+  ownerIdResourcePredicate: 'id'
 };
 
 export default ResourceSelectWithTags;

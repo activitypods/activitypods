@@ -17,7 +17,7 @@ const initializeBroker = async (port, accountsDataset) => {
   return broker;
 };
 
-describe('Test pods creation', (mode) => {
+describe('Test pods creation', mode => {
   let actors = [],
     broker,
     alice,
@@ -40,14 +40,14 @@ describe('Test pods creation', (mode) => {
         'activitypub.actor.awaitCreateComplete',
         {
           actorUri: webId,
-          additionalKeys: ['url'],
+          additionalKeys: ['url']
         },
         { meta: { dataset: actorData.username } }
       );
       actors[i].call = (actionName, params, options = {}) =>
         broker[i].call(actionName, params, {
           ...options,
-          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername },
+          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
         });
     }
 
@@ -61,38 +61,38 @@ describe('Test pods creation', (mode) => {
   test('Alice collections can be fetched', async () => {
     await expect(
       alice.call('activitypub.collection.get', {
-        collectionUri: alice.outbox,
+        collectionUri: alice.outbox
       })
     ).resolves.toMatchObject({
       type: 'OrderedCollection',
-      id: alice.outbox,
+      id: alice.outbox
     });
 
     await expect(
       alice.call('activitypub.collection.get', {
-        collectionUri: alice.inbox,
+        collectionUri: alice.inbox
       })
     ).resolves.toMatchObject({
       type: 'OrderedCollection',
-      id: alice.inbox,
+      id: alice.inbox
     });
 
     await expect(
       alice.call('activitypub.collection.get', {
-        collectionUri: alice.followers,
+        collectionUri: alice.followers
       })
     ).resolves.toMatchObject({
       type: 'Collection',
-      id: alice.followers,
+      id: alice.followers
     });
 
     await expect(
       alice.call('activitypub.collection.get', {
-        collectionUri: alice.following,
+        collectionUri: alice.following
       })
     ).resolves.toMatchObject({
       type: 'Collection',
-      id: alice.following,
+      id: alice.following
     });
   }, 80000);
 
@@ -100,11 +100,11 @@ describe('Test pods creation', (mode) => {
     await expect(
       alice.call('ldp.resource.get', {
         resourceUri: alice.url,
-        accept: MIME_TYPES.JSON,
+        accept: MIME_TYPES.JSON
       })
     ).resolves.toMatchObject({
       'vcard:given-name': 'Alice',
-      describes: alice.id,
+      describes: alice.id
     });
   }, 80000);
 
@@ -114,19 +114,19 @@ describe('Test pods creation', (mode) => {
       resource: {
         '@context': 'https://activitypods.org/context.json',
         type: 'pair:Project',
-        'pair:label': 'ActivityPods',
+        'pair:label': 'ActivityPods'
       },
-      contentType: MIME_TYPES.JSON,
+      contentType: MIME_TYPES.JSON
     });
 
     await expect(
       alice.call('ldp.resource.get', {
         resourceUri: projectUri,
-        accept: MIME_TYPES.JSON,
+        accept: MIME_TYPES.JSON
       })
     ).resolves.toMatchObject({
       type: 'pair:Project',
-      'pair:label': 'ActivityPods',
+      'pair:label': 'ActivityPods'
     });
   }, 80000);
 
@@ -139,16 +139,16 @@ describe('Test pods creation', (mode) => {
         }
       `,
       username: 'alice',
-      accept: MIME_TYPES.JSON,
+      accept: MIME_TYPES.JSON
     });
 
     expect(result).toMatchObject([
       {
         type: {
           termType: 'NamedNode',
-          value: 'http://virtual-assembly.org/ontologies/pair#Project',
-        },
-      },
+          value: 'http://virtual-assembly.org/ontologies/pair#Project'
+        }
+      }
     ]);
   });
 
@@ -156,23 +156,23 @@ describe('Test pods creation', (mode) => {
     await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
       type: 'Like',
-      object: projectUri,
+      object: projectUri
     });
 
     await expect(
       alice.call('activitypub.collection.get', {
         collectionUri: alice.outbox,
-        page: 1,
+        page: 1
       })
     ).resolves.toMatchObject({
       type: 'OrderedCollectionPage',
       orderedItems: [
         {
           type: 'Like',
-          object: projectUri,
-        },
+          object: projectUri
+        }
       ],
-      totalItems: 1,
+      totalItems: 1
     });
   }, 80000);
 });

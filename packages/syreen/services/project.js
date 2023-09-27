@@ -9,7 +9,7 @@ module.exports = {
     path: '/syreen/projects',
     acceptedTypes: ['syreen:Project'],
     permissions: {},
-    newResourcesPermissions: {},
+    newResourcesPermissions: {}
   },
   hooks: {
     after: {
@@ -22,8 +22,8 @@ module.exports = {
         // Do not await to increase performances
         ctx.call('syreen.location.updateRights', res);
         return res;
-      },
-    },
+      }
+    }
   },
   actions: {
     async setNewRights(ctx) {
@@ -36,10 +36,10 @@ module.exports = {
           additionalRights: {
             group: {
               uri: getAnnouncesGroupUri(offerUri),
-              read: true,
-            },
+              read: true
+            }
           },
-          webId: newData['dc:creator'],
+          webId: newData['dc:creator']
         });
       }
     },
@@ -54,10 +54,10 @@ module.exports = {
           }
         `,
         accept: MIME_TYPES.JSON,
-        webId: 'system',
+        webId: 'system'
       });
 
-      return result.map((node) => node.offerUri.value);
-    },
-  },
+      return result.map(node => node.offerUri.value);
+    }
+  }
 };

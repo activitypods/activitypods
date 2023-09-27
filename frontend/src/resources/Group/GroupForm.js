@@ -11,7 +11,7 @@ import {
   useUnselectAll,
   useRecordContext,
   useListController,
-  SimpleList,
+  SimpleList
 } from 'react-admin';
 import { useFormContext } from 'react-hook-form';
 import { arrayFromLdField } from '../../utils';
@@ -39,7 +39,7 @@ const AvatarItem = ({ source, label }) => {
 
 export const GroupFormContent = () => {
   const translate = useTranslate();
-  const isSmall = useMediaQuery((theme) => theme.breakpoints.down('sm'));
+  const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
 
   const group = useRecordContext();
   // Watch out: group['vcard:hasMember'] contains the actor URIs, not the profile URIs.
@@ -47,15 +47,15 @@ export const GroupFormContent = () => {
 
   const listControllerProps = useListController({
     resource: 'Profile',
-    disableSyncWithLocation: true,
+    disableSyncWithLocation: true
   });
   const { data: profileData, isLoading } = listControllerProps;
   const profileToMemberId = useMemo(
-    () => Object.fromEntries(profileData?.map((p) => [p.id, p.describes]) || []),
+    () => Object.fromEntries(profileData?.map(p => [p.id, p.describes]) || []),
     [profileData]
   );
   const filteredProfileData = useMemo(
-    () => profileData?.filter((p) => memberIds.includes(p?.['describes'])),
+    () => profileData?.filter(p => memberIds.includes(p?.['describes'])),
     [profileData, memberIds]
   );
 
@@ -67,16 +67,16 @@ export const GroupFormContent = () => {
   /** @param {{ ids: Identifier[] }} newProfileIds */
   const onMemberChange = useCallback(
     ({ ids: newProfileIds }) => {
-      const changedMemberIds = newProfileIds.map((profileId) => profileToMemberId[profileId]);
+      const changedMemberIds = newProfileIds.map(profileId => profileToMemberId[profileId]);
       setMemberIds(changedMemberIds);
     },
     [profileToMemberId, setMemberIds]
   );
   /** @param {Identifier[]} removeProfileIds */
   const onDeleteMembers = useCallback(
-    (removeProfileIds) => {
-      const removeMemberIds = removeProfileIds.map((id) => profileData.find((p) => p.id === id)?.describes);
-      setMemberIds(memberIds.filter((id) => !removeMemberIds.includes(id)));
+    removeProfileIds => {
+      const removeMemberIds = removeProfileIds.map(id => profileData.find(p => p.id === id)?.describes);
+      setMemberIds(memberIds.filter(id => !removeMemberIds.includes(id)));
     },
     [profileData, memberIds, setMemberIds]
   );
@@ -109,7 +109,7 @@ export const GroupFormContent = () => {
         tagName={translate('app.group.group')}
         resourceName={translate('app.group.profile')}
         // The selected member ids.
-        value={filteredProfileData?.map((p) => p.id) || []}
+        value={filteredProfileData?.map(p => p.id) || []}
         onSelectionChange={onMemberChange}
         // The groups's appearance suffices, so we don't need to label.
         groupBy={() => ''}
@@ -132,7 +132,7 @@ export const GroupFormContent = () => {
             <SimpleList
               empty={<>{translate('app.group.no_members')}</>}
               // leftIcon={() => <PersonIcon />}
-              leftIcon={(props) => (
+              leftIcon={props => (
                 <ReferenceField label="Avatar" source="id" reference="Profile" basePath={'/Group'} sortable={false}>
                   <AvatarItem source="vcard:photo" label="vcard:given-name" />
                 </ReferenceField>
@@ -188,7 +188,7 @@ export const GroupFormContent = () => {
   );
 };
 
-const GroupForm = (props) => {
+const GroupForm = props => {
   return (
     <SimpleForm
       redirect="list"

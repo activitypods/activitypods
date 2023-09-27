@@ -1,5 +1,14 @@
 import React from 'react';
-import { SaveButton, SimpleForm, TextInput, Toolbar, useTranslate, ImageField, useGetIdentity, useNotify } from 'react-admin';
+import {
+  SaveButton,
+  SimpleForm,
+  TextInput,
+  Toolbar,
+  useTranslate,
+  ImageField,
+  useGetIdentity,
+  useNotify
+} from 'react-admin';
 import { ImageInput } from '@semapps/input-components';
 import Edit from '../../layout/Edit';
 import ProfileTitle from './ProfileTitle';
@@ -7,7 +16,7 @@ import { g1PublicKeyToUrl, g1UrlToPublicKey } from '../../utils';
 import BlockAnonymous from '../../common/BlockAnonymous';
 import QuickCreateLocationInput from '../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput';
 
-const ToolbarWithoutDelete = (props) => (
+const ToolbarWithoutDelete = props => (
   <Toolbar {...props}>
     <SaveButton />
   </Toolbar>
@@ -22,7 +31,7 @@ export const ProfileEdit = () => {
     <BlockAnonymous>
       <Edit
         title={<ProfileTitle />}
-        transform={(data) => ({ ...data, 'vcard:fn': data['vcard:given-name'] })}
+        transform={data => ({ ...data, 'vcard:fn': data['vcard:given-name'] })}
         mutationMode="pessimistic"
         mutationOptions={{
           onSuccess: () => {
@@ -43,8 +52,8 @@ export const ProfileEdit = () => {
           <QuickCreateLocationInput reference="Location" source="vcard:hasAddress" />
           <TextInput
             source="foaf:tipjar"
-            parse={(v) => g1PublicKeyToUrl(v)}
-            format={(v) => g1UrlToPublicKey(v)}
+            parse={v => g1PublicKeyToUrl(v)}
+            format={v => g1UrlToPublicKey(v)}
             helperText={translate('app.helper.g1_tipjar_input')}
             fullWidth
           />

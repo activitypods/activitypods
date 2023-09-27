@@ -4,7 +4,7 @@ import { ImageInput } from '@semapps/input-components';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SimpleBox from '../../layout/SimpleBox';
 
-const ToolbarWithoutDelete = (props) => (
+const ToolbarWithoutDelete = props => (
   <Toolbar {...props}>
     <SaveButton />
   </Toolbar>

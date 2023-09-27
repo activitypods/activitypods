@@ -21,9 +21,7 @@ const ShowView = ({ asides, title, actions, children }) => {
             ) : (
               <>
                 <ListButton color="black" />
-                {permissions && permissions.some((p) => p['acl:mode'] === 'acl:Write') && (
-                  <EditButton color="black" />
-                )}
+                {permissions && permissions.some(p => p['acl:mode'] === 'acl:Write') && <EditButton color="black" />}
               </>
             )}
           </Box>

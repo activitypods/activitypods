@@ -14,17 +14,17 @@ module.exports = {
       attachToTypes: [OBJECT_TYPES.EVENT],
       attachPredicate: 'http://activitypods.org/ns/core#attendees',
       ordered: false,
-      dereferenceItems: false,
+      dereferenceItems: false
     });
 
     await this.broker.call('activity-mapping.addMapper', {
       match: JOIN_EVENT,
-      mapping: JOIN_EVENT_MAPPING,
+      mapping: JOIN_EVENT_MAPPING
     });
 
     await this.broker.call('activity-mapping.addMapper', {
       match: LEAVE_EVENT,
-      mapping: LEAVE_EVENT_MAPPING,
+      mapping: LEAVE_EVENT_MAPPING
     });
   },
   actions: {
@@ -32,7 +32,7 @@ module.exports = {
       const { resourceUri, newData } = ctx.params;
       await ctx.call('activitypub.collection.attach', {
         collectionUri: newData['apods:attendees'],
-        item: newData['dc:creator'],
+        item: newData['dc:creator']
       });
     },
     async givePermissionsForAttendeesCollection(ctx) {
@@ -43,12 +43,12 @@ module.exports = {
         additionalRights: {
           group: {
             uri: getAnnouncesGroupUri(resourceUri),
-            read: true,
-          },
+            read: true
+          }
         },
-        webId: newData['dc:creator'],
+        webId: newData['dc:creator']
       });
-    },
+    }
   },
   activities: {
     joinEvent: {
@@ -65,7 +65,7 @@ module.exports = {
           await ctx.call('webacl.group.addMember', {
             groupSlug: new URL(emitterUri).pathname + '/contacts',
             memberUri: organizerUri,
-            webId: emitterUri,
+            webId: emitterUri
           });
         }
       },
@@ -81,7 +81,7 @@ module.exports = {
         if (
           !(await ctx.call('activitypub.collection.includes', {
             collectionUri: event['apods:announces'],
-            itemUri: activity.actor,
+            itemUri: activity.actor
           }))
         ) {
           throw new MoleculerError('You have not been invited to this event', 400, 'BAD REQUEST');
@@ -89,14 +89,14 @@ module.exports = {
 
         await ctx.call('activitypub.collection.attach', {
           collectionUri: event['apods:attendees'],
-          item: activity.actor,
+          item: activity.actor
         });
 
         // Tag event as closed if max attendees has been reached
         await ctx.call('events.status.tagUpdatedEvent', { eventUri: event.id });
 
         // TODO send confirmation mail to participant
-      },
+      }
     },
     leaveEvent: {
       match: LEAVE_EVENT,
@@ -106,7 +106,7 @@ module.exports = {
         if (
           !(await ctx.call('activitypub.collection.includes', {
             collectionUri: event['apods:attendees'],
-            itemUri: activity.actor,
+            itemUri: activity.actor
           }))
         ) {
           throw new MoleculerError('You are not attending this event', 400);
@@ -116,12 +116,12 @@ module.exports = {
 
         await ctx.call('activitypub.collection.detach', {
           collectionUri: event['apods:attendees'],
-          item: activity.actor,
+          item: activity.actor
         });
 
         // Tag event as open if the number of attendees is now lower than max attendees
         await ctx.call('events.status.tagUpdatedEvent', { eventUri: event.id });
-      },
-    },
-  },
+      }
+    }
+  }
 };

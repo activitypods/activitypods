@@ -1,3 +1,3 @@
 module.exports = {
-  LaCarteDesSavoirsApp: require('./app'),
+  LaCarteDesSavoirsApp: require('./app')
 };

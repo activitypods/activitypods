@@ -17,12 +17,12 @@ const NEW_MESSAGE_ABOUT_OFFER_OR_REQUEST = {
         'mp:RentRequest',
         'mp:LoanRequest',
         'mp:GiftRequest',
-        'mp:BarterRequest',
-      ],
-    },
-  },
+        'mp:BarterRequest'
+      ]
+    }
+  }
 };
 
 module.exports = {
-  NEW_MESSAGE_ABOUT_OFFER_OR_REQUEST,
+  NEW_MESSAGE_ABOUT_OFFER_OR_REQUEST
 };

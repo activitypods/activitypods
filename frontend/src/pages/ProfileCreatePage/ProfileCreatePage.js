@@ -42,11 +42,11 @@ const ProfileCreatePage = () => {
           onSuccess: () => {
             notify('ra.notification.updated', {
               messageArgs: { smart_count: 1 },
-              undoable: false,
+              undoable: false
             });
             refetchIdentity();
             redirect(redirectPath);
-          },
+          }
         }}
       >
         <ProfileCreatePageView />

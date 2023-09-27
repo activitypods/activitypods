@@ -19,7 +19,7 @@ const EventsApp = {
     this.broker.createService(AttendeesMatcherService);
 
     this.broker.createService(StatusService);
-  },
+  }
 };
 
 module.exports = EventsApp;

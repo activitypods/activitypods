@@ -1,3 +1,3 @@
 module.exports = {
-  SyreenApp: require('./app'),
+  SyreenApp: require('./app')
 };

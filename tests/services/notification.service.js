@@ -12,8 +12,8 @@ module.exports = {
       secure: CONFIG.SMTP_SECURE,
       auth: {
         user: CONFIG.SMTP_USER,
-        pass: CONFIG.SMTP_PASS,
-      },
-    },
-  },
+        pass: CONFIG.SMTP_PASS
+      }
+    }
+  }
 };

@@ -4,5 +4,5 @@ import dataProvider from './dataProvider';
 export default authProvider({
   dataProvider,
   authType: 'local',
-  checkPermissions: true,
+  checkPermissions: true
 });

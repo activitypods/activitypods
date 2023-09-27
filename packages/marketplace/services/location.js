@@ -5,7 +5,9 @@ module.exports = {
   actions: {
     async setNewRights(ctx) {
       const { resourceUri, newData } = ctx.params;
-      const newLocation = newData['pair:hasLocation'] || (newData['mp:hasGeoCondition'] && newData['mp:hasGeoCondition']['pair:hasLocation']);
+      const newLocation =
+        newData['pair:hasLocation'] ||
+        (newData['mp:hasGeoCondition'] && newData['mp:hasGeoCondition']['pair:hasLocation']);
 
       if (newLocation) {
         await ctx.call('webacl.resource.addRights', {
@@ -13,17 +15,21 @@ module.exports = {
           additionalRights: {
             group: {
               uri: getAnnouncesGroupUri(resourceUri),
-              read: true,
-            },
+              read: true
+            }
           },
-          webId: newData['dc:creator'],
+          webId: newData['dc:creator']
         });
       }
     },
     async updateRights(ctx) {
       const { resourceUri, newData, oldData } = ctx.params;
-      const oldLocation = oldData['pair:hasLocation'] || (oldData['mp:hasGeoCondition'] && oldData['mp:hasGeoCondition']['pair:hasLocation']);
-      const newLocation = newData['pair:hasLocation'] || (newData['mp:hasGeoCondition'] && newData['mp:hasGeoCondition']['pair:hasLocation']);
+      const oldLocation =
+        oldData['pair:hasLocation'] ||
+        (oldData['mp:hasGeoCondition'] && oldData['mp:hasGeoCondition']['pair:hasLocation']);
+      const newLocation =
+        newData['pair:hasLocation'] ||
+        (newData['mp:hasGeoCondition'] && newData['mp:hasGeoCondition']['pair:hasLocation']);
 
       if (newLocation !== oldLocation) {
         if (newLocation) {
@@ -32,10 +38,10 @@ module.exports = {
             additionalRights: {
               group: {
                 uri: getAnnouncesGroupUri(resourceUri),
-                read: true,
-              },
+                read: true
+              }
             },
-            webId: newData['dc:creator'],
+            webId: newData['dc:creator']
           });
         }
 
@@ -45,12 +51,12 @@ module.exports = {
             rights: {
               group: {
                 uri: getAnnouncesGroupUri(resourceUri),
-                read: true,
-              },
-            },
+                read: true
+              }
+            }
           });
         }
       }
-    },
-  },
+    }
+  }
 };

@@ -49,14 +49,14 @@ describe('Test pods creation via API', () => {
     return fetch(path.startsWith('http') ? path : urlJoin(BASE_URL, path), {
       method: options.method || 'GET',
       body: options.body,
-      headers: options.headers,
+      headers: options.headers
     })
-      .then((response) =>
-        response.text().then((text) => ({
+      .then(response =>
+        response.text().then(text => ({
           status: response.status,
           statusText: response.statusText,
           headers: response.headers,
-          body: text,
+          body: text
         }))
       )
       .then(({ status, statusText, headers, body }) => {
@@ -90,8 +90,8 @@ describe('Test pods creation via API', () => {
       method: 'POST',
       body: aliceData,
       headers: new fetch.Headers({
-        'Content-Type': 'application/json', // We must not use JSON-LD here
-      }),
+        'Content-Type': 'application/json' // We must not use JSON-LD here
+      })
     });
 
     expect(json.webId).toBe(BASE_URL + '/alice');
@@ -116,13 +116,13 @@ describe('Test pods creation via API', () => {
         liked: BASE_URL + '/alice/liked',
         publicKey: {
           owner: BASE_URL + '/alice',
-          publicKeyPem: expect.stringContaining('-----BEGIN PUBLIC KEY-----'),
+          publicKeyPem: expect.stringContaining('-----BEGIN PUBLIC KEY-----')
         },
         endpoints: {
           proxyUrl: BASE_URL + '/alice/proxy',
-          'void:sparqlEndpoint': BASE_URL + '/alice/sparql',
+          'void:sparqlEndpoint': BASE_URL + '/alice/sparql'
         },
-        url: expect.anything(),
+        url: expect.anything()
       });
     });
   });
@@ -131,32 +131,32 @@ describe('Test pods creation via API', () => {
     await expect(fetchServer(alice.outbox)).resolves.toMatchObject({
       json: {
         type: 'OrderedCollection',
-        id: alice.outbox,
-      },
+        id: alice.outbox
+      }
     });
     await expect(fetchServer(alice.inbox)).resolves.toMatchObject({
       json: {
         type: 'OrderedCollection',
-        id: alice.inbox,
-      },
+        id: alice.inbox
+      }
     });
     await expect(fetchServer(alice.followers)).resolves.toMatchObject({
       json: {
         type: 'Collection',
-        id: alice.followers,
-      },
+        id: alice.followers
+      }
     });
     await expect(fetchServer(alice.following)).resolves.toMatchObject({
       json: {
         type: 'Collection',
-        id: alice.following,
-      },
+        id: alice.following
+      }
     });
   });
 
   test('Alice profile can be fetched', async () => {
     await expect(fetchServer(alice.url)).resolves.toMatchObject({
-      json: { 'vcard:given-name': 'Alice', describes: alice.id },
+      json: { 'vcard:given-name': 'Alice', describes: alice.id }
     });
   });
 
@@ -166,8 +166,8 @@ describe('Test pods creation via API', () => {
       body: {
         '@context': 'https://activitypods.org/context.json',
         type: 'pair:Project',
-        'pair:label': 'ActivityPods',
-      },
+        'pair:label': 'ActivityPods'
+      }
     });
 
     expect(status).toBe(201);
@@ -181,10 +181,10 @@ describe('Test pods creation via API', () => {
         'ldp:contains': expect.arrayContaining([
           expect.objectContaining({
             id: projectUri,
-            type: 'pair:Project',
-          }),
-        ]),
-      },
+            type: 'pair:Project'
+          })
+        ])
+      }
     });
   });
 
@@ -199,17 +199,17 @@ describe('Test pods creation via API', () => {
       `,
       headers: new fetch.Headers({
         'Content-Type': 'application/sparql-query',
-        Accept: 'application/sparql-results+json',
-      }),
+        Accept: 'application/sparql-results+json'
+      })
     });
 
     expect(json).toMatchObject([
       {
         type: {
           termType: 'NamedNode',
-          value: 'http://virtual-assembly.org/ontologies/pair#Project',
-        },
-      },
+          value: 'http://virtual-assembly.org/ontologies/pair#Project'
+        }
+      }
     ]);
   });
 
@@ -219,8 +219,8 @@ describe('Test pods creation via API', () => {
       body: {
         '@context': 'https://activitypods.org/context.json',
         type: 'Like',
-        object: projectUri,
-      },
+        object: projectUri
+      }
     });
 
     expect(status).toBe(201);
@@ -232,11 +232,11 @@ describe('Test pods creation via API', () => {
           orderedItems: [
             {
               type: 'Like',
-              object: projectUri,
-            },
+              object: projectUri
+            }
           ],
-          totalItems: 1,
-        },
+          totalItems: 1
+        }
       });
     });
   });

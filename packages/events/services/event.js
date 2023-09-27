@@ -14,9 +14,9 @@ module.exports = {
       key: 'new_event',
       title: {
         en: `{{emitterProfile.vcard:given-name}} invites you to an event "{{activity.object.name}}"`,
-        fr: `{{emitterProfile.vcard:given-name}} vous invite à une rencontre "{{activity.object.name}}"`,
-      },
-    },
+        fr: `{{emitterProfile.vcard:given-name}} vous invite à une rencontre "{{activity.object.name}}"`
+      }
+    }
   },
   hooks: {
     after: {
@@ -29,8 +29,8 @@ module.exports = {
             'dc:created',
             'apods:announces',
             'apods:announcers',
-            'apods:attendees',
-          ],
+            'apods:attendees'
+          ]
         });
 
         await ctx.call('events.status.tagNewEvent', { eventUri: res.resourceUri });
@@ -53,7 +53,7 @@ module.exports = {
           await ctx.call('events.status.tagUpdatedEvent', { eventUri: res.resourceUri });
         }
         return res;
-      },
-    },
-  },
+      }
+    }
+  }
 };

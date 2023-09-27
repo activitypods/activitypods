@@ -7,7 +7,6 @@ module.exports = {
   settings: {
     path: '/locations',
     acceptedTypes: ['vcard:Location'],
-    dereference: ['vcard:hasAddress/vcard:hasGeo'],
     excludeFromMirror: true,
     permissions: {},
     newResourcesPermissions: {},

@@ -11,7 +11,6 @@ module.exports = {
     // ControlledContainerMixin settings
     path: '/profiles',
     acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
-    dereference: ['vcard:hasGeo', 'vcard:hasTelephone'],
     permissions: {},
     newResourcesPermissions: {},
   },

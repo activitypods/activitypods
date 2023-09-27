@@ -6,9 +6,8 @@ module.exports = {
   settings: {
     path: '/skills',
     acceptedTypes: ['pair:Skill'],
-    dereference: [],
     permissions: {},
-    newResourcesPermissions: {}
+    newResourcesPermissions: {},
   },
   actions: {
     // Give read right on /skills container and all its resources
@@ -19,7 +18,9 @@ module.exports = {
 
       await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
-      const contactsGroupUri = await ctx.call('webacl.group.getUri', { groupSlug: new URL(webId).pathname + '/contacts' });
+      const contactsGroupUri = await ctx.call('webacl.group.getUri', {
+        groupSlug: new URL(webId).pathname + '/contacts',
+      });
 
       await ctx.call('webacl.resource.addRights', {
         resourceUri: containerUri,
@@ -32,17 +33,17 @@ module.exports = {
             group: {
               uri: contactsGroupUri,
               read: true,
-            }
-          }
+            },
+          },
         },
         webId,
       });
-    }
+    },
   },
   events: {
     async 'auth.registered'(ctx) {
       const { webId } = ctx.params;
       await this.actions.giveReadRightsToContacts({ webId }, { parentCtx: ctx });
-    }
-  }
+    },
+  },
 };

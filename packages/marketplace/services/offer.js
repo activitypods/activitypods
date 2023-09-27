@@ -7,7 +7,6 @@ module.exports = {
   settings: {
     path: '/offers',
     acceptedTypes: ['mp:Offer', 'mp:SaleOffer', 'mp:RentOffer', 'mp:LoanOffer', 'mp:GiftOffer', 'mp:BarterOffer'],
-    dereference: ['mp:hasTimeCondition', 'mp:hasGeoCondition', 'mp:hasReciprocityCondition'],
     permissions: {},
     newResourcesPermissions: {},
     notificationMapping: {
@@ -35,5 +34,5 @@ module.exports = {
         return res;
       },
     },
-  }
+  },
 };

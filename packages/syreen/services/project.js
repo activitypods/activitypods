@@ -8,9 +8,8 @@ module.exports = {
   settings: {
     path: '/syreen/projects',
     acceptedTypes: ['syreen:Project'],
-    dereference: ['syreen:hasLocation'],
     permissions: {},
-    newResourcesPermissions: {}
+    newResourcesPermissions: {},
   },
   hooks: {
     after: {
@@ -55,10 +54,10 @@ module.exports = {
           }
         `,
         accept: MIME_TYPES.JSON,
-        webId: 'system'
+        webId: 'system',
       });
 
-      return result.map(node => node.offerUri.value);
-    }
-  }
+      return result.map((node) => node.offerUri.value);
+    },
+  },
 };

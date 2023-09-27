@@ -13,7 +13,6 @@ module.exports = {
     // ControlledContainerMixin settings
     path: '/front-apps',
     acceptedTypes: ['apods:FrontAppRegistration'],
-    dereference: [],
     excludeFromMirror: true,
     permissions: {},
     newResourcesPermissions: {},

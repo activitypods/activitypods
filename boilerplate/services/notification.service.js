@@ -26,13 +26,13 @@ module.exports = {
     delay: 120000, // Wait 2min to ensure AnnouncerService has cached resources
     // Moleculer-mail settings
     from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
-    transport,
+    transport
   },
   methods: {
     async formatLink(link, recipientUri) {
       // In ActivityPods, all links are opened through the /openApp endpoint
       // The search param allows to specify the URI, the type and the mode
       return urlJoin(recipientUri, 'openApp') + link;
-    },
-  },
+    }
+  }
 };

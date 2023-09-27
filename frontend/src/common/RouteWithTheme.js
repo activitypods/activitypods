@@ -8,11 +8,11 @@ const PageWithTheme = ({ theme, children, ...rest }) => {
   return <ThemeProvider theme={muiTheme}>{React.cloneElement(children, rest)}</ThemeProvider>;
 };
 
-const RouteWithTheme = (props) => {
+const RouteWithTheme = props => {
   return (
     <RouteWithoutLayout
       {...props}
-      component={(p) => <PageWithTheme {...p}>{React.createElement(props.component)}</PageWithTheme>}
+      component={p => <PageWithTheme {...p}>{React.createElement(props.component)}</PageWithTheme>}
     />
   );
 };

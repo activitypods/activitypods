@@ -32,7 +32,7 @@ const ContactField = ({ source, context, ...rest }) => {
 
   const isOwner = identity?.id === record[source];
 
-  const onSubmit = async (values) => {
+  const onSubmit = async values => {
     try {
       await outbox.post({
         type: OBJECT_TYPES.NOTE,
@@ -41,8 +41,8 @@ const ContactField = ({ source, context, ...rest }) => {
         context: context ? record[context] : undefined,
         to:
           isOwner && record.type === OBJECT_TYPES.EVENT
-            ? attendees.filter((userUri) => userUri !== record[source])
-            : record[source],
+            ? attendees.filter(userUri => userUri !== record[source])
+            : record[source]
       });
       notify('app.notification.message_sent', 'success');
     } catch (e) {
@@ -54,7 +54,7 @@ const ContactField = ({ source, context, ...rest }) => {
     <Form
       onSubmit={onSubmit}
       render={({ handleSubmit, form, submitting }) => (
-        <form onSubmit={(event) => handleSubmit(event).then(form.reset)}>
+        <form onSubmit={event => handleSubmit(event).then(form.reset)}>
           {!isOwner && contactsLoaded && !contacts.includes(record[source]) && (
             <Box mb={1}>
               <Alert severity="warning">
@@ -91,7 +91,7 @@ const ContactField = ({ source, context, ...rest }) => {
 };
 
 ContactField.defaultProps = {
-  addLabel: true,
+  addLabel: true
 };
 
 export default ContactField;

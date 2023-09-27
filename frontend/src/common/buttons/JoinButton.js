@@ -3,7 +3,7 @@ import { useShowContext, useGetIdentity, useNotify, useRefresh, useTranslate } f
 import { useCollection, useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 import { Button } from '@material-ui/core';
 
-const JoinButton = (props) => {
+const JoinButton = props => {
   const [disabled, setDisabled] = useState(false);
   const [joined, setJoined] = useState(false);
   const outbox = useOutbox();
@@ -21,7 +21,7 @@ const JoinButton = (props) => {
         type: ACTIVITY_TYPES.JOIN,
         actor: outbox.owner,
         object: record.id,
-        to: record['dc:creator'],
+        to: record['dc:creator']
       });
       notify('app.notification.event_joined');
       setJoined(true);
@@ -39,7 +39,7 @@ const JoinButton = (props) => {
         type: ACTIVITY_TYPES.LEAVE,
         actor: outbox.owner,
         object: record.id,
-        to: record['dc:creator'],
+        to: record['dc:creator']
       });
       notify('app.notification.event_left');
       setJoined(false);

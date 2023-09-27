@@ -1,3 +1,3 @@
 module.exports = {
-  CoreService: require('./service'),
+  CoreService: require('./service')
 };

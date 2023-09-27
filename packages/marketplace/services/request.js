@@ -12,7 +12,7 @@ module.exports = {
       'mp:RentRequest',
       'mp:LoanRequest',
       'mp:GiftRequest',
-      'mp:BarterRequest',
+      'mp:BarterRequest'
     ],
     dereference: ['mp:hasTimeCondition', 'mp:hasGeoCondition', 'mp:hasReciprocityCondition'],
     permissions: {},
@@ -21,10 +21,10 @@ module.exports = {
       key: 'new_request',
       title: {
         en: `{{emitterProfile.vcard:given-name}} published a classified "{{activity.object.pair:label}}"`,
-        fr: `{{emitterProfile.vcard:given-name}} a publié une petite annonce "{{activity.object.pair:label}}"`,
+        fr: `{{emitterProfile.vcard:given-name}} a publié une petite annonce "{{activity.object.pair:label}}"`
       },
-      actionLink: '?type=mp:Request&uri={{encodeUri activity.object.id}}',
-    },
+      actionLink: '?type=mp:Request&uri={{encodeUri activity.object.id}}'
+    }
   },
   hooks: {
     after: {
@@ -40,7 +40,7 @@ module.exports = {
       async put(ctx, res) {
         await ctx.call('marketplace.location.updateRights', res);
         return res;
-      },
-    },
-  },
+      }
+    }
+  }
 };

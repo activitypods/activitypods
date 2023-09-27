@@ -3,7 +3,7 @@ import { ListButton, EditButton, useShowContext, usePermissionsOptimized } from 
 import { Box, Typography, Grid } from '@material-ui/core';
 import SplitView from './SplitView';
 
-const ShowView = (props) => {
+const ShowView = props => {
   const { record } = useShowContext(props);
   const { permissions } = usePermissionsOptimized(record?.id);
   return (
@@ -21,7 +21,7 @@ const ShowView = (props) => {
             ) : (
               <>
                 <ListButton color="text" record={record} />
-                {permissions && permissions.some((p) => p['acl:mode'] === 'acl:Write') && (
+                {permissions && permissions.some(p => p['acl:mode'] === 'acl:Write') && (
                   <EditButton color="text" record={record} />
                 )}
               </>

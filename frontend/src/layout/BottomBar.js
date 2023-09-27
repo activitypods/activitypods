@@ -7,28 +7,28 @@ import AssignmentIndIcon from '@material-ui/icons/AssignmentInd';
 import AppsIcon from '@material-ui/icons/Apps';
 import SettingsIcon from '@material-ui/icons/Settings';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   box: {
-    height: 56,
+    height: 56
   },
   appBar: {
     top: 'auto',
-    bottom: 0,
+    bottom: 0
   },
   bottomNav: {
     borderTopColor: theme.palette.primary.main,
     borderTopStyle: 'solid',
     borderTopWidth: 4,
     '& a': {
-      boxSizing: 'border-box',
-    },
+      boxSizing: 'border-box'
+    }
   },
   selected: {
     color: 'black',
     '& svg': {
-      fill: 'black',
-    },
-  },
+      fill: 'black'
+    }
+  }
 }));
 
 const BottomBar = () => {

@@ -2,7 +2,7 @@ import React from 'react';
 import { ListButton, useCreateContext } from 'react-admin';
 import { Box, Typography, Grid, Card } from '@material-ui/core';
 
-const CreateView = (props) => {
+const CreateView = props => {
   const { basePath, defaultTitle, record, redirect, resource, save, saving, version } = useCreateContext(props);
   return (
     <>
@@ -29,7 +29,7 @@ const CreateView = (props) => {
                 resource,
                 save: typeof props.children.props.save === 'undefined' ? save : props.children.props.save,
                 saving,
-                version,
+                version
               })
             : null}
         </Card>
@@ -39,7 +39,7 @@ const CreateView = (props) => {
 };
 
 CreateView.defaultProps = {
-  actions: [<ListButton />],
+  actions: [<ListButton />]
 };
 
 export default CreateView;

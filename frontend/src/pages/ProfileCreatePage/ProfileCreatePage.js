@@ -4,7 +4,7 @@ import ProfileCreatePageView from './ProfileCreatePageView';
 import theme from '../../config/theme';
 import { useGetIdentity, EditBase } from 'react-admin';
 
-const ProfileCreatePage = (props) => {
+const ProfileCreatePage = props => {
   const { identity } = useGetIdentity();
   if (!identity) return null;
   return (

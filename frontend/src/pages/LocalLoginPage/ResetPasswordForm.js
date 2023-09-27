@@ -6,24 +6,24 @@ import { useTranslate, useNotify, useSafeSetState, useAuthProvider } from 'react
 import TextInput from '../../common/inputs/TextInput';
 
 const useStyles = makeStyles(
-  (theme) => ({
+  theme => ({
     form: {
-      padding: '0 1em 1em 1em',
+      padding: '0 1em 1em 1em'
     },
     input: {
-      marginTop: '1em',
+      marginTop: '1em'
     },
     button: {
-      width: '100%',
+      width: '100%'
     },
     icon: {
-      marginRight: theme.spacing(1),
-    },
+      marginRight: theme.spacing(1)
+    }
   }),
   { name: 'RaLoginForm' }
 );
 
-const ResetPasswordForm = (props) => {
+const ResetPasswordForm = props => {
   const [loading, setLoading] = useSafeSetState(false);
   const authProvider = useAuthProvider();
 
@@ -31,7 +31,7 @@ const ResetPasswordForm = (props) => {
   const notify = useNotify();
   const classes = useStyles(props);
 
-  const validate = (values) => {
+  const validate = values => {
     const errors = { email: undefined };
 
     if (!values.email) {
@@ -41,15 +41,15 @@ const ResetPasswordForm = (props) => {
     return errors;
   };
 
-  const submit = (values) => {
+  const submit = values => {
     setLoading(true);
     authProvider
       .resetPassword({ ...values })
-      .then((res) => {
+      .then(res => {
         setLoading(false);
         notify('app.notification.reset_password_submitted', 'info');
       })
-      .catch((error) => {
+      .catch(error => {
         setLoading(false);
         notify(
           typeof error === 'string'
@@ -60,8 +60,8 @@ const ResetPasswordForm = (props) => {
           {
             type: 'warning',
             messageArgs: {
-              _: typeof error === 'string' ? error : error && error.message ? error.message : undefined,
-            },
+              _: typeof error === 'string' ? error : error && error.message ? error.message : undefined
+            }
           }
         );
       });
@@ -80,7 +80,7 @@ const ResetPasswordForm = (props) => {
                 name="email"
                 component={TextInput}
                 label={translate('auth.input.email')}
-                format={(value) => (value ? value.toLowerCase() : '')}
+                format={value => (value ? value.toLowerCase() : '')}
               />
             </div>
           </div>

@@ -23,8 +23,8 @@ module.exports = {
         // Do not await to increase performances
         ctx.call('syreen.location.updateRights', res);
         return res;
-      },
-    },
+      }
+    }
   },
   actions: {
     async setNewRights(ctx) {
@@ -37,10 +37,10 @@ module.exports = {
           additionalRights: {
             group: {
               uri: getAnnouncesGroupUri(offerUri),
-              read: true,
-            },
+              read: true
+            }
           },
-          webId: newData['dc:creator'],
+          webId: newData['dc:creator']
         });
       }
     },

@@ -14,7 +14,7 @@ const AcceptContactRequestButton = ({ activity, refetch, children, ...rest }) =>
         type: ACTIVITY_TYPES.ACCEPT,
         actor: outbox.owner,
         object: activity.id,
-        to: activity.actor,
+        to: activity.actor
       });
       notify('app.notification.contact_request_accepted');
       setTimeout(refetch, 3000);

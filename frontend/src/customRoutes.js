@@ -18,5 +18,5 @@ export default [
   <RouteWithoutLayout exact path="/authorize" component={AuthorizePage} />,
   <Route exact path="/settings" component={SettingsPage} />,
   <Route exact path="/settings/email" component={SettingsEmailPage} />,
-  <Route exact path="/settings/password" component={SettingsPasswordPage} />,
+  <Route exact path="/settings/password" component={SettingsPasswordPage} />
 ];

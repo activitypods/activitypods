@@ -9,24 +9,24 @@ module.exports = {
     cors: {
       origin: '*',
       methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE', 'HEAD', 'OPTIONS'],
-      exposedHeaders: '*',
+      exposedHeaders: '*'
     },
     routes: [
       {
         name: 'favicon',
         path: '/favicon.ico',
         aliases: {
-          'GET /': 'api.favicon',
-        },
+          'GET /': 'api.favicon'
+        }
       },
       {
         name: 'redirectToFront',
         path: '/',
         aliases: {
-          'GET /': 'api.redirectToFront',
-        },
-      },
-    ],
+          'GET /': 'api.redirectToFront'
+        }
+      }
+    ]
   },
   actions: {
     favicon(ctx) {
@@ -36,7 +36,7 @@ module.exports = {
     redirectToFront(ctx) {
       ctx.meta.$statusCode = 302;
       ctx.meta.$location = this.settings.frontendUrl;
-    },
+    }
   },
   methods: {
     authenticate(ctx, route, req, res) {
@@ -52,6 +52,6 @@ module.exports = {
       } else {
         return ctx.call('auth.authorize', { route, req, res });
       }
-    },
-  },
+    }
+  }
 };

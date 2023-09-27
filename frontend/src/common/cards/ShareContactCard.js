@@ -4,10 +4,10 @@ import { useGetIdentity, useTranslate } from 'react-admin';
 import { formatUsername } from '../../utils';
 import CopyButton from '../buttons/CopyButton';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   root: {
     marginTop: 5,
-    marginBottom: 24,
+    marginBottom: 24
   },
   title: {
     backgroundRepeat: 'no-repeat',
@@ -16,15 +16,15 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.primary.contrastText,
     padding: '10px 14px',
     [theme.breakpoints.down('sm')]: {
-      padding: '8px 16px',
-    },
+      padding: '8px 16px'
+    }
   },
   block: {
-    backgroundColor: 'white',
+    backgroundColor: 'white'
   },
   textField: {
-    paddingTop: 6,
-  },
+    paddingTop: 6
+  }
 }));
 
 const ShareContactCard = () => {

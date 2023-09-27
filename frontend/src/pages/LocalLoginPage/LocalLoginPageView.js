@@ -9,16 +9,16 @@ import ResetPasswordForm from './ResetPasswordForm';
 import NewPasswordForm from './NewPasswordForm';
 import SimpleBox from '../../layout/SimpleBox';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   switch: {
     margin: '1em',
     display: 'grid',
     textAlign: 'center',
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'
+  }
 }));
 
-const LocalLoginPage = (props) => {
+const LocalLoginPage = props => {
   const classes = useStyles(props);
   const searchParams = new URLSearchParams(props.location.search);
   const isSignup = searchParams.has('signup');

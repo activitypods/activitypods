@@ -3,9 +3,9 @@ import { UserMenu } from 'react-admin';
 import { Link } from 'react-router-dom';
 import { Box, Container, makeStyles, Typography, Grid } from '@material-ui/core';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   topBar: {
-    backgroundColor: theme.palette.primary.main,
+    backgroundColor: theme.palette.primary.main
   },
   title: {
     fontWeight: '800',
@@ -14,12 +14,12 @@ const useStyles = makeStyles((theme) => ({
 
     [theme.breakpoints.down('xs')]: {
       paddingTop: '1.3rem',
-      lineHeight: 0.8,
+      lineHeight: 0.8
     },
     '& a': {
-      textDecoration: 'none !important',
-    },
-  },
+      textDecoration: 'none !important'
+    }
+  }
 }));
 
 const AppBar = ({ title, logout }) => {

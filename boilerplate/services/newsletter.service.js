@@ -10,7 +10,7 @@ module.exports = {
     templateFolder: path.join(__dirname, '../templates'),
     from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
     transport,
-    data: {},
+    data: {}
   },
   actions: {
     async sendNewsletter(ctx) {
@@ -33,14 +33,14 @@ module.exports = {
             to: account.email,
             template,
             data: {
-              account,
-            },
+              account
+            }
           });
           this.logger.info('Newsletter sent to ' + account.email);
         } catch (e) {
           this.logger.warn('Could not send newsletter to ' + account.email);
         }
       }
-    },
-  },
+    }
+  }
 };

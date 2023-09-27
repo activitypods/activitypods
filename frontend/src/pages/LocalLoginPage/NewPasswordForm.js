@@ -6,24 +6,24 @@ import { useTranslate, useNotify, useSafeSetState, useAuthProvider } from 'react
 import TextInput from '../../common/inputs/TextInput';
 
 const useStyles = makeStyles(
-  (theme) => ({
+  theme => ({
     form: {
-      padding: '0 1em 1em 1em',
+      padding: '0 1em 1em 1em'
     },
     input: {
-      marginTop: '1em',
+      marginTop: '1em'
     },
     button: {
-      width: '100%',
+      width: '100%'
     },
     icon: {
-      marginRight: theme.spacing(1),
-    },
+      marginRight: theme.spacing(1)
+    }
   }),
   { name: 'RaLoginForm' }
 );
 
-const NewPasswordForm = (props) => {
+const NewPasswordForm = props => {
   const { location } = props;
   const searchParams = new URLSearchParams(location.search);
   const token = searchParams.get('token');
@@ -35,7 +35,7 @@ const NewPasswordForm = (props) => {
   const notify = useNotify();
   const classes = useStyles(props);
 
-  const validate = (values) => {
+  const validate = values => {
     const errors = { email: undefined };
 
     if (!values.email) {
@@ -45,18 +45,18 @@ const NewPasswordForm = (props) => {
     return errors;
   };
 
-  const submit = (values) => {
+  const submit = values => {
     setLoading(true);
     authProvider
       .setNewPassword({ ...values, token })
-      .then((res) => {
+      .then(res => {
         setTimeout(() => {
           window.location.href = '/login';
           setLoading(false);
         }, 2000);
         notify('app.notification.password_changed', 'info');
       })
-      .catch((error) => {
+      .catch(error => {
         setLoading(false);
         notify(
           typeof error === 'string'
@@ -67,8 +67,8 @@ const NewPasswordForm = (props) => {
           {
             type: 'warning',
             messageArgs: {
-              _: typeof error === 'string' ? error : error && error.message ? error.message : undefined,
-            },
+              _: typeof error === 'string' ? error : error && error.message ? error.message : undefined
+            }
           }
         );
       });
@@ -87,7 +87,7 @@ const NewPasswordForm = (props) => {
                 name="email"
                 component={TextInput}
                 label={translate('auth.input.email')}
-                format={(value) => (value ? value.toLowerCase() : '')}
+                format={value => (value ? value.toLowerCase() : '')}
               />
             </div>
             <div className={classes.input}>

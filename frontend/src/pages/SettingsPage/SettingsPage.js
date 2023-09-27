@@ -11,7 +11,7 @@ import {
   ListItemAvatar,
   ListItemText,
   ListItemSecondaryAction,
-  IconButton,
+  IconButton
 } from '@material-ui/core';
 import { useHistory } from 'react-router-dom';
 import EmailIcon from '@material-ui/icons/Email';
@@ -23,8 +23,8 @@ const useStyles = makeStyles(() => ({
   listItem: {
     backgroundColor: 'white',
     marginBottom: 8,
-    boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)',
-  },
+    boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)'
+  }
 }));
 
 const SettingsPage = () => {
@@ -38,7 +38,7 @@ const SettingsPage = () => {
   const { ids } = useGetList('Location');
 
   useEffect(() => {
-    authProvider.getAccountSettings().then((res) => setAccountSettings(res));
+    authProvider.getAccountSettings().then(res => setAccountSettings(res));
   }, [setAccountSettings, authProvider]);
 
   const settings = [
@@ -46,20 +46,20 @@ const SettingsPage = () => {
       path: '/Location',
       icon: <PlaceIcon />,
       label: 'app.setting.addresses',
-      value: translate('app.setting.address', { smart_count: ids.length }),
+      value: translate('app.setting.address', { smart_count: ids.length })
     },
     {
       path: '/settings/email',
       icon: <EmailIcon />,
       label: 'app.setting.email',
-      value: accountSettings.email,
+      value: accountSettings.email
     },
     {
       path: '/settings/password',
       icon: <LockIcon />,
       label: 'app.setting.password',
-      value: '***************',
-    },
+      value: '***************'
+    }
   ];
 
   return (
@@ -69,7 +69,7 @@ const SettingsPage = () => {
       </Typography>
       <Box mt={1}>
         <List>
-          {settings.map((setting) => (
+          {settings.map(setting => (
             <ListItem button onClick={() => history.push(setting.path)} className={classes.listItem}>
               <ListItemAvatar>
                 <Avatar>{setting.icon}</Avatar>

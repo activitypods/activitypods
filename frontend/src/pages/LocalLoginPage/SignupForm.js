@@ -8,19 +8,19 @@ import { Button, Box, CircularProgress, makeStyles } from '@material-ui/core';
 import { useSignup } from '@semapps/auth-provider';
 import TextInput from '../../common/inputs/TextInput';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   form: {
-    padding: '0 1em 1em 1em',
+    padding: '0 1em 1em 1em'
   },
   input: {
-    marginTop: '1em',
+    marginTop: '1em'
   },
   button: {
-    width: '100%',
+    width: '100%'
   },
   icon: {
-    marginRight: theme.spacing(1),
-  },
+    marginRight: theme.spacing(1)
+  }
 }));
 
 const SignupForm = ({ redirectTo }) => {
@@ -33,7 +33,7 @@ const SignupForm = ({ redirectTo }) => {
   const searchParams = new URLSearchParams(location.search);
 
   const validateEmail = email('ra.validation.email');
-  const validate = (values) => {
+  const validate = values => {
     const errors = { username: undefined, email: undefined, password: undefined };
 
     if (!values.username) {
@@ -56,13 +56,13 @@ const SignupForm = ({ redirectTo }) => {
     return errors;
   };
 
-  const submit = (values) => {
+  const submit = values => {
     setLoading(true);
     signup({
       ...values,
-      preferredLocale: process.env.REACT_APP_LANG,
+      preferredLocale: process.env.REACT_APP_LANG
     })
-      .then((webId) => {
+      .then(webId => {
         setTimeout(() => {
           // Reload to ensure the dataServer config is reset
           window.location.reload();
@@ -71,7 +71,7 @@ const SignupForm = ({ redirectTo }) => {
         }, 4000);
         notify('auth.message.new_user_created', 'info');
       })
-      .catch((error) => {
+      .catch(error => {
         setLoading(false);
         notify(
           typeof error === 'string'
@@ -81,7 +81,7 @@ const SignupForm = ({ redirectTo }) => {
             : error.message,
           'warning',
           {
-            _: typeof error === 'string' ? error : error && error.message ? error.message : undefined,
+            _: typeof error === 'string' ? error : error && error.message ? error.message : undefined
           }
         );
       });
@@ -101,12 +101,12 @@ const SignupForm = ({ redirectTo }) => {
                 name="username"
                 component={TextInput}
                 label={translate('auth.input.username')}
-                format={(value) =>
+                format={value =>
                   value
                     ? createSlug(value, {
                         lang: process.env.REACT_APP_LANG?.substring(0, 2) || 'fr',
                         separator: '_',
-                        custom: ['.', '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                        custom: ['.', '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
                       })
                     : ''
                 }
@@ -120,7 +120,7 @@ const SignupForm = ({ redirectTo }) => {
                 name="email"
                 component={TextInput}
                 label={translate('auth.input.email')}
-                format={(value) => (value ? value.toLowerCase() : '')}
+                format={value => (value ? value.toLowerCase() : '')}
                 disabled={loading || (searchParams.has('email') && searchParams.has('force-email'))}
               />
             </div>
@@ -149,7 +149,7 @@ const SignupForm = ({ redirectTo }) => {
 };
 
 SignupForm.propTypes = {
-  redirectTo: PropTypes.string,
+  redirectTo: PropTypes.string
 };
 
 export default SignupForm;

@@ -7,35 +7,35 @@ import AcceptContactRequestButton from '../buttons/AcceptContactRequestButton';
 import IgnoreContactRequestButton from '../buttons/IgnoreContactRequestButton';
 import RejectContactRequestButton from '../buttons/RejectContactRequestButton';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   root: {
     marginTop: 5,
     marginBottom: 24,
     [theme.breakpoints.down('sm')]: {
-      marginBottom: 0,
-    },
+      marginBottom: 0
+    }
   },
   title: {
     borderBottom: '1px lightgrey solid',
-    padding: 12,
+    padding: 12
   },
   list: {
     padding: 4,
     paddingLeft: 60,
-    position: 'relative',
+    position: 'relative'
   },
   name: {
     fontWeight: 'bold',
     lineHeight: 2,
     marginRight: 6,
-    color: 'black',
+    color: 'black'
   },
   avatar: {
     width: 42,
     height: 42,
     left: 5,
     top: 12,
-    position: 'absolute',
+    position: 'absolute'
   },
   button: {
     margin: 6,
@@ -43,20 +43,20 @@ const useStyles = makeStyles((theme) => ({
       margin: 0,
       marginRight: 6,
       height: 30,
-      minWidth: 90,
-    },
-  },
+      minWidth: 90
+    }
+  }
 }));
 
 const ContactRequest = ({ activity, refetch }) => {
   const classes = useStyles();
-  const xs = useMediaQuery((theme) => theme.breakpoints.down('xs'), { noSsr: true });
+  const xs = useMediaQuery(theme => theme.breakpoints.down('xs'), { noSsr: true });
   const translate = useTranslate();
 
   let { loading, data: profile } = useQueryWithStore({
     type: 'getOne',
     resource: 'Profile',
-    payload: { id: activity.object.object },
+    payload: { id: activity.object.object }
   });
 
   if (loading) return null;
@@ -140,7 +140,7 @@ const ContactRequestsBlock = () => {
         <Typography variant="body2">{translate('app.block.contact_requests')}</Typography>
       </Box>
       <Box p={1} pt={0}>
-        {contactRequests.map((activity) => (
+        {contactRequests.map(activity => (
           <Box className={classes.list}>
             <ContactRequest activity={activity} refetch={refetchAndRefresh} />
           </Box>

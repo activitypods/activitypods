@@ -4,7 +4,7 @@ const {
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
   REJECT_CONTACT_REQUEST,
-  IGNORE_CONTACT_REQUEST,
+  IGNORE_CONTACT_REQUEST
 } = require('../config/patterns');
 const { CONTACT_REQUEST_MAPPING, ACCEPT_CONTACT_REQUEST_MAPPING } = require('../config/mappings');
 const { defaultToArray } = require('@semapps/ldp');
@@ -19,7 +19,7 @@ module.exports = {
       attachToTypes: Object.values(ACTOR_TYPES),
       attachPredicate: 'http://activitypods.org/ns/core#contacts',
       ordered: false,
-      dereferenceItems: false,
+      dereferenceItems: false
     });
 
     await this.broker.call('activitypub.registry.register', {
@@ -27,7 +27,7 @@ module.exports = {
       attachToTypes: Object.values(ACTOR_TYPES),
       attachPredicate: 'http://activitypods.org/ns/core#contactRequests',
       ordered: false,
-      dereferenceItems: true,
+      dereferenceItems: true
     });
 
     await this.broker.call('activitypub.registry.register', {
@@ -35,17 +35,17 @@ module.exports = {
       attachToTypes: Object.values(ACTOR_TYPES),
       attachPredicate: 'http://activitypods.org/ns/core#rejectedContacts',
       ordered: false,
-      dereferenceItems: false,
+      dereferenceItems: false
     });
 
     await this.broker.call('activity-mapping.addMapper', {
       match: CONTACT_REQUEST,
-      mapping: CONTACT_REQUEST_MAPPING,
+      mapping: CONTACT_REQUEST_MAPPING
     });
 
     await this.broker.call('activity-mapping.addMapper', {
       match: ACCEPT_CONTACT_REQUEST,
-      mapping: ACCEPT_CONTACT_REQUEST_MAPPING,
+      mapping: ACCEPT_CONTACT_REQUEST_MAPPING
     });
   },
   activities: {
@@ -57,7 +57,7 @@ module.exports = {
           await ctx.call('webacl.group.addMember', {
             groupSlug: new URL(emitterUri).pathname + '/contacts',
             memberUri: targetUri,
-            webId: emitterUri,
+            webId: emitterUri
           });
         }
       },
@@ -68,7 +68,7 @@ module.exports = {
         if (
           await ctx.call('activitypub.collection.includes', {
             collectionUri: recipient['apods:contacts'],
-            itemUri: activity.actor,
+            itemUri: activity.actor
           })
         ) {
           return;
@@ -78,7 +78,7 @@ module.exports = {
         if (
           await ctx.call('activitypub.collection.includes', {
             collectionUri: recipient['apods:rejectedContacts'],
-            itemUri: activity.actor,
+            itemUri: activity.actor
           })
         ) {
           await ctx.call('activitypub.outbox.post', {
@@ -86,7 +86,7 @@ module.exports = {
             type: ACTIVITY_TYPES.REJECT,
             actor: recipient.id,
             object: activity.id,
-            to: activity.actor,
+            to: activity.actor
           });
           return;
         }
@@ -94,17 +94,17 @@ module.exports = {
         // Check that a request by the same actor is not already waiting (if so, ignore it)
         const collection = await ctx.call('activitypub.collection.get', {
           collectionUri: recipient['apods:contactRequests'],
-          webId: recipientUri,
+          webId: recipientUri
         });
-        if (collection && collection.items.length > 0 && collection.items.find((a) => a.actor === activity.actor)) {
+        if (collection && collection.items.length > 0 && collection.items.find(a => a.actor === activity.actor)) {
           return;
         }
 
         await ctx.call('activitypub.collection.attach', {
           collectionUri: recipient['apods:contactRequests'],
-          item: activity,
+          item: activity
         });
-      },
+      }
     },
     acceptContactRequest: {
       match: ACCEPT_CONTACT_REQUEST,
@@ -115,32 +115,32 @@ module.exports = {
         await ctx.call('webacl.group.addMember', {
           groupSlug: new URL(emitterUri).pathname + '/contacts',
           memberUri: activity.to,
-          webId: emitterUri,
+          webId: emitterUri
         });
 
         // 2. Cache the other actor's profile
         await ctx.call('ldp.remote.store', {
           resource: activity.object.object.object,
-          webId: emitterUri,
+          webId: emitterUri
         });
 
         // 3. Attach the other actor's profile to my profiles container
         await ctx.call('ldp.container.attach', {
           containerUri: urlJoin(emitterUri, 'data', 'profiles'),
           resourceUri: activity.object.object.object.id,
-          webId: emitterUri,
+          webId: emitterUri
         });
 
         // 4. Add the other actor to my contacts list
         await ctx.call('activitypub.collection.attach', {
           collectionUri: emitter['apods:contacts'],
-          item: activity.object.actor,
+          item: activity.object.actor
         });
 
         // 5. Remove the activity from my contact requests
         await ctx.call('activitypub.collection.detach', {
           collectionUri: emitter['apods:contactRequests'],
-          item: activity.object.id,
+          item: activity.object.id
         });
       },
       async onReceive(ctx, activity, recipientUri) {
@@ -153,23 +153,23 @@ module.exports = {
           // Cache the other actor's profile (it should be visible now)
           await ctx.call('ldp.remote.store', {
             resourceUri: emitter.url,
-            webId: recipientUri,
+            webId: recipientUri
           });
 
           // Attach the other actor's profile to my profiles container
           await ctx.call('ldp.container.attach', {
             containerUri: urlJoin(recipientUri, 'data', 'profiles'),
             resourceUri: emitter.url,
-            webId: recipientUri,
+            webId: recipientUri
           });
 
           // Add the other actor to my contacts list
           await ctx.call('activitypub.collection.attach', {
             collectionUri: recipient['apods:contacts'],
-            item: emitter.id,
+            item: emitter.id
           });
         }
-      },
+      }
     },
     ignoreContactRequest: {
       match: IGNORE_CONTACT_REQUEST,
@@ -179,7 +179,7 @@ module.exports = {
         // Remove the activity from my contact requests
         await ctx.call('activitypub.collection.detach', {
           collectionUri: emitter['apods:contactRequests'],
-          item: activity.object.id,
+          item: activity.object.id
         });
       },
       async onReceive(ctx, activity, recipientUri) {
@@ -187,9 +187,9 @@ module.exports = {
         await ctx.call('webacl.group.removeMember', {
           groupSlug: new URL(recipientUri).pathname + '/contacts',
           memberUri: activity.actor,
-          webId: recipientUri,
+          webId: recipientUri
         });
-      },
+      }
     },
     rejectContactRequest: {
       match: REJECT_CONTACT_REQUEST,
@@ -199,13 +199,13 @@ module.exports = {
         // Add the actor to my rejected contacts list
         await ctx.call('activitypub.collection.attach', {
           collectionUri: emitter['apods:rejectedContacts'],
-          item: activity.object.actor,
+          item: activity.object.actor
         });
 
         // Remove the activity from my contact requests
         await ctx.call('activitypub.collection.detach', {
           collectionUri: emitter['apods:contactRequests'],
-          item: activity.object.id,
+          item: activity.object.id
         });
       },
       async onReceive(ctx, activity, recipientUri) {
@@ -213,9 +213,9 @@ module.exports = {
         await ctx.call('webacl.group.removeMember', {
           groupSlug: new URL(recipientUri).pathname + '/contacts',
           memberUri: activity.actor,
-          webId: recipientUri,
+          webId: recipientUri
         });
-      },
-    },
-  },
+      }
+    }
+  }
 };

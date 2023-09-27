@@ -4,7 +4,7 @@ import { ThemeProvider } from '@material-ui/core';
 import AuthorizePageView from './AuthorizePageView';
 import theme from '../../config/theme';
 
-const AuthorizePage = (props) => {
+const AuthorizePage = props => {
   const { identity } = useGetIdentity();
   if (!identity) return null;
   return (

@@ -3,15 +3,15 @@ import { useShowContext } from 'react-admin';
 import { Grid, Avatar, makeStyles } from '@material-ui/core';
 import DetailsList from './DetailsList';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   avatar: {
     width: 200,
     height: 200,
     [theme.breakpoints.down('xs')]: {
       width: 120,
-      height: 120,
-    },
-  },
+      height: 120
+    }
+  }
 }));
 
 const Hero = ({ children, image, defaultImage }) => {

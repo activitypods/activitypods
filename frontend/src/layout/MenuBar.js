@@ -2,19 +2,19 @@ import React from 'react';
 import { useGetIdentity, useTranslate, Link } from 'react-admin';
 import { Box, Container, Breadcrumbs, makeStyles } from '@material-ui/core';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   menuBar: {
     backgroundColor: 'white',
     borderBottomColor: theme.palette.primary.main,
     borderBottomStyle: 'solid',
-    borderBottomWidth: 4,
+    borderBottomWidth: 4
   },
   link: {
     fontSize: '14pt',
     color: 'black',
     fontWeight: '300',
-    lineHeight: '2.2em',
-  },
+    lineHeight: '2.2em'
+  }
 }));
 
 const MenuBar = () => {

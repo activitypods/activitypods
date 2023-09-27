@@ -5,7 +5,7 @@ import LocationForm from './LocationForm';
 import LocationTitle from './LocationTitle';
 import BlockAnonymous from '../../common/BlockAnonymous';
 
-export const LocationEdit = (props) => (
+export const LocationEdit = props => (
   <BlockAnonymous>
     <Edit title={<LocationTitle />} actions={[<ListButton />]} {...props}>
       <LocationForm />

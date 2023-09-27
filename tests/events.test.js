@@ -8,7 +8,7 @@ jest.setTimeout(80000);
 
 const NUM_PODS = 4;
 
-const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
+const delay = t => new Promise(resolve => setTimeout(resolve, t));
 
 const mockSendNotification = jest.fn(() => Promise.resolve());
 
@@ -23,8 +23,8 @@ const initializeBroker = async (port, accountsDataset) => {
   await broker.createService({
     mixins: [require('./services/notification.service')],
     actions: {
-      send: mockSendNotification,
-    },
+      send: mockSendNotification
+    }
   });
 
   await broker.start();
@@ -32,7 +32,7 @@ const initializeBroker = async (port, accountsDataset) => {
   return broker;
 };
 
-describe.each(['single-server', 'multi-server'])('In mode %s, test events app', (mode) => {
+describe.each(['single-server', 'multi-server'])('In mode %s, test events app', mode => {
   let actors = [],
     broker,
     alice,
@@ -70,14 +70,14 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         'activitypub.actor.awaitCreateComplete',
         {
           actorUri: webId,
-          additionalKeys: ['url', 'apods:contacts', 'apods:contactRequests', 'apods:rejectedContacts'],
+          additionalKeys: ['url', 'apods:contacts', 'apods:contactRequests', 'apods:rejectedContacts']
         },
         { meta: { dataset: actorData.username } }
       );
       actors[i].call = (actionName, params, options = {}) =>
         broker[i].call(actionName, params, {
           ...options,
-          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername },
+          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
         });
     }
 
@@ -89,12 +89,12 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
     // Manually exchange contacts between Alice and Bob (this will ne used for attendees matching)
     await alice.call('activitypub.collection.attach', {
       collectionUri: alice['apods:contacts'],
-      itemUri: bob.id,
+      itemUri: bob.id
     });
 
     await bob.call('activitypub.collection.attach', {
       collectionUri: bob['apods:contacts'],
-      itemUri: alice.id,
+      itemUri: alice.id
     });
   }, 80001);
 
@@ -113,9 +113,9 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       containerUri: alice.id + '/data/locations',
       resource: {
         type: 'vcard:Location',
-        'vcard:given-name': 'Alice place',
+        'vcard:given-name': 'Alice place'
       },
-      contentType: MIME_TYPES.JSON,
+      contentType: MIME_TYPES.JSON
     });
 
     eventUri = await alice.call('events.event.post', {
@@ -123,21 +123,21 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       resource: {
         type: OBJECT_TYPES.EVENT,
         name: 'Birthday party !!',
-        location: locationUri,
+        location: locationUri
       },
-      contentType: MIME_TYPES.JSON,
+      contentType: MIME_TYPES.JSON
     });
 
     event = await alice.call('events.event.get', {
       resourceUri: eventUri,
-      accept: MIME_TYPES.JSON,
+      accept: MIME_TYPES.JSON
     });
 
     await waitForExpect(async () => {
       await expect(
         alice.call('webacl.group.exist', {
           groupSlug: new URL(eventUri).pathname + '/announces',
-          webId: 'system',
+          webId: 'system'
         })
       ).resolves.toBeTruthy();
     });
@@ -146,7 +146,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       await expect(
         alice.call('activitypub.collection.includes', {
           collectionUri: eventUri + '/attendees',
-          itemUri: alice.id,
+          itemUri: alice.id
         })
       ).resolves.toBeTruthy();
     });
@@ -159,7 +159,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       actor: alice.id,
       object: eventUri,
       target: [bob.id, craig.id],
-      to: [bob.id, craig.id],
+      to: [bob.id, craig.id]
     });
 
     await waitForExpect(() => {
@@ -173,7 +173,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       await expect(
         alice.call('activitypub.collection.includes', {
           collectionUri: eventUri + '/announces',
-          itemUri: bob.id,
+          itemUri: bob.id
         })
       ).resolves.toBeTruthy();
     });
@@ -182,7 +182,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       await expect(
         alice.call('activitypub.collection.includes', {
           collectionUri: eventUri + '/announcers',
-          itemUri: bob.id,
+          itemUri: bob.id
         })
       ).resolves.toBeFalsy();
     });
@@ -192,7 +192,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         alice.call('webacl.resource.hasRights', {
           resourceUri: eventUri,
           rights: { read: true },
-          webId: bob.id,
+          webId: bob.id
         })
       ).resolves.toMatchObject({ read: true });
     });
@@ -203,7 +203,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         alice.call('webacl.resource.hasRights', {
           resourceUri: locationUri,
           rights: { read: true },
-          webId: bob.id,
+          webId: bob.id
         })
       ).resolves.toMatchObject({ read: true });
     });
@@ -214,7 +214,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       await expect(
         bob.call('triplestore.countTriplesOfSubject', {
           uri: eventUri,
-          webId: 'system', // TODO change
+          webId: 'system' // TODO change
         })
       ).resolves.toBeTruthy();
     }, 20000);
@@ -225,7 +225,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         alice.call('webacl.resource.hasRights', {
           resourceUri: eventUri + '/attendees',
           rights: { read: true },
-          webId: bob.id,
+          webId: bob.id
         })
       ).resolves.not.toBeNull();
     });
@@ -236,16 +236,16 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       containerUri: alice.id + '/data/locations',
       resource: {
         type: 'vcard:Location',
-        'vcard:given-name': 'Alice other place',
+        'vcard:given-name': 'Alice other place'
       },
-      contentType: MIME_TYPES.JSON,
+      contentType: MIME_TYPES.JSON
     });
 
     event.location = newLocationUri;
 
     await alice.call('events.event.put', {
       resource: event,
-      contentType: MIME_TYPES.JSON,
+      contentType: MIME_TYPES.JSON
     });
 
     // Ensure the invitees have the right to see the new location
@@ -254,7 +254,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         alice.call('webacl.resource.hasRights', {
           resourceUri: newLocationUri,
           rights: { read: true },
-          webId: bob.id,
+          webId: bob.id
         })
       ).resolves.toMatchObject({ read: true });
     });
@@ -265,7 +265,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         alice.call('webacl.resource.hasRights', {
           resourceUri: locationUri,
           rights: { read: true },
-          webId: bob.id,
+          webId: bob.id
         })
       ).resolves.toMatchObject({ read: false });
     });
@@ -278,17 +278,17 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       actor: alice.id,
       object: {
         type: ACTIVITY_TYPES.ANNOUNCE,
-        object: eventUri,
+        object: eventUri
       },
       target: craig.id,
-      to: craig.id,
+      to: craig.id
     });
 
     await waitForExpect(async () => {
       await expect(
         alice.call('activitypub.collection.includes', {
           collectionUri: eventUri + '/announcers',
-          itemUri: craig.id,
+          itemUri: craig.id
         })
       ).resolves.toBeTruthy();
     });
@@ -299,7 +299,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         alice.call('webacl.resource.hasRights', {
           resourceUri: eventUri + '/announces',
           rights: { read: true },
-          webId: craig.id,
+          webId: craig.id
         })
       ).resolves.not.toBeNull();
     });
@@ -314,10 +314,10 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         type: ACTIVITY_TYPES.ANNOUNCE,
         actor: alice.id,
         object: eventUri,
-        target: daisy.id,
+        target: daisy.id
       },
       target: alice.id,
-      to: alice.id,
+      to: alice.id
     });
 
     await waitForExpect(() => {
@@ -330,7 +330,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       await expect(
         alice.call('activitypub.collection.includes', {
           collectionUri: eventUri + '/announces',
-          itemUri: daisy.id,
+          itemUri: daisy.id
         })
       ).resolves.toBeTruthy();
     });
@@ -342,7 +342,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       type: ACTIVITY_TYPES.JOIN,
       actor: bob.id,
       object: eventUri,
-      to: alice.id,
+      to: alice.id
     });
 
     await craig.call('activitypub.outbox.post', {
@@ -350,7 +350,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       type: ACTIVITY_TYPES.JOIN,
       actor: craig.id,
       object: eventUri,
-      to: alice.id,
+      to: alice.id
     });
 
     await daisy.call('activitypub.outbox.post', {
@@ -358,14 +358,14 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       type: ACTIVITY_TYPES.JOIN,
       actor: daisy.id,
       object: eventUri,
-      to: alice.id,
+      to: alice.id
     });
 
     await waitForExpect(async () => {
       await expect(
         alice.call('activitypub.collection.includes', {
           collectionUri: eventUri + '/attendees',
-          itemUri: bob.id,
+          itemUri: bob.id
         })
       ).resolves.toBeTruthy();
     });
@@ -376,7 +376,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         daisy.call('webacl.resource.hasRights', {
           resourceUri: daisy.url,
           rights: { read: true },
-          webId: alice.id,
+          webId: alice.id
         })
       ).resolves.toMatchObject({ read: true });
     });
@@ -403,7 +403,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
     await alice.call('events.event.put', {
       resourceUri: eventUri,
       resource: event,
-      contentType: MIME_TYPES.JSON,
+      contentType: MIME_TYPES.JSON
     });
 
     await alice.call('events.status.tagComing');
@@ -413,7 +413,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
     await expect(
       alice.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
     ).resolves.toMatchObject({
-      'apods:hasStatus': expect.arrayContaining(['apods:Coming', 'apods:Open']),
+      'apods:hasStatus': expect.arrayContaining(['apods:Coming', 'apods:Open'])
     });
   });
 
@@ -434,7 +434,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       resourceUri: eventUri,
       resource: event,
       contentType: MIME_TYPES.JSON,
-      webId: alice.id,
+      webId: alice.id
     });
 
     await alice.call('events.status.tagComing');
@@ -444,7 +444,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
     await expect(
       alice.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
     ).resolves.toMatchObject({
-      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming']),
+      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming'])
     });
   });
 
@@ -466,7 +466,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       resourceUri: eventUri,
       resource: event,
       contentType: MIME_TYPES.JSON,
-      webId: alice.id,
+      webId: alice.id
     });
 
     await alice.call('events.status.tagComing');
@@ -476,7 +476,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
     await expect(
       alice.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
     ).resolves.toMatchObject({
-      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming']),
+      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming'])
     });
   });
 
@@ -486,14 +486,14 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       type: ACTIVITY_TYPES.LEAVE,
       actor: craig.id,
       object: eventUri,
-      to: alice.id,
+      to: alice.id
     });
 
     await waitForExpect(async () => {
       await expect(
         alice.call('activitypub.collection.includes', {
           collectionUri: eventUri + '/attendees',
-          itemUri: craig.id,
+          itemUri: craig.id
         })
       ).resolves.toBeFalsy();
     });
@@ -508,7 +508,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       await expect(
         alice.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
       ).resolves.toMatchObject({
-        'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
+        'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming'])
       });
     }, 15000);
 
@@ -521,7 +521,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       await expect(
         alice.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
       ).resolves.toMatchObject({
-        'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming']),
+        'apods:hasStatus': expect.arrayContaining(['apods:Open', 'apods:Coming'])
       });
     });
   });
@@ -533,13 +533,13 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       resourceUri: eventUri,
       resource: event,
       contentType: MIME_TYPES.JSON,
-      webId: alice.id,
+      webId: alice.id
     });
 
     await expect(
       alice.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
     ).resolves.toMatchObject({
-      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming']),
+      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming'])
     });
 
     // This shouldn't have an impact
@@ -550,7 +550,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
     await expect(
       alice.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
     ).resolves.toMatchObject({
-      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming']),
+      'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Coming'])
     });
   });
 
@@ -570,7 +570,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         resourceUri: eventUri,
         resource: event,
         contentType: MIME_TYPES.JSON,
-        webId: alice.id,
+        webId: alice.id
       });
 
       await alice.call('events.status.tagComing');
@@ -580,7 +580,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       await expect(
         alice.call('activitypub.object.get', { objectUri: eventUri, actorUri: alice.id })
       ).resolves.toMatchObject({
-        'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Finished']),
+        'apods:hasStatus': expect.arrayContaining(['apods:Closed', 'apods:Finished'])
       });
 
       // Daisy should receive two contact requests from Alice and Bob
@@ -591,14 +591,14 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
           items: expect.arrayContaining([
             expect.objectContaining({
               type: ACTIVITY_TYPES.OFFER,
-              actor: alice.id,
+              actor: alice.id
             }),
             expect.objectContaining({
               type: ACTIVITY_TYPES.OFFER,
-              actor: bob.id,
-            }),
+              actor: bob.id
+            })
           ]),
-          totalItems: 2,
+          totalItems: 2
         });
       });
 
@@ -610,10 +610,10 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
           items: expect.arrayContaining([
             expect.objectContaining({
               type: ACTIVITY_TYPES.OFFER,
-              actor: daisy.id,
-            }),
+              actor: daisy.id
+            })
           ]),
-          totalItems: 1,
+          totalItems: 1
         });
       });
 
@@ -629,17 +629,17 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
 
     test('Daisy silently accept Bob automatic contact requests', async () => {
       const { items: contactRequests } = await daisy.call('activitypub.collection.get', {
-        collectionUri: daisy['apods:contactRequests'],
+        collectionUri: daisy['apods:contactRequests']
       });
 
-      const bobContactRequest = contactRequests.find((r) => r.actor === bob.id);
+      const bobContactRequest = contactRequests.find(r => r.actor === bob.id);
 
       await daisy.call('activitypub.outbox.post', {
         collectionUri: daisy.outbox,
         type: ACTIVITY_TYPES.ACCEPT,
         actor: daisy.id,
         object: bobContactRequest.id,
-        to: bob.id,
+        to: bob.id
       });
 
       await delay(5000);
@@ -651,7 +651,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
 
   test('Alice delete her event', async () => {
     await alice.call('events.event.delete', {
-      resourceUri: eventUri,
+      resourceUri: eventUri
     });
 
     // The event is now a Tombstone
@@ -671,14 +671,14 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
     await waitForExpect(async () => {
       await expect(
         alice.call('ldp.container.get', {
-          containerUri: alice.id + '/data/events',
+          containerUri: alice.id + '/data/events'
         })
       ).resolves.not.toMatchObject({
         'ldp:contains': expect.arrayContaining([
           expect.objectContaining({
-            id: eventUri,
-          }),
-        ]),
+            id: eventUri
+          })
+        ])
       });
     });
 
@@ -687,16 +687,16 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       // TODO new action to only get most recent item in collection
       const outbox = await alice.call('activitypub.collection.get', {
         collectionUri: alice.outbox,
-        page: 1,
+        page: 1
       });
       await expect(outbox.orderedItems[0]).toMatchObject({
         type: ACTIVITY_TYPES.ANNOUNCE,
         object: {
           type: ACTIVITY_TYPES.DELETE,
-          object: eventUri,
+          object: eventUri
         },
         actor: alice.id,
-        to: expect.arrayContaining([bob.id, craig.id, daisy.id]),
+        to: expect.arrayContaining([bob.id, craig.id, daisy.id])
       });
     });
 
@@ -704,14 +704,14 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
     await waitForExpect(async () => {
       await expect(
         bob.call('ldp.container.get', {
-          containerUri: bob.id + '/data/events',
+          containerUri: bob.id + '/data/events'
         })
       ).resolves.not.toMatchObject({
         'ldp:contains': expect.arrayContaining([
           expect.objectContaining({
-            id: eventUri,
-          }),
-        ]),
+            id: eventUri
+          })
+        ])
       });
     });
   });

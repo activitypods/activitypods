@@ -4,7 +4,7 @@ import { ImageField } from '@semapps/field-components';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import SimpleBox from '../../layout/SimpleBox';
 
-const ToolbarWithoutDelete = (props) => (
+const ToolbarWithoutDelete = props => (
   <Toolbar {...props}>
     <SaveButton />
   </Toolbar>

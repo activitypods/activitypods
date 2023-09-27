@@ -6,17 +6,17 @@ module.exports = {
   mixins: [ActivitiesHandlerMixin],
   settings: {
     groupUri: null,
-    alertBotUri: null,
+    alertBotUri: null
   },
   async started() {
     // Don't send notifications when the offer comes from Syreen group
     await this.broker.call('activity-mapping.addMapper', {
       match: {
         type: ACTIVITY_TYPES.ANNOUNCE,
-        actor: this.settings.groupUri,
+        actor: this.settings.groupUri
       },
       mapping: false,
-      priority: 2,
+      priority: 2
     });
   },
   actions: {
@@ -32,7 +32,7 @@ module.exports = {
 
           const groupExist = await ctx.call('webacl.group.exist', {
             groupUri: aclGroupUri,
-            webId: 'system', // We cannot use recipientUri or we get a 403
+            webId: 'system' // We cannot use recipientUri or we get a 403
           });
 
           if (groupExist) {
@@ -41,19 +41,19 @@ module.exports = {
             await ctx.call('webacl.group.addMember', {
               groupUri: aclGroupUri,
               memberUri: this.settings.groupUri,
-              webId: account.webId,
+              webId: account.webId
             });
 
             // Also add the alert bot to the ACL group in order to avoid errors with the ActivitiesHandlerMixin
             await ctx.call('webacl.group.addMember', {
               groupUri: aclGroupUri,
               memberUri: this.settings.alertBotUri,
-              webId: account.webId,
+              webId: account.webId
             });
           }
         }
       }
-    },
+    }
   },
   activities: {
     joinGroup: {
@@ -62,7 +62,7 @@ module.exports = {
           ctx,
           {
             type: ACTIVITY_TYPES.JOIN,
-            object: this.settings.groupUri,
+            object: this.settings.groupUri
           },
           activity
         );
@@ -72,45 +72,45 @@ module.exports = {
 
         const emitter = await ctx.call('activitypub.actor.get', {
           actorUri: emitterUri,
-          webId: emitterUri,
+          webId: emitterUri
         });
 
         const emitterProfile = await ctx.call('activitypub.object.get', {
           objectUri: emitter.url,
-          webId: emitterUri,
+          webId: emitterUri
         });
 
         const groupExist = await ctx.call('webacl.group.exist', {
           groupUri: aclGroupUri,
-          webId: 'system', // We cannot use recipientUri or we get a 403
+          webId: 'system' // We cannot use recipientUri or we get a 403
         });
 
         if (!groupExist) {
           // Create a local ACL group for Syreen members
           await ctx.call('webacl.group.create', {
             groupUri: aclGroupUri,
-            webId: emitterUri,
+            webId: emitterUri
           });
 
           await ctx.call('webacl.group.addMember', {
             groupUri: aclGroupUri,
             memberUri: this.settings.groupUri,
-            webId: emitterUri,
+            webId: emitterUri
           });
 
           // Also add the alert bot to the ACL group in order to avoid errors with the ActivitiesHandlerMixin
           await ctx.call('webacl.group.addMember', {
             groupUri: aclGroupUri,
             memberUri: this.settings.alertBotUri,
-            webId: emitterUri,
+            webId: emitterUri
           });
 
           const group = await ctx.call('activitypub.actor.get', {
-            actorUri: this.settings.groupUri,
+            actorUri: this.settings.groupUri
           });
 
           const groupFollowersCollection = await ctx.call('ldp.remote.get', {
-            resourceUri: group.followers,
+            resourceUri: group.followers
           });
 
           if (groupFollowersCollection) {
@@ -119,7 +119,7 @@ module.exports = {
               await ctx.call('webacl.group.addMember', {
                 groupUri: aclGroupUri,
                 memberUri,
-                webId: emitterUri,
+                webId: emitterUri
               });
             }
           }
@@ -133,16 +133,16 @@ module.exports = {
             additionalRights: {
               group: {
                 uri: aclGroupUri,
-                read: true,
-              },
+                read: true
+              }
             },
-            webId: emitterUri,
+            webId: emitterUri
           },
           {
             meta: {
               // We don't want the user to announce directly to other group members
-              skipObjectsWatcher: true,
-            },
+              skipObjectsWatcher: true
+            }
           }
         );
 
@@ -154,19 +154,19 @@ module.exports = {
             additionalRights: {
               group: {
                 uri: aclGroupUri,
-                read: true,
-              },
+                read: true
+              }
             },
-            webId: emitterUri,
+            webId: emitterUri
           },
           {
             meta: {
               // We don't want the user to announce directly to other group members
-              skipObjectsWatcher: true,
-            },
+              skipObjectsWatcher: true
+            }
           }
         );
-      },
+      }
     },
     announceJoinGroup: {
       match(ctx, activity) {
@@ -177,8 +177,8 @@ module.exports = {
             actor: this.settings.groupUri,
             object: {
               type: ACTIVITY_TYPES.JOIN,
-              object: this.settings.groupUri,
-            },
+              object: this.settings.groupUri
+            }
           },
           activity
         );
@@ -187,9 +187,9 @@ module.exports = {
         await ctx.call('webacl.group.addMember', {
           groupUri: getSyreenAclGroupUri(recipientUri),
           memberUri: activity.object.actor,
-          webId: recipientUri,
+          webId: recipientUri
         });
-      },
+      }
     },
     announceLeaveGroup: {
       match(ctx, activity) {
@@ -200,8 +200,8 @@ module.exports = {
             actor: this.settings.groupUri,
             object: {
               type: ACTIVITY_TYPES.LEAVE,
-              object: this.settings.groupUri,
-            },
+              object: this.settings.groupUri
+            }
           },
           activity
         );
@@ -210,9 +210,9 @@ module.exports = {
         await ctx.call('webacl.group.removeMember', {
           groupUri: getSyreenAclGroupUri(recipientUri),
           memberUri: activity.object.actor,
-          webId: recipientUri,
+          webId: recipientUri
         });
-      },
+      }
     },
     announceToGroup: {
       match(ctx, activity) {
@@ -222,8 +222,8 @@ module.exports = {
             type: ACTIVITY_TYPES.ANNOUNCE,
             to: this.settings.groupUri,
             object: {
-              type: 'syreen:Offer',
-            },
+              type: 'syreen:Offer'
+            }
           },
           activity
         );
@@ -231,14 +231,14 @@ module.exports = {
       async onEmit(ctx, activity, emitterUri) {
         const project = await ctx.call('syreen.project.get', {
           resourceUri: activity.object['syreen:partOf'],
-          webId: emitterUri,
+          webId: emitterUri
         });
 
         const resourcesUris = [
           activity.object.id, // Offer
           activity.object['syreen:hasLocation'], // Offer location
           project.id, // Project
-          project['syreen:hasLocation'], // Project location
+          project['syreen:hasLocation'] // Project location
         ];
 
         for (let resourceUri of resourcesUris) {
@@ -250,21 +250,21 @@ module.exports = {
                 additionalRights: {
                   group: {
                     uri: getSyreenAclGroupUri(emitterUri),
-                    read: true,
-                  },
+                    read: true
+                  }
                 },
-                webId: emitterUri,
+                webId: emitterUri
               },
               {
                 meta: {
                   // We don't want the user to announce directly to other group members
-                  skipObjectsWatcher: true,
-                },
+                  skipObjectsWatcher: true
+                }
               }
             );
           }
         }
-      },
-    },
-  },
+      }
+    }
+  }
 };

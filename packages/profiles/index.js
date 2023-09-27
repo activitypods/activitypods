@@ -1,3 +1,3 @@
 module.exports = {
-  ProfilesApp: require('./app'),
+  ProfilesApp: require('./app')
 };

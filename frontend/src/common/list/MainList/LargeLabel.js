@@ -1,10 +1,10 @@
 import React from 'react';
 import { makeStyles, Typography } from '@material-ui/core';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   subTitle: {
     marginTop: theme.spacing(5),
-    marginBottom: theme.spacing(1.5),
+    marginBottom: theme.spacing(1.5)
   },
   subTitleSpan: {
     color: theme.palette.primary.contrastText,
@@ -12,8 +12,8 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(0.75),
     paddingBottom: theme.spacing(0),
     paddingLeft: theme.spacing(2),
-    paddingRight: theme.spacing(5),
-  },
+    paddingRight: theme.spacing(5)
+  }
 }));
 
 const LargeLabel = ({ children }) => {

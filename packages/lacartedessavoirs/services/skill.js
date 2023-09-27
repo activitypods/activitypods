@@ -19,23 +19,25 @@ module.exports = {
 
       await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
-      const contactsGroupUri = await ctx.call('webacl.group.getUri', { groupSlug: new URL(webId).pathname + '/contacts' });
+      const contactsGroupUri = await ctx.call('webacl.group.getUri', {
+        groupSlug: new URL(webId).pathname + '/contacts'
+      });
 
       await ctx.call('webacl.resource.addRights', {
         resourceUri: containerUri,
         additionalRights: {
           group: {
             uri: contactsGroupUri,
-            read: true,
+            read: true
           },
           default: {
             group: {
               uri: contactsGroupUri,
-              read: true,
+              read: true
             }
           }
         },
-        webId,
+        webId
       });
     }
   },

@@ -10,7 +10,7 @@ import MainList from '../../common/list/MainList/MainList';
 import G1AccountField from '../../common/fields/G1AccountField';
 import BlockAnonymous from '../../common/BlockAnonymous';
 
-const ProfileShow = (props) => {
+const ProfileShow = props => {
   const translate = useTranslate();
   return (
     <BlockAnonymous>

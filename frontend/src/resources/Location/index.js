@@ -10,15 +10,15 @@ export default {
     list: LocationList,
     icon: PlaceIcon,
     options: {
-      label: 'Adresses',
-    },
+      label: 'Adresses'
+    }
   },
   dataModel: {
     types: ['vcard:Location'],
     list: {
       servers: 'pod',
-      blankNodes: ['vcard:hasAddress/vcard:hasGeo'],
-    },
+      blankNodes: ['vcard:hasAddress/vcard:hasGeo']
+    }
   },
   translations: {
     en: {
@@ -26,16 +26,16 @@ export default {
       fields: {
         'vcard:given-name': 'Name',
         'vcard:hasAddress': 'Address',
-        'vcard:note': 'Comment',
-      },
+        'vcard:note': 'Comment'
+      }
     },
     fr: {
       name: 'Adresse |||| Adresses',
       fields: {
         'vcard:given-name': 'Nom du lieu',
         'vcard:hasAddress': 'Adresse',
-        'vcard:note': 'Indications',
-      },
-    },
-  },
+        'vcard:note': 'Indications'
+      }
+    }
+  }
 };

@@ -6,24 +6,24 @@ import { useTranslate, useLogin, useNotify, useSafeSetState } from 'react-admin'
 import TextInput from '../../common/inputs/TextInput';
 
 const useStyles = makeStyles(
-  (theme) => ({
+  theme => ({
     form: {
-      padding: '0 1em 1em 1em',
+      padding: '0 1em 1em 1em'
     },
     input: {
-      marginTop: '1em',
+      marginTop: '1em'
     },
     button: {
-      width: '100%',
+      width: '100%'
     },
     icon: {
-      marginRight: theme.spacing(1),
-    },
+      marginRight: theme.spacing(1)
+    }
   }),
   { name: 'RaLoginForm' }
 );
 
-const LoginForm = (props) => {
+const LoginForm = props => {
   const { redirectTo } = props;
   const [loading, setLoading] = useSafeSetState(false);
   const login = useLogin();
@@ -31,7 +31,7 @@ const LoginForm = (props) => {
   const notify = useNotify();
   const classes = useStyles(props);
 
-  const validate = (values) => {
+  const validate = values => {
     const errors = { username: undefined, password: undefined };
 
     if (!values.username) {
@@ -43,13 +43,13 @@ const LoginForm = (props) => {
     return errors;
   };
 
-  const submit = (values) => {
+  const submit = values => {
     setLoading(true);
     login(values, redirectTo)
       .then(() => {
         setLoading(false);
       })
-      .catch((error) => {
+      .catch(error => {
         setLoading(false);
         notify(
           typeof error === 'string'
@@ -60,8 +60,8 @@ const LoginForm = (props) => {
           {
             type: 'warning',
             messageArgs: {
-              _: typeof error === 'string' ? error : error && error.message ? error.message : undefined,
-            },
+              _: typeof error === 'string' ? error : error && error.message ? error.message : undefined
+            }
           }
         );
       });
@@ -81,7 +81,7 @@ const LoginForm = (props) => {
                 name="username"
                 component={TextInput}
                 label={translate('auth.input.username_or_email')}
-                format={(value) => (value ? value.toLowerCase() : '')}
+                format={value => (value ? value.toLowerCase() : '')}
                 disabled={loading}
               />
             </div>

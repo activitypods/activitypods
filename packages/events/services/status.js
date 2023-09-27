@@ -27,19 +27,19 @@ module.exports = {
           'dc:created',
           'apods:attendees',
           'apods:announces',
-          'apods:announcers',
-        ],
+          'apods:announcers'
+        ]
       });
 
       let otherStatus;
       if (COMING_FINISHED_STATUSES.includes(newStatus)) {
         otherStatus =
           event['apods:hasStatus'] &&
-          defaultToArray(event['apods:hasStatus']).find((s) => OPEN_CLOSED_STATUSES.includes(s));
+          defaultToArray(event['apods:hasStatus']).find(s => OPEN_CLOSED_STATUSES.includes(s));
       } else if (OPEN_CLOSED_STATUSES.includes(newStatus)) {
         otherStatus =
           event['apods:hasStatus'] &&
-          defaultToArray(event['apods:hasStatus']).find((s) => COMING_FINISHED_STATUSES.includes(s));
+          defaultToArray(event['apods:hasStatus']).find(s => COMING_FINISHED_STATUSES.includes(s));
       } else {
         throw new Error('Invalid status ' + newStatus);
       }
@@ -47,7 +47,7 @@ module.exports = {
       await ctx.call('events.event.put', {
         resource: { ...event, 'apods:hasStatus': [newStatus, otherStatus] },
         contentType: MIME_TYPES.JSON,
-        webId: 'system',
+        webId: 'system'
       });
     },
     isFinished(ctx) {
@@ -73,14 +73,14 @@ module.exports = {
       const event = await ctx.call('events.event.get', {
         resourceUri: eventUri,
         accept: MIME_TYPES.JSON,
-        webId: 'system',
+        webId: 'system'
       });
 
       if (event['apods:maxAttendees']) {
         // TODO add a activitypub.collection.count action
         const attendeesCollection = await ctx.call('activitypub.collection.get', {
           collectionUri: event['apods:attendees'],
-          webId: 'system',
+          webId: 'system'
         });
 
         if (
@@ -113,10 +113,10 @@ module.exports = {
             }
           `,
           dataset,
-          webId: 'system',
+          webId: 'system'
         });
 
-        for (let eventUri of results.map((node) => node.eventUri.value)) {
+        for (let eventUri of results.map(node => node.eventUri.value)) {
           await this.actions.set({ eventUri, newStatus: EVENT_STATUS_COMING });
           await ctx.emit('events.status.coming', { eventUri });
         }
@@ -150,10 +150,10 @@ module.exports = {
             }
           `,
           dataset,
-          webId: 'system',
+          webId: 'system'
         });
 
-        for (let eventUri of results.map((node) => node.eventUri.value)) {
+        for (let eventUri of results.map(node => node.eventUri.value)) {
           await this.actions.set({ eventUri, newStatus: EVENT_STATUS_CLOSED });
           await ctx.emit('events.status.closed', { eventUri });
         }
@@ -176,16 +176,16 @@ module.exports = {
             }
           `,
           dataset,
-          webId: 'system',
+          webId: 'system'
         });
 
-        for (let eventUri of results.map((node) => node.eventUri.value)) {
+        for (let eventUri of results.map(node => node.eventUri.value)) {
           await this.actions.set({ eventUri, newStatus: EVENT_STATUS_FINISHED });
           await this.actions.set({ eventUri, newStatus: EVENT_STATUS_CLOSED });
           await ctx.emit('events.status.finished', { eventUri });
         }
       }
-    },
+    }
   },
   crons: [
     {
@@ -195,7 +195,7 @@ module.exports = {
         this.call('events.status.tagClosed');
         this.call('events.status.tagFinished');
       },
-      timeZone: 'Europe/Paris',
-    },
-  ],
+      timeZone: 'Europe/Paris'
+    }
+  ]
 };

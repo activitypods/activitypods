@@ -3,7 +3,7 @@ import { ResourceContextProvider, ListContextProvider, useListController, usePer
 import { useCreateContainer } from '@semapps/semantic-data-provider';
 import ListView from './ListView';
 
-const List = (props) => {
+const List = props => {
   const controllerProps = useListController(props);
   const createContainerUri = useCreateContainer(props.resource);
   const { permissions } = usePermissionsOptimized(createContainerUri);
@@ -16,7 +16,7 @@ const List = (props) => {
           hasCreate={
             props.hasCreate &&
             !!permissions &&
-            permissions.some((p) => ['acl:Append', 'acl:Write', 'acl:Control'].includes(p['acl:mode']))
+            permissions.some(p => ['acl:Append', 'acl:Write', 'acl:Control'].includes(p['acl:mode']))
           }
         />
       </ListContextProvider>

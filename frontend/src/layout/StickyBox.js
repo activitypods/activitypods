@@ -2,10 +2,10 @@ import React from 'react';
 import ReactStickyBox from 'react-sticky-box';
 import { makeStyles } from '@material-ui/core';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   root: {
-    marginTop: 5,
-  },
+    marginTop: 5
+  }
 }));
 
 const StickyBox = ({ children }) => {

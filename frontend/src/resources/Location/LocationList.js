@@ -9,21 +9,21 @@ import {
   ListItemAvatar,
   ListItemSecondaryAction,
   ListItemText,
-  Avatar,
+  Avatar
 } from '@material-ui/core';
 import PlaceIcon from '@material-ui/icons/Place';
 import List from '../../layout/List';
 
 const useStyles = makeStyles(() => ({
   root: {
-    height: 63,
+    height: 63
   },
   container: {
     backgroundColor: 'white',
     marginBottom: 8,
     height: 63,
-    boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)',
-  },
+    boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)'
+  }
 }));
 
 const ListWithSwitches = () => {
@@ -40,7 +40,7 @@ const ListWithSwitches = () => {
   }, [setCheckedId, identity]);
 
   const setHomeAddress = useCallback(
-    (id) => {
+    id => {
       // If click on current address, no home address
       if (id === checkedId) id = undefined;
       setCheckedId(id);
@@ -49,9 +49,9 @@ const ListWithSwitches = () => {
           id: identity?.profileData?.id,
           data: {
             ...identity?.profileData,
-            'vcard:hasAddress': id,
+            'vcard:hasAddress': id
           },
-          previousData: identity?.profileData,
+          previousData: identity?.profileData
         })
         .then(() => {
           if (id) {
@@ -66,7 +66,7 @@ const ListWithSwitches = () => {
 
   return (
     <MUIList>
-      {ids.map((id) => (
+      {ids.map(id => (
         <ListItem key={id} button onClick={() => history.push(linkToRecord('/Location', id, 'edit'))} classes={classes}>
           <ListItemAvatar>
             <Avatar>
@@ -78,7 +78,7 @@ const ListWithSwitches = () => {
             secondary={data[id]['vcard:hasAddress']?.['vcard:given-name']}
           />
           <ListItemSecondaryAction>
-            <Switch edge="end" onChange={(e) => setHomeAddress(id)} checked={id === checkedId} />
+            <Switch edge="end" onChange={e => setHomeAddress(id)} checked={id === checkedId} />
           </ListItemSecondaryAction>
         </ListItem>
       ))}
@@ -86,7 +86,7 @@ const ListWithSwitches = () => {
   );
 };
 
-const LocationList = (props) => {
+const LocationList = props => {
   const translate = useTranslate();
 
   return (

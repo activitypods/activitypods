@@ -4,10 +4,10 @@ import { useGetIdentity, linkToRecord, useTranslate } from 'react-admin';
 import { Link } from 'react-router-dom';
 import { formatUsername } from '../../utils';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   root: {
     marginTop: 5,
-    marginBottom: 24,
+    marginBottom: 24
   },
   title: {
     backgroundRepeat: 'no-repeat',
@@ -15,7 +15,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundImage: `radial-gradient(circle at 50% 14em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
     color: theme.palette.primary.contrastText,
     height: 85,
-    position: 'relative',
+    position: 'relative'
   },
   avatarWrapper: {
     position: 'absolute',
@@ -23,28 +23,28 @@ const useStyles = makeStyles((theme) => ({
     top: 0,
     left: 0,
     right: 0,
-    textAlign: 'center',
+    textAlign: 'center'
   },
   avatar: {
     width: 150,
-    height: 150,
+    height: 150
   },
   block: {
     backgroundColor: 'white',
     paddingTop: 80,
-    paddingBottom: 20,
+    paddingBottom: 20
   },
   button: {
     backgroundColor: 'white',
     textAlign: 'center',
     '& a': {
-      textDecoration: 'none',
-    },
+      textDecoration: 'none'
+    }
   },
   status: {
     marginTop: 8,
-    color: theme.palette.primary.main,
-  },
+    color: theme.palette.primary.main
+  }
 }));
 
 const ProfileCard = () => {

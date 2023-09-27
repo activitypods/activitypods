@@ -15,10 +15,10 @@ module.exports = {
       key: 'new_offer',
       title: {
         en: `{{emitterProfile.vcard:given-name}} published an offer "{{activity.object.syreen:label}}"`,
-        fr: `{{emitterProfile.vcard:given-name}} a publié une offre "{{activity.object.syreen:label}}"`,
+        fr: `{{emitterProfile.vcard:given-name}} a publié une offre "{{activity.object.syreen:label}}"`
       },
-      actionLink: '?type=syreen:Offer&uri={{encodeUri activity.object.id}}',
-    },
+      actionLink: '?type=syreen:Offer&uri={{encodeUri activity.object.id}}'
+    }
   },
   hooks: {
     after: {
@@ -32,8 +32,8 @@ module.exports = {
         // Do not await to increase performances
         ctx.call('syreen.location.updateRights', res);
         return res;
-      },
-    },
+      }
+    }
   },
   events: {
     async 'webacl.resource.updated'(ctx) {
@@ -47,7 +47,9 @@ module.exports = {
         });
         if (hasType(resource, 'syreen:Offer')) {
           if (addPublicRead) {
-            const isProjectPublic = await ctx.call('webacl.resource.isPublic', { resourceUri: resource['syreen:partOf'] });
+            const isProjectPublic = await ctx.call('webacl.resource.isPublic', {
+              resourceUri: resource['syreen:partOf']
+            });
             if (!isProjectPublic) {
               await ctx.call('webacl.resource.addRights', {
                 resourceUri: resource['syreen:partOf'],
@@ -71,7 +73,9 @@ module.exports = {
             });
           } else if (removePublicRead) {
             // Look if other offers on the project are public
-            const offersUris = await ctx.call('syreen.project.getProjectOffers', { projectUri: resource['syreen:partOf'] });
+            const offersUris = await ctx.call('syreen.project.getProjectOffers', {
+              projectUri: resource['syreen:partOf']
+            });
             let oneOfferIsPublic = false;
             for (let offerUri of offersUris) {
               // Don't look for the current offer since we know it's not public anymore

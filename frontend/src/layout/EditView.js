@@ -2,7 +2,7 @@ import React from 'react';
 import { ListButton, ShowButton, useEditContext } from 'react-admin';
 import { Box, Typography, Grid, Card } from '@material-ui/core';
 
-const EditView = (props) => {
+const EditView = props => {
   const { basePath, record, redirect, resource, save, saving, version } = useEditContext(props);
   return (
     <>
@@ -31,7 +31,7 @@ const EditView = (props) => {
                 saving,
                 undoable: props.undoable,
                 mutationMode: props.mutationMode,
-                version,
+                version
               })
             : null}
         </Card>
@@ -41,7 +41,7 @@ const EditView = (props) => {
 };
 
 EditView.defaultProps = {
-  actions: [<ListButton />, <ShowButton />],
+  actions: [<ListButton />, <ShowButton />]
 };
 
 export default EditView;

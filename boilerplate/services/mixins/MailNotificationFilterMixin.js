@@ -13,12 +13,12 @@ module.exports = {
 
       const isIgnored = await this.broker.call('activitypub.collection.includes', {
         collectionUri: actor['apods:ignoredContacts'],
-        itemUri: activity.actor,
+        itemUri: activity.actor
       });
       if (isIgnored) {
         this.logger.info(`Ignoring notification for activity ${activity.id} sent to ${recipientUri}.`);
       }
       return !isIgnored;
-    },
-  },
+    }
+  }
 };

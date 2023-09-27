@@ -14,7 +14,7 @@ const IgnoreContactRequestButton = ({ activity, refetch, children, ...rest }) =>
         type: ACTIVITY_TYPES.IGNORE,
         actor: outbox.owner,
         object: activity.id,
-        to: activity.actor,
+        to: activity.actor
       });
       notify('app.notification.contact_request_ignored');
       setTimeout(refetch, 3000);

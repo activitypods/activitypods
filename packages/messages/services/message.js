@@ -10,13 +10,13 @@ module.exports = {
     path: '/notes',
     acceptedTypes: [OBJECT_TYPES.NOTE],
     permissions: {},
-    newResourcesPermissions: {},
+    newResourcesPermissions: {}
   },
   dependencies: ['activity-mapping'],
   async started() {
     await this.broker.call('activity-mapping.addMapper', {
       match: NEW_MESSAGE,
-      mapping: NEW_MESSAGE_MAPPING,
+      mapping: NEW_MESSAGE_MAPPING
     });
   },
   activities: {
@@ -28,10 +28,10 @@ module.exports = {
           await ctx.call('webacl.group.addMember', {
             groupSlug: new URL(emitterUri).pathname + '/contacts',
             memberUri: targetUri,
-            webId: emitterUri,
+            webId: emitterUri
           });
         }
-      },
-    },
-  },
+      }
+    }
+  }
 };

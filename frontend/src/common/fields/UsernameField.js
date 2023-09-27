@@ -4,24 +4,24 @@ import { formatUsername } from '../../utils';
 import CopyButton from '../buttons/CopyButton';
 import { makeStyles } from '@material-ui/core';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   wrapper: {
-    position: 'relative',
+    position: 'relative'
   },
   text: {
     overflow: 'hidden',
     whiteSpace: 'nowrap',
     textOverflow: 'ellipsis',
-    marginRight: 15,
+    marginRight: 15
   },
   copyButton: {
     position: 'absolute',
     top: -3,
-    right: -3,
-  },
+    right: -3
+  }
 }));
 
-const UsernameField = (props) => {
+const UsernameField = props => {
   const { source } = props;
   const record = useRecordContext(props);
   const classes = useStyles();
@@ -39,7 +39,7 @@ const UsernameField = (props) => {
 };
 
 UsernameField.defaultProps = {
-  addLabel: true,
+  addLabel: true
 };
 
 export default UsernameField;

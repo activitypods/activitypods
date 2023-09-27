@@ -5,15 +5,15 @@ import makeStyles from '@mui/styles/makeStyles';
 import FileCopyOutlinedIcon from '@mui/icons-material/FileCopyOutlined';
 import { useTranslate } from 'react-admin';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   wrapper: {
     // position: 'relative',
   },
   icon: {
     position: 'absolute',
     top: -2,
-    left: 5,
-  },
+    left: 5
+  }
 }));
 
 const CopyButton = ({ text, className }) => {

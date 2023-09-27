@@ -23,7 +23,7 @@ module.exports = {
       signup: "S'inscrire",
       reset_password: 'Mot de passe oublié ?',
       set_new_password: 'Definir un nouveau mot de passe',
-      undo_ignore_contact: 'Ne plus ignorer',
+      undo_ignore_contact: 'Ne plus ignorer'
     },
     group: {
       members: 'Membres',
@@ -33,7 +33,7 @@ module.exports = {
       profile_name: 'Nom',
       group: 'Groupe',
       profile: 'Profil',
-      add_members: 'Ajouter des membres',
+      add_members: 'Ajouter des membres'
     },
 
     page: {
@@ -52,22 +52,22 @@ module.exports = {
       create_profile: 'Créez votre profil',
       authorize: 'Autorisation requise',
       groups: 'Mes groupes',
-      groups_short: 'Groupes',
+      groups_short: 'Groupes'
     },
     setting: {
       email: 'Adresse mail',
       password: 'Mot de passe',
       addresses: 'Mes adresses',
-      address: '1 adresse |||| %{smart_count} adresses',
+      address: '1 adresse |||| %{smart_count} adresses'
     },
     card: {
       add_contact: 'Ajouter un contact',
       contact_requests: 'Demandes de contact',
-      share_contact: 'Mon lien de contact',
+      share_contact: 'Mon lien de contact'
     },
     block: {
       contact_requests: 'Nouvelles demandes de contact',
-      g1_account: 'Compte G1',
+      g1_account: 'Compte G1'
     },
     input: {
       about_you: 'Quelques mots sur vous',
@@ -76,7 +76,7 @@ module.exports = {
       email: 'Email',
       current_password: 'Mot de passe actuel',
       new_password: 'Nouveau mot de passe',
-      confirm_new_password: 'Confirmer le nouveau mot de passe',
+      confirm_new_password: 'Confirmer le nouveau mot de passe'
     },
     helper: {
       add_contact:
@@ -99,14 +99,14 @@ module.exports = {
       set_new_password: 'Veuillez entrer votre adresse mail et un nouveau mot de passe ci-dessous',
       create_profile:
         'Maintenant que votre compte est créé, veuillez créer votre profil. Celui-ci ne sera visible par défaut que des personnes que vous acceptez dans votre réseau.',
-      authorize: 'Autorisez-vous le site %{appDomain} à accéder à votre POD ?',
+      authorize: 'Autorisez-vous le site %{appDomain} à accéder à votre POD ?'
     },
     message: {
       copied_to_clipboard: 'Copié !',
       no_condition: 'Aucune',
       you_participated_to_same_event: 'Vous avez participé à la même rencontre',
       verified_app: 'Application vérifiée',
-      verified: 'Vérifiée',
+      verified: 'Vérifiée'
     },
     notification: {
       contact_request_accepted: 'Demande de contact acceptée',
@@ -131,34 +131,34 @@ module.exports = {
       verified_applications_load_failed: 'Impossible de charger la liste des applications vérifiées',
       app_uninstalled: 'Application désinstallée',
       home_address_updated: 'Adresse du domicile mise à jour',
-      home_address_deleted: 'Adresse du domicile enlevée',
+      home_address_deleted: 'Adresse du domicile enlevée'
     },
     user: {
       unknown: 'Inconnu',
-      location: 'Chez %{surname}',
+      location: 'Chez %{surname}'
     },
     validation: {
       email: 'Doit être un email valide',
-      confirmNewPassword: 'Doit être le même que le nouveau champ de mot de passe',
+      confirmNewPassword: 'Doit être le même que le nouveau champ de mot de passe'
     },
     steps: {
       title: 'Comment ça marche ?',
       1: {
         title: 'Je crée mon espace personnel (POD)',
-        text: "Un seul endroit pour toutes mes données, c'est pas trop tôt !",
+        text: "Un seul endroit pour toutes mes données, c'est pas trop tôt !"
       },
       2: {
         title: 'Je me connecte aux applications compatibles',
-        text: "Rencontres, petites annonces... et beaucoup d'autres à venir !",
+        text: "Rencontres, petites annonces... et beaucoup d'autres à venir !"
       },
       3: {
         title: 'Mes données sont enregistrées sur mon POD',
-        text: "Les administrateurs des applications n'y ont pas accès.",
+        text: "Les administrateurs des applications n'y ont pas accès."
       },
       4: {
         title: 'Je choisis avec qui je partage mes données',
-        text: 'A tout moment, je sais qui voit mes données. Je peux révoquer les droits.',
-      },
-    },
-  },
+        text: 'A tout moment, je sais qui voit mes données. Je peux révoquer les droits.'
+      }
+    }
+  }
 };

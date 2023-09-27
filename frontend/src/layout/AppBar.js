@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 import { Box, Container, Typography, Grid } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   topBar: {
-    backgroundColor: theme.palette.primary.main,
+    backgroundColor: theme.palette.primary.main
   },
   title: {
     fontWeight: '800',
@@ -15,12 +15,12 @@ const useStyles = makeStyles((theme) => ({
 
     [theme.breakpoints.down('sm')]: {
       paddingTop: '1.3rem',
-      lineHeight: 0.8,
+      lineHeight: 0.8
     },
     '& a': {
-      textDecoration: 'none !important',
-    },
-  },
+      textDecoration: 'none !important'
+    }
+  }
 }));
 
 const AppBar = ({ title, logout }) => {

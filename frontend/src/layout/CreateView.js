@@ -26,7 +26,7 @@ const CreateView = ({ actions, children }) => {
 };
 
 CreateView.defaultProps = {
-  actions: [<ListButton />],
+  actions: [<ListButton />]
 };
 
 export default CreateView;

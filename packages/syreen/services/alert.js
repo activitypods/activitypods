@@ -19,15 +19,15 @@ module.exports = {
         key: 'alert',
         title: {
           en: `A new offer matches your alerts: "{{activity.object.syreen:label}}"`,
-          fr: `Une nouvelle offre correspond à vos alertes: "{{activity.object.syreen:label}}"`,
+          fr: `Une nouvelle offre correspond à vos alertes: "{{activity.object.syreen:label}}"`
         },
         actionName: {
           en: 'View',
-          fr: 'Voir',
+          fr: 'Voir'
         },
-        actionLink: '?uri={{encodeUri activity.object.id}}',
+        actionLink: '?uri={{encodeUri activity.object.id}}'
       },
       priority: 2
     });
-  },
+  }
 };

@@ -16,11 +16,11 @@ module.exports = {
     dereference: [],
     excludeFromMirror: true,
     permissions: {},
-    newResourcesPermissions: {},
+    newResourcesPermissions: {}
   },
   async started() {
     const res = await fetch('https://data.activitypods.org/trusted-apps', {
-      headers: { Accept: 'application/ld+json' },
+      headers: { Accept: 'application/ld+json' }
     });
 
     if (res.ok) {
@@ -38,8 +38,8 @@ module.exports = {
           'http://www.w3.org/2006/vcard/ns#Individual',
           'https://www.w3.org/ns/activitystreams#Profile',
           'http://www.w3.org/2006/vcard/ns#Location',
-          'http://activitypods.org/ns/core#FrontAppRegistration',
-        ],
+          'http://activitypods.org/ns/core#FrontAppRegistration'
+        ]
       });
     }
 
@@ -50,9 +50,9 @@ module.exports = {
         authorization: false,
         authentication: false,
         aliases: {
-          'GET /': 'core.front-apps.open',
-        },
-      },
+          'GET /': 'core.front-apps.open'
+        }
+      }
     });
   },
   actions: {
@@ -69,7 +69,7 @@ module.exports = {
             }
           `,
           dataset: username,
-          webId: 'system',
+          webId: 'system'
         });
 
         if (results.length === 0) throw new Error('Resource not found ' + uri);
@@ -93,7 +93,7 @@ module.exports = {
           }
         `,
         dataset: username,
-        webId: 'system',
+        webId: 'system'
       });
 
       if (!results.length) throw new Error(`No app associated with type ${type}`);
@@ -122,7 +122,7 @@ module.exports = {
             const appUri = urlJoin(this.settings.baseUrl, dataset, 'data', 'front-apps', app['apods:domainName']);
             const exists = await ctx.call('ldp.resource.exist', {
               resourceUri: appUri,
-              webId: 'system',
+              webId: 'system'
             });
 
             if (exists) {
@@ -138,10 +138,10 @@ module.exports = {
                     'apods:application':
                       app.type === 'apods:TrustedApps'
                         ? `https://${app['apods:domainName']}/application.json`
-                        : undefined,
+                        : undefined
                   },
                   contentType: MIME_TYPES.JSON,
-                  webId: urlJoin(this.settings.baseUrl, dataset),
+                  webId: urlJoin(this.settings.baseUrl, dataset)
                 },
                 { parentCtx: ctx }
               );
@@ -152,11 +152,11 @@ module.exports = {
                     type: 'apods:FrontAppRegistration',
                     'apods:domainName': app['apods:domainName'],
                     'apods:preferredForTypes': app['apods:handledTypes'],
-                    'apods:application': app.id,
+                    'apods:application': app.id
                   },
                   contentType: MIME_TYPES.JSON,
                   slug: app['apods:domainName'],
-                  webId: urlJoin(this.settings.baseUrl, dataset),
+                  webId: urlJoin(this.settings.baseUrl, dataset)
                 },
                 { parentCtx: ctx }
               );
@@ -169,7 +169,7 @@ module.exports = {
     },
     async list(ctx) {
       return this.trustedApps;
-    },
+    }
   },
   events: {
     async 'auth.registered'(ctx) {
@@ -188,16 +188,16 @@ module.exports = {
                 'apods:domainName': app['apods:domainName'],
                 'apods:preferredForTypes': app['apods:handledTypes'],
                 'apods:application':
-                  app.type === 'apods:TrustedApps' ? `https://${app['apods:domainName']}/application.json` : undefined,
+                  app.type === 'apods:TrustedApps' ? `https://${app['apods:domainName']}/application.json` : undefined
               },
               contentType: MIME_TYPES.JSON,
               slug: app['apods:domainName'],
-              webId,
+              webId
             },
             { parentCtx: ctx }
           );
         }
       }
-    },
-  },
+    }
+  }
 };

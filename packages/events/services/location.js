@@ -13,10 +13,10 @@ module.exports = {
           additionalRights: {
             group: {
               uri: getAnnouncesGroupUri(resourceUri),
-              read: true,
-            },
+              read: true
+            }
           },
-          webId: newData['dc:creator'],
+          webId: newData['dc:creator']
         });
       }
     },
@@ -30,10 +30,10 @@ module.exports = {
           additionalRights: {
             group: {
               uri: getAnnouncesGroupUri(resourceUri),
-              read: true,
-            },
+              read: true
+            }
           },
-          webId: newData['dc:creator'],
+          webId: newData['dc:creator']
         });
 
         await ctx.call('webacl.resource.removeRights', {
@@ -41,12 +41,12 @@ module.exports = {
           rights: {
             group: {
               uri: getAnnouncesGroupUri(resourceUri),
-              read: true,
-            },
+              read: true
+            }
           },
-          webId: newData['dc:creator'],
+          webId: newData['dc:creator']
         });
       }
-    },
-  },
+    }
+  }
 };

@@ -12,8 +12,8 @@ const cacherConfig = CONFIG.REDIS_CACHE_URL
       options: {
         prefix: 'action',
         ttl: 2592000, // Keep in cache for one month
-        redis: CONFIG.REDIS_CACHE_URL,
-      },
+        redis: CONFIG.REDIS_CACHE_URL
+      }
     }
   : undefined;
 
@@ -30,7 +30,7 @@ module.exports = {
     type: 'Console',
     options: {
       formatter: 'short',
-      level: 'info',
-    },
-  },
+      level: 'info'
+    }
+  }
 };

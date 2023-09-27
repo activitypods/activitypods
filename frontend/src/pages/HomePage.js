@@ -7,8 +7,8 @@ import theme from '../config/theme';
 const useStyles = makeStyles(() => ({
   '@global': {
     body: {
-      backgroundColor: theme.palette.primary.main,
-    },
+      backgroundColor: theme.palette.primary.main
+    }
   },
   circle: {
     borderRadius: '50%',
@@ -22,33 +22,33 @@ const useStyles = makeStyles(() => ({
       width: '100vw',
       height: '100vw',
       padding: 0,
-      top: -70,
-    },
+      top: -70
+    }
   },
   title: {
     fontWeight: '800',
-    paddingTop: 50,
+    paddingTop: 50
   },
   text: {
-    color: 'white',
+    color: 'white'
   },
   logo: {
     fontSize: 100,
-    color: 'white',
+    color: 'white'
   },
   button: {
-    margin: 5,
+    margin: 5
   },
   stepsTitle: {
     color: 'white',
     fontWeight: 'bold',
-    marginBottom: 15,
+    marginBottom: 15
   },
   steps: {
     marginTop: 400,
     [theme.breakpoints.down('sm')]: {
-      marginTop: 'calc(100vw - 30px)',
-    },
+      marginTop: 'calc(100vw - 30px)'
+    }
   },
   step: {
     position: 'relative',
@@ -58,9 +58,9 @@ const useStyles = makeStyles(() => ({
       [theme.breakpoints.down('sm')]: {
         fontWeight: 'bold',
         lineHeight: '1.2em',
-        marginBottom: 8,
-      },
-    },
+        marginBottom: 8
+      }
+    }
   },
   number: {
     position: 'absolute',
@@ -71,8 +71,8 @@ const useStyles = makeStyles(() => ({
     fontWeight: 'bold',
     color: theme.palette.primary.main,
     backgroundColor: 'white',
-    fontSize: 50,
-  },
+    fontSize: 50
+  }
 }));
 
 const HomePage = () => {
@@ -125,7 +125,7 @@ const HomePage = () => {
             {translate('app.steps.title')}
           </Typography>
           <Container>
-            {[1, 2, 3, 4].map((i) => (
+            {[1, 2, 3, 4].map(i => (
               <Box className={classes.step} key={i}>
                 <Avatar className={classes.number}>{i}</Avatar>
                 <Typography variant="h4">{translate(`app.steps.${i}.title`)}</Typography>

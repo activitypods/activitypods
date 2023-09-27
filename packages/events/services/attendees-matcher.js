@@ -11,13 +11,13 @@ module.exports = {
     await this.broker.call('activity-mapping.addMapper', {
       match: POST_EVENT_CONTACT_REQUEST,
       mapping: POST_EVENT_CONTACT_REQUEST_MAPPING,
-      priority: 2, // Before regular contact requests
+      priority: 2 // Before regular contact requests
     });
 
     await this.broker.call('activity-mapping.addMapper', {
       match: POST_EVENT_ACCEPT_CONTACT_REQUEST,
       mapping: false, // Ignore activity
-      priority: 2, // Before regular accept contact requests
+      priority: 2 // Before regular accept contact requests
     });
   },
   events: {
@@ -26,12 +26,12 @@ module.exports = {
       const event = await ctx.call('events.event.get', {
         resourceUri: eventUri,
         accept: MIME_TYPES.JSON,
-        webId: 'system',
+        webId: 'system'
       });
 
       const collection = await ctx.call('activitypub.collection.get', {
         collectionUri: event['apods:attendees'],
-        webId: 'system',
+        webId: 'system'
       });
 
       // Save meta data before modifying them temporarily
@@ -44,10 +44,10 @@ module.exports = {
         const attendee = await ctx.call('activitypub.actor.get', { actorUri: attendeeUri });
 
         let potentialNewContacts = [];
-        for (let otherAttendeeUri of collection.items.filter((uri) => uri !== attendeeUri)) {
+        for (let otherAttendeeUri of collection.items.filter(uri => uri !== attendeeUri)) {
           const alreadyConnected = await ctx.call('activitypub.collection.includes', {
             collectionUri: attendee['apods:contacts'],
-            itemUri: otherAttendeeUri,
+            itemUri: otherAttendeeUri
           });
           if (!alreadyConnected) potentialNewContacts.push(otherAttendeeUri);
         }
@@ -59,17 +59,17 @@ module.exports = {
             actor: attendee.id,
             object: {
               type: ACTIVITY_TYPES.ADD,
-              object: attendee.url,
+              object: attendee.url
             },
             context: event.id,
             target: potentialNewContacts,
-            to: potentialNewContacts,
+            to: potentialNewContacts
           });
         }
       }
 
       // Restore metadata
       ctx.meta = savedMeta;
-    },
-  },
+    }
+  }
 };

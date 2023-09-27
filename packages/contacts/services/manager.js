@@ -14,7 +14,7 @@ module.exports = {
       attachToTypes: Object.values(ACTOR_TYPES),
       attachPredicate: 'http://activitypods.org/ns/core#ignoredContacts',
       ordered: false,
-      dereferenceItems: false,
+      dereferenceItems: false
     });
   },
   activities: {
@@ -28,14 +28,14 @@ module.exports = {
 
         await ctx.call('activitypub.collection.detach', {
           collectionUri: activity.origin,
-          item: activity.object.id,
+          item: activity.object.id
         });
 
         await ctx.call('ldp.remote.delete', {
           resourceUri: activity.object.url,
-          webId: emitterUri,
+          webId: emitterUri
         });
-      },
+      }
     },
     ignoreContact: {
       match: IGNORE_CONTACT,
@@ -45,9 +45,9 @@ module.exports = {
         // Add the actor to its ignore contacts list
         await ctx.call('activitypub.collection.attach', {
           collectionUri: emitter['apods:ignoredContacts'],
-          item: activity.object,
+          item: activity.object
         });
-      },
+      }
     },
     undoIngoreContact: {
       match: UNDO_IGNORE_CONTACT,
@@ -57,9 +57,9 @@ module.exports = {
         // Add the actor to its ignore contacts list
         await ctx.call('activitypub.collection.detach', {
           collectionUri: emitter['apods:ignoredContacts'],
-          item: activity.object.object,
+          item: activity.object.object
         });
-      },
+      }
     },
     ignoreContact: {
       match: IGNORE_CONTACT,
@@ -69,9 +69,9 @@ module.exports = {
         // Add the actor to the emitter's ignore contacts list.
         await ctx.call('activitypub.collection.attach', {
           collectionUri: emitter['apods:ignoredContacts'],
-          item: activity.object,
+          item: activity.object
         });
-      },
+      }
     },
     undoIgnoreContact: {
       match: UNDO_IGNORE_CONTACT,
@@ -81,9 +81,9 @@ module.exports = {
         // Remove the actor from the emitter's ignore contacts list.
         await ctx.call('activitypub.collection.detach', {
           collectionUri: emitter['apods:ignoredContacts'],
-          item: activity.object.object,
+          item: activity.object.object
         });
-      },
+      }
     },
     deleteActor: {
       match: OFFER_DELETE_ACTOR,
@@ -107,7 +107,7 @@ module.exports = {
             }
           `,
           webId: 'system',
-          dataset,
+          dataset
         });
 
         // Get all cached resources from this Pod
@@ -121,13 +121,13 @@ module.exports = {
           `,
           accept: MIME_TYPES.JSON,
           webId: 'system',
-          dataset,
+          dataset
         });
 
-        for (let cachedResourceUri of result.map((node) => node.resourceUri.value)) {
+        for (let cachedResourceUri of result.map(node => node.resourceUri.value)) {
           await ctx.call('ldp.remote.delete', {
             resourceUri: cachedResourceUri,
-            webId: recipientUri,
+            webId: recipientUri
           });
         }
 
@@ -146,7 +146,7 @@ module.exports = {
             }
           `,
           webId: 'system',
-          dataset,
+          dataset
         });
 
         // Remove actor from all ACL groups
@@ -160,7 +160,7 @@ module.exports = {
             }
           `,
           webId: 'system',
-          dataset,
+          dataset
         });
 
         // Remove all rights of actor
@@ -174,7 +174,7 @@ module.exports = {
             }
           `,
           webId: 'system',
-          dataset,
+          dataset
         });
 
         // Confirm data suppression
@@ -182,9 +182,9 @@ module.exports = {
           collectionUri: recipient.outbox,
           type: ACTIVITY_TYPES.ACCEPT,
           object: activity.id,
-          to: activity.actor,
+          to: activity.actor
         });
-      },
-    },
-  },
+      }
+    }
+  }
 };

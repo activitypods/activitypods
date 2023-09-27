@@ -8,7 +8,7 @@ function getAclUriFromResourceUri(baseUrl, resourceUri) {
 
 const replaceRules = {
   invitees: 'announces',
-  inviters: 'announcers',
+  inviters: 'announcers'
 };
 
 module.exports = {
@@ -16,7 +16,7 @@ module.exports = {
   actions: {
     async createAndAttachIgnoredContacts(ctx) {
       const registeredCollections = await ctx.call('activitypub.registry.list');
-      const ignoredContactsCollection = registeredCollections.find((c) => c.name === '/ignored-contacts');
+      const ignoredContactsCollection = registeredCollections.find(c => c.name === '/ignored-contacts');
       for (let dataset of await ctx.call('pod.list')) {
         ctx.meta.dataset = dataset;
         const actorUri = urlJoin(CONFIG.HOME_URL, dataset);
@@ -24,7 +24,7 @@ module.exports = {
         await ctx.call('activitypub.registry.createAndAttachCollection', {
           objectUri: actorUri,
           collection: ignoredContactsCollection,
-          webId: 'system',
+          webId: 'system'
         });
       }
     },
@@ -60,7 +60,7 @@ module.exports = {
             }
           `,
           dataset: '*',
-          webId: 'system',
+          webId: 'system'
         });
       }
     },
@@ -81,7 +81,7 @@ module.exports = {
             }
           `,
           dataset: '*',
-          webId: 'system',
+          webId: 'system'
         });
       }
     },
@@ -100,12 +100,12 @@ module.exports = {
               await ctx.call('migration.replacePredicate', {
                 oldPredicate: 'http://activitypods.org/ns/core#' + from,
                 newPredicate: 'http://activitypods.org/ns/core#' + to,
-                dataset,
+                dataset
               });
             }
 
             const resources = await ctx.call('ldp.container.getUris', {
-              containerUri: urlJoin(CONFIG.HOME_URL, dataset, 'data', 'events'),
+              containerUri: urlJoin(CONFIG.HOME_URL, dataset, 'data', 'events')
             });
             for (let resourceUri of resources) {
               const resourceSlug = getSlugFromUri(resourceUri);
@@ -114,20 +114,20 @@ module.exports = {
                 await ctx.call('migration.moveResource', {
                   oldResourceUri: urlJoin(resourceUri, from),
                   newResourceUri: urlJoin(resourceUri, to),
-                  dataset,
+                  dataset
                 });
 
                 await ctx.call('migration.moveAclGroup', {
                   oldGroupUri: urlJoin(CONFIG.HOME_URL, '_groups', dataset, 'data', 'events', resourceSlug, from),
                   newGroupUri: urlJoin(CONFIG.HOME_URL, '_groups', dataset, 'data', 'events', resourceSlug, to),
-                  dataset,
+                  dataset
                 });
               }
             }
 
             await ctx.call('auth.account.update', {
               '@id': account['@id'],
-              version,
+              version
             });
 
             this.logger.info('Done !');
@@ -149,7 +149,7 @@ module.exports = {
           WHERE { ?s <${oldPredicate}> ?o . }
         `,
         dataset,
-        webId: 'system',
+        webId: 'system'
       });
     },
     async moveResource(ctx) {
@@ -164,7 +164,7 @@ module.exports = {
           WHERE { <${oldResourceUri}> ?p ?o }
         `,
         dataset,
-        webId: 'system',
+        webId: 'system'
       });
 
       await ctx.call('triplestore.update', {
@@ -174,7 +174,7 @@ module.exports = {
           WHERE { ?s ?p <${oldResourceUri}> }
         `,
         dataset,
-        webId: 'system',
+        webId: 'system'
       });
 
       await ctx.call('triplestore.update', {
@@ -185,7 +185,7 @@ module.exports = {
           WHERE { ?s ?p <${oldResourceUri}> }
         `,
         dataset,
-        webId: 'system',
+        webId: 'system'
       });
 
       await ctx.call('migration.moveAclRights', { newResourceUri, oldResourceUri, dataset });
@@ -203,7 +203,7 @@ module.exports = {
           WHERE { <${oldGroupUri}> ?p ?o }
         `,
         dataset,
-        webId: 'system',
+        webId: 'system'
       });
 
       await ctx.call('triplestore.update', {
@@ -214,7 +214,7 @@ module.exports = {
           WHERE { ?s ?p <${oldGroupUri}> }
         `,
         dataset,
-        webId: 'system',
+        webId: 'system'
       });
 
       await ctx.call('migration.moveAclRights', { newResourceUri: newGroupUri, oldResourceUri: oldGroupUri, dataset });
@@ -236,9 +236,9 @@ module.exports = {
             WHERE { <${oldResourceAclUri}> ?p ?o }
           `,
           dataset,
-          webId: 'system',
+          webId: 'system'
         });
       }
-    },
-  },
+    }
+  }
 };

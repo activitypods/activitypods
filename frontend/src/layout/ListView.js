@@ -25,7 +25,7 @@ const ListView = ({ asides, actions, title, children }) => {
 };
 
 ListView.defaultProps = {
-  actions: [<CreateButton />],
+  actions: [<CreateButton />]
 };
 
 export default ListView;

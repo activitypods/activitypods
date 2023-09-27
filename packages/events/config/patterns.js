@@ -3,15 +3,15 @@ const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 const JOIN_EVENT = {
   type: ACTIVITY_TYPES.JOIN,
   object: {
-    type: OBJECT_TYPES.EVENT,
-  },
+    type: OBJECT_TYPES.EVENT
+  }
 };
 
 const LEAVE_EVENT = {
   type: ACTIVITY_TYPES.LEAVE,
   object: {
-    type: OBJECT_TYPES.EVENT,
-  },
+    type: OBJECT_TYPES.EVENT
+  }
 };
 
 const NEW_MESSAGE_ABOUT_EVENT = {
@@ -19,9 +19,9 @@ const NEW_MESSAGE_ABOUT_EVENT = {
   object: {
     type: OBJECT_TYPES.NOTE,
     context: {
-      type: OBJECT_TYPES.EVENT,
-    },
-  },
+      type: OBJECT_TYPES.EVENT
+    }
+  }
 };
 
 const POST_EVENT_CONTACT_REQUEST = {
@@ -29,12 +29,12 @@ const POST_EVENT_CONTACT_REQUEST = {
   object: {
     type: ACTIVITY_TYPES.ADD,
     object: {
-      type: OBJECT_TYPES.PROFILE,
-    },
+      type: OBJECT_TYPES.PROFILE
+    }
   },
   context: {
-    type: OBJECT_TYPES.EVENT,
-  },
+    type: OBJECT_TYPES.EVENT
+  }
 };
 
 const POST_EVENT_ACCEPT_CONTACT_REQUEST = {
@@ -44,13 +44,13 @@ const POST_EVENT_ACCEPT_CONTACT_REQUEST = {
     object: {
       type: ACTIVITY_TYPES.ADD,
       object: {
-        type: OBJECT_TYPES.PROFILE,
-      },
+        type: OBJECT_TYPES.PROFILE
+      }
     },
     context: {
-      type: OBJECT_TYPES.EVENT,
-    },
-  },
+      type: OBJECT_TYPES.EVENT
+    }
+  }
 };
 
 module.exports = {
@@ -58,5 +58,5 @@ module.exports = {
   LEAVE_EVENT,
   NEW_MESSAGE_ABOUT_EVENT,
   POST_EVENT_CONTACT_REQUEST,
-  POST_EVENT_ACCEPT_CONTACT_REQUEST,
+  POST_EVENT_ACCEPT_CONTACT_REQUEST
 };

@@ -1,3 +1,3 @@
 module.exports = {
-  MarketplaceApp: require('./app'),
+  MarketplaceApp: require('./app')
 };

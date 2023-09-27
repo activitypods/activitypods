@@ -8,5 +8,5 @@ export default dataProvider({
   resources: Object.fromEntries(Object.entries(resources).map(([k, v]) => [k, v.dataModel])),
   ontologies,
   jsonContext: process.env.REACT_APP_JSON_CONTEXT,
-  returnFailedResources: true,
+  returnFailedResources: true
 });

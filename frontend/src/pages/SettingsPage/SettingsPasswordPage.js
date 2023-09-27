@@ -11,7 +11,7 @@ const validateConfirmNewPassword = [
       return 'app.validation.confirmNewPassword';
     }
     return;
-  },
+  }
 ];
 
 const SettingsPasswordPage = () => {
@@ -21,7 +21,7 @@ const SettingsPasswordPage = () => {
   const authProvider = useAuthProvider();
 
   const onSubmit = useCallback(
-    async (params) => {
+    async params => {
       try {
         await authProvider.updateAccountSettings({ ...params });
         notify('auth.message.account_settings_updated', 'success');

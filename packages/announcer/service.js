@@ -6,7 +6,7 @@ module.exports = {
   name: 'announcer',
   mixins: [ActivitiesHandlerMixin],
   settings: {
-    watchedTypes: [],
+    watchedTypes: []
   },
   dependencies: ['activitypub.registry'],
   actions: {
@@ -19,7 +19,7 @@ module.exports = {
         attachToTypes: this.settings.watchedTypes,
         attachPredicate: 'http://activitypods.org/ns/core#announces',
         ordered: false,
-        dereferenceItems: false,
+        dereferenceItems: false
       });
 
       await this.broker.call('activitypub.registry.register', {
@@ -27,7 +27,7 @@ module.exports = {
         attachToTypes: this.settings.watchedTypes,
         attachPredicate: 'http://activitypods.org/ns/core#announcers',
         ordered: false,
-        dereferenceItems: false,
+        dereferenceItems: false
       });
     },
     async giveRightsAfterCreate(ctx) {
@@ -35,7 +35,7 @@ module.exports = {
 
       const object = await ctx.call('activitypub.object.awaitCreateComplete', {
         objectUri: resourceUri,
-        predicates: ['dc:creator', 'dc:modified', 'dc:created', 'apods:announces', 'apods:announcers'],
+        predicates: ['dc:creator', 'dc:modified', 'dc:created', 'apods:announces', 'apods:announcers']
       });
 
       const creator = await ctx.call('activitypub.actor.get', { actorUri: object['dc:creator'] });
@@ -43,11 +43,11 @@ module.exports = {
       // Add the creator to the list of announces and announcers
       await ctx.call('activitypub.collection.attach', {
         collectionUri: object['apods:announces'],
-        item: creator.id,
+        item: creator.id
       });
       await ctx.call('activitypub.collection.attach', {
         collectionUri: object['apods:announcers'],
-        item: creator.id,
+        item: creator.id
       });
 
       const announcesGroupUri = getAnnouncesGroupUri(resourceUri);
@@ -62,10 +62,10 @@ module.exports = {
         additionalRights: {
           group: {
             uri: announcesGroupUri,
-            read: true,
-          },
+            read: true
+          }
         },
-        webId: creator.id,
+        webId: creator.id
       });
 
       // Give read rights to announcers for the list of announces
@@ -74,10 +74,10 @@ module.exports = {
         additionalRights: {
           group: {
             uri: announcersGroupUri,
-            read: true,
-          },
+            read: true
+          }
         },
-        webId: creator.id,
+        webId: creator.id
       });
 
       if (creator.url) {
@@ -87,13 +87,13 @@ module.exports = {
           additionalRights: {
             group: {
               uri: announcesGroupUri,
-              read: true,
-            },
+              read: true
+            }
           },
-          webId: creator.id,
+          webId: creator.id
         });
       }
-    },
+    }
   },
   activities: {
     announce: {
@@ -104,8 +104,8 @@ module.exports = {
           {
             type: ACTIVITY_TYPES.ANNOUNCE,
             object: {
-              type: this.settings.watchedTypes,
-            },
+              type: this.settings.watchedTypes
+            }
           },
           activity
         );
@@ -120,14 +120,14 @@ module.exports = {
         for (let actorUri of defaultToArray(activity.target)) {
           await ctx.call('activitypub.collection.attach', {
             collectionUri: activity.object['apods:announces'],
-            item: actorUri,
+            item: actorUri
           });
 
           // TODO automatically synchronize the collection with the ACL group
           await ctx.call('webacl.group.addMember', {
             groupUri: getAnnouncesGroupUri(activity.object.id),
             memberUri: actorUri,
-            webId: activity.object['dc:creator'],
+            webId: activity.object['dc:creator']
           });
         }
       },
@@ -142,23 +142,26 @@ module.exports = {
             // Cache remote object (we want to be able to fetch it with SPARQL)
             await ctx.call('ldp.remote.store', {
               resource: activity.object,
-              webId: recipientUri,
+              webId: recipientUri
             });
 
             const container = await ctx.call('ldp.registry.getByType', { type: resourceType });
-            if (!container) throw new Error(`Cannot store resource of type "${resourceType}", no matching containers were found!`);
+            if (!container)
+              throw new Error(`Cannot store resource of type "${resourceType}", no matching containers were found!`);
             const containerUri = await ctx.call('ldp.registry.getUri', { path: container.path, webId: recipientUri });
 
             await ctx.call('ldp.container.attach', {
               containerUri,
               resourceUri,
-              webId: recipientUri,
+              webId: recipientUri
             });
-          } catch(e) {
-            this.logger.warn(`Unable to cache remote object ${resourceUri} for actor ${recipientUri}. Message: ${e.message}`);
+          } catch (e) {
+            this.logger.warn(
+              `Unable to cache remote object ${resourceUri} for actor ${recipientUri}. Message: ${e.message}`
+            );
           }
         }
-      },
+      }
     },
     offerAnnounceByOrganizer: {
       async match(ctx, activity) {
@@ -169,9 +172,9 @@ module.exports = {
             object: {
               type: ACTIVITY_TYPES.ANNOUNCE,
               object: {
-                type: this.settings.watchedTypes,
-              },
-            },
+                type: this.settings.watchedTypes
+              }
+            }
           },
           activity
         );
@@ -185,16 +188,16 @@ module.exports = {
         for (let actorUri of defaultToArray(activity.target)) {
           await ctx.call('activitypub.collection.attach', {
             collectionUri: activity.object.object['apods:announcers'],
-            item: actorUri,
+            item: actorUri
           });
 
           await ctx.call('webacl.group.addMember', {
             groupUri: getAnnouncersGroupUri(activity.object.object.id),
             memberUri: actorUri,
-            webId: activity.object.object['dc:creator'],
+            webId: activity.object.object['dc:creator']
           });
         }
-      },
+      }
     },
     offerAnnounceToOrganizer: {
       async match(ctx, activity) {
@@ -205,9 +208,9 @@ module.exports = {
             object: {
               type: ACTIVITY_TYPES.ANNOUNCE,
               object: {
-                type: this.settings.watchedTypes,
-              },
-            },
+                type: this.settings.watchedTypes
+              }
+            }
           },
           activity
         );
@@ -222,7 +225,7 @@ module.exports = {
 
         const isAnnouncer = await ctx.call('activitypub.collection.includes', {
           collectionUri: object['apods:announcers'],
-          itemUri: activity.actor,
+          itemUri: activity.actor
         });
 
         if (!isAnnouncer) {
@@ -235,7 +238,7 @@ module.exports = {
           actor: creator.id,
           object: object.id,
           target: activity.object.target,
-          to: activity.object.target,
+          to: activity.object.target
         });
 
         // Inform the announcer that his offer has been accepted (this is not used currently)
@@ -244,9 +247,9 @@ module.exports = {
           type: ACTIVITY_TYPES.ACCEPT,
           actor: creator.id,
           object: activity.id,
-          to: activity.actor,
+          to: activity.actor
         });
-      },
-    },
-  },
+      }
+    }
+  }
 };

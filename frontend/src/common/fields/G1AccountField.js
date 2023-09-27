@@ -3,21 +3,21 @@ import { g1UrlToPublicKey } from '../../utils';
 import CopyButton from '../buttons/CopyButton';
 import makeStyles from '@mui/styles/makeStyles';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   wrapper: {
-    position: 'relative',
+    position: 'relative'
   },
   text: {
     overflow: 'hidden',
     whiteSpace: 'nowrap',
     textOverflow: 'ellipsis',
-    marginRight: 15,
+    marginRight: 15
   },
   copyButton: {
     position: 'absolute',
     top: -3,
-    right: -3,
-  },
+    right: -3
+  }
 }));
 
 const G1AccountField = ({ record, source }) => {
@@ -34,7 +34,7 @@ const G1AccountField = ({ record, source }) => {
 };
 
 G1AccountField.defaultProps = {
-  addLabel: true,
+  addLabel: true
 };
 
 export default G1AccountField;

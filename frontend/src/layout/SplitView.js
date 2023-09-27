@@ -1,6 +1,6 @@
 import React from 'react';
 import { Grid, useMediaQuery } from '@mui/material';
-import StickyBox from "./StickyBox";
+import StickyBox from './StickyBox';
 
 const SplitView = ({ asides, children }) => {
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
@@ -13,9 +13,7 @@ const SplitView = ({ asides, children }) => {
           {children}
         </Grid>
         <Grid item mt={2} md={4} lg={3}>
-          <StickyBox>
-            {asides.map((aside, i) => React.cloneElement(aside, { key: i }))}
-          </StickyBox>
+          <StickyBox>{asides.map((aside, i) => React.cloneElement(aside, { key: i }))}</StickyBox>
         </Grid>
       </Grid>
     );

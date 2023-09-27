@@ -10,28 +10,28 @@ import AppsIcon from '@mui/icons-material/Apps';
 import SettingsIcon from '@mui/icons-material/Settings';
 import GroupIcon from '@mui/icons-material/Group';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   box: {
-    height: 56,
+    height: 56
   },
   appBar: {
     top: 'auto',
-    bottom: 0,
+    bottom: 0
   },
   bottomNav: {
     borderTopColor: theme.palette.primary.main,
     borderTopStyle: 'solid',
     borderTopWidth: 4,
     '& a': {
-      boxSizing: 'border-box',
-    },
+      boxSizing: 'border-box'
+    }
   },
   selected: {
     color: 'black',
     '& svg': {
-      fill: 'black',
-    },
-  },
+      fill: 'black'
+    }
+  }
 }));
 
 const BottomBar = () => {

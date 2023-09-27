@@ -13,7 +13,7 @@ module.exports = {
     acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
     dereference: ['vcard:hasGeo', 'vcard:hasTelephone'],
     permissions: {},
-    newResourcesPermissions: {},
+    newResourcesPermissions: {}
   },
   dependencies: ['activitypub', 'webacl'],
   events: {
@@ -33,10 +33,10 @@ module.exports = {
               : profileData.name,
             'vcard:given-name': profileData.name,
             'vcard:family-name': profileData.familyName,
-            describes: webId,
+            describes: webId
           },
           contentType: MIME_TYPES.JSON,
-          webId,
+          webId
         },
         { parentCtx: ctx }
       );
@@ -46,24 +46,24 @@ module.exports = {
           resourceUri: profileUri,
           additionalRights: {
             anon: {
-              read: true,
-            },
+              read: true
+            }
           },
-          webId,
+          webId
         });
       }
 
       await ctx.call('ldp.resource.patch', {
         resourceUri: webId,
         triplesToAdd: [triple(namedNode(webId), namedNode(AS_PREFIX + 'url'), namedNode(profileUri))],
-        webId,
+        webId
       });
 
       // TODO put this on the contacts app
       // Create a WebACL group for the user's contact
       const { groupUri: contactsGroupUri } = await ctx.call('webacl.group.create', {
         groupSlug: new URL(webId).pathname + '/contacts',
-        webId,
+        webId
       });
 
       // Authorize this group to view the user's profile
@@ -72,12 +72,12 @@ module.exports = {
         additionalRights: {
           group: {
             uri: contactsGroupUri,
-            read: true,
-          },
+            read: true
+          }
         },
-        webId,
+        webId
       });
-    },
+    }
   },
   hooks: {
     before: {
@@ -86,7 +86,7 @@ module.exports = {
         if (ctx.params.resource['vcard:hasAddress']) {
           const location = await ctx.call('profiles.location.get', {
             resourceUri: ctx.params.resource['vcard:hasAddress'],
-            webId: ctx.params.webId,
+            webId: ctx.params.webId
           });
           if (location && location['vcard:hasAddress'] && location['vcard:hasAddress']['vcard:hasGeo']) {
             ctx.params.resource['vcard:hasGeo'] = location['vcard:hasAddress']['vcard:hasGeo'];
@@ -100,8 +100,8 @@ module.exports = {
             delete ctx.params.resource['vcard:hasGeo'];
           }
         }
-      },
-    },
+      }
+    }
     // TODO give permissions to read home address to all contacts ?
     // The action webacl.group.getUri need to be published first
     //   after: {
@@ -137,5 +137,5 @@ module.exports = {
     //       return res;
     //     }
     //   }
-  },
+  }
 };

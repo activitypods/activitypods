@@ -21,11 +21,11 @@ const useRequestContact = () => {
             object: {
               type: ACTIVITY_TYPES.ADD,
               actor: actorUri,
-              object: identity.profileData.id,
+              object: identity.profileData.id
             },
             content,
             target: actorUri,
-            to: actorUri,
+            to: actorUri
           });
           notify('app.notification.contact_request_sent', 'success');
         } else {

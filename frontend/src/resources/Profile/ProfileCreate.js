@@ -6,7 +6,7 @@ import { useCheckAuthenticated } from '@semapps/auth-provider';
 import useRequestContact from '../../hooks/useRequestContact';
 import SendIcon from '@mui/icons-material/Send';
 
-const AddContactToolbar = (props) => {
+const AddContactToolbar = props => {
   const translate = useTranslate();
   return (
     <Toolbar {...props}>

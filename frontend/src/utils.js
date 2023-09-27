@@ -1,14 +1,14 @@
 const CESIUM_APP_URL = 'https://demo.cesium.app/#/app/wot/';
 const CESIUM_APP_REGEX = /^https:\/\/demo\.cesium\.app\/#\/app\/wot\/([^\\]*)\//;
 
-export const g1PublicKeyToUrl = (value) => {
+export const g1PublicKeyToUrl = value => {
   if (value && !value.startsWith(CESIUM_APP_URL)) {
     return CESIUM_APP_URL + value + '/';
   }
   return value;
 };
 
-export const g1UrlToPublicKey = (value) => {
+export const g1UrlToPublicKey = value => {
   if (value && value.startsWith(CESIUM_APP_URL)) {
     const results = value.match(CESIUM_APP_REGEX);
     if (results) return results[1];
@@ -16,7 +16,7 @@ export const g1UrlToPublicKey = (value) => {
   return value;
 };
 
-export const formatUsername = (uri) => {
+export const formatUsername = uri => {
   const url = new URL(uri);
   const username = url.pathname.split('/')[1];
   return '@' + username + '@' + url.host;
@@ -29,7 +29,7 @@ export const formatUsername = (uri) => {
  * @param {*} value A non-array value, an array or undefined.
  * @returns
  */
-export const arrayFromLdField = (value) => {
+export const arrayFromLdField = value => {
   // If the field is null-ish, we suppose there are no values.
   if (!value) {
     return [];
@@ -61,7 +61,7 @@ export const colorFromString = (value, offsets = {}) => {
     r: { min: 0x60, max: 0xff },
     g: { min: 0x60, max: 0xff },
     b: { min: 0x60, max: 0xff },
-    ...offsets,
+    ...offsets
   };
 
   // Generate some number between 0 and 1 from the string.
@@ -89,7 +89,7 @@ export const colorFromString = (value, offsets = {}) => {
  * @param {string} seed
  * @returns
  */
-export const numberFromString = (seed) => {
+export const numberFromString = seed => {
   return Math.abs(
     Math.sin(
       seed.split('').reduce((a, b) => {
@@ -107,7 +107,7 @@ export const numberFromString = (seed) => {
  *
  * @param {number} seed
  */
-export const mulberry32 = (seed) => {
+export const mulberry32 = seed => {
   function next() {
     let z = (seed += 0x9e3779b9) | 0; // the `| 0` coerces it into a 32-bit int
     z ^= z >>> 16;

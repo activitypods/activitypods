@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import {
   useCheckAuthenticated,
-  passwordScorer,
+  defaultPasswordScorer,
   PasswordStrengthIndicator,
   validatePasswordStrength
 } from '@semapps/auth-provider';
@@ -60,11 +60,7 @@ const SettingsPasswordPage = () => {
             <Typography variant="body2" style={{ marginBottom: 3 }}>
               {translate('app.validation.password_strength')}:{' '}
             </Typography>
-            <PasswordStrengthIndicator
-              scorer={passwordScorer.defaultScorer}
-              password={newPassword}
-              sx={{ width: '100%' }}
-            />
+            <PasswordStrengthIndicator scorer={defaultPasswordScorer} password={newPassword} sx={{ width: '100%' }} />
             <TextInput
               label={translate('app.input.new_password')}
               source="newPassword"

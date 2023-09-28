@@ -139,7 +139,9 @@ module.exports = {
     },
     validation: {
       email: 'Doit être un email valide',
-      confirmNewPassword: 'Doit être le même que le nouveau champ de mot de passe'
+      confirmNewPassword: 'Doit être le même que le nouveau champ de mot de passe',
+      password_strength: 'Force du mot de passe',
+      password_too_weak: 'Mot de passe trop faible. Augmentez la longueur ou ajoutez des caractères spéciaux.'
     },
     steps: {
       title: 'Comment ça marche ?',

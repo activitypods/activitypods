@@ -1,5 +1,10 @@
 import React, { useCallback } from 'react';
-import { useCheckAuthenticated } from '@semapps/auth-provider';
+import {
+  useCheckAuthenticated,
+  defaultPasswordScorer,
+  PasswordStrengthIndicator,
+  validatePasswordStrength
+} from '@semapps/auth-provider';
 import { required, useAuthProvider, useNotify, useTranslate } from 'react-admin';
 import { SimpleForm, TextInput } from 'react-admin';
 import { Box, Card, Typography } from '@mui/material';
@@ -19,6 +24,8 @@ const SettingsPasswordPage = () => {
   const notify = useNotify();
   const { identity } = useCheckAuthenticated();
   const authProvider = useAuthProvider();
+
+  const [newPassword, setNewPassword] = React.useState('');
 
   const onSubmit = useCallback(
     async params => {
@@ -41,7 +48,7 @@ const SettingsPasswordPage = () => {
       </Typography>
       <Box mt={1}>
         <Card>
-          <SimpleForm save={onSubmit}>
+          <SimpleForm onSubmit={onSubmit}>
             <TextInput
               label={translate('app.input.current_password')}
               source="currentPassword"
@@ -49,7 +56,21 @@ const SettingsPasswordPage = () => {
               validate={required()}
               fullWidth
             />
-            <TextInput label={translate('app.input.new_password')} source="newPassword" type="password" fullWidth />
+
+            <Typography variant="body2" style={{ marginBottom: 3 }}>
+              {translate('app.validation.password_strength')}:{' '}
+            </Typography>
+            <PasswordStrengthIndicator scorer={defaultPasswordScorer} password={newPassword} sx={{ width: '100%' }} />
+            <TextInput
+              label={translate('app.input.new_password')}
+              source="newPassword"
+              type="password"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              validate={[validatePasswordStrength()]}
+              fullWidth
+            />
+
             <TextInput
               label={translate('app.input.confirm_new_password')}
               source="confirmNewPassword"

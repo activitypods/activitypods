@@ -10,19 +10,20 @@ const { initialize, listDatasets, clearDataset } = require('./initialize');
 /**
  * @typedef {import('moleculer').ServiceBroker} Broker
  */
-jest.setTimeout(30000);
+
+jest.setTimeout(30_000);
 
 const NUM_USERS = 2;
 
 /** @type {Broker} */
 let broker;
 
-const signupUser = async (num) => {
+const signupUser = async num => {
   const { webId, token } = await broker.call('auth.signup', {
     username: `user${num}`,
     email: `user${num}@test.com`,
     password: 'test',
-    name: `User #${num}`,
+    name: `User #${num}`
   });
   return { webId, token };
 };
@@ -31,40 +32,32 @@ const signupUser = async (num) => {
 const createUser = async (broker, num) => {
   const { webId, token } = await signupUser(num);
 
-  const webIdDoc = await waitForResource(
-    2000,
-    ['url', 'apods:capabilities'],
-    8,
-    async () =>
-      await broker.call('ldp.resource.get', {
-        resourceUri: webId,
-        accept: MIME_TYPES.JSON,
-        webId: 'system',
-      })
-  );
+  const webIdDoc = await broker.call('ldp.resource.awaitCreateComplete', {
+    resourceUri: webId,
+    predicates: ['url']
+  });
 
-  // The .id check is only necessary as long as the @context is not updated to contain `apods:capabilities`
-  const capsUri =
-    typeof webIdDoc['apods:capabilities'] === 'string'
-      ? webIdDoc['apods:capabilities']
-      : webIdDoc['apods:capabilities'].id;
+  const capabilitiesUri = await broker.call('capabilities.getContainerUri', { webId });
 
-  return { uri: webId, profileUri: webIdDoc['url'], capabilitiesUri: capsUri, token };
+  return { webId, profileUri: webIdDoc['url'], capabilitiesUri, token };
 };
 
-const getUserInviteCap = async (user) => {
+const getUserInviteCap = async user => {
   // Get all existing caps
-  const inviteCaps = await broker.call('ldp.container.get', {
-    containerUri: user.capabilitiesUri,
-    accept: MIME_TYPES.JSON,
-    webId: 'system',
-  });
+  const inviteCaps = await broker.call(
+    'ldp.container.get',
+    {
+      containerUri: user.capabilitiesUri,
+      accept: MIME_TYPES.JSON,
+      webId: 'system'
+    },
+
+    { meta: { $cache: false } }
+  );
   const caps = arrayOf(inviteCaps['ldp:contains']);
-  const inviteCap = caps.find((cap) => {
+  const inviteCap = caps.find(cap => {
     return (
-      cap.type === 'http://www.w3.org/ns/auth/acl#Authorization' &&
-      cap['http://www.w3.org/ns/auth/acl#Mode'] === 'http://www.w3.org/ns/auth/acl#Read' &&
-      cap['http://www.w3.org/ns/auth/acl#AccessTo'] === user.profileUri
+      cap.type === 'acl:Authorization' && cap['acl:Mode'] === 'acl:Read' && cap['acl:AccessTo'] === user.profileUri
     );
   });
   return inviteCap;
@@ -73,7 +66,7 @@ const getUserInviteCap = async (user) => {
 describe('capabilities', () => {
   /**
    * @typedef UserField
-   * @property {string} uri
+   * @property {string} webId
    * @property {string} profileUri
    * @property {string} capabilitiesUri
    * @property {string} token
@@ -101,7 +94,7 @@ describe('capabilities', () => {
     users = await Promise.all(newUserPromises);
 
     // We still need to wait here, signup hooks might not have completed (i.e. invite caps not set).
-    waitForExpect(
+    await waitForExpect(
       async () => {
         for (const user of users) {
           expect(await getUserInviteCap(user)).toBeTruthy();
@@ -136,7 +129,7 @@ describe('capabilities', () => {
     test('owner can GET capability container resources', async () => {
       // Make an authenticated fetch for user1.
       const fetchRes = await fetch(users[0].capabilitiesUri, {
-        headers: { authorization: `Bearer ${users[0].token}` },
+        headers: { authorization: `Bearer ${users[0].token}` }
       });
       const jsonRes = await fetchRes.json();
       const caps = jsonRes['ldp:contains'];
@@ -153,78 +146,57 @@ describe('capabilities', () => {
     test('other user sees empty container', async () => {
       // Make an authenticated fetch for user1, fetching user0's caps.
       const fetchRes = await fetch(users[0].capabilitiesUri, {
-        headers: { authorization: `Bearer ${users[1].token}` },
+        headers: { authorization: `Bearer ${users[1].token}` }
       });
       const jsonRes = await fetchRes.json();
       const caps = jsonRes['ldp:contains'];
       expect(arrayOf(caps)).toHaveLength(0);
     });
+    3;
   });
 
   test('migration to add invite URI capabilities', async () => {
     // For this test, we create a third user (without adding new capabilities),
     //  to emulate the pre-migration behavior.
-    // 1. Stop capabilities service (that defines capabilities on signup).
+    // 1. Stop capabilities service (that adds an invite capability on signup).
     await broker.destroyService('capabilities');
 
     // 2. Create user.
-    const newUser = await signupUser(3);
-
-    // 2.1 We use this, to get the profile URI.
-    const webIdDoc = await waitForResource(
-      2000,
-      ['url'],
-      8,
-      async () =>
-        await broker.call('ldp.resource.get', {
-          resourceUri: newUser.webId,
-          accept: MIME_TYPES.JSON,
-          webId: 'system',
-        })
-    );
-    // 2.2 Since the capabilities service is disabled, no reference should be created.
-    expect(webIdDoc['apods:capabilities']).toBeUndefined();
+    const newUser = await signupUser(NUM_USERS + 1);
+    const webIdDoc = await broker.call('ldp.resource.awaitCreateComplete', {
+      resourceUri: newUser.webId,
+      predicates: ['url']
+    });
+    newUser.profileUri = webIdDoc['url'];
 
     // 3. Start capabilities service again.
     broker.createService(CapabilitiesService, {
-      settings: { path: '/capabilities' },
+      settings: { path: '/capabilities' }
     });
 
     // 3.1 Run migration. Will add the capabilities. Wait a bit, until the service becomes available.
-    await delay(2000);
+    await delay(2_000);
     await broker.call('capabilities.addCapsContainersWhereMissing', {});
 
     // 4. Get the capabilities and assert them.
-    // 4.1 Get the capabilities URI from the webId document that should have been added.
-    const webIdDocNew = await waitForResource(
-      2000,
-      ['apods:capabilities'],
-      8,
-      async () =>
-        await broker.call('ldp.resource.get', {
-          resourceUri: newUser.webId,
-          accept: MIME_TYPES.JSON,
-          webId: 'system',
-        })
-    );
+    // 4.1. Add the missing properties to the actor object (required by `getActorInviteCap`).
+    newUser.capabilitiesUri = await broker.call('capabilities.getContainerUri', { webId: newUser.webId });
 
-    // 4.1.1 Add the missing properties to the actor object (required by `getActorInviteCap`).
-    newUser.profileUri = webIdDocNew['url'];
-    newUser.capabilitiesUri = webIdDocNew['apods:capabilities']?.id || webIdDocNew['apods:capabilities'];
-
-    // 4.2. The capabilities should be available now, get them.
-    const inviteCapAgain = getUserInviteCap(newUser);
+    // 4.2. Get the added capabilities for the new user.
+    const inviteCap = await waitForResource(200, undefined, 15, () => getUserInviteCap(newUser));
     // 4.3. Invite capability should be available.
-    expect(inviteCapAgain).toBeTruthy();
+    expect(inviteCap).toBeTruthy();
 
     // 5. Assert, that other users did not get more caps.
-    const inviteCaps = await broker.call('ldp.container.get', {
-      containerUri: users[0].capabilitiesUri,
-      accept: MIME_TYPES.JSON,
-      webId: 'system',
-    });
-    const user0Caps = arrayOf(inviteCaps['ldp:contains']);
-    expect(user0Caps).toHaveLength(1);
+    for (let i = 0; i < NUM_USERS; i += 1) {
+      const inviteCaps = await broker.call('ldp.container.get', {
+        containerUri: users[i].capabilitiesUri,
+        accept: MIME_TYPES.JSON,
+        webId: 'system'
+      });
+      const userCaps = arrayOf(inviteCaps['ldp:contains']);
+      expect(userCaps).toHaveLength(1);
+    }
   });
 
   test.skip('resource is accessible with capability token', async () => {

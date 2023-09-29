@@ -818,9 +818,6 @@
     "apods:application": {
       "@type": "@id"
     },
-    "apods:capabilities": {
-      "@type": "@id"
-    },
     "mp:offerOfResourceType": {
       "@type": "@id"
     },

@@ -21,8 +21,8 @@ module.exports = {
   hooks: {
     after: {
       async create(ctx, res) {
-        res.newData = await ctx.call('activitypub.object.awaitCreateComplete', {
-          objectUri: res.resourceUri,
+        res.newData = await ctx.call('ldp.resource.awaitCreateComplete', {
+          resourceUri: res.resourceUri,
           predicates: [
             'dc:creator',
             'dc:modified',

@@ -33,8 +33,8 @@ module.exports = {
     async giveRightsAfterCreate(ctx) {
       const { resourceUri } = ctx.params;
 
-      const object = await ctx.call('activitypub.object.awaitCreateComplete', {
-        objectUri: resourceUri,
+      const object = await ctx.call('ldp.resource.awaitCreateComplete', {
+        resourceUri,
         predicates: ['dc:creator', 'dc:modified', 'dc:created', 'apods:announces', 'apods:announcers']
       });
 

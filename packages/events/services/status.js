@@ -19,8 +19,8 @@ module.exports = {
       const { eventUri, newStatus } = ctx.params;
 
       // Ensure event is complete (we may have concurrency bugs otherwise)
-      const event = await ctx.call('activitypub.object.awaitCreateComplete', {
-        objectUri: eventUri,
+      const event = await ctx.call('ldp.resource.awaitCreateComplete', {
+        resourceUri: eventUri,
         predicates: [
           'dc:creator',
           'dc:modified',

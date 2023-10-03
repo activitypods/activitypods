@@ -4,8 +4,10 @@
     "pair": "http://virtual-assembly.org/ontologies/pair#",
     "mp": "http://virtual-assembly.org/ontologies/pair-mp#",
     "apods": "http://activitypods.org/ns/core#",
+    "syreen": "http://syreen.fr/ns/core#",
 
     "as": "https://www.w3.org/ns/activitystreams#",
+    "acl": "http://www.w3.org/ns/auth/acl#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "dc": "http://purl.org/dc/terms/",
@@ -18,6 +20,9 @@
     "semapps": "http://semapps.org/ns/core#",
     "vcard": "http://www.w3.org/2006/vcard/ns#",
     "void": "http://rdfs.org/ns/void#",
+    "obi": "https://w3id.org/openbadges#",
+    "extensions": "https://w3id.org/openbadges/extensions#",
+    "cred": "https://w3id.org/credentials#",
 
     "id": "@id",
     "type": "@type",
@@ -29,6 +34,13 @@
       "@type": "xsd:dateTime"
     },
     "dc:creator": {
+      "@type": "@id"
+    },
+
+    "skos:broader": {
+      "@type": "@id"
+    },
+    "skos:narrower": {
       "@type": "@id"
     },
 
@@ -763,7 +775,7 @@
     "vcard:hasAddress": {
       "@type": "@id"
     },
-    "vcard:hasGeo": {
+    "vcard:geo": {
       "@type": "@id"
     },
     "vcard:photo": {
@@ -815,6 +827,105 @@
     },
     "mp:expirationDate": {
       "@type": "xsd:dateTime"
-    }
+    },
+
+    "syreen:hasPart": {
+      "@type": "@id"
+    },
+    "syreen:actor": {
+      "@type": "@id"
+    },
+    "syreen:partOf": {
+      "@type": "@id"
+    },
+    "syreen:depictedBy": {
+      "@type": "@id"
+    },
+    "syreen:hasLocation": {
+      "@type": "@id"
+    },
+    "syreen:hasCategory": {
+      "@type": "@id"
+    },
+    "syreen:hasBatiprixCategory": {
+      "@type": "@id"
+    },
+    "syreen:hasUnit": {
+      "@type": "@id"
+    },
+    "syreen:hasStage": {
+      "@type": "@id"
+    },
+    "syreen:hasProjectType": {
+      "@type": "@id"
+    },
+    "syreen:startDate": {
+      "@type": "xsd:dateTime"
+    },
+    "syreen:endDate": {
+      "@type": "xsd:dateTime"
+    },
+
+    "AlignmentObject": "schema:AlignmentObject",
+    "Endorsement": "cred:Credential",
+    "Assertion": "obi:Assertion",
+    "BadgeClass": "obi:BadgeClass",
+    "Criteria": "obi:Criteria",
+    "Evidence": "obi:Evidence",
+    "Extension": "obi:Extension",
+    "FrameValidation": "obi:FrameValidation",
+    "IdentityObject": "obi:IdentityObject",
+    "HostedBadge": "obi:HostedBadge",
+    "hosted": "obi:HostedBadge",
+    "Issuer": "obi:Issuer",
+    "RevocationList": "obi:RevocationList",
+    "SignedBadge": "obi:SignedBadge",
+    "signed": "obi:SignedBadge",
+    "TypeValidation": "obi:TypeValidation",
+    "VerificationObject": "obi:VerificationObject",
+
+    "author": { "@id": "schema:author", "@type": "@id" },
+    "caption": { "@id": "schema:caption" },
+    "claim": { "@id": "cred:claim", "@type": "@id" },
+    "description": { "@id": "schema:description" },
+    "email": { "@id": "schema:email" },
+    "endorsement": { "@id": "cred:credential", "@type": "@id" },
+    "genre": { "@id": "schema:genre" },
+    "related": { "@id": "dc:relation", "@type": "@id" },
+    "startsWith": { "@id": "http://purl.org/dqm-vocabulary/v1/dqm#startsWith" },
+    "tags": { "@id": "schema:keywords" },
+    "targetDescription": { "@id": "schema:targetDescription" },
+    "targetFramework": { "@id": "schema:targetFramework" },
+    "targetName": { "@id": "schema:targetName" },
+    "targetUrl": { "@id": "schema:targetUrl" },
+    "telephone": { "@id": "schema:telephone" },
+    "version": { "@id": "schema:version" },
+
+    "alignment": { "@id": "obi:alignment", "@type": "@id" },
+    "allowedOrigins": { "@id": "obi:allowedOrigins" },
+    "badge": { "@id": "obi:badge", "@type": "@id" },
+    "criteria": { "@id": "obi:criteria", "@type": "@id" },
+    "endorsementComment": { "@id": "obi:endorsementComment" },
+    "evidence": { "@id": "obi:evidence", "@type": "@id" },
+    "hashed": { "@id": "obi:hashed", "@type": "xsd:boolean" },
+    "identity": { "@id": "obi:identityHash" },
+    "issuedOn": { "@id": "obi:issueDate", "@type": "xsd:dateTime" },
+    "issuer": { "@id": "obi:issuer", "@type": "@id" },
+    "narrative": { "@id": "obi:narrative" },
+    "recipient": { "@id": "obi:recipient", "@type": "@id" },
+    "revocationList": { "@id": "obi:revocationList", "@type": "@id" },
+    "revocationReason": { "@id": "obi:revocationReason" },
+    "revokedAssertions": { "@id": "obi:revoked" },
+    "targetCode": { "@id": "obi:targetCode" },
+    "uid": { "@id": "obi:uid" },
+    "validatesType": "obi:validatesType",
+    "validationFrame": "obi:validationFrame",
+    "validationSchema": "obi:validationSchema",
+    "verification": { "@id": "obi:verify", "@type": "@id" },
+    "verificationProperty": { "@id": "obi:verificationProperty" },
+    "verify": "verification",
+
+    "schema:image": { "@type": "@id" },
+    "schema:url": { "@type": "@id" }
   }
 }

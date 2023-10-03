@@ -3,7 +3,7 @@ FROM node:14-alpine
 # Default arguments
 ARG SELECTED_BRANCH=master
 
-WORKDIR /app
+WORKDIR /activitypods
 
 RUN node -v
 RUN npm -v
@@ -16,12 +16,12 @@ RUN yarn global add serve
 # If we don't do that, Docker may skip the git clone command
 ADD https://api.github.com/repos/assemblee-virtuelle/activitypods/git/refs/heads/$SELECTED_BRANCH ../git-version.json
 
-RUN git clone https://github.com/assemblee-virtuelle/activitypods.git /app
+RUN git clone https://github.com/assemblee-virtuelle/activitypods.git /activitypods
 
 RUN git checkout $SELECTED_BRANCH
 
-ADD app /app/frontend
-WORKDIR /app/frontend
+ADD app /activitypods/frontend
+WORKDIR /activitypods/frontend
 
 RUN yarn install
 

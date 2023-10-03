@@ -16,7 +16,7 @@
     "prettier": "^2.5.0"
   },
   "workspaces": [
-    "boilerplate",
+    "backend",
     "packages/*",
     "tests"
   ]

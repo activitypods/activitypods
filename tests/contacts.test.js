@@ -4,7 +4,7 @@ const { MIME_TYPES } = require('@semapps/mime-types');
 const { initialize, clearDataset, listDatasets } = require('./initialize');
 const path = require('path');
 const urlJoin = require('url-join');
-const notificationFilter = require('../boilerplate/services/mixins/MailNotificationFilterMixin');
+const notificationFilter = require('../backend/services/mixins/MailNotificationFilterMixin');
 const delay = t => new Promise(resolve => setTimeout(resolve, t));
 
 jest.setTimeout(80000);

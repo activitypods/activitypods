@@ -39,12 +39,12 @@ Check out [our website](https://activitypods.org) or [these slides](./proposal/p
 docker-compose up -d fuseki
 ```
 
-### Launch the boilerplate
+### Launch the backend
 
 ```
 yarn install
 yarn run bootstrap
-cd boilerplate
+cd backend
 yarn run dev
 ```
 
@@ -164,7 +164,7 @@ Accept: application/ld+json
 
 To modify packages on the [SemApps repository](https://github.com/assemblee-virtuelle/semapps) and see the changes before they are published, we recommend to use [`yarn link`](https://classic.yarnpkg.com/en/docs/cli/link/).
 
-### Linking middleware packages
+### Linking backend packages
 
 ```bash
 cd /SEMAPPS_REPO/src/middleware

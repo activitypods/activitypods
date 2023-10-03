@@ -3,7 +3,7 @@ FROM node:14-alpine
 # Default arguments
 ARG SELECTED_BRANCH=master
 
-WORKDIR /app
+WORKDIR /activitypods
 
 RUN node -v
 RUN npm -v
@@ -16,14 +16,14 @@ RUN yarn global add pm2
 # If we don't do that, Docker may skip the git clone command
 ADD https://api.github.com/repos/assemblee-virtuelle/activitypods/git/refs/heads/$SELECTED_BRANCH ../git-version.json
 
-RUN git clone https://github.com/assemblee-virtuelle/activitypods.git /app
+RUN git clone https://github.com/assemblee-virtuelle/activitypods.git /activitypods
 
-ADD boilerplate /app/boilerplate
+ADD app /activitypods/backend
 
 RUN yarn install
 RUN yarn run bootstrap
 
-WORKDIR /app/boilerplate
+WORKDIR /activitypods/backend
 
 EXPOSE 3000
 

@@ -6,7 +6,6 @@ module.exports = {
   settings: {
     path: '/skills',
     acceptedTypes: ['pair:Skill'],
-    dereference: [],
     permissions: {},
     newResourcesPermissions: {}
   },

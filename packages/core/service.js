@@ -100,6 +100,7 @@ const CoreService = {
         ontologies,
         podProvider: true,
         containers,
+        resourcesWithContainerPath: true, // TODO try to set to false
         defaultContainerOptions: {
           jsonContext: jsonContext || localJsonContext,
           permissions: {},

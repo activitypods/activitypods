@@ -801,6 +801,12 @@
     "interop:hasAccessNeeds": {
       "@type": "@id"
     },
+    "interop:hasAccessNeedGroup": {
+      "@type": "@id"
+    },
+    "interop:applicationAuthor": {
+      "@type": "@id"
+    },
     
     "apods:closingTime": {
       "@type": "xsd:dateTime"

@@ -39,7 +39,7 @@ const createUser = async (broker, num) => {
 
   const capabilitiesUri = await broker.call('capabilities.getContainerUri', { webId });
 
-  return { webId, profileUri: webIdDoc['url'], capabilitiesUri, token };
+  return { webId, profileUri: webIdDoc.url, capabilitiesUri, token };
 };
 
 const getUserInviteCap = async user => {
@@ -167,7 +167,7 @@ describe('capabilities', () => {
       resourceUri: newUser.webId,
       predicates: ['url']
     });
-    newUser.profileUri = webIdDoc['url'];
+    newUser.profileUri = webIdDoc.url;
 
     // 3. Start capabilities service again.
     broker.createService(CapabilitiesService, {
@@ -199,11 +199,46 @@ describe('capabilities', () => {
     }
   });
 
-  test.skip('resource is accessible with capability token', async () => {
-    // TODO
+  test('resource is accessible with capability token', async () => {
+    const inviteCap = await getUserInviteCap(users[0]);
+    const fetchedProfile = await fetch(users[0].profileUri, {
+      headers: { authorization: `Capability ${inviteCap.id}` }
+    });
+
+    expect(fetchedProfile.ok).toBeTruthy();
+    const fetchedProfileJson = await fetchedProfile.json();
+    expect(fetchedProfileJson).toMatchObject({
+      id: users[0].profileUri
+    });
   });
 
-  test.skip('resource is not accessible without capability token', async () => {
-    // TODO
+  test('resource is not accessible with wrong capability token', async () => {
+    const inviteCap = await getUserInviteCap(users[0]);
+    const fetchedProfile = await fetch(users[1].profileUri, {
+      headers: { authorization: `Capability ${inviteCap.id}` }
+    });
+    expect(fetchedProfile.ok).toBeFalsy();
+  });
+
+  test('resource is not accessible with misplaced capability token', async () => {
+    const misplacedCapUri = await broker.call('profiles.profile.post', {
+      resource: {
+        type: 'acl:Authorization',
+        'acl:Mode': 'acl:Read',
+        'acl:AccessTo': users[0].profileUri
+      },
+      contentType: MIME_TYPES.JSON,
+      webId: users[0].webId
+    });
+    const fetchedProfile = await fetch(users[0].profileUri, {
+      headers: { authorization: `Capability ${misplacedCapUri}` }
+    });
+
+    expect(fetchedProfile.ok).toBeFalsy();
+  });
+
+  test('resource is not accessible without capability token', async () => {
+    const fetchedProfile = await fetch(users[0].profileUri);
+    expect(fetchedProfile.ok).toBeFalsy();
   });
 });

@@ -844,6 +844,12 @@
     "apods:application": {
       "@type": "@id"
     },
+    "apods:hasSpecialAccessNeeds": {
+      "@type": "@id"
+    },
+    "apods:registeredClass": {
+      "@type": "@id"
+    }
 
     "mp:offerOfResourceType": {
       "@type": "@id"

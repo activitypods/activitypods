@@ -783,9 +783,6 @@
       "@type": "@id"
     },
 
-    "interop:registeredClass": {
-      "@type": "@id"
-    },
     "interop:accessNecessity": {
       "@type": "@id"
     },
@@ -849,7 +846,7 @@
     },
     "apods:registeredClass": {
       "@type": "@id"
-    }
+    },
 
     "mp:offerOfResourceType": {
       "@type": "@id"

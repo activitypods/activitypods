@@ -14,6 +14,7 @@
     "sec": "https://w3id.org/security#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "ldp": "http://www.w3.org/ns/ldp#",
+    "interop": "http://www.w3.org/ns/solid/interop#",
     "schema": "http://schema.org/",
     "foaf": "http://xmlns.com/foaf/0.1/",
     "skos": "http://www.w3.org/2004/02/skos/core#",
@@ -782,6 +783,25 @@
       "@type": "@id"
     },
 
+    "interop:registeredClass": {
+      "@type": "@id"
+    },
+    "interop:accessNecessity": {
+      "@type": "@id"
+    },
+    "interop:accessMode": {
+      "@type": "@id"
+    },
+    "interop:accessScenario": {
+      "@type": "@id"
+    },
+    "interop:authenticatedAs": {
+      "@type": "@id"
+    },
+    "interop:hasAccessNeeds": {
+      "@type": "@id"
+    },
+    
     "apods:closingTime": {
       "@type": "xsd:dateTime"
     },

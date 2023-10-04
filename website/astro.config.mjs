@@ -1,6 +1,8 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import remarkToc from 'remark-toc';
+
 import { defineConfig } from 'astro/config';
 
 import tailwind from '@astrojs/tailwind';
@@ -44,7 +46,7 @@ export default defineConfig({
 	],
 
 	markdown: {
-		remarkPlugins: [remarkReadingTime],
+		remarkPlugins: [remarkReadingTime, remarkToc],
 		extendDefaultPlugins: true,
 	},
 

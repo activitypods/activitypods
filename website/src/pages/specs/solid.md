@@ -7,7 +7,7 @@ Solid is a set of specifications.
 
 ### WebID
 
-All ActivityPub actors are also WebID.
+All ActivityPub actors are also WebIDs.
 
 ### Linked Data Protocol
 
@@ -23,7 +23,11 @@ Turtle and Json-LD
 
 Not yet implemented.
 
+TODO: https://github.com/assemblee-virtuelle/semapps/issues/176
+
 ### WAC permissions
+
+We support the full [WAC specification](https://solid.github.io/web-access-control-spec/)
 
 ### ACP
 
@@ -35,7 +39,7 @@ Not yet implemented.
 
 ### Solid OIDC
 
-Currently, we only support [HTTP signature](./activitypub#http-signature-authentication) for authentication on remote servers. Thanks to the Proxy endpoint, it solves all authentication needs we have.
+Currently, we only support [HTTP signature](./activitypub#http-signature-authentication) for authentication on remote servers. Thanks to the [Proxy endpoint](activitypods.md#proxy-endpoint-with-non-get-methods), it solves all authentication needs we have.
 
 We hope one day to support Solid OIDC so that Solid clients may connect to our Pods.
 
@@ -52,8 +56,8 @@ What we implement:
 
 What we don't implement:
 
-- Authorization flow is done ActivityPub, with a simple `Register` activity.
-- We only handle registration with `Applications`, not with other `SocialAgents` (we continue to use WAC permissions for the later)
+- Authorization flow is handled using ActivityPub, with a simple `Register` activity and not with Solid (yet).
+- We only handle registration with `Applications`, not with other `SocialAgents` (we continue to use WAC permissions for the latter)
 - Pods don't declare an `AuthorizationAgent`. It is handled internally.
 - Pods don't declare a `DataRegistry` (This registry is only used to list ShapeTrees. TypeIndex can be used instead)
 - Applications don't declare `AccessDescription` for the time being (we can deduce the accesses requested, and later it may be used to justify access to certain resources).

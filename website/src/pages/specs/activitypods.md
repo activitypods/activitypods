@@ -7,11 +7,18 @@ We try to make these standards.
 
 ### SPARQL endpoint respecting WAC permissions
 
-Every Pod comes with an SPARQL endpoint, linked to the WebID with the `void:sparqlEndpoint` predicate. Only SPARQL queries are supported, not SPARQL updates (You MUST use LDP or ActivityPub to modify data)
+Every Pod comes with an SPARQL endpoint, linked to the WebID with the `void:sparqlEndpoint` predicate. Only SPARQL _queries_ are supported, not [SPARQL _updates_](https://www.w3.org/TR/sparql11-update/) (You MUST use LDP or ActivityPub to modify data)
 
 ### Proxy endpoint with non-GET methods
 
-We have extended the ActivityPub proxy endpoint to support methods others than GET.
+We have extended the [ActivityPub proxy endpoint](./activitypub#proxy-endpoint) to support HTTP methods others than GET.
+
+To do that, you may pass a [`multipart/form-data``](https://developer.mozilla.org/en-US/docs/Web/API/FormData/Using_FormData_Objects) Content-Type with the following fields:
+
+- `id`: The URI of the resource
+- `method`: The HTTP method to use (default to `GET`)
+- `headers`: The HTTP headers to pass to the request (in JSON format)
+- `body`: The body of the request (optional)
 
 ### Apps registration through ActivityPub
 
@@ -21,11 +28,21 @@ We have extended the ActivityPub proxy endpoint to support methods others than G
 
 > TODO: https://github.com/assemblee-virtuelle/semapps/issues/1165
 
-It's possible to add items to (or remove items from) a collection with SPARQL-patch.
+It's possible to add items to (or remove items from) a collection using the `PATCH` method, the `application/sparql-update` Content-Type and a SPARQL query like this on the body:
+
+```sparql
+PREFIX as: <https://www.w3.org/ns/activitystreams#>
+INSERT DATA {
+  <https://mypod.store/alice/followers> as:items <https://mypod.store/bob> .
+};
+DELETE DATA {
+  <https://mypod.store/alice/followers> as:items <https://mypod.store/craig> .
+}
+```
 
 ### Custom collections
 
-It's possible to create other kind of collection.
+It's possible to create other kinds of collections.
 
 ### Notifications
 

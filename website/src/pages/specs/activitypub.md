@@ -23,7 +23,7 @@ The `Undo > Follow` activity is also supported.
 
 Every ActivityStreams actor is automatically attached a `as:liked` collection
 
-Every ActivityStreams object is automatically attached a `as:likes` collection, as soon as a Like is detected (?). If you want non-ActivityStreams objects to have a `as:likes` collection, you should add the type `as:Object`.
+Every ActivityStreams object is automatically attached a `as:likes` collection, as soon as a Like is detected (?). If you want non-ActivityStreams objects to have a `as:likes` collection, you should add the type `as:Object` to the resource (TODO).
 
 The `Undo > Like` activity is also supported.
 

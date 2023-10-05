@@ -46,14 +46,20 @@
 	@apply rotate-45 translate-y-[-8px] translate-x-[14px];
 }
 
-.toc-item,
-.toc-level {
-	margin-top: 0;
-	margin-bottom: 0;
-}
-
-.prose p {
+.prose p,
+.prose li {
 	margin-top: 0.8rem;
 	margin-bottom: 0.8rem;
 	line-height: 36px;
+}
+
+.prose ul {
+	margin-top: 0.8rem;
+	margin-bottom: 0.8rem;
+}
+
+.toc-item,
+.toc-level {
+	margin-top: 0 !important;
+	margin-bottom: 0 !important;
 }

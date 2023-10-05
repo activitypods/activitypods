@@ -23,13 +23,11 @@ Turtle and Json-LD
 
 #### LDP Prefer header <ProgressBar percentage={0} />
 
-TODO: https://github.com/assemblee-virtuelle/semapps/issues/1168
+👷 To be implemented. ([#1168](https://github.com/assemblee-virtuelle/semapps/issues/1168))
 
 #### LDP paging <ProgressBar percentage={0} />
 
-Not yet implemented.
-
-TODO: https://github.com/assemblee-virtuelle/semapps/issues/176
+👷 To be implemented. ([#176](https://github.com/assemblee-virtuelle/semapps/issues/176))
 
 ### WAC permissions <ProgressBar percentage={100} />
 
@@ -47,7 +45,7 @@ Currently, we only support [HTTP signature](./activitypub#http-signature-authent
 
 We hope one day to support Solid OIDC so that Solid clients may connect to our Pods.
 
-### Interoperability <ProgressBar percentage={30} />
+### Application interoperability <ProgressBar percentage={30} />
 
 [Solid Application Interoperability](https://solid.github.io/data-interoperability-panel/specification) is a complex specification which is not yet finished. Since we don't use [Solid-OIDC](#solid-oidc), we use ActivityPub and a new `Register` activity for app registration (applications are regular ActivityPub actors). We have also decided not to use ShapeTrees, which add nothing to our architecture: instead, applications only declare the classes they want to manage. For the rest, we chose to implement only the parts of the spec that we needed.
 
@@ -58,9 +56,9 @@ What we implement:
 - When the user receives an `Accept` activity for the registration, an `ApplicationRegistration` is saved on the user's Pod.
 - Whenever the user connects again to the application, we check that the `AccessNeeds` haven't changed. If needed, we show an authorization screen again and `AccessGrants` are updated.
 
-What we don't implement:
+What we don't implement yet:
 
-- Authorization flow is handled using ActivityPub, with a simple `Register` activity and not with Solid (yet).
+- Authorization flow is handled using ActivityPub, with a simple `Register` activity and not with Solid.
 - We only handle registration with `Applications`, not with other `SocialAgents` (we continue to use WAC permissions for the latter)
 - Pods don't declare an `AuthorizationAgent`. It is handled internally.
 - Pods don't declare a `DataRegistry` (This registry is only used to list ShapeTrees. TypeIndex can be used instead)
@@ -70,7 +68,7 @@ What we don't implement:
 
 #### ShapeTrees <ProgressBar percentage={0} />
 
-### Type Indexes <ProgressBar percentage={0} />
+#### Type Indexes <ProgressBar percentage={0} />
 
 See https://github.com/solid/type-indexes
 

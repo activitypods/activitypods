@@ -1,0 +1,64 @@
+---
+layout: ~/layouts/MdLayout.astro
+title: ActivityPub compliance
+---
+
+import ProgressBar from '../../components/ProgressBar.astro';
+
+Apart from a few side-effects which would be quick to implement if need arised, ActivityPods is 100% compatible with ActivityPub, and supports both client-to-server and server-to-server interactions.
+
+### Outbox <ProgressBar percentage={100} />
+
+### Inbox <ProgressBar percentage={100} />
+
+### Side effects <ProgressBar percentage={70} />
+
+#### Create/Update/Delete <ProgressBar percentage={100} />
+
+It's possible to create, update or delete any kind of objects. Objects are automatically stored in the corresponding containers.
+
+#### Follow <ProgressBar percentage={100} />
+
+Every ActivityStreams actor is automatically attached `as:followers` and `as:following` collections. Whenever a Follow activity is detected, it will add
+
+The `Undo > Follow` activity is also supported.
+
+#### Like <ProgressBar percentage={100} />
+
+Every ActivityStreams actor is automatically attached a `as:liked` collection
+
+Every ActivityStreams object is automatically attached a `as:likes` collection, as soon as a Like is detected (?). If you want non-ActivityStreams objects to have a `as:likes` collection, you should add the type `as:Object` to the resource (TODO).
+
+The `Undo > Like` activity is also supported.
+
+#### Announce <ProgressBar percentage={0} />
+
+The `as:shares` is not implemented yet. However we have a custom `apods:announces` and `apods:announcers` collections (see below).
+
+#### Add/Remove <ProgressBar percentage={0} />
+
+Not implemented yet.
+
+#### Block <ProgressBar percentage={0} />
+
+Not implemented yet.
+
+### Authentication <ProgressBar percentage={70} />
+
+#### HTTP Signature <ProgressBar percentage={100} />
+
+HTTP signature is the [recommended](https://www.w3.org/wiki/SocialCG/ActivityPub/Authentication_Authorization#Signing_requests_using_HTTP_Signatures) way to authenticate for server-to-server ActivityPub interactions. It is generally used when POSTing to other inboxes. We have extended its use so that it can be used on any endpoint, including LDP routes.
+
+#### Linked Data Signature <ProgressBar percentage={0} />
+
+In addition to HTTP signature, it is [recommended](https://www.w3.org/wiki/SocialCG/ActivityPub/Authentication_Authorization#Linked_Data_Signatures) to also implement Linked Data Signatures. This is implemented by only a few ActivityPub-compatible softwares (notably Mastodon), and none enforces it at the moment.
+
+Not implemented yet. ([#321](https://github.com/assemblee-virtuelle/semapps/issues/321))
+
+### Proxy endpoint <ProgressBar percentage={100} />
+
+The [ActivityPub specification](https://www.w3.org/TR/activitypub/#actor-objects) mentions a `as:proxyUrl` predicate (included in the `as:endpoint` predicate of the actor) with the following description:
+
+> Endpoint URI so this actor's clients may access remote ActivityStreams objects which require authentication to access. To use this endpoint, the client posts an ` x-www-form-urlencoded`` id parameter with the value being the  `id` of the requested ActivityStreams object.
+
+We have implemented this endpoint, and we have extended it for non-GET methods using the `multipart/form-data` Content-Type ([see the related ActivityPods section](./activitypods#proxy-endpoint-with-non-get-methods)).

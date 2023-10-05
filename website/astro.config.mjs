@@ -2,6 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import remarkToc from 'remark-toc';
+import rehypeToc from 'rehype-toc';
 
 import { defineConfig } from 'astro/config';
 
@@ -47,6 +48,18 @@ export default defineConfig({
 
 	markdown: {
 		remarkPlugins: [remarkReadingTime, remarkToc],
+		rehypePlugins: [
+			[
+				rehypeToc,
+				{
+					headings: ['h1', 'h2', 'h3', 'h4'],
+					cssClasses: {
+						toc: 'toc-post',
+						link: 'toc-link',
+					},
+				},
+			],
+		],
 		extendDefaultPlugins: true,
 	},
 

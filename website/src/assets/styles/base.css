@@ -45,3 +45,15 @@
 [data-aw-toggle-menu].expanded g > path:last-child {
 	@apply rotate-45 translate-y-[-8px] translate-x-[14px];
 }
+
+.toc-item,
+.toc-level {
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+.prose p {
+	margin-top: 0.8rem;
+	margin-bottom: 0.8rem;
+	line-height: 36px;
+}

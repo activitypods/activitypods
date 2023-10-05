@@ -1,15 +1,17 @@
 ---
 layout: ~/layouts/MdLayout.astro
-title: Solid conformance
+title: Solid compliance
 ---
+
+import ProgressBar from '../../components/ProgressBar.astro';
 
 Solid is a set of specifications.
 
-### WebID
+### WebID <ProgressBar percentage={100} />
 
 All ActivityPub actors are also WebIDs.
 
-### Linked Data Protocol
+### Linked Data Protocol <ProgressBar percentage={90} />
 
 We support the full protocol.
 
@@ -19,31 +21,33 @@ SPARQL-patch
 
 Turtle and Json-LD
 
-### LDP paging
+#### LDP Prefer header <ProgressBar percentage={0} />
+
+TODO: https://github.com/assemblee-virtuelle/semapps/issues/1168
+
+#### LDP paging <ProgressBar percentage={0} />
 
 Not yet implemented.
 
 TODO: https://github.com/assemblee-virtuelle/semapps/issues/176
 
-### WAC permissions
+### WAC permissions <ProgressBar percentage={100} />
 
 We support the full [WAC specification](https://solid.github.io/web-access-control-spec/)
 
-### ACP
+#### Access Control Policy <ProgressBar percentage={0} />
+
+https://solid.github.io/authorization-panel/acp-specification/
 
 Not supported.
 
-### Type Index
-
-Not yet implemented.
-
-### Solid OIDC
+### Solid OIDC <ProgressBar percentage={0} />
 
 Currently, we only support [HTTP signature](./activitypub#http-signature-authentication) for authentication on remote servers. Thanks to the [Proxy endpoint](activitypods.md#proxy-endpoint-with-non-get-methods), it solves all authentication needs we have.
 
 We hope one day to support Solid OIDC so that Solid clients may connect to our Pods.
 
-### Interoperability
+### Interoperability <ProgressBar percentage={30} />
 
 [Solid Application Interoperability](https://solid.github.io/data-interoperability-panel/specification) is a complex specification which is not yet finished. Since we don't use [Solid-OIDC](#solid-oidc), we use ActivityPub and a new `Register` activity for app registration (applications are regular ActivityPub actors). We have also decided not to use ShapeTrees, which add nothing to our architecture: instead, applications only declare the classes they want to manage. For the rest, we chose to implement only the parts of the spec that we needed.
 
@@ -64,8 +68,14 @@ What we don't implement:
 - Pods only create `AccessGrants` and `DataGrants`, not `AccessAuthorizations` and `DataAuthorizations`. Grants can be shared with the registered application, while Authorizations cannot. The only difference between them is a `grantedWith` predicate in `AccessAuthorizations` that indicates which app was used to manage authorizations (but we'll manage that internally anyway...).
 - Pods don't declare `RegistrySet`, `ApplicationRegistry`, `AuthorizationRegistry` as they are not visible from the outside. We just read `ApplicationRegistrations`, `AccessGrants` and `DataGrants` in their dedicated containers.
 
-### ShEx / SHACL
+#### ShapeTrees <ProgressBar percentage={0} />
 
-### ShapeTrees
+### Type Indexes <ProgressBar percentage={0} />
 
-### Subscription
+See https://github.com/solid/type-indexes
+
+Not yet implemented ([#1171](https://github.com/assemblee-virtuelle/semapps/issues/1171))
+
+### Notifications <ProgressBar percentage={0} />
+
+See https://solid.github.io/notifications/protocol

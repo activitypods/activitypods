@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "@fontsource/pt-sans": "^4.5.11",
-    "@fontsource/pt-sans-narrow": "^4.5.11"
+    "@fontsource/pt-sans-narrow": "^4.5.11",
+    "rehype-toc": "^3.0.2"
   }
 }

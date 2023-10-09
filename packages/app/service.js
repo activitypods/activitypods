@@ -1,4 +1,5 @@
 const urlJoin = require('url-join');
+const { interopContext } = require('@activitypods/core');
 const { ACTOR_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { triple, namedNode } = require('@rdfjs/data-model');
@@ -6,7 +7,6 @@ const { triple, namedNode } = require('@rdfjs/data-model');
 const AccessNeedsService = require('./services/access-needs');
 const AccessNeedsGroupsService = require('./services/access-needs-groups');
 const ActorsService = require('./services/actors');
-const interopJsonContext = require('./config/context.json');
 
 const INTEROP_PREFIX = 'http://www.w3.org/ns/solid/interop#';
 
@@ -65,12 +65,7 @@ module.exports = {
           await this.broker.call('actors.post', {
             slug: 'app',
             resource: {
-              '@context': [
-                'https://www.w3.org/ns/activitystreams',
-                {
-                  interop: INTEROP_PREFIX
-                }
-              ],
+              '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
               type: [ACTOR_TYPES.APPLICATION, 'interop:Application'],
               preferredUsername: 'app',
               name: this.settings.name,
@@ -100,18 +95,18 @@ module.exports = {
 
       for (let [necessity, accessNeeds] of Object.entries(this.settings.accessNeeds)) {
         let accessNeedsUris = [],
-          specialAccessNeedsUris = [];
+          specialRights = [];
 
         if (accessNeeds.length > 0) {
           for (const accessNeed of accessNeeds) {
             if (typeof accessNeed === 'string') {
               // If a string is provided, we have a special access need (e.g. apods:ReadInbox)
-              specialAccessNeedsUris.push(accessNeed);
+              specialRights.push(accessNeed);
             } else {
               accessNeedsUris.push(
                 await this.broker.call('access-needs.post', {
                   resource: {
-                    '@context': interopJsonContext,
+                    '@context': interopContext,
                     '@type': 'interop:AccessNeed',
                     'interop:accessNecessity':
                       necessity === 'required' ? 'interop:AccessRequired' : 'interop:AccessOptional',
@@ -127,16 +122,15 @@ module.exports = {
 
           accessNeedGroupsUris.push(
             await this.broker.call('access-needs-groups.post', {
-              slug: necessity,
               resource: {
-                '@context': interopJsonContext,
+                '@context': interopContext,
                 '@type': 'interop:AccessNeedGroup',
                 'interop:accessNecessity':
                   necessity === 'required' ? 'interop:AccessRequired' : 'interop:AccessOptional',
                 'interop:accessScenario': 'interop:PersonalAccess',
                 'interop:authenticatedAs': 'interop:SocialAgent',
-                'interop:hasAccessNeeds': accessNeedsUris,
-                'apods:hasSpecialAccessNeeds': specialAccessNeedsUris
+                'interop:hasAccessNeed': accessNeedsUris,
+                'apods:hasSpecialRights': specialRights
               },
               contentType: MIME_TYPES.JSON,
               webId: 'system'

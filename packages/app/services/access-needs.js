@@ -7,5 +7,10 @@ module.exports = {
     path: '/access-needs',
     acceptedTypes: ['interop:AccessNeed'],
     readOnly: true
+  },
+  actions: {
+    patch() {
+      throw new Error('Access needs are immutable');
+    }
   }
 };

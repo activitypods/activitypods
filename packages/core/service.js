@@ -14,6 +14,7 @@ const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
 const ApiService = require('./services/api');
 const FrontAppsService = require('./services/front-apps');
+const InstallationService = require('./services/installation');
 const containers = require('./config/containers');
 const ontologies = require('./config/ontologies.json');
 
@@ -197,6 +198,8 @@ const CoreService = {
         ontologies
       }
     });
+
+    this.broker.createService(InstallationService);
   }
 };
 

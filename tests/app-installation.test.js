@@ -8,8 +8,8 @@ jest.setTimeout(80000);
 
 const APP_URI = 'http://localhost:3001/actors/app';
 
-describe('Test app registration', () => {
-  let podServer, alice, appServer, app;
+describe('Test app installation', () => {
+  let podServer, alice, appServer, app, requiredAccessNeedGroup, optionalAccessNeedGroup;
 
   beforeAll(async () => {
     const datasets = await listDatasets();
@@ -66,7 +66,7 @@ describe('Test app registration', () => {
 
     // REQUIRED ACCESS NEEDS
 
-    const requiredAccessNeedGroup = await appServer.call('ldp.resource.get', {
+    requiredAccessNeedGroup = await appServer.call('ldp.resource.get', {
       resourceUri: 'http://localhost:3001/access-needs-groups/required',
       accept: MIME_TYPES.JSON
     });
@@ -94,7 +94,7 @@ describe('Test app registration', () => {
 
     // OPTIONAL ACCESS NEEDS
 
-    const optionalAccessNeedGroup = await appServer.call('ldp.resource.get', {
+    optionalAccessNeedGroup = await appServer.call('ldp.resource.get', {
       resourceUri: 'http://localhost:3001/access-needs-groups/optional',
       accept: MIME_TYPES.JSON
     });
@@ -118,6 +118,21 @@ describe('Test app registration', () => {
       'apods:registeredClass': 'as:Location',
       'interop:accessNecessity': 'interop:AccessOptional',
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Create'])
+    });
+  });
+
+  test('User accepts all access needs', async () => {
+    alice.call('activitypub.outbox.post', {
+      collectionUri: alice.outbox,
+      type: 'apods:Install',
+      object: APP_URI,
+      'apods:acceptedAccessNeeds': [
+        requiredAccessNeedGroup['interop:hasAccessNeeds'],
+        requiredAccessNeedGroup['apods:hasSpecialAccessNeeds'],
+        optionalAccessNeedGroup['interop:hasAccessNeeds'],
+        optionalAccessNeedGroup['apods:hasSpecialAccessNeeds']
+      ],
+      'apods:rejectedAccessNeeds': []
     });
   });
 });

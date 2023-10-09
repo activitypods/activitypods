@@ -792,16 +792,52 @@
     "interop:accessScenario": {
       "@type": "@id"
     },
+    "interop:applicationAuthor": {
+      "@type": "@id"
+    },
     "interop:authenticatedAs": {
       "@type": "@id"
     },
-    "interop:hasAccessNeeds": {
+    "interop:dataOwner": {
+      "@type": "@id"
+    },
+    "interop:grantedAt": {
+      "@type": "xsd:dateTime"
+    },
+    "interop:grantedBy": {
+      "@type": "@id"
+    },
+    "interop:grantee": {
+      "@type": "@id"
+    },
+    "interop:hasAccessGrant": {
+      "@type": "@id"
+    },
+    "interop:hasAccessNeed": {
       "@type": "@id"
     },
     "interop:hasAccessNeedGroup": {
       "@type": "@id"
     },
-    "interop:applicationAuthor": {
+    "interop:hasDataGrant": {
+      "@type": "@id"
+    },
+    "interop:satisfiesAccessNeed": {
+      "@type": "@id"
+    },
+    "interop:scopeOfGrant": {
+      "@type": "@id"
+    },
+    "interop:registeredAgent": {
+      "@type": "@id"
+    },
+    "interop:registeredAt": {
+      "@type": "xsd:dateTime"
+    },
+    "interop:registeredBy": {
+      "@type": "@id"
+    },
+    "interop:updatedAt": {
       "@type": "@id"
     },
     
@@ -841,7 +877,13 @@
     "apods:application": {
       "@type": "@id"
     },
-    "apods:hasSpecialAccessNeeds": {
+    "apods:hasSpecialRights": {
+      "@type": "@id"
+    },
+    "apods:acceptedAccessNeeds": {
+      "@type": "@id"
+    },
+    "apods:acceptedSpecialRights": {
       "@type": "@id"
     },
     "apods:registeredClass": {

@@ -7,6 +7,7 @@ const { triple, namedNode } = require('@rdfjs/data-model');
 const AccessNeedsService = require('./services/access-needs');
 const AccessNeedsGroupsService = require('./services/access-needs-groups');
 const ActorsService = require('./services/actors');
+const RegistrationService = require('./services/registration');
 
 const INTEROP_PREFIX = 'http://www.w3.org/ns/solid/interop#';
 
@@ -33,6 +34,7 @@ module.exports = {
     this.broker.createService(AccessNeedsService);
     this.broker.createService(AccessNeedsGroupsService);
     this.broker.createService(ActorsService);
+    this.broker.createService(RegistrationService);
   },
   async started() {
     await this.createActor();

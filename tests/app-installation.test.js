@@ -170,11 +170,12 @@ describe('Test app installation', () => {
     // Get the app registration from the app server (it should be public like AccessGrants and DataGrants)
     appRegistration = await appServer.call('ldp.remote.get', {
       resourceUri: appRegistrationUri,
+      jsonContext: interopContext,
       accept: MIME_TYPES.JSON
     });
 
     expect(appRegistration).toMatchObject({
-      type: 'interop:ApplicationRegistration',
+      '@type': 'interop:ApplicationRegistration',
       'interop:registeredAgent': APP_URI,
       'interop:registeredBy': alice.id,
       'interop:hasAccessGrant': expect.arrayContaining([])
@@ -184,6 +185,7 @@ describe('Test app installation', () => {
       appRegistration['interop:hasAccessGrant'].map(accessGrantUri =>
         appServer.call('ldp.remote.get', {
           resourceUri: accessGrantUri,
+          jsonContext: interopContext,
           accept: MIME_TYPES.JSON
         })
       )
@@ -193,6 +195,7 @@ describe('Test app installation', () => {
     optionalAccessGrant = accessGrants.find(g => g['interop:hasAccessNeedGroup'] === optionalAccessNeedGroup['@id']);
 
     expect(requiredAccessGrant).toMatchObject({
+      '@type': 'interop:AccessGrant',
       'interop:grantedBy': alice.id,
       'interop:grantee': APP_URI,
       'interop:hasAccessNeedGroup': requiredAccessNeedGroup['@id']
@@ -201,11 +204,12 @@ describe('Test app installation', () => {
     await expect(
       appServer.call('ldp.remote.get', {
         resourceUri: requiredAccessGrant['interop:hasDataGrant'],
+        jsonContext: interopContext,
         accept: MIME_TYPES.JSON
       })
     ).resolves.toMatchObject({
-      type: 'interop:DataGrant',
-      'apods:registeredClass': 'as:Event',
+      '@type': 'interop:DataGrant',
+      'apods:registeredClass': 'https://www.w3.org/ns/activitystreams#Event',
       'interop:dataOwner': alice.id,
       'interop:grantee': APP_URI,
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Create']),
@@ -214,6 +218,7 @@ describe('Test app installation', () => {
     });
 
     expect(optionalAccessGrant).toMatchObject({
+      '@type': 'interop:AccessGrant',
       'interop:grantedBy': alice.id,
       'interop:grantee': APP_URI,
       'interop:hasAccessNeedGroup': optionalAccessNeedGroup['@id']
@@ -222,11 +227,12 @@ describe('Test app installation', () => {
     await expect(
       appServer.call('ldp.remote.get', {
         resourceUri: optionalAccessGrant['interop:hasDataGrant'],
+        jsonContext: interopContext,
         accept: MIME_TYPES.JSON
       })
     ).resolves.toMatchObject({
-      type: 'interop:DataGrant',
-      'apods:registeredClass': 'as:Location',
+      '@type': 'interop:DataGrant',
+      'apods:registeredClass': 'https://www.w3.org/ns/activitystreams#Location',
       'interop:dataOwner': alice.id,
       'interop:grantee': APP_URI,
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Create']),

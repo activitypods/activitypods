@@ -1,6 +1,7 @@
 const CapabilitiesService = require('@activitypods/core/services/capabilities');
 const { delay } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const path = require('path');
 const fetch = require('node-fetch');
 const waitForExpect = require('wait-for-expect');
@@ -34,12 +35,12 @@ const createUser = async (broker, num) => {
 
   const webIdDoc = await broker.call('ldp.resource.awaitCreateComplete', {
     resourceUri: webId,
-    predicates: ['url']
+    predicates: ['url', 'apods:contacts']
   });
 
   const capabilitiesUri = await broker.call('capabilities.getContainerUri', { webId });
 
-  return { webId, profileUri: webIdDoc.url, capabilitiesUri, token };
+  return { ...webIdDoc, webId, profileUri: webIdDoc.url, capabilitiesUri, token };
 };
 
 const getUserInviteCap = async user => {
@@ -83,11 +84,12 @@ describe('capabilities', () => {
     broker = await initialize(3000, 'settings');
 
     broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
+    broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
 
     await broker.start();
 
     const newUserPromises = [];
-    for (let i = 1; i <= NUM_USERS; i++) {
+    for (let i = 0; i < NUM_USERS; i += 1) {
       newUserPromises.push(createUser(broker, i));
     }
 
@@ -127,7 +129,7 @@ describe('capabilities', () => {
 
   describe('container access is restricted', () => {
     test('owner can GET capability container resources', async () => {
-      // Make an authenticated fetch for user1.
+      // Make an authenticated fetch for user0.
       const fetchRes = await fetch(users[0].capabilitiesUri, {
         headers: { authorization: `Bearer ${users[0].token}` }
       });
@@ -144,7 +146,7 @@ describe('capabilities', () => {
     });
 
     test('other user sees empty container', async () => {
-      // Make an authenticated fetch for user1, fetching user0's caps.
+      // Make an authenticated fetch for user0, fetching user0's caps.
       const fetchRes = await fetch(users[0].capabilitiesUri, {
         headers: { authorization: `Bearer ${users[1].token}` }
       });
@@ -237,8 +239,78 @@ describe('capabilities', () => {
     expect(fetchedProfile.ok).toBeFalsy();
   });
 
+  test('resource is not accessible with wrong capability acl:accessTo', async () => {
+    const capUri = await broker.call('capabilities.post', {
+      resource: {
+        type: 'acl:Authorization',
+        'acl:Mode': 'acl:Read',
+        'acl:AccessTo': 'https://path-to-different-resource.example'
+      },
+      contentType: MIME_TYPES.JSON,
+      webId: users[0].webId
+    });
+    const fetchedProfile = await fetch(users[0].profileUri, {
+      headers: { authorization: `Capability ${capUri}` }
+    });
+
+    expect(fetchedProfile.ok).toBeFalsy();
+  });
+
   test('resource is not accessible without capability token', async () => {
     const fetchedProfile = await fetch(users[0].profileUri);
     expect(fetchedProfile.ok).toBeFalsy();
+  });
+
+  test('resource is not accessible without invalid capability URI', async () => {
+    const fetchedProfile = await fetch(users[1].profileUri, {
+      headers: { authorization: `Capability not-a-uri ha` }
+    });
+    expect(fetchedProfile.ok).toBeFalsy();
+  });
+
+  test('resource is not accessible with non-existing capability', async () => {
+    const inviteCap = await getUserInviteCap(users[0]);
+    const fetchedProfile = await fetch(users[1].profileUri, {
+      headers: { authorization: `Capability ${inviteCap.id}-some-more-chars` }
+    });
+    expect(fetchedProfile.ok).toBeFalsy();
+  });
+
+  test('posting to inbox with cap token accepts invite automatically', async () => {
+    // user0 sends invite to user1
+    const inviteCap = await getUserInviteCap(users[1]);
+    const postRes = await fetch(users[0].outbox, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${users[0].token}`, 'Content-Type': MIME_TYPES.JSON },
+      body: JSON.stringify({
+        '@context': 'https://activitypods.org/context.json',
+        type: ACTIVITY_TYPES.OFFER,
+        actor: users[0].webId,
+        to: users[1].webId,
+        target: users[1].webId,
+        object: {
+          type: ACTIVITY_TYPES.ADD,
+          object: users[0].profileUri
+        },
+        'as:context': inviteCap.id
+      })
+    });
+
+    expect(postRes.ok).toBeTruthy();
+
+    await waitForExpect(async () => {
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: users[1]['apods:contacts'],
+          itemUri: users[0].webId
+        })
+      ).resolves.toBeTruthy();
+      await expect(
+        broker.call('activitypub.collection.includes', {
+          collectionUri: users[0]['apods:contacts'],
+          itemUri: users[1].webId
+        })
+      ).resolves.toBeTruthy();
+    });
   });
 });

@@ -11,6 +11,7 @@
     "@activitypods/events": "1.1.0",
     "@activitypods/messages": "1.1.0",
     "@activitypods/profiles": "1.1.0",
+    "@semapps/activitypub": "0.5.1",
     "@semapps/mime-types": "0.5.1",
     "@semapps/ldp": "0.5.1",
     "dotenv-flow": "^3.2.0",

@@ -1,5 +1,7 @@
 const urlJoin = require('url-join');
 const { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
+const { defaultToArray } = require('@semapps/ldp');
+const { MIME_TYPES } = require('@semapps/mime-types');
 const {
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
@@ -7,7 +9,6 @@ const {
   IGNORE_CONTACT_REQUEST
 } = require('../config/patterns');
 const { CONTACT_REQUEST_MAPPING, ACCEPT_CONTACT_REQUEST_MAPPING } = require('../config/mappings');
-const { defaultToArray } = require('@semapps/ldp');
 
 module.exports = {
   name: 'contacts.request',
@@ -55,7 +56,7 @@ module.exports = {
         // Add the user to the contacts WebACL group so he can see my profile
         for (let targetUri of defaultToArray(activity.target)) {
           await ctx.call('webacl.group.addMember', {
-            groupSlug: new URL(emitterUri).pathname + '/contacts',
+            groupSlug: `${new URL(emitterUri).pathname}/contacts`,
             memberUri: targetUri,
             webId: emitterUri
           });
@@ -91,6 +92,46 @@ module.exports = {
           return;
         }
 
+        // Check, if an invite capability URI is present. If so, accept the request automatically.
+        if (activity['as:context']) {
+          const capability = await ctx.call('auth.getValidateCapability', {
+            capabilityUri: activity['as:context'],
+            webId: recipientUri
+          });
+          const { url: profileUri } = await ctx.call('ldp.resource.get', {
+            resourceUri: recipientUri,
+            webId: 'system',
+            accept: MIME_TYPES.JSON
+          });
+          // Capability to read the profile implies automatic contact approval.
+          if (
+            capability.type === 'acl:Authorization' &&
+            capability['acl:Mode'] === 'acl:Read' &&
+            capability['acl:AccessTo'] === profileUri
+          ) {
+            // Send the accept.
+            await ctx.call('activitypub.outbox.post', {
+              collectionUri: recipient.outbox,
+              type: ACTIVITY_TYPES.ACCEPT,
+              actor: recipient.id,
+              object: activity.id,
+              to: activity.actor
+            });
+            // Send notification.
+            /*
+            // TODO: i18n & fetch user data.
+            await ctx.call('activitypub.outbox.post', {
+              collectionUri: recipient.outbox,
+              type: ACTIVITY_TYPES.NOTE,
+              actor: recipient.id, // TODO: Actually, the application itself.
+              summary: `Contact request by ${recipient.id} accepted.`,
+              content: `The user ${recipient.id} was accepted to your contacts since they had your invite URI.`,
+              to: recipient.id
+            });
+            */
+          }
+        }
+
         // Check that a request by the same actor is not already waiting (if so, ignore it)
         const collection = await ctx.call('activitypub.collection.get', {
           collectionUri: recipient['apods:contactRequests'],
@@ -113,7 +154,7 @@ module.exports = {
 
         // 1. Add the other actor to the contacts WebACL group so he can see my profile
         await ctx.call('webacl.group.addMember', {
-          groupSlug: new URL(emitterUri).pathname + '/contacts',
+          groupSlug: `${new URL(emitterUri).pathname}/contacts`,
           memberUri: activity.to,
           webId: emitterUri
         });
@@ -185,7 +226,7 @@ module.exports = {
       async onReceive(ctx, activity, recipientUri) {
         // Remove the user from the contacts WebACL group so he can't see my profile anymore
         await ctx.call('webacl.group.removeMember', {
-          groupSlug: new URL(recipientUri).pathname + '/contacts',
+          groupSlug: `${new URL(recipientUri).pathname}/contacts`,
           memberUri: activity.actor,
           webId: recipientUri
         });
@@ -211,7 +252,7 @@ module.exports = {
       async onReceive(ctx, activity, recipientUri) {
         // Remove the emitter from the contacts WebACL group so he can't see the recipient's profile anymore
         await ctx.call('webacl.group.removeMember', {
-          groupSlug: new URL(recipientUri).pathname + '/contacts',
+          groupSlug: `${new URL(recipientUri).pathname}/contacts`,
           memberUri: activity.actor,
           webId: recipientUri
         });

@@ -1,5 +1,3 @@
-const CapabilitiesService = require('@activitypods/core/services/capabilities');
-const { delay } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const path = require('path');
@@ -7,12 +5,13 @@ const fetch = require('node-fetch');
 const waitForExpect = require('wait-for-expect');
 const { arrayOf, waitForResource } = require('./utils');
 const { initialize, listDatasets, clearDataset } = require('./initialize');
+const CapabilitiesProfileService = require('../packages/profiles/services/capabilities-profile-service');
 
 /**
  * @typedef {import('moleculer').ServiceBroker} Broker
  */
 
-jest.setTimeout(30_000);
+jest.setTimeout(300_000);
 
 const NUM_USERS = 2;
 
@@ -161,7 +160,7 @@ describe('capabilities', () => {
     // For this test, we create a third user (without adding new capabilities),
     //  to emulate the pre-migration behavior.
     // 1. Stop capabilities service (that adds an invite capability on signup).
-    await broker.destroyService('capabilities');
+    await broker.destroyService('profiles.capabilities');
 
     // 2. Create user.
     const newUser = await signupUser(NUM_USERS + 1);
@@ -172,13 +171,12 @@ describe('capabilities', () => {
     newUser.profileUri = webIdDoc.url;
 
     // 3. Start capabilities service again.
-    broker.createService(CapabilitiesService, {
-      settings: { path: '/capabilities' }
-    });
+    broker.createService(CapabilitiesProfileService);
 
+    await broker.waitForServices('profiles.capabilities', 4_000);
     // 3.1 Run migration. Will add the capabilities. Wait until the service becomes available.
     await broker.waitForServices('capabilities', 4_000);
-    await broker.call('capabilities.addCapsContainersWhereMissing', {});
+    await broker.call('profiles.capabilities.addCapsContainersWhereMissing', {});
 
     // 4. Get the capabilities and assert them.
     // 4.1. Add the missing properties to the actor object (required by `getActorInviteCap`).

@@ -1,39 +1,18 @@
-const { ControlledContainerMixin, delay } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
-const CAPABILITIES_ROUTE = '/capabilities';
-
 /**
- * Service to host the capabilities container.
+ * Service to create acl:Read authorization capability URIs for new users' profiles.
+ *
+ * Those can be used, to invite people who are not yet registered. With the capability,
+ *  the new user can see the inviter's profile and after account creation add the
+ *  contact without further authorization by the inviter.
  *
  * @type {import('moleculer').ServiceSchema}
  *
  */
-const CapabilitiesService = {
-  name: 'capabilities',
-  mixins: [ControlledContainerMixin],
-  settings: {
-    path: CAPABILITIES_ROUTE,
-    excludeFromMirror: true,
-    permissions: {},
-    newResourcesPermissions: {}
-  },
-  hooks: {
-    before: {
-      /**
-       * Bypass authorization when getting the resource.
-       *
-       * The URI itself is considered the secret. So no more
-       * authorization is necessary at this point.
-       * If we decide to support capabilities with multiple
-       * authorization factors, this will have to change in
-       * the future.
-       */
-      get: ctx => {
-        ctx.params.webId = 'system';
-      }
-    }
-  },
+const CapabilitiesProfileService = {
+  name: 'profiles.capabilities',
+
   events: {
     /**
      * A new user was registered:
@@ -43,44 +22,41 @@ const CapabilitiesService = {
     async 'auth.registered'(ctx) {
       const { webId } = ctx.params;
 
-      this.actions.createInviteCapability({
+      // Cap container creation might not have finished (at least in tests), so wait until it has.
+      const capContainerUri = await ctx.call('capabilities.getContainerUri', { webId }, { parentCtx: ctx });
+      await ctx.call('capabilities.waitForContainerCreation', { containerUri: capContainerUri }, { parentCtx: ctx });
+      // Same for profile URI (`url`).
+      await ctx.call('ldp.resource.awaitCreateComplete', {
+        resourceUri: webId,
+        predicates: ['url']
+      });
+
+      this.actions.createProfileCapability({
         webId
       });
     }
   },
   actions: {
-    createInviteCapability: {
+    createProfileCapability: {
       params: {
         webId: { type: 'string', optional: false }
       },
       handler: async function (ctx) {
         const { webId } = ctx.params;
 
-        const capContainerUriPromise = this.actions.getContainerUri({ webId }, { parentCtx: ctx });
-
-        // The profile might not have been created, so we await its URI.
-        const { url: profileUri } = await ctx.call('ldp.resource.awaitCreateComplete', {
+        const { url: profileUri } = await ctx.call('ldp.resource.get', {
           resourceUri: webId,
-          predicates: ['url']
+          webId: 'system',
+          accept: MIME_TYPES.JSON
         });
 
-        // The capability container creation might not have finished, so wait until it has.
-        await this.actions.waitForContainerCreation({ containerUri: await capContainerUriPromise }, { parentCtx: ctx });
-
         // Add an invite capability.
-        const inviteCapUri = await this.actions.post(
-          {
-            containerUri: await capContainerUriPromise,
-            resource: {
-              '@type': 'acl:Authorization',
-              'acl:AccessTo': profileUri,
-              'acl:Mode': 'acl:Read'
-            },
-            contentType: MIME_TYPES.JSON,
-            webId
-          },
+        const inviteCapUri = await ctx.call(
+          'capabilities.createCapability',
+          { accessTo: profileUri, mode: 'acl:Read', webId },
           { parentCtx: ctx }
         );
+
         return inviteCapUri;
       }
     },
@@ -101,7 +77,7 @@ const CapabilitiesService = {
               resourceUri: webId,
               accept: MIME_TYPES.JSON
             });
-            const capContainerUri = await this.actions.getContainerUri({ webId });
+            const capContainerUri = await ctx.call('capabilities.getContainerUri', { webId }, { parentCtx: ctx });
 
             // Get all existing caps
             const inviteCaps = await this.broker.call(
@@ -124,7 +100,7 @@ const CapabilitiesService = {
 
             if (!hasInviteCap) {
               this.logger.info('Migration: Adding invite capability for dataset ' + dataset + '...');
-              await this.actions.createInviteCapability({ webId });
+              await this.actions.createProfileCapability({ webId });
             }
           })
         );
@@ -133,4 +109,4 @@ const CapabilitiesService = {
   }
 };
 
-module.exports = CapabilitiesService;
+module.exports = CapabilitiesProfileService;

@@ -176,8 +176,8 @@ describe('capabilities', () => {
       settings: { path: '/capabilities' }
     });
 
-    // 3.1 Run migration. Will add the capabilities. Wait a bit, until the service becomes available.
-    await delay(2_000);
+    // 3.1 Run migration. Will add the capabilities. Wait until the service becomes available.
+    await broker.waitForServices('capabilities', 4_000);
     await broker.call('capabilities.addCapsContainersWhereMissing', {});
 
     // 4. Get the capabilities and assert them.

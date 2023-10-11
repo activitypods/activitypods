@@ -46,8 +46,6 @@ module.exports = {
         }
       },
       async onReceive(ctx, activity, recipientUri) {
-        console.log('Received app registration', activity);
-
         // GET APP REGISTRATION AND GRANTS
 
         const appRegistration = await ctx.call('ldp.remote.get', {
@@ -65,8 +63,14 @@ module.exports = {
           )
         );
 
-        const dataGrantsUris = accessGrants.reduce((acc, cur) => acc.push(cur['interop:hasAccessNeed']), []);
-        const specialRightsUris = accessGrants.reduce((acc, cur) => acc.push(cur['apods:hasSpecialRights']), []);
+        const dataGrantsUris = accessGrants.reduce(
+          (acc, cur) => (cur['interop:hasDataGrant'] ? [...acc, cur['interop:hasDataGrant']] : acc),
+          []
+        );
+        const specialRightsUris = accessGrants.reduce(
+          (acc, cur) => (cur['apods:hasSpecialRights'] ? [...acc, cur['apods:hasSpecialRights']] : acc),
+          []
+        );
 
         const dataGrants = await Promise.all(
           dataGrantsUris.map(dataGrantUri =>
@@ -78,19 +82,19 @@ module.exports = {
           )
         );
 
-        // ENSURE NO REGISTRATION ALREADY EXIST FOR THIS USER
-
         // CHECK THAT GRANTS MATCH WITH ACCESS NEEDS
 
         const filteredContainer = await ctx.call('access-needs-groups.list', {
-          filter: { 'interop:accessNecessity': 'interop:AccessRequired' },
+          filters: {
+            'http://www.w3.org/ns/solid/interop#accessNecessity': 'http://www.w3.org/ns/solid/interop#AccessRequired'
+          },
           accept: MIME_TYPES.JSON
         });
 
         const requiredAccessNeedGroup = filteredContainer['ldp:contains'];
 
         // Return true if all access needs and special rights of the required AccessNeedGroup are granted
-        const accessNeedsSatisfied = requiredAccessNeedGroup.every(
+        const accessNeedsSatisfied = arrayOf(requiredAccessNeedGroup).every(
           group =>
             arrayOf(group['interop:hasAccessNeed']).every(accessNeedUri =>
               dataGrants.some(dataGrant => dataGrant['interop:satisfiesAccessNeed'] === accessNeedUri)

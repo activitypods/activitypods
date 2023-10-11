@@ -64,7 +64,7 @@ module.exports = {
         for (const accessNeedGroupUri of defaultToArray(app['interop:hasAccessNeedGroup'] || [])) {
           const accessNeedGroup = await ctx.call('ldp.remote.get', { resourceUri: accessNeedGroupUri });
           let dataGrantsUris = [];
-          let specialAccessGrantUris = [];
+          let specialRightsUris = [];
 
           for (const accessNeedUri of defaultToArray(accessNeedGroup['interop:hasAccessNeed']) || []) {
             if (activity['apods:acceptedAccessNeeds'].includes(accessNeedUri)) {
@@ -87,9 +87,9 @@ module.exports = {
             }
           }
 
-          for (const specialAccessNeedUri of defaultToArray(app['apods:hasSpecialAccessNeed']) || []) {
-            if (activity['apods:acceptedSpecialAccessNeeds'].includes(specialAccessNeedUri)) {
-              specialAccessGrantUris.push(specialAccessNeedUri);
+          for (const specialRightUri of defaultToArray(accessNeedGroup['apods:hasSpecialRights']) || []) {
+            if (activity['apods:acceptedSpecialRights'].includes(specialRightUri)) {
+              specialRightsUris.push(specialRightUri);
             }
           }
 
@@ -103,7 +103,7 @@ module.exports = {
                 'interop:grantee': appUri,
                 'interop:hasAccessNeedGroup': accessNeedGroupUri,
                 'interop:hasDataGrant': dataGrantsUris,
-                'apods:hasSpecialAccessGrant': specialAccessGrantUris
+                'apods:hasSpecialRights': specialRightsUris
               },
               contentType: MIME_TYPES.JSON
             })

@@ -1,3 +1,4 @@
 module.exports = {
-  CoreService: require('./service')
+  CoreService: require('./service'),
+  interopContext: require('./config/context-interop.json')
 };

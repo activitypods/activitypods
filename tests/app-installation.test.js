@@ -255,13 +255,30 @@ describe('Test app installation', () => {
   });
 
   test('User installs app and do not grant required access needs', async () => {
-    alice.call('activitypub.outbox.post', {
+    await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
       '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
       '@type': 'apods:Install',
       object: APP_URI,
       'apods:acceptedAccessNeeds': [optionalAccessNeedGroup['interop:hasAccessNeed']],
       'apods:acceptedSpecialRights': [optionalAccessNeedGroup['apods:hasSpecialRights']]
+    });
+
+    let appRegistrationUri;
+
+    await waitForExpect(async () => {
+      const outbox = await alice.call('activitypub.collection.get', {
+        collectionUri: alice.outbox,
+        page: 1
+      });
+
+      expect(outbox?.orderedItems[0]).toMatchObject({
+        type: 'Create',
+        object: expect.anything(),
+        to: APP_URI
+      });
+
+      appRegistrationUri = outbox?.orderedItems[0]?.object;
     });
 
     await waitForExpect(async () => {
@@ -274,10 +291,20 @@ describe('Test app installation', () => {
         type: 'Reject'
       });
     });
+
+    // The ApplicationRegistration should be deleted
+    await waitForExpect(async () => {
+      await expect(
+        alice.call('ldp.resource.get', {
+          resourceUri: appRegistrationUri,
+          accept: MIME_TYPES.JSON
+        })
+      ).rejects.toThrow();
+    });
   });
 
   test('User installs app and only grant required access needs', async () => {
-    alice.call('activitypub.outbox.post', {
+    await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
       '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
       '@type': 'apods:Install',

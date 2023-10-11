@@ -1,6 +1,6 @@
 const urlJoin = require('url-join');
-const { ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const { ControlledContainerMixin, defaultToArray } = require('@semapps/ldp');
+const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const interopContext = require('../config/context-interop.json');
 
@@ -61,12 +61,12 @@ module.exports = {
 
         const app = await ctx.call('ldp.remote.get', { resourceUri: appUri });
 
-        for (const accessNeedGroupUri of defaultToArray(app['interop:hasAccessNeedGroup'] || [])) {
+        for (const accessNeedGroupUri of arrayOf(app['interop:hasAccessNeedGroup'])) {
           const accessNeedGroup = await ctx.call('ldp.remote.get', { resourceUri: accessNeedGroupUri });
           let dataGrantsUris = [];
           let specialRightsUris = [];
 
-          for (const accessNeedUri of defaultToArray(accessNeedGroup['interop:hasAccessNeed']) || []) {
+          for (const accessNeedUri of arrayOf(accessNeedGroup['interop:hasAccessNeed'])) {
             if (activity['apods:acceptedAccessNeeds'].includes(accessNeedUri)) {
               const accessNeed = await ctx.call('ldp.remote.get', { resourceUri: accessNeedUri });
               dataGrantsUris.push(
@@ -87,7 +87,7 @@ module.exports = {
             }
           }
 
-          for (const specialRightUri of defaultToArray(accessNeedGroup['apods:hasSpecialRights']) || []) {
+          for (const specialRightUri of arrayOf(accessNeedGroup['apods:hasSpecialRights'])) {
             if (activity['apods:acceptedSpecialRights'].includes(specialRightUri)) {
               specialRightsUris.push(specialRightUri);
             }
@@ -129,6 +129,67 @@ module.exports = {
           '@type': 'Create',
           object: appRegistrationUri,
           to: appUri
+        });
+      }
+    },
+    rejectAppRegistration: {
+      match: {
+        type: ACTIVITY_TYPES.REJECT,
+        object: {
+          type: ACTIVITY_TYPES.CREATE,
+          object: {
+            type: 'interop:ApplicationRegistration'
+          }
+        }
+      },
+      async onReceive(ctx, activity, recipientUri) {
+        const appRegistrationUri = activity.object.object.id;
+
+        const appRegistration = await ctx.call('ldp.resource.get', {
+          resourceUri: appRegistrationUri,
+          jsonContext: interopContext,
+          accept: MIME_TYPES.JSON,
+          webId: recipientUri
+        });
+
+        // SECURITY CHECKS
+
+        if (appRegistration['interop:registeredBy'] !== recipientUri) {
+          throw new Error(`The ApplicationRegistration ${appRegistrationUri} is not owned by ${recipientUri}`);
+        }
+
+        if (appRegistration['interop:registeredAgent'] !== activity.actor) {
+          throw new Error(`The ApplicationRegistration ${appRegistrationUri} is not for actor ${activity.actor}`);
+        }
+
+        // DELETE ALL RELATED GRANTS
+
+        for (const accessGrantUri of arrayOf(appRegistration['interop:hasAccessGrant'])) {
+          const accessGrant = await ctx.call('ldp.resource.get', {
+            resourceUri: accessGrantUri,
+            jsonContext: interopContext,
+            accept: MIME_TYPES.JSON,
+            webId: recipientUri
+          });
+
+          for (const dataGrantUri of arrayOf(accessGrant['interop:hasDataGrant'])) {
+            await ctx.call('ldp.resource.delete', {
+              resourceUri: dataGrantUri,
+              webId: recipientUri
+            });
+          }
+
+          await ctx.call('ldp.resource.delete', {
+            resourceUri: accessGrantUri,
+            webId: recipientUri
+          });
+        }
+
+        // DELETE APPLICATION REGISTRATION
+
+        await ctx.call('ldp.resource.delete', {
+          resourceUri: appRegistrationUri,
+          webId: recipientUri
         });
       }
     }

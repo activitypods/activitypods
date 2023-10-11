@@ -135,7 +135,7 @@ describe('Test app installation', () => {
   });
 
   test('User installs app and grants all access needs', async () => {
-    alice.call('activitypub.outbox.post', {
+    await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
       '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
       '@type': 'apods:Install',
@@ -150,7 +150,7 @@ describe('Test app installation', () => {
       ]
     });
 
-    let appRegistrationUri;
+    let appRegistrationUri, creationActivityUri;
 
     await waitForExpect(async () => {
       const outbox = await alice.call('activitypub.collection.get', {
@@ -164,6 +164,7 @@ describe('Test app installation', () => {
         to: APP_URI
       });
 
+      creationActivityUri = outbox?.orderedItems[0]?.id;
       appRegistrationUri = outbox?.orderedItems[0]?.object;
     });
 
@@ -238,6 +239,62 @@ describe('Test app installation', () => {
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Create']),
       'interop:satisfiesAccessNeed': optionalAccessNeedGroup['interop:hasAccessNeed'],
       'interop:scopeOfGrant': 'interop:All'
+    });
+
+    await waitForExpect(async () => {
+      const inbox = await alice.call('activitypub.collection.get', {
+        collectionUri: alice.inbox,
+        page: 1
+      });
+
+      expect(inbox?.orderedItems[0]).toMatchObject({
+        type: 'Accept',
+        object: creationActivityUri
+      });
+    });
+  });
+
+  test('User installs app and do not grant required access needs', async () => {
+    alice.call('activitypub.outbox.post', {
+      collectionUri: alice.outbox,
+      '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
+      '@type': 'apods:Install',
+      object: APP_URI,
+      'apods:acceptedAccessNeeds': [optionalAccessNeedGroup['interop:hasAccessNeed']],
+      'apods:acceptedSpecialRights': [optionalAccessNeedGroup['apods:hasSpecialRights']]
+    });
+
+    await waitForExpect(async () => {
+      const inbox = await alice.call('activitypub.collection.get', {
+        collectionUri: alice.inbox,
+        page: 1
+      });
+
+      expect(inbox?.orderedItems[0]).toMatchObject({
+        type: 'Reject'
+      });
+    });
+  });
+
+  test('User installs app and only grant required access needs', async () => {
+    alice.call('activitypub.outbox.post', {
+      collectionUri: alice.outbox,
+      '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
+      '@type': 'apods:Install',
+      object: APP_URI,
+      'apods:acceptedAccessNeeds': [requiredAccessNeedGroup['interop:hasAccessNeed']],
+      'apods:acceptedSpecialRights': [requiredAccessNeedGroup['apods:hasSpecialRights']]
+    });
+
+    await waitForExpect(async () => {
+      const inbox = await alice.call('activitypub.collection.get', {
+        collectionUri: alice.inbox,
+        page: 1
+      });
+
+      expect(inbox?.orderedItems[0]).toMatchObject({
+        type: 'Accept'
+      });
     });
   });
 });

@@ -117,4 +117,26 @@ They are translated into emails and push notifications.
 
 ### JsonLd header
 
-to be implemented.
+It's a peculiarity of the JSON-LD format that, when creating a LDP resource, you can indicate the context you wish to use (using the `@context` field), but when retrieving an existing resource, you are obliged to adapt to the context provided by the server. Of course, we can then reformat to suit our needs, but this may have performance costs.
+
+> This problem does not concern Solid providers who register data in the filesyste: they generally store and return the context provided at creation. However, when data is stored in a triple store, as is the case with ActivityPods, the initial context is lost.
+
+To remedy this problem, all GET routes of our pods (whether for LDP resources, LDP containers or ActivityStreams collections) accept an optional `JsonLdContext` header, which can be either a URL or a JSON representation (of an array or object). As a result, the specified context will be used to format the returned JSON-LD data.
+
+```http
+GET /alice/data/my-event HTTP/1.1
+Host: example.org
+Accept: application/ld+json
+JsonLdContext: https://www.w3.org/ns/activitystreams
+```
+
+Response:
+
+```json
+{
+	"@context": "https://www.w3.org/ns/activitystreams",
+	"id": "https://example.org/alice/data/my-event",
+	"type": "Event",
+	"name": "My event"
+}
+```

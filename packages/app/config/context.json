@@ -1,0 +1,26 @@
+{
+  "interop": "http://www.w3.org/ns/solid/interop#",
+  "acl": "http://www.w3.org/ns/auth/acl#",
+  "apods": "http://activitypods.org/ns/core#",
+  "interop:accessNecessity": {
+    "@type": "@id"
+  },
+  "interop:accessMode": {
+    "@type": "@id"
+  },
+  "interop:accessScenario": {
+    "@type": "@id"
+  },
+  "interop:authenticatedAs": {
+    "@type": "@id"
+  },
+  "interop:hasAccessNeeds": {
+    "@type": "@id"
+  },
+  "apods:registeredClass": {
+    "@type": "@id"
+  },
+  "apods:hasSpecialAccessNeeds": {
+    "@type": "@id"
+  }
+}

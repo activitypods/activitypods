@@ -6,6 +6,7 @@
     "test": "jest --detectOpenHandles --verbose"
   },
   "dependencies": {
+    "@activitypods/app": "1.1.0",
     "@activitypods/contacts": "1.1.0",
     "@activitypods/core": "1.1.0",
     "@activitypods/events": "1.1.0",

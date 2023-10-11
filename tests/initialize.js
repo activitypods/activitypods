@@ -1,8 +1,11 @@
 const path = require('path');
 const { ServiceBroker } = require('moleculer');
+const { AuthAccountService } = require('@semapps/auth');
+const { TripleStoreAdapter } = require('@semapps/triplestore');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
 const { CoreService } = require('@activitypods/core');
+const { CoreService: SemAppsCoreService } = require('@semapps/core');
 const { AnnouncerService } = require('@activitypods/announcer');
 const CONFIG = require('./config');
 
@@ -74,8 +77,47 @@ const initialize = async (port, accountsDataset) => {
   return broker;
 };
 
+const initializeAppServer = async (port, accountsDataset) => {
+  const baseUrl = `http://localhost:${port}/`;
+
+  const broker = new ServiceBroker({
+    nodeID: 'server' + port,
+    middlewares: [WebAclMiddleware({ baseUrl })],
+    logger: {
+      type: 'Console',
+      options: {
+        level: 'warn'
+      }
+    }
+  });
+
+  await broker.createService(SemAppsCoreService, {
+    settings: {
+      baseUrl,
+      baseDir: path.resolve(__dirname),
+      triplestore: {
+        url: CONFIG.SPARQL_ENDPOINT,
+        user: CONFIG.JENA_USER,
+        password: CONFIG.JENA_PASSWORD,
+        mainDataset: 'testData'
+      },
+      jsonContext: 'https://activitypods.org/context.json',
+      api: {
+        port
+      }
+    }
+  });
+
+  await broker.createService(AuthAccountService, {
+    adapter: new TripleStoreAdapter({ type: 'AuthAccount', dataset: accountsDataset })
+  });
+
+  return broker;
+};
+
 module.exports = {
   listDatasets,
   clearDataset,
-  initialize
+  initialize,
+  initializeAppServer
 };

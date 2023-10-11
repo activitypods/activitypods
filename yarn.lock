@@ -1643,6 +1643,24 @@
     pug "^3.0.2"
     url-join "^4.0.1"
 
+"@semapps/core@0.6.0-alpha.0":
+  version "0.6.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@semapps/core/-/core-0.6.0-alpha.0.tgz#41851a2f579349273c97fe89c8f23e38fe762d57"
+  integrity sha512-BoOfYQMpUPQTlOwyRy7/yMyHkW5hAWUfWfEnvD1aY0xa5XlxLn3cXgO5sl5AXF/LOQNgZyMCRV9CxZK0ZM7Crg==
+  dependencies:
+    "@semapps/activitypub" "0.6.0-alpha.0"
+    "@semapps/jsonld" "0.6.0-alpha.0"
+    "@semapps/ldp" "0.6.0-alpha.0"
+    "@semapps/signature" "0.6.0-alpha.0"
+    "@semapps/sparql-endpoint" "0.6.0-alpha.0"
+    "@semapps/triplestore" "0.6.0-alpha.0"
+    "@semapps/void" "0.6.0-alpha.0"
+    "@semapps/webacl" "0.6.0-alpha.0"
+    "@semapps/webfinger" "0.6.0-alpha.0"
+    moleculer "^0.14.19"
+    moleculer-web "^0.10.0-beta1"
+    url-join "^4.0.1"
+
 "@semapps/jsonld@0.6.0-alpha.0":
   version "0.6.0-alpha.0"
   resolved "https://registry.yarnpkg.com/@semapps/jsonld/-/jsonld-0.6.0-alpha.0.tgz#879ae72c2e2f13aaa4b3003e4baa740a38790d84"
@@ -1772,6 +1790,19 @@
     string-template "^1.0.0"
     url-join "^4.0.1"
     uuid "^9.0.1"
+
+"@semapps/void@0.6.0-alpha.0":
+  version "0.6.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@semapps/void/-/void-0.6.0-alpha.0.tgz#be7b9a6e921aea7eff7b92b8f157bed3949abffe"
+  integrity sha512-emGhXBOF4JLb0HEC0UBhwE6R7FZ2vePiDKFcXXy/6fif88i+BOpBZXDQe2boZc7qTOH8obgsxaC5vU3st7LKwA==
+  dependencies:
+    "@semapps/ldp" "0.6.0-alpha.0"
+    "@semapps/middlewares" "0.6.0-alpha.0"
+    "@semapps/mime-types" "0.6.0-alpha.0"
+    jsonld-streaming-serializer "^1.2.0"
+    moleculer "^0.14.17"
+    n3 "^1.8.0"
+    url-join "^4.0.1"
 
 "@semapps/webacl@0.6.0-alpha.0":
   version "0.6.0-alpha.0"

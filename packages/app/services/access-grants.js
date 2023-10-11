@@ -1,11 +1,11 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
 
 module.exports = {
-  name: 'access-needs',
+  name: 'access-grants',
   mixins: [ControlledContainerMixin],
   settings: {
-    path: '/access-needs',
-    acceptedTypes: ['interop:AccessNeed'],
-    readOnly: true
+    path: '/access-grants',
+    acceptedTypes: ['interop:AccessGrant'],
+    newResourcesPermissions: {}
   }
 };

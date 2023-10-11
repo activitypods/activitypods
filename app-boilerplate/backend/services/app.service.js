@@ -1,13 +1,13 @@
 const { AppService } = require('@activitypods/app');
 const { AS_PREFIX } = require('@semapps/activitypub');
-const CONFIG = require('../config/config');
 
 module.exports = {
   mixins: [AppService],
   settings: {
-    baseUrl: CONFIG.HOME_URL,
-    name: 'Example App',
-    description: 'An ActivityPods-compatible app',
+    app: {
+      name: 'Example App',
+      description: 'An ActivityPods-compatible app'
+    },
     accessNeeds: {
       required: [
         {

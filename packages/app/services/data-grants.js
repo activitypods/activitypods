@@ -1,11 +1,11 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
 
 module.exports = {
-  name: 'access-needs',
+  name: 'data-grants',
   mixins: [ControlledContainerMixin],
   settings: {
-    path: '/access-needs',
-    acceptedTypes: ['interop:AccessNeed'],
-    readOnly: true
+    path: '/data-grants',
+    acceptedTypes: ['interop:DataGrant'],
+    newResourcesPermissions: {}
   }
 };

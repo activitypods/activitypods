@@ -2,53 +2,18 @@ const urlJoin = require('url-join');
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const interopContext = require('../config/context-interop.json');
+const interopContext = require('../../config/context-interop.json');
+const AppRegistrationsService = require('./sub-services/app-registrations');
+const AccessGrantsService = require('./sub-services/access-grants');
+const DataGrantsService = require('./sub-services/data-grants');
 
 module.exports = {
   name: 'installation',
   mixins: [ActivitiesHandlerMixin],
   created() {
-    this.broker.createService({
-      name: 'application-registrations',
-      mixins: [ControlledContainerMixin],
-      settings: {
-        path: '/application-registrations',
-        acceptedTypes: ['interop:ApplicationRegistration'],
-        newResourcesPermissions: {
-          anon: {
-            read: true
-          }
-        }
-      }
-    });
-
-    this.broker.createService({
-      name: 'access-grants',
-      mixins: [ControlledContainerMixin],
-      settings: {
-        path: '/access-grants',
-        acceptedTypes: ['interop:AccessGrant'],
-        newResourcesPermissions: {
-          anon: {
-            read: true
-          }
-        }
-      }
-    });
-
-    this.broker.createService({
-      name: 'data-grants',
-      mixins: [ControlledContainerMixin],
-      settings: {
-        path: '/data-grants',
-        acceptedTypes: ['interop:DataGrant'],
-        newResourcesPermissions: {
-          anon: {
-            read: true
-          }
-        }
-      }
-    });
+    this.broker.createService(AppRegistrationsService);
+    this.broker.createService(AccessGrantsService);
+    this.broker.createService(DataGrantsService);
   },
   activities: {
     install: {
@@ -110,7 +75,7 @@ module.exports = {
           );
         }
 
-        const appRegistrationUri = await ctx.call('application-registrations.post', {
+        const appRegistrationUri = await ctx.call('app-registrations.post', {
           resource: {
             '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
             '@type': 'interop:ApplicationRegistration',
@@ -145,7 +110,7 @@ module.exports = {
       async onReceive(ctx, activity, recipientUri) {
         const appRegistrationUri = activity.object.object.id;
 
-        const appRegistration = await ctx.call('ldp.resource.get', {
+        const appRegistration = await ctx.call('app-registrations.get', {
           resourceUri: appRegistrationUri,
           jsonContext: interopContext,
           accept: MIME_TYPES.JSON,
@@ -162,35 +127,39 @@ module.exports = {
           throw new Error(`The ApplicationRegistration ${appRegistrationUri} is not for actor ${activity.actor}`);
         }
 
-        // DELETE ALL RELATED GRANTS
+        // DELETE APPLICATION REGISTRATION (THIS WILL ALSO DELETE ALL ASSOCIATED GRANTS)
 
-        for (const accessGrantUri of arrayOf(appRegistration['interop:hasAccessGrant'])) {
-          const accessGrant = await ctx.call('ldp.resource.get', {
-            resourceUri: accessGrantUri,
-            jsonContext: interopContext,
-            accept: MIME_TYPES.JSON,
-            webId: recipientUri
-          });
-
-          for (const dataGrantUri of arrayOf(accessGrant['interop:hasDataGrant'])) {
-            await ctx.call('ldp.resource.delete', {
-              resourceUri: dataGrantUri,
-              webId: recipientUri
-            });
-          }
-
-          await ctx.call('ldp.resource.delete', {
-            resourceUri: accessGrantUri,
-            webId: recipientUri
-          });
-        }
-
-        // DELETE APPLICATION REGISTRATION
-
-        await ctx.call('ldp.resource.delete', {
+        await ctx.call('app-registrations.delete', {
           resourceUri: appRegistrationUri,
           webId: recipientUri
         });
+      },
+      uninstall: {
+        match: {
+          type: ACTIVITY_TYPES.UNDO,
+          object: {
+            type: 'apods:Install'
+          }
+        },
+        async onEmit(ctx, activity, emitterUri) {
+          const appUri = activity.object.object;
+
+          const appRegistration = await ctx.call('app-registrations.getForApp', { appUri });
+
+          if (appRegistration) {
+            await ctx.call('app-registrations.delete', {
+              resourceUri: appRegistration['@id']
+            });
+
+            await ctx.call('activitypub.outbox.post', {
+              collectionUri: urlJoin(emitterUri, 'outbox'),
+              '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
+              '@type': 'Delete',
+              object: appRegistration['@id'],
+              to: appUri
+            });
+          }
+        }
       }
     }
   }

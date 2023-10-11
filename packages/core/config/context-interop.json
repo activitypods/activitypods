@@ -2,6 +2,7 @@
   "interop": "http://www.w3.org/ns/solid/interop#",
   "acl": "http://www.w3.org/ns/auth/acl#",
   "apods": "http://activitypods.org/ns/core#",
+  "ldp": "http://www.w3.org/ns/ldp#",
   "interop:accessNecessity": {
     "@type": "@id"
   },

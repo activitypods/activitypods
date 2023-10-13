@@ -10,6 +10,7 @@
     "@semapps/activitypub": "0.6.0-alpha.0",
     "@semapps/ldp": "0.6.0-alpha.0",
     "@semapps/mime-types": "0.6.0-alpha.0",
+    "moleculer": "^0.14.19",
     "url-join": "^4.0.1"
   },
   "publishConfig": {

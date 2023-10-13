@@ -12,7 +12,8 @@ module.exports = {
       anon: {
         read: true
       }
-    }
+    },
+    excludeFromMirror: true
   },
   actions: {
     async getForApp(ctx) {
@@ -24,8 +25,7 @@ module.exports = {
             'http://www.w3.org/ns/solid/interop#registeredAgent': appUri
           },
           jsonContext: interopContext,
-          accept: MIME_TYPES.JSON,
-          webId: 'system'
+          accept: MIME_TYPES.JSON
         },
         { parentCtx: ctx }
       );

@@ -10,6 +10,7 @@ module.exports = {
       anon: {
         read: true
       }
-    }
+    },
+    excludeFromMirror: true
   }
 };

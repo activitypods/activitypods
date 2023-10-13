@@ -1,15 +1,16 @@
+const { MoleculerError } = require('moleculer').Errors;
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { interopContext } = require('@semapps/core');
 
 module.exports = {
-  name: 'app.installation',
+  name: 'app.registration',
   mixins: [ActivitiesHandlerMixin],
   activities: {
     createAppRegistration: {
       match: {
-        type: 'Create',
+        type: ACTIVITY_TYPES.CREATE,
         object: {
           type: 'interop:ApplicationRegistration'
         }
@@ -30,8 +31,12 @@ module.exports = {
             accept: MIME_TYPES.JSON
           });
 
-          if (filteredContainer.length > 0) {
-            throw new Error(`User ${recipientUri} already has an application registration. Update or delete it.`);
+          if (filteredContainer['ldp:contains'].length > 0) {
+            throw new MoleculerError(
+              `User already has an application registration. Update or delete it.`,
+              400,
+              'BAD REQUEST'
+            );
           }
 
           // GET APP REGISTRATION AND GRANTS
@@ -93,7 +98,7 @@ module.exports = {
           );
 
           if (!accessNeedsSatisfied) {
-            throw new Error('One or more required access needs have not been granted');
+            throw new MoleculerError('One or more required access needs have not been granted', 400, 'BAD REQUEST');
           }
 
           // SEND BACK RESULT
@@ -107,15 +112,19 @@ module.exports = {
           // STORE LOCALLY APP REGISTRATION AND GRANTS
 
           await ctx.call('ldp.remote.store', { resource: appRegistration });
+          await ctx.call('app-registrations.attach', { resourceUri: appRegistration.id });
 
           for (const accessGrant of accessGrants) {
             await ctx.call('ldp.remote.store', { resource: accessGrant });
+            await ctx.call('access-grants.attach', { resourceUri: accessGrant.id });
           }
 
           for (const dataGrant of dataGrants) {
             await ctx.call('ldp.remote.store', { resource: dataGrant });
+            await ctx.call('data-grants.attach', { resourceUri: dataGrant.id });
           }
         } catch (e) {
+          if (e.code !== 400) console.error(e);
           await ctx.call('activitypub.outbox.post', {
             collectionUri: outboxUri,
             type: ACTIVITY_TYPES.REJECT,
@@ -124,6 +133,20 @@ module.exports = {
             to: activity.actor
           });
         }
+      }
+    },
+    deleteAppRegistration: {
+      match: {
+        type: ACTIVITY_TYPES.DELETE,
+        object: {
+          type: 'interop:ApplicationRegistration'
+        }
+      },
+      async onReceive(ctx, activity) {
+        const appRegistration = await ctx.call('app-registrations.getForActor', { actorUri: activity.actor });
+
+        // This will also delete the associated access grants and data grants
+        await ctx.call('app-registrations.delete', { resourceUri: appRegistration['@id'] });
       }
     }
   }

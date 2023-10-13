@@ -1,6 +1,6 @@
 const urlJoin = require('url-join');
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const interopContext = require('../../config/context-interop.json');
 const AppRegistrationsService = require('./sub-services/app-registrations');
@@ -133,32 +133,28 @@ module.exports = {
           resourceUri: appRegistrationUri,
           webId: recipientUri
         });
+      }
+    },
+    uninstall: {
+      match: {
+        type: ACTIVITY_TYPES.UNDO,
+        object: {
+          type: 'apods:Install'
+        }
       },
-      uninstall: {
-        match: {
-          type: ACTIVITY_TYPES.UNDO,
-          object: {
-            type: 'apods:Install'
-          }
-        },
-        async onEmit(ctx, activity, emitterUri) {
-          const appUri = activity.object.object;
+      async onEmit(ctx, activity, emitterUri) {
+        const appUri = activity.object.object;
 
-          const appRegistration = await ctx.call('app-registrations.getForApp', { appUri });
+        const appRegistration = await ctx.call('app-registrations.getForApp', { appUri });
 
-          if (appRegistration) {
-            await ctx.call('app-registrations.delete', {
-              resourceUri: appRegistration['@id']
-            });
-
-            await ctx.call('activitypub.outbox.post', {
-              collectionUri: urlJoin(emitterUri, 'outbox'),
-              '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
-              '@type': 'Delete',
-              object: appRegistration['@id'],
-              to: appUri
-            });
-          }
+        if (appRegistration) {
+          await ctx.call('activitypub.outbox.post', {
+            collectionUri: urlJoin(emitterUri, 'outbox'),
+            '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
+            type: ACTIVITY_TYPES.DELETE,
+            object: appRegistration['@id'],
+            to: appUri
+          });
         }
       }
     }

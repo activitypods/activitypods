@@ -1,6 +1,5 @@
 import React from 'react';
 import { Show, SimpleShowLayout, TextField, DateField } from 'react-admin';
-import Show from '../../layout/Show';
 
 const ProfileShow = () => (
   <Show>

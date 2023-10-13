@@ -7,6 +7,6 @@ export default dataProvider({
   dataServers,
   resources: Object.fromEntries(Object.entries(resources).map(([k, v]) => [k, v.dataModel])),
   ontologies,
-  jsonContext: process.env.REACT_APP_JSON_CONTEXT,
+  jsonContext: 'https://activitypods.org/context.json',
   returnFailedResources: true
 });

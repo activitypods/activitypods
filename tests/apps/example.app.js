@@ -4,8 +4,10 @@ const { AS_PREFIX } = require('@semapps/activitypub');
 module.exports = {
   mixins: [AppService],
   settings: {
-    name: 'Example App',
-    description: 'An ActivityPods app for integration tests',
+    app: {
+      name: 'Example App',
+      description: 'An ActivityPods app for integration tests'
+    },
     accessNeeds: {
       required: [
         {

@@ -1,10 +1,11 @@
 const path = require('path');
 const { ServiceBroker } = require('moleculer');
 const { AuthAccountService } = require('@semapps/auth');
+const { delay } = require('@semapps/ldp');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
-const { CoreService } = require('@activitypods/core');
+const { CoreService, interopContext } = require('@activitypods/core');
 const { CoreService: SemAppsCoreService } = require('@semapps/core');
 const { AnnouncerService } = require('@activitypods/announcer');
 const CONFIG = require('./config');
@@ -115,9 +116,36 @@ const initializeAppServer = async (port, accountsDataset) => {
   return broker;
 };
 
+const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRights) => {
+  await actor.call('activitypub.outbox.post', {
+    collectionUri: actor.outbox,
+    '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
+    type: 'apods:Install',
+    object: appUri,
+    'apods:acceptedAccessNeeds': acceptedAccessNeeds,
+    'apods:acceptedSpecialRights': acceptedSpecialRights
+  });
+
+  do {
+    const outbox = await actor.call('activitypub.collection.get', {
+      collectionUri: actor.outbox,
+      page: 1
+    });
+
+    const firstItem = outbox?.orderedItems[0];
+
+    if (firstItem.type === 'Create' && firstItem.to === appUri) {
+      return [firstItem.id, firstItem.object];
+    } else {
+      await delay(500);
+    }
+  } while (true);
+};
+
 module.exports = {
   listDatasets,
   clearDataset,
   initialize,
-  initializeAppServer
+  initializeAppServer,
+  installApp
 };

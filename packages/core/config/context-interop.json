@@ -2,6 +2,9 @@
   "interop": "http://www.w3.org/ns/solid/interop#",
   "acl": "http://www.w3.org/ns/auth/acl#",
   "apods": "http://activitypods.org/ns/core#",
+  "ldp": "http://www.w3.org/ns/ldp#",
+  "dc": "http://purl.org/dc/terms/",
+  "xsd": "http://www.w3.org/2001/XMLSchema#",
   "interop:accessNecessity": {
     "@type": "@id"
   },

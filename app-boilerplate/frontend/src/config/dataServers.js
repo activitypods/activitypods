@@ -6,7 +6,7 @@ const dataServers = {
     sparqlEndpoint: null,
     containers: {
       pod: {
-        'vcard:Individual': ['/profiles'],
+        'vcard:Individual': ['/profiles']
       }
     },
     uploadsContainer: '/files'

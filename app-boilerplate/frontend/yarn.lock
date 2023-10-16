@@ -1949,14 +1949,14 @@
   resolved "https://registry.yarnpkg.com/@remix-run/router/-/router-1.9.0.tgz#9033238b41c4cbe1e961eccb3f79e2c588328cf6"
   integrity sha512-bV63itrKBC0zdT27qYm6SDZHlkXwFL1xMBuhkn+X7l0+IIhNaH5wuuvZKp6eKhCD4KFhujhfhCT1YxXW6esUIA==
 
-"@semapps/activitypub-components@0.6.0-alpha.0":
-  version "0.6.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@semapps/activitypub-components/-/activitypub-components-0.6.0-alpha.0.tgz#ba445967cdbc144daf03a4edc47582ef22947988"
-  integrity sha512-cIZhozeiNHzazfPTLAlLFum292EwLS7J3i8k7oZjJXsO3v9BIjBkhs0r9qaiqYafhVXRhVmLDNifx6Na2J2uUA==
+"@semapps/activitypub-components@0.6.0-alpha.1":
+  version "0.6.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@semapps/activitypub-components/-/activitypub-components-0.6.0-alpha.1.tgz#9197f1e73e5bacd76a6c65d676816b7cc6beb163"
+  integrity sha512-uy9ABVhZTu8GG5KjWjmeNcYCb2gy8pb5qofXKY/qMt6gtx1WMJfAdRq8h0iBQ7p/T939s6n4NzSrI5enXbB1pg==
   dependencies:
-    "@semapps/auth-provider" "0.6.0-alpha.0"
-    "@semapps/field-components" "0.6.0-alpha.0"
-    "@semapps/semantic-data-provider" "0.6.0-alpha.0"
+    "@semapps/auth-provider" "0.6.0-alpha.1"
+    "@semapps/field-components" "0.6.0-alpha.1"
+    "@semapps/semantic-data-provider" "0.6.0-alpha.1"
     "@tiptap/core" "^2.0.0-beta.95"
     "@tiptap/extension-mention" "^2.0.0-beta.95"
     "@tiptap/extension-placeholder" "^2.0.0-beta.95"
@@ -1965,22 +1965,22 @@
     ra-input-rich-text "^4.11.0"
     tippy.js "^6.3.7"
 
-"@semapps/auth-provider@0.6.0-alpha.0":
-  version "0.6.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@semapps/auth-provider/-/auth-provider-0.6.0-alpha.0.tgz#9d328959650e19c90be648aa3e5e21c498e9c790"
-  integrity sha512-01bDe/r+PrzOilwqy3O42ufJ4oLKRzmrpoKhpbZlTsrzElCw4OJaKvnvrKq7wOAw9XaE1Ta8Q3d5lLnMV4aFxQ==
+"@semapps/auth-provider@0.6.0-alpha.1":
+  version "0.6.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@semapps/auth-provider/-/auth-provider-0.6.0-alpha.1.tgz#b5a6fba9647ce15458eecc0269f9f9ce747945a2"
+  integrity sha512-u7bQZ34tWrSuIOgUoDjWoAmfr+517oRTRea3VjeecVfmVZzSlYxsg3Em0LNlZQyYPZy07g3UqNeH3Kq2YcNFdA==
   dependencies:
-    "@semapps/semantic-data-provider" "0.6.0-alpha.0"
+    "@semapps/semantic-data-provider" "0.6.0-alpha.1"
     classnames "^2.3.2"
     jwt-decode "^3.0.0"
     lodash "^4.17.21"
-    prop-types "^15.8.1"
+    speakingurl "^14.0.1"
     url-join "^4.0.1"
 
-"@semapps/date-components@0.6.0-alpha.0":
-  version "0.6.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@semapps/date-components/-/date-components-0.6.0-alpha.0.tgz#58565a043b499577bdc5f26d56c3daebb1bf2ce7"
-  integrity sha512-a0hnSCC8DvizLqwuy6GaKrBOCSGj1HdBbAT32h7NiXToyfAgjA6tnHn7QXfJMJ+EJ5XKi41rII69hSWmLKARCg==
+"@semapps/date-components@0.6.0-alpha.1":
+  version "0.6.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@semapps/date-components/-/date-components-0.6.0-alpha.1.tgz#d889e943d3ab9454f197a97d8c3eb40f55de537e"
+  integrity sha512-ovHanJ6Afl3Bp5IJwkOvSMYUiU2qj1MadG6HjYmChiBTpJEqd5oPl21LBrk37YVFLMP+N9W9JeCPKZynUTUCeg==
   dependencies:
     "@fullcalendar/core" "^5.7.2"
     "@fullcalendar/daygrid" "^5.7.2"
@@ -1989,36 +1989,36 @@
     "@mui/x-date-pickers" "^6.6.0"
     date-fns "~2.8.1"
 
-"@semapps/field-components@0.6.0-alpha.0":
-  version "0.6.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@semapps/field-components/-/field-components-0.6.0-alpha.0.tgz#29b4fbf3ce4949c2d5cd8de841e90ee454bd2223"
-  integrity sha512-y5wZkoh9G7MfgeTpR42QSl3dlxbTMtEWSAzFMSFxS/kswJm+WhlxEYU+N9JWKFnfDyDbUeAawjk8T1wc+fm3Fg==
+"@semapps/field-components@0.6.0-alpha.1":
+  version "0.6.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@semapps/field-components/-/field-components-0.6.0-alpha.1.tgz#4326aa0615ef149d3f62f2ea3f22eec2f906be6e"
+  integrity sha512-KgpbJx4V3GLQOSZPJ9FbjFvHFgitcDE96wzYJyHHXCsB8p/0csVIspG3i8rIzRzZOfSX9vCT8yt50zwyBBzUtg==
   dependencies:
-    "@semapps/semantic-data-provider" "0.6.0-alpha.0"
+    "@semapps/semantic-data-provider" "0.6.0-alpha.1"
     lodash.debounce "^4.0.8"
     react-icons "^4.4.0"
 
-"@semapps/geo-components@0.6.0-alpha.0":
-  version "0.6.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@semapps/geo-components/-/geo-components-0.6.0-alpha.0.tgz#a9012eeaecb04be8ecffdabd7f3e9cd8eff9975b"
-  integrity sha512-DGGMy/scHLcdUSMJJ0GTrvGNRDBBryCVyVGFY8QJsBRn+KwKORv0lu3vlUvKfy3Dt91ww80DG2lN4/4jUKrB5g==
+"@semapps/geo-components@0.6.0-alpha.1":
+  version "0.6.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@semapps/geo-components/-/geo-components-0.6.0-alpha.1.tgz#edcd0926f42531c45af5611bf6c04259f74a2231"
+  integrity sha512-KdNCUh2Ohy3g2jQM+BRQ3MdBu89QPiPiLzKzFInSDcpBuEPVP7VFynUPoPViZNXM/EEu1lO9VxW1nLe9uCXCww==
   dependencies:
     "@react-leaflet/core" "^2.1.0"
     autosuggest-highlight "^3.1.1"
     lodash.throttle "^4.1.1"
     react-leaflet "4.0.2"
 
-"@semapps/input-components@0.6.0-alpha.0":
-  version "0.6.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@semapps/input-components/-/input-components-0.6.0-alpha.0.tgz#b79157fb4e267b5943bdcd8f49bcc45cda28a234"
-  integrity sha512-P4g2VjRm5f9zbV/FL21bsBhWP2c6wwZ54hEtMaiiU5qWThdkrxZiPQMtIj+g/t0ucws1IUxM9+HAmKjYPaZRdA==
+"@semapps/input-components@0.6.0-alpha.1":
+  version "0.6.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@semapps/input-components/-/input-components-0.6.0-alpha.1.tgz#d94a2afed64bc20c5dd7688500094de41a820822"
+  integrity sha512-Jb1s8nOs2jsjAQUbhD/Y8zp9SHfviWZF8IpWJwxxhb2zpBjh0bgo05bThvsGft9o7szhrNBNcUj/TcnW524ylw==
   dependencies:
-    "@semapps/semantic-data-provider" "0.6.0-alpha.0"
+    "@semapps/semantic-data-provider" "0.6.0-alpha.1"
 
-"@semapps/list-components@0.6.0-alpha.0":
-  version "0.6.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@semapps/list-components/-/list-components-0.6.0-alpha.0.tgz#53531ff179cca24d72dfc6e202c7b46a057f6ad7"
-  integrity sha512-myWKCmesnhApPg+8RUHZVyWcU51j0iu8IeSUwTw9sJ8p51r2Qy1my79bekkl5lvVQ+OS0loO39PoY406CCQooQ==
+"@semapps/list-components@0.6.0-alpha.1":
+  version "0.6.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@semapps/list-components/-/list-components-0.6.0-alpha.1.tgz#4b5632ebd861655f3f142684c457543b77c719d6"
+  integrity sha512-dyuslri2LV0ZBcBQtVj+Mj0C/h/TOxM5i+mekp+dkSVNp65kVWl0n99MtBXWgr0AXOfATy6d6OkKkB44ManCSQ==
   dependencies:
     "@semapps/semantic-data-provider" "0.5.0-alpha.1"
     react-masonry-css "^1.0.14"
@@ -2037,10 +2037,10 @@
     speakingurl "^14.0.1"
     url-join "^4.0.1"
 
-"@semapps/semantic-data-provider@0.6.0-alpha.0":
-  version "0.6.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@semapps/semantic-data-provider/-/semantic-data-provider-0.6.0-alpha.0.tgz#275588415b7ed2689dcc60c0e0338c60a8e4e660"
-  integrity sha512-khYHRGxlEJKQoQzcCBs0ncxafv2f2QI/hqrdH9W00j99BcMG3DFZqNvrC/gOkdtJMcuDx+9M1vSvWpoci2yC5Q==
+"@semapps/semantic-data-provider@0.6.0-alpha.1":
+  version "0.6.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@semapps/semantic-data-provider/-/semantic-data-provider-0.6.0-alpha.1.tgz#3d8718c4c4e0fa422f9f20ed458e59cdc2626dc7"
+  integrity sha512-zj+OMvcpTEhgVzTXh7zh4ofKO1hdZBbSw7t9r6B2RgQVVXwhMTVwv+QZ7dk9UYa3h4BTWjKIyKFb2fCoVfftgA==
   dependencies:
     "@rdfjs/data-model" "^1.3.4"
     crypto-js "^4.1.1"
@@ -2449,9 +2449,9 @@
   integrity sha512-K0VQKziLUWkVKiRVrx4a40iPaxTUefQmjtkQofBkYRcoaaL/8rhwDWww9qWbrgicNOgnpIsMxyNIUM4+n6dUIA==
 
 "@types/node@*":
-  version "20.8.5"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.8.5.tgz#13352ae1f80032171616910e8aba2e3e52e57d96"
-  integrity sha512-SPlobFgbidfIeOYlzXiEjSYeIJiOCthv+9tSQVpvk4PAdIIc+2SmjNVzWXk9t0Y7dl73Zdf+OgXKHX9XtkqUpw==
+  version "20.8.6"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.8.6.tgz#0dbd4ebcc82ad0128df05d0e6f57e05359ee47fa"
+  integrity sha512-eWO4K2Ji70QzKUqRy6oyJWUeB7+g2cRagT3T/nxYibYcT4y2BDL8lqolRXjTHmkZCdJfIPaY73KbJAZmcryxTQ==
   dependencies:
     undici-types "~5.25.1"
 
@@ -3784,9 +3784,9 @@ caniuse-api@^3.0.0:
     lodash.uniq "^4.5.0"
 
 caniuse-lite@^1.0.0, caniuse-lite@^1.0.30000981, caniuse-lite@^1.0.30001035, caniuse-lite@^1.0.30001109, caniuse-lite@^1.0.30001541:
-  version "1.0.30001547"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001547.tgz#d4f92efc488aab3c7f92c738d3977c2a3180472b"
-  integrity sha512-W7CrtIModMAxobGhz8iXmDfuJiiKg1WADMO/9x7/CLNin5cpSbuBjooyoIUVB5eyCc36QuTVlkVa1iB2S5+/eA==
+  version "1.0.30001549"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001549.tgz#7d1a3dce7ea78c06ed72c32c2743ea364b3615aa"
+  integrity sha512-qRp48dPYSCYaP+KurZLhDYdVE+yEyht/3NlmcJgVQ2VMGt6JL36ndQ/7rgspdZsJuxDPFIo/OzBT2+GmIJ53BA==
 
 canonicalize@^1.0.1:
   version "1.0.8"
@@ -5020,9 +5020,9 @@ ee-first@1.1.1:
   integrity sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==
 
 electron-to-chromium@^1.3.378, electron-to-chromium@^1.4.535:
-  version "1.4.553"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.553.tgz#56fd65afddbd713c52f0e95d0223b3368f520865"
-  integrity sha512-HiRdtyKS2+VhiXvjhMvvxiMC33FJJqTA5EB2YHgFZW6v7HkK4Q9Ahv2V7O2ZPgAjw+MyCJVMQvigj13H8t+wvA==
+  version "1.4.554"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.554.tgz#04e09c2ee31dc0f1546174033809b54cc372740b"
+  integrity sha512-Q0umzPJjfBrrj8unkONTgbKQXzXRrH7sVV7D9ea2yBV3Oaogz991yhbpfvo2LMNkJItmruXTEzVpP9cp7vaIiQ==
 
 elliptic@^6.5.3:
   version "6.5.4"
@@ -8754,9 +8754,9 @@ object-hash@^2.0.1:
   integrity sha512-gScRMn0bS5fH+IuwyIFgnh9zBdo4DV+6GhygmWM9HyNJSgS0hScp1f5vjtm7oIIOiT9trXrShAkLFSc2IqKNgw==
 
 object-inspect@^1.12.3, object-inspect@^1.9.0:
-  version "1.12.3"
-  resolved "https://registry.yarnpkg.com/object-inspect/-/object-inspect-1.12.3.tgz#ba62dffd67ee256c8c086dfae69e016cd1f198b9"
-  integrity sha512-geUvdk7c+eizMNUDkRpW1wJwgfOiOeHbxBR/hLXK1aT6zmVSO0jsQcs7fj6MGw89jC/cjGfLcNOrtMYtGqm81g==
+  version "1.13.0"
+  resolved "https://registry.yarnpkg.com/object-inspect/-/object-inspect-1.13.0.tgz#42695d3879e1cd5bda6df5062164d80c996e23e2"
+  integrity sha512-HQ4J+ic8hKrgIt3mqk6cVOVrW2ozL4KdvHlqpBv9vDYWx9ysAgENAdvy4FoGF+KFdhR7nQTNm5J0ctAeOwn+3g==
 
 object-is@^1.0.1:
   version "1.1.5"
@@ -10375,10 +10375,17 @@ ra-input-rich-text@^4.11.0:
     "@tiptap/starter-kit" "^2.0.3"
     clsx "^1.1.1"
 
-ra-language-english@^4.15.0:
+ra-language-english@^4.11.0, ra-language-english@^4.15.0:
   version "4.15.0"
   resolved "https://registry.yarnpkg.com/ra-language-english/-/ra-language-english-4.15.0.tgz#b0e42d12d920710c8f737c84100a06277c599c24"
   integrity sha512-3QO+1r3Aug/0RulfwhD86FARLp2d1qPdE2GYL0xHENG+F0+7/JfqRg7tWn5WlAHK3amaAUaeIgQ9vtukwpt6Gw==
+  dependencies:
+    ra-core "^4.15.0"
+
+ra-language-french@^4.11.0:
+  version "4.15.0"
+  resolved "https://registry.yarnpkg.com/ra-language-french/-/ra-language-french-4.15.0.tgz#a6bba6b31a12fddc981eb934cce93365f6a2a6cb"
+  integrity sha512-YbIpCM7owYxK4uyi7IDBQHTDLSgLGH1ZdhP/o9I6p24pP7k10NzA+dqe6WNv6C76OX8+1LS0LYYq+6aS6E2jQQ==
   dependencies:
     ra-core "^4.15.0"
 
@@ -10521,7 +10528,7 @@ react-dev-utils@^10.2.0:
     strip-ansi "6.0.0"
     text-table "0.2.0"
 
-react-dom@^18.1.0:
+react-dom@^18.2.0:
   version "18.2.0"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-18.2.0.tgz#22aaf38708db2674ed9ada224ca4aa708d821e3d"
   integrity sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==

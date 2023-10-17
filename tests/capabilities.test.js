@@ -11,7 +11,7 @@ const CapabilitiesProfileService = require('../packages/profiles/services/capabi
  * @typedef {import('moleculer').ServiceBroker} Broker
  */
 
-jest.setTimeout(300_000);
+jest.setTimeout(30_000);
 
 const NUM_USERS = 2;
 

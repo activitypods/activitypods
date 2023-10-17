@@ -1,35 +1,35 @@
+/* eslint-disable no-bitwise */
 const CESIUM_APP_URL = 'https://demo.cesium.app/#/app/wot/';
 const CESIUM_APP_REGEX = /^https:\/\/demo\.cesium\.app\/#\/app\/wot\/([^\\]*)\//;
 
-export const g1PublicKeyToUrl = value => {
+export const g1PublicKeyToUrl = (value: string) => {
   if (value && !value.startsWith(CESIUM_APP_URL)) {
-    return CESIUM_APP_URL + value + '/';
+    return `${CESIUM_APP_URL + value}/`;
   }
   return value;
 };
 
-export const g1UrlToPublicKey = value => {
+export const g1UrlToPublicKey = (value: string) => {
   if (value && value.startsWith(CESIUM_APP_URL)) {
-    const results = value.match(CESIUM_APP_REGEX);
+    const results = CESIUM_APP_REGEX.exec(value);
     if (results) return results[1];
   }
   return value;
 };
 
-export const formatUsername = uri => {
+export const formatUsername = (uri: string) => {
   const url = new URL(uri);
   const username = url.pathname.split('/')[1];
-  return '@' + username + '@' + url.host;
+  return `@${username}@${url.host}`;
 };
 
 /**
  * Useful, to avoid having to check if the field is an array or not.
  * Useful for json-ld objects where a field can be a single value or an array.
- *
  * @param {*} value A non-array value, an array or undefined.
  * @returns
  */
-export const arrayFromLdField = value => {
+export const arrayFromLdField = (value: any | any[]) => {
   // If the field is null-ish, we suppose there are no values.
   if (!value) {
     return [];
@@ -44,7 +44,6 @@ export const arrayFromLdField = value => {
 
 /**
  * Generate a random color using a string as seed.
- *
  * @param {string} value
  * @param {number} offset Optional.
  *  Min, max values for r, g, b between 0x00 and 0xff.
@@ -56,7 +55,7 @@ export const arrayFromLdField = value => {
  * @param {number} offset.b.min
  * @param {number} offset.b.max
  */
-export const colorFromString = (value, offsets = {}) => {
+export const colorFromString = (value: string, offsets = {}) => {
   const colRange = {
     r: { min: 0x60, max: 0xff },
     g: { min: 0x60, max: 0xff },
@@ -81,7 +80,7 @@ export const colorFromString = (value, offsets = {}) => {
 
   // Convert to padded hex string.
   const hex = colorNumber.toString(16).padStart(6, '0');
-  return '#' + hex;
+  return `#${hex}`;
 };
 
 /**
@@ -89,10 +88,12 @@ export const colorFromString = (value, offsets = {}) => {
  * @param {string} seed
  * @returns
  */
-export const numberFromString = seed => {
+export const numberFromString = (seed: string) => {
+  // make next lines disable no-bitwise eslint using eslint block disable
   return Math.abs(
     Math.sin(
       seed.split('').reduce((a, b) => {
+        // eslint-disable-next-line no-param-reassign
         a = (a << 5) - a + b.charCodeAt(0);
         return a & a;
       }, 0)
@@ -104,10 +105,9 @@ export const numberFromString = seed => {
  * Return a mulberry32 random number generator.
  * Generates numbers between 0 and 1.
  * See https://gist.github.com/tommyettinger/46a874533244883189143505d203312c
- *
  * @param {number} seed
  */
-export const mulberry32 = seed => {
+export const mulberry32 = (seed: number) => {
   function next() {
     let z = (seed += 0x9e3779b9) | 0; // the `| 0` coerces it into a 32-bit int
     z ^= z >>> 16;
@@ -118,4 +118,64 @@ export const mulberry32 = seed => {
     return (z >>> 0) / 0x100000000;
   }
   return next;
+};
+
+export const isUri = (uri: string) => {
+  try {
+    const url = new URL(uri);
+    return url;
+  } catch (e) {
+    return false;
+  }
+};
+
+/**
+ * Validates a URL and returns an object containing the error message and the URL object.
+ * @param {string} uriString - The URL to be validated.
+ * @param {boolean} allowAddHttp - Whether to allow adding the HTTP protocol to the URL string if it is missing.
+ * @returns {object} An object containing the error message and the validated URL.
+ */
+export const validateUrl = (
+  uriString: string,
+  allowAddHttp: boolean
+): { error: string; url: undefined } | { error: false; url: URL } => {
+  const hasProtocol = (url: URL) => {
+    return (url && url.protocol === 'http:') || (url && url.protocol === 'https:');
+  };
+
+  let url = isUri(uriString);
+  if (!url && allowAddHttp) {
+    // Try by adding protocol...
+    url = isUri(`https://${uriString}`);
+  }
+  if (!url) {
+    return { error: 'app.validation.url', url: undefined };
+  }
+  if (!hasProtocol(url)) {
+    return { error: 'app.validation.uri.no_http', url: undefined };
+  }
+  return { error: false, url };
+};
+
+export const isBaseUrl = (url: URL) => {
+  if (url.pathname === '/' && !url.search && !url.username && !url.password) {
+    return url;
+  }
+  return false;
+};
+
+export const validateBaseUrl = (uri: string, allowAddHttp: boolean) => {
+  if (!uri) {
+    return { error: 'ra.validation.required', url: undefined };
+  }
+
+  const { url, error } = validateUrl(uri, allowAddHttp);
+  if (error !== false) {
+    return { url, error };
+  }
+
+  if (!isBaseUrl(url)) {
+    return { error: 'app.validation.uri.no_base_url', url };
+  }
+  return { url, error };
 };

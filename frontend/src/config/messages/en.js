@@ -23,7 +23,12 @@ module.exports = {
       signup: 'Signup',
       reset_password: 'Reset password',
       set_new_password: 'Set new password',
-      undo_ignore_contact: 'No longer ignore'
+      undo_ignore_contact: 'No longer ignore',
+      select: 'Select',
+      go_back: 'Go back',
+      cancel: 'Cancel',
+      connect: 'Connect',
+      continue: 'Continue'
     },
     group: {
       members: 'Members',
@@ -51,7 +56,12 @@ module.exports = {
       settings_password: 'Update password',
       add_contact: 'Send a connection request',
       create_profile: 'Create your profile',
-      authorize: 'Authorization required'
+      authorize: 'Authorization required',
+      invite: '%{username} invited you to their network',
+      invite_connect: 'Do you want to connect with %{username}?',
+      choose_provider: 'Choose a data space',
+      choose_custom_provider: 'Choose a custom data space',
+      invite_success: 'Success!'
     },
     setting: {
       email: 'Email address',
@@ -93,14 +103,19 @@ module.exports = {
       set_new_password: 'Please enter your email address and a new password below',
       create_profile:
         'Now that your account is created, please create your profile. By default, your profile will only be visible to the people you accept into your network.',
-      authorize: 'Do you allow the website %{appDomain} to access your POD?'
+      authorize: 'Do you allow the website %{appDomain} to access your POD?',
+      invite_info_text:
+        "A personal data space is the place where you store your personal data. Like with email accounts, it's decentralized, so you can choose where your personal data is stored. Instead of creating a new account for every new app, you can login to new apps using your data space account. Compatible apps may use and store data in your space instead of theirs. At the same time, you can connect with others and communicate in many ways, using different apps.",
+      more_about_pods: 'Learn more about data spaces (PODs).',
+      choose_provider_info: 'If the provider you are looking for is not listed, you can enter its address here.'
     },
     message: {
       copied_to_clipboard: 'Copied !',
       no_condition: 'None',
       you_participated_to_same_event: 'You participated to the same event',
       verified_app: 'Verified application',
-      verified: 'Verified'
+      verified: 'Verified',
+      connection_successful: 'You are now connected!'
     },
     notification: {
       contact_request_accepted: 'Contact request accepted',
@@ -125,7 +140,11 @@ module.exports = {
       verified_applications_load_failed: 'Unable to load the list of verified applications',
       app_uninstalled: 'Application uninstalled',
       home_address_updated: 'Home address updated',
-      home_address_deleted: 'Home address deleted'
+      home_address_deleted: 'Home address deleted',
+      send_request_error: 'Error while sending the request: %{error}',
+      connection_accepted: 'You accepted the connection request.',
+      invite_cap_invalid: 'The invite link is not valid',
+      invite_cap_fetch_error: 'Error ocurred while fetching the invitation. It might not be valid.\n%{error}'
     },
     user: {
       unknown: 'Unknown',
@@ -136,7 +155,12 @@ module.exports = {
       email: 'Must be a valid email',
       confirmNewPassword: 'Must be the same as new password field',
       password_strength: 'Password strength',
-      password_too_weak: 'Password too weak. Increase length or add special characters.'
+      password_too_weak: 'Password too weak. Increase length or add special characters.',
+      url: 'Must be a valid URL',
+      uri: {
+        no_http: 'Must start with http:// or https://',
+        no_base_url: 'The URL must consist of the domain only.'
+      }
     },
     steps: {
       title: 'How does it work?',

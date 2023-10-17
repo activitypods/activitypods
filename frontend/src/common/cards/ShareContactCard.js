@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Card, Typography, TextField } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useGetIdentity, useTranslate } from 'react-admin';
-import { formatUsername } from '../../utils';
 import CopyButton from '../buttons/CopyButton';
 
 const useStyles = makeStyles(theme => ({
@@ -28,11 +27,36 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
+const getInviteCapUri = async (webId, profileUri, loginToken) => {
+  const fetchRes = await fetch(`${webId}/data/capabilities`, {
+    headers: { authorization: `Bearer ${loginToken}`, accept: 'application/ld+json' }
+  });
+  const jsonRes = await fetchRes.json();
+  const caps = jsonRes['ldp:contains'];
+
+  const inviteCap = caps.find(cap => {
+    return cap.type === 'acl:Authorization' && cap['acl:Mode'] === 'acl:Read' && cap['acl:AccessTo'] === profileUri;
+  });
+  return inviteCap.id;
+};
+
 const ShareContactCard = () => {
   const classes = useStyles();
   const { data: identity } = useGetIdentity();
+  const profileData = identity?.profileData;
   const translate = useTranslate();
-  const contactLink = identity && new URL(window.location.href).origin + '/u/' + formatUsername(identity?.id);
+  const [contactLink, setContactLink] = React.useState(null);
+
+  // Get invite capability URI.
+  useEffect(() => {
+    if (!contactLink && profileData?.describes) {
+      setContactLink(translate('ra.page.loading'));
+      getInviteCapUri(profileData.describes, profileData.id, localStorage.getItem('token')).then(inviteCapUri =>
+        setContactLink(`${new URL(window.location.href).origin}/invite?capabilityUri=${inviteCapUri}`)
+      );
+    }
+  });
+
   return (
     <Card className={classes.root}>
       <Box className={classes.title} p={2}>

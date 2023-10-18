@@ -139,6 +139,7 @@ const PodLoginPageView = ({ text, customPodProviders }) => {
               );
               if (searchParams.has('signup')) url.searchParams.set('signup', 'true');
               url.searchParams.set('redirect', window.location.href);
+              url.searchParams.set('appDomain', process.env.REACT_APP_BACKEND_DOMAIN_NAME);
               return (
                 <React.Fragment key={i}>
                   <Divider />

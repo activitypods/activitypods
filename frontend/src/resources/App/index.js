@@ -5,10 +5,7 @@ export default {
     list: AppList
   },
   dataModel: {
-    types: ['apods:FrontAppRegistration'],
-    fieldsMapping: {
-      title: 'apods:domainName'
-    }
+    types: ['interop:ApplicationRegistration']
   },
   translations: {
     en: {

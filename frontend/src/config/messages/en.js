@@ -59,6 +59,19 @@ module.exports = {
       addresses: 'My addresses',
       address: '1 address |||| %{smart_count} addresses'
     },
+    authorization: {
+      required: 'Required access',
+      optional: 'Optional access',
+      access_resources_of_type: '%{access_right} resources of type %{type}',
+      read: 'Read',
+      write: 'Write',
+      read_inbox: 'Read my inbox',
+      read_outbox: 'Read my outbox',
+      post_outbox: 'Post in my outbox',
+      send_notification: 'Send me notifications',
+      query_sparql_endpoint: 'Search on my pod',
+      create_acl_group: 'Create ACL group'
+    },
     card: {
       add_contact: 'Add a contact',
       contact_requests: 'Contact requests',
@@ -93,7 +106,7 @@ module.exports = {
       set_new_password: 'Please enter your email address and a new password below',
       create_profile:
         'Now that your account is created, please create your profile. By default, your profile will only be visible to the people you accept into your network.',
-      authorize: 'Do you allow the website %{appDomain} to access your POD?'
+      authorize: 'To be installed, the app %{appDomain} require the following authorizations'
     },
     message: {
       copied_to_clipboard: 'Copied !',

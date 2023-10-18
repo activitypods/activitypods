@@ -1,13 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Link, useDataProvider, useTranslate, useGetList } from 'react-admin';
+import React, { useEffect, useCallback, useState } from 'react';
+import { Link, useTranslate, useGetList } from 'react-admin';
 import { Typography, Box, Chip, Button } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import makeStyles from '@mui/styles/makeStyles';
 import WarningIcon from '@mui/icons-material/Warning';
 import DoneIcon from '@mui/icons-material/Done';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
+import { useOutbox } from '@semapps/activitypub-components';
 import SimpleBox from '../../layout/SimpleBox';
 import useTrustedApps from '../../hooks/useTrustedApps';
+import useApplication from '../../hooks/useApplication';
+import useAccessNeeds from '../../hooks/useAccessNeeds';
+import AccessNeedsList from './AccessNeedsList';
 
 const useStyles = makeStyles(() => ({
   app: {
@@ -44,61 +48,58 @@ const useStyles = makeStyles(() => ({
 const AuthorizePageView = () => {
   const classes = useStyles();
   useCheckAuthenticated();
-  const [appData, setAppData] = useState({});
   const [showScreen, setShowScreen] = useState(false);
+  const [allowedAccessNeeds, setAllowedAccessNeeds] = useState();
+  const outbox = useOutbox();
   const translate = useTranslate();
-  const dataProvider = useDataProvider();
   const trustedApps = useTrustedApps();
   const [searchParams] = useSearchParams();
-  const { data: registeredApps, isLoading } = useGetList('App', { page: 1, perPage: 1000 });
+  const { data: appRegistrations, isLoading } = useGetList('App', { page: 1, perPage: Infinity });
 
   const redirectTo = new URL(searchParams.get('redirect'));
-  const appDomain = redirectTo.host;
-  const appOrigin = redirectTo.origin;
+  const appDomain = searchParams.get('appDomain');
   const isTrustedApp = trustedApps.some(domain => domain === appDomain);
 
-  useEffect(() => {
-    (async () => {
-      if (appOrigin) {
-        try {
-          const { data } = await dataProvider.getOne('AppDescription', { id: `${appOrigin}/application.json` });
-          setAppData(data);
-        } catch (e) {
-          // Do nothing if application.json file is not found
-        }
-      }
-    })();
-  }, [dataProvider, appOrigin, setAppData]);
+  const { application } = useApplication(`@app@${appDomain}`);
+  const { requiredAccessNeeds, optionalAccessNeeds, loading, loaded } = useAccessNeeds(application);
 
-  const accessApp = useCallback(
-    async register => {
-      if (register) {
-        await dataProvider.create('App', {
-          data: {
-            type: 'apods:FrontAppRegistration',
-            'apods:application': `${redirectTo.origin}/application.json`,
-            'apods:domainName': redirectTo.host,
-            'apods:preferredForTypes': appData['apods:handledTypes']
-          }
-        });
-      }
-      const token = localStorage.getItem('token');
-      redirectTo.searchParams.set('token', token);
-      window.location.href = redirectTo.toString();
-    },
-    [dataProvider, redirectTo, appData]
-  );
+  useEffect(() => {
+    if (loaded) {
+      setAllowedAccessNeeds([
+        ...requiredAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id)),
+        ...optionalAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id))
+      ]);
+    }
+  }, [loaded, requiredAccessNeeds, optionalAccessNeeds, setAllowedAccessNeeds]);
+
+  const accessApp = useCallback(() => {
+    const token = localStorage.getItem('token');
+    redirectTo.searchParams.set('token', token);
+    window.location.href = redirectTo.toString();
+  }, [redirectTo]);
+
+  const installApp = useCallback(async () => {
+    await outbox.post({
+      '@context': process.env.REACT_APP_JSON_CONTEXT,
+      type: 'apods:Install',
+      actor: outbox.owner,
+      object: application.id,
+      'apods:acceptedAccessNeeds': allowedAccessNeeds.filter(a => !a.startsWith('apods:')),
+      'apods:acceptedSpecialRights': allowedAccessNeeds.filter(a => a.startsWith('apods:'))
+    });
+    accessApp();
+  }, [outbox, application, allowedAccessNeeds, accessApp]);
 
   // Once all data are loaded, either redirect to app or show authorization screen
   useEffect(() => {
-    if (!isLoading) {
-      if (Object.values(registeredApps).some(app => app['apods:domainName'] === appDomain)) {
-        accessApp(false);
+    if (!isLoading && application?.id) {
+      if (appRegistrations.some(reg => reg['interop:registeredAgent'] === application?.id)) {
+        accessApp();
       } else {
         setShowScreen(true);
       }
     }
-  }, [registeredApps, isLoading, appDomain, accessApp, setShowScreen]);
+  }, [appRegistrations, isLoading, application, accessApp, setShowScreen]);
 
   if (!showScreen) return null;
 
@@ -108,32 +109,49 @@ const AuthorizePageView = () => {
       icon={<WarningIcon />}
       text={translate('app.helper.authorize', { appDomain })}
     >
-      {appData && (
-        <Box p={2} pb={0}>
-          <div className={classes.app}>
-            <img src={appData.image} alt={appData.name} className={classes.appIcon} />
-            <Typography variant="h4" className={classes.appTitle}>
-              {appData.name}
-            </Typography>
-            <Typography variant="body2">{appData.content}</Typography>
-            <Typography variant="body2" className={classes.appUrl}>
-              {appOrigin}
-            </Typography>
-            {isTrustedApp && (
-              <Chip
-                size="small"
-                label={translate('app.message.verified_app')}
-                color="primary"
-                onDelete={() => {}}
-                deleteIcon={<DoneIcon />}
-                className={classes.appChip}
+      {application && (
+        <>
+          <Box p={2} pb={0}>
+            <div className={classes.app}>
+              <img
+                src={application['interop:applicationThumbnail']}
+                alt={application['interop:applicationName']}
+                className={classes.appIcon}
               />
-            )}
-          </div>
-        </Box>
+              <Typography variant="h4" className={classes.appTitle}>
+                {application['interop:applicationName']}
+              </Typography>
+              <Typography variant="body2">{application['interop:applicationDescription']}</Typography>
+              <Typography variant="body2" className={classes.appUrl}>
+                {appDomain}
+              </Typography>
+              {isTrustedApp && (
+                <Chip
+                  size="small"
+                  label={translate('app.message.verified_app')}
+                  color="primary"
+                  onDelete={() => {}}
+                  deleteIcon={<DoneIcon />}
+                  className={classes.appChip}
+                />
+              )}
+            </div>
+          </Box>
+          <AccessNeedsList
+            required
+            accessNeeds={requiredAccessNeeds}
+            allowedAccessNeeds={allowedAccessNeeds}
+            setAllowedAccessNeeds={setAllowedAccessNeeds}
+          />
+          <AccessNeedsList
+            accessNeeds={optionalAccessNeeds}
+            allowedAccessNeeds={allowedAccessNeeds}
+            setAllowedAccessNeeds={setAllowedAccessNeeds}
+          />
+        </>
       )}
       <Box p={2} display="flex" justifyContent="end">
-        <Button variant="contained" color="secondary" className={classes.button} onClick={() => accessApp(true)}>
+        <Button variant="contained" color="secondary" className={classes.button} onClick={installApp}>
           {translate('app.action.accept')}
         </Button>
         <Link to="/">

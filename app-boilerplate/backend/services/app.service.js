@@ -1,12 +1,15 @@
+const urlJoin = require('url-join');
 const { AppService } = require('@activitypods/app');
 const { AS_PREFIX } = require('@semapps/activitypub');
+const CONFIG = require('../config/config');
 
 module.exports = {
   mixins: [AppService],
   settings: {
     app: {
       name: 'Example App',
-      description: 'An ActivityPods-compatible app'
+      description: 'An ActivityPods-compatible app',
+      thumbnail: urlJoin(CONFIG.FRONT_URL, 'logo192.png')
     },
     accessNeeds: {
       required: [

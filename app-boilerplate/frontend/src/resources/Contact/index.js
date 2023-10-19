@@ -5,6 +5,7 @@ export default {
   config: {
     list: ContactList,
     show: ContactShow,
+    recordRepresentation: 'vcard:given-name',
     options: {
       label: 'Contacts'
     }

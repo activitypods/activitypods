@@ -3,6 +3,7 @@ import dataProvider from './dataProvider';
 
 export default authProvider({
   dataProvider,
-  authType: 'local',
-  checkPermissions: true
+  authType: 'pod',
+  checkPermissions: true,
+  allowAnonymous: false
 });

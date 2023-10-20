@@ -33,7 +33,7 @@ const SettingsPasswordPage = () => {
         await authProvider.updateAccountSettings({ ...params });
         notify('auth.message.account_settings_updated', 'success');
       } catch (error) {
-        notify(error.message, 'error');
+        notify(error.message, { type: 'error' });
       }
     },
     [authProvider, notify]

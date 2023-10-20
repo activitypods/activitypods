@@ -28,9 +28,9 @@ const SettingsEmailPage = () => {
     async params => {
       try {
         await authProvider.updateAccountSettings({ ...params });
-        notify('auth.message.account_settings_updated', 'success');
+        notify('auth.message.account_settings_updated', { type: 'success' });
       } catch (error) {
-        notify(error.message, 'error');
+        notify(error.message, { type: 'error' });
       }
     },
     [authProvider, notify]

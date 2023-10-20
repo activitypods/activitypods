@@ -57,7 +57,7 @@ const AddLocationButton = ({ reference, source }) => {
           form.setValue(source, data.id, { shouldDirty: true });
         },
         onError: error => {
-          notify(error.message, 'error');
+          notify(error.message, { type: 'error' });
         }
       }
     );

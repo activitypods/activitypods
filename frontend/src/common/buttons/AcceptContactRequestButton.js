@@ -19,7 +19,7 @@ const AcceptContactRequestButton = ({ activity, refetch, children, ...rest }) =>
       notify('app.notification.contact_request_accepted');
       setTimeout(refetch, 3000);
     } catch (e) {
-      notify(e.message, 'error');
+      notify(e.message, { type: 'error' });
     }
   }, [outbox, notify, refetch, activity]);
 

@@ -1,8 +1,8 @@
-import AppList from './AppList';
+import AppRegistrationList from './AppRegistrationList';
 
 export default {
   config: {
-    list: AppList
+    list: AppRegistrationList
   },
   dataModel: {
     types: ['interop:ApplicationRegistration']

@@ -18,7 +18,12 @@ const ProfileCreatePage = () => {
     } else if (redirectUrl.startsWith('/')) {
       return redirectUrl;
     } else if (redirectUrl.startsWith('http')) {
-      return '/authorize?redirect=' + encodeURIComponent(redirectUrl);
+      return (
+        '/authorize?redirect=' +
+        encodeURIComponent(redirectUrl) +
+        '&appDomain=' +
+        encodeURIComponent(searchParams.get('appDomain'))
+      );
     }
   }, [searchParams]);
 

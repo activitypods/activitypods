@@ -54,11 +54,13 @@ const AuthorizePageView = () => {
   const translate = useTranslate();
   const trustedApps = useTrustedApps();
   const [searchParams] = useSearchParams();
-  const { data: appRegistrations, isLoading } = useGetList('App', { page: 1, perPage: Infinity });
+  const { data: appRegistrations, isLoading } = useGetList('AppRegistration', { page: 1, perPage: Infinity });
 
   const redirectTo = new URL(searchParams.get('redirect'));
   const appDomain = searchParams.get('appDomain');
   const isTrustedApp = trustedApps.some(domain => domain === appDomain);
+
+  if (!appDomain) throw new Error('App domain is missing !');
 
   const { application } = useApplication(`@app@${appDomain}`);
   const { requiredAccessNeeds, optionalAccessNeeds, loading, loaded } = useAccessNeeds(application);
@@ -92,14 +94,14 @@ const AuthorizePageView = () => {
 
   // Once all data are loaded, either redirect to app or show authorization screen
   useEffect(() => {
-    if (!isLoading && application?.id) {
+    if (!isLoading && application?.id && appDomain) {
       if (appRegistrations.some(reg => reg['interop:registeredAgent'] === application?.id)) {
         accessApp();
       } else {
         setShowScreen(true);
       }
     }
-  }, [appRegistrations, isLoading, application, accessApp, setShowScreen]);
+  }, [appRegistrations, isLoading, appDomain, application, accessApp, setShowScreen]);
 
   if (!showScreen) return null;
 
@@ -154,7 +156,7 @@ const AuthorizePageView = () => {
         <Button variant="contained" color="secondary" className={classes.button} onClick={installApp}>
           {translate('app.action.accept')}
         </Button>
-        <Link to="/">
+        <Link to="/AppRegistration">
           <Button variant="contained" className={classes.button}>
             {translate('app.action.reject')}
           </Button>

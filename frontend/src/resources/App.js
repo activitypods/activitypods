@@ -1,5 +1,5 @@
 export default {
   dataModel: {
-    types: ['as:Application']
+    types: ['interop:Application']
   }
 };

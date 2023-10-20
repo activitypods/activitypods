@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { Notification } from 'react-admin';
 import { ThemeProvider } from '@mui/system';
 import { createTheme } from '@mui/material/styles';
 import { StyledEngineProvider } from '@mui/material';
@@ -11,7 +10,6 @@ const PodLoginPage = props => {
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={muiTheme}>
         <PodLoginPageView {...props} />
-        <Notification />
       </ThemeProvider>
     </StyledEngineProvider>
   );

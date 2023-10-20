@@ -129,7 +129,8 @@ module.exports = {
     },
     user: {
       unknown: 'Unknown',
-      location: "At %{surname}'s"
+      location: "At %{name}'s",
+      member_since: 'Member since'
     },
     validation: {
       email: 'Must be a valid email',

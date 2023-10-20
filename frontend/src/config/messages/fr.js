@@ -135,7 +135,7 @@ module.exports = {
     },
     user: {
       unknown: 'Inconnu',
-      location: 'Chez %{surname}'
+      location: 'Chez %{name}'
     },
     validation: {
       email: 'Doit être un email valide',

@@ -82,7 +82,7 @@ const AddLocationButton = ({ reference, source }) => {
           onSubmit={handleSubmit}
           defaultValues={
             existingLocations?.length === 0
-              ? { 'vcard:given-name': translate('app.user.location', { surname: identity?.fullName }) }
+              ? { 'vcard:given-name': translate('app.user.location', { name: identity?.fullName }) }
               : undefined
           }
         >

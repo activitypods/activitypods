@@ -11,7 +11,7 @@ export const LocationCreate = () => {
   return (
     <Create>
       <LocationForm
-        defaultValues={{ 'vcard:given-name': translate('app.user.location', { surname: identity?.fullName }) }}
+        defaultValues={{ 'vcard:given-name': translate('app.user.location', { name: identity?.fullName }) }}
       />
     </Create>
   );

@@ -77,8 +77,6 @@ module.exports = {
         appUri = results[0].appUri.value;
       }
 
-      console.log('appUri', appUri);
-
       const appBaseUrl = new URL(appUri).origin;
 
       if (uri) {

@@ -17,15 +17,14 @@ module.exports = {
           registeredClass: AS_PREFIX + 'Event',
           accessMode: ['acl:Read', 'acl:Create']
         },
-        'apods:ReadInbox'
-      ],
-      optional: [
         {
-          registeredClass: AS_PREFIX + 'Location',
-          accessMode: ['acl:Read', 'acl:Create']
+          registeredClass: 'http://www.w3.org/2006/vcard/ns#Individual',
+          accessMode: 'acl:Read'
         },
-        'apods:SendNotification'
-      ]
+        'apods:ReadInbox',
+        'apods:ReadOutbox'
+      ],
+      optional: ['apods:SendNotification']
     }
   }
 };

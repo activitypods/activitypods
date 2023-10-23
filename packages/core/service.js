@@ -13,6 +13,7 @@ const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
 const ApiService = require('./services/api');
+const AppOpenerService = require('./services/app-opener');
 const InstallationService = require('./services/installation');
 const containers = require('./config/containers');
 const ontologies = require('./config/ontologies.json');
@@ -191,6 +192,12 @@ const CoreService = {
     });
 
     this.broker.createService(InstallationService);
+
+    this.broker.createService(AppOpenerService, {
+      settings: {
+        frontendUrl
+      }
+    });
   }
 };
 

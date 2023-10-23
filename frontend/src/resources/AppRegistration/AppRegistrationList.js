@@ -56,8 +56,6 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const delay = async t => new Promise(resolve => setTimeout(resolve, t));
-
 const AppCardList = () => {
   const { data } = useListContext();
   const classes = useStyles();

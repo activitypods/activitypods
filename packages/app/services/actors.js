@@ -85,6 +85,11 @@ module.exports = {
         this.appActor = await ctx.call('activitypub.actor.awaitCreateComplete', { actorUri });
       }
 
+      await ctx.call('nodeinfo.addLink', {
+        rel: 'https://www.w3.org/ns/activitystreams#Application',
+        href: this.appActor.id
+      });
+
       return this.appActor;
     },
     async attachAccessNeedGroup(ctx) {

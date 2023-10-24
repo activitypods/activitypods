@@ -6,7 +6,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import WarningIcon from '@mui/icons-material/Warning';
 import DoneIcon from '@mui/icons-material/Done';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { useOutbox } from '@semapps/activitypub-components';
+import { useOutbox, useNodeinfo } from '@semapps/activitypub-components';
 import SimpleBox from '../../layout/SimpleBox';
 import useTrustedApps from '../../hooks/useTrustedApps';
 import useApplication from '../../hooks/useApplication';
@@ -55,14 +55,13 @@ const AuthorizePageView = () => {
   const trustedApps = useTrustedApps();
   const [searchParams] = useSearchParams();
   const { data: appRegistrations, isLoading } = useGetList('AppRegistration', { page: 1, perPage: Infinity });
-
-  const redirectTo = new URL(searchParams.get('redirect'));
   const appDomain = searchParams.get('appDomain');
+  const nodeinfo = useNodeinfo(appDomain);
   const isTrustedApp = trustedApps.some(domain => domain === appDomain);
 
   if (!appDomain) throw new Error('App domain is missing !');
 
-  const { application } = useApplication(`@app@${appDomain}`);
+  const application = useApplication(appDomain);
   const { requiredAccessNeeds, optionalAccessNeeds, loading, loaded } = useAccessNeeds(application);
 
   useEffect(() => {
@@ -76,9 +75,10 @@ const AuthorizePageView = () => {
 
   const accessApp = useCallback(() => {
     const token = localStorage.getItem('token');
-    redirectTo.searchParams.set('token', token);
-    window.location.href = redirectTo.toString();
-  }, [redirectTo]);
+    const authCallbackUrl = new URL(nodeinfo?.metadata?.auth_callback_url);
+    authCallbackUrl.searchParams.set('token', token);
+    window.location.href = authCallbackUrl.toString();
+  }, [nodeinfo]);
 
   const installApp = useCallback(async () => {
     await outbox.post({
@@ -94,14 +94,14 @@ const AuthorizePageView = () => {
 
   // Once all data are loaded, either redirect to app or show authorization screen
   useEffect(() => {
-    if (!isLoading && application?.id && appDomain) {
+    if (!isLoading && application?.id && appDomain && nodeinfo) {
       if (appRegistrations.some(reg => reg['interop:registeredAgent'] === application?.id)) {
         accessApp();
       } else {
         setShowScreen(true);
       }
     }
-  }, [appRegistrations, isLoading, appDomain, application, accessApp, setShowScreen]);
+  }, [appRegistrations, isLoading, appDomain, nodeinfo, application, accessApp, setShowScreen]);
 
   if (!showScreen) return null;
 

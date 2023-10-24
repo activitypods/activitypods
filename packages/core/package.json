@@ -4,12 +4,19 @@
   "description": "ActivityPods core services",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
+  "homepage": "https://activitypods.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/assemblee-virtuelle/activitypods.git",
+    "directory": "packages/core"
+  },
   "dependencies": {
     "@activitypods/announcer": "1.1.0",
     "@semapps/activitypub": "0.6.0-alpha.0",
     "@semapps/auth": "0.6.0-alpha.0",
     "@semapps/jsonld": "0.6.0-alpha.0",
     "@semapps/ldp": "0.6.0-alpha.0",
+    "@semapps/nodeinfo": "0.6.0-alpha.0",
     "@semapps/pod": "0.6.0-alpha.0",
     "@semapps/signature": "0.6.0-alpha.0",
     "@semapps/sparql-endpoint": "0.6.0-alpha.0",

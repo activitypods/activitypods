@@ -13,6 +13,7 @@ import {
   Card,
   Typography
 } from '@mui/material';
+import { useNodeinfo } from '@semapps/activitypub-components';
 import makeStyles from '@mui/styles/makeStyles';
 import LockIcon from '@mui/icons-material/Lock';
 import StorageIcon from '@mui/icons-material/Storage';
@@ -46,12 +47,35 @@ const useStyles = makeStyles(theme => ({
   list: {
     paddingTop: 0,
     paddingBottom: 0
-  },
-  listItem: {
-    paddingTop: 5,
-    paddingBottom: 5
   }
 }));
+
+const PodProvider = ({ podProvider, signup, appDomain }) => {
+  const nodeinfo = useNodeinfo(podProvider['apods:domainName']);
+
+  let url;
+  if (nodeinfo) {
+    url = new URL(signup ? nodeinfo?.metadata?.signup_url : nodeinfo?.metadata?.login_url);
+    if (signup) url.searchParams.set('signup', 'true');
+    url.searchParams.set('appDomain', appDomain);
+  }
+
+  return (
+    <>
+      <Divider />
+      <ListItem>
+        <ListItemButton component="a" href={url && url.toString()}>
+          <ListItemAvatar>
+            <Avatar>
+              <StorageIcon />
+            </Avatar>
+          </ListItemAvatar>
+          <ListItemText primary={podProvider['apods:domainName']} secondary={podProvider['apods:area']} />
+        </ListItemButton>
+      </ListItem>
+    </>
+  );
+};
 
 const PodLoginPageView = ({ text, customPodProviders, appDomain }) => {
   const classes = useStyles();
@@ -107,31 +131,14 @@ const PodLoginPageView = ({ text, customPodProviders, appDomain }) => {
         </Box>
         <Box m={2}>
           <List className={classes.list}>
-            {podProviders.map((podProvider, i) => {
-              const url = new URL(
-                '/auth',
-                (podProvider['apods:domainName'].includes(':') ? 'http://' : 'https://') +
-                  podProvider['apods:domainName']
-              );
-              if (searchParams.has('signup')) url.searchParams.set('signup', 'true');
-              url.searchParams.set('redirect', `${new URL(window.location.href).origin}/auth-callback`);
-              url.searchParams.set('appDomain', appDomain);
-              return (
-                <React.Fragment key={i}>
-                  <Divider />
-                  <ListItem className={classes.listItem}>
-                    <ListItemButton onClick={() => (window.location.href = url.toString())}>
-                      <ListItemAvatar>
-                        <Avatar>
-                          <StorageIcon />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText primary={podProvider['apods:domainName']} secondary={podProvider['apods:area']} />
-                    </ListItemButton>
-                  </ListItem>
-                </React.Fragment>
-              );
-            })}
+            {podProviders.map((podProvider, i) => (
+              <PodProvider
+                key={i}
+                podProvider={podProvider}
+                signup={searchParams.has('signup')}
+                appDomain={appDomain}
+              />
+            ))}
           </List>
         </Box>
       </Card>

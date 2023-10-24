@@ -106,7 +106,8 @@ module.exports = {
       no_condition: 'Aucune',
       you_participated_to_same_event: 'Vous avez participé à la même rencontre',
       verified_app: 'Application vérifiée',
-      verified: 'Vérifiée'
+      verified: 'Vérifiée',
+      no_app_registration: 'Aucune application installée'
     },
     notification: {
       contact_request_accepted: 'Demande de contact acceptée',
@@ -129,6 +130,7 @@ module.exports = {
       get_settings_error: "Une erreur s'est produite",
       update_settings_error: "Une erreur s'est produite",
       verified_applications_load_failed: 'Impossible de charger la liste des applications vérifiées',
+      app_uninstallation_in_progress: "Désinstallation de l'application en cours...",
       app_uninstalled: 'Application désinstallée',
       home_address_updated: 'Adresse du domicile mise à jour',
       home_address_deleted: 'Adresse du domicile enlevée'

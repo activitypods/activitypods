@@ -1,10 +1,17 @@
 import React, { useCallback } from 'react';
-import { useListContext, useTranslate, FunctionField, useNotify, useRefresh, RecordContextProvider } from 'react-admin';
+import {
+  useListContext,
+  useTranslate,
+  FunctionField,
+  useNotify,
+  useRecordContext,
+  RecordContextProvider
+} from 'react-admin';
 import { Box, Card, Typography, Grid, Button, Chip, useMediaQuery, IconButton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { ReferenceField } from '@semapps/field-components';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
+import { useOutbox, useNodeinfo, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 import List from '../../layout/List';
 import DoneIcon from '@mui/icons-material/Done';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -56,15 +63,18 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const AppCardList = () => {
-  const { data } = useListContext();
+const AppRegistration = () => {
+  const record = useRecordContext();
   const classes = useStyles();
   const translate = useTranslate();
-  const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
   const outbox = useOutbox();
   const trustedApps = useTrustedApps();
   const notify = useNotify();
-  const refresh = useRefresh();
+
+  const appUrl = new URL(record['interop:registeredAgent']);
+  const nodeinfo = useNodeinfo(appUrl.host);
+
+  const isTrustedApp = trustedApps.some(domain => domain === appUrl.host);
 
   const uninstallApp = useCallback(
     async appUri => {
@@ -77,76 +87,84 @@ const AppCardList = () => {
         }
       });
 
-      // TODO await Accept response
+      notify('app.notification.app_uninstallation_in_progress', { type: 'info' });
+
+      // TODO await Accept response in inbox
+      // notify('app.notification.app_uninstalled', { type: 'success' });
+
       setTimeout(() => {
-        notify('app.notification.app_uninstalled', { type: 'success' });
-        // TODO logout
-        refresh();
+        window.location.href = nodeinfo?.metadata?.logout_url;
       }, 5000);
     },
-    [outbox, notify, refresh]
+    [outbox, notify, nodeinfo]
   );
+
+  return (
+    <Grid item xs={12} sm={6}>
+      <Card className={classes.card}>
+        <ReferenceField reference="App" source="interop:registeredAgent" link={false}>
+          <FunctionField
+            render={app => (
+              <>
+                <img
+                  src={app['interop:applicationThumbnail']}
+                  alt={app['interop:applicationName']}
+                  className={classes.logo}
+                />
+                <Typography variant="h4" className={classes.title}>
+                  {app['interop:applicationName']}
+                </Typography>
+                <Typography variant="body2" className={classes.description}>
+                  {app['interop:applicationDescription']}
+                </Typography>
+              </>
+            )}
+          />
+        </ReferenceField>
+        <Typography variant="body2" className={classes.url}>
+          {appUrl.host}
+        </Typography>
+        {isTrustedApp && (
+          <Chip
+            size="small"
+            label={translate('app.message.verified')}
+            color="primary"
+            onDelete={() => {}}
+            deleteIcon={<DoneIcon />}
+            className={classes.appChip}
+          />
+        )}
+        <a
+          href={`/authorize?appDomain=${encodeURIComponent(appUrl.host)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={classes.link}
+        >
+          <Button variant="contained">{translate('app.action.open_app')}</Button>
+        </a>
+        <IconButton onClick={() => uninstallApp(record['interop:registeredAgent'])}>
+          <DeleteIcon />
+        </IconButton>
+      </Card>
+    </Grid>
+  );
+};
+
+const CardList = ({ children }) => {
+  const { data } = useListContext();
+  const translate = useTranslate();
+  const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
   return (
     <Box mt={1}>
       <Grid container spacing={xs ? 1 : 3}>
-        {data &&
-          data.map(record => {
-            const appUrl = new URL(record['interop:registeredAgent']);
-            const loginUrl = new URL('/auth', process.env.REACT_APP_POD_PROVIDER_URL);
-            loginUrl.searchParams.set('redirect', appUrl.origin + '/auth-callback');
-            loginUrl.searchParams.set('appDomain', appUrl.host);
-            const isTrustedApp = trustedApps.some(domain => domain === record['apods:domainName']);
-            return (
-              <RecordContextProvider value={record} key={record.id}>
-                <Grid item xs={12} sm={6}>
-                  <Card className={classes.card}>
-                    <ReferenceField reference="App" source="interop:registeredAgent" link={false}>
-                      <FunctionField
-                        render={app => (
-                          <>
-                            <img
-                              src={app['interop:applicationThumbnail']}
-                              alt={app['interop:applicationName']}
-                              className={classes.logo}
-                            />
-                            <Typography variant="h4" className={classes.title}>
-                              {app['interop:applicationName']}
-                            </Typography>
-                            <Typography variant="body2" className={classes.description}>
-                              {app['interop:applicationDescription']}
-                            </Typography>
-                          </>
-                        )}
-                      />
-                    </ReferenceField>
-                    <Typography variant="body2" className={classes.url}>
-                      {appUrl.host}
-                    </Typography>
-                    {isTrustedApp && (
-                      <Chip
-                        size="small"
-                        label={translate('app.message.verified')}
-                        color="primary"
-                        onDelete={() => {}}
-                        deleteIcon={<DoneIcon />}
-                        className={classes.appChip}
-                      />
-                    )}
-                    <a href={loginUrl.toString()} target="_blank" rel="noopener noreferrer" className={classes.link}>
-                      <Button variant="contained">{translate('app.action.open_app')}</Button>
-                    </a>
-                    {!isTrustedApp && (
-                      <IconButton onClick={() => uninstallApp(record['interop:registeredAgent'])}>
-                        <DeleteIcon />
-                      </IconButton>
-                    )}
-                  </Card>
-                </Grid>
-              </RecordContextProvider>
-            );
-          })}
+        {data?.map(record => (
+          <RecordContextProvider value={record} key={record.id}>
+            {children}
+          </RecordContextProvider>
+        ))}
       </Grid>
+      {data?.length === 0 && <Typography sx={{ mt: 4 }}>{translate('app.message.no_app_registration')}</Typography>}
     </Box>
   );
 };
@@ -156,7 +174,9 @@ const AppList = () => {
   const translate = useTranslate();
   return (
     <List title={translate('app.page.apps')} actions={[]} perPage={1000}>
-      <AppCardList />
+      <CardList>
+        <AppRegistration />
+      </CardList>
     </List>
   );
 };

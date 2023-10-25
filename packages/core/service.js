@@ -5,6 +5,7 @@ const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
 const { PodService } = require('@semapps/pod');
+const { NodeinfoService } = require('@semapps/nodeinfo');
 const { SignatureService, ProxyService } = require('@semapps/signature');
 const { SynchronizerService } = require('@semapps/sync');
 const { SparqlEndpointService } = require('@semapps/sparql-endpoint');
@@ -13,10 +14,11 @@ const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
 const ApiService = require('./services/api');
-const FrontAppsService = require('./services/front-apps');
+const AppOpenerService = require('./services/app-opener');
 const InstallationService = require('./services/installation');
 const containers = require('./config/containers');
 const ontologies = require('./config/ontologies.json');
+const package = require('./package.json');
 
 const CoreService = {
   name: 'core',
@@ -191,15 +193,44 @@ const CoreService = {
       }
     });
 
-    this.broker.createService(FrontAppsService, {
+    this.broker.createService(InstallationService);
+
+    this.broker.createService(AppOpenerService, {
       settings: {
-        baseUrl,
-        frontendUrl,
-        ontologies
+        frontendUrl
       }
     });
 
-    this.broker.createService(InstallationService);
+    this.broker.createService(NodeinfoService, {
+      settings: {
+        baseUrl,
+        software: {
+          name: 'activitypods',
+          version: package.version,
+          repository: package.repository?.url,
+          homepage: package.homepage
+        },
+        protocols: ['activitypub'],
+        metadata: {
+          frontend_url: frontendUrl,
+          login_url: urlJoin(frontendUrl, 'login'),
+          signup_url: urlJoin(frontendUrl, 'login?signup=true'),
+          logout_url: urlJoin(frontendUrl, 'login?logout=true'),
+          resource_url: urlJoin(frontendUrl, 'r')
+        }
+      },
+      actions: {
+        async getUsersCount(ctx) {
+          const pods = await ctx.call('pod.list');
+          const totalPods = pods.length;
+          return {
+            total: totalPods,
+            activeHalfYear: totalPods,
+            activeMonth: totalPods
+          };
+        }
+      }
+    });
   }
 };
 

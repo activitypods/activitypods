@@ -1,14 +1,11 @@
-import AppList from './AppList';
+import AppRegistrationList from './AppRegistrationList';
 
 export default {
   config: {
-    list: AppList
+    list: AppRegistrationList
   },
   dataModel: {
-    types: ['apods:FrontAppRegistration'],
-    fieldsMapping: {
-      title: 'apods:domainName'
-    }
+    types: ['interop:ApplicationRegistration']
   },
   translations: {
     en: {

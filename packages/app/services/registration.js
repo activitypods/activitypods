@@ -47,7 +47,7 @@ module.exports = {
           });
 
           const accessGrants = await Promise.all(
-            appRegistration['interop:hasAccessGrant'].map(accessGrantUri =>
+            arrayOf(appRegistration['interop:hasAccessGrant']).map(accessGrantUri =>
               ctx.call('ldp.remote.get', {
                 resourceUri: accessGrantUri,
                 jsonContext: interopContext,
@@ -57,11 +57,11 @@ module.exports = {
           );
 
           const dataGrantsUris = accessGrants.reduce(
-            (acc, cur) => (cur['interop:hasDataGrant'] ? [...acc, cur['interop:hasDataGrant']] : acc),
+            (acc, cur) => (cur['interop:hasDataGrant'] ? [...acc, ...arrayOf(cur['interop:hasDataGrant'])] : acc),
             []
           );
           const specialRightsUris = accessGrants.reduce(
-            (acc, cur) => (cur['apods:hasSpecialRights'] ? [...acc, cur['apods:hasSpecialRights']] : acc),
+            (acc, cur) => (cur['apods:hasSpecialRights'] ? [...acc, ...arrayOf(cur['apods:hasSpecialRights'])] : acc),
             []
           );
 

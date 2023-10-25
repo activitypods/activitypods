@@ -58,21 +58,24 @@ module.exports = {
             }
           }
 
-          accessGrantsUris.push(
-            await ctx.call('access-grants.post', {
-              resource: {
-                '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
-                '@type': 'interop:AccessGrant',
-                'interop:grantedBy': emitterUri,
-                'interop:grantedAt': new Date().toISOString(),
-                'interop:grantee': appUri,
-                'interop:hasAccessNeedGroup': accessNeedGroupUri,
-                'interop:hasDataGrant': dataGrantsUris,
-                'apods:hasSpecialRights': specialRightsUris
-              },
-              contentType: MIME_TYPES.JSON
-            })
-          );
+          // Only created the corresponding AccessGrant if a right was granted
+          if (dataGrantsUris.length > 0 || specialRightsUris.length > 0) {
+            accessGrantsUris.push(
+              await ctx.call('access-grants.post', {
+                resource: {
+                  '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
+                  '@type': 'interop:AccessGrant',
+                  'interop:grantedBy': emitterUri,
+                  'interop:grantedAt': new Date().toISOString(),
+                  'interop:grantee': appUri,
+                  'interop:hasAccessNeedGroup': accessNeedGroupUri,
+                  'interop:hasDataGrant': dataGrantsUris,
+                  'apods:hasSpecialRights': specialRightsUris
+                },
+                contentType: MIME_TYPES.JSON
+              })
+            );
+          }
         }
 
         const appRegistrationUri = await ctx.call('app-registrations.post', {

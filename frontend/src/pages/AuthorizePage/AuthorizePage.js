@@ -11,13 +11,13 @@ const AuthorizePage = () => {
   const navigate = useNavigate();
 
   // If the redirection is a local page, skip this page
-  useEffect(() => {
-    if (!searchParams.has('redirect') || !searchParams.get('redirect').startsWith('http')) {
-      navigate(searchParams.get('redirect') || '/');
-    }
-  }, [navigate, searchParams]);
+  // useEffect(() => {
+  //   if (searchParams.has('redirect') && !searchParams.get('redirect').startsWith('http')) {
+  //     navigate(searchParams.get('redirect') || '/');
+  //   }
+  // }, [navigate, searchParams]);
 
-  if (!identity || !searchParams.get('redirect').startsWith('http')) return null;
+  if (!identity /*|| !searchParams.get('redirect').startsWith('http')*/) return null;
   return (
     <ThemeProvider theme={theme}>
       <AuthorizePageView />

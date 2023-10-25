@@ -1,6 +1,7 @@
 const dataServers = {
   podProvider: {
     authServer: true,
+    void: false,
     baseUrl: process.env.REACT_APP_POD_PROVIDER_URL
   },
   pod: {
@@ -12,8 +13,8 @@ const dataServers = {
       pod: {
         'vcard:Location': ['/locations'],
         'vcard:Individual': ['/profiles'],
-        'apods:FrontAppRegistration': ['/front-apps'],
-        'vcard:Group': ['/groups']
+        'vcard:Group': ['/groups'],
+        'interop:ApplicationRegistration': ['/app-registrations']
       }
     },
     uploadsContainer: '/files'

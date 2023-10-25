@@ -38,7 +38,6 @@ export default defineConfig({
 			serviceEntryPoint: '@astrojs/image/sharp',
 		}),
 		mdx(),
-
 		...whenExternalScripts(() =>
 			partytown({
 				config: { forward: ['dataLayer.push'] },
@@ -61,6 +60,10 @@ export default defineConfig({
 			],
 		],
 		extendDefaultPlugins: true,
+		shikiConfig: {
+			theme: 'github-light',
+			wrap: true,
+		},
 	},
 
 	vite: {

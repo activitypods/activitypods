@@ -5,13 +5,79 @@ title: Solid compliance
 
 import ProgressBar from '../../components/ProgressBar.astro';
 
-[Solid](https://solidproject.org/) is a web decentralization project led by Sir Tim Berners-Lee, the inventor of the World Wide Web. It aims to give people more control over their own data by allowing them to store it securely in decentralized data stores called Pods. Pods are like personal databases, and you control who can access them and how.
+[Solid](https://solidproject.org/) is a web decentralization project led by Tim Berners-Lee, the inventor of the World Wide Web. It aims to give people more control over their own data by allowing them to store it securely in decentralized data stores called Pods. Pods are like personal databases, and you control who can access them and how.
 
 Solid applications use standard, open, and interoperable data formats and protocols to store and access data in Pods. This means that you can use your data with different applications without having to worry about it being locked into one platform.
 
-ActivityPods supports fully the philosophy behind Solid, but it doesn't support (yet) all the standards that have been defined.
+ActivityPods supports fully the philosophy behind Solid, but it doesn't yet support all the standards that have been defined for Solid. _It is thus not Solid compliant._ However we follow closely the evolutions of this standard and try to stick to them as closely as we can.
 
-### WebID <ProgressBar percentage={100} />
+### Linked Data Platform <ProgressBar percentage={90} />
+
+Each Solid Pod must comply with the [Linked Data Platform](https://www.w3.org/TR/ldp/) protocol. This is a REST-based API for managing containers and resources.
+
+#### Formats <ProgressBar percentage={90} />
+
+We support both JSON-LD and Turtle format.
+However since the Turtle format is never used in our applications, the implementation may be more prone to bugs.
+
+#### Containers <ProgressBar percentage={100} />
+
+We support the [`BasicContainer`](https://www.w3.org/TR/ldp/#ldpc-container) type, as required by the [Solid specs](https://solid.github.io/specification/protocol#resource-containment).
+
+#### Binaries <ProgressBar percentage={100} />
+
+We support non-RDF resources (binaries) uploads. The description of the resource is stored in the triplestore as a `http://semapps.org/ns/core#File`.
+
+```turtle
+<https://mypod.store/alice/data/files/picture.jpg>
+   a <http://semapps.org/ns/core#File> ;
+   <http://semapps.org/ns/core#fileName> "picture.jpg" ;
+   <http://semapps.org/ns/core#localPath> "uploads/files/picture.jpg" ;
+   <http://semapps.org/ns/core#mimeType> "image/jpeg" .
+```
+
+#### PATCH method <ProgressBar percentage={100} />
+
+LDP resources and containers can be selectively modified using the HTTP `PATCH` method. This method is important because it limits the risk of overwriting data, as with the simpler `PUT` method.
+However, due to the way RDF resources are formatted, the `PATCH` method cannot be used like more regular REST-based APIs.
+Many solutions have been proposed in the semantic web community to solve this problem:
+
+- [LD Patch](https://www.w3.org/TR/ldpatch/)
+- [SPARQL 1.1 Update](http://www.w3.org/TR/sparql11-http-rdf-update/#http-patch)
+- [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch)
+- [TurtlePatch](http://www.w3.org/2001/sw/wiki/TurtlePatch)
+- [RDF Patch](http://afs.github.io/rdf-patch/)
+
+Initially, the method used by Solid servers was SparqlPatch. In [2021](https://github.com/solid/specification/issues/332), it was switched to a new N3 Patch method, as described in the [Solid spec](https://solid.github.io/specification/protocol#writing-resources). It is not yet a W3C standard.
+
+Until the N3 Patch method is standardized, we will continue to use the [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch) format.
+Below is an example of a SparqlPatch update to modify a resource. Note that the `application/sparql-update` Content-Type header must be used.
+
+```sparql
+PREFIX as: <https://www.w3.org/ns/activitystreams#>
+INSERT DATA { <https://mypod.store/alice> as:preferredUsername "Alice" . };
+DELETE DATA { <https://mypod.store/alice> as:preferredUsername "ALICE" . };
+```
+
+Here is an example of a `PATCH` request to add or remove a resource from a container:
+
+```sparql
+PREFIX ldp: <http://www.w3.org/ns/ldp#>
+INSERT DATA { <http://url/of/container> ldp:contains <http://url/of/resource/to/attach>. };
+DELETE DATA { <http://url/of/container> ldp:contains <http://url/of/resource/to/detach>. };
+```
+
+#### LDP Prefer header <ProgressBar percentage={0} />
+
+👷 To be implemented. ([#1168](https://github.com/assemblee-virtuelle/semapps/issues/1168))
+
+#### LDP paging <ProgressBar percentage={0} />
+
+👷 To be implemented. ([#176](https://github.com/assemblee-virtuelle/semapps/issues/176))
+
+### Identity <ProgressBar percentage={100} />
+
+#### WebID <ProgressBar percentage={100} />
 
 All ActivityPub actors are also WebIDs.
 
@@ -43,87 +109,28 @@ Here is how an ActivityPods WebID looks like:
 }
 ```
 
-### Linked Data Platform <ProgressBar percentage={90} />
+### Authorization <ProgressBar percentage={50} />
 
-Each Solid Pod must comply with the [Linked Data Platform](https://www.w3.org/TR/ldp/) protocol. This is a REST-based API for managing containers and resources.
+#### Web Access Control <ProgressBar percentage={100} />
 
-#### Formats <ProgressBar percentage={90} />
-
-We support both JSON-LD and Turtle format.
-However since the Turtle format is never used in our applications, the implementation may be more prone to bugs.
-
-#### Containers <ProgressBar percentage={80} />
-
-We support only the [`BasicContainer`](https://www.w3.org/TR/ldp/#ldpc-container) type.
-
-Should the need for `DirectContainer` and `IndirectContainer` types arise, we could implement them.
-
-#### Binaries <ProgressBar percentage={100} />
-
-We support non-RDF resources (binaries) uploads. The description of the resource is stored in the triplestore as a `http://semapps.org/ns/core#File`.
-
-```turtle
-<https://mypod.store/alice/data/files/picture.jpg>
-   a <http://semapps.org/ns/core#File> ;
-   <http://semapps.org/ns/core#fileName> "picture.jpg" ;
-   <http://semapps.org/ns/core#localPath> "uploads/files/picture.jpg" ;
-   <http://semapps.org/ns/core#mimeType> "image/jpeg" .
-```
-
-#### PATCH method <ProgressBar percentage={100} />
-
-LDP resources and containers can be selectively modified using the HTTP `PATCH` method. This method is important because it limits the risk of overwriting data, as with the simpler `PUT` method.
-However, due to the way RDF resources are formatted, the `PATCH` method cannot be used like more regular REST-based APIs.
-Many solutions have been proposed in the semantic web community to solve this problem:
-
-- [LD Patch](https://www.w3.org/TR/ldpatch/)
-- [SPARQL 1.1 Update](http://www.w3.org/TR/sparql11-http-rdf-update/#http-patch)
-- [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch)
-- [TurtlePatch](http://www.w3.org/2001/sw/wiki/TurtlePatch)
-- [RDF Patch](http://afs.github.io/rdf-patch/)
-
-After careful consideration, we opted for the [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch) format, which integrates well with triplestore data storage.
-Below is an example of a SparqlPatch update to modify a resource. Note that the `application/sparql-update` Content-Type header must be used.
-
-```sparql
-PREFIX as: <https://www.w3.org/ns/activitystreams#>
-INSERT DATA { <https://mypod.store/alice> as:preferredUsername "Alice" . };
-DELETE DATA { <https://mypod.store/alice> as:preferredUsername "ALICE" . };
-```
-
-Here is an example of a `PATCH` request to add or remove a resource from a container:
-
-```sparql
-PREFIX ldp: <http://www.w3.org/ns/ldp#>
-INSERT DATA { <http://url/of/container> ldp:contains <http://url/of/resource/to/attach>. };
-DELETE DATA { <http://url/of/container> ldp:contains <http://url/of/resource/to/detach>. };
-```
-
-In the future, we could support other kind of patch methods.
-
-#### LDP Prefer header <ProgressBar percentage={0} />
-
-👷 To be implemented. ([#1168](https://github.com/assemblee-virtuelle/semapps/issues/1168))
-
-#### LDP paging <ProgressBar percentage={0} />
-
-👷 To be implemented. ([#176](https://github.com/assemblee-virtuelle/semapps/issues/176))
-
-### WAC permissions <ProgressBar percentage={100} />
-
-We support the full [WAC specification](https://solid.github.io/web-access-control-spec/)
+We support the full [WAC specification](https://solid.github.io/web-access-control-spec/).
 
 #### Access Control Policy <ProgressBar percentage={0} />
 
-https://solid.github.io/authorization-panel/acp-specification/
+We do not support yet the [ACP specification](https://solid.github.io/authorization-panel/acp-specification/).
 
-Not supported.
+### Authentication <ProgressBar percentage={0} />
 
-### Solid OIDC <ProgressBar percentage={0} />
+Currently, we only support [HTTP signature](./activitypub#http-signature-authentication) for authentication on remote servers. This is the standard used by ActivityPub.
+Thanks to the [Proxy endpoint](activitypods.md#proxy-endpoint-with-non-get-methods), it currently solves all authentication needs we have.
 
-Currently, we only support [HTTP signature](./activitypub#http-signature-authentication) for authentication on remote servers. Thanks to the [Proxy endpoint](activitypods.md#proxy-endpoint-with-non-get-methods), it solves all authentication needs we have.
+#### Solid-OIDC <ProgressBar percentage={0} />
 
-We hope one day to support Solid OIDC so that Solid clients may connect to our Pods.
+We hope one day to support [Solid-OIDC](https://solidproject.org/TR/oidc) so that regular Solid clients may connect to our Pods.
+
+#### WebID-TLS <ProgressBar percentage={0} />
+
+Considering [WebID-TLS](https://www.w3.org/2005/Incubator/webid/spec/tls/) authentication mechanism, used before Solid-OIDC, is now only an option, we do not implement it.
 
 ### Application interoperability <ProgressBar percentage={30} />
 
@@ -166,7 +173,16 @@ For ActivityPods, we prefer to consider the Pod as a data graph, and focus on th
 
 See https://github.com/solid/type-indexes
 
-### Notifications <ProgressBar percentage={0} />
+### Linked Data Notifications <ProgressBar percentage={0} />
+
+[Linked Data Notifications](https://www.w3.org/TR/ldn/), standardized in 2017, were the basis of the [ActivityPub](https://www.w3.org/TR/activitypub/) protocol (standardized in 2018).
+LDN defines only inboxes, while ActivityPub defines a full communication protocol, with inboxes and outboxes.
+
+Since [we implement the full ActivityPub protocol](activitypub), we haven't needed to implement the more lightweight LDN protocol, but it could be added in the future.
+
+### Live Update <ProgressBar percentage={0} />
+
+#### Solid Notifications Protocol <ProgressBar percentage={0} />
 
 👷 To be implemented
 

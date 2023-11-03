@@ -1,7 +1,6 @@
 {
   "private": true,
   "scripts": {
-    "bootstrap": "lerna bootstrap",
     "version": "lerna version --force-publish='*' --exact",
     "publish": "lerna publish from-package --dist-tag latest",
     "prettier": "prettier --write '**/*.js'",

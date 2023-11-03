@@ -43,7 +43,6 @@ docker-compose up -d fuseki
 
 ```
 yarn install
-yarn run bootstrap
 cd backend
 yarn run dev
 ```
@@ -198,7 +197,6 @@ Follow the guide [here](deploy/README.md).
 
 ```
 yarn install
-yarn run bootstrap
 docker-compose up -d fuseki_test
 cd tests
 yarn run test

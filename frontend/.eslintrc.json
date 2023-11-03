@@ -7,6 +7,7 @@
     "plugin:jsdoc/recommended-typescript-flavor",
     "eslint:recommended",
     "airbnb",
+    "plugin:import/typescript",
     "prettier"
   ],
   "parser": "@typescript-eslint/parser",
@@ -79,7 +80,6 @@
     "import/no-dynamic-require": "off",
     "import/no-named-as-default": "warn",
     "import/no-named-default": "warn",
-    "import/no-unresolved": "off",
     "import/no-useless-path-segments": "warn",
     "import/order": "warn",
     "jsdoc/require-jsdoc": "off",

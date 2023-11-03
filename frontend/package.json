@@ -28,8 +28,22 @@
     "url-join": "^4.0.1"
   },
   "devDependencies": {
-    "prettier": "^2.3.2",
-    "react-scripts": "3.4.0",
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@types/url-join": "^4.0.1",
+    "@typescript-eslint/eslint-plugin": "^6.7.5",
+    "@typescript-eslint/parser": "^6.7.5",
+    "eslint": "^8.2.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-import-typescript": "^0.0.4",
+    "eslint-plugin-jsdoc": "^46.4.4",
+    "eslint-plugin-jsx-a11y": "^6.5.1",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-react": "^7.28.0",
+    "eslint-plugin-react-hooks": "^4.3.0",
+    "prettier": "^3.0.3",
+    "react-scripts": "^5.0.1",
     "yalc": "1.0.0-pre.53"
   },
   "scripts": {

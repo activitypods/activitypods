@@ -35,23 +35,27 @@ Check out [our website](https://activitypods.org) or [these slides](./proposal/p
 
 ### Launch the triple store
 
-```
+```bash
 docker-compose up -d fuseki
+```
+
+### Bootstrap (installs frontend and backend)
+
+```bash
+yarn install
 ```
 
 ### Launch the backend
 
-```
-yarn install
+```bash
 cd backend
 yarn run dev
 ```
 
 ### Launch the frontend
 
-```
+```bash
 cd frontend
-yarn install
 yarn start
 ```
 
@@ -195,7 +199,7 @@ Follow the guide [here](deploy/README.md).
 
 ## Integration tests
 
-```
+```bash
 yarn install
 docker-compose up -d fuseki_test
 cd tests

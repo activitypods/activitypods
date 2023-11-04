@@ -17,7 +17,6 @@
   "plugins": ["jsdoc", "@typescript-eslint", "prettier"],
   "root": true,
   "rules": {
-    // Typescript strict rules should warn instead of error
     "@typescript-eslint/await-thenable": "warn",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/consistent-type-exports": "warn",

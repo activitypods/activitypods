@@ -17,10 +17,12 @@
     "leaflet.markercluster": "^1.5.3",
     "ra-language-english": "^4.11.0",
     "ra-language-french": "^4.11.0",
+    "ra-i18n-polyglot": "^4.11.0",
     "react": "^18.2.0",
     "react-admin": "^4.11.0",
     "react-copy-to-clipboard": "^5.0.4",
     "react-dom": "^18.2.0",
+    "react-final-form": "^6.5.9",
     "react-hook-form": "^7.47.0",
     "react-router-dom": "^6.17.0",
     "react-sticky-box": "^2.0.4",
@@ -51,11 +53,12 @@
     "start": "DISABLE_ESLINT_PLUGIN=true react-scripts start",
     "build": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
     "eject": "DISABLE_ESLINT_PLUGIN=true react-scripts eject",
-    "prettier": "prettier --single-quote --print-width 120 --write '**/*.js'",
+    "prettier": "prettier --write '**/*.{js,ts,json,tsx,jsx}'",
     "link-semapps-packages": "yalc link @semapps/activitypub-components @semapps/auth-provider @semapps/date-components @semapps/field-components @semapps/geo-components @semapps/input-components @semapps/list-components @semapps/markdown-components @semapps/semantic-data-provider",
     "unlink-semapps-packages": "yalc remove --all && rm -rf node_modules/@semapps && yarn install --force",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
-    "lint-files": "eslint --ext .js,.jsx,.ts,.tsx"
+    "lint-files": "eslint --ext .js,.jsx,.ts,.tsx",
+    "typecheck": "tsc --noEmit"
   },
   "eslintConfig": {
     "extends": "react-app",

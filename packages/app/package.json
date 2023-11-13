@@ -13,10 +13,10 @@
   "dependencies": {
     "@activitypods/core": "1.1.0",
     "@rdfjs/data-model": "^1.3.4",
-    "@semapps/activitypub": "0.6.0-alpha.3",
-    "@semapps/ldp": "0.6.0-alpha.3",
-    "@semapps/mime-types": "0.6.0-alpha.3",
-    "@semapps/nodeinfo": "0.6.0-alpha.3",
+    "@semapps/activitypub": "0.6.0-alpha.4",
+    "@semapps/ldp": "0.6.0-alpha.4",
+    "@semapps/mime-types": "0.6.0-alpha.4",
+    "@semapps/nodeinfo": "0.6.0-alpha.4",
     "moleculer": "^0.14.19",
     "url-join": "^4.0.1"
   },

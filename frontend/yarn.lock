@@ -9151,7 +9151,7 @@ ra-core@^4.15.2:
     react-is "^17.0.2"
     react-query "^3.32.1"
 
-ra-i18n-polyglot@^4.15.2:
+ra-i18n-polyglot@^4.11.0, ra-i18n-polyglot@^4.15.2:
   version "4.15.2"
   resolved "https://registry.yarnpkg.com/ra-i18n-polyglot/-/ra-i18n-polyglot-4.15.2.tgz#c86fcf9115620e4ffbf2ecc8f8a8fb95932a7da7"
   integrity sha512-zOsE/4xqh4xRSHBC0Jg4cggWoELeYzBx7qPpp/8fJkmHV0WceNvs07rj+3tQaT3QvCldXQ/VwRylStAIOfZexA==

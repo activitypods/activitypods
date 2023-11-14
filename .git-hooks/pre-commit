@@ -18,8 +18,8 @@ echo "prettifiying.."
 echo "$FILES" | xargs npx prettier --write --ignore-unknown
 
 if [ $? != 0 ]; then
-    echo "Something went wrong running prettier. Have you run \`npm install\` yet?
-You can skip prettier on commit by setting \$SKIP_PRECOMMIT_PRETTIER"
+    echo "⛔ Something went wrong running prettier. Have you run \`npm install\` yet?"
+    echo "   You can skip prettier on commit by setting \$SKIP_PRECOMMIT_PRETTIER"
     exit 1
 fi
 
@@ -27,6 +27,6 @@ fi
 xargs git add "$FILES"
 
 
-echo "=== Prettier done ==="
+echo "✅ Prettier successful!"
 
 exit 0

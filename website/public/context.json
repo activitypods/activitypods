@@ -14,6 +14,7 @@
     "sec": "https://w3id.org/security#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "ldp": "http://www.w3.org/ns/ldp#",
+    "oidc": "http://www.w3.org/ns/solid/oidc#",
     "interop": "http://www.w3.org/ns/solid/interop#",
     "schema": "http://schema.org/",
     "foaf": "http://xmlns.com/foaf/0.1/",
@@ -839,6 +840,32 @@
     },
     "interop:updatedAt": {
       "@type": "@id"
+    },
+
+    "oidc:client_uri": {
+      "@type": "@id"
+    },
+    "oidc:logo_uri": {
+      "@type": "@id"
+    },
+    "oidc:policy_uri": {
+      "@type": "@id"
+    },
+    "oidc:tos_uri": {
+      "@type": "@id"
+    },
+    "oidc:redirect_uris": {
+      "@type": "@id",
+      "@container": [
+        "@id",
+        "@set"
+      ]
+    },
+    "oidc:require_auth_time": {
+      "@type": "xsd:boolean"
+    },
+    "oidc:default_max_age": {
+      "@type": "xsd:integer"
     },
     
     "apods:closingTime": {

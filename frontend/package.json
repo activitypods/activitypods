@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "@mui/styles": "^5.0.2",
+    "@mui/material": "^5.0.2",
+    "@mui/icons-material": "5.0.2",
     "@semapps/activitypub-components": "0.6.0-alpha.1",
     "@semapps/auth-provider": "0.6.0-alpha.1",
     "@semapps/date-components": "0.6.0-alpha.1",
@@ -22,7 +24,6 @@
     "react-admin": "^4.11.0",
     "react-copy-to-clipboard": "^5.0.4",
     "react-dom": "^18.2.0",
-    "react-final-form": "^6.5.9",
     "react-hook-form": "^7.47.0",
     "react-router-dom": "^6.17.0",
     "react-sticky-box": "^2.0.4",

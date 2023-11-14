@@ -131,7 +131,7 @@
     "react/no-array-index-key": "warn",
     "react/no-unstable-nested-components": "warn",
     "react/prop-types": "warn",
-    "react/require-default-props": "warn",
+    "react/require-default-props": "off",
     "spaced-comment": "warn",
     "vars-on-top": "warn"
   },

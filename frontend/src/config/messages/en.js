@@ -36,8 +36,8 @@ module.exports = {
       label: "Group's name",
       remove_members: 'Remove selected',
       profile_name: 'Name',
-      profile: 'Profile',
       group: 'Group',
+      profile: 'Profile',
       add_members: 'Add members'
     },
     page: {
@@ -47,8 +47,6 @@ module.exports = {
       profile_short: 'Profile',
       apps: 'My applications',
       apps_short: 'Apps',
-      groups: 'My groups',
-      groups_short: 'Groups',
       settings: 'Settings',
       settings_short: 'Settings',
       addresses: 'My addresses',
@@ -57,10 +55,13 @@ module.exports = {
       add_contact: 'Send a connection request',
       create_profile: 'Create your profile',
       authorize: 'Authorization required',
+      groups: 'My groups',
+      groups_short: 'Groups',
       invite: '%{username} invited you to their network',
+      invite_loading: 'Invitation loading...',
       invite_connect: 'Do you want to connect with %{username}?',
-      choose_provider: 'Choose a data space',
-      choose_custom_provider: 'Choose a custom data space',
+      choose_provider: 'Choose data space provider',
+      choose_custom_provider: 'Choose custom provider',
       invite_success: 'Success!'
     },
     setting: {
@@ -85,7 +86,8 @@ module.exports = {
       email: 'Email',
       current_password: 'Current password',
       new_password: 'New password',
-      confirm_new_password: 'Confirm new password'
+      confirm_new_password: 'Confirm new password',
+      provider_url: 'Provider URL'
     },
     helper: {
       add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',
@@ -104,10 +106,19 @@ module.exports = {
       create_profile:
         'Now that your account is created, please create your profile. By default, your profile will only be visible to the people you accept into your network.',
       authorize: 'Do you allow the website %{appDomain} to access your POD?',
-      invite_info_text:
+      invite_text_logged_out:
         "A personal data space is the place where you store your personal data. Like with email accounts, it's decentralized, so you can choose where your personal data is stored. Instead of creating a new account for every new app, you can login to new apps using your data space account. Compatible apps may use and store data in your space instead of theirs. At the same time, you can connect with others and communicate in many ways, using different apps.",
+      invite_text_logged_in:
+        '%{username} invited you to their network (by their invite link). Click "Connect" to accept the invitation.',
+      choose_provider_text_login:
+        'Choose the provider where your data space (POD) is located. If it\'s not in the list, click "Choose custom provider".',
+      choose_provider_text_signup:
+        'Like with email, you can decide where you want to create your personal space. Choose a provider that seems trustworthy or that is close to you. If you are looking for one that\'s not in the list, click "Choose custom provider".',
       more_about_pods: 'Learn more about data spaces (PODs).',
-      choose_provider_info: 'If the provider you are looking for is not listed, you can enter its address here.'
+      choose_custom_provider:
+        'If the provider you are looking for is not listed, you can enter its address here (e.g. https://my-provider.example/).',
+      choose_pod_provider:
+        'The pod provider is the place where your data space is located. Like with an email provider, it will store your data.'
     },
     message: {
       copied_to_clipboard: 'Copied !',
@@ -144,7 +155,7 @@ module.exports = {
       send_request_error: 'Error while sending the request: %{error}',
       connection_accepted: 'You accepted the connection request.',
       invite_cap_invalid: 'The invite link is not valid',
-      invite_cap_fetch_error: 'Error ocurred while fetching the invitation. It might not be valid.\n%{error}'
+      invite_cap_fetch_error: 'Error ocurred while fetching the invitation. It might not be valid. Error: %{error}'
     },
     user: {
       unknown: 'Unknown',

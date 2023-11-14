@@ -23,7 +23,12 @@ module.exports = {
       signup: "S'inscrire",
       reset_password: 'Mot de passe oublié ?',
       set_new_password: 'Definir un nouveau mot de passe',
-      undo_ignore_contact: 'Ne plus ignorer'
+      undo_ignore_contact: 'Ne plus ignorer',
+      select: 'Sélectionner',
+      go_back: 'Retour',
+      cancel: 'Annuler',
+      connect: 'Connecter',
+      continue: 'Continuer'
     },
     group: {
       members: 'Membres',
@@ -52,7 +57,13 @@ module.exports = {
       create_profile: 'Créez votre profil',
       authorize: 'Autorisation requise',
       groups: 'Mes groupes',
-      groups_short: 'Groupes'
+      groups_short: 'Groupes',
+      invite: '%{username} a envoyé une demande de contact',
+      invite_loading: "Chargement de l'invitation...",
+      invite_connect: 'Voulez-vous connecter avec %{username} ?',
+      choose_provider: 'Choisissez un espace personnel (POD)',
+      choose_custom_provider: 'Choisissez un autre espace personnel (POD)',
+      invite_success: 'Succès !'
     },
     setting: {
       email: 'Adresse mail',
@@ -76,7 +87,8 @@ module.exports = {
       email: 'Email',
       current_password: 'Mot de passe actuel',
       new_password: 'Nouveau mot de passe',
-      confirm_new_password: 'Confirmer le nouveau mot de passe'
+      confirm_new_password: 'Confirmer le nouveau mot de passe',
+      provider_url: "URL de l'espace personnel (POD)"
     },
     helper: {
       add_contact:
@@ -99,14 +111,32 @@ module.exports = {
       set_new_password: 'Veuillez entrer votre adresse mail et un nouveau mot de passe ci-dessous',
       create_profile:
         'Maintenant que votre compte est créé, veuillez créer votre profil. Celui-ci ne sera visible par défaut que des personnes que vous acceptez dans votre réseau.',
-      authorize: 'Autorisez-vous le site %{appDomain} à accéder à votre POD ?'
+      authorize: 'Autorisez-vous le site %{appDomain} à accéder à votre POD ?',
+
+      invite_text_logged_out:
+        "Un espace de données personnel est l'endroit où vous stockez vos données personnelles. Tout comme les comptes de messagerie, il est décentralisé, ce qui vous permet de choisir l'emplacement de stockage de vos données personnelles. Au lieu de créer un nouveau compte pour chaque nouvelle application, vous pouvez vous connecter aux nouvelles applications en utilisant votre compte d'espace de données. Les applications compatibles peuvent utiliser et stocker des données dans votre espace plutôt que le leur. En même temps, vous pouvez vous connecter avec d'autres et communiquer de plusieurs manières, en utilisant différentes applications.",
+
+      invite_text_logged_in:
+        "%{username} vous a invité à rejoindre son réseau (via son lien d'invitation). Cliquez sur 'Connecter' pour accepter l'invitation.",
+      choose_provider_text_login:
+        "Choisissez le fournisseur où se trouve votre espace de données (POD). Si ce n'est pas dans la liste, cliquez sur 'Choisir un fournisseur personnalisé'.",
+      choose_provider_text_signup:
+        "Comme pour les e-mails, vous pouvez décider où vous souhaitez créer votre espace personnel. Choisissez un fournisseur qui vous semble digne de confiance ou qui est proche de vous. Si vous en cherchez un qui n'est pas dans la liste, cliquez sur 'Choisir un fournisseur personnalisé'.",
+      more_about_pods: 'En savoir plus sur les espaces de données (PODs).',
+      choose_custom_provider:
+        "Si le fournisseur que vous recherchez n'est pas listé, vous pouvez entrer son adresse ici (par exemple https://mon-fournisseur.exemple/).",
+      choose_pod_provider:
+        'The pod provider is the place where your data space is located. Like with an email provider, it will store your data.',
+      choose_pod_provider_fr:
+        "Le fournisseur de POD est le lieu où votre espace de données est situe. Comme avec un fournisseur d'email, il stockera vos données."
     },
     message: {
       copied_to_clipboard: 'Copié !',
       no_condition: 'Aucune',
       you_participated_to_same_event: 'Vous avez participé à la même rencontre',
       verified_app: 'Application vérifiée',
-      verified: 'Vérifiée'
+      verified: 'Vérifiée',
+      connection_successful: 'Vous êtes maintenant connecté !'
     },
     notification: {
       contact_request_accepted: 'Demande de contact acceptée',
@@ -131,7 +161,12 @@ module.exports = {
       verified_applications_load_failed: 'Impossible de charger la liste des applications vérifiées',
       app_uninstalled: 'Application désinstallée',
       home_address_updated: 'Adresse du domicile mise à jour',
-      home_address_deleted: 'Adresse du domicile enlevée'
+      home_address_deleted: 'Adresse du domicile enlevée',
+      send_request_error: "Erreur lors de l'envoi de la demande : %{error}",
+      connection_accepted: 'Vous avez accepté la demande de connexion.',
+      invite_cap_invalid: "Le lien d'invitation n'est pas valide",
+      invite_cap_fetch_error:
+        "Une erreur s'est produite lors de la récupération de l'invitation. Elle pourrait ne pas être valide.\n%{error}"
     },
     user: {
       unknown: 'Inconnu',
@@ -141,7 +176,12 @@ module.exports = {
       email: 'Doit être un email valide',
       confirmNewPassword: 'Doit être le même que le nouveau champ de mot de passe',
       password_strength: 'Force du mot de passe',
-      password_too_weak: 'Mot de passe trop faible. Augmentez la longueur ou ajoutez des caractères spéciaux.'
+      password_too_weak: 'Mot de passe trop faible. Augmentez la longueur ou ajoutez des caractères spéciaux.',
+      url: 'Doit être une URL valide',
+      uri: {
+        no_http: 'Doit commencer par http:// ou https://',
+        no_base_url: "L'URL doit se composer uniquement du domaine"
+      }
     },
     steps: {
       title: 'Comment ça marche ?',

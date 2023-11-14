@@ -855,11 +855,7 @@
       "@type": "@id"
     },
     "oidc:redirect_uris": {
-      "@type": "@id",
-      "@container": [
-        "@id",
-        "@set"
-      ]
+      "@type": "@id"
     },
     
     "apods:closingTime": {

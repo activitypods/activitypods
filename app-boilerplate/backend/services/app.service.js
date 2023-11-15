@@ -15,7 +15,7 @@ module.exports = {
       clientUri: CONFIG.FRONT_URL,
       redirectUris: urlJoin(CONFIG.FRONT_URL, 'auth-callback'),
       postLogoutRedirectUris: urlJoin(CONFIG.FRONT_URL, 'login?logout=true'),
-      tosUri: null,
+      tosUri: null
     },
     accessNeeds: {
       required: [

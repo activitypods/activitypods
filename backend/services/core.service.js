@@ -16,6 +16,7 @@ module.exports = {
     },
     jsonContext: CONFIG.JSON_CONTEXT,
     queueServiceUrl: CONFIG.QUEUE_SERVICE_URL,
+    redisOidcProviderUrl: CONFIG.REDIS_OIDC_PROVIDER_URL,
     authType: CONFIG.AUTH_TYPE,
     auth: {
       reservedUsernames: CONFIG.AUTH_RESERVED_USER_NAMES,

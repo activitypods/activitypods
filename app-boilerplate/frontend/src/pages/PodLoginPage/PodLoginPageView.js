@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNotify, useLocaleState, useTranslate, useLogout } from 'react-admin';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -13,10 +13,10 @@ import {
   Card,
   Typography
 } from '@mui/material';
-import { useNodeinfo } from '@semapps/activitypub-components';
 import makeStyles from '@mui/styles/makeStyles';
 import LockIcon from '@mui/icons-material/Lock';
 import StorageIcon from '@mui/icons-material/Storage';
+import * as oauth from 'oauth4webapi';
 
 const useStyles = makeStyles(theme => ({
   '@global': {
@@ -50,32 +50,21 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const PodProvider = ({ podProvider, signup, appDomain }) => {
-  const nodeinfo = useNodeinfo(podProvider['apods:domainName']);
-
-  let url;
-  if (nodeinfo) {
-    url = new URL(signup ? nodeinfo?.metadata?.signup_url : nodeinfo?.metadata?.login_url);
-    if (signup) url.searchParams.set('signup', 'true');
-    url.searchParams.set('appDomain', appDomain);
-  }
-
-  return (
-    <>
-      <Divider />
-      <ListItem>
-        <ListItemButton component="a" href={url && url.toString()}>
-          <ListItemAvatar>
-            <Avatar>
-              <StorageIcon />
-            </Avatar>
-          </ListItemAvatar>
-          <ListItemText primary={podProvider['apods:domainName']} secondary={podProvider['apods:area']} />
-        </ListItemButton>
-      </ListItem>
-    </>
-  );
-};
+const PodProvider = ({ podProvider, signup, appDomain, onSelect }) => (
+  <>
+    <Divider />
+    <ListItem>
+      <ListItemButton onClick={onSelect}>
+        <ListItemAvatar>
+          <Avatar>
+            <StorageIcon />
+          </Avatar>
+        </ListItemAvatar>
+        <ListItemText primary={podProvider['apods:domainName']} secondary={podProvider['apods:area']} />
+      </ListItemButton>
+    </ListItem>
+  </>
+);
 
 const PodLoginPageView = ({ text, customPodProviders, appDomain }) => {
   const classes = useStyles();
@@ -110,6 +99,34 @@ const PodLoginPageView = ({ text, customPodProviders, appDomain }) => {
     })();
   }, [podProviders, setPodProviders, notify, locale]);
 
+  const onSelect = useCallback(async podProvider => {
+    const issuer = new URL(
+      `${podProvider['apods:domainName'].includes('localhost') ? 'http' : 'https'}://${podProvider['apods:domainName']}`
+    );
+    const as = await oauth.discoveryRequest(issuer).then(response => oauth.processDiscoveryResponse(issuer, response));
+
+    const codeVerifier = oauth.generateRandomCodeVerifier();
+    const codeChallenge = await oauth.calculatePKCECodeChallenge(codeVerifier);
+    const codeChallengeMethod = 'S256';
+
+    localStorage.setItem('code_verifier', codeVerifier);
+
+    const authorizationUrl = new URL(as.authorization_endpoint);
+    authorizationUrl.searchParams.set(
+      'client_id',
+      `${process.env.REACT_APP_BACKEND_DOMAIN_NAME.includes('localhost') ? 'http' : 'https'}://${
+        process.env.REACT_APP_BACKEND_DOMAIN_NAME
+      }/actors/app`
+    );
+    authorizationUrl.searchParams.set('code_challenge', codeChallenge);
+    authorizationUrl.searchParams.set('code_challenge_method', codeChallengeMethod);
+    authorizationUrl.searchParams.set('redirect_uri', `${window.location.origin}/auth-callback`);
+    authorizationUrl.searchParams.set('response_type', 'code');
+    authorizationUrl.searchParams.set('scope', 'openid webid offline_access');
+
+    window.location = authorizationUrl;
+  }, []);
+
   useEffect(() => {
     if (searchParams.has('logout')) {
       logout();
@@ -137,6 +154,7 @@ const PodLoginPageView = ({ text, customPodProviders, appDomain }) => {
                 podProvider={podProvider}
                 signup={searchParams.has('signup')}
                 appDomain={appDomain}
+                onSelect={() => onSelect(podProvider)}
               />
             ))}
           </List>

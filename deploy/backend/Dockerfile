@@ -21,7 +21,6 @@ RUN git clone https://github.com/assemblee-virtuelle/activitypods.git /activityp
 ADD app /activitypods/backend
 
 RUN yarn install
-RUN yarn run bootstrap
 
 WORKDIR /activitypods/backend
 

@@ -1,19 +1,19 @@
 {
   "private": true,
   "scripts": {
-    "bootstrap": "lerna bootstrap",
     "version": "lerna version --force-publish='*' --exact",
     "publish": "lerna publish from-package --dist-tag latest",
-    "prettier": "prettier --write '**/*.js'",
+    "prettier": "prettier --write '**/*.{js,ts,json,tsx,jsx}'",
     "link-all": "lerna exec --parallel --scope @activitypods/** -- yarn link",
     "unlink-all": "lerna exec --parallel --scope @activitypods/** -- yarn unlink",
-    "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/mime-types @semapps/nodeinfo @semapps/sync @semapps/notifications @semapps/pod @semapps/signature @semapps/sparql-endpoint @semapps/triplestore @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
-    "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/mime-types @semapps/nodeinfo @semapps/sync @semapps/notifications @semapps/pod @semapps/signature @semapps/sparql-endpoint @semapps/triplestore @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
+    "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/mime-types @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/pod @semapps/signature @semapps/sparql-endpoint @semapps/triplestore @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
+    "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/mime-types @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/pod @semapps/signature @semapps/sparql-endpoint @semapps/triplestore @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
+    "postinstall": "cd backend && yarn install && cd ../frontend && yarn install",
     "preinstall": "git config core.hooksPath .git-hooks"
   },
   "devDependencies": {
     "lerna": "^4.0.0",
-    "prettier": "^2.5.0"
+    "prettier": "^3.0.3"
   },
   "workspaces": [
     "backend",

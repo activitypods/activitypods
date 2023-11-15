@@ -25,7 +25,6 @@
     "@semapps/webacl": "0.6.0-alpha.4",
     "@semapps/webfinger": "0.6.0-alpha.4",
     "@semapps/webid": "0.6.0-alpha.4",
-    "oidc-provider": "^8.4.1",
     "moleculer": "^0.14.19",
     "moleculer-web": "^0.10.0-beta1",
     "url-join": "^4.0.1"

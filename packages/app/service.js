@@ -15,6 +15,12 @@ module.exports = {
       author: null,
       thumbnail: null
     },
+    oidc: {
+      clientUri: null,
+      redirectUris: null,
+      postLogoutRedirectUris: [],
+      tosUri: null
+    },
     accessNeeds: {
       required: [],
       optional: []
@@ -30,7 +36,8 @@ module.exports = {
   created() {
     this.broker.createService(ActorsService, {
       settings: {
-        app: this.settings.app
+        app: this.settings.app,
+        oidc: this.settings.oidc
       }
     });
 

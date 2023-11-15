@@ -11,6 +11,12 @@ module.exports = {
       description: 'An ActivityPods-compatible app',
       thumbnail: urlJoin(CONFIG.FRONT_URL, 'logo192.png')
     },
+    oidc: {
+      clientUri: CONFIG.FRONT_URL,
+      redirectUris: urlJoin(CONFIG.FRONT_URL, 'auth-callback'),
+      postLogoutRedirectUris: urlJoin(CONFIG.FRONT_URL, 'login?logout=true'),
+      tosUri: null,
+    },
     accessNeeds: {
       required: [
         {

@@ -1,5 +1,6 @@
 {
   "interop": "http://www.w3.org/ns/solid/interop#",
+  "oidc": "http://www.w3.org/ns/solid/oidc#",
   "acl": "http://www.w3.org/ns/auth/acl#",
   "apods": "http://activitypods.org/ns/core#",
   "ldp": "http://www.w3.org/ns/ldp#",
@@ -61,6 +62,27 @@
   },
   "interop:updatedAt": {
     "@type": "@id"
+  },
+  "oidc:client_uri": {
+    "@type": "@id"
+  },
+  "oidc:logo_uri": {
+    "@type": "@id"
+  },
+  "oidc:policy_uri": {
+    "@type": "@id"
+  },
+  "oidc:tos_uri": {
+    "@type": "@id"
+  },
+  "oidc:redirect_uris": {
+    "@type": "@id"
+  },
+  "oidc:require_auth_time": {
+    "@type": "xsd:boolean"
+  },
+  "oidc:default_max_age": {
+    "@type": "xsd:integer"
   },
   "apods:hasSpecialRights": {
     "@type": "@id"

@@ -17,6 +17,12 @@ module.exports = {
       author: null,
       thumbnail: null
     },
+    oidc: {
+      clientUri: null,
+      redirectUris: [],
+      postLogoutRedirectUris: [],
+      tosUri: null
+    },
     // ControlledContainerMixin settings
     path: '/actors',
     acceptedTypes: [ACTOR_TYPES.APPLICATION, 'interop:Application'],
@@ -65,7 +71,18 @@ module.exports = {
                 'interop:applicationName': this.settings.app.name,
                 'interop:applicationDescription': this.settings.app.description,
                 'interop:applicationAuthor': this.settings.app.author,
-                'interop:applicationThumbnail': this.settings.app.thumbnail
+                'interop:applicationThumbnail': this.settings.app.thumbnail,
+                'oidc:client_name': this.settings.app.name,
+                'oidc:redirect_uris': this.settings.oidc.redirectUris,
+                'oidc:post_logout_redirect_uris': this.settings.oidc.postLogoutRedirectUris,
+                'oidc:client_uri': this.settings.oidc.clientUri,
+                'oidc:logo_uri': this.settings.app.thumbnail,
+                'oidc:tos_uri': this.settings.oidc.tosUri,
+                'oidc:scope': 'openid profile offline_access webid',
+                'oidc:grant_types': ['refresh_token', 'authorization_code'],
+                'oidc:response_types': ['code'],
+                'oidc:default_max_age': 3600,
+                'oidc:require_auth_time': true
               },
               contentType: MIME_TYPES.JSON,
               webId: 'system'

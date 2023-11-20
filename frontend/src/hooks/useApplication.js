@@ -1,7 +1,7 @@
 import { useNodeinfo } from '@semapps/activitypub-components';
 
-const useApplication = appDomain => {
-  const application = useNodeinfo(appDomain, 'https://www.w3.org/ns/activitystreams#Application');
+const useApplication = clientDomain => {
+  const application = useNodeinfo(clientDomain, 'https://www.w3.org/ns/activitystreams#Application');
   return application;
 };
 

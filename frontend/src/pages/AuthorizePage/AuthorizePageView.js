@@ -6,7 +6,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import WarningIcon from '@mui/icons-material/Warning';
 import DoneIcon from '@mui/icons-material/Done';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { useOutbox, useNodeinfo } from '@semapps/activitypub-components';
+import { useOutbox } from '@semapps/activitypub-components';
 import SimpleBox from '../../layout/SimpleBox';
 import useTrustedApps from '../../hooks/useTrustedApps';
 import useApplication from '../../hooks/useApplication';
@@ -55,14 +55,15 @@ const AuthorizePageView = () => {
   const trustedApps = useTrustedApps();
   const [searchParams] = useSearchParams();
   const { data: appRegistrations, isLoading } = useGetList('AppRegistration', { page: 1, perPage: Infinity });
-  const appDomain = searchParams.get('appDomain');
-  const nodeinfo = useNodeinfo(appDomain);
-  const isTrustedApp = trustedApps.some(domain => domain === appDomain);
+  const redirectTo = searchParams.get('redirect');
+  const clientId = searchParams.get('client_id');
+  const clientDomain = new URL(clientId).host;
+  const isTrustedApp = trustedApps.some(domain => domain === clientDomain);
 
-  if (!appDomain) throw new Error('App domain is missing !');
+  if (!clientId) throw new Error('The client ID is missing !');
 
-  const application = useApplication(appDomain);
-  const { requiredAccessNeeds, optionalAccessNeeds, loading, loaded } = useAccessNeeds(application);
+  const application = useApplication(clientDomain);
+  const { requiredAccessNeeds, optionalAccessNeeds, loaded } = useAccessNeeds(application);
 
   useEffect(() => {
     if (loaded) {
@@ -74,11 +75,8 @@ const AuthorizePageView = () => {
   }, [loaded, requiredAccessNeeds, optionalAccessNeeds, setAllowedAccessNeeds]);
 
   const accessApp = useCallback(() => {
-    const token = localStorage.getItem('token');
-    const authCallbackUrl = new URL(nodeinfo?.metadata?.auth_callback_url);
-    authCallbackUrl.searchParams.set('token', token);
-    window.location.href = authCallbackUrl.toString();
-  }, [nodeinfo]);
+    window.location.href = redirectTo;
+  }, [redirectTo]);
 
   const installApp = useCallback(async () => {
     await outbox.post({
@@ -94,14 +92,15 @@ const AuthorizePageView = () => {
 
   // Once all data are loaded, either redirect to app or show authorization screen
   useEffect(() => {
-    if (!isLoading && application?.id && appDomain && nodeinfo) {
+    if (!isLoading && application?.id && clientDomain) {
       if (appRegistrations.some(reg => reg['interop:registeredAgent'] === application?.id)) {
+        console.log('access app');
         accessApp();
       } else {
         setShowScreen(true);
       }
     }
-  }, [appRegistrations, isLoading, appDomain, nodeinfo, application, accessApp, setShowScreen]);
+  }, [appRegistrations, isLoading, clientDomain, application, accessApp, setShowScreen]);
 
   if (!showScreen) return null;
 
@@ -109,7 +108,7 @@ const AuthorizePageView = () => {
     <SimpleBox
       title={translate('app.page.authorize')}
       icon={<WarningIcon />}
-      text={translate('app.helper.authorize', { appDomain })}
+      text={translate('app.helper.authorize', { appDomain: clientDomain })}
     >
       {application && (
         <>
@@ -125,7 +124,7 @@ const AuthorizePageView = () => {
               </Typography>
               <Typography variant="body2">{application['interop:applicationDescription']}</Typography>
               <Typography variant="body2" className={classes.appUrl}>
-                {appDomain}
+                {clientDomain}
               </Typography>
               {isTrustedApp && (
                 <Chip

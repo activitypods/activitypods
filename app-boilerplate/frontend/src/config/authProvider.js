@@ -3,7 +3,8 @@ import dataProvider from './dataProvider';
 
 export default authProvider({
   dataProvider,
-  authType: 'pod',
+  authType: 'solid-oidc',
   checkPermissions: true,
-  allowAnonymous: false
+  allowAnonymous: false,
+  clientId: process.env.REACT_APP_BACKEND_CLIENT_ID
 });

@@ -73,7 +73,6 @@ class RedisAdapter {
 
     if (isEmpty(data)) {
       if (this.name === 'Client' && id.startsWith('http')) {
-        console.log(`Looking for payload data at ${id}`);
         if (!/^https:|^http:\/\/localhost(?::\d+)?(?:\/|$)/u.test(id)) {
           throw new Error(`SSL is required for client_id authentication unless working locally.`);
         }

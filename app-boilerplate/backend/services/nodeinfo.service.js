@@ -16,7 +16,7 @@ module.exports = {
     protocols: ['activitypub'],
     metadata: {
       frontend_url: CONFIG.FRONT_URL,
-      auth_callback_url: urlJoin(CONFIG.FRONT_URL, 'auth-callback'),
+      login_url: urlJoin(CONFIG.FRONT_URL, 'login'),
       logout_url: urlJoin(CONFIG.FRONT_URL, 'login?logout=true'),
       resource_url: urlJoin(CONFIG.FRONT_URL, 'r')
     }

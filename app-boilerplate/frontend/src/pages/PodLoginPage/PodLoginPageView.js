@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useNotify, useLocaleState, useTranslate, useLogout } from 'react-admin';
+import React, { useEffect, useState } from 'react';
+import { useNotify, useLocaleState, useTranslate, useLogin, useLogout } from 'react-admin';
 import { useSearchParams } from 'react-router-dom';
 import {
   Box,
@@ -16,7 +16,6 @@ import {
 import makeStyles from '@mui/styles/makeStyles';
 import LockIcon from '@mui/icons-material/Lock';
 import StorageIcon from '@mui/icons-material/Storage';
-import * as oauth from 'oauth4webapi';
 
 const useStyles = makeStyles(theme => ({
   '@global': {
@@ -50,7 +49,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const PodProvider = ({ podProvider, signup, appDomain, onSelect }) => (
+const PodProvider = ({ podProvider, onSelect }) => (
   <>
     <Divider />
     <ListItem>
@@ -66,11 +65,12 @@ const PodProvider = ({ podProvider, signup, appDomain, onSelect }) => (
   </>
 );
 
-const PodLoginPageView = ({ text, customPodProviders, appDomain }) => {
+const PodLoginPageView = ({ text, customPodProviders }) => {
   const classes = useStyles();
   const notify = useNotify();
   const [searchParams] = useSearchParams();
   const [locale] = useLocaleState();
+  const login = useLogin();
   const logout = useLogout();
   const translate = useTranslate();
   const [podProviders, setPodProviders] = useState(customPodProviders || []);
@@ -99,39 +99,14 @@ const PodLoginPageView = ({ text, customPodProviders, appDomain }) => {
     })();
   }, [podProviders, setPodProviders, notify, locale]);
 
-  const onSelect = useCallback(async podProvider => {
-    const issuer = new URL(
-      `${podProvider['apods:domainName'].includes('localhost') ? 'http' : 'https'}://${podProvider['apods:domainName']}`
-    );
-    const as = await oauth.discoveryRequest(issuer).then(response => oauth.processDiscoveryResponse(issuer, response));
-
-    const codeVerifier = oauth.generateRandomCodeVerifier();
-    const codeChallenge = await oauth.calculatePKCECodeChallenge(codeVerifier);
-    const codeChallengeMethod = 'S256';
-
-    localStorage.setItem('code_verifier', codeVerifier);
-
-    const authorizationUrl = new URL(as.authorization_endpoint);
-    authorizationUrl.searchParams.set(
-      'client_id',
-      `${process.env.REACT_APP_BACKEND_DOMAIN_NAME.includes('localhost') ? 'http' : 'https'}://${
-        process.env.REACT_APP_BACKEND_DOMAIN_NAME
-      }/actors/app`
-    );
-    authorizationUrl.searchParams.set('code_challenge', codeChallenge);
-    authorizationUrl.searchParams.set('code_challenge_method', codeChallengeMethod);
-    authorizationUrl.searchParams.set('redirect_uri', `${window.location.origin}/auth-callback`);
-    authorizationUrl.searchParams.set('response_type', 'code');
-    authorizationUrl.searchParams.set('scope', 'openid webid offline_access');
-
-    window.location = authorizationUrl;
-  }, []);
-
   useEffect(() => {
-    if (searchParams.has('logout')) {
+    if (searchParams.has('iss')) {
+      // Automatically login if Pod provider is known
+      login({ issuer: searchParams.get('iss') });
+    } else if (searchParams.has('logout')) {
       logout();
     }
-  }, [searchParams, logout]);
+  }, [searchParams, login, logout]);
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center">
@@ -152,9 +127,14 @@ const PodLoginPageView = ({ text, customPodProviders, appDomain }) => {
               <PodProvider
                 key={i}
                 podProvider={podProvider}
-                signup={searchParams.has('signup')}
-                appDomain={appDomain}
-                onSelect={() => onSelect(podProvider)}
+                onSelect={() =>
+                  login({
+                    // TODO include HTTP scheme in Pod providers list
+                    issuer: `${podProvider['apods:domainName'].includes('localhost') ? 'http' : 'https'}://${
+                      podProvider['apods:domainName']
+                    }`
+                  })
+                }
               />
             ))}
           </List>

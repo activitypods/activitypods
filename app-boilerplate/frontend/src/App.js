@@ -13,13 +13,7 @@ const customPodProviders = process.env.REACT_APP_POD_PROVIDER_DOMAIN_NAME && [
   { 'apods:domainName': process.env.REACT_APP_POD_PROVIDER_DOMAIN_NAME, 'apods:area': 'Local' }
 ];
 
-const LoginPage = props => (
-  <PodLoginPage
-    customPodProviders={customPodProviders}
-    appDomain={process.env.REACT_APP_BACKEND_DOMAIN_NAME}
-    {...props}
-  />
-);
+const LoginPage = props => <PodLoginPage customPodProviders={customPodProviders} {...props} />;
 
 const App = () => (
   <StyledEngineProvider injectFirst>

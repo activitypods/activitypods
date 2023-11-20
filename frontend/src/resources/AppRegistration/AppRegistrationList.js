@@ -12,9 +12,9 @@ import makeStyles from '@mui/styles/makeStyles';
 import { ReferenceField } from '@semapps/field-components';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import { useOutbox, useNodeinfo, ACTIVITY_TYPES } from '@semapps/activitypub-components';
-import List from '../../layout/List';
 import DoneIcon from '@mui/icons-material/Done';
 import DeleteIcon from '@mui/icons-material/Delete';
+import List from '../../layout/List';
 import useTrustedApps from '../../hooks/useTrustedApps';
 
 const useStyles = makeStyles(theme => ({
@@ -135,7 +135,7 @@ const AppRegistration = () => {
           />
         )}
         <a
-          href={`/authorize?appDomain=${encodeURIComponent(appUrl.host)}`}
+          href={`${nodeinfo?.metadata?.login_url}?iss=${process.env.REACT_APP_POD_PROVIDER_URL}`}
           target="_blank"
           rel="noopener noreferrer"
           className={classes.link}

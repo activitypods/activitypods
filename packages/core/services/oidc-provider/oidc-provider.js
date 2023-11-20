@@ -1,120 +1,42 @@
 const Redis = require('ioredis');
+
+const { Errors: E } = require('moleculer-web');
 const RedisAdapter = require('./adapter');
-const config = require('./config');
+const baseConfig = require('./base-config');
 const fetch = require('node-fetch');
 
 module.exports = {
   name: 'oidc-provider',
   settings: {
     baseUrl: undefined,
-    redisUrl: undefined
+    frontendUrl: undefined,
+    redisUrl: undefined,
+    cookieSecret: 'cookie-secret'
   },
+  dependencies: ['jwk'],
   async started() {
     // Dynamically import Provider since it's an ESM module
     const { default: Provider } = await import('oidc-provider');
 
     this.client = new Redis(this.settings.redisUrl, { keyPrefix: 'oidc:' });
 
-    // Solid OIDC requires pkce https://solid.github.io/solid-oidc/#concepts
-    config.pkce = {
-      methods: ['S256'],
-      required: () => true
-    };
+    const { privateJwk } = await this.broker.call('jwk.get');
 
-    // Default client settings that might not be defined.
-    // Mostly relevant for WebID clients.
-    // config.clientDefaults = {
-    //   id_token_signed_response_alg: key.alg,
-    // };
+    const config = baseConfig(this.settings, privateJwk);
 
-    config.cookies = {
-      ...config.cookies,
-      keys: ['cookie-secret']
-    };
-
-    // See https://github.com/CommunitySolidServer/CommunitySolidServer/blob/15a929a87e4ce00c0ed266e296405c8e4a22d4a7/src/identity/configuration/CachedJwkGenerator.ts
-    // import { exportJWK, generateKeyPair, importJWK } from 'jose';
-    // const { privateKey } = await generateKeyPair('ES256');
-    // const privateJwk = { ...await exportJWK(privateKey) };
-    // privateJwk.alg = 'ES256';
-
-    config.jwks = {
-      keys: [
-        {
-          d: 'VEZOsY07JTFzGTqv6cC2Y32vsfChind2I_TTuvV225_-0zrSej3XLRg8iE_u0-3GSgiGi4WImmTwmEgLo4Qp3uEcxCYbt4NMJC7fwT2i3dfRZjtZ4yJwFl0SIj8TgfQ8ptwZbFZUlcHGXZIr4nL8GXyQT0CK8wy4COfmymHrrUoyfZA154ql_OsoiupSUCRcKVvZj2JHL2KILsq_sh_l7g2dqAN8D7jYfJ58MkqlknBMa2-zi5I0-1JUOwztVNml_zGrp27UbEU60RqV3GHjoqwI6m01U7K0a8Q_SQAKYGqgepbAYOA-P4_TLl5KC4-WWBZu_rVfwgSENwWNEhw8oQ',
-          dp: 'E1Y-SN4bQqX7kP-bNgZ_gEv-pixJ5F_EGocHKfS56jtzRqQdTurrk4jIVpI-ZITA88lWAHxjD-OaoJUh9Jupd_lwD5Si80PyVxOMI2xaGQiF0lbKJfD38Sh8frRpgelZVaK_gm834B6SLfxKdNsP04DsJqGKktODF_fZeaGFPH0',
-          dq: 'F90JPxevQYOlAgEH0TUt1-3_hyxY6cfPRU2HQBaahyWrtCWpaOzenKZnvGFZdg-BuLVKjCchq3G_70OLE-XDP_ol0UTJmDTT-WyuJQdEMpt_WFF9yJGoeIu8yohfeLatU-67ukjghJ0s9CBzNE_LrGEV6Cup3FXywpSYZAV3iqc',
-          e: 'AQAB',
-          kty: 'RSA',
-          n: 'xwQ72P9z9OYshiQ-ntDYaPnnfwG6u9JAdLMZ5o0dmjlcyrvwQRdoFIKPnO65Q8mh6F_LDSxjxa2Yzo_wdjhbPZLjfUJXgCzm54cClXzT5twzo7lzoAfaJlkTsoZc2HFWqmcri0BuzmTFLZx2Q7wYBm0pXHmQKF0V-C1O6NWfd4mfBhbM-I1tHYSpAMgarSm22WDMDx-WWI7TEzy2QhaBVaENW9BKaKkJklocAZCxk18WhR0fckIGiWiSM5FcU1PY2jfGsTmX505Ub7P5Dz75Ygqrutd5tFrcqyPAtPTFDk8X1InxkkUwpP3nFU5o50DGhwQolGYKPGtQ-ZtmbOfcWQ',
-          p: '5wC6nY6Ev5FqcLPCqn9fC6R9KUuBej6NaAVOKW7GXiOJAq2WrileGKfMc9kIny20zW3uWkRLm-O-3Yzze1zFpxmqvsvCxZ5ERVZ6leiNXSu3tez71ZZwp0O9gys4knjrI-9w46l_vFuRtjL6XEeFfHEZFaNJpz-lcnb3w0okrbM',
-          q: '3I1qeEDslZFB8iNfpKAdWtz_Wzm6-jayT_V6aIvhvMj5mnU-Xpj75zLPQSGa9wunMlOoZW9w1wDO1FVuDhwzeOJaTm-Ds0MezeC4U6nVGyyDHb4CUA3ml2tzt4yLrqGYMT7XbADSvuWYADHw79OFjEi4T3s3tJymhaBvy1ulv8M',
-          qi: 'wSbXte9PcPtr788e713KHQ4waE26CzoXx-JNOgN0iqJMN6C4_XJEX-cSvCZDf4rh7xpXN6SGLVd5ibIyDJi7bbi5EQ5AXjazPbLBjRthcGXsIuZ3AtQyR0CEWNSdM7EyM5TRdyZQ9kftfz9nI03guW3iKKASETqX2vh0Z8XRjyU',
-          use: 'sig'
-        }
-      ]
-    };
-
-    config.adapter = name => {
-      console.log('init adapter', name);
-      return new RedisAdapter(name, this.client);
-    };
-
-    config.interactions = {
-      url: async (ctx, interaction) => {
-        console.log('interaction', interaction);
-        return `/interaction/${interaction.uid}`;
-      }
-    };
+    config.adapter = name => new RedisAdapter(name, this.client);
 
     // See https://github.com/panva/node-oidc-provider/blob/main/recipes/client_based_origins.md
     config.clientBasedCORS = (ctx, origin, client) => {
+      // TODO validate CORS based on client
       console.log('origin, client', origin, client);
       return true;
     };
 
-    // config.routes = {
-    //   authorization: '/.oidc/oauth/auth',
-    //   backchannel_authentication: '/.oidc/oauth/backchannel',
-    //   code_verification: '/.oidc/oauth/device',
-    //   device_authorization: '/.oidc/oauth/device/auth',
-    //   end_session: '/.oidc/oauth/session/end',
-    //   introspection: '/.oidc/oauth/token/introspection',
-    //   jwks: '/.oidc/oauth/jwks',
-    //   pushed_authorization_request: '/.oidc/oauth/request',
-    //   registration: '/.oidc/oauth/reg',
-    //   revocation: '/.oidc/oauth/token/revocation',
-    //   token: '/.oidc/oauth/token',
-    //   userinfo: '/.oidc/oauth/me'
-    // };
-
-    config.renderError = async (ctx, out, error) => {
-      console.log('out', out);
-      console.error(error);
-      ctx.type = 'html';
-      ctx.body = `
-        <!DOCTYPE html>
-        <head>
-          <title>oops! something went wrong</title>
-        </head>
-        <body>
-          <div>
-            <h1>oops! something went wrong</h1>
-            ${Object.entries(out)
-              .map(([key, value]) => `<pre><strong>${key}</strong>: ${value}</pre>`)
-              .join('')}
-          </div>
-        </body>
-        </html>
-      `;
-    };
-
-    const oidc = new Provider(this.settings.baseUrl, config);
+    this.oidc = new Provider(this.settings.baseUrl, config);
 
     // Allow provider to interpret reverse proxy headers.
-    oidc.proxy = true;
-
-    const oidcMiddleware = oidc.callback();
+    this.oidc.proxy = true;
 
     await this.broker.call('api.addRoute', {
       route: {
@@ -128,11 +50,50 @@ module.exports = {
     await this.broker.call('api.addRoute', {
       route: {
         path: '/.oidc/auth',
-        use: [oidcMiddleware]
+        use: [this.oidc.callback()]
       }
     });
   },
   actions: {
+    // See https://moleculer.services/docs/0.13/moleculer-web.html#Authentication
+    async authenticate(ctx) {
+      const { route, req, res } = ctx.params;
+      // Extract token from authorization header (do not take the Bearer part)
+      const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+      if (token) {
+        const payload = await ctx.call('jwk.verifyToken', { token });
+        if (payload) {
+          ctx.meta.tokenPayload = payload;
+          ctx.meta.webId = payload.webid; // Not webId !!
+          return Promise.resolve(payload);
+        }
+        // Invalid token
+        // TODO make sure token is deleted client-side
+        ctx.meta.webId = 'anon';
+        return Promise.reject(new E.UnAuthorizedError(E.ERR_INVALID_TOKEN));
+      }
+      // No token
+      ctx.meta.webId = 'anon';
+      return Promise.resolve(null);
+    },
+    // See https://moleculer.services/docs/0.13/moleculer-web.html#Authorization
+    async authorize(ctx) {
+      const { route, req, res } = ctx.params;
+      // Extract token from authorization header (do not take the Bearer part)
+      const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+      if (token) {
+        const payload = await ctx.call('jwk.verifyToken', { token });
+        if (payload) {
+          ctx.meta.tokenPayload = payload;
+          ctx.meta.webId = payload.webid; // Not webId !!
+          return Promise.resolve(payload);
+        }
+        ctx.meta.webId = 'anon';
+        return Promise.reject(new E.UnAuthorizedError(E.ERR_INVALID_TOKEN));
+      }
+      ctx.meta.webId = 'anon';
+      return Promise.reject(new E.UnAuthorizedError(E.ERR_NO_TOKEN));
+    },
     async proxyConfig() {
       const res = await fetch(`${this.settings.baseUrl}.oidc/auth/.well-known/openid-configuration`);
       if (res.ok) {
@@ -140,6 +101,33 @@ module.exports = {
       } else {
         throw new Error('Not found');
       }
+    }
+  },
+  events: {
+    async 'auth.connected'(ctx) {
+      const { webId, interactionId } = ctx.params;
+      if (interactionId) {
+        // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
+        await this.interactionFinished(interactionId, {
+          login: { accountId: webId, amr: ['pwd'] }
+        });
+      }
+    },
+    async 'auth.registered'(ctx) {
+      const { webId, interactionId } = ctx.params;
+      if (interactionId) {
+        // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
+        await this.interactionFinished(interactionId, {
+          login: { accountId: webId, amr: ['pwd'] }
+        });
+      }
+    }
+  },
+  methods: {
+    async interactionFinished(interactionId, result) {
+      const interaction = await this.oidc.Interaction.find(interactionId);
+      interaction.result = result;
+      await interaction.save(interaction.exp - Math.floor(Date.now() / 1000));
     }
   }
 };

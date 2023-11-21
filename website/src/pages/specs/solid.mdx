@@ -7,18 +7,15 @@ import ProgressBar from '../../components/ProgressBar.astro';
 
 [Solid](https://solidproject.org/) is a web decentralization project led by Tim Berners-Lee, the inventor of the World Wide Web. It aims to give people more control over their own data by allowing them to store it securely in decentralized data stores called Pods. Pods are like personal databases, and you control who can access them and how.
 
-Solid applications use standard, open, and interoperable data formats and protocols to store and access data in Pods. This means that you can use your data with different applications without having to worry about it being locked into one platform.
-
-ActivityPods supports fully the philosophy behind Solid, but it doesn't yet support all the standards that have been defined for Solid. _It is thus not Solid compliant._ However we follow closely the evolutions of this standard and try to stick to them as closely as we can.
+ActivityPods supports fully the philosophy behind Solid, but it doesn't yet support all the standards that have been defined for Solid. _It is thus not Solid compliant._ However we follow closely the evolutions of this standard and implement what we can depending on our means.
 
 ### Linked Data Platform <ProgressBar percentage={90} />
 
 Each Solid Pod must comply with the [Linked Data Platform](https://www.w3.org/TR/ldp/) protocol. This is a REST-based API for managing containers and resources.
 
-#### Formats <ProgressBar percentage={90} />
+#### Formats <ProgressBar percentage={100} />
 
 We support both JSON-LD and Turtle format.
-However since the Turtle format is never used in our applications, the implementation may be more prone to bugs.
 
 #### Containers <ProgressBar percentage={100} />
 
@@ -36,7 +33,9 @@ We support non-RDF resources (binaries) uploads. The description of the resource
    <http://semapps.org/ns/core#mimeType> "image/jpeg" .
 ```
 
-#### PATCH method <ProgressBar percentage={100} />
+There is an [issue](https://github.com/assemblee-virtuelle/semapps/issues/1192) to use the Solid recommended metadata instead.
+
+#### PATCH method <ProgressBar percentage={0} />
 
 LDP resources and containers can be selectively modified using the HTTP `PATCH` method. This method is important because it limits the risk of overwriting data, as with the simpler `PUT` method.
 However, due to the way RDF resources are formatted, the `PATCH` method cannot be used like more regular REST-based APIs.
@@ -48,24 +47,37 @@ Many solutions have been proposed in the semantic web community to solve this pr
 - [TurtlePatch](http://www.w3.org/2001/sw/wiki/TurtlePatch)
 - [RDF Patch](http://afs.github.io/rdf-patch/)
 
-Initially, the method used by Solid servers was SparqlPatch. In [2021](https://github.com/solid/specification/issues/332), it was switched to a new N3 Patch method, as described in the [Solid spec](https://solid.github.io/specification/protocol#writing-resources). It is not yet a W3C standard.
+Initially, the recommended method for Solid servers was [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch) and this is what we implemented. In [2021](https://github.com/solid/specification/issues/332), it was switched to a new N3 Patch method, as described in the [Solid spec](https://solid.github.io/specification/protocol#writing-resources). It is not yet a W3C standard.
 
 Until the N3 Patch method is standardized, we will continue to use the [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch) format.
-Below is an example of a SparqlPatch update to modify a resource. Note that the `application/sparql-update` Content-Type header must be used.
 
-```sparql
+<details>
+<summary>Example of a SparqlPatch update to modify a LDP resource.</summary>
+```http
+PATCH /alice HTTP/1.1
+Host: mypod.store
+Content-Type: application/sparql-update
+
 PREFIX as: <https://www.w3.org/ns/activitystreams#>
 INSERT DATA { <https://mypod.store/alice> as:preferredUsername "Alice" . };
 DELETE DATA { <https://mypod.store/alice> as:preferredUsername "ALICE" . };
-```
 
-Here is an example of a `PATCH` request to add or remove a resource from a container:
+````
+</details>
 
-```sparql
+<details>
+<summary>Example of a SparqlPatch update to add or remove a resource from a LDP container.</summary>
+```http
+PATCH /alice/data/events HTTP/1.1
+Host: mypod.store
+Content-Type: application/sparql-update
+
 PREFIX ldp: <http://www.w3.org/ns/ldp#>
-INSERT DATA { <http://url/of/container> ldp:contains <http://url/of/resource/to/attach>. };
-DELETE DATA { <http://url/of/container> ldp:contains <http://url/of/resource/to/detach>. };
-```
+INSERT DATA { <http://mypod.store/alice/data/events> ldp:contains <http://url/of/resource/to/attach>. };
+DELETE DATA { <http://mypod.store/alice/data/events> ldp:contains <http://url/of/resource/to/detach>. };
+````
+
+</details>
 
 #### LDP Prefer header <ProgressBar percentage={0} />
 
@@ -81,8 +93,8 @@ DELETE DATA { <http://url/of/container> ldp:contains <http://url/of/resource/to/
 
 All ActivityPub actors are also WebIDs.
 
-Here is how an ActivityPods WebID looks like:
-
+<details>
+	<summary>Click to see how an ActivityPods WebID looks like</summary>
 ```json
 {
 	"@context": "https://activitypods.org/context.json",
@@ -108,6 +120,28 @@ Here is how an ActivityPods WebID looks like:
 	"url": "https://mypod.store/alice/data/profiles/63c143b75ea9720d1b484a39"
 }
 ```
+</details>
+
+Some Solid predicates are still missing ([#122](https://github.com/assemblee-virtuelle/activitypods/issues/122))
+
+### Authentication <ProgressBar percentage={60} />
+
+#### Solid-OIDC <ProgressBar percentage={60} />
+
+In v2.0, we partly support authentication through [Solid-OIDC](https://solidproject.org/TR/oidc). This is detailed in [#121](https://github.com/assemblee-virtuelle/activitypods/issues/121).
+
+We do not support (yet) DPoP headers to request resources. HTTP signature should be used instead to request remote servers.
+
+#### HTTP Signature <ProgressBar percentage={100} />
+
+We support [HTTP signature](./activitypub#http-signature-authentication) for authentication on remote servers. This is the standard used by ActivityPub.
+Thanks to the [Proxy endpoint](activitypods.md#proxy-endpoint-with-non-get-methods), it currently solves all authentication needs we have.
+
+There is now a [proposal](https://solid.github.io/httpsig/) to integrate HTTP signature in the Solid protocol.
+
+#### WebID-TLS <ProgressBar percentage={0} />
+
+Considering [WebID-TLS](https://www.w3.org/2005/Incubator/webid/spec/tls/) authentication mechanism, used before Solid-OIDC, is now only an option, we will not implement it.
 
 ### Authorization <ProgressBar percentage={50} />
 
@@ -119,48 +153,73 @@ We support the full [WAC specification](https://solid.github.io/web-access-contr
 
 We do not support yet the [ACP specification](https://solid.github.io/authorization-panel/acp-specification/).
 
-### Authentication <ProgressBar percentage={0} />
-
-Currently, we only support [HTTP signature](./activitypub#http-signature-authentication) for authentication on remote servers. This is the standard used by ActivityPub.
-Thanks to the [Proxy endpoint](activitypods.md#proxy-endpoint-with-non-get-methods), it currently solves all authentication needs we have.
-
-#### Solid-OIDC <ProgressBar percentage={0} />
-
-We hope one day to support [Solid-OIDC](https://solidproject.org/TR/oidc) so that regular Solid clients may connect to our Pods.
-
-#### WebID-TLS <ProgressBar percentage={0} />
-
-Considering [WebID-TLS](https://www.w3.org/2005/Incubator/webid/spec/tls/) authentication mechanism, used before Solid-OIDC, is now only an option, we do not implement it.
-
 ### Application interoperability <ProgressBar percentage={30} />
 
 [Solid Application Interoperability](https://solid.github.io/data-interoperability-panel/specification) is a complex specification which is not yet finished.
-Since we don't use [Solid-OIDC](#solid-oidc), we use ActivityPub for app registration (applications are regular ActivityPub actors).
-We have also decided not to use [ShapeTrees](#shapetrees), which add nothing to our architecture: instead, applications only declare the classes they want to manage. For the rest, we chose to implement only the parts of the spec that we needed.
+For this reason, we have decided to implement as much of the specification that we could, and wait to see how it evolves before implementing the remaining parts.
 
-What we implement:
+We have been following closely the ontology proposed. However, we currently use ActivityPub for app registration (applications are regular ActivityPub actors).
+We have also decided not to use [ShapeTrees](#shapetrees), which add nothing to our triplestore-based architecture: instead, applications only declare the classes they want to manage.
 
-- Applications declare their needs through `AccessNeedGroups` and `AccessNeeds`, which are displayed on an authorization screen.
-- Before registration, `AccessGrants` and `DataGrants` are created on the user's Pod.
-- The `ApplicationRegistration` resource is created on the user's Pod and sent to the application through a `Create` activity.
-- If the `ApplicationRegistration` is correct, it is saved on the application instance, as well as the corresponding grants.
-- Whenever the user connects again to the application, we check that the `AccessNeeds` haven't changed. If needed, we show an authorization screen again and `ApplicationRegistration` is updated (with a `Update` activity).
-- If the user wants to uninstall the application, we delete the `ApplicationRegistration` (and corresponding grants) and send a `Delete` activity to the application.
+<details>
+	<summary>What we implement</summary>
+	<ul>
+		<li>
+			Applications declare their needs through `AccessNeedGroups` and `AccessNeeds`, which are displayed on an
+			authorization screen.
+		</li>
+		<li>Before registration, `AccessGrants` and `DataGrants` are created on the user's Pod.</li>
+		<li>
+			The `ApplicationRegistration` resource is created on the user's Pod and sent to the application through a `Create`
+			activity.
+		</li>
+		<li>
+			If the `ApplicationRegistration` is correct, it is saved on the application instance, as well as the corresponding
+			grants.
+		</li>
+		<li>
+			Whenever the user connects again to the application, we check that the `AccessNeeds` haven't changed. If needed,
+			we show an authorization screen again and `ApplicationRegistration` is updated (with a `Update` activity).
+		</li>
+		<li>
+			If the user wants to uninstall the application, we delete the `ApplicationRegistration` (and corresponding grants)
+			and send a `Delete` activity to the application.
+		</li>
+	</ul>
+</details>
 
-What we don't implement yet:
-
-- Authorization flow is handled using ActivityPub. The application is an ActivityPub actor.
-- We only handle registration with `Applications`, not with other `SocialAgents` (we continue to use WAC permissions for the latter)
-- Pods don't declare an `AuthorizationAgent`. It is handled internally.
-- Pods don't declare a `DataRegistry`. This registry is only used to list ShapeTrees. TypeIndex can be used instead.
-- Applications don't declare `AccessDescription` for the time being (we can deduce the accesses requested, and later it may be used to justify access to certain resources).
-- Pods only create `AccessGrants` and `DataGrants`, not `AccessAuthorizations` and `DataAuthorizations`. Grants can be shared with the registered application, while Authorizations cannot. The only difference between them is a `grantedWith` predicate in `AccessAuthorizations` that indicates which app was used to manage authorizations (but we manage that internally anyway).
-- Pods don't declare `RegistrySet`, `ApplicationRegistry`, `AuthorizationRegistry` as they are not visible from the outside. We just read `ApplicationRegistrations`, `AccessGrants` and `DataGrants` in their dedicated containers.
+<details>
+	<summary>What we don't implement yet</summary>
+	<ul>
+		<li>Authorization flow is handled using ActivityPub. The application is an ActivityPub actor.</li>
+		<li>
+			We only handle registration with `Applications`, not with other `SocialAgents` (we continue to use WAC permissions
+			for the latter)
+		</li>
+		<li>Pods don't declare an `AuthorizationAgent`. It is handled internally.</li>
+		<li>
+			Pods don't declare a `DataRegistry`. This registry is only used to list ShapeTrees. TypeIndex can be used instead.
+		</li>
+		<li>
+			Applications don't declare `AccessDescription` for the time being (we can deduce the accesses requested, and later
+			it may be used to justify access to certain resources).
+		</li>
+		<li>
+			Pods only create `AccessGrants` and `DataGrants`, not `AccessAuthorizations` and `DataAuthorizations`. Grants can
+			be shared with the registered application, while Authorizations cannot. The only difference between them is a
+			`grantedWith` predicate in `AccessAuthorizations` that indicates which app was used to manage authorizations (but
+			we manage that internally anyway).
+		</li>
+		<li>
+			Pods don't declare `RegistrySet`, `ApplicationRegistry`, `AuthorizationRegistry` as they are not visible from the
+			outside. We just read `ApplicationRegistrations`, `AccessGrants` and `DataGrants` in their dedicated containers.
+		</li>
+	</ul>
+</details>
 
 #### ShapeTrees <ProgressBar percentage={0} />
 
 [ShapeTrees](https://shapetrees.org) are the Solid community's answer to helping applications find data potentially scattered across numerous LDP containers.
-
 Simply put, applications declare the structure they intend to use to store their data. This operation is called "planting a ShapeTree". Other applications wishing to use the same type of data then know where to find it.
 
 Unfortunately, this standard is a complex one, and poses new problems, as highlighted in [this article](https://ruben.verborgh.org/blog/2022/12/30/lets-talk-about-pods/), particularly with regard to permissions management. As is written in [this other document](https://github.com/solid/data-interoperability-panel/blob/main/problems-and-goals.md#problem-4---people-shouldnt-need-to-think-about-how-to-physically-organize-their-data-to-use-solid), _"[Users] shouldn’t need to worry about where a particular type of data needs to be stored, nor should they have to hunt around to find the data they want."_.
@@ -170,8 +229,6 @@ For ActivityPods, we prefer to consider the Pod as a data graph, and focus on th
 #### Type Indexes <ProgressBar percentage={0} />
 
 👷 To be implemented ([#1171](https://github.com/assemblee-virtuelle/semapps/issues/1171))
-
-See https://github.com/solid/type-indexes
 
 ### Linked Data Notifications <ProgressBar percentage={0} />
 
@@ -184,6 +241,4 @@ Since [we implement the full ActivityPub protocol](activitypub), we haven't need
 
 #### Solid Notifications Protocol <ProgressBar percentage={0} />
 
-👷 To be implemented
-
-See https://solid.github.io/notifications/protocol and https://solid.github.io/notifications/websocket-channel-2023
+👷 To be implemented ([#126](https://github.com/assemblee-virtuelle/activitypods/issues/126), [#127](https://github.com/assemblee-virtuelle/activitypods/issues/127))

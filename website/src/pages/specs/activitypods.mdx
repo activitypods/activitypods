@@ -26,14 +26,6 @@ To do that, you may pass a [`multipart/form-data``](https://developer.mozilla.or
 
 To be implemented.
 
-### Apps registration through ActivityPub
-
-To be implemented.
-
-### Announces / Announcers collections
-
-To define.
-
 ### Collections API
 
 In ActivityPub, [ActivityStreams collections](https://www.w3.org/TR/activitystreams-core/#collections) are frequently used to handle side-effects. For example, when a `Follow` activity is sent, the actor is added to the `as:followers` collection. Collections have their own paging system. They can be ordered or unordered. Also, they can dereference the items they contain (this is the case for the inbox) or only display their URIs (like the `as:followers` collection).
@@ -85,9 +77,13 @@ DELETE DATA {
 
 For ordered collections, you should use the `as:orderedItems` predicate.
 
+#### Announces / Announcers collections
+
+To define.
+
 ### Notifications
 
-> TODO: https://github.com/assemblee-virtuelle/activitypods/issues/91
+👷 To be implemented ([#91](https://github.com/assemblee-virtuelle/activitypods/issues/91))
 
 Apps can send notifications to Pod users like this:
 
@@ -113,7 +109,7 @@ Apps can send notifications to Pod users like this:
 }
 ```
 
-They are translated into emails and push notifications.
+They can be translated into emails and, possibly, push notifications.
 
 ### JsonLdContext header
 
@@ -128,15 +124,12 @@ GET /alice/data/my-event HTTP/1.1
 Host: example.org
 Accept: application/ld+json
 JsonLdContext: https://www.w3.org/ns/activitystreams
-```
-
-Response:
-
-```json
 {
-	"@context": "https://www.w3.org/ns/activitystreams",
-	"id": "https://example.org/alice/data/my-event",
-	"type": "Event",
-	"name": "My event"
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "id": "https://example.org/alice/data/my-event",
+  "type": "Event",
+  "name": "My event"
 }
 ```
+
+There are [discussions](https://github.com/assemblee-virtuelle/semapps/issues/1204) about using more standards headers.

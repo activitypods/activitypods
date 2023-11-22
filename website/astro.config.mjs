@@ -3,6 +3,8 @@ import { fileURLToPath } from 'url';
 
 import remarkToc from 'remark-toc';
 import rehypeToc from 'rehype-toc';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import rehypeSlug from 'rehype-slug';
 
 import { defineConfig } from 'astro/config';
 
@@ -48,6 +50,8 @@ export default defineConfig({
 	markdown: {
 		remarkPlugins: [remarkReadingTime, remarkToc],
 		rehypePlugins: [
+			rehypeSlug,
+			[rehypeAutolinkHeadings, { behavior: 'append' }],
 			[
 				rehypeToc,
 				{

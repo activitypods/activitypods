@@ -5,9 +5,6 @@ title: ActivityPods specificity
 
 In this document, you can find descriptions for ActivityPods-specific APIs and protocol workflows. In the future, we will be contributing to related working groups, to bring the following specifications into official drafts.
 
-### SPARQL endpoint
-
-Every Pod comes with an SPARQL endpoint, linked to the WebID with the `void:sparqlEndpoint` predicate. Only SPARQL _queries_ are supported, not [SPARQL _updates_](https://www.w3.org/TR/sparql11-update/) (You MUST use LDP or ActivityPub to modify data). WAC permissions are applied to all SPARQL queries, in order to return only the resources that the autenticated user or application has the right to see.
 
 ### Authentication
 
@@ -22,23 +19,45 @@ To do that, you may pass a [`multipart/form-data``](https://developer.mozilla.or
 - `headers`: The HTTP headers to pass to the request (in JSON format)
 - `body`: The body of the request (optional)
 
-#### Capabilities URL
+#### Capability URL
 
-To be implemented.
+We implement capability resources which are defined as [WAC](https://solid.github.io/web-access-control-spec/) Authorizations:
+
+```json
+{
+	"@context": { "acl": "http://www.w3.org/ns/auth/acl#", },
+	"@id": "https://myserver.com/capabilities/k3kleict5ks3r4",
+	"@type": "acl:Authorization",
+	"acl:accessTo": "https://myserver.com/resource/x",
+	"acl:mode": "acl:Write"
+}
+```
+
+Anyone who know the capability URL can access its corresponding resource like this:
+
+```http
+GET /capabilities/k3kleict5ks3r4 HTTP/1.1
+Host: myserver.com
+Accept: application/ld+json
+Authorization: Capability https://myserver.com/capabilities/k3kleict5ks3r4
+```
+
+The capability resource itself is not public, but it can be requested with its own URL in the `Authorization` header.
 
 ### Collections API
 
-In ActivityPub, [ActivityStreams collections](https://www.w3.org/TR/activitystreams-core/#collections) are frequently used to handle side-effects. For example, when a `Follow` activity is sent, the actor is added to the `as:followers` collection. Collections have their own paging system. They can be ordered or unordered. Also, they can dereference the items they contain (this is the case for the inbox) or only display their URIs (like the `as:followers` collection).
+In ActivityPub, [ActivityStreams collections](https://www.w3.org/TR/activitystreams-core/#collections) are frequently used to handle side-effects. For example, when a `Follow` activity is sent, the actor is added to the `as:followers` collection.
+Collections have their own paging system. They can be ordered or unordered. Also, they can dereference the items they contain (this is the case for the inbox) or only display their URIs (like the `as:followers` collection).
 
 However, no API has been defined to create custom collections or add/remove items from existing collections.
 
 #### Create custom collection
 
-👷 To be implemented
+👷 To be implemented ([#1166](https://github.com/assemblee-virtuelle/semapps/issues/1166))
 
 In ActivityPods, ActivityStreams collections can be POSTed as regular LDP resources.
 
-The `@type` can a `as:Collection` or a `as:OrderedCollection`, depending on weither you need items to be ordered or not.
+The `@type` can be a `as:Collection` or a `as:OrderedCollection`, depending on weither you need items to be ordered or not.
 
 In the case of a `as:OrderedCollection`, you must also indicate the `apods:sortField` and `apods:sortOrder`.
 
@@ -46,24 +65,24 @@ We have added a boolean `apods:dereferenceItems` in order to declare if the item
 
 ```json
 {
-	"@context": [
-		"https://www.w3.org/ns/activitystreams",
-		{ "apods": "http://activitypods.org/ns/core#", "dc": "http://purl.org/dc/terms/" }
-	],
-	"@type": "OrderedCollection",
-	"apods:sortField": "dc:created",
-	"apods:sortOrder": "apods:AscOrder", // or "apods:DescOrder"
-	"apods:dereferenceItems": true
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    { "apods": "http://activitypods.org/ns/core#", "dc": "http://purl.org/dc/terms/" }
+  ],
+  "@type": "OrderedCollection",
+  "apods:sortField": "dc:created",
+  "apods:sortOrder": "apods:AscOrder", // or "apods:DescOrder"
+  "apods:dereferenceItems": true
 }
 ```
 
-It is then your responsibility to attach the newly-created collection to an actor or object.
+There are [discussions in the fediverse](https://socialhub.activitypub.rocks/t/fep-5bf0-collection-sorting-and-filtering/3095) to specify these missing predicates.
 
 #### Add or remove items
 
 👷 To be implemented ([#1165](https://github.com/assemblee-virtuelle/semapps/issues/1165))
 
-It's possible to add items to (or remove items from) a collection using the `PATCH` method, the `application/sparql-update` Content-Type and a SPARQL query like this on the body:
+It's possible to add items to (or remove items from) a collection using the [SparqlPatch](solid#patch-method) method, the `application/sparql-update` Content-Type and a SPARQL query like this on the body:
 
 ```sparql
 PREFIX as: <https://www.w3.org/ns/activitystreams#>
@@ -77,10 +96,6 @@ DELETE DATA {
 
 For ordered collections, you should use the `as:orderedItems` predicate.
 
-#### Announces / Announcers collections
-
-To define.
-
 ### Notifications
 
 👷 To be implemented ([#91](https://github.com/assemblee-virtuelle/activitypods/issues/91))
@@ -89,27 +104,27 @@ Apps can send notifications to Pod users like this:
 
 ```json
 {
-	"type": "Note",
-	"actor": "https://welcometomyplace.org/data/app",
-	"name": "Alice invites you to an event: my birthday party !",
-	"content": "You have received an invitation from Alice",
-	"url": [
-		{
-			"type": "Link",
-			"name": "View",
-			"href": "https://welcometomyplace.org/Event/{eventUri}/show"
-		},
-		{
-			"type": "Link",
-			"name": "Ignore future Alice invitations",
-			"href": "https://welcometomyplace.org/Event/{eventUri}/show?action=ignore"
-		}
-	],
-	"context": "https://mypod.store/alice/data/{uuid}"
+  "type": "Note",
+  "actor": "https://welcometomyplace.org/data/app",
+  "name": "Alice invites you to an event: my birthday party !",
+  "content": "You have received an invitation from Alice",
+  "url": [
+    {
+      "type": "Link",
+      "name": "View",
+      "href": "https://welcometomyplace.org/Event/{eventUri}/show"
+    },
+    {
+      "type": "Link",
+      "name": "Ignore future Alice invitations",
+      "href": "https://welcometomyplace.org/Event/{eventUri}/show?action=ignore"
+    }
+  ],
+  "context": "https://mypod.store/alice/data/{uuid}"
 }
 ```
 
-They can be translated into emails and, possibly, push notifications.
+They will be translated into emails and, possibly, push notifications.
 
 ### JsonLdContext header
 
@@ -133,3 +148,11 @@ JsonLdContext: https://www.w3.org/ns/activitystreams
 ```
 
 There are [discussions](https://github.com/assemblee-virtuelle/semapps/issues/1204) about using more standards headers.
+
+### Discovery
+
+#### Identifying application actors
+
+In ActivityPods, applications are also ActivityPub actor.
+
+To find the actor linked with an application, we have implemented the [FEP-2677](https://codeberg.org/fediverse/fep/src/branch/main/fep/2677/fep-2677.md)

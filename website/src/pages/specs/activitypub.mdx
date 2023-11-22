@@ -5,11 +5,21 @@ title: ActivityPub compliance
 
 import ProgressBar from '../../components/ProgressBar.astro';
 
+ActivityPub is a decentralized social networking protocol based upon the ActivityStreams 2.0 ontology. It provides a client-to-server and a server-to-server API for all common social features: following, liking, reposting... It became a W3C recommandation in 2018 and is used nowadays by dozens of softwares.
+
 Apart from a few side-effects which would be quick to implement if need arised, ActivityPods is 100% compatible with ActivityPub, and supports both client-to-server and server-to-server interactions.
 
 ### Outbox <ProgressBar percentage={100} />
 
+User can POST to his own outbox.
+
+Anyone can GET the outbox, but it will return only the activities they have the right to read.
+
 ### Inbox <ProgressBar percentage={100} />
+
+Any ActivityPub actors can post to an inbox, using [HTTP Signature](#http-signature) for authentication.
+
+Anyone can GET the inbox, but it will return only the activities they have the right to read.
 
 ### Authentication <ProgressBar percentage={70} />
 

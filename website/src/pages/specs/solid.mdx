@@ -236,6 +236,6 @@ Since [we implement the full ActivityPub protocol](activitypub), we haven't need
 
 ### SPARQL endpoint <ProgressBar percentage={100} />
 
-Even though it is not required anymore by the Solid spec, every Pod comes with an SPARQL endpoint, linked to the WebID with the `void:sparqlEndpoint` predicate. 
-Only SPARQL _queries_ are supported, not [SPARQL _updates_](https://www.w3.org/TR/sparql11-update/) (You MUST use LDP or ActivityPub to modify data). 
+Even though it is not required anymore by the Solid spec, every Pod comes with an SPARQL endpoint, linked to the WebID with the `void:sparqlEndpoint` predicate.
+Only SPARQL _queries_ are supported, not [SPARQL _updates_](https://www.w3.org/TR/sparql11-update/) (You MUST use LDP or ActivityPub to modify data).
 WAC permissions are applied to all SPARQL queries, in order to return only the resources that the autenticated user or application has the right to see.

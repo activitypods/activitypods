@@ -5,7 +5,6 @@ title: ActivityPods specificity
 
 In this document, you can find descriptions for ActivityPods-specific APIs and protocol workflows. In the future, we will be contributing to related working groups, to bring the following specifications into official drafts.
 
-
 ### Authentication
 
 #### Proxy endpoint with non-GET methods
@@ -25,7 +24,7 @@ We implement capability resources which are defined as [WAC](https://solid.githu
 
 ```json
 {
-	"@context": { "acl": "http://www.w3.org/ns/auth/acl#", },
+	"@context": { "acl": "http://www.w3.org/ns/auth/acl#" },
 	"@id": "https://myserver.com/capabilities/k3kleict5ks3r4",
 	"@type": "acl:Authorization",
 	"acl:accessTo": "https://myserver.com/resource/x",
@@ -65,14 +64,14 @@ We have added a boolean `apods:dereferenceItems` in order to declare if the item
 
 ```json
 {
-  "@context": [
-    "https://www.w3.org/ns/activitystreams",
-    { "apods": "http://activitypods.org/ns/core#", "dc": "http://purl.org/dc/terms/" }
-  ],
-  "@type": "OrderedCollection",
-  "apods:sortField": "dc:created",
-  "apods:sortOrder": "apods:AscOrder", // or "apods:DescOrder"
-  "apods:dereferenceItems": true
+	"@context": [
+		"https://www.w3.org/ns/activitystreams",
+		{ "apods": "http://activitypods.org/ns/core#", "dc": "http://purl.org/dc/terms/" }
+	],
+	"@type": "OrderedCollection",
+	"apods:sortField": "dc:created",
+	"apods:sortOrder": "apods:AscOrder", // or "apods:DescOrder"
+	"apods:dereferenceItems": true
 }
 ```
 
@@ -104,23 +103,23 @@ Apps can send notifications to Pod users like this:
 
 ```json
 {
-  "type": "Note",
-  "actor": "https://welcometomyplace.org/data/app",
-  "name": "Alice invites you to an event: my birthday party !",
-  "content": "You have received an invitation from Alice",
-  "url": [
-    {
-      "type": "Link",
-      "name": "View",
-      "href": "https://welcometomyplace.org/Event/{eventUri}/show"
-    },
-    {
-      "type": "Link",
-      "name": "Ignore future Alice invitations",
-      "href": "https://welcometomyplace.org/Event/{eventUri}/show?action=ignore"
-    }
-  ],
-  "context": "https://mypod.store/alice/data/{uuid}"
+	"type": "Note",
+	"actor": "https://welcometomyplace.org/data/app",
+	"name": "Alice invites you to an event: my birthday party !",
+	"content": "You have received an invitation from Alice",
+	"url": [
+		{
+			"type": "Link",
+			"name": "View",
+			"href": "https://welcometomyplace.org/Event/{eventUri}/show"
+		},
+		{
+			"type": "Link",
+			"name": "Ignore future Alice invitations",
+			"href": "https://welcometomyplace.org/Event/{eventUri}/show?action=ignore"
+		}
+	],
+	"context": "https://mypod.store/alice/data/{uuid}"
 }
 ```
 

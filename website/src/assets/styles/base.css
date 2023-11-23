@@ -56,18 +56,23 @@
 .prose p {
 	margin-top: 0.8rem;
 	margin-bottom: 0.8rem;
-	line-height: 36px;
+	line-height: 1.8rem;
 }
 
 .prose li {
 	margin-top: 0.4rem;
 	margin-bottom: 0.4rem;
-	line-height: 36px;
+	line-height: 1.8rem;
 }
 
 .prose ul {
 	margin-top: 0.8rem;
 	margin-bottom: 0.8rem;
+}
+
+.prose h2 {
+	margin-top: 1.2em;
+	margin-bottom: 0.5em;
 }
 
 .prose pre {

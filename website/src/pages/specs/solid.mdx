@@ -53,7 +53,7 @@ Until the N3 Patch method is standardized, we will continue to use the [SparqlPa
 
 <details>
 <summary>Example of a SparqlPatch update to modify a LDP resource.</summary>
-```http
+```
 PATCH /alice HTTP/1.1
 Host: mypod.store
 Content-Type: application/sparql-update
@@ -67,7 +67,7 @@ DELETE DATA { <https://mypod.store/alice> as:preferredUsername "ALICE" . };
 
 <details>
 <summary>Example of a SparqlPatch update to add or remove a resource from a LDP container.</summary>
-```http
+```
 PATCH /alice/data/events HTTP/1.1
 Host: mypod.store
 Content-Type: application/sparql-update

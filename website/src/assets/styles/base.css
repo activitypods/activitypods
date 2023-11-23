@@ -85,3 +85,8 @@
 summary {
 	cursor: pointer;
 }
+
+sup {
+	left: -0.1em;
+	top: -0.2em;
+}

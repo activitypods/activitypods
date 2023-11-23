@@ -3,79 +3,103 @@ publishDate: 'Nov 11 2023'
 title: 'The history of SemApps... and the future of ActivityPods'
 description: "ActivityPods was built on SemApps, a toolkit for developing semantic web applications that dates back to the early 2010s. The technological choices that have guided ActivityPods' development are intimately linked to SemApps and its philosophy"
 image: '~/assets/images/colors.jpg'
-tags: [astro, tailwind css, theme]
+tags: [semapps, history]
 ---
 
 import ImageCaption from '~/components/ImageCaption.astro';
+import hideToc from '~/assets/styles/hide-toc.css';
+import grandsVoisins from '~/assets/images/blog/grands-voisins.png';
+import moleculerServices from '~/assets/images/blog/moleculer-services.png';
+import archipelagoAv from '~/assets/images/blog/archipelago-av.png';
+import archipelLowTech from '~/assets/images/blog/archipel-low-tech.jpg';
 
-_ActivityPods was built on SemApps, a toolkit for developing semantic web applications that dates back to the early 2010s. The technological choices that have guided and continue to guide ActivityPods' development are intimately linked to SemApps and its philosophy._
+_ActivityPods is built on top of SemApps, a toolkit for developing semantic web applications that dates back to the early 2010s. The technological choices that have guided and continue to guide the development of ActivityPods are intimately linked to SemApps and its philosophy._
 
-SemApps (for Semantic Applications) was conceived within the Assemblée Virtuelle, an association founded in 2011 in France, which was initially conceived as a contributory citizen think-tank.
+SemApps (for Semantic Applications) was created within Virtual Assembly, a french non-profit association founded in 2011, which was initially conceived as a citizen think-tank.
 
-Its first project, Idées-Mix, had the ambition of valorizing ideas proposed by stakeholders, and transforming them into concrete projects by putting them in touch with other stakeholders and resources. But the small initial team soon came up against technical difficulties.
+The association's first project, [Idées-Mix](https://drive.google.com/file/d/0By8nyiKT594tb1plOU5GOW5CZkk/view?usp=sharing&resourcekey=0-C1qCChErHG5m60UULbHTvg) <sup>_(french)_</sup>, aimed to capitalize on 21 ideas proposed by 21 actors, and transform them into concrete projects by linking them up with other actors and resources. But the small team soon came up against the technical difficulties of the project.
 
-Following the discovery of the semantic web and, above all, a meeting in 2013 with Henry Story (Solid's historic contributor, who sadly passed away this autumn), the association's purpose was reoriented towards the creation of collaborative, decentralized software solutions.
+The discovery of the semantic web and, above all, the meeting in 2013 with Henry Story (Solid's historic contributor, who sadly passed away this autumn) gave the project a whole new perspective. The goal of the association was then redirected towards the creation of decentralized software solutions, seen as a means of facilitating cooperation.
 
-At the time, SemApps was not a toolbox, but an application to help organizations cooperate by opening up their data for reading and writing. v1 was essentially developed by Sébastien Lemoine and Romain Weeger, based on Semantic Forms, a software package developed by another member of the Virtual Assembly, Jean-Marc Vanel.
+SemApps was to become the association's flagship project. It was initially conceived, not as a toolbox, but as an application to help organizations cooperate, by opening up their data for reading and writing. The first version was developed by Sébastien Lemoine and Romain Weeger, using [Semantic Forms](https://github.com/jmvanel/semantic_forms), a software made by another member of the Virtual Assembly, Jean-Marc Vanel.
 
-The first instance of SemApps was deployed for a gigantic ephemeral third-place in Paris: Les Grands Voisins. It made visible the myriad organizations and individuals occupying the space, and helped them to cooperate more effectively. It was a great cooperative database.
+The first instance of [SemApps](../) was deployed for a gigantic ephemeral third-place in Paris: [Les Grands Voisins](https://lesgrandsvoisins.org/). It made visible the myriad of organizations and individuals occupying the space, and helped them to cooperate more effectively. It was a large cooperative database.
 
-![The first instance of SemApps for Les Grands Voisins](../../src/assets/images/blog/grands-voisins.png)
+<ImageCaption src={grandsVoisins.src} label="The first instance of SemApps for Les Grands Voisins" />
 
-<ImageCaption>The first instance of SemApps for Les Grands Voisins</ImageCaption>
+Naturally, the data was stored in semantic format. There were also features specific to the semantic web, such as the ability to import one's profile from another instance, or to add links with resources from distant instances. The Virtual Assembly association had its own instance.
 
-Of course, the data was stored in semantic form. There were also features specific to the semantic web, such as the ability to import one's profile from another instance, or to add links between resources of distant instances. The Assemblée Virtuelle association also had its own instance.
+Unfortunately, after Sébastien Lemoine left for other adventures, the development of the project came to a halt. The instances continued to run for a few years, but at some point they ceased to function and no one was able to revive them. This coincided with the closure of Les Grands Voisins.
 
-Unfortunately, following Sébastien Lemoine's departure for other adventures, development of the project came to a halt. The bodies were maintained for a few years, but at some point they ceased to function and no one was able to revive them. This coincided with the closure of Les Grands Voisins.
+## The renaissance
 
-## Congue justo vulputate nascetur convallis varius orci fringilla nulla pharetr
+In late 2019, the project was revived by a small team within Virtual Assembly:
 
-Lorem ipsum dolor sit amet consectetur adipiscing elit, augue malesuada natoque in ad erat aliquam facilisi, lacus rhoncus mattis nostra et a. Mauris malesuada rutrum dis libero egestas mus vulputate, fermentum ad morbi phasellus faucibus tellus leo urna, blandit ullamcorper diam imperdiet dictumst litora. Fringilla eros malesuada lobortis mi odio metus leo, blandit imperdiet augue fames aliquam ultricies tortor massa, duis magnis hendrerit id magna sociosqu. Aptent mi imperdiet id sapien suscipit ut netus turpis, lacinia ac porttitor potenti dui taciti at egestas, fermentum neque nascetur sodales tortor nunc congue.
+- Guillaume Rouyer, the association's founder and visionary ;
+- Pierre Bouvier-Muller, UX designer with a passion for cooperation ;
+- Simon Louvet, historic developer and creator of the [Semantic Bus](https://assemblee-virtuelle.github.io/semantic-bus-documentation/) ;
+- Sébastien Rosset, a new developer within Virtual Assembly.
 
-Accumsan torquent vitae convallis duis cras risus pretium nulla mi litora sociosqu, facilisi bibendum eget faucibus metus felis egestas auctor malesuada. Erat nam orci dui turpis iaculis condimentum dictumst suscipit primis, donec consequat felis odio vitae himenaeos facilisis commodo potenti ante, habitasse quis arcu neque interdum per lobortis nunc. Ultricies lobortis ullamcorper sagittis et sollicitudin sociis sed dignissim posuere, nisi pharetra erat varius id aenean lacinia commodo morbi primis, ornare diam proin nunc volutpat nec dui egestas.
+Sébastien Rosset was particularly interested in the [ActivityPub](https://www.w3.org/TR/activitypub) protocol, which had been standardized by the W3C the previous year and enabled decentralized social networking. Having developed a first server using Symfony, he wanted to give it a new dimension by saving data in semantic format ([ActivityPub is intrinsically linked to the semantic web](https://conf.tube/w/81248119-5e19-4798-bc37-f2cd5ed617c7), even if many ActivityPub-compatible apps ignore this dimension).
 
-## Mauris velit laoreet vitae cursus augue
+We had to start from scratch, as the v1 code was unusable. When it came to making the first technological choices, the small team benefited from the expertise of Niko, a veteran developer exiled in Greece.
 
-- Massa egestas consequat nisl id volutpat, varius neque aenean.
+Thanks to his input, it was decided to use [Moleculer](https://moleculer.services) for the backend. This NodeJS-based framework makes it easy to create microservices, which can remain on the same machine or be deployed on several machines. The architecture fitted in well with our desire to make SemApps modular. This way, users could activate only the services they needed, or develop their own services that could connect to existing ones.
 
-- Venenatis tincidunt eros pretium viverra lacinia convallis, turpis orci condimentum fusce.
+<ImageCaption src={moleculerServices.src} label="Moleculer services in SemApps applications" />
 
-- Pellentesque in aliquet nisi gravida netus, commodo aptent volutpat.
+Another important choice was to use Jena Fuseki as a triple store. Although it's possible to do semantic web without a triple store, the advantage of a triple store is that data is stored directly in semantic format. This means they can be easily queried using [SPARQL](https://fr.wikipedia.org/wiki/SPARQL). As we wanted to develop large collaborative databases, the ability to make SPARQL queries was crucial.
 
-- Nisi rutrum eros euismod, parturient ullamcorper mattis a, dapibus vestibulum.
+Apache [Jena Fuseki](https://jena.apache.org/documentation/fuseki2/) was chosen from among the existing triple stores because it was possible to develop extensions. We wanted to offer public SPARQL endpoints that respected the permissions ([WAC](https://solid.github.io/web-access-control-spec/)) granted on resources, and Fuseki made this possible thanks to extensions. This was to be the subject of a major developement for which Niko was to act as leader.
 
-Senectus fermentum tristique egestas bibendum per dictumst purus pharetra cras dictum pulvinar, vitae nec eros montes dis quis nullam duis netus litora, feugiat cubilia mollis porttitor velit ligula metus ante risus eu.
+## Deploying SemApps v2
 
-Vitae at pretium sem curabitur nascetur a aliquet dignissim ultricies congue, imperdiet rhoncus neque dictum et natoque sapien iaculis quam varius mollis, id augue torquent tortor lacus maecenas faucibus curae placerat. Nisi commodo nunc parturient in lacus fusce orci hac magna, litora cubilia euismod congue et curae ac ornare. Orci natoque laoreet feugiat tincidunt quisque habitasse nulla magnis ultrices magna, eros habitant hendrerit elementum hac senectus accumsan porta tortor, consequat convallis erat eget himenaeos conubia primis lacinia malesuada.
+After 6 months of intensive work (the first confinement having helped speed up development!), the new SemApps was ready.
 
-Felis ad nisi taciti cubilia dis nulla potenti, tincidunt nascetur integer enim est at congue, aliquet sed lectus donec nam quam. Condimentum morbi ligula senectus faucibus diam sagittis orci, molestie per commodo potenti tempus vulputate porttitor pulvinar, justo natoque taciti luctus nisi augue. Ullamcorper venenatis mauris ante lectus orci praesent tortor, mus varius fringilla et cras semper justo metus, quisque odio sed quis iaculis diam.
+Among the first services developed were one to create an [LDP](https://www.w3.org/TR/ldp/) server (a REST-based API for reading and writing semantic data) and another to manage the ActivityPub protocol. Both services could integrate WAC permissions but could also do without. Gradually, services were added to facilitate interoperability between instances.
 
-Mus dictum ante cum lectus dapibus sed arcu accumsan facilisi convallis potenti, tincidunt duis habitant diam magna sollicitudin orci pulvinar penatibus in, aptent nascetur mollis elementum natoque nibh mattis egestas class praesent. Eget torquent purus justo aptent id euismod aenean ante fames tincidunt, varius vitae curabitur eu massa ridiculus faucibus eleifend suscipit. Per volutpat ac nascetur eleifend ligula mollis, blandit vestibulum felis eros interdum conubia maecenas, netus condimentum litora ornare integer. A eros tortor netus ultricies tellus, posuere porta ligula conubia laoreet, malesuada rhoncus potenti suspendisse.
+The Virtual Assembly wanted to use SemApps for a purpose similar to the v1: to manage an open, interoperable database. The [React-Admin](https://marmelab.com/react-admin/) framework was chosen to create a admin-panel-like interface connecting to a SemApps backend. As this was a product in its own right, it was decided to name it [Archipelago](https://github.com/assemblee-virtuelle/archipelago) and keep the SemApps name for the toolbox.
 
-Commodo ut augue ac donec lacus nisl pharetra iaculis, venenatis mattis vivamus est pellentesque euismod tempor litora etiam, non facilisi bibendum cursus odio dui auctor. Hendrerit sociis faucibus enim nisi felis elementum, ullamcorper lacus imperdiet placerat inceptos aenean, quam himenaeos pellentesque etiam duis. Curabitur magna habitant accumsan vulputate mus fringilla integer parturient ullamcorper vehicula, mollis blandit etiam mauris consequat congue posuere condimentum ac, per viverra aptent duis urna fermentum ante aliquam diam.
+[Components for React-Admin](https://semapps.org/docs/frontend) were integrated into this toolbox, to facilitate the development of interfaces with semantic data. In use, React-Admin proved to be capable of much more than admin panels, and was used by many sites. Of course, developers were free to use other frameworks, as the frontend was completely decoupled from the backend.
 
-Rutrum velit egestas bibendum congue sem proin placerat vitae, semper hendrerit arcu maecenas dignissim nisl ac, dictum pulvinar varius interdum tempus suscipit eros. Ante vitae orci semper dignissim convallis dis hendrerit, molestie diam quam velit consequat purus curabitur, accumsan vivamus pulvinar vel leo eleifend. Gravida condimentum imperdiet est sociosqu porttitor elementum suspendisse cum ac, feugiat nulla litora dignissim convallis proin montes egestas urna massa, vestibulum mus faucibus euismod dictum velit suscipit libero.
+<ImageCaption
+	src={archipelagoAv.src}
+	url="https://archipel.assemblee-virtuelle.org"
+	label="The Archipelago instance for Virtual Assembly"
+/>
 
-Risus pellentesque montes laoreet orci natoque erat, vivamus hac sociosqu volutpat mauris sodales, ultricies odio feugiat viverra lectus. Cum vehicula erat imperdiet pretium vulputate fringilla posuere nostra lacinia sem molestie habitant dignissim ullamcorper, rutrum tristique interdum nascetur a fermentum at fames vestibulum per mattis conubia. Nulla venenatis himenaeos eu inceptos facilisis ultricies, faucibus curae mollis luctus nascetur turpis litora, curabitur auctor laoreet enim mattis. Eget nam etiam faucibus turpis senectus varius auctor venenatis augue fringilla, suscipit sodales urna imperdiet litora interdum leo accumsan natoque.
+Over the years, instances have been deployed for numerous actors in France wishing to put cooperation at the heart of their IT infrastructure. Examples include [Colibris](https://www.colibris-lemouvement.org), a major actor in social and ecological transition, [Les Chemins de la Transition](https://lescheminsdelatransition.org), a project to create nomadic learning courses, and [Destination Oasis](https://destination-oasis.fr), a website for finding accommodation in eco-communities.
 
-Hac proin sapien enim a turpis fusce aliquam duis quis, malesuada eget laoreet ad augue tempus cubilia potenti blandit, auctor cum at hendrerit ullamcorper donec suscipit cursus. Ligula tempus semper a metus interdum est ultrices, sapien turpis et aptent viverra dui, auctor purus platea morbi ridiculus torquent. Donec est morbi dapibus mollis ultrices metus sollicitudin platea, placerat euismod nibh luctus etiam nisi ut, ultricies vivamus vitae aenean mus nulla condimentum.
+## Toward Pods
 
-Curabitur dapibus rutrum luctus mollis nunc fringilla tellus etiam curae fames euismod aliquet eu, magnis purus venenatis pharetra integer blandit elementum varius dictumst viverra donec ridiculus. Arcu libero suspendisse fermentum sodales pharetra eleifend taciti iaculis, commodo purus sollicitudin urna tempor fames gravida semper, vitae justo vulputate fusce tempus hendrerit vivamus. Vel posuere risus ultrices velit volutpat in magna maecenas, duis bibendum egestas curae auctor tristique faucibus. Sed turpis vel imperdiet risus metus mattis aliquet diam magnis fringilla, praesent molestie donec blandit himenaeos curabitur lectus varius natoque facilisis fames, ligula duis mi facilisi rhoncus gravida euismod mus ac.
+When the [Solid project](https://solidproject.org) was launched in 2016, the Virtual Assembly community immediately took a keen interest, seeing it as the realization of the vision Henry Story had shared in 2013.
 
-Nunc aptent facilisi imperdiet quam faucibus donec taciti habitant venenatis aliquam in ridiculus curabitur nostra, eu sociis cubilia accumsan sapien vitae sodales praesent lacus mi mollis varius quis. Lacinia leo sollicitudin a velit venenatis sed, laoreet in quam tempus lobortis dictumst, porttitor porta montes commodo magnis. Malesuada erat consequat varius lobortis ornare cursus nibh velit, ultrices rutrum dignissim dictum elementum dis volutpat risus at, ante ridiculus mi tempus tellus senectus duis.
+With Solid, users are invited to create a Personal Online Datastore (Pod) on the host of their choice. Then, when they use a compatible application, it stores all their personal data on their Pod. It's a complete reversal of web architecture as we know it today.
 
-Donec dapibus est aliquam cum dictum potenti diam, fusce himenaeos molestie phasellus massa eros nam pulvinar, eget sociosqu sapien duis natoque nunc. Justo donec natoque mus at tempus curae ornare, aenean congue fames mauris sociosqu mattis orci, quam accumsan erat nunc senectus massa. Cum dis vestibulum litora fames mattis lacinia ligula, habitasse viverra suspendisse faucibus consequat primis, magna risus arcu vel commodo facilisis.
+Up until now, the SemApps team's focus had been on creating tools that encourage sharing and cooperation between organizations. Instead of Personal Online Datastores (Pods), the Virtual Assembly was deploying mostly Collective Online Datastores (or Cods, as we chose to call them in [this article](https://www.virtual-assembly.org/pods-and-cods/) <sup>_(french)_</sup>).
 
-Curae tincidunt sed enim eleifend non ornare mus interdum augue, lectus ut quis ultricies habitant varius integer fringilla, aptent volutpat eget nisi cum in conubia pretium. Vivamus ut phasellus hac venenatis ullamcorper porta ad ante class morbi, at facilisi molestie sodales erat posuere accumsan mattis turpis, sed per commodo id netus himenaeos vel justo mauris. Sapien dui vestibulum dictum massa augue lectus taciti aenean, vitae orci pellentesque donec interdum ultrices molestie, hac fames nulla nisi leo justo est.
+The focus was thus on facilitating information sharing (with the LDP protocol, but also ActivityPub) rather than on preserving personal data, even if there was a natural interest in the latter. Nevertheless, these remained two very different, even opposing, objectives, which could sometimes give rise to conflicts in terms of proposed functionalities.
 
-Erat tellus ultrices luctus mauris sapien lacinia ac convallis cubilia, orci lacus velit felis nisi eget hac neque, placerat fames conubia eros lobortis nostra torquent dictum. Ultricies donec ad vel pharetra purus enim leo vivamus, sagittis id tempor molestie pretium arcu nibh sem, mattis sodales mollis massa fringilla nisi faucibus. Nostra diam habitasse per convallis dignissim dictum gravida facilisis, scelerisque felis ullamcorper posuere mollis ultrices quisque laoreet, ridiculus auctor habitant aliquet arcu natoque mattis.
+The situation changed at the end of 2021, when Sébastien Rosset came up with the idea of proposing Pods integrating ActivityPub natively. Named [ActivityPods](https://activitypods.org), this new project was also based on SemApps. In just a few months, the SemApps code was adapted to enable the deployment of Pods, with each Pod having its own dataset on Jena Fuseki.
 
-Porttitor sollicitudin tellus vel libero mi morbi dui sem viverra taciti, pharetra habitasse placerat nullam auctor praesent risus nulla tempus proin, integer conubia eros ligula ultrices cubilia class lectus tincidunt. Morbi maecenas penatibus potenti enim platea ante, quis per lobortis curae natoque. Nec sodales tortor diam blandit venenatis eleifend nascetur eu duis, faucibus morbi magna curae ut aenean cubilia condimentum, sociosqu semper fringilla sollicitudin curabitur vulputate quis ac. Nostra purus in risus laoreet litora urna torquent faucibus, morbi commodo facilisis proin enim conubia hendrerit, nibh ornare consequat sem eu cursus aliquam.
+Applications soon sprang up, such as [Welcome to my Place](https://welcometomyplace.org), an app to propose invitation-only events, or [Mutual Aid](https://mutual-aid.app), a classified ads app. In both cases, users would first create a Pod on the host of their choice, and then the app would use this Pod to store their data.
 
-Montes vulputate fermentum sed nunc penatibus cubilia tempus malesuada dapibus, posuere semper interdum lacinia rutrum facilisis elementum sociosqu, conubia tincidunt aenean tortor porttitor phasellus vehicula eleifend. Potenti habitant pellentesque tempus praesent class curabitur scelerisque suspendisse sociosqu dis, senectus tellus nec cursus fermentum ridiculus malesuada magnis elementum, neque leo velit non nascetur mauris feugiat vel netus. Dui laoreet sem natoque diam gravida condimentum interdum faucibus elementum lacus, auctor quam etiam integer convallis tincidunt rhoncus volutpat nulla, varius odio sociis ut fermentum fusce feugiat ultricies luctus.
+Although ActivityPods was not 100% compatible with the Solid standard ([Solid-OIDC is currently being implemented](https://github.com/assemblee-virtuelle/activitypods/issues/121)), the project generated a great deal of interest among developers, to the point of being presented in March 2022 at [Solid World](https://vimeo.com/691410463#t=18m30s), the monthly gathering of the Solid community. In June 2023, the project also received funding from [NLnet](https://nlnet.nl) to consolidate the existing code base. This [ongoing work](the-road-towards-activitypods-2-0) is also helping to improve SemApps.
 
-Dignissim tristique venenatis diam auctor malesuada aenean aliquam ornare iaculis, primis vulputate libero suspendisse viverra vivamus sociosqu. Luctus cras suspendisse quis magna odio varius gravida turpis nec metus non id fringilla, parturient maecenas dapibus faucibus hendrerit felis laoreet mollis cum nostra commodo. Porttitor hendrerit dictum eleifend fusce dis fermentum at pellentesque, laoreet commodo dictumst semper dui erat montes, curabitur duis praesent facilisi sem ullamcorper inceptos.
+## The future: Pods and Cods
 
-Imperdiet sagittis sapien lobortis quis consequat blandit habitant porta potenti sed, natoque dictum nulla phasellus viverra felis pretium parturient. Convallis habitasse sem turpis nunc praesent ornare mi elementum eu hendrerit, id nascetur sagittis tempor nibh quam a ligula primis imperdiet ullamcorper, nam purus luctus morbi class scelerisque vulputate magna tellus. Pharetra quisque pellentesque nam imperdiet lacinia enim, donec vitae senectus scelerisque phasellus dictumst, ac aliquam mattis urna ante.
+At Virtual Assembly, the ActivityPods architecture was so convincing that we began to think only in terms of Pods. Until now, it was “Cods" that were deployed, and users created their accounts on the Cods. But why should their personal data be linked to a particular Cod? Couldn't they create a profile on their Pod, then share it with the organizations they're involved with?
 
-Habitant praesent pulvinar scelerisque per phasellus lobortis velit, magnis odio himenaeos primis curabitur senectus, nascetur ullamcorper convallis nunc placerat nisl. Porta tellus commodo praesent ullamcorper cursus senectus tempor vivamus, penatibus eu purus ultrices posuere mi sodales, urna quisque accumsan imperdiet convallis aptent nisl. Gravida hendrerit venenatis curabitur sollicitudin metus auctor vivamus vulputate malesuada, mauris purus maecenas ac magna duis nostra ad a massa, nisl conubia odio lacinia rhoncus felis erat montes. Nostra eros proin mi venenatis enim semper ad magnis netus, in vestibulum ornare ac fusce aliquet aptent non condimentum faucibus, tempor arcu potenti blandit magna consequat luctus nam.
+Taking this a step further, we realized that Archipelago itself could become an ActivityPods-compatible application. Each organization, instead of deploying an instance on its own server, would choose a hosting provider for its data. And it would then use the Archipelago app (but also other apps) to manage its data and share it with other organizations.
+
+To have real Cods that can be created "on the fly" and function like Pods, we would simply need to refine the rights management interface. A user with a Pod could create a Cod for an organization, and become the Cod's administrator. He could then grant administration rights to other users.
+
+<ImageCaption
+	src={archipelLowTech.src}
+	url="https://lowtechlab.org/fr/actualites-blog/l-archipel-low-tech-en-france-illustre"
+	label="France's Low-Tech Archipelago. Do you see Pods and Cods?"
+/>
+
+The result would be a constellation of Cods and Pods, all interoperable with each other. Collective data would be on Cods, personal data on Pods. The aim would be to promote exchange and openness, while preserving data sovereignty. These two objectives, which seemed so far apart at the outset, would thus be achieved in this new architecture with revolutionary potential.
+
+There's still a lot of work to be done, but these prospects are encouraging. Despite our limited resources, we're confident that the dreams that have been nurtured for almost 15 years within the Virtual Assembly (and internationally, within the Solid and ActivityPub communities) will come true in the next few years, and radically change the way we use the web.

@@ -1,0 +1,10 @@
+---
+const { src, label, url } = Astro.props;
+---
+
+<div class="text-center">
+  <a href={url} target="_blank"><img src={src} class="inline !mt-4" /></a>
+  <p class="text-base text-center italic !-mt-6 !pb-2">
+    {label}
+  </p>
+</div>

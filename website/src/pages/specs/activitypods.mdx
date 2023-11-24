@@ -34,7 +34,7 @@ We implement capability resources which are defined as [WAC](https://solid.githu
 
 Anyone who know the capability URL can access its corresponding resource like this:
 
-```http
+```
 GET /capabilities/k3kleict5ks3r4 HTTP/1.1
 Host: myserver.com
 Accept: application/ld+json
@@ -133,7 +133,7 @@ It's a peculiarity of the JSON-LD format that, when creating a LDP resource, you
 
 To remedy this problem, all GET routes of our pods (whether for LDP resources, LDP containers or ActivityStreams collections) accept an optional `JsonLdContext` header, which can be either a URL or a JSON representation (of an array or object). As a result, the specified context will be used to format the returned JSON-LD data.
 
-```http
+```
 GET /alice/data/my-event HTTP/1.1
 Host: example.org
 Accept: application/ld+json

@@ -20,6 +20,13 @@
 	}
 }
 
+/* https://jan-mueller.at/blog/next-level-heading-anchors/#heading-offset */
+@layer components {
+	*:is(h1, h2, h3, h4, h5, h6) {
+		@apply scroll-mt-20;
+	}
+}
+
 .dropdown:hover .dropdown-menu {
 	display: block;
 }
@@ -49,18 +56,23 @@
 .prose p {
 	margin-top: 0.8rem;
 	margin-bottom: 0.8rem;
-	line-height: 36px;
+	line-height: 1.8rem;
 }
 
 .prose li {
 	margin-top: 0.4rem;
 	margin-bottom: 0.4rem;
-	line-height: 36px;
+	line-height: 1.8rem;
 }
 
 .prose ul {
 	margin-top: 0.8rem;
 	margin-bottom: 0.8rem;
+}
+
+.prose h2 {
+	margin-top: 1.2em;
+	margin-bottom: 0.5em;
 }
 
 .prose pre {
@@ -77,4 +89,9 @@
 
 summary {
 	cursor: pointer;
+}
+
+sup {
+	left: -0.1em;
+	top: -0.2em;
 }

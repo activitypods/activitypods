@@ -80,10 +80,9 @@ import { Icon } from "astro-icon";
       </p>
       <a
         href="https://vimeo.com/691410463#t=18m30s"
-        target="_blank"
         class="btn py-2 px-6"
       >
-        <Icon name="tabler:video" class="w-5 h-5 mr-1 -ml-1.5" />
+        <Icon name="tabler:video" class="w-5 h-5 mr-2 -ml-1.5" />
         Watch video
       </a>
     </li>
@@ -166,7 +165,7 @@ import { Icon } from "astro-icon";
       </span>
       <time
         class="block mb-2 text-md font-normal leading-none text-gray-400 dark:text-gray-500"
-        >Mid-2023</time
+        >December 2023</time
       >
       <h3
         class="flex items-center mb-1 text-xl font-semibold text-gray-900 dark:text-white"
@@ -183,6 +182,39 @@ import { Icon } from "astro-icon";
     </li>
     <li class="mb-10 ml-10">
       <span
+        class="flex absolute -left-5 justify-center items-center w-10 h-10 bg-secondary-500 rounded-full ring-8 ring-white dark:ring-gray-900"
+      >
+        <Icon
+          name="tabler:tool"
+          class="w-6 h-6 text-white dark:text-slate-200"
+        />
+      </span>
+      <time
+        class="block mb-2 text-md font-normal leading-none text-gray-400 dark:text-gray-500"
+        >March 2024</time
+      >
+      <h3
+        class="flex items-center mb-1 text-xl font-semibold text-gray-900 dark:text-white"
+      >
+        ActivityPods 2.0<span
+        class="bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-white ml-3"
+        >Work in progress</span
+      >
+      </h3>
+      <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+        Extract bots from ActivityPods providers: they become independant
+        applications activable by user.
+      </p>
+      <a
+        href="/blog/the-road-to-activitypods-2-0"
+        class="btn py-2 px-6"
+      >
+        <Icon name="tabler:eye" class="w-5 h-5 mr-2 -ml-1.5" />
+        Read blog post
+      </a>
+    </li>
+    <li class="mb-10 ml-10">
+      <span
         class="flex absolute -left-5 justify-center items-center w-10 h-10 bg-gray-500 rounded-full ring-8 ring-white dark:ring-gray-900"
       >
         <Icon
@@ -192,16 +224,15 @@ import { Icon } from "astro-icon";
       </span>
       <time
         class="block mb-2 text-md font-normal leading-none text-gray-400 dark:text-gray-500"
-        >End of 2023</time
+        >Mid-2024</time
       >
       <h3
         class="flex items-center mb-1 text-xl font-semibold text-gray-900 dark:text-white"
       >
-        External bots
+        Full Solid-OIDC compliance
       </h3>
       <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-        Extract bots from ActivityPods providers: they become independant
-        applications activable by user.
+        Solid clients can connect to ActivityPods Pods just like other Pod providers
       </p>
     </li>
   </ol>

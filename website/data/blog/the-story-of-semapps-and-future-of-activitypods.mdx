@@ -42,7 +42,7 @@ In late 2019, the project was revived by a small team within Virtual Assembly:
 
 Sébastien Rosset was particularly interested in the [ActivityPub](https://www.w3.org/TR/activitypub) protocol, which had been standardized by the W3C the previous year and enabled decentralized social networking. Having developed a first server using Symfony, he wanted to give it a new dimension by saving data in semantic format ([ActivityPub is intrinsically linked to the semantic web](https://conf.tube/w/81248119-5e19-4798-bc37-f2cd5ed617c7), even if many ActivityPub-compatible apps ignore this dimension).
 
-We had to start from scratch, as the v1 code was unusable. When it came to making the first technological choices, the small team benefited from the expertise of Niko, a veteran developer exiled in Greece.
+We had to start from scratch, as the v1 code was unusable. When it came to making the first technological choices, the small team benefited from the expertise of Niko, a veteran developer.
 
 Thanks to his input, it was decided to use [Moleculer](https://moleculer.services) for the backend. This NodeJS-based framework makes it easy to create microservices, which can remain on the same machine or be deployed on several machines. The architecture fitted in well with our desire to make SemApps modular. This way, users could activate only the services they needed, or develop their own services that could connect to existing ones.
 

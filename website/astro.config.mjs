@@ -1,6 +1,9 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import remarkToc from 'remark-toc';
+import rehypeToc from 'rehype-toc';
+
 import { defineConfig } from 'astro/config';
 
 import tailwind from '@astrojs/tailwind';
@@ -35,7 +38,6 @@ export default defineConfig({
 			serviceEntryPoint: '@astrojs/image/sharp',
 		}),
 		mdx(),
-
 		...whenExternalScripts(() =>
 			partytown({
 				config: { forward: ['dataLayer.push'] },
@@ -44,8 +46,24 @@ export default defineConfig({
 	],
 
 	markdown: {
-		remarkPlugins: [remarkReadingTime],
+		remarkPlugins: [remarkReadingTime, remarkToc],
+		rehypePlugins: [
+			[
+				rehypeToc,
+				{
+					headings: ['h1', 'h2', 'h3', 'h4'],
+					cssClasses: {
+						toc: 'toc-post',
+						link: 'toc-link',
+					},
+				},
+			],
+		],
 		extendDefaultPlugins: true,
+		shikiConfig: {
+			theme: 'github-light',
+			wrap: true,
+		},
 	},
 
 	vite: {

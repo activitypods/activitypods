@@ -1,0 +1,241 @@
+---
+layout: ~/layouts/MdLayout.astro
+title: Solid compliance
+---
+
+import ProgressBar from '../../components/ProgressBar.astro';
+
+[Solid](https://solidproject.org/) (Social Linked Data) is a set of specifications whose aim is to allow users to store all their data in Pods ("Personal Online Datastores"). Users have full control over their data and can give permissions to applications or people they trust.
+
+ActivityPods supports fully the philosophy behind Solid, but it doesn't yet support all the standards that have been defined for Solid. _It is thus not Solid compliant._ However, we are keeping a close eye on the development of this standard and are gradually moving towards it, with the aim of being fully Solid compliant.
+
+### Linked Data Platform <ProgressBar percentage={90} />
+
+Each Solid Pod must comply with the [Linked Data Platform](https://www.w3.org/TR/ldp/) protocol. This is a REST-based API for managing containers and resources.
+
+#### Formats <ProgressBar percentage={100} />
+
+We support both JSON-LD and Turtle format.
+
+#### Containers <ProgressBar percentage={100} />
+
+We support the [`BasicContainer`](https://www.w3.org/TR/ldp/#ldpc-container) type, as required by the [Solid specs](https://solid.github.io/specification/protocol#resource-containment).
+
+#### Binaries <ProgressBar percentage={100} />
+
+We support non-RDF resources (binaries) uploads. The description of the resource is stored in the triplestore as a `http://semapps.org/ns/core#File`.
+
+```turtle
+<https://mypod.store/alice/data/files/picture.jpg>
+   a <http://semapps.org/ns/core#File> ;
+   <http://semapps.org/ns/core#fileName> "picture.jpg" ;
+   <http://semapps.org/ns/core#localPath> "uploads/files/picture.jpg" ;
+   <http://semapps.org/ns/core#mimeType> "image/jpeg" .
+```
+
+There is an [issue](https://github.com/assemblee-virtuelle/semapps/issues/1192) to use the Solid recommended metadata instead.
+
+#### PATCH method <ProgressBar percentage={0} />
+
+LDP resources and containers can be selectively modified using the HTTP `PATCH` method. This method is important because it limits the risk of overwriting data, as with the simpler `PUT` method.
+However, due to the way RDF resources are formatted, the `PATCH` method cannot be used like more regular REST-based APIs.
+Many solutions have been proposed in the semantic web community to solve this problem:
+
+- [LD Patch](https://www.w3.org/TR/ldpatch/)
+- [SPARQL 1.1 Update](http://www.w3.org/TR/sparql11-http-rdf-update/#http-patch)
+- [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch)
+- [TurtlePatch](http://www.w3.org/2001/sw/wiki/TurtlePatch)
+- [RDF Patch](http://afs.github.io/rdf-patch/)
+
+Initially, the recommended method for Solid servers was [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch) and this is what we implemented. In [2021](https://github.com/solid/specification/issues/332), it was switched to a new N3 Patch method, as described in the [Solid spec](https://solid.github.io/specification/protocol#writing-resources). It is not yet a W3C standard.
+
+Until the N3 Patch method is standardized, we will continue to use the [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch) format.
+
+<details>
+<summary>Example of a SparqlPatch update to modify a LDP resource.</summary>
+```http
+PATCH /alice HTTP/1.1
+Host: mypod.store
+Content-Type: application/sparql-update
+
+PREFIX as: <https://www.w3.org/ns/activitystreams#>
+INSERT DATA { <https://mypod.store/alice> as:preferredUsername "Alice" . };
+DELETE DATA { <https://mypod.store/alice> as:preferredUsername "ALICE" . };
+
+````
+</details>
+
+<details>
+<summary>Example of a SparqlPatch update to add or remove a resource from a LDP container.</summary>
+```http
+PATCH /alice/data/events HTTP/1.1
+Host: mypod.store
+Content-Type: application/sparql-update
+
+PREFIX ldp: <http://www.w3.org/ns/ldp#>
+INSERT DATA { <http://mypod.store/alice/data/events> ldp:contains <http://url/of/resource/to/attach>. };
+DELETE DATA { <http://mypod.store/alice/data/events> ldp:contains <http://url/of/resource/to/detach>. };
+````
+
+</details>
+
+#### LDP Prefer header <ProgressBar percentage={0} />
+
+👷 To be implemented. ([#1168](https://github.com/assemblee-virtuelle/semapps/issues/1168))
+
+#### LDP paging <ProgressBar percentage={0} />
+
+👷 To be implemented. ([#176](https://github.com/assemblee-virtuelle/semapps/issues/176))
+
+### Identity <ProgressBar percentage={100} />
+
+#### WebID <ProgressBar percentage={100} />
+
+All ActivityPub actors are also WebIDs.
+
+<details>
+	<summary>Click to see how an ActivityPods WebID looks like</summary>
+```json
+{
+	"@context": "https://activitypods.org/context.json",
+	"id": "https://mypod.store/alice",
+	"type": ["foaf:Person", "Person"],
+	"dc:created": "2023-01-13T11:42:45.636Z",
+	"dc:modified": "2023-01-13T11:42:48.389Z",
+	"foaf:nick": "alice",
+	"preferredUsername": "alice",
+	"inbox": "https://mypod.store/alice/inbox",
+	"outbox": "https://mypod.store/alice/outbox",
+	"followers": "https://mypod.store/alice/followers",
+	"following": "https://mypod.store/alice/following",
+	"liked": "https://mypod.store/alice/liked",
+	"publicKey": {
+		"owner": "https://mypod.store/alice",
+		"publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAzlq6avqA4nwxGDqXMijZ\nixRIllyIDkF4rc9KxUHizysOJEBx9+WSfom0wlS1hPr+Qn90eb8h/8wjbvfXdjYm\npdusaTOrRMFEEMX4lquAPcgLxZKzQNAy8zUw/oBpnrep52Hmx7VfYFfCpAP7OxAL\nsA4mdKq1tx2e0g9so+5WeAa3yiKCvqkE6QJQXgk+WQ998aQg133HOUOqa1JKaU0k\nJK6fVYnJ74L7b6OWQDbehu0SBlAAypOJzkO4WysKOGiUCrrcgol2LmTImzCoTZS3\nPUUV0Rh2iI3v5t07vUfr5o415Em5YFwoPRhq3WH6hmP7wd9ducaFNl9Q/XyYQmPK\nG1F3RQNwtSy6aeAUajw6HTWd+FlFA6oA9LLaVxCoTxlejLB8IrYo3y2PGxPAXNl3\nqodsXWk/I/Jm/nus+RLVGCoJLl+i+zzEF0WG20+rfb0cNPjzuzgWuYY2PTBu78Ib\nizaXLv23fPLmxxUwHQgcCc4RgbmBAwhLWTsGETRLbDSWwBZnkv6PnMVlyrzs47jf\nr+vFYIxdiz8VvJe+sQ7hSrkzVjCluKIXhWT3bPtOkq4fepTnZmGi3qXRCg5cacd8\ni+KLaGtsHIsNyGOGfi55S5ZiSMo7kbeUxfM6xFjfhWuj3jDmMYfYQgBSmP2CNcEU\nTWmx7zJiaO3Me1q3sFG8Ti0CAwEAAQ==\n-----END PUBLIC KEY-----\n"
+	},
+	"endpoints": {
+		"void:sparqlEndpoint": "https://mypod.store/alice/sparql",
+		"proxyUrl": "https://mypod.store/alice/proxy"
+	},
+	"url": "https://mypod.store/alice/data/profiles/63c143b75ea9720d1b484a39"
+}
+```
+</details>
+
+Some Solid predicates are still missing ([#122](https://github.com/assemblee-virtuelle/activitypods/issues/122))
+
+### Authentication <ProgressBar percentage={60} />
+
+#### Solid-OIDC <ProgressBar percentage={60} />
+
+In v2.0, we partly support authentication through [Solid-OIDC](https://solidproject.org/TR/oidc). This is detailed in [#121](https://github.com/assemblee-virtuelle/activitypods/issues/121).
+
+We do not support yet DPoP to request resources, but it will be implemented as soon as possible.
+In the meanwhile, the ActivityPub-defined [Proxy endpoint](activitypub#proxy-endpoint) should be used to request remote servers.
+
+#### HTTP Signature <ProgressBar percentage={100} />
+
+We support [HTTP signature](./activitypub#http-signature-authentication) for server-to-server authentication. This is the standard used by ActivityPub.
+
+There is now a [proposal](https://solid.github.io/httpsig/) to integrate HTTP signature in the Solid protocol.
+
+#### WebID-TLS <ProgressBar percentage={0} />
+
+Considering [WebID-TLS](https://www.w3.org/2005/Incubator/webid/spec/tls/) authentication mechanism, used before Solid-OIDC, is now only an option, we will not implement it.
+
+### Authorization <ProgressBar percentage={50} />
+
+#### Web Access Control <ProgressBar percentage={100} />
+
+We support the full [WAC specification](https://solid.github.io/web-access-control-spec/).
+
+#### Access Control Policy <ProgressBar percentage={0} />
+
+We do not support yet the [ACP specification](https://solid.github.io/authorization-panel/acp-specification/).
+
+### Application interoperability <ProgressBar percentage={30} />
+
+[Solid Application Interoperability](https://solid.github.io/data-interoperability-panel/specification) is a complex specification which is not yet complete.
+We've implemented everything we can at the moment and are waiting to see how it evolves before implementing the remaining parts.
+
+We're following the proposed ontology closely. On the other hand, application registration is done via ActivityPub, as this was the simplest method for us (applications are ActivityPub actors).
+We've also decided not to use [ShapeTrees](https://shapetrees.org) for the time being, as we don't think they add anything to our triplestore-based architecture: instead, applications just declare the classes they want to manage.
+
+<details>
+	<summary>What we implement</summary>
+	<ul>
+		<li>
+			Applications declare their needs through `AccessNeedGroups` and `AccessNeeds`, which are displayed on an
+			authorization screen.
+		</li>
+		<li>Before registration, `AccessGrants` and `DataGrants` are created on the user's Pod.</li>
+		<li>
+			The `ApplicationRegistration` resource is created on the user's Pod and sent to the application through a `Create`
+			activity.
+		</li>
+		<li>
+			If the `ApplicationRegistration` is correct, it is saved on the application instance, as well as the corresponding
+			grants. It returns an `Accept` activity.
+		</li>
+		<li>
+			Whenever the user connects again to the application, we check that the `AccessNeeds` haven't changed. If needed,
+			we show an authorization screen again and `ApplicationRegistration` is updated (with a `Update` activity).
+		</li>
+		<li>
+			If the user wants to uninstall the application, we delete the `ApplicationRegistration` (and corresponding grants)
+			and send a `Delete` activity to the application.
+		</li>
+	</ul>
+</details>
+
+<details>
+	<summary>What we don't implement yet</summary>
+	<ul>
+		<li>Authorization flow is handled using ActivityPub. The application is an ActivityPub actor.</li>
+		<li>
+			We only handle registration with `Applications`, not with other `SocialAgents` (we continue to use WAC permissions
+			for the latter)
+		</li>
+		<li>Pods don't declare an `AuthorizationAgent`. It is handled internally.</li>
+		<li>
+			Pods don't declare a `DataRegistry`. This registry is only used to list ShapeTrees. TypeIndex can be used instead.
+		</li>
+		<li>
+			Applications don't declare `AccessDescription` for the time being (we can deduce the accesses requested, and later
+			it may be used to justify access to certain resources).
+		</li>
+		<li>
+			Pods only create `AccessGrants` and `DataGrants`, not `AccessAuthorizations` and `DataAuthorizations`. Grants can
+			be shared with the registered application, while Authorizations cannot. The only difference between them is a
+			`grantedWith` predicate in `AccessAuthorizations` that indicates which app was used to manage authorizations (but
+			we manage that internally anyway).
+		</li>
+		<li>
+			Pods don't declare `RegistrySet`, `ApplicationRegistry`, `AuthorizationRegistry` as they are not visible from the
+			outside. We just read `ApplicationRegistrations`, `AccessGrants` and `DataGrants` in their dedicated containers.
+		</li>
+	</ul>
+</details>
+
+#### Type Indexes <ProgressBar percentage={0} />
+
+👷 To be implemented ([#1171](https://github.com/assemblee-virtuelle/semapps/issues/1171))
+
+### Linked Data Notifications <ProgressBar percentage={0} />
+
+[Linked Data Notifications](https://www.w3.org/TR/ldn/), standardized in 2017, were the basis of the [ActivityPub](https://www.w3.org/TR/activitypub/) protocol (standardized in 2018).
+LDN defines only inboxes, while ActivityPub defines a full communication protocol, with inboxes and outboxes.
+
+Since [we implement the full ActivityPub protocol](activitypub), we haven't needed to implement the more lightweight LDN protocol, but it could be added in the future.
+
+### Live Update <ProgressBar percentage={0} />
+
+#### Solid Notifications Protocol <ProgressBar percentage={0} />
+
+👷 To be implemented ([#126](https://github.com/assemblee-virtuelle/activitypods/issues/126), [#127](https://github.com/assemblee-virtuelle/activitypods/issues/127))
+
+### SPARQL endpoint <ProgressBar percentage={100} />
+
+Even though it is not required anymore by the Solid spec, every Pod comes with an SPARQL endpoint, linked to the WebID with the `void:sparqlEndpoint` predicate.
+Only SPARQL _queries_ are supported, not [SPARQL _updates_](https://www.w3.org/TR/sparql11-update/) (You MUST use LDP or ActivityPub to modify data).
+WAC permissions are applied to all SPARQL queries, in order to return only the resources that the autenticated user or application has the right to see.

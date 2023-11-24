@@ -1,0 +1,10 @@
+---
+const { percentage } = Astro.props;
+---
+
+<div class="inline-block ml-1 w-10 bg-gray-400 rounded-lg" style={{ height: '12px' }} title={`Estimated compliance: ${percentage}%`}>
+	<div
+		style={{ width: `${percentage}%`, backgroundColor: percentage < 40 ? 'red' : percentage < 80 ? 'orange' : 'green' }}
+		class="h-full rounded-lg"
+	/>
+</div>

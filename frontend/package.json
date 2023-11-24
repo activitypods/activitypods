@@ -3,51 +3,63 @@
   "version": "1.1.0",
   "private": true,
   "dependencies": {
-    "@mui/styles": "^5.0.2",
-    "@semapps/activitypub-components": "0.6.0-alpha.0",
-    "@semapps/auth-provider": "0.6.0-alpha.0",
-    "@semapps/date-components": "0.6.0-alpha.0",
-    "@semapps/field-components": "0.6.0-alpha.0",
-    "@semapps/geo-components": "0.6.0-alpha.0",
-    "@semapps/input-components": "0.6.0-alpha.0",
-    "@semapps/list-components": "0.6.0-alpha.0",
-    "@semapps/semantic-data-provider": "0.6.0-alpha.0",
+    "@mui/icons-material": "^5.14.13",
+    "@mui/material": "^5.14.13",
+    "@mui/styles": "^5.14.13",
+    "@semapps/activitypub-components": "0.6.0-alpha.3",
+    "@semapps/auth-provider": "0.6.0-alpha.3",
+    "@semapps/date-components": "0.6.0-alpha.3",
+    "@semapps/field-components": "0.6.0-alpha.3",
+    "@semapps/geo-components": "0.6.0-alpha.3",
+    "@semapps/input-components": "0.6.0-alpha.3",
+    "@semapps/list-components": "0.6.0-alpha.3",
+    "@semapps/semantic-data-provider": "0.6.0-alpha.3",
     "leaflet": "^1.8.0",
     "leaflet-defaulticon-compatibility": "^0.1.1",
     "leaflet.markercluster": "^1.5.3",
+    "ra-i18n-polyglot": "^4.11.0",
     "ra-language-english": "^4.11.0",
     "ra-language-french": "^4.11.0",
     "react": "^18.2.0",
     "react-admin": "^4.11.0",
     "react-copy-to-clipboard": "^5.0.4",
-    "react-dom": "^18.1.0",
-    "react-sticky-box": "^0.9.3",
-    "speakingurl": "^14.0.1"
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.47.0",
+    "react-router-dom": "^6.17.0",
+    "react-sticky-box": "^2.0.4",
+    "speakingurl": "^14.0.1",
+    "url-join": "^4.0.1"
   },
   "devDependencies": {
-    "prettier": "^2.3.2",
-    "react-scripts": "3.4.0"
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@types/url-join": "^4.0.1",
+    "@typescript-eslint/eslint-plugin": "^6.7.5",
+    "@typescript-eslint/parser": "^6.7.5",
+    "eslint": "^8.2.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-import-typescript": "^0.0.4",
+    "eslint-plugin-jsdoc": "^46.4.4",
+    "eslint-plugin-jsx-a11y": "^6.5.1",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-react": "^7.28.0",
+    "eslint-plugin-react-hooks": "^4.3.0",
+    "prettier": "^3.0.3",
+    "react-scripts": "^5.0.1",
+    "typescript": "^5.2.2",
+    "yalc": "1.0.0-pre.53"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "eject": "react-scripts eject",
-    "prettier": "prettier --single-quote --print-width 120 --write '**/*.js'",
-    "link-semapps-packages": "yarn link @semapps/activitypub-components @semapps/auth-provider @semapps/date-components @semapps/field-components @semapps/geo-components @semapps/input-components @semapps/list-components @semapps/markdown-components @semapps/semantic-data-provider",
-    "unlink-semapps-packages": "yarn unlink @semapps/activitypub-components @semapps/auth-provider @semapps/date-components @semapps/field-components @semapps/geo-components @semapps/input-components @semapps/list-components @semapps/markdown-components @semapps/semantic-data-provider"
-  },
-  "eslintConfig": {
-    "extends": "react-app",
-    "overrides": [
-      {
-        "files": [
-          "**/*.js"
-        ],
-        "rules": {
-          "jsx-a11y/anchor-is-valid": "off"
-        }
-      }
-    ]
+    "prettier": "prettier --write '**/*.{js,ts,json,tsx,jsx}'",
+    "link-semapps-packages": "yalc link @semapps/activitypub-components @semapps/auth-provider @semapps/date-components @semapps/field-components @semapps/geo-components @semapps/input-components @semapps/list-components @semapps/markdown-components @semapps/semantic-data-provider",
+    "unlink-semapps-packages": "yalc remove --all && rm -rf node_modules/@semapps && yarn install --force",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
+    "lint-files": "eslint --ext .js,.jsx,.ts,.tsx",
+    "typecheck": "tsc --noEmit"
   },
   "browserslist": [
     ">0.2%",

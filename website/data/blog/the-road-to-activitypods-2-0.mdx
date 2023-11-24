@@ -30,15 +30,15 @@ This solution is clearly not scalable, since whenever a new application is deplo
 
 In v2, all applications will have a their own backend where their specific code will be run. This backend will include at least an ActivityPub actor for the application, which will be able to communicate with users’ Pods (also ActivityPub actors).
 
-We're going to use [part of Solid application interoperability](../specs/solid#application-interoperability-) spec to allow applications to register with the Pod and declare their access needs. For the time being, application registration will go through ActivityPub, as this is the simplest with our current architecture. We're waiting for this spec to be completed before we fully comply with it.
+We're going to use [part of Solid application interoperability](../../specs/solid#application-interoperability-) spec to allow applications to register with the Pod and declare their access needs. For the time being, application registration will go through ActivityPub, as this is the simplest with our current architecture. We're waiting for this spec to be completed before we fully comply with it.
 
 The backend will be able to listen in and react to what's happening on the Pod. Via [Solid notifications](https://solid.github.io/notifications/protocol) and websocket channels, it will be able to listen to the user's ActivityPub inbox and outbox. When the user creates or updates data on his or her Pod, this will be indicated in the activity stream of his or her outbox to facilitate this listening.
 
-Finally, the backend will be able to send notifications to the user, when certain activities are received (e.g. an invitation to an event). This notification will simply be [a Note sent via ActivityPub to the user](../specs/activitypods#notifications), which will be transformed into an email or web push notification.
+Finally, the backend will be able to send notifications to the user, when certain activities are received (e.g. an invitation to an event). This notification will simply be [a Note sent via ActivityPub to the user](../../specs/activitypods#notifications), which will be transformed into an email or web push notification.
 
 ## More flexible containers and collections
 
-In v1, LDP containers could not be created by applications or users: the Pod host had to declare the containers. This is a similar problem to the previous one, which was due to the overly rigid architecture of SemApps, [the semantic web toolbox on which ActivityPods is based](the-history-of-semapps-and-future-of-activitypods).
+In v1, LDP containers could not be created by applications or users: the Pod host had to declare the containers. This is a similar problem to the previous one, which was due to the overly rigid architecture of SemApps, [the semantic web toolbox on which ActivityPods is based](the-story-of-semapps-and-future-of-activitypods).
 
 The problem was [fixed](https://github.com/assemblee-virtuelle/semapps/pull/1151) this autumn on SemApps side, which is now able to detect containers “on the fly” according to the data present in the triple store. This will enable more flexible management of LDP containers, which can be dynamically created as required.
 
@@ -48,7 +48,7 @@ For the time being, the plan is for applications to declare the type of resource
 
 With regard to [ActivityStreams collections](https://www.w3.org/TR/activitystreams-core/#collections), which are widely used by ActivityPub and which we find very useful for indexing data, the problem is similar: in v1, applications can declare "custom" collections that will automatically attach themselves to certain types of resources, but the declaration is made in the Pod host thanks to an internal service.
 
-The solution currently envisaged is to [develop an API](../specs/activitypods#collections-api) enabling (now external) applications to create collections themselves and add or remove items from them. This API does not exist in the ActivityPub specification, but there are proposals along these lines, and we intend to contribute to them.
+The solution currently envisaged is to [develop an API](../../specs/activitypods#collections-api) enabling (now external) applications to create collections themselves and add or remove items from them. This API does not exist in the ActivityPub specification, but there are proposals along these lines, and we intend to contribute to them.
 
 ## App-specific tokens and more secure authentication
 
@@ -62,7 +62,7 @@ Armed with this understanding, we implemented [the first part of the Solid-OIDC 
 
 <ImageCaption src={solidOidcFlow.src} label="Just a little part of the Solid-OIDC flow..." />
 
-What's still missing is the use of the DPoP protocol for resources requests. In the meantime, we're using the ID token returned by the server. This is bad practice, but the advantage is that it contains both the user's _and_ the application's WebID, thus allowing to limit access to the data that the application is authorized to manipulate (to request resources from a remote server, we always have to use a [proxy endpoint](../specs/activitypods#proxy-endpoint-with-non-get-methods)).
+What's still missing is the use of the DPoP protocol for resources requests. In the meantime, we're using the ID token returned by the server. This is bad practice, but the advantage is that it contains both the user's _and_ the application's WebID, thus allowing to limit access to the data that the application is authorized to manipulate (to request resources from a remote server, we always have to use a [proxy endpoint](../../specs/activitypods#proxy-endpoint-with-non-get-methods)).
 
 Time and resources permitting, we will finalize the implementation of Solid-OIDC for the release of v2 (or shortly thereafter), which would enable any Solid application to connect to ActivityPods. The other advantage is that [SemApps front-end components](https://semapps.org/docs/frontend) would become Solid-compatible, opening up their use to the entire Solid community!
 

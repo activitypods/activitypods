@@ -6,7 +6,8 @@ export const SITE = {
 	trailingSlash: false,
 
 	title: 'ActivityPods - Personal data spaces powered with ActivityPub',
-	description: 'Brings together ActivityPub and Solid Pods and empowers developers to create truly decentralized applications.',
+	description:
+		'Brings together ActivityPub and Solid Pods and empowers developers to create truly decentralized applications.',
 
 	googleAnalyticsId: false, // or "G-XXXXXXXXXX",
 	googleSiteVerificationId: 'orcPxI47GSa-cRvY11tUe6iGg2IO_RPvnA1q95iEM3M',
@@ -23,7 +24,7 @@ export const BLOG = {
 
 	post: {
 		disabled: false,
-		pathname: '', // empty for /some-post, value for /pathname/some-post
+		pathname: 'blog', // empty for /some-post, value for /pathname/some-post
 	},
 
 	category: {

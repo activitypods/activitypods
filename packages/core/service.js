@@ -16,9 +16,11 @@ const { WebIdService } = require('@semapps/webid');
 const ApiService = require('./services/api');
 const AppOpenerService = require('./services/app-opener');
 const InstallationService = require('./services/installation');
+const JWKService = require('./services/jwk');
+const OidcProviderService = require('./services/oidc-provider/oidc-provider');
 const containers = require('./config/containers');
 const ontologies = require('./config/ontologies.json');
-const package = require('./package.json');
+const packageDesc = require('./package.json');
 
 const CoreService = {
   name: 'core',
@@ -33,10 +35,16 @@ const CoreService = {
     },
     jsonContext: null,
     queueServiceUrl: null,
-    authType: 'local'
+    redisOidcProviderUrl: null,
+    authType: 'local',
+    oidcProvider: {
+      redisUrl: null,
+      cookieSecret: 'COOKIE-SECRET'
+    }
   },
   created() {
-    let { baseUrl, baseDir, frontendUrl, triplestore, jsonContext, queueServiceUrl, authType } = this.settings;
+    let { baseUrl, baseDir, frontendUrl, triplestore, jsonContext, queueServiceUrl, oidcProvider, authType } =
+      this.settings;
 
     // If an external JSON context is not provided, we will use a local one
     const localJsonContext = urlJoin(baseUrl, '_system', 'context.json');
@@ -201,22 +209,36 @@ const CoreService = {
       }
     });
 
+    this.broker.createService(JWKService, {
+      settings: {
+        jwtPath: path.resolve(baseDir, './jwt')
+      }
+    });
+
+    this.broker.createService(OidcProviderService, {
+      settings: {
+        baseUrl,
+        frontendUrl,
+        ...oidcProvider
+      }
+    });
+
     this.broker.createService(NodeinfoService, {
       settings: {
         baseUrl,
         software: {
           name: 'activitypods',
-          version: package.version,
-          repository: package.repository?.url,
-          homepage: package.homepage
+          version: packageDesc.version,
+          repository: packageDesc.repository?.url,
+          homepage: packageDesc.homepage
         },
         protocols: ['activitypub'],
         metadata: {
           frontend_url: frontendUrl,
-          login_url: urlJoin(frontendUrl, 'login'),
-          signup_url: urlJoin(frontendUrl, 'login?signup=true'),
-          logout_url: urlJoin(frontendUrl, 'login?logout=true'),
-          resource_url: urlJoin(frontendUrl, 'r')
+          login_url: frontendUrl && urlJoin(frontendUrl, 'login'),
+          signup_url: frontendUrl && urlJoin(frontendUrl, 'login?signup=true'),
+          logout_url: frontendUrl && urlJoin(frontendUrl, 'login?logout=true'),
+          resource_url: frontendUrl && urlJoin(frontendUrl, 'r')
         }
       },
       actions: {

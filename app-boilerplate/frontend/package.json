@@ -15,6 +15,7 @@
     "leaflet": "^1.8.0",
     "leaflet-defaulticon-compatibility": "^0.1.1",
     "leaflet.markercluster": "^1.5.3",
+    "oauth4webapi": "^2.3.0",
     "ra-language-english": "^4.11.0",
     "ra-language-french": "^4.11.0",
     "react": "^18.2.0",
@@ -30,8 +31,8 @@
     "yalc": "1.0.0-pre.53"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "export NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
+    "build": "export NODE_OPTIONS=--openssl-legacy-provider && react-scripts build",
     "eject": "react-scripts eject",
     "prettier": "prettier --single-quote --print-width 120 --write '**/*.js'",
     "link-semapps-packages": "yalc link @semapps/activitypub-components @semapps/auth-provider @semapps/date-components @semapps/field-components @semapps/geo-components @semapps/input-components @semapps/list-components @semapps/markdown-components @semapps/semantic-data-provider",

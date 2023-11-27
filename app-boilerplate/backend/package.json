@@ -9,10 +9,13 @@
   },
   "dependencies": {
     "@activitypods/app": "1.1.0",
-    "@semapps/auth": "0.6.0-alpha.2",
-    "@semapps/core": "0.6.0-alpha.2",
+    "@semapps/auth": "0.6.0-alpha.4",
+    "@semapps/core": "0.6.0-alpha.4",
     "dotenv-flow": "^3.2.0",
     "ioredis": "^4.17.3",
     "url-join": "^4.0.1"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

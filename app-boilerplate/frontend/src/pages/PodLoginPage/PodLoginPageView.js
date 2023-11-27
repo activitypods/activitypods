@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNotify, useLocaleState, useTranslate, useLogout } from 'react-admin';
+import { useNotify, useLocaleState, useTranslate, useLogin, useLogout } from 'react-admin';
 import { useSearchParams } from 'react-router-dom';
 import {
   Box,
@@ -13,7 +13,6 @@ import {
   Card,
   Typography
 } from '@mui/material';
-import { useNodeinfo } from '@semapps/activitypub-components';
 import makeStyles from '@mui/styles/makeStyles';
 import LockIcon from '@mui/icons-material/Lock';
 import StorageIcon from '@mui/icons-material/Storage';
@@ -50,38 +49,28 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const PodProvider = ({ podProvider, signup, appDomain }) => {
-  const nodeinfo = useNodeinfo(podProvider['apods:domainName']);
+const PodProvider = ({ podProvider, onSelect }) => (
+  <>
+    <Divider />
+    <ListItem>
+      <ListItemButton onClick={onSelect}>
+        <ListItemAvatar>
+          <Avatar>
+            <StorageIcon />
+          </Avatar>
+        </ListItemAvatar>
+        <ListItemText primary={podProvider['apods:domainName']} secondary={podProvider['apods:area']} />
+      </ListItemButton>
+    </ListItem>
+  </>
+);
 
-  let url;
-  if (nodeinfo) {
-    url = new URL(signup ? nodeinfo?.metadata?.signup_url : nodeinfo?.metadata?.login_url);
-    if (signup) url.searchParams.set('signup', 'true');
-    url.searchParams.set('appDomain', appDomain);
-  }
-
-  return (
-    <>
-      <Divider />
-      <ListItem>
-        <ListItemButton component="a" href={url && url.toString()}>
-          <ListItemAvatar>
-            <Avatar>
-              <StorageIcon />
-            </Avatar>
-          </ListItemAvatar>
-          <ListItemText primary={podProvider['apods:domainName']} secondary={podProvider['apods:area']} />
-        </ListItemButton>
-      </ListItem>
-    </>
-  );
-};
-
-const PodLoginPageView = ({ text, customPodProviders, appDomain }) => {
+const PodLoginPageView = ({ text, customPodProviders }) => {
   const classes = useStyles();
   const notify = useNotify();
   const [searchParams] = useSearchParams();
   const [locale] = useLocaleState();
+  const login = useLogin();
   const logout = useLogout();
   const translate = useTranslate();
   const [podProviders, setPodProviders] = useState(customPodProviders || []);
@@ -111,10 +100,13 @@ const PodLoginPageView = ({ text, customPodProviders, appDomain }) => {
   }, [podProviders, setPodProviders, notify, locale]);
 
   useEffect(() => {
-    if (searchParams.has('logout')) {
+    if (searchParams.has('iss')) {
+      // Automatically login if Pod provider is known
+      login({ issuer: searchParams.get('iss') });
+    } else if (searchParams.has('logout')) {
       logout();
     }
-  }, [searchParams, logout]);
+  }, [searchParams, login, logout]);
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center">
@@ -135,8 +127,14 @@ const PodLoginPageView = ({ text, customPodProviders, appDomain }) => {
               <PodProvider
                 key={i}
                 podProvider={podProvider}
-                signup={searchParams.has('signup')}
-                appDomain={appDomain}
+                onSelect={() =>
+                  login({
+                    // TODO include HTTP scheme in Pod providers list
+                    issuer: `${podProvider['apods:domainName'].includes('localhost') ? 'http' : 'https'}://${
+                      podProvider['apods:domainName']
+                    }`
+                  })
+                }
               />
             ))}
           </List>

@@ -30,5 +30,8 @@
   "devDependencies": {
     "jest": "^27.4.0",
     "wait-for-expect": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

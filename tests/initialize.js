@@ -2,6 +2,7 @@ const path = require('path');
 const { ServiceBroker } = require('moleculer');
 const { AuthAccountService } = require('@semapps/auth');
 const { delay } = require('@semapps/ldp');
+const { NodeinfoService } = require('@semapps/nodeinfo');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
@@ -64,6 +65,9 @@ const initialize = async (port, accountsDataset) => {
         password: CONFIG.JENA_PASSWORD
       },
       jsonContext: 'https://activitypods.org/context.json',
+      oidcProvider: {
+        redisUrl: CONFIG.REDIS_OIDC_PROVIDER_URL
+      },
       auth: {
         accountsDataset
       },
@@ -111,6 +115,12 @@ const initializeAppServer = async (port, accountsDataset) => {
 
   await broker.createService(AuthAccountService, {
     adapter: new TripleStoreAdapter({ type: 'AuthAccount', dataset: accountsDataset })
+  });
+
+  await broker.createService(NodeinfoService, {
+    settings: {
+      baseUrl
+    }
   });
 
   return broker;

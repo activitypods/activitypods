@@ -14,5 +14,8 @@
     "dotenv-flow": "^3.2.0",
     "ioredis": "^4.17.3",
     "url-join": "^4.0.1"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

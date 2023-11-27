@@ -20,7 +20,7 @@ const JWKService = require('./services/jwk');
 const OidcProviderService = require('./services/oidc-provider/oidc-provider');
 const containers = require('./config/containers');
 const ontologies = require('./config/ontologies.json');
-const package = require('./package.json');
+const packageDesc = require('./package.json');
 
 const CoreService = {
   name: 'core',
@@ -228,17 +228,17 @@ const CoreService = {
         baseUrl,
         software: {
           name: 'activitypods',
-          version: package.version,
-          repository: package.repository?.url,
-          homepage: package.homepage
+          version: packageDesc.version,
+          repository: packageDesc.repository?.url,
+          homepage: packageDesc.homepage
         },
         protocols: ['activitypub'],
         metadata: {
           frontend_url: frontendUrl,
-          login_url: urlJoin(frontendUrl, 'login'),
-          signup_url: urlJoin(frontendUrl, 'login?signup=true'),
-          logout_url: urlJoin(frontendUrl, 'login?logout=true'),
-          resource_url: urlJoin(frontendUrl, 'r')
+          login_url: frontendUrl && urlJoin(frontendUrl, 'login'),
+          signup_url: frontendUrl && urlJoin(frontendUrl, 'login?signup=true'),
+          logout_url: frontendUrl && urlJoin(frontendUrl, 'login?logout=true'),
+          resource_url: frontendUrl && urlJoin(frontendUrl, 'r')
         }
       },
       actions: {

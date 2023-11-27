@@ -11,7 +11,7 @@ module.exports = {
     baseUrl: undefined,
     frontendUrl: undefined,
     redisUrl: undefined,
-    cookieSecret: 'cookie-secret'
+    cookieSecret: 'COOKIE-SECRET'
   },
   dependencies: ['jwk'],
   async started() {

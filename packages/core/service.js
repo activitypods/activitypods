@@ -36,10 +36,14 @@ const CoreService = {
     jsonContext: null,
     queueServiceUrl: null,
     redisOidcProviderUrl: null,
-    authType: 'local'
+    authType: 'local',
+    oidcProvider: {
+      redisUrl: null,
+      cookieSecret: 'COOKIE-SECRET'
+    }
   },
   created() {
-    let { baseUrl, baseDir, frontendUrl, triplestore, jsonContext, queueServiceUrl, redisOidcProviderUrl, authType } =
+    let { baseUrl, baseDir, frontendUrl, triplestore, jsonContext, queueServiceUrl, oidcProvider, authType } =
       this.settings;
 
     // If an external JSON context is not provided, we will use a local one
@@ -215,7 +219,7 @@ const CoreService = {
       settings: {
         baseUrl,
         frontendUrl,
-        redisUrl: redisOidcProviderUrl
+        ...oidcProvider
       }
     });
 

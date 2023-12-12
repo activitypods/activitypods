@@ -1,5 +1,6 @@
 const path = require('path');
 const { ServiceBroker } = require('moleculer');
+const { pair } = require('@semapps/ontologies');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
 const { CoreService } = require('@activitypods/core');
@@ -33,7 +34,7 @@ const clearDataset = dataset =>
     }
   });
 
-const initialize = async (port, accountsDataset) => {
+const initialize = async (port, settingsDataset) => {
   const baseUrl = `http://localhost:${port}/`;
 
   const broker = new ServiceBroker({
@@ -59,10 +60,8 @@ const initialize = async (port, accountsDataset) => {
         user: CONFIG.JENA_USER,
         password: CONFIG.JENA_PASSWORD
       },
-      jsonContext: 'https://activitypods.org/context.json',
-      auth: {
-        accountsDataset
-      },
+      ontologies: [pair],
+      settingsDataset,
       api: {
         port
       }

@@ -4,7 +4,17 @@ const { ActivityPubService, ActivityMappingService, ACTOR_TYPES, OBJECT_TYPES } 
 const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
-const { OntologiesService, void: voidOntology } = require('@semapps/ontologies');
+const {
+  OntologiesService,
+  apods,
+  interop,
+  oidc,
+  dc,
+  syreen,
+  mp,
+  pair,
+  void: voidOntology
+} = require('@semapps/ontologies');
 const { PodService } = require('@semapps/pod');
 const { SignatureService, ProxyService } = require('@semapps/signature');
 const { SynchronizerService } = require('@semapps/sync');
@@ -86,7 +96,7 @@ const CoreService = {
 
     this.broker.createService(OntologiesService, {
       settings: {
-        ontologies: [...ontologies, voidOntology],
+        ontologies: [...ontologies, apods, interop, oidc, dc, syreen, mp, pair, voidOntology],
         persistRegistry: false,
         settingsDataset
       }

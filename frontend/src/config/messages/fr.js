@@ -78,9 +78,8 @@ module.exports = {
         'Pour envoyer de la monnaie libre à cet utilisateur, copiez sa clé publique ci-dessous et utilisez-la dans le logiciel Cesium.',
       g1_tipjar_input:
         'La clé publique de votre compte Ğ1. Permet aux autres membres du réseau de facilement vous envoyer de la monnaie libre.',
-      login: 'Connectez-vous à votre espace personnel. Vous pouvez utiliser vos identifiants de Bienvenue chez moi.',
-      signup:
-        "Créez votre espace personnel. Si vous avez déjà un compte sur Bienvenue chez moi, ce n'est pas nécessaire",
+      login: 'Connectez-vous à votre espace personnel.',
+      signup: 'Créez votre espace personnel.',
       reset_password:
         'Entrez votre adresse mail ci-dessous et nous vous enverrons un lien pour réinitialiser votre mot de passe',
       set_new_password: 'Veuillez entrer votre adresse mail et un nouveau mot de passe ci-dessous',

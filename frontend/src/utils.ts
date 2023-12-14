@@ -120,6 +120,8 @@ export const mulberry32 = (seed: number) => {
   return next;
 };
 
+export const localhostRegex = /^(127\.0\.0\.[0-9]{1,3}|localhost|\[::1\])$/;
+
 export const isUri = (uri: string) => {
   try {
     const url = new URL(uri);
@@ -132,19 +134,19 @@ export const isUri = (uri: string) => {
 /**
  * Validates a URL and returns an object containing the error message and the URL object.
  * @param {string} uriString - The URL to be validated.
- * @param {boolean} allowAddHttp - Whether to allow adding the HTTP protocol to the URL string if it is missing.
+ * @param {boolean} allowAddHttps - Whether to allow adding the HTTPS protocol to the URL string if it is missing.
  * @returns {object} An object containing the error message and the validated URL.
  */
 export const validateUrl = (
   uriString: string,
-  allowAddHttp: boolean
+  allowAddHttps: boolean
 ): { error: string; url: undefined } | { error: false; url: URL } => {
   const hasProtocol = (url: URL) => {
     return (url && url.protocol === 'http:') || (url && url.protocol === 'https:');
   };
 
   let url = isUri(uriString);
-  if (!url && allowAddHttp) {
+  if (!url && allowAddHttps) {
     // Try by adding protocol...
     url = isUri(`https://${uriString}`);
   }
@@ -164,6 +166,12 @@ export const isBaseUrl = (url: URL) => {
   return false;
 };
 
+/**
+ * Validate that the given string:
+ * - Is a valid http(s) URI by the URL constructor (prepending `https` may be allowed).
+ * - There is no path appended.
+ * - The URL has a tld (e.g. .com) or is localhost, [::1], or 127.0.0.*
+ */
 export const validateBaseUrl = (uri: string, allowAddHttp: boolean) => {
   if (!uri) {
     return { error: 'ra.validation.required', url: undefined };
@@ -177,5 +185,34 @@ export const validateBaseUrl = (uri: string, allowAddHttp: boolean) => {
   if (!isBaseUrl(url)) {
     return { error: 'app.validation.uri.no_base_url', url };
   }
+
+  // The URL must have a TLD (eg. `.com`), unless it's localhost.
+  if (!/^.+\..+/.exec(url.hostname) && !localhostRegex.exec(url.hostname)) {
+    return { error: 'app.validation.uri.no_tld' };
+  }
+
   return { url, error };
+};
+
+export const localPodProviderObject = {
+  type: 'apods:PodProvider',
+  'apods:area': process.env.POD_AREA,
+  'apods:locales': 'en',
+  'apods:domainName': new URL(process.env.REACT_APP_POD_PROVIDER_URL || 'http://localhost:3000').host
+};
+
+/**
+ * Removes duplicate items from a list.
+ * Example:
+ * ```js
+ * uniqueBy(teacher => teacher.class,
+ * [{class: "maths"}, {class: "maths"}, {class: "english"]
+ * )
+ * // returns [{class: "maths", {class: "english"}]
+ * ```
+ * @param criterion The criterion function to remove duplicates by.
+ * @param values The values.
+ */
+export const uniqueBy = <T>(criterion: (value: T) => string, values: T[]) => {
+  return Object.values(Object.fromEntries(values.map(v => [criterion(v), v])));
 };

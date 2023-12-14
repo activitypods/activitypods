@@ -1,7 +1,7 @@
-import React, { useGetIdentity, useNotify, useTranslate } from 'react-admin';
+import React, { useGetIdentity, useGetOne, useNotify, useTranslate } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { useOutbox } from '@semapps/activitypub-components';
+import { ACTIVITY_TYPES, useOutbox } from '@semapps/activitypub-components';
 import { Box, CircularProgress } from '@mui/material';
 import InvitePageViewLoggedOut from './InvitePageViewLoggedOut';
 import InvitePageViewLoggedIn from './InvitePageViewLoggedIn';
@@ -11,15 +11,9 @@ import SimpleBox from '../../layout/SimpleBox';
 
 /** The URI is expected to be encoded in the URI fragment in the SearchParams format. */
 const getCapabilityUri = (location: Location) => {
-  // const searchFragment = location.toString().match('#(.*)')?.[1];
-  // if (!searchFragment) {
-  //   return undefined;
-  // }
-
   try {
-    const { searchParams } = new URL(location.toString());
-    // const searchParams = new URLSearchParams(searchFragment);
-    return searchParams.get('capabilityUri') || undefined;
+    const capUriEncoded = /invite\/(.+)$/.exec(location.pathname)?.[1] || '';
+    return decodeURIComponent(capUriEncoded);
   } catch (e) {
     return undefined;
   }
@@ -35,10 +29,10 @@ const InvitePage = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showProviderSelect, setShowProviderSelect] = useState(false as false | 'login' | 'signup');
   const [inviterProfile, setInviterProfile] = useState(null as null | Record<string, unknown>);
-  const [capability, setCapability] = useState(null as null | Record<string, unknown>);
   const notify = useNotify();
   const { data: identity } = useGetIdentity();
   const ownProfile = identity?.profileData;
+  const { data: capability, error: capabilityFetchError } = useGetOne('Capability', { id: capabilityUri });
 
   const outbox = useOutbox();
 
@@ -46,21 +40,10 @@ const InvitePage = () => {
     notify('app.notification.invite_cap_invalid');
     navigate('/');
   }
-
-  // Fetch the capability document of the invitation.
-  useEffect(() => {
-    fetch(capabilityUri, { headers: { Accept: 'application/ld+json' } })
-      .then(async r => (r.ok ? r : Promise.reject(r.statusText)))
-      .then(async r => r.json())
-      .catch((error: Error | string) => {
-        notify(translate('app.notification.invite_cap_fetch_error', { error: error.toString() }));
-        navigate('/');
-        return error;
-      })
-      .then(cap => {
-        setCapability(cap);
-      });
-  }, [capabilityUri]);
+  if (capabilityFetchError) {
+    notify('app.notification.invite_cap_fetch_error', { error: JSON.stringify(capabilityFetchError) });
+    navigate('/');
+  }
 
   // Fetch the inviter profile, once the capability document (with the inviter's profile URI) is available.
   useEffect(() => {
@@ -71,6 +54,10 @@ const InvitePage = () => {
         .then(async response => response.json())
         .then(profile => {
           setInviterProfile(profile);
+        })
+        .catch((err: Error) => {
+          notify('app.notification.invite_cap_profile_fetch_error', { error: err.message });
+          navigate('/');
         });
     }
   }, [capability]);
@@ -102,7 +89,7 @@ const InvitePage = () => {
       outbox
         .post({
           '@context': 'https://activitypods.org/context.json',
-          type: 'Offer',
+          type: ACTIVITY_TYPES.OFFER,
           actor: identity.id,
           to: inviterProfile.describes,
           target: inviterProfile.describes,
@@ -110,7 +97,7 @@ const InvitePage = () => {
             type: 'Add',
             object: ownProfile.id
           },
-          'as:context': capabilityUri
+          context: capabilityUri
         })
         .then(() => {
           notify('app.notification.connection_accepted');
@@ -160,10 +147,7 @@ const InvitePage = () => {
 };
 
 const InvitePageWrapper = (props: any) => {
-  return (
-    <form>
-      <InvitePage {...props} />
-    </form>
-  );
+  return <InvitePage {...props} />;
 };
+
 export default InvitePageWrapper;

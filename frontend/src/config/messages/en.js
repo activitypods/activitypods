@@ -25,8 +25,6 @@ module.exports = {
       set_new_password: 'Set new password',
       undo_ignore_contact: 'No longer ignore',
       select: 'Select',
-      go_back: 'Go back',
-      cancel: 'Cancel',
       connect: 'Connect',
       continue: 'Continue'
     },
@@ -107,7 +105,7 @@ module.exports = {
         'Now that your account is created, please create your profile. By default, your profile will only be visible to the people you accept into your network.',
       authorize: 'Do you allow the website %{appDomain} to access your POD?',
       invite_text_logged_out:
-        "A personal data space is the place where you store your personal data. Like with email accounts, it's decentralized, so you can choose where your personal data is stored. Instead of creating a new account for every new app, you can login to new apps using your data space account. Compatible apps may use and store data in your space instead of theirs. At the same time, you can connect with others and communicate in many ways, using different apps.",
+        "A personal data space is in some way similar to an email account; It's decentralized, so you can choose where your personal data is stored. Instead of creating a new account for every new app, you can login to compatible apps using your data space account. Apps then store your data in your data space.",
       invite_text_logged_in:
         '%{username} invited you to their network (by their invite link). Click "Connect" to accept the invitation.',
       choose_provider_text_login:
@@ -116,7 +114,7 @@ module.exports = {
         'Like with email, you can decide where you want to create your personal space. Choose a provider that seems trustworthy or that is close to you. If you are looking for one that\'s not in the list, click "Choose custom provider".',
       more_about_pods: 'Learn more about data spaces (PODs).',
       choose_custom_provider:
-        'If the provider you are looking for is not listed, you can enter its address here (e.g. https://my-provider.example/).',
+        'If the provider you are looking for is not listed, you can enter its address here (e.g. https://my-provider.example).',
       choose_pod_provider:
         'The pod provider is the place where your data space is located. Like with an email provider, it will store your data.'
     },
@@ -155,7 +153,10 @@ module.exports = {
       send_request_error: 'Error while sending the request: %{error}',
       connection_accepted: 'You accepted the connection request.',
       invite_cap_invalid: 'The invite link is not valid',
-      invite_cap_fetch_error: 'Error ocurred while fetching the invitation. It might not be valid. Error: %{error}'
+      invite_cap_fetch_error: 'Error ocurred while fetching the invitation. It might not be valid. Error: %{error}',
+      invite_cap_missing: 'There is no invite capability available, to generate an invite link.',
+      invite_cap_profile_fetch_error: 'Error while fetching the profile associated with the invite link.',
+      pod_provider_fetch_error: 'Error while looking for other pod providers: %{error}'
     },
     user: {
       unknown: 'Unknown',
@@ -170,7 +171,8 @@ module.exports = {
       url: 'Must be a valid URL',
       uri: {
         no_http: 'Must start with http:// or https://',
-        no_base_url: 'The URL must consist of the domain only.'
+        no_base_url: 'The URL must consist of the domain only.',
+        no_tld: 'URI must have a TLD (e.g. `.com` or `.net`).'
       }
     },
     steps: {

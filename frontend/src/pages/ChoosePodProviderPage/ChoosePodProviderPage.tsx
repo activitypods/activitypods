@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useTranslate } from 'react-admin';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Form, SimpleForm, TextInput, useGetList, useNotify, useTranslate } from 'react-admin';
 import {
   List,
   ListItemButton,
@@ -8,27 +8,15 @@ import {
   Avatar,
   Divider,
   Button,
-  TextField,
-  Grid
+  Grid,
+  CircularProgress,
+  ListItem
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import StorageIcon from '@mui/icons-material/Storage';
-import { validateBaseUrl } from '../../utils';
+import { FieldValues, SubmitHandler } from 'react-hook-form';
+import { localPodProviderObject, uniqueBy, validateBaseUrl } from '../../utils';
 import SimpleBox from '../../layout/SimpleBox';
-
-const fetchRemotePodProviders = async (source: string) => {
-  const results = await fetch(source, {
-    headers: {
-      Accept: 'application/ld+json'
-    }
-  });
-  if (results.ok) {
-    const json = await results.json();
-    const podProviders = json['ldp:contains'] as string[] | undefined;
-    return podProviders || [];
-  }
-  return [];
-};
 
 /**
  * Component for choosing a custom pod provider. Only allows http(s) base URLs (no paths).
@@ -45,77 +33,73 @@ const ChooseCustomPodProvider = ({
   onCancel: () => void;
 }) => {
   const translate = useTranslate();
-  const [text, setText] = useState('');
-  const [hasError, setHasError] = useState(false as false | string);
+  const formDefaultValues = { podProvider: '' };
+
+  const [hasError, setHasError] = useState('');
 
   /** Validates the text input. */
-  const onTextChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    const { error } = validateBaseUrl(val, true);
-    setHasError(error && translate(error));
-
-    setText(val);
+  const validateProviderUri = (val: string) => {
+    const { error, url } = validateBaseUrl(val, true);
+    setHasError(error || '');
+    return error || '';
   };
+
+  const onSubmit: SubmitHandler<FieldValues> = useCallback(
+    params => {
+      let { podProvider } = params as typeof formDefaultValues;
+      // Add https, if no protocol is given.
+      if (!/^https?:\/\//.exec(podProvider)) {
+        podProvider = `https://${podProvider}`;
+      }
+      onSelected(String(podProvider));
+    },
+    [onSelected]
+  );
 
   return (
     <SimpleBox
       title={translate('app.page.choose_custom_provider')}
       text={translate('app.helper.choose_custom_provider')}
     >
-      {/* Provider URI Input */}
-      <Grid container item display="flex" justifyContent="center">
-        <TextField
-          fullWidth
-          value={text}
-          onChange={onTextChanged}
-          helperText={hasError}
-          error={!!hasError}
-          autoFocus
-          label={translate('app.input.provider_url')}
-        />
-      </Grid>
-
-      {/* Buttons */}
-      <Grid
-        container
-        item
-        display="flex"
-        spacing={1}
-        justifyContent="center"
-        sx={{ flexFlow: 'column', alignItems: 'center' }}
-      >
-        <Grid container item mt={2}>
-          {/* Submit Button */}
-          <Button
-            variant="contained"
+      <Form defaultValues={formDefaultValues} onSubmit={onSubmit}>
+        {/* Provider URI Input */}
+        <Grid container item display="flex" justifyContent="center">
+          <TextInput
             fullWidth
-            type="submit"
-            onClick={e => {
-              e.preventDefault();
-              onSelected(text);
-            }}
-            disabled={!!hasError}
-            color="primary"
-          >
-            {translate('app.action.select')}
-          </Button>
+            source="podProvider"
+            validate={validateProviderUri}
+            helperText={hasError}
+            error={!!hasError}
+            autoFocus
+            label={translate('app.input.provider_url')}
+          />
         </Grid>
-        {/* Cancel Button */}
-        <Grid container item>
-          <Button variant="contained" fullWidth type="reset" onClick={onCancel} color="secondary">
-            {translate('app.action.go_back')}
-          </Button>
+
+        {/* Buttons */}
+        <Grid
+          container
+          item
+          display="flex"
+          spacing={1}
+          justifyContent="center"
+          sx={{ flexFlow: 'column', alignItems: 'center' }}
+        >
+          <Grid container item mt={2}>
+            {/* Submit Button */}
+            <Button type="submit" variant="contained" fullWidth color="primary">
+              {translate('app.action.select')}
+            </Button>
+          </Grid>
+          {/* Cancel Button */}
+          <Grid container item>
+            <Button variant="contained" fullWidth type="reset" onClick={onCancel} color="secondary">
+              {translate('ra.action.back')}
+            </Button>
+          </Grid>
         </Grid>
-      </Grid>
+      </Form>
     </SimpleBox>
   );
-};
-
-const localPodProvider = {
-  type: 'apods:PodProvider',
-  'apods:area': process.env.REACT_APP_POD_PROVIDER_URL,
-  'apods:locales': 'en',
-  'apods:domainName': process.env.REACT_APP_POD_PROVIDER_URL
 };
 
 /**
@@ -140,21 +124,19 @@ const ChoosePodProviderPage = ({
   onCancel: () => void;
 }): React.JSX.Element => {
   const translate = useTranslate();
+  const notify = useNotify();
   const [inCustomProviderSelect, setInCustomProviderSelect] = useState(false);
-  const [podProviders, setPodProviders] = useState(customPodProviders || []);
+  const { data: podProvidersRaw, error, isLoading } = useGetList('PodProvider');
+  const podProviders = uniqueBy(
+    provider => provider['apods:domainName'] as string,
+    [localPodProviderObject, ...customPodProviders, ...(podProvidersRaw || [])]
+  );
 
   useEffect(() => {
-    fetchRemotePodProviders(process.env.POD_PROVIDERS_URL || 'https://data.activitypods.org/pod-providers').then(
-      fetchedProviders => {
-        setPodProviders([
-          localPodProvider,
-          ...fetchedProviders.filter(
-            (podProvider: any) => podProvider['apods:domainName'] === localPodProvider['apods:domainName']
-          )
-        ]);
-      }
-    );
-  }, []);
+    if (error) {
+      notify('app.notification.pod_provider_fetch_error', { error });
+    }
+  }, [error]);
 
   return inCustomProviderSelect ? (
     <ChooseCustomPodProvider
@@ -187,7 +169,11 @@ const ChoosePodProviderPage = ({
               </React.Fragment>
             );
           })}
-
+          {isLoading && (
+            <ListItem sx={{ justifyContent: 'center' }}>
+              <CircularProgress />
+            </ListItem>
+          )}
           {/* Option to add another Pod Provider */}
           <Divider />
           <ListItemButton
@@ -215,7 +201,7 @@ const ChoosePodProviderPage = ({
             onCancel();
           }}
         >
-          {translate('app.action.go_back')}
+          {translate('ra.action.back')}
         </Button>
       </Grid>
     </SimpleBox>

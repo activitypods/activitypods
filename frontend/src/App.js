@@ -1,6 +1,6 @@
 import React from 'react';
 import { Admin, Resource, CustomRoutes, memoryStore } from 'react-admin';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route } from 'react-router-dom';
 import { StyledEngineProvider } from '@mui/material/styles';
 import { LocalLoginPage } from '@semapps/auth-provider';
 
@@ -53,7 +53,7 @@ const App = () => (
           <Route path="/r" element={<RedirectPage />} />
           <Route path="/initialize" element={<ProfileCreatePage />} />
           <Route path="/authorize" element={<AuthorizePage />} />
-          <Route path="/invite" element={<InvitePage />} />
+          <Route path="/invite/:capability" element={<InvitePage />} />
         </CustomRoutes>
 
         <CustomRoutes>

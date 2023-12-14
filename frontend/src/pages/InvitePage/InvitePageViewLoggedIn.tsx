@@ -58,7 +58,7 @@ const InvitePageViewLoggedIn = ({
         </Grid>
         <Grid container item xs={12} md={8} lg={6}>
           <Button fullWidth variant="contained" color="secondary" size="large" onClick={onCancelClick}>
-            {translate('app.action.cancel')}
+            {translate('ra.action.cancel')}
           </Button>
         </Grid>
       </Grid>

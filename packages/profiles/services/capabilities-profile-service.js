@@ -31,9 +31,7 @@ const CapabilitiesProfileService = {
         predicates: ['url']
       });
 
-      this.actions.createProfileCapability({
-        webId
-      });
+      this.actions.createProfileCapability({ webId }, { parentCtx: ctx });
     }
   },
   actions: {

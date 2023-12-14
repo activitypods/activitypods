@@ -25,8 +25,6 @@ module.exports = {
       set_new_password: 'Definir un nouveau mot de passe',
       undo_ignore_contact: 'Ne plus ignorer',
       select: 'Sélectionner',
-      go_back: 'Retour',
-      cancel: 'Annuler',
       connect: 'Connecter',
       continue: 'Continuer'
     },

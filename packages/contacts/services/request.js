@@ -6,9 +6,14 @@ const {
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
   REJECT_CONTACT_REQUEST,
-  IGNORE_CONTACT_REQUEST
+  IGNORE_CONTACT_REQUEST,
+  AUTO_ACCEPTED_CONTACT_REQUEST
 } = require('../config/patterns');
-const { CONTACT_REQUEST_MAPPING, ACCEPT_CONTACT_REQUEST_MAPPING } = require('../config/mappings');
+const {
+  CONTACT_REQUEST_MAPPING,
+  ACCEPT_CONTACT_REQUEST_MAPPING,
+  AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
+} = require('../config/mappings');
 
 module.exports = {
   name: 'contacts.request',
@@ -42,6 +47,11 @@ module.exports = {
     await this.broker.call('activity-mapping.addMapper', {
       match: CONTACT_REQUEST,
       mapping: CONTACT_REQUEST_MAPPING
+    });
+
+    await this.broker.call('activity-mapping.addMapper', {
+      match: AUTO_ACCEPTED_CONTACT_REQUEST,
+      mapping: AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
     });
 
     await this.broker.call('activity-mapping.addMapper', {
@@ -115,20 +125,10 @@ module.exports = {
               type: ACTIVITY_TYPES.ACCEPT,
               actor: recipient.id,
               object: activity.id,
-              to: activity.actor
+              to: activity.actor,
+              // TODO: We might change that, once we figured out capabilities more generally (contacts recommendation).
+              context: capability.id
             });
-            // Send notification.
-            /*
-            // TODO: i18n & fetch user data.
-            await ctx.call('activitypub.outbox.post', {
-              collectionUri: recipient.outbox,
-              type: ACTIVITY_TYPES.NOTE,
-              actor: recipient.id, // TODO: Actually, the application itself.
-              summary: `Contact request by ${recipient.id} accepted.`,
-              content: `The user ${recipient.id} was accepted to your contacts since they had your invite URI.`,
-              to: recipient.id
-            });
-            */
           }
         }
 

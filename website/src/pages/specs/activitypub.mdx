@@ -1,0 +1,74 @@
+---
+layout: ~/layouts/MdLayout.astro
+title: ActivityPub compliance
+---
+
+import ProgressBar from '../../components/ProgressBar.astro';
+
+ActivityPub is a decentralized social networking protocol based upon the ActivityStreams 2.0 ontology. It provides a client-to-server and a server-to-server API for all common social features: following, liking, reposting... It became a W3C recommandation in 2018 and is used nowadays by dozens of softwares.
+
+Apart from a few side-effects which would be quick to implement if need arised, ActivityPods is 100% compatible with ActivityPub, and supports both client-to-server and server-to-server interactions.
+
+### Outbox <ProgressBar percentage={100} />
+
+User can POST to his own outbox.
+
+Anyone can GET the outbox, but it will return only the activities they have the right to read.
+
+### Inbox <ProgressBar percentage={100} />
+
+Any ActivityPub actors can post to an inbox, using [HTTP Signature](#http-signature) for authentication.
+
+Anyone can GET the inbox, but it will return only the activities they have the right to read.
+
+### Authentication <ProgressBar percentage={70} />
+
+#### HTTP Signature <ProgressBar percentage={100} />
+
+HTTP signature is the [recommended](https://www.w3.org/wiki/SocialCG/ActivityPub/Authentication_Authorization#Signing_requests_using_HTTP_Signatures) way to authenticate for server-to-server ActivityPub interactions. It is generally used when POSTing to other inboxes. We have extended its use so that it can be used on any endpoint, including LDP routes.
+
+#### Linked Data Signature <ProgressBar percentage={0} />
+
+In addition to HTTP signature, it is [recommended](https://www.w3.org/wiki/SocialCG/ActivityPub/Authentication_Authorization#Linked_Data_Signatures) to also verify content posted to inboxes with Linked Data Signatures in order to increase security. This is implemented by only a few ActivityPub-compatible softwares (notably Mastodon), and none enforces it at the moment.
+
+👷 To be implemented ([#321](https://github.com/assemblee-virtuelle/semapps/issues/321))
+
+#### Proxy endpoint <ProgressBar percentage={100} />
+
+The ActivityPub specification [mentions](https://www.w3.org/TR/activitypub/#actor-objects) a `as:proxyUrl` predicate (included in the `as:endpoint` predicate of the actor) with the following description:
+
+> Endpoint URI so this actor's clients may access remote ActivityStreams objects which require authentication to access. To use this endpoint, the client posts an `x-www-form-urlencoded`` id parameter with the value being the `id` of the requested ActivityStreams object.
+
+We have implemented this endpoint, and we have extended it for non-GET methods using the `multipart/form-data` Content-Type ([see the related ActivityPods section](./activitypods#proxy-endpoint-with-non-get-methods)).
+
+### Side effects <ProgressBar percentage={70} />
+
+#### Create/Update/Delete <ProgressBar percentage={100} />
+
+It's possible to create, update or delete any kind of objects. Objects are automatically stored in the corresponding containers.
+
+#### Follow <ProgressBar percentage={100} />
+
+Every ActivityStreams actor is automatically attached `as:followers` and `as:following` collections.
+
+The `Undo > Follow` activity is also supported.
+
+#### Like <ProgressBar percentage={100} />
+
+Every ActivityStreams actor is automatically attached a `as:liked` collection
+
+Every ActivityStreams object is automatically attached a `as:likes` collection, as soon as a `Like` activity is detected (?). If you want non-ActivityStreams objects to have a `as:likes` collection, you should add the type `as:Object` to the resource (TODO).
+
+The `Undo > Like` activity is also supported.
+
+#### Announce <ProgressBar percentage={0} />
+
+The `as:shares` collection is not implemented yet. However we have a custom `apods:announces` collection which list actors who are authorized to see a resource, and and `apods:announcers` collection with actors who are allowed to share it with their contacts (currently this is done through the `Announce` activity, but we may create a `Authorize` activity in the future).
+
+#### Add/Remove <ProgressBar percentage={0} />
+
+👷 To be implemented
+
+#### Block <ProgressBar percentage={0} />
+
+👷 To be implemented

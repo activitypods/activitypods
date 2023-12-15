@@ -4,6 +4,7 @@ const { AuthAccountService } = require('@semapps/auth');
 const { delay } = require('@semapps/ldp');
 const { NodeinfoService } = require('@semapps/nodeinfo');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
+const { pair } = require('@semapps/ontologies');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
 const { CoreService, interopContext } = require('@activitypods/core');
@@ -38,7 +39,7 @@ const clearDataset = dataset =>
     }
   });
 
-const initialize = async (port, accountsDataset) => {
+const initialize = async (port, settingsDataset) => {
   const baseUrl = `http://localhost:${port}/`;
 
   const broker = new ServiceBroker({
@@ -64,13 +65,14 @@ const initialize = async (port, accountsDataset) => {
         user: CONFIG.JENA_USER,
         password: CONFIG.JENA_PASSWORD
       },
-      jsonContext: 'https://activitypods.org/context.json',
       oidcProvider: {
         redisUrl: CONFIG.REDIS_OIDC_PROVIDER_URL
       },
       auth: {
         accountsDataset
       },
+      ontologies: [pair],
+      settingsDataset,
       api: {
         port
       }

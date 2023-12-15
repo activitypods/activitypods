@@ -20,6 +20,13 @@
 	}
 }
 
+/* https://jan-mueller.at/blog/next-level-heading-anchors/#heading-offset */
+@layer components {
+	*:is(h1, h2, h3, h4, h5, h6) {
+		@apply scroll-mt-20;
+	}
+}
+
 .dropdown:hover .dropdown-menu {
 	display: block;
 }
@@ -44,4 +51,47 @@
 
 [data-aw-toggle-menu].expanded g > path:last-child {
 	@apply rotate-45 translate-y-[-8px] translate-x-[14px];
+}
+
+.prose p {
+	margin-top: 0.8rem;
+	margin-bottom: 0.8rem;
+	line-height: 1.8rem;
+}
+
+.prose li {
+	margin-top: 0.4rem;
+	margin-bottom: 0.4rem;
+	line-height: 1.8rem;
+}
+
+.prose ul {
+	margin-top: 0.8rem;
+	margin-bottom: 0.8rem;
+}
+
+.prose h2 {
+	margin-top: 1.2em;
+	margin-bottom: 0.5em;
+}
+
+.prose pre {
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+	background-color: #e2e8f0 !important;
+}
+
+.toc-item,
+.toc-level {
+	margin-top: 0 !important;
+	margin-bottom: 0 !important;
+}
+
+summary {
+	cursor: pointer;
+}
+
+sup {
+	left: -0.1em;
+	top: -0.2em;
 }

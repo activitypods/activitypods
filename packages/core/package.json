@@ -17,6 +17,7 @@
     "@semapps/jsonld": "0.6.0-alpha.4",
     "@semapps/ldp": "0.6.0-alpha.4",
     "@semapps/nodeinfo": "0.6.0-alpha.4",
+    "@semapps/ontologies": "file:../../../semapps/src/middleware/packages/ontologies",
     "@semapps/pod": "0.6.0-alpha.4",
     "@semapps/signature": "0.6.0-alpha.4",
     "@semapps/sparql-endpoint": "0.6.0-alpha.4",

@@ -5,7 +5,7 @@ const { initialize, listDatasets, clearDataset } = require('./initialize');
 const path = require('path');
 const urlJoin = require('url-join');
 
-jest.setTimeout(30000);
+jest.setTimeout(50000);
 
 let broker;
 

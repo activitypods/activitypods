@@ -54,8 +54,17 @@ const CoreService = {
     }
   },
   created() {
-    let { baseUrl, baseDir, frontendUrl, triplestore, ontologies, settingsDataset, queueServiceUrl, oidcProvider, authType } =
-      this.settings;
+    let {
+      baseUrl,
+      baseDir,
+      frontendUrl,
+      triplestore,
+      ontologies,
+      settingsDataset,
+      queueServiceUrl,
+      oidcProvider,
+      authType
+    } = this.settings;
 
     this.broker.createService(ActivityPubService, {
       settings: {

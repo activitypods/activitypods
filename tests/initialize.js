@@ -4,7 +4,7 @@ const { AuthAccountService } = require('@semapps/auth');
 const { delay } = require('@semapps/ldp');
 const { NodeinfoService } = require('@semapps/nodeinfo');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
-const { pair } = require('@semapps/ontologies');
+const { apods, interop, oidc } = require('@semapps/ontologies');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
 const { CoreService, interopContext } = require('@activitypods/core');
@@ -13,6 +13,15 @@ const { AnnouncerService } = require('@activitypods/announcer');
 const CONFIG = require('./config');
 
 Error.stackTraceLimit = Infinity;
+
+const logger = {
+  type: 'File',
+  options: {
+    level: 'info',
+    filename: 'moleculer-{date}-{nodeID}.txt',
+    formatter: 'simple'
+  }
+};
 
 const listDatasets = async () => {
   const response = await fetch(CONFIG.SPARQL_ENDPOINT + '$/datasets', {
@@ -48,12 +57,7 @@ const initialize = async (port, settingsDataset) => {
       WebAclMiddleware({ baseUrl, podProvider: true }),
       ObjectsWatcherMiddleware({ baseUrl, podProvider: true })
     ],
-    logger: {
-      type: 'Console',
-      options: {
-        level: 'warn'
-      }
-    }
+    logger
   });
 
   await broker.createService(CoreService, {
@@ -69,9 +73,8 @@ const initialize = async (port, settingsDataset) => {
         redisUrl: CONFIG.REDIS_OIDC_PROVIDER_URL
       },
       auth: {
-        accountsDataset
+        accountsDataset: settingsDataset
       },
-      ontologies: [pair],
       settingsDataset,
       api: {
         port
@@ -84,18 +87,13 @@ const initialize = async (port, settingsDataset) => {
   return broker;
 };
 
-const initializeAppServer = async (port, accountsDataset) => {
+const initializeAppServer = async (port, settingsDataset) => {
   const baseUrl = `http://localhost:${port}/`;
 
   const broker = new ServiceBroker({
     nodeID: 'server' + port,
     middlewares: [WebAclMiddleware({ baseUrl })],
-    logger: {
-      type: 'Console',
-      options: {
-        level: 'warn'
-      }
-    }
+    logger
   });
 
   await broker.createService(SemAppsCoreService, {
@@ -108,7 +106,7 @@ const initializeAppServer = async (port, accountsDataset) => {
         password: CONFIG.JENA_PASSWORD,
         mainDataset: 'testData'
       },
-      jsonContext: 'https://activitypods.org/context.json',
+      ontologies: [interop, oidc, apods],
       api: {
         port
       }
@@ -116,7 +114,7 @@ const initializeAppServer = async (port, accountsDataset) => {
   });
 
   await broker.createService(AuthAccountService, {
-    adapter: new TripleStoreAdapter({ type: 'AuthAccount', dataset: accountsDataset })
+    adapter: new TripleStoreAdapter({ type: 'AuthAccount', dataset: settingsDataset })
   });
 
   await broker.createService(NodeinfoService, {

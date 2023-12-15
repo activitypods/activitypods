@@ -1,4 +1,5 @@
 const path = require('path');
+const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
@@ -212,6 +213,7 @@ describe('Test app installation', () => {
     ).resolves.toMatchObject({
       '@type': 'interop:DataGrant',
       'apods:registeredClass': 'https://www.w3.org/ns/activitystreams#Event',
+      'apods:registeredContainer': urlJoin(alice.id, 'data/as/event'),
       'interop:dataOwner': alice.id,
       'interop:grantee': APP_URI,
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Create']),
@@ -235,6 +237,7 @@ describe('Test app installation', () => {
     ).resolves.toMatchObject({
       '@type': 'interop:DataGrant',
       'apods:registeredClass': 'https://www.w3.org/ns/activitystreams#Location',
+      'apods:registeredContainer': urlJoin(alice.id, 'data/as/location'),
       'interop:dataOwner': alice.id,
       'interop:grantee': APP_URI,
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Create']),
@@ -252,6 +255,64 @@ describe('Test app installation', () => {
         type: ACTIVITY_TYPES.ACCEPT,
         object: creationActivityUri
       });
+    });
+  });
+
+  test('Containers are created according to access needs', async () => {
+    await expect(
+      alice.call('ldp.container.exist', {
+        containerUri: urlJoin(alice.id, 'data/as')
+      })
+    ).resolves.toBeTruthy();
+
+    await expect(
+      alice.call('ldp.container.exist', {
+        containerUri: urlJoin(alice.id, 'data/as/event')
+      })
+    ).resolves.toBeTruthy();
+
+    await expect(
+      alice.call('ldp.container.exist', {
+        containerUri: urlJoin(alice.id, 'data/as/location')
+      })
+    ).resolves.toBeTruthy();
+
+    await expect(
+      alice.call('webacl.resource.getRights', {
+        resourceUri: urlJoin(alice.id, 'data/as/event'),
+        accept: MIME_TYPES.JSON,
+        webId: APP_URI
+      })
+    ).resolves.toMatchObject({
+      '@graph': expect.arrayContaining([
+        expect.objectContaining({
+          'acl:agent': APP_URI,
+          'acl:mode': 'acl:Read'
+        }),
+        expect.objectContaining({
+          'acl:agent': APP_URI,
+          'acl:mode': 'acl:Write'
+        })
+      ])
+    });
+
+    await expect(
+      alice.call('webacl.resource.getRights', {
+        resourceUri: urlJoin(alice.id, 'data/as/location'),
+        accept: MIME_TYPES.JSON,
+        webId: APP_URI
+      })
+    ).resolves.toMatchObject({
+      '@graph': expect.arrayContaining([
+        expect.objectContaining({
+          'acl:agent': APP_URI,
+          'acl:mode': 'acl:Read'
+        }),
+        expect.objectContaining({
+          'acl:agent': APP_URI,
+          'acl:mode': 'acl:Write'
+        })
+      ])
     });
   });
 

@@ -15,10 +15,10 @@ const CONFIG = require('./config');
 Error.stackTraceLimit = Infinity;
 
 const logger = {
-  type: 'File',
+  type: 'Console',
   options: {
-    level: 'info',
-    filename: 'moleculer-{date}-{nodeID}.txt',
+    level: 'warn',
+    // filename: 'moleculer-{date}-{nodeID}.txt',
     formatter: 'simple'
   }
 };

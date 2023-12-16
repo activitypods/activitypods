@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Form, SimpleForm, TextInput, useGetList, useNotify, useTranslate } from 'react-admin';
+import { Form, TextInput, useGetList, useNotify, useTranslate } from 'react-admin';
 import {
   List,
   ListItemButton,
@@ -15,7 +15,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import StorageIcon from '@mui/icons-material/Storage';
 import { FieldValues, SubmitHandler } from 'react-hook-form';
-import { localPodProviderObject, uniqueBy, validateBaseUrl } from '../../utils';
+import { localPodProviderObject, localhostRegex, uniqueBy, validateBaseUrl } from '../../utils';
 import SimpleBox from '../../layout/SimpleBox';
 
 /**
@@ -132,6 +132,13 @@ const ChoosePodProviderPage = ({
     [localPodProviderObject, ...customPodProviders, ...(podProvidersRaw || [])]
   );
 
+  const providerSelected = useCallback(
+    (domainName: string) => {
+      onPodProviderSelected(localhostRegex.test(domainName) ? `http://${domainName}` : `https://${domainName}`);
+    },
+    [onPodProviderSelected]
+  );
+
   useEffect(() => {
     if (error) {
       notify('app.notification.pod_provider_fetch_error', { error });
@@ -140,7 +147,7 @@ const ChoosePodProviderPage = ({
 
   return inCustomProviderSelect ? (
     <ChooseCustomPodProvider
-      onSelected={onPodProviderSelected}
+      onSelected={providerSelected}
       onCancel={() => {
         setInCustomProviderSelect(false);
       }}
@@ -156,7 +163,7 @@ const ChoosePodProviderPage = ({
                 <Divider />
                 <ListItemButton
                   onClick={() => {
-                    onPodProviderSelected(podProvider['apods:domainName'] as string);
+                    providerSelected(podProvider['apods:domainName'] as string);
                   }}
                 >
                   <ListItemAvatar>

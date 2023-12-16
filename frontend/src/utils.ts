@@ -120,7 +120,11 @@ export const mulberry32 = (seed: number) => {
   return next;
 };
 
-export const localhostRegex = /^(127\.0\.0\.[0-9]{1,3}|localhost|\[::1\])$/;
+export const localhostRegex = /(127\.0\.0\.[0-9]{1,3}|localhost|\[::1\])/;
+
+export const isLocalHostname = (hostname: string) => {
+  return new RegExp(`^${localhostRegex.source}$`).test(hostname);
+};
 
 export const isUri = (uri: string) => {
   try {
@@ -187,7 +191,7 @@ export const validateBaseUrl = (uri: string, allowAddHttp: boolean) => {
   }
 
   // The URL must have a TLD (eg. `.com`), unless it's localhost.
-  if (!/^.+\..+/.exec(url.hostname) && !localhostRegex.exec(url.hostname)) {
+  if (!/^.+\..+/.exec(url.hostname) && !isLocalHostname(url.hostname)) {
     return { error: 'app.validation.uri.no_tld' };
   }
 
@@ -208,7 +212,7 @@ export const localPodProviderObject = {
  * uniqueBy(teacher => teacher.class,
  * [{class: "maths"}, {class: "maths"}, {class: "english"]
  * )
- * // returns [{class: "maths", {class: "english"}]
+ * // returns [{class: "maths"}, {class: "english"}]
  * ```
  * @param criterion The criterion function to remove duplicates by.
  * @param values The values.

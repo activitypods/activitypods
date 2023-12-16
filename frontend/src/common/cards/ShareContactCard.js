@@ -32,7 +32,7 @@ const ShareContactCard = () => {
   const { data: identity } = useGetIdentity();
   const profileData = identity?.profileData;
   const translate = useTranslate();
-  const [contactLink, setContactLink] = React.useState(null);
+  const [contactLink, setContactLink] = React.useState('');
   const { data: caps } = useGetList('Capability');
 
   // Get invite capability URI.

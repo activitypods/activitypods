@@ -31,7 +31,7 @@ const InvitePageProviderSelect: React.FC<{ capabilityUri: string; isSignup: bool
   const onPodProviderSelected = useCallback((podProviderUrl: string) => {
     // Navigate to pod provider's login page.
     const redirectTo = `/auth?${isSignup ? 'signup=true&' : ``}redirect=${encodeURIComponent(
-      `/invite?capabilityUri=${capabilityUri}`
+      `/invite/${encodeURIComponent(capabilityUri)}`
     )}`;
     const url = urljoin(podProviderUrl, redirectTo);
     window.location.href = url;

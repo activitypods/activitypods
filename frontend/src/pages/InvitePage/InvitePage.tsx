@@ -94,10 +94,10 @@ const InvitePage = () => {
           to: inviterProfile.describes,
           target: inviterProfile.describes,
           object: {
-            type: 'Add',
+            type: ACTIVITY_TYPES.ADD,
             object: ownProfile.id
           },
-          context: capabilityUri
+          'sec:capability': capabilityUri
         })
         .then(() => {
           notify('app.notification.connection_accepted');

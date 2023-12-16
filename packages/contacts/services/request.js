@@ -6,14 +6,14 @@ const {
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
   REJECT_CONTACT_REQUEST,
-  IGNORE_CONTACT_REQUEST,
-  AUTO_ACCEPTED_CONTACT_REQUEST
+  IGNORE_CONTACT_REQUEST
 } = require('../config/patterns');
 const {
   CONTACT_REQUEST_MAPPING,
   ACCEPT_CONTACT_REQUEST_MAPPING,
   AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
 } = require('../config/mappings');
+const matchActivity = require('@semapps/activitypub/utils/matchActivity');
 
 module.exports = {
   name: 'contacts.request',
@@ -44,18 +44,39 @@ module.exports = {
       dereferenceItems: false
     });
 
+    // Notify on contact requests (unless it's by an invite link capability).
     await this.broker.call('activity-mapping.addMapper', {
-      match: CONTACT_REQUEST,
+      match: (ctx, activity) => {
+        if (activityHasInviteCapability(activity)) {
+          return false;
+        }
+
+        return matchActivity(ctx, CONTACT_REQUEST, activity);
+      },
       mapping: CONTACT_REQUEST_MAPPING
     });
 
+    // Notify on auto-accepted invites (by invite link capability).
     await this.broker.call('activity-mapping.addMapper', {
-      match: AUTO_ACCEPTED_CONTACT_REQUEST,
+      match: (ctx, activity) => {
+        if (!activityHasInviteCapability(activity)) {
+          return false;
+        }
+
+        return matchActivity(ctx, CONTACT_REQUEST, activity);
+      },
       mapping: AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
     });
 
+    // Notify on accepted contact requests (unless auto-accepted by invite link capability).
     await this.broker.call('activity-mapping.addMapper', {
-      match: ACCEPT_CONTACT_REQUEST,
+      match: (ctx, activity) => {
+        if (activityHasInviteCapability(activity)) {
+          return false;
+        }
+
+        return matchActivity(ctx, ACCEPT_CONTACT_REQUEST, activity);
+      },
       mapping: ACCEPT_CONTACT_REQUEST_MAPPING
     });
   },
@@ -103,9 +124,9 @@ module.exports = {
         }
 
         // Check, if an invite capability URI is present. If so, accept the request automatically.
-        if (activity['as:context']) {
+        if (activity['sec:capability']) {
           const capability = await ctx.call('auth.getValidateCapability', {
-            capabilityUri: activity['as:context'],
+            capabilityUri: activity['sec:capability'],
             webId: recipientUri
           });
           const { url: profileUri } = await ctx.call('ldp.resource.get', {
@@ -127,7 +148,7 @@ module.exports = {
               object: activity.id,
               to: activity.actor,
               // TODO: We might change that, once we figured out capabilities more generally (contacts recommendation).
-              context: capability.id
+              'sec:capability': capability.id
             });
           }
         }
@@ -185,9 +206,9 @@ module.exports = {
         });
       },
       async onReceive(ctx, activity, recipientUri) {
-        // If there is a context, the contact offer was automatic (post event suggestion)
+        // If there is a capability, the contact offer was automatic (post event suggestion)
         // so we don't want to automatically add the contact back if it was accepted
-        if (!activity.object.context) {
+        if (!activity.object['sec:capability']) {
           const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
           const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
@@ -259,4 +280,14 @@ module.exports = {
       }
     }
   }
+};
+
+/**
+ * Right now, it's assumed that an Offer > Add > Profile activity with a
+ * capability attached is an contact request by invite link. Thus an invite capability.
+ * @param activity The activity object.
+ * @returns
+ */
+const activityHasInviteCapability = activity => {
+  return !!activity?.['sec:capability'];
 };

@@ -92,7 +92,7 @@ module.exports = {
       message_profile_show_right:
         'Sending a message to %{username} will give him/her the right to see your profile, in order to be able to respond.',
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',
-      share_contact: 'To connect with someone you know, you can send him the link below.',
+      share_contact: 'To connect with someone you know, you can send them the link below.',
       location_comment: 'Additional information to help find this place',
       g1_tipjar_field:
         'To send G1 money to this user, copy his public key below and use it inside the Cesium software.',

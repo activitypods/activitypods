@@ -24,7 +24,7 @@ module.exports = {
       tosUri: null
     },
     // ControlledContainerMixin settings
-    path: '/actors',
+    path: '/as/actor',
     acceptedTypes: [ACTOR_TYPES.APPLICATION, 'interop:Application'],
     readOnly: true
   },
@@ -40,12 +40,17 @@ module.exports = {
       // Ensure LDP sub-services have been started
       await this.broker.waitForServices(['ldp.container', 'ldp.resource']);
 
-      const actorsContainerUri = await this.actions.getContainerUri({}, { parentCtx: ctx });
-      const actorUri = urlJoin(actorsContainerUri, 'app');
+      let actorExist = false,
+        actorUri;
 
-      const actorExist = await ctx.call('ldp.resource.exist', {
-        resourceUri: actorUri
-      });
+      const actorAccount = await ctx.call('auth.account.findByUsername', { username: 'app' });
+
+      if (actorAccount) {
+        actorUri = actorAccount.webId;
+        actorExist = await ctx.call('ldp.resource.exist', {
+          resourceUri: actorUri
+        });
+      }
 
       if (!actorExist) {
         this.logger.info(`Actor ${actorUri} does not exist yet, creating it...`);
@@ -53,14 +58,13 @@ module.exports = {
         const account = await ctx.call(
           'auth.account.create',
           {
-            username: 'app',
-            webId: actorUri
+            username: 'app'
           },
           { meta: { isSystemCall: true } }
         );
 
         try {
-          await this.actions.post(
+          actorUri = await this.actions.post(
             {
               slug: 'app',
               resource: {
@@ -88,6 +92,15 @@ module.exports = {
               webId: 'system'
             },
             { parentCtx: ctx }
+          );
+
+          await ctx.call(
+            'auth.account.attachWebId',
+            {
+              accountUri: account['@id'],
+              webId: actorUri
+            },
+            { meta: { isSystemCall: true } }
           );
         } catch (e) {
           // Delete account if resource creation failed, or it may cause problems when retrying

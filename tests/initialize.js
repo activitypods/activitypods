@@ -109,7 +109,11 @@ const initializeAppServer = async (port, settingsDataset) => {
       ontologies: [interop, oidc, apods],
       api: {
         port
-      }
+      },
+      ldp: {
+        resourcesWithContainerPath: false
+      },
+      void: false
     }
   });
 

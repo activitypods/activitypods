@@ -17,6 +17,9 @@ module.exports = {
     api: {
       port: CONFIG.PORT
     },
+    ldp: {
+      resourcesWithContainerPath: false
+    },
     void: false
   }
 };

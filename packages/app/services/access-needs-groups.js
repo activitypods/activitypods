@@ -11,7 +11,6 @@ module.exports = {
       optional: []
     },
     // ControlledContainerMixin settings
-    path: '/access-needs-groups',
     acceptedTypes: ['interop:AccessNeedGroup'],
     readOnly: true
   },

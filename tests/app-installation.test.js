@@ -9,7 +9,7 @@ const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 
 jest.setTimeout(80000);
 
-const APP_URI = 'http://localhost:3001/actors/app';
+const APP_URI = 'http://localhost:3001/app';
 
 describe('Test app installation', () => {
   let podServer,

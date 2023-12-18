@@ -13,7 +13,7 @@ module.exports = {
     redisUrl: undefined,
     cookieSecret: 'COOKIE-SECRET'
   },
-  dependencies: ['jwk'],
+  dependencies: ['jwk', 'api'],
   async started() {
     // Dynamically import Provider since it's an ESM module
     const { default: Provider } = await import('oidc-provider');

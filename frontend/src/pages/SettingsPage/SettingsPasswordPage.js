@@ -5,8 +5,7 @@ import {
   PasswordStrengthIndicator,
   validatePasswordStrength
 } from '@semapps/auth-provider';
-import { required, useAuthProvider, useNotify, useTranslate } from 'react-admin';
-import { SimpleForm, TextInput } from 'react-admin';
+import { required, useAuthProvider, useNotify, useTranslate, SimpleForm, TextInput } from 'react-admin';
 import { Box, Card, Typography } from '@mui/material';
 
 const validateConfirmNewPassword = [
@@ -15,7 +14,6 @@ const validateConfirmNewPassword = [
     if (newPassword !== confirmNewPassword) {
       return 'app.validation.confirmNewPassword';
     }
-    return;
   }
 ];
 

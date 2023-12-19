@@ -39,7 +39,7 @@ const ChooseCustomPodProvider = ({
 
   /** Validates the text input. */
   const validateProviderUri = (val: string) => {
-    const { error, url } = validateBaseUrl(val, true);
+    const { error } = validateBaseUrl(val, true);
     setHasError(error || '');
     return error || '';
   };

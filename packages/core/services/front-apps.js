@@ -18,15 +18,21 @@ module.exports = {
     newResourcesPermissions: {}
   },
   async started() {
-    const res = await fetch('https://data.activitypods.org/trusted-apps', {
-      headers: { Accept: 'application/ld+json' }
-    });
+    const res = await fetch(
+      urlJoin(process.env.ACTIVITYPODS_COMMON_CONF_URL || 'https://data.activitypods.org', '/trusted-apps'),
+      {
+        headers: { Accept: 'application/ld+json' }
+      }
+    );
 
     if (res.ok) {
       const data = await res.json();
       this.trustedApps = data['ldp:contains'];
     } else {
-      throw new Error('Unable to fetch https://data.activitypods.org/trusted-apps');
+      throw new Error(
+        'Unable to fetch ' +
+          urlJoin(process.env.ACTIVITYPODS_COMMON_CONF_URL || 'https://data.activitypods.org', '/trusted-apps')
+      );
     }
 
     // POD provider app

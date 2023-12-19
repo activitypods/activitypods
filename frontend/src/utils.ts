@@ -44,16 +44,16 @@ export const arrayFromLdField = (value: any | any[]) => {
 
 /**
  * Generate a random color using a string as seed.
- * @param {string} value
+ * @param {string} value The string to seed from.
  * @param {number} offset Optional.
  *  Min, max values for r, g, b between 0x00 and 0xff.
  *  Default min values are 0x50, max values 0xff.
- * @param {number} offset.r.min
- * @param {number} offset.r.max
- * @param {number} offset.g.min
- * @param {number} offset.g.max
- * @param {number} offset.b.min
- * @param {number} offset.b.max
+ * @param {number} offset.r.min red min value
+ * @param {number} offset.r.max red max value
+ * @param {number} offset.g.min green min value
+ * @param {number} offset.g.max green max value
+ * @param {number} offset.b.min blue min value
+ * @param {number} offset.b.max blue max value
  */
 export const colorFromString = (value: string, offsets = {}) => {
   const colRange = {
@@ -85,8 +85,8 @@ export const colorFromString = (value: string, offsets = {}) => {
 
 /**
  * Return a number between 0 and one from a seed string.
- * @param {string} seed
- * @returns
+ * @param {string} seed The seed string to generate the number from.
+ * @returns {number} An integer value
  */
 export const numberFromString = (seed: string) => {
   // make next lines disable no-bitwise eslint using eslint block disable
@@ -105,7 +105,7 @@ export const numberFromString = (seed: string) => {
  * Return a mulberry32 random number generator.
  * Generates numbers between 0 and 1.
  * See https://gist.github.com/tommyettinger/46a874533244883189143505d203312c
- * @param {number} seed
+ * @param {number} seed A seed number.
  */
 export const mulberry32 = (seed: number) => {
   function next() {

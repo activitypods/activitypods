@@ -3,8 +3,8 @@ import { SimpleForm, TextInput, useTranslate, Toolbar, SaveButton } from 'react-
 import { Box, Card, Typography, Alert } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import useRequestContact from '../../hooks/useRequestContact';
 import SendIcon from '@mui/icons-material/Send';
+import useRequestContact from '../../hooks/useRequestContact';
 
 const AddContactToolbar = props => {
   const translate = useTranslate();

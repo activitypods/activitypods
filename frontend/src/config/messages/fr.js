@@ -164,11 +164,15 @@ module.exports = {
       connection_accepted: 'Vous avez accepté la demande de connexion.',
       invite_cap_invalid: "Le lien d'invitation n'est pas valide",
       invite_cap_fetch_error:
-        "Une erreur s'est produite lors de la récupération de l'invitation. Elle pourrait ne pas être valide.\n%{error}"
+        "Une erreur s'est produite lors de la récupération de l'invitation. Elle pourrait ne pas être valide.\n%{error}",
+      invite_cap_missing: "Il n'y a pas de capacité d'invitation disponible pour générer un lien d'invitation",
+      invite_cap_profile_fetch_error: "Erreur lors de la recherche du profil associé au lien d'invitation",
+      pod_provider_fetch_error: "Erreur lors de la recherche d'autres fournisseurs de pods : %{error"
     },
     user: {
       unknown: 'Inconnu',
-      location: 'Chez %{name}'
+      location: 'Chez %{name}',
+      member_since: 'Membre depuis'
     },
     validation: {
       email: 'Doit être un email valide',
@@ -178,7 +182,8 @@ module.exports = {
       url: 'Doit être une URL valide',
       uri: {
         no_http: 'Doit commencer par http:// ou https://',
-        no_base_url: "L'URL doit se composer uniquement du domaine"
+        no_base_url: "L'URL doit se composer uniquement du domaine",
+        no_tld: "L'URI doit avoir un TLD (par exemple `.com` ou `.net`)"
       }
     },
     steps: {

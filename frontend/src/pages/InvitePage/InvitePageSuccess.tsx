@@ -1,6 +1,6 @@
-import { Button, Grid, Typography } from '@mui/material';
+import { Button, Grid, Typography, IconButton, CircularProgress } from '@mui/material';
 import React, { useCallback } from 'react';
-import { useTranslate } from 'react-admin';
+import { useGetOne, useTranslate } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
 import ConnectAvatars from './ConnectAvatars';
 import SimpleBox from '../../layout/SimpleBox';
@@ -9,6 +9,10 @@ const InvitePageSuccess = ({ inviterProfile, ownProfile }: { inviterProfile: any
   const translate = useTranslate();
   const navigate = useNavigate();
 
+  // We need this to check when the profile is actually available
+  const { isLoading: profileLoading } = useGetOne('Profile', { id: inviterProfile.id });
+
+  // It takes a while for the new invitee to be authorized to see the profile, so we might have to wait a bit.
   const onContinue = useCallback(async () => {
     // Get the inviter's profile URI in the current users's profiles container.
     navigate(`/Profile/${encodeURIComponent(inviterProfile.id)}/show`);
@@ -30,9 +34,25 @@ const InvitePageSuccess = ({ inviterProfile, ownProfile }: { inviterProfile: any
 
       {/* Continue Button */}
       <Grid container item xs={12} md={8} lg={6} justifyItems="center" alignSelf="center">
-        <Button fullWidth onClick={onContinue} variant="contained" color="primary" size="large">
-          {translate('app.action.continue')}
-        </Button>
+        {!profileLoading && (
+          <Button fullWidth onClick={onContinue} variant="contained" color="primary" size="large">
+            {translate('app.action.continue')}
+          </Button>
+        )}
+
+        {profileLoading && (
+          <Button
+            startIcon={<CircularProgress sx={{ scale: '65%' }} />}
+            fullWidth
+            onClick={onContinue}
+            variant="contained"
+            color="primary"
+            size="large"
+            disabled
+          >
+            {translate('app.action.continue')}
+          </Button>
+        )}
       </Grid>
     </SimpleBox>
   );

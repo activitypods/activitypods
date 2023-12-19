@@ -11,7 +11,7 @@ const {
 const {
   CONTACT_REQUEST_MAPPING,
   ACCEPT_CONTACT_REQUEST_MAPPING,
-  AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
+  AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING: CONTACT_REQUEST_BY_INVITE_LINK_MAPPING
 } = require('../config/mappings');
 const matchActivity = require('@semapps/activitypub/utils/matchActivity');
 
@@ -46,36 +46,36 @@ module.exports = {
 
     // Notify on contact requests (unless it's by an invite link capability).
     await this.broker.call('activity-mapping.addMapper', {
-      match: (ctx, activity) => {
+      match: async (ctx, activity) => {
         if (activityHasInviteCapability(activity)) {
           return false;
         }
 
-        return matchActivity(ctx, CONTACT_REQUEST, activity);
+        return !!(await matchActivity(ctx, CONTACT_REQUEST, activity));
       },
       mapping: CONTACT_REQUEST_MAPPING
     });
 
     // Notify on auto-accepted invites (by invite link capability).
     await this.broker.call('activity-mapping.addMapper', {
-      match: (ctx, activity) => {
+      match: async (ctx, activity) => {
         if (!activityHasInviteCapability(activity)) {
           return false;
         }
 
-        return matchActivity(ctx, CONTACT_REQUEST, activity);
+        return !!(await matchActivity(ctx, CONTACT_REQUEST, activity));
       },
-      mapping: AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
+      mapping: CONTACT_REQUEST_BY_INVITE_LINK_MAPPING
     });
 
     // Notify on accepted contact requests (unless auto-accepted by invite link capability).
     await this.broker.call('activity-mapping.addMapper', {
-      match: (ctx, activity) => {
+      match: async (ctx, activity) => {
         if (activityHasInviteCapability(activity)) {
           return false;
         }
 
-        return matchActivity(ctx, ACCEPT_CONTACT_REQUEST, activity);
+        return !!(await matchActivity(ctx, ACCEPT_CONTACT_REQUEST, activity));
       },
       mapping: ACCEPT_CONTACT_REQUEST_MAPPING
     });
@@ -124,7 +124,7 @@ module.exports = {
         }
 
         // Check, if an invite capability URI is present. If so, accept the request automatically.
-        if (activity['sec:capability']) {
+        if (activityHasInviteCapability(activity)) {
           const capability = await ctx.call('auth.getValidateCapability', {
             capabilityUri: activity['sec:capability'],
             webId: recipientUri
@@ -147,9 +147,12 @@ module.exports = {
               actor: recipient.id,
               object: activity.id,
               to: activity.actor,
-              // TODO: We might change that, once we figured out capabilities more generally (contacts recommendation).
-              'sec:capability': capability.id
+              // TODO: this is semantically not so clean but the easiest way rn, to detect what kind of response this is.
+              'sec:capability': activity['sec:capability']
             });
+
+            // No need to add the user to contact requests.
+            return;
           }
         }
 
@@ -206,31 +209,27 @@ module.exports = {
         });
       },
       async onReceive(ctx, activity, recipientUri) {
-        // If there is a capability, the contact offer was automatic (post event suggestion)
-        // so we don't want to automatically add the contact back if it was accepted
-        if (!activity.object['sec:capability']) {
-          const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
-          const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
+        const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
-          // Cache the other actor's profile (it should be visible now)
-          await ctx.call('ldp.remote.store', {
-            resourceUri: emitter.url,
-            webId: recipientUri
-          });
+        // Cache the other actor's profile (it should be visible now)
+        await ctx.call('ldp.remote.store', {
+          resourceUri: emitter.url,
+          webId: recipientUri
+        });
 
-          // Attach the other actor's profile to my profiles container
-          await ctx.call('ldp.container.attach', {
-            containerUri: urlJoin(recipientUri, 'data', 'profiles'),
-            resourceUri: emitter.url,
-            webId: recipientUri
-          });
+        // Attach the other actor's profile to my profiles container
+        await ctx.call('ldp.container.attach', {
+          containerUri: urlJoin(recipientUri, 'data', 'profiles'),
+          resourceUri: emitter.url,
+          webId: recipientUri
+        });
 
-          // Add the other actor to my contacts list
-          await ctx.call('activitypub.collection.attach', {
-            collectionUri: recipient['apods:contacts'],
-            item: emitter.id
-          });
-        }
+        // Add the other actor to my contacts list
+        await ctx.call('activitypub.collection.attach', {
+          collectionUri: recipient['apods:contacts'],
+          item: emitter.id
+        });
       }
     },
     ignoreContactRequest: {

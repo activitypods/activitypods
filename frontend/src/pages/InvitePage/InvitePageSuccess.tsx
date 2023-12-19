@@ -1,4 +1,4 @@
-import { Button, Grid, Typography, IconButton, CircularProgress } from '@mui/material';
+import { Button, Grid, Typography, CircularProgress } from '@mui/material';
 import React, { useCallback } from 'react';
 import { useGetOne, useTranslate } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
@@ -13,9 +13,9 @@ const InvitePageSuccess = ({ inviterProfile, ownProfile }: { inviterProfile: any
   const { isLoading: profileLoading } = useGetOne('Profile', { id: inviterProfile.id });
 
   // It takes a while for the new invitee to be authorized to see the profile, so we might have to wait a bit.
-  const onContinue = useCallback(async () => {
+  const onContinue = useCallback(() => {
     // Get the inviter's profile URI in the current users's profiles container.
-    navigate(`/Profile/${encodeURIComponent(inviterProfile.id)}/show`);
+    navigate(`/Profile/${encodeURIComponent(inviterProfile.id as string)}/show`);
   }, []);
 
   return (

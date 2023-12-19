@@ -50,7 +50,7 @@ const InvitePageViewLoggedIn = ({
       </Grid>
 
       {/* Connect / Cancel Buttons */}
-      <Grid container item spacing={1} sx={{ flexFlow: 'column', alignItems: 'center' }}>
+      <Grid container item spacing={1} sx={{ flexFlow: 'column', alignItems: 'center', mt: 1 }}>
         <Grid container item xs={12} md={8} lg={6}>
           <Button fullWidth variant="contained" color="primary" size="large" onClick={onConnectClick}>
             {translate('app.action.connect')}

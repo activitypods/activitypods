@@ -1,5 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
-import { Typography } from '@mui/material';
+import React, { useCallback } from 'react';
 import { useTranslate } from 'react-admin';
 import urljoin from 'url-join';
 
@@ -17,17 +16,6 @@ const InvitePageProviderSelect: React.FC<{ capabilityUri: string; isSignup: bool
 }) => {
   const translate = useTranslate();
 
-  const detailsText = useMemo(
-    () =>
-      isSignup ? (
-        <Typography variant="body2">{translate('app.helper.choose_provider_text_signup')}</Typography>
-      ) : (
-        // login text
-        <Typography variant="body2">{translate('app.helper.choose_provider_text_login')}</Typography>
-      ),
-    [isSignup]
-  );
-
   const onPodProviderSelected = useCallback((podProviderUrl: string) => {
     // Navigate to pod provider's login page.
     const redirectTo = `/auth?${isSignup ? 'signup=true&' : ``}redirect=${encodeURIComponent(
@@ -39,7 +27,7 @@ const InvitePageProviderSelect: React.FC<{ capabilityUri: string; isSignup: bool
 
   return (
     <ChoosePodProviderPage
-      detailsText={detailsText}
+      detailsText={isSignup ? translate('app.helper.choose_provider_text_signup') : undefined}
       customPodProviders={[]}
       onPodProviderSelected={onPodProviderSelected}
       onCancel={onCancel}

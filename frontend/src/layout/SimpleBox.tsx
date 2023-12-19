@@ -22,6 +22,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     marginRight: 5
   },
   title: {
+    lineHeight: '1.8rem',
     [theme.breakpoints.down('sm')]: {
       fontWeight: 'bold',
       marginTop: 12

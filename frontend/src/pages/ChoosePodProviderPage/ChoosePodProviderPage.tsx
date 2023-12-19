@@ -126,7 +126,11 @@ const ChoosePodProviderPage = ({
   const translate = useTranslate();
   const notify = useNotify();
   const [inCustomProviderSelect, setInCustomProviderSelect] = useState(false);
-  const { data: podProvidersRaw, error, isLoading } = useGetList('PodProvider');
+  const {
+    data: podProvidersRaw,
+    error,
+    isLoading
+  } = useGetList('PodProvider', { filter: { 'apods:locales': process.env.REACT_APP_LANG } });
   const podProviders = uniqueBy(
     provider => provider['apods:domainName'] as string,
     [localPodProviderObject, ...customPodProviders, ...(podProvidersRaw || [])]
@@ -155,7 +159,7 @@ const ChoosePodProviderPage = ({
   ) : (
     <SimpleBox title={translate('app.page.choose_provider')} infoText={detailsText}>
       {/* Pod Providers List */}
-      <Grid item m={2}>
+      <Grid item>
         <List>
           {podProviders.map(podProvider => {
             return (

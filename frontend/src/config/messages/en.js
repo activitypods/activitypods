@@ -108,8 +108,6 @@ module.exports = {
         "A personal data space is in some way similar to an email account; It's decentralized, so you can choose where your personal data is stored. Instead of creating a new account for every new app, you can login to compatible apps using your data space account. Apps then store your data in your data space.",
       invite_text_logged_in:
         '%{username} invited you to their network (by their invite link). Click "Connect" to accept the invitation.',
-      choose_provider_text_login:
-        'Choose the provider where your data space (POD) is located. If it\'s not in the list, click "Choose custom provider".',
       choose_provider_text_signup:
         'Like with email, you can decide where you want to create your personal space. Choose a provider that seems trustworthy or that is close to you. If you are looking for one that\'s not in the list, click "Choose custom provider".',
       more_about_pods: 'Learn more about data spaces (PODs).',

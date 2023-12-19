@@ -33,7 +33,7 @@ const InvitePageSuccess = ({ inviterProfile, ownProfile }: { inviterProfile: any
       </Grid>
 
       {/* Continue Button */}
-      <Grid container item xs={12} md={8} lg={6} justifyItems="center" alignSelf="center">
+      <Grid container item xs={12} md={8} lg={6} justifyItems="center" alignSelf="center" sx={{ mt: 2, mb: 2 }}>
         {!profileLoading && (
           <Button fullWidth onClick={onContinue} variant="contained" color="primary" size="large">
             {translate('app.action.continue')}

@@ -25,7 +25,7 @@ module.exports = {
       set_new_password: 'Definir un nouveau mot de passe',
       undo_ignore_contact: 'Ne plus ignorer',
       select: 'Sélectionner',
-      connect: 'Connecter',
+      connect: "Accepter l'invitation",
       continue: 'Continuer'
     },
     group: {
@@ -56,12 +56,12 @@ module.exports = {
       authorize: 'Autorisation requise',
       groups: 'Mes groupes',
       groups_short: 'Groupes',
-      invite: '%{username} a envoyé une demande de contact',
+      invite: '%{username} souhaite vous inviter dans son réseau',
       invite_loading: "Chargement de l'invitation...",
-      invite_connect: 'Voulez-vous connecter avec %{username} ?',
-      choose_provider: 'Choisissez un espace personnel (POD)',
-      choose_custom_provider: 'Choisissez un autre espace personnel (POD)',
-      invite_success: 'Succès !'
+      invite_connect: '%{username} souhaite vous inviter dans son réseau',
+      choose_provider: 'Choisissez un hébergeur',
+      choose_custom_provider: 'Choisir un autre hébergeur',
+      invite_success: 'Connection établie !'
     },
     setting: {
       email: 'Adresse mail',
@@ -101,32 +101,27 @@ module.exports = {
         'Pour envoyer de la monnaie libre à cet utilisateur, copiez sa clé publique ci-dessous et utilisez-la dans le logiciel Cesium.',
       g1_tipjar_input:
         'La clé publique de votre compte Ğ1. Permet aux autres membres du réseau de facilement vous envoyer de la monnaie libre.',
-      login: 'Connectez-vous à votre espace personnel. Vous pouvez utiliser vos identifiants de Bienvenue chez moi.',
-      signup:
-        "Créez votre espace personnel. Si vous avez déjà un compte sur Bienvenue chez moi, ce n'est pas nécessaire",
+      login: 'Je me connecte à mon espace personnel',
+      signup: 'Je crée mon espace personnel',
       reset_password:
         'Entrez votre adresse mail ci-dessous et nous vous enverrons un lien pour réinitialiser votre mot de passe',
       set_new_password: 'Veuillez entrer votre adresse mail et un nouveau mot de passe ci-dessous',
       create_profile:
         'Maintenant que votre compte est créé, veuillez créer votre profil. Celui-ci ne sera visible par défaut que des personnes que vous acceptez dans votre réseau.',
-      authorize: 'Autorisez-vous le site %{appDomain} à accéder à votre POD ?',
+      authorize: 'Autorisez-vous le site %{appDomain} à accéder à votre espace de données ?',
 
       invite_text_logged_out:
-        "Un espace de données personnel est l'endroit où vous stockez vos données personnelles. Tout comme les comptes de messagerie, il est décentralisé, ce qui vous permet de choisir l'emplacement de stockage de vos données personnelles. Au lieu de créer un nouveau compte pour chaque nouvelle application, vous pouvez vous connecter aux nouvelles applications en utilisant votre compte d'espace de données. Les applications compatibles peuvent utiliser et stocker des données dans votre espace plutôt que le leur. En même temps, vous pouvez vous connecter avec d'autres et communiquer de plusieurs manières, en utilisant différentes applications.",
+        "Un espace personnel est l'endroit où vous stockez vos données. Tout comme les comptes email, il est décentralisé, ce qui vous permet de choisir un fournisseur de confiance. Au lieu de créer un nouveau compte pour chaque nouvelle application, vous pourrez utiliser le même compte. Les applications compatibles stockeront les données dans votre espace.",
 
       invite_text_logged_in:
-        "%{username} vous a invité à rejoindre son réseau (via son lien d'invitation). Cliquez sur 'Connecter' pour accepter l'invitation.",
-      choose_provider_text_login:
-        "Choisissez le fournisseur où se trouve votre espace de données (POD). Si ce n'est pas dans la liste, cliquez sur 'Choisir un fournisseur personnalisé'.",
+        "En acceptant l'invitation, %{username} sera ajouté à vos contacts. Par ailleurs, vous lui donnez le droit de voir votre profil et de vous ajouter à ses propre contacts",
       choose_provider_text_signup:
-        "Comme pour les e-mails, vous pouvez décider où vous souhaitez créer votre espace personnel. Choisissez un fournisseur qui vous semble digne de confiance ou qui est proche de vous. Si vous en cherchez un qui n'est pas dans la liste, cliquez sur 'Choisir un fournisseur personnalisé'.",
-      more_about_pods: 'En savoir plus sur les espaces de données (PODs).',
-      choose_custom_provider:
-        "Si le fournisseur que vous recherchez n'est pas listé, vous pouvez entrer son adresse ici (par exemple https://mon-fournisseur.exemple/).",
+        'Comme pour les e-mails, vous pouvez décider où vous souhaitez créer votre espace personnel. Choisissez un hébergeur qui vous semble digne de confiance ou qui est proche de vous.',
+      more_about_pods: 'En savoir plus sur les espaces de données.',
       choose_pod_provider:
         'The pod provider is the place where your data space is located. Like with an email provider, it will store your data.',
-      choose_pod_provider_fr:
-        "Le fournisseur de POD est le lieu où votre espace de données est situe. Comme avec un fournisseur d'email, il stockera vos données."
+      choose_custom_provider:
+        "Si l'hébergeur que vous recherchez n'est pas listé, vous pouvez entrer son adresse ci-dessous (par exemple https://mon-fournisseur.com)."
     },
     message: {
       copied_to_clipboard: 'Copié !',

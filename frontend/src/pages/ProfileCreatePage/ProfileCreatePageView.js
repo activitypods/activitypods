@@ -5,7 +5,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SimpleBox from '../../layout/SimpleBox';
 
 const ToolbarWithoutDelete = props => (
-  <Toolbar {...props}>
+  <Toolbar {...props} sx={{ margin: 0 }}>
     <SaveButton />
   </Toolbar>
 );
@@ -18,7 +18,7 @@ const ProfileCreatePageView = () => {
       icon={<AccountCircleIcon />}
       text={translate('app.helper.create_profile')}
     >
-      <SimpleForm toolbar={<ToolbarWithoutDelete />}>
+      <SimpleForm toolbar={<ToolbarWithoutDelete />} component="div">
         <TextInput source="vcard:given-name" fullWidth />
         <TextInput source="vcard:note" fullWidth />
         <ImageInput source="vcard:photo" accept="image/*">

@@ -7,6 +7,7 @@ import ProfileCard from '../../common/cards/ProfileCard';
 import ShareContactCard from '../../common/cards/ShareContactCard';
 import { formatUsername } from '../../utils';
 import ContactRequestsBlock from '../../common/blocks/ContactRequestsBlock';
+import MyGroupsButton from '../../common/buttons/MyGroupsButton';
 
 const ProfileList = () => {
   const { identity } = useCheckAuthenticated();
@@ -15,7 +16,7 @@ const ProfileList = () => {
   return (
     <List
       title={translate('app.page.contacts')}
-      actions={[<CreateButton label="app.action.add_contact" />]}
+      actions={[<CreateButton label="app.action.add_contact" />, <MyGroupsButton />]}
       asides={[<ProfileCard />, <ShareContactCard />]}
       sort={{ field: 'vcard:given-name', order: 'ASC' }}
       perPage={1000}

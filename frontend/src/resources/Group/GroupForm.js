@@ -11,15 +11,16 @@ import {
   useUnselectAll,
   useRecordContext,
   useListController,
-  SimpleList
+  SimpleList,
+  required
 } from 'react-admin';
 import { useFormContext } from 'react-hook-form';
-import { arrayFromLdField } from '../../utils';
 import { Avatar, ListItemAvatar, useMediaQuery } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import GroupIcon from '@mui/icons-material/Group';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { ReferenceField } from '@semapps/field-components';
+import { arrayFromLdField } from '../../utils';
 import UsernameField from '../../common/fields/UsernameField';
 import ResourceSelectWithTags from '../../common/tags/ResourceSelectWithTags';
 
@@ -55,7 +56,7 @@ export const GroupFormContent = () => {
     [profileData]
   );
   const filteredProfileData = useMemo(
-    () => profileData?.filter(p => memberIds.includes(p?.['describes'])),
+    () => profileData?.filter(p => memberIds.includes(p?.describes)),
     [profileData, memberIds]
   );
 
@@ -90,7 +91,7 @@ export const GroupFormContent = () => {
 
   return (
     <>
-      <TextInput source="vcard:label" fullWidth label={translate('app.group.label')} />
+      <TextInput source="vcard:label" fullWidth label={translate('app.group.label')} validate={[required()]} />
       <h3>{translate('app.group.members')}</h3>
       <ResourceSelectWithTags
         title={translate('app.group.add_members')}
@@ -133,12 +134,12 @@ export const GroupFormContent = () => {
               empty={<>{translate('app.group.no_members')}</>}
               // leftIcon={() => <PersonIcon />}
               leftIcon={props => (
-                <ReferenceField label="Avatar" source="id" reference="Profile" basePath={'/Group'} sortable={false}>
+                <ReferenceField label="Avatar" source="id" reference="Profile" basePath="/Group" sortable={false}>
                   <AvatarItem source="vcard:photo" label="vcard:given-name" />
                 </ReferenceField>
               )}
               primaryText={() => (
-                <ReferenceField source="id" reference="Profile" basePath={'/Group'} sortBy="vcard:given-name">
+                <ReferenceField source="id" reference="Profile" basePath="/Group" sortBy="vcard:given-name">
                   <TextField source="vcard:given-name" label={translate('app.group.profile_name')} fullWidth />
                 </ReferenceField>
               )}
@@ -147,19 +148,17 @@ export const GroupFormContent = () => {
           ) : (
             <Datagrid
               bulkActionButtons={
-                <>
-                  <Button
-                    onClick={() => {
-                      onDeleteMembers(listControllerProps.selectedIds);
-                      unselectMemberIds();
-                    }}
-                    label={translate('app.group.remove_members')}
-                    disabled={isLoading}
-                    sx={{ color: 'red' }}
-                  >
-                    {<DeleteIcon />}
-                  </Button>
-                </>
+                <Button
+                  onClick={() => {
+                    onDeleteMembers(listControllerProps.selectedIds);
+                    unselectMemberIds();
+                  }}
+                  label={translate('app.group.remove_members')}
+                  disabled={isLoading}
+                  sx={{ color: 'red' }}
+                >
+                  <DeleteIcon />
+                </Button>
               }
             >
               <ReferenceField label="" source="id" reference="Profile" sortable={false} link="show">

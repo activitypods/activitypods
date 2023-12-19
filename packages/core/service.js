@@ -43,8 +43,7 @@ const CoreService = {
     authType: 'local'
   },
   created() {
-    let { baseUrl, baseDir, frontendUrl, triplestore, settingsDataset, queueServiceUrl, authType } =
-      this.settings;
+    let { baseUrl, baseDir, frontendUrl, triplestore, settingsDataset, queueServiceUrl, authType } = this.settings;
 
     this.broker.createService(ActivityPubService, {
       settings: {

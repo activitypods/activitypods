@@ -43,7 +43,6 @@ module.exports = {
       apps: 'My applications',
       apps_short: 'Apps',
       groups: 'My groups',
-      groups_short: 'Groups',
       settings: 'Settings',
       settings_short: 'Settings',
       addresses: 'My addresses',
@@ -125,7 +124,8 @@ module.exports = {
       verified_applications_load_failed: 'Unable to load the list of verified applications',
       app_uninstalled: 'Application uninstalled',
       home_address_updated: 'Home address updated',
-      home_address_deleted: 'Home address deleted'
+      home_address_deleted: 'Home address deleted',
+      contact_link_copied: 'Contact link copied successfully'
     },
     user: {
       unknown: 'Unknown',

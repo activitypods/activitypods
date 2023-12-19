@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { useTranslate, useGetList, useAuthProvider } from 'react-admin';
+import { useTranslate, useGetList, useAuthProvider, useGetIdentity, useNotify } from 'react-admin';
 import {
   Box,
   Typography,
@@ -13,12 +13,16 @@ import {
   ListItemSecondaryAction,
   IconButton
 } from '@mui/material';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 import makeStyles from '@mui/styles/makeStyles';
 import { useNavigate } from 'react-router-dom';
 import EmailIcon from '@mui/icons-material/Email';
 import PlaceIcon from '@mui/icons-material/Place';
 import LockIcon from '@mui/icons-material/Lock';
 import EditIcon from '@mui/icons-material/Edit';
+import LinkIcon from '@mui/icons-material/Link';
+import FileCopyIcon from '@mui/icons-material/FileCopy';
+import { formatUsername } from '../../utils';
 
 const useStyles = makeStyles(() => ({
   listItem: {
@@ -26,6 +30,12 @@ const useStyles = makeStyles(() => ({
     padding: 0,
     marginBottom: 8,
     boxShadow: '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)'
+  },
+  listItemText: {
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+    marginRight: 32
   }
 }));
 
@@ -33,6 +43,8 @@ const SettingsPage = () => {
   const translate = useTranslate();
   const authProvider = useAuthProvider();
   const navigate = useNavigate();
+  const notify = useNotify();
+  const { data: identity } = useGetIdentity();
   const [accountSettings, setAccountSettings] = useState({});
   useCheckAuthenticated();
   const classes = useStyles();
@@ -64,6 +76,8 @@ const SettingsPage = () => {
     }
   ];
 
+  const contactLink = identity && `${new URL(window.location.href).origin}/u/${formatUsername(identity?.id)}`;
+
   return (
     <>
       <Typography variant="h2" component="h1" sx={{ mt: 2 }}>
@@ -77,7 +91,11 @@ const SettingsPage = () => {
                 <ListItemAvatar>
                   <Avatar>{setting.icon}</Avatar>
                 </ListItemAvatar>
-                <ListItemText primary={translate(setting.label)} secondary={setting.value} />
+                <ListItemText
+                  primary={translate(setting.label)}
+                  secondary={setting.value}
+                  className={classes.listItemText}
+                />
                 <ListItemSecondaryAction>
                   <IconButton>
                     <EditIcon />
@@ -86,6 +104,27 @@ const SettingsPage = () => {
               </ListItemButton>
             </ListItem>
           ))}
+          <ListItem className={classes.listItem}>
+            <CopyToClipboard text={contactLink}>
+              <ListItemButton onClick={() => notify('app.notification.contact_link_copied', { type: 'success' })}>
+                <ListItemAvatar>
+                  <Avatar>
+                    <LinkIcon />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={translate('app.card.share_contact')}
+                  secondary={contactLink}
+                  className={classes.listItemText}
+                />
+                <ListItemSecondaryAction>
+                  <IconButton>
+                    <FileCopyIcon />
+                  </IconButton>
+                </ListItemSecondaryAction>
+              </ListItemButton>
+            </CopyToClipboard>
+          </ListItem>
         </List>
       </Box>
     </>

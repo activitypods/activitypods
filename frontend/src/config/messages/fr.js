@@ -6,7 +6,7 @@ module.exports = {
       accept: 'Accepter',
       accept_contact_request: 'Accepter la demande',
       add: 'Ajouter',
-      add_contact: 'Envoyer la demande',
+      add_contact: 'Ajouter contact',
       add_location: 'Ajouter une adresse',
       copy: 'Copier dans votre presse-papier',
       edit_profile: 'Éditer mon profil',
@@ -51,8 +51,7 @@ module.exports = {
       add_contact: 'Demander une mise en relation',
       create_profile: 'Créez votre profil',
       authorize: 'Autorisation requise',
-      groups: 'Mes groupes',
-      groups_short: 'Groupes'
+      groups: 'Mes groupes'
     },
     setting: {
       email: 'Adresse mail',
@@ -131,7 +130,8 @@ module.exports = {
       verified_applications_load_failed: 'Impossible de charger la liste des applications vérifiées',
       app_uninstalled: 'Application désinstallée',
       home_address_updated: 'Adresse du domicile mise à jour',
-      home_address_deleted: 'Adresse du domicile enlevée'
+      home_address_deleted: 'Adresse du domicile enlevée',
+      contact_link_copied: 'Lien de contact copié avec succès'
     },
     user: {
       unknown: 'Inconnu',

@@ -16,11 +16,11 @@ const AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING = {
   key: 'auto_accept_contact_request',
   title: {
     en: `{{{emitterProfile.vcard:given-name}}} accepted your contact request by invite link.`,
-    fr: `{{{emitterProfile.vcard:given-name}}} a accepté la demande de contact que tu as donnée par le lien d'invitation.`
+    fr: `{{{emitterProfile.vcard:given-name}}} a accepté votre demande de contact donnée par lien d'invitation.`
   },
   description: {
     en: `You're now connected with {{{emitterProfile.vcard:given-name}}}.`,
-    fr: 'Tu es maintenant connecté à {{{emitterProfile.vcard:given-name}}}.'
+    fr: 'Vous êtes maintenant connectés à {{{emitterProfile.vcard:given-name}}}.'
   },
   actionName: {
     en: 'View',

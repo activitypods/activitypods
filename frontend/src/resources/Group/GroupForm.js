@@ -44,7 +44,7 @@ export const GroupFormContent = () => {
 
   const group = useRecordContext();
   // Watch out: group['vcard:hasMember'] contains the actor URIs, not the profile URIs.
-  const [memberIds, setMemberIds] = React.useState(arrayFromLdField(group['vcard:hasMember']));
+  const [memberIds, setMemberIds] = React.useState(arrayFromLdField(group?.['vcard:hasMember']));
 
   const listControllerProps = useListController({
     resource: 'Profile',
@@ -52,7 +52,7 @@ export const GroupFormContent = () => {
   });
   const { data: profileData, isLoading } = listControllerProps;
   const profileToMemberId = useMemo(
-    () => Object.fromEntries(profileData.map(p => [p.id, p.describes]) || []),
+    () => Object.fromEntries(profileData?.map(p => [p.id, p.describes]) || []),
     [profileData]
   );
   const filteredProfileData = useMemo(
@@ -110,7 +110,7 @@ export const GroupFormContent = () => {
         tagName={translate('app.group.group')}
         resourceName={translate('app.group.profile')}
         // The selected member ids.
-        value={filteredProfileData.map(p => p.id) || []}
+        value={filteredProfileData?.map(p => p.id) || []}
         onSelectionChange={onMemberChange}
         // The groups's appearance suffices, so we don't need to label.
         groupBy={() => ''}
@@ -119,7 +119,7 @@ export const GroupFormContent = () => {
       />
       {/* We use a custom datagrid to render the selected users. */}
       <ListContextProvider
-        value={{ ...listControllerProps, data: filteredProfileData, total: filteredProfileData.length }}
+        value={{ ...listControllerProps, data: filteredProfileData, total: filteredProfileData?.length }}
       >
         <ListView
           title={translate('app.group.members')}

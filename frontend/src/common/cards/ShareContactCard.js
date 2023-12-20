@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Box, Card, Typography, TextField } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { useGetIdentity, useTranslate, useGetList } from 'react-admin';
+import { useTranslate } from 'react-admin';
 import CopyButton from '../buttons/CopyButton';
+import useContactLink from '../../hooks/useContactLink';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -29,28 +30,8 @@ const useStyles = makeStyles(theme => ({
 
 const ShareContactCard = () => {
   const classes = useStyles();
-  const { data: identity } = useGetIdentity();
-  const profileData = identity?.profileData;
   const translate = useTranslate();
-  const [contactLink, setContactLink] = React.useState('');
-  const { data: caps } = useGetList('Capability');
-
-  // Get invite capability URI.
-  useEffect(() => {
-    if (!contactLink && profileData?.describes) {
-      setContactLink(translate('ra.page.loading'));
-    } else if (contactLink && profileData?.describes && caps) {
-      const inviteCapability = caps.find(
-        cap =>
-          cap.type === 'acl:Authorization' && cap['acl:Mode'] === 'acl:Read' && cap['acl:AccessTo'] === profileData.id
-      );
-      if (inviteCapability) {
-        setContactLink(`${new URL(window.location.href).origin}/invite/${encodeURIComponent(inviteCapability.id)}`);
-      } else {
-        setContactLink(translate('app.notification.invite_cap_missing'));
-      }
-    }
-  }, [profileData, contactLink, caps]);
+  const contactLink = useContactLink();
 
   return (
     <Card className={classes.root}>

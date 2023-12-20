@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { useTranslate, useGetList, useAuthProvider, useGetIdentity, useNotify } from 'react-admin';
+import { useTranslate, useGetList, useAuthProvider, useNotify } from 'react-admin';
 import {
   Box,
   Typography,
@@ -22,7 +22,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import EditIcon from '@mui/icons-material/Edit';
 import LinkIcon from '@mui/icons-material/Link';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
-import { formatUsername } from '../../utils';
+import useContactLink from '../../hooks/useContactLink';
 
 const useStyles = makeStyles(() => ({
   listItem: {
@@ -44,12 +44,12 @@ const SettingsPage = () => {
   const authProvider = useAuthProvider();
   const navigate = useNavigate();
   const notify = useNotify();
-  const { data: identity } = useGetIdentity();
   const [accountSettings, setAccountSettings] = useState({});
   useCheckAuthenticated();
   const classes = useStyles();
 
   const { data } = useGetList('Location');
+  const contactLink = useContactLink();
 
   useEffect(() => {
     authProvider.getAccountSettings().then(res => setAccountSettings(res));
@@ -75,8 +75,6 @@ const SettingsPage = () => {
       value: '***************'
     }
   ];
-
-  const contactLink = identity && `${new URL(window.location.href).origin}/u/${formatUsername(identity?.id)}`;
 
   return (
     <>

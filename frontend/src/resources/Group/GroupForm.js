@@ -11,7 +11,8 @@ import {
   useUnselectAll,
   useRecordContext,
   useListController,
-  SimpleList
+  SimpleList,
+  required
 } from 'react-admin';
 import { useFormContext } from 'react-hook-form';
 import { Avatar, ListItemAvatar, useMediaQuery } from '@mui/material';
@@ -55,7 +56,7 @@ export const GroupFormContent = () => {
     [profileData]
   );
   const filteredProfileData = useMemo(
-    () => profileData.filter(p => memberIds.includes(p?.describes)),
+    () => profileData?.filter(p => memberIds.includes(p?.describes)),
     [profileData, memberIds]
   );
 
@@ -90,7 +91,7 @@ export const GroupFormContent = () => {
 
   return (
     <>
-      <TextInput source="vcard:label" fullWidth label={translate('app.group.label')} />
+      <TextInput source="vcard:label" fullWidth label={translate('app.group.label')} validate={[required()]} />
       <h3>{translate('app.group.members')}</h3>
       <ResourceSelectWithTags
         title={translate('app.group.add_members')}

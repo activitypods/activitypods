@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 const urlJoin = require('url-join');
-const { ControlledContainerMixin, useFullURI, defaultToArray } = require('@semapps/ldp');
+const { ControlledContainerMixin, defaultToArray } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
@@ -9,7 +9,6 @@ module.exports = {
   settings: {
     baseUrl: null,
     frontendUrl: null,
-    ontologies: [],
     // ControlledContainerMixin settings
     path: '/front-apps',
     acceptedTypes: ['apods:FrontAppRegistration'],
@@ -51,7 +50,7 @@ module.exports = {
     await this.broker.call('api.addRoute', {
       route: {
         name: 'open-app-endpoint',
-        path: '/:username/openApp',
+        path: '/:username([^/.][^/]+)/openApp',
         authorization: false,
         authentication: false,
         aliases: {
@@ -85,7 +84,7 @@ module.exports = {
 
       if (!type) throw new Error('The type or URI must be provided');
 
-      if (!type.startsWith('http')) type = useFullURI(type, this.settings.ontologies);
+      type = await ctx.call('ontologies.prefixToUri', { value: type });
 
       const results = await ctx.call('triplestore.query', {
         query: `

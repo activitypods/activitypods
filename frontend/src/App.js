@@ -2,7 +2,7 @@ import React from 'react';
 import { Admin, Resource, CustomRoutes, memoryStore } from 'react-admin';
 import { BrowserRouter, Route } from 'react-router-dom';
 import { StyledEngineProvider } from '@mui/material/styles';
-import { LocalLoginPage, createPasswordScorer, defaultPasswordScorerOptions } from '@semapps/auth-provider';
+import { LocalLoginPage } from '@semapps/auth-provider';
 
 import authProvider from './config/authProvider';
 import dataProvider from './config/dataProvider';
@@ -11,6 +11,7 @@ import * as resources from './resources';
 
 import Layout from './layout/Layout';
 import theme from './config/theme';
+import scorer from './config/scorer';
 
 import HomePage from './pages/HomePage';
 import SettingsPage from './pages/SettingsPage/SettingsPage';
@@ -28,7 +29,7 @@ const LoginPage = () => (
     postSignupRedirect="/initialize"
     postLoginRedirect="/authorize"
     additionalSignupValues={{ preferredLocale: process.env.REACT_APP_LANG }}
-    passwordScorer={createPasswordScorer(defaultPasswordScorerOptions, 3)}
+    passwordScorer={scorer}
   />
 );
 

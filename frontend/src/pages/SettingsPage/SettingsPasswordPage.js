@@ -1,13 +1,8 @@
 import React, { useCallback } from 'react';
-import {
-  useCheckAuthenticated,
-  createPasswordScorer,
-  defaultPasswordScorerOptions,
-  PasswordStrengthIndicator,
-  validatePasswordStrength
-} from '@semapps/auth-provider';
+import { useCheckAuthenticated, PasswordStrengthIndicator, validatePasswordStrength } from '@semapps/auth-provider';
 import { required, useAuthProvider, useNotify, useTranslate, SimpleForm, TextInput } from 'react-admin';
 import { Box, Card, Typography } from '@mui/material';
+import scorer from '../../config/scorer';
 
 const validateConfirmNewPassword = [
   (value, { newPassword, confirmNewPassword }) => {
@@ -17,8 +12,6 @@ const validateConfirmNewPassword = [
     }
   }
 ];
-
-const scorer = createPasswordScorer(defaultPasswordScorerOptions, 3);
 
 const SettingsPasswordPage = () => {
   const translate = useTranslate();

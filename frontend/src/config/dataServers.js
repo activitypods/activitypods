@@ -1,7 +1,8 @@
 const dataServers = {
   podProvider: {
     authServer: true,
-    baseUrl: process.env.REACT_APP_POD_PROVIDER_URL
+    baseUrl: process.env.REACT_APP_POD_PROVIDER_URL,
+    void: false
   },
   pod: {
     pod: true,

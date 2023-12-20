@@ -55,7 +55,7 @@ const ContactRequest = ({ activity, refetch }) => {
   const createPath = useCreatePath();
   const translate = useTranslate();
 
-  let { data: profile, isLoading } = useGetOne('Profile', { id: activity.object.object });
+  const { data: profile, isLoading } = useGetOne('Profile', { id: activity.object.object });
 
   if (isLoading) return null;
 

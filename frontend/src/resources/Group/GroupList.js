@@ -2,13 +2,15 @@ import React from 'react';
 import { useTranslate, SimpleList, TextField } from 'react-admin';
 import { Avatar } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
+import { useCheckAuthenticated } from '@semapps/auth-provider';
 import List from '../../layout/List';
 import { arrayFromLdField } from '../../utils';
 
 const GroupList = () => {
+  useCheckAuthenticated();
   const translate = useTranslate();
   return (
-    <List>
+    <List title={translate('app.page.groups')}>
       <SimpleList
         primaryText={<TextField source="vcard:label" />}
         secondaryText={record =>

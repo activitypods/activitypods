@@ -38,14 +38,12 @@ const CoreService = {
       user: null,
       password: null
     },
-    ontologies: [],
     settingsDataset: 'settings',
     queueServiceUrl: null,
     authType: 'local'
   },
   created() {
-    let { baseUrl, baseDir, frontendUrl, triplestore, ontologies, settingsDataset, queueServiceUrl, authType } =
-      this.settings;
+    let { baseUrl, baseDir, frontendUrl, triplestore, settingsDataset, queueServiceUrl, authType } = this.settings;
 
     this.broker.createService(ActivityPubService, {
       settings: {
@@ -97,7 +95,7 @@ const CoreService = {
 
     this.broker.createService(OntologiesService, {
       settings: {
-        ontologies: [...ontologies, apods, interop, oidc, dc, syreen, mp, pair, voidOntology],
+        ontologies: [apods, interop, oidc, dc, syreen, mp, pair, voidOntology],
         persistRegistry: false,
         settingsDataset
       }
@@ -107,7 +105,6 @@ const CoreService = {
       mixins: [DocumentTaggerMixin],
       settings: {
         baseUrl,
-        ontologies,
         podProvider: true,
         containers,
         resourcesWithContainerPath: true, // TODO try to set to false
@@ -202,8 +199,7 @@ const CoreService = {
     this.broker.createService(FrontAppsService, {
       settings: {
         baseUrl,
-        frontendUrl,
-        ontologies
+        frontendUrl
       }
     });
   }

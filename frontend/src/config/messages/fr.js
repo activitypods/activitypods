@@ -6,7 +6,7 @@ module.exports = {
       accept: 'Accepter',
       accept_contact_request: 'Accepter la demande',
       add: 'Ajouter',
-      add_contact: 'Envoyer la demande',
+      add_contact: 'Ajouter contact',
       add_location: 'Ajouter une adresse',
       copy: 'Copier dans votre presse-papier',
       edit_profile: 'Éditer mon profil',
@@ -162,7 +162,8 @@ module.exports = {
         "Une erreur s'est produite lors de la récupération de l'invitation. Elle pourrait ne pas être valide.\n%{error}",
       invite_cap_missing: "Il n'y a pas de capacité d'invitation disponible pour générer un lien d'invitation",
       invite_cap_profile_fetch_error: "Erreur lors de la recherche du profil associé au lien d'invitation",
-      pod_provider_fetch_error: "Erreur lors de la recherche d'autres fournisseurs de pods : %{error"
+      pod_provider_fetch_error: "Erreur lors de la recherche d'autres hébergeurs : %{error}",
+      contact_link_copied: 'Lien de contact copié avec succès'
     },
     user: {
       unknown: 'Inconnu',

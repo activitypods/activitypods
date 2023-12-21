@@ -290,7 +290,7 @@ describe('capabilities', () => {
           type: ACTIVITY_TYPES.ADD,
           object: users[0].profileUri
         },
-        'as:context': inviteCap.id
+        'sec:capability': inviteCap.id
       })
     });
 

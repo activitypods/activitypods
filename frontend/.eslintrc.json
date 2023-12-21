@@ -78,6 +78,7 @@
     "import/no-duplicates": "warn",
     "import/no-dynamic-require": "off",
     "import/no-named-as-default": "warn",
+    "import/no-named-as-default-member": "warn",
     "import/no-named-default": "warn",
     "import/no-useless-path-segments": "warn",
     "import/order": "warn",

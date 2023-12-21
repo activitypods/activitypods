@@ -1,6 +1,7 @@
 const urlJoin = require('url-join');
 const { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const { defaultToArray } = require('@semapps/ldp');
+const { arrayOf } = require('@semapps/ldp');
+const { matchActivity } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const {
   CONTACT_REQUEST,
@@ -13,7 +14,6 @@ const {
   ACCEPT_CONTACT_REQUEST_MAPPING,
   AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING: CONTACT_REQUEST_BY_INVITE_LINK_MAPPING
 } = require('../config/mappings');
-const matchActivity = require('@semapps/activitypub/utils/matchActivity');
 
 module.exports = {
   name: 'contacts.request',
@@ -62,8 +62,7 @@ module.exports = {
         if (!activityHasInviteCapability(activity)) {
           return false;
         }
-
-        return !!(await matchActivity(ctx, CONTACT_REQUEST, activity));
+        return await matchActivity(ctx, CONTACT_REQUEST, activity);
       },
       mapping: CONTACT_REQUEST_BY_INVITE_LINK_MAPPING
     });
@@ -74,8 +73,7 @@ module.exports = {
         if (activityHasInviteCapability(activity)) {
           return false;
         }
-
-        return !!(await matchActivity(ctx, ACCEPT_CONTACT_REQUEST, activity));
+        return await matchActivity(ctx, ACCEPT_CONTACT_REQUEST, activity);
       },
       mapping: ACCEPT_CONTACT_REQUEST_MAPPING
     });
@@ -85,7 +83,7 @@ module.exports = {
       match: CONTACT_REQUEST,
       async onEmit(ctx, activity, emitterUri) {
         // Add the user to the contacts WebACL group so he can see my profile
-        for (let targetUri of defaultToArray(activity.target)) {
+        for (let targetUri of arrayOf(activity.target)) {
           await ctx.call('webacl.group.addMember', {
             groupSlug: `${new URL(emitterUri).pathname}/contacts`,
             memberUri: targetUri,
@@ -161,7 +159,11 @@ module.exports = {
           collectionUri: recipient['apods:contactRequests'],
           webId: recipientUri
         });
-        if (collection && collection.items.length > 0 && collection.items.find(a => a.actor === activity.actor)) {
+        if (
+          collection &&
+          arrayOf(collection.items).length > 0 &&
+          arrayOf(collection.items).find(a => a.actor === activity.actor)
+        ) {
           return;
         }
 

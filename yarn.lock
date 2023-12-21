@@ -1601,25 +1601,6 @@
     async "0.2.10"
     localforage "^1.9.0"
 
-"@semapps/activitypub@0.5.1":
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/@semapps/activitypub/-/activitypub-0.5.1.tgz#f65ce3fd7b935a752df279b1c2e2916eccbbac5b"
-  integrity sha512-t1uZAwKtcYt0HPXJU3NnAZQCfaqdRAzNOe/IcuSFJQP/QR+DVSwdTcAERnOh3nOgcIBAS92U6HQmNlfkh/LPAg==
-  dependencies:
-    "@rdfjs/data-model" "^1.3.4"
-    "@semapps/ldp" "0.5.1"
-    "@semapps/middlewares" "0.5.1"
-    "@semapps/mime-types" "0.5.1"
-    "@semapps/triplestore" "0.5.1"
-    bull-board "^0.7.0"
-    handlebars "^4.7.7"
-    moleculer "^0.14.18"
-    moleculer-bull "^0.2.5"
-    moleculer-db "^0.8.15"
-    moleculer-web "^0.10.0-beta1"
-    node-fetch "^2.6.6"
-    url-join "^4.0.1"
-
 "@semapps/activitypub@0.6.0-alpha.5":
   version "0.6.0-alpha.5"
   resolved "https://registry.yarnpkg.com/@semapps/activitypub/-/activitypub-0.6.0-alpha.5.tgz#41045e67518cfced23bc4dd495831d8d4c8eb047"
@@ -1674,26 +1655,6 @@
     streamify-string "^1.0.1"
     url-join "^4.0.1"
 
-"@semapps/ldp@0.5.1":
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/@semapps/ldp/-/ldp-0.5.1.tgz#0e1f9a8fcd2e94786e6c07926b9ab7b361d4346f"
-  integrity sha512-8UlTIQaPBUGlo8VceTT6F7/dXxb8Egm5kh6oiU0k4jgjvMEHqzIlP2fpTJe37Wm/v+/6JASwbQ8sA0obbnjVqw==
-  dependencies:
-    "@rdfjs/data-model" "^1.3.4"
-    "@semapps/middlewares" "0.5.1"
-    "@semapps/mime-types" "0.5.1"
-    "@semapps/triplestore" "0.5.1"
-    bson "^4.0.4"
-    moleculer "^0.14.17"
-    moleculer-schedule "^0.2.3"
-    path-to-regexp "^6.2.0"
-    rdf-parse "^1.7.0"
-    sharp "^0.31.2"
-    sparqljs "^3.5.2"
-    speakingurl "^14.0.1"
-    streamify-string "^1.0.1"
-    url-join "^4.0.1"
-
 "@semapps/ldp@0.6.0-alpha.5":
   version "0.6.0-alpha.5"
   resolved "https://registry.yarnpkg.com/@semapps/ldp/-/ldp-0.6.0-alpha.5.tgz#b4e6072f861276fa63b822b27f1a0c79e1cecf85"
@@ -1720,16 +1681,6 @@
     url-join "^4.0.1"
     uuid "^9.0.1"
 
-"@semapps/middlewares@0.5.1":
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/@semapps/middlewares/-/middlewares-0.5.1.tgz#737a1af178657e335beef809f36a9632406a1c18"
-  integrity sha512-qQlkFEwAgAG65FTRdQdDVxqPcRVhAkTrelNCel8i732mHkVlXPwFHgQeeD3MYEHVLND8L46lwHWgEigsLM3lNQ==
-  dependencies:
-    "@semapps/mime-types" "0.5.1"
-    busboy "^0.3.1"
-    memory-streams "^0.1.3"
-    moleculer "^0.14.18"
-
 "@semapps/middlewares@0.6.0-alpha.5":
   version "0.6.0-alpha.5"
   resolved "https://registry.yarnpkg.com/@semapps/middlewares/-/middlewares-0.6.0-alpha.5.tgz#4cb8e384261071cc26197e45b020eeb19504f2ef"
@@ -1739,14 +1690,6 @@
     busboy "^0.3.1"
     memory-streams "^0.1.3"
     moleculer "^0.14.18"
-
-"@semapps/mime-types@0.5.1":
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/@semapps/mime-types/-/mime-types-0.5.1.tgz#52bb46bd9ced158a07a86cee94e7ec5363a9d239"
-  integrity sha512-SUx+1Jw+FNvmE/F0Tk6GR85hXG57zk26dzgtDUNeQcmbnw5HPFE1ZQWNORkOoqjHGPvxIDoMW5zIzH1631OJ/g==
-  dependencies:
-    moleculer "^0.14.18"
-    negotiator "^0.6.2"
 
 "@semapps/mime-types@0.6.0-alpha.5":
   version "0.6.0-alpha.5"
@@ -1834,21 +1777,6 @@
     "@semapps/mime-types" "0.6.0-alpha.5"
     moleculer "^0.14.17"
     node-fetch "^2.6.6"
-    url-join "^4.0.1"
-
-"@semapps/triplestore@0.5.1":
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/@semapps/triplestore/-/triplestore-0.5.1.tgz#3c8f11ea2e77f79741f37559eb6936820c68d305"
-  integrity sha512-7OB0Pueo6WBDjzdcMm09Q42FsOFst/4iQxVYjFJWHGllWFzD/o2uDQ258LhmkAOYdW5u0AIxMb17e8foFwwS0Q==
-  dependencies:
-    "@semapps/middlewares" "0.5.1"
-    "@semapps/mime-types" "0.5.1"
-    bson "^4.0.4"
-    negotiator "^0.6.2"
-    node-fetch "^2.6.6"
-    sparqljs "^3.5.2"
-    sparqljson-parse "^1.5.1"
-    string-template "^1.0.0"
     url-join "^4.0.1"
 
 "@semapps/triplestore@0.6.0-alpha.5":
@@ -2672,13 +2600,6 @@ bser@2.1.1:
   dependencies:
     node-int64 "^0.4.0"
 
-bson@^4.0.4:
-  version "4.7.2"
-  resolved "https://registry.yarnpkg.com/bson/-/bson-4.7.2.tgz#320f4ad0eaf5312dd9b45dc369cc48945e2a5f2e"
-  integrity sha512-Ry9wCtIZ5kGqkJoi6aD8KjxFZEx78guTQDnpXWiNthsxzrxAK/i8E6pCHAIZTbaEFWcOCvbecMukfK7XUvyLpQ==
-  dependencies:
-    buffer "^5.6.0"
-
 buffer-equal-constant-time@1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/buffer-equal-constant-time/-/buffer-equal-constant-time-1.0.1.tgz#f8e71132f7ffe6e01a5c9697a4c6f3e48d5cc819"
@@ -2689,7 +2610,7 @@ buffer-from@^1.0.0:
   resolved "https://registry.yarnpkg.com/buffer-from/-/buffer-from-1.1.2.tgz#2b146a6fd72e80b4f55d255f35ed59a3a9a41bd5"
   integrity sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==
 
-buffer@^5.5.0, buffer@^5.6.0:
+buffer@^5.5.0:
   version "5.7.1"
   resolved "https://registry.yarnpkg.com/buffer/-/buffer-5.7.1.tgz#ba62e7c13133053582197160851a8f648e99eed0"
   integrity sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==

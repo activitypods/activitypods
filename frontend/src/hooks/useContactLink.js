@@ -12,7 +12,7 @@ const useContactLink = () => {
     if (contactLink && profileData?.describes && caps) {
       const inviteCapability = caps.find(
         cap =>
-          cap.type === 'acl:Authorization' && cap['acl:Mode'] === 'acl:Read' && cap['acl:AccessTo'] === profileData.id
+          cap.type === 'acl:Authorization' && cap['acl:mode'] === 'acl:Read' && cap['acl:accessTo'] === profileData.id
       );
       if (inviteCapability) {
         setContactLink(`${new URL(window.location.href).origin}/invite/${encodeURIComponent(inviteCapability.id)}`);

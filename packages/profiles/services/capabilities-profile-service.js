@@ -93,7 +93,7 @@ const CapabilitiesProfileService = {
 
             const hasInviteCap = caps.some(cap => {
               return (cap.type =
-                'acl:Authorization' && cap['acl:Mode'] === 'acl:Read' && cap['acl:AccessTo'] === profileUri);
+                'acl:Authorization' && cap['acl:mode'] === 'acl:Read' && cap['acl:accessTo'] === profileUri);
             });
 
             if (!hasInviteCap) {

@@ -48,7 +48,7 @@ const InvitePage = () => {
   // Fetch the inviter profile, once the capability document (with the inviter's profile URI) is available.
   useEffect(() => {
     if (capability) {
-      fetch(capability['acl:AccessTo'] as string, {
+      fetch(capability['acl:accessTo'] as string, {
         headers: { Accept: 'application/ld+json', Authorization: `Capability ${capabilityUri}` }
       })
         .then(async response => response.json())

@@ -57,7 +57,7 @@ const getUserInviteCap = async user => {
   const caps = arrayOf(inviteCaps['ldp:contains']);
   const inviteCap = caps.find(cap => {
     return (
-      cap.type === 'acl:Authorization' && cap['acl:Mode'] === 'acl:Read' && cap['acl:AccessTo'] === user.profileUri
+      cap.type === 'acl:Authorization' && cap['acl:mode'] === 'acl:Read' && cap['acl:accessTo'] === user.profileUri
     );
   });
   return inviteCap;
@@ -224,8 +224,8 @@ describe('capabilities', () => {
     const misplacedCapUri = await broker.call('profiles.profile.post', {
       resource: {
         type: 'acl:Authorization',
-        'acl:Mode': 'acl:Read',
-        'acl:AccessTo': users[0].profileUri
+        'acl:mode': 'acl:Read',
+        'acl:accessTo': users[0].profileUri
       },
       contentType: MIME_TYPES.JSON,
       webId: users[0].webId
@@ -241,8 +241,8 @@ describe('capabilities', () => {
     const capUri = await broker.call('capabilities.post', {
       resource: {
         type: 'acl:Authorization',
-        'acl:Mode': 'acl:Read',
-        'acl:AccessTo': 'https://path-to-different-resource.example'
+        'acl:mode': 'acl:Read',
+        'acl:accessTo': 'https://path-to-different-resource.example'
       },
       contentType: MIME_TYPES.JSON,
       webId: users[0].webId

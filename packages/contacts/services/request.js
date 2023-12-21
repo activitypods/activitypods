@@ -135,8 +135,8 @@ module.exports = {
           // Capability to read the profile implies automatic contact approval.
           if (
             capability.type === 'acl:Authorization' &&
-            capability['acl:Mode'] === 'acl:Read' &&
-            capability['acl:AccessTo'] === profileUri
+            capability['acl:mode'] === 'acl:Read' &&
+            capability['acl:accessTo'] === profileUri
           ) {
             // Send the accept.
             await ctx.call('activitypub.outbox.post', {

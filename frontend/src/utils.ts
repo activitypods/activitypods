@@ -198,12 +198,14 @@ export const validateBaseUrl = (uri: string, allowAddHttp: boolean) => {
   return { url, error };
 };
 
-export const localPodProviderObject = {
-  type: 'apods:PodProvider',
-  'apods:area': process.env.POD_AREA,
-  'apods:locales': 'en',
-  'apods:domainName': new URL(process.env.REACT_APP_POD_PROVIDER_URL || 'http://localhost:3000').host
-};
+export const localPodProviderObject = process.env.REACT_APP_POD_PROVIDER_URL
+  ? {
+      type: 'apods:PodProvider',
+      'apods:area': process.env.POD_AREA,
+      'apods:locales': 'en',
+      'apods:domainName': new URL(process.env.REACT_APP_POD_PROVIDER_URL).host
+    }
+  : undefined;
 
 /**
  * Removes duplicate items from a list.

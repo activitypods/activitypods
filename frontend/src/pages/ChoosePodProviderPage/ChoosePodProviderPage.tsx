@@ -131,10 +131,9 @@ const ChoosePodProviderPage = ({
     error,
     isLoading
   } = useGetList('PodProvider', { filter: { 'apods:locales': process.env.REACT_APP_LANG } });
-  const podProviders = uniqueBy(
-    provider => provider['apods:domainName'] as string,
-    [localPodProviderObject, ...customPodProviders, ...(podProvidersRaw || [])]
-  );
+  const podProviders = localPodProviderObject
+    ? [localPodProviderObject]
+    : uniqueBy(provider => provider['apods:domainName'] as string, [...customPodProviders, ...(podProvidersRaw || [])]);
 
   const providerSelected = useCallback(
     (domainName: string) => {
@@ -186,19 +185,23 @@ const ChoosePodProviderPage = ({
             </ListItem>
           )}
           {/* Option to add another Pod Provider */}
-          <Divider />
-          <ListItemButton
-            onClick={() => {
-              setInCustomProviderSelect(true);
-            }}
-          >
-            <ListItemAvatar>
-              <Avatar>
-                <AddIcon />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText primary={translate('app.page.choose_custom_provider')} />
-          </ListItemButton>
+          {!localPodProviderObject && (
+            <>
+              <Divider />
+              <ListItemButton
+                onClick={() => {
+                  setInCustomProviderSelect(true);
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar>
+                    <AddIcon />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText primary={translate('app.page.choose_custom_provider')} />
+              </ListItemButton>
+            </>
+          )}
         </List>
       </Grid>
 

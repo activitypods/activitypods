@@ -1,7 +1,7 @@
 const ProfileService = require('./services/profile');
 const LocationService = require('./services/location');
 const ContactGroupsService = require('./services/contactgroup');
-const CapabilitiesProfileService = require('./services/capabilities-profile-service');
+const CapabilitiesProfileService = require('./services/capabilities-profile');
 
 const ProfilesApp = {
   name: 'profiles',

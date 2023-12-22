@@ -1,4 +1,5 @@
 const { MIME_TYPES } = require('@semapps/mime-types');
+const { arrayOf } = require('@semapps/ldp');
 
 /**
  * Service to create acl:Read authorization capability URIs for new users' profiles.
@@ -58,50 +59,41 @@ const CapabilitiesProfileService = {
         return inviteCapUri;
       }
     },
-
+    // Add invite cap to each capabilities container, where missing.
     addCapsContainersWhereMissing: {
-      params: {},
       handler: async function (ctx) {
         /** @type {string[]} */
         const datasets = await ctx.call('pod.list');
 
-        // Add invite cap to each capabilities container, where missing.
-        await Promise.all(
-          datasets.map(async dataset => {
-            const [account] = await this.broker.call('auth.account.find', { query: { username: dataset } });
-            const webId = account.webId;
+        for (let dataset of datasets) {
+          const [account] = await ctx.call('auth.account.find', { query: { username: dataset } });
+          const webId = account.webId;
+          ctx.meta.dataset = dataset;
 
-            const { url: profileUri } = await this.broker.call('ldp.resource.get', {
-              resourceUri: webId,
-              accept: MIME_TYPES.JSON
-            });
-            const capContainerUri = await ctx.call('capabilities.getContainerUri', { webId }, { parentCtx: ctx });
+          const { url: profileUri } = await ctx.call('ldp.resource.get', {
+            resourceUri: webId,
+            accept: MIME_TYPES.JSON
+          });
 
-            // Get all existing caps
-            const inviteCaps = await this.broker.call(
-              'ldp.container.get',
-              {
-                containerUri: capContainerUri,
-                accept: MIME_TYPES.JSON,
-                webId: 'system'
-              },
-              { meta: { $cache: false } }
-            );
+          const capContainerUri = await ctx.call('capabilities.getContainerUri', { webId });
 
-            // Make caps an array for easier handling.
-            const caps = (inviteCaps['ldp:contains'] && [inviteCaps['ldp:contains']].flatMap(i => i)) || [];
+          // Get all existing caps
+          const inviteCaps = await ctx.call('ldp.container.get', {
+            containerUri: capContainerUri,
+            accept: MIME_TYPES.JSON,
+            webId: 'system'
+          });
 
-            const hasInviteCap = caps.some(cap => {
-              return (cap.type =
-                'acl:Authorization' && cap['acl:mode'] === 'acl:Read' && cap['acl:accessTo'] === profileUri);
-            });
+          const hasInviteCap = arrayOf(inviteCaps['ldp:contains']).some(
+            cap =>
+              (cap.type = 'acl:Authorization' && cap['acl:mode'] === 'acl:Read' && cap['acl:accessTo'] === profileUri)
+          );
 
-            if (!hasInviteCap) {
-              this.logger.info('Migration: Adding invite capability for dataset ' + dataset + '...');
-              await this.actions.createProfileCapability({ webId });
-            }
-          })
-        );
+          if (!hasInviteCap) {
+            this.logger.info('Migration: Adding invite capability for dataset ' + dataset + '...');
+            await this.actions.createProfileCapability({ webId });
+          }
+        }
       }
     }
   }

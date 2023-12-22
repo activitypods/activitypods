@@ -5,7 +5,7 @@ const fetch = require('node-fetch');
 const waitForExpect = require('wait-for-expect');
 const { arrayOf, waitForResource } = require('./utils');
 const { initialize, listDatasets, clearDataset } = require('./initialize');
-const CapabilitiesProfileService = require('../packages/profiles/services/capabilities-profile-service');
+const CapabilitiesProfileService = require('../packages/profiles/services/capabilities-profile');
 
 /**
  * @typedef {import('moleculer').ServiceBroker} Broker
@@ -157,7 +157,7 @@ describe('capabilities', () => {
     // 1. Stop capabilities service (that adds an invite capability on signup).
     await broker.destroyService('profiles.capabilities');
 
-    // 2. Create user.
+    // 2. Create user 3.
     const newUser = await signupUser(NUM_USERS + 1);
     const webIdDoc = await broker.call('ldp.resource.awaitCreateComplete', {
       resourceUri: newUser.webId,
@@ -171,7 +171,7 @@ describe('capabilities', () => {
     await broker.waitForServices('profiles.capabilities', 4_000);
     // 3.1 Run migration. Will add the capabilities. Wait until the service becomes available.
     await broker.waitForServices('capabilities', 4_000);
-    await broker.call('profiles.capabilities.addCapsContainersWhereMissing', {});
+    await broker.call('profiles.capabilities.addCapsContainersWhereMissing');
 
     // 4. Get the capabilities and assert them.
     // 4.1. Add the missing properties to the actor object (required by `getActorInviteCap`).

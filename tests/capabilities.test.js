@@ -137,23 +137,18 @@ describe('capabilities', () => {
       expect(arrayOf(caps)).toHaveLength(1);
     });
 
-    test('anonymous user sees empty container', async () => {
-      const fetchRes = await fetch(users[0].capabilitiesUri);
-      const jsonRes = await fetchRes.json();
-      const caps = jsonRes['ldp:contains'];
-      expect(arrayOf(caps)).toHaveLength(0);
+    test('anonymous user cannot get container', async () => {
+      const { status } = await fetch(users[0].capabilitiesUri);
+      expect(status).toBe(404);
     });
 
-    test('other user sees empty container', async () => {
+    test('other user cannot get container', async () => {
       // Make an authenticated fetch for user0, fetching user0's caps.
-      const fetchRes = await fetch(users[0].capabilitiesUri, {
-        headers: { authorization: `Bearer ${users[1].token}` }
+      const { status } = await fetch(users[0].capabilitiesUri, {
+        headers: { Authorization: `Bearer ${users[1].token}` }
       });
-      const jsonRes = await fetchRes.json();
-      const caps = jsonRes['ldp:contains'];
-      expect(arrayOf(caps)).toHaveLength(0);
+      expect(status).toBe(404);
     });
-    3;
   });
 
   test('migration to add invite URI capabilities', async () => {

@@ -770,6 +770,25 @@
     "signatureAlgorithm": "sec:signingAlgorithm",
     "signatureValue": "sec:signatureValue",
 
+    "acl:accessTo": {
+      "@type": "@id"
+    },
+    "acl:agent": {
+      "@type": "@id"
+    },
+    "acl:agentGroup": {
+      "@type": "@id"
+    },
+    "acl:agentClass": {
+      "@type": "@id"
+    },
+    "acl:default": {
+      "@type": "@id"
+    },
+    "acl:mode": {
+      "@type": "@id"
+    },
+
     "void:sparqlEndpoint": {
       "@type": "@id"
     },
@@ -857,7 +876,7 @@
     "oidc:redirect_uris": {
       "@type": "@id"
     },
-    
+
     "apods:closingTime": {
       "@type": "xsd:dateTime"
     },

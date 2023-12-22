@@ -26,7 +26,7 @@ const IgnoreContactButton = ({ ...rest }) => {
         setDisabled(false);
       }, 3000);
     } catch (e) {
-      notify(e.message, 'error');
+      notify(e.message, { type: 'error' });
       setDisabled(false);
     }
   }, [setDisabled, record, notify, refetchIgnored, outbox, url]);
@@ -48,7 +48,7 @@ const IgnoreContactButton = ({ ...rest }) => {
         setDisabled(false);
       }, 3000);
     } catch (e) {
-      notify(e.message, 'error');
+      notify(e.message, { type: 'error' });
       setDisabled(false);
     }
   }, [setDisabled, record, notify, refetchIgnored, outbox]);

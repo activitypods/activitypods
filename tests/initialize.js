@@ -1,7 +1,7 @@
 const path = require('path');
 const { ServiceBroker } = require('moleculer');
 const { pair } = require('@semapps/ontologies');
-const { WebAclMiddleware } = require('@semapps/webacl');
+const { WebAclMiddleware, CacherMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
 const { CoreService } = require('@activitypods/core');
 const { AnnouncerService } = require('@activitypods/announcer');
@@ -40,6 +40,8 @@ const initialize = async (port, settingsDataset) => {
   const broker = new ServiceBroker({
     nodeID: 'server' + port,
     middlewares: [
+      // Uncomment the next line run all tests with memory cacher
+      // CacherMiddleware({ type: 'Memory' }),
       WebAclMiddleware({ baseUrl, podProvider: true }),
       ObjectsWatcherMiddleware({ baseUrl, podProvider: true })
     ],

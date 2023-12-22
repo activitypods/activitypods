@@ -39,6 +39,16 @@ const theme = createTheme({
         fontSize: 28
       }
     },
+    h3: {
+      fontFamily,
+      fontSize: 35,
+      fontStyle: 'normal',
+      fontWeight: 'normal',
+      [muiTheme.breakpoints.down('sm')]: {
+        fontSize: 23
+      }
+    },
+
     h4: {
       fontFamily,
       fontSize: 30,

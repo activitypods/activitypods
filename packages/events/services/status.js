@@ -1,6 +1,6 @@
 const CronMixin = require('moleculer-cron');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { defaultToArray } = require('@semapps/ldp');
+const { arrayOf } = require('@semapps/ldp');
 
 const EVENT_STATUS_COMING = 'apods:Coming';
 const EVENT_STATUS_FINISHED = 'apods:Finished';
@@ -34,12 +34,10 @@ module.exports = {
       let otherStatus;
       if (COMING_FINISHED_STATUSES.includes(newStatus)) {
         otherStatus =
-          event['apods:hasStatus'] &&
-          defaultToArray(event['apods:hasStatus']).find(s => OPEN_CLOSED_STATUSES.includes(s));
+          event['apods:hasStatus'] && arrayOf(event['apods:hasStatus']).find(s => OPEN_CLOSED_STATUSES.includes(s));
       } else if (OPEN_CLOSED_STATUSES.includes(newStatus)) {
         otherStatus =
-          event['apods:hasStatus'] &&
-          defaultToArray(event['apods:hasStatus']).find(s => COMING_FINISHED_STATUSES.includes(s));
+          event['apods:hasStatus'] && arrayOf(event['apods:hasStatus']).find(s => COMING_FINISHED_STATUSES.includes(s));
       } else {
         throw new Error('Invalid status ' + newStatus);
       }
@@ -52,12 +50,12 @@ module.exports = {
     },
     isFinished(ctx) {
       const { event } = ctx.params;
-      const status = defaultToArray(event['apods:hasStatus']) || [];
+      const status = arrayOf(event['apods:hasStatus']) || [];
       return status.includes(EVENT_STATUS_FINISHED);
     },
     isClosed(ctx) {
       const { event } = ctx.params;
-      const status = defaultToArray(event['apods:hasStatus']) || [];
+      const status = arrayOf(event['apods:hasStatus']) || [];
       return status.includes(EVENT_STATUS_CLOSED);
     },
     async tagNewEvent(ctx) {
@@ -85,12 +83,12 @@ module.exports = {
 
         if (
           !event['apods:hasStatus'].includes(EVENT_STATUS_CLOSED) &&
-          attendeesCollection.items.length >= event['apods:maxAttendees']
+          arrayOf(attendeesCollection.items).length >= event['apods:maxAttendees']
         ) {
           await this.actions.set({ eventUri, newStatus: EVENT_STATUS_CLOSED });
         } else if (
           !event['apods:hasStatus'].includes(EVENT_STATUS_OPEN) &&
-          attendeesCollection.items.length < event['apods:maxAttendees']
+          arrayOf(attendeesCollection.items).length < event['apods:maxAttendees']
         ) {
           await this.actions.set({ eventUri, newStatus: EVENT_STATUS_OPEN });
         }

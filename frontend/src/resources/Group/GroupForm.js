@@ -84,7 +84,7 @@ export const GroupFormContent = () => {
 
   // We use this to store the memberIds in the form, since they don't have a dedicated component for this.
   useEffect(() => {
-    if (!arraysEqual(memberIds, form.getValues()?.['vcard:hasMember'])) {
+    if (!arraysEqual(memberIds, form.getValues()['vcard:hasMember'])) {
       form.setValue('vcard:hasMember', memberIds, { shouldDirty: true });
     }
   }, [memberIds, form]);

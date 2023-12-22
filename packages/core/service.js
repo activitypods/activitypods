@@ -76,6 +76,7 @@ const CoreService = {
         accountSelection: ['preferredLocale'],
         formUrl: frontendUrl ? urlJoin(frontendUrl, 'login') : undefined,
         accountsDataset: settingsDataset,
+        podProvider: true,
         ...this.settings.auth
       }
     });

@@ -2,7 +2,7 @@ import React from 'react';
 import { Admin, Resource, CustomRoutes, memoryStore } from 'react-admin';
 import { BrowserRouter, Route } from 'react-router-dom';
 import { StyledEngineProvider } from '@mui/material/styles';
-import { LocalLoginPage, createPasswordScorer, defaultPasswordScorerOptions } from '@semapps/auth-provider';
+import { LocalLoginPage } from '@semapps/auth-provider';
 
 import authProvider from './config/authProvider';
 import dataProvider from './config/dataProvider';
@@ -11,6 +11,7 @@ import * as resources from './resources';
 
 import Layout from './layout/Layout';
 import theme from './config/theme';
+import scorer from './config/scorer';
 
 import HomePage from './pages/HomePage';
 import SettingsPage from './pages/SettingsPage/SettingsPage';
@@ -20,6 +21,7 @@ import ProfileCreatePage from './pages/ProfileCreatePage/ProfileCreatePage';
 import AuthorizePage from './pages/AuthorizePage/AuthorizePage';
 import UserPage from './pages/UserPage';
 import RedirectPage from './pages/RedirectPage';
+import InvitePage from './pages/InvitePage/InvitePage';
 
 const LoginPage = () => (
   <LocalLoginPage
@@ -27,7 +29,7 @@ const LoginPage = () => (
     postSignupRedirect="/initialize"
     postLoginRedirect="/authorize"
     additionalSignupValues={{ preferredLocale: process.env.REACT_APP_LANG }}
-    passwordScorer={createPasswordScorer(defaultPasswordScorerOptions, 3)}
+    passwordScorer={scorer}
   />
 );
 
@@ -48,16 +50,18 @@ const App = () => (
           <Resource key={key} name={key} {...resource.config} />
         ))}
         <CustomRoutes noLayout>
-          <Route exact path="/" element={<HomePage />} />
-          <Route exact path="/u/:id" element={<UserPage />} />
-          <Route exact path="/r" element={<RedirectPage />} />
-          <Route exact path="/initialize" element={<ProfileCreatePage />} />
-          <Route exact path="/authorize" element={<AuthorizePage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/u/:id" element={<UserPage />} />
+          <Route path="/r" element={<RedirectPage />} />
+          <Route path="/initialize" element={<ProfileCreatePage />} />
+          <Route path="/authorize" element={<AuthorizePage />} />
+          <Route path="/invite/:capability" element={<InvitePage />} />
         </CustomRoutes>
+
         <CustomRoutes>
-          <Route exact path="/settings" element={<SettingsPage />} />
-          <Route exact path="/settings/email" element={<SettingsEmailPage />} />
-          <Route exact path="/settings/password" element={<SettingsPasswordPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings/email" element={<SettingsEmailPage />} />
+          <Route path="/settings/password" element={<SettingsPasswordPage />} />
         </CustomRoutes>
       </Admin>
     </BrowserRouter>

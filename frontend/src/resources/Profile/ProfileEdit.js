@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   SaveButton,
   SimpleForm,
@@ -27,6 +27,13 @@ export const ProfileEdit = () => {
   const notify = useNotify();
   const { refetch: refetchIdentity } = useGetIdentity();
 
+  // Needed to trigger orm change and enable save button :
+  // https://codesandbox.io/s/react-admin-v3-advanced-recipes-quick-createpreview-voyci
+  const [locationVersion, setLocationVersion] = useState(0);
+  const handleLocationChange = useCallback(() => {
+    setLocationVersion(locationVersion + 1);
+  }, [locationVersion]);
+
   return (
     <BlockAnonymous>
       <Edit
@@ -49,7 +56,12 @@ export const ProfileEdit = () => {
           <ImageInput source="vcard:photo" accept="image/*">
             <ImageField source="src" />
           </ImageInput>
-          <QuickCreateLocationInput reference="Location" source="vcard:hasAddress" />
+          <QuickCreateLocationInput
+            version={locationVersion}
+            reference="Location"
+            source="vcard:hasAddress"
+            onChange={handleLocationChange}
+          />
           <TextInput
             source="foaf:tipjar"
             parse={v => g1PublicKeyToUrl(v)}

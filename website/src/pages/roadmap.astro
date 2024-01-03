@@ -1,20 +1,16 @@
 ---
-import { SITE } from "~/config.mjs";
-import { getCanonical, getHomePermalink } from "~/utils/permalinks";
 import Layout from "~/layouts/PageLayout.astro";
-import Roadmap from "~/components/widgets/Roadmap.astro";
+import RoadMap from "~/components/widgets/Roadmap.astro";
 import Newsletter from "~/components/widgets/Newsletter.astro";
 import Sponsors from "~/components/widgets/Sponsors.astro";
 
-const meta = {
-  title: SITE.title,
-  description: SITE.description,
-  canonical: getCanonical(getHomePermalink()),
+const metadata = {
+  title: 'Roadmap'
 };
 ---
 
-<Layout {meta}>
-  <Roadmap />
+<Layout {metadata}>
+  <RoadMap />
   <Newsletter />
   <Sponsors />
 </Layout>

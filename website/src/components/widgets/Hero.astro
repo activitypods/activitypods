@@ -1,5 +1,6 @@
 ---
-import { Icon } from 'astro-icon';
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
 import activitypods from '~/assets/images/activitypods.svg';
 ---
 
@@ -7,7 +8,7 @@ import activitypods from '~/assets/images/activitypods.svg';
 	<div class="max-w-6xl mx-auto px-4 sm:px-6">
 		<div class="py-8 md:py-12">
 			<div class="text-center max-w-5xl mx-auto">
-				<img src={activitypods} alt="ActivityPods" class="w-48 sm:w-96 mx-auto" />
+				<Image src={activitypods} alt="ActivityPods" class="w-48 sm:w-96 mx-auto" />
 				<h1 class="text-3xl md:text-[3.50rem] font-bold sm:leading-[2.8rem] mb-4 font-heading sm:max-w-[1100px] mx-auto">
 					Creating decentralized social apps has never been easier
 				</h1>

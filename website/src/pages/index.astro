@@ -1,8 +1,5 @@
 ---
-import { SITE } from "~/config.mjs";
-import { getCanonical, getHomePermalink } from "~/utils/permalinks";
 import Layout from "~/layouts/PageLayout.astro";
-
 import Hero from "~/components/widgets/Hero.astro";
 import Features from "~/components/widgets/Features.astro";
 import Solid from "~/components/widgets/Solid.astro";
@@ -13,16 +10,15 @@ import Developers from "~/components/widgets/Developers.astro";
 import Applications from "~/components/widgets/Applications.astro";
 import Sponsors from "~/components/widgets/Sponsors.astro";
 import Newsletter from "~/components/widgets/Newsletter.astro";
-import LatestPosts from "~/components/blog/LatestPosts.astro";
+import BlogLatestPosts from "~/components/widgets/BlogLatestPosts.astro";
 
-const meta = {
-  title: SITE.title,
-  description: SITE.description,
-  canonical: getCanonical(getHomePermalink()),
+const metadata = {
+  title: 'ActivityPods - Personal data spaces powered with ActivityPub',
+  ignoreTitleTemplate: true,
 };
 ---
 
-<Layout {meta}>
+<Layout {metadata}>
   <Hero />
   <ActivityPub />
   <Solid />
@@ -31,7 +27,7 @@ const meta = {
   <Features />
   <Applications />
   <Developers />
-  <LatestPosts />
+  <BlogLatestPosts />
   <Newsletter />
   <Sponsors />
 </Layout>

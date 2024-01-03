@@ -5,10 +5,12 @@ const id = 'inject-comments';
 
 const Comments = () => {
   const [mounted, setMounted] = React.useState(false);
+  const [theme, setTheme] = React.useState('light');
 
   React.useEffect(() => {
     setMounted(true);
-  }, []);
+    if (localStorage) setTheme(localStorage.getItem('theme'));
+  }, [setMounted, setTheme]);
 
   return (
     <section className="pb-12 px-6 mx-auto max-w-3xl">
@@ -24,7 +26,7 @@ const Comments = () => {
             reactionsEnabled="0"
             emitMetadata="0"
             inputPosition="top"
-            theme="light"
+            theme={theme}
             lang="en"
             loading="lazy"
           />

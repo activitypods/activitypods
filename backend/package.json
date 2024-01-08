@@ -1,0 +1,34 @@
+{
+  "name": "backend",
+  "version": "1.1.0",
+  "private": true,
+  "description": "ActivityPods backend",
+  "scripts": {
+    "dev": "moleculer-runner --repl --hot services/*.service.js apps/*.app.js",
+    "start": "moleculer-runner services/*.service.js apps/*.app.js",
+    "test": "jest --detectOpenHandles --verbose"
+  },
+  "dependencies": {
+    "@activitypods/announcer": "1.1.0",
+    "@activitypods/contacts": "1.1.0",
+    "@activitypods/core": "1.1.0",
+    "@activitypods/events": "1.1.0",
+    "@activitypods/marketplace": "1.1.0",
+    "@activitypods/messages": "1.1.0",
+    "@activitypods/profiles": "1.1.0",
+    "@semapps/notifications": "0.6.0-alpha.8",
+    "@semapps/sync": "0.6.0-alpha.8",
+    "@semapps/webacl": "0.6.0-alpha.8",
+    "dotenv-flow": "^3.2.0",
+    "ioredis": "^4.17.3",
+    "moleculer": "^0.14.19",
+    "moleculer-bull": "0.2.8",
+    "moleculer-cron": "^0.0.2",
+    "moleculer-repl": "^0.6.6",
+    "url-join": "^4.0.1"
+  },
+  "devDependencies": {
+    "jest": "^27.4.0",
+    "wait-for-expect": "^3.0.2"
+  }
+}

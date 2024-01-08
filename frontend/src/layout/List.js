@@ -1,12 +1,12 @@
 import React from 'react';
-import { ResourceContextProvider, ListContextProvider, useListController, usePermissionsOptimized } from 'react-admin';
+import { ResourceContextProvider, ListContextProvider, useListController, usePermissions } from 'react-admin';
 import { useCreateContainer } from '@semapps/semantic-data-provider';
 import ListView from './ListView';
 
 const List = props => {
   const controllerProps = useListController(props);
   const createContainerUri = useCreateContainer(props.resource);
-  const { permissions } = usePermissionsOptimized(createContainerUri);
+  const { permissions } = usePermissions(createContainerUri);
   return (
     <ResourceContextProvider value={props.resource}>
       <ListContextProvider value={controllerProps}>

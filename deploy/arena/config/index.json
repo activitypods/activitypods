@@ -2,21 +2,21 @@
   "queues": [
     {
       "name": "sendMail",
-      "hostId": "middleware",
+      "hostId": "backend",
       "host": "redis",
       "port": 6379,
       "db": 1
     },
     {
       "name": "remotePost",
-      "hostId": "middleware",
+      "hostId": "backend",
       "host": "redis",
       "port": 6379,
       "db": 1
     },
     {
       "name": "localPost",
-      "hostId": "middleware",
+      "hostId": "backend",
       "host": "redis",
       "port": 6379,
       "db": 1

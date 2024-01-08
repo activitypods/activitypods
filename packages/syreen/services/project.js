@@ -8,7 +8,6 @@ module.exports = {
   settings: {
     path: '/syreen/projects',
     acceptedTypes: ['syreen:Project'],
-    dereference: ['syreen:hasLocation'],
     permissions: {},
     newResourcesPermissions: {}
   },

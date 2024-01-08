@@ -1,16 +1,7 @@
-import React from 'react';
-import {
-  Box,
-  Button,
-  makeStyles,
-  Typography,
-  ThemeProvider,
-  useMediaQuery,
-  Container,
-  Avatar
-} from '@material-ui/core';
-import { Link, useGetIdentity, useTranslate } from 'react-admin';
-import { Redirect } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Box, Button, Typography, ThemeProvider, useMediaQuery, Container, Avatar } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import { Link, useGetIdentity, useTranslate, useRedirect } from 'react-admin';
 import theme from '../config/theme';
 
 const useStyles = makeStyles(() => ({
@@ -23,11 +14,11 @@ const useStyles = makeStyles(() => ({
     borderRadius: '50%',
     backgroundColor: 'white',
     padding: 30,
-    height: 400,
-    width: 400,
+    height: 460,
+    width: 460,
     position: 'absolute',
     top: -100,
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       width: '100vw',
       height: '100vw',
       padding: 0,
@@ -55,7 +46,7 @@ const useStyles = makeStyles(() => ({
   },
   steps: {
     marginTop: 400,
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       marginTop: 'calc(100vw - 30px)'
     }
   },
@@ -64,7 +55,7 @@ const useStyles = makeStyles(() => ({
     paddingLeft: 90,
     marginBottom: 25,
     '& h4': {
-      [theme.breakpoints.down('xs')]: {
+      [theme.breakpoints.down('sm')]: {
         fontWeight: 'bold',
         lineHeight: '1.2em',
         marginBottom: 8
@@ -84,23 +75,28 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const HomePage = ({ title }) => {
+const HomePage = () => {
   const classes = useStyles();
-  const { loading, identity } = useGetIdentity();
+  const { data: identity, isLoading } = useGetIdentity();
+  const redirect = useRedirect();
   const translate = useTranslate();
-  const xs = useMediaQuery(() => theme.breakpoints.down('xs'), { noSsr: true });
+  const xs = useMediaQuery(() => theme.breakpoints.down('sm'), { noSsr: true });
 
-  if (loading) return null;
+  useEffect(() => {
+    if (identity?.id) {
+      redirect('/Profile');
+    }
+  }, [redirect, identity]);
 
-  return identity?.id ? (
-    <Redirect to="/Profile" />
-  ) : (
+  if (isLoading) return null;
+
+  return (
     <ThemeProvider theme={theme}>
       <Box display="flex" justifyContent="center">
         <Box className={classes.circle} display="flex" alignItems="center" justifyContent="center">
           <Box>
             <Typography align="center" variant="h1" className={classes.title}>
-              {title}
+              {process.env.REACT_APP_NAME}
             </Typography>
             <Typography align="center">{process.env.REACT_APP_DESCRIPTION}</Typography>
             <Box

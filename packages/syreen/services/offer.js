@@ -8,7 +8,6 @@ module.exports = {
   settings: {
     path: '/syreen/offers',
     acceptedTypes: ['syreen:Offer'],
-    dereference: ['syreen:hasLocation'],
     permissions: {},
     newResourcesPermissions: {},
     notificationMapping: {

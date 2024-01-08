@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { useNotify, useTranslate } from 'react-admin';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 import { useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 
 const RejectContactRequestButton = ({ activity, refetch, children, ...rest }) => {

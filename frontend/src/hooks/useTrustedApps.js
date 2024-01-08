@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react';
-import { useQueryWithStore } from 'react-admin';
+import { useGetList } from 'react-admin';
 
 const useTrustedApps = () => {
   const [trustedApps, setTrustedApps] = useState([]);
 
-  const { loaded, data } = useQueryWithStore({
-    type: 'getList',
-    resource: 'TrustedApp',
-    payload: { pagination: { page: 1, perPage: 1000 } }
-  });
+  const { data, isLoaded } = useGetList('TrustedApp', { pagination: { page: 1, perPage: 1000 } });
 
   useEffect(() => {
-    if (loaded) {
+    if (isLoaded) {
       setTrustedApps(Object.values(data).map(app => app['apods:domainName']));
     }
-  }, [loaded, data, setTrustedApps]);
+  }, [isLoaded, data, setTrustedApps]);
 
   return trustedApps;
 };

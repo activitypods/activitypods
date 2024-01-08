@@ -2,6 +2,7 @@ const path = require('path');
 const waitForExpect = require('wait-for-expect');
 const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const { arrayOf } = require('@semapps/ldp');
 const { initialize, listDatasets, clearDataset } = require('./initialize');
 
 jest.setTimeout(80000);
@@ -164,7 +165,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
 
     await waitForExpect(() => {
       expect(mockSendNotification).toHaveBeenCalledTimes(2);
-    });
+    }, 20000);
 
     expect(mockSendNotification.mock.calls[0][0].params.data.key).toBe('new_event');
     expect(mockSendNotification.mock.calls[1][0].params.data.key).toBe('new_event');
@@ -607,12 +608,10 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         await expect(
           bob.call('activitypub.collection.get', { collectionUri: bob['apods:contactRequests'] })
         ).resolves.toMatchObject({
-          items: expect.arrayContaining([
-            expect.objectContaining({
-              type: ACTIVITY_TYPES.OFFER,
-              actor: daisy.id
-            })
-          ]),
+          items: expect.objectContaining({
+            type: ACTIVITY_TYPES.OFFER,
+            actor: daisy.id
+          }),
           totalItems: 1
         });
       });
@@ -632,7 +631,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         collectionUri: daisy['apods:contactRequests']
       });
 
-      const bobContactRequest = contactRequests.find(r => r.actor === bob.id);
+      const bobContactRequest = arrayOf(contactRequests).find(r => r.actor === bob.id);
 
       await daisy.call('activitypub.outbox.post', {
         collectionUri: daisy.outbox,
@@ -689,7 +688,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         collectionUri: alice.outbox,
         page: 1
       });
-      await expect(outbox.orderedItems[0]).toMatchObject({
+      await expect(arrayOf(outbox.orderedItems)[0]).toMatchObject({
         type: ACTIVITY_TYPES.ANNOUNCE,
         object: {
           type: ACTIVITY_TYPES.DELETE,

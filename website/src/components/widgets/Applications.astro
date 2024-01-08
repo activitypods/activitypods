@@ -1,6 +1,6 @@
 ---
-import { Picture } from "@astrojs/image/components";
-import { Icon } from "astro-icon";
+import { Picture } from 'astro:assets';
+import { Icon } from "astro-icon/components";
 import welcomeToMyPlace from "../../assets/images/welcometomyplace.png";
 import mutualAid from "../../assets/images/mutual-aid.png";
 import trustedApps from "~/config/trusted-apps";
@@ -45,7 +45,6 @@ import trustedApps from "~/config/trusted-apps";
                     widths={[800]}
                     sizes="(max-width: 800px) 400px, 900px"
                     alt={app["apods:name"]}
-                    aspectRatio="16:9"
                   />
                 </a>
               </div>

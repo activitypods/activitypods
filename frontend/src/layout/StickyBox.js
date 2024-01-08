@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactStickyBox from 'react-sticky-box';
-import { makeStyles } from '@material-ui/core';
+import makeStyles from '@mui/styles/makeStyles';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(() => ({
   root: {
     marginTop: 5
   }

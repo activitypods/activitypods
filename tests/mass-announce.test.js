@@ -5,11 +5,9 @@ const { initialize, listDatasets, clearDataset } = require('./initialize');
 const path = require('path');
 const urlJoin = require('url-join');
 
-jest.setTimeout(30000);
+jest.setTimeout(50000);
 
 let broker;
-
-const mockSendNotification = jest.fn(() => Promise.resolve());
 
 const NUM_ACTORS = 20;
 
@@ -25,14 +23,6 @@ beforeAll(async () => {
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/events.app.js'));
 
-  // Mock notification service
-  await broker.createService({
-    mixins: [require('./services/notification.service')],
-    actions: {
-      send: mockSendNotification
-    }
-  });
-
   await broker.start();
 });
 
@@ -41,8 +31,7 @@ afterAll(async () => {
 });
 
 describe('Test mass sharing', () => {
-  let actors = [],
-    actorsUris = [];
+  let actorsUris = [];
 
   test(`Create ${NUM_ACTORS} users`, async () => {
     for (let i = 1; i <= NUM_ACTORS; i++) {
@@ -55,15 +44,7 @@ describe('Test mass sharing', () => {
         name: `User #${i}`
       });
 
-      // actorsUris[i] = urlJoin(CONFIG.HOME_URL, `user${i}`);
       actorsUris[i] = webId;
-
-      // actors[i] = await broker.call('activitypub.actor.awaitCreateComplete', {
-      //   actorUri: webId,
-      //   additionalKeys: ['url', 'apods:contacts', 'apods:contactRequests', 'apods:rejectedContacts'],
-      // });
-      //
-      // expect(actors[i].preferredUsername).toBe(`user${i}`);
     }
   }, 300000);
 

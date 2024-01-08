@@ -1,3 +1,16 @@
 .idea
 node_modules
 /data
+yarn-error.log
+
+/app-boilerplate/backend/.env.local
+/app-boilerplate/backend/.env.*.local
+/app-boilerplate/backend/actors/*.key
+/app-boilerplate/backend/actors/*.key.pub
+/app-boilerplate/backend/jwt/*.key
+/app-boilerplate/backend/jwt/*.key.pub
+/app-boilerplate/backend/uploads
+
+/app-boilerplate/frontend/.env.local
+/app-boilerplate/frontend/.yalc
+/app-boilerplate/frontend/yalc.lock

@@ -1,12 +1,13 @@
-import React from 'react';
-import { Redirect, useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useGetIdentity, useNotify, useTranslate } from 'react-admin';
 
 const UserPage = () => {
   const params = useParams();
-  const { identity, loaded: userLoaded } = useGetIdentity();
+  const { data: identity, isLoading } = useGetIdentity();
   const translate = useTranslate();
   const notify = useNotify();
+  const navigate = useNavigate();
 
   // const webfinger = useWebfinger();
   // const [ isContact, setIsContact ] = useState();
@@ -19,16 +20,17 @@ const UserPage = () => {
   //   }
   // }, [contacts, contactsLoaded, webfinger, params, setIsContact, isContact]);
 
-  if (!userLoaded) return null;
+  useEffect(() => {
+    const contactFormUrl = '/Profile/create/?id=' + params.id;
+    if (identity?.id) {
+      navigate(contactFormUrl);
+    } else if (!isLoading) {
+      notify(translate('app.notification.login_to_connect_user', { username: params.id }));
+      navigate('/login?signup=true&redirect=' + encodeURIComponent(contactFormUrl));
+    }
+  }, [identity, isLoading, params.id, notify, translate, navigate]);
 
-  const contactFormUrl = '/Profile/create/?id=' + params.id;
-
-  if (identity?.id) {
-    return <Redirect to={contactFormUrl} />;
-  } else {
-    notify(translate('app.notification.login_to_connect_user', { username: params.id }));
-    return <Redirect to={'/login?signup=true&redirect=' + encodeURIComponent(contactFormUrl)} />;
-  }
+  return null;
 };
 
 export default UserPage;

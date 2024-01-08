@@ -4,14 +4,14 @@ import { useCallback } from 'react';
 
 const useRequestContact = () => {
   const notify = useNotify();
-  const { identity } = useGetIdentity();
+  const { data: identity } = useGetIdentity();
   const webfinger = useWebfinger();
   const outbox = useOutbox();
 
   return useCallback(
     async ({ id, content }) => {
       if (!identity?.profileData?.id) {
-        notify('app.notification.profile_data_not_found', 'error');
+        notify('app.notification.profile_data_not_found', { type: 'error' });
       } else {
         const actorUri = id.startsWith('http') ? id : await webfinger.fetch(id);
         if (actorUri) {
@@ -27,9 +27,9 @@ const useRequestContact = () => {
             target: actorUri,
             to: actorUri
           });
-          notify('app.notification.contact_request_sent', 'success');
+          notify('app.notification.contact_request_sent', { type: 'success' });
         } else {
-          notify('app.notification.user_not_found', 'error', { username: id });
+          notify('app.notification.user_not_found', { type: 'error', messageArgs: { username: id } });
         }
       }
     },

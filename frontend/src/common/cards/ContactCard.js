@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
-import { makeStyles, Box, Card, Typography, Avatar } from '@material-ui/core';
+import { Box, Card, Typography, Avatar } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { useRecordContext } from 'react-admin';
 import { useCollection } from '@semapps/activitypub-components';
 import { formatUsername } from '../../utils';

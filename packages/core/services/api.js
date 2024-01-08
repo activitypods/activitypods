@@ -52,6 +52,12 @@ module.exports = {
       } else {
         return ctx.call('auth.authorize', { route, req, res });
       }
+    },
+    // Overwrite optimization method to put catchAll routes at the end
+    // See https://github.com/moleculerjs/moleculer-web/issues/335
+    optimizeRouteOrder() {
+      this.routes.sort(a => (a.opts.catchAll ? 1 : -1));
+      this.aliases.sort(a => (a.route.opts.catchAll ? 1 : -1));
     }
   }
 };

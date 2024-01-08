@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 const urlJoin = require('url-join');
-const { ControlledContainerMixin, useFullURI, defaultToArray } = require('@semapps/ldp');
+const { ControlledContainerMixin, defaultToArray } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
@@ -9,25 +9,29 @@ module.exports = {
   settings: {
     baseUrl: null,
     frontendUrl: null,
-    ontologies: [],
     // ControlledContainerMixin settings
     path: '/front-apps',
     acceptedTypes: ['apods:FrontAppRegistration'],
-    dereference: [],
     excludeFromMirror: true,
     permissions: {},
     newResourcesPermissions: {}
   },
   async started() {
-    const res = await fetch('https://data.activitypods.org/trusted-apps', {
-      headers: { Accept: 'application/ld+json' }
-    });
+    const res = await fetch(
+      urlJoin(process.env.ACTIVITYPODS_COMMON_CONF_URL || 'https://data.activitypods.org', '/trusted-apps'),
+      {
+        headers: { Accept: 'application/ld+json' }
+      }
+    );
 
     if (res.ok) {
       const data = await res.json();
       this.trustedApps = data['ldp:contains'];
     } else {
-      throw new Error('Unable to fetch https://data.activitypods.org/trusted-apps');
+      throw new Error(
+        'Unable to fetch ' +
+          urlJoin(process.env.ACTIVITYPODS_COMMON_CONF_URL || 'https://data.activitypods.org', '/trusted-apps')
+      );
     }
 
     // POD provider app
@@ -46,7 +50,7 @@ module.exports = {
     await this.broker.call('api.addRoute', {
       route: {
         name: 'open-app-endpoint',
-        path: '/:username/openApp',
+        path: '/:username([^/.][^/]+)/openApp',
         authorization: false,
         authentication: false,
         aliases: {
@@ -80,7 +84,7 @@ module.exports = {
 
       if (!type) throw new Error('The type or URI must be provided');
 
-      if (!type.startsWith('http')) type = useFullURI(type, this.settings.ontologies);
+      type = await ctx.call('ontologies.prefixToUri', { value: type });
 
       const results = await ctx.call('triplestore.query', {
         query: `
@@ -166,6 +170,9 @@ module.exports = {
           }
         }
       }
+    },
+    async list(ctx) {
+      return this.trustedApps;
     }
   },
   events: {

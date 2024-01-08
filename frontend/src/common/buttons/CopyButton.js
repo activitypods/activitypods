@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
-import { IconButton, makeStyles, Tooltip } from '@material-ui/core';
-import FileCopyOutlinedIcon from '@material-ui/icons/FileCopyOutlined';
+import { IconButton, Tooltip } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import FileCopyOutlinedIcon from '@mui/icons-material/FileCopyOutlined';
 import { useTranslate } from 'react-admin';
 
-const useStyles = makeStyles(theme => ({
-  wrapper: {
-    // position: 'relative',
-  },
+const useStyles = makeStyles(() => ({
   icon: {
     position: 'absolute',
     top: -2,

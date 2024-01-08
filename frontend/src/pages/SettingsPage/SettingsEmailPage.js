@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import { email, required, useAuthProvider, useNotify, useTranslate } from 'react-admin';
 import { SimpleForm, TextInput } from 'react-admin';
-import { Box, Card, Typography } from '@material-ui/core';
+import { Box, Card, Typography } from '@mui/material';
 
 const validateEmail = [required(), email('app.validation.email')];
 
@@ -28,9 +28,9 @@ const SettingsEmailPage = () => {
     async params => {
       try {
         await authProvider.updateAccountSettings({ ...params });
-        notify('auth.message.account_settings_updated', 'success');
+        notify('auth.message.account_settings_updated', { type: 'success' });
       } catch (error) {
-        notify(error.message, 'error');
+        notify(error.message, { type: 'error' });
       }
     },
     [authProvider, notify]
@@ -40,12 +40,12 @@ const SettingsEmailPage = () => {
 
   return (
     <>
-      <Typography variant="h2" component="h1">
+      <Typography variant="h2" component="h1" sx={{ mt: 2 }}>
         {translate('app.page.settings_email')}
       </Typography>
       <Box mt={1}>
         <Card>
-          <SimpleForm initialValues={formDefaultValue} save={onSubmit}>
+          <SimpleForm defaultValues={formDefaultValue} onSubmit={onSubmit}>
             <TextInput
               label={translate('app.input.email')}
               source="email"

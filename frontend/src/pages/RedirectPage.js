@@ -1,6 +1,5 @@
-import React from 'react';
-import { useLocation } from 'react-router';
-import { Redirect } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDataModels } from '@semapps/semantic-data-provider';
 import ontologies from '../config/ontologies.json';
 
@@ -12,29 +11,30 @@ const prefix = uri => {
 
 const RedirectPage = () => {
   const dataModels = useDataModels();
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  if (dataModels) {
-    const prefixedType = prefix(searchParams.get('type'));
-    const resource = Object.keys(dataModels).find(
-      key => dataModels[key].types && dataModels[key].types.includes(prefixedType)
-    );
-    if (searchParams.has('uri')) {
-      return (
-        <Redirect
-          push
-          to={`/${resource}/${encodeURIComponent(searchParams.get('uri'))}${
-            searchParams.get('mode') === 'show' ? '/show' : ''
-          }`}
-        />
+  useEffect(() => {
+    if (dataModels) {
+      const prefixedType = prefix(searchParams.get('type'));
+      const resource = Object.keys(dataModels).find(
+        key => dataModels[key].types && dataModels[key].types.includes(prefixedType)
       );
-    } else {
-      return <Redirect push to={`/${resource}`} />;
+      if (searchParams.has('uri')) {
+        navigate(
+          `/${resource}/${encodeURIComponent(searchParams.get('uri'))}${
+            searchParams.get('mode') === 'show' ? '/show' : ''
+          }`
+        );
+      } else if (resource) {
+        navigate(`/${resource}`);
+      } else {
+        navigate('/Profile');
+      }
     }
-  } else {
-    return null;
-  }
+  }, [dataModels, searchParams, navigate]);
+
+  return null;
 };
 
 export default RedirectPage;

@@ -4,6 +4,17 @@ const { ActivityPubService, ActivityMappingService, ACTOR_TYPES, OBJECT_TYPES } 
 const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
+const {
+  OntologiesService,
+  apods,
+  interop,
+  oidc,
+  dc,
+  syreen,
+  mp,
+  pair,
+  void: voidOntology
+} = require('@semapps/ontologies');
 const { PodService } = require('@semapps/pod');
 const { SignatureService, ProxyService } = require('@semapps/signature');
 const { SynchronizerService } = require('@semapps/sync');
@@ -15,7 +26,6 @@ const { WebIdService } = require('@semapps/webid');
 const ApiService = require('./services/api');
 const FrontAppsService = require('./services/front-apps');
 const containers = require('./config/containers');
-const ontologies = require('./config/ontologies.json');
 
 const CoreService = {
   name: 'core',
@@ -28,20 +38,16 @@ const CoreService = {
       user: null,
       password: null
     },
-    jsonContext: null,
+    settingsDataset: 'settings',
     queueServiceUrl: null,
     authType: 'local'
   },
   created() {
-    let { baseUrl, baseDir, frontendUrl, triplestore, jsonContext, queueServiceUrl, authType } = this.settings;
-
-    // If an external JSON context is not provided, we will use a local one
-    const localJsonContext = urlJoin(baseUrl, '_system', 'context.json');
+    let { baseUrl, baseDir, frontendUrl, triplestore, settingsDataset, queueServiceUrl, authType } = this.settings;
 
     this.broker.createService(ActivityPubService, {
       settings: {
         baseUri: baseUrl,
-        jsonContext: jsonContext || localJsonContext,
         containers,
         podProvider: true,
         dispatch: {
@@ -69,6 +75,8 @@ const CoreService = {
         webIdSelection: ['nick'],
         accountSelection: ['preferredLocale'],
         formUrl: frontendUrl ? urlJoin(frontendUrl, 'login') : undefined,
+        accountsDataset: settingsDataset,
+        podProvider: true,
         ...this.settings.auth
       }
     });
@@ -76,15 +84,7 @@ const CoreService = {
     this.broker.createService(JsonLdService, {
       settings: {
         baseUri: baseUrl,
-        localContextFiles: jsonContext
-          ? undefined
-          : [
-              {
-                path: '_system/context.json',
-                file: path.resolve(__dirname, './config/context.json')
-              }
-            ],
-        remoteContextFiles: [
+        cachedContextFiles: [
           {
             uri: 'https://www.w3.org/ns/activitystreams',
             file: path.resolve(__dirname, './config/context-as.json')
@@ -93,15 +93,22 @@ const CoreService = {
       }
     });
 
+    this.broker.createService(OntologiesService, {
+      settings: {
+        ontologies: [apods, interop, oidc, dc, syreen, mp, pair, voidOntology],
+        persistRegistry: false,
+        settingsDataset
+      }
+    });
+
     this.broker.createService(LdpService, {
       mixins: [DocumentTaggerMixin],
       settings: {
         baseUrl,
-        ontologies,
         podProvider: true,
         containers,
+        resourcesWithContainerPath: true, // TODO try to set to false
         defaultContainerOptions: {
-          jsonContext: jsonContext || localJsonContext,
           permissions: {},
           newResourcesPermissions: {}
         }
@@ -192,8 +199,7 @@ const CoreService = {
     this.broker.createService(FrontAppsService, {
       settings: {
         baseUrl,
-        frontendUrl,
-        ontologies
+        frontendUrl
       }
     });
   }

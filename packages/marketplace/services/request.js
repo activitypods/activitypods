@@ -14,7 +14,6 @@ module.exports = {
       'mp:GiftRequest',
       'mp:BarterRequest'
     ],
-    dereference: ['mp:hasTimeCondition', 'mp:hasGeoCondition', 'mp:hasReciprocityCondition'],
     permissions: {},
     newResourcesPermissions: {},
     notificationMapping: {

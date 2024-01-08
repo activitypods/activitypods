@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import nlnet from "~/assets/images/nlnet.svg";
 import ngi from "~/assets/images/ngi-zero-entrust.svg";
 ---
@@ -30,10 +31,10 @@ import ngi from "~/assets/images/ngi-zero-entrust.svg";
       </p>
     </div>
     <div class="col-span-3 md:col-span-1 pt-4">
-      <img src={nlnet} alt="NLnet" class="w-full" />
+      <Image src={nlnet} alt="NLnet" class="w-full" />
     </div>
     <div class="col-span-3 md:col-span-1 pt-4">
-      <img src={ngi} alt="NGI Zero Entrust" class="w-full mt-2" />
+      <Image src={ngi} alt="NGI Zero Entrust" class="w-full mt-2" />
     </div>
   </div>
 </section>

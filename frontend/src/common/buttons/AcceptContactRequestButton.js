@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { useNotify, useTranslate } from 'react-admin';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 import { useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 
 const AcceptContactRequestButton = ({ activity, refetch, children, ...rest }) => {
@@ -19,7 +19,7 @@ const AcceptContactRequestButton = ({ activity, refetch, children, ...rest }) =>
       notify('app.notification.contact_request_accepted');
       setTimeout(refetch, 3000);
     } catch (e) {
-      notify(e.message, 'error');
+      notify(e.message, { type: 'error' });
     }
   }, [outbox, notify, refetch, activity]);
 

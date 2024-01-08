@@ -1,16 +1,21 @@
-import { createTheme } from '@material-ui/core/styles';
-
-const defaultTheme = createTheme();
-
+import { createTheme } from '@mui/material/styles';
+import { defaultTheme as raTheme } from 'react-admin';
+const muiTheme = createTheme();
 const fontFamily = '"Open Sans", "sans-serif"';
-
 const theme = createTheme({
+  ...raTheme,
   palette: {
     primary: {
       main: process.env.REACT_APP_COLOR_PRIMARY
     },
     secondary: {
       main: process.env.REACT_APP_COLOR_SECONDARY
+    },
+    black: {
+      main: '#000'
+    },
+    grey: {
+      main: '#BDBDBD'
     }
   },
   typography: {
@@ -20,7 +25,7 @@ const theme = createTheme({
       fontStyle: 'normal',
       fontWeight: 'normal',
       lineHeight: '70px',
-      [defaultTheme.breakpoints.down('xs')]: {
+      [muiTheme.breakpoints.down('sm')]: {
         fontSize: 32,
         lineHeight: '46px'
       }
@@ -30,17 +35,27 @@ const theme = createTheme({
       fontSize: 40,
       fontStyle: 'normal',
       fontWeight: 'normal',
-      [defaultTheme.breakpoints.down('xs')]: {
+      [muiTheme.breakpoints.down('sm')]: {
         fontSize: 28
       }
     },
+    h3: {
+      fontFamily,
+      fontSize: 35,
+      fontStyle: 'normal',
+      fontWeight: 'normal',
+      [muiTheme.breakpoints.down('sm')]: {
+        fontSize: 23
+      }
+    },
+
     h4: {
       fontFamily,
       fontSize: 30,
       fontStyle: 'normal',
       fontWeight: 'normal',
       lineHeight: '44px',
-      [defaultTheme.breakpoints.down('xs')]: {
+      [muiTheme.breakpoints.down('sm')]: {
         fontSize: 18,
         lineHeight: '26px'
       }
@@ -89,44 +104,69 @@ const theme = createTheme({
       textTransform: 'uppercase'
     }
   },
-  overrides: {
-    RaImageField: {
-      image: {
-        width: '100%',
-        margin: 0,
-        maxHeight: 200,
-        objectFit: 'cover'
-      }
-    },
+  components: {
+    ...raTheme.components,
     MuiButton: {
-      contained: {
-        borderRadius: 8,
-        paddingLeft: 15,
-        paddingRight: 15,
-        height: 36,
-        minWidth: 100
+      styleOverrides: {
+        contained: {
+          borderRadius: 8,
+          paddingLeft: 15,
+          paddingRight: 15,
+          height: 36,
+          minWidth: 100
+        }
       }
     },
     MuiAlert: {
-      message: {
-        paddingTop: 11
+      styleOverrides: {
+        message: {
+          paddingTop: 11
+        }
       }
     },
     MuiIconButton: {
-      root: {
-        padding: 8,
-        paddingRight: 0
+      styleOverrides: {
+        root: {
+          padding: 8,
+          paddingRight: 0
+        }
+      }
+    },
+    MuiScopedCssBaseline: {
+      styleOverrides: {
+        root: {
+          backgroundColor: 'unset'
+        }
       }
     },
     RaCreateButton: {
-      floating: {
-        backgroundColor: process.env.REACT_APP_COLOR_PRIMARY,
-        bottom: 80
+      styleOverrides: {
+        root: {
+          '&.RaCreateButton-floating': {
+            backgroundColor: process.env.REACT_APP_COLOR_SECONDARY,
+            bottom: 80
+          }
+        }
       }
     },
     RaToolbar: {
-      mobileToolbar: {
-        bottom: 56
+      styleOverrides: {
+        root: {
+          '&.RaToolbar-mobileToolbar': {
+            bottom: 56
+          }
+        }
+      }
+    },
+    // Remove the large padding for the toolbar on mobile
+    RaSimpleForm: {
+      styleOverrides: {
+        root: {
+          [muiTheme.breakpoints.down('sm')]: {
+            paddingBottom: 0,
+            marginBottom: 68
+          }
+        }
       }
     }
   }

@@ -1,7 +1,8 @@
 const dataServers = {
   podProvider: {
     authServer: true,
-    baseUrl: process.env.REACT_APP_POD_PROVIDER_URL
+    baseUrl: process.env.REACT_APP_POD_PROVIDER_URL,
+    void: false
   },
   pod: {
     pod: true,
@@ -12,13 +13,14 @@ const dataServers = {
       pod: {
         'vcard:Location': ['/locations'],
         'vcard:Individual': ['/profiles'],
-        'apods:FrontAppRegistration': ['/front-apps']
+        'apods:FrontAppRegistration': ['/front-apps'],
+        'vcard:Group': ['/groups']
       }
     },
     uploadsContainer: '/files'
   },
   activitypods: {
-    baseUrl: 'https://data.activitypods.org/',
+    baseUrl: process.env.ACTIVITYPODS_COMMON_CONF_URL || 'https://data.activitypods.org/',
     noProxy: true // HTTP signature is not supported on that server
   }
 };

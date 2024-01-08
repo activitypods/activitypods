@@ -1,11 +1,10 @@
 import React from 'react';
 import { SimpleForm, TextInput, useTranslate, Toolbar, SaveButton } from 'react-admin';
-import { Box, Card, Typography } from '@material-ui/core';
-import Alert from '@material-ui/lab/Alert';
+import { Box, Card, Typography, Alert } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
+import SendIcon from '@mui/icons-material/Send';
 import useRequestContact from '../../hooks/useRequestContact';
-import SendIcon from '@material-ui/icons/Send';
 
 const AddContactToolbar = props => {
   const translate = useTranslate();
@@ -30,17 +29,17 @@ const ProfileCreate = () => {
 
   return (
     <>
-      <Typography variant="h2" component="h1">
+      <Typography variant="h2" component="h1" sx={{ mt: 2 }}>
         {translate('app.page.add_contact')}
       </Typography>
       <Box mt={1}>
         <Card>
           <SimpleForm
-            initialValues={{ id: searchParams.get('id') }}
-            save={requestContact}
+            defaultValues={{ id: searchParams.get('id') }}
+            onSubmit={requestContact}
             toolbar={<AddContactToolbar />}
           >
-            <Alert severity="info" fullWidth>
+            <Alert severity="info" sx={{ width: '100%' }}>
               {translate('app.helper.add_contact')}
             </Alert>
             <br />

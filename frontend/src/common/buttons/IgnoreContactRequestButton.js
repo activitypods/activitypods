@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { useNotify, useTranslate } from 'react-admin';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 import { useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 
 const IgnoreContactRequestButton = ({ activity, refetch, children, ...rest }) => {
@@ -19,7 +19,7 @@ const IgnoreContactRequestButton = ({ activity, refetch, children, ...rest }) =>
       notify('app.notification.contact_request_ignored');
       setTimeout(refetch, 3000);
     } catch (e) {
-      notify(e.message, 'error');
+      notify(e.message, { type: 'error' });
     }
   }, [outbox, refetch, notify, activity]);
 

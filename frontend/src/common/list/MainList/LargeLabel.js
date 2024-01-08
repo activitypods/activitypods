@@ -1,5 +1,6 @@
 import React from 'react';
-import { makeStyles, Typography } from '@material-ui/core';
+import { Typography } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles(theme => ({
   subTitle: {
@@ -16,10 +17,10 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const LargeLabel = ({ children }) => {
+const LargeLabel = ({ children, ...rest }) => {
   const classes = useStyles();
   return (
-    <Typography variant="h5" className={classes.subTitle}>
+    <Typography variant="h5" className={classes.subTitle} {...rest}>
       <span className={classes.subTitleSpan}>{children}</span>
     </Typography>
   );

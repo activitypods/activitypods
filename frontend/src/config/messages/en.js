@@ -152,7 +152,7 @@ module.exports = {
       connection_accepted: 'You accepted the connection request.',
       invite_cap_invalid: 'The invite link is not valid',
       invite_cap_fetch_error: 'Error ocurred while fetching the invitation. It might not be valid. Error: %{error}',
-      invite_cap_missing: 'There is no invite capability available, to generate an invite link.',
+      invite_cap_missing: 'Unable to generate an invite link (missing capability)',
       invite_cap_profile_fetch_error: 'Error while fetching the profile associated with the invite link.',
       pod_provider_fetch_error: 'Error while looking for other pod providers: %{error}',
       contact_link_copied: 'Contact link copied successfully'

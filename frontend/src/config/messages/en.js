@@ -66,7 +66,7 @@ module.exports = {
       email: 'Email address',
       password: 'Password',
       addresses: 'My addresses',
-      address: '1 address |||| %{smart_count} addresses'
+      address: '%{smart_count} address |||| %{smart_count} addresses'
     },
     card: {
       add_contact: 'Add a contact',

@@ -48,7 +48,8 @@ export const GroupFormContent = () => {
 
   const listControllerProps = useListController({
     resource: 'Profile',
-    disableSyncWithLocation: true
+    disableSyncWithLocation: true,
+    perPage: Infinity
   });
   const { data: profileData, isLoading } = listControllerProps;
   const profileToMemberId = useMemo(

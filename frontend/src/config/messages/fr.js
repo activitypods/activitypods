@@ -36,9 +36,9 @@ module.exports = {
       profile_name: 'Nom',
       group: 'Groupe',
       profile: 'Profil',
+      create: 'Nouveau groupe',
       add_members: 'Ajouter des membres'
     },
-
     page: {
       contacts: 'Mon réseau',
       contacts_short: 'Réseau',

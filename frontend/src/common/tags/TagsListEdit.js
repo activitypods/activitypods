@@ -23,8 +23,7 @@ const colors = ['lightblue', 'lightgreen', 'lightpink', 'lightyellow', 'lightgre
  * @typedef {import('react').MouseEvent<HTMLDivElement>} ReactDivMouseEvent
  * @typedef {import('react').FormEvent<HTMLFormElement>} ReactFormEvent
  * @typedef {import('react-admin').Identifier} Identifier
- *
- * @typedef {Object} TagsListEditProps
+ * @typedef {object} TagsListEditProps
  * @property {string} relationshipPredicate Tag field name that contains the list of resource ids.
  * @property {string} namePredicate Tag field name that contains the tag label to show.
  * @property {string} [colorPredicate] Tag field name that contains the tag color, if present.
@@ -34,7 +33,6 @@ const colors = ['lightblue', 'lightgreen', 'lightpink', 'lightyellow', 'lightgre
  * @property {string} tagResource The resource name of the tags that can be selected.
  * @property {boolean} [showColors] Whether to show colors (based on tag name), even if the tag doesn't have one, default `true`.
  * @property {boolean} [allowCreate] Whether to allow creating new tags, default `true`.
- *
  */
 
 /**
@@ -256,11 +254,11 @@ const TagsListEdit = props => {
           aria-labelledby="form-dialog-title"
         >
           <form onSubmit={handleCreateTag}>
-            <DialogTitle id="form-dialog-title">Create a new tag</DialogTitle>
+            <DialogTitle id="form-dialog-title">{translate('app.group.create')}</DialogTitle>
             <DialogContent>
               <TextField
                 autoFocus
-                label="Tag name"
+                label={translate('app.group.label')}
                 fullWidth
                 value={newTagName}
                 onChange={event => setNewTagName(event.target.value)}

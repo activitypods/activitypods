@@ -71,9 +71,11 @@ const ResourceSelectWithTags = props => {
     setSelectedResources(props.value || []);
   }, [props.value]);
 
-  const { data: tagDataRaw, isLoading: isLoadingTags } = useGetList(tagResource, { pagination: { perPage: Infinity } });
+  const { data: tagDataRaw, isLoading: isLoadingTags } = useGetList(tagResource, {
+    pagination: { page: 1, perPage: Infinity }
+  });
   const { data: resourceDataRaw, isLoading: isLoadingResources } = useGetList(entityResource, {
-    pagination: { perPage: Infinity }
+    pagination: { page: 1, perPage: Infinity }
   });
   const tagData = Object.fromEntries((tagDataRaw || []).map(tag => [tag.id, tag]));
   const resourceData = Object.fromEntries((resourceDataRaw || []).map(r => [r.id, r]));

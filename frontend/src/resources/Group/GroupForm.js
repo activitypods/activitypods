@@ -49,6 +49,7 @@ export const GroupFormContent = () => {
   const listControllerProps = useListController({
     resource: 'Profile',
     disableSyncWithLocation: true,
+    page: 1,
     perPage: Infinity
   });
   const { data: profileData, isLoading } = listControllerProps;

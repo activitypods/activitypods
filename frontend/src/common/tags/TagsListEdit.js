@@ -73,7 +73,7 @@ const TagsListEdit = props => {
     data: tagData,
     isLoading: isLoadingAllTags,
     refetch
-  } = useGetList(tagResource, { pagination: { perPage: Infinity } });
+  } = useGetList(tagResource, { pagination: { page: 1, perPage: Infinity } });
   // We maintain a separate state, to display updates immediately.
   const [tagDataState, setTagDataState] = useState(tagData || []);
 

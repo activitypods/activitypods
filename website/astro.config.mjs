@@ -14,9 +14,14 @@ import rehypeSlug from 'rehype-slug';
 import rehypeExternalLinks from 'rehype-external-links';
 import { readingTimeRemarkPlugin, responsiveTablesRehypePlugin } from './src/utils/frontmatter.mjs';
 import { ANALYTICS, SITE } from './src/utils/config.ts';
-import react from "@astrojs/react";
+import react from '@astrojs/react';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const whenExternalScripts = (items = []) => ANALYTICS.vendors.googleAnalytics.id && ANALYTICS.vendors.googleAnalytics.partytown ? Array.isArray(items) ? items.map(item => item()) : [items()] : [];
+const whenExternalScripts = (items = []) =>
+  ANALYTICS.vendors.googleAnalytics.id && ANALYTICS.vendors.googleAnalytics.partytown
+    ? Array.isArray(items)
+      ? items.map((item) => item())
+      : [items()]
+    : [];
 
 // https://astro.build/config
 export default defineConfig({
@@ -24,51 +29,76 @@ export default defineConfig({
   base: SITE.base,
   trailingSlash: SITE.trailingSlash ? 'always' : 'never',
   output: 'static',
-  integrations: [tailwind({
-    applyBaseStyles: false
-  }), sitemap(), mdx(), icon({
-    include: {
-      tabler: ['*'],
-      ic: ['*'],
-      'flat-color-icons': ['*'],
-      'eos-icons': ['proxy-outlined'],
-      bi: ['mailbox']
-    }
-  }), ...whenExternalScripts(() => partytown({
-    config: {
-      forward: ['dataLayer.push']
-    }
-  })), tasks(), react()],
+  integrations: [
+    tailwind({
+      applyBaseStyles: false,
+    }),
+    sitemap(),
+    mdx(),
+    icon({
+      include: {
+        tabler: ['*'],
+        ic: ['*'],
+        'flat-color-icons': ['*'],
+        'eos-icons': ['proxy-outlined'],
+        bi: ['mailbox'],
+      },
+    }),
+    ...whenExternalScripts(() =>
+      partytown({
+        config: {
+          forward: ['dataLayer.push'],
+        },
+      })
+    ),
+    tasks(),
+    react(),
+  ],
   image: {
-    service: squooshImageService()
+    service: squooshImageService(),
   },
   markdown: {
     remarkPlugins: [readingTimeRemarkPlugin, remarkToc],
-    rehypePlugins: [responsiveTablesRehypePlugin, rehypeSlug, [rehypeAutolinkHeadings, {
-      behavior: 'append'
-    }], [rehypeToc, {
-      headings: ['h1', 'h2', 'h3', 'h4'],
-      cssClasses: {
-        toc: 'toc-post',
-        link: 'toc-link'
-      }
-    }], [rehypeExternalLinks, {
-      target: '_blank'
-    }]],
+    rehypePlugins: [
+      responsiveTablesRehypePlugin,
+      rehypeSlug,
+      [
+        rehypeAutolinkHeadings,
+        {
+          behavior: 'append',
+        },
+      ],
+      [
+        rehypeToc,
+        {
+          headings: ['h1', 'h2', 'h3', 'h4'],
+          cssClasses: {
+            toc: 'toc-post',
+            link: 'toc-link',
+          },
+        },
+      ],
+      [
+        rehypeExternalLinks,
+        {
+          target: '_blank',
+        },
+      ],
+    ],
     shikiConfig: {
       // theme: 'github-light',
       experimentalThemes: {
         light: 'github-light',
-        dark: 'github-dark'
+        dark: 'github-dark',
       },
-      wrap: true
-    }
+      wrap: true,
+    },
   },
   vite: {
     resolve: {
       alias: {
-        '~': path.resolve(__dirname, './src')
-      }
-    }
-  }
+        '~': path.resolve(__dirname, './src'),
+      },
+    },
+  },
 });

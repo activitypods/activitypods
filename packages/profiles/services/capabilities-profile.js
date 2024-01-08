@@ -49,14 +49,18 @@ const CapabilitiesProfileService = {
           accept: MIME_TYPES.JSON
         });
 
-        // Add an invite capability.
-        const inviteCapUri = await ctx.call(
-          'capabilities.createCapability',
-          { accessTo: profileUri, mode: 'acl:Read', webId },
-          { parentCtx: ctx }
-        );
+        if (profileUri) {
+          // Add an invite capability.
+          const inviteCapUri = await ctx.call(
+            'capabilities.createCapability',
+            { accessTo: profileUri, mode: 'acl:Read', webId },
+            { parentCtx: ctx }
+          );
 
-        return inviteCapUri;
+          return inviteCapUri;
+        } else {
+          this.logger.warn(`Unable to find a profile for webId ${webId}`);
+        }
       }
     },
     // Add invite cap to each capabilities container, where missing.

@@ -11,7 +11,7 @@ const dataServers = {
         'as:Event': ['/as/event']
       }
     },
-    uploadsContainer: '/files'
+    uploadsContainer: '/semapps/file'
   }
 };
 

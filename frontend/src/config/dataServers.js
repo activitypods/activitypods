@@ -11,13 +11,13 @@ const dataServers = {
     sparqlEndpoint: null,
     containers: {
       pod: {
-        'vcard:Location': ['/locations'],
-        'vcard:Individual': ['/profiles'],
-        'vcard:Group': ['/groups'],
-        'interop:ApplicationRegistration': ['/app-registrations']
+        'vcard:Location': ['/vcard/location'],
+        'vcard:Individual': ['/vcard/individual'],
+        'vcard:Group': ['/vcard/group'],
+        'interop:ApplicationRegistration': ['/interop/application-registration']
       }
     },
-    uploadsContainer: '/files'
+    uploadsContainer: '/semapps/file'
   },
   activitypods: {
     baseUrl: process.env.ACTIVITYPODS_COMMON_CONF_URL || 'https://data.activitypods.org/',

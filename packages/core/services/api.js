@@ -46,11 +46,11 @@ module.exports = {
         const token = req.headers.authorization?.split(' ')[1];
         if (token) {
           const payload = await ctx.call('auth.jwt.decodeToken', { token });
-          if (payload.azp) {
+          if (payload?.azp) {
             // This is a OIDC provider-generated ID token
             return ctx.call('oidc-provider.authenticate', { route, req, res });
           } else {
-            // Otherwise it is a custom JWT token (used by ActivityPods frontend)
+            // Otherwise it is a custom JWT token (used by ActivityPods frontend) or a capability URL
             return ctx.call('auth.authenticate', { route, req, res });
           }
         } else {

@@ -27,32 +27,32 @@ const { socialLinks = [], secondaryLinks = [], links = [], footNote = '', theme 
 ---
 
 <footer class="bg-slate-200 dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800">
-	<div class="max-w-6xl mx-auto px-4 sm:px-6">
-		<div class="grid grid-cols-2 gap-8 gap-y-2 py-4">
-			<div>
-				<a class="flex items-center" href={getHomePermalink()}>
-					<Logo />
-				</a>
-			</div>
-			<div>
-			<ul class="flex mb-2 md:order-1 -ml-2 md:ml-4 md:mb-0 float-right">
-				{
-					socialLinks.map(({ ariaLabel, href, icon }) => (
-						<li>
-							<a
-								class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 inline-flex items-center"
-								aria-label={ariaLabel}
-								href={href}
-							>
-								<Icon name={icon} class="w-5 h-5" />
-							</a>
-						</li>
-					))
-				}
-			</ul>
-		</div>
-		</div>
-	</div>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="grid grid-cols-2 gap-8 gap-y-2 py-4">
+      <div>
+        <a class="flex items-center" href={getHomePermalink()}>
+          <Logo />
+        </a>
+      </div>
+      <div>
+        <ul class="flex mb-2 md:order-1 -ml-2 md:ml-4 md:mb-0 float-right">
+          {
+            socialLinks.map(({ ariaLabel, href, icon }) => (
+              <li>
+                <a
+                  class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 inline-flex items-center"
+                  aria-label={ariaLabel}
+                  href={href}
+                >
+                  <Icon name={icon} class="w-5 h-5" />
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
 </footer>
 
 <!-- <footer class:list={[{ dark: theme === 'dark' }, 'relative border-t border-gray-200 dark:border-slate-800 not-prose']}>

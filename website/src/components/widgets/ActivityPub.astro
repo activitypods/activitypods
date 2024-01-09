@@ -5,39 +5,45 @@ import activitypub from '~/assets/images/activitypub.svg';
 ---
 
 <section class="bg-tertiary-500 full-height min-h-[900px]" id="activitypub">
-	<div class="container max-w-6xl px-4 mx-auto pt-6 sm:py-8 pb-10">
-		<Image src={activitypub} alt="ActivityPub" class="w-24 sm:w-48" />
-		<h2 class="max-w-lg mb-4 text-4xl font-bold leading-none text-white sm:text-6xl font-heading">
-			Activity<span class="text-secondary-500">Pub</span>
-		</h2>
-		<div class="grid grid-cols-1 gap-x-8 gap-y-8 lg:gap-x-16 md:grid-cols-2">
-			<div>
-				<p class="text-white text-lg sm:text-xl mb-4">
-					Activity<span class="text-secondary-500">Pub</span> is a decentralized social networking protocol based upon the ActivityStreams 2.0 ontology. It provides a client-to-server and a server-to-server API for all common social features: following, liking, reposting... It became a W3C recommandation in 2018 and is used nowadays by dozens of softwares.
-				</p>
-				<a href="https://activitypub.rocks"  target="_blank" class="text-white text-lg sm:text-xl underline">
-					www.activitypub.rocks
-				</a>
-			</div>
-			<div>
-				<p class="mb-4 text-xl font-bold text-white">
-					<Icon name="tabler:arrow-down-right" class="w-7 h-7 text-white inline-block" />
-					What is the main shortcoming of Activity<span class="text-secondary-500">Pub</span> ?
-				</p>
-				<p class="text-white text-lg sm:text-lg">
-					ActivityPub wants to make it possible to create decentralized apps. But to post videos, you need an account on a PeerTube instance. 
-					And to post images, you need an account on a PixelFed instance. You must thus handle multiple accounts, with their profile, list of followers, etc.
-				</p>
-				<br />
-				<p class="mb-4 text-xl font-bold text-white">
-					<Icon name="tabler:arrow-down-right" class="w-7 h-7 text-white inline-block" />
-					How does Activity<span class="text-primary-500">Pods</span> solve this shortcoming ?
-				</p>
-				<p class="text-white text-lg sm:text-lg">
-					With ActivityPods, you have only one profile, one outbox, one inbox and one list of followers - all in a single place. Applications connect to your	
-					Pod to post activities, read the inbox and fetch data. And of course they can connect to any existing <a href="https://fediverse.party/" target="_blank" class="underline">fediverse</a> application !
-				</p>
-			</div>
-		</div>
-	</div>
+  <div class="container max-w-6xl px-4 mx-auto pt-6 sm:py-8 pb-10">
+    <Image src={activitypub} alt="ActivityPub" class="w-24 sm:w-48" />
+    <h2 class="max-w-lg mb-4 text-4xl font-bold leading-none text-white sm:text-6xl font-heading">
+      Activity<span class="text-secondary-500">Pub</span>
+    </h2>
+    <div class="grid grid-cols-1 gap-x-8 gap-y-8 lg:gap-x-16 md:grid-cols-2">
+      <div>
+        <p class="text-white text-lg sm:text-xl mb-4">
+          Activity<span class="text-secondary-500">Pub</span> is a decentralized social networking protocol based upon the
+          ActivityStreams 2.0 ontology. It provides a client-to-server and a server-to-server API for all common social features:
+          following, liking, reposting... It became a W3C recommandation in 2018 and is used nowadays by dozens of softwares.
+        </p>
+        <a href="https://activitypub.rocks" target="_blank" class="text-white text-lg sm:text-xl underline">
+          www.activitypub.rocks
+        </a>
+      </div>
+      <div>
+        <p class="mb-4 text-xl font-bold text-white">
+          <Icon name="tabler:arrow-down-right" class="w-7 h-7 text-white inline-block" />
+          What is the main shortcoming of Activity<span class="text-secondary-500">Pub</span> ?
+        </p>
+        <p class="text-white text-lg sm:text-lg">
+          ActivityPub wants to make it possible to create decentralized apps. But to post videos, you need an account on
+          a PeerTube instance. And to post images, you need an account on a PixelFed instance. You must thus handle
+          multiple accounts, with their profile, list of followers, etc.
+        </p>
+        <br />
+        <p class="mb-4 text-xl font-bold text-white">
+          <Icon name="tabler:arrow-down-right" class="w-7 h-7 text-white inline-block" />
+          How does Activity<span class="text-primary-500">Pods</span> solve this shortcoming ?
+        </p>
+        <p class="text-white text-lg sm:text-lg">
+          With ActivityPods, you have only one profile, one outbox, one inbox and one list of followers - all in a
+          single place. Applications connect to your Pod to post activities, read the inbox and fetch data. And of
+          course they can connect to any existing <a href="https://fediverse.party/" target="_blank" class="underline"
+            >fediverse</a
+          > application !
+        </p>
+      </div>
+    </div>
+  </div>
 </section>

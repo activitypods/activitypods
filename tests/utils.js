@@ -1,6 +1,6 @@
 const { delay } = require('@semapps/ldp');
 
-const arrayOf = (value) => {
+const arrayOf = value => {
   // If the field is null-ish, we suppose there are no values.
   if (!value) {
     return [];
@@ -25,7 +25,7 @@ const waitForResource = async (delayMs, fieldNames, maxTries, callback) => {
   for (let i = 0; i < maxTries; i += 1) {
     const result = await callback();
     // If a result (and the expected field, if required) is present, return.
-    if (result !== undefined && arrayOf(fieldNames).every((fieldName) => Object.keys(result).includes(fieldName))) {
+    if (result !== undefined && arrayOf(fieldNames).every(fieldName => Object.keys(result).includes(fieldName))) {
       return result;
     }
     await delay(delayMs);
@@ -35,5 +35,5 @@ const waitForResource = async (delayMs, fieldNames, maxTries, callback) => {
 
 module.exports = {
   arrayOf,
-  waitForResource,
+  waitForResource
 };

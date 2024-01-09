@@ -5,9 +5,7 @@
     "allowJs": true,
     "baseUrl": "/home/sebastien/SemApps/activitypods/website",
     "paths": {
-      "~/*": [
-        "src/*"
-      ]
+      "~/*": ["src/*"]
     },
     "jsx": "react-jsx",
     "jsxImportSource": "react"

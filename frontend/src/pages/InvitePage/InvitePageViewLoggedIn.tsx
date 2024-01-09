@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { Typography, Button, Grid } from '@mui/material';
 import React, { useEffect } from 'react';
 import { useGetOne, useLocaleState, useNotify, useTranslate } from 'react-admin';

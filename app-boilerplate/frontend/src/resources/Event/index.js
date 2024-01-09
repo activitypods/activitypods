@@ -1,20 +1,24 @@
-import ContactList from './ContactList';
-import ContactShow from './ContactShow';
-import ContactsIcon from '@mui/icons-material/Contacts';
+import EventCreate from './EventCreate';
+import EventEdit from './EventEdit';
+import EventList from './EventList';
+import EventShow from './EventShow';
+import EventIcon from '@mui/icons-material/Event';
 
 export default {
   config: {
-    list: ContactList,
-    show: ContactShow,
-    icon: ContactsIcon,
+    list: EventList,
+    show: EventShow,
+    create: EventCreate,
+    edit: EventEdit,
+    icon: EventIcon,
     recordRepresentation: 'vcard:given-name'
   },
   dataModel: {
-    types: ['vcard:Individual', 'as:Profile']
+    types: ['as:Event']
   },
   translations: {
     en: {
-      name: 'Contact |||| Contacts',
+      name: 'Event |||| Events',
       fields: {
         describes: 'User ID',
         'vcard:given-name': 'Surname',
@@ -26,7 +30,7 @@ export default {
       }
     },
     fr: {
-      name: 'Profil |||| Profils',
+      name: 'Evénement |||| Evénements',
       fields: {
         describes: 'Identifiant',
         'vcard:given-name': 'Prénom',

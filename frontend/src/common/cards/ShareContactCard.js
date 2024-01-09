@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box, Card, Typography, TextField } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { useGetIdentity, useTranslate } from 'react-admin';
-import { formatUsername } from '../../utils';
+import { useTranslate } from 'react-admin';
 import CopyButton from '../buttons/CopyButton';
+import useContactLink from '../../hooks/useContactLink';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -30,9 +30,9 @@ const useStyles = makeStyles(theme => ({
 
 const ShareContactCard = () => {
   const classes = useStyles();
-  const { data: identity } = useGetIdentity();
   const translate = useTranslate();
-  const contactLink = identity && new URL(window.location.href).origin + '/u/' + formatUsername(identity?.id);
+  const contactLink = useContactLink();
+
   return (
     <Card className={classes.root}>
       <Box className={classes.title} p={2}>

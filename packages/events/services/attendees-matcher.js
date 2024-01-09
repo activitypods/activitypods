@@ -1,6 +1,6 @@
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { getSlugFromUri } = require('@semapps/ldp');
+const { getSlugFromUri, arrayOf } = require('@semapps/ldp');
 const { POST_EVENT_CONTACT_REQUEST, POST_EVENT_ACCEPT_CONTACT_REQUEST } = require('../config/patterns');
 const { POST_EVENT_CONTACT_REQUEST_MAPPING } = require('../config/mappings');
 
@@ -37,14 +37,14 @@ module.exports = {
       // Save meta data before modifying them temporarily
       const savedMeta = { ...ctx.meta };
 
-      for (let attendeeUri of collection.items) {
+      for (let attendeeUri of arrayOf(collection.items)) {
         ctx.meta.webId = attendeeUri;
         ctx.meta.dataset = getSlugFromUri(attendeeUri);
 
         const attendee = await ctx.call('activitypub.actor.get', { actorUri: attendeeUri });
 
         let potentialNewContacts = [];
-        for (let otherAttendeeUri of collection.items.filter(uri => uri !== attendeeUri)) {
+        for (let otherAttendeeUri of arrayOf(collection.items).filter(uri => uri !== attendeeUri)) {
           const alreadyConnected = await ctx.call('activitypub.collection.includes', {
             collectionUri: attendee['apods:contacts'],
             itemUri: otherAttendeeUri

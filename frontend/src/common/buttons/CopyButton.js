@@ -5,10 +5,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import FileCopyOutlinedIcon from '@mui/icons-material/FileCopyOutlined';
 import { useTranslate } from 'react-admin';
 
-const useStyles = makeStyles(theme => ({
-  wrapper: {
-    // position: 'relative',
-  },
+const useStyles = makeStyles(() => ({
   icon: {
     position: 'absolute',
     top: -2,

@@ -1,13 +1,8 @@
 import React, { useCallback } from 'react';
-import {
-  useCheckAuthenticated,
-  defaultPasswordScorer,
-  PasswordStrengthIndicator,
-  validatePasswordStrength
-} from '@semapps/auth-provider';
-import { required, useAuthProvider, useNotify, useTranslate } from 'react-admin';
-import { SimpleForm, TextInput } from 'react-admin';
+import { useCheckAuthenticated, PasswordStrengthIndicator, validatePasswordStrength } from '@semapps/auth-provider';
+import { required, useAuthProvider, useNotify, useTranslate, SimpleForm, TextInput } from 'react-admin';
 import { Box, Card, Typography } from '@mui/material';
+import scorer from '../../config/scorer';
 
 const validateConfirmNewPassword = [
   (value, { newPassword, confirmNewPassword }) => {
@@ -15,7 +10,6 @@ const validateConfirmNewPassword = [
     if (newPassword !== confirmNewPassword) {
       return 'app.validation.confirmNewPassword';
     }
-    return;
   }
 ];
 
@@ -33,7 +27,7 @@ const SettingsPasswordPage = () => {
         await authProvider.updateAccountSettings({ ...params });
         notify('auth.message.account_settings_updated', 'success');
       } catch (error) {
-        notify(error.message, 'error');
+        notify(error.message, { type: 'error' });
       }
     },
     [authProvider, notify]
@@ -60,14 +54,14 @@ const SettingsPasswordPage = () => {
             <Typography variant="body2" style={{ marginBottom: 3 }}>
               {translate('app.validation.password_strength')}:{' '}
             </Typography>
-            <PasswordStrengthIndicator scorer={defaultPasswordScorer} password={newPassword} sx={{ width: '100%' }} />
+            <PasswordStrengthIndicator scorer={scorer} password={newPassword} sx={{ width: '100%' }} />
             <TextInput
               label={translate('app.input.new_password')}
               source="newPassword"
               type="password"
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
-              validate={[validatePasswordStrength()]}
+              validate={[validatePasswordStrength(scorer)]}
               fullWidth
             />
 

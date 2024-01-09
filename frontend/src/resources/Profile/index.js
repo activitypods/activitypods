@@ -21,7 +21,7 @@ export default {
       name: 'Profile |||| Profiles',
       fields: {
         describes: 'User ID',
-        'vcard:given-name': 'Surname',
+        'vcard:given-name': 'Given Name',
         'vcard:family-name': 'Family name',
         'vcard:note': 'About you',
         'vcard:photo': 'Picture',

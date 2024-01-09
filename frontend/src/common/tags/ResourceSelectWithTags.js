@@ -30,7 +30,7 @@ import { arrayFromLdField, colorFromString } from '../../utils';
  *  Custom renderer for tag options. Receives the tag record and whether it is selected.
  * @property {(resource: Record, selected: boolean) => JSX.Element} renderResourceOption
  *  Custom renderer for resource options. Receives the resource record and whether it is selected.
-*/
+ */
 
 /**
  * Autocomplete select that allows to select resources based on
@@ -71,8 +71,12 @@ const ResourceSelectWithTags = props => {
     setSelectedResources(props.value || []);
   }, [props.value]);
 
-  const { data: tagDataRaw, isLoading: isLoadingTags } = useGetList(tagResource);
-  const { data: resourceDataRaw, isLoading: isLoadingResources } = useGetList(entityResource);
+  const { data: tagDataRaw, isLoading: isLoadingTags } = useGetList(tagResource, {
+    pagination: { page: 1, perPage: Infinity }
+  });
+  const { data: resourceDataRaw, isLoading: isLoadingResources } = useGetList(entityResource, {
+    pagination: { page: 1, perPage: Infinity }
+  });
   const tagData = Object.fromEntries((tagDataRaw || []).map(tag => [tag.id, tag]));
   const resourceData = Object.fromEntries((resourceDataRaw || []).map(r => [r.id, r]));
 

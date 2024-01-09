@@ -37,9 +37,6 @@ const MenuBar = () => {
           <Link to={'/Profile/' + encodeURIComponent(identity?.profileData?.id)} className={classes.link}>
             {translate('app.page.profile')}
           </Link>
-          <Link to={'/Group/'} className={classes.link}>
-            {translate('app.page.groups')}
-          </Link>
           <Link to="/settings" className={classes.link}>
             {translate('app.page.settings')}
           </Link>

@@ -29,7 +29,7 @@ const ProfileShow = () => {
           <TagsListEdit
             source="id"
             addLabel
-            label="Groups"
+            label={translate('app.group.group')}
             relationshipPredicate="vcard:hasMember"
             namePredicate="vcard:label"
             avatarPredicate="vcard:photo"

@@ -1,8 +1,8 @@
 const dataServers = {
   podProvider: {
     authServer: true,
-    void: false,
-    baseUrl: process.env.REACT_APP_POD_PROVIDER_URL
+    baseUrl: process.env.REACT_APP_POD_PROVIDER_URL,
+    void: false
   },
   pod: {
     pod: true,
@@ -20,7 +20,7 @@ const dataServers = {
     uploadsContainer: '/files'
   },
   activitypods: {
-    baseUrl: 'https://data.activitypods.org/',
+    baseUrl: process.env.ACTIVITYPODS_COMMON_CONF_URL || 'https://data.activitypods.org/',
     noProxy: true // HTTP signature is not supported on that server
   }
 };

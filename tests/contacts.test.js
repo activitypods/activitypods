@@ -1,6 +1,7 @@
 const waitForExpect = require('wait-for-expect');
 const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const { arrayOf } = require('@semapps/ldp');
 const { initialize, clearDataset, listDatasets } = require('./initialize');
 const path = require('path');
 const urlJoin = require('url-join');
@@ -492,7 +493,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
         collectionUri: bob.inbox,
         page: 1
       });
-      await expect(outbox.orderedItems[0]).toMatchObject({
+      await expect(arrayOf(outbox.orderedItems)[0]).toMatchObject({
         type: ACTIVITY_TYPES.ACCEPT,
         object: activity.id,
         actor: alice.id,

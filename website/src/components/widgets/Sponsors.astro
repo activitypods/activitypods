@@ -1,39 +1,29 @@
 ---
-import nlnet from "~/assets/images/nlnet.svg";
-import ngi from "~/assets/images/ngi-zero-entrust.svg";
+import { Image } from 'astro:assets';
+import nlnet from '~/assets/images/nlnet.svg';
+import ngi from '~/assets/images/ngi-zero-entrust.svg';
 ---
 
 <section class="py-8">
-  <div
-    class="container max-w-6xl px-4 sm:px-6 sm:mx-auto grid grid-cols-6 gap-2"
-  >
+  <div class="container max-w-6xl px-4 sm:px-6 sm:mx-auto grid grid-cols-6 gap-2">
     <div class="col-span-6 md:col-span-4 pt-4">
       <p class="text-gray-500 dark:text-gray-400">
-        This project is funded through the <a
-          href="https://nlnet.nl/entrust"
-          target="_blank"
-          class="underline">NGI0 Entrust Fund</a
-        >, a fund established by <a
-          href="https://nlnet.nl"
-          target="_blank"
-          class="underline">NLnet</a
-        > with financial support from the European Commission's <a
-          href="https://ngi.eu"
-          target="_blank"
-          class="underline">Next Generation Internet</a
-        > program, under the aegis of DG Communications Networks, Content and Technology
-        under grant agreement No 101069594. Learn more on the <a
-          href="https://nlnet.nl/project/ActivityPods"
-          target="_blank"
-          class="underline">project page</a
+        This project is funded through the <a href="https://nlnet.nl/entrust" target="_blank" class="underline"
+          >NGI0 Entrust Fund</a
+        >, a fund established by <a href="https://nlnet.nl" target="_blank" class="underline">NLnet</a> with financial support
+        from the European Commission's <a href="https://ngi.eu" target="_blank" class="underline"
+          >Next Generation Internet</a
+        > program, under the aegis of DG Communications Networks, Content and Technology under grant agreement No 101069594.
+        Learn more on the <a href="https://nlnet.nl/project/ActivityPods" target="_blank" class="underline"
+          >project page</a
         >.
       </p>
     </div>
     <div class="col-span-3 md:col-span-1 pt-4">
-      <img src={nlnet} alt="NLnet" class="w-full" />
+      <Image src={nlnet} alt="NLnet" class="w-full" />
     </div>
     <div class="col-span-3 md:col-span-1 pt-4">
-      <img src={ngi} alt="NGI Zero Entrust" class="w-full mt-2" />
+      <Image src={ngi} alt="NGI Zero Entrust" class="w-full mt-2" />
     </div>
   </div>
 </section>

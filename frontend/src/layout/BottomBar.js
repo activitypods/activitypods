@@ -5,10 +5,8 @@ import makeStyles from '@mui/styles/makeStyles';
 import { Link, useLocation } from 'react-router-dom';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-// import GroupIcon from '@mui/icons-material/Group';
 import AppsIcon from '@mui/icons-material/Apps';
 import SettingsIcon from '@mui/icons-material/Settings';
-import GroupIcon from '@mui/icons-material/Group';
 
 const useStyles = makeStyles(theme => ({
   box: {
@@ -87,14 +85,6 @@ const BottomBar = () => {
             icon={<AssignmentIndIcon />}
             component={Link}
             to={'/Profile/' + encodeURIComponent(identity?.profileData?.id)}
-            classes={{ selected: classes.selected }}
-          />
-          <BottomNavigationAction
-            label={translate('app.page.groups_short')}
-            value="groups"
-            icon={<GroupIcon />}
-            component={Link}
-            to={'/Group'}
             classes={{ selected: classes.selected }}
           />
           <BottomNavigationAction

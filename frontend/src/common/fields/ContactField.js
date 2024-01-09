@@ -38,9 +38,9 @@ const ContactField = ({ source, context }) => {
             ? attendees.filter(userUri => userUri !== record[source])
             : record[source]
       });
-      notify('app.notification.message_sent', 'success');
+      notify('app.notification.message_sent', { type: 'success' });
     } catch (e) {
-      notify('app.notification.message_send_error', 'error', { error: e.message });
+      notify('app.notification.message_send_error', { type: 'error', messageArgs: { error: e.message } });
     }
   };
 

@@ -4,17 +4,7 @@ const { ActivityPubService, ActivityMappingService, ACTOR_TYPES, OBJECT_TYPES } 
 const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
-const {
-  OntologiesService,
-  apods,
-  interop,
-  oidc,
-  dc,
-  syreen,
-  mp,
-  pair,
-  void: voidOntology
-} = require('@semapps/ontologies');
+const { OntologiesService, dc, syreen, mp, pair, void: voidOntology } = require('@semapps/ontologies');
 const { PodService } = require('@semapps/pod');
 const { NodeinfoService } = require('@semapps/nodeinfo');
 const { SignatureService, ProxyService } = require('@semapps/signature');
@@ -24,10 +14,12 @@ const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
+const { apods, interop, notify, oidc } = require('@activitypods/ontologies');
 const ApiService = require('./services/api');
 const AppOpenerService = require('./services/app-opener');
 const FilesService = require('./services/files');
 const InstallationService = require('./services/installation');
+const NotificationService = require('./services/notification');
 const JWKService = require('./services/jwk');
 const OidcProviderService = require('./services/oidc-provider/oidc-provider');
 const packageDesc = require('./package.json');
@@ -105,7 +97,7 @@ const CoreService = {
 
     this.broker.createService(OntologiesService, {
       settings: {
-        ontologies: [apods, interop, oidc, dc, syreen, mp, pair, voidOntology],
+        ontologies: [apods, interop, notify, oidc, dc, syreen, mp, pair, voidOntology],
         persistRegistry: false,
         settingsDataset
       }
@@ -206,6 +198,12 @@ const CoreService = {
     });
 
     this.broker.createService(InstallationService);
+
+    this.broker.createService(NotificationService, {
+      settings: {
+        baseUrl
+      }
+    });
 
     this.broker.createService(AppOpenerService, {
       settings: {

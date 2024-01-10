@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@activitypods/app": "1.1.0",
+    "@activitypods/ontologies": "1.1.0",
     "@semapps/auth": "0.6.0-alpha.8",
     "@semapps/core": "0.6.0-alpha.8",
     "dotenv-flow": "^3.2.0",

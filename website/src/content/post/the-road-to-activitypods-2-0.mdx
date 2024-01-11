@@ -43,7 +43,7 @@ The problem was [fixed](https://github.com/assemblee-virtuelle/semapps/pull/1151
 
 For the time being, the plan is for applications to declare the type of resource they wish to use (read and/or write) when registering. This will automatically create a corresponding container, if one does not already exist, and the appropriate permissions will be given to the applications concerned. Users will be asked to give their consent via a dedicated screen.
 
-<ImageCaption src={authScreen.src} label="The authorization screen in ActivityPods 2.0" />
+<ImageCaption src={authScreen} label="The authorization screen in ActivityPods 2.0" />
 
 With regard to [ActivityStreams collections](https://www.w3.org/TR/activitystreams-core/#collections), which are widely used by ActivityPub and which we find very useful for indexing data, the problem is similar: in v1, applications can declare "custom" collections that will automatically attach themselves to certain types of resources, but the declaration is made in the Pod host thanks to an internal service.
 
@@ -59,7 +59,7 @@ So this autumn, we took the time to study the OAuth 2.0 and OIDC standards, than
 
 Armed with this understanding, we implemented [the first part of the Solid-OIDC spec](https://solidproject.org/TR/oidc-primer#authorization-code-pkce-flow), which concerns authentication. For this, we used the [node-oidc-provider](https://github.com/panva/node-oidc-provider) library, also used by the [Community Solid Server](https://github.com/CommunitySolidServer/CommunitySolidServer).
 
-<ImageCaption src={solidOidcFlow.src} label="Just a little part of the Solid-OIDC flow..." />
+<ImageCaption src={solidOidcFlow} label="Just a little part of the Solid-OIDC flow..." />
 
 What's still missing is the use of the DPoP protocol for resources requests. In the meantime, we're using the ID token returned by the server. This is bad practice, but the advantage is that it contains both the user's _and_ the application's WebID, thus allowing to limit access to the data that the application is authorized to manipulate (to request resources from a remote server, we always have to use a [proxy endpoint](../specs/activitypods#proxy-endpoint-with-non-get-methods)).
 
@@ -69,7 +69,7 @@ Time and resources permitting, we will finalize the implementation of Solid-OIDC
 
 The NLnet team has agreed to include in the funding a development we've been wanting to make for a long time: an application compatible with all Mastodon instances, but which will have the particularity of hosting data on a Pod. This future app has a perfect name: Mastopod.
 
-<ImageCaption src={mastopod.src} label="A Mastopod, according to generative AI." />
+<ImageCaption src={mastopod} label="A Mastopod, according to generative AI." />
 
 We think Mastopod will generate a lot of interest from the ActivityPub community. Developers will realize that, with the help of the ActivityPods framework, it's super easy to create ActivityPub-compatible applications, since all the basic functionality (inbox, outbox, authentication, etc.) is already handled by the backend. All that's left is to take care of the application-specific aspects.
 

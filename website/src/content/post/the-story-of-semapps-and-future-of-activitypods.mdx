@@ -24,7 +24,7 @@ SemApps was to become the association's flagship project. It was initially conce
 
 The first instance of SemApps was deployed for a gigantic ephemeral third-place in Paris: [Les Grands Voisins](https://lesgrandsvoisins.org/) <sup>_(french)_</sup>. It made visible the myriad of organizations and individuals occupying the space, and helped them to cooperate more effectively. It was a large cooperative database.
 
-<ImageCaption src={grandsVoisins.src} label="The first instance of SemApps for Les Grands Voisins" />
+<ImageCaption src={grandsVoisins} label="The first instance of SemApps for Les Grands Voisins" />
 
 Naturally, the data was stored in semantic format. There were also features specific to the semantic web, such as the ability to import one's profile from another instance, or to add links with resources from distant instances. The Virtual Assembly association had its own instance.
 
@@ -45,7 +45,7 @@ We had to start from scratch, as the v1 code was unusable. When it came to makin
 
 Thanks to his input, it was decided to use [Moleculer](https://moleculer.services) for the backend. This NodeJS-based framework makes it easy to create microservices, which can remain on the same machine or be deployed on several machines. The architecture fitted in well with our desire to make SemApps modular. This way, users could activate only the services they needed, or develop their own services that could connect to existing ones.
 
-<ImageCaption src={moleculerServices.src} label="Moleculer services in SemApps applications" />
+<ImageCaption src={moleculerServices} label="Moleculer services in SemApps applications" />
 
 Another important choice was to use Jena Fuseki as a triple store. Although it's possible to do semantic web without a triple store, the advantage of a triple store is that data is stored directly in semantic format. This means they can be easily queried using [SPARQL](https://fr.wikipedia.org/wiki/SPARQL). As we wanted to develop large collaborative databases, the ability to make SPARQL queries was crucial.
 
@@ -62,7 +62,7 @@ The Virtual Assembly wanted to use SemApps for a purpose similar to the v1: to m
 [Components for React-Admin](https://semapps.org/docs/frontend) were integrated into this toolbox, to facilitate the development of interfaces with semantic data. In use, React-Admin proved to be capable of much more than admin panels, and was used by many sites. Of course, developers were free to use other frameworks, as the frontend was completely decoupled from the backend.
 
 <ImageCaption
-  src={archipelagoAv.src}
+  src={archipelagoAv}
   url="https://archipel.assemblee-virtuelle.org"
   label="The Archipelago instance for Virtual Assembly"
 />
@@ -94,7 +94,7 @@ Taking this a step further, we realized that Archipelago itself could become an 
 To have real Cods that can be created "on the fly" and function like Pods, we would simply need to refine the rights management interface. A user with a Pod could create a Cod for an organization, and become the Cod's administrator. He could then grant administration rights to other users.
 
 <ImageCaption
-  src={archipelLowTech.src}
+  src={archipelLowTech}
   url="https://lowtechlab.org/fr/actualites-blog/l-archipel-low-tech-en-france-illustre"
   label="France's Low-Tech Archipelago. Do you see Pods and Cods?"
 />

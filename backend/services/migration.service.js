@@ -14,6 +14,28 @@ const replaceRules = {
 module.exports = {
   name: 'migration',
   actions: {
+    async associateFrontAppRegistration(ctx) {
+      const { domainName } = ctx.params;
+      if (!domainName) throw new Error('Missing parameter domainName');
+      for (let dataset of await ctx.call('pod.list')) {
+        this.logger.info(`Associating apods:FrontAppRegistration type with app.armoise.co for dataset ${dataset}...`);
+        await ctx.call('triplestore.update', {
+          query: `
+            DELETE { 
+              ?s <http://activitypods.org/ns/core#preferredForTypes> <http://activitypods.org/ns/core#FrontAppRegistration> . 
+            }
+            INSERT { 
+              ?s <http://activitypods.org/ns/core#preferredForTypes> <http://activitypods.org/ns/core#FrontAppRegistration> . 
+            }
+            WHERE { 
+              ?s <http://activitypods.org/ns/core#domainName> "${domainName}" .
+            }
+          `,
+          dataset,
+          webId: 'system'
+        });
+      }
+    },
     async fixFilesType(ctx) {
       for (let dataset of await ctx.call('pod.list')) {
         this.logger.info(`Fixing semapps:File type for dataset ${dataset}...`);

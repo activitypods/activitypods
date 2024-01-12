@@ -14,6 +14,20 @@ const replaceRules = {
 module.exports = {
   name: 'migration',
   actions: {
+    async fixFilesType(ctx) {
+      for (let dataset of await ctx.call('pod.list')) {
+        this.logger.info(`Fixing semapps:File type for dataset ${dataset}...`);
+        await ctx.call('triplestore.update', {
+          query: `
+          DELETE { ?s a <semapps:File> . }
+          INSERT { ?s a <http://semapps.org/ns/core#File> . }
+          WHERE { ?s a <semapps:File> . }
+          `,
+          dataset,
+          webId: 'system'
+        });
+      }
+    },
     async createAndAttachIgnoredContacts(ctx) {
       const registeredCollections = await ctx.call('activitypub.registry.list');
       const ignoredContactsCollection = registeredCollections.find(c => c.name === '/ignored-contacts');

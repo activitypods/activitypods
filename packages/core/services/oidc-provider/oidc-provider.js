@@ -1,5 +1,5 @@
 const Redis = require('ioredis');
-
+const { delay } = require('@semapps/ldp');
 const { Errors: E } = require('moleculer-web');
 const RedisAdapter = require('./adapter');
 const baseConfig = require('./base-config');
@@ -40,6 +40,7 @@ module.exports = {
 
     await this.broker.call('api.addRoute', {
       route: {
+        name: 'oidc-config',
         path: '/.well-known/openid-configuration',
         aliases: {
           'GET /': 'oidc-provider.proxyConfig'
@@ -47,8 +48,13 @@ module.exports = {
       }
     });
 
+    // The OIDC provider route must be added after all other routes, otherwise it gets overwritten
+    // TODO find out why ! Probably due to the fact it is only a middleware (adding dummy aliases doesn't help)
+    await delay(5000);
+
     await this.broker.call('api.addRoute', {
       route: {
+        name: 'oidc-provider',
         path: '/.oidc/auth',
         use: [this.oidc.callback()]
       }

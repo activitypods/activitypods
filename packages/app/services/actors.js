@@ -135,6 +135,9 @@ module.exports = {
         ],
         webId: 'system'
       });
+    },
+    getApp() {
+      return this.appActor;
     }
   }
 };

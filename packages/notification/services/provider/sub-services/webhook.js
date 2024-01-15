@@ -1,10 +1,12 @@
 const urlJoin = require('url-join');
 const fetch = require('node-fetch');
+const { Errors: E } = require('moleculer-web');
+const { parseHeader, negotiateContentType, parseJson } = require('@semapps/middlewares');
 const { ControlledContainerMixin, getDatasetFromUri } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
-  name: 'notification.webhook',
+  name: 'notification.provider.webhook',
   mixins: [ControlledContainerMixin],
   settings: {
     baseUrl: null,
@@ -22,11 +24,12 @@ module.exports = {
       route: {
         name: 'notification-webhook',
         path: '/.notifications/WebhookChannel2023',
+        bodyParsers: false,
         authorization: false,
         authentication: true,
         aliases: {
-          'GET /': 'notification.webhook.discover',
-          'POST /': 'notification.webhook.createChannel'
+          'GET /': 'notification.provider.webhook.discover',
+          'POST /': [parseHeader, negotiateContentType, parseJson, 'notification.provider.webhook.createChannel']
         }
       }
     });
@@ -49,30 +52,43 @@ module.exports = {
     async createChannel(ctx) {
       // Expect format https://communitysolidserver.github.io/CommunitySolidServer/latest/usage/notifications/#webhooks
       // Correct context: https://github.com/solid/vocab/blob/main/solid-notifications-context.jsonld
-      const { type, topic, sendTo } = ctx.params;
+      const type = ctx.params.type || ctx.params['@type'];
+      const topic = ctx.params.topic || ctx.params['notify:topic'];
+      const sendTo = ctx.params.sendTo || ctx.params['notify:sendTo'];
       const webId = ctx.meta.webId;
 
       if (type !== 'notify:WebhookChannel2023')
         throw new Error('Only notify:WebhookChannel2023 is accepted on this endpoint');
 
       // Ensure topic exist (LDP resource, container or collection)
+      const exists = await ctx.call('ldp.resource.exist', {
+        resourceUri: topic,
+        webId: 'system'
+      });
+      if (!exists) throw new E.BadRequestError('Cannot watch unexisting resource');
 
       // Ensure topic can be watched by the authenticated agent
+      const rights = await ctx.call('webacl.resource.hasRights', {
+        resourceUri: topic,
+        rights: { read: true },
+        webId
+      });
+      if (!rights.read) throw new E.ForbiddenError('You need acl:Read rights on the resource');
 
       // Find container URI from topic (must be stored on same Pod)
       const topicWebId = urlJoin(this.settings.baseUrl, getDatasetFromUri(topic));
-      const channelContainerUri = this.actions.getContainerUri({ webId: topicWebId }, { parentCtx: ctx });
+      const channelContainerUri = await this.actions.getContainerUri({ webId: topicWebId }, { parentCtx: ctx });
 
       // Post channel on Pod
       const channelUri = await this.actions.post(
         {
           containerUri: channelContainerUri,
           resource: {
-            '@context': { notify: 'http://www.w3.org/ns/solid/notifications#' },
-            '@type': 'notify:WebhookChannel2023',
+            type: 'notify:WebhookChannel2023',
             'notify:topic': topic,
             'notify:sendTo': sendTo
           },
+          contentType: MIME_TYPES.JSON,
           webId: 'system'
         },
         { parentCtx: ctx }
@@ -89,7 +105,8 @@ module.exports = {
       return await this.actions.get(
         {
           resourceUri: channelUri,
-          accept: MIME_TYPES.JSON
+          accept: MIME_TYPES.JSON,
+          webId: 'system'
         },
         { parentCtx: ctx }
       );

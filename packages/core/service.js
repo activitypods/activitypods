@@ -14,12 +14,12 @@ const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
+const { NotificationProviderService } = require('@activitypods/notification');
 const { apods, interop, notify, oidc } = require('@activitypods/ontologies');
 const ApiService = require('./services/api');
 const AppOpenerService = require('./services/app-opener');
 const FilesService = require('./services/files');
 const InstallationService = require('./services/installation');
-const NotificationService = require('./services/notification');
 const JWKService = require('./services/jwk');
 const OidcProviderService = require('./services/oidc-provider/oidc-provider');
 const packageDesc = require('./package.json');
@@ -199,13 +199,6 @@ const CoreService = {
 
     this.broker.createService(InstallationService);
 
-    this.broker.createService(NotificationService, {
-      settings: {
-        baseUrl,
-        queueServiceUrl
-      }
-    });
-
     this.broker.createService(AppOpenerService, {
       settings: {
         frontendUrl
@@ -225,6 +218,13 @@ const CoreService = {
         baseUrl,
         frontendUrl,
         ...oidcProvider
+      }
+    });
+
+    this.broker.createService(NotificationProviderService, {
+      settings: {
+        baseUrl,
+        queueServiceUrl
       }
     });
 

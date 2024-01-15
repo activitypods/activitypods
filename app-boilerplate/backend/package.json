@@ -10,8 +10,10 @@
   "dependencies": {
     "@activitypods/app": "1.1.0",
     "@activitypods/ontologies": "1.1.0",
+    "@activitypods/notification": "1.1.0",
     "@semapps/auth": "0.6.0-alpha.8",
     "@semapps/core": "0.6.0-alpha.8",
+    "@semapps/signature": "0.6.0-alpha.8",
     "dotenv-flow": "^3.2.0",
     "ioredis": "^4.17.3",
     "url-join": "^4.0.1"

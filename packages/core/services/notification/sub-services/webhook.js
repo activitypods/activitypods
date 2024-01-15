@@ -13,6 +13,10 @@ module.exports = {
     readOnly: true
   },
   dependencies: ['api'],
+  async created() {
+    if (!this.settings.baseUrl) throw new Error('The baseUrl setting is required');
+    if (!this.createJob) throw new Error('The QueueMixin must be configured with this service');
+  },
   async started() {
     await this.broker.call('api.addRoute', {
       route: {
@@ -97,22 +101,46 @@ module.exports = {
       const matchingChannels = this.channels.filter(c => c.topic === collectionUri);
 
       for (const channel of matchingChannels) {
-        // TODO use jobs
-        await fetch(channel.sendTo, {
+        const activity = {
+          '@context': 'https://www.w3.org/ns/activitystreams',
+          id: 'urn:123456:http://example.com/foo',
+          type: 'Add',
+          object: itemUri,
+          target: collectionUri,
+          state: '987654',
+          published: '2023-02-09T15:08:12.345Z'
+        };
+
+        this.createJob(
+          'remotePost',
+          channel.sendTo,
+          { channel, activity },
+          { attempts: 10, backoff: { type: 'exponential', delay: 1000 } }
+        );
+      }
+    }
+  },
+  queues: {
+    remotePost: {
+      name: '*',
+      async process(job) {
+        const { channel, activity } = job.data;
+
+        const response = await fetch(channel.sendTo, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/ld+json'
           },
-          body: JSON.stringify({
-            '@context': 'https://www.w3.org/ns/activitystreams',
-            id: 'urn:123456:http://example.com/foo',
-            type: 'Add',
-            object: itemUri,
-            target: collectionUri,
-            state: '987654',
-            published: '2023-02-09T15:08:12.345Z'
-          })
+          body: JSON.stringify(activity)
         });
+
+        if (!response.ok) {
+          job.retry();
+        } else {
+          job.progress(100);
+        }
+
+        return { response };
       }
     }
   }

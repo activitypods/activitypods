@@ -201,7 +201,8 @@ const CoreService = {
 
     this.broker.createService(NotificationService, {
       settings: {
-        baseUrl
+        baseUrl,
+        queueServiceUrl
       }
     });
 

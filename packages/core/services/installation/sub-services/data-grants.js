@@ -1,5 +1,5 @@
 const urlJoin = require('url-join');
-const { ControlledContainerMixin, getSlugFromUri, getParentContainerUri, isURL } = require('@semapps/ldp');
+const { ControlledContainerMixin, isURL, getSlugFromUri } = require('@semapps/ldp');
 
 module.exports = {
   name: 'data-grants',
@@ -12,6 +12,20 @@ module.exports = {
       }
     },
     excludeFromMirror: true
+  },
+  dependencies: ['ldp', 'ldp.registry', 'pod'],
+  async started() {
+    const baseUrl = await this.broker.call('ldp.getBaseUrl');
+    for (let dataset of await this.broker.call('pod.list')) {
+      const results = await this.actions.list({});
+      for (const dataGrant of results.rows) {
+        await this.broker.call('ldp.registry.register', {
+          path: dataGrant['apods:registeredContainer'].replace(baseUrl, ''),
+          acceptedTypes: dataGrant['apods:registeredClass'],
+          dataset
+        });
+      }
+    }
   },
   hooks: {
     before: {
@@ -53,46 +67,11 @@ module.exports = {
         if (!ontology) throw new Error(`Could not register ontology for resource type ${resourceType}`);
 
         // If the resource type is invalid, an error will be thrown here
-        const containerPath = await ctx.call('ldp.container.getPath', { resourceType });
+        // const containerPath = await ctx.call('ldp.container.getPath', { resourceType });
 
-        const containerUri = urlJoin(baseUrl, dataset, 'data', containerPath);
-        const ontologyContainerUri = getParentContainerUri(containerUri);
-        const rootContainerUri = getParentContainerUri(ontologyContainerUri);
-
-        // Create the parent container (ontology container) if necessary
-
-        if (!(await ctx.call('ldp.container.exist', { containerUri: ontologyContainerUri, webId: 'system' }))) {
-          await ctx.call('ldp.container.create', {
-            containerUri: ontologyContainerUri,
-            webId: 'system'
-          });
-
-          await ctx.call('ldp.container.attach', {
-            containerUri: rootContainerUri,
-            resourceUri: ontologyContainerUri,
-            webId: 'system'
-          });
-        }
-
-        // Create the container if necessary
-        if (!(await ctx.call('ldp.container.exist', { containerUri, webId: 'system' }))) {
-          await ctx.call('ldp.container.create', {
-            containerUri,
-            webId: 'system'
-          });
-
-          await ctx.call('ldp.container.attach', {
-            containerUri: ontologyContainerUri,
-            resourceUri: containerUri,
-            webId: 'system'
-          });
-        }
-
-        // Give read-write permission to the application
-        // TODO adapt to requested permissions
-        await ctx.call('webacl.resource.addRights', {
-          resourceUri: containerUri,
-          additionalRights: {
+        const containerRegistration = await this.broker.call('ldp.registry.register', {
+          acceptedTypes: resourceType,
+          permissions: {
             user: {
               uri: appUri,
               read: true,
@@ -106,10 +85,67 @@ module.exports = {
               }
             }
           },
-          webId: 'system'
+          dataset
         });
 
-        ctx.params.resource['apods:registeredContainer'] = containerUri;
+        ctx.params.resource['apods:registeredContainer'] = urlJoin(
+          baseUrl,
+          dataset,
+          'data',
+          containerRegistration.path
+        );
+        // const ontologyContainerUri = getParentContainerUri(containerUri);
+        // const rootContainerUri = getParentContainerUri(ontologyContainerUri);
+
+        // // Create the parent container (ontology container) if necessary
+
+        // if (!(await ctx.call('ldp.container.exist', { containerUri: ontologyContainerUri, webId: 'system' }))) {
+        //   await ctx.call('ldp.container.create', {
+        //     containerUri: ontologyContainerUri,
+        //     webId: 'system'
+        //   });
+
+        //   await ctx.call('ldp.container.attach', {
+        //     containerUri: rootContainerUri,
+        //     resourceUri: ontologyContainerUri,
+        //     webId: 'system'
+        //   });
+        // }
+
+        // // Create the container if necessary
+        // if (!(await ctx.call('ldp.container.exist', { containerUri, webId: 'system' }))) {
+        //   await ctx.call('ldp.container.create', {
+        //     containerUri,
+        //     webId: 'system'
+        //   });
+
+        //   await ctx.call('ldp.container.attach', {
+        //     containerUri: ontologyContainerUri,
+        //     resourceUri: containerUri,
+        //     webId: 'system'
+        //   });
+        // }
+
+        // // Give read-write permission to the application
+        // // TODO adapt to requested permissions
+        // await ctx.call('webacl.resource.addRights', {
+        //   resourceUri: containerUri,
+        //   additionalRights: {
+        //     user: {
+        //       uri: appUri,
+        //       read: true,
+        //       write: true
+        //     },
+        //     default: {
+        //       user: {
+        //         uri: appUri,
+        //         read: true,
+        //         write: true
+        //       }
+        //     }
+        //   },
+        //   webId: 'system'
+        // });
       }
     }
   }

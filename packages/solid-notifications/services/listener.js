@@ -16,7 +16,7 @@ module.exports = {
     if (!this.settings.baseUrl) throw new Error(`The baseUrl setting is required`);
 
     // Retrieve all active listeners
-    const results = await this.actions.list();
+    const results = await this.actions.list({});
     this.listeners = results.rows;
 
     console.log('active listener', this.listeners);

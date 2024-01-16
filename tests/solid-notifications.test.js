@@ -108,7 +108,6 @@ describe('Test app installation', () => {
   });
 
   test('Cannot create webhook channel for unexisting resources', async () => {
-    // Alice profile is not public
     const { status } = await fetchServer(webhookChannelSubscriptionUrl, {
       method: 'POST',
       headers: new fetch.Headers({ 'Content-Type': 'application/ld+json' }),
@@ -154,6 +153,18 @@ describe('Test app installation', () => {
       type: 'notify:WebhookChannel2023',
       'notify:topic': alice.inbox,
       'notify:sendTo': urlJoin(APP_SERVER_BASE_URL, 'fake-webhook')
+    });
+  });
+
+  test('Listen to Alice inbox', async () => {
+    alice.call('activitypub.outbox.post', {
+      collectionUri: alice.outbox,
+      type: 'Event',
+      content: 'Birthday party !'
+    });
+
+    await waitForExpect(async () => {
+      expect(mockWebhookAction).toHaveBeenCalledTimes(1);
     });
   });
 });

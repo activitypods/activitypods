@@ -6,7 +6,7 @@ const { ControlledContainerMixin, getDatasetFromUri } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
-  name: 'notification.provider.webhook',
+  name: 'solid-notifications.provider.webhook',
   mixins: [ControlledContainerMixin],
   settings: {
     baseUrl: null,
@@ -28,8 +28,8 @@ module.exports = {
         authorization: false,
         authentication: true,
         aliases: {
-          'GET /': 'notification.provider.webhook.discover',
-          'POST /': [parseHeader, negotiateContentType, parseJson, 'notification.provider.webhook.createChannel']
+          'GET /': 'solid-notifications.provider.webhook.discover',
+          'POST /': [parseHeader, negotiateContentType, parseJson, 'solid-notifications.provider.webhook.createChannel']
         }
       }
     });

@@ -3,7 +3,7 @@ const QueueMixin = require('moleculer-bull');
 const WebhookChannelService = require('./sub-services/webhook');
 
 module.exports = {
-  name: 'notification.provider',
+  name: 'solid-notifications.provider',
   settings: {
     baseUrl: null,
     queueServiceUrl: null
@@ -19,7 +19,7 @@ module.exports = {
     });
   },
   async started() {
-    await this.broker.call('ldp.link-header.register', { actionName: 'notification.provider.getLink' });
+    await this.broker.call('ldp.link-header.register', { actionName: 'solid-notifications.provider.getLink' });
 
     await this.broker.call('api.addRoute', {
       route: {
@@ -28,7 +28,7 @@ module.exports = {
         authorization: false,
         authentication: false,
         aliases: {
-          'GET /': 'notification.provider.discover'
+          'GET /': 'solid-notifications.provider.discover'
         }
       }
     });

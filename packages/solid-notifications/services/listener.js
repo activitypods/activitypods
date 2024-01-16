@@ -5,7 +5,7 @@ const DbService = require('moleculer-db');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
 
 module.exports = {
-  name: 'notification.listener',
+  name: 'solid-notifications.listener',
   mixins: [DbService],
   adapter: new TripleStoreAdapter({ type: 'WebhookChannelListener', dataset: 'settings' }),
   settings: {
@@ -27,7 +27,7 @@ module.exports = {
         authorization: false,
         authentication: false,
         aliases: {
-          'POST /': 'notification.listener.process'
+          'POST /': 'solid-notifications.listener.process'
         },
         bodyParsers: { json: true }
       }

@@ -10,7 +10,7 @@
   "dependencies": {
     "@activitypods/app": "1.1.0",
     "@activitypods/ontologies": "1.1.0",
-    "@activitypods/notification": "1.1.0",
+    "@activitypods/solid-notifications": "1.1.0",
     "@semapps/auth": "0.6.0-alpha.8",
     "@semapps/core": "0.6.0-alpha.8",
     "@semapps/signature": "0.6.0-alpha.8",

@@ -1,5 +1,5 @@
 const { TripleStoreAdapter } = require('@semapps/triplestore');
-const { NotificationListenerService } = require('@activitypods/notification');
+const { NotificationListenerService } = require('@activitypods/solid-notifications');
 const CONFIG = require('../config/config');
 
 module.exports = {

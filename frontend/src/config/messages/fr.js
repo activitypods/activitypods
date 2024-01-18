@@ -163,7 +163,8 @@ module.exports = {
       invite_cap_missing: "Impossible de générer un lien d'invitation (missing capability)",
       invite_cap_profile_fetch_error: "Erreur lors de la recherche du profil associé au lien d'invitation",
       pod_provider_fetch_error: "Erreur lors de la recherche d'autres hébergeurs : %{error}",
-      contact_link_copied: 'Lien de contact copié avec succès'
+      contact_link_copied: 'Lien de contact copié avec succès',
+      already_connected: "Tu es déjà connecté avec la personne qui t'a invité."
     },
     user: {
       unknown: 'Inconnu',

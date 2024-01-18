@@ -26,10 +26,10 @@ const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
 const ApiService = require('./services/api');
 const AppOpenerService = require('./services/app-opener');
+const FilesService = require('./services/files');
 const InstallationService = require('./services/installation');
 const JWKService = require('./services/jwk');
 const OidcProviderService = require('./services/oidc-provider/oidc-provider');
-const containers = require('./config/containers');
 const packageDesc = require('./package.json');
 
 const CoreService = {
@@ -59,7 +59,6 @@ const CoreService = {
     this.broker.createService(ActivityPubService, {
       settings: {
         baseUri: baseUrl,
-        containers,
         podProvider: true,
         dispatch: {
           queueServiceUrl
@@ -117,8 +116,7 @@ const CoreService = {
       settings: {
         baseUrl,
         podProvider: true,
-        containers,
-        resourcesWithContainerPath: true, // TODO try to set to false
+        resourcesWithContainerPath: false,
         defaultContainerOptions: {
           permissions: {},
           newResourcesPermissions: {}
@@ -214,6 +212,8 @@ const CoreService = {
         frontendUrl
       }
     });
+
+    this.broker.createService(FilesService);
 
     this.broker.createService(JWKService, {
       settings: {

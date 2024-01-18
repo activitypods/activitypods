@@ -7,8 +7,7 @@ module.exports = {
   name: 'messages.message',
   mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
   settings: {
-    path: '/notes',
-    acceptedTypes: [OBJECT_TYPES.NOTE],
+    acceptedTypes: 'as:Note',
     permissions: {},
     newResourcesPermissions: {}
   },

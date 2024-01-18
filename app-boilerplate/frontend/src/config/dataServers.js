@@ -7,10 +7,11 @@ const dataServers = {
     sparqlEndpoint: null,
     containers: {
       pod: {
-        'vcard:Individual': ['/profiles']
+        'vcard:Individual': ['/vcard/individual'],
+        'as:Event': ['/as/event']
       }
     },
-    uploadsContainer: '/files'
+    uploadsContainer: '/semapps/file'
   }
 };
 

@@ -193,7 +193,7 @@ module.exports = {
 
         // 3. Attach the other actor's profile to my profiles container
         await ctx.call('ldp.container.attach', {
-          containerUri: urlJoin(emitterUri, 'data', 'profiles'),
+          containerUri: urlJoin(emitterUri, 'data', 'vcard', 'individual'),
           resourceUri: activity.object.object.object.id,
           webId: emitterUri
         });
@@ -222,7 +222,7 @@ module.exports = {
 
         // Attach the other actor's profile to my profiles container
         await ctx.call('ldp.container.attach', {
-          containerUri: urlJoin(recipientUri, 'data', 'profiles'),
+          containerUri: urlJoin(recipientUri, 'data', 'vcard', 'individual'),
           resourceUri: emitter.url,
           webId: recipientUri
         });

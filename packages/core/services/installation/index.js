@@ -31,30 +31,34 @@ module.exports = {
           let dataGrantsUris = [];
           let specialRightsUris = [];
 
-          for (const accessNeedUri of arrayOf(accessNeedGroup['interop:hasAccessNeed'])) {
-            if (activity['apods:acceptedAccessNeeds'].includes(accessNeedUri)) {
-              const accessNeed = await ctx.call('ldp.remote.get', { resourceUri: accessNeedUri });
-              dataGrantsUris.push(
-                await ctx.call('data-grants.post', {
-                  resource: {
-                    '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
-                    '@type': 'interop:DataGrant',
-                    'interop:dataOwner': emitterUri,
-                    'interop:grantee': appUri,
-                    'apods:registeredClass': accessNeed['apods:registeredClass'],
-                    'interop:accessMode': accessNeed['interop:accessMode'],
-                    'interop:scopeOfGrant': 'interop:All',
-                    'interop:satisfiesAccessNeed': accessNeedUri
-                  },
-                  contentType: MIME_TYPES.JSON
-                })
-              );
+          if (activity['apods:acceptedAccessNeeds']) {
+            for (const accessNeedUri of arrayOf(accessNeedGroup['interop:hasAccessNeed'])) {
+              if (activity['apods:acceptedAccessNeeds'].includes(accessNeedUri)) {
+                const accessNeed = await ctx.call('ldp.remote.get', { resourceUri: accessNeedUri });
+                dataGrantsUris.push(
+                  await ctx.call('data-grants.post', {
+                    resource: {
+                      '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
+                      '@type': 'interop:DataGrant',
+                      'interop:dataOwner': emitterUri,
+                      'interop:grantee': appUri,
+                      'apods:registeredClass': accessNeed['apods:registeredClass'],
+                      'interop:accessMode': accessNeed['interop:accessMode'],
+                      'interop:scopeOfGrant': 'interop:All',
+                      'interop:satisfiesAccessNeed': accessNeedUri
+                    },
+                    contentType: MIME_TYPES.JSON
+                  })
+                );
+              }
             }
           }
 
-          for (const specialRightUri of arrayOf(accessNeedGroup['apods:hasSpecialRights'])) {
-            if (activity['apods:acceptedSpecialRights'].includes(specialRightUri)) {
-              specialRightsUris.push(specialRightUri);
+          if (activity['apods:acceptedSpecialRights']) {
+            for (const specialRightUri of arrayOf(accessNeedGroup['apods:hasSpecialRights'])) {
+              if (activity['apods:acceptedSpecialRights'].includes(specialRightUri)) {
+                specialRightsUris.push(specialRightUri);
+              }
             }
           }
 

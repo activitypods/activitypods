@@ -2,6 +2,7 @@ const path = require('path');
 const { ServiceBroker } = require('moleculer');
 const { AuthAccountService } = require('@semapps/auth');
 const { delay } = require('@semapps/ldp');
+const { MIME_TYPES } = require('@semapps/mime-types');
 const { NodeinfoService } = require('@semapps/nodeinfo');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
 const { apods, interop, oidc } = require('@semapps/ontologies');
@@ -132,7 +133,38 @@ const initializeAppServer = async (port, settingsDataset) => {
   return broker;
 };
 
+const getAppAccessNeeds = async (actor, appUri) => {
+  const app = await actor.call('ldp.resource.get', {
+    resourceUri: appUri,
+    jsonContext: interopContext,
+    accept: MIME_TYPES.JSON
+  });
+
+  let accessNeedGroup;
+  for (const accessNeedUri of app['interop:hasAccessNeedGroup']) {
+    accessNeedGroup = await actor.call('ldp.resource.get', {
+      resourceUri: accessNeedUri,
+      jsonContext: interopContext,
+      accept: MIME_TYPES.JSON
+    });
+    if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
+      requiredAccessNeedGroup = accessNeedGroup;
+    } else {
+      optionalAccessNeedGroup = accessNeedGroup;
+    }
+  }
+
+  return [requiredAccessNeedGroup, optionalAccessNeedGroup];
+};
+
 const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRights) => {
+  // If the accepted needs are not specified, use the app required access needs
+  if (!acceptedAccessNeeds && !acceptedSpecialRights) {
+    const [requiredAccessNeedGroup] = await getAppAccessNeeds(actor, appUri);
+    acceptedAccessNeeds = requiredAccessNeedGroup['interop:hasAccessNeed'];
+    acceptedSpecialRights = requiredAccessNeedGroup['apods:hasSpecialRights'];
+  }
+
   await actor.call('activitypub.outbox.post', {
     collectionUri: actor.outbox,
     '@context': ['https://www.w3.org/ns/activitystreams', interopContext],

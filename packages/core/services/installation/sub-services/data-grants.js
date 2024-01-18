@@ -1,5 +1,5 @@
 const urlJoin = require('url-join');
-const { ControlledContainerMixin, getSlugFromUri, getParentContainerUri, isURL } = require('@semapps/ldp');
+const { ControlledContainerMixin, isURL, getSlugFromUri } = require('@semapps/ldp');
 
 module.exports = {
   name: 'data-grants',
@@ -13,6 +13,20 @@ module.exports = {
     },
     excludeFromMirror: true
   },
+  dependencies: ['ldp', 'ldp.registry', 'pod'],
+  async started() {
+    const baseUrl = await this.broker.call('ldp.getBaseUrl');
+    for (let dataset of await this.broker.call('pod.list')) {
+      const results = await this.actions.list({});
+      for (const dataGrant of results.rows) {
+        await this.broker.call('ldp.registry.register', {
+          path: dataGrant['apods:registeredContainer'].replace(baseUrl, ''),
+          acceptedTypes: dataGrant['apods:registeredClass'],
+          dataset
+        });
+      }
+    }
+  },
   hooks: {
     before: {
       async post(ctx) {
@@ -22,8 +36,6 @@ module.exports = {
         const dataset = getSlugFromUri(webId);
         const appUri = resource['interop:grantee'];
         const resourceType = resource['apods:registeredClass'];
-
-        const baseUrl = await ctx.call('ldp.getBaseUrl');
 
         // Match a string of type ldp:Container
         const regex = /^([^:]+):([^:]+)$/gm;
@@ -52,41 +64,21 @@ module.exports = {
 
         if (!ontology) throw new Error(`Could not register ontology for resource type ${resourceType}`);
 
-        // If the resource type is invalid, an error will be thrown here
-        const containerPath = await ctx.call('ldp.container.getPath', { resourceType });
+        // Check if a container registration already exist for this type (happens if another app registered the same type)
+        let containerRegistration = await this.broker.call('ldp.registry.getByType', {
+          type: resourceType,
+          dataset
+        });
 
-        const containerUri = urlJoin(baseUrl, dataset, 'data', containerPath);
-        const ontologyContainerUri = getParentContainerUri(containerUri);
-        const rootContainerUri = getParentContainerUri(ontologyContainerUri);
-
-        // Create the parent container (ontology container) if necessary
-
-        if (!(await ctx.call('ldp.container.exist', { containerUri: ontologyContainerUri, webId: 'system' }))) {
-          await ctx.call('ldp.container.create', {
-            containerUri: ontologyContainerUri,
-            webId: 'system'
-          });
-
-          await ctx.call('ldp.container.attach', {
-            containerUri: rootContainerUri,
-            resourceUri: ontologyContainerUri,
-            webId: 'system'
+        if (!containerRegistration) {
+          // If the resource type is invalid, an error will be thrown here
+          containerRegistration = await this.broker.call('ldp.registry.register', {
+            acceptedTypes: resourceType,
+            dataset
           });
         }
 
-        // Create the container if necessary
-        if (!(await ctx.call('ldp.container.exist', { containerUri, webId: 'system' }))) {
-          await ctx.call('ldp.container.create', {
-            containerUri,
-            webId: 'system'
-          });
-
-          await ctx.call('ldp.container.attach', {
-            containerUri: ontologyContainerUri,
-            resourceUri: containerUri,
-            webId: 'system'
-          });
-        }
+        const containerUri = await this.broker.call('ldp.registry.getUri', { path: containerRegistration.path, webId });
 
         // Give read-write permission to the application
         // TODO adapt to requested permissions

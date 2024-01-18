@@ -10,11 +10,13 @@ const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 jest.setTimeout(80000);
 
 const APP_URI = 'http://localhost:3001/app';
+const APP2_URI = 'http://localhost:3002/app';
 
 describe('Test app installation', () => {
   let podServer,
     alice,
     appServer,
+    appServer2,
     app,
     requiredAccessNeedGroup,
     optionalAccessNeedGroup,
@@ -51,11 +53,16 @@ describe('Test app installation', () => {
     appServer = await initializeAppServer(3001, 'app_settings');
     await appServer.createService(ExampleAppService);
     await appServer.start();
+
+    appServer2 = await initializeAppServer(3002, 'app2_settings');
+    await appServer2.createService(ExampleAppService);
+    await appServer2.start();
   }, 80000);
 
   afterAll(async () => {
     await podServer.stop();
     await appServer.stop();
+    await appServer2.stop();
   });
 
   test('App access needs are correctly declared', async () => {
@@ -438,6 +445,49 @@ describe('Test app installation', () => {
         type: ACTIVITY_TYPES.ACCEPT,
         object: creationActivityUri
       });
+    });
+  });
+
+  test('User installs app 2 which has same requirements', async () => {
+    // Install app2 with only required access needs
+    await installApp(alice, APP2_URI);
+
+    // Access to the Event container is required by App2
+    await expect(
+      alice.call('webacl.resource.getRights', {
+        resourceUri: urlJoin(alice.id, 'data/as/event'),
+        accept: MIME_TYPES.JSON
+      })
+    ).resolves.toMatchObject({
+      '@graph': expect.arrayContaining([
+        expect.objectContaining({
+          'acl:agent': [APP_URI, APP2_URI],
+          'acl:mode': 'acl:Read'
+        }),
+        expect.objectContaining({
+          'acl:agent': [APP_URI, APP2_URI],
+          'acl:mode': 'acl:Write'
+        })
+      ])
+    });
+
+    // Access to the Location container is **not** required by App2
+    await expect(
+      alice.call('webacl.resource.getRights', {
+        resourceUri: urlJoin(alice.id, 'data/as/location'),
+        accept: MIME_TYPES.JSON
+      })
+    ).resolves.toMatchObject({
+      '@graph': expect.arrayContaining([
+        expect.objectContaining({
+          'acl:agent': APP_URI,
+          'acl:mode': 'acl:Read'
+        }),
+        expect.objectContaining({
+          'acl:agent': APP_URI,
+          'acl:mode': 'acl:Write'
+        })
+      ])
     });
   });
 });

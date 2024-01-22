@@ -2,6 +2,7 @@ const urlJoin = require('url-join');
 const fetch = require('node-fetch');
 const { v4: uuidv4 } = require('uuid');
 const DbService = require('moleculer-db');
+const { parseHeader, negotiateContentType, parseJson } = require('@semapps/middlewares');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
 
 module.exports = {
@@ -19,7 +20,7 @@ module.exports = {
     const results = await this.actions.list({});
     this.listeners = results.rows;
 
-    console.log('active listener', this.listeners);
+    console.log('Webhook listeners on start', this.listeners);
 
     await this.broker.call('api.addRoute', {
       route: {
@@ -27,33 +28,50 @@ module.exports = {
         authorization: false,
         authentication: false,
         aliases: {
-          'POST /': 'solid-notifications.listener.process'
+          'POST /': [parseHeader, negotiateContentType, parseJson, 'solid-notifications.listener.process']
         },
-        bodyParsers: { json: true }
+        bodyParsers: false
       }
     });
   },
   actions: {
-    async add(ctx) {
-      const { webId, actionName } = ctx.params;
+    async register(ctx) {
+      const { resourceUri, actionName } = ctx.params;
 
       const appActor = await ctx.call('actors.getApp');
 
       // Check if a channel already exist
 
       // Discover webhook endpoint
-      const storageDescription = await this.getSolidEndpoint(webId);
-      const webhookChannelEndpointUrl = storageDescription['notify:subscription'][1];
+      const storageDescription = await this.getSolidEndpoint(resourceUri);
+      if (!storageDescription) throw new Error(`No storageDescription found for resourceUri ${resourceUri}`);
 
-      // Find user inbox
-      const inboxUri = await ctx.call('activitypub.actor.getCollectionUri', { actorUri: webId, predicate: 'inbox' });
+      // Fetch all subscriptions URLs
+      const results = await Promise.all(
+        storageDescription['notify:subscription'].map(channelSubscriptionUrl =>
+          fetch(channelSubscriptionUrl, {
+            headers: {
+              Accept: 'application/ld+json'
+            }
+          }).then(res => res.ok && res.json())
+        )
+      );
+
+      // Find webhook channel
+      const webhookSubscription = results.find(
+        subscription => subscription && subscription['notify:channelType'] === 'notify:WebhookChannel2023'
+      );
+
+      if (!webhookSubscription) throw new Error(`No webhook subscription URL found for resourceUri ${resourceUri}`);
+
+      // Ensure webhookSubscription['notify:features'] are correct
 
       // Generate a webhook path
       const webhookUrl = urlJoin(this.settings.baseUrl, '.webhooks', uuidv4());
 
       // Create a webhook channel (authenticate with HTTP signature)
-      const { body } = await appServer.call('signature.proxy.query', {
-        url: webhookChannelEndpointUrl,
+      const { body } = await ctx.call('signature.proxy.query', {
+        url: webhookSubscription.id || webhookSubscription['@id'],
         method: 'POST',
         headers: new fetch.Headers({ 'Content-Type': 'application/ld+json' }),
         body: JSON.stringify({
@@ -61,7 +79,7 @@ module.exports = {
             notify: 'http://www.w3.org/ns/solid/notifications#'
           },
           '@type': 'notify:WebhookChannel2023',
-          'notify:topic': inboxUri,
+          'notify:topic': resourceUri,
           'notify:sendTo': webhookUrl
         }),
         actorUri: appActor.id
@@ -94,7 +112,13 @@ module.exports = {
   },
   methods: {
     async getSolidEndpoint(resourceUri) {
-      const solidEndpointUrl = new URL(resourceUri).origin;
+      // TODO See why we can't get the Solid endpoint URL through link headers
+      // const response = await fetch(resourceUri, {
+      //   method: 'HEAD'
+      // });
+      // const linkHeader = response.headers.get('Link');
+
+      const solidEndpointUrl = urlJoin(new URL(resourceUri).origin, '.well-known', 'solid');
       const response = await fetch(solidEndpointUrl, {
         headers: {
           Accept: 'application/ld+json'

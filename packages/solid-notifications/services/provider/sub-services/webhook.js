@@ -2,7 +2,8 @@ const urlJoin = require('url-join');
 const fetch = require('node-fetch');
 const { Errors: E } = require('moleculer-web');
 const { parseHeader, negotiateContentType, parseJson } = require('@semapps/middlewares');
-const { ControlledContainerMixin, getDatasetFromUri } = require('@semapps/ldp');
+const { ControlledContainerMixin, getDatasetFromUri, arrayOf } = require('@semapps/ldp');
+const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
@@ -12,9 +13,17 @@ module.exports = {
     baseUrl: null,
     // ControlledContainerMixin
     acceptedTypes: ['notify:WebhookChannel2023'],
-    readOnly: true
+    excludeFromMirror: true,
+    // Like the CSS, we allow anyone with the URI of the channel to read and delete it
+    // https://communitysolidserver.github.io/CommunitySolidServer/latest/usage/notifications/#unsubscribing-from-a-notification-channel
+    newResourcesPermissions: {
+      anon: {
+        read: true,
+        write: true
+      }
+    }
   },
-  dependencies: ['api'],
+  dependencies: ['api', 'pod'],
   async created() {
     if (!this.settings.baseUrl) throw new Error('The baseUrl setting is required');
     if (!this.createJob) throw new Error('The QueueMixin must be configured with this service');
@@ -36,7 +45,19 @@ module.exports = {
 
     this.channels = [];
 
-    // TODO load all channels from all Pods
+    // Load all channels from all Pods
+    for (const dataset of await this.broker.call('pod.list')) {
+      const container = await this.actions.list({ webId: urlJoin(this.settings.baseUrl, dataset) });
+      for (const channel of arrayOf(container['ldp:contains'])) {
+        this.channels.push({
+          id: channel.id || channel['@id'],
+          topic: channel['notify:topic'],
+          sendTo: channel['notify:sendTo']
+        });
+      }
+    }
+
+    console.log('Webhook channels on start', this.channels);
   },
   actions: {
     async discover(ctx) {
@@ -121,11 +142,11 @@ module.exports = {
         const activity = {
           '@context': 'https://www.w3.org/ns/activitystreams',
           id: 'urn:123456:http://example.com/foo',
-          type: 'Add',
+          type: ACTIVITY_TYPES.ADD,
           object: itemUri,
           target: collectionUri,
           state: '987654',
-          published: '2023-02-09T15:08:12.345Z'
+          published: new Date().toISOString()
         };
 
         this.createJob(
@@ -158,6 +179,15 @@ module.exports = {
         }
 
         return { response };
+      }
+    }
+  },
+  hooks: {
+    after: {
+      delete(ctx, res) {
+        const { resourceUri } = ctx.params;
+        this.channels = this.channels.filter(channel => channel.id !== resourceUri);
+        return res;
       }
     }
   }

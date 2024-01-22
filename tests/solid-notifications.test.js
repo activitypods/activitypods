@@ -2,12 +2,11 @@ const path = require('path');
 const urlJoin = require('url-join');
 const fetch = require('node-fetch');
 const waitForExpect = require('wait-for-expect');
-const { MIME_TYPES } = require('@semapps/mime-types');
 const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
-const { interopContext } = require('@activitypods/core');
 const ExampleAppService = require('./apps/example.app');
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { parseHeader, negotiateContentType, parseJson } = require('@semapps/middlewares');
 const { fetchServer } = require('./utils');
+const { delay } = require('@semapps/ldp');
 
 jest.setTimeout(80000);
 
@@ -16,6 +15,7 @@ const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
 const mockWebhookAction = jest.fn(() => Promise.resolve());
+const mockWebhookAction2 = jest.fn(() => Promise.resolve());
 
 describe('Test app installation', () => {
   let podServer, alice, appServer, webhookChannelSubscriptionUrl, webhookChannelUri;
@@ -34,7 +34,7 @@ describe('Test app installation', () => {
     await appServer.createService(ExampleAppService);
     await appServer.createService({
       name: 'fake-service',
-      actions: { webhook: mockWebhookAction }
+      actions: { webhook: mockWebhookAction, webhook2: mockWebhookAction2 }
     });
     await appServer.start();
     await appServer.call('api.addRoute', {
@@ -43,9 +43,9 @@ describe('Test app installation', () => {
         authorization: false,
         authentication: false,
         aliases: {
-          'POST /': 'fake-service.webhook'
+          'POST /': [parseHeader, negotiateContentType, parseJson, 'fake-service.webhook']
         },
-        bodyParsers: { json: true }
+        bodyParsers: false
       }
     });
 
@@ -134,7 +134,7 @@ describe('Test app installation', () => {
           notify: 'http://www.w3.org/ns/solid/notifications#'
         },
         '@type': 'notify:WebhookChannel2023',
-        'notify:topic': alice.inbox,
+        'notify:topic': alice.outbox,
         'notify:sendTo': urlJoin(APP_SERVER_BASE_URL, 'fake-webhook')
       }),
       actorUri: APP_URI
@@ -151,13 +151,13 @@ describe('Test app installation', () => {
 
     expect(body).toMatchObject({
       type: 'notify:WebhookChannel2023',
-      'notify:topic': alice.inbox,
+      'notify:topic': alice.outbox,
       'notify:sendTo': urlJoin(APP_SERVER_BASE_URL, 'fake-webhook')
     });
   });
 
-  test('Listen to Alice inbox', async () => {
-    alice.call('activitypub.outbox.post', {
+  test('Listen to Alice outbox', async () => {
+    const activity = await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
       type: 'Event',
       content: 'Birthday party !'
@@ -165,6 +165,57 @@ describe('Test app installation', () => {
 
     await waitForExpect(async () => {
       expect(mockWebhookAction).toHaveBeenCalledTimes(1);
+    }, 10000);
+
+    expect(mockWebhookAction.mock.calls[0][0].params).toMatchObject({
+      '@context': 'https://www.w3.org/ns/activitystreams',
+      type: 'Add',
+      object: activity.id || activity['@id'],
+      target: alice.outbox
+    });
+  });
+
+  test('Delete webhook channel', async () => {
+    const response = await appServer.call('signature.proxy.query', {
+      url: webhookChannelUri,
+      method: 'DELETE',
+      actorUri: APP_URI
+    });
+
+    expect(response.status).toBe(204);
+
+    await alice.call('activitypub.outbox.post', {
+      collectionUri: alice.outbox,
+      type: 'Event',
+      content: 'Birthday party 2 !'
+    });
+
+    await delay(5000);
+
+    expect(mockWebhookAction).not.toHaveBeenCalledTimes(2);
+  });
+
+  test('Listen to Alice outbox through listener', async () => {
+    await appServer.call('solid-notifications.listener.register', {
+      resourceUri: alice.outbox,
+      actionName: 'fake-service.webhook2'
+    });
+
+    const activity = await alice.call('activitypub.outbox.post', {
+      collectionUri: alice.outbox,
+      type: 'Event',
+      content: 'Birthday party 3 !'
+    });
+
+    await waitForExpect(async () => {
+      expect(mockWebhookAction2).toHaveBeenCalledTimes(1);
+    }, 5000);
+
+    expect(mockWebhookAction2.mock.calls[0][0].params).toMatchObject({
+      '@context': 'https://www.w3.org/ns/activitystreams',
+      type: 'Add',
+      object: activity.id || activity['@id'],
+      target: alice.outbox
     });
   });
 });

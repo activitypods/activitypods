@@ -134,6 +134,7 @@ const initializeAppServer = async (port, settingsDataset) => {
   });
 
   await broker.createService(NotificationListenerService, {
+    adapter: new TripleStoreAdapter({ type: 'AuthAccount', dataset: settingsDataset }),
     settings: {
       baseUrl
     }

@@ -45,10 +45,33 @@ module.exports = {
       const appActor = await ctx.call('actors.getApp');
 
       // Check if a listener already exist
-      const existingListener = this.listeners.some(
+      const existingListener = this.listeners.find(
         listener => listener.resourceUri === resourceUri && listener.actionName === actionName
       );
-      if (existingListener) return existingListener;
+
+      if (existingListener) {
+        try {
+          // Check if channel still exist
+          const channel = await ctx.call('ldp.remote.get', {
+            resourceUri: existingListener.channelUri,
+            webId: appActor.id,
+            strategy: 'networkOnly'
+          });
+
+          // If the channel still exist, registration is not needed
+          return existingListener;
+        } catch (e) {
+          if (e.code === 404) {
+            this.logger.warn(
+              `Channel ${existingListener.channelUri} doesn't exist anymore. Registering a new channel...`
+            );
+            this.actions.remove({ id: existingListener['@id'] }, { parentCtx: ctx });
+            this.listeners = this.listeners.filter(l => l['@id'] !== existingListener['@id']);
+          } else {
+            throw e;
+          }
+        }
+      }
 
       // Discover webhook endpoint
       const storageDescription = await this.getSolidEndpoint(resourceUri);
@@ -93,17 +116,15 @@ module.exports = {
         actorUri: appActor.id
       });
 
-      const listener = {
+      // Persist listener on the settings dataset
+      const listener = await this._create(ctx, {
         webhookUrl,
         resourceUri,
         channelUri: body.id,
         actionName
-      };
+      });
 
       this.listeners.push(listener);
-
-      // Persist listener on the settings dataset
-      await this._create(ctx, listener);
 
       return listener;
     },
@@ -116,8 +137,7 @@ module.exports = {
       if (listener) {
         await ctx.call(listener.actionName, data);
       } else {
-        this.logger.warn(`No webhook found with URL ${webhookUrl}`);
-        // throw new MoleculerError(`No webhook found with URL ${webhookUrl}`, 404, 'NOT_FOUND');
+        throw new MoleculerError(`No webhook found with URL ${webhookUrl}`, 404, 'NOT_FOUND');
       }
     }
   },

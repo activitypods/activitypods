@@ -52,8 +52,8 @@ services:
     depends_on:
       - redis
     ports:
-      - "4567:4567"
+      - '4567:4567'
     expose:
-      - "4567"
+      - '4567'
     environment:
       REDIS_HOST: 'redis'

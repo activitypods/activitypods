@@ -6,6 +6,15 @@ const { ControlledContainerMixin, getDatasetFromUri, arrayOf } = require('@semap
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
+const queueOptions =
+  process.env.NODE_ENV === 'test'
+    ? {}
+    : {
+        // Try again after 3 minutes and until 12 hours later
+        attempts: 8,
+        backoff: { type: 'exponential', delay: '180000' }
+      };
+
 module.exports = {
   name: 'solid-notifications.provider.webhook',
   mixins: [ControlledContainerMixin],
@@ -47,12 +56,14 @@ module.exports = {
 
     // Load all channels from all Pods
     for (const dataset of await this.broker.call('pod.list')) {
-      const container = await this.actions.list({ webId: urlJoin(this.settings.baseUrl, dataset) });
+      const webId = urlJoin(this.settings.baseUrl, dataset);
+      const container = await this.actions.list({ webId });
       for (const channel of arrayOf(container['ldp:contains'])) {
         this.channels.push({
           id: channel.id || channel['@id'],
           topic: channel['notify:topic'],
-          sendTo: channel['notify:sendTo']
+          sendTo: channel['notify:sendTo'],
+          webId
         });
       }
     }
@@ -119,7 +130,8 @@ module.exports = {
       this.channels.push({
         id: channelUri,
         topic,
-        sendTo
+        sendTo,
+        webId
       });
 
       ctx.meta.$responseType = 'application/ld+json';
@@ -149,18 +161,7 @@ module.exports = {
           published: new Date().toISOString()
         };
 
-        this.createJob(
-          'webhookPost',
-          channel.sendTo,
-          { channel, activity }
-          // process.env.NODE_ENV === 'test'
-          //   ? {}
-          //   : {
-          //       // Try again after 3 minutes and until 12 hours later
-          //       attempts: 8,
-          //       backoff: { type: 'exponential', delay: '180000' }
-          //     }
-        );
+        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
       }
     }
   },
@@ -179,14 +180,18 @@ module.exports = {
         });
 
         if (!response.ok) {
-          // job.retry();
-          throw new Error(`Cannot post to ${channel.sendTo}`);
-          // job.moveToFailed({ });
+          if (response.status === 404) {
+            this.logger.warn(`Webhook ${channel.sendTo} returned a 404 error, deleting it...`);
+            await this.actions.delete({ resourceUri: channel.id, webId: channel.webId });
+          } else {
+            this.logger.warn(`Webhook ${channel.sendTo} returned a ${response.status} error`);
+            throw new Error(`Webhook ${channel.sendTo} returned a ${response.status} error (${response.statusText})`);
+          }
         } else {
           job.progress(100);
         }
 
-        return { response };
+        return { ok: response.ok, status: response.status, statusText: response.statusText };
       }
     }
   },

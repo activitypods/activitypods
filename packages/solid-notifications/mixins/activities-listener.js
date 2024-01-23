@@ -2,6 +2,15 @@ const { getContainerFromUri } = require('@semapps/ldp');
 const { matchActivity } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
+const queueOptions =
+  process.env.NODE_ENV === 'test'
+    ? {}
+    : {
+        // Try again after 3 minutes and until 12 hours later
+        attempts: 8,
+        backoff: { type: 'exponential', delay: '180000' }
+      };
+
 module.exports = {
   name: 'activities-listener',
   dependencies: ['triplestore', 'activitypub.actor', 'solid-notifications.listener'],
@@ -19,25 +28,30 @@ module.exports = {
       webId: 'system'
     });
 
+    // On (re)start, delete existing queue
+    this.getQueue('registerListener').clean(0);
+    this.getQueue('registerListener').clean(0, 'failed');
+    this.getQueue('registerListener').empty();
+
     for (const { grantedBy, specialRights } of nodes) {
       try {
-        const actor = await this.broker.call('activitypub.actor.get', { actorUri: grantedBy.value });
-
         switch (specialRights.value) {
           case 'http://activitypods.org/ns/core#ReadInbox':
-            this.logger.info(`Listening to ${actor.id} inbox...`);
-            await this.broker.call('solid-notifications.listener.register', {
-              resourceUri: actor.inbox,
-              actionName: 'activities-listener.processWebhook'
-            });
+            this.createJob(
+              'registerListener',
+              grantedBy.value + ' inbox',
+              { actorUri: grantedBy.value, collectionPredicate: 'inbox' },
+              queueOptions
+            );
             break;
 
           case 'http://activitypods.org/ns/core#ReadOutbox':
-            this.logger.info(`Listening to ${actor.id} outbox...`);
-            await this.broker.call('solid-notifications.listener.register', {
-              resourceUri: actor.outbox,
-              actionName: 'activities-listener.processWebhook'
-            });
+            this.createJob(
+              'registerListener',
+              grantedBy.value + ' outbox',
+              { actorUri: grantedBy.value, collectionPredicate: 'outbox' },
+              queueOptions
+            );
             break;
         }
       } catch (e) {
@@ -94,24 +108,43 @@ module.exports = {
     async 'app.registered'(ctx) {
       const { accessGrants, appRegistration } = ctx.params;
 
-      const actor = await ctx.call('activitypub.actor.get', { actorUri: appRegistration['interop:registeredBy'] });
-
       // If we were given the permission to read the inbox, add listener
       if (arrayOf(accessGrants['apods:hasSpecialRights']).includes('apods:ReadInbox')) {
-        this.logger.info(`Listening to ${actor.id} inbox...`);
-        await ctx.call('solid-notifications.listener.register', {
-          resourceUri: actor.inbox,
-          actionName: 'activities-listener.processWebhook'
-        });
+        this.createJob(
+          'registerListener',
+          appRegistration['interop:registeredBy'] + ' inbox',
+          { actorUri: appRegistration['interop:registeredBy'], collectionPredicate: 'inbox' },
+          queueOptions
+        );
       }
 
       // If we were given the permission to read the inbox, add listener
       if (arrayOf(accessGrants['apods:hasSpecialRights']).includes('apods:ReadOutbox')) {
-        this.logger.info(`Listening to ${actor.id} outbox...`);
-        await ctx.call('solid-notifications.listener.register', {
-          resourceUri: actor.outbox,
+        this.createJob(
+          'registerListener',
+          appRegistration['interop:registeredBy'] + ' outbox',
+          { actorUri: appRegistration['interop:registeredBy'], collectionPredicate: 'outbox' },
+          queueOptions
+        );
+      }
+    }
+  },
+  queues: {
+    registerListener: {
+      name: '*',
+      async process(job) {
+        const { actorUri, collectionPredicate } = job.data;
+
+        const actor = await this.broker.call('activitypub.actor.get', { actorUri });
+
+        const listener = await this.broker.call('solid-notifications.listener.register', {
+          resourceUri: actor[collectionPredicate],
           actionName: 'activities-listener.processWebhook'
         });
+
+        this.logger.info(`Listening to ${actor.id} ${collectionPredicate}...`);
+
+        return listener;
       }
     }
   }

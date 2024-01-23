@@ -5,12 +5,44 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Pod provider backend",
       "type": "node",
-      "runtimeVersion": "20.9.0",
       "request": "launch",
-      "name": "Launch Program",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run-script", "dev"],
+      "runtimeVersion": "20.9.0",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${file}"
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "name": "Pod provider frontend",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run-script", "start"],
+      "runtimeVersion": "20.9.0",
+      "skipFiles": ["<node_internals>/**"],
+      "cwd": "${workspaceFolder}/frontend"
+    },
+    {
+      "name": "App boilerplate backend",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run-script", "dev"],
+      "runtimeVersion": "20.9.0",
+      "skipFiles": ["<node_internals>/**"],
+      "cwd": "${workspaceFolder}/app-boilerplate/backend"
+    },
+    {
+      "name": "App boilerplate frontend",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run-script", "start"],
+      "runtimeVersion": "20.9.0",
+      "skipFiles": ["<node_internals>/**"],
+      "cwd": "${workspaceFolder}/app-boilerplate/frontend"
     }
   ]
 }

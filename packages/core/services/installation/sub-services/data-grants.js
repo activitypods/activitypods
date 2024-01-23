@@ -1,5 +1,5 @@
 const urlJoin = require('url-join');
-const { ControlledContainerMixin, isURL, getSlugFromUri } = require('@semapps/ldp');
+const { ControlledContainerMixin, isURL, getSlugFromUri, arrayOf } = require('@semapps/ldp');
 
 module.exports = {
   name: 'data-grants',
@@ -17,10 +17,12 @@ module.exports = {
   async started() {
     const baseUrl = await this.broker.call('ldp.getBaseUrl');
     for (let dataset of await this.broker.call('pod.list')) {
-      const results = await this.actions.list({});
-      for (const dataGrant of results.rows) {
+      const webId = urlJoin(baseUrl, dataset);
+      this.logger.info(`Registering containers for ${webId}...`);
+      const results = await this.actions.list({ webId });
+      for (const dataGrant of arrayOf(results['ldp:contains'])) {
         await this.broker.call('ldp.registry.register', {
-          path: dataGrant['apods:registeredContainer'].replace(baseUrl, ''),
+          path: dataGrant['apods:registeredContainer'].replace(urlJoin(webId, 'data'), ''),
           acceptedTypes: dataGrant['apods:registeredClass'],
           dataset
         });

@@ -150,16 +150,22 @@ module.exports = {
         };
 
         this.createJob(
-          'remotePost',
+          'webhookPost',
           channel.sendTo,
-          { channel, activity },
-          { attempts: 10, backoff: { type: 'exponential', delay: 1000 } }
+          { channel, activity }
+          // process.env.NODE_ENV === 'test'
+          //   ? {}
+          //   : {
+          //       // Try again after 3 minutes and until 12 hours later
+          //       attempts: 8,
+          //       backoff: { type: 'exponential', delay: '180000' }
+          //     }
         );
       }
     }
   },
   queues: {
-    remotePost: {
+    webhookPost: {
       name: '*',
       async process(job) {
         const { channel, activity } = job.data;
@@ -173,7 +179,9 @@ module.exports = {
         });
 
         if (!response.ok) {
-          job.retry();
+          // job.retry();
+          throw new Error(`Cannot post to ${channel.sendTo}`);
+          // job.moveToFailed({ });
         } else {
           job.progress(100);
         }

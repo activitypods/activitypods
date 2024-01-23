@@ -18,7 +18,8 @@
     "@semapps/mime-types": "0.6.0-alpha.8",
     "@semapps/nodeinfo": "0.6.0-alpha.8",
     "moleculer": "^0.14.19",
-    "url-join": "^4.0.1"
+    "url-join": "^4.0.1",
+    "formdata-to-string": "2.0.2"
   },
   "publishConfig": {
     "access": "public"

@@ -4,6 +4,7 @@ const ActorsService = require('./services/actors');
 const AppRegistrationsService = require('./services/app-registrations');
 const AccessGrantsService = require('./services/access-grants');
 const DataGrantsService = require('./services/data-grants');
+const PodProxyService = require('./services/pod-proxy');
 const RegistrationService = require('./services/registration');
 
 module.exports = {
@@ -53,6 +54,8 @@ module.exports = {
     this.broker.createService(AppRegistrationsService);
     this.broker.createService(DataGrantsService);
     this.broker.createService(AccessGrantsService);
+
+    this.broker.createService(PodProxyService);
   },
   async started() {
     await this.broker.waitForServices(['actors'], 10000);

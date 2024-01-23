@@ -47,7 +47,8 @@ module.exports = {
 
       const publicKey = await importJWK(this.publicJwk, this.settings.alg);
 
-      const { payload } = await jwtVerify(token, publicKey);
+      // Allow expired token to last one more month
+      const { payload } = await jwtVerify(token, publicKey, { clockTolerance: 2629800 });
 
       return payload;
     }

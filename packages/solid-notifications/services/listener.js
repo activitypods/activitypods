@@ -2,6 +2,7 @@ const urlJoin = require('url-join');
 const fetch = require('node-fetch');
 const { v4: uuidv4 } = require('uuid');
 const DbService = require('moleculer-db');
+const { MoleculerError } = require('moleculer').Errors;
 const { parseHeader, negotiateContentType, parseJson } = require('@semapps/middlewares');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
 
@@ -10,9 +11,12 @@ module.exports = {
   mixins: [DbService],
   adapter: new TripleStoreAdapter({ type: 'WebhookChannelListener', dataset: 'settings' }),
   settings: {
-    baseUrl: undefined
+    baseUrl: undefined,
+    // DbService settings
+    idField: '@id'
   },
-  dependencies: ['api'],
+  // TODO remove dependency to actors service by passing the app URI in the settings ?
+  dependencies: ['api', 'actors'],
   async started() {
     if (!this.settings.baseUrl) throw new Error(`The baseUrl setting is required`);
 
@@ -28,7 +32,7 @@ module.exports = {
         authorization: false,
         authentication: false,
         aliases: {
-          'POST /': [parseHeader, negotiateContentType, parseJson, 'solid-notifications.listener.process']
+          'POST /': [parseHeader, negotiateContentType, parseJson, 'solid-notifications.listener.transfer']
         },
         bodyParsers: false
       }
@@ -40,7 +44,11 @@ module.exports = {
 
       const appActor = await ctx.call('actors.getApp');
 
-      // Check if a channel already exist
+      // Check if a listener already exist
+      const existingListener = this.listeners.some(
+        listener => listener.resourceUri === resourceUri && listener.actionName === actionName
+      );
+      if (existingListener) return existingListener;
 
       // Discover webhook endpoint
       const storageDescription = await this.getSolidEndpoint(resourceUri);
@@ -87,16 +95,19 @@ module.exports = {
 
       const listener = {
         webhookUrl,
+        resourceUri,
         channelUri: body.id,
         actionName
       };
 
       this.listeners.push(listener);
 
-      // Save webhook + channel on the settings dataset
-      return await this._create(ctx, listener);
+      // Persist listener on the settings dataset
+      await this._create(ctx, listener);
+
+      return listener;
     },
-    async process(ctx) {
+    async transfer(ctx) {
       const { uuid, ...data } = ctx.params;
       const webhookUrl = urlJoin(this.settings.baseUrl, '.webhooks', uuid);
 
@@ -106,7 +117,7 @@ module.exports = {
         await ctx.call(listener.actionName, data);
       } else {
         this.logger.warn(`No webhook found with URL ${webhookUrl}`);
-        throw new MoleculerError(`No webhook found with URL ${webhookUrl}`, 404, 'NOT_FOUND');
+        // throw new MoleculerError(`No webhook found with URL ${webhookUrl}`, 404, 'NOT_FOUND');
       }
     }
   },

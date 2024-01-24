@@ -146,23 +146,94 @@ module.exports = {
     }
   },
   events: {
-    async 'activitypub.collection.added'(ctx) {
-      const { collectionUri, itemUri } = ctx.params;
-      const matchingChannels = this.channels.filter(c => c.topic === collectionUri);
-
-      for (const channel of matchingChannels) {
+    async 'ldp.resource.created'(ctx) {
+      const { resourceUri } = ctx.params;
+      for (const channel of this.getMatchingChannels(resourceUri)) {
         const activity = {
-          '@context': 'https://www.w3.org/ns/activitystreams',
-          id: 'urn:123456:http://example.com/foo',
-          type: ACTIVITY_TYPES.ADD,
-          object: itemUri,
-          target: collectionUri,
-          state: '987654',
-          published: new Date().toISOString()
+          type: ACTIVITY_TYPES.CREATE,
+          object: resourceUri
         };
-
         this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
       }
+    },
+    async 'ldp.resource.updated'(ctx) {
+      const { resourceUri } = ctx.params;
+      for (const channel of this.getMatchingChannels(resourceUri)) {
+        const activity = {
+          type: ACTIVITY_TYPES.UPDATE,
+          object: resourceUri
+        };
+        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+      }
+    },
+    async 'ldp.resource.patched'(ctx) {
+      const { resourceUri } = ctx.params;
+      for (const channel of this.getMatchingChannels(resourceUri)) {
+        const activity = {
+          type: ACTIVITY_TYPES.UPDATE,
+          object: resourceUri
+        };
+        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+      }
+    },
+    async 'ldp.resource.deleted'(ctx) {
+      const { resourceUri } = ctx.params;
+      for (const channel of this.getMatchingChannels(resourceUri)) {
+        const activity = {
+          type: ACTIVITY_TYPES.DELETE,
+          object: resourceUri
+        };
+        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+      }
+    },
+    async 'ldp.container.attached'(ctx) {
+      const { containerUri, resourceUri } = ctx.params;
+      for (const channel of this.getMatchingChannels(containerUri)) {
+        const activity = {
+          type: ACTIVITY_TYPES.ADD,
+          object: resourceUri,
+          target: containerUri
+        };
+        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+      }
+    },
+    async 'ldp.container.detached'(ctx) {
+      const { containerUri, resourceUri } = ctx.params;
+      for (const channel of this.getMatchingChannels(containerUri)) {
+        const activity = {
+          type: ACTIVITY_TYPES.REMOVE,
+          object: resourceUri,
+          target: containerUri
+        };
+        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+      }
+    },
+    async 'activitypub.collection.added'(ctx) {
+      const { collectionUri, itemUri } = ctx.params;
+      for (const channel of this.getMatchingChannels(collectionUri)) {
+        const activity = {
+          type: ACTIVITY_TYPES.ADD,
+          object: itemUri,
+          target: collectionUri
+        };
+        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+      }
+    },
+    async 'activitypub.collection.removed'(ctx) {
+      const { collectionUri, itemUri } = ctx.params;
+      for (const channel of this.getMatchingChannels(collectionUri)) {
+        const activity = {
+          type: ACTIVITY_TYPES.REMOVE,
+          object: itemUri,
+          target: collectionUri
+        };
+        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+      }
+    }
+  },
+  methods: {
+    getMatchingChannels(topic) {
+      return this.channels.filter(c => c.topic === topic);
     }
   },
   queues: {
@@ -177,7 +248,11 @@ module.exports = {
             headers: {
               'Content-Type': 'application/ld+json'
             },
-            body: JSON.stringify(activity)
+            body: JSON.stringify({
+              '@context': 'https://www.w3.org/ns/activitystreams',
+              ...activity,
+              published: new Date().toISOString()
+            })
           });
 
           if (response.status === 404) {

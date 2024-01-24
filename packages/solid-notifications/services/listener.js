@@ -15,16 +15,13 @@ module.exports = {
     // DbService settings
     idField: '@id'
   },
-  // TODO remove dependency to actors service by passing the app URI in the settings ?
-  dependencies: ['api', 'actors'],
+  dependencies: ['api', 'app'],
   async started() {
     if (!this.settings.baseUrl) throw new Error(`The baseUrl setting is required`);
 
     // Retrieve all active listeners
     const results = await this.actions.list({});
     this.listeners = results.rows;
-
-    console.log('Webhook listeners on start', this.listeners);
 
     await this.broker.call('api.addRoute', {
       route: {
@@ -42,7 +39,7 @@ module.exports = {
     async register(ctx) {
       const { resourceUri, actionName } = ctx.params;
 
-      const appActor = await ctx.call('actors.getApp');
+      const appActor = await ctx.call('app.get');
 
       // Check if a listener already exist
       const existingListener = this.listeners.find(
@@ -139,6 +136,9 @@ module.exports = {
       } else {
         throw new MoleculerError(`No webhook found with URL ${webhookUrl}`, 404, 'NOT_FOUND');
       }
+    },
+    get() {
+      return this.listeners;
     }
   },
   methods: {

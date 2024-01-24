@@ -67,8 +67,6 @@ module.exports = {
         });
       }
     }
-
-    console.log('Webhook channels on start', this.channels);
   },
   actions: {
     async discover(ctx) {
@@ -143,6 +141,9 @@ module.exports = {
         },
         { parentCtx: ctx }
       );
+    },
+    get() {
+      return this.channels;
     }
   },
   events: {

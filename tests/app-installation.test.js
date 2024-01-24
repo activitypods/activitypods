@@ -2,6 +2,7 @@ const path = require('path');
 const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const { arrayOf } = require('@semapps/ldp');
 const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
 const { interopContext } = require('@activitypods/core');
 const ExampleAppService = require('./apps/example.app');
@@ -69,11 +70,10 @@ describe('Test app installation', () => {
     await waitForExpect(async () => {
       app = await appServer.call('ldp.resource.get', {
         resourceUri: APP_URI,
-        jsonContext: interopContext,
         accept: MIME_TYPES.JSON
       });
       expect(app).toMatchObject({
-        '@type': expect.arrayContaining(['interop:Application']),
+        type: expect.arrayContaining(['interop:Application']),
         'interop:applicationName': 'Example App',
         'interop:applicationDescription': 'An ActivityPods app for integration tests',
         'interop:hasAccessNeedGroup': expect.anything()
@@ -81,7 +81,7 @@ describe('Test app installation', () => {
     });
 
     let accessNeedGroup;
-    for (const accessNeedUri of app['interop:hasAccessNeedGroup']) {
+    for (const accessNeedUri of arrayOf(app['interop:hasAccessNeedGroup'])) {
       accessNeedGroup = await appServer.call('ldp.resource.get', {
         resourceUri: accessNeedUri,
         jsonContext: interopContext,

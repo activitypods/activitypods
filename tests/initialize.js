@@ -6,10 +6,10 @@ const { MIME_TYPES } = require('@semapps/mime-types');
 const { NodeinfoService } = require('@semapps/nodeinfo');
 const { ProxyService } = require('@semapps/signature');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
-const { apods, interop, oidc } = require('@semapps/ontologies');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
 const { CoreService, interopContext } = require('@activitypods/core');
+const { apods, interop, oidc, notify } = require('@activitypods/ontologies');
 const { NotificationListenerService } = require('@activitypods/solid-notifications');
 const { CoreService: SemAppsCoreService } = require('@semapps/core');
 const { AnnouncerService } = require('@activitypods/announcer');
@@ -112,7 +112,7 @@ const initializeAppServer = async (port, settingsDataset) => {
         password: CONFIG.JENA_PASSWORD,
         mainDataset: 'testData'
       },
-      ontologies: [interop, oidc, apods],
+      ontologies: [interop, oidc, apods, notify],
       api: {
         port
       },
@@ -134,7 +134,7 @@ const initializeAppServer = async (port, settingsDataset) => {
   });
 
   await broker.createService(NotificationListenerService, {
-    adapter: new TripleStoreAdapter({ type: 'AuthAccount', dataset: settingsDataset }),
+    adapter: new TripleStoreAdapter({ type: 'WebhookChannelListener', dataset: settingsDataset }),
     settings: {
       baseUrl
     }

@@ -2,11 +2,12 @@ const formDataToString = require('formdata-to-string');
 
 module.exports = {
   name: 'pod-proxy',
+  dependencies: ['app'],
   actions: {
     async get(ctx) {
       const { resourceUri, actorUri } = ctx.params;
 
-      const app = await ctx.call('actors.getApp');
+      const app = await ctx.call('app.get');
 
       const actor = await ctx.call('activitypub.actor.get', { actorUri });
 

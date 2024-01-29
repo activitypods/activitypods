@@ -21,7 +21,7 @@ module.exports = {
       required: [
         {
           registeredClass: AS_PREFIX + 'Event',
-          accessMode: ['acl:Read', 'acl:Create']
+          accessMode: ['acl:Read', 'acl:Write']
         },
         {
           registeredClass: 'http://www.w3.org/2006/vcard/ns#Individual',

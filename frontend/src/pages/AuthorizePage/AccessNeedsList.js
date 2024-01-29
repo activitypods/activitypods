@@ -37,9 +37,6 @@ const specialRights = {
   }
 };
 
-const ACL_READ_RIGHTS = ['acl:Read'];
-const ACL_WRITE_RIGHTS = ['acl:Create', 'acl:Update', 'acl:Write', 'acl:Append', 'acl:Delete'];
-
 const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowedAccessNeeds }) => {
   const translate = useTranslate();
 
@@ -52,18 +49,24 @@ const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowed
           icon
         };
       } else {
-        let accessRights = [];
-        const hasRead = arrayFromLdField(accessNeed['interop:accessMode']).some(a => ACL_READ_RIGHTS.includes(a));
-        const hasWrite = arrayFromLdField(accessNeed['interop:accessMode']).some(a => ACL_WRITE_RIGHTS.includes(a));
+        const accessRights = [];
+
+        const hasRead = arrayFromLdField(accessNeed['interop:accessMode']).includes('acl:Read');
+        const hasAppend = arrayFromLdField(accessNeed['interop:accessMode']).includes('acl:Append');
+        const hasWrite = arrayFromLdField(accessNeed['interop:accessMode']).includes('acl:Write');
+        const hasControl = arrayFromLdField(accessNeed['interop:accessMode']).includes('acl:Control');
+
         if (hasRead) accessRights.push(translate('app.authorization.read'));
+        if (hasAppend) accessRights.push(translate('app.authorization.append'));
         if (hasWrite) accessRights.push(translate('app.authorization.write'));
+        if (hasControl) accessRights.push(translate('app.authorization.control'));
 
         return {
           label: translate('app.authorization.access_resources_of_type', {
             access_right: accessRights.join('/'),
             type: accessNeed['apods:registeredClass']
           }),
-          icon: hasWrite ? CreateNewFolderIcon : FolderIcon
+          icon: hasAppend || hasWrite ? CreateNewFolderIcon : FolderIcon
         };
       }
     },

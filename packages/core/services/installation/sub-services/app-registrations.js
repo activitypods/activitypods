@@ -1,6 +1,4 @@
 const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const interopContext = require('../../../config/context-interop.json');
 
 module.exports = {
   name: 'app-registrations',
@@ -22,9 +20,7 @@ module.exports = {
         {
           filters: {
             'http://www.w3.org/ns/solid/interop#registeredAgent': appUri
-          },
-          jsonContext: interopContext,
-          accept: MIME_TYPES.JSON
+          }
         },
         { parentCtx: ctx }
       );
@@ -33,39 +29,32 @@ module.exports = {
     }
   },
   hooks: {
-    before: {
-      async delete(ctx) {
-        const { resourceUri, webId } = ctx.params;
-
-        const appRegistration = await ctx.call('ldp.resource.get', {
-          resourceUri,
-          jsonContext: interopContext,
-          accept: MIME_TYPES.JSON,
-          webId
-        });
+    after: {
+      async delete(ctx, res) {
+        const appRegistration = res.oldData;
 
         // DELETE ALL RELATED GRANTS
 
         for (const accessGrantUri of arrayOf(appRegistration['interop:hasAccessGrant'])) {
-          const accessGrant = await ctx.call('ldp.resource.get', {
+          const accessGrant = await ctx.call('access-grants.get', {
             resourceUri: accessGrantUri,
-            jsonContext: interopContext,
-            accept: MIME_TYPES.JSON,
-            webId
+            webId: 'system'
           });
 
           for (const dataGrantUri of arrayOf(accessGrant['interop:hasDataGrant'])) {
-            await ctx.call('ldp.resource.delete', {
+            await ctx.call('data-grants.delete', {
               resourceUri: dataGrantUri,
-              webId
+              webId: 'system'
             });
           }
 
-          await ctx.call('ldp.resource.delete', {
+          await ctx.call('access-grants.delete', {
             resourceUri: accessGrantUri,
-            webId
+            webId: 'system'
           });
         }
+
+        return res;
       }
     }
   }

@@ -107,6 +107,36 @@ module.exports = {
 
         ctx.params.resource['apods:registeredContainer'] = containerUri;
       }
+    },
+    after: {
+      async delete(ctx, res) {
+        const containerUri = res.oldData['apods:registeredContainer'];
+        const appUri = res.oldData['interop:grantee'];
+
+        // If we remove a right which hasn't been granted, no error will be thrown
+        await ctx.call('webacl.resource.removeRights', {
+          resourceUri: containerUri,
+          rights: {
+            user: {
+              uri: appUri,
+              read: true,
+              write: true
+            },
+            default: {
+              user: {
+                uri: appUri,
+                read: true,
+                append: true,
+                write: true,
+                control: true
+              }
+            }
+          },
+          webId: 'system'
+        });
+
+        return res;
+      }
     }
   }
 };

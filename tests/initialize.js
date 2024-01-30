@@ -1,6 +1,7 @@
 const path = require('path');
 const { ServiceBroker } = require('moleculer');
 const { AuthAccountService } = require('@semapps/auth');
+const { CoreService: SemAppsCoreService } = require('@semapps/core');
 const { delay } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { NodeinfoService } = require('@semapps/nodeinfo');
@@ -8,10 +9,9 @@ const { ProxyService } = require('@semapps/signature');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
-const { CoreService, interopContext } = require('@activitypods/core');
+const { CoreService, AppControlMiddleware } = require('@activitypods/core');
 const { apods, interop, oidc, notify } = require('@activitypods/ontologies');
 const { NotificationListenerService } = require('@activitypods/solid-notifications');
-const { CoreService: SemAppsCoreService } = require('@semapps/core');
 const { AnnouncerService } = require('@activitypods/announcer');
 const CONFIG = require('./config');
 
@@ -60,7 +60,8 @@ const initialize = async (port, settingsDataset) => {
       // Uncomment the next line run all tests with memory cacher
       // CacherMiddleware({ type: 'Memory' }),
       WebAclMiddleware({ baseUrl, podProvider: true }),
-      ObjectsWatcherMiddleware({ baseUrl, podProvider: true })
+      ObjectsWatcherMiddleware({ baseUrl, podProvider: true }),
+      AppControlMiddleware({ baseUrl })
     ],
     logger
   });
@@ -148,7 +149,6 @@ const initializeAppServer = async (port, settingsDataset) => {
 const getAppAccessNeeds = async (actor, appUri) => {
   const app = await actor.call('ldp.resource.get', {
     resourceUri: appUri,
-    jsonContext: interopContext,
     accept: MIME_TYPES.JSON
   });
 
@@ -156,7 +156,6 @@ const getAppAccessNeeds = async (actor, appUri) => {
   for (const accessNeedUri of app['interop:hasAccessNeedGroup']) {
     accessNeedGroup = await actor.call('ldp.resource.get', {
       resourceUri: accessNeedUri,
-      jsonContext: interopContext,
       accept: MIME_TYPES.JSON
     });
     if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
@@ -179,7 +178,6 @@ const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRig
 
   await actor.call('activitypub.outbox.post', {
     collectionUri: actor.outbox,
-    '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
     type: 'apods:Install',
     object: appUri,
     'apods:acceptedAccessNeeds': acceptedAccessNeeds,

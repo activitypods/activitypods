@@ -153,14 +153,7 @@ module.exports = {
         const appRegistration = await ctx.call('app-registrations.getForApp', { appUri });
 
         if (appRegistration) {
-          // We delete the registration here (and not through the activitypub.object.process action)
-          // because we want the AppRegistration service hooks to be called
-          await ctx.call('app-registrations.delete', {
-            resourceUri: appRegistration.id || appRegistration['@id'],
-            webId: emitterUri
-          });
-
-          // Warn the app that the AppRegistration has been deleted (it will delete the remote cache)
+          // Delete registration locally (through activitypub.object.process) and warn the app to delete its cache
           await ctx.call('activitypub.outbox.post', {
             collectionUri: urlJoin(emitterUri, 'outbox'),
             type: ACTIVITY_TYPES.DELETE,

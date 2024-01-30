@@ -74,13 +74,15 @@ module.exports = {
       optional: 'Optional access',
       access_resources_of_type: '%{access_right} resources of type %{type}',
       read: 'Read',
+      append: 'Append',
       write: 'Write',
+      control: 'Control',
       read_inbox: 'Read my inbox',
       read_outbox: 'Read my outbox',
       post_outbox: 'Post in my outbox',
       send_notification: 'Send me notifications',
-      query_sparql_endpoint: 'Search on my pod',
-      create_acl_group: 'Create ACL group'
+      query_sparql_endpoint: 'Search on my data',
+      create_acl_group: 'Create permissions group'
     },
     card: {
       add_contact: 'Add a contact',

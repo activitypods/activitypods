@@ -38,6 +38,7 @@ module.exports = {
         const dataset = getSlugFromUri(webId);
         const appUri = resource['interop:grantee'];
         const resourceType = resource['apods:registeredClass'];
+        const accessMode = arrayOf(resource['interop:accessMode']);
 
         // Match a string of type ldp:Container
         const regex = /^([^:]+):([^:]+)$/gm;
@@ -83,10 +84,42 @@ module.exports = {
         const containerUri = await this.broker.call('ldp.registry.getUri', { path: containerRegistration.path, webId });
 
         // Give read-write permission to the application
-        // TODO adapt to requested permissions
+        // For details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
         await ctx.call('webacl.resource.addRights', {
           resourceUri: containerUri,
           additionalRights: {
+            // Container rights
+            user: {
+              uri: appUri,
+              read: accessMode.includes('acl:Read'),
+              write: accessMode.includes('acl:Write')
+            },
+            // Resources default rights
+            default: {
+              user: {
+                uri: appUri,
+                read: accessMode.includes('acl:Read'),
+                append: accessMode.includes('acl:Append'),
+                write: accessMode.includes('acl:Write'),
+                control: accessMode.includes('acl:Control')
+              }
+            }
+          },
+          webId: 'system'
+        });
+
+        ctx.params.resource['apods:registeredContainer'] = containerUri;
+      }
+    },
+    after: {
+      async delete(ctx, res) {
+        const containerUri = res.oldData['apods:registeredContainer'];
+        const appUri = res.oldData['interop:grantee'];
+
+        // If we remove a right which hasn't been granted, no error will be thrown
+        await ctx.call('webacl.resource.removeRights', {
+          resourceUri: containerUri,
+          rights: {
             user: {
               uri: appUri,
               read: true,
@@ -96,14 +129,16 @@ module.exports = {
               user: {
                 uri: appUri,
                 read: true,
-                write: true
+                append: true,
+                write: true,
+                control: true
               }
             }
           },
           webId: 'system'
         });
 
-        ctx.params.resource['apods:registeredContainer'] = containerUri;
+        return res;
       }
     }
   }

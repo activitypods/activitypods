@@ -119,8 +119,6 @@ module.exports = {
 
         const appRegistration = await ctx.call('app-registrations.get', {
           resourceUri: appRegistrationUri,
-          jsonContext: interopContext,
-          accept: MIME_TYPES.JSON,
           webId: recipientUri
         });
 
@@ -155,11 +153,11 @@ module.exports = {
         const appRegistration = await ctx.call('app-registrations.getForApp', { appUri });
 
         if (appRegistration) {
+          // Delete registration locally (through activitypub.object.process) and warn the app to delete its cache
           await ctx.call('activitypub.outbox.post', {
             collectionUri: urlJoin(emitterUri, 'outbox'),
-            '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
             type: ACTIVITY_TYPES.DELETE,
-            object: appRegistration['@id'],
+            object: appRegistration.id || appRegistration['@id'],
             to: appUri
           });
         }

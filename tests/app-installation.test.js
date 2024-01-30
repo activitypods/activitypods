@@ -4,7 +4,6 @@ const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { arrayOf } = require('@semapps/ldp');
 const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
-const { interopContext } = require('@activitypods/core');
 const ExampleAppService = require('./apps/example.app');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 
@@ -19,6 +18,8 @@ describe('Test app installation', () => {
     appServer,
     appServer2,
     app,
+    eventsContainerUri,
+    locationsContainerUri,
     requiredAccessNeedGroup,
     optionalAccessNeedGroup,
     requiredAccessGrant,
@@ -84,7 +85,6 @@ describe('Test app installation', () => {
     for (const accessNeedUri of arrayOf(app['interop:hasAccessNeedGroup'])) {
       accessNeedGroup = await appServer.call('ldp.resource.get', {
         resourceUri: accessNeedUri,
-        jsonContext: interopContext,
         accept: MIME_TYPES.JSON
       });
       if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
@@ -97,7 +97,7 @@ describe('Test app installation', () => {
     // REQUIRED ACCESS NEEDS
 
     expect(requiredAccessNeedGroup).toMatchObject({
-      '@type': 'interop:AccessNeedGroup',
+      type: 'interop:AccessNeedGroup',
       'interop:accessNecessity': 'interop:AccessRequired',
       'interop:accessScenario': 'interop:PersonalAccess',
       'interop:authenticatedAs': 'interop:SocialAgent',
@@ -108,20 +108,19 @@ describe('Test app installation', () => {
     await expect(
       appServer.call('ldp.resource.get', {
         resourceUri: requiredAccessNeedGroup['interop:hasAccessNeed'],
-        jsonContext: interopContext,
         accept: MIME_TYPES.JSON
       })
     ).resolves.toMatchObject({
-      '@type': 'interop:AccessNeed',
-      'apods:registeredClass': 'https://www.w3.org/ns/activitystreams#Event',
+      type: 'interop:AccessNeed',
+      'apods:registeredClass': 'as:Event',
       'interop:accessNecessity': 'interop:AccessRequired',
-      'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Create'])
+      'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Write', 'acl:Control'])
     });
 
     // OPTIONAL ACCESS NEEDS
 
     expect(optionalAccessNeedGroup).toMatchObject({
-      '@type': 'interop:AccessNeedGroup',
+      type: 'interop:AccessNeedGroup',
       'interop:accessNecessity': 'interop:AccessOptional',
       'interop:accessScenario': 'interop:PersonalAccess',
       'interop:authenticatedAs': 'interop:SocialAgent',
@@ -132,22 +131,20 @@ describe('Test app installation', () => {
     await expect(
       appServer.call('ldp.resource.get', {
         resourceUri: optionalAccessNeedGroup['interop:hasAccessNeed'],
-        jsonContext: interopContext,
         accept: MIME_TYPES.JSON
       })
     ).resolves.toMatchObject({
-      '@type': 'interop:AccessNeed',
-      'apods:registeredClass': 'https://www.w3.org/ns/activitystreams#Location',
+      type: 'interop:AccessNeed',
+      'apods:registeredClass': 'as:Location',
       'interop:accessNecessity': 'interop:AccessOptional',
-      'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Create'])
+      'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append'])
     });
   });
 
   test('User installs app and grants all access needs', async () => {
     await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
-      '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
-      '@type': 'apods:Install',
+      type: 'apods:Install',
       object: APP_URI,
       'apods:acceptedAccessNeeds': [
         requiredAccessNeedGroup['interop:hasAccessNeed'],
@@ -180,12 +177,11 @@ describe('Test app installation', () => {
     // Get the app registration from the app server (it should be public like AccessGrants and DataGrants)
     appRegistration = await appServer.call('ldp.remote.get', {
       resourceUri: appRegistrationUri,
-      jsonContext: interopContext,
       accept: MIME_TYPES.JSON
     });
 
     expect(appRegistration).toMatchObject({
-      '@type': 'interop:ApplicationRegistration',
+      type: 'interop:ApplicationRegistration',
       'interop:registeredAgent': APP_URI,
       'interop:registeredBy': alice.id,
       'interop:hasAccessGrant': expect.arrayContaining([])
@@ -195,59 +191,56 @@ describe('Test app installation', () => {
       appRegistration['interop:hasAccessGrant'].map(accessGrantUri =>
         appServer.call('ldp.remote.get', {
           resourceUri: accessGrantUri,
-          jsonContext: interopContext,
           accept: MIME_TYPES.JSON
         })
       )
     );
 
-    requiredAccessGrant = accessGrants.find(g => g['interop:hasAccessNeedGroup'] === requiredAccessNeedGroup['@id']);
-    optionalAccessGrant = accessGrants.find(g => g['interop:hasAccessNeedGroup'] === optionalAccessNeedGroup['@id']);
+    requiredAccessGrant = accessGrants.find(g => g['interop:hasAccessNeedGroup'] === requiredAccessNeedGroup.id);
+    optionalAccessGrant = accessGrants.find(g => g['interop:hasAccessNeedGroup'] === optionalAccessNeedGroup.id);
 
     expect(requiredAccessGrant).toMatchObject({
-      '@type': 'interop:AccessGrant',
+      type: 'interop:AccessGrant',
       'interop:grantedBy': alice.id,
       'interop:grantee': APP_URI,
-      'interop:hasAccessNeedGroup': requiredAccessNeedGroup['@id']
+      'interop:hasAccessNeedGroup': requiredAccessNeedGroup.id
     });
 
     await expect(
       appServer.call('ldp.remote.get', {
         resourceUri: requiredAccessGrant['interop:hasDataGrant'],
-        jsonContext: interopContext,
         accept: MIME_TYPES.JSON
       })
     ).resolves.toMatchObject({
-      '@type': 'interop:DataGrant',
-      'apods:registeredClass': 'https://www.w3.org/ns/activitystreams#Event',
+      type: 'interop:DataGrant',
+      'apods:registeredClass': 'as:Event',
       'apods:registeredContainer': urlJoin(alice.id, 'data/as/event'),
       'interop:dataOwner': alice.id,
       'interop:grantee': APP_URI,
-      'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Create']),
+      'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Write', 'acl:Control']),
       'interop:satisfiesAccessNeed': requiredAccessNeedGroup['interop:hasAccessNeed'],
       'interop:scopeOfGrant': 'interop:All'
     });
 
     expect(optionalAccessGrant).toMatchObject({
-      '@type': 'interop:AccessGrant',
+      type: 'interop:AccessGrant',
       'interop:grantedBy': alice.id,
       'interop:grantee': APP_URI,
-      'interop:hasAccessNeedGroup': optionalAccessNeedGroup['@id']
+      'interop:hasAccessNeedGroup': optionalAccessNeedGroup.id
     });
 
     await expect(
       appServer.call('ldp.remote.get', {
         resourceUri: optionalAccessGrant['interop:hasDataGrant'],
-        jsonContext: interopContext,
         accept: MIME_TYPES.JSON
       })
     ).resolves.toMatchObject({
-      '@type': 'interop:DataGrant',
-      'apods:registeredClass': 'https://www.w3.org/ns/activitystreams#Location',
+      type: 'interop:DataGrant',
+      'apods:registeredClass': 'as:Location',
       'apods:registeredContainer': urlJoin(alice.id, 'data/as/location'),
       'interop:dataOwner': alice.id,
       'interop:grantee': APP_URI,
-      'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Create']),
+      'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append']),
       'interop:satisfiesAccessNeed': optionalAccessNeedGroup['interop:hasAccessNeed'],
       'interop:scopeOfGrant': 'interop:All'
     });
@@ -272,55 +265,148 @@ describe('Test app installation', () => {
       })
     ).resolves.toBeTruthy();
 
+    eventsContainerUri = urlJoin(alice.id, 'data/as/event');
+    locationsContainerUri = urlJoin(alice.id, 'data/as/location');
+
     await expect(
       alice.call('ldp.container.exist', {
-        containerUri: urlJoin(alice.id, 'data/as/event')
+        containerUri: eventsContainerUri
       })
     ).resolves.toBeTruthy();
 
     await expect(
       alice.call('ldp.container.exist', {
-        containerUri: urlJoin(alice.id, 'data/as/location')
+        containerUri: locationsContainerUri
       })
     ).resolves.toBeTruthy();
 
-    await expect(
-      alice.call('webacl.resource.getRights', {
-        resourceUri: urlJoin(alice.id, 'data/as/event'),
-        accept: MIME_TYPES.JSON,
-        webId: APP_URI
-      })
-    ).resolves.toMatchObject({
+    const eventsRights = await alice.call('webacl.resource.getRights', {
+      resourceUri: urlJoin(alice.id, 'data/as/event'),
+      accept: MIME_TYPES.JSON,
+      webId: APP_URI
+    });
+
+    expect(eventsRights).toMatchObject({
       '@graph': expect.arrayContaining([
         expect.objectContaining({
+          'acl:accessTo': eventsContainerUri,
           'acl:agent': APP_URI,
           'acl:mode': 'acl:Read'
         }),
         expect.objectContaining({
+          'acl:accessTo': eventsContainerUri,
           'acl:agent': APP_URI,
           'acl:mode': 'acl:Write'
         })
       ])
     });
 
-    await expect(
-      alice.call('webacl.resource.getRights', {
-        resourceUri: urlJoin(alice.id, 'data/as/location'),
-        accept: MIME_TYPES.JSON,
-        webId: APP_URI
-      })
-    ).resolves.toMatchObject({
+    const locationsRights = await alice.call('webacl.resource.getRights', {
+      resourceUri: urlJoin(alice.id, 'data/as/location'),
+      accept: MIME_TYPES.JSON,
+      webId: APP_URI
+    });
+
+    expect(locationsRights).toMatchObject({
       '@graph': expect.arrayContaining([
         expect.objectContaining({
           'acl:agent': APP_URI,
+          'acl:mode': 'acl:Read',
+          'acl:accessTo': locationsContainerUri
+        })
+      ])
+    });
+
+    expect(locationsRights['@graph']).not.toContain([
+      expect.objectContaining({
+        'acl:agent': APP_URI,
+        'acl:mode': 'acl:Write',
+        'acl:accessTo': locationsContainerUri
+      })
+    ]);
+  });
+
+  test('Resources created in the containers have the correct permissions', async () => {
+    const eventUri = await alice.call('ldp.container.post', {
+      containerUri: urlJoin(alice.id, 'data/as/event'),
+      resource: {
+        type: 'Event',
+        name: 'Birthday party !'
+      },
+      contentType: MIME_TYPES.JSON
+    });
+
+    const eventsRights = await alice.call('webacl.resource.getRights', {
+      resourceUri: eventUri,
+      accept: MIME_TYPES.JSON,
+      webId: 'system' // We must fetch as system, because we need control rights on the container to see all permissions
+    });
+
+    expect(eventsRights).toMatchObject({
+      '@graph': expect.arrayContaining([
+        expect.objectContaining({
+          'acl:agent': APP_URI,
+          'acl:default': eventsContainerUri,
           'acl:mode': 'acl:Read'
         }),
         expect.objectContaining({
           'acl:agent': APP_URI,
+          'acl:default': eventsContainerUri,
           'acl:mode': 'acl:Write'
+        }),
+        expect.objectContaining({
+          'acl:agent': APP_URI,
+          'acl:default': eventsContainerUri,
+          'acl:mode': 'acl:Control'
         })
       ])
     });
+
+    const locationUri = await alice.call('ldp.container.post', {
+      containerUri: urlJoin(alice.id, 'data/as/location'),
+      resource: {
+        type: 'Location',
+        name: 'Home sweet home'
+      },
+      contentType: MIME_TYPES.JSON
+    });
+
+    const locationsRights = await alice.call('webacl.resource.getRights', {
+      resourceUri: locationUri,
+      accept: MIME_TYPES.JSON,
+      webId: 'system'
+    });
+
+    expect(locationsRights).toMatchObject({
+      '@graph': expect.arrayContaining([
+        expect.objectContaining({
+          'acl:agent': APP_URI,
+          'acl:mode': 'acl:Read',
+          'acl:default': locationsContainerUri
+        }),
+        expect.objectContaining({
+          'acl:agent': APP_URI,
+          'acl:mode': 'acl:Append',
+          'acl:default': locationsContainerUri
+        })
+      ])
+    });
+
+    expect(locationsRights['@graph']).not.toContain([
+      expect.objectContaining({
+        'acl:agent': APP_URI,
+        'acl:mode': 'acl:Write',
+        'acl:default': locationsContainerUri
+      })
+    ]);
+
+    expect(locationsRights['@graph']).not.toContain([
+      expect.objectContaining({
+        'acl:agent': APP_URI,
+        'acl:mode': 'acl:Control',
+        'acl:default': locationsContainerUri
+      })
+    ]);
   });
 
   test('User installs same app a second time and get an error', async () => {
@@ -348,7 +434,6 @@ describe('Test app installation', () => {
   test('User uninstalls app', async () => {
     await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
-      '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
       type: ACTIVITY_TYPES.UNDO,
       object: {
         type: 'apods:Install',
@@ -388,11 +473,54 @@ describe('Test app installation', () => {
       await expect(
         appServer.call('ldp.remote.getStored', {
           resourceUri: appRegistrationUri,
-          accept: MIME_TYPES.JSON,
           webId: 'system'
         })
       ).rejects.toThrow();
     });
+
+    // A DataGrant should be deleted
+    await waitForExpect(async () => {
+      await expect(
+        alice.call('ldp.resource.get', {
+          resourceUri: requiredAccessGrant['interop:hasDataGrant'],
+          accept: MIME_TYPES.JSON
+        })
+      ).rejects.toThrow();
+    });
+
+    // It should be deleted on the app server as well
+    await waitForExpect(async () => {
+      await expect(
+        appServer.call('ldp.remote.getStored', {
+          resourceUri: requiredAccessGrant['interop:hasDataGrant'],
+          webId: 'system'
+        })
+      ).rejects.toThrow();
+    });
+  });
+
+  test('Permissions granted to the app should be removed', async () => {
+    const eventsRights = await alice.call('webacl.resource.getRights', {
+      resourceUri: urlJoin(alice.id, 'data/as/event'),
+      accept: MIME_TYPES.JSON,
+      webId: APP_URI
+    });
+
+    expect(eventsRights['@graph']).not.toContain([
+      expect.objectContaining({
+        'acl:agent': APP_URI,
+        'acl:mode': 'acl:Read',
+        'acl:accessTo': eventsContainerUri
+      })
+    ]);
+
+    expect(eventsRights['@graph']).not.toContain([
+      expect.objectContaining({
+        'acl:agent': APP_URI,
+        'acl:mode': 'acl:Write',
+        'acl:accessTo': eventsContainerUri
+      })
+    ]);
   });
 
   test('User installs app and do not grant required access needs', async () => {
@@ -466,25 +594,6 @@ describe('Test app installation', () => {
         }),
         expect.objectContaining({
           'acl:agent': [APP_URI, APP2_URI],
-          'acl:mode': 'acl:Write'
-        })
-      ])
-    });
-
-    // Access to the Location container is **not** required by App2
-    await expect(
-      alice.call('webacl.resource.getRights', {
-        resourceUri: urlJoin(alice.id, 'data/as/location'),
-        accept: MIME_TYPES.JSON
-      })
-    ).resolves.toMatchObject({
-      '@graph': expect.arrayContaining([
-        expect.objectContaining({
-          'acl:agent': APP_URI,
-          'acl:mode': 'acl:Read'
-        }),
-        expect.objectContaining({
-          'acl:agent': APP_URI,
           'acl:mode': 'acl:Write'
         })
       ])

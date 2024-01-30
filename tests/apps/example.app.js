@@ -12,14 +12,14 @@ module.exports = {
       required: [
         {
           registeredClass: AS_PREFIX + 'Event',
-          accessMode: ['acl:Read', 'acl:Create']
+          accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
         },
         'apods:ReadInbox'
       ],
       optional: [
         {
           registeredClass: AS_PREFIX + 'Location',
-          accessMode: ['acl:Read', 'acl:Create']
+          accessMode: ['acl:Read', 'acl:Append']
         },
         'apods:SendNotification'
       ]

@@ -477,7 +477,7 @@ describe('Test app installation', () => {
       ).rejects.toThrow();
     });
 
-    // The DataGrant should be deleted
+    // A DataGrant should be deleted
     await waitForExpect(async () => {
       await expect(
         alice.call('ldp.resource.get', {
@@ -496,6 +496,30 @@ describe('Test app installation', () => {
         })
       ).rejects.toThrow();
     });
+  });
+
+  test('Permissions granted to the app should be removed', async () => {
+    const eventsRights = await alice.call('webacl.resource.getRights', {
+      resourceUri: urlJoin(alice.id, 'data/as/event'),
+      accept: MIME_TYPES.JSON,
+      webId: APP_URI
+    });
+
+    expect(eventsRights['@graph']).not.toContain([
+      expect.objectContaining({
+        'acl:agent': APP_URI,
+        'acl:mode': 'acl:Read',
+        'acl:accessTo': eventsContainerUri
+      })
+    ]);
+
+    expect(eventsRights['@graph']).not.toContain([
+      expect.objectContaining({
+        'acl:agent': APP_URI,
+        'acl:mode': 'acl:Write',
+        'acl:accessTo': eventsContainerUri
+      })
+    ]);
   });
 
   test('User installs app and do not grant required access needs', async () => {
@@ -570,21 +594,6 @@ describe('Test app installation', () => {
         expect.objectContaining({
           'acl:agent': [APP_URI, APP2_URI],
           'acl:mode': 'acl:Write'
-        })
-      ])
-    });
-
-    // Access to the Location container is **not** required by App2
-    await expect(
-      alice.call('webacl.resource.getRights', {
-        resourceUri: urlJoin(alice.id, 'data/as/location'),
-        accept: MIME_TYPES.JSON
-      })
-    ).resolves.toMatchObject({
-      '@graph': expect.arrayContaining([
-        expect.objectContaining({
-          'acl:agent': APP_URI,
-          'acl:mode': 'acl:Read'
         })
       ])
     });

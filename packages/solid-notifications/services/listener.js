@@ -137,7 +137,7 @@ module.exports = {
         throw new MoleculerError(`No webhook found with URL ${webhookUrl}`, 404, 'NOT_FOUND');
       }
     },
-    get() {
+    getCache() {
       return this.listeners;
     }
   },

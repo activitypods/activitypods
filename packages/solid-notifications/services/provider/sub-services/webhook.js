@@ -142,7 +142,7 @@ module.exports = {
         { parentCtx: ctx }
       );
     },
-    get() {
+    getCache() {
       return this.channels;
     }
   },

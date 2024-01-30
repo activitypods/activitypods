@@ -1,5 +1,4 @@
-const urlJoin = require('url-join');
-const { ControlledContainerMixin, isURL, getSlugFromUri } = require('@semapps/ldp');
+const { ControlledContainerMixin, isURL, getSlugFromUri, arrayOf } = require('@semapps/ldp');
 
 module.exports = {
   name: 'data-grants',
@@ -36,6 +35,7 @@ module.exports = {
         const dataset = getSlugFromUri(webId);
         const appUri = resource['interop:grantee'];
         const resourceType = resource['apods:registeredClass'];
+        const accessMode = arrayOf(resource['interop:accessMode']);
 
         // Match a string of type ldp:Container
         const regex = /^([^:]+):([^:]+)$/gm;
@@ -81,20 +81,24 @@ module.exports = {
         const containerUri = await this.broker.call('ldp.registry.getUri', { path: containerRegistration.path, webId });
 
         // Give read-write permission to the application
-        // TODO adapt to requested permissions
+        // For details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
         await ctx.call('webacl.resource.addRights', {
           resourceUri: containerUri,
           additionalRights: {
+            // Container rights
             user: {
               uri: appUri,
-              read: true,
-              write: true
+              read: accessMode.includes('acl:Read'),
+              write: accessMode.includes('acl:Write')
             },
+            // Resources default rights
             default: {
               user: {
                 uri: appUri,
-                read: true,
-                write: true
+                read: accessMode.includes('acl:Read'),
+                append: accessMode.includes('acl:Append'),
+                write: accessMode.includes('acl:Write'),
+                control: accessMode.includes('acl:Control')
               }
             }
           },

@@ -69,6 +69,21 @@ module.exports = {
       addresses: 'Mes adresses',
       address: '%{smart_count} adresse |||| %{smart_count} adresses'
     },
+    authorization: {
+      required: 'Accès requis',
+      optional: 'Accès optionnel',
+      access_resources_of_type: '%{access_right} les ressources de type %{type}',
+      read: 'Lire',
+      append: 'Enrichir',
+      write: 'Écrire',
+      control: 'Administrer',
+      read_inbox: 'Lire ma boîte de réception',
+      read_outbox: "Lire ma boîte d'envoi",
+      post_outbox: "Poster dans ma boîte d'envoi",
+      send_notification: "M'envoyer des notifications",
+      query_sparql_endpoint: 'Rechercher mes données',
+      create_acl_group: 'Créer un groupe de permissions'
+    },
     card: {
       add_contact: 'Ajouter un contact',
       contact_requests: 'Demandes de contact',

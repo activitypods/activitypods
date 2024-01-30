@@ -146,7 +146,10 @@ module.exports = {
         const appRegistration = await ctx.call('app-registrations.getForActor', { actorUri: activity.actor });
 
         // This will also delete the associated access grants and data grants
-        await ctx.call('app-registrations.delete', { resourceUri: appRegistration['@id'] });
+        await ctx.call('app-registrations.delete', {
+          resourceUri: appRegistration.id || appRegistration['@id'],
+          webId: 'system'
+        });
       }
     }
   }

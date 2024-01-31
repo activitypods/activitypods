@@ -95,5 +95,8 @@
   },
   "apods:registeredClass": {
     "@type": "@id"
+  },
+  "apods:registeredContainer": {
+    "@type": "@id"
   }
 }

@@ -2,6 +2,7 @@ const path = require('path');
 const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const { arrayOf } = require('@semapps/ldp');
 const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
@@ -81,7 +82,7 @@ describe('Test app installation', () => {
     });
 
     let accessNeedGroup;
-    for (const accessNeedUri of app['interop:hasAccessNeedGroup']) {
+    for (const accessNeedUri of arrayOf(app['interop:hasAccessNeedGroup'])) {
       accessNeedGroup = await appServer.call('ldp.resource.get', {
         resourceUri: accessNeedUri,
         accept: MIME_TYPES.JSON

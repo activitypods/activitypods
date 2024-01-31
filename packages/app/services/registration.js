@@ -101,7 +101,8 @@ module.exports = {
             throw new MoleculerError('One or more required access needs have not been granted', 400, 'BAD REQUEST');
           }
 
-          // SEND BACK RESULT
+          // SEND BACK ACCEPT ACTIVITY
+
           await ctx.call('activitypub.outbox.post', {
             collectionUri: outboxUri,
             type: ACTIVITY_TYPES.ACCEPT,
@@ -123,6 +124,8 @@ module.exports = {
             await ctx.call('ldp.remote.store', { resource: dataGrant });
             await ctx.call('data-grants.attach', { resourceUri: dataGrant.id });
           }
+
+          await ctx.emit('app.registered', { appRegistration, accessGrants, dataGrants });
         } catch (e) {
           if (e.code !== 400) console.error(e);
           await ctx.call('activitypub.outbox.post', {

@@ -1,3 +1,4 @@
+const urlJoin = require('url-join');
 const { ControlledContainerMixin, isURL, getSlugFromUri, arrayOf } = require('@semapps/ldp');
 
 module.exports = {
@@ -16,14 +17,37 @@ module.exports = {
   async started() {
     const baseUrl = await this.broker.call('ldp.getBaseUrl');
     for (let dataset of await this.broker.call('pod.list')) {
-      const results = await this.actions.list({});
-      for (const dataGrant of results.rows) {
+      const webId = urlJoin(baseUrl, dataset);
+      this.logger.info(`Registering containers for ${webId}...`);
+      const results = await this.actions.list({ webId });
+      for (const dataGrant of arrayOf(results['ldp:contains'])) {
         await this.broker.call('ldp.registry.register', {
-          path: dataGrant['apods:registeredContainer'].replace(baseUrl, ''),
+          path: dataGrant['apods:registeredContainer'].replace(urlJoin(webId, 'data'), ''),
           acceptedTypes: dataGrant['apods:registeredClass'],
           dataset
         });
       }
+    }
+  },
+  actions: {
+    async getForApp(ctx) {
+      const { appUri, podOwner } = ctx.params;
+
+      const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
+
+      let filteredContainer = await this.actions.list(
+        {
+          containerUri,
+          filters: {
+            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
+            'http://www.w3.org/ns/solid/interop#grantee': appUri
+          },
+          webId: 'system'
+        },
+        { parentCtx: ctx }
+      );
+
+      return arrayOf(filteredContainer['ldp:contains']);
     }
   },
   hooks: {

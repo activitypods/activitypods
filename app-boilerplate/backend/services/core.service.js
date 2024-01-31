@@ -1,6 +1,6 @@
 const path = require('path');
 const { CoreService } = require('@semapps/core');
-const { interop, apods, oidc } = require('@semapps/ontologies');
+const { apods, notify, interop, oidc } = require('@activitypods/ontologies');
 const CONFIG = require('../config/config');
 
 module.exports = {
@@ -14,7 +14,7 @@ module.exports = {
       password: CONFIG.JENA_PASSWORD,
       mainDataset: CONFIG.MAIN_DATASET
     },
-    ontologies: [apods, interop, oidc],
+    ontologies: [apods, notify, interop, oidc],
     api: {
       port: CONFIG.PORT
     },

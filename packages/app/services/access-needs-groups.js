@@ -14,9 +14,10 @@ module.exports = {
     acceptedTypes: ['interop:AccessNeedGroup'],
     readOnly: true
   },
-  dependencies: ['actors'],
   actions: {
     async initialize(ctx) {
+      let accessNeedGroupUris = [];
+
       for (const [necessity, accessNeeds] of Object.entries(this.settings.accessNeeds)) {
         let accessNeedsUris = [],
           specialRights = [];
@@ -44,29 +45,31 @@ module.exports = {
             }
           }
 
-          const accessNeedGroupUri = await this.actions.post(
-            {
-              resource: {
-                '@context': interopContext,
-                '@type': 'interop:AccessNeedGroup',
-                'interop:accessNecessity':
-                  necessity === 'required' ? 'interop:AccessRequired' : 'interop:AccessOptional',
-                'interop:accessScenario': 'interop:PersonalAccess',
-                'interop:authenticatedAs': 'interop:SocialAgent',
-                'interop:hasAccessNeed': accessNeedsUris,
-                'apods:hasSpecialRights': specialRights
+          accessNeedGroupUris.push(
+            await this.actions.post(
+              {
+                resource: {
+                  '@context': interopContext,
+                  '@type': 'interop:AccessNeedGroup',
+                  'interop:accessNecessity':
+                    necessity === 'required' ? 'interop:AccessRequired' : 'interop:AccessOptional',
+                  'interop:accessScenario': 'interop:PersonalAccess',
+                  'interop:authenticatedAs': 'interop:SocialAgent',
+                  'interop:hasAccessNeed': accessNeedsUris,
+                  'apods:hasSpecialRights': specialRights
+                },
+                contentType: MIME_TYPES.JSON,
+                webId: 'system'
               },
-              contentType: MIME_TYPES.JSON,
-              webId: 'system'
-            },
-            {
-              parentCtx: ctx
-            }
+              {
+                parentCtx: ctx
+              }
+            )
           );
-
-          await ctx.call('actors.attachAccessNeedGroup', { accessNeedGroupUri });
         }
       }
+
+      return accessNeedGroupUris;
     }
   }
 };

@@ -53,11 +53,10 @@ module.exports = {
             // Otherwise it is a custom JWT token (used by ActivityPods frontend) or a capability URL
             return ctx.call('auth.authenticate', { route, req, res });
           }
-        } else {
-          ctx.meta.webId = 'anon';
-          return null;
         }
       }
+      ctx.meta.webId = 'anon';
+      return null;
     },
     async authorize(ctx, route, req, res) {
       if (req.headers.signature) {

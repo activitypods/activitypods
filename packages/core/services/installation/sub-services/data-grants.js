@@ -29,6 +29,27 @@ module.exports = {
       }
     }
   },
+  actions: {
+    async getForApp(ctx) {
+      const { appUri, podOwner } = ctx.params;
+
+      const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
+
+      let filteredContainer = await this.actions.list(
+        {
+          containerUri,
+          filters: {
+            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
+            'http://www.w3.org/ns/solid/interop#grantee': appUri
+          },
+          webId: 'system'
+        },
+        { parentCtx: ctx }
+      );
+
+      return arrayOf(filteredContainer['ldp:contains']);
+    }
+  },
   hooks: {
     before: {
       async post(ctx) {

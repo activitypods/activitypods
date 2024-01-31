@@ -26,6 +26,25 @@ module.exports = {
       );
 
       return filteredContainer['ldp:contains']?.[0];
+    },
+    async isRegistered(ctx) {
+      const { appUri, podOwner } = ctx.params;
+
+      const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
+
+      let filteredContainer = await this.actions.list(
+        {
+          containerUri,
+          filters: {
+            'http://www.w3.org/ns/solid/interop#registeredAgent': appUri,
+            'http://www.w3.org/ns/solid/interop#registeredBy': podOwner
+          },
+          webId: 'system'
+        },
+        { parentCtx: ctx }
+      );
+
+      return filteredContainer['ldp:contains'] && filteredContainer['ldp:contains'].length > 0 ? true : false;
     }
   },
   hooks: {

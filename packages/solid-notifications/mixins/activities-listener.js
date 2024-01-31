@@ -77,8 +77,8 @@ module.exports = {
 
       // Use pod-proxy.get instead of ldp.resource.get for matcher
       const fetcher = async (ctx, resourceUri) => {
-        const resource = await ctx.call('pod-proxy.get', { resourceUri, actorUri });
-        return resource;
+        const { body } = await ctx.call('pod-proxy.get', { resourceUri, actorUri });
+        return body;
       };
 
       if (actor.inbox === target) {

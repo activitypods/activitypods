@@ -1,4 +1,4 @@
-const { getContainerFromUri, arrayOf } = require('@semapps/ldp');
+const { getContainerFromUri, arrayOf, isObject } = require('@semapps/ldp');
 const { matchActivity } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
@@ -10,6 +10,8 @@ const queueOptions =
         attempts: 8,
         backoff: { type: 'exponential', delay: '180000' }
       };
+
+const objectDepth = o => (Object(o) === o ? 1 + Math.max(-1, ...Object.values(o).map(objectDepth)) : 0);
 
 module.exports = {
   name: 'pod-activities-watcher',
@@ -66,6 +68,8 @@ module.exports = {
       const { matcher, actionName, boxTypes, key } = ctx.params;
 
       this.handlers.push({ matcher, actionName, boxTypes, key });
+
+      this.sortHandlers();
     },
     async processWebhook(ctx) {
       const { type, object, target } = ctx.params;
@@ -119,6 +123,26 @@ module.exports = {
           }
         }
       }
+    }
+  },
+  methods: {
+    sortHandlers() {
+      // Sort handlers by the depth of matchers (if matcher is a function, it is put at the end)
+      this.handlers.sort((a, b) => {
+        if (isObject(a.matcher)) {
+          if (isObject(b.matcher)) {
+            return objectDepth(a.matcher) - objectDepth(b.matcher);
+          } else {
+            return 1;
+          }
+        } else {
+          if (isObject(b)) {
+            return -1;
+          } else {
+            return 0;
+          }
+        }
+      });
     }
   },
   events: {

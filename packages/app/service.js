@@ -3,14 +3,14 @@ const { ACTOR_TYPES } = require('@semapps/activitypub');
 const { arrayOf } = require('@semapps/ldp');
 const { triple, namedNode } = require('@rdfjs/data-model');
 const { interopContext } = require('@activitypods/core');
-const AccessNeedsService = require('./services/access-needs');
-const AccessNeedsGroupsService = require('./services/access-needs-groups');
-const ActorsService = require('./services/actors');
-const AppRegistrationsService = require('./services/app-registrations');
-const AccessGrantsService = require('./services/access-grants');
-const DataGrantsService = require('./services/data-grants');
-const PodProxyService = require('./services/pod-proxy');
-const RegistrationService = require('./services/registration');
+const AccessNeedsService = require('./services/registration/access-needs');
+const AccessNeedsGroupsService = require('./services/registration/access-needs-groups');
+const ActorsService = require('./services/registration/actors');
+const AppRegistrationsService = require('./services/registration/app-registrations');
+const AccessGrantsService = require('./services/registration/access-grants');
+const DataGrantsService = require('./services/registration/data-grants');
+const PodProxyService = require('./services/pod-handling/pod-proxy');
+const RegistrationService = require('./services/registration/registration');
 
 module.exports = {
   name: 'app',

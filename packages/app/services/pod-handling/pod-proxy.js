@@ -1,19 +1,10 @@
 const { Readable } = require('stream');
 const { FormData } = require('formdata-node');
 const { FormDataEncoder } = require('form-data-encoder');
-
-function stream2buffer(stream) {
-  return new Promise((resolve, reject) => {
-    const _buf = [];
-    stream.on('data', chunk => _buf.push(chunk));
-    stream.on('end', () => resolve(Buffer.concat(_buf)));
-    stream.on('error', err => reject(err));
-  });
-}
+const { stream2buffer } = require('../../utils');
 
 module.exports = {
   name: 'pod-proxy',
-  dependencies: ['app'],
   actions: {
     async get(ctx) {
       const { resourceUri, actorUri } = ctx.params;

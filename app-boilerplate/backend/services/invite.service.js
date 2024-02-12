@@ -1,9 +1,8 @@
-const QueueMixin = require('moleculer-bull');
-const { ActivitiesListenerMixin } = require('@activitypods/solid-notifications');
-const CONFIG = require('../config/config');
+const { PodActivitiesHandlerMixin } = require('@activitypods/app');
 
 module.exports = {
-  mixins: [ActivitiesListenerMixin, QueueMixin(CONFIG.QUEUE_SERVICE_URL)],
+  name: 'invite',
+  mixins: [PodActivitiesHandlerMixin],
   activities: {
     invite: {
       match: {

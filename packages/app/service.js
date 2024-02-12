@@ -1,16 +1,18 @@
+const QueueMixin = require('moleculer-bull');
+const { triple, namedNode } = require('@rdfjs/data-model');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTOR_TYPES } = require('@semapps/activitypub');
 const { arrayOf } = require('@semapps/ldp');
-const { triple, namedNode } = require('@rdfjs/data-model');
 const { interopContext } = require('@activitypods/core');
-const AccessNeedsService = require('./services/access-needs');
-const AccessNeedsGroupsService = require('./services/access-needs-groups');
-const ActorsService = require('./services/actors');
-const AppRegistrationsService = require('./services/app-registrations');
-const AccessGrantsService = require('./services/access-grants');
-const DataGrantsService = require('./services/data-grants');
-const PodProxyService = require('./services/pod-proxy');
-const RegistrationService = require('./services/registration');
+const AccessNeedsService = require('./services/registration/access-needs');
+const AccessNeedsGroupsService = require('./services/registration/access-needs-groups');
+const ActorsService = require('./services/registration/actors');
+const AppRegistrationsService = require('./services/registration/app-registrations');
+const AccessGrantsService = require('./services/registration/access-grants');
+const DataGrantsService = require('./services/registration/data-grants');
+const RegistrationService = require('./services/registration/registration');
+const PodProxyService = require('./services/pod-handling/pod-proxy');
+const PodActivitiesWatcherService = require('./services/pod-handling/pod-activities-watcher');
 
 module.exports = {
   name: 'app',
@@ -30,7 +32,8 @@ module.exports = {
     accessNeeds: {
       required: [],
       optional: []
-    }
+    },
+    queueServiceUrl: null
   },
   dependencies: [
     'activitypub',
@@ -41,6 +44,10 @@ module.exports = {
     'ldp.resource'
   ],
   created() {
+    if (!this.settings.queueServiceUrl) {
+      throw new Error(`The setting queueServiceUrl is mandatory`);
+    }
+
     this.broker.createService(ActorsService);
 
     this.broker.createService(RegistrationService);
@@ -57,6 +64,9 @@ module.exports = {
     this.broker.createService(AccessGrantsService);
 
     this.broker.createService(PodProxyService);
+    this.broker.createService(PodActivitiesWatcherService, {
+      mixins: [QueueMixin(this.settings.queueServiceUrl)]
+    });
   },
   async started() {
     let actorExist = false,

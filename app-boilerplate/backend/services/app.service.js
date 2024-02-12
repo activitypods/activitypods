@@ -31,6 +31,7 @@ module.exports = {
         'apods:ReadOutbox'
       ],
       optional: ['apods:SendNotification']
-    }
+    },
+    queueServiceUrl: CONFIG.QUEUE_SERVICE_URL
   }
 };

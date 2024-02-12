@@ -1,6 +1,7 @@
 const { getContainerFromUri, arrayOf, isObject } = require('@semapps/ldp');
 const { matchActivity } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const { objectDepth } = require('../../utils');
 
 const queueOptions =
   process.env.NODE_ENV === 'test'
@@ -10,8 +11,6 @@ const queueOptions =
         attempts: 8,
         backoff: { type: 'exponential', delay: '180000' }
       };
-
-const objectDepth = o => (Object(o) === o ? 1 + Math.max(-1, ...Object.values(o).map(objectDepth)) : 0);
 
 module.exports = {
   name: 'pod-activities-watcher',

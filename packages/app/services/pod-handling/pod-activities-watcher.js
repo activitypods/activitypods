@@ -1,4 +1,4 @@
-const { getContainerFromUri } = require('@semapps/ldp');
+const { getContainerFromUri, arrayOf } = require('@semapps/ldp');
 const { matchActivity } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
@@ -12,7 +12,7 @@ const queueOptions =
       };
 
 module.exports = {
-  name: 'activities-listener',
+  name: 'pod-activities-watcher',
   dependencies: ['triplestore', 'activitypub.actor', 'solid-notifications.listener'],
   async started() {
     const nodes = await this.broker.call('triplestore.query', {
@@ -58,8 +58,15 @@ module.exports = {
         this.logger.warn(`Could not listen to actor ${grantedBy.value}. Error message: ${e.message}`);
       }
     }
+
+    this.handlers = [];
   },
   actions: {
+    async watch(ctx) {
+      const { matcher, actionName, boxTypes, key } = ctx.params;
+
+      this.handlers.push({ matcher, actionName, boxTypes, key });
+    },
     async processWebhook(ctx) {
       const { type, object, target } = ctx.params;
 
@@ -73,7 +80,7 @@ module.exports = {
       const actor = await ctx.call('activitypub.actor.get', { actorUri });
 
       // TODO get the cached activity to ensure we have no authorization problems
-      const activity = await ctx.call('pod-proxy.get', { resourceUri: object, actorUri });
+      const { body: activity } = await ctx.call('pod-proxy.get', { resourceUri: object, actorUri });
 
       // Use pod-proxy.get instead of ldp.resource.get for matcher
       const fetcher = async (ctx, resourceUri) => {
@@ -81,23 +88,33 @@ module.exports = {
         return body;
       };
 
-      if (actor.inbox === target) {
-        for (const [key, activityHandler] of Object.entries(this.schema.activities)) {
-          if (activityHandler.onReceive) {
-            const dereferencedActivity = await matchActivity(ctx, activityHandler.match, activity, fetcher);
+      if (target === actor.inbox) {
+        for (const handler of this.handlers) {
+          if (handler.boxTypes.includes('inbox')) {
+            const dereferencedActivity = await matchActivity(ctx, handler.matcher, activity, fetcher);
             if (!!dereferencedActivity) {
-              this.logger.info(`Reception of activity "${key}" by ${actorUri} detected`);
-              await activityHandler.onReceive.bind(this)(ctx, dereferencedActivity, actorUri);
+              this.logger.info(`Reception of activity "${handler.key}" by ${actorUri} detected`);
+              await ctx.call(handler.actionName, {
+                key: handler.key,
+                boxType: 'inbox',
+                dereferencedActivity,
+                actorUri
+              });
             }
           }
         }
-      } else if (actor.outbox === target) {
-        for (const [key, activityHandler] of Object.entries(this.schema.activities)) {
-          if (activityHandler.onEmit) {
-            const dereferencedActivity = await matchActivity(ctx, activityHandler.match, activity, fetcher);
+      } else if (target === actor.outbox) {
+        for (const handler of this.handlers) {
+          if (handler.boxTypes.includes('outbox')) {
+            const dereferencedActivity = await matchActivity(ctx, handler.matcher, activity, fetcher);
             if (!!dereferencedActivity) {
-              this.logger.info(`Emission of activity "${key}" by ${actorUri} detected`);
-              await activityHandler.onEmit.bind(this)(ctx, dereferencedActivity, actorUri);
+              this.logger.info(`Emission of activity "${handler.key}" by ${actorUri} detected`);
+              await ctx.call(handler.actionName, {
+                key: handler.key,
+                boxType: 'outbox',
+                dereferencedActivity,
+                actorUri
+              });
             }
           }
         }
@@ -139,7 +156,7 @@ module.exports = {
 
         const listener = await this.broker.call('solid-notifications.listener.register', {
           resourceUri: actor[collectionPredicate],
-          actionName: 'activities-listener.processWebhook'
+          actionName: this.name + '.processWebhook'
         });
 
         this.logger.info(`Listening to ${actor.id} ${collectionPredicate}...`);

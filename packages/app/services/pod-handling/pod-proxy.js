@@ -13,7 +13,6 @@ function stream2buffer(stream) {
 
 module.exports = {
   name: 'pod-proxy',
-  dependencies: ['app'],
   actions: {
     async get(ctx) {
       const { resourceUri, actorUri } = ctx.params;

@@ -35,6 +35,15 @@ module.exports = {
         }
       }
     },
+    notifications: {
+      mail: {
+        from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
+        transport,
+        data: {
+          color: CONFIG.FRONTEND_COLOR
+        }
+      }
+    },
     api: {
       port: CONFIG.PORT
     }

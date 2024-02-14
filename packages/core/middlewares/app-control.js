@@ -38,7 +38,6 @@ const AppControlMiddleware = ({ baseUrl }) => ({
 
         // Ensure the webId is a registered application
         if (!(await ctx.call('app-registrations.isRegistered', { appUri, podOwner }))) {
-          console.log('APP NOT REGISTERED !!', appUri, podOwner);
           throw new E.ForbiddenError(`Only registered applications may fetch the proxy endpoint`);
         }
 

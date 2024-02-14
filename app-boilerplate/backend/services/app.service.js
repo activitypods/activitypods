@@ -9,7 +9,8 @@ module.exports = {
     app: {
       name: 'Example App',
       description: 'An ActivityPods-compatible app',
-      thumbnail: urlJoin(CONFIG.FRONT_URL, 'logo192.png')
+      thumbnail: urlJoin(CONFIG.FRONT_URL, 'logo192.png'),
+      frontUrl: CONFIG.FRONT_URL
     },
     oidc: {
       clientUri: CONFIG.FRONT_URL,

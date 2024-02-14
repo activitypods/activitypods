@@ -25,7 +25,7 @@ module.exports = {
 
       const app = await ctx.call('app.get');
       const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
-      const locale = recipient.preferredLocale || 'en';
+      const locale = recipient['schema:knowsLanguage'] || 'en';
 
       let templateParams = {};
 

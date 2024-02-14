@@ -128,6 +128,8 @@ Some Solid predicates are still missing ([#122](https://github.com/assemblee-vir
 
 #### Solid-OIDC <ProgressBar percentage={60} />
 
+⚠️ _Will be available in ActivityPods 2.0_
+
 In v2.0, we partly support authentication through [Solid-OIDC](https://solidproject.org/TR/oidc). This is detailed in [#121](https://github.com/assemblee-virtuelle/activitypods/issues/121).
 
 We do not support yet DPoP to request resources, but it will be implemented as soon as possible.
@@ -154,6 +156,8 @@ We support the full [WAC specification](https://solid.github.io/web-access-contr
 We do not support yet the [ACP specification](https://solid.github.io/authorization-panel/acp-specification/).
 
 ### Application interoperability <ProgressBar percentage={30} />
+
+⚠️ _Will be available in ActivityPods 2.0_
 
 [Solid Application Interoperability](https://solid.github.io/data-interoperability-panel/specification) is a complex specification which is not yet complete.
 We've implemented everything we can at the moment and are waiting to see how it evolves before implementing the remaining parts.
@@ -230,12 +234,48 @@ Since [we implement the full ActivityPub protocol](activitypub), we haven't need
 
 ### Live Update <ProgressBar percentage={0} />
 
-#### Solid Notifications Protocol <ProgressBar percentage={0} />
+#### Solid Notifications Protocol <ProgressBar percentage={100} />
 
-👷 To be implemented ([#126](https://github.com/assemblee-virtuelle/activitypods/issues/126), [#127](https://github.com/assemblee-virtuelle/activitypods/issues/127))
+⚠️ _Will be available in ActivityPods 2.0_
 
-### SPARQL endpoint <ProgressBar percentage={100} />
+You can listen to LDP resources, LDP containers or ActivityStreams collections.
 
-Even though it is not required anymore by the Solid spec, every Pod comes with an SPARQL endpoint, linked to the WebID with the `void:sparqlEndpoint` predicate.
-Only SPARQL _queries_ are supported, not [SPARQL _updates_](https://www.w3.org/TR/sparql11-update/) (You MUST use LDP or ActivityPub to modify data).
-WAC permissions are applied to all SPARQL queries, in order to return only the resources that the autenticated user or application has the right to see.
+We support discovering the notification subscription services through the storage description resource. This can be found by doing a HEAD request on any resource in your pod and looking for the Link header with the `http://www.w3.org/ns/solid/terms#storageDescription` relationship.
+
+This leads to the `/.well-known/solid` endpoint which includes links to available subscription services.
+
+<details>
+  <summary>Webhooks subscription</summary>
+  <p>
+    To subscribe to the http://localhost:3000/foo resource using WebSockets, you use an authenticated POST request to send the following JSON-LD document to the server, at http://localhost:3000/.notifications/WebhookChannel2023/:
+
+    ```json
+    {
+      "@context": [ "https://www.w3.org/ns/solid/notification/v1" ],
+      "type": "http://www.w3.org/ns/solid/notifications#WebhookChannel2023",
+      "topic": "http://localhost:3000/foo",
+      "sendTo": "https://example.com/webhook"
+    }
+    ```
+
+    The `sendTo` predicate is the Webhook URL of your server, the URL to which you want the notifications to be sent.
+
+  </p>
+</details>
+
+<details>
+  <summary>Notification types</summary>
+  <p>
+    Just like the [Community Solid Server](https://communitysolidserver.github.io/CommunitySolidServer), we support five different notification types that the client can receive. The format of the notification can slightly change depending on the type.
+
+    - Create: When the resource is created.
+    - Update: When the existing resource is changed.
+    - Delete: When the resource is deleted. Does not have a state field.
+
+    Additionally, when listening to a LDP container or an ActivityStreams collection, there are two extra notifications that are sent out when the contents of the container or collection change. For these notifications, the `object` field references the resource that was added or removed, while the new `target` field references the container or collection itself.
+
+    - Add: When a new resource is added to the container or collection.
+    - Remove: When a resource is removed from the container or collection.
+
+  </p>
+</details>

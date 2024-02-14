@@ -5,6 +5,12 @@ title: ActivityPods specificity
 
 In this document, you can find descriptions for ActivityPods-specific APIs and protocol workflows. In the future, we will be contributing to related working groups, to bring the following specifications into official drafts.
 
+### SPARQL endpoint
+
+Every Pod comes with an SPARQL endpoint, linked to the WebID with the `void:sparqlEndpoint` predicate.
+Only SPARQL _queries_ are supported, not [SPARQL _updates_](https://www.w3.org/TR/sparql11-update/) (You MUST use LDP or ActivityPub to modify data).
+WAC permissions are applied to all SPARQL queries, in order to return only the resources that the autenticated user or application has the right to see.
+
 ### Authentication
 
 #### Proxy endpoint with non-GET methods
@@ -52,7 +58,7 @@ However, no API has been defined to create custom collections or add/remove item
 
 #### Create custom collection
 
-👷 To be implemented ([#1166](https://github.com/assemblee-virtuelle/semapps/issues/1166))
+⚠️ _Will be available in ActivityPods 2.0_
 
 In ActivityPods, ActivityStreams collections can be POSTed as regular LDP resources.
 
@@ -79,7 +85,7 @@ There are [discussions in the fediverse](https://socialhub.activitypub.rocks/t/f
 
 #### Add or remove items
 
-👷 To be implemented ([#1165](https://github.com/assemblee-virtuelle/semapps/issues/1165))
+⚠️ _Will be available in ActivityPods 2.0_
 
 It's possible to add items to (or remove items from) a collection using the [SparqlPatch](solid.mdx#patch-method) method, the `application/sparql-update` Content-Type and a SPARQL query like this on the body:
 
@@ -97,7 +103,7 @@ For ordered collections, you should use the `as:orderedItems` predicate.
 
 ### Notifications
 
-👷 To be implemented ([#91](https://github.com/assemblee-virtuelle/activitypods/issues/91))
+⚠️ _Will be available in ActivityPods 2.0_
 
 Apps can send notifications to Pod users like this:
 
@@ -123,7 +129,9 @@ Apps can send notifications to Pod users like this:
 }
 ```
 
-They will be translated into emails and, possibly, push notifications.
+They will be transformed into emails and, in the future, push notifications.
+
+Applications can find the preferred language of an user by looking at the `schema:knowsLanguage` predicate on its WebID.
 
 ### JsonLdContext header
 

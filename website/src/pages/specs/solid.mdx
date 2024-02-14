@@ -232,17 +232,27 @@ LDN defines only inboxes, while ActivityPub defines a full communication protoco
 
 Since [we implement the full ActivityPub protocol](activitypub), we haven't needed to implement the more lightweight LDN protocol, but it could be added in the future.
 
-### Live Update <ProgressBar percentage={0} />
-
-#### Solid Notifications Protocol <ProgressBar percentage={100} />
+### Solid Notifications <ProgressBar percentage={100} />
 
 ⚠️ _Will be available in ActivityPods 2.0_
 
-You can listen to LDP resources, LDP containers or ActivityStreams collections.
+Thanks to the [Solid Notifications Protocol](https://solid.github.io/notifications/protocol, you can listen to LDP resources, LDP containers or ActivityStreams collections.
 
-We support discovering the notification subscription services through the storage description resource. This can be found by doing a HEAD request on any resource in your pod and looking for the Link header with the `http://www.w3.org/ns/solid/terms#storageDescription` relationship.
+We support discovering the notification subscription services through the storage description resource. This can be found by doing a HEAD request on any resource in your pod and looking for the `Link` header with the `http://www.w3.org/ns/solid/terms#storageDescription` relationship.
 
 This leads to the `/.well-known/solid` endpoint which includes links to available subscription services.
+
+```json
+  {
+    "@context": { "notify":"http://www.w3.org/ns/solid/notifications#" },
+    "@id": "http://localhost:3000/.well-known/solid",
+    "@type":"http://www.w3.org/ns/pim/space#Storage",
+    "notify:subscription": [
+      "http://localhost:3000/.notifications/WebSocketChannel2023",
+      "http://localhost:3000/.notifications/WebhookChannel2023"
+    ]
+  }
+```
 
 <details>
   <summary>Webhooks subscription</summary>

@@ -239,6 +239,7 @@ const CoreService = {
     this.broker.createService(MailNotificationsService, {
       mixins: queueServiceUrl ? [QueueService(queueServiceUrl)] : undefined,
       settings: {
+        frontendUrl,
         ...notifications.mail
       }
     });

@@ -10,6 +10,10 @@
     "url": "https://github.com/assemblee-virtuelle/activitypods.git",
     "directory": "packages/core"
   },
+  "dependencies": {
+    "http-link-header": "^1.1.1",
+    "uuid": "^9.0.1"
+  },
   "publishConfig": {
     "access": "public"
   }

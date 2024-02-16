@@ -1,6 +1,7 @@
 const path = require('path');
 const urlJoin = require('url-join');
-const { ActivityPubService, ActivityMappingService, ACTOR_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
+const QueueService = require('moleculer-bull');
+const { ActivityPubService, ACTOR_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
@@ -22,6 +23,7 @@ const FilesService = require('./services/files');
 const InstallationService = require('./services/installation');
 const JWKService = require('./services/jwk');
 const OidcProviderService = require('./services/oidc-provider/oidc-provider');
+const MailNotificationsService = require('./services/mail-notifications');
 const packageDesc = require('./package.json');
 
 const CoreService = {
@@ -37,16 +39,34 @@ const CoreService = {
     },
     settingsDataset: 'settings',
     queueServiceUrl: null,
-    redisOidcProviderUrl: null,
     authType: 'local',
     oidcProvider: {
       redisUrl: null,
       cookieSecret: 'COOKIE-SECRET'
+    },
+    notifications: {
+      mail: {
+        // See moleculer-mail doc https://github.com/moleculerjs/moleculer-addons/tree/master/packages/moleculer-mail
+        from: null,
+        transport: null,
+        data: {
+          color: '#E2003B'
+        }
+      }
     }
   },
   created() {
-    let { baseUrl, baseDir, frontendUrl, triplestore, settingsDataset, queueServiceUrl, oidcProvider, authType } =
-      this.settings;
+    let {
+      baseUrl,
+      baseDir,
+      frontendUrl,
+      triplestore,
+      settingsDataset,
+      queueServiceUrl,
+      authType,
+      oidcProvider,
+      notifications
+    } = this.settings;
 
     this.broker.createService(ActivityPubService, {
       settings: {
@@ -74,8 +94,7 @@ const CoreService = {
         baseUrl,
         jwtPath: path.resolve(baseDir, './jwt'),
         reservedUsernames: ['sparql', 'auth', 'common', 'data', 'settings', 'localData', 'testData'],
-        webIdSelection: ['nick'],
-        accountSelection: ['preferredLocale'],
+        webIdSelection: ['nick', 'schema:knowsLanguage'],
         formUrl: frontendUrl ? urlJoin(frontendUrl, 'login') : undefined,
         accountsDataset: settingsDataset,
         podProvider: true,
@@ -119,17 +138,6 @@ const CoreService = {
     this.broker.createService(PodService, {
       settings: {
         baseUrl
-      }
-    });
-
-    // Required for notifications
-    this.broker.createService(ActivityMappingService, {
-      settings: {
-        handlebars: {
-          helpers: {
-            encodeUri: uri => encodeURIComponent(uri)
-          }
-        }
       }
     });
 
@@ -225,6 +233,14 @@ const CoreService = {
       settings: {
         baseUrl,
         queueServiceUrl
+      }
+    });
+
+    this.broker.createService(MailNotificationsService, {
+      mixins: queueServiceUrl ? [QueueService(queueServiceUrl)] : undefined,
+      settings: {
+        frontendUrl,
+        ...notifications.mail
       }
     });
 

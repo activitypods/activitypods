@@ -11,8 +11,9 @@ const AppRegistrationsService = require('./services/registration/app-registratio
 const AccessGrantsService = require('./services/registration/access-grants');
 const DataGrantsService = require('./services/registration/data-grants');
 const RegistrationService = require('./services/registration/registration');
-const PodProxyService = require('./services/pod-handling/pod-proxy');
 const PodActivitiesWatcherService = require('./services/pod-handling/pod-activities-watcher');
+const PodNotificationService = require('./services/pod-handling/pod-notification');
+const PodProxyService = require('./services/pod-handling/pod-proxy');
 
 module.exports = {
   name: 'app',
@@ -21,7 +22,8 @@ module.exports = {
       name: null,
       description: null,
       author: null,
-      thumbnail: null
+      thumbnail: null,
+      frontUrl: null
     },
     oidc: {
       clientUri: null,
@@ -63,10 +65,15 @@ module.exports = {
     this.broker.createService(DataGrantsService);
     this.broker.createService(AccessGrantsService);
 
-    this.broker.createService(PodProxyService);
+    this.broker.createService(PodNotificationService, {
+      settings: {
+        frontUrl: this.settings.app.frontUrl
+      }
+    });
     this.broker.createService(PodActivitiesWatcherService, {
       mixins: [QueueMixin(this.settings.queueServiceUrl)]
     });
+    this.broker.createService(PodProxyService);
   },
   async started() {
     let actorExist = false,

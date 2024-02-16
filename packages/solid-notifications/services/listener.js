@@ -1,5 +1,6 @@
 const urlJoin = require('url-join');
 const fetch = require('node-fetch');
+const LinkHeader = require('http-link-header');
 const { v4: uuidv4 } = require('uuid');
 const DbService = require('moleculer-db');
 const { MoleculerError } = require('moleculer').Errors;
@@ -143,13 +144,23 @@ module.exports = {
   },
   methods: {
     async getSolidEndpoint(resourceUri) {
-      // TODO See why we can't get the Solid endpoint URL through link headers
-      // const response = await fetch(resourceUri, {
-      //   method: 'HEAD'
-      // });
-      // const linkHeader = response.headers.get('Link');
+      let solidEndpointUrl;
 
-      const solidEndpointUrl = urlJoin(new URL(resourceUri).origin, '.well-known', 'solid');
+      try {
+        const response = await fetch(resourceUri, { method: 'HEAD' });
+        const linkHeader = LinkHeader.parse(response.headers.get('Link'));
+        const storageDescriptionLinkHeader = linkHeader.rel('http://www.w3.org/ns/solid/terms#storageDescription');
+        solidEndpointUrl = storageDescriptionLinkHeader[0].uri;
+      } catch (e) {
+        // Ignore errors, we will display a warning below
+      }
+
+      if (!solidEndpointUrl) {
+        this.logger.warn(`Could not get link header for ${resourceUri}`);
+        // Assume same endpoint as ActivityPods or CSS
+        solidEndpointUrl = urlJoin(new URL(resourceUri).origin, '.well-known', 'solid');
+      }
+
       const response = await fetch(solidEndpointUrl, {
         headers: {
           Accept: 'application/ld+json'

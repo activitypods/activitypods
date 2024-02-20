@@ -13,7 +13,7 @@ const DataGrantsService = require('./services/registration/data-grants');
 const RegistrationService = require('./services/registration/registration');
 const PodActivitiesWatcherService = require('./services/pod-handling/pod-activities-watcher');
 const PodNotificationService = require('./services/pod-handling/pod-notification');
-const PodProxyService = require('./services/pod-handling/pod-proxy');
+const PodResourcesService = require('./services/pod-handling/pod-resources');
 
 module.exports = {
   name: 'app',
@@ -73,7 +73,7 @@ module.exports = {
     this.broker.createService(PodActivitiesWatcherService, {
       mixins: [QueueMixin(this.settings.queueServiceUrl)]
     });
-    this.broker.createService(PodProxyService);
+    this.broker.createService(PodResourcesService);
   },
   async started() {
     let actorExist = false,

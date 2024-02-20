@@ -20,7 +20,6 @@ module.exports = {
               en: `{{emitterProfile.vcard:given-name}} invites you to an event "{{activity.object.name}}"`,
               fr: `{{emitterProfile.vcard:given-name}} vous invite à une rencontre "{{activity.object.name}}"`
             },
-            // content: '{{activity.object.content}}',
             actions: [
               {
                 caption: {

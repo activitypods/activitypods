@@ -34,7 +34,7 @@ module.exports = {
         let emitterProfile = {};
         try {
           ({ body: emitterProfile } = emitter.url
-            ? await ctx.call('pod-proxy.get', { resourceUri: emitter.url, actorUri: recipientUri })
+            ? await ctx.call('pod-resources.get', { resourceUri: emitter.url, actorUri: recipientUri })
             : {});
         } catch (e) {
           this.logger.warn(`Could not get profile of actor ${activity.actor}`);

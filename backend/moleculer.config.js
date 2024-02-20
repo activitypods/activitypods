@@ -24,7 +24,7 @@ module.exports = {
   middlewares: [
     CacherMiddleware(cacherConfig), // Set the cacher before the WebAcl middleware
     WebAclMiddleware({ baseUrl: CONFIG.HOME_URL, podProvider: true }),
-    ObjectsWatcherMiddleware({ baseUrl: CONFIG.HOME_URL, podProvider: true }),
+    ObjectsWatcherMiddleware({ baseUrl: CONFIG.HOME_URL, podProvider: true, postWithoutRecipients: true }),
     AppControlMiddleware({ baseUrl: CONFIG.HOME_URL })
   ],
   errorHandler,

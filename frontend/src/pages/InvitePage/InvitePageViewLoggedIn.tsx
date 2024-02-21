@@ -1,7 +1,8 @@
-/* eslint-disable react/prop-types */
 import { Typography, Button, Grid } from '@mui/material';
-import React from 'react';
-import { useLocaleState, useTranslate } from 'react-admin';
+import React, { useEffect } from 'react';
+import { useGetOne, useLocaleState, useNotify, useTranslate } from 'react-admin';
+import { useNavigate } from 'react-router-dom';
+import { ACTIVITY_TYPES, useOutbox } from '@semapps/activitypub-components';
 import { formatUsername } from '../../utils';
 import ConnectAvatars from './ConnectAvatars';
 import SimpleBox from '../../layout/SimpleBox';
@@ -10,18 +11,49 @@ const InvitePageViewLoggedIn = ({
   inviterProfile,
   ownProfile,
   onConnectClick,
-  onCancelClick
+  onCancelClick,
+  capabilityUri
 }: {
   inviterProfile: any;
   ownProfile: any;
   onConnectClick: () => void;
   onCancelClick: () => void;
+  capabilityUri: string;
 }) => {
+  const notify = useNotify();
+  const navigate = useNavigate();
+  const outbox = useOutbox();
+  const [locale] = useLocaleState();
+  const translate = useTranslate();
+
   const { 'vcard:given-name': inviterFirstName, describes: inviterWebId } = inviterProfile;
   const memberSince = new Date(inviterProfile['dc:created']);
 
-  const [locale] = useLocaleState();
-  const translate = useTranslate();
+  // The profile was fetched with a capability. Check if it's in our profile list already (i.e. user is already connected).
+  const { isSuccess: profileIsConnected } = useGetOne('Profile', { id: inviterProfile.id });
+  useEffect(() => {
+    if (profileIsConnected) {
+      notify('app.notification.already_connected', { autoHideDuration: 5000, type: 'warning' });
+      // It might be, that the inviter does not have the user's profile in their profile list.
+      // So, we send the Accept > Offer > Add > Profile anyways (triggered by onConnectClicked).
+      outbox
+        .post({
+          '@context': 'https://activitypods.org/context.json',
+          type: ACTIVITY_TYPES.OFFER,
+          actor: ownProfile.describes,
+          to: inviterProfile.describes,
+          target: inviterProfile.describes,
+          object: {
+            type: ACTIVITY_TYPES.ADD,
+            object: ownProfile.id
+          },
+          'sec:capability': capabilityUri
+        })
+        .then(() => {
+          navigate(`/Profile/${encodeURIComponent(inviterProfile.id as string)}/show`);
+        });
+    }
+  }, [profileIsConnected]);
 
   return (
     <SimpleBox
@@ -45,7 +77,7 @@ const InvitePageViewLoggedIn = ({
             {memberSince.toLocaleDateString(locale, {
               dateStyle: 'medium'
             })}
-          </Typography>{' '}
+          </Typography>
         </Grid>
       </Grid>
 

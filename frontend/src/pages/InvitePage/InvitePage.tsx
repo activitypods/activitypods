@@ -118,6 +118,7 @@ const InvitePage = () => {
         onCancelClick={() => {
           navigate('/');
         }}
+        capabilityUri={capabilityUri}
       />
     );
   }

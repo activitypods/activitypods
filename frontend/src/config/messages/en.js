@@ -173,7 +173,8 @@ module.exports = {
       invite_cap_missing: 'Unable to generate an invite link (missing capability)',
       invite_cap_profile_fetch_error: 'Error while fetching the profile associated with the invite link.',
       pod_provider_fetch_error: 'Error while looking for other pod providers: %{error}',
-      contact_link_copied: 'Contact link copied successfully'
+      contact_link_copied: 'Contact link copied successfully',
+      already_connected: 'You are already connected with the person who invited you.'
     },
     user: {
       unknown: 'Unknown',

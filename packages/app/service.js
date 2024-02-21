@@ -43,7 +43,8 @@ module.exports = {
     'auth.account',
     'ldp.container',
     'ldp.registry',
-    'ldp.resource'
+    'ldp.resource',
+    'actors'
   ],
   created() {
     if (!this.settings.queueServiceUrl) {

@@ -8,7 +8,7 @@ module.exports = {
     newResourcesPermissions: {}
   },
   actions: {
-    async getContainerUri(ctx) {
+    async getContainerByType(ctx) {
       const { type, podOwner } = ctx.params;
 
       const app = await ctx.call('app.get');

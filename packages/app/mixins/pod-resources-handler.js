@@ -85,7 +85,10 @@ module.exports = {
       await ctx.call('pod-resources.delete', ctx.params);
     },
     async getContainerUri(ctx) {
-      return await ctx.call('data-grants.getContainerUri', { podOwner: ctx.params.actorUri, type: this.settings.type });
+      return await ctx.call('data-grants.getContainerByType', {
+        type: this.settings.type,
+        podOwner: ctx.params.actorUri
+      });
     }
   }
 };

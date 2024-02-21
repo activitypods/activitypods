@@ -1,5 +1,6 @@
 const { AppService } = require('@activitypods/app');
 const { AS_PREFIX } = require('@semapps/activitypub');
+const CONFIG = require('../config');
 
 module.exports = {
   mixins: [AppService],
@@ -23,6 +24,7 @@ module.exports = {
         },
         'apods:SendNotification'
       ]
-    }
+    },
+    queueServiceUrl: CONFIG.QUEUE_SERVICE_URL
   }
 };

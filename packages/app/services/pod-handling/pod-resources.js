@@ -23,7 +23,7 @@ module.exports = {
         };
       }
 
-      return await this.actions.fetch({
+      const { headers } = await this.actions.fetch({
         url: containerUri,
         method: 'POST',
         headers: {
@@ -32,11 +32,13 @@ module.exports = {
         body: JSON.stringify(resource),
         actorUri
       });
+
+      return headers.get('Location');
     },
     async list(ctx) {
       const { containerUri, actorUri } = ctx.params;
 
-      return this.actions.fetch({
+      const { body } = await this.actions.fetch({
         url: containerUri,
         method: 'GET',
         headers: {
@@ -45,11 +47,13 @@ module.exports = {
         },
         actorUri
       });
+
+      return body;
     },
     async get(ctx) {
       const { resourceUri, actorUri } = ctx.params;
 
-      return this.actions.fetch({
+      const { body } = await this.actions.fetch({
         url: resourceUri,
         method: 'GET',
         headers: {
@@ -58,6 +62,8 @@ module.exports = {
         },
         actorUri
       });
+
+      return body;
     },
     async patch(ctx) {
       const { resourceUri, triplesToAdd, triplesToRemove, actorUri } = ctx.params;
@@ -81,7 +87,7 @@ module.exports = {
         });
       }
 
-      return await this.actions.fetch({
+      await this.actions.fetch({
         url: resourceUri,
         method: 'PATCH',
         headers: {
@@ -102,7 +108,7 @@ module.exports = {
         };
       }
 
-      return await this.actions.fetch({
+      await this.actions.fetch({
         url: resource.id || resource['@id'],
         method: 'PUT',
         headers: {
@@ -115,7 +121,7 @@ module.exports = {
     async delete(ctx) {
       const { resourceUri, actorUri } = ctx.params;
 
-      return await this.actions.fetch({
+      await this.actions.fetch({
         url: resourceUri,
         method: 'DELETE',
         actorUri

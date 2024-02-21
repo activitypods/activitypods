@@ -83,13 +83,10 @@ module.exports = {
       const actor = await ctx.call('activitypub.actor.get', { actorUri });
 
       // TODO get the cached activity to ensure we have no authorization problems
-      const { body: activity } = await ctx.call('pod-resources.get', { resourceUri: object, actorUri });
+      const activity = await ctx.call('pod-resources.get', { resourceUri: object, actorUri });
 
       // Use pod-resources.get instead of ldp.resource.get for matcher
-      const fetcher = async (ctx, resourceUri) => {
-        const { body } = await ctx.call('pod-resources.get', { resourceUri, actorUri });
-        return body;
-      };
+      const fetcher = (ctx, resourceUri) => ctx.call('pod-resources.get', { resourceUri, actorUri });
 
       if (target === actor.inbox) {
         for (const handler of this.handlers) {

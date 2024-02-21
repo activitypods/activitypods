@@ -73,20 +73,16 @@ module.exports = {
       return await ctx.call('pod-resources.list', ctx.params);
     },
     async get(ctx) {
-      const containerParams = {};
-      return await ctx.call('pod-resources.get', {
-        ...containerParams,
-        ...ctx.params
-      });
+      return await ctx.call('pod-resources.get', ctx.params);
     },
     async patch(ctx) {
-      return await ctx.call('pod-resources.patch', ctx.params);
+      await ctx.call('pod-resources.patch', ctx.params);
     },
     async put(ctx) {
-      return await ctx.call('pod-resources.put', ctx.params);
+      await ctx.call('pod-resources.put', ctx.params);
     },
     async delete(ctx) {
-      return await ctx.call('pod-resources.delete', ctx.params);
+      await ctx.call('pod-resources.delete', ctx.params);
     },
     async getContainerUri(ctx) {
       return await ctx.call('data-grants.getContainerUri', { podOwner: ctx.params.actorUri, type: this.settings.type });

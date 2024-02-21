@@ -3,9 +3,10 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://docs.activitypods.org',
   integrations: [
     starlight({
-      title: 'Docs',
+      title: 'DOCS',
       logo: {
         src: './src/assets/logo.svg'
       },
@@ -26,14 +27,17 @@ export default defineConfig({
           autogenerate: { directory: 'backend' }
         },
         {
-          label: 'Design',
-          autogenerate: { directory: 'design' }
+          label: 'App frontend',
+          autogenerate: { directory: 'frontend' }
         },
         {
-          label: 'Reference',
-          autogenerate: { directory: 'reference' }
+          label: 'Design',
+          autogenerate: { directory: 'design' }
         }
-      ]
+      ],
+      components: {
+        Hero: './src/components/Hero.astro'
+      }
     })
   ]
 });

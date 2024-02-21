@@ -1,17 +1,56 @@
 ---
-title: ActivityPods documentation
+title: Getting Started
+description: A basic intro to Astro.
+i18nReady: true
+tableOfContents: false
+editUrl: false
+next: false
+# banner:
+#   content: |
+#     <a href="https://astro.build/blog/astro-4/">Astro version 4.0 is here!</a>
+#     Are you ready to upgrade? <a href="/en/guides/upgrade-to/v4/">Read our upgrade guide</a>.
+hero:
+  title: ActivityPods Docs
+  tagline: Guides and resources to help you build with the ActivityPods framework
+  actions:
+    - text: Get started
+      icon: rocket
+      link: /en/install/auto/
+      variant: primary
+    - text: Learn about ActivityPods' architecture
+      icon: right-arrow
+      link: /en/concepts/why-astro/
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
-
-Guides lead a user through a specific task they want to accomplish, often with a sequence of steps.
-Writing a good guide requires thinking about what your users are trying to do.
+import { CardGrid } from '@astrojs/starlight/components';
+import Card from '../../components/Card.astro';
+import ListCard from '../../components/ListCard.astro';
 
 <CardGrid>
-  <Card title="Getting started" icon="rocket">
-    Tutorials
+  <Card title="Setup your own Pod provider" icon="laptop">
+    Explore [Astro starter themes](https://astro.build/themes/) for blogs, portfolios, docs, landing pages, SaaS, marketing, ecommerce sites, and more!
   </Card>
-  <Card title="References" icon="document">
-    Io, Europa, Ganymede
-  </Card>
+
+{' '}
+
+<Card title="Create your first social app" icon="star">
+  Complete our introductory [Build a Blog Tutorial](/en/tutorial/0-introduction/) to learn the basics and create your
+  first Astro site.
+</Card>
+
+{' '}
+
+<ListCard title="App backend" icon="open-book">
+  - [Astro's main features](/en/concepts/why-astro/) - [Island architecture](/en/concepts/islands/) - [Astro
+  components](/en/basics/astro-components/) - [The Astro template syntax](/en/basics/astro-syntax/)
+</ListCard>
+
+  <ListCard title="App frontend" icon="puzzle">
+    - [Add integrations like React, and Tailwind](/en/guides/integrations-guide/)
+    - [Create type safe content collections](/en/guides/content-collections/)
+    - [Enhance navigation with view transitions](/en/guides/view-transitions/)
+    - [Connect a headless CMS to your project](/en/guides/cms/) 
+  </ListCard>
 </CardGrid>
+
+{/* <Discord title="Have a question or want to get involved?" cta="Join our Discord" /> */}

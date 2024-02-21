@@ -4,15 +4,14 @@ sidebar:
   order: 1
 ---
 
-Application registration is a complex
+Application registration is a complex process [as can be read here](../../design/application-interoperability/). Fortunately, we handle it behind the scene so you have nothing to do except configuring a few settings.
 
 ## `AppService`
 
+Here is an example of a configuration:
+
 ```js
-const urlJoin = require('url-join');
 const { AppService } = require('@activitypods/app');
-const { AS_PREFIX } = require('@semapps/activitypub');
-const CONFIG = require('../config/config');
 
 module.exports = {
   mixins: [AppService],

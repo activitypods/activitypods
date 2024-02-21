@@ -3,7 +3,7 @@ import type { Props } from '@astrojs/starlight/props';
 import Button from './Button.astro';
 
 const { hero } = Astro.props.entry.data;
-const { title, tagline, actions, facepile } = hero!;
+const { title, tagline, actions } = hero!;
 ---
 
 <div class="hero">
@@ -101,7 +101,7 @@ const { title, tagline, actions, facepile } = hero!;
 		}
 		.hero-content > * {
 			/* Limit the content width so it doesn’t overlap with facepile elements. */
-			max-width: calc(100% - 29rem);
+			max-width: calc(100% - 20rem);
 		}
 
 		.actions {

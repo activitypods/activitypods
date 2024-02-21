@@ -83,6 +83,20 @@ const initialize = async (port, settingsDataset) => {
         accountsDataset: settingsDataset
       },
       settingsDataset,
+      notifications: {
+        mail: {
+          from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
+          transport: {
+            host: CONFIG.SMTP_HOST,
+            port: CONFIG.SMTP_PORT,
+            secure: CONFIG.SMTP_SECURE,
+            auth: {
+              user: CONFIG.SMTP_USER,
+              pass: CONFIG.SMTP_PASS
+            }
+          }
+        }
+      },
       api: {
         port
       }

@@ -65,7 +65,7 @@ describe('Test app installation', () => {
     await appServer.stop();
   });
 
-  test('Get local data through proxy', async () => {
+  test('Get local data through app', async () => {
     aliceEventUri = await alice.call('ldp.container.post', {
       containerUri: urlJoin(alice.id, 'data/as/event'),
       resource: {
@@ -76,19 +76,17 @@ describe('Test app installation', () => {
     });
 
     await expect(
-      appServer.call('pod-proxy.get', {
+      appServer.call('pod-resources.get', {
         resourceUri: aliceEventUri,
         actorUri: alice.id
       })
     ).resolves.toMatchObject({
-      body: {
-        type: 'Event',
-        name: 'Birthday party !'
-      }
+      type: 'Event',
+      name: 'Birthday party !'
     });
   });
 
-  test('Get remote data through proxy', async () => {
+  test('Get remote data through app', async () => {
     bobEventUri = await bob.call('ldp.container.post', {
       containerUri: urlJoin(bob.id, 'data/as/event'),
       resource: {
@@ -100,7 +98,7 @@ describe('Test app installation', () => {
 
     // Alice hasn't right (yet) to see Bob event
     await expect(
-      appServer.call('pod-proxy.get', {
+      appServer.call('pod-resources.get', {
         resourceUri: bobEventUri,
         actorUri: alice.id
       })
@@ -118,15 +116,13 @@ describe('Test app installation', () => {
     });
 
     await expect(
-      appServer.call('pod-proxy.get', {
+      appServer.call('pod-resources.get', {
         resourceUri: bobEventUri,
         actorUri: alice.id
       })
     ).resolves.toMatchObject({
-      body: {
-        type: 'Event',
-        name: 'Vegan barbecue'
-      }
+      type: 'Event',
+      name: 'Vegan barbecue'
     });
   });
 
@@ -157,14 +153,14 @@ describe('Test app installation', () => {
 
     // Bob's note is shared with Alice, but the app has not registered as:Note
     await expect(
-      appServer.call('pod-proxy.get', {
+      appServer.call('pod-resources.get', {
         resourceUri: bobNoteUri,
         actorUri: alice.id
       })
     ).rejects.toThrow();
   });
 
-  test('Cannot PUT data not registered by app', async () => {
+  test('Cannot POST data not registered by app', async () => {
     await bob.call('webacl.resource.addRights', {
       resourceUri: bobNoteUri,
       additionalRights: {
@@ -178,7 +174,7 @@ describe('Test app installation', () => {
 
     // Bob gave write permission to Alice, but the app has not registered as:Note
     await expect(
-      appServer.call('pod-proxy.post', {
+      appServer.call('pod-resources.post', {
         resource: {
           type: 'Note',
           name: 'Note to myself... and my friends !'
@@ -188,7 +184,7 @@ describe('Test app installation', () => {
     ).rejects.toThrow();
   });
 
-  test('PUT data registered by app', async () => {
+  test('POST data registered by app', async () => {
     await bob.call('webacl.resource.addRights', {
       resourceUri: bobEventUri,
       additionalRights: {
@@ -201,7 +197,7 @@ describe('Test app installation', () => {
     });
 
     await expect(
-      appServer.call('pod-proxy.post', {
+      appServer.call('pod-resources.post', {
         resource: {
           type: 'Event',
           name: 'Vegan (and vegetarian) barbecue'

@@ -10,7 +10,7 @@ The mechanism for generating webhooks and subscribing to collections can be tedi
 
 ## `PodActivitiesWatcherService`
 
-This service, which is automatically created by the `AppService', will check for all users who have granted the special `apods:ReadInbox' and `apods:ReadOutbox' permissions, and will automatically subscribe to webhooks.
+This service, which is automatically created by the `AppService`, will check for all users who have granted the special `apods:ReadInbox' and `apods:ReadOutbox' permissions, and will automatically subscribe to webhooks.
 
 Each service can monitor certain types of activity like this:
 

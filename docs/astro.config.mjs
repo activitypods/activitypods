@@ -22,8 +22,8 @@ export default defineConfig({
           autogenerate: { directory: 'tutorials' }
         },
         {
-          label: 'Guides',
-          autogenerate: { directory: 'guides' }
+          label: 'App backend',
+          autogenerate: { directory: 'backend' }
         },
         {
           label: 'Design',

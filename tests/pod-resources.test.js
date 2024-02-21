@@ -1,6 +1,7 @@
 const path = require('path');
 const urlJoin = require('url-join');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const { triple, namedNode, literal } = require('@rdfjs/data-model');
 const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 
@@ -11,7 +12,7 @@ const NUM_PODS = 2;
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
-describe('Test app installation', () => {
+describe('Test Pod resources handling', () => {
   let actors = [],
     podServer,
     alice,
@@ -126,6 +127,18 @@ describe('Test app installation', () => {
     });
   });
 
+  test('Cannot post to non-container', async () => {
+    await expect(
+      appServer.call('pod-resources.post', {
+        resource: {
+          id: alice.id + '/sparql',
+          hackMe: 'if you can ?'
+        },
+        actorUri: alice.id
+      })
+    ).rejects.toThrow();
+  });
+
   test('Cannot get data not registered by app', async () => {
     await bob.call('ldp.registry.register', {
       acceptedTypes: 'as:Note'
@@ -160,7 +173,41 @@ describe('Test app installation', () => {
     ).rejects.toThrow();
   });
 
-  test('Cannot POST data not registered by app', async () => {
+  test('PUT data registered by app', async () => {
+    await bob.call('webacl.resource.addRights', {
+      resourceUri: bobEventUri,
+      additionalRights: {
+        user: {
+          uri: alice.id,
+          write: true
+        }
+      },
+      contentType: MIME_TYPES.JSON
+    });
+
+    await expect(
+      appServer.call('pod-resources.put', {
+        resource: {
+          id: bobEventUri,
+          type: 'Event',
+          name: 'Vegan (and vegetarian) barbecue'
+        },
+        actorUri: alice.id
+      })
+    ).resolves.not.toThrow();
+
+    await expect(
+      appServer.call('pod-resources.get', {
+        resourceUri: bobEventUri,
+        actorUri: alice.id
+      })
+    ).resolves.toMatchObject({
+      type: 'Event',
+      name: 'Vegan (and vegetarian) barbecue'
+    });
+  });
+
+  test('Cannot PUT data not registered by app', async () => {
     await bob.call('webacl.resource.addRights', {
       resourceUri: bobNoteUri,
       additionalRights: {
@@ -174,8 +221,9 @@ describe('Test app installation', () => {
 
     // Bob gave write permission to Alice, but the app has not registered as:Note
     await expect(
-      appServer.call('pod-resources.post', {
+      appServer.call('pod-resources.put', {
         resource: {
+          id: bobNoteUri,
           type: 'Note',
           name: 'Note to myself... and my friends !'
         },
@@ -184,24 +232,44 @@ describe('Test app installation', () => {
     ).rejects.toThrow();
   });
 
-  test('POST data registered by app', async () => {
-    await bob.call('webacl.resource.addRights', {
-      resourceUri: bobEventUri,
-      additionalRights: {
-        user: {
-          uri: alice.id,
-          write: true
-        }
-      },
-      contentType: MIME_TYPES.JSON
-    });
+  test('PATCH data registered by app', async () => {
+    await expect(
+      appServer.call('pod-resources.patch', {
+        resourceUri: bobEventUri,
+        triplesToAdd: [
+          triple(
+            namedNode(bobEventUri),
+            namedNode('https://www.w3.org/ns/activitystreams#summary'),
+            literal('A super-powerful AI-generated summary')
+          )
+        ],
+        actorUri: alice.id
+      })
+    ).resolves.not.toThrow();
 
     await expect(
-      appServer.call('pod-resources.post', {
-        resource: {
-          type: 'Event',
-          name: 'Vegan (and vegetarian) barbecue'
-        },
+      appServer.call('pod-resources.get', {
+        resourceUri: bobEventUri,
+        actorUri: alice.id
+      })
+    ).resolves.toMatchObject({
+      type: 'Event',
+      name: 'Vegan (and vegetarian) barbecue',
+      summary: 'A super-powerful AI-generated summary'
+    });
+  });
+
+  test('DELETE data registered by app', async () => {
+    await expect(
+      appServer.call('pod-resources.delete', {
+        resourceUri: bobEventUri,
+        actorUri: alice.id
+      })
+    ).resolves.not.toThrow();
+
+    await expect(
+      appServer.call('pod-resources.get', {
+        resourceUri: bobEventUri,
         actorUri: alice.id
       })
     ).rejects.toThrow();

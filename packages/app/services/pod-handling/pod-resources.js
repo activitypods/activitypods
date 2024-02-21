@@ -98,7 +98,7 @@ module.exports = {
       });
     },
     async put(ctx) {
-      const { resource, actorUri } = ctx.params;
+      let { resource, actorUri } = ctx.params;
 
       // Adds the default context, if it is missing
       if (!resource['@context']) {
@@ -128,7 +128,7 @@ module.exports = {
       });
     },
     async fetch(ctx) {
-      let { url, method, headers, body, actorUri } = ctx.params;
+      let { url, method, headers = {}, body, actorUri } = ctx.params;
 
       const app = await ctx.call('app.get');
 

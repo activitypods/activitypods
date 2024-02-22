@@ -13,6 +13,7 @@ const DataGrantsService = require('./services/registration/data-grants');
 const RegistrationService = require('./services/registration/registration');
 const PodActivitiesWatcherService = require('./services/pod-handling/pod-activities-watcher');
 const PodNotificationService = require('./services/pod-handling/pod-notification');
+const PodOutboxService = require('./services/pod-handling/pod-outbox');
 const PodResourcesService = require('./services/pod-handling/pod-resources');
 
 module.exports = {
@@ -66,14 +67,15 @@ module.exports = {
     this.broker.createService(DataGrantsService);
     this.broker.createService(AccessGrantsService);
 
+    this.broker.createService(PodActivitiesWatcherService, {
+      mixins: [QueueMixin(this.settings.queueServiceUrl)]
+    });
     this.broker.createService(PodNotificationService, {
       settings: {
         frontUrl: this.settings.app.frontUrl
       }
     });
-    this.broker.createService(PodActivitiesWatcherService, {
-      mixins: [QueueMixin(this.settings.queueServiceUrl)]
-    });
+    this.broker.createService(PodOutboxService);
     this.broker.createService(PodResourcesService);
   },
   async started() {

@@ -12,6 +12,30 @@ module.exports = {
     },
     excludeFromMirror: true
   },
+  actions: {
+    async getSpecialRights(ctx) {
+      const { appUri, podOwner } = ctx.params;
+
+      const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
+
+      const filteredContainer = await this.actions.list(
+        {
+          containerUri,
+          filters: {
+            'http://www.w3.org/ns/solid/interop#grantedBy': podOwner,
+            'http://www.w3.org/ns/solid/interop#grantee': appUri
+          },
+          webId: 'system'
+        },
+        { parentCtx: ctx }
+      );
+
+      return arrayOf(filteredContainer['ldp:contains']).reduce((acc, cur) => {
+        if (cur['apods:hasSpecialRights']) acc.push(...arrayOf(cur['apods:hasSpecialRights']));
+        return acc;
+      }, []);
+    }
+  },
   hooks: {
     after: {
       async post(ctx, res) {

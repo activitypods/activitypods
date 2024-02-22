@@ -1,7 +1,8 @@
 const urlJoin = require('url-join');
 const { Errors: E } = require('moleculer-web');
-const { arrayOf, hasType } = require('@semapps/ldp');
+const { arrayOf, hasType, getParentContainerUri } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
+const { MIME_TYPES } = require('@semapps/mime-types');
 
 const DEFAULT_ALLOWED_TYPES = [...Object.values(ACTOR_TYPES), ...Object.values(ACTIVITY_TYPES)];
 
@@ -112,6 +113,72 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         }
 
         return result;
+      };
+    } else if (action.name === 'activitypub.outbox.post') {
+      return async ctx => {
+        const { collectionUri, ...activity } = ctx.params;
+        const podOwner = getParentContainerUri(collectionUri);
+
+        console.log('podOwner', podOwner);
+
+        // Bypass checks if user is posting to their outbox
+        if (ctx.meta.webId === podOwner) {
+          return next(ctx);
+        }
+
+        console.log('activity', activity);
+
+        const appUri = ctx.meta.webId;
+
+        // Ensure the webId is a registered application
+        if (!(await ctx.call('app-registrations.isRegistered', { appUri, podOwner }))) {
+          throw new E.ForbiddenError(`Only registered applications may post to the user`);
+        }
+
+        const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
+        if (!specialRights.includes('apods:PostOutbox')) {
+          throw new E.ForbiddenError(`The application has no permission to post to the outbox (apods:PostOutbox)`);
+        }
+
+        if (hasType(activity, 'Create') || hasType(activity, 'Update') || hasType(activity, 'Delete')) {
+          const allowedTypes = await getAllowedTypes(ctx, appUri, podOwner, 'acl:Write');
+          let resourceTypes;
+
+          if (hasType(activity, 'Create')) {
+            resourceTypes = await ctx.call('jsonld.parser.expandTypes', {
+              types: activity.object.type || activity.object['@type'],
+              context: activity['@context']
+            });
+          } else {
+            try {
+              const resource = await ctx.call('ldp.resource.get', {
+                resourceUri: activity.object.id || activity.object['@id'],
+                accept: MIME_TYPES.JSON,
+                webId: 'system'
+              });
+
+              resourceTypes = await ctx.call('jsonld.parser.expandTypes', {
+                types: resource.type || resource['@type'],
+                context: activity['@context']
+              });
+            } catch (e) {
+              throw new E.ForbiddenError(`The resource ${activity.object.id || activity.object['@id']} doesn't exist`);
+            }
+          }
+
+          console.log('resourceTypes', resourceTypes);
+
+          if (!resourceTypes.some(t => allowedTypes.includes(t))) {
+            throw new E.ForbiddenError(`The type of the resource doesn't match any authorized types`);
+          }
+        }
+
+        // Impersonate the user so that signature.proxy.api_query can be called
+        ctx.meta.webId = podOwner;
+
+        ctx.params.generator = appUri;
+
+        return await next(ctx);
       };
     }
 

@@ -119,14 +119,10 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         const { collectionUri, ...activity } = ctx.params;
         const podOwner = getParentContainerUri(collectionUri);
 
-        console.log('podOwner', podOwner);
-
         // Bypass checks if user is posting to their outbox
         if (ctx.meta.webId === podOwner) {
           return next(ctx);
         }
-
-        console.log('activity', activity);
 
         const appUri = ctx.meta.webId;
 
@@ -165,8 +161,6 @@ const AppControlMiddleware = ({ baseUrl }) => ({
               throw new E.ForbiddenError(`The resource ${activity.object.id || activity.object['@id']} doesn't exist`);
             }
           }
-
-          console.log('resourceTypes', resourceTypes);
 
           if (!resourceTypes.some(t => allowedTypes.includes(t))) {
             throw new E.ForbiddenError(`The type of the resource doesn't match any authorized types`);

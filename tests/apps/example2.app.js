@@ -6,18 +6,15 @@ module.exports = {
   mixins: [AppService],
   settings: {
     app: {
-      name: 'Example App',
-      description: 'An ActivityPods app for integration tests'
+      name: 'Example 2 App',
+      description: 'Another ActivityPods app for integration tests'
     },
     accessNeeds: {
       required: [
         {
           registeredClass: AS_PREFIX + 'Event',
           accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
-        },
-        'apods:ReadInbox',
-        'apods:PostOutbox',
-        'apods:SendNotification'
+        }
       ],
       optional: [
         {

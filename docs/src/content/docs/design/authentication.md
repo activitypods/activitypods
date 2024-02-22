@@ -4,9 +4,6 @@ sidebar:
   order: 3
 ---
 
-Guides lead a user through a specific task they want to accomplish, often with a sequence of steps.
-Writing a good guide requires thinking about what your users are trying to do.
-
 ## Solid-OIDC
 
 In v2.0, we partly support authentication through [Solid-OIDC](https://solidproject.org/TR/oidc). This is detailed in [#121](https://github.com/assemblee-virtuelle/activitypods/issues/121).
@@ -42,28 +39,3 @@ In addition to HTTP signature, it is [recommended](https://www.w3.org/wiki/Socia
 ## WebID-TLS
 
 Considering [WebID-TLS](https://www.w3.org/2005/Incubator/webid/spec/tls/) authentication mechanism, used before Solid-OIDC, is now only an option, we will not implement it.
-
-## Capability URL
-
-We implement capability resources which are defined as [WAC](https://solid.github.io/web-access-control-spec/) Authorizations:
-
-```json
-{
-  "@context": { "acl": "http://www.w3.org/ns/auth/acl#" },
-  "@id": "https://myserver.com/capabilities/k3kleict5ks3r4",
-  "@type": "acl:Authorization",
-  "acl:accessTo": "https://myserver.com/resource/x",
-  "acl:mode": "acl:Write"
-}
-```
-
-Anyone who know the capability URL can access its corresponding resource like this:
-
-```
-GET /capabilities/k3kleict5ks3r4 HTTP/1.1
-Host: myserver.com
-Accept: application/ld+json
-Authorization: Capability https://myserver.com/capabilities/k3kleict5ks3r4
-```
-
-The capability resource itself is not public, but it can be requested with its own URL in the `Authorization` header.

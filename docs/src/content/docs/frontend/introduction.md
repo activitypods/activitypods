@@ -1,5 +1,5 @@
 ---
-title: Overall architecture
+title: Introduction
 sidebar:
   order: 0
 ---

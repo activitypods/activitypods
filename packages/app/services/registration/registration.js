@@ -2,7 +2,6 @@ const { MoleculerError } = require('moleculer').Errors;
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { interopContext } = require('@semapps/core');
 
 module.exports = {
   name: 'app.registration',
@@ -41,16 +40,19 @@ module.exports = {
 
           // GET APP REGISTRATION AND GRANTS
 
+          // Use local context to get all data
+          const jsonContext = await ctx.call('jsonld.context.get');
+
           const appRegistration = await ctx.call('ldp.remote.get', {
             resourceUri: activity.object.id,
-            jsonContext: interopContext
+            jsonContext
           });
 
           const accessGrants = await Promise.all(
             arrayOf(appRegistration['interop:hasAccessGrant']).map(accessGrantUri =>
               ctx.call('ldp.remote.get', {
                 resourceUri: accessGrantUri,
-                jsonContext: interopContext,
+                jsonContext,
                 accept: MIME_TYPES.JSON
               })
             )
@@ -69,7 +71,7 @@ module.exports = {
             dataGrantsUris.map(dataGrantUri =>
               ctx.call('ldp.remote.get', {
                 resourceUri: dataGrantUri,
-                jsonContext: interopContext,
+                jsonContext,
                 accept: MIME_TYPES.JSON
               })
             )
@@ -113,16 +115,16 @@ module.exports = {
           // STORE LOCALLY APP REGISTRATION AND GRANTS
 
           await ctx.call('ldp.remote.store', { resource: appRegistration });
-          await ctx.call('app-registrations.attach', { resourceUri: appRegistration.id });
+          await ctx.call('app-registrations.attach', { resourceUri: appRegistration.id || appRegistration['@id'] });
 
           for (const accessGrant of accessGrants) {
             await ctx.call('ldp.remote.store', { resource: accessGrant });
-            await ctx.call('access-grants.attach', { resourceUri: accessGrant.id });
+            await ctx.call('access-grants.attach', { resourceUri: accessGrant.id || accessGrant['@id'] });
           }
 
           for (const dataGrant of dataGrants) {
             await ctx.call('ldp.remote.store', { resource: dataGrant });
-            await ctx.call('data-grants.attach', { resourceUri: dataGrant.id });
+            await ctx.call('data-grants.attach', { resourceUri: dataGrant.id || dataGrant['@id'] });
           }
 
           await ctx.emit('app.registered', { appRegistration, accessGrants, dataGrants });

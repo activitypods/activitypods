@@ -1,6 +1,6 @@
 const urlJoin = require('url-join');
 const { Errors: E } = require('moleculer-web');
-const { arrayOf } = require('@semapps/ldp');
+const { arrayOf, hasType } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
 
 const DEFAULT_ALLOWED_TYPES = [...Object.values(ACTOR_TYPES), ...Object.values(ACTIVITY_TYPES)];
@@ -28,6 +28,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
     if (action.name === 'signature.proxy.api_query') {
       return async ctx => {
         const podOwner = urlJoin(baseUrl, ctx.params.username);
+        const url = ctx.params.id;
 
         // Bypass checks if user is querying his own pod
         if (ctx.meta.webId === podOwner) {
@@ -36,26 +37,29 @@ const AppControlMiddleware = ({ baseUrl }) => ({
 
         const appUri = ctx.meta.webId;
 
+        // Ensure we are fetching remote data (otherwise this could be a security issue)
+        if (url.startsWith(podOwner)) {
+          throw new E.ForbiddenError(`The proxy cannot be used to fetch local data`);
+        }
+
         // Ensure the webId is a registered application
         if (!(await ctx.call('app-registrations.isRegistered', { appUri, podOwner }))) {
           throw new E.ForbiddenError(`Only registered applications may fetch the proxy endpoint`);
         }
-
-        // TODO Ensure the application has the "special right" to query the proxy
 
         // Ensure the application has the right to modify this resource
         if (ctx.params.method === 'PUT' || ctx.params.method === 'DELETE') {
           let resourceTypes = [];
           try {
             // Fetch the resource to have its type
-            const resource = await ctx.call('ldp.remote.get', { resourceUri: ctx.params.id, webId: podOwner });
+            const resource = await ctx.call('ldp.remote.get', { resourceUri: url, webId: podOwner });
             resourceTypes = await ctx.call('jsonld.parser.expandTypes', {
               types: resource.type || resource['@type'],
               context: resource['@context']
             });
           } catch (e) {
             // If we can't GET the resource, we won't authorize the call to the proxy
-            throw new E.ForbiddenError(`No ${ctx.params.method} call is allowed on the URL ${ctx.params.id}`);
+            throw new E.ForbiddenError(`No ${ctx.params.method} call is allowed on the URL ${url}`);
           }
 
           const allowedTypes = await getAllowedTypes(ctx, appUri, podOwner, 'acl:Write');
@@ -69,6 +73,11 @@ const AppControlMiddleware = ({ baseUrl }) => ({
 
         // Ensure the application has the right to create this resource
         if (ctx.params.method === 'POST') {
+          const resource = await ctx.call('ldp.remote.getNetwork', { resourceUri: url, webId: podOwner });
+          if (hasType(resource, 'ldp:Container')) {
+            throw new E.ForbiddenError(`Cannot post to ${url} because it is not a container`);
+          }
+
           const resourceTypes = await ctx.call('jsonld.parser.expandTypes', {
             types: ctx.params.body.type || ctx.params.body['@type'],
             context: ctx.params.body['@context']

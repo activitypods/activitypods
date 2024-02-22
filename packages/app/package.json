@@ -21,7 +21,8 @@
     "moleculer": "^0.14.19",
     "url-join": "^4.0.1",
     "formdata-node": "4.4.1",
-    "form-data-encoder": "1.9.0"
+    "form-data-encoder": "1.9.0",
+    "sparqljs": "^3.5.2"
   },
   "publishConfig": {
     "access": "public"

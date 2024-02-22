@@ -60,7 +60,7 @@ const initialize = async (port, settingsDataset) => {
       // Uncomment the next line run all tests with memory cacher
       // CacherMiddleware({ type: 'Memory' }),
       WebAclMiddleware({ baseUrl, podProvider: true }),
-      ObjectsWatcherMiddleware({ baseUrl, podProvider: true }),
+      ObjectsWatcherMiddleware({ baseUrl, podProvider: true, postWithoutRecipients: true }),
       AppControlMiddleware({ baseUrl })
     ],
     logger

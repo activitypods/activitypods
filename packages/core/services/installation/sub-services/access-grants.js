@@ -30,9 +30,10 @@ module.exports = {
         { parentCtx: ctx }
       );
 
-      return filteredContainer['ldp:contains']
-        ? [].concat(filteredContainer['ldp:contains'].map(accessGrant => accessGrant['apods:hasSpecialRights']))
-        : [];
+      return arrayOf(filteredContainer['ldp:contains']).reduce((acc, cur) => {
+        if (cur['apods:hasSpecialRights']) acc.push(...arrayOf(cur['apods:hasSpecialRights']));
+        return acc;
+      }, []);
     }
   },
   hooks: {

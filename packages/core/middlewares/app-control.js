@@ -198,8 +198,6 @@ const AppControlMiddleware = ({ baseUrl }) => ({
           throw new E.ForbiddenError(`The application has no permission to handle ACL groups (apods:CreateAclGroup)`);
         }
 
-        // ctx.meta.webId = podOwner;
-
         return await next(ctx);
       };
     }

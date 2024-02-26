@@ -14,7 +14,9 @@ const RegistrationService = require('./services/registration/registration');
 const PodActivitiesWatcherService = require('./services/pod-handling/pod-activities-watcher');
 const PodNotificationService = require('./services/pod-handling/pod-notification');
 const PodOutboxService = require('./services/pod-handling/pod-outbox');
+const PodPermissionsService = require('./services/pod-handling/pod-permissions');
 const PodResourcesService = require('./services/pod-handling/pod-resources');
+const PodWacGroupsService = require('./services/pod-handling/pod-wac-groups');
 
 module.exports = {
   name: 'app',
@@ -76,7 +78,9 @@ module.exports = {
       }
     });
     this.broker.createService(PodOutboxService);
+    this.broker.createService(PodPermissionsService);
     this.broker.createService(PodResourcesService);
+    this.broker.createService(PodWacGroupsService);
   },
   async started() {
     let actorExist = false,

@@ -14,10 +14,10 @@ Get permissions of a resource, container or collection.
 
 #### Parameters
 
-| Property   | Type     | Default      | Description                                         |
-| ---------- | -------- | ------------ | --------------------------------------------------- |
-| `uri`      | `String` | **required** | URI of the resource, container or collection        |
-| `actorUri` | `String` | **required** | WebID of the Pod on which the action should be done |
+| Property   | Type     | Description                                         |
+| ---------- | -------- | --------------------------------------------------- |
+| `uri`      | `String` | URI of the resource, container or collection        |
+| `actorUri` | `String` | WebID of the Pod on which the action should be done |
 
 #### Return value
 
@@ -29,13 +29,13 @@ Add permissions to a resource, container or collection.
 
 #### Parameters
 
-| Property         | Type     | Default      | Description                                                   |
-| ---------------- | -------- | ------------ | ------------------------------------------------------------- |
-| `uri`            | `String` | **required** | URI of the resource, container or collection                  |
-| `agentUri`       | `String` | **required** | URI of the agent which will receive the permission            |
-| `agentPredicate` | `String` | **required** | Can be `acl:agent`, `acl:agentGroup` or `acl:agentClass`      |
-| `mode`           | `String` | **required** | Can be `acl:Read`, `acl:Append`, `acl:Write` or `acl:Control` |
-| `actorUri`       | `String` | **required** | WebID of the Pod on which the action should be done           |
+| Property         | Type     | Description                                                   |
+| ---------------- | -------- | ------------------------------------------------------------- |
+| `uri`            | `String` | URI of the resource, container or collection                  |
+| `agentUri`       | `String` | URI of the agent which will receive the permission            |
+| `agentPredicate` | `String` | Can be `acl:agent`, `acl:agentGroup` or `acl:agentClass`      |
+| `mode`           | `String` | Can be `acl:Read`, `acl:Append`, `acl:Write` or `acl:Control` |
+| `actorUri`       | `String` | WebID of the Pod on which the action should be done           |
 
 #### Return value
 
@@ -47,13 +47,13 @@ Remove permissions from a resource, container or collection.
 
 #### Parameters
 
-| Property         | Type     | Default      | Description                                                   |
-| ---------------- | -------- | ------------ | ------------------------------------------------------------- |
-| `uri`            | `String` | **required** | URI of the resource, container or collection                  |
-| `agentUri`       | `String` | **required** | URI of the agent which will receive the permission            |
-| `agentPredicate` | `String` | **required** | Can be `acl:agent`, `acl:agentGroup` or `acl:agentClass`      |
-| `mode`           | `String` | **required** | Can be `acl:Read`, `acl:Append`, `acl:Write` or `acl:Control` |
-| `actorUri`       | `String` | **required** | WebID of the Pod on which the action should be done           |
+| Property         | Type     | Description                                                   |
+| ---------------- | -------- | ------------------------------------------------------------- |
+| `uri`            | `String` | URI of the resource, container or collection                  |
+| `agentUri`       | `String` | URI of the agent which will receive the permission            |
+| `agentPredicate` | `String` | Can be `acl:agent`, `acl:agentGroup` or `acl:agentClass`      |
+| `mode`           | `String` | Can be `acl:Read`, `acl:Append`, `acl:Write` or `acl:Control` |
+| `actorUri`       | `String` | WebID of the Pod on which the action should be done           |
 
 #### Return value
 

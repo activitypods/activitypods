@@ -1,4 +1,5 @@
 const urlJoin = require('url-join');
+const createSlug = require('speakingurl');
 const { Errors: E } = require('moleculer-web');
 const { arrayOf, hasType, getParentContainerUri } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
@@ -39,6 +40,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         const appUri = ctx.meta.webId;
 
         // Ensure we are fetching remote data (otherwise this could be a security issue)
+        console.log('url startsWith', url);
         if (url.startsWith(podOwner)) {
           throw new E.ForbiddenError(`The proxy cannot be used to fetch local data`);
         }
@@ -128,7 +130,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
 
         // Ensure the webId is a registered application
         if (!(await ctx.call('app-registrations.isRegistered', { appUri, podOwner }))) {
-          throw new E.ForbiddenError(`Only registered applications may post to the user`);
+          throw new E.ForbiddenError(`Only registered applications may post to the user outbox`);
         }
 
         const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
@@ -171,6 +173,32 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         ctx.meta.webId = podOwner;
 
         ctx.params.generator = appUri;
+
+        return await next(ctx);
+      };
+    } else if (action.name === 'webacl.group.api_create') {
+      return async ctx => {
+        const { username } = ctx.params;
+        const podOwner = urlJoin(baseUrl, username);
+
+        // Bypass checks if user is acting on their own
+        if (ctx.meta.webId === podOwner) {
+          return next(ctx);
+        }
+
+        const appUri = ctx.meta.webId;
+
+        // Ensure the webId is a registered application
+        if (!(await ctx.call('app-registrations.isRegistered', { appUri, podOwner }))) {
+          throw new E.ForbiddenError(`Only registered applications may handle ACL groups`);
+        }
+
+        const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
+        if (!specialRights.includes('apods:CreateAclGroup')) {
+          throw new E.ForbiddenError(`The application has no permission to handle ACL groups (apods:CreateAclGroup)`);
+        }
+
+        // ctx.meta.webId = podOwner;
 
         return await next(ctx);
       };

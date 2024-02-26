@@ -58,7 +58,15 @@ module.exports = {
     isLocal(url, podOwner) {
       const { origin, pathname } = new URL(podOwner);
       const aclBase = `${origin}/_acl${pathname}`; // URL of type http://localhost:3000/_acl/alice
-      return url === podOwner || url.startsWith(podOwner + '/') || url === aclBase || url.startsWith(aclBase);
+      const aclGroupBase = `${origin}/_groups${pathname}`; // URL of type http://localhost:3000/_groups/alice
+      return (
+        url === podOwner ||
+        url.startsWith(podOwner + '/') ||
+        url === aclBase ||
+        url.startsWith(aclBase + '/') ||
+        url === aclGroupBase ||
+        url.startsWith(aclGroupBase + '/')
+      );
     }
   }
 };

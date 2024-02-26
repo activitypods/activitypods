@@ -17,7 +17,8 @@ module.exports = {
         },
         'apods:ReadInbox',
         'apods:PostOutbox',
-        'apods:SendNotification'
+        'apods:SendNotification',
+        'apods:CreateAclGroup'
       ],
       optional: [
         {

@@ -15,15 +15,28 @@ module.exports = {
         actorUri
       });
 
-      return status === 200 ? body['@graph'] : false;
+      return status === 200 ? body : false;
+    },
+    async list(ctx) {
+      const { actorUri } = ctx.params;
+      const { origin, pathname } = new URL(actorUri);
+
+      const { body, status } = await this.actions.fetch({
+        url: `${origin}/_groups${pathname}`,
+        headers: {
+          Accept: 'application/ld+json'
+        },
+        actorUri
+      });
+
+      return status === 200 ? body : false;
     },
     async create(ctx) {
       const { groupSlug, actorUri } = ctx.params;
+      const { origin, pathname } = new URL(actorUri);
 
-      const { origin } = new URL(podOwner);
-
-      const { body } = await this.actions.fetch({
-        url: `${origin}/_groups`,
+      const { headers } = await this.actions.fetch({
+        url: `${origin}/_groups${pathname}`,
         method: 'POST',
         headers: {
           Slug: groupSlug
@@ -31,7 +44,7 @@ module.exports = {
         actorUri
       });
 
-      return body;
+      return headers.location;
     },
     async delete(ctx) {
       const { groupUri, groupSlug, actorUri } = ctx.params;
@@ -77,9 +90,9 @@ module.exports = {
   },
   methods: {
     // Return URL like http://localhost:3000/_groups/alice/contacts
-    async getGroupUri(groupSlug, podOwner) {
+    getGroupUri(groupSlug, podOwner) {
       const { origin, pathname } = new URL(podOwner);
-      return `${origin}/groups${pathname}/${groupSlug}`;
+      return `${origin}/_groups${pathname}/${groupSlug}`;
     }
   }
 };

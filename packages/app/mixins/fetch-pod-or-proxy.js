@@ -6,7 +6,7 @@ const { stream2buffer } = require('../utils');
 module.exports = {
   actions: {
     async fetch(ctx) {
-      let { url, method, headers = {}, body, actorUri } = ctx.params;
+      let { url, method = 'GET', headers = {}, body, actorUri } = ctx.params;
 
       const app = await ctx.call('app.get');
 
@@ -58,7 +58,7 @@ module.exports = {
     isLocal(url, podOwner) {
       const { origin, pathname } = new URL(podOwner);
       const aclBase = `${origin}/_acl${pathname}`; // URL of type http://localhost:3000/_acl/alice
-      return url === podOwner || url.startsWith(actorUri + '/') || url === aclBase || url.startsWith(aclBase);
+      return url === podOwner || url.startsWith(podOwner + '/') || url === aclBase || url.startsWith(aclBase);
     }
   }
 };

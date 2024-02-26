@@ -13,7 +13,7 @@ module.exports = {
       required: [
         {
           registeredClass: AS_PREFIX + 'Event',
-          accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
+          accessMode: ['acl:Read', 'acl:Write']
         }
       ],
       optional: [

@@ -8,7 +8,7 @@ Writing and reading resources on the user's Pod is easy thanks to the [LDP speci
 
 ## `PodResourcesService`
 
-If you need to read or write data to the Pod, you can use the `PodResourcesService'. It implements the `post`, `list`, `get`, `put`, `patch`and`delete`actions in a very similar way to the`LdpResourceService`and`LdpContainerService`, except that you have to specify the Pod you want to write to using the `actorUri` parameter.
+If you need to read or write data to the Pod, you can use the `PodResourcesService`. It implements the `post`, `list`, `get`, `put`, `patch`and`delete`actions in a very similar way to the`LdpResourceService`and`LdpContainerService`, except that you have to specify the Pod you want to write to using the `actorUri` parameter.
 
 ```js
 await ctx.call('pod-resources.get`, {

@@ -23,7 +23,7 @@ If the resources you want to fetch is not in the Pod of the user (`actorUri`) bu
 
 ## `PodResourcesHandlerMixin`
 
-Since your application is likely to deal only with certain types of data, you can use the `PodResourcesHandlerMixin' to interact with the Pod more easily. This mixin contains the same type of actions as the `PodResourcesMixin`, except that you don't need to provide the containerUri for the `post`and`list` actions.
+Since your application is likely to deal only with certain types of data, you can use the `PodResourcesHandlerMixin` to interact with the Pod more easily. This mixin contains the same type of actions as the `PodResourcesMixin`, except that you don't need to provide the containerUri for the `post`and`list` actions.
 
 You can also configure the `onCreate`, `onUpdate`, and `onDelete` methods to listen for changes in the Pod. When you define one of these methods, the mixin will automatically watch for `Create`, `Update`, and `Delete` activities related to these resources, thanks to the [`PodActivitiesWatcherService`](listening-to-inbox-and-outbox.md#podactivitieswatcherservice).
 

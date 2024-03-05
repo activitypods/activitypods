@@ -21,17 +21,27 @@ module.exports = {
     accessNeeds: {
       required: [
         {
-          registeredClass: AS_PREFIX + 'Event',
+          registeredClass: 'as:Event',
           accessMode: ['acl:Read', 'acl:Write']
         },
         {
-          registeredClass: 'http://www.w3.org/2006/vcard/ns#Individual',
+          registeredClass: 'vcard:Individual',
           accessMode: 'acl:Read'
         },
         'apods:ReadInbox',
         'apods:ReadOutbox'
       ],
       optional: ['apods:SendNotification']
+    },
+    classDescription: {
+      'as:Event': {
+        label: {
+          en: 'Events',
+          fr: 'Evénements'
+        },
+        labelPredicate: 'as:name',
+        canOpenWithApp: true
+      }
     },
     queueServiceUrl: CONFIG.QUEUE_SERVICE_URL
   }

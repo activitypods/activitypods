@@ -5,10 +5,10 @@ i18nReady: true
 tableOfContents: false
 editUrl: false
 next: false
-# banner:
-#   content: |
-#     <a href="https://astro.build/blog/astro-4/">Astro version 4.0 is here!</a>
-#     Are you ready to upgrade? <a href="/en/guides/upgrade-to/v4/">Read our upgrade guide</a>.
+banner:
+  content: |
+    This documentation is for ActivityPods 2.0, which will be released this spring.
+    <a href="/en/guides/upgrade-to/v4/">Read more</a>.
 hero:
   title: ActivityPods Docs
   tagline: Guides and resources to help you build with the ActivityPods framework
@@ -27,29 +27,30 @@ import Card from '../../components/Card.astro';
 import ListCard from '../../components/ListCard.astro';
 
 <CardGrid>
-  <Card title="Setup your own Pod provider" icon="laptop">
+  <Card title="Deploy your own Pod provider" icon="laptop">
     Explore [Astro starter themes](https://astro.build/themes/) for blogs, portfolios, docs, landing pages, SaaS, marketing, ecommerce sites, and more!
   </Card>
+  <Card title="Create your first social app" icon="star">
+    Complete our introductory [Build a Blog Tutorial](/en/tutorial/0-introduction/) to learn the basics and create your
+    first Astro site.
+  </Card>
 
-{' '}
-
-<Card title="Create your first social app" icon="star">
-  Complete our introductory [Build a Blog Tutorial](/en/tutorial/0-introduction/) to learn the basics and create your
-  first Astro site.
-</Card>
-
-{' '}
-
-<ListCard title="App backend" icon="open-book">
-  - [Astro's main features](/en/concepts/why-astro/) - [Island architecture](/en/concepts/islands/) - [Astro
-  components](/en/basics/astro-components/) - [The Astro template syntax](/en/basics/astro-syntax/)
-</ListCard>
-
-  <ListCard title="App frontend" icon="puzzle">
-    - [Add integrations like React, and Tailwind](/en/guides/integrations-guide/)
-    - [Create type safe content collections](/en/guides/content-collections/)
-    - [Enhance navigation with view transitions](/en/guides/view-transitions/)
-    - [Connect a headless CMS to your project](/en/guides/cms/) 
+  <ListCard title="Architecture" icon="puzzle">
+    - [Application interoperability](/en/guides/integrations-guide/)
+    - [Identity](/en/guides/content-collections/)
+    - [Authentication](/en/guides/view-transitions/)
+    - [Authorization](/en/guides/cms/) 
+    - [Resources management](/en/guides/cms/) 
+    - [Live update](/en/guides/cms/) 
+  </ListCard>
+  <ListCard title="Backend Guides" icon="puzzle">
+    - [Application registration](/en/guides/integrations-guide/)
+    - [Reading and writing resources](/en/guides/content-collections/)
+    - [Listening to inbox & outbox](/en/guides/view-transitions/)
+    - [Posting as the user](/en/guides/cms/)
+    - [Handling permissions](/en/guides/cms/) 
+    - [Handling collections](/en/guides/cms/) 
+    - [Sending notifications](/en/guides/cms/) 
   </ListCard>
 </CardGrid>
 

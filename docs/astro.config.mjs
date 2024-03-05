@@ -6,10 +6,11 @@ export default defineConfig({
   site: 'https://docs.activitypods.org',
   integrations: [
     starlight({
-      title: 'DOCS',
+      title: 'Docs',
       logo: {
-        src: './src/assets/logo.svg'
+        src: './src/assets/full-logo.png'
       },
+      customCss: ['@fontsource/pt-sans/400.css', '@fontsource/pt-sans/700.css', './src/styles/custom.css'],
       editLink: {
         baseUrl: 'https://github.com/assemblee-virtuelle/activitypods/edit/master/docs/'
       },
@@ -23,15 +24,20 @@ export default defineConfig({
           autogenerate: { directory: 'tutorials' }
         },
         {
-          label: 'App backend',
-          autogenerate: { directory: 'backend' }
+          label: 'App framework',
+          items: [
+            {
+              label: 'Backend',
+              autogenerate: { directory: 'backend' }
+            },
+            {
+              label: 'Frontend',
+              autogenerate: { directory: 'frontend' }
+            }
+          ]
         },
         {
-          label: 'App frontend',
-          autogenerate: { directory: 'frontend' }
-        },
-        {
-          label: 'Design',
+          label: 'Pods architecture',
           autogenerate: { directory: 'design' }
         },
         {

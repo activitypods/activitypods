@@ -4,6 +4,7 @@ const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTOR_TYPES } = require('@semapps/activitypub');
 const { arrayOf } = require('@semapps/ldp');
 const { interopContext } = require('@activitypods/core');
+const { ClassDescriptionService, AccessDescriptionSetService } = require('@activitypods/description');
 const AccessNeedsService = require('./services/registration/access-needs');
 const AccessNeedsGroupsService = require('./services/registration/access-needs-groups');
 const ActorsService = require('./services/registration/actors');
@@ -38,6 +39,7 @@ module.exports = {
       required: [],
       optional: []
     },
+    classDescriptions: {},
     queueServiceUrl: null
   },
   dependencies: [
@@ -68,6 +70,9 @@ module.exports = {
     this.broker.createService(AppRegistrationsService);
     this.broker.createService(DataGrantsService);
     this.broker.createService(AccessGrantsService);
+
+    this.broker.createService(AccessDescriptionSetService);
+    this.broker.createService(ClassDescriptionService);
 
     this.broker.createService(PodActivitiesWatcherService, {
       mixins: [QueueMixin(this.settings.queueServiceUrl)]
@@ -165,6 +170,17 @@ module.exports = {
       });
     } else {
       this.appActor = await this.broker.call('activitypub.actor.awaitCreateComplete', { actorUri });
+    }
+
+    for (const [type, classDescription] of Object.entries(this.settings.classDescriptions)) {
+      await this.broker.call('class-description.register', {
+        type,
+        appUri: this.appActor.id,
+        label: classDescription.label,
+        labelPredicate: classDescription.labelPredicate,
+        openEndpoint: classDescription.openEndpoint,
+        webId: 'system'
+      });
     }
 
     await this.broker.call('nodeinfo.addLink', {

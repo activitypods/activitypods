@@ -33,14 +33,14 @@ module.exports = {
       ],
       optional: ['apods:SendNotification']
     },
-    classDescription: {
+    classDescriptions: {
       'as:Event': {
         label: {
           en: 'Events',
           fr: 'Evénements'
         },
         labelPredicate: 'as:name',
-        canOpenWithApp: true
+        openEndpoint: urlJoin(CONFIG.FRONT_URL, '/r')
       }
     },
     queueServiceUrl: CONFIG.QUEUE_SERVICE_URL

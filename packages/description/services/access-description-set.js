@@ -1,7 +1,7 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
 
 module.exports = {
-  name: 'access.description-set',
+  name: 'access-description-set',
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:AccessDescriptionSet'],

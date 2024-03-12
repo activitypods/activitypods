@@ -83,7 +83,7 @@ module.exports = {
             webId
           });
         } else {
-          await ctx.call('access-description-set.post', {
+          const accessDescriptionSetUri = await ctx.call('access-description-set.post', {
             resource: {
               type: 'interop:AccessDescriptionSet',
               'interop:usesLanguage': locale,
@@ -92,6 +92,20 @@ module.exports = {
             contentType: MIME_TYPES.JSON,
             webId
           });
+
+          if (appUri) {
+            await ctx.call('access-description-set.patch', {
+              resourceUri: appUri,
+              triplesToAdd: [
+                triple(
+                  namedNode(appUri),
+                  namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
+                  namedNode(accessDescriptionSetUri)
+                )
+              ],
+              webId
+            });
+          }
         }
       }
     },
@@ -103,7 +117,7 @@ module.exports = {
           PREFIX interop: <http://www.w3.org/ns/solid/interop#>
           SELECT ?classDescription 
           WHERE {
-            ?classDescription apods:describedClass "${type}"
+            ?classDescription apods:describedClass <${type}> .
             ?classDescription a apods:ClassDescription .
             ?set apods:hasClassDescription ?classDescription .
             ?set interop:usesLanguage "${locale}"

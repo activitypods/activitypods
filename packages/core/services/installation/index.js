@@ -24,7 +24,8 @@ module.exports = {
       },
       async onEmit(ctx, activity, emitterUri) {
         const appUri = activity.object;
-        let accessGrantsUris = [];
+        let accessGrantsUris = [],
+          preferredForClass = [];
 
         const app = await ctx.call('ldp.remote.get', { resourceUri: appUri });
 
@@ -40,8 +41,7 @@ module.exports = {
                 dataGrantsUris.push(
                   await ctx.call('data-grants.post', {
                     resource: {
-                      '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
-                      '@type': 'interop:DataGrant',
+                      type: 'interop:DataGrant',
                       'interop:dataOwner': emitterUri,
                       'interop:grantee': appUri,
                       'apods:registeredClass': accessNeed['apods:registeredClass'],
@@ -69,8 +69,7 @@ module.exports = {
             accessGrantsUris.push(
               await ctx.call('access-grants.post', {
                 resource: {
-                  '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
-                  '@type': 'interop:AccessGrant',
+                  type: 'interop:AccessGrant',
                   'interop:grantedBy': emitterUri,
                   'interop:grantedAt': new Date().toISOString(),
                   'interop:grantee': appUri,
@@ -83,19 +82,6 @@ module.exports = {
             );
           }
         }
-
-        const appRegistrationUri = await ctx.call('app-registrations.post', {
-          resource: {
-            '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
-            '@type': 'interop:ApplicationRegistration',
-            'interop:registeredBy': emitterUri,
-            'interop:registeredAt': new Date().toISOString(),
-            'interop:updatedAt': new Date().toISOString(),
-            'interop:registeredAgent': appUri,
-            'interop:hasAccessGrant': accessGrantsUris
-          },
-          contentType: MIME_TYPES.JSON
-        });
 
         if (app['interop:hasAccessDescriptionSet']) {
           const userData = await ctx.call('ldp.resource.get', {
@@ -120,10 +106,39 @@ module.exports = {
           if (!classDescriptionsUris) classDescriptionsUris = defaultClassDescriptionsUris;
 
           for (const classDescriptionUri of classDescriptionsUris) {
-            await ctx.call('ldp.remote.store', { resourceUri: classDescriptionUri, webId: emitterUri });
+            const classDescription = await ctx.call('ldp.remote.get', {
+              resourceUri: classDescriptionUri,
+              webId: emitterUri
+            });
+            await ctx.call('ldp.remote.store', { resource: classDescription, webId: emitterUri });
             await ctx.call('class-description.attach', { resourceUri: classDescriptionUri });
+
+            const preferredAppForClass = await ctx.call('app-registrations.preferredAppForClass', {
+              type: classDescription['apods:describedClass']
+            });
+
+            console.log('preferredAppForClass', classDescription['apods:describedClass'], preferredAppForClass);
+
+            if (!preferredAppForClass) {
+              preferredForClass.push(classDescription['apods:describedClass']);
+            }
           }
         }
+
+        console.log('preferredForClass', preferredForClass);
+
+        const appRegistrationUri = await ctx.call('app-registrations.post', {
+          resource: {
+            type: 'interop:ApplicationRegistration',
+            'interop:registeredBy': emitterUri,
+            'interop:registeredAt': new Date().toISOString(),
+            'interop:updatedAt': new Date().toISOString(),
+            'interop:registeredAgent': appUri,
+            'interop:hasAccessGrant': accessGrantsUris,
+            'apods:preferredForClass': preferredForClass
+          },
+          contentType: MIME_TYPES.JSON
+        });
 
         await ctx.call('activitypub.outbox.post', {
           collectionUri: urlJoin(emitterUri, 'outbox'),

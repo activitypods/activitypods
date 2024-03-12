@@ -57,6 +57,9 @@
     "apods:hasClassDescription": {
       "@type": "@id"
     },
+    "apods:preferredForClass": {
+      "@type": "@id"
+    },
     "apods:describedClass": {
       "@type": "@id"
     },

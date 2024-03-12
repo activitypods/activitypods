@@ -19,7 +19,7 @@ describe('Test app installation', () => {
     appServer2,
     app,
     eventsContainerUri,
-    locationsContainerUri,
+    placesContainerUri,
     requiredAccessNeedGroup,
     optionalAccessNeedGroup,
     requiredAccessGrant,
@@ -102,7 +102,12 @@ describe('Test app installation', () => {
       'interop:accessScenario': 'interop:PersonalAccess',
       'interop:authenticatedAs': 'interop:SocialAgent',
       'interop:hasAccessNeed': expect.anything(),
-      'apods:hasSpecialRights': 'apods:ReadInbox'
+      'apods:hasSpecialRights': expect.arrayContaining([
+        'apods:ReadInbox',
+        'apods:PostOutbox',
+        'apods:CreateAclGroup',
+        'apods:SendNotification'
+      ])
     });
 
     await expect(
@@ -124,8 +129,7 @@ describe('Test app installation', () => {
       'interop:accessNecessity': 'interop:AccessOptional',
       'interop:accessScenario': 'interop:PersonalAccess',
       'interop:authenticatedAs': 'interop:SocialAgent',
-      'interop:hasAccessNeed': expect.anything(),
-      'apods:hasSpecialRights': 'apods:SendNotification'
+      'interop:hasAccessNeed': expect.anything()
     });
 
     await expect(
@@ -135,7 +139,7 @@ describe('Test app installation', () => {
       })
     ).resolves.toMatchObject({
       type: 'interop:AccessNeed',
-      'apods:registeredClass': 'as:Location',
+      'apods:registeredClass': 'as:Place',
       'interop:accessNecessity': 'interop:AccessOptional',
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append'])
     });
@@ -236,8 +240,8 @@ describe('Test app installation', () => {
       })
     ).resolves.toMatchObject({
       type: 'interop:DataGrant',
-      'apods:registeredClass': 'as:Location',
-      'apods:registeredContainer': urlJoin(alice.id, 'data/as/location'),
+      'apods:registeredClass': 'as:Place',
+      'apods:registeredContainer': urlJoin(alice.id, 'data/as/place'),
       'interop:dataOwner': alice.id,
       'interop:grantee': APP_URI,
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append']),
@@ -266,7 +270,7 @@ describe('Test app installation', () => {
     ).resolves.toBeTruthy();
 
     eventsContainerUri = urlJoin(alice.id, 'data/as/event');
-    locationsContainerUri = urlJoin(alice.id, 'data/as/location');
+    placesContainerUri = urlJoin(alice.id, 'data/as/place');
 
     await expect(
       alice.call('ldp.container.exist', {
@@ -276,7 +280,7 @@ describe('Test app installation', () => {
 
     await expect(
       alice.call('ldp.container.exist', {
-        containerUri: locationsContainerUri
+        containerUri: placesContainerUri
       })
     ).resolves.toBeTruthy();
 
@@ -301,27 +305,27 @@ describe('Test app installation', () => {
       ])
     });
 
-    const locationsRights = await alice.call('webacl.resource.getRights', {
-      resourceUri: urlJoin(alice.id, 'data/as/location'),
+    const placesRights = await alice.call('webacl.resource.getRights', {
+      resourceUri: urlJoin(alice.id, 'data/as/place'),
       accept: MIME_TYPES.JSON,
       webId: APP_URI
     });
 
-    expect(locationsRights).toMatchObject({
+    expect(placesRights).toMatchObject({
       '@graph': expect.arrayContaining([
         expect.objectContaining({
           'acl:agent': APP_URI,
           'acl:mode': 'acl:Read',
-          'acl:accessTo': locationsContainerUri
+          'acl:accessTo': placesContainerUri
         })
       ])
     });
 
-    expect(locationsRights['@graph']).not.toContain([
+    expect(placesRights['@graph']).not.toContain([
       expect.objectContaining({
         'acl:agent': APP_URI,
         'acl:mode': 'acl:Write',
-        'acl:accessTo': locationsContainerUri
+        'acl:accessTo': placesContainerUri
       })
     ]);
   });
@@ -362,49 +366,49 @@ describe('Test app installation', () => {
       ])
     });
 
-    const locationUri = await alice.call('ldp.container.post', {
-      containerUri: urlJoin(alice.id, 'data/as/location'),
+    const placeUri = await alice.call('ldp.container.post', {
+      containerUri: urlJoin(alice.id, 'data/as/place'),
       resource: {
-        type: 'Location',
+        type: 'Place',
         name: 'Home sweet home'
       },
       contentType: MIME_TYPES.JSON
     });
 
-    const locationsRights = await alice.call('webacl.resource.getRights', {
-      resourceUri: locationUri,
+    const placesRights = await alice.call('webacl.resource.getRights', {
+      resourceUri: placeUri,
       accept: MIME_TYPES.JSON,
       webId: 'system'
     });
 
-    expect(locationsRights).toMatchObject({
+    expect(placesRights).toMatchObject({
       '@graph': expect.arrayContaining([
         expect.objectContaining({
           'acl:agent': APP_URI,
           'acl:mode': 'acl:Read',
-          'acl:default': locationsContainerUri
+          'acl:default': placesContainerUri
         }),
         expect.objectContaining({
           'acl:agent': APP_URI,
           'acl:mode': 'acl:Append',
-          'acl:default': locationsContainerUri
+          'acl:default': placesContainerUri
         })
       ])
     });
 
-    expect(locationsRights['@graph']).not.toContain([
+    expect(placesRights['@graph']).not.toContain([
       expect.objectContaining({
         'acl:agent': APP_URI,
         'acl:mode': 'acl:Write',
-        'acl:default': locationsContainerUri
+        'acl:default': placesContainerUri
       })
     ]);
 
-    expect(locationsRights['@graph']).not.toContain([
+    expect(placesRights['@graph']).not.toContain([
       expect.objectContaining({
         'acl:agent': APP_URI,
         'acl:mode': 'acl:Control',
-        'acl:default': locationsContainerUri
+        'acl:default': placesContainerUri
       })
     ]);
   });

@@ -13,7 +13,15 @@ module.exports = {
     path: '/vcard/individual',
     acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
     permissions: {},
-    newResourcesPermissions: {}
+    newResourcesPermissions: {},
+    // ClassDescriptionMixin settings
+    classDescription: {
+      label: {
+        en: 'Profiles',
+        fr: 'Profils'
+      },
+      labelPredicate: 'vcard:fn'
+    }
   },
   dependencies: ['activitypub', 'webacl'],
   events: {

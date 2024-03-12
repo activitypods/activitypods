@@ -1,17 +1,27 @@
-const { triple, namedNode } = require('@rdfjs/data-model');
 const { ControlledContainerMixin, getDatasetFromUri } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const { skos } = require('@semapps/ontologies');
 
 module.exports = {
   name: 'class-description',
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['apods:ClassDescription'],
-    readOnly: true
+    readOnly: true,
+    excludeFromMirror: true
+  },
+  async started() {
+    await this.broker.call('ontologies.register', {
+      ...skos,
+      overwrite: true
+    });
   },
   actions: {
     async register(ctx) {
       const { type, appUri, label, labelPredicate, openEndpoint, webId } = ctx.params;
+
+      const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
+      await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
       const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
 

@@ -6,7 +6,8 @@ module.exports = {
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:AccessDescriptionSet'],
-    readOnly: true
+    readOnly: true,
+    excludeFromMirror: true
   },
   actions: {
     async attachClassDescription(ctx) {

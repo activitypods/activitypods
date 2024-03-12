@@ -14,6 +14,7 @@ import theme from './config/theme';
 import scorer from './config/scorer';
 
 import HomePage from './pages/HomePage';
+import DataPage from './pages/DataPage/DataPage';
 import SettingsPage from './pages/SettingsPage/SettingsPage';
 import SettingsPasswordPage from './pages/SettingsPage/SettingsPasswordPage';
 import SettingsEmailPage from './pages/SettingsPage/SettingsEmailPage';
@@ -57,11 +58,11 @@ const App = () => (
           <Route path="/authorize" element={<AuthorizePage />} />
           <Route path="/invite/:capability" element={<InvitePage />} />
         </CustomRoutes>
-
         <CustomRoutes>
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/email" element={<SettingsEmailPage />} />
           <Route path="/settings/password" element={<SettingsPasswordPage />} />
+          <Route path="/data" element={<DataPage />} />
         </CustomRoutes>
       </Admin>
     </BrowserRouter>

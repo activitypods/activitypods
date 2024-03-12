@@ -1,4 +1,5 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
+const { triple, namedNode } = require('@rdfjs/data-model');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {

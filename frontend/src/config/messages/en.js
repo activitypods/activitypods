@@ -42,8 +42,8 @@ module.exports = {
     page: {
       contacts: 'My network',
       contacts_short: 'Network',
-      profile: 'My profile',
-      profile_short: 'Profile',
+      data: 'My data',
+      data_short: 'Data',
       apps: 'My applications',
       apps_short: 'Apps',
       settings: 'Settings',
@@ -64,6 +64,7 @@ module.exports = {
       invite_success: 'Success!'
     },
     setting: {
+      profile: 'My profile',
       email: 'Email address',
       password: 'Password',
       addresses: 'My addresses',
@@ -72,7 +73,7 @@ module.exports = {
     authorization: {
       required: 'Required access',
       optional: 'Optional access',
-      access_resources_of_type: '%{access_right} resources of type %{type}',
+      access_resources_of_type: '%{access_right} %{type} (%type_uri)',
       read: 'Read',
       append: 'Append',
       write: 'Write',

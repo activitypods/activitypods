@@ -15,17 +15,7 @@ module.exports = {
 
       const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
 
-      // let userLocal;
-
-      // if (podOwner) {
-      //   // Wait to know the user language
-      //   const userData = await ctx.call('ldp.resource.awaitCreateComplete', {
-      //     resourceUri: podOwner,
-      //     predicates: ['schema:knowsLanguage']
-      //   });
-
-      //   userLocal = userData['schema:knowsLanguage'];
-      // }
+      let returnValue = {};
 
       for (const locale of Object.keys(label)) {
         let classDescriptionUri = await this.actions.findByLocaleAndType({ locale, type: expandedType, webId });
@@ -69,45 +59,10 @@ module.exports = {
           );
         }
 
-        const descriptionSet = await ctx.call('access-description-set.findByLocale', { locale, webId });
-        if (descriptionSet) {
-          await ctx.call('access-description-set.patch', {
-            resourceUri: descriptionSet.id,
-            triplesToAdd: [
-              triple(
-                namedNode(descriptionSet.id),
-                namedNode('http://activitypods.org/ns/core#hasClassDescription'),
-                namedNode(classDescriptionUri)
-              )
-            ],
-            webId
-          });
-        } else {
-          const accessDescriptionSetUri = await ctx.call('access-description-set.post', {
-            resource: {
-              type: 'interop:AccessDescriptionSet',
-              'interop:usesLanguage': locale,
-              'apods:hasClassDescription': classDescriptionUri
-            },
-            contentType: MIME_TYPES.JSON,
-            webId
-          });
-
-          if (appUri) {
-            await ctx.call('access-description-set.patch', {
-              resourceUri: appUri,
-              triplesToAdd: [
-                triple(
-                  namedNode(appUri),
-                  namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
-                  namedNode(accessDescriptionSetUri)
-                )
-              ],
-              webId
-            });
-          }
-        }
+        returnValue[locale] = classDescriptionUri;
       }
+
+      return returnValue;
     },
     async findByLocaleAndType(ctx) {
       const { locale, type, webId } = ctx.params;

@@ -1,11 +1,12 @@
 const { triple, namedNode } = require('@rdfjs/data-model');
+const { ClassDescriptionMixin } = require('@activitypods/description');
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { OBJECT_TYPES, AS_PREFIX } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
   name: 'profiles.profile',
-  mixins: [ControlledContainerMixin],
+  mixins: [ControlledContainerMixin, ClassDescriptionMixin],
   settings: {
     publicProfile: false,
     // ControlledContainerMixin settings

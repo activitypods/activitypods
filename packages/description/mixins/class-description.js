@@ -21,7 +21,7 @@ module.exports = {
       const { webId } = ctx.params;
 
       await ctx.call('class-description.register', {
-        type: this.settings.acceptedTypes,
+        type: Array.isArray(this.settings.acceptedTypes) ? this.settings.acceptedTypes[0] : this.settings.acceptedTypes,
         ...this.settings.classDescription,
         webId
       });

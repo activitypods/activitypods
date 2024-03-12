@@ -173,7 +173,8 @@ module.exports = {
     }
 
     for (const [type, classDescription] of Object.entries(this.settings.classDescriptions)) {
-      await this.broker.call('class-description.register', {
+      // Create one ClassDescription per language
+      const results = await this.broker.call('class-description.register', {
         type,
         appUri: this.appActor.id,
         label: classDescription.label,
@@ -181,6 +182,27 @@ module.exports = {
         openEndpoint: classDescription.openEndpoint,
         webId: 'system'
       });
+
+      for (const [locale, classDescriptionUri] of Object.entries(results)) {
+        // Attach ClassDescription to corresponding AccessDescriptionSet (create it if necessary)
+        const accessDescriptionSetUri = await this.broker.call('access-description-set.attachClassDescription', {
+          locale,
+          classDescriptionUri
+        });
+
+        // Attach the AccessDescriptionSet to the Application
+        await this.broker.call('ldp.resource.patch', {
+          resourceUri: this.appActor.id,
+          triplesToAdd: [
+            triple(
+              namedNode(this.appActor.id),
+              namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
+              namedNode(accessDescriptionSetUri)
+            )
+          ],
+          webId: 'system'
+        });
+      }
     }
 
     await this.broker.call('nodeinfo.addLink', {

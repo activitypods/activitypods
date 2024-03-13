@@ -31,12 +31,17 @@ module.exports = {
         let classDescriptionUri = await this.actions.findByLocaleAndType({ locale, type: expandedType, webId });
 
         if (classDescriptionUri) {
+          const classDescription = await this.actions.get({
+            resourceUri: classDescriptionUri,
+            accept: MIME_TYPES.JSON,
+            webId
+          });
+
           // If ClassDescription exist, update it
           await this.actions.put(
             {
               resource: {
-                '@id': classDescriptionUri,
-                '@type': 'apods:ClassDescription',
+                ...classDescription,
                 'skos:prefLabel': label[locale],
                 'apods:labelPredicate': labelPredicate,
                 'apods:openEndpoint': openEndpoint
@@ -53,7 +58,7 @@ module.exports = {
           classDescriptionUri = await this.actions.post(
             {
               resource: {
-                '@type': 'apods:ClassDescription',
+                type: 'apods:ClassDescription',
                 'apods:describedClass': expandedType,
                 'apods:describedBy': appUri,
                 'skos:prefLabel': label[locale],
@@ -85,7 +90,7 @@ module.exports = {
             ?classDescription apods:describedClass <${type}> .
             ?classDescription a apods:ClassDescription .
             ?set apods:hasClassDescription ?classDescription .
-            ?set interop:usesLanguage "${locale}"
+            ?set interop:usesLanguage "${locale}"^^<http://www.w3.org/2001/XMLSchema#language>
           }
         `,
         dataset: webId !== 'system' ? getDatasetFromUri(webId) : undefined,

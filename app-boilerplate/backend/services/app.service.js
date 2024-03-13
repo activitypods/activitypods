@@ -37,7 +37,7 @@ module.exports = {
       'as:Event': {
         label: {
           en: 'Events',
-          fr: 'Evénements'
+          fr: 'Événements'
         },
         labelPredicate: 'as:name',
         openEndpoint: urlJoin(CONFIG.FRONT_URL, '/r')

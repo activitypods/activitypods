@@ -35,7 +35,7 @@ const useClassDescriptions = application => {
     })();
   }, [application, currentData, setAppData, loading, setLoading, loaded, setLoaded]);
 
-  return { classDescriptions: [...appData, ...currentData], loading, loaded };
+  return { classDescriptions: loaded ? [...appData, ...currentData] : [], loading, loaded };
 };
 
 export default useClassDescriptions;

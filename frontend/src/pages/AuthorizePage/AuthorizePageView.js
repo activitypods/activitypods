@@ -66,7 +66,6 @@ const AuthorizePageView = () => {
   const application = useApplication(clientDomain);
   const { requiredAccessNeeds, optionalAccessNeeds, loaded } = useAccessNeeds(application);
   const { classDescriptions } = useClassDescriptions(application);
-  console.log('classDescriptions', classDescriptions);
 
   useEffect(() => {
     if (loaded) {

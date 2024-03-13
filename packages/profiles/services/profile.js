@@ -20,7 +20,7 @@ module.exports = {
         en: 'Profiles',
         fr: 'Profils'
       },
-      labelPredicate: 'vcard:fn'
+      labelPredicate: 'vcard:given-name'
     }
   },
   dependencies: ['activitypub', 'webacl'],

@@ -62,7 +62,10 @@ const App = () => (
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/email" element={<SettingsEmailPage />} />
           <Route path="/settings/password" element={<SettingsPasswordPage />} />
-          <Route path="/data" element={<DataPage />} />
+          <Route path="/data">
+            <Route index element={<DataPage />} />
+            <Route path=":type" element={<DataPage />} />
+          </Route>
         </CustomRoutes>
       </Admin>
     </BrowserRouter>

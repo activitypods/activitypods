@@ -1,20 +1,14 @@
 import React from 'react';
-import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { useTranslate, useGetList, useGetOne } from 'react-admin';
-import FolderIcon from '@mui/icons-material/Folder';
-import {
-  Box,
-  Badge,
-  Typography,
-  List,
-  ListItem,
-  ListItemButton,
-  Avatar,
-  ListItemAvatar,
-  ListItemText
-} from '@mui/material';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslate, useGetList } from 'react-admin';
+import { Box, Typography, List, ListItem, ListItemButton, Avatar, ListItemAvatar, ListItemText } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { useNavigate } from 'react-router-dom';
+import FolderIcon from '@mui/icons-material/Folder';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import { useCheckAuthenticated } from '@semapps/auth-provider';
+import AppBadge from '../../common/AppBadge';
+import SplitView from '../../layout/SplitView';
+import useResourcesByType from '../../hooks/useResourcesByType';
 
 const useStyles = makeStyles(() => ({
   listItem: {
@@ -31,77 +25,75 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const ApplicationBadge = ({ appUri, children }) => {
-  const { data: app } = useGetOne('App', { id: appUri }, { enabled: !!appUri });
-  if (!appUri) return children;
-  return (
-    <Badge
-      overlap="circular"
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      badgeContent={
-        <Avatar
-          alt={app['interop:applicationName']}
-          src={app['interop:applicationThumbnail']}
-          sx={{ width: 22, height: 22, bgcolor: 'white' }}
-        />
-      }
-    >
-      {children}
-    </Badge>
-  );
-};
-
 const DataPage = () => {
   useCheckAuthenticated();
   const translate = useTranslate();
   const navigate = useNavigate();
   const classes = useStyles();
+  const { type } = useParams();
 
   const { data: classDescriptions } = useGetList('ClassDescription');
   const { data: appRegistrations } = useGetList('AppRegistration');
 
+  const classDescription = type && classDescriptions?.find(desc => desc['apods:describedClass'] === type);
+  const resources = useResourcesByType(type, classDescription);
+
   if (!classDescriptions || !appRegistrations) return null;
 
   return (
-    <>
+    <SplitView>
       <Typography variant="h2" component="h1" sx={{ mt: 2 }}>
-        {translate('app.page.data')}
+        {classDescription?.['skos:prefLabel'] || translate('app.page.data')}
       </Typography>
       <Box>
         <List>
-          {classDescriptions?.map(classDescription => {
-            const appRegistration = appRegistrations.find(
-              appReg => appReg['apods:preferredForClass'] === classDescription['apods:describedClass']
-            );
-            return (
-              <ListItem className={classes.listItem} key={classDescription.id}>
-                <ListItemButton
-                  onClick={() => navigate(`/data/${encodeURIComponent(classDescription['apods:describedClass'])}`)}
-                >
-                  <ListItemAvatar>
-                    <ApplicationBadge appUri={appRegistration?.['interop:registeredAgent']}>
-                      <Avatar>
-                        <FolderIcon />
-                      </Avatar>
-                    </ApplicationBadge>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={classDescription['skos:prefLabel']}
-                    secondary={classDescription['apods:describedClass']}
-                    className={classes.listItemText}
-                  />
-                  {/* <ListItemSecondaryAction>
-                  <IconButton>
-                    <EditIcon />
-                  </IconButton>
-                </ListItemSecondaryAction> */}
-                </ListItemButton>
-              </ListItem>
-            );
-          })}
+          {type
+            ? resources.map(resource => (
+                <ListItem className={classes.listItem} key={resource.resourceUri.value}>
+                  <ListItemButton onClick={() => navigate(`/data`)}>
+                    <ListItemAvatar>
+                      <AppBadge>
+                        <Avatar>
+                          <InsertDriveFileIcon />
+                        </Avatar>
+                      </AppBadge>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={resource.label.value}
+                      secondary={resource.resourceUri.value}
+                      className={classes.listItemText}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))
+            : classDescriptions?.map(classDescription => {
+                const appRegistration = appRegistrations.find(
+                  appReg => appReg['apods:preferredForClass'] === classDescription['apods:describedClass']
+                );
+                return (
+                  <ListItem className={classes.listItem} key={classDescription.id}>
+                    <ListItemButton
+                      onClick={() => navigate(`/data/${encodeURIComponent(classDescription['apods:describedClass'])}`)}
+                    >
+                      <ListItemAvatar>
+                        <AppBadge appUri={appRegistration?.['interop:registeredAgent']}>
+                          <Avatar>
+                            <FolderIcon />
+                          </Avatar>
+                        </AppBadge>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={classDescription['skos:prefLabel']}
+                        secondary={classDescription['apods:describedClass']}
+                        className={classes.listItemText}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
         </List>
       </Box>
-    </>
+    </SplitView>
   );
 };
 

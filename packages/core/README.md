@@ -11,7 +11,7 @@ Core [ActivityPods](../../README.md) services
 - [WebfingerService](https://semapps.org/docs/middleware/webfinger)
 - [WebIdService](https://semapps.org/docs/middleware/webid)
 - [AuthLocalService](https://semapps.org/docs/middleware/auth)
-- [SignatureService](https://semapps.org/docs/middleware/signature)
+- [CryptoServices](https://semapps.org/docs/middleware/crypto)
 - SparqlEndpointService
 - PodService
 - JsonLdService

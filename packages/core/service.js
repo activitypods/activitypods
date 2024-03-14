@@ -8,13 +8,12 @@ const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
 const { OntologiesService, dc, syreen, mp, pair, void: voidOntology } = require('@semapps/ontologies');
 const { PodService } = require('@semapps/pod');
 const { NodeinfoService } = require('@semapps/nodeinfo');
-const { SignatureService, ProxyService } = require('@semapps/signature');
+const { SignatureService, ProxyService, KeysService } = require('@semapps/crypto');
 const { SynchronizerService } = require('@semapps/sync');
 const { SparqlEndpointService } = require('@semapps/sparql-endpoint');
 const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
-const { WebIdService } = require('@semapps/webid');
 const { NotificationProviderService } = require('@activitypods/solid-notifications');
 const { apods, interop, notify, oidc } = require('@activitypods/ontologies');
 const ApiService = require('./services/api');
@@ -26,6 +25,7 @@ const OidcProviderService = require('./services/oidc-provider/oidc-provider');
 const MailNotificationsService = require('./services/mail-notifications');
 const packageDesc = require('./package.json');
 
+/** @type {import("moleculer").ServiceSchema} */
 const CoreService = {
   name: 'core',
   settings: {
@@ -147,9 +147,12 @@ const CoreService = {
       }
     });
 
-    this.broker.createService(SignatureService, {
+    this.broker.createService(SignatureService);
+
+    this.broker.createService(KeysService, {
       settings: {
-        actorsKeyPairsDir: path.resolve(baseDir, './actors')
+        actorsKeyPairsDir: path.resolve(baseDir, './actors'),
+        podProvider: true
       }
     });
 
@@ -178,21 +181,6 @@ const CoreService = {
     this.broker.createService(WebfingerService, {
       settings: {
         baseUrl
-      }
-    });
-
-    this.broker.createService(WebIdService, {
-      settings: {
-        baseUrl,
-        podProvider: true
-      },
-      hooks: {
-        before: {
-          async create(ctx) {
-            const { nick } = ctx.params;
-            await ctx.call('pod.create', { username: nick });
-          }
-        }
       }
     });
 

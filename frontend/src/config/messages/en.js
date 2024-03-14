@@ -103,7 +103,10 @@ module.exports = {
       current_password: 'Current password',
       new_password: 'New password',
       confirm_new_password: 'Confirm new password',
-      provider_url: 'Provider URL'
+      provider_url: 'Provider URL',
+      creator: 'Creator',
+      created: 'Created',
+      modified: 'Modified'
     },
     helper: {
       add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',

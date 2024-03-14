@@ -9,7 +9,9 @@ import {
   Avatar,
   ListItemAvatar,
   ListItemText,
-  CircularProgress
+  CircularProgress,
+  Dialog,
+  useMediaQuery
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
@@ -52,6 +54,7 @@ const DataTypePage = () => {
   const { type } = useParams();
   const translate = useTranslate();
   const [selected, setSelected] = useState();
+  const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
   const { data: classDescriptions } = useGetList('ClassDescription', {}, { staleTime: Infinity });
   const { data: appRegistrations } = useGetList('AppRegistration', {}, { staleTime: Infinity });
@@ -69,7 +72,7 @@ const DataTypePage = () => {
       title={classDescription?.['skos:prefLabel']}
       actions={[<MyDataButton />]}
       asides={
-        selected
+        selected && !xs
           ? [<ResourceCard resource={selected} classDescription={classDescription} appRegistration={appRegistration} />]
           : null
       }
@@ -98,6 +101,11 @@ const DataTypePage = () => {
           ))}
         </List>
       </Box>
+      {xs && (
+        <Dialog fullWidth open={!!selected} onClose={() => setSelected(null)}>
+          <ResourceCard resource={selected} classDescription={classDescription} appRegistration={appRegistration} />
+        </Dialog>
+      )}
     </ListView>
   );
 };

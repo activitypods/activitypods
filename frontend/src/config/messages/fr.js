@@ -102,7 +102,10 @@ module.exports = {
       current_password: 'Mot de passe actuel',
       new_password: 'Nouveau mot de passe',
       confirm_new_password: 'Confirmer le nouveau mot de passe',
-      provider_url: "URL de l'espace personnel (POD)"
+      provider_url: "URL de l'espace personnel (POD)",
+      creator: 'Créé par',
+      created: 'Créé le',
+      modified: 'Modifié le'
     },
     helper: {
       add_contact:

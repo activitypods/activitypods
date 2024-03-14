@@ -1,16 +1,5 @@
 import React from 'react';
-import {
-  Card,
-  Avatar,
-  Box,
-  Button,
-  TableContainer,
-  Table,
-  TableBody,
-  TableRow,
-  TableCell,
-  Typography
-} from '@mui/material';
+import { Card, Avatar, Box, Button, Table, TableBody, TableRow, TableCell, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import { useTranslate } from 'react-admin';
@@ -53,7 +42,7 @@ const ResourceCard = ({ resource, classDescription, appRegistration }) => {
   if (!resource) return null;
 
   return (
-    <Card sx={{ mb: 24 }}>
+    <Card>
       <Box className={classes.title}>
         <Box display="flex" justifyContent="center" className={classes.avatarWrapper}>
           <AppBadge large appUri={appRegistration?.['interop:registeredAgent']}>
@@ -63,29 +52,30 @@ const ResourceCard = ({ resource, classDescription, appRegistration }) => {
           </AppBadge>
         </Box>
       </Box>
+
       <Typography variant="h4" sx={{ mt: 10, textAlign: 'center' }}>
         {resource?.label.value}
       </Typography>
-      <TableContainer sx={{ p: 2 }}>
+      <Box p={2}>
         <Table size="small">
           <TableBody>
             <TableRow>
-              <TableCell>Creator</TableCell>
+              <TableCell>{translate('app.input.creator')}</TableCell>
               <TableCell align="right">{actor.name}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>Created</TableCell>
+              <TableCell>{translate('app.input.created')}</TableCell>
               <TableCell align="right">{dateTimeFormat.format(created)}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>Modified</TableCell>
+              <TableCell>{translate('app.input.modified')}</TableCell>
               <TableCell align="right">{dateTimeFormat.format(modified)}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
-      </TableContainer>
+      </Box>
       {classDescription['apods:openEndpoint'] && (
-        <Box sx={{ mb: 2, textAlign: 'center' }}>
+        <Box sx={{ mt: 1, mb: 3, textAlign: 'center' }}>
           <a
             href={`${classDescription['apods:openEndpoint']}?type=${encodeURIComponent(
               classDescription['apods:describedClass']

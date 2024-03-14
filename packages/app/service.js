@@ -179,8 +179,7 @@ module.exports = {
         appUri: this.appActor.id,
         label: classDescription.label,
         labelPredicate: classDescription.labelPredicate,
-        openEndpoint: classDescription.openEndpoint,
-        webId: 'system'
+        openEndpoint: classDescription.openEndpoint
       });
 
       for (const [locale, classDescriptionUri] of Object.entries(results)) {

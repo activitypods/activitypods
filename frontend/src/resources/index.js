@@ -1,3 +1,4 @@
+export { default as Actor } from './Actor';
 export { default as AppRegistration } from './AppRegistration';
 export { default as App } from './App';
 export { default as Location } from './Location';

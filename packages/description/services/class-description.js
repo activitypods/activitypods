@@ -18,9 +18,9 @@ module.exports = {
   },
   actions: {
     async register(ctx) {
-      const { type, appUri, label, labelPredicate, openEndpoint, webId } = ctx.params;
+      const { type, label, labelPredicate, openEndpoint, appUri, podOwner } = ctx.params;
 
-      const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
+      const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
       await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
       const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
@@ -28,13 +28,15 @@ module.exports = {
       let returnValue = {};
 
       for (const locale of Object.keys(label)) {
-        let classDescriptionUri = await this.actions.findByLocaleAndType({ locale, type: expandedType, webId });
+        let classDescriptionUri = await this.actions.findByLocaleAndType({ locale, type: expandedType, podOwner });
+
+        console.log('classDescriptionUri', classDescriptionUri, locale, expandedType, podOwner);
 
         if (classDescriptionUri) {
           const classDescription = await this.actions.get({
             resourceUri: classDescriptionUri,
             accept: MIME_TYPES.JSON,
-            webId
+            webId: podOwner || 'system'
           });
 
           // If ClassDescription exist, update it
@@ -47,7 +49,7 @@ module.exports = {
                 'apods:openEndpoint': openEndpoint
               },
               contentType: MIME_TYPES.JSON,
-              webId
+              webId: podOwner || 'system'
             },
             {
               parentCtx: ctx
@@ -66,7 +68,7 @@ module.exports = {
                 'apods:openEndpoint': openEndpoint
               },
               contentType: MIME_TYPES.JSON,
-              webId
+              webId: podOwner || 'system'
             },
             {
               parentCtx: ctx
@@ -80,22 +82,36 @@ module.exports = {
       return returnValue;
     },
     async findByLocaleAndType(ctx) {
-      const { locale, type, webId } = ctx.params;
-      const results = await ctx.call('triplestore.query', {
-        query: `
+      const { locale, type, podOwner } = ctx.params;
+
+      // If we are registering on a Pod, we only register one locale and there is no AccessDescriptionSet
+      const query = podOwner
+        ? `
           PREFIX apods: <http://activitypods.org/ns/core#>
           PREFIX interop: <http://www.w3.org/ns/solid/interop#>
           SELECT ?classDescription 
           WHERE {
             ?classDescription apods:describedClass <${type}> .
             ?classDescription a apods:ClassDescription .
-            ?set apods:hasClassDescription ?classDescription .
-            ?set interop:usesLanguage "${locale}"^^<http://www.w3.org/2001/XMLSchema#language>
           }
-        `,
-        dataset: webId !== 'system' ? getDatasetFromUri(webId) : undefined,
+        `
+        : `
+        PREFIX apods: <http://activitypods.org/ns/core#>
+        PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+        SELECT ?classDescription 
+        WHERE {
+          ?classDescription apods:describedClass <${type}> .
+          ?classDescription a apods:ClassDescription .
+          ?set apods:hasClassDescription ?classDescription .
+          ?set interop:usesLanguage "${locale}"^^<http://www.w3.org/2001/XMLSchema#language>
+        }
+      `;
+
+      const results = await ctx.call('triplestore.query', {
+        query,
+        dataset: podOwner ? getDatasetFromUri(podOwner) : undefined,
         accept: MIME_TYPES.JSON,
-        webId
+        webId: 'system'
       });
 
       return results[0]?.classDescription.value;

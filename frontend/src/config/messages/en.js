@@ -15,6 +15,7 @@ module.exports = {
       ignore_contact_request: 'Ignore contact request',
       login: 'Login with an account',
       open_app: 'Open application',
+      open: 'Open',
       reject: 'Reject',
       reject_contact_request: 'Reject contact request',
       remove_contact: 'Remove contact',

@@ -15,6 +15,7 @@ import scorer from './config/scorer';
 
 import HomePage from './pages/HomePage';
 import DataPage from './pages/DataPage/DataPage';
+import DataTypePage from './pages/DataPage/DataTypePage';
 import SettingsPage from './pages/SettingsPage/SettingsPage';
 import SettingsPasswordPage from './pages/SettingsPage/SettingsPasswordPage';
 import SettingsEmailPage from './pages/SettingsPage/SettingsEmailPage';
@@ -64,7 +65,7 @@ const App = () => (
           <Route path="/settings/password" element={<SettingsPasswordPage />} />
           <Route path="/data">
             <Route index element={<DataPage />} />
-            <Route path=":type" element={<DataPage />} />
+            <Route path=":type" element={<DataTypePage />} />
           </Route>
         </CustomRoutes>
       </Admin>

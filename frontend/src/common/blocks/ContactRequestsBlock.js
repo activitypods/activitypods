@@ -130,7 +130,7 @@ const ContactRequestsBlock = () => {
     refresh();
   }, [refetch, refresh]);
 
-  if (contactRequests.length === 0) return null;
+  if (!contactRequests || contactRequests.length === 0) return null;
 
   return (
     <Card className={classes.root}>

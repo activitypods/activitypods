@@ -27,18 +27,22 @@ export default defineConfig({
           label: 'App framework',
           items: [
             {
+              label: 'Introduction',
+              link: 'app-framework/introduction'
+            },
+            {
               label: 'Backend',
-              autogenerate: { directory: 'backend' }
+              autogenerate: { directory: 'app-framework/backend' }
             },
             {
               label: 'Frontend',
-              autogenerate: { directory: 'frontend' }
+              autogenerate: { directory: 'app-framework/frontend' }
             }
           ]
         },
         {
           label: 'Pods architecture',
-          autogenerate: { directory: 'design' }
+          autogenerate: { directory: 'architecture' }
         },
         {
           label: 'Reference',

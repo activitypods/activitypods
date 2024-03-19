@@ -18,7 +18,7 @@ module.exports = {
           en: 'View',
           fr: 'Voir'
         },
-        actionLink: `https://mastopod.org/actor/{{encodeUri activity.actor}}`
+        actionLink: `https://mastopod.com/actor/{{encodeUri activity.actor}}`
       }
     });
   }

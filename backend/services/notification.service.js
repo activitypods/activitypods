@@ -30,9 +30,13 @@ module.exports = {
   },
   methods: {
     async formatLink(link, recipientUri) {
-      // In ActivityPods, all links are opened through the /openApp endpoint
-      // The search param allows to specify the URI, the type and the mode
-      return urlJoin(recipientUri, 'openApp') + link;
+      if (link && !link.startsWith('http')) {
+        // In ActivityPods, all links are opened by default through the /openApp endpoint
+        // The search param allows to specify the URI, the type and the mode
+        return urlJoin(recipientUri, 'openApp') + link;
+      } else {
+        return link;
+      }
     }
   }
 };

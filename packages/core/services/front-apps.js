@@ -156,7 +156,7 @@ module.exports = {
                     type: 'apods:FrontAppRegistration',
                     'apods:domainName': app['apods:domainName'],
                     'apods:preferredForTypes': app['apods:handledTypes'],
-                    'apods:application': app.id
+                    'apods:application': `https://${app['apods:domainName']}/application.json`
                   },
                   contentType: MIME_TYPES.JSON,
                   slug: app['apods:domainName'],

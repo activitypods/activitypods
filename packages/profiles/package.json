@@ -1,13 +1,13 @@
 {
   "name": "@activitypods/profiles",
-  "version": "1.1.0",
+  "version": "1.5.1",
   "description": "ActivityPods app for users' profiles and locations",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
   "dependencies": {
-    "@semapps/activitypub": "0.6.0-alpha.8",
-    "@semapps/ldp": "0.6.0-alpha.8",
-    "@semapps/mime-types": "0.6.0-alpha.8"
+    "@semapps/activitypub": "0.6.0",
+    "@semapps/ldp": "0.6.0",
+    "@semapps/mime-types": "0.6.0"
   },
   "publishConfig": {
     "access": "public"

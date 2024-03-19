@@ -1,14 +1,14 @@
 {
   "name": "@activitypods/events",
-  "version": "1.1.0",
+  "version": "1.5.1",
   "description": "ActivityPods app for events",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
   "dependencies": {
-    "@activitypods/announcer": "1.1.0",
-    "@semapps/activitypub": "0.6.0-alpha.8",
-    "@semapps/ldp": "0.6.0-alpha.8",
-    "@semapps/mime-types": "0.6.0-alpha.8",
+    "@activitypods/announcer": "1.5.1",
+    "@semapps/activitypub": "0.6.0",
+    "@semapps/ldp": "0.6.0",
+    "@semapps/mime-types": "0.6.0",
     "moleculer-cron": "^0.0.2"
   },
   "publishConfig": {

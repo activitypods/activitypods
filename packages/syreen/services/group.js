@@ -1,4 +1,4 @@
-const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { ActivitiesHandlerMixin, ACTIVITY_TYPES, matchActivity } = require('@semapps/activitypub');
 const { getSyreenAclGroupUri } = require('../utils');
 
 module.exports = {
@@ -58,7 +58,7 @@ module.exports = {
   activities: {
     joinGroup: {
       match(ctx, activity) {
-        return this.matchActivity(
+        return matchActivity(
           ctx,
           {
             type: ACTIVITY_TYPES.JOIN,
@@ -170,7 +170,7 @@ module.exports = {
     },
     announceJoinGroup: {
       match(ctx, activity) {
-        return this.matchActivity(
+        return matchActivity(
           ctx,
           {
             type: ACTIVITY_TYPES.ANNOUNCE,
@@ -193,7 +193,7 @@ module.exports = {
     },
     announceLeaveGroup: {
       match(ctx, activity) {
-        return this.matchActivity(
+        return matchActivity(
           ctx,
           {
             type: ACTIVITY_TYPES.ANNOUNCE,
@@ -216,7 +216,7 @@ module.exports = {
     },
     announceToGroup: {
       match(ctx, activity) {
-        return this.matchActivity(
+        return matchActivity(
           ctx,
           {
             type: ACTIVITY_TYPES.ANNOUNCE,

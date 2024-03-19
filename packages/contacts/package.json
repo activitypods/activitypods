@@ -1,16 +1,16 @@
 {
   "name": "@activitypods/contacts",
-  "version": "1.1.0",
+  "version": "1.5.1",
   "description": "ActivityPods app for contacts exchange",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
   "dependencies": {
-    "@semapps/activitypub": "0.6.0-alpha.8",
-    "@semapps/ldp": "0.6.0-alpha.8",
-    "@semapps/mime-types": "0.6.0-alpha.8",
+    "@rdfjs/data-model": "^1.3.4",
+    "@semapps/activitypub": "0.6.0",
+    "@semapps/ldp": "0.6.0",
+    "@semapps/mime-types": "0.6.0",
     "moleculer": "^0.14.19",
     "moleculer-cron": "^0.0.2",
-    "@rdfjs/data-model": "^1.3.4",
     "url-join": "^4.0.1"
   },
   "publishConfig": {

@@ -1,6 +1,6 @@
 const { defaultToArray } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const { delay, getAnnouncesGroupUri, getAnnouncersGroupUri } = require('./utils');
+const { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } = require('@semapps/activitypub');
+const { getAnnouncesGroupUri, getAnnouncersGroupUri } = require('./utils');
 
 module.exports = {
   name: 'announcer',
@@ -99,7 +99,7 @@ module.exports = {
     announce: {
       async match(ctx, activity) {
         if (this.settings.watchedTypes.length === 0) return false;
-        return await this.matchActivity(
+        return await matchActivity(
           ctx,
           {
             type: ACTIVITY_TYPES.ANNOUNCE,
@@ -165,7 +165,7 @@ module.exports = {
     },
     offerAnnounceByOrganizer: {
       async match(ctx, activity) {
-        const dereferencedActivity = await this.matchActivity(
+        const dereferencedActivity = await matchActivity(
           ctx,
           {
             type: ACTIVITY_TYPES.OFFER,
@@ -201,7 +201,7 @@ module.exports = {
     },
     offerAnnounceToOrganizer: {
       async match(ctx, activity) {
-        const dereferencedActivity = await this.matchActivity(
+        const dereferencedActivity = await matchActivity(
           ctx,
           {
             type: ACTIVITY_TYPES.OFFER,

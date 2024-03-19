@@ -689,11 +689,8 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
         page: 1
       });
       await expect(arrayOf(outbox.orderedItems)[0]).toMatchObject({
-        type: ACTIVITY_TYPES.ANNOUNCE,
-        object: {
-          type: ACTIVITY_TYPES.DELETE,
-          object: eventUri
-        },
+        type: ACTIVITY_TYPES.DELETE,
+        object: eventUri,
         actor: alice.id,
         to: expect.arrayContaining([bob.id, craig.id, daisy.id])
       });

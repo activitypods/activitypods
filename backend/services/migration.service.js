@@ -101,7 +101,13 @@ module.exports = {
       }
     },
     async useApplicationJson(ctx) {
-      const appsDomains = ['lentraide.app', 'bienvenuechezmoi.org', 'welcometomyplace.org', 'mutual-aid.app'];
+      const appsDomains = [
+        'lentraide.app',
+        'bienvenuechezmoi.org',
+        'welcometomyplace.org',
+        'mutual-aid.app',
+        'mastopod.com'
+      ];
       for (let domain of appsDomains) {
         this.logger.info(`Moving app registrations for domain ${domain}...`);
         await ctx.call('triplestore.update', {

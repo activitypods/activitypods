@@ -117,57 +117,61 @@ module.exports = {
     },
     async addMissingApps(ctx) {
       for (let dataset of await ctx.call('pod.list')) {
-        ctx.meta.dataset = dataset;
-        this.logger.info('Adding front apps to dataset ' + dataset + '...');
-        const [account] = await ctx.call('auth.account.find', { query: { username: dataset } });
+        try {
+          ctx.meta.dataset = dataset;
+          this.logger.info('Adding front apps to dataset ' + dataset + '...');
+          const [account] = await ctx.call('auth.account.find', { query: { username: dataset } });
 
-        for (let app of this.trustedApps) {
-          if (!app['apods:locales'] || defaultToArray(app['apods:locales']).includes(account.preferredLocale)) {
-            const appUri = urlJoin(this.settings.baseUrl, dataset, 'data', 'front-apps', app['apods:domainName']);
-            const exists = await ctx.call('ldp.resource.exist', {
-              resourceUri: appUri,
-              webId: 'system'
-            });
+          for (let app of this.trustedApps) {
+            if (!app['apods:locales'] || defaultToArray(app['apods:locales']).includes(account.preferredLocale)) {
+              const appUri = urlJoin(this.settings.baseUrl, dataset, 'data', 'front-apps', app['apods:domainName']);
+              const exists = await ctx.call('ldp.resource.exist', {
+                resourceUri: appUri,
+                webId: 'system'
+              });
 
-            if (exists) {
-              this.logger.info(`${appUri} already exists, updating...`);
+              if (exists) {
+                this.logger.info(`${appUri} already exists, updating...`);
 
-              await this.actions.put(
-                {
-                  resource: {
-                    id: appUri,
-                    type: 'apods:FrontAppRegistration',
-                    'apods:domainName': app['apods:domainName'],
-                    'apods:preferredForTypes': app['apods:handledTypes'],
-                    'apods:application':
-                      app.type === 'apods:TrustedApps'
-                        ? `https://${app['apods:domainName']}/application.json`
-                        : undefined
+                await this.actions.put(
+                  {
+                    resource: {
+                      id: appUri,
+                      type: 'apods:FrontAppRegistration',
+                      'apods:domainName': app['apods:domainName'],
+                      'apods:preferredForTypes': app['apods:handledTypes'],
+                      'apods:application':
+                        app.type === 'apods:TrustedApps'
+                          ? `https://${app['apods:domainName']}/application.json`
+                          : undefined
+                    },
+                    contentType: MIME_TYPES.JSON,
+                    webId: urlJoin(this.settings.baseUrl, dataset)
                   },
-                  contentType: MIME_TYPES.JSON,
-                  webId: urlJoin(this.settings.baseUrl, dataset)
-                },
-                { parentCtx: ctx }
-              );
-            } else {
-              await this.actions.post(
-                {
-                  resource: {
-                    type: 'apods:FrontAppRegistration',
-                    'apods:domainName': app['apods:domainName'],
-                    'apods:preferredForTypes': app['apods:handledTypes'],
-                    'apods:application': `https://${app['apods:domainName']}/application.json`
+                  { parentCtx: ctx }
+                );
+              } else {
+                await this.actions.post(
+                  {
+                    resource: {
+                      type: 'apods:FrontAppRegistration',
+                      'apods:domainName': app['apods:domainName'],
+                      'apods:preferredForTypes': app['apods:handledTypes'],
+                      'apods:application': `https://${app['apods:domainName']}/application.json`
+                    },
+                    contentType: MIME_TYPES.JSON,
+                    slug: app['apods:domainName'],
+                    webId: urlJoin(this.settings.baseUrl, dataset)
                   },
-                  contentType: MIME_TYPES.JSON,
-                  slug: app['apods:domainName'],
-                  webId: urlJoin(this.settings.baseUrl, dataset)
-                },
-                { parentCtx: ctx }
-              );
+                  { parentCtx: ctx }
+                );
 
-              this.logger.info(`${appUri} added!`);
+                this.logger.info(`${appUri} added!`);
+              }
             }
           }
+        } catch (e) {
+          this.logger.warn(`Unable to migrate ${dataset}. Error message: ${e.message}`);
         }
       }
     },

@@ -36,7 +36,8 @@ module.exports = {
   },
   events: {
     async 'webacl.resource.updated'(ctx) {
-      const { uri, isContainer, addPublicRead, removePublicRead } = ctx.params;
+      const { uri, isContainer, addPublicRead, removePublicRead, dataset } = ctx.params;
+      ctx.meta.dataset = dataset;
       // If a resource has been published or unpublished
       if (!isContainer && (addPublicRead || removePublicRead)) {
         const resource = await ctx.call('ldp.resource.get', {

@@ -56,7 +56,8 @@ const CoreService = {
         like: {
           attachToObjectTypes: [...Object.values(OBJECT_TYPES), 'pair:Skill'],
           attachToActorTypes: Object.values(ACTOR_TYPES)
-        }
+        },
+        activitiesPath: '/activities'
       }
     });
 

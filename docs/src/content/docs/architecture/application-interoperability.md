@@ -30,10 +30,39 @@ We've also decided not to use [ShapeTrees](https://shapetrees.org) for the time 
 - We only handle registration with `Applications`, not with other `SocialAgents` (we continue to use WAC permissions for the latter)
 - Pods don't declare an `AuthorizationAgent`. It is handled internally.
 - Pods don't declare a `DataRegistry`. This registry is only used to list ShapeTrees. TypeIndex can be used instead.
-- Applications don't declare `AccessDescription` for the time being (we can deduce the accesses requested, and later it may be used to justify access to certain resources).
+- Applications don't declare `AccessNeedDescription`. On the other hand, in the `AccessDescriptionSet` it is possible to declare [`ClassDescriptions`](#class-descriptions).
 - Pods only create `AccessGrants` and `DataGrants`, not `AccessAuthorizations` and `DataAuthorizations`. Grants can be shared with the registered application, while Authorizations cannot. The only difference between them is a `grantedWith` predicate in `AccessAuthorizations` that indicates which app was used to manage authorizations (but we manage that internally anyway).
 - Pods don't declare `RegistrySet`, `ApplicationRegistry`, `AuthorizationRegistry` as they are not visible from the outside. We just read `ApplicationRegistrations`, `AccessGrants` and `DataGrants` in their dedicated containers.
 
 ## Type Indexes
 
 👷 To be implemented ([#1171](https://github.com/assemblee-virtuelle/semapps/issues/1171))
+
+## Class descriptions
+
+Applications can describe the types of resources (classes) they use. This enables user-friendly information to be displayed on the authorization screen, as well as on the data browser.
+
+```json
+{
+  "@type": "apods:ClassDescription",
+  "apods:describedClass": "https://www.w3.org/ns/activitystreams#Event",
+  "apods:describedBy": "https://welcometomyplace.org",
+  "skos:prefLabel": "Events",
+  "apods:labelPredicate": "https://www.w3.org/ns/activitystreams#name",
+  "apods:openEndpoint": "https://welcometomyplace.org/r"
+}
+```
+
+- `skos:prefLabel` is the
+- `apods:labelPredicate` indicates the predicate to be used to obtain the resource label. This displays the resource label in the data browser.
+- `apods:openEndpoint` is the URL
+
+Class descriptions are located in the `interop:AccessDescriptionSet`
+
+```json
+{
+  "@type": "interop:AccessDescriptionSet",
+  "interop:usesLanguage": "en",
+  "apods:hasClassDescription": "https://mypod.store/alice/data/eba0227a-3bbb-4582-b879
+}
+```

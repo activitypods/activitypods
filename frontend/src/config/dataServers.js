@@ -14,7 +14,8 @@ const dataServers = {
         'vcard:Location': ['/locations'],
         'vcard:Individual': ['/profiles'],
         'apods:FrontAppRegistration': ['/front-apps'],
-        'vcard:Group': ['/groups']
+        'vcard:Group': ['/groups'],
+        'acl:Authorization': ['/capabilities']
       }
     },
     uploadsContainer: '/files'

@@ -8,18 +8,18 @@ next: false
 banner:
   content: |
     This documentation is for ActivityPods 2.0, which will be released this spring.
-    <a href="/en/guides/upgrade-to/v4/">Read more</a>.
+    <a href="https://activitypods.org/the-road-to-activitypods-2-0/" target="_blank">Read more</a>.
 hero:
   title: ActivityPods Docs
   tagline: Guides and resources to help you build with the ActivityPods framework
   actions:
     - text: Get started
       icon: rocket
-      link: /en/install/auto/
+      link: /app-framework/backend/introduction
       variant: primary
     - text: Learn about ActivityPods' architecture
       icon: right-arrow
-      link: /en/concepts/why-astro/
+      link: /architecture/application-interoperability/
 ---
 
 import { CardGrid } from '@astrojs/starlight/components';
@@ -28,29 +28,28 @@ import ListCard from '../../components/ListCard.astro';
 
 <CardGrid>
   <Card title="Deploy your own Pod provider" icon="laptop">
-    Explore [Astro starter themes](https://astro.build/themes/) for blogs, portfolios, docs, landing pages, SaaS, marketing, ecommerce sites, and more!
+    Thanks to Docker, deploying your own Pod provider is easy ! [Follow our tutorial](/tutorials/deploy-your-own-pod-provider/) to started.
   </Card>
   <Card title="Create your first social app" icon="star">
-    Complete our introductory [Build a Blog Tutorial](/en/tutorial/0-introduction/) to learn the basics and create your
-    first Astro site.
+    We provide [an example app](/tutorials/create-your-first-social-app/) that you can run in 30 minutes and connect to any existing Pod provider.
   </Card>
 
-  <ListCard title="Architecture" icon="puzzle">
-    - [Application interoperability](/en/guides/integrations-guide/)
-    - [Identity](/en/guides/content-collections/)
-    - [Authentication](/en/guides/view-transitions/)
-    - [Authorization](/en/guides/cms/) 
-    - [Resources management](/en/guides/cms/) 
-    - [Live update](/en/guides/cms/) 
+  <ListCard title="Pods architecture" icon="puzzle">
+    - [Application interoperability](/architecture/application-interoperability/)
+    - [Identity](/architecture/identity/)
+    - [Authentication](/architecture/authentication/)
+    - [Authorization](/architecture/authorization/) 
+    - [Resources management](/architecture/resources-management/) 
+    - [Live update](/architecture/live-update/) 
   </ListCard>
-  <ListCard title="Backend Guides" icon="puzzle">
-    - [Application registration](/en/guides/integrations-guide/)
-    - [Reading and writing resources](/en/guides/content-collections/)
-    - [Listening to inbox & outbox](/en/guides/view-transitions/)
-    - [Posting as the user](/en/guides/cms/)
-    - [Handling permissions](/en/guides/cms/) 
-    - [Handling collections](/en/guides/cms/) 
-    - [Sending notifications](/en/guides/cms/) 
+  <ListCard title="App framework guides" icon="puzzle">
+    - [Application registration](/app-framework/backend/application-registration/)
+    - [Reading and writing resources](/app-framework/backend/reading-and-writing-resources/)
+    - [Listening to inbox & outbox](/app-framework/backend/listening-to-inbox-and-outbox/)
+    - [Posting as the user](/app-framework/backend/posting-as-the-user/)
+    - [Handling permissions](/app-framework/backend/handling-permissions/) 
+    - [Handling collections](/app-framework/backend/handling-collections/) 
+    - [Sending notifications](/app-framework/backend/sending-notifications/) 
   </ListCard>
 </CardGrid>
 

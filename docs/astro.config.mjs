@@ -6,7 +6,7 @@ export default defineConfig({
   site: 'https://docs.activitypods.org',
   integrations: [
     starlight({
-      title: 'Docs',
+      title: 'Docs (preview)',
       logo: {
         src: './src/assets/full-logo.png'
       },
@@ -16,7 +16,8 @@ export default defineConfig({
       },
       social: {
         github: 'https://github.com/assemblee-virtuelle/activitypods',
-        mastodon: 'https://fosstodon.org/@activitypods'
+        mastodon: 'https://fosstodon.org/@activitypods',
+        matrix: 'https://matrix.to/#/#activitypods:matrix.org'
       },
       sidebar: [
         {
@@ -26,10 +27,6 @@ export default defineConfig({
         {
           label: 'App framework',
           items: [
-            {
-              label: 'Introduction',
-              link: 'app-framework/introduction'
-            },
             {
               label: 'Backend',
               autogenerate: { directory: 'app-framework/backend' }

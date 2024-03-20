@@ -11,14 +11,14 @@ const UserPage = () => {
 
   // const webfinger = useWebfinger();
   // const [ isContact, setIsContact ] = useState();
-  // const { items: contacts, loaded: contactsLoaded } = useCollection(identity?.webIdData?.['apods:contacts']);
+  // const { items: contacts } = useCollection(identity?.webIdData?.['apods:contacts']);
   // useEffect(() => {
-  //   if( contactsLoaded && isContact === undefined ) {
+  //   if( contacts && isContact === undefined ) {
   //     webfinger.fetch(params.id).then(actorUri => {
   //       setIsContact(contacts.includes(actorUri));
   //     });
   //   }
-  // }, [contacts, contactsLoaded, webfinger, params, setIsContact, isContact]);
+  // }, [contacts, webfinger, params, setIsContact, isContact]);
 
   useEffect(() => {
     const contactFormUrl = '/Profile/create/?id=' + params.id;

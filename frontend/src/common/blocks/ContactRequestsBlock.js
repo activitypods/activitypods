@@ -138,7 +138,7 @@ const ContactRequestsBlock = () => {
         <Typography variant="body2">{translate('app.block.contact_requests')}</Typography>
       </Box>
       <Box p={1} pt={0}>
-        {contactRequests.map(activity => (
+        {contactRequests?.map(activity => (
           <Box className={classes.list} key={activity.id}>
             <ContactRequest activity={activity} refetch={refetchAndRefresh} />
           </Box>

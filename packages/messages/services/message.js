@@ -1,5 +1,5 @@
 const { ControlledContainerMixin, defaultToArray } = require('@semapps/ldp');
-const { OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
+const { OBJECT_TYPES, ActivitiesHandlerMixin, matchActivity } = require('@semapps/activitypub');
 const { NEW_MESSAGE } = require('../config/patterns');
 const { NEW_MESSAGE_MAPPING } = require('../config/mappings');
 
@@ -15,7 +15,20 @@ module.exports = {
   dependencies: ['activity-mapping'],
   async started() {
     await this.broker.call('activity-mapping.addMapper', {
-      match: NEW_MESSAGE,
+      match: async (ctx, activity) => {
+        const dereferencedActivity = await matchActivity(ctx, NEW_MESSAGE, activity);
+        // Do not send mail notification for non-private messages
+        if (
+          dereferencedActivity &&
+          (await ctx.call('activitypub.activity.isPublic', { activity: dereferencedActivity }))
+        ) {
+          this.logger.warn(
+            `Ignoring message ${dereferencedActivity.id || dereferencedActivity['@id']} because it is not private`
+          );
+          return false;
+        }
+        return dereferencedActivity;
+      },
       mapping: NEW_MESSAGE_MAPPING
     });
   },

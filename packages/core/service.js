@@ -1,5 +1,6 @@
 const path = require('path');
 const urlJoin = require('url-join');
+const sanitizeHtml = require('sanitize-html');
 const { ActivityPubService, ActivityMappingService, ACTOR_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
@@ -127,7 +128,8 @@ const CoreService = {
       settings: {
         handlebars: {
           helpers: {
-            encodeUri: uri => encodeURIComponent(uri)
+            encodeUri: uri => encodeURIComponent(uri),
+            removeHtmlTags: text => sanitizeHtml(text, { allowedTags: [] }).trim()
           }
         }
       }

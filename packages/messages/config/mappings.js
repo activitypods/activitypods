@@ -1,10 +1,10 @@
 const NEW_MESSAGE_MAPPING = {
   key: 'new_message',
   title: {
-    en: `{{{emitterProfile.vcard:given-name}}} sent you a message`,
-    fr: `{{{emitterProfile.vcard:given-name}}} vous a envoyé un message`
+    en: `{{#if emitterProfile.vcard:given-name}}{{{emitterProfile.vcard:given-name}}}{{else}}{{{emitter.name}}}{{/if}} sent you a message`,
+    fr: `{{#if emitterProfile.vcard:given-name}}{{{emitterProfile.vcard:given-name}}}{{else}}{{{emitter.name}}}{{/if}} vous a envoyé un message`
   },
-  description: '{{activity.object.content}}',
+  description: '{{removeHtmlTags activity.object.content}}',
   actionName: {
     en: 'Reply',
     fr: 'Répondre'

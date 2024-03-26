@@ -23,6 +23,7 @@
     "moleculer": "^0.14.19",
     "moleculer-web": "^0.10.0-beta1",
     "node-fetch": "^2.6.6",
+    "sanitize-html": "^2.6.1",
     "url-join": "^4.0.1"
   },
   "publishConfig": {

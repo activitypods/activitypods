@@ -1,4 +1,4 @@
-[![SemApps](https://badgen.net/badge/Powered%20by/SemApps/28CDFB)](https://semapps.org) [![Chat](https://badgen.net/badge/chat/on%20rocket.chat/orange)](https://chat.lescommuns.org/channel/activitypods)
+[![SemApps](https://badgen.net/badge/Powered%20by/SemApps/28CDFB)](https://semapps.org) [![Chat](https://badgen.net/badge/chat/on%20matrix/00af90)](https://matrix.to/#/#activitypods:matrix.org)
 
 ![activitypods-small](https://user-images.githubusercontent.com/17931931/215525902-6ae72fa9-fde0-43eb-a053-0ccfd4565ead.png)
 

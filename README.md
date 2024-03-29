@@ -4,16 +4,16 @@
 
 # ActivityPods
 
-Check out [our website](https://activitypods.org) or [these slides](./proposal/proposal-english.pdf) ([french version](./proposal/proposal-french.pdf)) for more information about this project !
+Check out [our website](https://activitypods.org) or [these slides](./proposal/proposal-english.pdf) ([French version](./proposal/proposal-french.pdf)) for more information about this project !
 
 > Note: the next version of ActivityPods, currently in alpha stage, is available in the [next](https://github.com/assemblee-virtuelle/activitypods/tree/next) branch.
 
 ### Frontends using ActivityPods
 
-- [Welcome To My Place](https://github.com/assemblee-virtuelle/welcometomyplace) ([french version](https://bienvenuechezmoi.org))
-- [Mutual Aid](https://github.com/assemblee-virtuelle/mutual-aid.app) ([french version](https://lentraide.app))
+- [Welcome To My Place](https://github.com/assemblee-virtuelle/welcometomyplace) ([French version](https://bienvenuechezmoi.org))
+- [Mutual Aid](https://github.com/assemblee-virtuelle/mutual-aid.app) ([French version](https://lentraide.app))
 
-### Pods providers
+### Pod providers
 
 - [MyPod.store](https://mypod.store) (English)
 - [Armoise.co](https://armoise.co) (French, Oise area)
@@ -33,7 +33,7 @@ Check out [our website](https://activitypods.org) or [these slides](./proposal/p
 
 ## Getting started
 
-### Launch the triple store
+### Launch the triplestore
 
 ```bash
 docker-compose up -d fuseki
@@ -61,7 +61,7 @@ yarn start
 
 ## Quick guide
 
-### Create an actor with a POD
+### Create an actor with a Pod
 
 ```
 POST /auth/signup HTTP/1.1
@@ -76,7 +76,7 @@ Content-Type: application/json
 }
 ```
 
-This will create an ActivityPub actor on http://localhost:3000/alice (viewable by everyone) and a Solid POD on http://localhost:3000/alice/data.
+This will create an ActivityPub actor on http://localhost:3000/alice (viewable by everyone) and a Solid Pod on http://localhost:3000/alice/data.
 
 You will receive in return a JWT token to authenticate the newly-created user on subsequent requests.
 
@@ -92,7 +92,7 @@ You will receive in return a JWT token to authenticate the newly-created user on
 
 ### Post a resource in a container
 
-Upon actor creation, several LDP containers have been automatically created on the http://localhost:3000/alice/data POD: `/profiles`, `/events`, `/places`.
+Upon actor creation, several LDP containers have been automatically created on the http://localhost:3000/alice/data Pod: `/profiles`, `/events`, `/places`.
 
 You can now post an event on the `/events` container, following the [LDP specification](https://www.w3.org/TR/ldp-primer/).
 
@@ -109,7 +109,7 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
 }
 ```
 
-The URL of the newly-created event will be returned in the `Location` header of the response.
+The URL of the newly-created event will be returned in the `Location:` header of the response.
 
 ```
 Location: http://localhost:3000/alice/data/events/61a0f897e5b88b06f85b1190
@@ -165,7 +165,7 @@ Accept: application/ld+json
 
 ## Linking to SemApps packages
 
-To modify packages on the [SemApps repository](https://github.com/assemblee-virtuelle/semapps) and see the changes before they are published on NPM, see the following instructions.
+To modify packages on the [SemApps repository](https://github.com/assemblee-virtuelle/semapps), and see the changes before they are published on NPM, see the following instructions.
 
 ### Linking backend packages
 
@@ -189,9 +189,9 @@ cd /ACTIVITYPODS_REPO/frontend
 yarn run link-semapps-packages
 ```
 
-Additionally, frontend packages need to be rebuilt on every changes, or they will not be taken into account by ActivityPods. You can use `yarn run build` to build a package once, or `yarn run watch` to rebuild a package on every change. On every build, the new package will be published to Yalc.
+Additionally, frontend packages need to be rebuilt on every change, or they will not be taken into account by ActivityPods. You can use `yarn run build` to build a package once, or `yarn run watch` to rebuild a package on every change. On every build, the new package will be published to Yalc.
 
-Thanks to git hooks, the frontend packages will also be published to Yalc whenever git branches are changed.
+Thanks to Git hooks, the frontend packages will also be published to Yalc whenever Git branches are changed.
 
 ## Deployment to production
 

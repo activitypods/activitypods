@@ -34,7 +34,7 @@ const createUser = async (broker, num) => {
 
   const webIdDoc = await broker.call('ldp.resource.awaitCreateComplete', {
     resourceUri: webId,
-    predicates: ['url', 'apods:contacts']
+    predicates: ['url', 'apods:contacts', 'inbox', 'outbox']
   });
 
   const capabilitiesUri = await broker.call('capabilities.getContainerUri', { webId });

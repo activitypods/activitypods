@@ -30,8 +30,6 @@ module.exports = {
       for (const locale of Object.keys(label)) {
         let classDescriptionUri = await this.actions.findByLocaleAndType({ locale, type: expandedType, podOwner });
 
-        console.log('classDescriptionUri', classDescriptionUri, locale, expandedType, podOwner);
-
         if (classDescriptionUri) {
           const classDescription = await this.actions.get({
             resourceUri: classDescriptionUri,

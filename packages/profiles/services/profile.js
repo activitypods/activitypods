@@ -46,7 +46,12 @@ module.exports = {
           contentType: MIME_TYPES.JSON,
           webId
         },
-        { parentCtx: ctx }
+        {
+          meta: {
+            skipObjectsWatcher: true // We don't want to trigger a Create action
+          },
+          parentCtx: ctx 
+        }
       );
 
       if (this.settings.publicProfile) {

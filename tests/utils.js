@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const { delay } = require('@semapps/ldp');
+const CONFIG = require('./config');
 
 const arrayOf = value => {
   // If the field is null-ish, we suppose there are no values.
@@ -60,6 +61,24 @@ const fetchServer = (url, options = {}) => {
     });
 };
 
+const fetchMails = async () => {
+  const results = await fetch(CONFIG.MAILCATCHER_API_URL, {
+    headers: {
+      Accept: 'application/json'
+    }
+  });
+
+  const json = await results.json();
+
+  return json;
+}
+
+const clearMails = async () => {
+  await fetch(CONFIG.MAILCATCHER_API_URL, {
+    method: 'DELETE'
+  });
+}
+
 /**
  * Call a callback and expect the result object to have all properties in `fieldNames`.
  * If not, try again after `delayMs` until `maxTries` is reached.
@@ -83,5 +102,7 @@ const waitForResource = async (delayMs, fieldNames, maxTries, callback) => {
 module.exports = {
   arrayOf,
   fetchServer,
+  fetchMails,
+  clearMails,
   waitForResource
 };

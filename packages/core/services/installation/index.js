@@ -117,15 +117,11 @@ module.exports = {
               type: classDescription['apods:describedClass']
             });
 
-            console.log('preferredAppForClass', classDescription['apods:describedClass'], preferredAppForClass);
-
             if (!preferredAppForClass) {
               preferredForClass.push(classDescription['apods:describedClass']);
             }
           }
         }
-
-        console.log('preferredForClass', preferredForClass);
 
         const appRegistrationUri = await ctx.call('app-registrations.post', {
           resource: {

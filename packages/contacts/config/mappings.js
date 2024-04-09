@@ -1,49 +1,58 @@
 const CONTACT_REQUEST_MAPPING = {
-  key: 'contact_request',
   title: {
     en: `{{{emitterProfile.vcard:given-name}}} would like to connect with you`,
     fr: `{{{emitterProfile.vcard:given-name}}} souhaiterait se connecter avec vous`
   },
-  description: `{{activity.content}}`,
-  actionName: {
-    en: 'View',
-    fr: 'Voir'
-  },
-  actionLink: '?type=as:Profile'
+  content: `{{activity.content}}`,
+  actions: [
+    {
+      caption: {
+        en: 'View',
+        fr: 'Voir'
+      },
+      link: '/Profile/{{encodeUri emitterProfile.id}}/show'
+    }
+  ]
 };
 
 const AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING = {
-  key: 'auto_accept_contact_request',
   title: {
     en: `{{{emitterProfile.vcard:given-name}}} accepted your contact request by invite link.`,
     fr: `{{{emitterProfile.vcard:given-name}}} a accepté votre demande de contact donnée par lien d'invitation.`
   },
-  description: {
+  content: {
     en: `You're now connected with {{{emitterProfile.vcard:given-name}}}.`,
     fr: 'Vous êtes maintenant connectés à {{{emitterProfile.vcard:given-name}}}.'
   },
-  actionName: {
-    en: 'View',
-    fr: 'Voir'
-  },
-  actionLink: '?type=as:Profile'
+  actions: [
+    {
+      caption: {
+        en: 'View',
+        fr: 'Voir'
+      },
+      link: '/Profile/{{encodeUri emitterProfile.id}}/show'
+    }
+  ]
 };
 
 const ACCEPT_CONTACT_REQUEST_MAPPING = {
-  key: 'accept_contact_request',
   title: {
     en: `{{{emitterProfile.vcard:given-name}}} is now part of your network`,
     fr: `{{{emitterProfile.vcard:given-name}}} fait maintenant partie de votre réseau`
   },
-  description: {
+  content: {
     en: `{{{emitterProfile.vcard:given-name}}} has accepted your contact requests`,
     fr: `{{{emitterProfile.vcard:given-name}}} a accepté votre demande de mise en relation`
   },
-  actionName: {
-    en: 'View',
-    fr: 'Voir'
-  },
-  actionLink: '?type=as:Profile&uri={{encodeUri emitterProfile.id}}'
+  actions: [
+    {
+      caption: {
+        en: 'View',
+        fr: 'Voir'
+      },
+      link: '/Profile/{{encodeUri emitterProfile.id}}/show'
+    }
+  ]
 };
 
 module.exports = {

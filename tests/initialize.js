@@ -70,6 +70,7 @@ const initialize = async (port, settingsDataset) => {
     settings: {
       baseUrl,
       baseDir: path.resolve(__dirname),
+      frontendUrl: 'https://example.app/',
       triplestore: {
         url: CONFIG.SPARQL_ENDPOINT,
         user: CONFIG.JENA_USER,
@@ -108,7 +109,7 @@ const initialize = async (port, settingsDataset) => {
   return broker;
 };
 
-const initializeAppServer = async (port, settingsDataset) => {
+const initializeAppServer = async (port, mainDataset, settingsDataset) => {
   const baseUrl = `http://localhost:${port}/`;
 
   const broker = new ServiceBroker({
@@ -125,7 +126,7 @@ const initializeAppServer = async (port, settingsDataset) => {
         url: CONFIG.SPARQL_ENDPOINT,
         user: CONFIG.JENA_USER,
         password: CONFIG.JENA_PASSWORD,
-        mainDataset: 'testData'
+        mainDataset
       },
       ontologies: [interop, oidc, apods, notify],
       api: {
@@ -200,7 +201,7 @@ const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRig
 
   do {
     const outbox = await actor.call('activitypub.collection.get', {
-      collectionUri: actor.outbox,
+      resourceUri: actor.outbox,
       page: 1
     });
 

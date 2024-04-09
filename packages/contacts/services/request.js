@@ -1,7 +1,6 @@
 const urlJoin = require('url-join');
 const { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { arrayOf } = require('@semapps/ldp');
-const { matchActivity } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const {
   CONTACT_REQUEST,
@@ -12,7 +11,7 @@ const {
 const {
   CONTACT_REQUEST_MAPPING,
   ACCEPT_CONTACT_REQUEST_MAPPING,
-  AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING: CONTACT_REQUEST_BY_INVITE_LINK_MAPPING
+  AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
 } = require('../config/mappings');
 
 module.exports = {
@@ -43,40 +42,6 @@ module.exports = {
       ordered: false,
       dereferenceItems: false
     });
-
-    // Notify on contact requests (unless it's by an invite link capability).
-    // await this.broker.call('activity-mapping.addMapper', {
-    //   match: async (ctx, activity) => {
-    //     if (activityHasInviteCapability(activity)) {
-    //       return false;
-    //     }
-
-    //     return !!(await matchActivity(ctx, CONTACT_REQUEST, activity));
-    //   },
-    //   mapping: CONTACT_REQUEST_MAPPING
-    // });
-
-    // Notify on auto-accepted invites (by invite link capability).
-    // await this.broker.call('activity-mapping.addMapper', {
-    //   match: async (ctx, activity) => {
-    //     if (!activityHasInviteCapability(activity)) {
-    //       return false;
-    //     }
-    //     return await matchActivity(ctx, CONTACT_REQUEST, activity);
-    //   },
-    //   mapping: CONTACT_REQUEST_BY_INVITE_LINK_MAPPING
-    // });
-
-    // Notify on accepted contact requests (unless auto-accepted by invite link capability).
-    // await this.broker.call('activity-mapping.addMapper', {
-    //   match: async (ctx, activity) => {
-    //     if (activityHasInviteCapability(activity)) {
-    //       return false;
-    //     }
-    //     return await matchActivity(ctx, ACCEPT_CONTACT_REQUEST, activity);
-    //   },
-    //   mapping: ACCEPT_CONTACT_REQUEST_MAPPING
-    // });
   },
   activities: {
     contactRequest: {
@@ -149,6 +114,13 @@ module.exports = {
               'sec:capability': activity['sec:capability']
             });
 
+            await ctx.call('mail-notifications.notify', {
+              template: AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING,
+              recipientUri,
+              activity,
+              context: activity.id
+            });
+
             // No need to add the user to contact requests.
             return;
           }
@@ -156,7 +128,7 @@ module.exports = {
 
         // Check that a request by the same actor is not already waiting (if so, ignore it)
         const collection = await ctx.call('activitypub.collection.get', {
-          collectionUri: recipient['apods:contactRequests'],
+          resourceUri: recipient['apods:contactRequests'],
           webId: recipientUri
         });
         if (
@@ -167,9 +139,16 @@ module.exports = {
           return;
         }
 
-        await ctx.call('activitypub.collection.attach', {
+        await ctx.call('activitypub.collection.add', {
           collectionUri: recipient['apods:contactRequests'],
           item: activity
+        });
+
+        await ctx.call('mail-notifications.notify', {
+          template: CONTACT_REQUEST_MAPPING,
+          recipientUri,
+          activity,
+          context: activity.id
         });
       }
     },
@@ -199,13 +178,13 @@ module.exports = {
         });
 
         // 4. Add the other actor to my contacts list
-        await ctx.call('activitypub.collection.attach', {
+        await ctx.call('activitypub.collection.add', {
           collectionUri: emitter['apods:contacts'],
           item: activity.object.actor
         });
 
         // 5. Remove the activity from my contact requests
-        await ctx.call('activitypub.collection.detach', {
+        await ctx.call('activitypub.collection.remove', {
           collectionUri: emitter['apods:contactRequests'],
           item: activity.object.id
         });
@@ -228,10 +207,20 @@ module.exports = {
         });
 
         // Add the other actor to my contacts list
-        await ctx.call('activitypub.collection.attach', {
+        await ctx.call('activitypub.collection.add', {
           collectionUri: recipient['apods:contacts'],
           item: emitter.id
         });
+
+        // If the contact request was automatically accepted, don't send a notification
+        if (!activityHasInviteCapability(activity)) {
+          await ctx.call('mail-notifications.notify', {
+            template: ACCEPT_CONTACT_REQUEST_MAPPING,
+            recipientUri,
+            activity,
+            context: activity.id
+          });
+        }
       }
     },
     ignoreContactRequest: {
@@ -240,7 +229,7 @@ module.exports = {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Remove the activity from my contact requests
-        await ctx.call('activitypub.collection.detach', {
+        await ctx.call('activitypub.collection.remove', {
           collectionUri: emitter['apods:contactRequests'],
           item: activity.object.id
         });
@@ -260,13 +249,13 @@ module.exports = {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Add the actor to my rejected contacts list
-        await ctx.call('activitypub.collection.attach', {
+        await ctx.call('activitypub.collection.add', {
           collectionUri: emitter['apods:rejectedContacts'],
           item: activity.object.actor
         });
 
         // Remove the activity from my contact requests
-        await ctx.call('activitypub.collection.detach', {
+        await ctx.call('activitypub.collection.remove', {
           collectionUri: emitter['apods:contactRequests'],
           item: activity.object.id
         });

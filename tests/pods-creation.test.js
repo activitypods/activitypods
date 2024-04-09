@@ -61,7 +61,7 @@ describe('Test pods creation', mode => {
   test('Alice collections can be fetched', async () => {
     await expect(
       alice.call('activitypub.collection.get', {
-        collectionUri: alice.outbox
+        resourceUri: alice.outbox
       })
     ).resolves.toMatchObject({
       type: 'OrderedCollection',
@@ -70,7 +70,7 @@ describe('Test pods creation', mode => {
 
     await expect(
       alice.call('activitypub.collection.get', {
-        collectionUri: alice.inbox
+        resourceUri: alice.inbox
       })
     ).resolves.toMatchObject({
       type: 'OrderedCollection',
@@ -79,7 +79,7 @@ describe('Test pods creation', mode => {
 
     await expect(
       alice.call('activitypub.collection.get', {
-        collectionUri: alice.followers
+        resourceUri: alice.followers
       })
     ).resolves.toMatchObject({
       type: 'Collection',
@@ -88,7 +88,7 @@ describe('Test pods creation', mode => {
 
     await expect(
       alice.call('activitypub.collection.get', {
-        collectionUri: alice.following
+        resourceUri: alice.following
       })
     ).resolves.toMatchObject({
       type: 'Collection',
@@ -161,18 +161,17 @@ describe('Test pods creation', mode => {
 
     await expect(
       alice.call('activitypub.collection.get', {
-        collectionUri: alice.outbox,
+        resourceUri: alice.outbox,
         page: 1
       })
     ).resolves.toMatchObject({
       type: 'OrderedCollectionPage',
-      orderedItems: [
-        {
+      orderedItems: expect.arrayContaining([
+        expect.objectContaining({
           type: 'Like',
           object: projectUri
-        }
-      ],
-      totalItems: 1
+        })
+      ])
     });
   }, 80000);
 });

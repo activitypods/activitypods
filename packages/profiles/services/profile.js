@@ -50,7 +50,7 @@ module.exports = {
           meta: {
             skipObjectsWatcher: true // We don't want to trigger a Create action
           },
-          parentCtx: ctx 
+          parentCtx: ctx
         }
       );
 

@@ -553,7 +553,7 @@ describe('Test app installation', () => {
         })
       ).resolves.toMatchObject({
         type: 'Tombstone'
-      });;
+      });
     });
 
     // It should be deleted on the app server as well

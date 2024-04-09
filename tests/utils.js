@@ -71,13 +71,13 @@ const fetchMails = async () => {
   const json = await results.json();
 
   return json;
-}
+};
 
 const clearMails = async () => {
   await fetch(CONFIG.MAILCATCHER_API_URL, {
     method: 'DELETE'
   });
-}
+};
 
 /**
  * Call a callback and expect the result object to have all properties in `fieldNames`.

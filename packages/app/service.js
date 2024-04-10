@@ -13,6 +13,7 @@ const AccessGrantsService = require('./services/registration/access-grants');
 const DataGrantsService = require('./services/registration/data-grants');
 const RegistrationService = require('./services/registration/registration');
 const PodActivitiesWatcherService = require('./services/pod-handling/pod-activities-watcher');
+const PodCollectionsService = require('./services/pod-handling/pod-collections');
 const PodNotificationService = require('./services/pod-handling/pod-notification');
 const PodOutboxService = require('./services/pod-handling/pod-outbox');
 const PodPermissionsService = require('./services/pod-handling/pod-permissions');
@@ -82,6 +83,7 @@ module.exports = {
         frontUrl: this.settings.app.frontUrl
       }
     });
+    this.broker.createService(PodCollectionsService);
     this.broker.createService(PodOutboxService);
     this.broker.createService(PodPermissionsService);
     this.broker.createService(PodResourcesService);

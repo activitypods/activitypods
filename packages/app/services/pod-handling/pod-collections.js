@@ -18,7 +18,7 @@ module.exports = {
 
       const { status, headers } = await this.actions.fetch({
         method: 'POST',
-        url: urlJoin(actorUri, '/as/collection'), // TODO use TypeIndex to find container URL
+        url: urlJoin(actorUri, '/data/as/collection'), // TODO use TypeIndex to find container URL
         headers: {
           'Content-Type': 'application/ld+json'
         },
@@ -26,22 +26,24 @@ module.exports = {
           '@context': await ctx.call('jsonld.context.get'),
           type: ordered ? 'OrderedCollection' : 'Collection',
           summary,
-          itemsPerPage,
-          dereferenceItems,
-          sortPredicate,
-          sortOrder
+          'semapps:itemsPerPage': itemsPerPage,
+          'semapps:dereferenceItems': dereferenceItems,
+          'semapps:sortPredicate': sortPredicate,
+          'semapps:sortOrder': sortOrder
         }),
         actorUri
       });
 
-      if (status === 200) {
-        const collectionUri = headers.get('Location');
+      if (status === 201) {
+        const collectionUri = headers.location;
 
         await ctx.call('pod-resources.patch', {
           resourceUri: objectUri,
           triplesToAdd: [triple(namedNode(objectUri), namedNode(attachPredicate), namedNode(collectionUri))],
           actorUri
         });
+
+        return collectionUri;
       }
     },
     async deleteAndDetach(ctx) {
@@ -52,7 +54,9 @@ module.exports = {
         actorUri
       });
 
-      const collectionUri = object.attachPredicate;
+      const [expandedObject] = await ctx.call('jsonld.parser.expand', { input: object });
+
+      const collectionUri = expandedObject[attachPredicate]?.[0]?.['@id'];
       if (!collectionUri) throw new Error(`No collection with predicate ${attachPredicate} attached to ${objectUri}`);
 
       await ctx.call('pod-resources.delete', {
@@ -66,8 +70,8 @@ module.exports = {
         actorUri
       });
     },
-    async addItem(ctx) {
-      const { collectionUri, itemUri } = ctx.params;
+    async add(ctx) {
+      const { collectionUri, itemUri, actorUri } = ctx.params;
 
       const sparqlUpdate = {
         type: 'update',
@@ -100,8 +104,8 @@ module.exports = {
         actorUri
       });
     },
-    async removeItem(ctx) {
-      const { collectionUri, itemUri } = ctx.params;
+    async remove(ctx) {
+      const { collectionUri, itemUri, actorUri } = ctx.params;
 
       const sparqlUpdate = {
         type: 'update',

@@ -18,7 +18,9 @@ module.exports = {
         'apods:ReadInbox',
         'apods:PostOutbox',
         'apods:SendNotification',
-        'apods:CreateAclGroup'
+        'apods:CreateAclGroup',
+        'apods:CreateCollection',
+        'apods:UpdateWebId'
       ],
       optional: [
         {

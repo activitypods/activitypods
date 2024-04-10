@@ -16,7 +16,7 @@ Create a collection in the `/as/collection` container, and attach it to the prov
 
 | Property            | Type     | Description                                             |
 | ------------------- | -------- | ------------------------------------------------------- |
-| `objectUri`         | `String` | Resource to which the collection should be attached     |
+| `resourceUri`       | `String` | Resource to which the collection should be attached     |
 | `attachPredicate`   | `URI`    | Predicate used to attach the collection to the resource |
 | `collectionOptions` | `Object` | See below                                               |
 | `actorUri`          | `URI`    | WebID of the Pod on which the action should be done     |
@@ -33,7 +33,7 @@ Delete a collection and detach it to the provided resource.
 
 | Property          | Type     | Description                                                             |
 | ----------------- | -------- | ----------------------------------------------------------------------- |
-| `objectUri`       | `String` | Resource to which the collection was attached                           |
+| `resourceUri`     | `String` | Resource to which the collection was attached                           |
 | `attachPredicate` | `URI`    | Full URI of the predicate used to attach the collection to the resource |
 | `actorUri`        | `URI`    | WebID of the Pod on which the action should be done                     |
 
@@ -60,6 +60,18 @@ Remove an item from a collection.
 | `collectionUri` | `URI` | URI of the collection                               |
 | `itemUri`       | `URI` | URI of the item to be removed                       |
 | `actorUri`      | `URI` | WebID of the Pod on which the action should be done |
+
+### `createAndAttachMissing`
+
+Create and attach a collection to all resources of all registered Pods for a given type (when no such collection already exist).
+
+#### Parameters
+
+| Property            | Type     | Description                                             |
+| ------------------- | -------- | ------------------------------------------------------- |
+| `type`              | `URI`    | Type of resources to watch for                          |
+| `attachPredicate`   | `URI`    | Predicate used to attach the collection to the resource |
+| `collectionOptions` | `Object` | See below                                               |
 
 ## Collection options
 

@@ -4,7 +4,7 @@ sidebar:
   order: 4
 ---
 
-## Web Access Control
+## Web Access Control (WAC)
 
 We support the full [WAC specification](https://solid.github.io/web-access-control-spec/).
 

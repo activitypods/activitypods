@@ -42,7 +42,7 @@ The `context` will be an important way to avoid multiple applications to send no
 
 Applications can find the preferred language of an user by looking at the `schema:knowsLanguage` predicate on its WebID.
 
-## `PodNotificationsService`
+## Using the `PodNotificationsService`
 
 To make it easier to send notifications, you can use the `PodNotificationsService`.
 

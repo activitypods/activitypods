@@ -85,3 +85,6 @@ The following special rights are allowed:
 - `apods:ReadOutbox`: permission to read and [watch](../listening-to-inbox-and-outbox/) the user's outbox
 - `apods:PostOutbox`: permission to [post as the user](../posting-as-the-user/)
 - `apods:SendNotification`: permission to [send notifications](../sending-notifications/)
+- `apods:CreateWacGroup`: permission to [create WAC groups](../handling-permissions/#creating-wac-groups)
+- `apods:CreateCollection`: permission to [create custom collections](../handling-collections/)
+- `apods:UpdateWebId`: permission to update the Pod's owner [WebID](/architecture/identity/#webid)

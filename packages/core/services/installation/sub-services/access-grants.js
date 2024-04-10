@@ -60,7 +60,7 @@ module.exports = {
             webId: 'system'
           });
         }
-       
+
         if (specialRightsUris.includes('apods:UpdateWebId')) {
           await ctx.call('webacl.resource.addRights', {
             resourceUri: ctx.params.resource['interop:grantedBy'],

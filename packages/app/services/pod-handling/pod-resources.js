@@ -12,9 +12,9 @@ module.exports = {
   actions: {
     post: {
       params: {
-        containerUri: { type: "string", optional: false },
-        resource: { type: "object", optional: false },
-        actorUri: { type: "string", optional: false }
+        containerUri: { type: 'string', optional: false },
+        resource: { type: 'object', optional: false },
+        actorUri: { type: 'string', optional: false }
       },
       async handler(ctx) {
         const { containerUri, resource, actorUri } = ctx.params;
@@ -38,12 +38,12 @@ module.exports = {
         });
 
         return headers.get('Location');
-      },
-    },  
+      }
+    },
     list: {
       params: {
-        containerUri: { type: "string", optional: false },
-        actorUri: { type: "string", optional: false }
+        containerUri: { type: 'string', optional: false },
+        actorUri: { type: 'string', optional: false }
       },
       async handler(ctx) {
         const { containerUri, actorUri } = ctx.params;
@@ -59,12 +59,12 @@ module.exports = {
         });
 
         return body;
-      },
+      }
     },
     get: {
       params: {
-        resourceUri: { type: "string", optional: false },
-        actorUri: { type: "string", optional: false }
+        resourceUri: { type: 'string', optional: false },
+        actorUri: { type: 'string', optional: false }
       },
       async handler(ctx) {
         const { resourceUri, actorUri } = ctx.params;
@@ -80,14 +80,14 @@ module.exports = {
         });
 
         return body;
-      },
+      }
     },
     patch: {
       params: {
-        resourceUri: { type: "string", optional: false },
-        triplesToAdd: { type: "array", optional: true },
-        triplesToRemove: { type: "array", optional: true },
-        actorUri: { type: "string", optional: false }
+        resourceUri: { type: 'string', optional: false },
+        triplesToAdd: { type: 'array', optional: true },
+        triplesToRemove: { type: 'array', optional: true },
+        actorUri: { type: 'string', optional: false }
       },
       async handler(ctx) {
         const { resourceUri, triplesToAdd, triplesToRemove, actorUri } = ctx.params;
@@ -120,12 +120,12 @@ module.exports = {
           body: this.sparqlGenerator.stringify(sparqlUpdate),
           actorUri
         });
-      },
+      }
     },
     put: {
       params: {
-        resource: { type: "object", optional: false },
-        actorUri: { type: "string", optional: false }
+        resource: { type: 'object', optional: false },
+        actorUri: { type: 'string', optional: false }
       },
       async handler(ctx) {
         let { resource, actorUri } = ctx.params;
@@ -147,12 +147,12 @@ module.exports = {
           body: JSON.stringify(resource),
           actorUri
         });
-      },
+      }
     },
     delete: {
       params: {
-        resourceUri: { type: "string", optional: false },
-        actorUri: { type: "string", optional: false }
+        resourceUri: { type: 'string', optional: false },
+        actorUri: { type: 'string', optional: false }
       },
       async handler(ctx) {
         const { resourceUri, actorUri } = ctx.params;

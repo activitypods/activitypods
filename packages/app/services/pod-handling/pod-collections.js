@@ -169,7 +169,10 @@ module.exports = {
 
           if (!collectionUri) {
             this.logger.info(`Attaching collection to ${resourceUri}...`);
-            await this.actions.createAndAttach({ resourceUri, attachPredicate: expandedAttachPredicate, collectionOptions, actorUri: podOwner }, { parentCtx: ctx });
+            await this.actions.createAndAttach(
+              { resourceUri, attachPredicate: expandedAttachPredicate, collectionOptions, actorUri: podOwner },
+              { parentCtx: ctx }
+            );
           } else {
             this.logger.info(`A collection ${collectionUri} is already attached to ${resourceUri}. Skipping...`);
           }

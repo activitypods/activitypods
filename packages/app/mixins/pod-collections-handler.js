@@ -12,13 +12,32 @@ module.exports = {
       dereferenceItems: false,
       sortPredicate: 'as:published',
       sortOrder: 'DESC'
-    }
+    },
+    createWacGroup: false
   },
   dependencies: ['pod-collections'],
   actions: {
+    async createAndAttach(ctx) {
+      const { resourceUri, actorUri } = ctx.params;
+      const { attachPredicate, collectionOptions } = this.settings;
+      await ctx.call('pod-collections.createAndAttach', {
+        resourceUri,
+        attachPredicate,
+        collectionOptions,
+        actorUri
+      });
+    },
+    async deleteAndDetach(ctx) {
+      const { resourceUri, actorUri } = ctx.params;
+      const { attachPredicate } = this.settings;
+      await ctx.call('pod-collections.deleteAndDetach', {
+        resourceUri,
+        attachPredicate,
+        actorUri
+      });
+    },
     async createAndAttachMissing(ctx) {
       const { type, attachPredicate, collectionOptions } = this.settings;
-      console.log('settings', { type, attachPredicate, collectionOptions });
       await ctx.call('pod-collections.createAndAttachMissing', {
         type,
         attachPredicate,
@@ -28,21 +47,22 @@ module.exports = {
   },
   methods: {
     async onCreate(ctx, resource, actorUri) {
-      const { attachPredicate, collectionOptions } = this.settings;
-      await ctx.call('pod-collections.createAndAttach', {
-        resourceUri: resource.id || resource['@id'],
-        attachPredicate,
-        collectionOptions,
-        actorUri
-      });
+      await this.actions.createAndAttach(
+        {
+          resourceUri: resource.id || resource['@id'],
+          actorUri
+        },
+        { parentCtx: ctx }
+      );
     },
     async onDelete(ctx, resourceUri, actorUri) {
-      const { attachPredicate } = this.settings;
-      await ctx.call('pod-collections.deleteAndDetach', {
-        resourceUri: resourceUri,
-        attachPredicate,
-        actorUri
-      });
+      await this.actions.deleteAndDetach(
+        {
+          resourceUri,
+          actorUri
+        },
+        { parentCtx: ctx }
+      );
     }
   }
 };

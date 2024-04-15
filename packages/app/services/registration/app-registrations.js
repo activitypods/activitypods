@@ -11,16 +11,22 @@ module.exports = {
     async getForActor(ctx) {
       const { actorUri } = ctx.params;
 
-      let filteredContainer = await this.actions.list(
+      const filteredContainer = await this.actions.list(
         {
           filters: {
             'http://www.w3.org/ns/solid/interop#registeredBy': actorUri
-          }
+          },
+          webId: 'system'
         },
         { parentCtx: ctx }
       );
 
       return filteredContainer['ldp:contains']?.[0];
+    },
+    async getRegisteredPods(ctx) {
+      const filteredContainer = await this.actions.list({ webId: 'system' }, { parentCtx: ctx });
+
+      return filteredContainer['ldp:contains']?.map(appRegistration => appRegistration['interop:registeredBy']);
     }
   },
   hooks: {

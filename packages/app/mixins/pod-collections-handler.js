@@ -14,11 +14,23 @@ module.exports = {
       sortOrder: 'DESC'
     }
   },
+  dependencies: ['pod-collections'],
+  actions: {
+    async createAndAttachMissing(ctx) {
+      const { type, attachPredicate, collectionOptions } = this.settings;
+      console.log('settings', { type, attachPredicate, collectionOptions });
+      await ctx.call('pod-collections.createAndAttachMissing', {
+        type,
+        attachPredicate,
+        collectionOptions
+      });
+    }
+  },
   methods: {
     async onCreate(ctx, resource, actorUri) {
       const { attachPredicate, collectionOptions } = this.settings;
       await ctx.call('pod-collections.createAndAttach', {
-        objectUri: resource.id || resource['@id'],
+        resourceUri: resource.id || resource['@id'],
         attachPredicate,
         collectionOptions,
         actorUri
@@ -27,7 +39,7 @@ module.exports = {
     async onDelete(ctx, resourceUri, actorUri) {
       const { attachPredicate } = this.settings;
       await ctx.call('pod-collections.deleteAndDetach', {
-        objectUri: resourceUri,
+        resourceUri: resourceUri,
         attachPredicate,
         actorUri
       });

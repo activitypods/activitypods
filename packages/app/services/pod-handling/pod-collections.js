@@ -2,6 +2,7 @@ const urlJoin = require('url-join');
 const { triple, namedNode } = require('@rdfjs/data-model');
 const SparqlGenerator = require('sparqljs').Generator;
 const FetchPodOrProxyMixin = require('../../mixins/fetch-pod-or-proxy');
+const { arrayOf } = require('@semapps/ldp');
 
 module.exports = {
   name: 'pod-collections',
@@ -13,7 +14,7 @@ module.exports = {
   },
   actions: {
     async createAndAttach(ctx) {
-      const { objectUri, attachPredicate, collectionOptions, actorUri } = ctx.params;
+      const { resourceUri, attachPredicate, collectionOptions, actorUri } = ctx.params;
       const { ordered, summary, itemsPerPage, dereferenceItems, sortPredicate, sortOrder } = collectionOptions;
 
       const { status, headers } = await this.actions.fetch({
@@ -28,8 +29,8 @@ module.exports = {
           summary,
           'semapps:itemsPerPage': itemsPerPage,
           'semapps:dereferenceItems': dereferenceItems,
-          'semapps:sortPredicate': sortPredicate,
-          'semapps:sortOrder': sortOrder
+          'semapps:sortPredicate': ordered ? sortPredicate : undefined,
+          'semapps:sortOrder': ordered ? sortOrder : undefined
         }),
         actorUri
       });
@@ -37,9 +38,11 @@ module.exports = {
       if (status === 201) {
         const collectionUri = headers.location;
 
+        const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
+
         await ctx.call('pod-resources.patch', {
-          resourceUri: objectUri,
-          triplesToAdd: [triple(namedNode(objectUri), namedNode(attachPredicate), namedNode(collectionUri))],
+          resourceUri,
+          triplesToAdd: [triple(namedNode(resourceUri), namedNode(expandedAttachPredicate), namedNode(collectionUri))],
           actorUri
         });
 
@@ -47,17 +50,20 @@ module.exports = {
       }
     },
     async deleteAndDetach(ctx) {
-      const { objectUri, attachPredicate, actorUri } = ctx.params;
+      const { resourceUri, attachPredicate, actorUri } = ctx.params;
 
-      const object = await ctx.call('pod-resources.get', {
-        resourceUri: objectUri,
+      const resource = await ctx.call('pod-resources.get', {
+        resourceUri,
         actorUri
       });
 
-      const [expandedObject] = await ctx.call('jsonld.parser.expand', { input: object });
+      const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
 
-      const collectionUri = expandedObject[attachPredicate]?.[0]?.['@id'];
-      if (!collectionUri) throw new Error(`No collection with predicate ${attachPredicate} attached to ${objectUri}`);
+      const collectionUri = await this.actions.getCollectionUriFromResource({
+        resource,
+        attachPredicate: expandedAttachPredicate
+      });
+      if (!collectionUri) throw new Error(`No collection with predicate ${attachPredicate} attached to ${resourceUri}`);
 
       await ctx.call('pod-resources.delete', {
         resourceUri: collectionUri,
@@ -65,8 +71,8 @@ module.exports = {
       });
 
       await ctx.call('pod-resources.patch', {
-        resourceUri: objectUri,
-        triplesToRemove: [triple(namedNode(objectUri), namedNode(attachPredicate), namedNode(collectionUri))],
+        resourceUri,
+        triplesToRemove: [triple(namedNode(resourceUri), namedNode(expandedAttachPredicate), namedNode(collectionUri))],
         actorUri
       });
     },
@@ -137,6 +143,45 @@ module.exports = {
         body: this.sparqlGenerator.stringify(sparqlUpdate),
         actorUri
       });
+    },
+    async createAndAttachMissing(ctx) {
+      const { type, attachPredicate, collectionOptions } = ctx.params;
+
+      const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
+
+      // Go through all pods
+      for (let podOwner of await ctx.call('app-registrations.getRegisteredPods')) {
+        this.logger.info(`Going through resources of ${podOwner}...`);
+        // Find the container for this type
+        const containerUri = await ctx.call('data-grants.getContainerByType', { type, podOwner });
+        if (!containerUri) throw new Error(`No container found with type ${type} on pod ${podOwner}`);
+
+        const container = await ctx.call('pod-resources.list', { containerUri, actorUri: podOwner });
+
+        // Go through all resources in the container
+        for (let resource of arrayOf(container['ldp:contains'])) {
+          resource = { '@context': container['@context'], ...resource };
+          const resourceUri = resource.id || resource['@id'];
+          const collectionUri = await this.actions.getCollectionUriFromResource(
+            { resource, attachPredicate: expandedAttachPredicate },
+            { parentCtx: ctx }
+          );
+
+          if (!collectionUri) {
+            this.logger.info(`Attaching collection to ${resourceUri}...`);
+            await this.actions.createAndAttach({ resourceUri, attachPredicate: expandedAttachPredicate, collectionOptions, actorUri: podOwner }, { parentCtx: ctx });
+          } else {
+            this.logger.info(`A collection ${collectionUri} is already attached to ${resourceUri}. Skipping...`);
+          }
+        }
+      }
+    },
+    // Find the collection attached to a given resource (or undefined if no collection is attached)
+    async getCollectionUriFromResource(ctx) {
+      const { resource, attachPredicate } = ctx.params;
+      const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
+      const [expandedResource] = await ctx.call('jsonld.parser.expand', { input: resource });
+      return expandedResource[expandedAttachPredicate]?.[0]?.['@id'];
     }
   }
 };

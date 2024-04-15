@@ -61,7 +61,7 @@ describe('Test AS collections handling', () => {
 
   test('Attach a collection to Alice actor', async () => {
     collectionUri = await appServer.call('pod-collections.createAndAttach', {
-      objectUri: alice.id,
+      resourceUri: alice.id,
       attachPredicate: 'http://activitypods.org/ns/core#friends',
       collectionOptions: {
         ordered: false,
@@ -138,7 +138,7 @@ describe('Test AS collections handling', () => {
 
   test('Delete collection', async () => {
     await appServer.call('pod-collections.deleteAndDetach', {
-      objectUri: alice.id,
+      resourceUri: alice.id,
       attachPredicate: 'http://activitypods.org/ns/core#friends',
       actorUri: alice.id
     });

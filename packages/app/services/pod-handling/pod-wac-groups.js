@@ -1,3 +1,4 @@
+const createSlug = require('speakingurl');
 const FetchPodOrProxyMixin = require('../../mixins/fetch-pod-or-proxy');
 
 module.exports = {
@@ -92,6 +93,8 @@ module.exports = {
     // Return URL like http://localhost:3000/_groups/alice/contacts
     getGroupUri(groupSlug, podOwner) {
       const { origin, pathname } = new URL(podOwner);
+      // Sluggify with the same parameters as the webacl.group.create action
+      groupSlug = createSlug(groupSlug, { lang: 'fr', custom: { '.': '.', '/': '/' } });
       return `${origin}/_groups${pathname}/${groupSlug}`;
     }
   }

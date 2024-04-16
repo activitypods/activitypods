@@ -9,6 +9,7 @@ module.exports = {
     collectionOptions: {
       ordered: false,
       summary: 'Event attendees'
-    }
+    },
+    createWacGroup: true
   }
 };

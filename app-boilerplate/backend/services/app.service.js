@@ -30,6 +30,7 @@ module.exports = {
         },
         'apods:ReadInbox',
         'apods:ReadOutbox',
+        'apods:CreateAclGroup',
         'apods:CreateCollection',
         'apods:UpdateWebId'
       ],

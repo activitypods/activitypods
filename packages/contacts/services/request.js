@@ -44,7 +44,10 @@ module.exports = {
   async started() {
     await this.broker.call('activitypub.collections-registry.register', this.settings.contactsCollectionOptions);
     await this.broker.call('activitypub.collections-registry.register', this.settings.contactRequestsCollectionOptions);
-    await this.broker.call('activitypub.collections-registry.register', this.settings.rejectedContactsCollectionOptions);
+    await this.broker.call(
+      'activitypub.collections-registry.register',
+      this.settings.rejectedContactsCollectionOptions
+    );
   },
   actions: {
     async updateCollectionsOptions(ctx) {

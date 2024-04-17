@@ -1,7 +1,7 @@
 const { PodActivitiesHandlerMixin } = require('@activitypods/app');
 
 module.exports = {
-  name: 'join',
+  name: 'registration',
   mixins: [PodActivitiesHandlerMixin],
   activities: {
     join: {

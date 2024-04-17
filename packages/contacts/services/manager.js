@@ -6,16 +6,25 @@ const { REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT, OFFER_DELETE_ACTOR 
 module.exports = {
   name: 'contacts.manager',
   mixins: [ActivitiesHandlerMixin],
-  dependencies: ['activitypub.registry', 'webacl'],
-
-  async started() {
-    await this.broker.call('activitypub.registry.register', {
+  settings: {
+    ignoredContactsCollectionOptions: {
       path: '/ignored-contacts',
       attachToTypes: Object.values(ACTOR_TYPES),
       attachPredicate: 'http://activitypods.org/ns/core#ignoredContacts',
       ordered: false,
       dereferenceItems: false
-    });
+    }
+  },
+  dependencies: ['activitypub.collections-registry', 'webacl'],
+  async started() {
+    await this.broker.call('activitypub.collections-registry.register', this.settings.ignoredContactsCollectionOptions);
+  },
+  actions: {
+    async updateCollectionsOptions(ctx) {
+      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        collection: this.settings.ignoredContactsCollectionOptions
+      });
+    }
   },
   activities: {
     removeContact: {

@@ -17,31 +17,47 @@ const {
 module.exports = {
   name: 'contacts.request',
   mixins: [ActivitiesHandlerMixin],
-  dependencies: ['activitypub.registry', 'webacl'],
-  async started() {
-    await this.broker.call('activitypub.registry.register', {
+  settings: {
+    contactsCollectionOptions: {
       path: '/contacts',
       attachToTypes: Object.values(ACTOR_TYPES),
       attachPredicate: 'http://activitypods.org/ns/core#contacts',
       ordered: false,
       dereferenceItems: false
-    });
-
-    await this.broker.call('activitypub.registry.register', {
+    },
+    contactRequestsCollectionOptions: {
       path: '/contact-requests',
       attachToTypes: Object.values(ACTOR_TYPES),
       attachPredicate: 'http://activitypods.org/ns/core#contactRequests',
       ordered: false,
       dereferenceItems: true
-    });
-
-    await this.broker.call('activitypub.registry.register', {
+    },
+    rejectedContactsCollectionOptions: {
       path: '/rejected-contacts',
       attachToTypes: Object.values(ACTOR_TYPES),
       attachPredicate: 'http://activitypods.org/ns/core#rejectedContacts',
       ordered: false,
       dereferenceItems: false
-    });
+    }
+  },
+  dependencies: ['activitypub.collections-registry', 'webacl'],
+  async started() {
+    await this.broker.call('activitypub.collections-registry.register', this.settings.contactsCollectionOptions);
+    await this.broker.call('activitypub.collections-registry.register', this.settings.contactRequestsCollectionOptions);
+    await this.broker.call('activitypub.collections-registry.register', this.settings.rejectedContactsCollectionOptions);
+  },
+  actions: {
+    async updateCollectionsOptions(ctx) {
+      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        collection: this.settings.contactsCollectionOptions
+      });
+      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        collection: this.settings.contactRequestsCollectionOptions
+      });
+      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        collection: this.settings.rejectedContactsCollectionOptions
+      });
+    }
   },
   activities: {
     contactRequest: {

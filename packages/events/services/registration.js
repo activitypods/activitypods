@@ -7,9 +7,9 @@ const { JOIN_EVENT_MAPPING, LEAVE_EVENT_MAPPING } = require('../config/mappings'
 module.exports = {
   name: 'events.registration',
   mixins: [ActivitiesHandlerMixin],
-  dependencies: ['activitypub.registry', 'activity-mapping', 'ldp', 'webacl'],
+  dependencies: ['activitypub.collections-registry', 'activity-mapping', 'ldp', 'webacl'],
   async started() {
-    await this.broker.call('activitypub.registry.register', {
+    await this.broker.call('activitypub.collections-registry.register', {
       path: '/attendees',
       attachToTypes: [OBJECT_TYPES.EVENT],
       attachPredicate: 'http://activitypods.org/ns/core#attendees',

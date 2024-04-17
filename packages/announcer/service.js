@@ -8,13 +8,13 @@ module.exports = {
   settings: {
     watchedTypes: []
   },
-  dependencies: ['activitypub.registry'],
+  dependencies: ['activitypub.collections-registry'],
   actions: {
     async watch(ctx) {
       const { types } = ctx.params;
       this.settings.watchedTypes.push(...types);
 
-      await this.broker.call('activitypub.registry.register', {
+      await this.broker.call('activitypub.collections-registry.register', {
         path: '/announces',
         attachToTypes: this.settings.watchedTypes,
         attachPredicate: 'http://activitypods.org/ns/core#announces',
@@ -22,7 +22,7 @@ module.exports = {
         dereferenceItems: false
       });
 
-      await this.broker.call('activitypub.registry.register', {
+      await this.broker.call('activitypub.collections-registry.register', {
         path: '/announcers',
         attachToTypes: this.settings.watchedTypes,
         attachPredicate: 'http://activitypods.org/ns/core#announcers',

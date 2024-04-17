@@ -87,4 +87,10 @@ module.exports = {
 
 With this new service, the application will listen for creation of resources of type `as:Event` on the Pods it is installed, and automatically create and attach the collections.
 
-If you want to attach collections to existing resources of type `as:Event`, you can call the `addMissingCollections` action.
+If you want to attach collections to existing resources of type `as:Event`, you can call the `createAndAttachMissing` action.
+
+## Automatically creating WAC groups
+
+The `PodCollectionsHandlerMixin` accepts a `createWacGroup` setting. If true, every time a collection is created, a [WAC group](../handling-permissions) will also be created with the same slug as the collection. When the `add` or `remove` actions are called, it will automatically add or remove members from the WAC group.
+
+This option should only be used if you are inserting WebIDs in your collection.

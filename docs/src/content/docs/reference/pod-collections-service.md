@@ -73,6 +73,17 @@ Create and attach a collection to all resources of all registered Pods for a giv
 | `attachPredicate`   | `URI`    | Predicate used to attach the collection to the resource |
 | `collectionOptions` | `Object` | See below                                               |
 
+### `getCollectionUriFromResource`
+
+Get the URI of a collection based on the resource and the attach predicate (will be expanded if necessary).
+
+#### Parameters
+
+| Property          | Type     | Description                                             |
+| ----------------- | -------- | ------------------------------------------------------- |
+| `resource`        | `Object` | Resource to which the collection is attached            |
+| `attachPredicate` | `URI`    | Predicate used to attach the collection to the resource |
+
 ## Collection options
 
 The following options are available when creating a new collection. They are persisted using the `semapps:` ontology.

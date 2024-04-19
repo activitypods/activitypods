@@ -61,6 +61,37 @@ module.exports = {
           });
         }
 
+        if (specialRightsUris.includes('apods:UpdateWebId')) {
+          await ctx.call('webacl.resource.addRights', {
+            resourceUri: ctx.params.resource['interop:grantedBy'],
+            additionalRights: {
+              user: {
+                uri: ctx.params.resource['interop:grantee'],
+                write: true
+              }
+            },
+            webId: 'system'
+          });
+        }
+
+        if (specialRightsUris.includes('apods:CreateCollection')) {
+          const collectionsContainerUri = await ctx.call('activitypub.collection.getContainerUri', {
+            webId: ctx.params.resource['interop:grantedBy']
+          });
+
+          // Give write permission on collections container
+          await ctx.call('webacl.resource.addRights', {
+            resourceUri: collectionsContainerUri,
+            additionalRights: {
+              user: {
+                uri: ctx.params.resource['interop:grantee'],
+                write: true
+              }
+            },
+            webId: 'system'
+          });
+        }
+
         return res;
       },
       async delete(ctx, res) {

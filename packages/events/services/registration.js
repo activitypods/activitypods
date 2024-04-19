@@ -7,9 +7,9 @@ const { JOIN_EVENT_MAPPING, LEAVE_EVENT_MAPPING } = require('../config/mappings'
 module.exports = {
   name: 'events.registration',
   mixins: [ActivitiesHandlerMixin],
-  dependencies: ['activitypub.registry', 'activity-mapping', 'ldp', 'webacl'],
+  dependencies: ['activitypub.collections-registry', 'activity-mapping', 'ldp', 'webacl'],
   async started() {
-    await this.broker.call('activitypub.registry.register', {
+    await this.broker.call('activitypub.collections-registry.register', {
       path: '/attendees',
       attachToTypes: [OBJECT_TYPES.EVENT],
       attachPredicate: 'http://activitypods.org/ns/core#attendees',
@@ -29,8 +29,8 @@ module.exports = {
   },
   actions: {
     async addCreatorToAttendees(ctx) {
-      const { resourceUri, newData } = ctx.params;
-      await ctx.call('activitypub.collection.attach', {
+      const { newData } = ctx.params;
+      await ctx.call('activitypub.collection.add', {
         collectionUri: newData['apods:attendees'],
         item: newData['dc:creator']
       });
@@ -87,7 +87,7 @@ module.exports = {
           throw new MoleculerError('You have not been invited to this event', 400, 'BAD REQUEST');
         }
 
-        await ctx.call('activitypub.collection.attach', {
+        await ctx.call('activitypub.collection.add', {
           collectionUri: event['apods:attendees'],
           item: activity.actor
         });
@@ -114,7 +114,7 @@ module.exports = {
           throw new MoleculerError('This event is closed', 403, 'FORBIDDEN');
         }
 
-        await ctx.call('activitypub.collection.detach', {
+        await ctx.call('activitypub.collection.remove', {
           collectionUri: event['apods:attendees'],
           item: activity.actor
         });

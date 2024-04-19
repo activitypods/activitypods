@@ -52,11 +52,11 @@ describe('Test app installation', () => {
         meta: { ...options.meta, webId, dataset: alice.preferredUsername }
       });
 
-    appServer = await initializeAppServer(3001, 'app_settings');
+    appServer = await initializeAppServer(3001, 'appData', 'app_settings');
     await appServer.createService(ExampleAppService);
     await appServer.start();
 
-    appServer2 = await initializeAppServer(3002, 'app2_settings');
+    appServer2 = await initializeAppServer(3002, 'app2Data', 'app2_settings');
     await appServer2.createService(ExampleAppService);
     await appServer2.start();
   }, 80000);
@@ -164,7 +164,7 @@ describe('Test app installation', () => {
 
     await waitForExpect(async () => {
       const outbox = await alice.call('activitypub.collection.get', {
-        collectionUri: alice.outbox,
+        resourceUri: alice.outbox,
         page: 1
       });
 
@@ -251,7 +251,7 @@ describe('Test app installation', () => {
 
     await waitForExpect(async () => {
       const inbox = await alice.call('activitypub.collection.get', {
-        collectionUri: alice.inbox,
+        resourceUri: alice.inbox,
         page: 1
       });
 
@@ -483,7 +483,7 @@ describe('Test app installation', () => {
 
     await waitForExpect(async () => {
       const inbox = await alice.call('activitypub.collection.get', {
-        collectionUri: alice.inbox,
+        resourceUri: alice.inbox,
         page: 1
       });
 
@@ -509,7 +509,7 @@ describe('Test app installation', () => {
 
     await waitForExpect(async () => {
       const outbox = await alice.call('activitypub.collection.get', {
-        collectionUri: alice.outbox,
+        resourceUri: alice.outbox,
         page: 1
       });
 
@@ -529,7 +529,9 @@ describe('Test app installation', () => {
           resourceUri: appRegistrationUri,
           accept: MIME_TYPES.JSON
         })
-      ).rejects.toThrow();
+      ).resolves.toMatchObject({
+        type: 'Tombstone'
+      });
     });
 
     // It should be deleted on the app server as well
@@ -549,7 +551,9 @@ describe('Test app installation', () => {
           resourceUri: requiredAccessGrant['interop:hasDataGrant'],
           accept: MIME_TYPES.JSON
         })
-      ).rejects.toThrow();
+      ).resolves.toMatchObject({
+        type: 'Tombstone'
+      });
     });
 
     // It should be deleted on the app server as well
@@ -597,7 +601,7 @@ describe('Test app installation', () => {
 
     await waitForExpect(async () => {
       const inbox = await alice.call('activitypub.collection.get', {
-        collectionUri: alice.inbox,
+        resourceUri: alice.inbox,
         page: 1
       });
 
@@ -615,7 +619,9 @@ describe('Test app installation', () => {
           resourceUri: appRegistrationUri,
           accept: MIME_TYPES.JSON
         })
-      ).rejects.toThrow();
+      ).resolves.toMatchObject({
+        type: 'Tombstone'
+      });
     });
   });
 
@@ -629,7 +635,7 @@ describe('Test app installation', () => {
 
     await waitForExpect(async () => {
       const inbox = await alice.call('activitypub.collection.get', {
-        collectionUri: alice.inbox,
+        resourceUri: alice.inbox,
         page: 1
       });
 

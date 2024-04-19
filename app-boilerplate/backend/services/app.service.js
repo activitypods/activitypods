@@ -29,7 +29,10 @@ module.exports = {
           accessMode: 'acl:Read'
         },
         'apods:ReadInbox',
-        'apods:ReadOutbox'
+        'apods:ReadOutbox',
+        'apods:CreateAclGroup',
+        'apods:CreateCollection',
+        'apods:UpdateWebId'
       ],
       optional: ['apods:SendNotification']
     },

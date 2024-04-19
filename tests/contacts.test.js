@@ -1,32 +1,20 @@
-const waitForExpect = require('wait-for-expect');
-const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { arrayOf } = require('@semapps/ldp');
-const { initialize, clearDataset, listDatasets } = require('./initialize');
 const path = require('path');
 const urlJoin = require('url-join');
-const notificationFilter = require('../backend/services/mixins/MailNotificationFilterMixin');
-const delay = t => new Promise(resolve => setTimeout(resolve, t));
+const waitForExpect = require('wait-for-expect');
+const { ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { arrayOf } = require('@semapps/ldp');
+const { initialize, clearDataset, listDatasets } = require('./initialize');
+const { fetchMails, clearMails } = require('./utils');
 
 jest.setTimeout(80000);
 
 const NUM_PODS = 3;
-
-const mockSendNotification = jest.fn(() => Promise.resolve());
 
 const initializeBroker = async (port, accountsDataset) => {
   const broker = await initialize(port, accountsDataset);
 
   await broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
-
-  // Mock notification service
-  await broker.createService({
-    mixins: [notificationFilter, require('./services/notification.service')],
-    actions: {
-      send: mockSendNotification
-    }
-  });
 
   await broker.start();
 
@@ -50,7 +38,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
       await clearDataset(dataset);
     }
 
-    mockSendNotification.mockReset();
+    clearMails();
 
     if (mode === 'single-server') {
       broker = await initializeBroker(3000, 'settings');
@@ -85,10 +73,6 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     alice = actors[1];
     bob = actors[2];
     craig = actors[3];
-  }, 80001);
-
-  beforeEach(async () => {
-    mockSendNotification.mockClear();
   });
 
   afterAll(async () => {
@@ -110,16 +94,19 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
         type: ACTIVITY_TYPES.ADD,
         object: alice.url
       },
-      content: 'Salut Bob, tu te rappelles de moi ?',
+      content: 'Hey Bob, do you remember me ?',
       target: bob.id,
       to: bob.id
     });
 
-    await waitForExpect(() => {
-      expect(mockSendNotification).toHaveBeenCalledTimes(1);
+    await waitForExpect(async () => {
+      await expect(fetchMails()).resolves.toContainEqual(
+        expect.objectContaining({
+          recipients: ['<bob@test.com>'],
+          subject: 'Alice would like to connect with you'
+        })
+      );
     });
-
-    expect(mockSendNotification.mock.calls[0][0].params.data.key).toBe('contact_request');
 
     await waitForExpect(async () => {
       await expect(
@@ -148,7 +135,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
         type: ACTIVITY_TYPES.ADD,
         object: alice.url
       },
-      content: 'Salut Craig, ça fait longtemps !',
+      content: 'Hey Craig, long time no see !',
       target: craig.id,
       to: craig.id
     });
@@ -162,12 +149,15 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
       ).resolves.toBeFalsy();
     });
 
-    await waitForExpect(() => {
-      expect(mockSendNotification).toHaveBeenCalledTimes(2);
+    await waitForExpect(async () => {
+      await expect(fetchMails()).resolves.toContainEqual(
+        expect.objectContaining({
+          recipients: ['<craig@test.com>'],
+          subject: 'Alice would like to connect with you'
+        })
+      );
     });
-
-    expect(mockSendNotification.mock.calls[1][0].params.data.key).toBe('contact_request');
-  }, 80000);
+  });
 
   test('Bob accept Alice contact request', async () => {
     await bob.call('activitypub.outbox.post', {
@@ -243,12 +233,15 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
       ).resolves.toBeTruthy();
     });
 
-    await waitForExpect(() => {
-      expect(mockSendNotification).toHaveBeenCalledTimes(1);
+    await waitForExpect(async () => {
+      await expect(fetchMails()).resolves.toContainEqual(
+        expect.objectContaining({
+          recipients: ['<alice@test.com>'],
+          subject: 'Bob is now part of your network'
+        })
+      );
     });
-
-    expect(mockSendNotification.mock.calls[0][0].params.data.key).toBe('accept_contact_request');
-  }, 80000);
+  });
 
   test('Craig reject Alice contact request', async () => {
     await craig.call('activitypub.outbox.post', {
@@ -492,7 +485,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     await waitForExpect(async () => {
       // TODO new action to only get most recent item in collection
       const outbox = await bob.call('activitypub.collection.get', {
-        collectionUri: bob.inbox,
+        resourceUri: bob.inbox,
         page: 1
       });
       await expect(arrayOf(outbox.orderedItems)[0]).toMatchObject({

@@ -32,7 +32,7 @@ describe('Test Pod resources handling', () => {
     await podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
     await podServer.start();
 
-    appServer = await initializeAppServer(3001, 'app_settings');
+    appServer = await initializeAppServer(3001, 'appData', 'app_settings');
     await appServer.createService(ExampleAppService);
     await appServer.start();
 

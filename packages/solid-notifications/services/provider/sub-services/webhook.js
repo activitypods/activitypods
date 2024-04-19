@@ -23,6 +23,7 @@ module.exports = {
     // ControlledContainerMixin
     acceptedTypes: ['notify:WebhookChannel2023'],
     excludeFromMirror: true,
+    activateTombstones: false,
     // Like the CSS, we allow anyone with the URI of the channel to read and delete it
     // https://communitysolidserver.github.io/CommunitySolidServer/latest/usage/notifications/#unsubscribing-from-a-notification-channel
     newResourcesPermissions: {

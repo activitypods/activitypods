@@ -6,16 +6,25 @@ const { REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT, OFFER_DELETE_ACTOR 
 module.exports = {
   name: 'contacts.manager',
   mixins: [ActivitiesHandlerMixin],
-  dependencies: ['activitypub.registry', 'webacl'],
-
-  async started() {
-    await this.broker.call('activitypub.registry.register', {
+  settings: {
+    ignoredContactsCollectionOptions: {
       path: '/ignored-contacts',
       attachToTypes: Object.values(ACTOR_TYPES),
       attachPredicate: 'http://activitypods.org/ns/core#ignoredContacts',
       ordered: false,
       dereferenceItems: false
-    });
+    }
+  },
+  dependencies: ['activitypub.collections-registry', 'webacl'],
+  async started() {
+    await this.broker.call('activitypub.collections-registry.register', this.settings.ignoredContactsCollectionOptions);
+  },
+  actions: {
+    async updateCollectionsOptions(ctx) {
+      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        collection: this.settings.ignoredContactsCollectionOptions
+      });
+    }
   },
   activities: {
     removeContact: {
@@ -26,7 +35,7 @@ module.exports = {
         if (!activity.origin.startsWith(emitterUri))
           throw new Error(`Cannot remove from collection ${activity.origin} as it is not owned by the emitter`);
 
-        await ctx.call('activitypub.collection.detach', {
+        await ctx.call('activitypub.collection.remove', {
           collectionUri: activity.origin,
           item: activity.object.id
         });
@@ -43,7 +52,7 @@ module.exports = {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Add the actor to the emitter's ignore contacts list.
-        await ctx.call('activitypub.collection.attach', {
+        await ctx.call('activitypub.collection.add', {
           collectionUri: emitter['apods:ignoredContacts'],
           item: activity.object
         });
@@ -55,7 +64,7 @@ module.exports = {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Remove the actor from the emitter's ignore contacts list.
-        await ctx.call('activitypub.collection.detach', {
+        await ctx.call('activitypub.collection.remove', {
           collectionUri: emitter['apods:ignoredContacts'],
           item: activity.object.object
         });
@@ -153,7 +162,6 @@ module.exports = {
           dataset
         });
 
-        // Confirm data suppression
         await ctx.call('activitypub.outbox.post', {
           collectionUri: recipient.outbox,
           type: ACTIVITY_TYPES.ACCEPT,

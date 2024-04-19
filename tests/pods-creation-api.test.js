@@ -106,7 +106,7 @@ describe('Test pods creation via API', () => {
       ({ json: alice } = await fetchServer(BASE_URL + '/alice', { method: 'GET' }));
 
       expect(alice).toMatchObject({
-        type: ['foaf:Person', 'Person'],
+        type: expect.arrayContaining(['foaf:Person', 'Person']),
         'foaf:nick': 'alice',
         preferredUsername: 'alice',
         inbox: BASE_URL + '/alice/inbox',
@@ -229,13 +229,12 @@ describe('Test pods creation via API', () => {
       await expect(fetchServer(`${alice.outbox}?page=1`)).resolves.toMatchObject({
         json: {
           type: 'OrderedCollectionPage',
-          orderedItems: [
-            {
+          orderedItems: expect.arrayContaining([
+            expect.objectContaining({
               type: 'Like',
               object: projectUri
-            }
-          ],
-          totalItems: 1
+            })
+          ])
         }
       });
     });

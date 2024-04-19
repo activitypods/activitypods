@@ -77,7 +77,7 @@ module.exports = {
       if (event['apods:maxAttendees']) {
         // TODO add a activitypub.collection.count action
         const attendeesCollection = await ctx.call('activitypub.collection.get', {
-          collectionUri: event['apods:attendees'],
+          resourceUri: event['apods:attendees'],
           webId: 'system'
         });
 

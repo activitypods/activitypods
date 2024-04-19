@@ -1,6 +1,6 @@
 const { defaultToArray } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const { delay, getAnnouncesGroupUri, getAnnouncersGroupUri } = require('./utils');
+const { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } = require('@semapps/activitypub');
+const { getAnnouncesGroupUri, getAnnouncersGroupUri } = require('./utils');
 
 module.exports = {
   name: 'announcer',
@@ -8,13 +8,13 @@ module.exports = {
   settings: {
     watchedTypes: []
   },
-  dependencies: ['activitypub.registry'],
+  dependencies: ['activitypub.collections-registry'],
   actions: {
     async watch(ctx) {
       const { types } = ctx.params;
       this.settings.watchedTypes.push(...types);
 
-      await this.broker.call('activitypub.registry.register', {
+      await this.broker.call('activitypub.collections-registry.register', {
         path: '/announces',
         attachToTypes: this.settings.watchedTypes,
         attachPredicate: 'http://activitypods.org/ns/core#announces',
@@ -22,7 +22,7 @@ module.exports = {
         dereferenceItems: false
       });
 
-      await this.broker.call('activitypub.registry.register', {
+      await this.broker.call('activitypub.collections-registry.register', {
         path: '/announcers',
         attachToTypes: this.settings.watchedTypes,
         attachPredicate: 'http://activitypods.org/ns/core#announcers',
@@ -41,11 +41,11 @@ module.exports = {
       const creator = await ctx.call('activitypub.actor.get', { actorUri: object['dc:creator'] });
 
       // Add the creator to the list of announces and announcers
-      await ctx.call('activitypub.collection.attach', {
+      await ctx.call('activitypub.collection.add', {
         collectionUri: object['apods:announces'],
         item: creator.id
       });
-      await ctx.call('activitypub.collection.attach', {
+      await ctx.call('activitypub.collection.add', {
         collectionUri: object['apods:announcers'],
         item: creator.id
       });
@@ -99,7 +99,7 @@ module.exports = {
     announce: {
       async match(ctx, activity) {
         if (this.settings.watchedTypes.length === 0) return false;
-        return await this.matchActivity(
+        return await matchActivity(
           ctx,
           {
             type: ACTIVITY_TYPES.ANNOUNCE,
@@ -118,7 +118,7 @@ module.exports = {
         // Add all targeted actors to the collection and WebACL group
         // TODO check if we could not use activity.to instead of activity.target (and change this everywhere)
         for (let actorUri of defaultToArray(activity.target)) {
-          await ctx.call('activitypub.collection.attach', {
+          await ctx.call('activitypub.collection.add', {
             collectionUri: activity.object['apods:announces'],
             item: actorUri
           });
@@ -165,7 +165,7 @@ module.exports = {
     },
     offerAnnounceByOrganizer: {
       async match(ctx, activity) {
-        const dereferencedActivity = await this.matchActivity(
+        const dereferencedActivity = await matchActivity(
           ctx,
           {
             type: ACTIVITY_TYPES.OFFER,
@@ -186,7 +186,7 @@ module.exports = {
       async onEmit(ctx, activity) {
         // Add all announcers to the collection and WebACL group
         for (let actorUri of defaultToArray(activity.target)) {
-          await ctx.call('activitypub.collection.attach', {
+          await ctx.call('activitypub.collection.add', {
             collectionUri: activity.object.object['apods:announcers'],
             item: actorUri
           });
@@ -201,7 +201,7 @@ module.exports = {
     },
     offerAnnounceToOrganizer: {
       async match(ctx, activity) {
-        const dereferencedActivity = await this.matchActivity(
+        const dereferencedActivity = await matchActivity(
           ctx,
           {
             type: ACTIVITY_TYPES.OFFER,

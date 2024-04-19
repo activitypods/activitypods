@@ -88,12 +88,12 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
     daisy = actors[4];
 
     // Manually exchange contacts between Alice and Bob (this will ne used for attendees matching)
-    await alice.call('activitypub.collection.attach', {
+    await alice.call('activitypub.collection.add', {
       collectionUri: alice['apods:contacts'],
       itemUri: bob.id
     });
 
-    await bob.call('activitypub.collection.attach', {
+    await bob.call('activitypub.collection.add', {
       collectionUri: bob['apods:contacts'],
       itemUri: alice.id
     });
@@ -587,7 +587,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       // Daisy should receive two contact requests from Alice and Bob
       await waitForExpect(async () => {
         await expect(
-          daisy.call('activitypub.collection.get', { collectionUri: daisy['apods:contactRequests'] })
+          daisy.call('activitypub.collection.get', { resourceUri: daisy['apods:contactRequests'] })
         ).resolves.toMatchObject({
           items: expect.arrayContaining([
             expect.objectContaining({
@@ -606,7 +606,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
       // Bob should only receive a contact request from Daisy (Alice is already in his contacts)
       await waitForExpect(async () => {
         await expect(
-          bob.call('activitypub.collection.get', { collectionUri: bob['apods:contactRequests'] })
+          bob.call('activitypub.collection.get', { resourceUri: bob['apods:contactRequests'] })
         ).resolves.toMatchObject({
           items: expect.objectContaining({
             type: ACTIVITY_TYPES.OFFER,
@@ -628,7 +628,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
 
     test('Daisy silently accept Bob automatic contact requests', async () => {
       const { items: contactRequests } = await daisy.call('activitypub.collection.get', {
-        collectionUri: daisy['apods:contactRequests']
+        resourceUri: daisy['apods:contactRequests']
       });
 
       const bobContactRequest = arrayOf(contactRequests).find(r => r.actor === bob.id);
@@ -685,7 +685,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test events app', 
     await waitForExpect(async () => {
       // TODO new action to only get most recent item in collection
       const outbox = await alice.call('activitypub.collection.get', {
-        collectionUri: alice.outbox,
+        resourceUri: alice.outbox,
         page: 1
       });
       await expect(arrayOf(outbox.orderedItems)[0]).toMatchObject({

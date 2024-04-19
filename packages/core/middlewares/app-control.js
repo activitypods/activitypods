@@ -40,7 +40,6 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         const appUri = ctx.meta.webId;
 
         // Ensure we are fetching remote data (otherwise this could be a security issue)
-        console.log('url startsWith', url);
         if (url.startsWith(podOwner)) {
           throw new E.ForbiddenError(`The proxy cannot be used to fetch local data`);
         }

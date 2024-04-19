@@ -29,7 +29,7 @@ module.exports = {
       });
 
       const collection = await ctx.call('activitypub.collection.get', {
-        collectionUri: event['apods:attendees'],
+        resourceUri: event['apods:attendees'],
         webId: 'system'
       });
 

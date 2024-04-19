@@ -8,6 +8,7 @@ import OutboxIcon from '@mui/icons-material/Outbox';
 import MoveToInboxIcon from '@mui/icons-material/MoveToInbox';
 import SearchIcon from '@mui/icons-material/Search';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import { arrayFromLdField } from '../../utils';
 
 const specialRights = {
@@ -34,6 +35,14 @@ const specialRights = {
   'apods:CreateAclGroup': {
     label: 'app.authorization.create_acl_group',
     icon: GroupAddIcon
+  },
+  'apods:CreateCollection': {
+    label: 'app.authorization.create_collection',
+    icon: PlaylistAddIcon
+  },
+  'apods:UpdateWebId': {
+    label: 'app.authorization.update_webid',
+    icon: PlaylistAddIcon
   }
 };
 

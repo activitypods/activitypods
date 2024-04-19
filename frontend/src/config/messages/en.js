@@ -84,7 +84,9 @@ module.exports = {
       post_outbox: 'Post in my outbox',
       send_notification: 'Send me notifications',
       query_sparql_endpoint: 'Search on my data',
-      create_acl_group: 'Create permissions group'
+      create_acl_group: 'Create and manage permissions groups',
+      create_collection: 'Create and manage collections',
+      update_webid: 'Update my identity (WebId)'
     },
     card: {
       add_contact: 'Add a contact',

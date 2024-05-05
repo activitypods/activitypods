@@ -42,11 +42,15 @@ module.exports = {
         throw new Error('Invalid status ' + newStatus);
       }
 
-      await ctx.call('events.event.put', {
-        resource: { ...event, 'apods:hasStatus': [newStatus, otherStatus] },
-        contentType: MIME_TYPES.JSON,
-        webId: 'system'
-      });
+      this.logger.warn('status.set called');
+
+      console.log({ ...event, 'apods:hasStatus': [newStatus, otherStatus] });
+
+      // await ctx.call('events.event.put', {
+      //   resource: { ...event, 'apods:hasStatus': [newStatus, otherStatus] },
+      //   contentType: MIME_TYPES.JSON,
+      //   webId: 'system'
+      // });
     },
     isFinished(ctx) {
       const { event } = ctx.params;

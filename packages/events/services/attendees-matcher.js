@@ -23,6 +23,9 @@ module.exports = {
   events: {
     async 'events.status.finished'(ctx) {
       const { eventUri } = ctx.params;
+
+      this.logger.warn('Event events.status.finished detected !', eventUri);
+
       const event = await ctx.call('events.event.get', {
         resourceUri: eventUri,
         accept: MIME_TYPES.JSON,
@@ -53,18 +56,19 @@ module.exports = {
         }
 
         if (potentialNewContacts.length > 0) {
-          await ctx.call('activitypub.outbox.post', {
-            collectionUri: attendee.outbox,
-            type: ACTIVITY_TYPES.OFFER,
-            actor: attendee.id,
-            object: {
-              type: ACTIVITY_TYPES.ADD,
-              object: attendee.url
-            },
-            context: event.id,
-            target: potentialNewContacts,
-            to: potentialNewContacts
-          });
+          this.logger.warn('Offer not sent. Potential new contacts:' + potentialNewContacts.join(', '));
+          // await ctx.call('activitypub.outbox.post', {
+          //   collectionUri: attendee.outbox,
+          //   type: ACTIVITY_TYPES.OFFER,
+          //   actor: attendee.id,
+          //   object: {
+          //     type: ACTIVITY_TYPES.ADD,
+          //     object: attendee.url
+          //   },
+          //   context: event.id,
+          //   target: potentialNewContacts,
+          //   to: potentialNewContacts
+          // });
         }
       }
 

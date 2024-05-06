@@ -23,6 +23,7 @@ module.exports = {
   events: {
     async 'events.status.finished'(ctx) {
       const { eventUri } = ctx.params;
+
       const event = await ctx.call('events.event.get', {
         resourceUri: eventUri,
         accept: MIME_TYPES.JSON,

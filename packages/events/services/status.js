@@ -182,6 +182,7 @@ module.exports = {
         });
 
         for (let eventUri of results.map(node => node.eventUri.value)) {
+          console.log('FOUND ONE EVENT FINISHED', eventUri, dataset, results);
           await this.actions.set({ eventUri, newStatus: EVENT_STATUS_FINISHED });
           await this.actions.set({ eventUri, newStatus: EVENT_STATUS_CLOSED });
           await ctx.emit('events.status.finished', { eventUri });

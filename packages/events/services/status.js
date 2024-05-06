@@ -46,9 +46,7 @@ module.exports = {
         throw new Error('Invalid status ' + newStatus);
       }
 
-      this.logger.warn('status.set called');
-
-      console.log({ ...event, 'apods:hasStatus': [newStatus, otherStatus] });
+      this.logger.warn('status.set called', newStatus, { ...event, 'apods:hasStatus': [newStatus, otherStatus] });
 
       // await ctx.call('events.event.put', {
       //   resource: { ...event, 'apods:hasStatus': [newStatus, otherStatus] },
@@ -75,6 +73,8 @@ module.exports = {
     },
     async tagUpdatedEvent(ctx) {
       const { eventUri } = ctx.params;
+
+      this.logger.info('tagUpdatedEvent', eventUri);
 
       const event = await ctx.call('events.event.get', {
         resourceUri: eventUri,

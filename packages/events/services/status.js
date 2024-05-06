@@ -16,7 +16,7 @@ module.exports = {
   mixins: [CronMixin],
   dependencies: ['api', 'ldp', 'webacl'],
   async started() {
-    this.baseUrl = await ctx.call('ldp.getBaseUrl');
+    this.baseUrl = await this.broker.call('ldp.getBaseUrl');
   },
   actions: {
     async set(ctx) {

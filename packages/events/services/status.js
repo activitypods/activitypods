@@ -1,4 +1,5 @@
 const CronMixin = require('moleculer-cron');
+const urlJoin = require('url-join');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { arrayOf } = require('@semapps/ldp');
 
@@ -14,6 +15,9 @@ module.exports = {
   name: 'events.status',
   mixins: [CronMixin],
   dependencies: ['api', 'ldp', 'webacl'],
+  async started() {
+    this.baseUrl = await ctx.call('ldp.getBaseUrl');
+  },
   actions: {
     async set(ctx) {
       const { eventUri, newStatus } = ctx.params;
@@ -100,15 +104,16 @@ module.exports = {
     },
     async tagComing(ctx) {
       for (let dataset of await ctx.call('pod.list')) {
-        // TODO do not return cached events
         const results = await ctx.call('triplestore.query', {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
             PREFIX as: <https://www.w3.org/ns/activitystreams#>
+            PREFIX dc: <http://purl.org/dc/terms/>
             PREFIX ldp: <http://www.w3.org/ns/ldp#>
             SELECT ?eventUri
             WHERE {
               ?eventUri a as:Event .
+              ?eventUri dc:creator <${urlJoin(this.baseUrl, dataset)}> . # Filter out cached events
               ?eventUri as:endTime ?endTime .
               FILTER(NOW() < ?endTime) .
               FILTER NOT EXISTS { ?eventUri apods:hasStatus ${EVENT_STATUS_COMING} . }
@@ -126,7 +131,6 @@ module.exports = {
     },
     async tagClosed(ctx) {
       for (let dataset of await ctx.call('pod.list')) {
-        // TODO do not return cached events
         const results = await ctx.call('triplestore.query', {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
@@ -135,6 +139,7 @@ module.exports = {
             SELECT ?eventUri
             WHERE {
               ?eventUri a as:Event .
+              ?eventUri dc:creator <${urlJoin(this.baseUrl, dataset)}> . # Filter out cached events
               ?eventUri as:endTime ?endTime .
               OPTIONAL { ?eventUri apods:closingTime ?closingTime }
               OPTIONAL { ?eventUri apods:maxAttendees ?maxAttendees }
@@ -163,7 +168,6 @@ module.exports = {
     },
     async tagFinished(ctx) {
       for (let dataset of await ctx.call('pod.list')) {
-        // TODO do not return cached events
         const results = await ctx.call('triplestore.query', {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
@@ -172,6 +176,7 @@ module.exports = {
             SELECT ?eventUri
             WHERE {
               ?eventUri a as:Event .
+              ?eventUri dc:creator <${urlJoin(this.baseUrl, dataset)}> . # Filter out cached events
               ?eventUri as:endTime ?endTime .
               FILTER(NOW() > ?endTime) .
               FILTER NOT EXISTS { ?eventUri apods:hasStatus ${EVENT_STATUS_FINISHED} . }

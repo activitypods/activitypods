@@ -135,6 +135,7 @@ module.exports = {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
             PREFIX ldp: <http://www.w3.org/ns/ldp#>
+            PREFIX dc: <http://purl.org/dc/terms/>
             PREFIX as: <https://www.w3.org/ns/activitystreams#>
             SELECT ?eventUri
             WHERE {
@@ -172,6 +173,7 @@ module.exports = {
           query: `
             PREFIX apods: <http://activitypods.org/ns/core#>
             PREFIX ldp: <http://www.w3.org/ns/ldp#>
+            PREFIX dc: <http://purl.org/dc/terms/>
             PREFIX as: <https://www.w3.org/ns/activitystreams#>
             SELECT ?eventUri
             WHERE {

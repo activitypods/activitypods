@@ -46,13 +46,11 @@ module.exports = {
         throw new Error('Invalid status ' + newStatus);
       }
 
-      this.logger.warn('status.set called', newStatus, { ...event, 'apods:hasStatus': [newStatus, otherStatus] });
-
-      // await ctx.call('events.event.put', {
-      //   resource: { ...event, 'apods:hasStatus': [newStatus, otherStatus] },
-      //   contentType: MIME_TYPES.JSON,
-      //   webId: 'system'
-      // });
+      await ctx.call('events.event.put', {
+        resource: { ...event, 'apods:hasStatus': [newStatus, otherStatus] },
+        contentType: MIME_TYPES.JSON,
+        webId: 'system'
+      });
     },
     isFinished(ctx) {
       const { event } = ctx.params;
@@ -73,8 +71,6 @@ module.exports = {
     },
     async tagUpdatedEvent(ctx) {
       const { eventUri } = ctx.params;
-
-      this.logger.info('tagUpdatedEvent', eventUri);
 
       const event = await ctx.call('events.event.get', {
         resourceUri: eventUri,
@@ -189,7 +185,6 @@ module.exports = {
         });
 
         for (let eventUri of results.map(node => node.eventUri.value)) {
-          console.log('FOUND ONE EVENT FINISHED', eventUri, dataset, results);
           await this.actions.set({ eventUri, newStatus: EVENT_STATUS_FINISHED });
           await this.actions.set({ eventUri, newStatus: EVENT_STATUS_CLOSED });
           await ctx.emit('events.status.finished', { eventUri });

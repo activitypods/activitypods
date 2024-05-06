@@ -56,19 +56,18 @@ module.exports = {
         }
 
         if (potentialNewContacts.length > 0) {
-          this.logger.warn('Offer not sent. Potential new contacts:' + potentialNewContacts.join(', '));
-          // await ctx.call('activitypub.outbox.post', {
-          //   collectionUri: attendee.outbox,
-          //   type: ACTIVITY_TYPES.OFFER,
-          //   actor: attendee.id,
-          //   object: {
-          //     type: ACTIVITY_TYPES.ADD,
-          //     object: attendee.url
-          //   },
-          //   context: event.id,
-          //   target: potentialNewContacts,
-          //   to: potentialNewContacts
-          // });
+          await ctx.call('activitypub.outbox.post', {
+            collectionUri: attendee.outbox,
+            type: ACTIVITY_TYPES.OFFER,
+            actor: attendee.id,
+            object: {
+              type: ACTIVITY_TYPES.ADD,
+              object: attendee.url
+            },
+            context: event.id,
+            target: potentialNewContacts,
+            to: potentialNewContacts
+          });
         }
       }
 

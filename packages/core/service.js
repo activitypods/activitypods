@@ -17,13 +17,12 @@ const {
   void: voidOntology
 } = require('@semapps/ontologies');
 const { PodService } = require('@semapps/pod');
-const { SignatureService, ProxyService } = require('@semapps/signature');
+const { SignatureService, KeyService, ProxyService } = require('@semapps/crypto');
 const { SynchronizerService } = require('@semapps/sync');
 const { SparqlEndpointService } = require('@semapps/sparql-endpoint');
 const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
-const { WebIdService } = require('@semapps/webid');
 const ApiService = require('./services/api');
 const FrontAppsService = require('./services/front-apps');
 const containers = require('./config/containers');
@@ -141,8 +140,11 @@ const CoreService = {
       }
     });
 
-    this.broker.createService(SignatureService, {
+    this.broker.createService(SignatureService);
+
+    this.broker.createService(KeyService, {
       settings: {
+        podProvider: true,
         actorsKeyPairsDir: path.resolve(baseDir, './actors')
       }
     });
@@ -172,21 +174,6 @@ const CoreService = {
     this.broker.createService(WebfingerService, {
       settings: {
         baseUrl
-      }
-    });
-
-    this.broker.createService(WebIdService, {
-      settings: {
-        baseUrl,
-        podProvider: true
-      },
-      hooks: {
-        before: {
-          async create(ctx) {
-            const { nick } = ctx.params;
-            await ctx.call('pod.create', { username: nick });
-          }
-        }
       }
     });
 

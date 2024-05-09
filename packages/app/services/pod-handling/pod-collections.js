@@ -13,6 +13,13 @@ module.exports = {
     });
   },
   actions: {
+    async getItems(ctx) {
+      const { collectionUri, actorUri } = ctx.params;
+
+      const collection = await ctx.call('pod-resources.get', { resourceUri: collectionUri, actorUri });
+
+      return arrayOf(collection.items || collection.orderedItems);
+    },
     async createAndAttach(ctx) {
       const { resourceUri, attachPredicate, collectionOptions, actorUri } = ctx.params;
       const { ordered, summary, itemsPerPage, dereferenceItems, sortPredicate, sortOrder } = collectionOptions;

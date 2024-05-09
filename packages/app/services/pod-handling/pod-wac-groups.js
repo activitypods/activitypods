@@ -87,6 +87,23 @@ module.exports = {
       });
 
       return status === 204;
+    },
+    async getUriFromCollectionUri(ctx) {
+      const { collectionUri } = ctx.params;
+      let groupPath;
+
+      const { origin, pathname } = new URL(collectionUri);
+      const parts = pathname.split('/');
+
+      if (parts[2] === 'data') {
+        // Transforms http://localhost:3000/alice/data/e8c183f8-4e16-4aed/likes to e8c183f8-4e16-4aed/likes
+        groupPath = parts.slice(3).join('/');
+      } else {
+        // Transforms http://localhost:3000/alice/folowers to followers
+        groupPath = parts.slice(2).join('/');
+      }
+
+      return `${origin}/_groups/${groupPath}`;
     }
   },
   methods: {

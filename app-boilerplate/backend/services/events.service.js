@@ -7,6 +7,12 @@ module.exports = {
   settings: {
     type: 'Event'
   },
+  actions: {
+    async tagAsStarted(ctx) {
+      const { event } = ctx.params;
+      this.logger.info(`The event ${event.name} has started !!`);
+    }
+  },
   methods: {
     async onCreate(ctx, resource, actorUri) {
       await this.actions.patch(
@@ -23,6 +29,21 @@ module.exports = {
         },
         { parentCtx: ctx }
       );
+
+      await ctx.call('timer.set', {
+        key: [resource.id, 'started'],
+        time: resource.startTime,
+        actionName: 'events.tagAsStarted',
+        params: { event: resource }
+      });
+    },
+    async onUpdate(ctx, resource) {
+      await ctx.call('timer.set', {
+        key: [resource.id, 'started'],
+        time: resource.startTime,
+        actionName: 'events.tagAsStarted',
+        params: { event: resource }
+      });
     }
   }
 };

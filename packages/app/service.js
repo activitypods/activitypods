@@ -19,6 +19,8 @@ const PodOutboxService = require('./services/pod-handling/pod-outbox');
 const PodPermissionsService = require('./services/pod-handling/pod-permissions');
 const PodResourcesService = require('./services/pod-handling/pod-resources');
 const PodWacGroupsService = require('./services/pod-handling/pod-wac-groups');
+const TimerService = require('./services/utils/timer');
+const TranslatorService = require('./services/utils/translator');
 
 module.exports = {
   name: 'app',
@@ -75,6 +77,7 @@ module.exports = {
     this.broker.createService(AccessDescriptionSetService);
     this.broker.createService(ClassDescriptionService);
 
+    // Pod handling
     this.broker.createService(PodActivitiesWatcherService, {
       mixins: [QueueMixin(this.settings.queueServiceUrl)]
     });
@@ -88,6 +91,12 @@ module.exports = {
     this.broker.createService(PodPermissionsService);
     this.broker.createService(PodResourcesService);
     this.broker.createService(PodWacGroupsService);
+
+    // Utils
+    this.broker.createService(TimerService, {
+      mixins: [QueueMixin(this.settings.queueServiceUrl)]
+    });
+    this.broker.createService(TranslatorService);
   },
   async started() {
     let actorExist = false,

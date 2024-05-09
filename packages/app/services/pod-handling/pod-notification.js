@@ -6,12 +6,6 @@ module.exports = {
   settings: {
     frontUrl: null
   },
-  async started() {
-    for (const [name, fn] of Object.entries(this.settings.handlebars.helpers)) {
-      this.logger.info(`Registering handlebars helper ${name}`);
-      Handlebars.registerHelper(name, fn);
-    }
-  },
   actions: {
     async send(ctx) {
       const { template, recipientUri, activity, context, ...rest } = ctx.params;

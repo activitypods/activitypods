@@ -34,6 +34,13 @@
       "host": "redis",
       "port": 6379,
       "db": 1
+    },
+    {
+      "name": "timeout",
+      "hostId": "app-boilerplate",
+      "host": "redis",
+      "port": 6379,
+      "db": 1
     }
   ]
 }

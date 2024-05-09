@@ -4,7 +4,7 @@
   "private": true,
   "description": "Boilerplate for ActivityPods apps",
   "scripts": {
-    "dev": "moleculer-runner --repl --hot services/*.service.js",
+    "dev": "moleculer-runner --repl services/*.service.js",
     "start": "moleculer-runner services/*.service.js"
   },
   "dependencies": {

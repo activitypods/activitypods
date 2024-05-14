@@ -1,7 +1,7 @@
 const path = require('path');
 const urlJoin = require('url-join');
 const QueueService = require('moleculer-bull');
-const { ActivityPubService, ACTOR_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
+const { ActivityPubService, ACTOR_TYPES, OBJECT_TYPES, FULL_ACTOR_TYPES } = require('@semapps/activitypub');
 const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
@@ -14,6 +14,7 @@ const { SparqlEndpointService } = require('@semapps/sparql-endpoint');
 const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
+const { WebIdService } = require('@semapps/webid');
 const { NotificationProviderService } = require('@activitypods/solid-notifications');
 const { apods, interop, notify, oidc } = require('@activitypods/ontologies');
 const ApiService = require('./services/api');
@@ -131,6 +132,24 @@ const CoreService = {
         defaultContainerOptions: {
           permissions: {},
           newResourcesPermissions: {}
+        }
+      }
+    });
+
+    this.broker.createService(WebIdService, {
+      settings: {
+        path: '/',
+        baseUrl,
+        acceptedTypes: Object.values(FULL_ACTOR_TYPES),
+        podProvider: true,
+        podsContainer: true
+      },
+      hooks: {
+        before: {
+          async createWebId(ctx) {
+            const { nick } = ctx.params;
+            await ctx.call('pod.create', { username: nick });
+          }
         }
       }
     });

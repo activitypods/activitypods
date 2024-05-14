@@ -1,41 +1,33 @@
 const { defaultToArray } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } = require('@semapps/activitypub');
+const { MIME_TYPES } = require('@semapps/mime-types');
 const { getAnnouncesGroupUri, getAnnouncersGroupUri } = require('./utils');
 
 module.exports = {
   name: 'announcer',
   mixins: [ActivitiesHandlerMixin],
   settings: {
-    watchedTypes: []
+    announcesCollectionOptions: {
+      path: '/announces',
+      attachPredicate: 'http://activitypods.org/ns/core#announces',
+      ordered: false,
+      dereferenceItems: false
+    },
+    announcersCollectionOptions: {
+      path: '/announcers',
+      attachPredicate: 'http://activitypods.org/ns/core#announcers',
+      ordered: false,
+      dereferenceItems: false
+    }
   },
   dependencies: ['activitypub.collections-registry'],
   actions: {
-    async watch(ctx) {
-      const { types } = ctx.params;
-      this.settings.watchedTypes.push(...types);
-
-      await this.broker.call('activitypub.collections-registry.register', {
-        path: '/announces',
-        attachToTypes: this.settings.watchedTypes,
-        attachPredicate: 'http://activitypods.org/ns/core#announces',
-        ordered: false,
-        dereferenceItems: false
-      });
-
-      await this.broker.call('activitypub.collections-registry.register', {
-        path: '/announcers',
-        attachToTypes: this.settings.watchedTypes,
-        attachPredicate: 'http://activitypods.org/ns/core#announcers',
-        ordered: false,
-        dereferenceItems: false
-      });
-    },
-    async giveRightsAfterCreate(ctx) {
-      const { resourceUri } = ctx.params;
+    async giveRightsAfterAnnouncesCollectionCreate(ctx) {
+      const { objectUri } = ctx.params;
 
       const object = await ctx.call('ldp.resource.awaitCreateComplete', {
-        resourceUri,
-        predicates: ['dc:creator', 'dc:modified', 'dc:created', 'apods:announces', 'apods:announcers']
+        resourceUri: objectUri,
+        predicates: ['apods:announces']
       });
 
       const creator = await ctx.call('activitypub.actor.get', { actorUri: object['dc:creator'] });
@@ -45,35 +37,16 @@ module.exports = {
         collectionUri: object['apods:announces'],
         item: creator.id
       });
-      await ctx.call('activitypub.collection.add', {
-        collectionUri: object['apods:announcers'],
-        item: creator.id
-      });
 
-      const announcesGroupUri = getAnnouncesGroupUri(resourceUri);
-      const announcersGroupUri = getAnnouncersGroupUri(resourceUri);
-
+      const announcesGroupUri = getAnnouncesGroupUri(objectUri);
       await ctx.call('webacl.group.create', { groupUri: announcesGroupUri, webId: creator.id });
-      await ctx.call('webacl.group.create', { groupUri: announcersGroupUri, webId: creator.id });
 
       // Give read rights for the resource
       await ctx.call('webacl.resource.addRights', {
-        resourceUri,
+        resourceUri: objectUri,
         additionalRights: {
           group: {
             uri: announcesGroupUri,
-            read: true
-          }
-        },
-        webId: creator.id
-      });
-
-      // Give read rights to announcers for the list of announces
-      await ctx.call('webacl.resource.addRights', {
-        resourceUri: object['apods:announces'],
-        additionalRights: {
-          group: {
-            uri: announcersGroupUri,
             read: true
           }
         },
@@ -93,39 +66,67 @@ module.exports = {
           webId: creator.id
         });
       }
+    },
+    async giveRightsAfterAnnouncersCollectionCreate(ctx) {
+      const { objectUri } = ctx.params;
+
+      const object = await ctx.call('ldp.resource.awaitCreateComplete', {
+        resourceUri: objectUri,
+        predicates: ['apods:announcers']
+      });
+
+      // Add the creator to the list of announcers
+      await ctx.call('activitypub.collection.add', {
+        collectionUri: object['apods:announcers'],
+        item: object['dc:creator']
+      });
+
+      const announcersGroupUri = getAnnouncersGroupUri(objectUri);
+      await ctx.call('webacl.group.create', { groupUri: announcersGroupUri, webId: object['dc:creator'] });
+
+      // Give read rights to announcers for the list of announces
+      await ctx.call('webacl.resource.addRights', {
+        resourceUri: object['apods:announces'],
+        additionalRights: {
+          group: {
+            uri: announcersGroupUri,
+            read: true
+          }
+        },
+        webId: object['dc:creator']
+      });
     }
   },
   activities: {
     announce: {
-      async match(ctx, activity) {
-        if (this.settings.watchedTypes.length === 0) return false;
-        return await matchActivity(
-          ctx,
-          {
-            type: ACTIVITY_TYPES.ANNOUNCE,
-            object: {
-              type: this.settings.watchedTypes
-            }
-          },
-          activity
-        );
+      match: {
+        type: ACTIVITY_TYPES.ANNOUNCE
       },
       async onEmit(ctx, activity, emitterUri) {
         if (emitterUri !== activity.object['dc:creator']) {
           throw new Error('Only the creator has the right to share the object ' + activity.object.id);
         }
 
+        const objectUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
+
+        const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
+          objectUri,
+          collection: this.settings.announcesCollectionOptions
+        });
+
+        await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri }, { parentCtx: ctx });
+
         // Add all targeted actors to the collection and WebACL group
         // TODO check if we could not use activity.to instead of activity.target (and change this everywhere)
         for (let actorUri of defaultToArray(activity.target)) {
           await ctx.call('activitypub.collection.add', {
-            collectionUri: activity.object['apods:announces'],
+            collectionUri: announcesCollectionUri,
             item: actorUri
           });
 
           // TODO automatically synchronize the collection with the ACL group
           await ctx.call('webacl.group.addMember', {
-            groupUri: getAnnouncesGroupUri(activity.object.id),
+            groupUri: getAnnouncesGroupUri(objectUri),
             memberUri: actorUri,
             webId: activity.object['dc:creator']
           });
@@ -170,10 +171,7 @@ module.exports = {
           {
             type: ACTIVITY_TYPES.OFFER,
             object: {
-              type: ACTIVITY_TYPES.ANNOUNCE,
-              object: {
-                type: this.settings.watchedTypes
-              }
+              type: ACTIVITY_TYPES.ANNOUNCE
             }
           },
           activity
@@ -184,15 +182,25 @@ module.exports = {
         }
       },
       async onEmit(ctx, activity) {
+        const objectUri =
+          typeof activity.object.object === 'string' ? activity.object.object : activity.object.object.id;
+
+        const announcersCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
+          objectUri,
+          collection: this.settings.announcersCollectionOptions
+        });
+
+        await this.actions.giveRightsAfterAnnouncersCollectionCreate({ objectUri }, { parentCtx: ctx });
+
         // Add all announcers to the collection and WebACL group
         for (let actorUri of defaultToArray(activity.target)) {
           await ctx.call('activitypub.collection.add', {
-            collectionUri: activity.object.object['apods:announcers'],
+            collectionUri: announcersCollectionUri,
             item: actorUri
           });
 
           await ctx.call('webacl.group.addMember', {
-            groupUri: getAnnouncersGroupUri(activity.object.object.id),
+            groupUri: getAnnouncersGroupUri(objectUri),
             memberUri: actorUri,
             webId: activity.object.object['dc:creator']
           });
@@ -206,10 +214,7 @@ module.exports = {
           {
             type: ACTIVITY_TYPES.OFFER,
             object: {
-              type: ACTIVITY_TYPES.ANNOUNCE,
-              object: {
-                type: this.settings.watchedTypes
-              }
+              type: ACTIVITY_TYPES.ANNOUNCE
             }
           },
           activity
@@ -220,7 +225,16 @@ module.exports = {
         }
       },
       async onReceive(ctx, activity) {
-        const object = activity.object.object;
+        const object = await ctx.call('ldp.resource.get', {
+          resourceUri: typeof activity.object.object === 'string' ? activity.object.object : activity.object.object.id,
+          accept: MIME_TYPES.JSON
+        });
+
+        if (!object['apods:announcers']) {
+          this.logger.warn(`No announcers collection attached to object ${object.id}, skipping...`);
+          return;
+        }
+
         const creator = await ctx.call('activitypub.actor.get', { actorUri: object['dc:creator'] });
 
         const isAnnouncer = await ctx.call('activitypub.collection.includes', {
@@ -239,15 +253,6 @@ module.exports = {
           object: object.id,
           target: activity.object.target,
           to: activity.object.target
-        });
-
-        // Inform the announcer that his offer has been accepted (this is not used currently)
-        await ctx.call('activitypub.outbox.post', {
-          collectionUri: creator.outbox,
-          type: ACTIVITY_TYPES.ACCEPT,
-          actor: creator.id,
-          object: activity.id,
-          to: activity.actor
         });
       }
     }

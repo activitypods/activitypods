@@ -12,7 +12,6 @@ const { ObjectsWatcherMiddleware } = require('@semapps/sync');
 const { CoreService, AppControlMiddleware } = require('@activitypods/core');
 const { apods, interop, oidc, notify } = require('@activitypods/ontologies');
 const { NotificationListenerService } = require('@activitypods/solid-notifications');
-const { AnnouncerService } = require('@activitypods/announcer');
 const CONFIG = require('./config');
 
 Error.stackTraceLimit = Infinity;
@@ -103,8 +102,6 @@ const initialize = async (port, settingsDataset) => {
       }
     }
   });
-
-  await broker.createService(AnnouncerService);
 
   return broker;
 };

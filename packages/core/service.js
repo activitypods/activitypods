@@ -17,7 +17,7 @@ const {
   void: voidOntology
 } = require('@semapps/ontologies');
 const { PodService } = require('@semapps/pod');
-const { SignatureService, KeyService, ProxyService } = require('@semapps/crypto');
+const { SignatureService, KeysService, ProxyService } = require('@semapps/crypto');
 const { SynchronizerService } = require('@semapps/sync');
 const { SparqlEndpointService } = require('@semapps/sparql-endpoint');
 const { TripleStoreService } = require('@semapps/triplestore');
@@ -142,7 +142,7 @@ const CoreService = {
 
     this.broker.createService(SignatureService);
 
-    this.broker.createService(KeyService, {
+    this.broker.createService(KeysService, {
       settings: {
         podProvider: true,
         actorsKeyPairsDir: path.resolve(baseDir, './actors')

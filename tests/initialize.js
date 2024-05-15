@@ -129,8 +129,6 @@ const initializeAppServer = async (port, mainDataset, settingsDataset) => {
         mainDataset
       },
       ontologies: [interop, oidc, apods, notify],
-      // Disable webId here, since its started in the apub core service.
-      webid: { disabled: true }, 
       api: {
         port
       },
@@ -138,7 +136,7 @@ const initializeAppServer = async (port, mainDataset, settingsDataset) => {
         resourcesWithContainerPath: false
       },
       void: false,
-      webid: {path: '/'}
+      webid: false
     }
   });
 

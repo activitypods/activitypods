@@ -13,7 +13,7 @@
     "@activitypods/solid-notifications": "2.0.0-alpha.0",
     "@semapps/auth": "0.7.0",
     "@semapps/core": "0.7.0",
-    "@semapps/crypto": "0.7.0",
+    "@semapps/crypto": "file:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/crypto/index.js",
     "dotenv-flow": "^3.2.0",
     "ioredis": "^4.17.3",
     "url-join": "^4.0.1"

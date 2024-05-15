@@ -103,18 +103,24 @@ module.exports = {
         type: ACTIVITY_TYPES.ANNOUNCE
       },
       async onEmit(ctx, activity, emitterUri) {
-        if (emitterUri !== activity.object['dc:creator']) {
-          throw new Error('Only the creator has the right to share the object ' + activity.object.id);
+        const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
+
+        const resource = await ctx.call('ldp.resource.get', {
+          resourceUri,
+          accept: MIME_TYPES.JSON,
+          webId: emitterUri
+        });
+
+        if (emitterUri !== resource['dc:creator']) {
+          throw new Error('Only the creator has the right to share the object ' + resourceUri);
         }
 
-        const objectUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
-
         const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
-          objectUri,
+          objectUri: resourceUri,
           collection: this.settings.announcesCollectionOptions
         });
 
-        await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri }, { parentCtx: ctx });
+        await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
 
         // Add all targeted actors to the collection and WebACL group
         // TODO check if we could not use activity.to instead of activity.target (and change this everywhere)
@@ -126,15 +132,22 @@ module.exports = {
 
           // TODO automatically synchronize the collection with the ACL group
           await ctx.call('webacl.group.addMember', {
-            groupUri: getAnnouncesGroupUri(objectUri),
+            groupUri: getAnnouncesGroupUri(resourceUri),
             memberUri: actorUri,
-            webId: activity.object['dc:creator']
+            webId: resource['dc:creator']
           });
         }
       },
       async onReceive(ctx, activity, recipientUri) {
-        const resourceUri = activity.object.id || activity.object['@id'];
-        const resourceType = activity.object['@type'] || activity.object.type;
+        const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
+
+        const resource = await ctx.call('ldp.resource.get', {
+          resourceUri,
+          accept: MIME_TYPES.JSON,
+          webId: recipientUri
+        });
+
+        const resourceType = resource['@type'] || resource.type;
 
         // Sometimes when reposting, a recipient may be the original announcer
         // So ensure this is a remote resource before storing it locally
@@ -142,7 +155,7 @@ module.exports = {
           try {
             // Cache remote object (we want to be able to fetch it with SPARQL)
             await ctx.call('ldp.remote.store', {
-              resource: activity.object,
+              resource,
               webId: recipientUri
             });
 

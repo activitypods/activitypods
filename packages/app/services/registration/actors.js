@@ -8,9 +8,6 @@ module.exports = {
     path: '/as/actor',
     acceptedTypes: [ACTOR_TYPES.APPLICATION, 'interop:Application'],
     readOnly: true,
-    dereferencePlan: [
-      { property: 'publicKey' },
-      { property: 'assertionMethod' }
-    ]
+    dereferencePlan: [{ property: 'publicKey' }, { property: 'assertionMethod' }]
   }
 };

@@ -13,6 +13,7 @@ const { CoreService, AppControlMiddleware } = require('@activitypods/core');
 const { apods, interop, oidc, notify } = require('@activitypods/ontologies');
 const { NotificationListenerService } = require('@activitypods/solid-notifications');
 const { AnnouncerService } = require('@activitypods/announcer');
+const { ProfilesApp } = require('@activitypods/profiles');
 const CONFIG = require('./config');
 
 Error.stackTraceLimit = Infinity;
@@ -74,7 +75,8 @@ const initialize = async (port, settingsDataset) => {
       triplestore: {
         url: CONFIG.SPARQL_ENDPOINT,
         user: CONFIG.JENA_USER,
-        password: CONFIG.JENA_PASSWORD
+        password: CONFIG.JENA_PASSWORD,
+        fusekiBase: CONFIG.FUSEKI_BASE
       },
       queueServiceUrl: CONFIG.QUEUE_SERVICE_URL,
       oidcProvider: {
@@ -106,6 +108,8 @@ const initialize = async (port, settingsDataset) => {
 
   await broker.createService(AnnouncerService);
 
+  await broker.createService(ProfilesApp);
+
   return broker;
 };
 
@@ -126,6 +130,7 @@ const initializeAppServer = async (port, mainDataset, settingsDataset) => {
         url: CONFIG.SPARQL_ENDPOINT,
         user: CONFIG.JENA_USER,
         password: CONFIG.JENA_PASSWORD,
+        fusekiBase: CONFIG.FUSEKI_BASE,
         mainDataset
       },
       ontologies: [interop, oidc, apods, notify],

@@ -17,6 +17,7 @@ const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
 const { NotificationProviderService } = require('@activitypods/solid-notifications');
 const { apods, interop, notify, oidc } = require('@activitypods/ontologies');
+const { ManagementService } = require('./services/management');
 const ApiService = require('./services/api');
 const AppOpenerService = require('./services/app-opener');
 const FilesService = require('./services/files');
@@ -36,7 +37,8 @@ const CoreService = {
     triplestore: {
       url: null,
       user: null,
-      password: null
+      password: null,
+      fusekiBase: null
     },
     settingsDataset: 'settings',
     queueServiceUrl: null,
@@ -184,10 +186,12 @@ const CoreService = {
 
     this.broker.createService(TripleStoreService, {
       settings: {
-        url: triplestore.url,
-        user: triplestore.user,
-        password: triplestore.password
+        ...triplestore
       }
+    });
+
+    this.broker.createService(ManagementService, {
+      settings: { settingsDataset }
     });
 
     this.broker.createService(WebAclService, {

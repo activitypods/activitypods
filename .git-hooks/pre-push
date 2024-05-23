@@ -8,13 +8,13 @@ fi
 
 # Run typecheck and linter before push.
 ROOT_DIR=$(git rev-parse --show-toplevel)
-cd "$ROOT_DIR"/frontend
+cd "$ROOT_DIR/"
 
-echo "==== Running typecheck for frontend ===="
+echo "==== Running typecheck ===="
 
 yarn typecheck > /dev/null
 if [ $? -ne 0 ]; then
-  echo "⛔ Typecheck failed! To see the errors, run \`yarn typecheck\` in the frontend directory."
+  echo "⛔ Typecheck failed! To see the errors, run \`yarn typecheck\`."
   echo "   You can skip pre-push checks by setting \$SKIP_PREPUSH_CHECKS=true"
   exit 1
 fi

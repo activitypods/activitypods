@@ -1,13 +1,29 @@
+const BackupService = require('@semapps/backup');
 const fs = require('fs');
+const path = require('path');
 const urlJoin = require('url-join');
 const { initialize, clearDataset, listDatasets } = require('./initialize');
+const CONFIG = require('./config');
 
-jest.setTimeout(80000);
+jest.setTimeout(80_000);
 
 const NUM_PODS = 2;
 
 const initializeBroker = async (port, accountsDataset) => {
   const broker = await initialize(port, accountsDataset);
+
+  broker.createService({
+    mixins: [BackupService],
+    settings: {
+      localServer: {
+        fusekiBase: CONFIG.FUSEKI_BASE
+      },
+      copyMethod: 'fs', // rsync, ftp, or fs
+      remoteServer: {
+        path: path.join(__dirname, 'backups')
+      }
+    }
+  });
 
   await broker.start();
 
@@ -58,9 +74,12 @@ describe('Delete an actor', () => {
       });
     }
 
+    // Create backups.
+    await broker.call('backup.backupDatasets');
+
     alice = actors[1];
     bob = actors[2];
-  }, 80000);
+  }, 80_000);
 
   afterAll(async () => {
     await broker?.stop();
@@ -92,7 +111,31 @@ describe('Delete an actor', () => {
     expect(fs.existsSync('./uploads/' + username)).toBeFalsy();
 
     // Check, if backups are deleted.
-  }, 80000);
+    expect(fs.readdirSync(path.join(CONFIG.FUSEKI_BASE, 'backups')).find(file => file.includes(username))).toBeFalsy();
+  }, 80_100);
+
+  test('New user Alice is not able to be created due to the tombstone.', async () => {
+    const actorData = require(`./data/actor1.json`);
+    await expect(broker.call('auth.signup', actorData)).rejects.toThrow('');
+  }, 80_100);
+
+  test.skip('A new user alice is able to be created after tombstone is removed..', async () => {
+    await broker.call('auth.account.deleteByWebId', { webId: alice.id || alice['@id'] });
+
+    const actorData = require(`./data/actor1.json`);
+    const { webId } = await broker.call('auth.signup', actorData);
+
+    await expect(
+      await broker.call(
+        'activitypub.actor.awaitCreateComplete',
+        {
+          actorUri: webId,
+          additionalKeys: ['url']
+        },
+        { meta: { dataset: actorData.username } }
+      )
+    ).not.toThrow();
+  }, 10_000);
 
   test('Actor Bob is still available', async () => {
     const username = bob['foaf:nick'];
@@ -106,8 +149,9 @@ describe('Delete an actor', () => {
     expect(account).toHaveProperty('hashedPassword');
 
     // Check, that uploads are not empty.
-    expect(fs.existsSync('./uploads/' + username)).toBeTruthy();
+    expect(fs.existsSync(path.join('./uploads/', username))).toBeTruthy();
 
     // Check, that backups are not deleted.
-  }, 80000);
+    expect(fs.readdirSync(path.join(CONFIG.FUSEKI_BASE, 'backups')).find(file => file.includes(username))).toBeTruthy();
+  }, 10_000);
 });

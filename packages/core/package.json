@@ -29,6 +29,7 @@
     "@semapps/webacl": "0.7.0",
     "@semapps/webfinger": "0.7.0",
     "@semapps/webid": "0.7.0",
+    "archiver": "^7.0.1",
     "handlebars": "^4.7.7",
     "ioredis": "^4.0.0",
     "jose": "^5.1.1",

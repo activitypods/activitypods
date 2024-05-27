@@ -90,7 +90,7 @@ const CapabilitiesProfileService = {
 
           const hasInviteCap = arrayOf(inviteCaps['ldp:contains']).some(
             cap =>
-              (cap.type = 'acl:Authorization' && cap['acl:mode'] === 'acl:Read' && cap['acl:accessTo'] === profileUri)
+              cap.type === 'acl:Authorization' && cap['acl:mode'] === 'acl:Read' && cap['acl:accessTo'] === profileUri
           );
 
           if (!hasInviteCap) {

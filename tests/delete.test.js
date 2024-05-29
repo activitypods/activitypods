@@ -91,7 +91,8 @@ describe('Delete an actor', () => {
     );
   });
 
-  test('Actor Alice is deleted', async () => {
+  // This test will fail, if the server does not have write access on the triplestore directory.
+  test('Actor Alice is deleted (requires triplestore directory access).', async () => {
     const username = alice['foaf:nick'];
     // Delete Alice
     await alice.call('management.deleteActor', { actorSlug: username, iKnowWhatImDoing: true });
@@ -107,6 +108,10 @@ describe('Delete an actor', () => {
     expect(tombStoneAccount).not.toHaveProperty('email');
     expect(tombStoneAccount).not.toHaveProperty('hashedPassword');
 
+    // When querying all accounts, alice is not present.
+    const allAccounts = await broker.call('auth.account.find');
+    expect(allAccounts.find(acc => acc.username === username)).toBeTruthy();
+
     // Check, if uploads are empty.
     expect(fs.existsSync('./uploads/' + username)).toBeFalsy();
 
@@ -119,7 +124,12 @@ describe('Delete an actor', () => {
     await expect(broker.call('auth.signup', actorData)).rejects.toThrow('');
   }, 80_100);
 
-  test.skip('A new user alice is able to be created after tombstone is removed..', async () => {
+  // We need to skip this test, because dataset deletion is only completed after a fuseki restart.
+  // And a fuseki restart has to be done manually.
+  test.skip('A new user alice is able to be created after tombstone is removed (requires triplestore directory access).', async () => {
+    // Delete the dataset here because in normal situations, it is scheduled to be deleted after a delay.
+    await this.broker.call('triplestore.dataset.delete', { dataset, iKnowWhatImDoing: true });
+    // Delete tombstone information manually here, since it is usually scheduled to be deleted after a year.
     await broker.call('auth.account.deleteByWebId', { webId: alice.id || alice['@id'] });
 
     const actorData = require(`./data/actor1.json`);

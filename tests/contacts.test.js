@@ -13,7 +13,6 @@ const NUM_PODS = 3;
 const initializeBroker = async (port, accountsDataset) => {
   const broker = await initialize(port, accountsDataset);
 
-  await broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
   await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
 
   await broker.start();
@@ -453,16 +452,17 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
   });
 
   test('Bob requests Alice to remove all his data from her Pod', async () => {
-    const activity = await bob.call('activitypub.outbox.post', {
-      collectionUri: bob.outbox,
-      type: ACTIVITY_TYPES.OFFER,
-      actor: bob.id,
-      object: {
+    const activity = await bob.call(
+      'activitypub.outbox.post',
+      {
+        collectionUri: bob.outbox,
         type: ACTIVITY_TYPES.DELETE,
-        object: bob.id
+        actor: bob.id,
+        object: bob.id,
+        to: alice.id
       },
-      to: alice.id
-    });
+      { meta: { doNotProcessObject: true } }
+    );
 
     await waitForExpect(async () => {
       await expect(

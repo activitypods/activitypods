@@ -69,13 +69,10 @@ const UNDO_IGNORE_CONTACT = {
   object: IGNORE_CONTACT
 };
 
-const OFFER_DELETE_ACTOR = {
-  type: ACTIVITY_TYPES.OFFER,
+const DELETE_ACTOR = {
+  type: ACTIVITY_TYPES.DELETE,
   object: {
-    type: ACTIVITY_TYPES.DELETE,
-    object: {
-      type: ACTOR_TYPES.PERSON
-    }
+    type: ACTOR_TYPES.PERSON
   }
 };
 
@@ -87,5 +84,5 @@ module.exports = {
   REMOVE_CONTACT,
   IGNORE_CONTACT,
   UNDO_IGNORE_CONTACT,
-  OFFER_DELETE_ACTOR
+  DELETE_ACTOR
 };

@@ -3,7 +3,7 @@ const path = require('node:path');
 const fs = require('fs');
 const archiver = require('archiver');
 const urlJoin = require('url-join');
-const { throw403, throw404 } = require('@semapps/middlewares');
+const { throw403, throw404, throw500 } = require('@semapps/middlewares');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTIVITY_TYPES, PUBLIC_URI } = require('@semapps/activitypub');
 
@@ -31,6 +31,8 @@ const ManagementService = {
         }
       }
     });
+
+    if (!fs.existsSync(this.settings.exportDir)) fs.mkdirSync(this.settings.exportDir);
   },
   actions: {
     deleteActor: {
@@ -126,6 +128,15 @@ const ManagementService = {
           throw404('Actor not found.');
         }
 
+        // If there has been an export less than 5 minutes ago, we won't create a new one.
+        // The last one might have stopped during download.
+        const recentExport = this.findRecentExport(dataset, 5 * 60 * 1000);
+        if (recentExport) {
+          // Return file stream.
+          ctx.meta.$responseType = 'application/zip';
+          return fs.promises.readFile(recentExport);
+        }
+
         const dumpQuery = `SELECT * { { ?s ?p ?o } UNION { GRAPH ?g { ?s ?p ?o } } }`;
         /** @type {string} */
         const rdfDump = await ctx
@@ -151,47 +162,19 @@ const ManagementService = {
         this.logger.info('dump created:', rdfDump.substring(0, 1000), '...', settingsQuads.substring(0, 1000));
 
         const dateTimeString = new Date().toISOString().replace(/:/g, '-');
+        const fileName = path.join(this.settings.exportDir, `${dataset}_${dateTimeString}.zip`);
 
-        // Create a file to stream archive data to.
-        if (!fs.existsSync(this.settings.exportDir)) fs.mkdirSync(this.settings.exportDir);
-        const output = fs.createWriteStream(path.join(this.settings.exportDir, `${dataset}_${dateTimeString}.zip`));
+        // Create zip archiver.
         const archive = archiver('zip', {
           zlib: { level: 9 } // Sets the compression level.
         });
+        archive.on('error', function (err) {
+          this.logger.error('Error while exporting pod data ', err);
+          throw500(err.message);
+        });
 
-        // Listeners
-        {
-          // listen for all archive data to be written
-          // 'close' event is fired only when a file descriptor is involved
-          output.on('close', function () {
-            console.log(archive.pointer() + ' total bytes');
-            console.log('archiver has been finalized and the output file descriptor has closed.');
-          });
-
-          // This event is fired when the data source is drained no matter what was the data source.
-          // It is not part of this library but rather from the NodeJS Stream API.
-          // @see: https://nodejs.org/api/stream.html#stream_event_end
-          output.on('end', function () {
-            console.log('Data has been drained');
-          });
-
-          // good practice to catch warnings (ie stat failures and other non-blocking errors)
-          archive.on('warning', function (err) {
-            if (err.code === 'ENOENT') {
-              // log warning
-            } else {
-              // throw error
-              throw err;
-            }
-          });
-
-          // good practice to catch this error explicitly
-          archive.on('error', function (err) {
-            console.error(err);
-            // throw err;
-          });
-        }
-
+        // Create a file to stream archive data to.
+        const output = fs.createWriteStream(fileName);
         archive.pipe(output);
 
         // Add everything rdf into a joined file.
@@ -208,21 +191,55 @@ const ManagementService = {
 
         // Add non-rdf files to repo
         const uploadsPath = path.join('./uploads/', dataset, 'data');
-        (await this.getFiles(uploadsPath)).forEach(relativeFileName => {
+        (await this.getFilesRecursively(uploadsPath)).forEach(relativeFileName => {
           // Reconstruct the URI of the file
           const fileUri = urlJoin(actor.podUri, relativeFileName);
           // Add file to archive under /non-rdf/<encoded-uri>
           archive.file(path.join(uploadsPath, relativeFileName), { name: `non-rdf/${encodeURIComponent(fileUri)}` });
         });
 
-        // Finish archive creation.
+        // Finish archive creation (closes file).
         await archive.finalize();
+
+        // Return file by reading it from fs.
+        ctx.meta.$responseType = 'application/zip';
+        return fs.promises.readFile(fileName);
       }
     }
   },
 
   methods: {
-    async getFiles(originalDirPath, dirPath = originalDirPath, filesArr = []) {
+    /** Finds the most recent export for a given dataset, if it is within the `offsetMs` range. Otherwise returns `undefined`. */
+    async findRecentExport(dataset, offsetMs = 5 * 60 * 1000) {
+      const files = fs.readdirSync(this.settings.exportDir);
+      files.sort();
+      // Regex to grab the date and time part of a file name (colons replaced by hyphens)
+      const regex = new RegExp(dataset + '_([\\d\\-]+)T([\\d\\-.]+)Z?\\.zip');
+      const recentExportFilename = files
+        .map(file => [file, regex.exec(file)])
+        .filter(([file, matches]) => matches)
+        // Reconstruct date objects from file name (hyphens are replaced back to colon in time string)
+        .map(([file, matches]) => [file, new Date(`${matches[1]}T${matches[2].replace(/-/g, ':')}Z`)])
+        // Only look for exports younger than offset
+        .filter(([file, created]) => Date.now() - created < offsetMs)
+        .map(([file, created]) => file)
+        .at(-1);
+
+      return recentExportFilename;
+    },
+    /** Delete all exports in the export directory that are older than the given ms offset. */
+    async deleteOutdatedExports(offsetMs) {
+      const files = fs.readdirSync(this.settings.exportDir);
+      files.sort();
+      const regex = new RegExp(dataset + '_([\\d\\-]+)T([\\d\\-.]+)Z?\\.zip');
+      const recentExport = files
+        .map(file => [file, regex.exec(file)])
+        .filter(([file, matches]) => matches)
+        .map(([file, matches]) => [file, new Date(matches[1] + 'T' + matches[2].replace(/-/g, ':') + 'Z')])
+        .filter(([file, created]) => Date.now() - created > offsetMs)
+        .forEach(([file, created]) => fs.rmSync(file));
+    },
+    async getFilesRecursively(originalDirPath, dirPath = originalDirPath, filesArr = []) {
       const files = fs.readdirSync(dirPath);
 
       for (const file of files) {
@@ -230,7 +247,7 @@ const ManagementService = {
         const stat = fs.statSync(filePath);
 
         if (stat.isDirectory()) {
-          await this.getFiles(originalDirPath, filePath, filesArr);
+          await this.getFilesRecursively(originalDirPath, filePath, filesArr);
         } else {
           filesArr.push(path.relative(originalDirPath, filePath));
         }

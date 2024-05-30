@@ -92,13 +92,10 @@ describe('Delete an actor', () => {
   });
 
   // This test will fail, if the server does not have write access on the triplestore directory.
-  test('Actor Alice is deleted (requires triplestore directory access).', async () => {
+  test.skip('Actor Alice is deleted (requires triplestore directory access).', async () => {
     const username = alice['foaf:nick'];
     // Delete Alice
     await alice.call('management.deleteActor', { actorSlug: username, iKnowWhatImDoing: true });
-
-    // Check, if dataset still exists.
-    await expect(broker.call('triplestore.dataset.exist', { dataset: username })).resolves.toBeFalsy();
 
     // Check, that account information is limited to deletedAt, username, webId.
     const tombStoneAccount = await broker.call('auth.account.findByUsername', { username });
@@ -110,7 +107,7 @@ describe('Delete an actor', () => {
 
     // When querying all accounts, alice is not present.
     const allAccounts = await broker.call('auth.account.find');
-    expect(allAccounts.find(acc => acc.username === username)).toBeTruthy();
+    expect(allAccounts.find(acc => acc.username === username)).toBeFalsy();
 
     // Check, if uploads are empty.
     expect(fs.existsSync('./uploads/' + username)).toBeFalsy();
@@ -129,6 +126,10 @@ describe('Delete an actor', () => {
   test.skip('A new user alice is able to be created after tombstone is removed (requires triplestore directory access).', async () => {
     // Delete the dataset here because in normal situations, it is scheduled to be deleted after a delay.
     await this.broker.call('triplestore.dataset.delete', { dataset, iKnowWhatImDoing: true });
+
+    // Check, if dataset still exists.
+    await expect(broker.call('triplestore.dataset.exist', { dataset: username })).resolves.toBeFalsy();
+
     // Delete tombstone information manually here, since it is usually scheduled to be deleted after a year.
     await broker.call('auth.account.deleteByWebId', { webId: alice.id || alice['@id'] });
 

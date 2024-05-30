@@ -66,9 +66,8 @@ const ManagementService = {
         const uploadsPath = path.join('./uploads/', dataset);
         await fs.promises.rm(uploadsPath, { recursive: true, force: true });
 
-        let skip = true;
         // Delete backups.
-        if (this.broker.registry.hasService('backup') && !skip) {
+        if (this.broker.registry.hasService('backup')) {
           await this.broker.call('backup.deleteDataset', { iKnowWhatImDoing, dataset });
         }
 

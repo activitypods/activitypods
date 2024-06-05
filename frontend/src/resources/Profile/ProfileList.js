@@ -6,7 +6,6 @@ import List from '../../layout/List';
 import ProfileCard from '../../common/cards/ProfileCard';
 import ShareContactCard from '../../common/cards/ShareContactCard';
 import { formatUsername } from '../../utils';
-import ContactRequestsBlock from '../../common/blocks/ContactRequestsBlock';
 import MyGroupsButton from '../../common/buttons/MyGroupsButton';
 
 const ProfileList = () => {

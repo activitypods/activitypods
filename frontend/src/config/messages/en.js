@@ -27,7 +27,9 @@ module.exports = {
       undo_ignore_contact: 'No longer ignore',
       select: 'Select',
       connect: 'Connect',
-      continue: 'Continue'
+      continue: 'Continue',
+      delete_pod: 'Delete all my data',
+      export_pod: 'Download my data'
     },
     group: {
       members: 'Members',
@@ -62,14 +64,24 @@ module.exports = {
       invite_connect: 'Do you want to connect with %{username}?',
       choose_provider: 'Choose data space provider',
       choose_custom_provider: 'Choose custom provider',
-      invite_success: 'Success!'
+      invite_success: 'Success!',
+      delete_pod: 'Delete My Pod',
+      export_pod: 'Export My Data'
+    },
+    description: {
+      delete_pod:
+        'By continuing, you will delete your pod. This is irreversible! Please consider exporting all your data first (see settings). If you want to continue, type "%{confirm_text}".',
+      delete_pod_confirm_text: 'delete my pod',
+      export_pod: 'You can export and download all your data as a backup. The action might take a short while.'
     },
     setting: {
       profile: 'My profile',
       email: 'Email address',
       password: 'Password',
       addresses: 'My addresses',
-      address: '%{smart_count} address |||| %{smart_count} addresses'
+      address: '%{smart_count} address |||| %{smart_count} addresses',
+      export: 'Export all my data',
+      delete: 'Delete my Pod'
     },
     authorization: {
       required: 'Required access',
@@ -108,7 +120,9 @@ module.exports = {
       provider_url: 'Provider URL',
       creator: 'Creator',
       created: 'Created',
-      modified: 'Modified'
+      modified: 'Modified',
+      confirm_delete: 'Confirm deletion',
+      with_backups: 'Include database backups (if available)'
     },
     helper: {
       add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',
@@ -181,7 +195,8 @@ module.exports = {
       invite_cap_profile_fetch_error: 'Error while fetching the profile associated with the invite link.',
       pod_provider_fetch_error: 'Error while looking for other pod providers: %{error}',
       contact_link_copied: 'Contact link copied successfully',
-      already_connected: 'You are already connected with the person who invited you.'
+      already_connected: 'You are already connected with the person who invited you.',
+      export_failed: 'The export failed: %{error}'
     },
     user: {
       unknown: 'Unknown',

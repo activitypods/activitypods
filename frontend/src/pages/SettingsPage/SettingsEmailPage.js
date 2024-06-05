@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { email, required, useAuthProvider, useNotify, useTranslate } from 'react-admin';
-import { SimpleForm, TextInput } from 'react-admin';
+import { email, required, useAuthProvider, useNotify, useTranslate, SimpleForm, TextInput } from 'react-admin';
 import { Box, Card, Typography } from '@mui/material';
 
 const validateEmail = [required(), email('app.validation.email')];
@@ -21,7 +20,6 @@ const SettingsEmailPage = () => {
     authProvider.getAccountSettings().then(res => {
       setFormDefaultValue({ ...formDefaultValue, email: res.email });
     });
-    // eslint-disable-next-line
   }, [setFormDefaultValue, authProvider]);
 
   const onSubmit = useCallback(

@@ -59,7 +59,7 @@ const CoreService = {
     }
   },
   created() {
-    let {
+    const {
       baseUrl,
       baseDir,
       frontendUrl,
@@ -191,6 +191,7 @@ const CoreService = {
     });
 
     this.broker.createService(ManagementService, {
+      mixins: queueServiceUrl ? [QueueService(queueServiceUrl)] : undefined,
       settings: { settingsDataset }
     });
 

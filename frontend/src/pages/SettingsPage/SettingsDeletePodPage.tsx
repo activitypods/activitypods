@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
-import { useDataProvider, useGetIdentity, useLogout, useNotify, useTranslate } from 'react-admin';
-import { Box, Card, Typography, TextField, Button } from '@mui/material';
+import React, { useCallback, useState } from 'react';
+import { useGetIdentity, useLogout, useNotify, useTranslate } from 'react-admin';
+import { Box, Card, Typography, TextField, Button, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import urlJoin from 'url-join';
 
@@ -12,8 +12,10 @@ const SettingsDeletePodPage = () => {
   const { data: identity } = useGetIdentity();
 
   const [confirmInput, setConfirmInput] = React.useState('');
+  const [deletedClicked, setDeletedClicked] = useState(false);
 
   const onDeletePod = useCallback(() => {
+    setDeletedClicked(true);
     const token = localStorage.getItem('token');
     const webId = encodeURIComponent(String(identity?.id));
 
@@ -50,10 +52,11 @@ const SettingsDeletePodPage = () => {
 
           <Button
             sx={{ mt: 1 }}
-            disabled={confirmInput !== translate('app.description.delete_pod_confirm_text')}
+            disabled={deletedClicked || confirmInput !== translate('app.description.delete_pod_confirm_text')}
             variant="contained"
             color="error"
             onClick={() => onDeletePod()}
+            endIcon={deletedClicked && <CircularProgress sx={{ scale: '0.7' }} />}
           >
             {translate('app.action.delete_pod')}
           </Button>

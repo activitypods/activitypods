@@ -1,11 +1,18 @@
-const { getDatasetFromUri } = require('@semapps/ldp');
 const path = require('node:path');
 const fs = require('fs');
+const { namedNode, quad } = require('@rdfjs/data-model');
 const archiver = require('archiver');
 const urlJoin = require('url-join');
 const { throw403, throw404, throw500 } = require('@semapps/middlewares');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTIVITY_TYPES, PUBLIC_URI } = require('@semapps/activitypub');
+
+let Readable, NTriplesSerializer;
+const importAsync = async () => {
+  ({ Readable } = await import('readable-stream'));
+  ({ NTriplesSerializer } = await import('@rdfjs/formats'));
+};
+importAsync();
 
 /** @type {import('moleculer').ServiceSchema} */
 const ManagementService = {
@@ -13,7 +20,8 @@ const ManagementService = {
   dependencies: ['api'],
   settings: {
     settingsDataset: 'settings',
-    exportDir: './exports'
+    exportDir: './exports',
+    retainTmpExportsMs: 5 * 60 * 1000
   },
   async started() {
     if (!this.createJob) {
@@ -21,13 +29,14 @@ const ManagementService = {
         'The moleculer-bull scheduler is not available for the management service. Some feature might not work.'
       );
     }
-    await this.broker.call('api.addRoute', {
+    this.broker.call('api.addRoute', {
       route: {
         name: 'management',
         authentication: true,
-        path: '/.management/actor/:actorSlug',
+        path: '/.management/',
         aliases: {
-          'DELETE /': 'management.deleteActor'
+          'POST /actor/:actorUri/export': 'management.exportActor',
+          'DELETE /actor/:actorUri': 'management.deleteActor'
         }
       }
     });
@@ -37,27 +46,28 @@ const ManagementService = {
   actions: {
     deleteActor: {
       params: {
-        actorSlug: { type: 'string' },
-        iKnowWhatImDoing: { type: 'boolean' }
+        actorUri: { type: 'string' },
+        iKnowWhatImDoing: { type: 'boolean', default: false, convert: true }
       },
       async handler(ctx) {
-        const { actorSlug: dataset, iKnowWhatImDoing } = ctx.params;
-        const webId = ctx.meta.webId;
+        const { actorUri, iKnowWhatImDoing } = ctx.params;
+        const { webId } = ctx.meta;
         if (!iKnowWhatImDoing) {
           throw new Error(
             'Please confirm that you know what you are doing and set the `iKnowWhatImDoing` parameter to `true`.'
           );
         }
 
-        if (!webId || (webId !== 'system' && getDatasetFromUri(webId) !== dataset)) {
+        if (!webId || (webId !== 'system' && webId !== actorUri)) {
           throw403('You are not allowed to delete this actor.');
         }
 
         // Validate that the actor exists.
-        const { webId: actorUri } = await ctx.call('auth.account.findByUsername', { username: dataset });
-        if (!actorUri) {
+        const actor = await ctx.call('auth.account.findByWebId', { webId: actorUri });
+        if (!actor) {
           throw404('Actor not found.');
         }
+        const dataset = actor.username;
 
         // Delete account information settings data.
         await this.broker.call('auth.account.setTombstone', { webId: actorUri });
@@ -107,77 +117,60 @@ const ManagementService = {
         }
       }
     },
+    /**
+     * Create an export of all actor data (+ backups if requested).
+     * Creates a zip archive file with rdf db dump and binaries.
+     * Stores it on disk temporarily in the `settings.exportDir`.
+     * If a backup exists which is younger than five minutes, the existing backup is served.
+     * @returns {Promise<object>} The backup file promise as returned by `fs.promises.readFile`
+     */
     exportActor: {
       params: {
-        actorSlug: { type: 'string' },
-        withBackups: { type: 'boolean', default: false }
+        actorUri: { type: 'string' },
+        withBackups: { type: 'boolean', default: false, convert: true }
       },
       async handler(ctx) {
-        const { actorSlug: dataset, withBackups } = ctx.params;
+        const { actorUri, withBackups } = ctx.params;
 
         const webId = ctx.meta.webId || ctx.params.webId;
 
-        if (webId !== 'system' && getDatasetFromUri(webId) !== dataset) {
+        if (webId !== 'system' && webId !== actorUri) {
           throw403('You are not allowed to export this actor.');
         }
 
         // Validate that the actor exists.
-        const actor = await ctx.call('auth.account.findByUsername', { username: dataset });
+        const actor = await ctx.call('auth.account.findByWebId', { webId: actorUri });
         if (!actor?.webId) {
           throw404('Actor not found.');
         }
+        const dataset = actor.username;
 
         // If there has been an export less than 5 minutes ago, we won't create a new one.
         // The last one might have stopped during download.
-        const recentExport = this.findRecentExport(dataset, 5 * 60 * 1000);
+        const recentExport = await this.findRecentExport(dataset, this.settings.retainTmpExportsMs);
         if (recentExport) {
           // Return file stream.
           ctx.meta.$responseType = 'application/zip';
           return fs.promises.readFile(recentExport);
         }
 
-        const dumpQuery = `SELECT * { { ?s ?p ?o } UNION { GRAPH ?g { ?s ?p ?o } } }`;
-        /** @type {string} */
-        const rdfDump = await ctx
-          .call('triplestore.query', {
-            query: dumpQuery,
-            webId: 'system',
-            dataset,
-            // n-quads
-            accept: MIME_TYPES.TSV
-          })
-          // Fuseki doesn't support n-quads, so we convert by removing the first line and add `.` behind each line.
-          .then(tsv => tsv.replace(/.*\n/, '').replace(/\n/g, ' .\n'));
+        const serializedQuads = await this.createRdfDump(dataset, webId);
 
-        const settingsQuads = await ctx
-          .call('triplestore.query', {
-            query: `SELECT * WHERE {
-            ?s ?p ?o .
-            FILTER EXISTS { ?s <http://semapps.org/ns/core#webId> <${actorUri}> }
-          }`
-          })
-          .then(tsv => tsv.replace(/.*\n/, '').replace(/\n/g, ' <http://semapps.org/ns/core#settings> .\n'));
-
-        this.logger.info('dump created:', rdfDump.substring(0, 1000), '...', settingsQuads.substring(0, 1000));
-
-        const dateTimeString = new Date().toISOString().replace(/:/g, '-');
-        const fileName = path.join(this.settings.exportDir, `${dataset}_${dateTimeString}.zip`);
+        const currentDateStr = new Date().toISOString().replace(/:/g, '-');
+        const fileName = path.join(this.settings.exportDir, `${dataset}_${currentDateStr}.zip`);
 
         // Create zip archiver.
-        const archive = archiver('zip', {
-          zlib: { level: 9 } // Sets the compression level.
-        });
+        const archive = archiver('zip', {});
         archive.on('error', function (err) {
           this.logger.error('Error while exporting pod data ', err);
-          throw500(err.message);
+          throw500(err?.message);
         });
-
         // Create a file to stream archive data to.
         const output = fs.createWriteStream(fileName);
         archive.pipe(output);
 
         // Add everything rdf into a joined file.
-        archive.append(rdfDump + '\n' + settingsQuads, { name: 'rdf.nq' });
+        archive.append(serializedQuads, { name: 'rdf.nq' });
 
         // Add backup files, if desired and available.
         if (withBackups && ctx.broker.registry.hasService('backup')) {
@@ -188,9 +181,9 @@ const ManagementService = {
           }
         }
 
-        // Add non-rdf files to repo
+        // Add non-rdf files.
         const uploadsPath = path.join('./uploads/', dataset, 'data');
-        (await this.getFilesRecursively(uploadsPath)).forEach(relativeFileName => {
+        (await this.getFilesInDir(uploadsPath)).forEach(relativeFileName => {
           // Reconstruct the URI of the file
           const fileUri = urlJoin(actor.podUri, relativeFileName);
           // Add file to archive under /non-rdf/<encoded-uri>
@@ -200,6 +193,13 @@ const ManagementService = {
         // Finish archive creation (closes file).
         await archive.finalize();
 
+        // Schedule cleanup of temporary export file
+        if (this.createJob) {
+          this.createJob('cleanUpExports', dataset, { offsetMs: 1000 * 60 * 5 }, { delay: 1000 * 60 * 5 });
+        } else {
+          setTimeout(() => this.deleteOutdatedExports(5 * 60 * 1000));
+        }
+
         // Return file by reading it from fs.
         ctx.meta.$responseType = 'application/zip';
         return fs.promises.readFile(fileName);
@@ -208,12 +208,17 @@ const ManagementService = {
   },
 
   methods: {
-    /** Finds the most recent export for a given dataset, if it is within the `offsetMs` range. Otherwise returns `undefined`. */
-    async findRecentExport(dataset, offsetMs = 5 * 60 * 1000) {
+    /**
+     * Finds the most recent export for a given dataset, if it is within the `offsetMs` range. Otherwise returns `undefined`.
+     * @param {string} dataset Dataset name
+     * @param {string} offsetMs Offset in milliseconds
+     * @returns {string} The most recent export filename, if within offset.
+     */
+    async findRecentExport(dataset, offsetMs = this.settings.retainTmpExportsMs) {
       const files = fs.readdirSync(this.settings.exportDir);
       files.sort();
       // Regex to grab the date and time part of a file name (colons replaced by hyphens)
-      const regex = new RegExp(dataset + '_([\\d\\-]+)T([\\d\\-.]+)Z?\\.zip');
+      const regex = new RegExp(`${dataset}_([\\d\\-]+)T([\\d\\-.]+)Z?\\.zip`);
       const recentExportFilename = files
         .map(file => [file, regex.exec(file)])
         .filter(([file, matches]) => matches)
@@ -224,21 +229,33 @@ const ManagementService = {
         .map(([file, created]) => file)
         .at(-1);
 
-      return recentExportFilename;
+      return recentExportFilename && path.join(this.settings.exportDir, recentExportFilename);
     },
-    /** Delete all exports in the export directory that are older than the given ms offset. */
+
+    /**
+     * Delete all exports in the export directory that are older than the given ms offset.
+     * @param {number} offsetMs Offset in milliseconds
+     */
     async deleteOutdatedExports(offsetMs) {
       const files = fs.readdirSync(this.settings.exportDir);
       files.sort();
-      const regex = new RegExp(dataset + '_([\\d\\-]+)T([\\d\\-.]+)Z?\\.zip');
-      const recentExport = files
+      const regex = /_([\d-]+)T([\d\-.]+)Z?\.zip/;
+      files
         .map(file => [file, regex.exec(file)])
         .filter(([file, matches]) => matches)
-        .map(([file, matches]) => [file, new Date(matches[1] + 'T' + matches[2].replace(/-/g, ':') + 'Z')])
+        .map(([file, matches]) => [file, new Date(`${matches[1]}T${matches[2].replace(/-/g, ':')}Z`)])
         .filter(([file, created]) => Date.now() - created > offsetMs)
-        .forEach(([file, created]) => fs.rmSync(file));
+        .forEach(([file, created]) => fs.rmSync(path.join(this.settings.exportDir, file), { force: true }));
     },
-    async getFilesRecursively(originalDirPath, dirPath = originalDirPath, filesArr = []) {
+    /**
+     * Get all filenames of a directory and its subdirectories.
+     * @param {string} originalDirPath The path to query
+     * @param {string} dirPath For recursion only, current query path
+     * @param {string[]} filesArr For recursion only, accumulator for files already found
+     * @returns {string[]} Filenames relative to the queried directory
+     */
+    async getFilesInDir(originalDirPath, dirPath = originalDirPath, filesArr = []) {
+      if (!fs.existsSync(dirPath)) return [];
       const files = fs.readdirSync(dirPath);
 
       for (const file of files) {
@@ -246,7 +263,7 @@ const ManagementService = {
         const stat = fs.statSync(filePath);
 
         if (stat.isDirectory()) {
-          await this.getFilesRecursively(originalDirPath, filePath, filesArr);
+          await this.getFilesInDir(originalDirPath, filePath, filesArr);
         } else {
           filesArr.push(path.relative(originalDirPath, filePath));
         }
@@ -257,8 +274,64 @@ const ManagementService = {
     async deleteDataset(dataset) {
       // Delete dataset.
       await this.broker.call('triplestore.dataset.delete', { dataset, iKnowWhatImDoing: true });
+    },
+    /**
+     * Create n-quad string from array of rdf-js quads or triples.
+     * @param {object[]} quads Array of quads to serialize
+     * @returns {string} Serialized n-quads string
+     */
+    async serializeQuads(quads) {
+      const quadStrings = [];
+      const serializer = new NTriplesSerializer();
+      const nQuadStream = serializer.import(Readable.from(quads));
+      nQuadStream.on('data', quadString => {
+        quadStrings.push(quadString);
+      });
+      // Wait until reading stream finished
+      await new Promise(resolve => {
+        nQuadStream.on('end', () => {
+          resolve();
+        });
+      });
+      return quadStrings.join('');
+    },
+    /**
+     * Create n-quads string from dataset and settings dataset of webId.
+     * @param {string} dataset Name of db dataset
+     * @param {string} webId WebId as registered in the settings
+     * @returns {string} n-quads serialized dump of dataset and settings records.
+     */
+    async createRdfDump(dataset, webId) {
+      const dumpQuery = `SELECT * { { ?s ?p ?o } UNION { GRAPH ?g { ?s ?p ?o } } }`;
+      /** @type {object[]} */
+      const datasetDump = await this.broker.call('triplestore.query', {
+        query: dumpQuery,
+        webId: 'system',
+        dataset,
+        accept: MIME_TYPES.JSON
+      });
+      const settingsDump = await this.broker.call('triplestore.query', {
+        dataset: this.settings.settingsDataset,
+        query: `SELECT * WHERE {
+          ?s ?p ?o .
+          FILTER EXISTS { ?s <http://semapps.org/ns/core#webId> "${webId}" }
+        }`,
+        accept: MIME_TYPES.JSON
+      });
+      // Add settings graph to settings triples
+      const settingsGraphNode = namedNode('http://semapps.org/ns/core#settings');
+      settingsDump.forEach(record => {
+        record.g = settingsGraphNode;
+      });
+      // Add settings triples to export dataset.
+      datasetDump.push(...settingsDump);
+      // Convert to rdf-js quads.
+      const allQuads = datasetDump.map(q => quad(q.s, q.p, q.o, q.g));
+      const serializedRdf = await this.serializeQuads(allQuads);
+      return serializedRdf;
     }
   },
+
   queues: {
     deleteDataset: {
       name: '*',
@@ -269,36 +342,25 @@ const ManagementService = {
         job.progress(100);
       }
     },
+
     deleteAccountInfo: {
       name: '*',
       async process(job) {
         const { webId } = job.data;
         job.progress(0);
-        await broker.call('auth.account.deleteByWebId', { webId });
+        await this.broker.call('auth.account.deleteByWebId', { webId });
         job.progress(100);
+      }
+    },
+
+    cleanUpExports: {
+      name: '*',
+      async process(job) {
+        const { offsetMs } = job.data;
+        await this.deleteOutdatedExports(offsetMs ?? this.settings.retainTmpExportsMs);
       }
     }
   }
 };
 
 module.exports = { ManagementService };
-
-// // Delete everything but webId data + keys and dataset (necessary since we send a
-// //  `Delete` activity (which gets signed with the publicKey dereferenced by the webId's key).
-// await ctx.call('triplestore.upade', {
-//   query: `
-//   DELETE {?s ?p ?o} WHERE {
-//     ?s ?p ?o .
-//     FILTER NOT EXISTS {
-//       {
-//         <${actorUri}> ?p ?o .
-//       } UNION {
-//         <${actorUri}> <https://w3id.org/security#publicKey> ?s .
-//       } UNION {
-//         <${actorUri}> <https://w3id.org/security#verificationMethod> ?s .
-//       }
-//     }
-//   }`,
-//   webId: 'system',
-//   dataset
-// });

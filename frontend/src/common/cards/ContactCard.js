@@ -62,7 +62,7 @@ const ContactCard = () => {
   const { items: contactRequests, refetch: refetchRequests } = useCollection('apods:contactRequests');
 
   const contactRequest = useMemo(
-    () => contactRequests.find(activity => record && activity.actor === record.describes),
+    () => contactRequests?.find(activity => record && activity.actor === record.describes),
     [contactRequests, record]
   );
 

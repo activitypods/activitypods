@@ -34,11 +34,11 @@ describe('Delete an actor', () => {
   let actors = [],
     broker,
     alice,
-    projectUri;
+    bob;
 
   beforeAll(async () => {
     const datasets = await listDatasets();
-    for (let dataset of datasets) {
+    for (const dataset of datasets) {
       await clearDataset(dataset);
     }
 
@@ -86,7 +86,7 @@ describe('Delete an actor', () => {
   });
 
   test('Actor Alice is not allowed to be deleted by Bob.', async () => {
-    await expect(bob.call('management.deleteActor', { actorSlug: 'alice', iKnowWhatImDoing: true })).rejects.toThrow(
+    await expect(bob.call('management.deleteActor', { actorUri: alice.id, iKnowWhatImDoing: true })).rejects.toThrow(
       'Forbidden'
     );
   });
@@ -95,7 +95,7 @@ describe('Delete an actor', () => {
   test.skip('Actor Alice is deleted (requires triplestore directory access).', async () => {
     const username = alice['foaf:nick'];
     // Delete Alice
-    await alice.call('management.deleteActor', { actorSlug: username, iKnowWhatImDoing: true });
+    await alice.call('management.deleteActor', { actorUri: alice.id, iKnowWhatImDoing: true });
 
     // Check, that account information is limited to deletedAt, username, webId.
     const tombStoneAccount = await broker.call('auth.account.findByUsername', { username });
@@ -110,7 +110,7 @@ describe('Delete an actor', () => {
     expect(allAccounts.find(acc => acc.username === username)).toBeFalsy();
 
     // Check, if uploads are empty.
-    expect(fs.existsSync('./uploads/' + username)).toBeFalsy();
+    expect(fs.existsSync(`./uploads/${username}`)).toBeFalsy();
 
     // Check, if backups are deleted.
     expect(fs.readdirSync(path.join(CONFIG.FUSEKI_BASE, 'backups')).find(file => file.includes(username))).toBeFalsy();
@@ -123,16 +123,19 @@ describe('Delete an actor', () => {
 
   // We need to skip this test, because dataset deletion is only completed after a fuseki restart.
   // And a fuseki restart has to be done manually.
-  test.skip('A new user alice is able to be created after tombstone is removed (requires triplestore directory access).', async () => {
-    // Delete the dataset here because in normal situations, it is scheduled to be deleted after a delay.
-    await this.broker.call('triplestore.dataset.delete', { dataset, iKnowWhatImDoing: true });
+  test.skip('A new user alice is able to be created after tombstone is removed (requires triplestore directory access + fuseki restart).', async () => {
+    const username = alice['foaf:nick'];
 
-    // Check, if dataset still exists.
-    await expect(broker.call('triplestore.dataset.exist', { dataset: username })).resolves.toBeFalsy();
+    // Delete the dataset here because in normal situations, it is scheduled to be deleted after a delay.
+    await broker.call('triplestore.dataset.delete', { dataset: username, iKnowWhatImDoing: true });
 
     // Delete tombstone information manually here, since it is usually scheduled to be deleted after a year.
     await broker.call('auth.account.deleteByWebId', { webId: alice.id || alice['@id'] });
 
+    // Check, if dataset still exists.
+    await expect(broker.call('triplestore.dataset.exist', { dataset: username })).resolves.toBeFalsy();
+
+    // Create alice again.
     const actorData = require(`./data/actor1.json`);
     const { webId } = await broker.call('auth.signup', actorData);
 

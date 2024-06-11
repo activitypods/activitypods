@@ -82,7 +82,11 @@ const ManagementService = {
         }
 
         // Send `Delete` activity to the outside world (so they delete cached data and contact info, etc.).
-        const { outbox } = await ctx.call('ldp.resource.get', {
+        const {
+          outbox,
+          followers,
+          'apods:contacts': contacts
+        } = await ctx.call('ldp.resource.get', {
           resourceUri: actorUri,
           webId: 'system',
           accept: MIME_TYPES.JSON
@@ -97,7 +101,7 @@ const ManagementService = {
             actor: actorUri,
             // TODO: In the future, it would be good to send the activity to as many servers as possible (not just followers).
             //  This is in order to delete cached versions of the account.
-            to: PUBLIC_URI
+            to: [followers, contacts, PUBLIC_URI]
           },
           // If we don't set this, we will trigger delete of the actor's webId document locally.
           { meta: { doNotProcessObject: true } }

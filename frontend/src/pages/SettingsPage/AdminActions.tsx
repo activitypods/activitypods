@@ -32,7 +32,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const AdminItems = () => {
+const AdminActions = () => {
   const translate = useTranslate();
   const theme = useTheme();
   const navigate = useNavigate();
@@ -86,4 +86,4 @@ const AdminItems = () => {
   );
 };
 
-export default AdminItems;
+export default AdminActions;

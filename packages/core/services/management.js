@@ -131,10 +131,11 @@ const ManagementService = {
     exportActor: {
       params: {
         actorUri: { type: 'string' },
-        withBackups: { type: 'boolean', default: false, convert: true }
+        withBackups: { type: 'boolean', default: false, convert: true },
+        withSettings: { type: 'boolean', default: false, convert: true }
       },
       async handler(ctx) {
-        const { actorUri, withBackups } = ctx.params;
+        const { actorUri, withBackups, withSettings } = ctx.params;
 
         const webId = ctx.meta.webId || ctx.params.webId;
 
@@ -158,7 +159,7 @@ const ManagementService = {
           return fs.promises.readFile(recentExport);
         }
 
-        const serializedQuads = await this.createRdfDump(dataset, webId);
+        const serializedQuads = await this.createRdfDump(dataset, webId, withSettings);
 
         const currentDateStr = new Date().toISOString().replace(/:/g, '-');
         const fileName = path.join(this.settings.exportDir, `${dataset}_${currentDateStr}.zip`);
@@ -303,9 +304,10 @@ const ManagementService = {
      * Create n-quads string from dataset and settings dataset of webId.
      * @param {string} dataset Name of db dataset
      * @param {string} webId WebId as registered in the settings
+     * @param withSettings
      * @returns {string} n-quads serialized dump of dataset and settings records.
      */
-    async createRdfDump(dataset, webId) {
+    async createRdfDump(dataset, webId, withSettings = false) {
       const dumpQuery = `SELECT * { { ?s ?p ?o } UNION { GRAPH ?g { ?s ?p ?o } } }`;
       /** @type {object[]} */
       const datasetDump = await this.broker.call('triplestore.query', {
@@ -314,14 +316,16 @@ const ManagementService = {
         dataset,
         accept: MIME_TYPES.JSON
       });
-      const settingsDump = await this.broker.call('triplestore.query', {
-        dataset: this.settings.settingsDataset,
-        query: `SELECT * WHERE {
+      const settingsDump = !withSettings
+        ? []
+        : await this.broker.call('triplestore.query', {
+            dataset: this.settings.settingsDataset,
+            query: `SELECT * WHERE {
           ?s ?p ?o .
           FILTER EXISTS { ?s <http://semapps.org/ns/core#webId> "${webId}" }
         }`,
-        accept: MIME_TYPES.JSON
-      });
+            accept: MIME_TYPES.JSON
+          });
       // Add settings graph to settings triples
       const settingsGraphNode = namedNode('http://semapps.org/ns/core#settings');
       settingsDump.forEach(record => {

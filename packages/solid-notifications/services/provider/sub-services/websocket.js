@@ -1,9 +1,10 @@
-const path = require('path');
 const urlJoin = require('url-join');
 const fetch = require('node-fetch');
+const { v4: uuidv4 } = require('uuid');
+import { WebSocketServer } from 'ws';
 const { Errors: E } = require('moleculer-web');
 const { parseHeader, negotiateContentType, parseJson } = require('@semapps/middlewares');
-const { ControlledContainerMixin, getDatasetFromUri, getWebIdFromUri, arrayOf } = require('@semapps/ldp');
+const { ControlledContainerMixin, getDatasetFromUri, arrayOf } = require('@semapps/ldp');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
@@ -16,13 +17,14 @@ const queueOptions =
         backoff: { type: 'exponential', delay: '180000' }
       };
 
-module.exports = {
-  name: 'solid-notifications.provider.webhook',
+/** @type {import('moleculer').ServiceSchema} */
+const WebSocketChannel2023Service = {
+  name: 'solid-notifications.provider.websocket',
   mixins: [ControlledContainerMixin],
   settings: {
     baseUrl: null,
-    // ControlledContainerMixin
-    acceptedTypes: ['notify:WebhookChannel2023'],
+    // ControlledContainerMixin settings
+    acceptedTypes: ['notify:WebSocketChannel2023'],
     excludeFromMirror: true,
     activateTombstones: false,
     // Like the CSS, we allow anyone with the URI of the channel to read and delete it
@@ -40,17 +42,31 @@ module.exports = {
     if (!this.createJob) throw new Error('The QueueMixin must be configured with this service');
   },
   async started() {
-    const { pathname: basePath } = new URL(this.settings.baseUrl);
     await this.broker.call('api.addRoute', {
       route: {
-        name: 'notification-webhook',
-        path: path.join(basePath, '/.notifications/WebhookChannel2023'),
+        name: 'notification-websocket',
+        path: '/.notifications/WebSocketChannel2023',
         bodyParsers: false,
         authorization: false,
         authentication: true,
         aliases: {
-          'GET /': 'solid-notifications.provider.webhook.discover',
-          'POST /': [parseHeader, negotiateContentType, parseJson, 'solid-notifications.provider.webhook.createChannel']
+          'GET /': 'solid-notifications.provider.websocket.discover',
+          'POST /': [
+            parseHeader,
+            negotiateContentType,
+            parseJson,
+            'solid-notifications.provider.websocket.createChannel'
+          ],
+          'GET /:uuid': [
+            // EXPERIMENTAL
+            (request, response, next) => {
+              request.headers;
+              request.socket;
+
+              next();
+            },
+            'solid-notifications.provider.websocket.handshake'
+          ]
         }
       }
     });
@@ -60,10 +76,6 @@ module.exports = {
     // Load all channels from all Pods
     for (const dataset of await this.broker.call('pod.list')) {
       const webId = urlJoin(this.settings.baseUrl, dataset);
-
-      const containerUri = await this.actions.getContainerUri({ webId });
-      await this.actions.waitForContainerCreation({ containerUri });
-
       const container = await this.actions.list({ webId });
       for (const channel of arrayOf(container['ldp:contains'])) {
         this.channels.push({
@@ -81,23 +93,24 @@ module.exports = {
       ctx.meta.$responseType = 'application/ld+json';
       return {
         '@context': { notify: 'http://www.w3.org/ns/solid/notifications#' },
-        '@id': urlJoin(this.settings.baseUrl, '.notifications', 'WebhookChannel2023'),
-        'notify:channelType': 'notify:WebhookChannel2023',
+        '@id': urlJoin(this.settings.baseUrl, '.notifications', 'WebSocketChannel2023'),
+        'notify:channelType': 'notify:WebSocketChannel2023',
         'notify:features': ['notify:accept', 'notify:endAt', 'notify:rate', 'notify:startAt', 'notify:state']
       };
     },
     async createChannel(ctx) {
-      // Expect format https://communitysolidserver.github.io/CommunitySolidServer/latest/usage/notifications/#webhooks
+      // Expect format https://communitysolidserver.github.io/CommunitySolidServer/latest/usage/notifications/#websockets
       // Correct context: https://github.com/solid/vocab/blob/main/solid-notifications-context.jsonld
       const type = ctx.params.type || ctx.params['@type'];
       const topic = ctx.params.topic || ctx.params['notify:topic'];
-      const sendTo = ctx.params.sendTo || ctx.params['notify:sendTo'];
       const { webId } = ctx.meta;
 
-      if (type !== 'notify:WebhookChannel2023')
-        throw new Error('Only notify:WebhookChannel2023 is accepted on this endpoint');
+      if (type !== 'notify:WebSocketChannel2023')
+        throw new Error('Only notify:WebSocketChannel2023 is accepted on this endpoint');
 
-      // Ensure topic exist (LDP resource, container or collection)
+      // @srosset81 This is taken from the webhook code.
+      //  But should actors without read rights have the permission to know if a resource exists?
+      // Ensure topic exists (LDP resource, container or collection)
       const exists = await ctx.call('ldp.resource.exist', {
         resourceUri: topic,
         webId: 'system'
@@ -116,14 +129,20 @@ module.exports = {
       const topicWebId = urlJoin(this.settings.baseUrl, getDatasetFromUri(topic));
       const channelContainerUri = await this.actions.getContainerUri({ webId: topicWebId }, { parentCtx: ctx });
 
+      // Create random URI with ws(s) protocol.
+      const receiveFrom = urlJoin(this.settings.baseUrl, '/.notifications/WebSocketChannel2023', uuidv4()).replace(
+        'http',
+        'ws'
+      );
+
       // Post channel on Pod
       const channelUri = await this.actions.post(
         {
           containerUri: channelContainerUri,
           resource: {
-            type: 'notify:WebhookChannel2023',
+            type: 'notify:WebSocketChannel2023',
             'notify:topic': topic,
-            'notify:sendTo': sendTo
+            'notify:receiveFrom': receiveFrom
           },
           contentType: MIME_TYPES.JSON,
           webId: 'system'
@@ -135,8 +154,8 @@ module.exports = {
       this.channels.push({
         id: channelUri,
         topic,
-        sendTo,
-        webId: getWebIdFromUri(topic)
+        webId,
+        receiveFrom
       });
 
       ctx.meta.$responseType = 'application/ld+json';
@@ -149,13 +168,10 @@ module.exports = {
         { parentCtx: ctx }
       );
     },
-    async deleteAppChannels(ctx) {
-      const { appUri, webId } = ctx.params;
-      const { origin: appOrigin } = new URL(appUri);
-      const appChannels = this.channels.filter(c => c.webId === webId && c.sendTo.startsWith(appOrigin));
-      for (const appChannel of appChannels) {
-        await this.actions.delete({ resourceUri: appChannel.id, webId: appChannel.webId });
-      }
+    async handshake(ctx) {
+      const { uuid } = ctx.params;
+      const channels = await this.actions.getCache();
+      // Perform ws handshake
     },
     getCache() {
       return this.channels;
@@ -169,7 +185,7 @@ module.exports = {
           type: ACTIVITY_TYPES.CREATE,
           object: resourceUri
         };
-        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+        this.createJob('websocketPost', channel.sendTo, { channel, activity }, queueOptions);
       }
     },
     async 'ldp.resource.updated'(ctx) {
@@ -179,7 +195,7 @@ module.exports = {
           type: ACTIVITY_TYPES.UPDATE,
           object: resourceUri
         };
-        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+        this.createJob('websocketPost', channel.sendTo, { channel, activity }, queueOptions);
       }
     },
     async 'ldp.resource.patched'(ctx) {
@@ -189,7 +205,7 @@ module.exports = {
           type: ACTIVITY_TYPES.UPDATE,
           object: resourceUri
         };
-        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+        this.createJob('websocketPost', channel.sendTo, { channel, activity }, queueOptions);
       }
     },
     async 'ldp.resource.deleted'(ctx) {
@@ -199,7 +215,7 @@ module.exports = {
           type: ACTIVITY_TYPES.DELETE,
           object: resourceUri
         };
-        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+        this.createJob('websocketPost', channel.sendTo, { channel, activity }, queueOptions);
       }
     },
     async 'ldp.container.attached'(ctx) {
@@ -210,7 +226,7 @@ module.exports = {
           object: resourceUri,
           target: containerUri
         };
-        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+        this.createJob('websocketPost', channel.sendTo, { channel, activity }, queueOptions);
       }
     },
     async 'ldp.container.detached'(ctx) {
@@ -221,7 +237,7 @@ module.exports = {
           object: resourceUri,
           target: containerUri
         };
-        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+        this.createJob('websocketPost', channel.sendTo, { channel, activity }, queueOptions);
       }
     },
     async 'activitypub.collection.added'(ctx) {
@@ -232,7 +248,7 @@ module.exports = {
           object: itemUri,
           target: collectionUri
         };
-        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+        this.createJob('websocketPost', channel.sendTo, { channel, activity }, queueOptions);
       }
     },
     async 'activitypub.collection.removed'(ctx) {
@@ -243,7 +259,7 @@ module.exports = {
           object: itemUri,
           target: collectionUri
         };
-        this.createJob('webhookPost', channel.sendTo, { channel, activity }, queueOptions);
+        this.createJob('websocketPost', channel.sendTo, { channel, activity }, queueOptions);
       }
     }
   },
@@ -253,7 +269,7 @@ module.exports = {
     }
   },
   queues: {
-    webhookPost: {
+    websocketPost: {
       name: '*',
       async process(job) {
         const { channel, activity } = job.data;
@@ -271,11 +287,9 @@ module.exports = {
             })
           });
 
-          if (response.status >= 400) {
+          if (response.status === 404) {
+            this.logger.warn(`websocket ${channel.sendTo} returned a 404 error, deleting it...`);
             await this.actions.delete({ resourceUri: channel.id, webId: channel.webId });
-            throw new Error(
-              `Webhook ${channel.sendTo} returned a ${response.status} error (${response.statusText}). It has been deleted.`
-            );
           } else {
             job.progress(100);
           }
@@ -283,12 +297,12 @@ module.exports = {
           return { ok: response.ok, status: response.status, statusText: response.statusText };
         } catch (e) {
           if (job.attemptsMade + 1 >= job.opts.attempts) {
-            this.logger.warn(`Webhook ${channel.sendTo} failed ${job.opts.attempts} times, deleting it...`);
+            this.logger.warn(`websocket ${channel.sendTo} failed ${job.opts.attempts} times, deleting it...`);
             // DO NOT DELETE YET TO IMPROVE MONITORING
             // await this.actions.delete({ resourceUri: channel.id, webId: channel.webId });
           }
 
-          throw new Error(`Posting to webhook ${channel.sendTo} failed. Error: (${e.message})`);
+          throw new Error(`Posting to websocket ${channel.sendTo} failed. Error: (${e.message})`);
         }
       }
     }
@@ -303,3 +317,5 @@ module.exports = {
     }
   }
 };
+
+module.exports = WebSocketChannel2023Service;

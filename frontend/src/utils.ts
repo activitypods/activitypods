@@ -31,7 +31,7 @@ export const formatUsername = (uri: string) => {
  */
 export const arrayFromLdField = (value: any | any[]) => {
   // If the field is null-ish, we suppose there are no values.
-  if (!value) {
+  if (value === null || value === undefined) {
     return [];
   }
   // Return as is.

@@ -51,7 +51,9 @@ module.exports = {
 
       if (!type) throw new Error('The type or URI must be provided');
 
-      if (!type.startsWith('http')) type = useFullURI(type, this.settings.ontologies);
+      if (!type.startsWith('http')) {
+        [type] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
+      }
 
       let appUri;
       if (POD_PROVIDER_TYPES.includes(type)) {

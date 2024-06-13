@@ -37,11 +37,14 @@ const InvitePage = () => {
   const outbox = useOutbox();
 
   if (!capabilityUri) {
-    notify('app.notification.invite_cap_invalid');
+    notify('app.notification.invite_cap_invalid', { type: 'error' });
     navigate('/');
   }
   if (capabilityFetchError) {
-    notify('app.notification.invite_cap_fetch_error', { error: JSON.stringify(capabilityFetchError) });
+    notify('app.notification.invite_cap_fetch_error', {
+      type: 'error',
+      messageArgs: { error: JSON.stringify(capabilityFetchError) }
+    });
     navigate('/');
   }
 

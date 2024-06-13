@@ -144,7 +144,7 @@ const ChoosePodProviderPage = ({
 
   useEffect(() => {
     if (error) {
-      notify('app.notification.pod_provider_fetch_error', { error });
+      notify('app.notification.pod_provider_fetch_error', { messageArgs: { error } });
     }
   }, [error]);
 

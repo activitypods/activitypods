@@ -87,7 +87,7 @@ const AppRegistration = () => {
         }
       });
 
-      notify('app.notification.app_uninstallation_in_progress', { type: 'info' });
+      notify('app.notification.app_uninstallation_in_progress');
 
       // TODO await Accept response in inbox
       // notify('app.notification.app_uninstalled', { type: 'success' });

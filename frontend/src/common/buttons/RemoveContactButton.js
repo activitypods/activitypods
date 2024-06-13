@@ -26,7 +26,7 @@ const RemoveContactButton = ({ refetch, ...rest }) => {
         setDisabled(false);
       }, 3000);
     } catch (e) {
-      notify(e.message, 'error');
+      notify(e.message, { type: 'error' });
       setDisabled(false);
     }
   }, [setDisabled, record, notify, refetch, outbox, url]);

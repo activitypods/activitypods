@@ -1,14 +1,14 @@
 const path = require('path');
 const urlJoin = require('url-join');
 const QueueService = require('moleculer-bull');
-const { ActivityPubService, ACTOR_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
+const { ActivityPubService, ACTOR_TYPES, OBJECT_TYPES, FULL_ACTOR_TYPES } = require('@semapps/activitypub');
 const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
 const { OntologiesService, dc, syreen, mp, pair, void: voidOntology } = require('@semapps/ontologies');
 const { PodService } = require('@semapps/pod');
 const { NodeinfoService } = require('@semapps/nodeinfo');
-const { SignatureService, ProxyService } = require('@semapps/signature');
+const { SignatureService, ProxyService, KeysService } = require('@semapps/crypto');
 const { SynchronizerService } = require('@semapps/sync');
 const { SparqlEndpointService } = require('@semapps/sparql-endpoint');
 const { TripleStoreService } = require('@semapps/triplestore');
@@ -26,6 +26,7 @@ const OidcProviderService = require('./services/oidc-provider/oidc-provider');
 const MailNotificationsService = require('./services/mail-notifications');
 const packageDesc = require('./package.json');
 
+/** @type {import("moleculer").ServiceSchema} */
 const CoreService = {
   name: 'core',
   settings: {
@@ -135,6 +136,24 @@ const CoreService = {
       }
     });
 
+    this.broker.createService(WebIdService, {
+      settings: {
+        path: '/',
+        baseUrl,
+        acceptedTypes: Object.values(FULL_ACTOR_TYPES),
+        podProvider: true,
+        podsContainer: true
+      },
+      hooks: {
+        before: {
+          async createWebId(ctx) {
+            const { nick } = ctx.params;
+            await ctx.call('pod.create', { username: nick });
+          }
+        }
+      }
+    });
+
     this.broker.createService(PodService, {
       settings: {
         baseUrl
@@ -147,9 +166,12 @@ const CoreService = {
       }
     });
 
-    this.broker.createService(SignatureService, {
+    this.broker.createService(SignatureService);
+
+    this.broker.createService(KeysService, {
       settings: {
-        actorsKeyPairsDir: path.resolve(baseDir, './actors')
+        actorsKeyPairsDir: path.resolve(baseDir, './actors'),
+        podProvider: true
       }
     });
 
@@ -178,21 +200,6 @@ const CoreService = {
     this.broker.createService(WebfingerService, {
       settings: {
         baseUrl
-      }
-    });
-
-    this.broker.createService(WebIdService, {
-      settings: {
-        baseUrl,
-        podProvider: true
-      },
-      hooks: {
-        before: {
-          async create(ctx) {
-            const { nick } = ctx.params;
-            await ctx.call('pod.create', { username: nick });
-          }
-        }
       }
     });
 

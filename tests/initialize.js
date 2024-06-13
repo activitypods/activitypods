@@ -5,7 +5,7 @@ const { CoreService: SemAppsCoreService } = require('@semapps/core');
 const { delay } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { NodeinfoService } = require('@semapps/nodeinfo');
-const { ProxyService } = require('@semapps/signature');
+const { ProxyService } = require('@semapps/crypto');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
@@ -135,7 +135,8 @@ const initializeAppServer = async (port, mainDataset, settingsDataset) => {
       ldp: {
         resourcesWithContainerPath: false
       },
-      void: false
+      void: false,
+      webid: false
     }
   });
 

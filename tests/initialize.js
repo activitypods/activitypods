@@ -5,13 +5,15 @@ const { CoreService: SemAppsCoreService } = require('@semapps/core');
 const { delay } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { NodeinfoService } = require('@semapps/nodeinfo');
-const { ProxyService } = require('@semapps/signature');
+const { ProxyService } = require('@semapps/crypto');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
 const { CoreService, AppControlMiddleware } = require('@activitypods/core');
 const { apods, interop, oidc, notify } = require('@activitypods/ontologies');
 const { NotificationListenerService } = require('@activitypods/solid-notifications');
+const { AnnouncerService } = require('@activitypods/announcer');
+const { ProfilesApp } = require('@activitypods/profiles');
 const CONFIG = require('./config');
 
 Error.stackTraceLimit = Infinity;
@@ -26,27 +28,26 @@ const logger = {
 };
 
 const listDatasets = async () => {
-  const response = await fetch(CONFIG.SPARQL_ENDPOINT + '$/datasets', {
+  const response = await fetch(`${CONFIG.SPARQL_ENDPOINT}$/datasets`, {
     headers: {
-      Authorization: 'Basic ' + Buffer.from(CONFIG.JENA_USER + ':' + CONFIG.JENA_PASSWORD).toString('base64')
+      Authorization: `Basic ${Buffer.from(`${CONFIG.JENA_USER}:${CONFIG.JENA_PASSWORD}`).toString('base64')}`
     }
   });
 
   if (response.ok) {
     const json = await response.json();
     return json.datasets.map(dataset => dataset['ds.name'].substring(1));
-  } else {
-    return [];
   }
+  return [];
 };
 
 const clearDataset = dataset =>
-  fetch(CONFIG.SPARQL_ENDPOINT + dataset + '/update', {
+  fetch(`${CONFIG.SPARQL_ENDPOINT + dataset}/update`, {
     method: 'POST',
     body: 'update=CLEAR+ALL', // DROP+ALL is not working with WebACL datasets !
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: 'Basic ' + Buffer.from(CONFIG.JENA_USER + ':' + CONFIG.JENA_PASSWORD).toString('base64')
+      Authorization: `Basic ${Buffer.from(`${CONFIG.JENA_USER}:${CONFIG.JENA_PASSWORD}`).toString('base64')}`
     }
   });
 
@@ -54,7 +55,7 @@ const initialize = async (port, settingsDataset) => {
   const baseUrl = `http://localhost:${port}/`;
 
   const broker = new ServiceBroker({
-    nodeID: 'server' + port,
+    nodeID: `server${port}`,
     middlewares: [
       // Uncomment the next line run all tests with memory cacher
       // CacherMiddleware({ type: 'Memory' }),
@@ -73,7 +74,8 @@ const initialize = async (port, settingsDataset) => {
       triplestore: {
         url: CONFIG.SPARQL_ENDPOINT,
         user: CONFIG.JENA_USER,
-        password: CONFIG.JENA_PASSWORD
+        password: CONFIG.JENA_PASSWORD,
+        fusekiBase: CONFIG.FUSEKI_BASE
       },
       queueServiceUrl: CONFIG.QUEUE_SERVICE_URL,
       oidcProvider: {
@@ -103,6 +105,10 @@ const initialize = async (port, settingsDataset) => {
     }
   });
 
+  await broker.createService(AnnouncerService);
+
+  await broker.createService(ProfilesApp);
+
   return broker;
 };
 
@@ -110,7 +116,7 @@ const initializeAppServer = async (port, mainDataset, settingsDataset) => {
   const baseUrl = `http://localhost:${port}/`;
 
   const broker = new ServiceBroker({
-    nodeID: 'server' + port,
+    nodeID: `server${port}`,
     middlewares: [WebAclMiddleware({ baseUrl })],
     logger
   });
@@ -123,6 +129,7 @@ const initializeAppServer = async (port, mainDataset, settingsDataset) => {
         url: CONFIG.SPARQL_ENDPOINT,
         user: CONFIG.JENA_USER,
         password: CONFIG.JENA_PASSWORD,
+        fusekiBase: CONFIG.FUSEKI_BASE,
         mainDataset
       },
       ontologies: [interop, oidc, apods, notify],
@@ -132,7 +139,8 @@ const initializeAppServer = async (port, mainDataset, settingsDataset) => {
       ldp: {
         resourcesWithContainerPath: false
       },
-      void: false
+      void: false,
+      webid: false
     }
   });
 
@@ -206,9 +214,8 @@ const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRig
 
     if (firstItem.type === 'Create' && firstItem.to === appUri) {
       return [firstItem.id, firstItem.object];
-    } else {
-      await delay(500);
     }
+    await delay(500);
   } while (true);
 };
 

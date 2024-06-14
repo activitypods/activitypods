@@ -6,8 +6,8 @@
   "author": "Virtual Assembly",
   "dependencies": {
     "@activitypods/announcer": "2.0.0-alpha.0",
-    "@semapps/activitypub": "0.7.0",
-    "@semapps/ldp": "0.7.0"
+    "@semapps/activitypub": "0.8.0",
+    "@semapps/ldp": "0.8.0"
   },
   "publishConfig": {
     "access": "public"

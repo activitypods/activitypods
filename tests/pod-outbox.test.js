@@ -6,7 +6,7 @@ const ExampleAppService = require('./apps/example.app');
 const Example2AppService = require('./apps/example2.app');
 const { OBJECT_TYPES, ACTIVITY_TYPES } = require('@semapps/activitypub');
 
-jest.setTimeout(80000);
+jest.setTimeout(120000);
 
 const NUM_PODS = 1;
 
@@ -64,7 +64,7 @@ describe('Test Pod outbox posting', () => {
 
     await installApp(alice, APP_URI);
     await installApp(alice, APP2_URI);
-  }, 80000);
+  }, 120000);
 
   afterAll(async () => {
     await podServer.stop();

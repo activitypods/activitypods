@@ -1,11 +1,10 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGetIdentity, useNotify, useTranslate } from 'react-admin';
+import { useGetIdentity, useNotify } from 'react-admin';
 
 const UserPage = () => {
   const params = useParams();
   const { data: identity, isLoading } = useGetIdentity();
-  const translate = useTranslate();
   const notify = useNotify();
   const navigate = useNavigate();
 
@@ -21,14 +20,14 @@ const UserPage = () => {
   // }, [contacts, contactsLoaded, webfinger, params, setIsContact, isContact]);
 
   useEffect(() => {
-    const contactFormUrl = '/Profile/create/?id=' + params.id;
+    const contactFormUrl = `/Profile/create/?id=${params.id}`;
     if (identity?.id) {
       navigate(contactFormUrl);
     } else if (!isLoading) {
-      notify(translate('app.notification.login_to_connect_user', { username: params.id }));
-      navigate('/login?signup=true&redirect=' + encodeURIComponent(contactFormUrl));
+      notify('app.notification.login_to_connect_user', { messageArgs: { username: params.id } });
+      navigate(`/login?signup=true&redirect=${encodeURIComponent(contactFormUrl)}`);
     }
-  }, [identity, isLoading, params.id, notify, translate, navigate]);
+  }, [identity, isLoading, params.id, notify, navigate]);
 
   return null;
 };

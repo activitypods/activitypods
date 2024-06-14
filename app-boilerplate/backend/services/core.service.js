@@ -21,6 +21,7 @@ module.exports = {
     ldp: {
       resourcesWithContainerPath: false
     },
-    void: false
+    void: false,
+    webid: false
   }
 };

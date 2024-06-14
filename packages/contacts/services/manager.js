@@ -1,7 +1,7 @@
 const urlJoin = require('url-join');
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT, OFFER_DELETE_ACTOR } = require('../config/patterns');
+const { REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT, DELETE_ACTOR } = require('../config/patterns');
 
 module.exports = {
   name: 'contacts.manager',
@@ -71,12 +71,13 @@ module.exports = {
       }
     },
     deleteActor: {
-      match: OFFER_DELETE_ACTOR,
+      match: DELETE_ACTOR,
       async onReceive(ctx, activity, recipientUri) {
-        if (activity.actor !== activity.object.object.id)
-          throw new Error(`The actor ${activity.actor} cannot ask to remove actor ${activity.object.object.id}`);
+        // See also https://swicg.github.io/activitypub-http-signature/#handling-deletes-of-actors for more sophisticated approaches.
+        if (!(activity.actor === activity.object.id))
+          throw new Error(`The actor ${activity.actor} cannot ask to remove actor ${activity.object.id}`);
 
-        const actorToDelete = activity.object.object.id;
+        const actorToDelete = activity.object.id;
 
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 

@@ -40,7 +40,7 @@ services:
     ports:
       - '6379:6379'
     volumes:
-      - ./data/redis:/data
+      - ./data/redis:/data:z
     command: ['redis-server', '--appendonly', 'yes']
 
   arena:

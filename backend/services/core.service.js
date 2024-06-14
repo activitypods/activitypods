@@ -12,7 +12,8 @@ module.exports = {
     triplestore: {
       url: CONFIG.SPARQL_ENDPOINT,
       user: CONFIG.JENA_USER,
-      password: CONFIG.JENA_PASSWORD
+      password: CONFIG.JENA_PASSWORD,
+      fusekiBase: CONFIG.FUSEKI_BASE
     },
     queueServiceUrl: CONFIG.QUEUE_SERVICE_URL,
     authType: CONFIG.AUTH_TYPE,

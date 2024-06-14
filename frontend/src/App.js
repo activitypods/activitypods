@@ -19,6 +19,8 @@ import DataTypePage from './pages/DataPage/DataTypePage';
 import SettingsPage from './pages/SettingsPage/SettingsPage';
 import SettingsPasswordPage from './pages/SettingsPage/SettingsPasswordPage';
 import SettingsEmailPage from './pages/SettingsPage/SettingsEmailPage';
+import SettingsExportPodPage from './pages/SettingsPage/SettingsExportPodPage';
+import SettingsDeletePodPage from './pages/SettingsPage/SettingsDeletePodPage';
 import ProfileCreatePage from './pages/ProfileCreatePage/ProfileCreatePage';
 import AuthorizePage from './pages/AuthorizePage/AuthorizePage';
 import UserPage from './pages/UserPage';
@@ -63,6 +65,8 @@ const App = () => (
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/email" element={<SettingsEmailPage />} />
           <Route path="/settings/password" element={<SettingsPasswordPage />} />
+          <Route path="/settings/export-pod" element={<SettingsExportPodPage />} />
+          <Route path="/settings/delete-pod" element={<SettingsDeletePodPage />} />
           <Route path="/data">
             <Route index element={<DataPage />} />
             <Route path=":type" element={<DataTypePage />} />

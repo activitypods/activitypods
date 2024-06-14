@@ -4,7 +4,7 @@ const CONFIG = require('./config');
 
 const arrayOf = value => {
   // If the field is null-ish, we suppose there are no values.
-  if (!value) {
+  if (value === null || value === undefined) {
     return [];
   }
   // Return as is.
@@ -84,9 +84,8 @@ const clearMails = async () => {
  * If not, try again after `delayMs` until `maxTries` is reached.
  * If `fieldNames` is `undefined`, the return value of `callback` is expected to not be
  * `undefined`.
- *
  * @type {import("./utilTypes").waitForResource}
- **/
+ */
 const waitForResource = async (delayMs, fieldNames, maxTries, callback) => {
   for (let i = 0; i < maxTries; i += 1) {
     const result = await callback();
@@ -96,7 +95,7 @@ const waitForResource = async (delayMs, fieldNames, maxTries, callback) => {
     }
     await delay(delayMs);
   }
-  throw new Error('Waiting for resource failed. No results after ' + maxTries + ' tries');
+  throw new Error(`Waiting for resource failed. No results after ${maxTries} tries`);
 };
 
 module.exports = {

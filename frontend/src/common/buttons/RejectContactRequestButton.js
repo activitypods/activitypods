@@ -19,7 +19,7 @@ const RejectContactRequestButton = ({ activity, refetch, children, ...rest }) =>
       notify('app.notification.contact_request_rejected');
       setTimeout(refetch, 3000);
     } catch (e) {
-      notify(e.message, 'error');
+      notify(e.message, { type: 'error' });
     }
   }, [outbox, refetch, notify, activity]);
 

@@ -92,7 +92,10 @@ const ManagementService = {
           webId: 'system',
           accept: MIME_TYPES.JSON
         });
-        const contactsCollection = await this.broker.call('activitypub.collections.get', { resourceUri: contacts });
+        const contactsCollection = await this.broker.call('activitypub.collections.get', {
+          resourceUri: contacts,
+          webId: 'system'
+        });
         await ctx.call(
           'activitypub.outbox.post',
           {

@@ -1,9 +1,9 @@
-const { ControlledContainerMixin, ControlledContainerDereferenceMixin } = require('@semapps/ldp');
+const { ControlledContainerMixin, DereferenceMixin } = require('@semapps/ldp');
 const { ACTOR_TYPES } = require('@semapps/activitypub');
 
 module.exports = {
   name: 'actors',
-  mixins: [ControlledContainerMixin, ControlledContainerDereferenceMixin],
+  mixins: [ControlledContainerMixin, DereferenceMixin],
   settings: {
     path: '/as/actor',
     acceptedTypes: [ACTOR_TYPES.APPLICATION, 'interop:Application'],

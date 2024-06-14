@@ -222,3 +222,29 @@ export const localPodProviderObject = process.env.REACT_APP_POD_PROVIDER_URL
 export const uniqueBy = <T>(criterion: (value: T) => string, values: T[]) => {
   return Object.values(Object.fromEntries(values.map(v => [criterion(v), v])));
 };
+
+export const downloadFile = (blob: Blob, filename: string) => {
+  // Fetch the data as a blob
+  // Create a URL representing the blob
+  const blobUrl = URL.createObjectURL(blob);
+
+  // Create a new anchor element
+  const a = document.createElement('a');
+
+  // Set the href and download attributes of the anchor element
+  a.href = blobUrl;
+  a.download = filename;
+  a.style.display = 'none';
+
+  // Append the anchor element to the body
+  document.body.appendChild(a);
+
+  // Programmatically click the anchor element to start the download
+  a.click();
+
+  // Remove the anchor element from the body
+  document.body.removeChild(a);
+
+  // Revoke the blob URL
+  URL.revokeObjectURL(blobUrl);
+};

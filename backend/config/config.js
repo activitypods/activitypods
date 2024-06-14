@@ -2,6 +2,8 @@
 // See https://github.com/kerimdzhanov/dotenv-flow for more details
 require('dotenv-flow').config();
 
+const path = require('path');
+
 module.exports = {
   INSTANCE_NAME: process.env.SEMAPPS_INSTANCE_NAME,
   HOME_URL: process.env.SEMAPPS_HOME_URL,
@@ -27,7 +29,9 @@ module.exports = {
   SMTP_USER: process.env.SEMAPPS_SMTP_USER,
   SMTP_PASS: process.env.SEMAPPS_SMTP_PASS,
   BACKUP_SERVER_PATH: process.env.SEMAPPS_BACKUP_SERVER_PATH,
+  /** @deprecated */
   BACKUP_FUSEKI_DATASETS_PATH: process.env.SEMAPPS_BACKUP_FUSEKI_DATASETS_PATH,
+  FUSEKI_BASE: process.env.FUSEKI_BASE || path.join(process.env.SEMAPPS_BACKUP_FUSEKI_DATASETS_PATH || '', '..'),
   SENTRY_DSN: process.env.SEMAPPS_SENTRY_DSN,
   SENTRY_ENVIRONMENT: process.env.SEMAPPS_SENTRY_ENVIRONMENT,
   AUTH_TYPE: process.env.SEMAPPS_AUTH_TYPE,

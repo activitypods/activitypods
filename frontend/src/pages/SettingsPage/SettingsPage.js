@@ -24,6 +24,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import LinkIcon from '@mui/icons-material/Link';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import useContactLink from '../../hooks/useContactLink';
+import AdminActions from './AdminActions';
 
 const useStyles = makeStyles(() => ({
   listItem: {
@@ -132,6 +133,8 @@ const SettingsPage = () => {
               </ListItemButton>
             </CopyToClipboard>
           </ListItem>
+
+          <AdminActions />
         </List>
       </Box>
     </>

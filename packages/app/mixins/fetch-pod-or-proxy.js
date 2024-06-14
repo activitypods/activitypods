@@ -1,7 +1,6 @@
 const { Readable } = require('stream');
 const { FormData } = require('formdata-node');
 const { FormDataEncoder } = require('form-data-encoder');
-const { MoleculerRetryableError } = require('moleculer').Errors;
 const { stream2buffer } = require('../utils');
 
 module.exports = {
@@ -12,17 +11,19 @@ module.exports = {
       const app = await ctx.call('app.get');
 
       if (this.isLocal(url, actorUri)) {
-        try {
-          return await ctx.call('signature.proxy.query', {
-            url,
-            method,
-            headers,
-            body,
-            actorUri: app.id || app['@id']
-          });
-        } catch (e) {
-          throw new MoleculerRetryableError(e.message, e.code, e.type);
+        const res = await ctx.call('signature.proxy.query', {
+          url,
+          method,
+          headers,
+          body,
+          actorUri: app.id || app['@id']
+        });
+        if (res.status >= 400) {
+          this.logger.warn(
+            `Could not ${method} ${url} with actor ${actorUri} and body ${body}. Error ${res.status}: ${res.statusText}`
+          );
         }
+        return res;
       } else {
         // Remote resources. We will go through the Pod proxy.
         const actor = await ctx.call('activitypub.actor.get', { actorUri });
@@ -48,17 +49,19 @@ module.exports = {
 
         const encoder = new FormDataEncoder(formData);
 
-        try {
-          return await ctx.call('signature.proxy.query', {
-            url: proxyUrl,
-            method: 'POST',
-            headers: encoder.headers,
-            body: await stream2buffer(Readable.from(encoder)),
-            actorUri: app.id || app['@id']
-          });
-        } catch (e) {
-          throw new MoleculerRetryableError(e.message, e.code, e.type);
+        const res = await ctx.call('signature.proxy.query', {
+          url: proxyUrl,
+          method: 'POST',
+          headers: encoder.headers,
+          body: await stream2buffer(Readable.from(encoder)),
+          actorUri: app.id || app['@id']
+        });
+        if (res.status >= 400) {
+          this.logger.warn(
+            `Could not ${method} ${url} with actor ${actorUri} and body ${body}. Error ${res.status}: ${res.statusText}`
+          );
         }
+        return res;
       }
     }
   },

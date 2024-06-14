@@ -11,13 +11,15 @@ module.exports = {
       path: '/announces',
       attachPredicate: 'http://activitypods.org/ns/core#announces',
       ordered: false,
-      dereferenceItems: false
+      dereferenceItems: false,
+      permissions: {}
     },
     announcersCollectionOptions: {
       path: '/announcers',
       attachPredicate: 'http://activitypods.org/ns/core#announcers',
       ordered: false,
-      dereferenceItems: false
+      dereferenceItems: false,
+      permissions: {}
     }
   },
   dependencies: ['activitypub.collections-registry'],
@@ -31,12 +33,6 @@ module.exports = {
       });
 
       const creator = await ctx.call('activitypub.actor.get', { actorUri: object['dc:creator'] });
-
-      // Add the creator to the list of announces and announcers
-      await ctx.call('activitypub.collection.add', {
-        collectionUri: object['apods:announces'],
-        item: creator.id
-      });
 
       const announcesGroupUri = getAnnouncesGroupUri(objectUri);
       const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcesGroupUri, webId: 'system' });

@@ -6,6 +6,7 @@ const urlJoin = require('url-join');
 const { throw403, throw404, throw500 } = require('@semapps/middlewares');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTIVITY_TYPES, PUBLIC_URI } = require('@semapps/activitypub');
+const { arrayOf } = require('@semapps/ldp');
 
 let Readable, NTriplesSerializer;
 const importAsync = async () => {
@@ -91,6 +92,7 @@ const ManagementService = {
           webId: 'system',
           accept: MIME_TYPES.JSON
         });
+        const contactsCollection = await this.broker.call('activitypub.collections.get', { resourceUri: contacts });
         await ctx.call(
           'activitypub.outbox.post',
           {
@@ -101,7 +103,7 @@ const ManagementService = {
             actor: actorUri,
             // TODO: In the future, it would be good to send the activity to as many servers as possible (not just followers).
             //  This is in order to delete cached versions of the account.
-            to: [followers, contacts, PUBLIC_URI]
+            to: [followers, ...arrayOf(contactsCollection.items), PUBLIC_URI]
           },
           // If we don't set this, we will trigger delete of the actor's webId document locally.
           { meta: { doNotProcessObject: true } }

@@ -21,6 +21,8 @@
     "@semapps/crypto": "0.7.0",
     "@semapps/jsonld": "0.7.0",
     "@semapps/ldp": "0.7.0",
+    "@semapps/middlewares": "0.7.0",
+    "@semapps/mime-types": "0.7.0",
     "@semapps/nodeinfo": "0.7.0",
     "@semapps/ontologies": "0.7.0",
     "@semapps/pod": "0.7.0",

@@ -11,13 +11,19 @@ module.exports = {
       const app = await ctx.call('app.get');
 
       if (this.isLocal(url, actorUri)) {
-        return await ctx.call('signature.proxy.query', {
+        const res = await ctx.call('signature.proxy.query', {
           url,
           method,
           headers,
           body,
           actorUri: app.id || app['@id']
         });
+        if (res.status >= 400) {
+          this.logger.warn(
+            `Could not ${method} ${url} with actor ${actorUri} and body ${body}. Error ${res.status}: ${res.statusText}`
+          );
+        }
+        return res;
       } else {
         // Remote resources. We will go through the Pod proxy.
         const actor = await ctx.call('activitypub.actor.get', { actorUri });
@@ -43,13 +49,19 @@ module.exports = {
 
         const encoder = new FormDataEncoder(formData);
 
-        return await ctx.call('signature.proxy.query', {
+        const res = await ctx.call('signature.proxy.query', {
           url: proxyUrl,
           method: 'POST',
           headers: encoder.headers,
           body: await stream2buffer(Readable.from(encoder)),
           actorUri: app.id || app['@id']
         });
+        if (res.status >= 400) {
+          this.logger.warn(
+            `Could not ${method} ${url} with actor ${actorUri} and body ${body}. Error ${res.status}: ${res.statusText}`
+          );
+        }
+        return res;
       }
     }
   },

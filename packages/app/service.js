@@ -166,7 +166,7 @@ module.exports = {
 
       this.appActor = await this.broker.call('activitypub.actor.awaitCreateComplete', { actorUri });
 
-      await this.broker.waitForServices(["access-needs-groups"])
+      await this.broker.waitForServices(['access-needs-groups']);
       const accessNeedGroupUris = await this.broker.call('access-needs-groups.initialize');
 
       await this.broker.call('ldp.resource.patch', {
@@ -185,8 +185,8 @@ module.exports = {
       this.appActor = await this.broker.call('activitypub.actor.awaitCreateComplete', { actorUri });
     }
 
-    await this.broker.waitForServices(["class-description", "access-description-set"]);
-    
+    await this.broker.waitForServices(['class-description', 'access-description-set']);
+
     for (const [type, classDescription] of Object.entries(this.settings.classDescriptions)) {
       // Create one ClassDescription per language
       const results = await this.broker.call('class-description.register', {

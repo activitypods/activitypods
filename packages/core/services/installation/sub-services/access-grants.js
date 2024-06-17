@@ -74,12 +74,27 @@ module.exports = {
           });
         }
 
-        if (specialRightsUris.includes('apods:CreateCollection')) {
-          const collectionsContainerUri = await ctx.call('activitypub.collection.getContainerUri', {
-            webId: ctx.params.resource['interop:grantedBy']
-          });
+        const collectionsContainerUri = await ctx.call('activitypub.collection.getContainerUri', {
+          webId: ctx.params.resource['interop:grantedBy']
+        });
 
-          // Give write permission on collections container
+        // Give read/write permissions on all existing collections
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri: collectionsContainerUri,
+          additionalRights: {
+            default: {
+              user: {
+                uri: ctx.params.resource['interop:grantee'],
+                read: true,
+                write: true
+              }
+            }
+          },
+          webId: 'system'
+        });
+
+        if (specialRightsUris.includes('apods:CreateCollection')) {
+          // Give permission to create new collections
           await ctx.call('webacl.resource.addRights', {
             resourceUri: collectionsContainerUri,
             additionalRights: {

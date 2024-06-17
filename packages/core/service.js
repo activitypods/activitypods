@@ -15,6 +15,7 @@ const { TripleStoreService } = require('@semapps/triplestore');
 const { WebAclService } = require('@semapps/webacl');
 const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
+const { AnnouncerService } = require('@activitypods/announcer');
 const { NotificationProviderService } = require('@activitypods/solid-notifications');
 const { apods, interop, notify, oidc } = require('@activitypods/ontologies');
 const { ManagementService } = require('./services/management');
@@ -255,6 +256,8 @@ const CoreService = {
         ...notifications.mail
       }
     });
+
+    this.broker.createService(AnnouncerService);
 
     this.broker.createService(NodeinfoService, {
       settings: {

@@ -14,7 +14,7 @@ const queueOptions =
 
 module.exports = {
   name: 'pod-activities-watcher',
-  dependencies: ['triplestore', 'activitypub.actor', 'solid-notifications.listener'],
+  dependencies: ['triplestore', 'ldp', 'activitypub.actor', 'solid-notifications.listener'],
   async started() {
     const nodes = await this.broker.call('triplestore.query', {
       query: `
@@ -61,6 +61,8 @@ module.exports = {
     }
 
     this.handlers = [];
+
+    this.baseUrl = await this.broker.call('ldp.getBaseUrl');
   },
   actions: {
     async watch(ctx) {
@@ -82,11 +84,17 @@ module.exports = {
 
       const actor = await ctx.call('activitypub.actor.get', { actorUri });
 
-      // TODO get the cached activity to ensure we have no authorization problems
-      const activity = await ctx.call('pod-resources.get', { resourceUri: object, actorUri });
+      // Use pod-resources.get instead of ldp.resource.get when getting pod resources
+      const fetcher = (ctx, resourceUri) => {
+        if (resourceUri.startsWith(this.baseUrl)) {
+          return ctx.call('ldp.resource.get', { resourceUri, accept: MIME_TYPES.JSON, webId: actorUri });
+        } else {
+          return ctx.call('pod-resources.get', { resourceUri, actorUri });
+        }
+      };
 
-      // Use pod-resources.get instead of ldp.resource.get for matcher
-      const fetcher = (ctx, resourceUri) => ctx.call('pod-resources.get', { resourceUri, actorUri });
+      // TODO get the cached activity to ensure we have no authorization problems
+      const activity = await fetcher(ctx, object);
 
       if (target === actor.inbox) {
         for (const handler of this.handlers) {

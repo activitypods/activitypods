@@ -5,7 +5,12 @@ const { arrayOf, hasType, getParentContainerUri } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
-const DEFAULT_ALLOWED_TYPES = [...Object.values(ACTOR_TYPES), ...Object.values(ACTIVITY_TYPES)];
+const DEFAULT_ALLOWED_TYPES = [
+  ...Object.values(ACTOR_TYPES),
+  ...Object.values(ACTIVITY_TYPES),
+  'Collection',
+  'OrderedCollection'
+];
 
 // TODO use cache to improve performances
 const getAllowedTypes = async (ctx, appUri, podOwner, accessMode) => {
@@ -180,7 +185,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         const { username } = ctx.params;
         const podOwner = urlJoin(baseUrl, username);
 
-        // Bypass checks if user is acting on their own
+        // Bypass checks if user is acting on their own pod
         if (ctx.meta.webId === podOwner) {
           return next(ctx);
         }
@@ -198,6 +203,36 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         }
 
         return await next(ctx);
+      };
+    } else if (action.name === 'webacl.group.api_addMember') {
+      return async ctx => {
+        const { username } = ctx.params;
+        const podOwner = urlJoin(baseUrl, username);
+
+        // Bypass checks if user is acting on their own
+        if (ctx.meta.webId === podOwner) {
+          return next(ctx);
+        }
+
+        // If the webId is a registered application, use the system webId to bypass WAC checks
+        if (await ctx.call('app-registrations.isRegistered', { appUri: ctx.meta.webId, podOwner })) {
+          const appUri = ctx.meta.webId;
+
+          const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
+          if (!specialRights.includes('apods:CreateAclGroup')) {
+            throw new E.ForbiddenError(`The application has no permission to handle ACL groups (apods:CreateAclGroup)`);
+          }
+
+          ctx.meta.webId = 'system';
+
+          const result = await next(ctx);
+
+          ctx.meta.webId = appUri;
+
+          return result;
+        } else {
+          return await next(ctx);
+        }
       };
     }
 

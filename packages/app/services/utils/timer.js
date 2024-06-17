@@ -23,7 +23,6 @@ module.exports = {
       const jobs = await this.getQueue('timeout').getJobs('delayed');
 
       // TODO find how to delete a job by key
-      console.log('jobs', jobs);
 
       for (const job of jobs) {
         if (job.name === key) {

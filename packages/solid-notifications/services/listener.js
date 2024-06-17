@@ -133,7 +133,13 @@ module.exports = {
       const listener = this.listeners.find(l => l.webhookUrl === webhookUrl);
 
       if (listener) {
-        await ctx.call(listener.actionName, data);
+        try {
+          // Do no wait for the action to finish, so that the result can be immediately returned
+          ctx.call(listener.actionName, data);
+        } catch (e) {
+          // Ignore errors that the actions may generate (otherwise 404 errors will be considered as non-existing webhooks)
+        }
+        ctx.meta.$statusCode = 200;
       } else {
         throw new MoleculerError(`No webhook found with URL ${webhookUrl}`, 404, 'NOT_FOUND');
       }

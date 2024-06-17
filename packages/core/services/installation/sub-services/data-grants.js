@@ -1,5 +1,6 @@
 const urlJoin = require('url-join');
 const { ControlledContainerMixin, isURL, getSlugFromUri, arrayOf } = require('@semapps/ldp');
+const { default: ContactList } = require('../../../../../app-boilerplate/frontend/src/resources/Event/EventList');
 
 module.exports = {
   name: 'data-grants',
@@ -14,21 +15,6 @@ module.exports = {
     excludeFromMirror: true
   },
   dependencies: ['ldp', 'ldp.registry', 'pod'],
-  async started() {
-    const baseUrl = await this.broker.call('ldp.getBaseUrl');
-    for (let dataset of await this.broker.call('pod.list')) {
-      const webId = urlJoin(baseUrl, dataset);
-      this.logger.info(`Registering containers for ${webId}...`);
-      const results = await this.actions.list({ webId });
-      for (const dataGrant of arrayOf(results['ldp:contains'])) {
-        await this.broker.call('ldp.registry.register', {
-          path: dataGrant['apods:registeredContainer'].replace(urlJoin(webId, 'data'), ''),
-          acceptedTypes: dataGrant['apods:registeredClass'],
-          dataset
-        });
-      }
-    }
-  },
   actions: {
     async getForApp(ctx) {
       const { appUri, podOwner } = ctx.params;
@@ -88,21 +74,19 @@ module.exports = {
 
         if (!ontology) throw new Error(`Could not register ontology for resource type ${resourceType}`);
 
-        // Check if a container registration already exist for this type (happens if another app registered the same type)
-        let containerRegistration = await this.broker.call('ldp.registry.getByType', {
+        // Check if a type registration already exist (happens if another app registered the same type)
+        const containerUri = await this.broker.call('type-registrations.findContainerUri', {
           type: resourceType,
-          dataset
+          webId
         });
 
         if (!containerRegistration) {
           // If the resource type is invalid, an error will be thrown here
-          containerRegistration = await this.broker.call('ldp.registry.register', {
-            acceptedTypes: resourceType,
-            dataset
+          containerRegistration = await this.broker.call('type-registrations.register', {
+            type: resourceType,
+            webId
           });
         }
-
-        const containerUri = await this.broker.call('ldp.registry.getUri', { path: containerRegistration.path, webId });
 
         // Give read-write permission to the application
         // For details, see https://github.com/assemblee-virtuelle/activitypods/issues/116

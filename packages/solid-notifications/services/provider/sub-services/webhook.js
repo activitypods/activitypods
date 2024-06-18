@@ -58,6 +58,10 @@ module.exports = {
     // Load all channels from all Pods
     for (const dataset of await this.broker.call('pod.list')) {
       const webId = urlJoin(this.settings.baseUrl, dataset);
+
+      const containerUri = await this.actions.getContainerUri({ webId });
+      await this.actions.waitForContainerCreation({ containerUri });
+
       const container = await this.actions.list({ webId });
       for (const channel of arrayOf(container['ldp:contains'])) {
         this.channels.push({

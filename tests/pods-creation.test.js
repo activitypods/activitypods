@@ -108,6 +108,27 @@ describe('Test pods creation', mode => {
     });
   }, 80000);
 
+  test('Alice TypeIndex has been created', async () => {
+    const aliceData = await alice.call('ldp.resource.get', {
+      resourceUri: alice.id,
+      accept: MIME_TYPES.JSON
+    });
+
+    const typeIndexUri = aliceData['solid:publicTypeIndex'];
+
+    expect(typeIndexUri).not.toBeNull();
+
+    const typeIndex = await alice.call('ldp.resource.get', {
+      resourceUri: typeIndexUri,
+      accept: MIME_TYPES.JSON
+    });
+
+    expect(typeIndex).toMatchObject({
+      type: expect.arrayContaining(['solid:ListedDocument', 'solid:TypeIndex']),
+      'solid:hasTypeRegistration': expect.anything()
+    });
+  }, 80000);
+
   test('Alice can post on her Pod', async () => {
     projectUri = await alice.call('ldp.container.post', {
       containerUri: urlJoin(alice.id, 'data'),

@@ -1,4 +1,5 @@
-const { ControlledContainerMixin, getDatasetFromUri } = require('@semapps/ldp');
+const urlJoin = require('url-join');
+const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { namedNode, triple } = require('@rdfjs/data-model');
 const TypeRegistrationsService = require('./type-registrations');
@@ -7,9 +8,26 @@ module.exports = {
   name: 'type-indexes',
   mixins: [ControlledContainerMixin],
   settings: {
-    acceptedTypes: ['solid:TypeIndex']
+    acceptedTypes: ['solid:TypeIndex'],
+    newResourcesPermissions: webId => {
+      if (webId === 'anon' || webId === 'system')
+        throw new Error('Type indexes must be created by a registered webId.');
+
+      return {
+        anon: {
+          read: true
+        },
+        user: {
+          uri: webId,
+          read: true,
+          write: true,
+          control: true
+        }
+      };
+    },
+    excludeFromMirror: true
   },
-  create() {
+  created() {
     this.broker.createService({
       mixins: [TypeRegistrationsService]
     });
@@ -23,6 +41,7 @@ module.exports = {
           resource: {
             type: ['solid:TypeIndex', 'solid:ListedDocument']
           },
+          contentType: MIME_TYPES.JSON,
           webId
         },
         { parentCtx: ctx }
@@ -49,15 +68,28 @@ module.exports = {
     },
     async migrate(ctx) {
       const accounts = await ctx.call('auth.account.find');
-      for (const { webId } of accounts) {
+      for (const { webId, podUri } of accounts) {
         this.logger.info(`Migrating ${webId}...`);
         await this.actions.createAndAttachToWebId({ webId }, { parentCtx: ctx });
+
+        // Go through each registered container and persist them
+        const registeredContainers = await ctx.call('ldp.registry.list');
+        for (const container of Object.values(registeredContainers)) {
+          const containerUri = urlJoin(podUri, container.path);
+          for (const type of arrayOf(container.acceptedTypes))
+            await ctx.call('type-registrations.register', { type, containerUri, webId });
+        }
       }
     }
   },
   events: {
     async 'auth.registered'(ctx) {
       const { webId } = ctx.params;
+
+      // Wait until the /solid/type-index container has been created for the user
+      const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
+      await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
+
       await this.actions.createAndAttachToWebId({ webId }, { parentCtx: ctx });
     }
   }

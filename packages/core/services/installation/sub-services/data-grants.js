@@ -1,5 +1,5 @@
 const urlJoin = require('url-join');
-const { ControlledContainerMixin, isURL, getSlugFromUri, arrayOf } = require('@semapps/ldp');
+const { ControlledContainerMixin, isURL, arrayOf } = require('@semapps/ldp');
 
 module.exports = {
   name: 'data-grants',
@@ -14,21 +14,6 @@ module.exports = {
     excludeFromMirror: true
   },
   dependencies: ['ldp', 'ldp.registry', 'pod'],
-  async started() {
-    const baseUrl = await this.broker.call('ldp.getBaseUrl');
-    for (let dataset of await this.broker.call('pod.list')) {
-      const webId = urlJoin(baseUrl, dataset);
-      this.logger.info(`Registering containers for ${webId}...`);
-      const results = await this.actions.list({ webId });
-      for (const dataGrant of arrayOf(results['ldp:contains'])) {
-        await this.broker.call('ldp.registry.register', {
-          path: dataGrant['apods:registeredContainer'].replace(urlJoin(webId, 'data'), ''),
-          acceptedTypes: dataGrant['apods:registeredClass'],
-          dataset
-        });
-      }
-    }
-  },
   actions: {
     async getForApp(ctx) {
       const { appUri, podOwner } = ctx.params;
@@ -56,7 +41,6 @@ module.exports = {
         const { resource } = ctx.params;
 
         const webId = resource['interop:dataOwner'];
-        const dataset = getSlugFromUri(webId);
         const appUri = resource['interop:grantee'];
         const resourceType = resource['apods:registeredClass'];
         const accessMode = arrayOf(resource['interop:accessMode']);
@@ -88,76 +72,94 @@ module.exports = {
 
         if (!ontology) throw new Error(`Could not register ontology for resource type ${resourceType}`);
 
-        // Check if a container registration already exist for this type (happens if another app registered the same type)
-        let containerRegistration = await this.broker.call('ldp.registry.getByType', {
+        // Check if containers with this type already exist (happens if another app registered the same type)
+        let containersUris = await this.broker.call('type-registrations.findContainersUris', {
           type: resourceType,
-          dataset
+          webId
         });
 
-        if (!containerRegistration) {
+        // If no container exist yet, create it and register it in the TypeIndex
+        if (containersUris.length === 0) {
+          // Generate a path for the new container
+          const containerPath = await ctx.call('ldp.container.getPath', { resourceType });
+          this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${resourceType}`);
+
+          // Create the container and attach it to its parent(s)
+          containersUris[0] = urlJoin(webId, 'data', containerPath);
+          await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId });
+
           // If the resource type is invalid, an error will be thrown here
-          containerRegistration = await this.broker.call('ldp.registry.register', {
-            acceptedTypes: resourceType,
-            dataset
+          await this.broker.call('type-registrations.register', {
+            type: resourceType,
+            containerUri: containersUris[0],
+            webId
           });
         }
 
-        const containerUri = await this.broker.call('ldp.registry.getUri', { path: containerRegistration.path, webId });
-
-        // Give read-write permission to the application
-        // For details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
-        await ctx.call('webacl.resource.addRights', {
-          resourceUri: containerUri,
-          additionalRights: {
-            // Container rights
-            user: {
-              uri: appUri,
-              read: accessMode.includes('acl:Read'),
-              write: accessMode.includes('acl:Write')
-            },
-            // Resources default rights
-            default: {
+        for (const containerUri of containersUris) {
+          // Give read-write permission to the application
+          // For details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
+          await ctx.call('webacl.resource.addRights', {
+            resourceUri: containerUri,
+            additionalRights: {
+              // Container rights
               user: {
                 uri: appUri,
                 read: accessMode.includes('acl:Read'),
-                append: accessMode.includes('acl:Append'),
-                write: accessMode.includes('acl:Write'),
-                control: accessMode.includes('acl:Control')
+                write: accessMode.includes('acl:Write')
+              },
+              // Resources default rights
+              default: {
+                user: {
+                  uri: appUri,
+                  read: accessMode.includes('acl:Read'),
+                  append: accessMode.includes('acl:Append'),
+                  write: accessMode.includes('acl:Write'),
+                  control: accessMode.includes('acl:Control')
+                }
               }
-            }
-          },
-          webId: 'system'
-        });
+            },
+            webId: 'system'
+          });
+        }
 
-        ctx.params.resource['apods:registeredContainer'] = containerUri;
+        // Persist the container URI so that the app doesn't need to fetch the whole TypeIndex
+        ctx.params.resource['apods:registeredContainer'] = containersUris;
       }
     },
     after: {
       async delete(ctx, res) {
-        const containerUri = res.oldData['apods:registeredContainer'];
+        const webId = res.oldData['interop:dataOwner'];
         const appUri = res.oldData['interop:grantee'];
 
-        // If we remove a right which hasn't been granted, no error will be thrown
-        await ctx.call('webacl.resource.removeRights', {
-          resourceUri: containerUri,
-          rights: {
-            user: {
-              uri: appUri,
-              read: true,
-              write: true
-            },
-            default: {
+        const containersUris = await this.broker.call('type-registrations.findContainersUri', {
+          type: res.oldData['apods:registeredClass'],
+          webId
+        });
+
+        for (const containerUri of containersUris) {
+          // If we remove a right which hasn't been granted, no error will be thrown
+          await ctx.call('webacl.resource.removeRights', {
+            resourceUri: containerUri,
+            rights: {
               user: {
                 uri: appUri,
                 read: true,
-                append: true,
-                write: true,
-                control: true
+                write: true
+              },
+              default: {
+                user: {
+                  uri: appUri,
+                  read: true,
+                  append: true,
+                  write: true,
+                  control: true
+                }
               }
-            }
-          },
-          webId: 'system'
-        });
+            },
+            webId: 'system'
+          });
+        }
 
         return res;
       }

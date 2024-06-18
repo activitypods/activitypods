@@ -1,0 +1,22 @@
+{
+  "name": "@activitypods/type-index",
+  "version": "2.0.0-alpha.0",
+  "description": "ActivityPods package for Solid TypeIndex",
+  "license": "Apache-2.0",
+  "author": "Virtual Assembly",
+  "homepage": "https://activitypods.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/assemblee-virtuelle/activitypods.git",
+    "directory": "packages/type-index"
+  },
+  "dependencies": {
+    "@rdfjs/data-model": "^1.3.4",
+    "@semapps/ldp": "0.8.0",
+    "@semapps/mime-types": "0.8.0",
+    "url-join": "^4.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -73,10 +73,11 @@ module.exports = {
         type: 'apods:Notification'
       },
       async onReceive(ctx, activity, recipientUri) {
-        if (!(await ctx.call('app-registrations.isRegistered', { appUri: activity.actor, podOwner: recipientUri }))) {
-          this.logger.warn(`Application ${activity.actor} is not registered by ${recipientUri}`);
-          return;
-        }
+        // TODO Allow to user to disable notifications from given applications
+        // if (!(await ctx.call('app-registrations.isRegistered', { appUri: activity.actor, podOwner: recipientUri }))) {
+        //   this.logger.warn(`Application ${activity.actor} is not registered by ${recipientUri}`);
+        //   return;
+        // }
 
         const account = await ctx.call('auth.account.findByWebId', { webId: recipientUri });
 

@@ -19,7 +19,7 @@ module.exports = {
         let emitterProfile = {};
         try {
           emitterProfile = emitter.url
-            ? await ctx.call('pod-resources.get', { resourceUri: emitter.url, actorUri: recipientUri })
+            ? await ctx.call('pod-resources.get', { resourceUri: emitter.url, actorUri: activity.actor })
             : {};
         } catch (e) {
           this.logger.warn(`Could not get profile of actor ${activity.actor}`);

@@ -1,4 +1,3 @@
-const { triple, namedNode } = require('@rdfjs/data-model');
 const FetchPodOrProxyMixin = require('../../mixins/fetch-pod-or-proxy');
 const SparqlGenerator = require('sparqljs').Generator;
 
@@ -161,88 +160,6 @@ module.exports = {
         await this.actions.fetch({
           url: resourceUri,
           method: 'DELETE',
-          actorUri
-        });
-      }
-    },
-    attach: {
-      params: {
-        containerUri: { type: 'string', optional: false },
-        resourceUri: { type: 'string', optional: false },
-        actorUri: { type: 'string', optional: false }
-      },
-      async handler(ctx) {
-        const { containerUri, resourceUri, actorUri } = ctx.params;
-
-        const sparqlUpdate = {
-          type: 'update',
-          updates: [
-            {
-              updateType: 'insert',
-              insert: [
-                {
-                  type: 'bgp',
-                  triples: [
-                    triple(
-                      namedNode(containerUri),
-                      namedNode('http://www.w3.org/ns/ldp#contains'),
-                      namedNode(resourceUri)
-                    )
-                  ]
-                }
-              ]
-            }
-          ]
-        };
-
-        await this.actions.fetch({
-          url: containerUri,
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/sparql-update'
-          },
-          body: this.sparqlGenerator.stringify(sparqlUpdate),
-          actorUri
-        });
-      }
-    },
-    detach: {
-      params: {
-        containerUri: { type: 'string', optional: false },
-        resourceUri: { type: 'string', optional: false },
-        actorUri: { type: 'string', optional: false }
-      },
-      async handler(ctx) {
-        const { containerUri, resourceUri, actorUri } = ctx.params;
-
-        const sparqlUpdate = {
-          type: 'update',
-          updates: [
-            {
-              updateType: 'delete',
-              insert: [
-                {
-                  type: 'bgp',
-                  triples: [
-                    triple(
-                      namedNode(containerUri),
-                      namedNode('http://www.w3.org/ns/ldp#contains'),
-                      namedNode(resourceUri)
-                    )
-                  ]
-                }
-              ]
-            }
-          ]
-        };
-
-        await this.actions.fetch({
-          url: containerUri,
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/sparql-update'
-          },
-          body: this.sparqlGenerator.stringify(sparqlUpdate),
           actorUri
         });
       }

@@ -17,7 +17,8 @@ const { WebfingerService } = require('@semapps/webfinger');
 const { WebIdService } = require('@semapps/webid');
 const { AnnouncerService } = require('@activitypods/announcer');
 const { NotificationProviderService } = require('@activitypods/solid-notifications');
-const { apods, interop, notify, oidc } = require('@activitypods/ontologies');
+const { TypeIndexesService } = require('@activitypods/type-index');
+const { apods, interop, notify, oidc, solid } = require('@activitypods/ontologies');
 const { ManagementService } = require('./services/management');
 const ApiService = require('./services/api');
 const AppOpenerService = require('./services/app-opener');
@@ -120,7 +121,7 @@ const CoreService = {
 
     this.broker.createService(OntologiesService, {
       settings: {
-        ontologies: [apods, interop, notify, oidc, dc, syreen, mp, pair, voidOntology],
+        ontologies: [apods, interop, notify, oidc, solid, dc, syreen, mp, pair, voidOntology],
         persistRegistry: false,
         settingsDataset
       }
@@ -248,6 +249,8 @@ const CoreService = {
         queueServiceUrl
       }
     });
+
+    this.broker.createService({ mixins: [TypeIndexesService] });
 
     this.broker.createService(MailNotificationsService, {
       mixins: queueServiceUrl ? [QueueService(queueServiceUrl)] : undefined,

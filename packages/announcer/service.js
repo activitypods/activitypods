@@ -1,5 +1,6 @@
-const { defaultToArray, getDatasetFromUri } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } = require('@semapps/activitypub');
+const urlJoin = require('url-join');
+const { defaultToArray, arrayOf } = require('@semapps/ldp');
+const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { getAnnouncesGroupUri, getAnnouncersGroupUri } = require('./utils');
 
@@ -146,8 +147,6 @@ module.exports = {
           webId: recipientUri
         });
 
-        const resourceType = resource['@type'] || resource.type;
-
         // Sometimes when reposting, a recipient may be the original announcer
         // So ensure this is a remote resource before storing it locally
         if (await ctx.call('ldp.remote.isRemote', { resourceUri, webId: recipientUri })) {
@@ -157,24 +156,48 @@ module.exports = {
               resource,
               webId: recipientUri
             });
-
-            const container = await ctx.call('ldp.registry.getByType', {
-              type: resourceType,
-              dataset: getDatasetFromUri(recipientUri)
-            });
-            if (!container)
-              throw new Error(`Cannot store resource of type "${resourceType}", no matching containers were found!`);
-            const containerUri = await ctx.call('ldp.registry.getUri', { path: container.path, webId: recipientUri });
-
-            await ctx.call('ldp.container.attach', {
-              containerUri,
-              resourceUri,
-              webId: recipientUri
-            });
           } catch (e) {
             this.logger.warn(
               `Unable to cache remote object ${resourceUri} for actor ${recipientUri}. Message: ${e.message}`
             );
+          }
+
+          const expandedTypes = await ctx.call('jsonld.parser.expandTypes', {
+            types: resource['@type'] || resource.type
+          });
+
+          // Go through all the resource's types and attach it to the corresponding container
+          for (const expandedType of expandedTypes) {
+            let containersUris = await ctx.call('type-registrations.findContainersUris', {
+              type: expandedType,
+              webId: recipientUri
+            });
+
+            // If no container exist yet for this type, create it and register it in the TypeIndex
+            if (containersUris.length === 0) {
+              // Generate a path for the new container
+              const containerPath = await ctx.call('ldp.container.getPath', { resourceType: expandedType });
+              this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${expandedType}`);
+
+              // Create the container and attach it to its parent(s)
+              containersUris[0] = urlJoin(recipientUri, 'data', containerPath);
+              await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId: recipientUri });
+
+              // If the resource type is invalid, an error will be thrown here
+              await this.broker.call('type-registrations.register', {
+                type: expandedType,
+                containerUri: containersUris[0],
+                webId: recipientUri
+              });
+            }
+
+            for (const containerUri of containersUris) {
+              await ctx.call('ldp.container.attach', {
+                containerUri,
+                resourceUri,
+                webId: recipientUri
+              });
+            }
           }
         }
       }

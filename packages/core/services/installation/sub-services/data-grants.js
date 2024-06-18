@@ -81,8 +81,8 @@ module.exports = {
         // If no container exist yet, create it and register it in the TypeIndex
         if (containersUris.length === 0) {
           // Generate a path for the new container
-          const containerPath = await ctx.call('ldp.container.getPath', { resourceType: expandedType });
-          this.logger.debug(`Automatically generated the path ${path} for resource type ${expandedType}`);
+          const containerPath = await ctx.call('ldp.container.getPath', { resourceType });
+          this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${resourceType}`);
 
           // Create the container and attach it to its parent(s)
           containersUris[0] = urlJoin(webId, 'data', containerPath);

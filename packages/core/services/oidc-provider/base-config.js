@@ -6,6 +6,9 @@ module.exports = (settings, privateJwk) => ({
     openid: ['azp'],
     webid: ['webid']
   },
+  extraParams: [
+    'is_signup' // Used to recognize signup requests
+  ],
   // Default client settings that might not be defined.
   // Mostly relevant for WebID clients.
   clientDefaults: { id_token_signed_response_alg: privateJwk.alg },
@@ -98,6 +101,7 @@ module.exports = (settings, privateJwk) => ({
           loginUrl.searchParams.set('interaction_id', interaction.jti);
           loginUrl.searchParams.set('client_id', interaction?.params?.client_id);
           loginUrl.searchParams.set('redirect', interaction.returnTo);
+          if (interaction?.params?.is_signup === 'true') loginUrl.searchParams.set('signup', true); // Extra param
           return loginUrl.toString();
         }
 

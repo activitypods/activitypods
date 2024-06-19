@@ -96,7 +96,6 @@ const AuthorizePageView = () => {
   useEffect(() => {
     if (!isLoading && application?.id && clientDomain) {
       if (appRegistrations.some(reg => reg['interop:registeredAgent'] === application?.id)) {
-        console.log('access app');
         accessApp();
       } else {
         setShowScreen(true);

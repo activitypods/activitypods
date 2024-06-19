@@ -92,7 +92,6 @@ module.exports = (settings, privateJwk) => ({
   // Since the login form is on a separated frontend, we must redirect to it
   interactions: {
     url: async (ctx, interaction) => {
-      console.log('interaction', interaction);
       switch (interaction?.prompt?.name) {
         case 'login': {
           const loginUrl = new URL(urlJoin(settings.frontendUrl, '/login'));

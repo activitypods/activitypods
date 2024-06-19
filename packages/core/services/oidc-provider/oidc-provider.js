@@ -29,7 +29,6 @@ module.exports = {
     // See https://github.com/panva/node-oidc-provider/blob/main/recipes/client_based_origins.md
     config.clientBasedCORS = (ctx, origin, client) => {
       // TODO validate CORS based on client
-      console.log('origin, client', origin, client);
       return true;
     };
 
@@ -44,6 +43,20 @@ module.exports = {
         path: '/.well-known/openid-configuration',
         aliases: {
           'GET /': 'oidc-provider.proxyConfig'
+        }
+      }
+    });
+
+    await this.broker.call('api.addRoute', {
+      route: {
+        name: 'oidc-login-completed',
+        path: '/.oidc/login-completed',
+        authentication: true,
+        bodyParsers: {
+          json: true
+        },
+        aliases: {
+          'POST /': 'oidc-provider.loginCompleted'
         }
       }
     });
@@ -107,11 +120,23 @@ module.exports = {
       } else {
         throw new Error('Not found');
       }
+    },
+    async loginCompleted(ctx) {
+      const { interactionId, webId } = ctx.params;
+
+      if (!ctx.meta.webId || ctx.meta.webId !== webId) {
+        throw new E.ForbiddenError(`User not logged or the provided webId don't match the token webId`);
+      }
+
+      await this.interactionFinished(interactionId, {
+        login: { accountId: webId, amr: ['pwd'] }
+      });
     }
   },
   events: {
     async 'auth.connected'(ctx) {
       const { webId, interactionId } = ctx.params;
+      // This may not be necessary anymore, now that the LocalLoginPage calls the /.oidc/finish-interaction endpoint
       if (interactionId) {
         // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
         await this.interactionFinished(interactionId, {

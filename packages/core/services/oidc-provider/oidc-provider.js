@@ -83,7 +83,8 @@ module.exports = {
         const payload = await ctx.call('jwk.verifyToken', { token });
         if (payload) {
           ctx.meta.tokenPayload = payload;
-          ctx.meta.webId = payload.webid; // Not webId !!
+          ctx.meta.webId = payload.azp; // Use the WebID of the application requesting access
+          ctx.meta.impersonatedUser = payload.webid; // Used by some services which need to know the real user (Attention: webid with a i)
           return Promise.resolve(payload);
         }
         // Invalid token
@@ -104,7 +105,8 @@ module.exports = {
         const payload = await ctx.call('jwk.verifyToken', { token });
         if (payload) {
           ctx.meta.tokenPayload = payload;
-          ctx.meta.webId = payload.webid; // Not webId !!
+          ctx.meta.webId = payload.azp; // Use the WebID of the application requesting access
+          ctx.meta.impersonatedUser = payload.webid; // Used by some services which need to know the real user (Attention: webid with a i)
           return Promise.resolve(payload);
         }
         ctx.meta.webId = 'anon';

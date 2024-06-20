@@ -96,7 +96,6 @@ const AuthorizePageView = () => {
   useEffect(() => {
     if (!isLoading && application?.id && clientDomain) {
       if (appRegistrations.some(reg => reg['interop:registeredAgent'] === application?.id)) {
-        console.log('access app');
         accessApp();
       } else {
         setShowScreen(true);
@@ -114,7 +113,7 @@ const AuthorizePageView = () => {
     >
       {application && (
         <>
-          <Box p={2} pb={0}>
+          <Box pt={1} pb={0}>
             <div className={classes.app}>
               <img
                 src={application['interop:applicationThumbnail']}
@@ -155,7 +154,7 @@ const AuthorizePageView = () => {
           />
         </>
       )}
-      <Box p={2} display="flex" justifyContent="end">
+      <Box display="flex" justifyContent="end">
         <Button variant="contained" color="secondary" className={classes.button} onClick={installApp}>
           {translate('app.action.accept')}
         </Button>

@@ -15,6 +15,7 @@
     "@activitypods/description": "2.0.0-alpha.0",
     "@activitypods/ontologies": "2.0.0-alpha.0",
     "@activitypods/solid-notifications": "2.0.0-alpha.0",
+    "@activitypods/type-index": "2.0.0-alpha.0",
     "@rdfjs/formats": "4.0.0",
     "@semapps/activitypub": "0.8.0",
     "@semapps/auth": "0.8.0",

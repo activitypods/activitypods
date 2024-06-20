@@ -156,24 +156,26 @@ module.exports = {
     async 'app.registered'(ctx) {
       const { accessGrants, appRegistration } = ctx.params;
 
-      // If we were given the permission to read the inbox, add listener
-      if (arrayOf(accessGrants['apods:hasSpecialRights']).includes('apods:ReadInbox')) {
-        this.createJob(
-          'registerListener',
-          appRegistration['interop:registeredBy'] + ' inbox',
-          { actorUri: appRegistration['interop:registeredBy'], collectionPredicate: 'inbox' },
-          queueOptions
-        );
-      }
+      for (const accessGrant of accessGrants) {
+        // If we were given the permission to read the inbox, add listener
+        if (arrayOf(accessGrant['apods:hasSpecialRights']).includes('apods:ReadInbox')) {
+          this.createJob(
+            'registerListener',
+            appRegistration['interop:registeredBy'] + ' inbox',
+            { actorUri: appRegistration['interop:registeredBy'], collectionPredicate: 'inbox' },
+            queueOptions
+          );
+        }
 
-      // If we were given the permission to read the inbox, add listener
-      if (arrayOf(accessGrants['apods:hasSpecialRights']).includes('apods:ReadOutbox')) {
-        this.createJob(
-          'registerListener',
-          appRegistration['interop:registeredBy'] + ' outbox',
-          { actorUri: appRegistration['interop:registeredBy'], collectionPredicate: 'outbox' },
-          queueOptions
-        );
+        // If we were given the permission to read the inbox, add listener
+        if (arrayOf(accessGrant['apods:hasSpecialRights']).includes('apods:ReadOutbox')) {
+          this.createJob(
+            'registerListener',
+            appRegistration['interop:registeredBy'] + ' outbox',
+            { actorUri: appRegistration['interop:registeredBy'], collectionPredicate: 'outbox' },
+            queueOptions
+          );
+        }
       }
     }
   },

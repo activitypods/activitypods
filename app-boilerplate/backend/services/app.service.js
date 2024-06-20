@@ -30,11 +30,13 @@ module.exports = {
         },
         'apods:ReadInbox',
         'apods:ReadOutbox',
-        'apods:CreateAclGroup',
+        'apods:PostOutbox',
+        'apods:QuerySparqlEndpoint',
+        'apods:CreateWacGroup',
         'apods:CreateCollection',
         'apods:UpdateWebId'
       ],
-      optional: ['apods:SendNotification']
+      optional: []
     },
     classDescriptions: {
       'as:Event': {

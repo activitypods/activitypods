@@ -69,7 +69,7 @@ describe('Test Pod WAC groups handling', () => {
     await appServer.stop();
   });
 
-  test('Create WAC group with apods:CreateAclGroup permission', async () => {
+  test('Create WAC group with apods:CreateWacGroup permission', async () => {
     await expect(
       appServer.call('pod-wac-groups.create', {
         groupSlug: 'my-group',
@@ -91,7 +91,7 @@ describe('Test Pod WAC groups handling', () => {
     ).resolves.toContain('http://localhost:3000/_groups/alice/my-group');
   });
 
-  test('Add permission without apods:CreateAclGroup permission', async () => {
+  test('Add permission without apods:CreateWacGroup permission', async () => {
     await expect(
       app2Server.call('pod-wac-groups.create', {
         groupSlug: 'my-other-group',

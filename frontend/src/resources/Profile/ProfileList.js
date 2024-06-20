@@ -5,8 +5,9 @@ import { useCheckAuthenticated } from '@semapps/auth-provider';
 import List from '../../layout/List';
 import ProfileCard from '../../common/cards/ProfileCard';
 import ShareContactCard from '../../common/cards/ShareContactCard';
-import { formatUsername } from '../../utils';
 import MyGroupsButton from '../../common/buttons/MyGroupsButton';
+import ContactRequestsBlock from '../../common/blocks/ContactRequestsBlock';
+import { formatUsername } from '../../utils';
 
 const ProfileList = () => {
   const { identity } = useCheckAuthenticated();
@@ -20,7 +21,7 @@ const ProfileList = () => {
       sort={{ field: 'vcard:given-name', order: 'ASC' }}
       perPage={1000}
     >
-      {/* <ContactRequestsBlock /> */}
+      <ContactRequestsBlock />
       <SimpleList
         primaryText={record => record['vcard:given-name']}
         secondaryText={record => formatUsername(record.describes)}

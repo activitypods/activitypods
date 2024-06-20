@@ -107,30 +107,33 @@ module.exports = {
           });
         }
 
+        // Give read/write permissions on the files container
+
+        const filesContainerUri = await ctx.call('files.getContainerUri', {
+          webId: ctx.params.resource['interop:grantedBy']
+        });
+
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri: filesContainerUri,
+          additionalRights: {
+            default: {
+              user: {
+                uri: ctx.params.resource['interop:grantee'],
+                read: true,
+                write: true
+              }
+            }
+          },
+          webId: 'system'
+        });
+
         return res;
       },
       async delete(ctx, res) {
-        const specialRightsUris = arrayOf(res.oldData['apods:hasSpecialRights']);
-
-        if (specialRightsUris.includes('apods:ReadInbox') || specialRightsUris.includes('apods:ReadOutbox')) {
-          const activitiesContainerUri = await ctx.call('activitypub.activity.getContainerUri', {
-            webId: res.oldData['interop:grantedBy']
-          });
-
-          // Give read permissions on all activities
-          await ctx.call('webacl.resource.removeRights', {
-            resourceUri: activitiesContainerUri,
-            rights: {
-              default: {
-                user: {
-                  uri: res.oldData['interop:grantee'],
-                  read: true
-                }
-              }
-            },
-            webId: 'system'
-          });
-        }
+        // Remove all rights of the application on the Pod
+        await ctx.call('webacl.resource.deleteAllUserRights', {
+          webId: res.oldData['interop:grantee']
+        });
 
         return res;
       }

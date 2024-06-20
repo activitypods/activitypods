@@ -3,12 +3,13 @@ import { useTranslate } from 'react-admin';
 import { List, ListItem, ListItemIcon, ListItemText, ListSubheader, Switch } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import OutboxIcon from '@mui/icons-material/Outbox';
 import MoveToInboxIcon from '@mui/icons-material/MoveToInbox';
 import SearchIcon from '@mui/icons-material/Search';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { arrayFromLdField } from '../../utils';
 
 const specialRights = {
@@ -24,16 +25,12 @@ const specialRights = {
     label: 'app.authorization.post_outbox',
     icon: OutboxIcon
   },
-  'apods:SendNotification': {
-    label: 'app.authorization.send_notification',
-    icon: NotificationsIcon
-  },
   'apods:QuerySparqlEndpoint': {
     label: 'app.authorization.query_sparql_endpoint',
     icon: SearchIcon
   },
-  'apods:CreateAclGroup': {
-    label: 'app.authorization.create_acl_group',
+  'apods:CreateWacGroup': {
+    label: 'app.authorization.create_wac_group',
     icon: GroupAddIcon
   },
   'apods:CreateCollection': {
@@ -42,13 +39,8 @@ const specialRights = {
   },
   'apods:UpdateWebId': {
     label: 'app.authorization.update_webid',
-    icon: PlaylistAddIcon
+    icon: ManageAccountsIcon
   }
-};
-
-const getTranslatedType = (type, classDescriptions) => {
-  const match = classDescriptions.find(desc => desc['apods:describedClass'] === type);
-  return match ? match['skos:prefLabel'] : type;
 };
 
 const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowedAccessNeeds, classDescriptions }) => {
@@ -57,11 +49,18 @@ const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowed
   const parseAccessNeed = useCallback(
     accessNeed => {
       if (typeof accessNeed === 'string') {
-        const { label, icon } = specialRights[accessNeed];
-        return {
-          label: translate(label),
-          icon
-        };
+        const specialRight = specialRights[accessNeed];
+        if (specialRight) {
+          return {
+            label: translate(specialRight.label),
+            icon: specialRight.icon
+          };
+        } else {
+          return {
+            label: translate('app.authorization.unknown', { key: accessNeed }),
+            icon: HelpOutlineIcon
+          };
+        }
       } else {
         const accessRights = [];
 
@@ -110,20 +109,24 @@ const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowed
     [setAllowedAccessNeeds]
   );
 
+  if (accessNeeds.length === 0) return null;
+
   return (
     <List
       sx={{ width: '100%', bgcolor: 'background.paper' }}
       subheader={
-        <ListSubheader>
+        <ListSubheader sx={{ p: 0, lineHeight: 3 }}>
           {translate(required ? 'app.authorization.required' : 'app.authorization.optional')}
         </ListSubheader>
       }
     >
       {accessNeeds.map((accessNeed, i) => {
-        const { label, icon } = parseAccessNeed(accessNeed);
+        const parsedAccessNeed = parseAccessNeed(accessNeed);
+        if (!parsedAccessNeed) return null;
+        const { label, icon } = parsedAccessNeed;
         const checked = arrayFromLdField(allowedAccessNeeds).some(a => a === accessNeed || a === accessNeed?.id);
         return (
-          <ListItem key={i} sx={{ pt: 0, pb: 0 }}>
+          <ListItem key={i} sx={{ p: 0 }}>
             <ListItemIcon sx={{ minWidth: 36 }}>{React.createElement(icon)}</ListItemIcon>
             <ListItemText primary={label} />
             <Switch edge="end" onChange={() => toggle(accessNeed, checked)} checked={checked} disabled={required} />

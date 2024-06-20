@@ -231,8 +231,9 @@ module.exports = {
           item: emitter.id
         });
 
-        // If the contact request was automatically accepted, don't send a notification
-        if (!activityHasInviteCapability(activity)) {
+        // If the contact request was automatically accepted, or if the initial
+        // request had a context (case for attendees matcher), don't send a notification
+        if (!activityHasInviteCapability(activity) && !activity.object.context) {
           await ctx.call('mail-notifications.notify', {
             template: ACCEPT_CONTACT_REQUEST_MAPPING,
             recipientUri,

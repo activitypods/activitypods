@@ -9,7 +9,9 @@ const DEFAULT_ALLOWED_TYPES = [
   ...Object.values(ACTOR_TYPES),
   ...Object.values(ACTIVITY_TYPES),
   'Collection',
-  'OrderedCollection'
+  'OrderedCollection',
+  'semapps:File',
+  'acl:Authorization'
 ];
 
 // TODO use cache to improve performances
@@ -108,8 +110,12 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         if (result && ctx.params.method === 'GET') {
           const allowedTypes = await getAllowedTypes(ctx, appUri, podOwner, 'acl:Read');
 
-          const resourceTypes = await ctx.call('jsonld.parser.expandTypes', {
-            types: result.type || result['@type'],
+          let resourceTypes = result['@graph']
+            ? [].concat(result['@graph'].map(r => r.type || r['@type']))
+            : result.type || result['@type'];
+
+          resourceTypes = await ctx.call('jsonld.parser.expandTypes', {
+            types: resourceTypes,
             context: result['@context']
           });
 
@@ -198,8 +204,8 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         }
 
         const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
-        if (!specialRights.includes('apods:CreateAclGroup')) {
-          throw new E.ForbiddenError(`The application has no permission to handle ACL groups (apods:CreateAclGroup)`);
+        if (!specialRights.includes('apods:CreateWacGroup')) {
+          throw new E.ForbiddenError(`The application has no permission to handle ACL groups (apods:CreateWacGroup)`);
         }
 
         return await next(ctx);
@@ -209,7 +215,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         const { username } = ctx.params;
         const podOwner = urlJoin(baseUrl, username);
 
-        // Bypass checks if user is acting on their own
+        // Bypass checks if user is acting on their own Pod
         if (ctx.meta.webId === podOwner) {
           return next(ctx);
         }
@@ -219,8 +225,8 @@ const AppControlMiddleware = ({ baseUrl }) => ({
           const appUri = ctx.meta.webId;
 
           const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
-          if (!specialRights.includes('apods:CreateAclGroup')) {
-            throw new E.ForbiddenError(`The application has no permission to handle ACL groups (apods:CreateAclGroup)`);
+          if (!specialRights.includes('apods:CreateWacGroup')) {
+            throw new E.ForbiddenError(`The application has no permission to handle ACL groups (apods:CreateWacGroup)`);
           }
 
           ctx.meta.webId = 'system';
@@ -233,6 +239,30 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         } else {
           return await next(ctx);
         }
+      };
+    } else if (action.name === 'sparqlEndpoint.query') {
+      return async ctx => {
+        const { username } = ctx.params;
+        const podOwner = urlJoin(baseUrl, username);
+
+        // Bypass checks if user is acting on their own
+        if (ctx.meta.webId === podOwner) {
+          return next(ctx);
+        }
+
+        // If the webId is a registered application, check it has the special right
+        if (await ctx.call('app-registrations.isRegistered', { appUri: ctx.meta.webId, podOwner })) {
+          const appUri = ctx.meta.webId;
+
+          const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
+          if (!specialRights.includes('apods:QuerySparqlEndpoint')) {
+            throw new E.ForbiddenError(
+              `The application has no permission to query the SPARQL endpoint (apods:QuerySparqlEndpoint)`
+            );
+          }
+        }
+
+        return next(ctx);
       };
     }
 

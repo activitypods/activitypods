@@ -1,7 +1,8 @@
 const CONTACT_REQUEST_MAPPING = {
   title: {
-    en: `{{{emitterProfile.vcard:given-name}}} would like to connect with you`,
-    fr: `{{{emitterProfile.vcard:given-name}}} souhaiterait se connecter avec vous`
+    // Allow to override the title by setting a summary to the activity
+    en: `{{#if activity.summary}}{{activity.summary}}{{else}}{{{emitterProfile.vcard:given-name}}} would like to connect with you{{/if}}`,
+    fr: `{{#if activity.summary}}{{activity.summary}}{{else}}{{{emitterProfile.vcard:given-name}}} souhaiterait se connecter avec vous{{/if}}`
   },
   content: `{{activity.content}}`,
   actions: [
@@ -41,7 +42,7 @@ const ACCEPT_CONTACT_REQUEST_MAPPING = {
     fr: `{{{emitterProfile.vcard:given-name}}} fait maintenant partie de votre réseau`
   },
   content: {
-    en: `{{{emitterProfile.vcard:given-name}}} has accepted your contact requests`,
+    en: `{{{emitterProfile.vcard:given-name}}} has accepted your contact request`,
     fr: `{{{emitterProfile.vcard:given-name}}} a accepté votre demande de mise en relation`
   },
   actions: [

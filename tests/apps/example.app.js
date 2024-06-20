@@ -16,9 +16,10 @@ module.exports = {
           accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
         },
         'apods:ReadInbox',
+        'apods:ReadOutbox',
         'apods:PostOutbox',
-        'apods:SendNotification',
-        'apods:CreateAclGroup',
+        'apods:QuerySparqlEndpoint',
+        'apods:CreateWacGroup',
         'apods:CreateCollection',
         'apods:UpdateWebId'
       ],

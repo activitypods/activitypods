@@ -73,7 +73,6 @@ module.exports = {
     authorization: {
       required: 'Accès requis',
       optional: 'Accès optionnel',
-      access_resources_of_type: '%{access_right} les ressources de type %{type}',
       read: 'Lire',
       append: 'Enrichir',
       write: 'Écrire',
@@ -81,11 +80,11 @@ module.exports = {
       read_inbox: 'Lire ma boîte de réception',
       read_outbox: "Lire ma boîte d'envoi",
       post_outbox: "Poster dans ma boîte d'envoi",
-      send_notification: "M'envoyer des notifications",
       query_sparql_endpoint: 'Rechercher mes données',
-      create_acl_group: 'Créer et gérer des groupes de permissions',
+      create_wac_group: 'Créer et gérer des groupes de permissions',
       create_collection: 'Créer et gérer des collections',
-      update_webid: 'Modifier mon identité (WebId)'
+      update_webid: 'Modifier mon identité (WebId)',
+      unknown: 'Permission inconnue "%{key}"'
     },
     card: {
       add_contact: 'Ajouter un contact',

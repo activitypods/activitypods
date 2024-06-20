@@ -12,17 +12,15 @@ const useStyles = makeStyles((theme: Theme) => ({
   card: {
     minWidth: 300,
     maxWidth: 500,
-    marginTop: '6em',
-    [theme.breakpoints.down('sm')]: {
-      margin: '1em'
-    }
+    margin: '1em'
   },
   icon: {
     marginTop: 5,
-    marginRight: 5
+    marginRight: 7
   },
   title: {
     lineHeight: '1.8rem',
+    marginTop: 10,
     [theme.breakpoints.down('sm')]: {
       fontWeight: 'bold',
       marginTop: 12
@@ -45,7 +43,7 @@ const SimpleBox = ({
 }) => {
   const classes = useStyles();
   return (
-    <Box display="flex" flexDirection="column" alignItems="center">
+    <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="100vh">
       <Card className={classes.card} sx={{ padding: 2, display: 'flex', flexDirection: 'column', rowGap: 1 }}>
         <Box pb={2} display="flex" justifyContent="start">
           {icon && React.cloneElement(icon, { fontSize: 'large', className: classes.icon })}

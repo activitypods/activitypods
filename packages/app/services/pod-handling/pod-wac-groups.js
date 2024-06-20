@@ -36,7 +36,7 @@ module.exports = {
       const { groupSlug, actorUri } = ctx.params;
       const { origin, pathname } = new URL(actorUri);
 
-      const { headers } = await this.actions.fetch({
+      const { status, statusText, headers } = await this.actions.fetch({
         url: `${origin}/_groups${pathname}`,
         method: 'POST',
         headers: {
@@ -45,7 +45,11 @@ module.exports = {
         actorUri
       });
 
-      return headers.location;
+      if (status === 201) {
+        return headers?.location;
+      } else {
+        this.logger.error(`Unable to create WAC group. Error ${status}: ${statusText}`);
+      }
     },
     async delete(ctx) {
       const { groupUri, groupSlug, actorUri } = ctx.params;

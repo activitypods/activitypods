@@ -31,8 +31,8 @@ module.exports = {
         await ctx.call('mail-notifications.notify', {
           template: {
             title: {
-              en: `{{{emitterProfile.vcard:given-name}}} sent you a message`,
-              fr: `{{{emitterProfile.vcard:given-name}}} vous a envoyé un message`
+              en: `{{#if activity.object.summary}}{{{activity.object.summary}}}{{else}}{{{emitterProfile.vcard:given-name}}} sent you a message{{/if}}`,
+              fr: `{{#if activity.object.summary}}{{{activity.object.summary}}}{{else}}{{{emitterProfile.vcard:given-name}}} vous a envoyé un message{{/if}}`
             },
             content: '{{activity.object.content}}',
             actions: [

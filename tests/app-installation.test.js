@@ -102,12 +102,7 @@ describe('Test app installation', () => {
       'interop:accessScenario': 'interop:PersonalAccess',
       'interop:authenticatedAs': 'interop:SocialAgent',
       'interop:hasAccessNeed': expect.anything(),
-      'apods:hasSpecialRights': expect.arrayContaining([
-        'apods:ReadInbox',
-        'apods:PostOutbox',
-        'apods:CreateAclGroup',
-        'apods:SendNotification'
-      ])
+      'apods:hasSpecialRights': expect.arrayContaining(['apods:ReadInbox', 'apods:PostOutbox', 'apods:CreateWacGroup'])
     });
 
     await expect(

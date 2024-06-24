@@ -1,6 +1,6 @@
 const SparqlGenerator = require('sparqljs').Generator;
 const { triple, namedNode } = require('@rdfjs/data-model');
-const { arrayOf } = require('@semapps/ldp');
+const { arrayOf, isURL } = require('@semapps/ldp');
 const FetchPodOrProxyMixin = require('../../mixins/fetch-pod-or-proxy');
 
 module.exports = {
@@ -44,14 +44,17 @@ module.exports = {
           });
 
           // Go through all TypeRegistration
-          for (const registrationUri of arrayOf(typeIndex['solid:hasTypeRegistration'])) {
-            const { body: registration } = await this.actions.fetch({
-              url: registrationUri,
-              headers: {
-                'Content-Type': 'application/ld+json'
-              },
-              actorUri
-            });
+          for (let registration of arrayOf(typeIndex['solid:hasTypeRegistration'])) {
+            // If the TypeRegistration has not been dereferenced, do it
+            if (isURL(registration)) {
+              ({ body: registration } = await this.actions.fetch({
+                url: registration,
+                headers: {
+                  'Content-Type': 'application/ld+json'
+                },
+                actorUri
+              }));
+            }
 
             const expandedRegisteredTypes = await ctx.call('jsonld.parser.expandTypes', {
               types: registration['solid:forClass']

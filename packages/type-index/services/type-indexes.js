@@ -1,12 +1,12 @@
 const urlJoin = require('url-join');
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+const { ControlledContainerMixin, DereferenceMixin, arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { namedNode, triple } = require('@rdfjs/data-model');
 const TypeRegistrationsService = require('./type-registrations');
 
 module.exports = {
   name: 'type-indexes',
-  mixins: [ControlledContainerMixin],
+  mixins: [ControlledContainerMixin, DereferenceMixin],
   settings: {
     acceptedTypes: ['solid:TypeIndex'],
     newResourcesPermissions: webId => {
@@ -25,7 +25,9 @@ module.exports = {
         }
       };
     },
-    excludeFromMirror: true
+    excludeFromMirror: true,
+    // DereferenceMixin settings
+    dereferencePlan: [{ property: 'solid:hasTypeRegistration' }]
   },
   created() {
     this.broker.createService({

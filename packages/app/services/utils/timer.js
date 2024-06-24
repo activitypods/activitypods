@@ -12,7 +12,10 @@ module.exports = {
         this.serializeKey(key),
         { actionName, params, time },
         {
-          delay: new Date(time) - Date.now()
+          delay: new Date(time) - Date.now(),
+          // Try again after 3 minutes and until 12 hours later
+          attempts: 8,
+          backoff: { type: 'exponential', delay: '180000' }
         }
       );
     },
@@ -21,8 +24,6 @@ module.exports = {
       key = this.serializeKey(key);
 
       const jobs = await this.getQueue('timeout').getJobs('delayed');
-
-      // TODO find how to delete a job by key
 
       for (const job of jobs) {
         if (job.name === key) {

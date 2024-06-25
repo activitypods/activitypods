@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+RUN node -v
+RUN npm -v
+
+RUN apk add --update --no-cache autoconf bash libtool automake python3 py3-pip alpine-sdk openssh-keygen yarn nano
+
+RUN yarn global add serve
+
+ADD frontend /app/frontend
+
+WORKDIR /app/frontend
+
+RUN yarn install
+
+RUN yarn run build
+
+EXPOSE 4000
+
+CMD serve -s build -l 4000

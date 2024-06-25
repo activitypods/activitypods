@@ -82,7 +82,6 @@ const AuthorizePageView = () => {
 
   const installApp = useCallback(async () => {
     await outbox.post({
-      '@context': process.env.REACT_APP_JSON_CONTEXT,
       type: 'apods:Install',
       actor: outbox.owner,
       object: application.id,

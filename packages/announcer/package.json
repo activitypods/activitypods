@@ -1,6 +1,6 @@
 {
   "name": "@activitypods/announcer",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.2",
   "description": "ActivityPods service to announce objects",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",

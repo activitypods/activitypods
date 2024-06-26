@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: activitypods/backend
+    env_file:
+      - ./backend/.env
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: activitypods/frontend
+    env_file:
+      - ./frontend/.env

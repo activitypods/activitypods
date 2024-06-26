@@ -15,6 +15,9 @@ RUN yarn install
 
 RUN yarn run build
 
-EXPOSE 4000
+EXPOSE 5000
 
-CMD serve -s build -l 4000
+# This variable is only used on runtime
+ENV CONFIG_URL http://localhost:3000/.well-known/config.js
+
+CMD docker-entrypoint.sh

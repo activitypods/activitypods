@@ -68,7 +68,7 @@ services:
       - backend
     restart: always
     expose:
-      - '4000'
+      - '5000'
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.frontend.rule=Host(`${FRONTEND_DOMAIN_NAME}`)'

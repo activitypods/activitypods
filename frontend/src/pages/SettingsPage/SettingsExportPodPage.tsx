@@ -18,13 +18,7 @@ const SettingsExportPodPage = () => {
     const webId = encodeURIComponent(String(identity?.id));
     setIsLoading(true);
     await fetch(
-      urlJoin(
-        process.env.REACT_APP_POD_PROVIDER_URL || '',
-        '/.management/actor/',
-        webId,
-        '/export',
-        `?withBackups=${withBackups}`
-      ),
+      urlJoin(CONFIG.BACKEND_URL || '', '/.management/actor/', webId, '/export', `?withBackups=${withBackups}`),
       {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }

@@ -198,12 +198,12 @@ export const validateBaseUrl = (uri: string, allowAddHttp: boolean) => {
   return { url, error };
 };
 
-export const localPodProviderObject = process.env.REACT_APP_POD_PROVIDER_URL
+export const localPodProviderObject = CONFIG.BACKEND_URL
   ? {
       type: 'apods:PodProvider',
       'apods:area': process.env.POD_AREA,
       'apods:locales': 'en',
-      'apods:domainName': new URL(process.env.REACT_APP_POD_PROVIDER_URL).host
+      'apods:domainName': new URL(CONFIG.BACKEND_URL).host
     }
   : undefined;
 

@@ -135,7 +135,7 @@ const AppRegistration = () => {
           />
         )}
         <a
-          href={`${nodeinfo?.metadata?.login_url}?iss=${process.env.REACT_APP_POD_PROVIDER_URL}`}
+          href={`${nodeinfo?.metadata?.login_url}?iss=${CONFIG.BACKEND_URL}`}
           target="_blank"
           rel="noopener noreferrer"
           className={classes.link}

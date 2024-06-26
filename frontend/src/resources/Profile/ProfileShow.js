@@ -23,7 +23,7 @@ const ProfileShow = () => {
           <G1AccountField source="foaf:tipjar" />
           <DateField
             source="dc:created"
-            locales={process.env.REACT_APP_LANG}
+            locales={CONFIG.DEFAULT_LOCALE}
             options={{ month: 'long', day: 'numeric', year: 'numeric' }}
           />
           <TagsListEdit

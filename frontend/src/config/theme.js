@@ -6,10 +6,10 @@ const theme = createTheme({
   ...raTheme,
   palette: {
     primary: {
-      main: process.env.REACT_APP_COLOR_PRIMARY
+      main: CONFIG.COLOR_PRIMARY
     },
     secondary: {
-      main: process.env.REACT_APP_COLOR_SECONDARY
+      main: CONFIG.COLOR_SECONDARY
     },
     black: {
       main: '#000'
@@ -143,7 +143,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '&.RaCreateButton-floating': {
-            backgroundColor: process.env.REACT_APP_COLOR_SECONDARY,
+            backgroundColor: CONFIG.COLOR_SECONDARY,
             bottom: 80
           }
         }

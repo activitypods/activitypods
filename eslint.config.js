@@ -15,7 +15,7 @@ module.exports = tsEslint.config(
   },
   // Globals
   {
-    languageOptions: { globals: { ...globals.commonjs, process: false } },
+    languageOptions: { globals: { ...globals.commonjs, CONFIG: true, process: false } },
     rules: {
       'array-callback-return': 'warn',
       'arrow-body-style': 'off',

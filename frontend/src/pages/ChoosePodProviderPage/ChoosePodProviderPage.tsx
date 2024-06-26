@@ -130,7 +130,7 @@ const ChoosePodProviderPage = ({
     data: podProvidersRaw,
     error,
     isLoading
-  } = useGetList('PodProvider', { filter: { 'apods:locales': process.env.REACT_APP_LANG } });
+  } = useGetList('PodProvider', { filter: { 'apods:locales': CONFIG.DEFAULT_LOCALE } });
   const podProviders = localPodProviderObject
     ? [localPodProviderObject]
     : uniqueBy(provider => provider['apods:domainName'] as string, [...customPodProviders, ...(podProvidersRaw || [])]);

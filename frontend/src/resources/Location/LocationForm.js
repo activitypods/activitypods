@@ -9,7 +9,7 @@ export const LocationForm = ({ defaultValues }) => {
       <TextInput source="vcard:given-name" fullWidth />
       <LocationInput
         mapboxConfig={{
-          access_token: CONFIG.mapbox_access_token,
+          access_token: CONFIG.MAPBOX_ACCESS_TOKEN,
           types: ['place', 'address'],
           country: ['fr', 'be', 'ch']
         }}

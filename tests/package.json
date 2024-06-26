@@ -1,17 +1,17 @@
 {
   "name": "activitypods-tests",
-  "version": "2.0.0-alpha.2",
+  "version": "2.0.0-alpha.3",
   "private": true,
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles --verbose"
   },
   "dependencies": {
-    "@activitypods/app": "2.0.0-alpha.2",
-    "@activitypods/contacts": "2.0.0-alpha.2",
-    "@activitypods/core": "2.0.0-alpha.2",
-    "@activitypods/events": "2.0.0-alpha.2",
-    "@activitypods/messages": "2.0.0-alpha.2",
-    "@activitypods/profiles": "2.0.0-alpha.2",
+    "@activitypods/app": "2.0.0-alpha.3",
+    "@activitypods/contacts": "2.0.0-alpha.3",
+    "@activitypods/core": "2.0.0-alpha.3",
+    "@activitypods/events": "2.0.0-alpha.3",
+    "@activitypods/messages": "2.0.0-alpha.3",
+    "@activitypods/profiles": "2.0.0-alpha.3",
     "@semapps/activitypub": "0.8.2",
     "@semapps/ldp": "0.8.2",
     "@semapps/mime-types": "0.8.2",

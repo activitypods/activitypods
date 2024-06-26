@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "2.0.0-alpha.2",
+  "version": "2.0.0-alpha.3",
   "private": true,
   "description": "ActivityPods backend",
   "scripts": {
@@ -9,11 +9,11 @@
     "test": "jest --detectOpenHandles --verbose"
   },
   "dependencies": {
-    "@activitypods/announcer": "2.0.0-alpha.2",
-    "@activitypods/contacts": "2.0.0-alpha.2",
-    "@activitypods/core": "2.0.0-alpha.2",
-    "@activitypods/messages": "2.0.0-alpha.2",
-    "@activitypods/profiles": "2.0.0-alpha.2",
+    "@activitypods/announcer": "2.0.0-alpha.3",
+    "@activitypods/contacts": "2.0.0-alpha.3",
+    "@activitypods/core": "2.0.0-alpha.3",
+    "@activitypods/messages": "2.0.0-alpha.3",
+    "@activitypods/profiles": "2.0.0-alpha.3",
     "@semapps/notifications": "0.8.2",
     "@semapps/sync": "0.8.2",
     "@semapps/webacl": "0.8.2",

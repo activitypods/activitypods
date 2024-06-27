@@ -8,18 +8,14 @@ RUN apk add --update --no-cache autoconf bash libtool automake python3 py3-pip a
 RUN yarn global add pm2
 
 ADD backend /app/backend
-ADD packages /app/packages
-ADD node_modules /app/node_modules
 ADD ecosystem.config.js /app/backend
 
 WORKDIR /app/backend
 
-RUN yarn install
+# Install packages and immediately remove cache to reduce layer size
+# See https://making.close.com/posts/reduce-docker-image-size
+RUN yarn install && yarn cache clean
 
 EXPOSE 3000
-
-ENV SEMAPPS_SPARQL_ENDPOINT http://fuseki:3030/
-ENV SEMAPPS_JENA_PASSWORD admin
-ENV SEMAPPS_MAPBOX_ACCESS_TOKEN 
 
 CMD [ "pm2-runtime", "ecosystem.config.js" ]

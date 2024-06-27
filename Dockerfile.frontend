@@ -11,13 +11,18 @@ ADD frontend /app/frontend
 
 WORKDIR /app/frontend
 
-RUN yarn install
+# Install packages and immediately remove cache to reduce layer size
+# See https://making.close.com/posts/reduce-docker-image-size
+RUN yarn install && yarn cache clean
 
 RUN yarn run build
 
+ADD docker-entrypoint.sh /app/frontend
+
+RUN ["chmod", "+x", "docker-entrypoint.sh"]
+
 EXPOSE 5000
 
-# This variable is only used on runtime
-ENV CONFIG_URL http://localhost:3000/.well-known/config.js
+ENTRYPOINT ["/app/frontend/docker-entrypoint.sh"]
 
-CMD docker-entrypoint.sh
+CMD /usr/local/bin/serve -s build -l 5000

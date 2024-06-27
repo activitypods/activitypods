@@ -3,7 +3,7 @@
 
 DOCKER_COMPOSE_DEV=docker compose -f docker-compose.yml
 DOCKER_COMPOSE_PROD=docker compose -f docker-compose-prod.yml --env-file .env.local
-DOCKER_COMPOSE_BUILD=docker compose -f docker-compose-build.yml
+DOCKER_COMPOSE_PUBLISH=docker compose -f docker-compose-publish.yml
 
 # Build and start
 
@@ -28,11 +28,19 @@ attach-backend:
 show-config:
 	$(DOCKER_COMPOSE_PROD) config
 
-# Release
+# Publish images
 
-push-frontend:
-	$(DOCKER_COMPOSE_BUILD) build frontend && $(DOCKER_COMPOSE_BUILD) push frontend
+publish-frontend:
+	export TAG=latest
+	$(DOCKER_COMPOSE_PUBLISH) build frontend
+#	$(DOCKER_COMPOSE_PUBLISH) push frontend
 
-push-backend:
-	$(DOCKER_COMPOSE_BUILD) build backend && $(DOCKER_COMPOSE_BUILD) push backend
+publish-backend:
+	export TAG=latest
+	$(DOCKER_COMPOSE_PUBLISH) build backend
+#	$(DOCKER_COMPOSE_PUBLISH) push backend
 
+publish-arena:
+	export TAG=latest
+	$(DOCKER_COMPOSE_PUBLISH) build arena
+	$(DOCKER_COMPOSE_PUBLISH) push arena

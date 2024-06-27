@@ -90,9 +90,7 @@ services:
     command: ['redis-server', '--appendonly', 'yes']
 
   arena:
-    build:
-      context: .
-      dockerfile: Dockerfile.arena
+    image: activitypods/arena
     container_name: arena
     restart: always
     volumes:

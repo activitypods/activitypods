@@ -19,4 +19,4 @@ services:
       dockerfile: Dockerfile.arena
     image: activitypods/arena:${TAG:-latest}
     environment:
-      REDIS_HOST: "redis"
+      REDIS_HOST: 'redis'

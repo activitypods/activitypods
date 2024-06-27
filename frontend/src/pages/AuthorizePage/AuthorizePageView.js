@@ -82,6 +82,18 @@ const AuthorizePageView = () => {
 
   const installApp = useCallback(async () => {
     await outbox.post({
+      '@context': [
+        'https://www.w3.org/ns/activitystreams',
+        {
+          apods: 'http://activitypods.org/ns/core#',
+          'apods:acceptedAccessNeeds': {
+            '@type': '@id'
+          },
+          'apods:acceptedSpecialRights': {
+            '@type': '@id'
+          }
+        }
+      ],
       type: 'apods:Install',
       actor: outbox.owner,
       object: application.id,

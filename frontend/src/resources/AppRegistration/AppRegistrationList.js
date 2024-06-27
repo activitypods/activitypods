@@ -79,6 +79,7 @@ const AppRegistration = () => {
   const uninstallApp = useCallback(
     async appUri => {
       await outbox.post({
+        '@context': ['https://www.w3.org/ns/activitystreams', { apods: 'http://activitypods.org/ns/core#' }],
         type: ACTIVITY_TYPES.UNDO,
         actor: outbox.owner,
         object: {

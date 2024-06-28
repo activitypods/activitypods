@@ -79,6 +79,7 @@ const AppRegistration = () => {
   const uninstallApp = useCallback(
     async appUri => {
       await outbox.post({
+        '@context': ['https://www.w3.org/ns/activitystreams', { apods: 'http://activitypods.org/ns/core#' }],
         type: ACTIVITY_TYPES.UNDO,
         actor: outbox.owner,
         object: {
@@ -135,7 +136,7 @@ const AppRegistration = () => {
           />
         )}
         <a
-          href={`${nodeinfo?.metadata?.login_url}?iss=${process.env.REACT_APP_POD_PROVIDER_URL}`}
+          href={`${nodeinfo?.metadata?.login_url}?iss=${CONFIG.BACKEND_URL}`}
           target="_blank"
           rel="noopener noreferrer"
           className={classes.link}

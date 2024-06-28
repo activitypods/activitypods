@@ -19,13 +19,10 @@ const SettingsDeletePodPage = () => {
     const token = localStorage.getItem('token');
     const webId = encodeURIComponent(String(identity?.id));
 
-    fetch(
-      urlJoin(process.env.REACT_APP_POD_PROVIDER_URL || '', '/.management/actor/', webId, '?iKnowWhatImDoing=true'),
-      {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      }
-    ).then(() => logout());
+    fetch(urlJoin(CONFIG.BACKEND_URL || '', '/.management/actor/', webId, '?iKnowWhatImDoing=true'), {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(() => logout());
   }, [notify, navigate, logout]);
 
   return (

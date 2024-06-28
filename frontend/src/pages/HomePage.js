@@ -98,9 +98,9 @@ const HomePage = () => {
         <Box className={classes.circle} display="flex" alignItems="center" justifyContent="center">
           <Box>
             <Typography align="center" variant="h1" className={classes.title}>
-              {process.env.REACT_APP_NAME}
+              {CONFIG.INSTANCE_NAME}
             </Typography>
-            <Typography align="center">{process.env.REACT_APP_DESCRIPTION}</Typography>
+            <Typography align="center">{CONFIG.INSTANCE_DESCRIPTION}</Typography>
             <Box
               display="flex"
               flexDirection={xs ? 'column' : 'row'}

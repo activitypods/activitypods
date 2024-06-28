@@ -1,6 +1,6 @@
 {
   "name": "@activitypods/app",
-  "version": "2.0.0-alpha.3",
+  "version": "2.0.0-alpha.4",
   "description": "Tools for ActivityPods apps",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
@@ -11,8 +11,8 @@
     "directory": "packages/app"
   },
   "dependencies": {
-    "@activitypods/core": "2.0.0-alpha.3",
-    "@activitypods/description": "2.0.0-alpha.3",
+    "@activitypods/core": "2.0.0-alpha.4",
+    "@activitypods/description": "2.0.0-alpha.4",
     "@rdfjs/data-model": "^1.3.4",
     "@semapps/activitypub": "0.8.2",
     "@semapps/ldp": "0.8.2",

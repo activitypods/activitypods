@@ -37,7 +37,7 @@ const ResourceCard = ({ resource, classDescription, appRegistration }) => {
 
   const created = new Date(resource?.created.value);
   const modified = new Date(resource?.modified.value);
-  const dateTimeFormat = new Intl.DateTimeFormat(process.env.REACT_APP_LANG);
+  const dateTimeFormat = new Intl.DateTimeFormat(CONFIG.DEFAULT_LOCALE);
 
   if (!resource) return null;
 

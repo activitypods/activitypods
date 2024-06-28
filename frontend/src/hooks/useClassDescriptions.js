@@ -15,7 +15,7 @@ const useClassDescriptions = application => {
           setLoading(true);
           for (const accessDescriptionSetUri of arrayFromLdField(application['interop:hasAccessDescriptionSet'])) {
             const { json: accessDescriptionSet } = await fetchUtils.fetchJson(accessDescriptionSetUri);
-            if (accessDescriptionSet['interop:usesLanguage'] === process.env.REACT_APP_LANG) {
+            if (accessDescriptionSet['interop:usesLanguage'] === CONFIG.DEFAULT_LOCALE) {
               for (const classDescriptionUri of arrayFromLdField(accessDescriptionSet['apods:hasClassDescription'])) {
                 const { json: classDescription } = await fetchUtils.fetchJson(classDescriptionUri);
                 setAppData(oldData => {

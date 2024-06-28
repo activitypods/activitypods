@@ -30,28 +30,14 @@
     },
     {
       "name": "registerListener",
-      "hostId": "app-boilerplate",
-      "host": "redis",
-      "port": 6379,
-      "db": 1
-    },
-    {
-      "name": "timeout",
-      "hostId": "app-boilerplate",
-      "host": "redis",
-      "port": 6379,
-      "db": 1
-    },
-    {
-      "name": "registerListener",
-      "hostId": "welcometomyplace",
+      "hostId": "app",
       "host": "redis",
       "port": 6379,
       "db": 8
     },
     {
       "name": "timeout",
-      "hostId": "welcometomyplace",
+      "hostId": "app",
       "host": "redis",
       "port": 6379,
       "db": 8

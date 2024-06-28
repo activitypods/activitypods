@@ -1,0 +1,28 @@
+services:
+  fuseki_test:
+    image: semapps/jena-fuseki-webacl
+    volumes:
+      - ./data/fuseki_test:/fuseki:z
+    ports:
+      - '3040:3030'
+    expose:
+      - '3040'
+    environment:
+      ADMIN_PASSWORD: 'admin'
+
+  redis:
+    image: redis
+    expose:
+      - '6379'
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./data/redis:/data:z
+    command: ['redis-server', '--appendonly', 'yes']
+
+  mailcatcher:
+    image: dockage/mailcatcher:0.7.1
+    ports:
+      - '1080:1080'
+      - '1025:1025'
+    restart: on-failure

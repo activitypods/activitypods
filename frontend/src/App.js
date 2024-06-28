@@ -32,7 +32,7 @@ const LoginPage = () => (
     allowUsername
     postSignupRedirect="/initialize"
     postLoginRedirect="/authorize"
-    additionalSignupValues={{ 'schema:knowsLanguage': process.env.REACT_APP_LANG }}
+    additionalSignupValues={{ 'schema:knowsLanguage': CONFIG.APP_LANG }}
     passwordScorer={scorer}
   />
 );
@@ -41,7 +41,7 @@ const App = () => (
   <StyledEngineProvider injectFirst>
     <BrowserRouter>
       <Admin
-        title={process.env.REACT_APP_NAME}
+        title={CONFIG.INSTANCE_NAME}
         authProvider={authProvider}
         dataProvider={dataProvider}
         i18nProvider={i18nProvider}

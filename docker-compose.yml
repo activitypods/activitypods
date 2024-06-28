@@ -44,11 +44,11 @@ services:
     command: ['redis-server', '--appendonly', 'yes']
 
   arena:
-    build: ./arena
+    image: activitypods/arena
     container_name: arena
     restart: always
     volumes:
-      - ./arena/config:/opt/arena/src/server/config
+      - ./arena.json:/opt/arena/src/server/config/index.json
     depends_on:
       - redis
     ports:

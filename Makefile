@@ -33,12 +33,12 @@ show-config:
 publish-frontend:
 	export TAG=latest
 	$(DOCKER_COMPOSE_PUBLISH) build frontend
-#	$(DOCKER_COMPOSE_PUBLISH) push frontend
+	$(DOCKER_COMPOSE_PUBLISH) push frontend
 
 publish-backend:
 	export TAG=latest
 	$(DOCKER_COMPOSE_PUBLISH) build backend
-#	$(DOCKER_COMPOSE_PUBLISH) push backend
+	$(DOCKER_COMPOSE_PUBLISH) push backend
 
 publish-arena:
 	export TAG=latest

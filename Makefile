@@ -1,34 +1,37 @@
-.DEFAULT_GOAL := help
-.PHONY: docker-build docker-up build start log stop restart
-
-DOCKER_COMPOSE_DEV=docker compose -f docker-compose.yml
-DOCKER_COMPOSE_PROD=docker compose -f docker-compose-prod.yml --env-file .env.local
+DOCKER_COMPOSE_DEV=docker compose
+DOCKER_COMPOSE_TEST=docker compose -f docker-compose-test.yml
 DOCKER_COMPOSE_PUBLISH=docker compose -f docker-compose-publish.yml
 
-# Build and start
+# Development
 
-build-prod: 
-	$(DOCKER_COMPOSE_PROD) up -d --force-recreate
+build: 
+	$(DOCKER_COMPOSE_DEV) build
 
-start-prod: 
-	$(DOCKER_COMPOSE_PROD) build
+start: 
+	$(DOCKER_COMPOSE_DEV) up -d
 
-stop-prod:
-	$(DOCKER_COMPOSE_PROD) kill
-	$(DOCKER_COMPOSE_PROD) rm -fv
+stop:
+	$(DOCKER_COMPOSE_DEV) down
 
-# Maintainance
+compact-datasets:
+	$(DOCKER_COMPOSE_DEV) down
+	docker run --volume=./data/fuseki:/fuseki --entrypoint=/docker-compact-entrypoint.sh semapps/jena-fuseki-webacl
+	docker run --volume=./data/fuseki_test:/fuseki --entrypoint=/docker-compact-entrypoint.sh semapps/jena-fuseki-webacl
+	$(DOCKER_COMPOSE_DEV) up -d
 
-log-prod:
-	$(DOCKER_COMPOSE_PROD) logs -f backend frontend fuseki
+# Test
 
-attach-backend:
-	$(DOCKER_COMPOSE_PROD) exec backend pm2 attach 0
+start-test: 
+	$(DOCKER_COMPOSE_TEST) up -d
 
-show-config:
-	$(DOCKER_COMPOSE_PROD) config
+build-test: 
+	$(DOCKER_COMPOSE_TEST) build
 
-# Publish images
+stop-test:
+	$(DOCKER_COMPOSE_TEST) kill
+	$(DOCKER_COMPOSE_TEST) rm -fv
+
+# Publish
 
 publish-frontend:
 	export TAG=latest

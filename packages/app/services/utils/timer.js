@@ -1,6 +1,17 @@
 module.exports = {
   name: 'timer',
   actions: {
+    async get(ctx) {
+      const { key } = ctx.params;
+
+      const job = await this.getJob(key);
+
+      if (job) {
+        return job.data;
+      } else {
+        return false;
+      }
+    },
     async set(ctx) {
       const { key, time, actionName, params } = ctx.params;
 
@@ -20,20 +31,35 @@ module.exports = {
       );
     },
     async delete(ctx) {
-      let { key } = ctx.params;
+      const { key } = ctx.params;
+
+      const job = await this.getJob(key);
+
+      if (job) {
+        this.logger.info(`Removing job ${job.name}...`);
+        try {
+          await job.remove();
+        } catch (e) {
+          this.logger.warn(`Failed removing job ${job.name}...`);
+        }
+      }
+    }
+  },
+  methods: {
+    async getJob(key) {
       key = this.serializeKey(key);
 
       const jobs = await this.getQueue('timeout').getJobs('delayed');
 
       for (const job of jobs) {
         if (job.name === key) {
-          this.logger.info(`Removing job ${job.id}...`);
-          await job.remove();
+          return job;
         }
       }
-    }
-  },
-  methods: {
+
+      // No matching job found
+      return false;
+    },
     serializeKey(key) {
       if (Array.isArray(key)) {
         return key.join('|');

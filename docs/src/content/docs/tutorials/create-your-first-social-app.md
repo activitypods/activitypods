@@ -4,13 +4,13 @@ sidebar:
   order: 2
 ---
 
-We created a boilerplate to help you quickly setup a social app in a local environment, and connect it with a local Pod provider. In just a few minutes, you should be able to play with your first ActivityPods-compatible app !
+We created a boilerplate to help you quickly setup a social app in a local environment, and connect it with a local Pod provider. In just a few minutes, you should be able to play with your first ActivityPods-compatible app!
 
 ## Requirements
 
 - Git
 - Makefile
-- [Docker](https://docs.docker.com/engine/install/) (with the Compose plugin)
+- [Docker](https://docs.docker.com/engine/install/) (make sure you have the `docker-compose-plugin` installed)
 - [NodeJS](https://nodejs.org) 20.0 or above
 - [Yarn](https://yarnpkg.com/)
 
@@ -26,7 +26,7 @@ git clone https://github.com/activitypods/app-boilerplate.git
 
 A single environment variable is required: the MapBox access token to autocomplete the location field on the Pod provider frontend.
 
-Fortunately MapBox has a generous free tier with 100'000 requests per month, so you should not need to pay anything. But you still need to get the token. [See this page](https://docs.mapbox.com/help/getting-started/access-tokens/) for more information.
+Fortunately MapBox has a generous free tier with 100,000 requests per month, so you should not need to pay anything. But you still need to get the token. [See this page](https://docs.mapbox.com/help/getting-started/access-tokens/) for more information.
 
 Once you have your access token, copy the `.env` file at the root directory into a `.env.local` file and set it there.
 
@@ -36,7 +36,7 @@ nano .env.local
 ```
 
 :::note
-We would like to find an alternative to MapBox so that the Pod provider can be launched without any environment variable. If you have some tips, let us know !
+We would like to find an alternative to MapBox so that the Pod provider can be launched without any environment variable. If you have some tips, let us know!
 :::
 
 ## Run the Pod provider

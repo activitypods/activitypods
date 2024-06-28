@@ -19,8 +19,6 @@ We created a boilerplate to help you quickly setup a social app in a local envir
 First clone the [boilerplate repository](https://github.com/activitypods/app-boilerplate):
 
 ```bash
-git clone git@github.com:activitypods/app-boilerplate.git
-# Or if you don't have an ssh key registered at Github:
 git clone https://github.com/activitypods/app-boilerplate.git
 ```
 
@@ -54,7 +52,7 @@ make start
 This will also launch Jena Fuseki (the triplestore used to store semantic data) and Redis, which are needed by the Pod provider and will also be used by the application.
 
 :::note
-An alternative to creating a local pod provider is to use a tunnel for your boilerplate app like [Ngrok](https://ngrok.com/), [zrok](https://zrok.io/) or [loophole](https://loophole.cloud/docs/guides/expose) so that your application backend is accessible from the web. Feel free to improve this guide if you chose this solution!
+An alternative to creating a local Pod provider is to use a tunnel for your boilerplate app like [Ngrok](https://ngrok.com/), [zrok](https://zrok.io/) or [loophole](https://loophole.cloud/docs/guides/expose) so that your application backend is accessible from the web. Feel free to improve this guide if you chose this solution!
 :::
 
 ## Create an account
@@ -72,7 +70,7 @@ The Fuseki interface is accessible at http://localhost:3030. In local environmen
 ![](../../../assets/local-fuseki-front.png)
 
 :::note
-If there is a problem, in particular if the second link is not working, you can access the Pod provider backend with this command `make attach-activitypods-cli`. This will give you access to ActivityPods' Moleculer CLI. [Moleculer](https://moleculer.services/) is the microservice framework that all ActivityPods services run on. If there are errors, they will be displayed here.
+If there is a problem, in particular if the second link is not working, you can access the Pod provider backend with this command `make attach-activitypods`. This will give you access to ActivityPods' Moleculer CLI. [Moleculer](https://moleculer.services/) is the microservice framework that all ActivityPods services run on. If there are errors, they will be displayed here.
 :::
 
 ## Launch the backend
@@ -80,7 +78,7 @@ If there is a problem, in particular if the second link is not working, you can 
 Although Docker could also be used to launch the application backend, we recommend to launch it outside of Docker to avoid the usual problems we encounter in containerized environments.
 The boilerplate application backend uses the [Moleculer](https://moleculer.services/) microservice framework for node.js as well.
 
-On the other hand, we will use the same Fuseki and Redis instance as the Pod provider.
+On the other hand, we will use the same Fuseki and Redis server as used for the ActivityPods backend.
 
 ```bash
 cd backend
@@ -106,7 +104,7 @@ A browser window should automatically be launched. If not, you can access the ap
 
 ## Play with the boilerplate
 
-The "hot module reload" feature is activated on both frontend and code, so you can do changes to the code and it will be visible almost immediately.
+The "Hot module reload" feature is activated on both frontend and code, so you can do changes to the code and it will be visible almost immediately.
 
 For the frontend, check the excellent [React-Admin documentation](https://marmelab.com/react-admin/Readme.html) to find what you can do. Have a look at [SemApps website](https://semapps.org/docs/frontend) for specific components.
 
@@ -114,4 +112,4 @@ For the backend, you will find plenty of documentation on this website.
 
 You can test emails are correctly sent by opening up the Mailcatcher interface at http://localhost:1080. You can also watch the jobs queue at http://localhost:4567
 
-Enjoy! And if you run into any problem, please don't hesitate to to open an [issue](https://github.com/activitypods/activitypods/issues)!
+Enjoy! And if you run into any problem, please don't hesitate to open an [issue](https://github.com/activitypods/activitypods/issues)!

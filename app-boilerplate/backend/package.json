@@ -1,6 +1,6 @@
 {
   "name": "app-backend",
-  "version": "2.0.0-alpha.3",
+  "version": "2.0.0-alpha.4",
   "private": true,
   "description": "Boilerplate for ActivityPods apps",
   "scripts": {
@@ -8,9 +8,9 @@
     "start": "moleculer-runner services/*.service.js"
   },
   "dependencies": {
-    "@activitypods/app": "2.0.0-alpha.3",
-    "@activitypods/ontologies": "2.0.0-alpha.3",
-    "@activitypods/solid-notifications": "2.0.0-alpha.3",
+    "@activitypods/app": "2.0.0-alpha.4",
+    "@activitypods/ontologies": "2.0.0-alpha.4",
+    "@activitypods/solid-notifications": "2.0.0-alpha.4",
     "@semapps/auth": "0.8.2",
     "@semapps/core": "0.8.2",
     "@semapps/crypto": "0.8.2",

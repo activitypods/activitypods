@@ -166,7 +166,7 @@ describe('capabilities', () => {
     newUser.profileUri = webIdDoc.url;
 
     // 3. Start capabilities service again.
-    broker.createService(CapabilitiesProfileService);
+    broker.createService({ mixins: [CapabilitiesProfileService] });
 
     await broker.waitForServices('profiles.capabilities', 4_000);
     // 3.1 Run migration. Will add the capabilities. Wait until the service becomes available.

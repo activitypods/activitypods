@@ -53,11 +53,11 @@ describe('Test app installation', () => {
       });
 
     appServer = await initializeAppServer(3001, 'appData', 'app_settings');
-    await appServer.createService(ExampleAppService);
+    appServer.createService({ mixins: [ExampleAppService] });
     await appServer.start();
 
     appServer2 = await initializeAppServer(3002, 'app2Data', 'app2_settings');
-    await appServer2.createService(ExampleAppService);
+    appServer2.createService({ mixins: [ExampleAppService] });
     await appServer2.start();
   }, 80000);
 

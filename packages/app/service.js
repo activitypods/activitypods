@@ -60,45 +60,47 @@ module.exports = {
       throw new Error(`The setting queueServiceUrl is mandatory`);
     }
 
-    this.broker.createService(ActorsService);
+    this.broker.createService({ mixins: [ActorsService] });
 
-    this.broker.createService(RegistrationService);
+    this.broker.createService({ mixins: [RegistrationService] });
 
-    this.broker.createService(AccessNeedsService);
-    this.broker.createService(AccessNeedsGroupsService, {
+    this.broker.createService({ mixins: [AccessNeedsService] });
+    this.broker.createService({
+      mixins: [AccessNeedsGroupsService],
       settings: {
         accessNeeds: this.settings.accessNeeds
       }
     });
 
-    this.broker.createService(AppRegistrationsService);
-    this.broker.createService(DataGrantsService);
-    this.broker.createService(AccessGrantsService);
+    this.broker.createService({ mixins: [AppRegistrationsService] });
+    this.broker.createService({ mixins: [DataGrantsService] });
+    this.broker.createService({ mixins: [AccessGrantsService] });
 
-    this.broker.createService(AccessDescriptionSetService);
-    this.broker.createService(ClassDescriptionService);
+    this.broker.createService({ mixins: [AccessDescriptionSetService] });
+    this.broker.createService({ mixins: [ClassDescriptionService] });
 
     // Pod handling
-    this.broker.createService(PodActivitiesWatcherService, {
-      mixins: [QueueMixin(this.settings.queueServiceUrl)]
+    this.broker.createService({
+      mixins: [PodActivitiesWatcherService, QueueMixin(this.settings.queueServiceUrl)]
     });
-    this.broker.createService(PodNotificationService, {
+    this.broker.createService({
+      mixins: [PodNotificationService],
       settings: {
         frontUrl: this.settings.app.frontUrl
       }
     });
-    this.broker.createService(PodCollectionsService);
-    this.broker.createService(PodContainersService);
-    this.broker.createService(PodOutboxService);
-    this.broker.createService(PodPermissionsService);
-    this.broker.createService(PodResourcesService);
-    this.broker.createService(PodWacGroupsService);
+    this.broker.createService({ mixins: [PodCollectionsService] });
+    this.broker.createService({ mixins: [PodContainersService] });
+    this.broker.createService({ mixins: [PodOutboxService] });
+    this.broker.createService({ mixins: [PodPermissionsService] });
+    this.broker.createService({ mixins: [PodResourcesService] });
+    this.broker.createService({ mixins: [PodWacGroupsService] });
 
     // Utils
-    this.broker.createService(TimerService, {
-      mixins: [QueueMixin(this.settings.queueServiceUrl)]
+    this.broker.createService({
+      mixins: [TimerService, QueueMixin(this.settings.queueServiceUrl)]
     });
-    this.broker.createService(TranslatorService);
+    this.broker.createService({ mixins: [TranslatorService] });
   },
   async started() {
     let actorExist = false,

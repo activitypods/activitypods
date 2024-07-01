@@ -66,7 +66,8 @@ const initialize = async (port, settingsDataset) => {
     logger
   });
 
-  await broker.createService(CoreService, {
+  broker.createService({
+    mixins: [CoreService],
     settings: {
       baseUrl,
       baseDir: path.resolve(__dirname),
@@ -105,9 +106,9 @@ const initialize = async (port, settingsDataset) => {
     }
   });
 
-  await broker.createService(AnnouncerService);
+  broker.createService({ mixins: [AnnouncerService] });
 
-  await broker.createService(ProfilesApp);
+  broker.createService({ mixins: [ProfilesApp] });
 
   return broker;
 };
@@ -121,7 +122,8 @@ const initializeAppServer = async (port, mainDataset, settingsDataset) => {
     logger
   });
 
-  await broker.createService(SemAppsCoreService, {
+  broker.createService({
+    mixins: [SemAppsCoreService],
     settings: {
       baseUrl,
       baseDir: path.resolve(__dirname),
@@ -144,24 +146,27 @@ const initializeAppServer = async (port, mainDataset, settingsDataset) => {
     }
   });
 
-  await broker.createService(AuthAccountService, {
+  broker.createService({
+    mixins: [AuthAccountService],
     adapter: new TripleStoreAdapter({ type: 'AuthAccount', dataset: settingsDataset })
   });
 
-  await broker.createService(NodeinfoService, {
+  broker.createService({
+    mixins: [NodeinfoService],
     settings: {
       baseUrl
     }
   });
 
-  await broker.createService(NotificationListenerService, {
+  broker.createService({
+    mixins: [NotificationListenerService],
     adapter: new TripleStoreAdapter({ type: 'WebhookChannelListener', dataset: settingsDataset }),
     settings: {
       baseUrl
     }
   });
 
-  await broker.createService(ProxyService);
+  broker.createService({ mixins: [ProxyService] });
 
   return broker;
 };

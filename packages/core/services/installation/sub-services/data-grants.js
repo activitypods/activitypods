@@ -132,7 +132,7 @@ module.exports = {
         const webId = res.oldData['interop:dataOwner'];
         const appUri = res.oldData['interop:grantee'];
 
-        const containersUris = await this.broker.call('type-registrations.findContainersUri', {
+        const containersUris = await ctx.call('type-registrations.findContainersUris', {
           type: res.oldData['apods:registeredClass'],
           webId
         });

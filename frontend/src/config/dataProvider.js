@@ -1,3 +1,4 @@
+import urlJoin from 'url-join';
 import { dataProvider } from '@semapps/semantic-data-provider';
 import ontologies from './ontologies.json';
 import dataServers from './dataServers';
@@ -7,6 +8,6 @@ export default dataProvider({
   dataServers,
   resources: Object.fromEntries(Object.entries(resources).map(([k, v]) => [k, v.dataModel])),
   ontologies,
-  jsonContext: ['https://www.w3.org/ns/activitystreams', 'http://localhost:3000/.well-known/context.jsonld'],
+  jsonContext: ['https://www.w3.org/ns/activitystreams', urlJoin(CONFIG.BACKEND_URL, '/.well-known/context.jsonld')],
   returnFailedResources: true
 });

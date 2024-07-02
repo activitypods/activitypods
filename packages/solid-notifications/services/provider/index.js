@@ -13,8 +13,8 @@ module.exports = {
     const { baseUrl, queueServiceUrl } = this.settings;
     if (!baseUrl || !queueServiceUrl) throw new Error(`The baseUrl and queueServiceUrl settings are required`);
 
-    this.broker.createService(WebhookChannelService, {
-      mixins: [QueueMixin(queueServiceUrl)],
+    this.broker.createService({
+      mixins: [WebhookChannelService, QueueMixin(queueServiceUrl)],
       settings: { baseUrl }
     });
   },

@@ -73,7 +73,8 @@ const CoreService = {
       notifications
     } = this.settings;
 
-    this.broker.createService(ActivityPubService, {
+    this.broker.createService({
+      mixins: [ActivityPubService],
       settings: {
         baseUri: baseUrl,
         podProvider: true,
@@ -87,14 +88,16 @@ const CoreService = {
       }
     });
 
-    this.broker.createService(ApiService, {
+    this.broker.createService({
+      mixins: [ApiService],
       settings: {
         ...this.settings.api,
         frontendUrl
       }
     });
 
-    this.broker.createService(authType === 'local' ? AuthLocalService : AuthOIDCService, {
+    this.broker.createService({
+      mixins: [authType === 'local' ? AuthLocalService : AuthOIDCService],
       settings: {
         baseUrl,
         jwtPath: path.resolve(baseDir, './jwt'),
@@ -107,7 +110,8 @@ const CoreService = {
       }
     });
 
-    this.broker.createService(JsonLdService, {
+    this.broker.createService({
+      mixins: [JsonLdService],
       settings: {
         baseUri: baseUrl,
         cachedContextFiles: [
@@ -119,7 +123,8 @@ const CoreService = {
       }
     });
 
-    this.broker.createService(OntologiesService, {
+    this.broker.createService({
+      mixins: [OntologiesService],
       settings: {
         ontologies: [apods, interop, notify, oidc, solid, dc, syreen, mp, pair, voidOntology],
         persistRegistry: false,
@@ -127,8 +132,8 @@ const CoreService = {
       }
     });
 
-    this.broker.createService(LdpService, {
-      mixins: [DocumentTaggerMixin],
+    this.broker.createService({
+      mixins: [LdpService, DocumentTaggerMixin],
       settings: {
         baseUrl,
         podProvider: true,
@@ -140,7 +145,8 @@ const CoreService = {
       }
     });
 
-    this.broker.createService(WebIdService, {
+    this.broker.createService({
+      mixins: [WebIdService],
       settings: {
         path: '/',
         baseUrl,
@@ -158,59 +164,67 @@ const CoreService = {
       }
     });
 
-    this.broker.createService(PodService, {
+    this.broker.createService({
+      mixins: [PodService],
       settings: {
         baseUrl
       }
     });
 
-    this.broker.createService(ProxyService, {
+    this.broker.createService({
+      mixins: [ProxyService],
       settings: {
         podProvider: true
       }
     });
 
-    this.broker.createService(SignatureService);
+    this.broker.createService({ mixins: [SignatureService] });
 
-    this.broker.createService(KeysService, {
+    this.broker.createService({
+      mixins: [KeysService],
       settings: {
         actorsKeyPairsDir: path.resolve(baseDir, './actors'),
         podProvider: true
       }
     });
 
-    this.broker.createService(SparqlEndpointService, {
+    this.broker.createService({
+      mixins: [SparqlEndpointService],
       settings: {
         podProvider: true,
         defaultAccept: 'application/ld+json'
       }
     });
 
-    this.broker.createService(TripleStoreService, {
+    this.broker.createService({
+      mixins: [TripleStoreService],
       settings: {
         ...triplestore
       }
     });
 
-    this.broker.createService(ManagementService, {
-      mixins: queueServiceUrl ? [QueueService(queueServiceUrl)] : undefined,
+    this.broker.createService({
+      mixins: queueServiceUrl ? [ManagementService, QueueService(queueServiceUrl)] : [ManagementService],
       settings: { settingsDataset }
     });
 
-    this.broker.createService(WebAclService, {
+    this.broker.createService({
+      mixins: [WebAclService],
       settings: {
         baseUrl,
         podProvider: true
       }
     });
 
-    this.broker.createService(WebfingerService, {
+    this.broker.createService({
+      mixins: [WebfingerService],
       settings: {
         baseUrl
       }
     });
 
-    this.broker.createService(SynchronizerService, {
+    this.broker.createService({
+      mixins: [SynchronizerService],
       settings: {
         podProvider: true,
         mirrorGraph: false,
@@ -219,23 +233,26 @@ const CoreService = {
       }
     });
 
-    this.broker.createService(InstallationService);
+    this.broker.createService({ mixins: [InstallationService] });
 
-    this.broker.createService(AppOpenerService, {
+    this.broker.createService({
+      mixins: [AppOpenerService],
       settings: {
         frontendUrl
       }
     });
 
-    this.broker.createService(FilesService);
+    this.broker.createService({ mixins: [FilesService] });
 
-    this.broker.createService(JWKService, {
+    this.broker.createService({
+      mixins: [JWKService],
       settings: {
         jwtPath: path.resolve(baseDir, './jwt')
       }
     });
 
-    this.broker.createService(OidcProviderService, {
+    this.broker.createService({
+      mixins: [OidcProviderService],
       settings: {
         baseUrl,
         frontendUrl,
@@ -243,7 +260,8 @@ const CoreService = {
       }
     });
 
-    this.broker.createService(NotificationProviderService, {
+    this.broker.createService({
+      mixins: [NotificationProviderService],
       settings: {
         baseUrl,
         queueServiceUrl
@@ -252,17 +270,18 @@ const CoreService = {
 
     this.broker.createService({ mixins: [TypeIndexesService] });
 
-    this.broker.createService(MailNotificationsService, {
-      mixins: queueServiceUrl ? [QueueService(queueServiceUrl)] : undefined,
+    this.broker.createService({
+      mixins: queueServiceUrl ? [MailNotificationsService, QueueService(queueServiceUrl)] : [MailNotificationsService],
       settings: {
         frontendUrl,
         ...notifications.mail
       }
     });
 
-    this.broker.createService(AnnouncerService);
+    this.broker.createService({ mixins: [AnnouncerService] });
 
-    this.broker.createService(NodeinfoService, {
+    this.broker.createService({
+      mixins: [NodeinfoService],
       settings: {
         baseUrl,
         software: {

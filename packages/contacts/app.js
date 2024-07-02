@@ -4,9 +4,9 @@ const RequestService = require('./services/request');
 const ContactsApp = {
   name: 'contacts',
   created() {
-    this.broker.createService(ManagerService);
+    this.broker.createService({ mixins: [ManagerService] });
 
-    this.broker.createService(RequestService);
+    this.broker.createService({ mixins: [RequestService] });
   }
 };
 

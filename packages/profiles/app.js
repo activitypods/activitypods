@@ -9,17 +9,18 @@ const ProfilesApp = {
     publicProfile: false
   },
   created() {
-    this.broker.createService(ProfileService, {
+    this.broker.createService({
+      mixins: [ProfileService],
       settings: {
         publicProfile: this.settings.publicProfile
       }
     });
 
-    this.broker.createService(LocationService);
+    this.broker.createService({ mixins: [LocationService] });
 
-    this.broker.createService(ContactGroupsService);
+    this.broker.createService({ mixins: [ContactGroupsService] });
 
-    this.broker.createService(CapabilitiesProfileService);
+    this.broker.createService({ mixins: [CapabilitiesProfileService] });
   }
 };
 

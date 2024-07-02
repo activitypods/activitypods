@@ -1,11 +1,11 @@
 {
   "name": "@activitypods/events",
-  "version": "2.0.0-alpha.4",
+  "version": "2.0.0-alpha.5",
   "description": "ActivityPods app for events",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
   "dependencies": {
-    "@activitypods/announcer": "2.0.0-alpha.4",
+    "@activitypods/announcer": "2.0.0-alpha.5",
     "@semapps/activitypub": "0.8.3",
     "@semapps/ldp": "0.8.3",
     "@semapps/mime-types": "0.8.3",

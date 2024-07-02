@@ -1,6 +1,6 @@
 {
   "name": "@activitypods/core",
-  "version": "2.0.0-alpha.4",
+  "version": "2.0.0-alpha.5",
   "description": "ActivityPods core services",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
@@ -11,11 +11,11 @@
     "directory": "packages/core"
   },
   "dependencies": {
-    "@activitypods/announcer": "2.0.0-alpha.4",
-    "@activitypods/description": "2.0.0-alpha.4",
-    "@activitypods/ontologies": "2.0.0-alpha.4",
-    "@activitypods/solid-notifications": "2.0.0-alpha.4",
-    "@activitypods/type-index": "2.0.0-alpha.4",
+    "@activitypods/announcer": "2.0.0-alpha.5",
+    "@activitypods/description": "2.0.0-alpha.5",
+    "@activitypods/ontologies": "2.0.0-alpha.5",
+    "@activitypods/solid-notifications": "2.0.0-alpha.5",
+    "@activitypods/type-index": "2.0.0-alpha.5",
     "@rdfjs/formats": "4.0.0",
     "@semapps/activitypub": "0.8.3",
     "@semapps/auth": "0.8.3",

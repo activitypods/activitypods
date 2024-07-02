@@ -86,13 +86,28 @@ module.exports = {
   },
   events: {
     async 'auth.registered'(ctx) {
-      const { webId } = ctx.params;
+      const { webId, accountData } = ctx.params;
 
       // Wait until the /solid/type-index container has been created for the user
       const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
       await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
+      // Wait until the /solid/type-registration container has been created for the user
+      const registrationsContainerUri = await ctx.call('type-registrations.getContainerUri', { webId });
+      await ctx.call('type-registrations.waitForContainerCreation', { containerUri: registrationsContainerUri });
+
       await this.actions.createAndAttachToWebId({ webId }, { parentCtx: ctx });
+
+      const registeredContainers = await ctx.call('ldp.registry.list');
+
+      // Go through each registered container
+      for (const container of Object.values(registeredContainers)) {
+        if (container.podsContainer !== true) {
+          const containerUri = urlJoin(accountData.podUri, container.path);
+          for (const type of arrayOf(container.acceptedTypes))
+            await ctx.call('type-registrations.register', { type, containerUri, webId });
+        }
+      }
     }
   }
 };

@@ -1,6 +1,6 @@
 const urlJoin = require('url-join');
 const { namedNode, triple } = require('@rdfjs/data-model');
-const { ControlledContainerMixin, arrayOf, getDatasetFromUri } = require('@semapps/ldp');
+const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
@@ -173,32 +173,6 @@ module.exports = {
               }
             }
           }
-        }
-      }
-    }
-  },
-  events: {
-    async 'auth.registered'(ctx) {
-      const { webId, accountData } = ctx.params;
-
-      // Wait until the /solid/type-registration container has been created for the user
-      const registrationsContainerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
-      await this.actions.waitForContainerCreation({ containerUri: registrationsContainerUri }, { parentCtx: ctx });
-
-      // Wait until the public TypeIndex has been created
-      await ctx.call('ldp.resource.awaitCreateComplete', {
-        resourceUri: webId,
-        predicates: ['solid:publicTypeIndex']
-      });
-
-      const registeredContainers = await ctx.call('ldp.registry.list');
-
-      // Go through each registered container
-      for (const container of Object.values(registeredContainers)) {
-        if (container.podsContainer !== true) {
-          const containerUri = urlJoin(accountData.podUri, container.path);
-          for (const type of arrayOf(container.acceptedTypes))
-            await this.actions.register({ type, containerUri, webId }, { parentCtx: ctx });
         }
       }
     }

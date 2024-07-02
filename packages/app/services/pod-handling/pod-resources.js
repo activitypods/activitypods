@@ -27,7 +27,7 @@ module.exports = {
           };
         }
 
-        const { headers } = await this.actions.fetch({
+        const { ok, headers } = await this.actions.fetch({
           url: containerUri,
           method: 'POST',
           headers: {
@@ -37,7 +37,11 @@ module.exports = {
           actorUri
         });
 
-        return headers.get('Location');
+        if (ok) {
+          return headers.get('Location');
+        } else {
+          return false;
+        }
       }
     },
     list: {
@@ -48,7 +52,7 @@ module.exports = {
       async handler(ctx) {
         const { containerUri, actorUri } = ctx.params;
 
-        const { body } = await this.actions.fetch({
+        return await this.actions.fetch({
           url: containerUri,
           method: 'GET',
           headers: {
@@ -57,8 +61,6 @@ module.exports = {
           },
           actorUri
         });
-
-        return body;
       }
     },
     get: {
@@ -69,7 +71,7 @@ module.exports = {
       async handler(ctx) {
         const { resourceUri, actorUri } = ctx.params;
 
-        const { body } = await this.actions.fetch({
+        return await this.actions.fetch({
           url: resourceUri,
           method: 'GET',
           headers: {
@@ -78,8 +80,6 @@ module.exports = {
           },
           actorUri
         });
-
-        return body;
       }
     },
     patch: {
@@ -111,7 +111,7 @@ module.exports = {
           });
         }
 
-        await this.actions.fetch({
+        return await this.actions.fetch({
           url: resourceUri,
           method: 'PATCH',
           headers: {
@@ -129,6 +129,7 @@ module.exports = {
       },
       async handler(ctx) {
         let { resource, actorUri } = ctx.params;
+        const resourceUri = resource.id || resource['@id'];
 
         // Adds the default context, if it is missing
         if (!resource['@context']) {
@@ -138,8 +139,8 @@ module.exports = {
           };
         }
 
-        await this.actions.fetch({
-          url: resource.id || resource['@id'],
+        return await this.actions.fetch({
+          url: resourceUri,
           method: 'PUT',
           headers: {
             'Content-Type': 'application/ld+json'
@@ -157,7 +158,7 @@ module.exports = {
       async handler(ctx) {
         const { resourceUri, actorUri } = ctx.params;
 
-        await this.actions.fetch({
+        return await this.actions.fetch({
           url: resourceUri,
           method: 'DELETE',
           actorUri

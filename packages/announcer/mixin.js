@@ -74,45 +74,50 @@ module.exports = {
           actorUri
         });
 
-        const creator = await ctx.call('pod-resources.get', { resourceUri: resource['dc:creator'], actorUri });
-
-        const announcesGroupUri = getAnnouncesGroupUri(announcesCollectionUri);
-        await ctx.call('pod-wac-groups.create', { groupUri: announcesGroupUri, actorUri });
-
-        // Give read rights for the resource
-        await ctx.call('pod-permissions.add', {
-          uri: resourceUri,
-          agentUri: announcesGroupUri,
-          agentPredicate: 'acl:agentGroup',
-          mode: 'acl:Read',
+        const { ok, body: creator } = await ctx.call('pod-resources.get', {
+          resourceUri: resource['dc:creator'],
           actorUri
         });
 
-        if (creator.url) {
+        if (ok) {
+          const announcesGroupUri = getAnnouncesGroupUri(announcesCollectionUri);
+          await ctx.call('pod-wac-groups.create', { groupUri: announcesGroupUri, actorUri });
+
+          // Give read rights for the resource
           await ctx.call('pod-permissions.add', {
-            uri: creator.url,
+            uri: resourceUri,
             agentUri: announcesGroupUri,
             agentPredicate: 'acl:agentGroup',
             mode: 'acl:Read',
             actorUri
           });
-        }
 
-        // Add all targeted actors to the collection and WebACL group
-        // TODO check if we could not use activity.to instead of activity.target (and change this everywhere)
-        for (let recipientUri of defaultToArray(activity.target)) {
-          await ctx.call('pod-collections.add', {
-            collectionUri: announcesCollectionUri,
-            item: recipientUri,
-            actorUri
-          });
+          if (creator.url) {
+            await ctx.call('pod-permissions.add', {
+              uri: creator.url,
+              agentUri: announcesGroupUri,
+              agentPredicate: 'acl:agentGroup',
+              mode: 'acl:Read',
+              actorUri
+            });
+          }
 
-          // TODO automatically synchronize the collection with the ACL group
-          await ctx.call('pod-wac-groups.addMember', {
-            groupUri: announcesGroupUri,
-            memberUri: recipientUri,
-            actorUri
-          });
+          // Add all targeted actors to the collection and WebACL group
+          // TODO check if we could not use activity.to instead of activity.target (and change this everywhere)
+          for (let recipientUri of defaultToArray(activity.target)) {
+            await ctx.call('pod-collections.add', {
+              collectionUri: announcesCollectionUri,
+              item: recipientUri,
+              actorUri
+            });
+
+            // TODO automatically synchronize the collection with the ACL group
+            await ctx.call('pod-wac-groups.addMember', {
+              groupUri: announcesGroupUri,
+              memberUri: recipientUri,
+              actorUri
+            });
+          }
         }
       },
       async onReceive(ctx, activity, recipientUri) {

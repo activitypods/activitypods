@@ -85,16 +85,31 @@ module.exports = {
       const actor = await ctx.call('activitypub.actor.get', { actorUri });
 
       // Use pod-resources.get instead of ldp.resource.get when getting pod resources
-      const fetcher = (ctx, resourceUri) => {
+      const fetcher = async (ctx, resourceUri) => {
         if (resourceUri.startsWith(this.baseUrl)) {
-          return ctx.call('ldp.resource.get', { resourceUri, accept: MIME_TYPES.JSON, webId: actorUri });
+          try {
+            // TODO Do not throw errors on ldp.resource.get ! (should be done on the API layer)
+            const resource = await ctx.call('ldp.resource.get', {
+              resourceUri,
+              accept: MIME_TYPES.JSON,
+              webId: actorUri
+            });
+            return resource; // First get the resource, then return it, otherwise the try/catch will not work
+          } catch (e) {
+            return false;
+          }
         } else {
-          return ctx.call('pod-resources.get', { resourceUri, actorUri });
+          const { ok, body } = await ctx.call('pod-resources.get', { resourceUri, actorUri });
+          return ok && body;
         }
       };
 
       // TODO get the cached activity to ensure we have no authorization problems
       const activity = await fetcher(ctx, object);
+      if (!activity) {
+        this.logger.warn(`Could not fetch activity ${object} received by ${actorUri}`);
+        return false;
+      }
 
       if (target === actor.inbox) {
         for (const handler of this.handlers) {

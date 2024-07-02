@@ -76,13 +76,13 @@ module.exports = {
       return await ctx.call('pod-resources.get', ctx.params);
     },
     async patch(ctx) {
-      await ctx.call('pod-resources.patch', ctx.params);
+      return await ctx.call('pod-resources.patch', ctx.params);
     },
     async put(ctx) {
-      await ctx.call('pod-resources.put', ctx.params);
+      return await ctx.call('pod-resources.put', ctx.params);
     },
     async delete(ctx) {
-      await ctx.call('pod-resources.delete', ctx.params);
+      return await ctx.call('pod-resources.delete', ctx.params);
     },
     async getContainerUri(ctx) {
       return await ctx.call('data-grants.getContainerByType', {

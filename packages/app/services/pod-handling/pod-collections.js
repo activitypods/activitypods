@@ -16,9 +16,9 @@ module.exports = {
     async getItems(ctx) {
       const { collectionUri, actorUri } = ctx.params;
 
-      const collection = await ctx.call('pod-resources.get', { resourceUri: collectionUri, actorUri });
+      const { body: collection } = await ctx.call('pod-resources.get', { resourceUri: collectionUri, actorUri });
 
-      return arrayOf(collection.items || collection.orderedItems);
+      return arrayOf(collection?.items || collection?.orderedItems);
     },
     async createAndAttach(ctx) {
       const { resourceUri, attachPredicate, collectionOptions, actorUri } = ctx.params;
@@ -59,29 +59,34 @@ module.exports = {
     async deleteAndDetach(ctx) {
       const { resourceUri, attachPredicate, actorUri } = ctx.params;
 
-      const resource = await ctx.call('pod-resources.get', {
+      const { ok, body: resource } = await ctx.call('pod-resources.get', {
         resourceUri,
         actorUri
       });
 
-      const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
+      if (ok) {
+        const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
 
-      const collectionUri = await this.actions.getCollectionUriFromResource({
-        resource,
-        attachPredicate: expandedAttachPredicate
-      });
-      if (!collectionUri) throw new Error(`No collection with predicate ${attachPredicate} attached to ${resourceUri}`);
+        const collectionUri = await this.actions.getCollectionUriFromResource({
+          resource,
+          attachPredicate: expandedAttachPredicate
+        });
+        if (!collectionUri)
+          throw new Error(`No collection with predicate ${attachPredicate} attached to ${resourceUri}`);
 
-      await ctx.call('pod-resources.delete', {
-        resourceUri: collectionUri,
-        actorUri
-      });
+        await ctx.call('pod-resources.delete', {
+          resourceUri: collectionUri,
+          actorUri
+        });
 
-      await ctx.call('pod-resources.patch', {
-        resourceUri,
-        triplesToRemove: [triple(namedNode(resourceUri), namedNode(expandedAttachPredicate), namedNode(collectionUri))],
-        actorUri
-      });
+        await ctx.call('pod-resources.patch', {
+          resourceUri,
+          triplesToRemove: [
+            triple(namedNode(resourceUri), namedNode(expandedAttachPredicate), namedNode(collectionUri))
+          ],
+          actorUri
+        });
+      }
     },
     async add(ctx) {
       const { collectionUri, itemUri, actorUri } = ctx.params;

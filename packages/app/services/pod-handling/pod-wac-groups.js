@@ -48,7 +48,10 @@ module.exports = {
       if (status === 201) {
         return headers?.location;
       } else {
-        this.logger.error(`Unable to create WAC group. Error ${status}: ${statusText}`);
+        this.logger.error(
+          `Unable to create WAC group ${groupSlug} for actor ${actorUri}. Error ${status}: ${statusText}`
+        );
+        return false;
       }
     },
     async delete(ctx) {

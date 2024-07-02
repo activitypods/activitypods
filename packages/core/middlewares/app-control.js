@@ -1,5 +1,4 @@
 const urlJoin = require('url-join');
-const createSlug = require('speakingurl');
 const { Errors: E } = require('moleculer-web');
 const { arrayOf, hasType, getParentContainerUri } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
@@ -10,6 +9,7 @@ const DEFAULT_ALLOWED_TYPES = [
   ...Object.values(ACTIVITY_TYPES),
   'Collection',
   'OrderedCollection',
+  'Tombstone',
   'semapps:File',
   'acl:Authorization'
 ];

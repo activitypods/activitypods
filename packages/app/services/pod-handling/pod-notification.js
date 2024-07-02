@@ -17,12 +17,15 @@ module.exports = {
       if (activity) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
         let emitterProfile = {};
-        try {
-          emitterProfile = emitter.url
-            ? await ctx.call('pod-resources.get', { resourceUri: emitter.url, actorUri: activity.actor })
-            : {};
-        } catch (e) {
-          this.logger.warn(`Could not get profile of actor ${activity.actor}`);
+        if (emitter.url) {
+          try {
+            ({ body: emitterProfile } = await ctx.call('pod-resources.get', {
+              resourceUri: emitter.url,
+              actorUri: activity.actor
+            }));
+          } catch (e) {
+            this.logger.warn(`Could not get profile of actor ${activity.actor}`);
+          }
         }
         templateParams = { activity, emitter, emitterProfile, ...rest };
       } else {

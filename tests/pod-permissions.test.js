@@ -115,7 +115,7 @@ describe('Test Pod resources handling', () => {
         mode: 'acl:Read',
         actorUri: alice.id
       })
-    ).rejects.toThrow();
+    ).resolves.toBeFalsy();
   });
 
   test('Remove permission', async () => {

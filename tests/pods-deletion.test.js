@@ -114,12 +114,12 @@ describe('Delete an actor', () => {
 
     // Check, if backups are deleted.
     expect(fs.readdirSync(path.join(CONFIG.FUSEKI_BASE, 'backups')).find(file => file.includes(username))).toBeFalsy();
-  }, 80_100);
+  }, 80_000);
 
   test('New user Alice is not able to be created due to the tombstone.', async () => {
     const actorData = require(`./data/actor1.json`);
     await expect(broker.call('auth.signup', actorData)).rejects.toThrow('');
-  }, 80_100);
+  }, 80_000);
 
   // We need to skip this test, because dataset deletion is only completed after a fuseki restart.
   // And a fuseki restart has to be done manually.

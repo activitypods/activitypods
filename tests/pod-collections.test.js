@@ -24,11 +24,11 @@ describe('Test AS collections handling', () => {
     }
 
     podServer = await initialize(3000, 'settings');
-    await podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
+    podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
     await podServer.start();
 
     appServer = await initializeAppServer(3001, 'appData', 'app_settings');
-    await appServer.createService(ExampleAppService);
+    appServer.createService(ExampleAppService);
     await appServer.start();
 
     for (let i = 1; i <= NUM_PODS; i++) {
@@ -73,7 +73,7 @@ describe('Test AS collections handling', () => {
 
     expect(collectionUri).not.toBeUndefined();
 
-    const collection = await appServer.call('pod-resources.get', {
+    const { body: collection } = await appServer.call('pod-resources.get', {
       resourceUri: collectionUri,
       actorUri: alice.id
     });
@@ -91,9 +91,11 @@ describe('Test AS collections handling', () => {
         actorUri: alice.id
       })
     ).resolves.toMatchObject({
-      // Since this predicate is not defined in the JSON-LD context, it is an object
-      'apods:friends': {
-        id: collectionUri
+      body: {
+        // Since this predicate is not defined in the JSON-LD context, it is an object
+        'apods:friends': {
+          id: collectionUri
+        }
       }
     });
   });
@@ -105,7 +107,7 @@ describe('Test AS collections handling', () => {
       actorUri: alice.id
     });
 
-    const collection = await appServer.call('pod-resources.get', {
+    const { body: collection } = await appServer.call('pod-resources.get', {
       resourceUri: collectionUri,
       actorUri: alice.id
     });
@@ -124,7 +126,7 @@ describe('Test AS collections handling', () => {
       actorUri: alice.id
     });
 
-    const collection = await appServer.call('pod-resources.get', {
+    const { body: collection } = await appServer.call('pod-resources.get', {
       resourceUri: collectionUri,
       actorUri: alice.id
     });
@@ -148,6 +150,8 @@ describe('Test AS collections handling', () => {
         resourceUri: collectionUri,
         actorUri: alice.id
       })
-    ).rejects.toThrow();
+    ).resolves.toMatchObject({
+      status: 404
+    });
   });
 });

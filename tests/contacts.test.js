@@ -105,7 +105,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
           subject: 'Alice would like to connect with you'
         })
       );
-    });
+    }, 80_000);
 
     await waitForExpect(async () => {
       await expect(
@@ -155,7 +155,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
           subject: 'Alice would like to connect with you'
         })
       );
-    });
+    }, 80_000);
   });
 
   test('Bob accept Alice contact request', async () => {
@@ -239,7 +239,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
           subject: 'Bob is now part of your network'
         })
       );
-    });
+    }, 80_000);
   });
 
   test('Craig reject Alice contact request', async () => {

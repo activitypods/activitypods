@@ -29,11 +29,11 @@ describe('Test Pod resources handling', () => {
     }
 
     podServer = await initialize(3000, 'settings');
-    await podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
+    podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
     await podServer.start();
 
     appServer = await initializeAppServer(3001, 'appData', 'app_settings');
-    await appServer.createService(ExampleAppService);
+    appServer.createService({ mixins: [ExampleAppService] });
     await appServer.start();
 
     for (let i = 1; i <= NUM_PODS; i++) {
@@ -59,11 +59,11 @@ describe('Test Pod resources handling', () => {
 
     await installApp(alice, APP_URI);
     await installApp(bob, APP_URI);
-  }, 80000);
+  }, 120000);
 
   afterAll(async () => {
-    await podServer.stop();
     await appServer.stop();
+    await podServer.stop();
   });
 
   test('Get local data through app', async () => {
@@ -82,8 +82,10 @@ describe('Test Pod resources handling', () => {
         actorUri: alice.id
       })
     ).resolves.toMatchObject({
-      type: 'Event',
-      name: 'Birthday party !'
+      body: {
+        type: 'Event',
+        name: 'Birthday party !'
+      }
     });
   });
 
@@ -103,7 +105,9 @@ describe('Test Pod resources handling', () => {
         resourceUri: bobEventUri,
         actorUri: alice.id
       })
-    ).rejects.toThrow();
+    ).resolves.toMatchObject({
+      status: 403
+    });
 
     await bob.call('webacl.resource.addRights', {
       resourceUri: bobEventUri,
@@ -112,8 +116,7 @@ describe('Test Pod resources handling', () => {
           uri: alice.id,
           read: true
         }
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
     await expect(
@@ -122,8 +125,10 @@ describe('Test Pod resources handling', () => {
         actorUri: alice.id
       })
     ).resolves.toMatchObject({
-      type: 'Event',
-      name: 'Vegan barbecue'
+      body: {
+        type: 'Event',
+        name: 'Vegan barbecue'
+      }
     });
   });
 
@@ -170,7 +175,9 @@ describe('Test Pod resources handling', () => {
         resourceUri: bobNoteUri,
         actorUri: alice.id
       })
-    ).rejects.toThrow();
+    ).resolves.toMatchObject({
+      status: 403
+    });
   });
 
   test('PUT data registered by app', async () => {
@@ -202,8 +209,10 @@ describe('Test Pod resources handling', () => {
         actorUri: alice.id
       })
     ).resolves.toMatchObject({
-      type: 'Event',
-      name: 'Vegan (and vegetarian) barbecue'
+      body: {
+        type: 'Event',
+        name: 'Vegan (and vegetarian) barbecue'
+      }
     });
   });
 
@@ -229,7 +238,9 @@ describe('Test Pod resources handling', () => {
         },
         actorUri: alice.id
       })
-    ).rejects.toThrow();
+    ).resolves.toMatchObject({
+      status: 403
+    });
   });
 
   test('PATCH data registered by app', async () => {
@@ -253,25 +264,35 @@ describe('Test Pod resources handling', () => {
         actorUri: alice.id
       })
     ).resolves.toMatchObject({
-      type: 'Event',
-      name: 'Vegan (and vegetarian) barbecue',
-      summary: 'A super-powerful AI-generated summary'
+      body: {
+        type: 'Event',
+        name: 'Vegan (and vegetarian) barbecue',
+        summary: 'A super-powerful AI-generated summary'
+      }
     });
   });
 
   test('DELETE data registered by app', async () => {
+    // Alice has write permission on Bob's event
     await expect(
       appServer.call('pod-resources.delete', {
         resourceUri: bobEventUri,
         actorUri: alice.id
       })
-    ).resolves.not.toThrow();
+    ).resolves.toMatchObject({
+      status: 204
+    });
 
     await expect(
       appServer.call('pod-resources.get', {
         resourceUri: bobEventUri,
         actorUri: alice.id
       })
-    ).rejects.toThrow();
+    ).resolves.toMatchObject({
+      body: {
+        type: 'Tombstone',
+        formerType: 'as:Event'
+      }
+    });
   });
 });

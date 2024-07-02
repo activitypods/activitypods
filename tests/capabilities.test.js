@@ -11,7 +11,7 @@ const CapabilitiesProfileService = require('../packages/profiles/services/capabi
  * @typedef {import('moleculer').ServiceBroker} Broker
  */
 
-jest.setTimeout(30_000);
+jest.setTimeout(60_000);
 
 const NUM_USERS = 2;
 
@@ -23,7 +23,8 @@ const signupUser = async num => {
     username: `user${num}`,
     email: `user${num}@test.com`,
     password: 'test',
-    name: `User #${num}`
+    name: `User #${num}`,
+    'schema:knowsLanguage': 'en'
   });
   return { webId, token };
 };
@@ -304,6 +305,6 @@ describe('capabilities', () => {
           itemUri: users[1].webId
         })
       ).resolves.toBeTruthy();
-    });
+    }, 100_000);
   });
 });

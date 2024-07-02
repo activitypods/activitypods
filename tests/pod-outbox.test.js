@@ -91,11 +91,13 @@ describe('Test Pod outbox posting', () => {
         actorUri: alice.id
       })
     ).resolves.toMatchObject({
-      type: ACTIVITY_TYPES.LIKE,
-      actor: alice.id,
-      object: alice.id,
-      summary: 'Liking yourself is good',
-      generator: APP_URI
+      body: {
+        type: ACTIVITY_TYPES.LIKE,
+        actor: alice.id,
+        object: alice.id,
+        summary: 'Liking yourself is good',
+        generator: APP_URI
+      }
     });
   });
 
@@ -127,7 +129,7 @@ describe('Test Pod outbox posting', () => {
 
     expect(activityUri).toMatch(alice.id);
 
-    const activity = await appServer.call('pod-resources.get', {
+    const { body: activity } = await appServer.call('pod-resources.get', {
       resourceUri: activityUri,
       actorUri: alice.id
     });
@@ -143,7 +145,7 @@ describe('Test Pod outbox posting', () => {
 
     expect(activity.object.id).not.toBeUndefined();
 
-    const event = await appServer.call('pod-resources.get', {
+    const { body: event } = await appServer.call('pod-resources.get', {
       resourceUri: activity.object.id,
       actorUri: alice.id
     });

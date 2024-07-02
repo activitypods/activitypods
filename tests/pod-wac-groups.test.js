@@ -97,7 +97,7 @@ describe('Test Pod WAC groups handling', () => {
         groupSlug: 'my-other-group',
         actorUri: alice.id
       })
-    ).rejects.toThrow();
+    ).resolves.toBeFalsy();
   });
 
   test('Add members to WAC group', async () => {
@@ -147,6 +147,6 @@ describe('Test Pod WAC groups handling', () => {
         groupSlug: 'my-group',
         actorUri: alice.id
       })
-    ).rejects.toThrow();
+    ).resolves.toBeFalsy();
   });
 });

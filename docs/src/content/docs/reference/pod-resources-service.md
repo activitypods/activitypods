@@ -26,7 +26,7 @@ If no `@context` is provided for the resource, the default context of the applic
 
 #### Return value
 
-The URI of the created resource
+The URI of the created resource, or `false` if the creation failed.
 
 ### `list`
 
@@ -41,7 +41,15 @@ Get a LDP container
 
 #### Return value
 
-The JSON-LD representation of the LDP container, formatted with the context of the application.
+An object with the following properties:
+
+| Property     | Type      | Description                                   |
+| ------------ | --------- | --------------------------------------------- |
+| `ok`         | `Boolean` | `true` if the query succeeded                 |
+| `status`     | `Number`  | The status code returned by the Pod provider  |
+| `statusText` | `String`  | The status text returned by the Pod provider  |
+| `body`       | `Object`  | A JSON-LD representation of the LDP container |
+| `headers`    | `Object`  | The headers returned by the Pod provider      |
 
 ### `get`
 
@@ -56,7 +64,15 @@ Get a LDP resource
 
 #### Return value
 
-The JSON-LD representation of the LDP resource, formatted with the context of the application.
+An object with the following properties:
+
+| Property     | Type      | Description                                  |
+| ------------ | --------- | -------------------------------------------- |
+| `ok`         | `Boolean` | `true` if the query succeeded                |
+| `status`     | `Number`  | The status code returned by the Pod provider |
+| `statusText` | `String`  | The status text returned by the Pod provider |
+| `body`       | `Object`  | A JSON-LD representation of the LDP resource |
+| `headers`    | `Object`  | The headers returned by the Pod provider     |
 
 ### `patch`
 
@@ -68,6 +84,16 @@ The JSON-LD representation of the LDP resource, formatted with the context of th
 | `triplesToAdd`    | `Array` | Array of triples conforming with the [RDF.js data model](https://github.com/rdfjs-base/data-model) |
 | `triplesToRemove` | `Array` | Array of triples conforming with the [RDF.js data model](https://github.com/rdfjs-base/data-model) |
 | `actorUri`        | `URI`   | WebID of the Pod on which the action should be done                                                |
+
+#### Return value
+
+An object with the following properties:
+
+| Property     | Type      | Description                                  |
+| ------------ | --------- | -------------------------------------------- |
+| `ok`         | `Boolean` | `true` if the query succeeded                |
+| `status`     | `Number`  | The status code returned by the Pod provider |
+| `statusText` | `String`  | The status text returned by the Pod provider |
 
 ### `put`
 
@@ -84,6 +110,16 @@ Update a resource, overwriting any existing data. This action should be used car
 If no `@context` is provided for the resource, the default context of the application will be used.
 :::
 
+#### Return value
+
+An object with the following properties:
+
+| Property     | Type      | Description                                  |
+| ------------ | --------- | -------------------------------------------- |
+| `ok`         | `Boolean` | `true` if the query succeeded                |
+| `status`     | `Number`  | The status code returned by the Pod provider |
+| `statusText` | `String`  | The status text returned by the Pod provider |
+
 ### `delete`
 
 Delete a resource.
@@ -94,3 +130,13 @@ Delete a resource.
 | ------------- | ----- | --------------------------------------------------- |
 | `resourceUri` | `URI` | Resource to delete                                  |
 | `actorUri`    | `URI` | WebID of the Pod on which the action should be done |
+
+#### Return value
+
+An object with the following properties:
+
+| Property     | Type      | Description                                  |
+| ------------ | --------- | -------------------------------------------- |
+| `ok`         | `Boolean` | `true` if the query succeeded                |
+| `status`     | `Number`  | The status code returned by the Pod provider |
+| `statusText` | `String`  | The status text returned by the Pod provider |

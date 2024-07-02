@@ -36,9 +36,34 @@ We've also decided not to use [ShapeTrees](https://shapetrees.org) for the time 
 
 ## Type Indexes
 
-👷 To be implemented ([#1171](https://github.com/assemblee-virtuelle/semapps/issues/1171))
+**Added in:** `activitypods@2.0`
+
+We have implemented a basic [TypeIndex](https://github.com/solid/type-indexes), that is linked to the WebID with the `solid:publicTypeIndex` predicate.
+
+Since we don't support yet RDF documents (planned for version 3.0), we use a custom `solid:hasTypeRegistration` predicate to link the `solid:TypeIndex` with the various `solid:TypeRegistration`, and we dereference them for easier handling. See [this issue](https://github.com/solid/type-indexes/issues/29) for more details.
+
+```
+{
+   "id":"https://mypod.store/sro/data/9abafd71-39d9-47f2-8a1d-a50cb6a0a5c6",
+   "type":[ "solid:TypeIndex", "solid:ListedDocument"],
+   "solid:hasTypeRegistration":[
+      {
+         "id":"https://mypod.store/sro/data/da9c1935-1c9d-4660-81de-183657c2a7a7",
+         "type":"solid:TypeRegistration",
+         "dc:created":"2024-07-02T15:41:41.252Z",
+         "dc:creator":"https://mypod.store/sro",
+         "dc:modified":"2024-07-02T15:41:41.252Z",
+         "solid:forClass":"vcard:Group",
+         "solid:instanceContainer":"https://mypod.store/sro/data/vcard/group"
+      },
+      ...
+   ]
+}
+```
 
 ## Class descriptions
+
+**Added in:** `activitypods@2.0`
 
 Applications can describe the types of resources (classes) they use. This enables user-friendly information to be displayed on the authorization screen, as well as on the data browser.
 

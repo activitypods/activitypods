@@ -20,7 +20,7 @@ const resourceUri = await ctx.call('pod-resources.post`, {
   actorUri: 'http://localhost:3000/alice'
 });
 
-const resource = await ctx.call('pod-resources.get`, {
+const { body: resource } = await ctx.call('pod-resources.get`, {
   resourceUri,
   actorUri: 'http://localhost:3000/alice'
 });

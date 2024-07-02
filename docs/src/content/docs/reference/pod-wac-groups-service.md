@@ -51,7 +51,7 @@ Create a new WAC group on the Pod.
 
 #### Return value
 
-The URI of the newly-created group, e.g. `http://localhost:3000/_groups/{username}/{group-slug}`
+The URI of the newly-created group, e.g. `http://localhost:3000/_groups/{username}/{group-slug}`, or `false` is the creation failed.
 
 ### `delete`
 

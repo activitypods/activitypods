@@ -32,7 +32,7 @@ const LoginPage = () => (
     allowUsername
     postSignupRedirect="/initialize"
     postLoginRedirect="/authorize"
-    additionalSignupValues={{ 'schema:knowsLanguage': CONFIG.APP_LANG }}
+    additionalSignupValues={{ 'schema:knowsLanguage': CONFIG.DEFAULT_LOCALE }}
     passwordScorer={scorer}
   />
 );

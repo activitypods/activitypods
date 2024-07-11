@@ -85,7 +85,7 @@ module.exports = {
       const actor = await ctx.call('activitypub.actor.get', { actorUri });
 
       // Use pod-resources.get instead of ldp.resource.get when getting pod resources
-      const fetcher = async (ctx, resourceUri) => {
+      const fetcher = async resourceUri => {
         if (resourceUri.startsWith(this.baseUrl)) {
           try {
             // TODO Do not throw errors on ldp.resource.get ! (should be done on the API layer)
@@ -114,8 +114,8 @@ module.exports = {
       if (target === actor.inbox) {
         for (const handler of this.handlers) {
           if (handler.boxTypes.includes('inbox')) {
-            const dereferencedActivity = await matchActivity(ctx, handler.matcher, activity, fetcher);
-            if (!!dereferencedActivity) {
+            const { match, dereferencedActivity } = await matchActivity(handler.matcher, activity, fetcher);
+            if (match) {
               this.logger.info(`Reception of activity "${handler.key}" by ${actorUri} detected`);
               await ctx.call(handler.actionName, {
                 key: handler.key,
@@ -129,8 +129,8 @@ module.exports = {
       } else if (target === actor.outbox) {
         for (const handler of this.handlers) {
           if (handler.boxTypes.includes('outbox')) {
-            const dereferencedActivity = await matchActivity(ctx, handler.matcher, activity, fetcher);
-            if (!!dereferencedActivity) {
+            const { match, dereferencedActivity } = await matchActivity(handler.matcher, activity, fetcher);
+            if (match) {
               this.logger.info(`Emission of activity "${handler.key}" by ${actorUri} detected`);
               await ctx.call(handler.actionName, {
                 key: handler.key,

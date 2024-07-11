@@ -1,5 +1,5 @@
 const { defaultToArray, getDatasetFromUri } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity, OBJECT_TYPES } = require('@semapps/activitypub');
+const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { getAnnouncesGroupUri, getAnnouncersGroupUri } = require('./utils');
 const { PodActivitiesHandlerMixin } = require('@activitypods/app');

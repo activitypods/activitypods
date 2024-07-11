@@ -78,9 +78,7 @@ const CoreService = {
       settings: {
         baseUri: baseUrl,
         podProvider: true,
-        dispatch: {
-          queueServiceUrl
-        },
+        queueServiceUrl,
         like: {
           attachToObjectTypes: [...Object.values(OBJECT_TYPES), 'pair:Skill'],
           attachToActorTypes: Object.values(ACTOR_TYPES)

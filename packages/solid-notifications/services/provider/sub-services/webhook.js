@@ -2,7 +2,7 @@ const urlJoin = require('url-join');
 const fetch = require('node-fetch');
 const { Errors: E } = require('moleculer-web');
 const { parseHeader, negotiateContentType, parseJson } = require('@semapps/middlewares');
-const { ControlledContainerMixin, getDatasetFromUri, arrayOf } = require('@semapps/ldp');
+const { ControlledContainerMixin, getDatasetFromUri, getWebIdFromUri, arrayOf } = require('@semapps/ldp');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
@@ -134,7 +134,7 @@ module.exports = {
         id: channelUri,
         topic,
         sendTo,
-        webId
+        webId: getWebIdFromUri(topic)
       });
 
       ctx.meta.$responseType = 'application/ld+json';
@@ -146,6 +146,15 @@ module.exports = {
         },
         { parentCtx: ctx }
       );
+    },
+    async deleteAppChannels(ctx) {
+      const { appUri, webId } = ctx.params;
+      const { origin: appOrigin } = new URL(appUri);
+      const appChannels = this.channels.filter(c => c.webId === webId && c.sendTo.startsWith(appOrigin));
+      console.log('appChannels', appChannels);
+      for (const appChannel of appChannels) {
+        await this.actions.delete({ resourceUri: appChannel.id, webId: appChannel.webId });
+      }
     },
     getCache() {
       return this.channels;

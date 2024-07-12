@@ -33,7 +33,7 @@ describe('Test app installation', () => {
     }
 
     podServer = await initialize(3000, 'settings');
-    await podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
+    podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
     await podServer.start();
 
     const actorData = require(`./data/actor1.json`);
@@ -52,12 +52,10 @@ describe('Test app installation', () => {
         meta: { ...options.meta, webId, dataset: alice.preferredUsername }
       });
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings');
-    appServer.createService({ mixins: [ExampleAppService] });
+    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();
 
-    appServer2 = await initializeAppServer(3002, 'app2Data', 'app2_settings');
-    appServer2.createService({ mixins: [ExampleAppService] });
+    appServer2 = await initializeAppServer(3002, 'app2Data', 'app2_settings', 2, ExampleAppService);
     await appServer2.start();
   }, 80000);
 
@@ -250,7 +248,8 @@ describe('Test app installation', () => {
         page: 1
       });
 
-      expect(inbox?.orderedItems[0]).toMatchObject({
+      expect(inbox?.orderedItems?.[0]).not.toBeNull();
+      expect(inbox?.orderedItems?.[0]).toMatchObject({
         type: ACTIVITY_TYPES.ACCEPT,
         object: creationActivityUri
       });
@@ -560,6 +559,8 @@ describe('Test app installation', () => {
         })
       ).rejects.toThrow();
     });
+
+    // TODO Test that the webhook channels are deleted
   });
 
   test('Permissions granted to the app should be removed', async () => {

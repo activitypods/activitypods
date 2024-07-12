@@ -1,6 +1,5 @@
 const { AppService } = require('@activitypods/app');
 const { AS_PREFIX } = require('@semapps/activitypub');
-const CONFIG = require('../config');
 
 module.exports = {
   mixins: [AppService],
@@ -22,7 +21,6 @@ module.exports = {
           accessMode: ['acl:Read', 'acl:Append']
         }
       ]
-    },
-    queueServiceUrl: CONFIG.QUEUE_SERVICE_URL
+    }
   }
 };

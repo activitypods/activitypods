@@ -32,12 +32,10 @@ describe('Test Pod WAC groups handling', () => {
     await podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
     await podServer.start();
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings');
-    await appServer.createService(ExampleAppService);
+    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();
 
-    app2Server = await initializeAppServer(3002, 'app2Data', 'app2_settings');
-    await app2Server.createService(Example2AppService);
+    app2Server = await initializeAppServer(3002, 'app2Data', 'app2_settings', 2, Example2AppService);
     await app2Server.start();
 
     for (let i = 1; i <= NUM_PODS; i++) {

@@ -1,6 +1,5 @@
 const { AppService } = require('@activitypods/app');
 const { AS_PREFIX } = require('@semapps/activitypub');
-const CONFIG = require('../config');
 
 module.exports = {
   mixins: [AppService],
@@ -39,7 +38,6 @@ module.exports = {
         labelPredicate: 'as:name',
         openEndpoint: 'https://example.app/r'
       }
-    },
-    queueServiceUrl: CONFIG.QUEUE_SERVICE_URL
+    }
   }
 };

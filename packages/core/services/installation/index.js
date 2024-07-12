@@ -194,6 +194,9 @@ module.exports = {
         const appRegistration = await ctx.call('app-registrations.getForApp', { appUri });
 
         if (appRegistration) {
+          // Immediately delete existing webhooks channels to avoid permissions errors later
+          await ctx.call('solid-notifications.provider.webhook.deleteAppChannels', { appUri, webId: emitterUri });
+
           // Delete registration locally (through activitypub.object.process) and warn the app to delete its cache
           await ctx.call('activitypub.outbox.post', {
             collectionUri: urlJoin(emitterUri, 'outbox'),

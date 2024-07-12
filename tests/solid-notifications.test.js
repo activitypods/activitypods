@@ -30,8 +30,7 @@ describe('Test app installation', () => {
     podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
     await podServer.start();
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings');
-    appServer.createService({ mixins: [ExampleAppService] });
+    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     appServer.createService({
       name: 'fake-service',
       actions: { webhook: mockWebhookAction, webhook2: mockWebhookAction2 }

@@ -16,6 +16,7 @@
     "@semapps/ldp": "0.8.3",
     "@semapps/mime-types": "0.8.3",
     "dotenv-flow": "^3.2.0",
+    "ioredis": "^4.27.0",
     "moleculer": "^0.14.19",
     "node-fetch": "^2.6.6",
     "url-join": "^4.0.1",

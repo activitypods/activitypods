@@ -183,7 +183,7 @@ const initializeAppServer = async (port, mainDataset, settingsDataset, queueServ
 
   broker.createService({ mixins: [ProxyService] });
 
-  broker.createService({ mixins: [appService], settings: { queueServiceUrl }});
+  broker.createService({ mixins: [appService], settings: { queueServiceUrl } });
 
   return broker;
 };

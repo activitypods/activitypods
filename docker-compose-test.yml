@@ -18,7 +18,7 @@ services:
       - '6379:6379'
     volumes:
       - ./data/redis_test:/data:z
-    command: [ 'redis-server', '--appendonly', 'yes' ]
+    command: ['redis-server', '--appendonly', 'yes']
 
   arena:
     image: activitypods/arena

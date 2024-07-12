@@ -151,7 +151,6 @@ module.exports = {
       const { appUri, webId } = ctx.params;
       const { origin: appOrigin } = new URL(appUri);
       const appChannels = this.channels.filter(c => c.webId === webId && c.sendTo.startsWith(appOrigin));
-      console.log('appChannels', appChannels);
       for (const appChannel of appChannels) {
         await this.actions.delete({ resourceUri: appChannel.id, webId: appChannel.webId });
       }

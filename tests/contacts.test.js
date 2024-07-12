@@ -13,7 +13,7 @@ const NUM_PODS = 3;
 const initializeBroker = async (port, accountsDataset) => {
   const broker = await initialize(port, accountsDataset);
 
-  await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
+  broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
 
   await broker.start();
 

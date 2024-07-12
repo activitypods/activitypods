@@ -96,7 +96,11 @@ module.exports = {
             });
             return resource; // First get the resource, then return it, otherwise the try/catch will not work
           } catch (e) {
-            return false;
+            if (e.status === 401 || e.status === 403 || e.status === 404) {
+              return false;
+            } else {
+              throw new Error(e);
+            }
           }
         } else {
           const { ok, body } = await ctx.call('pod-resources.get', { resourceUri, actorUri });
@@ -105,7 +109,7 @@ module.exports = {
       };
 
       // TODO get the cached activity to ensure we have no authorization problems
-      const activity = await fetcher(ctx, object);
+      const activity = await fetcher(object);
       if (!activity) {
         this.logger.warn(`Could not fetch activity ${object} received by ${actorUri}`);
         return false;

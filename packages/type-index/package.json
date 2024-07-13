@@ -1,6 +1,6 @@
 {
   "name": "@activitypods/type-index",
-  "version": "2.0.0-alpha.5",
+  "version": "2.0.0-alpha.6",
   "description": "ActivityPods package for Solid TypeIndex",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",

@@ -85,7 +85,7 @@ module.exports = {
       const actor = await ctx.call('activitypub.actor.get', { actorUri });
 
       // Use pod-resources.get instead of ldp.resource.get when getting pod resources
-      const fetcher = async (ctx, resourceUri) => {
+      const fetcher = async resourceUri => {
         if (resourceUri.startsWith(this.baseUrl)) {
           try {
             // TODO Do not throw errors on ldp.resource.get ! (should be done on the API layer)
@@ -96,7 +96,11 @@ module.exports = {
             });
             return resource; // First get the resource, then return it, otherwise the try/catch will not work
           } catch (e) {
-            return false;
+            if (e.status === 401 || e.status === 403 || e.status === 404) {
+              return false;
+            } else {
+              throw new Error(e);
+            }
           }
         } else {
           const { ok, body } = await ctx.call('pod-resources.get', { resourceUri, actorUri });
@@ -105,7 +109,7 @@ module.exports = {
       };
 
       // TODO get the cached activity to ensure we have no authorization problems
-      const activity = await fetcher(ctx, object);
+      const activity = await fetcher(object);
       if (!activity) {
         this.logger.warn(`Could not fetch activity ${object} received by ${actorUri}`);
         return false;
@@ -114,8 +118,8 @@ module.exports = {
       if (target === actor.inbox) {
         for (const handler of this.handlers) {
           if (handler.boxTypes.includes('inbox')) {
-            const dereferencedActivity = await matchActivity(ctx, handler.matcher, activity, fetcher);
-            if (!!dereferencedActivity) {
+            const { match, dereferencedActivity } = await matchActivity(handler.matcher, activity, fetcher);
+            if (match) {
               this.logger.info(`Reception of activity "${handler.key}" by ${actorUri} detected`);
               await ctx.call(handler.actionName, {
                 key: handler.key,
@@ -129,8 +133,8 @@ module.exports = {
       } else if (target === actor.outbox) {
         for (const handler of this.handlers) {
           if (handler.boxTypes.includes('outbox')) {
-            const dereferencedActivity = await matchActivity(ctx, handler.matcher, activity, fetcher);
-            if (!!dereferencedActivity) {
+            const { match, dereferencedActivity } = await matchActivity(handler.matcher, activity, fetcher);
+            if (match) {
               this.logger.info(`Emission of activity "${handler.key}" by ${actorUri} detected`);
               await ctx.call(handler.actionName, {
                 key: handler.key,

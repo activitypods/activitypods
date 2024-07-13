@@ -53,7 +53,7 @@ module.exports = {
 
       const values = this.parseTemplate(template, templateParams, locale);
 
-      await this.queueMail(ctx, values.title, {
+      return await this.queueMail(ctx, values.title, {
         to: account.email,
         data: {
           title: values.title,
@@ -99,7 +99,7 @@ module.exports = {
       if (this.createJob) {
         return this.createJob('sendMail', title, payload);
       }
-      await this.actions.send(payload, { parentCtx: ctx });
+      return await this.actions.send(payload, { parentCtx: ctx });
     },
     parseTemplate(template, params, locale) {
       return (

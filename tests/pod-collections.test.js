@@ -27,8 +27,7 @@ describe('Test AS collections handling', () => {
     podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
     await podServer.start();
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings');
-    appServer.createService(ExampleAppService);
+    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();
 
     for (let i = 1; i <= NUM_PODS; i++) {

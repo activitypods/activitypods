@@ -57,14 +57,14 @@ module.exports = {
   },
   activities: {
     joinGroup: {
-      match(ctx, activity) {
+      match(activity, fetcher) {
         return matchActivity(
-          ctx,
           {
             type: ACTIVITY_TYPES.JOIN,
             object: this.settings.groupUri
           },
-          activity
+          activity,
+          fetcher
         );
       },
       async onEmit(ctx, activity, emitterUri) {
@@ -169,9 +169,8 @@ module.exports = {
       }
     },
     announceJoinGroup: {
-      match(ctx, activity) {
+      match(activity, fetcher) {
         return matchActivity(
-          ctx,
           {
             type: ACTIVITY_TYPES.ANNOUNCE,
             actor: this.settings.groupUri,
@@ -180,7 +179,8 @@ module.exports = {
               object: this.settings.groupUri
             }
           },
-          activity
+          activity,
+          fetcher
         );
       },
       async onReceive(ctx, activity, recipientUri) {
@@ -192,9 +192,8 @@ module.exports = {
       }
     },
     announceLeaveGroup: {
-      match(ctx, activity) {
+      match(activity, fetcher) {
         return matchActivity(
-          ctx,
           {
             type: ACTIVITY_TYPES.ANNOUNCE,
             actor: this.settings.groupUri,
@@ -203,7 +202,8 @@ module.exports = {
               object: this.settings.groupUri
             }
           },
-          activity
+          activity,
+          fetcher
         );
       },
       async onReceive(ctx, activity, recipientUri) {
@@ -215,9 +215,8 @@ module.exports = {
       }
     },
     announceToGroup: {
-      match(ctx, activity) {
+      match(activity, fetcher) {
         return matchActivity(
-          ctx,
           {
             type: ACTIVITY_TYPES.ANNOUNCE,
             to: this.settings.groupUri,
@@ -225,7 +224,8 @@ module.exports = {
               type: 'syreen:Offer'
             }
           },
-          activity
+          activity,
+          fetcher
         );
       },
       async onEmit(ctx, activity, emitterUri) {

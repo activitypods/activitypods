@@ -28,7 +28,7 @@ module.exports = {
         }
       },
       async onReceive(ctx, activity, recipientUri) {
-        await ctx.call('mail-notifications.notify', {
+        return await ctx.call('mail-notifications.notify', {
           template: {
             title: {
               en: `{{#if activity.object.summary}}{{{activity.object.summary}}}{{else}}{{{emitterProfile.vcard:given-name}}} sent you a message{{/if}}`,

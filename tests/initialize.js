@@ -1,4 +1,5 @@
 const path = require('path');
+const Redis = require('ioredis');
 const { ServiceBroker } = require('moleculer');
 const { AuthAccountService } = require('@semapps/auth');
 const { CoreService: SemAppsCoreService } = require('@semapps/core');
@@ -51,8 +52,17 @@ const clearDataset = dataset =>
     }
   });
 
-const initialize = async (port, settingsDataset) => {
+const clearQueue = async redisUrl => {
+  const redisClient = new Redis(redisUrl);
+  await redisClient.flushdb();
+  redisClient.disconnect();
+};
+
+const initialize = async (port, settingsDataset, queueServiceDb = 0) => {
   const baseUrl = `http://localhost:${port}/`;
+  const queueServiceUrl = `redis://localhost:6379/${queueServiceDb}`;
+
+  await clearQueue(queueServiceUrl);
 
   const broker = new ServiceBroker({
     nodeID: `server${port}`,
@@ -78,7 +88,7 @@ const initialize = async (port, settingsDataset) => {
         password: CONFIG.JENA_PASSWORD,
         fusekiBase: CONFIG.FUSEKI_BASE
       },
-      queueServiceUrl: CONFIG.QUEUE_SERVICE_URL,
+      queueServiceUrl,
       oidcProvider: {
         redisUrl: CONFIG.REDIS_OIDC_PROVIDER_URL
       },
@@ -113,8 +123,11 @@ const initialize = async (port, settingsDataset) => {
   return broker;
 };
 
-const initializeAppServer = async (port, mainDataset, settingsDataset) => {
+const initializeAppServer = async (port, mainDataset, settingsDataset, queueServiceDb, appService) => {
   const baseUrl = `http://localhost:${port}/`;
+  const queueServiceUrl = `redis://localhost:6379/${queueServiceDb}`;
+
+  await clearQueue(queueServiceUrl);
 
   const broker = new ServiceBroker({
     nodeID: `server${port}`,
@@ -135,6 +148,9 @@ const initializeAppServer = async (port, mainDataset, settingsDataset) => {
         mainDataset
       },
       ontologies: [interop, oidc, apods, notify],
+      activitypub: {
+        queueServiceUrl
+      },
       api: {
         port
       },
@@ -167,6 +183,8 @@ const initializeAppServer = async (port, mainDataset, settingsDataset) => {
   });
 
   broker.createService({ mixins: [ProxyService] });
+
+  broker.createService({ mixins: [appService], settings: { queueServiceUrl } });
 
   return broker;
 };

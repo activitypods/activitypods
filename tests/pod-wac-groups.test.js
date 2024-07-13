@@ -1,6 +1,5 @@
 const path = require('path');
 const urlJoin = require('url-join');
-const { MIME_TYPES } = require('@semapps/mime-types');
 const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const Example2AppService = require('./apps/example2.app');
@@ -29,15 +28,13 @@ describe('Test Pod WAC groups handling', () => {
     }
 
     podServer = await initialize(3000, 'settings');
-    await podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
+    podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
     await podServer.start();
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings');
-    await appServer.createService(ExampleAppService);
+    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();
 
-    app2Server = await initializeAppServer(3002, 'app2Data', 'app2_settings');
-    await app2Server.createService(Example2AppService);
+    app2Server = await initializeAppServer(3002, 'app2Data', 'app2_settings', 2, Example2AppService);
     await app2Server.start();
 
     for (let i = 1; i <= NUM_PODS; i++) {

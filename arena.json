@@ -5,28 +5,56 @@
       "hostId": "pod-provider",
       "host": "redis",
       "port": 6379,
-      "db": 4
+      "db": 1
     },
     {
       "name": "remotePost",
       "hostId": "pod-provider",
       "host": "redis",
       "port": 6379,
-      "db": 4
+      "db": 1
     },
     {
-      "name": "localPost",
+      "name": "processInbox",
       "hostId": "pod-provider",
       "host": "redis",
       "port": 6379,
-      "db": 4
+      "db": 1
+    },
+    {
+      "name": "processOutbox",
+      "hostId": "pod-provider",
+      "host": "redis",
+      "port": 6379,
+      "db": 1
     },
     {
       "name": "webhookPost",
       "hostId": "pod-provider",
       "host": "redis",
       "port": 6379,
-      "db": 4
+      "db": 1
+    },
+    {
+      "name": "remotePost",
+      "hostId": "app",
+      "host": "redis",
+      "port": 6379,
+      "db": 8
+    },
+    {
+      "name": "processInbox",
+      "hostId": "app",
+      "host": "redis",
+      "port": 6379,
+      "db": 8
+    },
+    {
+      "name": "processOutbox",
+      "hostId": "app",
+      "host": "redis",
+      "port": 6379,
+      "db": 8
     },
     {
       "name": "registerListener",

@@ -11,7 +11,7 @@ const BASE_URL = 'http://localhost:3000';
 const initializeBroker = async (port, accountsDataset) => {
   const broker = await initialize(port, accountsDataset);
 
-  await broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
+  broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
 
   await broker.start();
 

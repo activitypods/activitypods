@@ -10,10 +10,10 @@ jest.setTimeout(80000);
 
 const NUM_PODS = 3;
 
-const initializeBroker = async (port, accountsDataset) => {
-  const broker = await initialize(port, accountsDataset);
+const initializeBroker = async (port, accountsDataset, queueServiceDb) => {
+  const broker = await initialize(port, accountsDataset, queueServiceDb);
 
-  await broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
+  broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
 
   await broker.start();
 
@@ -40,14 +40,14 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     clearMails();
 
     if (mode === 'single-server') {
-      broker = await initializeBroker(3000, 'settings');
+      broker = await initializeBroker(3000, 'settings', 0);
     } else {
       broker = [];
     }
 
     for (let i = 1; i <= NUM_PODS; i++) {
       if (mode === 'multi-server') {
-        broker[i] = await initializeBroker(3000 + i, 'settings' + i);
+        broker[i] = await initializeBroker(3000 + i, 'settings' + i, i);
       } else {
         broker[i] = broker;
       }

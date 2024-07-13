@@ -58,10 +58,11 @@ const clearQueue = async redisUrl => {
   redisClient.disconnect();
 };
 
-const initialize = async (port, settingsDataset) => {
+const initialize = async (port, settingsDataset, queueServiceDb = 0) => {
   const baseUrl = `http://localhost:${port}/`;
+  const queueServiceUrl = `redis://localhost:6379/${queueServiceDb}`;
 
-  await clearQueue(CONFIG.QUEUE_SERVICE_URL);
+  await clearQueue(queueServiceUrl);
 
   const broker = new ServiceBroker({
     nodeID: `server${port}`,
@@ -87,7 +88,7 @@ const initialize = async (port, settingsDataset) => {
         password: CONFIG.JENA_PASSWORD,
         fusekiBase: CONFIG.FUSEKI_BASE
       },
-      queueServiceUrl: CONFIG.QUEUE_SERVICE_URL,
+      queueServiceUrl,
       oidcProvider: {
         redisUrl: CONFIG.REDIS_OIDC_PROVIDER_URL
       },

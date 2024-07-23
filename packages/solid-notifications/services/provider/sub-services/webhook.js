@@ -271,9 +271,11 @@ module.exports = {
             })
           });
 
-          if (response.status === 404) {
-            this.logger.warn(`Webhook ${channel.sendTo} returned a 404 error, deleting it...`);
+          if (response.status >= 400) {
             await this.actions.delete({ resourceUri: channel.id, webId: channel.webId });
+            throw new Error(
+              `Webhook ${channel.sendTo} returned a ${response.status} error (${response.statusText}). It has been deleted.`
+            );
           } else {
             job.progress(100);
           }

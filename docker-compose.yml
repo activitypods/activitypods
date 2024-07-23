@@ -11,18 +11,6 @@ services:
     environment:
       ADMIN_PASSWORD: 'admin'
 
-  fuseki_test:
-    image: semapps/jena-fuseki-webacl
-    container_name: fuseki_test
-    volumes:
-      - ./data/fuseki_test:/fuseki:z
-    ports:
-      - '3040:3030'
-    expose:
-      - '3040'
-    environment:
-      ADMIN_PASSWORD: 'admin'
-
   mailcatcher:
     image: dockage/mailcatcher:0.7.1
     container_name: mailcatcher

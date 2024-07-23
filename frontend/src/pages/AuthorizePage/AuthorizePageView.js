@@ -13,6 +13,7 @@ import useApplication from '../../hooks/useApplication';
 import useAccessNeeds from '../../hooks/useAccessNeeds';
 import useClassDescriptions from '../../hooks/useClassDescriptions';
 import AccessNeedsList from './AccessNeedsList';
+import ProgressMessage from '../../common/ProgressMessage';
 
 const useStyles = makeStyles(() => ({
   app: {
@@ -50,6 +51,7 @@ const AuthorizePageView = () => {
   const classes = useStyles();
   useCheckAuthenticated();
   const [showScreen, setShowScreen] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
   const [allowedAccessNeeds, setAllowedAccessNeeds] = useState();
   const outbox = useOutbox();
   const translate = useTranslate();
@@ -81,6 +83,7 @@ const AuthorizePageView = () => {
   }, [redirectTo]);
 
   const installApp = useCallback(async () => {
+    setIsInstalling(true);
     await outbox.post({
       '@context': [
         'https://www.w3.org/ns/activitystreams',
@@ -101,7 +104,7 @@ const AuthorizePageView = () => {
       'apods:acceptedSpecialRights': allowedAccessNeeds.filter(a => a.startsWith('apods:'))
     });
     accessApp();
-  }, [outbox, application, allowedAccessNeeds, accessApp]);
+  }, [outbox, application, allowedAccessNeeds, accessApp, setIsInstalling]);
 
   // Once all data are loaded, either redirect to app or show authorization screen
   useEffect(() => {
@@ -115,6 +118,8 @@ const AuthorizePageView = () => {
   }, [appRegistrations, isLoading, clientDomain, application, accessApp, setShowScreen]);
 
   if (!showScreen) return null;
+
+  if (isInstalling) return <ProgressMessage message="app.message.app_installation_progress" />;
 
   return (
     <SimpleBox

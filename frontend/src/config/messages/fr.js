@@ -150,7 +150,9 @@ module.exports = {
       verified_app: 'Application vérifiée',
       verified: 'Vérifiée',
       no_app_registration: 'Aucune application installée',
-      connection_successful: 'Vous êtes maintenant connecté !'
+      connection_successful: 'Vous êtes maintenant connecté !',
+      pod_creation_progress: 'Compte en cours de création...',
+      app_installation_progress: 'Installation en cours...'
     },
     notification: {
       contact_request_accepted: 'Demande de contact acceptée',

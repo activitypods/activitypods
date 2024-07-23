@@ -4,6 +4,7 @@ import { ThemeProvider } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import ProfileCreatePageView from './ProfileCreatePageView';
 import theme from '../../config/theme';
+import ProgressMessage from '../../common/ProgressMessage';
 
 const ProfileCreatePage = () => {
   const notify = useNotify();
@@ -23,11 +24,13 @@ const ProfileCreatePage = () => {
   // Reload profile unless profile is created
   useEffect(() => {
     if (!identity?.profileData?.id) {
-      setTimeout(refetchIdentity, 1000);
+      console.log('set interval', refetchIdentity);
+      const intervalId = setInterval(refetchIdentity, 1000);
+      return () => clearInterval(intervalId);
     }
   }, [identity, refetchIdentity]);
 
-  if (!identity?.profileData?.id) return null;
+  if (!identity?.profileData?.id) return <ProgressMessage message="app.message.pod_creation_progress" />;
 
   return (
     <ThemeProvider theme={theme}>

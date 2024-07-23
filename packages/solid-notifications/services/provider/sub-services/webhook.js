@@ -1,3 +1,4 @@
+const path = require('path');
 const urlJoin = require('url-join');
 const fetch = require('node-fetch');
 const { Errors: E } = require('moleculer-web');
@@ -39,10 +40,11 @@ module.exports = {
     if (!this.createJob) throw new Error('The QueueMixin must be configured with this service');
   },
   async started() {
+    const { pathname: basePath } = new URL(this.settings.baseUrl);
     await this.broker.call('api.addRoute', {
       route: {
         name: 'notification-webhook',
-        path: '/.notifications/WebhookChannel2023',
+        path: path.join(basePath, '/.notifications/WebhookChannel2023'),
         bodyParsers: false,
         authorization: false,
         authentication: true,

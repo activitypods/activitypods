@@ -1,3 +1,4 @@
+const path = require('path');
 const urlJoin = require('url-join');
 const fetch = require('node-fetch');
 const LinkHeader = require('http-link-header');
@@ -24,9 +25,11 @@ module.exports = {
     const results = await this.actions.list({});
     this.listeners = results.rows;
 
+    const { pathname: basePath } = new URL(this.settings.baseUrl);
+
     await this.broker.call('api.addRoute', {
       route: {
-        path: '/.webhooks/:uuid',
+        path: path.join(basePath, '/.webhooks/:uuid'),
         authorization: false,
         authentication: false,
         aliases: {

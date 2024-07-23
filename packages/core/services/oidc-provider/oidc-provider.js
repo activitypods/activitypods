@@ -1,3 +1,4 @@
+const path = require('path');
 const Redis = require('ioredis');
 const { delay } = require('@semapps/ldp');
 const { Errors: E } = require('moleculer-web');
@@ -47,10 +48,12 @@ module.exports = {
       }
     });
 
+    const { pathname: basePath } = new URL(this.settings.baseUrl);
+
     await this.broker.call('api.addRoute', {
       route: {
         name: 'oidc-login-completed',
-        path: '/.oidc/login-completed',
+        path: path.join(basePath, '/.oidc/login-completed'),
         authentication: true,
         bodyParsers: {
           json: true
@@ -68,7 +71,7 @@ module.exports = {
     await this.broker.call('api.addRoute', {
       route: {
         name: 'oidc-provider',
-        path: '/.oidc/auth',
+        path: path.join(basePath, '/.oidc/auth'),
         use: [this.oidc.callback()]
       }
     });

@@ -18,7 +18,7 @@ importAsync();
 /** @type {import('moleculer').ServiceSchema} */
 const ManagementService = {
   name: 'management',
-  dependencies: ['api'],
+  dependencies: ['api', 'ldp'],
   settings: {
     settingsDataset: 'settings',
     exportDir: './exports',
@@ -30,11 +30,12 @@ const ManagementService = {
         'The moleculer-bull scheduler is not available for the management service. Some feature might not work.'
       );
     }
+    const basePath = await this.broker.call('ldp.getBasePath');
     this.broker.call('api.addRoute', {
       route: {
         name: 'management',
+        path: path.join(basePath, '/.management/'),
         authentication: true,
-        path: '/.management/',
         aliases: {
           'POST /actor/:actorUri/export': 'management.exportActor',
           'DELETE /actor/:actorUri': 'management.deleteActor'

@@ -1,4 +1,4 @@
-const { useFullURI } = require('@semapps/ldp');
+const path = require('path');
 
 const POD_PROVIDER_TYPES = [
   'http://www.w3.org/2006/vcard/ns#Individual',
@@ -12,12 +12,13 @@ module.exports = {
   settings: {
     frontendUrl: null
   },
-  dependencies: ['api'],
+  dependencies: ['api', 'ldp'],
   async started() {
+    const basePath = await this.broker.call('ldp.getBasePath');
     await this.broker.call('api.addRoute', {
       route: {
         name: 'open-app-endpoint',
-        path: '/:username/openApp',
+        path: path.join(basePath, '/:username/openApp'),
         authorization: false,
         authentication: false,
         aliases: {

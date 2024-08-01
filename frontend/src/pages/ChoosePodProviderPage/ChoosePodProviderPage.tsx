@@ -15,7 +15,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import StorageIcon from '@mui/icons-material/Storage';
 import { FieldValues, SubmitHandler } from 'react-hook-form';
-import { localPodProviderObject, localhostRegex, uniqueBy, validateBaseUrl } from '../../utils';
+import { isLocalURL, localPodProviderObject, uniqueBy, validateBaseUrl } from '../../utils';
 import SimpleBox from '../../layout/SimpleBox';
 
 /**
@@ -47,10 +47,6 @@ const ChooseCustomPodProvider = ({
   const onSubmit: SubmitHandler<FieldValues> = useCallback(
     params => {
       let { podProvider } = params as typeof formDefaultValues;
-      // Add https, if no protocol is given.
-      if (!/^https?:\/\//.exec(podProvider)) {
-        podProvider = `https://${podProvider}`;
-      }
       onSelected(String(podProvider));
     },
     [onSelected]
@@ -131,13 +127,15 @@ const ChoosePodProviderPage = ({
     error,
     isLoading
   } = useGetList('PodProvider', { filter: { 'apods:locales': CONFIG.DEFAULT_LOCALE } });
-  const podProviders = localPodProviderObject
-    ? [localPodProviderObject]
-    : uniqueBy(provider => provider['apods:domainName'] as string, [...customPodProviders, ...(podProvidersRaw || [])]);
+
+  // If we are on a local server, don't allow to select remote Pod providers as it will not work
+  const podProviders = isLocalURL(CONFIG.BACKEND_URL)
+    ? [localPodProviderObject] 
+    : uniqueBy(provider => provider['apods:baseUrl'] as string, [...customPodProviders, ...(podProvidersRaw || [])]);
 
   const providerSelected = useCallback(
-    (domainName: string) => {
-      onPodProviderSelected(localhostRegex.test(domainName) ? `http://${domainName}` : `https://${domainName}`);
+    (baseUrl: string) => {
+      onPodProviderSelected(baseUrl);
     },
     [onPodProviderSelected]
   );
@@ -162,11 +160,11 @@ const ChoosePodProviderPage = ({
         <List>
           {podProviders.map(podProvider => {
             return (
-              <React.Fragment key={podProvider['apods:domainName']}>
+              <React.Fragment key={podProvider['apods:baseUrl']}>
                 <Divider />
                 <ListItemButton
                   onClick={() => {
-                    providerSelected(podProvider['apods:domainName'] as string);
+                    providerSelected(podProvider['apods:baseUrl'] as string);
                   }}
                 >
                   <ListItemAvatar>
@@ -174,7 +172,7 @@ const ChoosePodProviderPage = ({
                       <StorageIcon />
                     </Avatar>
                   </ListItemAvatar>
-                  <ListItemText primary={podProvider['apods:domainName']} secondary={podProvider['apods:area']} />
+                  <ListItemText primary={podProvider['apods:baseUrl']} secondary={podProvider['apods:area']} />
                 </ListItemButton>
               </React.Fragment>
             );
@@ -184,8 +182,8 @@ const ChoosePodProviderPage = ({
               <CircularProgress />
             </ListItem>
           )}
-          {/* Option to add another Pod Provider */}
-          {!localPodProviderObject && (
+          {/* Allow to add another Pod provider only if we are on a remote server */}
+          {!isLocalURL(CONFIG.BACKEND_URL) && (
             <>
               <Divider />
               <ListItemButton

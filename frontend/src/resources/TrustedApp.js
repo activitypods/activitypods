@@ -1,6 +1,6 @@
 export default {
   dataModel: {
-    types: ['apods:TrustedApps'],
+    types: ['interop:Application'],
     list: {
       servers: ['activitypods'],
       fetchContainer: true

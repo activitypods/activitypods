@@ -26,7 +26,7 @@ module.exports = {
         webId: { type: 'string' }
       },
       async handler(ctx) {
-        let { type, containerUri, webId } = ctx.params;
+        let { type, containerUri, label, labelPredicate, openEndpoint, webId } = ctx.params;
 
         const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
 
@@ -98,6 +98,15 @@ module.exports = {
           return registrationUri;
         }
       }
+    },
+    registerApp: {
+      visibility: 'public',
+      params: {
+        type: { type: 'string' },
+        containerUri: { type: 'string' },
+        webId: { type: 'string' }
+      },
+      async handler(ctx) {}
     },
     getByType: {
       visibility: 'public',

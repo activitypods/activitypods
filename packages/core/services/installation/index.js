@@ -24,8 +24,7 @@ module.exports = {
       },
       async onEmit(ctx, activity, emitterUri) {
         const appUri = activity.object;
-        let accessGrantsUris = [],
-          preferredForClass = [];
+        let accessGrantsUris = [];
 
         const app = await ctx.call('ldp.remote.get', { resourceUri: appUri });
 
@@ -110,16 +109,25 @@ module.exports = {
               resourceUri: classDescriptionUri,
               webId: emitterUri
             });
-            await ctx.call('ldp.remote.store', { resource: classDescription, webId: emitterUri });
-            await ctx.call('class-description.attach', { resourceUri: classDescriptionUri });
 
-            const preferredAppForClass = await ctx.call('app-registrations.preferredAppForClass', {
-              type: classDescription['apods:describedClass']
+            await ctx.call('type-registrations.bindApp', {
+              type: classDescription['apods:describedClass'],
+              appUri,
+              label: classDescription['skos:prefLabel'],
+              labelPredicate: classDescription['apods:labelPredicate'],
+              openEndpoint: classDescription['apods:openEndpoint']
             });
 
-            if (!preferredAppForClass) {
-              preferredForClass.push(classDescription['apods:describedClass']);
-            }
+            // await ctx.call('ldp.remote.store', { resource: classDescription, webId: emitterUri });
+            // await ctx.call('class-description.attach', { resourceUri: classDescriptionUri });
+
+            // const preferredAppForClass = await ctx.call('app-registrations.preferredAppForClass', {
+            //   type: classDescription['apods:describedClass']
+            // });
+
+            // if (!preferredAppForClass) {
+            //   preferredForClass.push(classDescription['apods:describedClass']);
+            // }
           }
         }
 
@@ -130,8 +138,7 @@ module.exports = {
             'interop:registeredAt': new Date().toISOString(),
             'interop:updatedAt': new Date().toISOString(),
             'interop:registeredAgent': appUri,
-            'interop:hasAccessGrant': accessGrantsUris,
-            'apods:preferredForClass': preferredForClass
+            'interop:hasAccessGrant': accessGrantsUris
           },
           contentType: MIME_TYPES.JSON
         });

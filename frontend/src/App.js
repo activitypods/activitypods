@@ -69,7 +69,7 @@ const App = () => (
           <Route path="/settings/delete-pod" element={<SettingsDeletePodPage />} />
           <Route path="/data">
             <Route index element={<DataPage />} />
-            <Route path=":type" element={<DataTypePage />} />
+            <Route path=":containerUri" element={<DataTypePage />} />
           </Route>
         </CustomRoutes>
       </Admin>

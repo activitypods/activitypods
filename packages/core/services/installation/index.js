@@ -2,7 +2,6 @@ const urlJoin = require('url-join');
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { ClassDescriptionService } = require('@activitypods/description');
 const interopContext = require('../../config/context-interop.json');
 const AppRegistrationsService = require('./sub-services/app-registrations');
 const AccessGrantsService = require('./sub-services/access-grants');
@@ -15,7 +14,6 @@ module.exports = {
     this.broker.createService(AppRegistrationsService);
     this.broker.createService(AccessGrantsService);
     this.broker.createService(DataGrantsService);
-    this.broker.createService(ClassDescriptionService);
   },
   activities: {
     install: {
@@ -79,55 +77,6 @@ module.exports = {
                 contentType: MIME_TYPES.JSON
               })
             );
-          }
-        }
-
-        if (app['interop:hasAccessDescriptionSet']) {
-          const userData = await ctx.call('ldp.resource.get', {
-            resourceUri: emitterUri,
-            accept: MIME_TYPES.JSON,
-            webId: emitterUri
-          });
-
-          const userLocale = userData['schema:knowsLanguage'];
-
-          let classDescriptionsUris, defaultClassDescriptionsUris;
-
-          for (const setUri of arrayOf(app['interop:hasAccessDescriptionSet'])) {
-            const set = await ctx.call('ldp.remote.get', { resourceUri: setUri, webId: emitterUri });
-            if (set['interop:usesLanguage'] === userLocale) {
-              classDescriptionsUris = arrayOf(set['apods:hasClassDescription']);
-            } else if (set['interop:usesLanguage'] === 'en') {
-              defaultClassDescriptionsUris = arrayOf(set['apods:hasClassDescription']);
-            }
-          }
-
-          if (!classDescriptionsUris) classDescriptionsUris = defaultClassDescriptionsUris;
-
-          for (const classDescriptionUri of classDescriptionsUris) {
-            const classDescription = await ctx.call('ldp.remote.get', {
-              resourceUri: classDescriptionUri,
-              webId: emitterUri
-            });
-
-            await ctx.call('type-registrations.bindApp', {
-              type: classDescription['apods:describedClass'],
-              appUri,
-              label: classDescription['skos:prefLabel'],
-              labelPredicate: classDescription['apods:labelPredicate'],
-              openEndpoint: classDescription['apods:openEndpoint']
-            });
-
-            // await ctx.call('ldp.remote.store', { resource: classDescription, webId: emitterUri });
-            // await ctx.call('class-description.attach', { resourceUri: classDescriptionUri });
-
-            // const preferredAppForClass = await ctx.call('app-registrations.preferredAppForClass', {
-            //   type: classDescription['apods:describedClass']
-            // });
-
-            // if (!preferredAppForClass) {
-            //   preferredForClass.push(classDescription['apods:describedClass']);
-            // }
           }
         }
 

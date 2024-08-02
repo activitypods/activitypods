@@ -1,12 +1,11 @@
 const { triple, namedNode } = require('@rdfjs/data-model');
-const { ClassDescriptionMixin } = require('@activitypods/description');
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { OBJECT_TYPES, AS_PREFIX } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
   name: 'profiles.profile',
-  mixins: [ControlledContainerMixin, ClassDescriptionMixin],
+  mixins: [ControlledContainerMixin],
   settings: {
     publicProfile: false,
     // ControlledContainerMixin settings
@@ -14,9 +13,8 @@ module.exports = {
     acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
     permissions: {},
     newResourcesPermissions: {},
-    // ClassDescriptionMixin settings
-    classDescription: {
-      label: {
+    description: {
+      labelMap: {
         en: 'Profiles',
         fr: 'Profils'
       },

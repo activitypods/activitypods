@@ -43,7 +43,14 @@ const specialRights = {
   }
 };
 
-const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowedAccessNeeds, classDescriptions }) => {
+const AccessNeedsList = ({
+  accessNeeds,
+  required,
+  allowedAccessNeeds,
+  setAllowedAccessNeeds,
+  classDescriptions,
+  typeRegistrations
+}) => {
   const translate = useTranslate();
 
   const parseAccessNeed = useCallback(
@@ -74,17 +81,22 @@ const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowed
         if (hasWrite) accessRights.push(translate('app.authorization.write'));
         if (hasControl) accessRights.push(translate('app.authorization.control'));
 
-        const classDescription = classDescriptions.find(
-          desc => desc['apods:describedClass'] === accessNeed['apods:registeredClass']
-        );
+        // Get description from local TypeRegistrations first, to prevent apps to fool users about what they request
+        const description =
+          typeRegistrations.find(reg =>
+            arrayFromLdField(reg['solid:forClass']).includes(accessNeed['apods:registeredClass'])
+          ) ||
+          classDescriptions.find(desc =>
+            arrayFromLdField(desc['apods:describedClass']).includes(accessNeed['apods:registeredClass'])
+          );
 
         return {
           label: (
             <span>
               {accessRights.join('/')}{' '}
-              {classDescription ? (
+              {description ? (
                 <span title={accessNeed['apods:registeredClass']} style={{ textDecoration: 'underline dotted grey' }}>
-                  {classDescription['skos:prefLabel']}
+                  {description['skos:prefLabel']}
                 </span>
               ) : (
                 accessNeed['apods:registeredClass']

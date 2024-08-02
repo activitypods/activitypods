@@ -14,6 +14,7 @@ import useAccessNeeds from '../../hooks/useAccessNeeds';
 import useClassDescriptions from '../../hooks/useClassDescriptions';
 import AccessNeedsList from './AccessNeedsList';
 import ProgressMessage from '../../common/ProgressMessage';
+import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 
 const useStyles = makeStyles(() => ({
   app: {
@@ -68,6 +69,7 @@ const AuthorizePageView = () => {
   const application = useApplication(clientDomain);
   const { requiredAccessNeeds, optionalAccessNeeds, loaded } = useAccessNeeds(application);
   const { classDescriptions } = useClassDescriptions(application);
+  const typeRegistrations = useTypeRegistrations();
 
   useEffect(() => {
     if (loaded) {
@@ -161,12 +163,14 @@ const AuthorizePageView = () => {
             allowedAccessNeeds={allowedAccessNeeds}
             setAllowedAccessNeeds={setAllowedAccessNeeds}
             classDescriptions={classDescriptions}
+            typeRegistrations={typeRegistrations}
           />
           <AccessNeedsList
             accessNeeds={optionalAccessNeeds}
             allowedAccessNeeds={allowedAccessNeeds}
             setAllowedAccessNeeds={setAllowedAccessNeeds}
             classDescriptions={classDescriptions}
+            typeRegistrations={typeRegistrations}
           />
         </>
       )}

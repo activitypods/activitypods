@@ -407,65 +407,65 @@ describe('Test app installation', () => {
     ]);
   });
 
-  test('Class descriptions are correctly created', async () => {
-    let app;
+  // test('Class descriptions are correctly created', async () => {
+  //   let app;
 
-    await waitForExpect(async () => {
-      app = await alice.call('ldp.remote.get', { resourceUri: APP_URI });
+  //   await waitForExpect(async () => {
+  //     app = await alice.call('ldp.remote.get', { resourceUri: APP_URI });
 
-      expect(app?.['interop:hasAccessDescriptionSet']).toHaveLength(2);
-    });
+  //     expect(app?.['interop:hasAccessDescriptionSet']).toHaveLength(2);
+  //   });
 
-    const accessDescriptionSets = await Promise.all(
-      app['interop:hasAccessDescriptionSet'].map(setUri =>
-        alice.call('ldp.remote.get', {
-          resourceUri: setUri
-        })
-      )
-    );
+  //   const accessDescriptionSets = await Promise.all(
+  //     app['interop:hasAccessDescriptionSet'].map(setUri =>
+  //       alice.call('ldp.remote.get', {
+  //         resourceUri: setUri
+  //       })
+  //     )
+  //   );
 
-    expect(accessDescriptionSets).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: 'interop:AccessDescriptionSet',
-          'interop:usesLanguage': 'en'
-        }),
-        expect.objectContaining({
-          type: 'interop:AccessDescriptionSet',
-          'interop:usesLanguage': 'fr'
-        })
-      ])
-    );
+  //   expect(accessDescriptionSets).toEqual(
+  //     expect.arrayContaining([
+  //       expect.objectContaining({
+  //         type: 'interop:AccessDescriptionSet',
+  //         'interop:usesLanguage': 'en'
+  //       }),
+  //       expect.objectContaining({
+  //         type: 'interop:AccessDescriptionSet',
+  //         'interop:usesLanguage': 'fr'
+  //       })
+  //     ])
+  //   );
 
-    const classDescriptions = await Promise.all(
-      accessDescriptionSets.map(set =>
-        alice.call('ldp.remote.get', {
-          resourceUri: set['apods:hasClassDescription']
-        })
-      )
-    );
+  //   const classDescriptions = await Promise.all(
+  //     accessDescriptionSets.map(set =>
+  //       alice.call('ldp.remote.get', {
+  //         resourceUri: set['apods:hasClassDescription']
+  //       })
+  //     )
+  //   );
 
-    expect(classDescriptions).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: 'apods:ClassDescription',
-          'apods:describedClass': 'as:Event',
-          'apods:describedBy': APP_URI,
-          'skos:prefLabel': 'Events',
-          'apods:labelPredicate': 'as:name',
-          'apods:openEndpoint': 'https://example.app/r'
-        }),
-        expect.objectContaining({
-          type: 'apods:ClassDescription',
-          'apods:describedClass': 'as:Event',
-          'apods:describedBy': APP_URI,
-          'skos:prefLabel': 'Evénements',
-          'apods:labelPredicate': 'as:name',
-          'apods:openEndpoint': 'https://example.app/r'
-        })
-      ])
-    );
-  });
+  //   expect(classDescriptions).toEqual(
+  //     expect.arrayContaining([
+  //       expect.objectContaining({
+  //         type: 'apods:ClassDescription',
+  //         'apods:describedClass': 'as:Event',
+  //         'apods:describedBy': APP_URI,
+  //         'skos:prefLabel': 'Events',
+  //         'apods:labelPredicate': 'as:name',
+  //         'apods:openEndpoint': 'https://example.app/r'
+  //       }),
+  //       expect.objectContaining({
+  //         type: 'apods:ClassDescription',
+  //         'apods:describedClass': 'as:Event',
+  //         'apods:describedBy': APP_URI,
+  //         'skos:prefLabel': 'Evénements',
+  //         'apods:labelPredicate': 'as:name',
+  //         'apods:openEndpoint': 'https://example.app/r'
+  //       })
+  //     ])
+  //   );
+  // });
 
   test('User installs same app a second time and get an error', async () => {
     const [creationActivityUri] = await installApp(

@@ -78,8 +78,16 @@ module.exports = {
         const registeredContainers = await ctx.call('ldp.registry.list');
         for (const container of Object.values(registeredContainers)) {
           const containerUri = urlJoin(podUri, container.path);
-          for (const type of arrayOf(container.acceptedTypes))
+          for (const type of arrayOf(container.acceptedTypes)) {
             await ctx.call('type-registrations.register', { type, containerUri, webId });
+            if (container.description) {
+              await ctx.call('type-registrations.attachDescription', {
+                type,
+                webId,
+                ...container.description
+              });
+            }
+          }
         }
       }
     }
@@ -104,8 +112,16 @@ module.exports = {
       for (const container of Object.values(registeredContainers)) {
         if (container.podsContainer !== true) {
           const containerUri = urlJoin(accountData.podUri, container.path);
-          for (const type of arrayOf(container.acceptedTypes))
+          for (const type of arrayOf(container.acceptedTypes)) {
             await ctx.call('type-registrations.register', { type, containerUri, webId });
+            if (container.description) {
+              await ctx.call('type-registrations.attachDescription', {
+                type,
+                webId,
+                ...container.description
+              });
+            }
+          }
         }
       }
     }

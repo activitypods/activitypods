@@ -4,7 +4,6 @@ import makeStyles from '@mui/styles/makeStyles';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import { useTranslate } from 'react-admin';
 import useActor from '../../hooks/useActor';
-import AppBadge from '../AppBadge';
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -29,7 +28,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ResourceCard = ({ resource, classDescription, appRegistration }) => {
+const ResourceCard = ({ resource, typeRegistration }) => {
   const translate = useTranslate();
   const classes = useStyles();
 
@@ -45,14 +44,11 @@ const ResourceCard = ({ resource, classDescription, appRegistration }) => {
     <Card>
       <Box className={classes.title}>
         <Box display="flex" justifyContent="center" className={classes.avatarWrapper}>
-          <AppBadge large appUri={appRegistration?.['interop:registeredAgent']}>
-            <Avatar className={classes.avatar}>
-              <InsertDriveFileIcon sx={{ width: 100, height: 100 }} />
-            </Avatar>
-          </AppBadge>
+          <Avatar src={typeRegistration['apods:icon']} className={classes.avatar}>
+            <InsertDriveFileIcon sx={{ width: 100, height: 100 }} />
+          </Avatar>
         </Box>
       </Box>
-
       <Typography variant="h4" sx={{ mt: 10, textAlign: 'center' }}>
         {resource?.label.value}
       </Typography>
@@ -74,11 +70,11 @@ const ResourceCard = ({ resource, classDescription, appRegistration }) => {
           </TableBody>
         </Table>
       </Box>
-      {classDescription['apods:openEndpoint'] && (
+      {typeRegistration['apods:openEndpoint'] && (
         <Box sx={{ mt: 1, mb: 3, textAlign: 'center' }}>
           <a
-            href={`${classDescription['apods:openEndpoint']}?type=${encodeURIComponent(
-              classDescription['apods:describedClass']
+            href={`${typeRegistration['apods:openEndpoint']}?type=${encodeURIComponent(
+              typeRegistration['solid:forClass']
             )}&uri=${encodeURIComponent(resource?.resourceUri.value)}&mode=show`}
             target="_blank"
             rel="noreferrer"

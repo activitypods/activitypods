@@ -68,6 +68,12 @@
     },
     "apods:labelPredicate": {
       "@type": "@id"
+    },
+    "apods:defaultApp": {
+      "@type": "@id"
+    },
+    "apods:availableApps": {
+      "@type": "@id"
     }
   }
 }

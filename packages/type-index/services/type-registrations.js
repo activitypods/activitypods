@@ -26,7 +26,7 @@ module.exports = {
         webId: { type: 'string' }
       },
       async handler(ctx) {
-        let { type, containerUri, label, labelPredicate, openEndpoint, webId } = ctx.params;
+        let { type, containerUri, webId } = ctx.params;
 
         const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
 
@@ -99,14 +99,96 @@ module.exports = {
         }
       }
     },
-    registerApp: {
+    attachDescription: {
       visibility: 'public',
       params: {
         type: { type: 'string' },
-        containerUri: { type: 'string' },
+        webId: { type: 'string' },
+        labelMap: { type: 'object', optional: true },
+        labelPredicate: { type: 'string', optional: true },
+        openEndpoint: { type: 'string', optional: true },
+        icon: { type: 'string', optional: true }
+      },
+      async handler(ctx) {
+        const { type, webId, labelMap, labelPredicate, openEndpoint, icon } = ctx.params;
+
+        const [registration] = await this.actions.getByType({ type, webId }, { parentCtx: ctx });
+        if (!registration) throw new Error(`No registration found with type ${type}`);
+
+        let label;
+
+        if (labelMap) {
+          const userData = await ctx.call('ldp.resource.get', {
+            resourceUri: webId,
+            accept: MIME_TYPES.JSON,
+            webId
+          });
+
+          const userLocale = userData['schema:knowsLanguage'];
+
+          if (userLocale && labelMap[userLocale]) {
+            label = labelMap[userLocale];
+          } else if (labelMap.en) {
+            label = labelMap.en;
+          }
+        }
+
+        await ctx.call('type-registrations.put', {
+          resource: {
+            ...registration,
+            'skos:prefLabel': label,
+            'apods:labelPredicate': labelPredicate,
+            'apods:openEndpoint': openEndpoint,
+            'apods:icon': icon
+          },
+          contentType: MIME_TYPES.JSON,
+          webId
+        });
+      }
+    },
+    bindApp: {
+      visibility: 'public',
+      params: {
+        type: { type: 'string' },
+        appUri: { type: 'string' },
         webId: { type: 'string' }
       },
-      async handler(ctx) {}
+      async handler(ctx) {
+        const { type, appUri, webId } = ctx.params;
+
+        let [registration] = await this.actions.getByType({ type, webId }, { parentCtx: ctx });
+        if (!registration) throw new Error(`No registration found with type ${type}`);
+
+        // Add the app to available apps
+        registration['apods:availableApps'] = [...new Set([...arrayOf(registration['apods:availableApps']), appUri])];
+
+        // If no default app is defined for this type, use this one
+        if (!registration['apods:defaultApp']) registration['apods:defaultApp'] = appUri;
+
+        // If the app is the default app, update its description
+        if (registration['apods:defaultApp'] === appUri) {
+          const classDescription = await ctx.call('app-registrations.getClassDescription', {
+            type,
+            appUri,
+            podOwner: webId
+          });
+          if (classDescription) {
+            registration = {
+              ...registration,
+              'skos:prefLabel': classDescription['skos:prefLabel'],
+              'apods:labelPredicate': classDescription['apods:labelPredicate'],
+              'apods:openEndpoint': classDescription['apods:openEndpoint'],
+              'apods:icon': classDescription['apods:icon']
+            };
+          }
+        }
+
+        await ctx.call('type-registrations.put', {
+          resource: registration,
+          contentType: MIME_TYPES.JSON,
+          webId
+        });
+      }
     },
     getByType: {
       visibility: 'public',
@@ -161,7 +243,7 @@ module.exports = {
       async handler(ctx) {
         const { type, webId } = ctx.params;
 
-        const registrations = await this.actions.getByType({ type, webId });
+        const registrations = await this.actions.getByType({ type, webId }, { parentCtx: ctx });
 
         return registrations.map(r => r['solid:instanceContainer']);
       }

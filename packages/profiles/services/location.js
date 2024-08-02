@@ -1,18 +1,16 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { ClassDescriptionMixin } = require('@activitypods/description');
 
 module.exports = {
   name: 'profiles.location',
-  mixins: [ControlledContainerMixin, ClassDescriptionMixin],
+  mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['vcard:Location'],
     excludeFromMirror: true,
     permissions: {},
     newResourcesPermissions: {},
-    // ClassDescriptionMixin settings
-    classDescription: {
-      label: {
+    description: {
+      labelMap: {
         en: 'Addresses',
         fr: 'Adresses'
       },

@@ -1,6 +1,7 @@
 const urlJoin = require('url-join');
 const QueueMixin = require('moleculer-bull');
-const WebhookChannelService = require('./sub-services/webhook');
+const WebhookChannelService = require('./sub-services/webhook-channel');
+const WebSocketChannelService = require('./sub-services/websocket-channel');
 
 module.exports = {
   name: 'solid-notifications.provider',
@@ -14,6 +15,12 @@ module.exports = {
     if (!baseUrl || !queueServiceUrl) throw new Error(`The baseUrl and queueServiceUrl settings are required`);
 
     this.broker.createService({
+      name: 'solid-notifications.provider.websocket',
+      mixins: [WebSocketChannelService],
+      settings: { baseUrl }
+    });
+    this.broker.createService({
+      name: 'solid-notifications.provider.webhook',
       mixins: [WebhookChannelService, QueueMixin(queueServiceUrl)],
       settings: { baseUrl }
     });
@@ -35,8 +42,10 @@ module.exports = {
   },
   actions: {
     discover(ctx) {
-      // TODO Handle content negociation
+      // TODO Handle content negotiation
       ctx.meta.$responseType = 'application/ld+json';
+      // Cache for 1 days.
+      ctx.meta.$responseHeaders = { 'Cache-Control': 'public, max-age=86400' };
       return {
         '@context': { notify: 'http://www.w3.org/ns/solid/notifications#' },
         '@id': urlJoin(this.settings.baseUrl, '.well-known', 'solid'),

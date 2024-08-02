@@ -86,6 +86,7 @@ const CoreService = {
       mixins: [ApiService],
       settings: {
         ...this.settings.api,
+        baseUrl,
         frontendUrl
       }
     });

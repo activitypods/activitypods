@@ -11,7 +11,8 @@ const queueOptions =
         backoff: { type: 'exponential', delay: '180000' }
       };
 
-const WebSocketChannel2023Service = {
+/** @type {import('moleculer').ServiceSchema} */
+const WebhookChannel2023Service = {
   name: 'solid-notifications.provider.webhook',
   mixins: [NotificationChannelMixin],
   settings: {
@@ -85,4 +86,4 @@ const WebSocketChannel2023Service = {
   }
 };
 
-module.exports = WebSocketChannel2023Service;
+module.exports = WebhookChannel2023Service;

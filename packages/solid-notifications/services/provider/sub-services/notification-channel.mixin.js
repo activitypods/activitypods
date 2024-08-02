@@ -25,7 +25,7 @@ module.exports = {
   settings: {
     // Channel properties (to be overridden)
     channelType: null, // E.g. 'WebhookChannel2023',
-    typePredicate: null, // E.g. 'notify:WebhookChannel2023', defaults to `nofiy:${this.settings.channelType}`,
+    typePredicate: null, // E.g. 'notify:WebhookChannel2023', defaults to `notify:${this.settings.channelType}`,
     acceptedTypes: [], // E.g. ['notify:WebhookChannel2023'],
     sendOrReceive: null, // Either 'send' or 'receive' (will set `sendTo` or `receiveFrom` URIs).
 

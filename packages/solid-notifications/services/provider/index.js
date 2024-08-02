@@ -15,10 +15,12 @@ module.exports = {
     if (!baseUrl || !queueServiceUrl) throw new Error(`The baseUrl and queueServiceUrl settings are required`);
 
     this.broker.createService({
-      mixin: [WebSocketChannelService],
+      name: 'solid-notifications.provider.websocket',
+      mixins: [WebSocketChannelService],
       settings: { baseUrl }
     });
     this.broker.createService({
+      name: 'solid-notifications.provider.webhook',
       mixins: [WebhookChannelService, QueueMixin(queueServiceUrl)],
       settings: { baseUrl }
     });

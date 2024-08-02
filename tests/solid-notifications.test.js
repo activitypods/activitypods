@@ -265,7 +265,7 @@ describe('Test app installation', () => {
       expect(status).toBe(400);
     });
 
-    describe('collection and resource subscription.', () => {
+    describe('collection and resource subscription', () => {
       let collectionUri,
         noteUri,
         collectionWebSocket,
@@ -345,7 +345,7 @@ describe('Test app installation', () => {
         expect(collectionChannelBody.id).toBeTruthy();
         webSocketCollectionChannelUri = collectionChannelBody.id;
 
-        console.log('Created channel for collection', collectionChannelBody);
+        // console.log('Created channel for collection', collectionChannelBody);
         collectionWebSocket = new WebSocket(collectionChannelBody['notify:receiveFrom']);
         collectionWebSocket.addEventListener('message', e => {
           collectionActivities.push(JSON.parse(e.data));
@@ -368,7 +368,7 @@ describe('Test app installation', () => {
         expect(itemChannelBody.id).toBeTruthy();
         webSocketItemChannelUri = itemChannelBody.id;
 
-        console.log('Created channel for item', itemChannelBody);
+        // console.log('Created channel for item', itemChannelBody);
         itemWebSocket = new WebSocket(itemChannelBody['notify:receiveFrom']);
         itemWebSocket.addEventListener('message', e => {
           itemActivities.push(JSON.parse(e.data));
@@ -443,13 +443,13 @@ describe('Test app installation', () => {
       });
 
       test('Delete web socket channels', async () => {
-        console.log('Deleting collection channel', webSocketCollectionChannelUri);
+        // console.log('Deleting collection channel', webSocketCollectionChannelUri);
         const responseDelCollection = await appServer.call('signature.proxy.query', {
           url: webSocketCollectionChannelUri,
           method: 'DELETE',
           actorUri: APP_URI
         });
-        console.log('Deleting item channel', webSocketItemChannelUri);
+        // console.log('Deleting item channel', webSocketItemChannelUri);
         const responseDelItem = await appServer.call('signature.proxy.query', {
           url: webSocketItemChannelUri,
           method: 'DELETE',
@@ -463,7 +463,7 @@ describe('Test app installation', () => {
       });
     });
 
-    describe('container subscription .', () => {
+    describe('container subscription', () => {
       let containerUri, resourceUri, containerWebSocket;
       const containerActivities = [];
 

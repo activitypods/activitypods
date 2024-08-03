@@ -21,7 +21,14 @@ const dataServers = {
     uploadsContainer: '/semapps/file'
   },
   activitypods: {
-    baseUrl: process.env.ACTIVITYPODS_COMMON_CONF_URL || 'https://data.activitypods.org/',
+    baseUrl: 'https://activitypods.org/data/',
+    containers: {
+      activitypods: {
+        'apods:PodProvider': ['/pod-providers'],
+        'interop:Application': ['/trusted-apps']
+      }
+    },
+    void: false,
     noProxy: true // HTTP signature is not supported on that server
   }
 };

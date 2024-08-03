@@ -122,8 +122,8 @@ export const mulberry32 = (seed: number) => {
 
 export const localhostRegex = /(127\.0\.0\.[0-9]{1,3}|localhost|\[::1\])/;
 
-export const isLocalHostname = (hostname: string) => {
-  return new RegExp(`^${localhostRegex.source}$`).test(hostname);
+export const isLocalURL = (url: string) => {
+  return new RegExp(`^${localhostRegex.source}$`).test((new URL(url)).hostname);
 };
 
 export const isUri = (uri: string) => {
@@ -191,21 +191,20 @@ export const validateBaseUrl = (uri: string, allowAddHttp: boolean) => {
   }
 
   // The URL must have a TLD (eg. `.com`), unless it's localhost.
-  if (!/^.+\..+/.exec(url.hostname) && !isLocalHostname(url.hostname)) {
+  if (!/^.+\..+/.exec(url.hostname) && !isLocalURL(uri)) {
     return { error: 'app.validation.uri.no_tld' };
   }
 
   return { url, error };
 };
 
-export const localPodProviderObject = CONFIG.BACKEND_URL
-  ? {
-      type: 'apods:PodProvider',
-      'apods:area': process.env.POD_AREA,
-      'apods:locales': 'en',
-      'apods:domainName': new URL(CONFIG.BACKEND_URL).host
-    }
-  : undefined;
+export const localPodProviderObject = {
+  type: 'apods:PodProvider',
+  'apods:area': 'Local server',
+  'apods:locales': CONFIG.DEFAULT_LOCALE,
+  'apods:baseUrl': CONFIG.BACKEND_URL,
+  'apods:providedBy': CONFIG.INSTANCE_NAME
+};
 
 /**
  * Removes duplicate items from a list.

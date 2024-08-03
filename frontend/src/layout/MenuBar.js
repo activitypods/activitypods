@@ -30,7 +30,7 @@ const MenuBar = () => {
           <Link to="/Profile" className={classes.link}>
             {translate('app.page.contacts')}
           </Link>
-          <Link to="/AppRegistration" className={classes.link}>
+          <Link to="/apps" className={classes.link}>
             {translate('app.page.apps')}
           </Link>
           <Link to="/data" className={classes.link}>

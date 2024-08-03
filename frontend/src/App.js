@@ -26,6 +26,7 @@ import AuthorizePage from './pages/AuthorizePage/AuthorizePage';
 import UserPage from './pages/UserPage';
 import RedirectPage from './pages/RedirectPage';
 import InvitePage from './pages/InvitePage/InvitePage';
+import ApplicationsPage from './pages/ApplicationsPage/ApplicationsPage';
 
 const LoginPage = () => (
   <LocalLoginPage
@@ -62,6 +63,7 @@ const App = () => (
           <Route path="/invite/:capability" element={<InvitePage />} />
         </CustomRoutes>
         <CustomRoutes>
+          <Route path="/apps" element={<ApplicationsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/email" element={<SettingsEmailPage />} />
           <Route path="/settings/password" element={<SettingsPasswordPage />} />

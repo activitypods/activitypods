@@ -167,7 +167,7 @@ module.exports = {
 
         // If the app is the default app, update its description
         if (registration['apods:defaultApp'] === appUri) {
-          const classDescription = await ctx.call('app-registrations.getClassDescription', {
+          const classDescription = await ctx.call('applications.getClassDescription', {
             type,
             appUri,
             podOwner: webId

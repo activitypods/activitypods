@@ -5,7 +5,6 @@
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
   "dependencies": {
-    "@activitypods/description": "2.0.0-alpha.8",
     "@semapps/activitypub": "0.8.8",
     "@semapps/ldp": "0.8.8",
     "@semapps/mime-types": "0.8.8"

@@ -3,7 +3,7 @@ const { MIME_TYPES } = require('@semapps/mime-types');
 const { skos } = require('@semapps/ontologies');
 
 module.exports = {
-  name: 'class-description',
+  name: 'class-descriptions',
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['apods:ClassDescription'],

@@ -3,6 +3,7 @@ const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub
 const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const interopContext = require('../../config/context-interop.json');
+const ApplicationsService = require('./sub-services/applications');
 const AppRegistrationsService = require('./sub-services/app-registrations');
 const AccessGrantsService = require('./sub-services/access-grants');
 const DataGrantsService = require('./sub-services/data-grants');
@@ -11,6 +12,7 @@ module.exports = {
   name: 'installation',
   mixins: [ActivitiesHandlerMixin],
   created() {
+    this.broker.createService(ApplicationsService);
     this.broker.createService(AppRegistrationsService);
     this.broker.createService(AccessGrantsService);
     this.broker.createService(DataGrantsService);

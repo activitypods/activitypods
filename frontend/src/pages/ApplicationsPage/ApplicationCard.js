@@ -80,29 +80,18 @@ const ApplicationCard = ({ app, isTrustedApp, isInstalled, uninstallApp }) => {
           className={classes.appChip}
         />
       )}
-      {isInstalled ? (
-        <>
-          <a
-            href={`${nodeinfo?.metadata?.login_url}?iss=${CONFIG.BACKEND_URL}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={classes.link}
-          >
-            <Button variant="contained">{translate('app.action.open_app')}</Button>
-          </a>
-          <IconButton onClick={() => uninstallApp()}>
-            <DeleteIcon />
-          </IconButton>
-        </>
-      ) : (
-        <a
-          href={`${nodeinfo?.metadata?.login_url}?signup=true&iss=${CONFIG.BACKEND_URL}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={classes.link}
-        >
-          <Button variant="contained">{translate('app.action.open_app')}</Button>
-        </a>
+      <a
+        href={`${nodeinfo?.metadata?.login_url}?iss=${CONFIG.BACKEND_URL}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={classes.link}
+      >
+        <Button variant="contained">{translate(isInstalled ? 'app.action.open_app' : 'app.action.install_app')}</Button>
+      </a>
+      {isInstalled && (
+        <IconButton onClick={() => uninstallApp()}>
+          <DeleteIcon />
+        </IconButton>
       )}
     </Card>
   );

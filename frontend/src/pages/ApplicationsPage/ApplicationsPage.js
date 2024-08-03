@@ -3,6 +3,7 @@ import { useGetList } from 'react-admin';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import InstalledApps from './InstalledApps';
 import AvailableApps from './AvailableApps';
+import { isLocalURL } from '../../utils';
 
 const ApplicationsPage = () => {
   useCheckAuthenticated();
@@ -28,7 +29,9 @@ const ApplicationsPage = () => {
   return (
     <>
       <InstalledApps appRegistrations={appRegistrations} trustedApps={trustedApps} />
-      <AvailableApps appRegistrations={appRegistrations} trustedApps={trustedApps} />
+      {!isLocalURL(CONFIG.BACKEND_URL) && (
+        <AvailableApps appRegistrations={appRegistrations} trustedApps={trustedApps} />
+      )}
     </>
   );
 };

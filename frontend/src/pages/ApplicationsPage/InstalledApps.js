@@ -33,11 +33,7 @@ const AppRegistration = ({ appRegistration, trustedApps }) => {
 
   if (isLoading) return null;
 
-  return (
-    <Grid item xs={12} sm={6}>
-      <ApplicationCard app={app} isTrustedApp={isTrustedApp} isInstalled uninstallApp={uninstallApp} />
-    </Grid>
-  );
+  return <ApplicationCard app={app} isTrustedApp={isTrustedApp} isInstalled uninstallApp={uninstallApp} />;
 };
 
 const InstalledApps = ({ appRegistrations, trustedApps }) => {
@@ -51,10 +47,12 @@ const InstalledApps = ({ appRegistrations, trustedApps }) => {
       <Typography variant="h2" component="h1" sx={{ mt: 2 }}>
         {translate('app.page.apps')}
       </Typography>
-      <Box mt={1} mb={3}>
+      <Box mt={1} mb={5}>
         <Grid container spacing={xs ? 1 : 3}>
           {appRegistrations.map(appRegistration => (
-            <AppRegistration appRegistration={appRegistration} trustedApps={trustedApps} />
+            <Grid item xs={12} sm={6}>
+              <AppRegistration appRegistration={appRegistration} trustedApps={trustedApps} />
+            </Grid>
           ))}
         </Grid>
       </Box>

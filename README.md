@@ -6,7 +6,7 @@
 
 Check out [our website](https://activitypods.org) or [these slides](./proposal/proposal-english.pdf) ([French version](./proposal/proposal-french.pdf)) for more information about this project !
 
-> Note: the next version of ActivityPods, currently in alpha stage, is available in the [next](https://github.com/assemblee-virtuelle/activitypods/tree/next) branch.
+> Note: the version 2.0 of ActivityPods, currently in alpha stage, is available in the [external-apps](https://github.com/assemblee-virtuelle/activitypods/tree/external-apps) branch.
 
 ### Frontends using ActivityPods
 

@@ -24,12 +24,12 @@ const ApplicationsPage = () => {
     { staleTime: Infinity }
   );
 
-  if (isTrustedAppsLoading || isAppRegistrationsLoading) return null;
+  if (isAppRegistrationsLoading) return null;
 
   return (
     <>
       <InstalledApps appRegistrations={appRegistrations} trustedApps={trustedApps} />
-      {!isLocalURL(CONFIG.BACKEND_URL) && (
+      {!isLocalURL(CONFIG.BACKEND_URL) && !isTrustedAppsLoading && (
         <AvailableApps appRegistrations={appRegistrations} trustedApps={trustedApps} />
       )}
     </>

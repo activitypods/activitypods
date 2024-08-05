@@ -8,7 +8,7 @@ const AppRegistration = ({ appRegistration, trustedApps }) => {
   const notify = useNotify();
   const outbox = useOutbox();
   const { data: app, isLoading } = useGetOne('App', { id: appRegistration['interop:registeredAgent'] });
-  const isTrustedApp = trustedApps.some(baseUrl => baseUrl === appRegistration['interop:registeredAgent']);
+  const isTrustedApp = trustedApps?.some(baseUrl => baseUrl === appRegistration['interop:registeredAgent']) || false;
 
   const uninstallApp = useCallback(async () => {
     await outbox.post({

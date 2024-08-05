@@ -30,7 +30,8 @@ module.exports = {
       connect: 'Connect',
       continue: 'Continue',
       delete_pod: 'Delete all my data',
-      export_pod: 'Download my data'
+      export_pod: 'Download my data',
+      set_default_app: 'Set default app'
     },
     group: {
       members: 'Members',

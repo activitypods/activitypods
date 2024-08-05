@@ -27,7 +27,10 @@ module.exports = {
       undo_ignore_contact: 'Ne plus ignorer',
       select: 'Sélectionner',
       connect: "Accepter l'invitation",
-      continue: 'Continuer'
+      continue: 'Continuer',
+      delete_pod: 'Effacer toutes mes données',
+      export_pod: 'Télécharger mes données',
+      set_default_app: 'Définir appli par défaut'
     },
     group: {
       members: 'Membres',

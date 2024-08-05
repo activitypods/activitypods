@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useGetList, useTranslate, Button } from 'react-admin';
+import { useTranslate, Button } from 'react-admin';
 import {
   Box,
   List,
@@ -21,6 +21,7 @@ import ListView from '../../layout/ListView';
 import useResourcesByType from '../../hooks/useResourcesByType';
 import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import ResourceCard from '../../common/cards/ResourceCard';
+import SetDefaultAppButton from '../../common/buttons/SetDefaultAppButton';
 
 const useStyles = makeStyles(() => ({
   listItem: {
@@ -65,7 +66,7 @@ const DataTypePage = () => {
   return (
     <ListView
       title={typeRegistration?.['skos:prefLabel']}
-      actions={[<MyDataButton />]}
+      actions={[<MyDataButton />, <SetDefaultAppButton typeRegistration={typeRegistration} />]}
       asides={selected && !xs ? [<ResourceCard resource={selected} typeRegistration={typeRegistration} />] : null}
     >
       <Box>

@@ -21,7 +21,7 @@ const WebhookChannel2023Service = {
 
     baseUrl: null
   },
-  created(ctx) {
+  created() {
     if (!this.createJob) throw new Error('The QueueMixin must be configured with this service');
   },
   actions: {
@@ -36,6 +36,14 @@ const WebhookChannel2023Service = {
         'notify:channelType': 'notify:WebhookChannel2023',
         'notify:feature': ['notify:endAt', 'notify:rate', 'notify:startAt', 'notify:state']
       };
+    },
+    async deleteAppChannels(ctx) {
+      const { appUri, webId } = ctx.params;
+      const { origin: appOrigin } = new URL(appUri);
+      const appChannels = this.channels.filter(c => c.webId === webId && c.sendTo.startsWith(appOrigin));
+      for (const appChannel of appChannels) {
+        await this.actions.delete({ resourceUri: appChannel.id, webId: appChannel.webId });
+      }
     }
   },
 

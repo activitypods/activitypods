@@ -1,3 +1,4 @@
+const path = require('path');
 const urlJoin = require('url-join');
 const { Errors: E } = require('moleculer-web');
 const { parseHeader, negotiateContentType, parseJson } = require('@semapps/middlewares');
@@ -52,12 +53,13 @@ module.exports = {
     if (this.settings.acceptedTypes?.length <= 0) this.settings.acceptedTypes = [this.settings.typePredicate];
   },
   async started() {
-    const { channelType } = this.settings;
+    const { channelType, baseUrl } = this.settings;
+    const { pathname: basePath } = new URL(baseUrl);
 
     await this.broker.call('api.addRoute', {
       route: {
         name: `notification-${channelType}`,
-        path: `/.notifications/${channelType}`,
+        path: path.join(basePath, `/.notifications/${channelType}`),
         bodyParsers: false,
         authorization: false,
         authentication: true,

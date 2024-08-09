@@ -16,10 +16,15 @@ We created a boilerplate to help you quickly setup a social app in a local envir
 
 ## Clone the boilerplate repository
 
-First clone the [boilerplate repository](https://github.com/activitypods/app-boilerplate):
+First clone and initialize the [boilerplate repository](https://github.com/activitypods/app-boilerplate):
 
 ```bash
-git clone https://github.com/activitypods/app-boilerplate.git
+git clone https://github.com/activitypods/app-boilerplate.git # <optionally your app name>
+cd app-boilerplate # <or your app name>
+
+# Initialize new git repository
+rm -rf .git
+git init
 ```
 
 ## Setup environment variables

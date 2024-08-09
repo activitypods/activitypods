@@ -8,7 +8,7 @@ import ApplicationCard from './ApplicationCard';
 const AppRegistration = ({ appRegistration, trustedApps }) => {
   const notify = useNotify();
   const outbox = useOutbox();
-  const { data: app, isLoading } = useGetOne('App', { id: appRegistration['interop:registeredAgent'] });
+  const { data: app, isLoading, error } = useGetOne('App', { id: appRegistration['interop:registeredAgent'] });
   const isTrustedApp = trustedApps?.some(baseUrl => baseUrl === appRegistration['interop:registeredAgent']) || false;
 
   const uninstallApp = useCallback(async () => {
@@ -35,7 +35,7 @@ const AppRegistration = ({ appRegistration, trustedApps }) => {
     }, 5000);
   }, [app, outbox, notify]);
 
-  if (isLoading) return null;
+  if (isLoading || error) return null;
 
   return <ApplicationCard app={app} isTrustedApp={isTrustedApp} isInstalled uninstallApp={uninstallApp} />;
 };

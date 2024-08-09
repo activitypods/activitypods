@@ -83,10 +83,10 @@ const AccessNeedsList = ({
 
         // Get description from local TypeRegistrations first, to prevent apps to fool users about what they request
         const description =
-          typeRegistrations.find(reg =>
+          typeRegistrations?.find(reg =>
             arrayFromLdField(reg['solid:forClass']).includes(accessNeed['apods:registeredClass'])
           ) ||
-          classDescriptions.find(desc =>
+          classDescriptions?.find(desc =>
             arrayFromLdField(desc['apods:describedClass']).includes(accessNeed['apods:registeredClass'])
           );
 

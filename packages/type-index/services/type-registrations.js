@@ -1,5 +1,6 @@
 const urlJoin = require('url-join');
-const { namedNode, triple } = require('@rdfjs/data-model');
+const { namedNode, triple, literal } = require('@rdfjs/data-model');
+const { MoleculerError } = require('moleculer').Errors;
 const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
@@ -262,6 +263,132 @@ module.exports = {
               for (const type of arrayOf(container.acceptedTypes)) {
                 await this.actions.register({ type, containerUri, webId }, { parentCtx: ctx });
               }
+            }
+          }
+        }
+      }
+    }
+  },
+  hooks: {
+    before: {
+      async patch(ctx) {
+        const { resourceUri, triplesToAdd, triplesToRemove } = ctx.params;
+        const webId = ctx.params.webId || ctx.meta.webId || 'anon';
+
+        const addDefaultAppTriple = triplesToAdd?.find(
+          t => t.subject.value === resourceUri && t.predicate.value === 'http://activitypods.org/ns/core#defaultApp'
+        );
+
+        const removeDefaultAppTriple = triplesToRemove?.find(
+          t => t.subject.value === resourceUri && t.predicate.value === 'http://activitypods.org/ns/core#defaultApp'
+        );
+
+        // If the patch operation is about replacing the default app...
+        if (addDefaultAppTriple && removeDefaultAppTriple) {
+          const newAppUri = addDefaultAppTriple.object.value;
+          const oldAppUri = removeDefaultAppTriple.object.value;
+
+          const oldData = await ctx.call(
+            'ldp.resource.get',
+            {
+              resourceUri,
+              accept: MIME_TYPES.JSON,
+              webId
+            },
+            {
+              meta: { $cache: false }
+            }
+          );
+
+          if (oldData['apods:defaultApp'] !== oldAppUri) {
+            throw new MoleculerError(`The application ${oldAppUri} is not the default app`, 400, 'BAD_REQUEST');
+          }
+
+          if (!arrayOf(oldData['apods:availableApps']).includes(newAppUri)) {
+            throw new MoleculerError(`The application ${newAppUri} is not in the available apps`, 400, 'BAD_REQUEST');
+          }
+
+          // Get the description of the selected app
+          const classDescription = await ctx.call('applications.getClassDescription', {
+            type: oldData['solid:forClass'],
+            appUri: newAppUri,
+            podOwner: webId
+          });
+
+          // If the new default app has a description for this type, replace the current data in the type registration
+          if (classDescription) {
+            // TODO set a function to simplify the lines below
+            const [expandedNewLabelPredicate] = await ctx.call('jsonld.parser.expandTypes', {
+              types: [classDescription['apods:labelPredicate']],
+              context: classDescription['@context']
+            });
+
+            triplesToAdd.push(
+              triple(
+                namedNode(resourceUri),
+                namedNode('http://www.w3.org/2004/02/skos/core#prefLabel'),
+                literal(classDescription['skos:prefLabel'])
+              ),
+              triple(
+                namedNode(resourceUri),
+                namedNode('http://activitypods.org/ns/core#labelPredicate'),
+                namedNode(expandedNewLabelPredicate)
+              ),
+              triple(
+                namedNode(resourceUri),
+                namedNode('http://activitypods.org/ns/core#openEndpoint'),
+                literal(classDescription['apods:openEndpoint'])
+              ),
+              triple(
+                namedNode(resourceUri),
+                namedNode('http://activitypods.org/ns/core#icon'),
+                literal(classDescription['apods:icon'])
+              )
+            );
+
+            if (oldData['skos:prefLabel']) {
+              triplesToRemove.push(
+                triple(
+                  namedNode(resourceUri),
+                  namedNode('http://www.w3.org/2004/02/skos/core#prefLabel'),
+                  literal(oldData['skos:prefLabel'])
+                )
+              );
+            }
+
+            if (oldData['apods:labelPredicate']) {
+              const [expandedOldLabelPredicate] = await ctx.call('jsonld.parser.expandTypes', {
+                types: [oldData['apods:labelPredicate']],
+                context: oldData['@context']
+              });
+
+              triplesToRemove.push(
+                triple(
+                  namedNode(resourceUri),
+                  namedNode('http://activitypods.org/ns/core#labelPredicate'),
+                  namedNode(expandedOldLabelPredicate)
+                )
+              );
+            }
+
+            if (oldData['apods:openEndpoint']) {
+              triplesToRemove.push(
+                triple(
+                  namedNode(resourceUri),
+                  namedNode('http://activitypods.org/ns/core#openEndpoint'),
+                  literal(oldData['apods:openEndpoint'])
+                )
+              );
+            }
+
+            if (oldData['apods:icon']) {
+              triplesToRemove.push(
+                triple(
+                  namedNode(resourceUri),
+                  namedNode('http://activitypods.org/ns/core#icon'),
+                  literal(oldData['apods:icon'])
+                )
+              );
             }
           }
         }

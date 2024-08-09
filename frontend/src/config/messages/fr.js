@@ -27,7 +27,10 @@ module.exports = {
       undo_ignore_contact: 'Ne plus ignorer',
       select: 'Sélectionner',
       connect: "Accepter l'invitation",
-      continue: 'Continuer'
+      continue: 'Continuer',
+      delete_pod: 'Effacer toutes mes données',
+      export_pod: 'Télécharger mes données',
+      set_default_app: 'Définir appli par défaut'
     },
     group: {
       members: 'Membres',
@@ -154,7 +157,8 @@ module.exports = {
       no_app_registration: 'Aucune application installée',
       connection_successful: 'Vous êtes maintenant connecté !',
       pod_creation_progress: 'Compte en cours de création...',
-      app_installation_progress: 'Installation en cours...'
+      app_installation_progress: 'Installation en cours...',
+      default_app_changed: "L'application par défaut a été changée"
     },
     notification: {
       contact_request_accepted: 'Demande de contact acceptée',

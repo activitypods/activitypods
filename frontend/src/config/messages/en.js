@@ -30,7 +30,8 @@ module.exports = {
       connect: 'Connect',
       continue: 'Continue',
       delete_pod: 'Delete all my data',
-      export_pod: 'Download my data'
+      export_pod: 'Download my data',
+      set_default_app: 'Set default app'
     },
     group: {
       members: 'Members',
@@ -163,7 +164,8 @@ module.exports = {
       no_app_registration: 'You have no application installed',
       connection_successful: 'You are now connected!',
       pod_creation_progress: 'Your Pod is being created...',
-      app_installation_progress: 'App installation in progress...'
+      app_installation_progress: 'App installation in progress...',
+      default_app_changed: 'The default app has been successfully changed'
     },
     notification: {
       contact_request_accepted: 'Contact request accepted',

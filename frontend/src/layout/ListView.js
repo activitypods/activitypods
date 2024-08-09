@@ -3,7 +3,7 @@ import { CreateButton, useListContext } from 'react-admin';
 import { Box, Typography, Grid } from '@mui/material';
 import SplitView from './SplitView';
 
-const ListView = ({ asides, actions, title, children }) => {
+const ListView = ({ asides, actions = [<CreateButton />], title, children }) => {
   const { defaultTitle } = useListContext();
   return (
     <SplitView asides={asides}>
@@ -22,10 +22,6 @@ const ListView = ({ asides, actions, title, children }) => {
       {children}
     </SplitView>
   );
-};
-
-ListView.defaultProps = {
-  actions: [<CreateButton />]
 };
 
 export default ListView;

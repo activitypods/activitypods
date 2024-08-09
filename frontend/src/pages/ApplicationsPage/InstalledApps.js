@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import urlJoin from 'url-join';
 import { useTranslate, useNotify, useGetOne } from 'react-admin';
 import { Box, Typography, Grid, useMediaQuery } from '@mui/material';
 import { useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
@@ -27,7 +28,10 @@ const AppRegistration = ({ appRegistration, trustedApps }) => {
     // notify('app.notification.app_uninstalled', { type: 'success' });
 
     setTimeout(() => {
-      window.location.href = app['oidc:post_logout_redirect_uris'];
+      const currentUrl = new URL(window.location);
+      const logoutUrl = new URL(app['oidc:post_logout_redirect_uris']);
+      logoutUrl.searchParams.append('redirect', urlJoin(currentUrl.origin, '/apps'));
+      window.location.href = logoutUrl.toString();
     }, 5000);
   }, [app, outbox, notify]);
 
@@ -50,7 +54,7 @@ const InstalledApps = ({ appRegistrations, trustedApps }) => {
       <Box mt={1} mb={5}>
         <Grid container spacing={xs ? 1 : 3}>
           {appRegistrations.map(appRegistration => (
-            <Grid item xs={12} sm={6}>
+            <Grid key={appRegistration.id} item xs={12} sm={6}>
               <AppRegistration appRegistration={appRegistration} trustedApps={trustedApps} />
             </Grid>
           ))}

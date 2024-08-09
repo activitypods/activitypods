@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import LargeLabel from './LargeLabel';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(() => ({
   divider: {
     paddingTop: 5,
     paddingBottom: 20,
@@ -15,7 +15,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const MainList = ({ children, divider, Label }) => {
+const MainList = ({ children, divider, Label = LargeLabel }) => {
   const translate = useTranslate();
   const classes = useStyles();
   const { isLoading, record, resource } = useShowContext();
@@ -47,10 +47,6 @@ const MainList = ({ children, divider, Label }) => {
       )}
     </Box>
   );
-};
-
-MainList.defaultProps = {
-  Label: LargeLabel
 };
 
 export default MainList;

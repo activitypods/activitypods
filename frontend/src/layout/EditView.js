@@ -2,7 +2,7 @@ import React from 'react';
 import { ListButton, ShowButton } from 'react-admin';
 import { Box, Typography, Grid, Card } from '@mui/material';
 
-const EditView = ({ title, actions, children }) => (
+const EditView = ({ title, actions = [<ListButton />, <ShowButton />], children }) => (
   <>
     <Grid container sx={{ mt: 2 }}>
       <Grid item xs={8}>
@@ -21,9 +21,5 @@ const EditView = ({ title, actions, children }) => (
     </Box>
   </>
 );
-
-EditView.defaultProps = {
-  actions: [<ListButton />, <ShowButton />]
-};
 
 export default EditView;

@@ -24,36 +24,45 @@ module.exports = {
       const { resourceUri, attachPredicate, collectionOptions, actorUri } = ctx.params;
       const { ordered, summary, itemsPerPage, dereferenceItems, sortPredicate, sortOrder } = collectionOptions;
 
-      const { status, headers } = await this.actions.fetch({
-        method: 'POST',
-        url: urlJoin(actorUri, '/data/as/collection'), // TODO use TypeIndex to find container URL
-        headers: {
-          'Content-Type': 'application/ld+json'
-        },
-        body: JSON.stringify({
-          '@context': await ctx.call('jsonld.context.get'),
-          type: ordered ? 'OrderedCollection' : 'Collection',
-          summary,
-          'semapps:itemsPerPage': itemsPerPage,
-          'semapps:dereferenceItems': dereferenceItems,
-          'semapps:sortPredicate': ordered ? sortPredicate : undefined,
-          'semapps:sortOrder': ordered ? sortOrder : undefined
-        }),
-        actorUri
-      });
+      const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
 
-      if (status === 201) {
-        const collectionUri = headers.location;
+      const { body: resource } = await ctx.call('pod-resources.get', { resourceUri, actorUri });
+      const [expandedResource] = await ctx.call('jsonld.parser.expand', { input: resource });
 
-        const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
-
-        await ctx.call('pod-resources.patch', {
-          resourceUri,
-          triplesToAdd: [triple(namedNode(resourceUri), namedNode(expandedAttachPredicate), namedNode(collectionUri))],
+      // Ensure no similar collection is already attached to the resource
+      // (May happen if another app is already attaching the same kind of collections)
+      if (!expandedResource[expandedAttachPredicate]) {
+        const { status, headers } = await this.actions.fetch({
+          method: 'POST',
+          url: urlJoin(actorUri, '/data/as/collection'), // TODO use TypeIndex to find container URL
+          headers: {
+            'Content-Type': 'application/ld+json'
+          },
+          body: JSON.stringify({
+            '@context': await ctx.call('jsonld.context.get'),
+            type: ordered ? 'OrderedCollection' : 'Collection',
+            summary,
+            'semapps:itemsPerPage': itemsPerPage,
+            'semapps:dereferenceItems': dereferenceItems,
+            'semapps:sortPredicate': ordered ? sortPredicate : undefined,
+            'semapps:sortOrder': ordered ? sortOrder : undefined
+          }),
           actorUri
         });
 
-        return collectionUri;
+        if (status === 201) {
+          const collectionUri = headers.location;
+
+          await ctx.call('pod-resources.patch', {
+            resourceUri,
+            triplesToAdd: [
+              triple(namedNode(resourceUri), namedNode(expandedAttachPredicate), namedNode(collectionUri))
+            ],
+            actorUri
+          });
+
+          return collectionUri;
+        }
       }
     },
     async deleteAndDetach(ctx) {

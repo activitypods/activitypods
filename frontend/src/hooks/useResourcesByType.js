@@ -10,13 +10,13 @@ const useResourcesByType = (containerUri, typeRegistration) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  console.log('typeRegistration', typeRegistration);
-
   useEffect(() => {
     (async () => {
       if (containerUri && typeRegistration && identity?.id) {
         try {
           const [expandedTypeRegistration] = await jsonld.expand(typeRegistration);
+          const expandedLabelPredicate =
+            expandedTypeRegistration?.['http://activitypods.org/ns/core#labelPredicate']?.[0]?.['@id'];
 
           const { json } = await dataProvider.fetch(urlJoin(identity.id, 'sparql'), {
             method: 'POST',
@@ -27,7 +27,7 @@ const useResourcesByType = (containerUri, typeRegistration) => {
               WHERE {
                 <${containerUri}> ldp:contains ?resourceUri .
                 OPTIONAL {
-                  ?resourceUri <${expandedTypeRegistration['http://activitypods.org/ns/core#labelPredicate'][0]['@id']}> ?label .
+                  ${expandedLabelPredicate ? `?resourceUri <${expandedLabelPredicate}> ?label . ` : ''}
                   ?resourceUri dc:creator ?creator .
                   ?resourceUri dc:created ?created .
                   ?resourceUri dc:modified ?modified .

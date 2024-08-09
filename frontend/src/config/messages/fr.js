@@ -157,7 +157,8 @@ module.exports = {
       no_app_registration: 'Aucune application installée',
       connection_successful: 'Vous êtes maintenant connecté !',
       pod_creation_progress: 'Compte en cours de création...',
-      app_installation_progress: 'Installation en cours...'
+      app_installation_progress: 'Installation en cours...',
+      default_app_changed: "L'application par défaut a été changée"
     },
     notification: {
       contact_request_accepted: 'Demande de contact acceptée',

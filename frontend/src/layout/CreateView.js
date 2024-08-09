@@ -2,7 +2,7 @@ import React from 'react';
 import { ListButton, useCreateContext } from 'react-admin';
 import { Box, Typography, Grid, Card } from '@mui/material';
 
-const CreateView = ({ actions, children }) => {
+const CreateView = ({ actions = [<ListButton />], children }) => {
   const { defaultTitle } = useCreateContext();
   return (
     <>
@@ -23,10 +23,6 @@ const CreateView = ({ actions, children }) => {
       </Box>
     </>
   );
-};
-
-CreateView.defaultProps = {
-  actions: [<ListButton />]
 };
 
 export default CreateView;

@@ -6,6 +6,7 @@
     "@mui/icons-material": "^5.14.13",
     "@mui/material": "^5.14.13",
     "@mui/styles": "^5.14.13",
+    "@rdfjs/data-model": "^1.3.4",
     "@semapps/activitypub-components": "0.6.3",
     "@semapps/auth-provider": "0.6.3",
     "@semapps/date-components": "0.6.3",

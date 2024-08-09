@@ -57,7 +57,7 @@ const DataTypePage = () => {
   const [selected, setSelected] = useState();
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
-  const typeRegistrations = useTypeRegistrations();
+  const { data: typeRegistrations, refetch } = useTypeRegistrations();
   const typeRegistration = typeRegistrations?.find(reg => reg['solid:instanceContainer'] === containerUri);
   const { resources, isLoading, isLoaded } = useResourcesByType(containerUri, typeRegistration);
 
@@ -66,7 +66,7 @@ const DataTypePage = () => {
   return (
     <ListView
       title={typeRegistration?.['skos:prefLabel']}
-      actions={[<MyDataButton />, <SetDefaultAppButton typeRegistration={typeRegistration} />]}
+      actions={[<MyDataButton />, <SetDefaultAppButton typeRegistration={typeRegistration} refetch={refetch} />]}
       asides={selected && !xs ? [<ResourceCard resource={selected} typeRegistration={typeRegistration} />] : null}
     >
       <Box>
@@ -82,7 +82,7 @@ const DataTypePage = () => {
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary={resource.label.value}
+                  primary={resource.label?.value}
                   secondary={resource.resourceUri.value}
                   className={classes.listItemText}
                 />

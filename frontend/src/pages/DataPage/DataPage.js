@@ -27,7 +27,7 @@ const DataPage = () => {
   const translate = useTranslate();
   const navigate = useNavigate();
   const classes = useStyles();
-  const typeRegistrations = useTypeRegistrations();
+  const { data: typeRegistrations } = useTypeRegistrations();
 
   if (!typeRegistrations) return null;
 

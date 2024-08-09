@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@activitypods/announcer": "2.0.0-alpha.8",
-    "@activitypods/description": "2.0.0-alpha.8",
     "@activitypods/ontologies": "2.0.0-alpha.8",
     "@activitypods/solid-notifications": "2.0.0-alpha.8",
     "@activitypods/type-index": "2.0.0-alpha.8",

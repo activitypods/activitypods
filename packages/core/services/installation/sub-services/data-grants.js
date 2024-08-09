@@ -94,6 +94,12 @@ module.exports = {
             containerUri: containersUris[0],
             webId
           });
+
+          await this.broker.call('type-registrations.bindApp', {
+            type: resourceType,
+            appUri,
+            webId
+          });
         }
 
         for (const containerUri of containersUris) {

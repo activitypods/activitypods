@@ -3,7 +3,7 @@ const { triple, namedNode } = require('@rdfjs/data-model');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
-  name: 'access-description-set',
+  name: 'access-description-sets',
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:AccessDescriptionSet'],
@@ -16,7 +16,7 @@ module.exports = {
       const descriptionSet = await this.actions.findByLocale({ locale }, { parentCtx: ctx });
 
       if (descriptionSet) {
-        await ctx.call('access-description-set.patch', {
+        await ctx.call('access-description-sets.patch', {
           resourceUri: descriptionSet.id,
           triplesToAdd: [
             triple(
@@ -29,7 +29,7 @@ module.exports = {
         });
         return descriptionSet.id;
       } else {
-        const accessDescriptionSetUri = await ctx.call('access-description-set.post', {
+        const accessDescriptionSetUri = await ctx.call('access-description-sets.post', {
           resource: {
             type: 'interop:AccessDescriptionSet',
             'interop:usesLanguage': locale,

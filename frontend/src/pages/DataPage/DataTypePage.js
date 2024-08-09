@@ -17,9 +17,9 @@ import makeStyles from '@mui/styles/makeStyles';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import AppBadge from '../../common/AppBadge';
 import ListView from '../../layout/ListView';
 import useResourcesByType from '../../hooks/useResourcesByType';
+import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import ResourceCard from '../../common/cards/ResourceCard';
 
 const useStyles = makeStyles(() => ({
@@ -51,31 +51,22 @@ const MyDataButton = ({ color }) => {
 const DataTypePage = () => {
   useCheckAuthenticated();
   const classes = useStyles();
-  const { type } = useParams();
+  const { containerUri } = useParams();
   const translate = useTranslate();
   const [selected, setSelected] = useState();
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
-  const { data: classDescriptions } = useGetList('ClassDescription', {}, { staleTime: Infinity });
-  const { data: appRegistrations } = useGetList('AppRegistration', {}, { staleTime: Infinity });
+  const typeRegistrations = useTypeRegistrations();
+  const typeRegistration = typeRegistrations?.find(reg => reg['solid:instanceContainer'] === containerUri);
+  const { resources, isLoading, isLoaded } = useResourcesByType(containerUri, typeRegistration);
 
-  const classDescription = classDescriptions?.find(desc => desc['apods:describedClass'] === type);
-  const appRegistration = appRegistrations?.find(
-    appReg => appReg['apods:preferredForClass'] === classDescription['apods:describedClass']
-  );
-  const { resources, isLoading, isLoaded } = useResourcesByType(type, classDescription);
-
-  if (!classDescriptions || !appRegistrations) return null;
+  if (!typeRegistrations) return null;
 
   return (
     <ListView
-      title={classDescription?.['skos:prefLabel']}
+      title={typeRegistration?.['skos:prefLabel']}
       actions={[<MyDataButton />]}
-      asides={
-        selected && !xs
-          ? [<ResourceCard resource={selected} classDescription={classDescription} appRegistration={appRegistration} />]
-          : null
-      }
+      asides={selected && !xs ? [<ResourceCard resource={selected} typeRegistration={typeRegistration} />] : null}
     >
       <Box>
         <List>
@@ -85,11 +76,9 @@ const DataTypePage = () => {
             <ListItem className={classes.listItem} key={resource.resourceUri.value}>
               <ListItemButton onClick={() => setSelected(resource)}>
                 <ListItemAvatar>
-                  <AppBadge appUri={appRegistration?.['interop:registeredAgent']}>
-                    <Avatar>
-                      <InsertDriveFileIcon />
-                    </Avatar>
-                  </AppBadge>
+                  <Avatar src={typeRegistration?.['apods:icon']}>
+                    <InsertDriveFileIcon />
+                  </Avatar>
                 </ListItemAvatar>
                 <ListItemText
                   primary={resource.label.value}
@@ -103,7 +92,7 @@ const DataTypePage = () => {
       </Box>
       {xs && (
         <Dialog fullWidth open={!!selected} onClose={() => setSelected(null)}>
-          <ResourceCard resource={selected} classDescription={classDescription} appRegistration={appRegistration} />
+          <ResourceCard resource={selected} typeRegistration={typeRegistration} />
         </Dialog>
       )}
     </ListView>

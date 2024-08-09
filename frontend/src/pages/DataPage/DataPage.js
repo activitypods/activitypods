@@ -5,7 +5,7 @@ import { Box, Typography, List, ListItem, ListItemButton, Avatar, ListItemAvatar
 import makeStyles from '@mui/styles/makeStyles';
 import FolderIcon from '@mui/icons-material/Folder';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import AppBadge from '../../common/AppBadge';
+import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 
 const useStyles = makeStyles(() => ({
   listItem: {
@@ -27,14 +27,9 @@ const DataPage = () => {
   const translate = useTranslate();
   const navigate = useNavigate();
   const classes = useStyles();
+  const typeRegistrations = useTypeRegistrations();
 
-  const { data: classDescriptions } = useGetList('ClassDescription', {}, { staleTime: Infinity });
-  const { data: appRegistrations } = useGetList('AppRegistration', {}, { staleTime: Infinity });
-
-  // Put class descriptions linked to an app first
-  classDescriptions?.sort(a => (a['apods:describedBy'] ? -1 : 1));
-
-  if (!classDescriptions || !appRegistrations) return null;
+  if (!typeRegistrations) return null;
 
   return (
     <>
@@ -43,29 +38,27 @@ const DataPage = () => {
       </Typography>
       <Box>
         <List>
-          {classDescriptions?.map(classDescription => {
-            const appRegistration = appRegistrations.find(
-              appReg => appReg['apods:preferredForClass'] === classDescription['apods:describedClass']
-            );
-            return (
-              <ListItem className={classes.listItem} key={classDescription.id}>
-                <ListItemButton onClick={() => navigate(`/data/${classDescription['apods:describedClass']}`)}>
+          {typeRegistrations
+            ?.filter(r => r['skos:prefLabel'])
+            ?.sort(a => (a['apods:defaultApp'] ? -1 : 1))
+            .map(typeRegistration => (
+              <ListItem className={classes.listItem} key={typeRegistration.id}>
+                <ListItemButton
+                  onClick={() => navigate(`/data/${encodeURIComponent(typeRegistration['solid:instanceContainer'])}`)}
+                >
                   <ListItemAvatar>
-                    <AppBadge appUri={appRegistration?.['interop:registeredAgent']}>
-                      <Avatar>
-                        <FolderIcon />
-                      </Avatar>
-                    </AppBadge>
+                    <Avatar src={typeRegistration?.['apods:icon']}>
+                      <FolderIcon />
+                    </Avatar>
                   </ListItemAvatar>
                   <ListItemText
-                    primary={classDescription['skos:prefLabel']}
-                    secondary={classDescription['apods:describedClass']}
+                    primary={typeRegistration['skos:prefLabel']}
+                    secondary={typeRegistration['solid:forClass']}
                     className={classes.listItemText}
                   />
                 </ListItemButton>
               </ListItem>
-            );
-          })}
+            ))}
         </List>
       </Box>
     </>

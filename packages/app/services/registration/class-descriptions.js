@@ -3,7 +3,7 @@ const { MIME_TYPES } = require('@semapps/mime-types');
 const { skos } = require('@semapps/ontologies');
 
 module.exports = {
-  name: 'class-description',
+  name: 'class-descriptions',
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['apods:ClassDescription'],
@@ -18,7 +18,9 @@ module.exports = {
   },
   actions: {
     async register(ctx) {
-      const { type, label, labelPredicate, openEndpoint, appUri, podOwner } = ctx.params;
+      const { type, label, labelPredicate, openEndpoint, icon, appUri, podOwner } = ctx.params;
+
+      const app = await ctx.call('ldp.resource.get', { resourceUri: appUri, accept: MIME_TYPES.JSON });
 
       const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
       await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
@@ -44,7 +46,8 @@ module.exports = {
                 ...classDescription,
                 'skos:prefLabel': label[locale],
                 'apods:labelPredicate': labelPredicate,
-                'apods:openEndpoint': openEndpoint
+                'apods:openEndpoint': openEndpoint,
+                'apods:icon': icon || app['oidc:logo_uri']
               },
               contentType: MIME_TYPES.JSON,
               webId: podOwner || 'system'
@@ -63,7 +66,8 @@ module.exports = {
                 'apods:describedBy': appUri,
                 'skos:prefLabel': label[locale],
                 'apods:labelPredicate': labelPredicate,
-                'apods:openEndpoint': openEndpoint
+                'apods:openEndpoint': openEndpoint,
+                'apods:icon': icon || app['oidc:logo_uri']
               },
               contentType: MIME_TYPES.JSON,
               webId: podOwner || 'system'

@@ -4,12 +4,13 @@ const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTOR_TYPES } = require('@semapps/activitypub');
 const { arrayOf } = require('@semapps/ldp');
 const { interopContext } = require('@activitypods/core');
-const { ClassDescriptionService, AccessDescriptionSetService } = require('@activitypods/description');
+const AccessDescriptionSetService = require('./services/registration/access-description-sets');
 const AccessNeedsService = require('./services/registration/access-needs');
 const AccessNeedsGroupsService = require('./services/registration/access-needs-groups');
 const ActorsService = require('./services/registration/actors');
 const AppRegistrationsService = require('./services/registration/app-registrations');
 const AccessGrantsService = require('./services/registration/access-grants');
+const ClassDescriptionService = require('./services/registration/class-descriptions');
 const DataGrantsService = require('./services/registration/data-grants');
 const RegistrationService = require('./services/registration/registration');
 const PodActivitiesWatcherService = require('./services/pod-handling/pod-activities-watcher');
@@ -189,11 +190,11 @@ module.exports = {
       this.appActor = await this.broker.call('activitypub.actor.awaitCreateComplete', { actorUri });
     }
 
-    await this.broker.waitForServices(['class-description', 'access-description-set']);
+    await this.broker.waitForServices(['class-descriptions', 'access-description-sets']);
 
     for (const [type, classDescription] of Object.entries(this.settings.classDescriptions)) {
       // Create one ClassDescription per language
-      const results = await this.broker.call('class-description.register', {
+      const results = await this.broker.call('class-descriptions.register', {
         type,
         appUri: this.appActor.id,
         label: classDescription.label,
@@ -203,7 +204,7 @@ module.exports = {
 
       for (const [locale, classDescriptionUri] of Object.entries(results)) {
         // Attach ClassDescription to corresponding AccessDescriptionSet (create it if necessary)
-        const accessDescriptionSetUri = await this.broker.call('access-description-set.attachClassDescription', {
+        const accessDescriptionSetUri = await this.broker.call('access-description-sets.attachClassDescription', {
           locale,
           classDescriptionUri
         });

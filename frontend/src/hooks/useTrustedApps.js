@@ -8,7 +8,7 @@ const useTrustedApps = () => {
 
   useEffect(() => {
     if (isLoaded) {
-      setTrustedApps(Object.values(data).map(app => app['apods:domainName']));
+      setTrustedApps(Object.values(data).map(app => app['apods:baseUrl']));
     }
   }, [isLoaded, data, setTrustedApps]);
 

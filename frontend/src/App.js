@@ -27,6 +27,7 @@ import AuthorizePage from './pages/AuthorizePage/AuthorizePage';
 import UserPage from './pages/UserPage';
 import RedirectPage from './pages/RedirectPage';
 import InvitePage from './pages/InvitePage/InvitePage';
+import ApplicationsPage from './pages/ApplicationsPage/ApplicationsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +76,7 @@ const App = () => (
           <Route path="/invite/:capability" element={<InvitePage />} />
         </CustomRoutes>
         <CustomRoutes>
+          <Route path="/apps" element={<ApplicationsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/email" element={<SettingsEmailPage />} />
           <Route path="/settings/password" element={<SettingsPasswordPage />} />
@@ -82,7 +84,7 @@ const App = () => (
           <Route path="/settings/delete-pod" element={<SettingsDeletePodPage />} />
           <Route path="/data">
             <Route index element={<DataPage />} />
-            <Route path=":type" element={<DataTypePage />} />
+            <Route path=":containerUri" element={<DataTypePage />} />
           </Route>
         </CustomRoutes>
       </Admin>

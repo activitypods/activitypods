@@ -1,12 +1,12 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { Link, useTranslate, useGetList } from 'react-admin';
+import { Link, useTranslate, useGetList, useNotify } from 'react-admin';
 import { Typography, Box, Chip, Button } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import makeStyles from '@mui/styles/makeStyles';
 import WarningIcon from '@mui/icons-material/Warning';
 import DoneIcon from '@mui/icons-material/Done';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { useOutbox } from '@semapps/activitypub-components';
+import { useOutbox, useInbox } from '@semapps/activitypub-components';
 import SimpleBox from '../../layout/SimpleBox';
 import useTrustedApps from '../../hooks/useTrustedApps';
 import useApplication from '../../hooks/useApplication';
@@ -55,9 +55,11 @@ const AuthorizePageView = () => {
   const [isInstalling, setIsInstalling] = useState(false);
   const [allowedAccessNeeds, setAllowedAccessNeeds] = useState();
   const outbox = useOutbox();
+  const inbox = useInbox();
   const translate = useTranslate();
   const trustedApps = useTrustedApps();
   const [searchParams] = useSearchParams();
+  const notify = useNotify();
   const { data: appRegistrations, isLoading } = useGetList('AppRegistration', { page: 1, perPage: Infinity });
   const redirectTo = searchParams.get('redirect');
   const clientId = searchParams.get('client_id');
@@ -85,28 +87,48 @@ const AuthorizePageView = () => {
   }, [redirectTo]);
 
   const installApp = useCallback(async () => {
-    setIsInstalling(true);
-    await outbox.post({
-      '@context': [
-        'https://www.w3.org/ns/activitystreams',
-        {
-          apods: 'http://activitypods.org/ns/core#',
-          'apods:acceptedAccessNeeds': {
-            '@type': '@id'
-          },
-          'apods:acceptedSpecialRights': {
-            '@type': '@id'
+    try {
+      setIsInstalling(true);
+
+      // Do not await to ensure we don't miss the activities below
+      outbox.post({
+        '@context': [
+          'https://www.w3.org/ns/activitystreams',
+          {
+            apods: 'http://activitypods.org/ns/core#',
+            'apods:acceptedAccessNeeds': {
+              '@type': '@id'
+            },
+            'apods:acceptedSpecialRights': {
+              '@type': '@id'
+            }
           }
-        }
-      ],
-      type: 'apods:Install',
-      actor: outbox.owner,
-      object: application.id,
-      'apods:acceptedAccessNeeds': allowedAccessNeeds.filter(a => !a.startsWith('apods:')),
-      'apods:acceptedSpecialRights': allowedAccessNeeds.filter(a => a.startsWith('apods:'))
-    });
-    accessApp();
-  }, [outbox, application, allowedAccessNeeds, accessApp, setIsInstalling]);
+        ],
+        type: 'apods:Install',
+        actor: outbox.owner,
+        object: application.id,
+        'apods:acceptedAccessNeeds': allowedAccessNeeds.filter(a => !a.startsWith('apods:')),
+        'apods:acceptedSpecialRights': allowedAccessNeeds.filter(a => a.startsWith('apods:'))
+      });
+
+      // TODO Allow to pass an object, and automatically dereference it, like on the @semapps/activitypub matchActivity util
+      const createRegistrationActivity = await outbox.awaitActivity(
+        activity => activity.type === 'Create' && activity.to === application.id
+      );
+
+      await inbox.awaitActivity(
+        activity =>
+          activity.type === 'Accept' &&
+          activity.actor === application.id &&
+          activity.object === createRegistrationActivity.id
+      );
+
+      accessApp();
+    } catch (e) {
+      setIsInstalling(false);
+      notify(`Error on app installation: ${e.message}`, { type: 'error' });
+    }
+  }, [outbox, inbox, notify, application, allowedAccessNeeds, accessApp, setIsInstalling]);
 
   // Once all data are loaded, either redirect to app or show authorization screen
   useEffect(() => {

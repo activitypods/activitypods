@@ -24,7 +24,6 @@ const ProfileCreatePage = () => {
   // Reload profile unless profile is created
   useEffect(() => {
     if (!identity?.profileData?.id) {
-      console.log('set interval', refetchIdentity);
       const intervalId = setInterval(refetchIdentity, 1000);
       return () => clearInterval(intervalId);
     }

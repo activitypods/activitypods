@@ -11,7 +11,8 @@ module.exports = {
         read: true
       }
     },
-    excludeFromMirror: true
+    excludeFromMirror: true,
+    activateTombstones: false
   },
   dependencies: ['ldp', 'ldp.registry', 'pod'],
   actions: {

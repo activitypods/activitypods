@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { Link, useTranslate, useGetList, useNotify } from 'react-admin';
+import { Link, useTranslate, useGetList, useNotify, useDataProvider } from 'react-admin';
+import urlJoin from 'url-join';
 import { Typography, Box, Chip, Button } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import makeStyles from '@mui/styles/makeStyles';
@@ -60,9 +61,11 @@ const AuthorizePageView = () => {
   const trustedApps = useTrustedApps();
   const [searchParams] = useSearchParams();
   const notify = useNotify();
+  const dataProvider = useDataProvider();
   const { data: appRegistrations, isLoading } = useGetList('AppRegistration', { page: 1, perPage: Infinity });
   const redirectTo = searchParams.get('redirect');
   const clientId = searchParams.get('client_id');
+  const interactionId = searchParams.get('interaction_id');
   const clientDomain = new URL(clientId).host;
   const isTrustedApp = trustedApps.some(domain => domain === clientDomain);
 
@@ -82,9 +85,18 @@ const AuthorizePageView = () => {
     }
   }, [loaded, requiredAccessNeeds, optionalAccessNeeds, setAllowedAccessNeeds]);
 
-  const accessApp = useCallback(() => {
+  const accessApp = useCallback(async () => {
+    await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.oidc/consent-completed'), {
+      method: 'POST',
+      body: JSON.stringify({
+        interactionId
+        // webId
+      }),
+      headers: new Headers({ 'Content-Type': 'application/json' })
+    });
+
     window.location.href = redirectTo;
-  }, [redirectTo]);
+  }, [dataProvider, interactionId, redirectTo]);
 
   const installApp = useCallback(async () => {
     try {

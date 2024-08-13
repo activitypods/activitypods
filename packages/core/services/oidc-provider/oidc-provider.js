@@ -64,9 +64,22 @@ module.exports = {
       }
     });
 
+    await this.broker.call('api.addRoute', {
+      route: {
+        name: 'oidc-consent-completed',
+        path: path.join(basePath, '/.oidc/consent-completed'),
+        bodyParsers: {
+          json: true
+        },
+        aliases: {
+          'POST /': 'oidc-provider.consentCompleted'
+        }
+      }
+    });
+
     // The OIDC provider route must be added after all other routes, otherwise it gets overwritten
     // TODO find out why ! Probably due to the fact it is only a middleware (adding dummy aliases doesn't help)
-    await delay(5000);
+    await delay(10000);
 
     await this.broker.call('api.addRoute', {
       route: {
@@ -126,6 +139,7 @@ module.exports = {
         throw new Error('Not found');
       }
     },
+    // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
     async loginCompleted(ctx) {
       const { interactionId, webId } = ctx.params;
 
@@ -134,8 +148,30 @@ module.exports = {
       }
 
       await this.interactionFinished(interactionId, {
-        login: { accountId: webId, amr: ['pwd'] }
+        login: { accountId: webId, amr: ['pwd'], remember: true }
       });
+    },
+    // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
+    async consentCompleted(ctx) {
+      const { interactionId } = ctx.params;
+      const interaction = await this.oidc.Interaction.find(interactionId);
+
+      if (interaction) {
+        const clientId = interaction.params?.client_id;
+        const accountId = interaction.session?.accountId;
+        const scope = interaction.params?.scope;
+
+        // Grant the requested scope (should be "webid openid")
+        const grant = new this.oidc.Grant({ accountId, clientId });
+        grant.addOIDCScope(scope);
+        const grantId = await grant.save();
+
+        await this.interactionFinished(interactionId, {
+          consent: { grantId }
+        });
+      } else {
+        throw new Error(`No interaction found with ID ${interactionId}`);
+      }
     }
   },
   events: {

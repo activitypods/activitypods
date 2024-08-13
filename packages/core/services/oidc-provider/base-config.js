@@ -92,7 +92,8 @@ module.exports = (settings, privateJwk) => ({
       return { sub, webid: sub, azp: ctx.oidc.client?.clientId };
     }
   }),
-  // Since the login form is on a separated frontend, we must redirect to it
+  // Since the login and consent forms are on a separated frontend, we must redirect to it
+  // The /.oidc/login-completed and /.oidc/consent-completed endpoint will take care of finishing the interaction
   interactions: {
     url: async (ctx, interaction) => {
       switch (interaction?.prompt?.name) {
@@ -106,9 +107,11 @@ module.exports = (settings, privateJwk) => ({
         }
 
         case 'consent': {
-          // We automatically grant required scopes so consent screen should not be handled
-          // See loadExistingGrant config below
-          throw new Error('Consent interaction not handled');
+          const authorizeUrl = new URL(urlJoin(settings.frontendUrl, '/authorize'));
+          authorizeUrl.searchParams.set('interaction_id', interaction.jti);
+          authorizeUrl.searchParams.set('client_id', interaction?.params?.client_id);
+          authorizeUrl.searchParams.set('redirect', interaction.returnTo);
+          return authorizeUrl.toString();
         }
 
         default: {
@@ -117,33 +120,18 @@ module.exports = (settings, privateJwk) => ({
       }
     }
   },
-  // Automatically grant `webid` and `openid` scopes to avoid dealing with the consent interaction
-  // https://github.com/panva/node-oidc-provider/blob/main/recipes/skip_consent.md
-  loadExistingGrant: async ctx => {
-    const grantId = ctx.oidc.result?.consent?.grantId || ctx.oidc.session.grantIdFor(ctx.oidc.client.clientId);
-    if (grantId) {
-      return ctx.oidc.provider.Grant.find(grantId);
-    } else {
-      const clientId = ctx.oidc.client.clientId;
-      const accountId = ctx.oidc.session.accountId;
-      const grant = new ctx.oidc.provider.Grant({ accountId, clientId });
-      grant.addOIDCScope('webid openid');
-      await grant.save();
-      return grant;
-    }
-  },
   // Solid OIDC requires pkce https://solid.github.io/solid-oidc/#concepts
   pkce: { methods: ['S256'], required: () => true },
   scopes: ['openid', 'profile', 'offline_access', 'webid'],
   subjectTypes: ['public'],
   ttl: {
-    AccessToken: 3600,
+    AccessToken: 3600, // Increase ?
     AuthorizationCode: 600,
     BackchannelAuthenticationRequest: 600,
     ClientCredentials: 600,
     DeviceCode: 600,
     Grant: 1209600,
-    IdToken: 3600,
+    IdToken: 3600, // Increase ?
     Interaction: 3600,
     RefreshToken: 86400,
     Session: 1209600

@@ -44,7 +44,6 @@ const LoginPage = () => (
   <LocalLoginPage
     allowUsername
     postSignupRedirect="/initialize"
-    postLoginRedirect="/authorize"
     additionalSignupValues={{ 'schema:knowsLanguage': CONFIG.DEFAULT_LOCALE }}
     passwordScorer={scorer}
   />

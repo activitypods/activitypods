@@ -40,6 +40,9 @@ module.exports = (settings, privateJwk) => ({
     dPoP: { enabled: true },
     introspection: { enabled: true },
     registration: { enabled: true },
+    // The /.oidc/auth/session/end endpoint is being called when you disconnect from the Pod provider
+    // It has the effect of destroying the session and grants of the logged user
+    // The code below automatically accept the global logout, to avoid showing an additional form to the user
     rpInitiatedLogout: {
       enabled: true,
       // Automatically submit the form
@@ -125,16 +128,22 @@ module.exports = (settings, privateJwk) => ({
   scopes: ['openid', 'profile', 'offline_access', 'webid'],
   subjectTypes: ['public'],
   ttl: {
-    AccessToken: 3600, // Increase ?
+    AccessToken: 3600,
     AuthorizationCode: 600,
     BackchannelAuthenticationRequest: 600,
     ClientCredentials: 600,
     DeviceCode: 600,
-    Grant: 1209600,
-    IdToken: 3600, // Increase ?
+    // Set a very short ttl so that, if the application is uninstalled, we will show the Authorization screen again
+    // Ideally the grant linked with the session should be revoked on uninstallation but we found no easy way to do that (except with a raw edition of the Redis DB)
+    // Community Solid Server use 14 days (1209600s) that is the same time as the session (they expire at the same time)
+    Grant: 30,
+    // Since we currently use ID tokens instead of Access tokens with DPOP, keep it active for one year.
+    // Community Solid Server use one hour (3600s) which is a g)ood default if it is used only to generate an access token
+    IdToken: 31536000,
     Interaction: 3600,
     RefreshToken: 86400,
-    Session: 1209600
+    // Keep session open for one year, like the ID token. On Community Solid Server, it is 14 days (1209600s)
+    Session: 31536000
   },
   renderError: async (ctx, out, error) => {
     console.error(error);

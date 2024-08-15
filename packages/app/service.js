@@ -1,9 +1,6 @@
 const QueueMixin = require('moleculer-bull');
 const { triple, namedNode } = require('@rdfjs/data-model');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { ACTOR_TYPES } = require('@semapps/activitypub');
 const { arrayOf } = require('@semapps/ldp');
-const { interopContext } = require('@activitypods/core');
 const AccessDescriptionSetService = require('./services/registration/access-description-sets');
 const AccessNeedsService = require('./services/registration/access-needs');
 const AccessNeedsGroupsService = require('./services/registration/access-needs-groups');
@@ -27,6 +24,7 @@ const TranslatorService = require('./services/utils/translator');
 module.exports = {
   name: 'app',
   settings: {
+    baseUrl: null,
     app: {
       name: null,
       description: null,
@@ -54,7 +52,10 @@ module.exports = {
     'ldp.container',
     'ldp.registry',
     'ldp.resource',
-    'actors'
+    'actors',
+    'access-needs-groups',
+    'class-descriptions',
+    'access-description-sets'
   ],
   created() {
     if (!this.settings.queueServiceUrl) {
@@ -66,12 +67,7 @@ module.exports = {
     this.broker.createService({ mixins: [RegistrationService] });
 
     this.broker.createService({ mixins: [AccessNeedsService] });
-    this.broker.createService({
-      mixins: [AccessNeedsGroupsService],
-      settings: {
-        accessNeeds: this.settings.accessNeeds
-      }
-    });
+    this.broker.createService({ mixins: [AccessNeedsGroupsService] });
 
     this.broker.createService({ mixins: [AppRegistrationsService] });
     this.broker.createService({ mixins: [DataGrantsService] });
@@ -104,130 +100,55 @@ module.exports = {
     this.broker.createService({ mixins: [TranslatorService] });
   },
   async started() {
-    let actorExist = false,
-      actorUri;
+    this.appActor = await this.broker.call('actors.createOrUpdateApp', {
+      app: this.settings.app,
+      oidc: this.settings.oidc
+    });
 
-    const actorAccount = await this.broker.call('auth.account.findByUsername', { username: 'app' });
-
-    if (actorAccount) {
-      actorUri = actorAccount.webId;
-      actorExist = await this.broker.call('ldp.resource.exist', {
-        resourceUri: actorUri
-      });
-    }
-
-    if (!actorExist) {
-      this.logger.info(`Actor ${actorUri} does not exist yet, creating it...`);
-
-      const account = await this.broker.call(
-        'auth.account.create',
-        {
-          username: 'app'
-        },
-        { meta: { isSystemCall: true } }
-      );
-
-      try {
-        actorUri = await this.broker.call('actors.post', {
-          slug: 'app',
-          resource: {
-            '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
-            type: [ACTOR_TYPES.APPLICATION, 'interop:Application'],
-            preferredUsername: 'app',
-            name: this.settings.app.name,
-            'interop:applicationName': this.settings.app.name,
-            'interop:applicationDescription': this.settings.app.description,
-            'interop:applicationAuthor': this.settings.app.author,
-            'interop:applicationThumbnail': this.settings.app.thumbnail,
-            'oidc:client_name': this.settings.app.name,
-            'oidc:redirect_uris': this.settings.oidc.redirectUris,
-            'oidc:post_logout_redirect_uris': this.settings.oidc.postLogoutRedirectUris,
-            'oidc:client_uri': this.settings.oidc.clientUri,
-            'oidc:logo_uri': this.settings.app.thumbnail,
-            'oidc:tos_uri': this.settings.oidc.tosUri,
-            'oidc:scope': 'openid profile offline_access webid',
-            'oidc:grant_types': ['refresh_token', 'authorization_code'],
-            'oidc:response_types': ['code'],
-            'oidc:default_max_age': 3600,
-            'oidc:require_auth_time': true
-          },
-          contentType: MIME_TYPES.JSON,
-          webId: 'system'
-        });
-
-        await this.broker.call(
-          'auth.account.attachWebId',
-          {
-            accountUri: account['@id'],
-            webId: actorUri
-          },
-          { meta: { isSystemCall: true } }
-        );
-      } catch (e) {
-        // Delete account if resource creation failed, or it may cause problems when retrying
-        await this.broker.call('auth.account.remove', { id: account['@id'] });
-        throw e;
-      }
-
-      this.appActor = await this.broker.call('activitypub.actor.awaitCreateComplete', { actorUri });
-
-      await this.broker.waitForServices(['access-needs-groups']);
-      const accessNeedGroupUris = await this.broker.call('access-needs-groups.initialize');
-
-      await this.broker.call('ldp.resource.patch', {
-        resourceUri: this.appActor.id,
-        triplesToAdd: arrayOf(accessNeedGroupUris).map(accessNeedGroupUri =>
-          triple(
-            namedNode(this.appActor.id),
-            namedNode('http://www.w3.org/ns/solid/interop#hasAccessNeedGroup'),
-            namedNode(accessNeedGroupUri)
-          )
-        ),
-        webId: 'system'
-      });
-    } else {
-      await this.broker.waitForServices('activitypub.actor');
-      this.appActor = await this.broker.call('activitypub.actor.awaitCreateComplete', { actorUri });
-    }
-
-    await this.broker.waitForServices(['class-descriptions', 'access-description-sets']);
-
-    for (const [type, classDescription] of Object.entries(this.settings.classDescriptions)) {
-      // Create one ClassDescription per language
-      const results = await this.broker.call('class-descriptions.register', {
-        type,
-        appUri: this.appActor.id,
-        label: classDescription.label,
-        labelPredicate: classDescription.labelPredicate,
-        openEndpoint: classDescription.openEndpoint
-      });
-
-      for (const [locale, classDescriptionUri] of Object.entries(results)) {
-        // Attach ClassDescription to corresponding AccessDescriptionSet (create it if necessary)
-        const accessDescriptionSetUri = await this.broker.call('access-description-sets.attachClassDescription', {
-          locale,
-          classDescriptionUri
-        });
-
-        // Attach the AccessDescriptionSet to the Application
-        await this.broker.call('ldp.resource.patch', {
-          resourceUri: this.appActor.id,
-          triplesToAdd: [
-            triple(
-              namedNode(this.appActor.id),
-              namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
-              namedNode(accessDescriptionSetUri)
-            )
-          ],
-          webId: 'system'
-        });
-      }
-    }
-
+    // TODO Ensure this doesn't add a link on every call
     await this.broker.call('nodeinfo.addLink', {
       rel: 'https://www.w3.org/ns/activitystreams#Application',
       href: this.appActor.id
     });
+
+    await this.broker.call('access-needs-groups.createOrUpdate', {
+      accessNeeds: {
+        required: arrayOf(this.settings.accessNeeds.required),
+        optional: arrayOf(this.settings.accessNeeds.optional)
+      }
+    });
+
+    // for (const [type, classDescription] of Object.entries(this.settings.classDescriptions)) {
+    //   // Create one ClassDescription per language
+    //   const results = await this.broker.call('class-descriptions.register', {
+    //     type,
+    //     appUri: this.appActor.id,
+    //     label: classDescription.label,
+    //     labelPredicate: classDescription.labelPredicate,
+    //     openEndpoint: classDescription.openEndpoint
+    //   });
+
+    //   for (const [locale, classDescriptionUri] of Object.entries(results)) {
+    //     // Attach ClassDescription to corresponding AccessDescriptionSet (create it if necessary)
+    //     const accessDescriptionSetUri = await this.broker.call('access-description-sets.attachClassDescription', {
+    //       locale,
+    //       classDescriptionUri
+    //     });
+
+    //     // Attach the AccessDescriptionSet to the Application
+    //     await this.broker.call('ldp.resource.patch', {
+    //       resourceUri: this.appActor.id,
+    //       triplesToAdd: [
+    //         triple(
+    //           namedNode(this.appActor.id),
+    //           namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
+    //           namedNode(accessDescriptionSetUri)
+    //         )
+    //       ],
+    //       webId: 'system'
+    //     });
+    //   }
+    // }
   },
   actions: {
     get() {

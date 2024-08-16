@@ -1,5 +1,8 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
 
+/**
+ * Mirror container for data grants which have been granted to the app
+ */
 module.exports = {
   name: 'data-grants',
   mixins: [ControlledContainerMixin],

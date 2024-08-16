@@ -151,6 +151,40 @@ module.exports = {
         },
         { parentCtx: ctx }
       );
+    },
+    async attachAccessDescriptionSet(ctx) {
+      const { accessDescriptionSetUri } = ctx.params;
+      await this.actions.patch(
+        {
+          resourceUri: this.appActor.id,
+          triplesToAdd: [
+            triple(
+              namedNode(this.appActor.id),
+              namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
+              namedNode(accessDescriptionSetUri)
+            )
+          ],
+          webId: 'system'
+        },
+        { parentCtx: ctx }
+      );
+    },
+    async detachAccessDescriptionSet(ctx) {
+      const { accessDescriptionSetUri } = ctx.params;
+      await this.actions.patch(
+        {
+          resourceUri: this.appActor.id,
+          triplesToRemove: [
+            triple(
+              namedNode(this.appActor.id),
+              namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
+              namedNode(accessDescriptionSetUri)
+            )
+          ],
+          webId: 'system'
+        },
+        { parentCtx: ctx }
+      );
     }
   }
 };

@@ -4,7 +4,7 @@ const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
-  name: 'app.registration',
+  name: 'registration',
   mixins: [ActivitiesHandlerMixin],
   activities: {
     createAppRegistration: {

@@ -15,10 +15,10 @@ module.exports = {
   },
   actions: {
     put() {
-      throw new Error(`The resource of type interop:AccessNeedGroup are immutable`);
+      throw new Error(`The resources of type interop:AccessNeedGroup are immutable`);
     },
     patch() {
-      throw new Error(`The resource of type interop:AccessNeedGroup are immutable`);
+      throw new Error(`The resources of type interop:AccessNeedGroup are immutable`);
     },
     async createOrUpdate(ctx) {
       const { accessNeeds: accessNeedsByNecessity } = ctx.params;
@@ -106,7 +106,7 @@ module.exports = {
               );
             }
 
-            await this.actions.post(
+            const accessNeedGroupUri = await this.actions.post(
               {
                 resource: {
                   '@context': interopContext,
@@ -124,6 +124,8 @@ module.exports = {
                 parentCtx: ctx
               }
             );
+
+            this.logger.info(`Created new access need group ${accessNeedGroupUri}`);
           }
         } else {
           // If there are no more access needs...

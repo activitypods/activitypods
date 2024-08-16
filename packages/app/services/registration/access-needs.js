@@ -1,4 +1,4 @@
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+const { ControlledContainerMixin } = require('@semapps/ldp');
 const { necessityMapping } = require('../../mappings');
 const { arraysEqual } = require('../../utils');
 
@@ -12,10 +12,10 @@ module.exports = {
   },
   actions: {
     put() {
-      throw new Error(`The resource of type interop:AccessNeed are immutable`);
+      throw new Error(`The resources of type interop:AccessNeed are immutable`);
     },
     patch() {
-      throw new Error(`The resource of type interop:AccessNeed are immutable`);
+      throw new Error(`The resources of type interop:AccessNeed are immutable`);
     },
     async find(ctx) {
       const { necessity, registeredClassUri, accessMode } = ctx.params;

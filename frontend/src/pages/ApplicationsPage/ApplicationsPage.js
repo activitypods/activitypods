@@ -7,8 +7,8 @@ import { isLocalURL } from '../../utils';
 
 const ApplicationsPage = () => {
   useCheckAuthenticated();
-  const { data: appRegistrations, isLoading: isAppRegistrationsLoading } = useGetList(
-    'AppRegistration',
+  const { data: installedApps, isLoading: isInstalledAppsLoading } = useGetList(
+    'App',
     {
       page: 1,
       perPage: Infinity
@@ -24,13 +24,13 @@ const ApplicationsPage = () => {
     { staleTime: Infinity }
   );
 
-  if (isAppRegistrationsLoading) return null;
+  if (isInstalledAppsLoading) return null;
 
   return (
     <>
-      <InstalledApps appRegistrations={appRegistrations} trustedApps={trustedApps} />
+      <InstalledApps installedApps={installedApps} trustedApps={trustedApps} />
       {!isLocalURL(CONFIG.BACKEND_URL) && !isTrustedAppsLoading && (
-        <AvailableApps appRegistrations={appRegistrations} trustedApps={trustedApps} />
+        <AvailableApps installedApps={installedApps} trustedApps={trustedApps} />
       )}
     </>
   );

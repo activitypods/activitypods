@@ -51,6 +51,18 @@ module.exports = {
   },
   hooks: {
     after: {
+      async post(ctx, res) {
+        const appUri = ctx.params.resource['interop:registeredAgent'];
+        const webId = ctx.params.resource['interop:registeredBy'];
+
+        // Keep in cache the application. This is useful for:
+        // - Display the application details in the app store even if it's offline
+        // - Known when the app must be upgraded by comparing the dc:modified predicate
+        await ctx.call('ldp.remote.store', { resourceUri: appUri, webId });
+        await ctx.call('applications.attach', { resourceUri: appUri, webId });
+
+        return res;
+      },
       async delete(ctx, res) {
         const appRegistration = res.oldData;
 
@@ -74,6 +86,13 @@ module.exports = {
             webId: 'system'
           });
         }
+
+        // DELETE APPLICATION KEPT IN CACHE
+
+        await ctx.call('applications.delete', {
+          resourceUri: appRegistration['interop:registeredAgent'],
+          webId: 'system'
+        });
 
         return res;
       }

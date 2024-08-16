@@ -3,13 +3,13 @@ import { useTranslate } from 'react-admin';
 import { Box, Typography, Grid, useMediaQuery } from '@mui/material';
 import ApplicationCard from './ApplicationCard';
 
-const AvailableApps = ({ appRegistrations, trustedApps }) => {
+const AvailableApps = ({ installedApps, trustedApps }) => {
   const translate = useTranslate();
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
   // Filter out applications which are already installed
   const availableApps = trustedApps?.filter(
-    app => !appRegistrations.some(r => r['interop:registeredAgent'] === app.id)
+    trustedApp => !installedApps.some(installedApp => installedApp.id === trustedApp.id)
   );
 
   if (availableApps?.length === 0) return null;

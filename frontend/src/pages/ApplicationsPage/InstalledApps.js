@@ -1,17 +1,15 @@
 import React, { useCallback, useEffect } from 'react';
 import urlJoin from 'url-join';
 import { useSearchParams } from 'react-router-dom';
-import { useTranslate, useNotify, useGetOne } from 'react-admin';
+import { useTranslate, useNotify } from 'react-admin';
 import { Box, Typography, Grid, useMediaQuery } from '@mui/material';
 import { useOutbox, ACTIVITY_TYPES, useInbox } from '@semapps/activitypub-components';
 import ApplicationCard from './ApplicationCard';
 
-const AppRegistration = ({ appRegistration, trustedApps }) => {
+const AppRegistration = ({ app, isTrustedApp }) => {
   const notify = useNotify();
   const outbox = useOutbox();
   const inbox = useInbox();
-  const { data: app, isLoading, error } = useGetOne('App', { id: appRegistration['interop:registeredAgent'] });
-  const isTrustedApp = trustedApps?.some(baseUrl => baseUrl === appRegistration['interop:registeredAgent']) || false;
 
   const uninstallApp = useCallback(async () => {
     try {
@@ -46,12 +44,10 @@ const AppRegistration = ({ appRegistration, trustedApps }) => {
     }
   }, [app, outbox, inbox, notify]);
 
-  if (isLoading || error) return null;
-
   return <ApplicationCard app={app} isTrustedApp={isTrustedApp} isInstalled uninstallApp={uninstallApp} />;
 };
 
-const InstalledApps = ({ appRegistrations, trustedApps }) => {
+const InstalledApps = ({ installedApps, trustedApps }) => {
   const notify = useNotify();
   const translate = useTranslate();
   const [searchParams] = useSearchParams();
@@ -64,7 +60,7 @@ const InstalledApps = ({ appRegistrations, trustedApps }) => {
     }
   }, [notify, searchParams]);
 
-  if (appRegistrations?.length === 0) return null;
+  if (installedApps?.length === 0) return null;
 
   return (
     <>
@@ -73,11 +69,14 @@ const InstalledApps = ({ appRegistrations, trustedApps }) => {
       </Typography>
       <Box mt={1} mb={5}>
         <Grid container spacing={xs ? 1 : 3}>
-          {appRegistrations.map(appRegistration => (
-            <Grid key={appRegistration.id} item xs={12} sm={6}>
-              <AppRegistration appRegistration={appRegistration} trustedApps={trustedApps} />
-            </Grid>
-          ))}
+          {installedApps?.map(installedApp => {
+            const isTrustedApp = trustedApps?.some(baseUrl => baseUrl === installedApp.id) || false;
+            return (
+              <Grid key={installedApp.id} item xs={12} sm={6}>
+                <AppRegistration app={installedApp} isTrustedApp={isTrustedApp} />
+              </Grid>
+            );
+          })}
         </Grid>
       </Box>
     </>

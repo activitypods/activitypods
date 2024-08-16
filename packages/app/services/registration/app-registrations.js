@@ -1,5 +1,8 @@
 const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 
+/**
+ * Mirror container for application registrations
+ */
 module.exports = {
   name: 'app-registrations',
   mixins: [ControlledContainerMixin],

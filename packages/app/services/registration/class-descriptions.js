@@ -8,7 +8,8 @@ module.exports = {
   settings: {
     acceptedTypes: ['apods:ClassDescription'],
     readOnly: true,
-    excludeFromMirror: true
+    excludeFromMirror: true,
+    activateTombstones: false
   },
   async started() {
     await this.broker.call('ontologies.register', {
@@ -17,101 +18,32 @@ module.exports = {
     });
   },
   actions: {
-    async register(ctx) {
-      const { type, label, labelPredicate, openEndpoint, icon, appUri, podOwner } = ctx.params;
-
-      const app = await ctx.call('ldp.resource.get', { resourceUri: appUri, accept: MIME_TYPES.JSON });
-
-      const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
-      await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
-
-      const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
-
-      let returnValue = {};
-
-      for (const locale of Object.keys(label)) {
-        let classDescriptionUri = await this.actions.findByLocaleAndType({ locale, type: expandedType, podOwner });
-
-        if (classDescriptionUri) {
-          const classDescription = await this.actions.get({
-            resourceUri: classDescriptionUri,
-            accept: MIME_TYPES.JSON,
-            webId: podOwner || 'system'
-          });
-
-          // If ClassDescription exist, update it
-          await this.actions.put(
-            {
-              resource: {
-                ...classDescription,
-                'skos:prefLabel': label[locale],
-                'apods:labelPredicate': labelPredicate,
-                'apods:openEndpoint': openEndpoint,
-                'apods:icon': icon || app['oidc:logo_uri']
-              },
-              contentType: MIME_TYPES.JSON,
-              webId: podOwner || 'system'
-            },
-            {
-              parentCtx: ctx
-            }
-          );
-        } else {
-          // If ClassDescription doesn't exist, create it
-          classDescriptionUri = await this.actions.post(
-            {
-              resource: {
-                type: 'apods:ClassDescription',
-                'apods:describedClass': expandedType,
-                'apods:describedBy': appUri,
-                'skos:prefLabel': label[locale],
-                'apods:labelPredicate': labelPredicate,
-                'apods:openEndpoint': openEndpoint,
-                'apods:icon': icon || app['oidc:logo_uri']
-              },
-              contentType: MIME_TYPES.JSON,
-              webId: podOwner || 'system'
-            },
-            {
-              parentCtx: ctx
-            }
-          );
-        }
-
-        returnValue[locale] = classDescriptionUri;
-      }
-
-      return returnValue;
+    put() {
+      throw new Error(`The resources of type apods:ClassDescription are immutable`);
     },
-    async findByLocaleAndType(ctx) {
-      const { locale, type, podOwner } = ctx.params;
+    patch() {
+      throw new Error(`The resources of type apods:ClassDescription are immutable`);
+    },
+    async findExisting(ctx) {
+      const { locale, type, label, labelPredicate, openEndpoint, icon } = ctx.params;
 
-      // If we are registering on a Pod, we only register one locale and there is no AccessDescriptionSet
-      const query = podOwner
-        ? `
+      const results = await ctx.call('triplestore.query', {
+        query: `
           PREFIX apods: <http://activitypods.org/ns/core#>
           PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+          PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
           SELECT ?classDescription 
           WHERE {
             ?classDescription apods:describedClass <${type}> .
+            ?classDescription skos:prefLabel "${label}" .
+            ?classDescription apods:labelPredicate <${labelPredicate}> .
+            ?classDescription apods:openEndpoint "${openEndpoint}" .
+            ?classDescription apods:icon "${icon}" .
             ?classDescription a apods:ClassDescription .
+            ?set apods:hasClassDescription ?classDescription .
+            ?set interop:usesLanguage "${locale}"^^<http://www.w3.org/2001/XMLSchema#language>
           }
-        `
-        : `
-        PREFIX apods: <http://activitypods.org/ns/core#>
-        PREFIX interop: <http://www.w3.org/ns/solid/interop#>
-        SELECT ?classDescription 
-        WHERE {
-          ?classDescription apods:describedClass <${type}> .
-          ?classDescription a apods:ClassDescription .
-          ?set apods:hasClassDescription ?classDescription .
-          ?set interop:usesLanguage "${locale}"^^<http://www.w3.org/2001/XMLSchema#language>
-        }
-      `;
-
-      const results = await ctx.call('triplestore.query', {
-        query,
-        dataset: podOwner ? getDatasetFromUri(podOwner) : undefined,
+        `,
         accept: MIME_TYPES.JSON,
         webId: 'system'
       });

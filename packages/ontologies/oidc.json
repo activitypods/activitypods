@@ -17,12 +17,6 @@
     },
     "oidc:redirect_uris": {
       "@type": "@id"
-    },
-    "oidc:require_auth_time": {
-      "@type": "xsd:boolean"
-    },
-    "oidc:default_max_age": {
-      "@type": "xsd:integer"
     }
   }
 }

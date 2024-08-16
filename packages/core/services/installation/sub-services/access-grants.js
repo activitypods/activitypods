@@ -10,7 +10,8 @@ module.exports = {
         read: true
       }
     },
-    excludeFromMirror: true
+    excludeFromMirror: true,
+    activateTombstones: false
   },
   actions: {
     async getSpecialRights(ctx) {

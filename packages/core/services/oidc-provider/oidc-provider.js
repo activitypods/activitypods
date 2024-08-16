@@ -19,13 +19,12 @@ module.exports = {
     // Dynamically import Provider since it's an ESM module
     const { default: Provider } = await import('oidc-provider');
 
-    this.client = new Redis(this.settings.redisUrl, { keyPrefix: 'oidc:' });
-
     const { privateJwk } = await this.broker.call('jwk.get');
 
     const config = baseConfig(this.settings, privateJwk);
 
-    config.adapter = name => new RedisAdapter(name, this.client);
+    const redisClient = new Redis(this.settings.redisUrl, { keyPrefix: 'oidc:' });
+    config.adapter = name => new RedisAdapter(name, redisClient);
 
     // See https://github.com/panva/node-oidc-provider/blob/main/recipes/client_based_origins.md
     config.clientBasedCORS = (ctx, origin, client) => {
@@ -64,9 +63,22 @@ module.exports = {
       }
     });
 
+    await this.broker.call('api.addRoute', {
+      route: {
+        name: 'oidc-consent-completed',
+        path: path.join(basePath, '/.oidc/consent-completed'),
+        bodyParsers: {
+          json: true
+        },
+        aliases: {
+          'POST /': 'oidc-provider.consentCompleted'
+        }
+      }
+    });
+
     // The OIDC provider route must be added after all other routes, otherwise it gets overwritten
     // TODO find out why ! Probably due to the fact it is only a middleware (adding dummy aliases doesn't help)
-    await delay(5000);
+    await delay(10000);
 
     await this.broker.call('api.addRoute', {
       route: {
@@ -91,7 +103,6 @@ module.exports = {
           return Promise.resolve(payload);
         }
         // Invalid token
-        // TODO make sure token is deleted client-side
         ctx.meta.webId = 'anon';
         return Promise.reject(new E.UnAuthorizedError(E.ERR_INVALID_TOKEN));
       }
@@ -123,47 +134,50 @@ module.exports = {
       if (res.ok) {
         return await res.json();
       } else {
-        throw new Error('Not found');
+        throw new Error('OIDC server not loaded');
       }
     },
+    // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
     async loginCompleted(ctx) {
-      const { interactionId, webId } = ctx.params;
-
-      if (!ctx.meta.webId || ctx.meta.webId !== webId) {
-        throw new E.ForbiddenError(`User not logged or the provided webId don't match the token webId`);
-      }
+      const { interactionId } = ctx.params;
+      const webId = ctx.meta.webId;
 
       await this.interactionFinished(interactionId, {
-        login: { accountId: webId, amr: ['pwd'] }
+        login: { accountId: webId, amr: ['pwd'], remember: true }
       });
-    }
-  },
-  events: {
-    async 'auth.connected'(ctx) {
-      const { webId, interactionId } = ctx.params;
-      // This may not be necessary anymore, now that the LocalLoginPage calls the /.oidc/finish-interaction endpoint
-      if (interactionId) {
-        // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
-        await this.interactionFinished(interactionId, {
-          login: { accountId: webId, amr: ['pwd'] }
-        });
-      }
     },
-    async 'auth.registered'(ctx) {
-      const { webId, interactionId } = ctx.params;
-      if (interactionId) {
-        // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
+    // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
+    async consentCompleted(ctx) {
+      const { interactionId } = ctx.params;
+      const interaction = await this.oidc.Interaction.find(interactionId);
+
+      if (interaction) {
+        const clientId = interaction.params?.client_id;
+        const accountId = interaction.session?.accountId;
+        const scope = interaction.params?.scope;
+
+        // Grant the requested scope (should be "webid openid")
+        const grant = new this.oidc.Grant({ accountId, clientId });
+        grant.addOIDCScope(scope);
+        const grantId = await grant.save();
+
         await this.interactionFinished(interactionId, {
-          login: { accountId: webId, amr: ['pwd'] }
+          consent: { grantId }
         });
+      } else {
+        throw new Error(`No interaction found with ID ${interactionId}`);
       }
     }
   },
   methods: {
     async interactionFinished(interactionId, result) {
       const interaction = await this.oidc.Interaction.find(interactionId);
-      interaction.result = result;
-      await interaction.save(interaction.exp - Math.floor(Date.now() / 1000));
+      if (interaction) {
+        interaction.result = result;
+        await interaction.save(interaction.exp - Math.floor(Date.now() / 1000));
+      } else {
+        throw new Error(`No interaction found with ID ${interactionId}`);
+      }
     }
   }
 };

@@ -1,7 +1,7 @@
 const path = require('path');
 const urlJoin = require('url-join');
 const QueueService = require('moleculer-bull');
-const { ActivityPubService, ACTOR_TYPES, OBJECT_TYPES, FULL_ACTOR_TYPES } = require('@semapps/activitypub');
+const { ActivityPubService, FULL_ACTOR_TYPES } = require('@semapps/activitypub');
 const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
@@ -22,6 +22,7 @@ const { apods, interop, notify, oidc, solid } = require('@activitypods/ontologie
 const { ManagementService } = require('./services/management');
 const ApiService = require('./services/api');
 const AppOpenerService = require('./services/app-opener');
+const AppStatusService = require('./services/app-status');
 const FilesService = require('./services/files');
 const InstallationService = require('./services/installation');
 const JWKService = require('./services/jwk');
@@ -237,6 +238,8 @@ const CoreService = {
       }
     });
 
+    this.broker.createService({ mixins: [AppStatusService] });
+
     this.broker.createService({ mixins: [FilesService] });
 
     this.broker.createService({
@@ -289,9 +292,9 @@ const CoreService = {
         metadata: {
           frontend_url: frontendUrl,
           login_url: frontendUrl && urlJoin(frontendUrl, 'login'),
+          consent_url: frontendUrl && urlJoin(frontendUrl, 'authorize'),
           signup_url: frontendUrl && urlJoin(frontendUrl, 'login?signup=true'),
-          logout_url: frontendUrl && urlJoin(frontendUrl, 'login?logout=true'),
-          resource_url: frontendUrl && urlJoin(frontendUrl, 'r')
+          logout_url: frontendUrl && urlJoin(frontendUrl, 'login?logout=true')
         }
       },
       actions: {

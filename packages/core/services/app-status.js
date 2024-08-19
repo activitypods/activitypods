@@ -17,10 +17,6 @@ const AppStatusService = {
   },
   actions: {
     async get(ctx) {
-      if (ctx.meta.impersonatedUser && ctx.meta.webId !== ctx.params.appUri) {
-        throw new Error(`An app cannot get the status of another app`);
-      }
-
       let onlineBackend = true,
         remoteAppData;
 

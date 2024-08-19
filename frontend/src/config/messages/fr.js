@@ -133,7 +133,7 @@ module.exports = {
       set_new_password: 'Veuillez entrer votre adresse mail et un nouveau mot de passe ci-dessous',
       create_profile:
         'Maintenant que votre compte est créé, veuillez créer votre profil. Celui-ci ne sera visible par défaut que des personnes que vous acceptez dans votre réseau.',
-      authorize: 'Autorisez-vous le site %{appDomain} à accéder à votre espace de données ?',
+      authorize: "Pour être installée, l'application requiert les autorisations suivantes",
 
       invite_text_logged_out:
         "Un espace personnel est l'endroit où vous stockez vos données. Tout comme les comptes email, il est décentralisé, ce qui vous permet de choisir un fournisseur de confiance. Au lieu de créer un nouveau compte pour chaque nouvelle application, vous pourrez utiliser le même compte. Les applications compatibles stockeront les données dans votre espace.",

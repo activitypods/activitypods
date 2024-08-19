@@ -1,55 +1,27 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { Link, useTranslate, useGetList, useNotify, useDataProvider } from 'react-admin';
+import { useGetList, useGetOne, useDataProvider } from 'react-admin';
 import urlJoin from 'url-join';
-import { Box, Button } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
-import WarningIcon from '@mui/icons-material/Warning';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { useOutbox, useInbox } from '@semapps/activitypub-components';
-import SimpleBox from '../../layout/SimpleBox';
 import useTrustedApps from '../../hooks/useTrustedApps';
-import useApplication from '../../hooks/useApplication';
-import useAccessNeeds from '../../hooks/useAccessNeeds';
-import useClassDescriptions from '../../hooks/useClassDescriptions';
-import AccessNeedsList from './AccessNeedsList';
-import ProgressMessage from '../../common/ProgressMessage';
-import useTypeRegistrations from '../../hooks/useTypeRegistrations';
-import AppHeader from './AppHeader';
+import useGetAppStatus from '../../hooks/useGetAppStatus';
+import InstallationScreen from './InstallationScreen';
 
 const AuthorizePage = () => {
   useCheckAuthenticated();
-  const [showScreen, setShowScreen] = useState(false);
-  const [isInstalling, setIsInstalling] = useState(false);
-  const [allowedAccessNeeds, setAllowedAccessNeeds] = useState();
-  const outbox = useOutbox();
-  const inbox = useInbox();
-  const translate = useTranslate();
+  const [screen, setScreen] = useState();
   const trustedApps = useTrustedApps();
   const [searchParams] = useSearchParams();
-  const notify = useNotify();
+  const getAppStatus = useGetAppStatus();
   const dataProvider = useDataProvider();
-  const { data: appRegistrations, isLoading } = useGetList('AppRegistration', { page: 1, perPage: Infinity });
+
+  const appUri = searchParams.get('client_id');
   const redirectTo = searchParams.get('redirect');
-  const clientId = searchParams.get('client_id');
   const interactionId = searchParams.get('interaction_id');
-  const clientDomain = new URL(clientId).host;
-  const isTrustedApp = trustedApps.some(domain => domain === clientDomain);
+  const isTrustedApp = trustedApps?.some(baseUrl => baseUrl === new URL(appUri).origin) || false;
 
-  if (!clientId) throw new Error('The client ID is missing !');
-
-  const application = useApplication(clientDomain);
-  const { requiredAccessNeeds, optionalAccessNeeds, loaded } = useAccessNeeds(application);
-  const { classDescriptions } = useClassDescriptions(application);
-  const { data: typeRegistrations } = useTypeRegistrations();
-
-  useEffect(() => {
-    if (loaded) {
-      setAllowedAccessNeeds([
-        ...requiredAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id)),
-        ...optionalAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id))
-      ]);
-    }
-  }, [loaded, requiredAccessNeeds, optionalAccessNeeds, setAllowedAccessNeeds]);
+  const { data: application } = useGetOne('App', { id: appUri });
+  const { data: appRegistrations, isLoading } = useGetList('AppRegistration', { page: 1, perPage: Infinity });
 
   const accessApp = useCallback(async () => {
     await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.oidc/consent-completed'), {
@@ -61,103 +33,33 @@ const AuthorizePage = () => {
     window.location.href = redirectTo;
   }, [dataProvider, interactionId, redirectTo]);
 
-  const installApp = useCallback(async () => {
-    try {
-      setIsInstalling(true);
-
-      // Do not await to ensure we don't miss the activities below
-      outbox.post({
-        '@context': [
-          'https://www.w3.org/ns/activitystreams',
-          {
-            apods: 'http://activitypods.org/ns/core#',
-            'apods:acceptedAccessNeeds': {
-              '@type': '@id'
-            },
-            'apods:acceptedSpecialRights': {
-              '@type': '@id'
-            }
-          }
-        ],
-        type: 'apods:Install',
-        actor: outbox.owner,
-        object: application.id,
-        'apods:acceptedAccessNeeds': allowedAccessNeeds.filter(a => !a.startsWith('apods:')),
-        'apods:acceptedSpecialRights': allowedAccessNeeds.filter(a => a.startsWith('apods:'))
-      });
-
-      // TODO Allow to pass an object, and automatically dereference it, like on the @semapps/activitypub matchActivity util
-      const createRegistrationActivity = await outbox.awaitActivity(
-        activity => activity.type === 'Create' && activity.to === application.id
-      );
-
-      await inbox.awaitActivity(
-        activity =>
-          activity.type === 'Accept' &&
-          activity.actor === application.id &&
-          activity.object === createRegistrationActivity.id
-      );
-
-      accessApp();
-    } catch (e) {
-      setIsInstalling(false);
-      notify(`Error on app installation: ${e.message}`, { type: 'error' });
-    }
-  }, [outbox, inbox, notify, application, allowedAccessNeeds, accessApp, setIsInstalling]);
-
-  // Once all data are loaded, either redirect to app or show authorization screen
   useEffect(() => {
-    if (!isLoading && application?.id && clientDomain) {
-      if (appRegistrations.some(reg => reg['interop:registeredAgent'] === application?.id)) {
-        accessApp();
-      } else {
-        setShowScreen(true);
+    (async () => {
+      if (!isLoading && application?.id) {
+        if (appRegistrations.some(reg => reg['interop:registeredAgent'] === application.id)) {
+          const appStatus = await getAppStatus(application.id);
+          if (appStatus.updated) {
+            setScreen('upgrade');
+          } else {
+            accessApp();
+          }
+        } else {
+          setScreen('install');
+        }
       }
-    }
-  }, [appRegistrations, isLoading, clientDomain, application, accessApp, setShowScreen]);
+    })();
+  }, [appRegistrations, isLoading, application, accessApp, getAppStatus, setScreen]);
 
-  if (!showScreen) return null;
+  switch (screen) {
+    case 'install':
+      return <InstallationScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
 
-  if (isInstalling) return <ProgressMessage message="app.message.app_installation_progress" />;
+    // case 'upgrade':
+    //   return <UpgradeScreen />
 
-  return (
-    <SimpleBox
-      title={translate('app.page.authorize')}
-      icon={<WarningIcon />}
-      text={translate('app.helper.authorize', { appDomain: clientDomain })}
-    >
-      {application && (
-        <>
-          <AppHeader application={application} isTrustedApp={isTrustedApp} />
-          <AccessNeedsList
-            required
-            accessNeeds={requiredAccessNeeds}
-            allowedAccessNeeds={allowedAccessNeeds}
-            setAllowedAccessNeeds={setAllowedAccessNeeds}
-            classDescriptions={classDescriptions}
-            typeRegistrations={typeRegistrations}
-          />
-          <AccessNeedsList
-            accessNeeds={optionalAccessNeeds}
-            allowedAccessNeeds={allowedAccessNeeds}
-            setAllowedAccessNeeds={setAllowedAccessNeeds}
-            classDescriptions={classDescriptions}
-            typeRegistrations={typeRegistrations}
-          />
-        </>
-      )}
-      <Box display="flex" justifyContent="end">
-        <Button variant="contained" color="secondary" onClick={installApp} sx={{ ml: 10 }}>
-          {translate('app.action.accept')}
-        </Button>
-        <Link to="/apps">
-          <Button variant="contained" sx={{ ml: 1 }}>
-            {translate('app.action.reject')}
-          </Button>
-        </Link>
-      </Box>
-    </SimpleBox>
-  );
+    default:
+      return null;
+  }
 };
 
 export default AuthorizePage;

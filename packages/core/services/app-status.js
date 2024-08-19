@@ -17,17 +17,29 @@ const AppStatusService = {
   },
   actions: {
     async get(ctx) {
-      if (!ctx.meta.impersonatedUser) throw new Error(`This endpoint must be called with an app-specific token`);
+      if (ctx.meta.impersonatedUser && ctx.meta.webId !== ctx.params.appUri) {
+        throw new Error(`An app cannot get the status of another app`);
+      }
 
-      const appUri = ctx.meta.webId;
-      const webId = ctx.meta.impersonatedUser;
+      let onlineBackend = true,
+        remoteAppData;
+
+      const appUri = ctx.meta.impersonatedUser ? ctx.meta.webId : ctx.params.appUri;
+      const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
 
       ctx.meta.dataset = getDatasetFromUri(webId);
 
       const localAppData = await ctx.call('ldp.remote.getStored', { resourceUri: appUri, webId });
-      const remoteAppData = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri, webId });
 
-      return { updated: localAppData['dc:modified'] != remoteAppData['dc:modified'] };
+      try {
+        remoteAppData = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri, webId });
+      } catch (e) {
+        onlineBackend = false;
+      }
+      return {
+        onlineBackend,
+        updated: onlineBackend ? localAppData['dc:modified'] != remoteAppData['dc:modified'] : undefined
+      };
     }
   }
 };

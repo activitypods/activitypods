@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
-import { Box, Button, Typography, ThemeProvider, useMediaQuery, Container, Avatar } from '@mui/material';
+import { Box, Button, Typography, useMediaQuery, Container, Avatar } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { Link, useGetIdentity, useTranslate, useRedirect } from 'react-admin';
-import theme from '../config/theme';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles(theme => ({
   '@global': {
     body: {
       backgroundColor: theme.palette.primary.main
@@ -80,7 +79,7 @@ const HomePage = () => {
   const { data: identity, isLoading } = useGetIdentity();
   const redirect = useRedirect();
   const translate = useTranslate();
-  const xs = useMediaQuery(() => theme.breakpoints.down('sm'), { noSsr: true });
+  const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
   useEffect(() => {
     if (!isLoading && identity?.id) {
@@ -90,54 +89,50 @@ const HomePage = () => {
 
   if (isLoading || identity?.id) return null;
 
-  console.log('isLoading', isLoading, identity);
-
   return (
-    <ThemeProvider theme={theme}>
-      <Box display="flex" justifyContent="center">
-        <Box className={classes.circle} display="flex" alignItems="center" justifyContent="center">
-          <Box>
-            <Typography align="center" variant="h1" className={classes.title}>
-              {CONFIG.INSTANCE_NAME}
-            </Typography>
-            <Typography align="center">{CONFIG.INSTANCE_DESCRIPTION}</Typography>
-            <Box
-              display="flex"
-              flexDirection={xs ? 'column' : 'row'}
-              pt={3}
-              pb={3}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Link to="/login?signup">
-                <Button variant="contained" color="secondary" className={classes.button}>
-                  {translate('auth.action.signup')}
-                </Button>
-              </Link>
-              <Link to="/login">
-                <Button variant="contained" color="secondary" className={classes.button}>
-                  {translate('ra.auth.sign_in')}
-                </Button>
-              </Link>
-            </Box>
+    <Box display="flex" justifyContent="center">
+      <Box className={classes.circle} display="flex" alignItems="center" justifyContent="center">
+        <Box>
+          <Typography align="center" variant="h1" className={classes.title}>
+            {CONFIG.INSTANCE_NAME}
+          </Typography>
+          <Typography align="center">{CONFIG.INSTANCE_DESCRIPTION}</Typography>
+          <Box
+            display="flex"
+            flexDirection={xs ? 'column' : 'row'}
+            pt={3}
+            pb={3}
+            alignItems="center"
+            justifyContent="center"
+          >
+            <Link to="/login?signup">
+              <Button variant="contained" color="secondary" className={classes.button}>
+                {translate('auth.action.signup')}
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button variant="contained" color="secondary" className={classes.button}>
+                {translate('ra.auth.sign_in')}
+              </Button>
+            </Link>
           </Box>
         </Box>
-        <Box className={classes.steps}>
-          <Typography variant="h2" align="center" className={classes.stepsTitle}>
-            {translate('app.steps.title')}
-          </Typography>
-          <Container>
-            {[1, 2, 3, 4].map(i => (
-              <Box className={classes.step} key={i}>
-                <Avatar className={classes.number}>{i}</Avatar>
-                <Typography variant="h4">{translate(`app.steps.${i}.title`)}</Typography>
-                <Typography>{translate(`app.steps.${i}.text`)}</Typography>
-              </Box>
-            ))}
-          </Container>
-        </Box>
       </Box>
-    </ThemeProvider>
+      <Box className={classes.steps}>
+        <Typography variant="h2" align="center" className={classes.stepsTitle}>
+          {translate('app.steps.title')}
+        </Typography>
+        <Container>
+          {[1, 2, 3, 4].map(i => (
+            <Box className={classes.step} key={i}>
+              <Avatar className={classes.number}>{i}</Avatar>
+              <Typography variant="h4">{translate(`app.steps.${i}.title`)}</Typography>
+              <Typography>{translate(`app.steps.${i}.text`)}</Typography>
+            </Box>
+          ))}
+        </Container>
+      </Box>
+    </Box>
   );
 };
 

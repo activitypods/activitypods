@@ -6,6 +6,7 @@ import { useCheckAuthenticated } from '@semapps/auth-provider';
 import useTrustedApps from '../../hooks/useTrustedApps';
 import useGetAppStatus from '../../hooks/useGetAppStatus';
 import InstallationScreen from './InstallationScreen';
+import UpgradeScreen from './UpgradeScreen';
 
 const AuthorizePage = () => {
   useCheckAuthenticated();
@@ -24,11 +25,14 @@ const AuthorizePage = () => {
   const { data: appRegistrations, isLoading } = useGetList('AppRegistration', { page: 1, perPage: Infinity });
 
   const accessApp = useCallback(async () => {
-    await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.oidc/consent-completed'), {
-      method: 'POST',
-      body: JSON.stringify({ interactionId }),
-      headers: new Headers({ 'Content-Type': 'application/json' })
-    });
+    // There is no interactionId in case of upgrade
+    if (interactionId) {
+      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.oidc/consent-completed'), {
+        method: 'POST',
+        body: JSON.stringify({ interactionId }),
+        headers: new Headers({ 'Content-Type': 'application/json' })
+      });
+    }
 
     window.location.href = redirectTo;
   }, [dataProvider, interactionId, redirectTo]);
@@ -54,8 +58,8 @@ const AuthorizePage = () => {
     case 'install':
       return <InstallationScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
 
-    // case 'upgrade':
-    //   return <UpgradeScreen />
+    case 'upgrade':
+      return <UpgradeScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
 
     default:
       return null;

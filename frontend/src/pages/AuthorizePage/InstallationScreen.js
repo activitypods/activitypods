@@ -82,7 +82,7 @@ const InstallationScreen = ({ application, accessApp, isTrustedApp }) => {
     <SimpleBox
       title={translate('app.page.authorize')}
       icon={<WarningIcon />}
-      text={translate('app.helper.authorize', { appName: application.name })}
+      text={translate('app.helper.authorize_install')}
     >
       {application && (
         <>

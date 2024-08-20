@@ -1,6 +1,5 @@
 const { MoleculerError } = require('moleculer').Errors;
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
@@ -23,7 +22,7 @@ module.exports = {
         try {
           // ENSURE THE APP IS NOT ALREADY REGISTERED
 
-          let filteredContainer = await ctx.call('app-registrations.list', {
+          const filteredContainer = await ctx.call('app-registrations.list', {
             filters: {
               'http://www.w3.org/ns/solid/interop#registeredBy': activity.actor
             },
@@ -38,65 +37,11 @@ module.exports = {
             );
           }
 
-          // GET APP REGISTRATION AND GRANTS
+          // CHECK ACCESS NEEDS ARE SATISFIED
 
-          // Use local context to get all data
-          const jsonContext = await ctx.call('jsonld.context.get');
-
-          const appRegistration = await ctx.call('ldp.remote.get', {
-            resourceUri: activity.object.id,
-            jsonContext
-          });
-
-          const accessGrants = await Promise.all(
-            arrayOf(appRegistration['interop:hasAccessGrant']).map(accessGrantUri =>
-              ctx.call('ldp.remote.get', {
-                resourceUri: accessGrantUri,
-                jsonContext,
-                accept: MIME_TYPES.JSON
-              })
-            )
-          );
-
-          const dataGrantsUris = accessGrants.reduce(
-            (acc, cur) => (cur['interop:hasDataGrant'] ? [...acc, ...arrayOf(cur['interop:hasDataGrant'])] : acc),
-            []
-          );
-          const specialRightsUris = accessGrants.reduce(
-            (acc, cur) => (cur['apods:hasSpecialRights'] ? [...acc, ...arrayOf(cur['apods:hasSpecialRights'])] : acc),
-            []
-          );
-
-          const dataGrants = await Promise.all(
-            dataGrantsUris.map(dataGrantUri =>
-              ctx.call('ldp.remote.get', {
-                resourceUri: dataGrantUri,
-                jsonContext,
-                accept: MIME_TYPES.JSON
-              })
-            )
-          );
-
-          // CHECK THAT GRANTS MATCH WITH ACCESS NEEDS
-
-          filteredContainer = await ctx.call('access-needs-groups.list', {
-            filters: {
-              'http://www.w3.org/ns/solid/interop#accessNecessity': 'http://www.w3.org/ns/solid/interop#AccessRequired'
-            },
-            accept: MIME_TYPES.JSON
-          });
-
-          const requiredAccessNeedGroups = arrayOf(filteredContainer['ldp:contains']);
-
-          // Return true if all access needs and special rights of the required AccessNeedGroups are granted
-          const accessNeedsSatisfied = requiredAccessNeedGroups.every(
-            group =>
-              arrayOf(group['interop:hasAccessNeed']).every(accessNeedUri =>
-                dataGrants.some(dataGrant => dataGrant['interop:satisfiesAccessNeed'] === accessNeedUri)
-              ) &&
-              arrayOf(group['interop:hasSpecialRights']).every(specialRightUri =>
-                specialRightsUris.some(sr => sr === specialRightUri)
-              )
+          const { accessNeedsSatisfied, appRegistration, accessGrants, dataGrants } = await ctx.call(
+            'app-registrations.verify',
+            { appRegistrationUri: activity.object.id }
           );
 
           if (!accessNeedsSatisfied) {
@@ -112,7 +57,7 @@ module.exports = {
             to: activity.actor
           });
 
-          // STORE LOCALLY APP REGISTRATION AND GRANTS
+          // STORE APP REGISTRATION AND GRANTS IN LOCAL CACHE
 
           await ctx.call('ldp.remote.store', { resource: appRegistration });
           await ctx.call('app-registrations.attach', { resourceUri: appRegistration.id || appRegistration['@id'] });
@@ -128,6 +73,85 @@ module.exports = {
           }
 
           await ctx.emit('app.registered', { appRegistration, accessGrants, dataGrants });
+        } catch (e) {
+          if (e.code !== 400) console.error(e);
+          await ctx.call('activitypub.outbox.post', {
+            collectionUri: outboxUri,
+            type: ACTIVITY_TYPES.REJECT,
+            summary: e.message,
+            object: activity.id,
+            to: activity.actor
+          });
+        }
+      }
+    },
+    updateAppRegistration: {
+      match: {
+        type: ACTIVITY_TYPES.UPDATE,
+        object: {
+          type: 'interop:ApplicationRegistration'
+        }
+      },
+      async onReceive(ctx, activity, recipientUri) {
+        const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
+          actorUri: recipientUri,
+          predicate: 'outbox'
+        });
+
+        try {
+          // ENSURE A LOCAL APP REGISTRATION ALREADY EXIST
+
+          const localAppRegistration = await ctx.call('ldp.remote.getStored', { resourceUri: activity.object.id });
+
+          if (!localAppRegistration) {
+            throw new MoleculerError(
+              `No application registration found for this user. Create it first.`,
+              400,
+              'BAD REQUEST'
+            );
+          }
+
+          // CHECK ACCESS NEEDS ARE STILL SATISFIED
+
+          const { accessNeedsSatisfied, appRegistration, accessGrants, dataGrants } = await ctx.call(
+            'app-registrations.verify',
+            { appRegistrationUri: activity.object.id }
+          );
+
+          if (!accessNeedsSatisfied) {
+            throw new MoleculerError('One or more required access needs have not been granted', 400, 'BAD REQUEST');
+          }
+
+          // SEND BACK ACCEPT ACTIVITY
+
+          await ctx.call('activitypub.outbox.post', {
+            collectionUri: outboxUri,
+            type: ACTIVITY_TYPES.ACCEPT,
+            object: activity.id,
+            to: activity.actor
+          });
+
+          // UPDATE CACHE FOR APP REGISTRATION AND GRANTS
+
+          await ctx.call('ldp.remote.store', { resource: appRegistration });
+
+          for (const accessGrant of accessGrants) {
+            // If the access grant is already cached, this will update the cache
+            await ctx.call('ldp.remote.store', { resource: accessGrant });
+            await ctx.call('access-grants.attach', { resourceUri: accessGrant.id || accessGrant['@id'] });
+          }
+
+          for (const dataGrant of dataGrants) {
+            // If the data grant is already cached, this will update the cache
+            await ctx.call('ldp.remote.store', { resource: dataGrant });
+            await ctx.call('data-grants.attach', { resourceUri: dataGrant.id || dataGrant['@id'] });
+          }
+
+          // Remove any grant that is not linked anymore to an access need
+          await ctx.call('access-grants.deleteOrphans', { podOwner: activity.actor });
+          await ctx.call('data-grants.deleteOrphans', { podOwner: activity.actor });
+
+          await ctx.emit('app.upgraded', { appRegistration, accessGrants, dataGrants });
         } catch (e) {
           if (e.code !== 400) console.error(e);
           await ctx.call('activitypub.outbox.post', {

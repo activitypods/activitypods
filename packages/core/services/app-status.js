@@ -25,6 +25,8 @@ const AppStatusService = {
 
       ctx.meta.dataset = getDatasetFromUri(webId);
 
+      const installed = await ctx.call('app-registrations.isRegistered', { appUri, podOwner: webId });
+
       const localAppData = await ctx.call('ldp.remote.getStored', { resourceUri: appUri, webId });
 
       try {
@@ -34,7 +36,9 @@ const AppStatusService = {
       }
       return {
         onlineBackend,
-        updated: onlineBackend ? localAppData['dc:modified'] != remoteAppData['dc:modified'] : undefined
+        installed,
+        upgradeNeeded:
+          onlineBackend && installed ? localAppData['dc:modified'] != remoteAppData['dc:modified'] : undefined
       };
     }
   }

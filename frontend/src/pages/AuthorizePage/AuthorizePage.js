@@ -40,15 +40,13 @@ const AuthorizePage = () => {
   useEffect(() => {
     (async () => {
       if (!isLoading && application?.id) {
-        if (appRegistrations.some(reg => reg['interop:registeredAgent'] === application.id)) {
-          const appStatus = await getAppStatus(application.id);
-          if (appStatus.updated) {
-            setScreen('upgrade');
-          } else {
-            accessApp();
-          }
-        } else {
+        const appStatus = await getAppStatus(application.id);
+        if (!appStatus.installed) {
           setScreen('install');
+        } else if (appStatus.upgradeNeeded) {
+          setScreen('upgrade');
+        } else {
+          accessApp();
         }
       }
     })();

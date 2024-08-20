@@ -16,12 +16,19 @@ module.exports = {
   },
   dependencies: ['ldp', 'ldp.registry', 'pod'],
   actions: {
+    put() {
+      throw new Error(`The resources of type interop:DataGrant are immutable`);
+    },
+    patch() {
+      throw new Error(`The resources of type interop:DataGrant are immutable`);
+    },
+    // Get all the DataGrants granted to an application
     async getForApp(ctx) {
       const { appUri, podOwner } = ctx.params;
 
       const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
 
-      let filteredContainer = await this.actions.list(
+      const filteredContainer = await this.actions.list(
         {
           containerUri,
           filters: {
@@ -34,6 +41,40 @@ module.exports = {
       );
 
       return arrayOf(filteredContainer['ldp:contains']);
+    },
+    // Get the DataGrant linked with an AcccessNeed
+    async getByAccessNeed(ctx) {
+      const { accessNeedUri, podOwner } = ctx.params;
+
+      const filteredContainer = await this.actions.list(
+        {
+          filters: {
+            'http://www.w3.org/ns/solid/interop#satisfiesAccessNeed': accessNeedUri,
+            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner
+          },
+          webId: podOwner
+        },
+        { parentCtx: ctx }
+      );
+
+      return filteredContainer['ldp:contains']?.[0];
+    },
+    // Delete DataGrants which are not linked to an AccessNeed (may happen on app upgrade)
+    async deleteOrphans(ctx) {
+      const { podOwner } = ctx.params;
+      const container = await this.actions.list({ webId: podOwner }, { parentCtx: ctx });
+      for (const dataGrant of arrayOf(container?.['ldp:contains'])) {
+        try {
+          await ctx.call('ldp.remote.get', { resourceUri: dataGrant['interop:satisfiesAccessNeed'] });
+        } catch (e) {
+          if (e.code === 404) {
+            this.logger.info(`Deleting ${dataGrant.id} as it is not linked anymore with an existing access need...`);
+            await this.actions.delete({ resourceUri: dataGrant.id, webId: podOwner });
+          } else {
+            throw e;
+          }
+        }
+      }
     }
   },
   hooks: {

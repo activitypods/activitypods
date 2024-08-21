@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useTranslate, useNotify } from 'react-admin';
 import { Box, Button } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
@@ -11,7 +11,7 @@ import AccessNeedsList from './AccessNeedsList';
 import ProgressMessage from '../../common/ProgressMessage';
 import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import AppHeader from './AppHeader';
-import { arrayFromLdField, delay } from '../../utils';
+import { arrayFromLdField } from '../../utils';
 
 const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
   const [step, setStep] = useState();
@@ -35,7 +35,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
         try {
           setStep('upgrading');
 
-          console.log('outbox.hasLiveUpdate', outbox?.hasLiveUpdates?.webSocket);
+          await outbox.awaitWebSocketConnection();
 
           // Do not await to ensure we don't miss the activities below
           outbox.post({
@@ -61,10 +61,6 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
               a.startsWith('apods:')
             )
           });
-
-          console.log('outbox.hasLiveUpdate', outbox?.hasLiveUpdates?.webSocket);
-
-          await delay(5000);
 
           // TODO Allow to pass an object, and automatically dereference it, like on the @semapps/activitypub matchActivity util
           const updateRegistrationActivity = await outbox.awaitActivity(

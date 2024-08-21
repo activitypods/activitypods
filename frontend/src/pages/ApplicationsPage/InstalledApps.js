@@ -15,6 +15,9 @@ const AppRegistration = ({ app, isTrustedApp }) => {
     try {
       notify('app.notification.app_uninstallation_in_progress');
 
+      await outbox.awaitWebSocketConnection();
+
+      // Do not await to ensure we don't miss the activities
       outbox.post({
         '@context': ['https://www.w3.org/ns/activitystreams', { apods: 'http://activitypods.org/ns/core#' }],
         type: ACTIVITY_TYPES.UNDO,

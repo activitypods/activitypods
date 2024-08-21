@@ -36,7 +36,9 @@ const InstallationScreen = ({ application, accessApp, isTrustedApp }) => {
     try {
       setIsInstalling(true);
 
-      // Do not await to ensure we don't miss the activities below
+      await outbox.awaitWebSocketConnection();
+
+      // Do not await to ensure we don't miss the activities
       outbox.post({
         '@context': [
           'https://www.w3.org/ns/activitystreams',

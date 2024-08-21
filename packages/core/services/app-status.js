@@ -27,13 +27,14 @@ const AppStatusService = {
 
       const installed = await ctx.call('app-registrations.isRegistered', { appUri, podOwner: webId });
 
-      const localAppData = await ctx.call('ldp.remote.getStored', { resourceUri: appUri, webId });
+      const localAppData = installed && (await ctx.call('ldp.remote.getStored', { resourceUri: appUri, webId }));
 
       try {
         remoteAppData = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri, webId });
       } catch (e) {
         onlineBackend = false;
       }
+
       return {
         onlineBackend,
         installed,

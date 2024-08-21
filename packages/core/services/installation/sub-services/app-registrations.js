@@ -149,7 +149,7 @@ module.exports = {
     },
     async isRegistered(ctx) {
       const { appUri, podOwner } = ctx.params;
-      return !!this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx });
+      return !!(await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx }));
     }
   },
   hooks: {
@@ -201,8 +201,7 @@ module.exports = {
         // DELETE APPLICATION RESOURCE KEPT IN CACHE
 
         await ctx.call('applications.delete', {
-          resourceUri: appRegistration['interop:registeredAgent'],
-          webId: 'system'
+          resourceUri: appRegistration['interop:registeredAgent']
         });
 
         return res;

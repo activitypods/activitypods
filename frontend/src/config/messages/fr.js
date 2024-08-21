@@ -16,6 +16,7 @@ module.exports = {
       login: 'Se connecter',
       open_app: "Ouvrir l'appli",
       install_app: "Installer l'appli",
+      uninstall_app: "Désinstaller l'appli",
       reject: 'Refuser',
       reject_contact_request: 'Rejeter la demande',
       remove_contact: 'Retirer de mes contacts',
@@ -161,6 +162,9 @@ module.exports = {
       pod_creation_progress: 'Compte en cours de création...',
       app_installation_progress: 'Installation en cours...',
       app_upgrade_progress: 'Mise à jour en cours...',
+      app_upgrade_cancel: "Désinstaller l'application ?",
+      app_upgrade_cancel_description:
+        "Cette application ne peut pas fonctionner si vous ne lui donnez pas les autorisations qu'elle demande. Est-ce que vous souhaitez désinstaller l'application ?",
       default_app_changed: "L'application par défaut a été changée"
     },
     notification: {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useTranslate, useNotify } from 'react-admin';
-import { Box, Button } from '@mui/material';
+import { useTranslate, useNotify } from 'react-admin';
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
 import { useOutbox, useInbox } from '@semapps/activitypub-components';
 import SimpleBox from '../../layout/SimpleBox';
@@ -12,9 +12,11 @@ import ProgressMessage from '../../common/ProgressMessage';
 import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import AppHeader from './AppHeader';
 import { arrayFromLdField } from '../../utils';
+import useUninstallApp from '../../hooks/useUninstallApp';
 
 const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
   const [step, setStep] = useState();
+  const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
   const [allowedAccessNeeds, setAllowedAccessNeeds] = useState([]);
   const [grantedAccessNeeds, setGrantedAccessNeeds] = useState([]);
   const [missingAccessNeeds, setMissingAccessNeeds] = useState({ required: [], optional: [] });
@@ -22,6 +24,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
   const inbox = useInbox();
   const translate = useTranslate();
   const notify = useNotify();
+  const uninstallApp = useUninstallApp(application);
 
   const { requiredAccessNeeds, optionalAccessNeeds, loaded: accessNeedsLoaded } = useAccessNeeds(application);
   const { classDescriptions } = useClassDescriptions(application);
@@ -178,12 +181,24 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
         <Button variant="contained" color="secondary" onClick={() => setStep('upgrade')} sx={{ ml: 10 }}>
           {translate('app.action.accept')}
         </Button>
-        <Link to="/apps">
-          <Button variant="contained" sx={{ ml: 1 }}>
-            {translate('app.action.reject')}
-          </Button>
-        </Link>
+        <Button variant="contained" onClick={() => setRejectDialogOpen(true)} sx={{ ml: 1 }}>
+          {translate('app.action.reject')}
+        </Button>
       </Box>
+      <Dialog onClose={() => setRejectDialogOpen(false)} open={rejectDialogOpen}>
+        <DialogTitle>{translate('app.message.app_upgrade_cancel')}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{translate('app.message.app_upgrade_cancel_description')}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" color="secondary" onClick={() => setRejectDialogOpen(false)}>
+            {translate('ra.action.cancel')}
+          </Button>
+          <Button variant="contained" color="error" onClick={() => uninstallApp()}>
+            {translate('app.action.uninstall_app')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </SimpleBox>
   );
 };

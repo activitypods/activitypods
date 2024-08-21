@@ -1,54 +1,8 @@
-import React, { useCallback, useEffect } from 'react';
-import urlJoin from 'url-join';
+import React, { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslate, useNotify } from 'react-admin';
 import { Box, Typography, Grid, useMediaQuery } from '@mui/material';
-import { useOutbox, ACTIVITY_TYPES, useInbox } from '@semapps/activitypub-components';
 import ApplicationCard from './ApplicationCard';
-
-const AppRegistration = ({ app, isTrustedApp }) => {
-  const notify = useNotify();
-  const outbox = useOutbox();
-  const inbox = useInbox();
-
-  const uninstallApp = useCallback(async () => {
-    try {
-      notify('app.notification.app_uninstallation_in_progress');
-
-      await outbox.awaitWebSocketConnection();
-
-      // Do not await to ensure we don't miss the activities
-      outbox.post({
-        '@context': ['https://www.w3.org/ns/activitystreams', { apods: 'http://activitypods.org/ns/core#' }],
-        type: ACTIVITY_TYPES.UNDO,
-        actor: outbox.owner,
-        object: {
-          type: 'apods:Install',
-          object: app.id
-        }
-      });
-
-      // TODO Allow to pass an object, and automatically dereference it, like on the @semapps/activitypub matchActivity util
-      const deleteRegistrationActivity = await outbox.awaitActivity(
-        activity => activity.type === 'Delete' && activity.to === app.id
-      );
-
-      await inbox.awaitActivity(
-        activity =>
-          activity.type === 'Accept' && activity.actor === app.id && activity.object === deleteRegistrationActivity.id
-      );
-
-      const currentUrl = new URL(window.location);
-      const logoutUrl = new URL(app['oidc:post_logout_redirect_uris']);
-      logoutUrl.searchParams.append('redirect', urlJoin(currentUrl.origin, '/apps?uninstalled=true'));
-      window.location.href = logoutUrl.toString();
-    } catch (e) {
-      notify(`Error on app installation: ${e.message}`, { type: 'error' });
-    }
-  }, [app, outbox, inbox, notify]);
-
-  return <ApplicationCard app={app} isTrustedApp={isTrustedApp} isInstalled uninstallApp={uninstallApp} />;
-};
 
 const InstalledApps = ({ installedApps, trustedApps }) => {
   const notify = useNotify();
@@ -76,7 +30,7 @@ const InstalledApps = ({ installedApps, trustedApps }) => {
             const isTrustedApp = trustedApps?.some(baseUrl => baseUrl === installedApp.id) || false;
             return (
               <Grid key={installedApp.id} item xs={12} sm={6}>
-                <AppRegistration app={installedApp} isTrustedApp={isTrustedApp} />
+                <ApplicationCard app={installedApp} isTrustedApp={isTrustedApp} isInstalled />
               </Grid>
             );
           })}

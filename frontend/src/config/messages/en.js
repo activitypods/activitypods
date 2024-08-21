@@ -16,6 +16,7 @@ module.exports = {
       login: 'Login with an account',
       open_app: 'Open application',
       install_app: 'Install application',
+      uninstall_app: 'Uninstall application',
       open: 'Open',
       reject: 'Reject',
       reject_contact_request: 'Reject contact request',
@@ -167,6 +168,9 @@ module.exports = {
       pod_creation_progress: 'Your Pod is being created...',
       app_installation_progress: 'App installation in progress...',
       app_upgrade_progress: 'App upgrade in progress...',
+      app_upgrade_cancel: 'Uninstall the application ?',
+      app_upgrade_cancel_description:
+        "The application cannot work if you don't give it the authorizations it requires. Do you want to uninstall this application ?",
       default_app_changed: 'The default app has been successfully changed'
     },
     notification: {

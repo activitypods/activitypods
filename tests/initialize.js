@@ -247,5 +247,6 @@ module.exports = {
   clearDataset,
   initialize,
   initializeAppServer,
+  getAppAccessNeeds,
   installApp
 };

@@ -1,4 +1,5 @@
 const urlJoin = require('url-join');
+const { MoleculerError } = require('moleculer').Errors;
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
 const ApplicationsService = require('./sub-services/applications');
 const AppRegistrationsService = require('./sub-services/app-registrations');
@@ -20,6 +21,19 @@ module.exports = {
         type: 'apods:Install'
       },
       async onEmit(ctx, activity, emitterUri) {
+        const appRegistration = await ctx.call('app-registrations.getForApp', {
+          appUri: activity.object,
+          podOwner: emitterUri
+        });
+
+        if (appRegistration) {
+          throw new MoleculerError(
+            `User already has an application registration. Upgrade or uninstall the app first.`,
+            400,
+            'BAD REQUEST'
+          );
+        }
+
         const appRegistrationUri = await ctx.call('app-registrations.createOrUpdate', {
           appUri: activity.object,
           podOwner: emitterUri,

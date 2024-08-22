@@ -13,3 +13,5 @@ yarn-error.log
 /app-boilerplate/frontend/.env.local
 /app-boilerplate/frontend/.yalc
 /app-boilerplate/frontend/yalc.lock
+
+/uploads

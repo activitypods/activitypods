@@ -179,6 +179,14 @@ module.exports = {
       async delete(ctx, res) {
         const webId = res.oldData['interop:dataOwner'];
         const appUri = res.oldData['interop:grantee'];
+        const resourceType = res.oldData['apods:registeredClass'];
+        const accessMode = arrayOf(res.oldData['interop:accessMode']);
+
+        await this.broker.call('type-registrations.unbindApp', {
+          type: resourceType,
+          appUri,
+          webId
+        });
 
         const containersUris = await ctx.call('type-registrations.findContainersUris', {
           type: res.oldData['apods:registeredClass'],
@@ -186,22 +194,22 @@ module.exports = {
         });
 
         for (const containerUri of containersUris) {
-          // If we remove a right which hasn't been granted, no error will be thrown
+          // Mirror of what is done on the above hook
           await ctx.call('webacl.resource.removeRights', {
             resourceUri: containerUri,
             rights: {
               user: {
                 uri: appUri,
-                read: true,
-                write: true
+                read: accessMode.includes('acl:Read'),
+                write: accessMode.includes('acl:Write')
               },
               default: {
                 user: {
                   uri: appUri,
-                  read: true,
-                  append: true,
-                  write: true,
-                  control: true
+                  read: accessMode.includes('acl:Read'),
+                  append: accessMode.includes('acl:Append'),
+                  write: accessMode.includes('acl:Write'),
+                  control: accessMode.includes('acl:Control')
                 }
               }
             },

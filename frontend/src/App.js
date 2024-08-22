@@ -27,6 +27,8 @@ import RedirectPage from './pages/RedirectPage';
 import InvitePage from './pages/InvitePage/InvitePage';
 import ApplicationsPage from './pages/ApplicationsPage/ApplicationsPage';
 import LoginPage from './pages/LoginPage';
+import NetworkPage from './pages/NetworkPage/NetworkPage';
+import NetworkActorPage from './pages/NetworkPage/NetworkActorPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -74,6 +76,10 @@ const App = () => (
           <Route path="/data">
             <Route index element={<DataPage />} />
             <Route path=":containerUri" element={<DataTypePage />} />
+          </Route>
+          <Route path="/network">
+            <Route index element={<NetworkPage />} />
+            <Route path=":actorId" element={<NetworkActorPage />} />
           </Route>
         </CustomRoutes>
       </Admin>

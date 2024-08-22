@@ -66,7 +66,11 @@ const DataTypePage = () => {
   return (
     <ListView
       title={typeRegistration?.['skos:prefLabel']}
-      actions={[<MyDataButton />, <SetDefaultAppButton typeRegistration={typeRegistration} refetch={refetch} />]}
+      actions={
+        typeRegistration?.['apods:availableApps']
+          ? [<MyDataButton />, <SetDefaultAppButton typeRegistration={typeRegistration} refetch={refetch} />]
+          : [<MyDataButton />]
+      }
       asides={selected && !xs ? [<ResourceCard resource={selected} typeRegistration={typeRegistration} />] : null}
     >
       <Box>

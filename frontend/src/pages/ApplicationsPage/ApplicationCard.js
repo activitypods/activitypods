@@ -1,10 +1,11 @@
 import React from 'react';
+import { useTranslate } from 'react-admin';
 import { Card, Typography, Button, Chip, IconButton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useNodeinfo } from '@semapps/activitypub-components';
 import DoneIcon from '@mui/icons-material/Done';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useTranslate } from 'react-admin';
+import useUninstallApp from '../../hooks/useUninstallApp';
 
 const useStyles = makeStyles(theme => ({
   card: {
@@ -52,11 +53,12 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ApplicationCard = ({ app, isTrustedApp, isInstalled, uninstallApp }) => {
+const ApplicationCard = ({ app, isTrustedApp, isInstalled }) => {
   const classes = useStyles();
   const translate = useTranslate();
   const appDomain = new URL(app.id).host;
   const nodeinfo = useNodeinfo(appDomain);
+  const uninstallApp = useUninstallApp(app);
 
   return (
     <Card className={classes.card}>

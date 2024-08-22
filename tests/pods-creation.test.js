@@ -1,5 +1,6 @@
 const path = require('path');
 const urlJoin = require('url-join');
+const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { initialize, clearDataset, listDatasets } = require('./initialize');
 
@@ -118,14 +119,21 @@ describe('Test pods creation', mode => {
 
     expect(typeIndexUri).not.toBeNull();
 
-    const typeIndex = await alice.call('ldp.resource.get', {
-      resourceUri: typeIndexUri,
-      accept: MIME_TYPES.JSON
-    });
+    // TypeRegistrations take time to be populated
+    await waitForExpect(async () => {
+      const typeIndex = await alice.call('type-indexes.get', {
+        resourceUri: typeIndexUri,
+        accept: MIME_TYPES.JSON
+      });
 
-    expect(typeIndex).toMatchObject({
-      type: expect.arrayContaining(['solid:ListedDocument', 'solid:TypeIndex']),
-      'solid:hasTypeRegistration': expect.anything()
+      expect(typeIndex['solid:hasTypeRegistration']).toContainEqual(
+        expect.objectContaining({
+          'solid:forClass': expect.arrayContaining(['as:Profile', 'vcard:Individual']),
+          'solid:instanceContainer': urlJoin(alice.id, '/data/vcard/individual'),
+          'skos:prefLabel': 'Profiles',
+          'apods:labelPredicate': 'vcard:given-name'
+        })
+      );
     });
   }, 80000);
 

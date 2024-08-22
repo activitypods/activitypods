@@ -247,3 +247,8 @@ export const downloadFile = (blob: Blob, filename: string) => {
   // Revoke the blob URL
   URL.revokeObjectURL(blobUrl);
 };
+
+export const arraysEqual = (a1 : [], a2 : []) : boolean =>
+  arrayFromLdField(a1).length === arrayFromLdField(a2).length && arrayFromLdField(a1).every(i => arrayFromLdField(a2).includes(i));
+
+export const delay = (t : number) => new Promise(resolve => setTimeout(resolve, t));

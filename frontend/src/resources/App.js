@@ -1,5 +1,8 @@
 export default {
   dataModel: {
-    types: ['interop:Application']
+    types: ['interop:Application'],
+    list: {
+      servers: ['pod']
+    }
   }
 };

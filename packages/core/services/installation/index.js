@@ -1,8 +1,6 @@
 const urlJoin = require('url-join');
+const { MoleculerError } = require('moleculer').Errors;
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { arrayOf } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const interopContext = require('../../config/context-interop.json');
 const ApplicationsService = require('./sub-services/applications');
 const AppRegistrationsService = require('./sub-services/app-registrations');
 const AccessGrantsService = require('./sub-services/access-grants');
@@ -23,83 +21,51 @@ module.exports = {
         type: 'apods:Install'
       },
       async onEmit(ctx, activity, emitterUri) {
-        const appUri = activity.object;
-        let accessGrantsUris = [];
+        const appRegistration = await ctx.call('app-registrations.getForApp', {
+          appUri: activity.object,
+          podOwner: emitterUri
+        });
 
-        const app = await ctx.call('ldp.remote.get', { resourceUri: appUri });
-
-        for (const accessNeedGroupUri of arrayOf(app['interop:hasAccessNeedGroup'])) {
-          const accessNeedGroup = await ctx.call('ldp.remote.get', { resourceUri: accessNeedGroupUri });
-          let dataGrantsUris = [];
-          let specialRightsUris = [];
-
-          if (activity['apods:acceptedAccessNeeds']) {
-            for (const accessNeedUri of arrayOf(accessNeedGroup['interop:hasAccessNeed'])) {
-              if (activity['apods:acceptedAccessNeeds'].includes(accessNeedUri)) {
-                const accessNeed = await ctx.call('ldp.remote.get', { resourceUri: accessNeedUri });
-                dataGrantsUris.push(
-                  await ctx.call('data-grants.post', {
-                    resource: {
-                      type: 'interop:DataGrant',
-                      'interop:dataOwner': emitterUri,
-                      'interop:grantee': appUri,
-                      'apods:registeredClass': accessNeed['apods:registeredClass'],
-                      'interop:accessMode': accessNeed['interop:accessMode'],
-                      'interop:scopeOfGrant': 'interop:All',
-                      'interop:satisfiesAccessNeed': accessNeedUri
-                    },
-                    contentType: MIME_TYPES.JSON
-                  })
-                );
-              }
-            }
-          }
-
-          if (activity['apods:acceptedSpecialRights']) {
-            for (const specialRightUri of arrayOf(accessNeedGroup['apods:hasSpecialRights'])) {
-              if (activity['apods:acceptedSpecialRights'].includes(specialRightUri)) {
-                specialRightsUris.push(specialRightUri);
-              }
-            }
-          }
-
-          // Only created the corresponding AccessGrant if a right was granted
-          if (dataGrantsUris.length > 0 || specialRightsUris.length > 0) {
-            accessGrantsUris.push(
-              await ctx.call('access-grants.post', {
-                resource: {
-                  type: 'interop:AccessGrant',
-                  'interop:grantedBy': emitterUri,
-                  'interop:grantedAt': new Date().toISOString(),
-                  'interop:grantee': appUri,
-                  'interop:hasAccessNeedGroup': accessNeedGroupUri,
-                  'interop:hasDataGrant': dataGrantsUris,
-                  'apods:hasSpecialRights': specialRightsUris
-                },
-                contentType: MIME_TYPES.JSON
-              })
-            );
-          }
+        if (appRegistration) {
+          throw new MoleculerError(
+            `User already has an application registration. Upgrade or uninstall the app first.`,
+            400,
+            'BAD REQUEST'
+          );
         }
 
-        const appRegistrationUri = await ctx.call('app-registrations.post', {
-          resource: {
-            type: 'interop:ApplicationRegistration',
-            'interop:registeredBy': emitterUri,
-            'interop:registeredAt': new Date().toISOString(),
-            'interop:updatedAt': new Date().toISOString(),
-            'interop:registeredAgent': appUri,
-            'interop:hasAccessGrant': accessGrantsUris
-          },
-          contentType: MIME_TYPES.JSON
+        const appRegistrationUri = await ctx.call('app-registrations.createOrUpdate', {
+          appUri: activity.object,
+          podOwner: emitterUri,
+          acceptedAccessNeeds: activity['apods:acceptedAccessNeeds'],
+          acceptedSpecialRights: activity['apods:acceptedSpecialRights']
         });
 
         await ctx.call('activitypub.outbox.post', {
           collectionUri: urlJoin(emitterUri, 'outbox'),
-          '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
-          '@type': 'Create',
+          '@type': ACTIVITY_TYPES.CREATE,
           object: appRegistrationUri,
-          to: appUri
+          to: activity.object
+        });
+      }
+    },
+    upgrade: {
+      match: {
+        type: 'apods:Upgrade'
+      },
+      async onEmit(ctx, activity, emitterUri) {
+        const appRegistrationUri = await ctx.call('app-registrations.createOrUpdate', {
+          appUri: activity.object,
+          podOwner: emitterUri,
+          acceptedAccessNeeds: activity['apods:acceptedAccessNeeds'],
+          acceptedSpecialRights: activity['apods:acceptedSpecialRights']
+        });
+
+        await ctx.call('activitypub.outbox.post', {
+          collectionUri: urlJoin(emitterUri, 'outbox'),
+          '@type': ACTIVITY_TYPES.UPDATE,
+          object: appRegistrationUri,
+          to: activity.object
         });
       }
     },
@@ -148,8 +114,9 @@ module.exports = {
       },
       async onEmit(ctx, activity, emitterUri) {
         const appUri = activity.object.object;
+        const podOwner = emitterUri;
 
-        const appRegistration = await ctx.call('app-registrations.getForApp', { appUri });
+        const appRegistration = await ctx.call('app-registrations.getForApp', { appUri, podOwner });
 
         if (appRegistration) {
           // Immediately delete existing webhooks channels to avoid permissions errors later

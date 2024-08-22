@@ -1,8 +1,12 @@
-const { arrayOf } = require('@semapps/ldp');
+const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
   name: 'applications',
+  mixins: [ControlledContainerMixin],
+  settings: {
+    acceptedTypes: ['interop:Application']
+  },
   actions: {
     async get(ctx) {
       const { appUri } = ctx.params;

@@ -1,13 +1,13 @@
 {
   "name": "@activitypods/marketplace",
-  "version": "2.0.0-alpha.10",
+  "version": "2.0.0-alpha.11",
   "description": "ActivityPods app for marketplace (offers and requests)",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
   "dependencies": {
-    "@activitypods/announcer": "2.0.0-alpha.10",
-    "@semapps/activitypub": "0.9.0",
-    "@semapps/ldp": "0.9.0"
+    "@activitypods/announcer": "2.0.0-alpha.11",
+    "@semapps/activitypub": "0.9.1",
+    "@semapps/ldp": "0.9.1"
   },
   "publishConfig": {
     "access": "public"

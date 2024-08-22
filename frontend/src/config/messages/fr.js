@@ -16,6 +16,7 @@ module.exports = {
       login: 'Se connecter',
       open_app: "Ouvrir l'appli",
       install_app: "Installer l'appli",
+      uninstall_app: "Désinstaller l'appli",
       reject: 'Refuser',
       reject_contact_request: 'Rejeter la demande',
       remove_contact: 'Retirer de mes contacts',
@@ -133,7 +134,9 @@ module.exports = {
       set_new_password: 'Veuillez entrer votre adresse mail et un nouveau mot de passe ci-dessous',
       create_profile:
         'Maintenant que votre compte est créé, veuillez créer votre profil. Celui-ci ne sera visible par défaut que des personnes que vous acceptez dans votre réseau.',
-      authorize: 'Autorisez-vous le site %{appDomain} à accéder à votre espace de données ?',
+      authorize_install: "Pour être installée, l'application requiert les autorisations suivantes",
+      authorize_upgrade:
+        "L'application a été mise à jour et requiert maintenant les nouvelles autorisations ci-dessous",
 
       invite_text_logged_out:
         "Un espace personnel est l'endroit où vous stockez vos données. Tout comme les comptes email, il est décentralisé, ce qui vous permet de choisir un fournisseur de confiance. Au lieu de créer un nouveau compte pour chaque nouvelle application, vous pourrez utiliser le même compte. Les applications compatibles stockeront les données dans votre espace.",
@@ -158,6 +161,10 @@ module.exports = {
       connection_successful: 'Vous êtes maintenant connecté !',
       pod_creation_progress: 'Compte en cours de création...',
       app_installation_progress: 'Installation en cours...',
+      app_upgrade_progress: 'Mise à jour en cours...',
+      app_upgrade_cancel: "Désinstaller l'application ?",
+      app_upgrade_cancel_description:
+        "Cette application ne peut pas fonctionner si vous ne lui donnez pas les autorisations qu'elle demande. Est-ce que vous souhaitez désinstaller l'application ?",
       default_app_changed: "L'application par défaut a été changée"
     },
     notification: {

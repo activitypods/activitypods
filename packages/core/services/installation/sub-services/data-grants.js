@@ -16,12 +16,19 @@ module.exports = {
   },
   dependencies: ['ldp', 'ldp.registry', 'pod'],
   actions: {
+    put() {
+      throw new Error(`The resources of type interop:DataGrant are immutable`);
+    },
+    patch() {
+      throw new Error(`The resources of type interop:DataGrant are immutable`);
+    },
+    // Get all the DataGrants granted to an application
     async getForApp(ctx) {
       const { appUri, podOwner } = ctx.params;
 
       const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
 
-      let filteredContainer = await this.actions.list(
+      const filteredContainer = await this.actions.list(
         {
           containerUri,
           filters: {
@@ -34,6 +41,40 @@ module.exports = {
       );
 
       return arrayOf(filteredContainer['ldp:contains']);
+    },
+    // Get the DataGrant linked with an AcccessNeed
+    async getByAccessNeed(ctx) {
+      const { accessNeedUri, podOwner } = ctx.params;
+
+      const filteredContainer = await this.actions.list(
+        {
+          filters: {
+            'http://www.w3.org/ns/solid/interop#satisfiesAccessNeed': accessNeedUri,
+            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner
+          },
+          webId: podOwner
+        },
+        { parentCtx: ctx }
+      );
+
+      return filteredContainer['ldp:contains']?.[0];
+    },
+    // Delete DataGrants which are not linked to an AccessNeed (may happen on app upgrade)
+    async deleteOrphans(ctx) {
+      const { podOwner } = ctx.params;
+      const container = await this.actions.list({ webId: podOwner }, { parentCtx: ctx });
+      for (const dataGrant of arrayOf(container?.['ldp:contains'])) {
+        try {
+          await ctx.call('ldp.remote.get', { resourceUri: dataGrant['interop:satisfiesAccessNeed'] });
+        } catch (e) {
+          if (e.code === 404) {
+            this.logger.info(`Deleting ${dataGrant.id} as it is not linked anymore with an existing access need...`);
+            await this.actions.delete({ resourceUri: dataGrant.id, webId: podOwner });
+          } else {
+            throw e;
+          }
+        }
+      }
     }
   },
   hooks: {
@@ -138,6 +179,14 @@ module.exports = {
       async delete(ctx, res) {
         const webId = res.oldData['interop:dataOwner'];
         const appUri = res.oldData['interop:grantee'];
+        const resourceType = res.oldData['apods:registeredClass'];
+        const accessMode = arrayOf(res.oldData['interop:accessMode']);
+
+        await this.broker.call('type-registrations.unbindApp', {
+          type: resourceType,
+          appUri,
+          webId
+        });
 
         const containersUris = await ctx.call('type-registrations.findContainersUris', {
           type: res.oldData['apods:registeredClass'],
@@ -145,22 +194,22 @@ module.exports = {
         });
 
         for (const containerUri of containersUris) {
-          // If we remove a right which hasn't been granted, no error will be thrown
+          // Mirror of what is done on the above hook
           await ctx.call('webacl.resource.removeRights', {
             resourceUri: containerUri,
             rights: {
               user: {
                 uri: appUri,
-                read: true,
-                write: true
+                read: accessMode.includes('acl:Read'),
+                write: accessMode.includes('acl:Write')
               },
               default: {
                 user: {
                   uri: appUri,
-                  read: true,
-                  append: true,
-                  write: true,
-                  control: true
+                  read: accessMode.includes('acl:Read'),
+                  append: accessMode.includes('acl:Append'),
+                  write: accessMode.includes('acl:Write'),
+                  control: accessMode.includes('acl:Control')
                 }
               }
             },

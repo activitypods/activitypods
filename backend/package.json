@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "2.0.0-alpha.10",
+  "version": "2.0.0-alpha.11",
   "private": true,
   "description": "ActivityPods backend",
   "scripts": {
@@ -9,14 +9,14 @@
     "test": "jest --detectOpenHandles --verbose"
   },
   "dependencies": {
-    "@activitypods/announcer": "2.0.0-alpha.10",
-    "@activitypods/contacts": "2.0.0-alpha.10",
-    "@activitypods/core": "2.0.0-alpha.10",
-    "@activitypods/messages": "2.0.0-alpha.10",
-    "@activitypods/profiles": "2.0.0-alpha.10",
-    "@semapps/notifications": "0.9.0",
-    "@semapps/sync": "0.9.0",
-    "@semapps/webacl": "0.9.0",
+    "@activitypods/announcer": "2.0.0-alpha.11",
+    "@activitypods/contacts": "2.0.0-alpha.11",
+    "@activitypods/core": "2.0.0-alpha.11",
+    "@activitypods/messages": "2.0.0-alpha.11",
+    "@activitypods/profiles": "2.0.0-alpha.11",
+    "@semapps/notifications": "0.9.1",
+    "@semapps/sync": "0.9.1",
+    "@semapps/webacl": "0.9.1",
     "dotenv-flow": "^3.2.0",
     "ioredis": "^4.17.3",
     "moleculer": "^0.14.19",

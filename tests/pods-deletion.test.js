@@ -16,7 +16,7 @@ const initializeBroker = async (port, accountsDataset) => {
     mixins: [BackupService],
     settings: {
       localServer: {
-        fusekiBase: CONFIG.FUSEKI_BASE
+        fusekiBase: path.resolve(__dirname, CONFIG.FUSEKI_BASE)
       },
       copyMethod: 'fs', // rsync, ftp, or fs
       remoteServer: {
@@ -166,6 +166,8 @@ describe('Delete an actor', () => {
     expect(fs.existsSync(path.join('./uploads/', username))).toBeTruthy();
 
     // Check, that backups are not deleted.
-    expect(fs.readdirSync(path.join(CONFIG.FUSEKI_BASE, 'backups')).find(file => file.includes(username))).toBeTruthy();
+    expect(
+      fs.readdirSync(path.resolve(__dirname, CONFIG.FUSEKI_BASE, 'backups')).find(file => file.includes(username))
+    ).toBeTruthy();
   }, 10_000);
 });

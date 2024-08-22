@@ -3,7 +3,6 @@ import { Admin, Resource, CustomRoutes, memoryStore } from 'react-admin';
 import { BrowserRouter, Route } from 'react-router-dom';
 import { QueryClient } from 'react-query';
 import { StyledEngineProvider } from '@mui/material/styles';
-import { LocalLoginPage } from '@semapps/auth-provider';
 
 import authProvider from './config/authProvider';
 import dataProvider from './config/dataProvider';
@@ -12,7 +11,6 @@ import * as resources from './resources';
 
 import Layout from './layout/Layout';
 import theme from './config/theme';
-import scorer from './config/scorer';
 
 import HomePage from './pages/HomePage';
 import DataPage from './pages/DataPage/DataPage';
@@ -28,6 +26,7 @@ import UserPage from './pages/UserPage';
 import RedirectPage from './pages/RedirectPage';
 import InvitePage from './pages/InvitePage/InvitePage';
 import ApplicationsPage from './pages/ApplicationsPage/ApplicationsPage';
+import LoginPage from './pages/LoginPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,15 +38,6 @@ const queryClient = new QueryClient({
     }
   }
 });
-
-const LoginPage = () => (
-  <LocalLoginPage
-    allowUsername
-    postSignupRedirect="/initialize"
-    additionalSignupValues={{ 'schema:knowsLanguage': CONFIG.DEFAULT_LOCALE }}
-    passwordScorer={scorer}
-  />
-);
 
 const App = () => (
   <StyledEngineProvider injectFirst>

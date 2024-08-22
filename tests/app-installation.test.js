@@ -407,86 +407,96 @@ describe('Test app installation', () => {
     ]);
   });
 
-  // test('Class descriptions are correctly created', async () => {
-  //   let app;
-
-  //   await waitForExpect(async () => {
-  //     app = await alice.call('ldp.remote.get', { resourceUri: APP_URI });
-
-  //     expect(app?.['interop:hasAccessDescriptionSet']).toHaveLength(2);
-  //   });
-
-  //   const accessDescriptionSets = await Promise.all(
-  //     app['interop:hasAccessDescriptionSet'].map(setUri =>
-  //       alice.call('ldp.remote.get', {
-  //         resourceUri: setUri
-  //       })
-  //     )
-  //   );
-
-  //   expect(accessDescriptionSets).toEqual(
-  //     expect.arrayContaining([
-  //       expect.objectContaining({
-  //         type: 'interop:AccessDescriptionSet',
-  //         'interop:usesLanguage': 'en'
-  //       }),
-  //       expect.objectContaining({
-  //         type: 'interop:AccessDescriptionSet',
-  //         'interop:usesLanguage': 'fr'
-  //       })
-  //     ])
-  //   );
-
-  //   const classDescriptions = await Promise.all(
-  //     accessDescriptionSets.map(set =>
-  //       alice.call('ldp.remote.get', {
-  //         resourceUri: set['apods:hasClassDescription']
-  //       })
-  //     )
-  //   );
-
-  //   expect(classDescriptions).toEqual(
-  //     expect.arrayContaining([
-  //       expect.objectContaining({
-  //         type: 'apods:ClassDescription',
-  //         'apods:describedClass': 'as:Event',
-  //         'apods:describedBy': APP_URI,
-  //         'skos:prefLabel': 'Events',
-  //         'apods:labelPredicate': 'as:name',
-  //         'apods:openEndpoint': 'https://example.app/r'
-  //       }),
-  //       expect.objectContaining({
-  //         type: 'apods:ClassDescription',
-  //         'apods:describedClass': 'as:Event',
-  //         'apods:describedBy': APP_URI,
-  //         'skos:prefLabel': 'Evénements',
-  //         'apods:labelPredicate': 'as:name',
-  //         'apods:openEndpoint': 'https://example.app/r'
-  //       })
-  //     ])
-  //   );
-  // });
-
-  test('User installs same app a second time and get an error', async () => {
-    const [creationActivityUri] = await installApp(
-      alice,
-      APP_URI,
-      requiredAccessNeedGroup['interop:hasAccessNeed'],
-      requiredAccessNeedGroup['apods:hasSpecialRights']
-    );
+  test('Class descriptions are correctly created by the application', async () => {
+    let app;
 
     await waitForExpect(async () => {
-      const inbox = await alice.call('activitypub.collection.get', {
-        resourceUri: alice.inbox,
-        page: 1
-      });
+      app = await alice.call('ldp.remote.get', { resourceUri: APP_URI });
 
-      expect(inbox?.orderedItems[0]).toMatchObject({
-        type: ACTIVITY_TYPES.REJECT,
-        object: creationActivityUri,
-        summary: 'User already has an application registration. Update or delete it.'
-      });
+      expect(app?.['interop:hasAccessDescriptionSet']).toHaveLength(2);
     });
+
+    const accessDescriptionSets = await Promise.all(
+      app['interop:hasAccessDescriptionSet'].map(setUri =>
+        alice.call('ldp.remote.get', {
+          resourceUri: setUri
+        })
+      )
+    );
+
+    expect(accessDescriptionSets).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'interop:AccessDescriptionSet',
+          'interop:usesLanguage': 'en'
+        }),
+        expect.objectContaining({
+          type: 'interop:AccessDescriptionSet',
+          'interop:usesLanguage': 'fr'
+        })
+      ])
+    );
+
+    const classDescriptions = await Promise.all(
+      accessDescriptionSets.map(set =>
+        alice.call('ldp.remote.get', {
+          resourceUri: set['apods:hasClassDescription']
+        })
+      )
+    );
+
+    expect(classDescriptions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'apods:ClassDescription',
+          'apods:describedClass': 'as:Event',
+          'apods:describedBy': APP_URI,
+          'skos:prefLabel': 'Events',
+          'apods:labelPredicate': 'as:name',
+          'apods:openEndpoint': 'https://example.app/r'
+        }),
+        expect.objectContaining({
+          type: 'apods:ClassDescription',
+          'apods:describedClass': 'as:Event',
+          'apods:describedBy': APP_URI,
+          'skos:prefLabel': 'Evénements',
+          'apods:labelPredicate': 'as:name',
+          'apods:openEndpoint': 'https://example.app/r'
+        })
+      ])
+    );
+  });
+
+  test('Types are correctly registered in the TypeIndex', async () => {
+    const typeIndex = await alice.call('type-indexes.get', {
+      resourceUri: alice['solid:publicTypeIndex'],
+      accept: MIME_TYPES.JSON
+    });
+
+    expect(typeIndex['solid:hasTypeRegistration']).toContainEqual(
+      expect.objectContaining({
+        'solid:forClass': 'as:Event',
+        'solid:instanceContainer': urlJoin(alice.id, 'data/as/event'),
+        'apods:defaultApp': APP_URI,
+        'apods:availableApps': APP_URI,
+        'skos:prefLabel': 'Events', // Alice speaks english (schema:knowsLanguage)
+        'apods:labelPredicate': 'as:name',
+        'apods:openEndpoint': 'https://example.app/r',
+        'apods:icon': 'https://example.app/logo.png' // App icons
+      })
+    );
+  });
+
+  test('User installs same app a second time and get an error', async () => {
+    await expect(
+      alice.call('activitypub.outbox.post', {
+        collectionUri: alice.outbox,
+        type: 'apods:Install',
+        object: APP_URI,
+        'apods:acceptedAccessNeeds': requiredAccessNeedGroup['interop:hasAccessNeed'],
+        'apods:acceptedSpecialRights': requiredAccessNeedGroup['apods:hasSpecialRights']
+      })
+    ).rejects.toThrow('User already has an application registration. Upgrade or uninstall the app first.');
   });
 
   test('User uninstalls app', async () => {
@@ -523,9 +533,7 @@ describe('Test app installation', () => {
           resourceUri: appRegistrationUri,
           accept: MIME_TYPES.JSON
         })
-      ).resolves.toMatchObject({
-        type: 'Tombstone'
-      });
+      ).rejects.toThrow();
     });
 
     // It should be deleted on the app server as well
@@ -545,9 +553,7 @@ describe('Test app installation', () => {
           resourceUri: requiredAccessGrant['interop:hasDataGrant'],
           accept: MIME_TYPES.JSON
         })
-      ).resolves.toMatchObject({
-        type: 'Tombstone'
-      });
+      ).rejects.toThrow();
     });
 
     // It should be deleted on the app server as well
@@ -587,6 +593,24 @@ describe('Test app installation', () => {
     ]);
   });
 
+  test('App-related description should be removed from the TypeIndex', async () => {
+    const typeIndex = await alice.call('type-indexes.get', {
+      resourceUri: alice['solid:publicTypeIndex'],
+      accept: MIME_TYPES.JSON
+    });
+
+    const eventTypeRegistration = typeIndex['solid:hasTypeRegistration'].find(r => r['solid:forClass'] === 'as:Event');
+
+    expect(eventTypeRegistration['apods:defaultApp']).toBeUndefined();
+    expect(eventTypeRegistration['apods:availableApps']).toBeUndefined();
+    expect(eventTypeRegistration['apods:openEndpoint']).toBeUndefined();
+    expect(eventTypeRegistration['apods:icon']).toBeUndefined();
+
+    // We keep the label and labelPredicate for the data browser, even if no application handle this type of data
+    expect(eventTypeRegistration['skos:prefLabel']).toBe('Events');
+    expect(eventTypeRegistration['apods:labelPredicate']).toBe('as:name');
+  });
+
   test('User installs app and do not grant required access needs', async () => {
     const [creationActivityUri, appRegistrationUri] = await installApp(
       alice,
@@ -615,9 +639,7 @@ describe('Test app installation', () => {
           resourceUri: appRegistrationUri,
           accept: MIME_TYPES.JSON
         })
-      ).resolves.toMatchObject({
-        type: 'Tombstone'
-      });
+      ).rejects.toThrow();
     });
   });
 

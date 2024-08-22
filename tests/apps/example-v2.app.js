@@ -5,23 +5,21 @@ module.exports = {
   mixins: [AppService],
   settings: {
     app: {
-      name: 'Example App',
-      description: 'An ActivityPods app for integration tests',
-      thumbnail: 'https://example.app/logo.png'
+      name: 'Example App v2',
+      description: 'An ActivityPods app for integration tests'
     },
     accessNeeds: {
       required: [
         {
           registeredClass: AS_PREFIX + 'Event',
-          accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
+          accessMode: ['acl:Read', 'acl:Write']
         },
         'apods:ReadInbox',
         'apods:ReadOutbox',
         'apods:PostOutbox',
         'apods:QuerySparqlEndpoint',
         'apods:CreateWacGroup',
-        'apods:CreateCollection',
-        'apods:UpdateWebId'
+        'apods:CreateCollection'
       ],
       optional: [
         {
@@ -33,11 +31,11 @@ module.exports = {
     classDescriptions: {
       'as:Event': {
         label: {
-          en: 'Events',
-          fr: 'Evénements'
+          en: 'Meetings',
+          fr: 'Rencontres'
         },
         labelPredicate: 'as:name',
-        openEndpoint: 'https://example.app/r'
+        openEndpoint: 'https://example.app/redirect'
       }
     }
   }

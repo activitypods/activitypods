@@ -16,6 +16,7 @@ module.exports = {
       login: 'Login with an account',
       open_app: 'Open application',
       install_app: 'Install application',
+      uninstall_app: 'Uninstall application',
       open: 'Open',
       reject: 'Reject',
       reject_contact_request: 'Reject contact request',
@@ -142,7 +143,8 @@ module.exports = {
       set_new_password: 'Please enter your email address and a new password below',
       create_profile:
         'Now that your account is created, please create your profile. By default, your profile will only be visible to the people you accept into your network.',
-      authorize: 'To be installed, the app %{appDomain} require the following authorizations',
+      authorize_install: 'To be installed, the app requires the following authorizations',
+      authorize_upgrade: 'The app has been updated and now requires the following additional authorizations',
       invite_text_logged_out:
         "A personal data space is in some way similar to an email account; It's decentralized, so you can choose where your personal data is stored. Instead of creating a new account for every new app, you can login to compatible apps using your data space account. Apps then store your data in your data space.",
       invite_text_logged_in:
@@ -165,6 +167,10 @@ module.exports = {
       connection_successful: 'You are now connected!',
       pod_creation_progress: 'Your Pod is being created...',
       app_installation_progress: 'App installation in progress...',
+      app_upgrade_progress: 'App upgrade in progress...',
+      app_upgrade_cancel: 'Uninstall the application ?',
+      app_upgrade_cancel_description:
+        "The application cannot work if you don't give it the authorizations it requires. Do you want to uninstall this application ?",
       default_app_changed: 'The default app has been successfully changed'
     },
     notification: {

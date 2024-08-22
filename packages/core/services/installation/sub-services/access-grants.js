@@ -14,6 +14,13 @@ module.exports = {
     activateTombstones: false
   },
   actions: {
+    put() {
+      throw new Error(`The resources of type interop:AccessGrant are immutable`);
+    },
+    patch() {
+      throw new Error(`The resources of type interop:AccessGrant are immutable`);
+    },
+    // Get all the special rights given to an application
     async getSpecialRights(ctx) {
       const { appUri, podOwner } = ctx.params;
 
@@ -35,25 +42,59 @@ module.exports = {
         if (cur['apods:hasSpecialRights']) acc.push(...arrayOf(cur['apods:hasSpecialRights']));
         return acc;
       }, []);
+    },
+    // Get the AccessGrant linked with an AcccessNeedGroup
+    async getByAccessNeedGroup(ctx) {
+      const { accessNeedGroupUri, podOwner } = ctx.params;
+
+      const filteredContainer = await this.actions.list(
+        {
+          filters: {
+            'http://www.w3.org/ns/solid/interop#grantedBy': podOwner,
+            'http://www.w3.org/ns/solid/interop#hasAccessNeedGroup': accessNeedGroupUri
+          },
+          webId: podOwner
+        },
+        { parentCtx: ctx }
+      );
+
+      return filteredContainer['ldp:contains']?.[0];
+    },
+    // Delete AccessGrants which are not linked to an AccessNeedGroup (may happen on app upgrade)
+    async deleteOrphans(ctx) {
+      const { podOwner } = ctx.params;
+      const container = await this.actions.list({ webId: podOwner }, { parentCtx: ctx });
+      for (const accessGrant of arrayOf(container?.['ldp:contains'])) {
+        try {
+          await ctx.call('ldp.remote.get', { resourceUri: accessGrant['interop:hasAccessNeedGroup'] });
+        } catch (e) {
+          if (e.code === 404) {
+            this.logger.info(
+              `Deleting ${accessGrant.id} as it is not linked anymore with an existing access need group...`
+            );
+            await this.actions.delete({ resourceUri: accessGrant.id, webId: podOwner });
+          } else {
+            throw e;
+          }
+        }
+      }
     }
   },
   hooks: {
     after: {
       async post(ctx, res) {
+        const webId = ctx.params.resource['interop:grantedBy'];
+        const appUri = ctx.params.resource['interop:grantee'];
         const specialRightsUris = arrayOf(ctx.params.resource['apods:hasSpecialRights']);
 
+        // Give read permissions on all activities, if requested
         if (specialRightsUris.includes('apods:ReadInbox') || specialRightsUris.includes('apods:ReadOutbox')) {
-          const activitiesContainerUri = await ctx.call('activitypub.activity.getContainerUri', {
-            webId: ctx.params.resource['interop:grantedBy']
-          });
-
-          // Give read permissions on all activities
           await ctx.call('webacl.resource.addRights', {
-            resourceUri: activitiesContainerUri,
+            resourceUri: await ctx.call('activitypub.activity.getContainerUri', { webId }),
             additionalRights: {
               default: {
                 user: {
-                  uri: ctx.params.resource['interop:grantee'],
+                  uri: appUri,
                   read: true
                 }
               }
@@ -62,12 +103,13 @@ module.exports = {
           });
         }
 
+        // Give update permission on user's webId, if requested
         if (specialRightsUris.includes('apods:UpdateWebId')) {
           await ctx.call('webacl.resource.addRights', {
-            resourceUri: ctx.params.resource['interop:grantedBy'],
+            resourceUri: webId,
             additionalRights: {
               user: {
-                uri: ctx.params.resource['interop:grantee'],
+                uri: appUri,
                 write: true
               }
             },
@@ -75,51 +117,35 @@ module.exports = {
           });
         }
 
-        const collectionsContainerUri = await ctx.call('activitypub.collection.getContainerUri', {
-          webId: ctx.params.resource['interop:grantedBy']
-        });
-
         // Give read/write permissions on all existing collections
+        // plus permission to create collection, if it was requested
         await ctx.call('webacl.resource.addRights', {
-          resourceUri: collectionsContainerUri,
+          resourceUri: await ctx.call('activitypub.collection.getContainerUri', { webId }),
           additionalRights: {
             default: {
               user: {
-                uri: ctx.params.resource['interop:grantee'],
+                uri: appUri,
                 read: true,
                 write: true
               }
-            }
+            },
+            user: specialRightsUris.includes('apods:CreateCollection')
+              ? {
+                  uri: appUri,
+                  write: true
+                }
+              : undefined
           },
           webId: 'system'
         });
 
-        if (specialRightsUris.includes('apods:CreateCollection')) {
-          // Give permission to create new collections
-          await ctx.call('webacl.resource.addRights', {
-            resourceUri: collectionsContainerUri,
-            additionalRights: {
-              user: {
-                uri: ctx.params.resource['interop:grantee'],
-                write: true
-              }
-            },
-            webId: 'system'
-          });
-        }
-
         // Give read/write permissions on the files container
-
-        const filesContainerUri = await ctx.call('files.getContainerUri', {
-          webId: ctx.params.resource['interop:grantedBy']
-        });
-
         await ctx.call('webacl.resource.addRights', {
-          resourceUri: filesContainerUri,
+          resourceUri: await ctx.call('files.getContainerUri', { webId }),
           additionalRights: {
             default: {
               user: {
-                uri: ctx.params.resource['interop:grantee'],
+                uri: appUri,
                 read: true,
                 write: true
               }
@@ -130,10 +156,77 @@ module.exports = {
 
         return res;
       },
+      // Mirror of the post hook
       async delete(ctx, res) {
-        // Remove all rights of the application on the Pod
-        await ctx.call('webacl.resource.deleteAllUserRights', {
-          webId: res.oldData['interop:grantee']
+        const webId = res.oldData['interop:grantedBy'];
+        const appUri = res.oldData['interop:grantee'];
+        const specialRightsUris = arrayOf(res.oldData['apods:hasSpecialRights']);
+
+        // Remove read permissions on all activities, if requested
+        if (specialRightsUris.includes('apods:ReadInbox') || specialRightsUris.includes('apods:ReadOutbox')) {
+          await ctx.call('webacl.resource.removeRights', {
+            resourceUri: await ctx.call('activitypub.activity.getContainerUri', { webId }),
+            rights: {
+              default: {
+                user: {
+                  uri: appUri,
+                  read: true
+                }
+              }
+            },
+            webId: 'system'
+          });
+        }
+
+        // Remove update permission on user's webId, if requested
+        if (specialRightsUris.includes('apods:UpdateWebId')) {
+          await ctx.call('webacl.resource.removeRights', {
+            resourceUri: webId,
+            rights: {
+              user: {
+                uri: appUri,
+                write: true
+              }
+            },
+            webId: 'system'
+          });
+        }
+
+        // Remove read/write permissions on all existing collections
+        // plus permission to create collection, if it was requested
+        await ctx.call('webacl.resource.removeRights', {
+          resourceUri: await ctx.call('activitypub.collection.getContainerUri', { webId }),
+          rights: {
+            default: {
+              user: {
+                uri: appUri,
+                read: true,
+                write: true
+              }
+            },
+            user: specialRightsUris.includes('apods:CreateCollection')
+              ? {
+                  uri: appUri,
+                  write: true
+                }
+              : undefined
+          },
+          webId: 'system'
+        });
+
+        // Remove read/write permissions on the files container
+        await ctx.call('webacl.resource.removeRights', {
+          resourceUri: await ctx.call('files.getContainerUri', { webId }),
+          rights: {
+            default: {
+              user: {
+                uri: appUri,
+                read: true,
+                write: true
+              }
+            }
+          },
+          webId: 'system'
         });
 
         return res;

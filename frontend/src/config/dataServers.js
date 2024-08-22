@@ -14,7 +14,11 @@ const dataServers = {
         'vcard:Location': ['/vcard/location'],
         'vcard:Individual': ['/vcard/individual'],
         'vcard:Group': ['/vcard/group'],
+        'interop:Application': ['/interop/application'],
         'interop:ApplicationRegistration': ['/interop/application-registration'],
+        'interop:AccessGrant': ['/interop/access-grant'],
+        'interop:DataGrant': ['/interop/data-grant'],
+        'solid:TypeRegistration': ['/solid/type-registration'],
         'apods:ClassDescription': ['/apods/class-description']
       }
     },

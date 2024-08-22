@@ -1,6 +1,6 @@
 {
   "name": "@activitypods/type-index",
-  "version": "2.0.0-alpha.10",
+  "version": "2.0.0-alpha.11",
   "description": "ActivityPods package for Solid TypeIndex",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@rdfjs/data-model": "^1.3.4",
-    "@semapps/ldp": "0.9.0",
-    "@semapps/mime-types": "0.9.0",
+    "@semapps/ldp": "0.9.1",
+    "@semapps/mime-types": "0.9.1",
     "url-join": "^4.0.1"
   },
   "publishConfig": {

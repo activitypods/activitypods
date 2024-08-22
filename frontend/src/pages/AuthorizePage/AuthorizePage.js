@@ -1,34 +1,67 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material';
-import AuthorizePageView from './AuthorizePageView';
-import theme from '../../config/theme';
+import React, { useEffect, useCallback, useState } from 'react';
+import { useGetList, useGetOne, useDataProvider } from 'react-admin';
+import urlJoin from 'url-join';
+import { useSearchParams } from 'react-router-dom';
+import { useCheckAuthenticated } from '@semapps/auth-provider';
+import useTrustedApps from '../../hooks/useTrustedApps';
+import useGetAppStatus from '../../hooks/useGetAppStatus';
+import InstallationScreen from './InstallationScreen';
+import UpgradeScreen from './UpgradeScreen';
 
 const AuthorizePage = () => {
+  useCheckAuthenticated();
+  const [screen, setScreen] = useState();
+  const trustedApps = useTrustedApps();
   const [searchParams] = useSearchParams();
+  const getAppStatus = useGetAppStatus();
+  const dataProvider = useDataProvider();
+
+  const appUri = searchParams.get('client_id');
   const redirectTo = searchParams.get('redirect');
-  const clientId = searchParams.get('client_id');
-  const navigate = useNavigate();
+  const interactionId = searchParams.get('interaction_id');
+  const isTrustedApp = trustedApps?.some(baseUrl => baseUrl === new URL(appUri).origin) || false;
 
-  // If no clientId is provided, we are not connecting to an application so we can skip this screen
-  // This happens when we go through the signup process (the ProfileCreatePage redirects here)
-  useEffect(() => {
-    if (!clientId) {
-      if (redirectTo && redirectTo.startsWith('http')) {
-        window.location.href = redirectTo;
-      } else {
-        navigate(redirectTo || '/');
-      }
+  const { data: application } = useGetOne('App', { id: appUri });
+  const { data: appRegistrations, isLoading } = useGetList('AppRegistration', { page: 1, perPage: Infinity });
+
+  const accessApp = useCallback(async () => {
+    // There is no interactionId in case of upgrade
+    if (interactionId) {
+      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.oidc/consent-completed'), {
+        method: 'POST',
+        body: JSON.stringify({ interactionId }),
+        headers: new Headers({ 'Content-Type': 'application/json' })
+      });
     }
-  }, [navigate, clientId, redirectTo]);
 
-  if (!clientId) return null;
+    window.location.href = redirectTo;
+  }, [dataProvider, interactionId, redirectTo]);
 
-  return (
-    <ThemeProvider theme={theme}>
-      <AuthorizePageView />
-    </ThemeProvider>
-  );
+  useEffect(() => {
+    (async () => {
+      if (!isLoading && application?.id) {
+        const appStatus = await getAppStatus(application.id);
+        if (!appStatus.installed) {
+          setScreen('install');
+        } else if (appStatus.upgradeNeeded) {
+          setScreen('upgrade');
+        } else {
+          accessApp();
+        }
+      }
+    })();
+  }, [appRegistrations, isLoading, application, accessApp, getAppStatus, setScreen]);
+
+  switch (screen) {
+    case 'install':
+      return <InstallationScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
+
+    case 'upgrade':
+      return <UpgradeScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
+
+    default:
+      return null;
+  }
 };
 
 export default AuthorizePage;

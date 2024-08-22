@@ -127,10 +127,8 @@ module.exports = {
 
           const userLocale = userData['schema:knowsLanguage'];
 
-          if (userLocale && labelMap[userLocale]) {
-            label = labelMap[userLocale];
-          } else if (labelMap.en) {
-            label = labelMap.en;
+          if (userLocale) {
+            label = labelMap?.[userLocale] || labelMap?.en;
           }
         }
 
@@ -147,6 +145,11 @@ module.exports = {
         });
       }
     },
+    /**
+     * Bind an application to a certain type of resources
+     * If no other app is bound with this type yet, it will be marked as the default app and its class description will be used
+     * Otherwise, the app will be added to the list of available apps, that the user can switch to
+     */
     bindApp: {
       visibility: 'public',
       params: {
@@ -180,6 +183,80 @@ module.exports = {
               'apods:labelPredicate': classDescription['apods:labelPredicate'],
               'apods:openEndpoint': classDescription['apods:openEndpoint'],
               'apods:icon': classDescription['apods:icon']
+            };
+          }
+        }
+
+        await ctx.call('type-registrations.put', {
+          resource: registration,
+          contentType: MIME_TYPES.JSON,
+          webId
+        });
+      }
+    },
+    /**
+     * Unbind an application from a certain type of resource (Mirror of the above action.)
+     * If another application is in the list of available apps, its class description will be used instead.
+     * Otherwise, we will keep the label and labelPredicate, but not the icon and openEndpoint
+     */
+    unbindApp: {
+      visibility: 'public',
+      params: {
+        type: { type: 'string' },
+        appUri: { type: 'string' },
+        webId: { type: 'string' }
+      },
+      async handler(ctx) {
+        const { type, appUri, webId } = ctx.params;
+
+        let [registration] = await this.actions.getByType({ type, webId }, { parentCtx: ctx });
+        if (!registration) throw new Error(`No registration found with type ${type}`);
+
+        // Remove the app from available apps
+        registration['apods:availableApps'] = arrayOf(registration['apods:availableApps']).filter(a => a !== appUri);
+
+        if (registration['apods:defaultApp'] === appUri) {
+          let alternativeClassDescriptionFound = false;
+
+          // If there are other available apps for this type, set the first one as the default app
+          if (registration['apods:availableApps'].length > 0) {
+            const newDefaultAppUri = registration['apods:availableApps'][0];
+
+            registration['apods:defaultApp'] = newDefaultAppUri;
+
+            const classDescription = await ctx.call('applications.getClassDescription', {
+              type,
+              appUri: newDefaultAppUri,
+              podOwner: webId
+            });
+
+            if (classDescription) {
+              registration = {
+                ...registration,
+                'skos:prefLabel': classDescription['skos:prefLabel'],
+                'apods:labelPredicate': classDescription['apods:labelPredicate'],
+                'apods:openEndpoint': classDescription['apods:openEndpoint'],
+                'apods:icon': classDescription['apods:icon']
+              };
+
+              alternativeClassDescriptionFound = true;
+            }
+          } else {
+            registration['apods:defaultApp'] = undefined;
+          }
+
+          // If no other available apps, or if the new default app has no class description
+          if (!alternativeClassDescriptionFound) {
+            // Try to find if the LDP registry has a description
+            const containerDescription = await ctx.call('ldp.registry.getDescriptionByType', { type, webId });
+
+            // Keep the label and labelPredicate as it is an useful information for the data browser
+            registration = {
+              ...registration,
+              'skos:prefLabel': containerDescription?.label || registration['skos:prefLabel'],
+              'apods:labelPredicate': containerDescription?.labelPredicate || registration['apods:labelPredicate'],
+              'apods:openEndpoint': undefined,
+              'apods:icon': undefined
             };
           }
         }

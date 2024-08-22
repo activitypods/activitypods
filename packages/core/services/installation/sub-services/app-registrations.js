@@ -1,5 +1,6 @@
 const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const { arraysEqual } = require('../../../utils');
 
 module.exports = {
   name: 'app-registrations',
@@ -70,12 +71,23 @@ module.exports = {
         // Only created the corresponding AccessGrant if a right was granted
         if (dataGrantsUris.length > 0 || specialRightsUris.length > 0) {
           const accessGrant = await ctx.call('access-grants.getByAccessNeedGroup', { accessNeedGroupUri, podOwner });
-          if (accessGrant) {
+          if (
+            accessGrant &&
+            arraysEqual(accessGrant['interop:hasDataGrant'], dataGrantsUris) &&
+            arraysEqual(accessGrant['apods:hasSpecialRights'], specialRightsUris)
+          ) {
             this.logger.info(
               `Found access grant ${accessGrant.id} linked with access need group ${accessNeedGroupUri}`
             );
             accessGrantsUris.push(accessGrant.id);
           } else {
+            if (accessGrant) {
+              this.logger.info(`Deleting ${accessGrant.id} before recreating one as it does not grant the same rights`);
+              await ctx.call('access-grants.delete', {
+                resourceUri: accessGrant.id,
+                webId: podOwner
+              });
+            }
             accessGrantsUris.push(
               await ctx.call('access-grants.post', {
                 resource: {

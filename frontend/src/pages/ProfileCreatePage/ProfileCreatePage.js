@@ -23,7 +23,6 @@ const ProfileCreatePage = () => {
   return (
     <EditBase
       resource="Profile"
-      basePath="/Profile"
       id={identity?.profileData?.id}
       mutationMode="pessimistic"
       mutationOptions={{

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTranslate, getFieldLabelTranslationArgs, useShowContext } from 'react-admin';
+import { useTranslate, getFieldLabelTranslationArgs, useRecordContext, useResourceContext } from 'react-admin';
 import { Box, Grid, Typography } from '@mui/material';
 
 import makeStyles from '@mui/styles/makeStyles';
@@ -18,7 +18,9 @@ const useStyles = makeStyles(() => ({
 const DetailsList = ({ children }) => {
   const classes = useStyles();
   const translate = useTranslate();
-  const { record, resource } = useShowContext();
+  const record = useRecordContext();
+  const resource = useResourceContext();
+  if (!record) return null;
 
   return (
     <Box>

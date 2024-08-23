@@ -1,9 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { Box, Card, Typography, Avatar } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { useRecordContext } from 'react-admin';
 import { useCollection } from '@semapps/activitypub-components';
-import { formatUsername } from '../../utils';
 import RemoveContactButton from '../buttons/RemoveContactButton';
 import AcceptContactRequestButton from '../buttons/AcceptContactRequestButton';
 import RejectContactRequestButton from '../buttons/RejectContactRequestButton';
@@ -55,39 +53,40 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ContactCard = () => {
+const ContactCard = ({ actor, profile }) => {
   const classes = useStyles();
-  const record = useRecordContext();
   const { items: contacts, refetch: refetchContacts } = useCollection('apods:contacts');
   const { items: contactRequests, refetch: refetchRequests } = useCollection('apods:contactRequests');
 
   const contactRequest = useMemo(
-    () => contactRequests?.find(activity => record && activity.actor === record.describes),
-    [contactRequests, record]
+    () => contactRequests?.find(activity => activity.actor === actor.id),
+    [contactRequests, actor]
   );
 
   const refetchAll = useCallback(async () => {
     await Promise.all([refetchContacts(), refetchRequests()]);
   }, [refetchContacts, refetchRequests]);
 
-  if (!record) return null;
+  const actorServer = new URL(actor.id).hostname;
 
   return (
     <Card className={classes.root}>
       <Box className={classes.title}>
         <Box display="flex" justifyContent="center" className={classes.avatarWrapper}>
-          <Avatar src={record['vcard:photo']} className={classes.avatar} />
+          <Avatar src={profile?.['vcard:photo'] || actor.icon?.url} className={classes.avatar} />
         </Box>
       </Box>
       <Box className={classes.block}>
         <Typography variant="h2" align="center">
-          {record['vcard:given-name']}
+          {profile?.['vcard:given-name'] || actor.name || actor.preferredUsername}
         </Typography>
-        <Typography align="center">{formatUsername(record.describes)}</Typography>
+        <Typography align="center">
+          @{actor.preferredUsername}@{actorServer}
+        </Typography>
       </Box>
-      {(contacts?.includes(record.describes) || contactRequest) && (
+      {(contacts?.includes(actor.id) || contactRequest) && (
         <Box className={classes.button} pb={3} pr={3} pl={3}>
-          {contacts?.includes(record.describes) && (
+          {contacts?.includes(actor.id) && (
             <RemoveContactButton refetch={refetchContacts} variant="contained" color="secondary" fullWidth />
           )}
           {contactRequest && (

@@ -83,7 +83,7 @@ const HomePage = () => {
 
   useEffect(() => {
     if (!isLoading && identity?.id) {
-      redirect('/Profile');
+      redirect('/network');
     }
   }, [redirect, isLoading, identity]);
 

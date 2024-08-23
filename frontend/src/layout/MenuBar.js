@@ -27,7 +27,7 @@ const MenuBar = () => {
     <Box className={classes.menuBar}>
       <Container>
         <Breadcrumbs separator="|">
-          <Link to="/Profile" className={classes.link}>
+          <Link to="/network" className={classes.link}>
             {translate('app.page.contacts')}
           </Link>
           <Link to="/apps" className={classes.link}>

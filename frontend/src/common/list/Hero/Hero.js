@@ -1,6 +1,5 @@
 import React from 'react';
-import { useShowContext } from 'react-admin';
-import { Grid, Avatar } from '@mui/material';
+import { Avatar, Grid } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import DetailsList from './DetailsList';
 
@@ -25,14 +24,11 @@ const useStyles = makeStyles(theme => ({
 
 const Hero = ({ children, image }) => {
   const classes = useStyles();
-  const { record, isLoading } = useShowContext();
-  if (isLoading) return null;
-
   return (
     <div className={classes.root}>
       <Grid container spacing={7}>
         <Grid item xs={12} sm={3}>
-          <Avatar src={record[image]} className={classes.avatar} />
+          <Avatar src={image} className={classes.avatar} />
         </Grid>
         <Grid item xs={12} sm={9}>
           <DetailsList>{children}</DetailsList>

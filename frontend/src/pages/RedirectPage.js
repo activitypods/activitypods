@@ -29,7 +29,7 @@ const RedirectPage = () => {
       } else if (resource) {
         navigate(`/${resource}`);
       } else {
-        navigate('/Profile');
+        navigate('/network');
       }
     }
   }, [dataModels, searchParams, navigate]);

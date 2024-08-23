@@ -1,10 +1,9 @@
 import React from 'react';
 import { useRecordContext } from 'react-admin';
-import { formatUsername } from '../../utils';
 import CopyButton from '../buttons/CopyButton';
 import makeStyles from '@mui/styles/makeStyles';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(() => ({
   wrapper: {
     position: 'relative'
   },
@@ -21,17 +20,20 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const UsernameField = ({ source, showCopyButton }) => {
+const UsernameField = ({ showCopyButton }) => {
   const record = useRecordContext();
   const classes = useStyles();
 
-  if (!record || !record[source]) return null;
+  if (!record) return null;
+
+  const actorServer = new URL(record.id).hostname;
+  const webfingerId = `@${record.preferredUsername}@${actorServer}`;
 
   return (
     <div className={classes.wrapper}>
       <div className={classes.text}>
-        {formatUsername(record[source])}
-        {showCopyButton && <CopyButton text={formatUsername(record[source])} className={classes.copyButton} />}
+        {webfingerId}
+        {showCopyButton && <CopyButton text={webfingerId} className={classes.copyButton} />}
       </div>
     </div>
   );

@@ -20,7 +20,7 @@ const AddContactToolbar = props => {
   );
 };
 
-const ProfileCreate = () => {
+const NetworkRequestPage = () => {
   useCheckAuthenticated();
   const requestContact = useRequestContact();
   const location = useLocation();
@@ -52,4 +52,4 @@ const ProfileCreate = () => {
   );
 };
 
-export default ProfileCreate;
+export default NetworkRequestPage;

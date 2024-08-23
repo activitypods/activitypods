@@ -1,26 +1,9 @@
-/* eslint-disable no-bitwise */
-const CESIUM_APP_URL = 'https://demo.cesium.app/#/app/wot/';
-const CESIUM_APP_REGEX = /^https:\/\/demo\.cesium\.app\/#\/app\/wot\/([^\\]*)\//;
-
-export const g1PublicKeyToUrl = (value: string) => {
-  if (value && !value.startsWith(CESIUM_APP_URL)) {
-    return `${CESIUM_APP_URL + value}/`;
+export const formatUsername = (uri?: string) => {
+  if (uri) {
+    const url = new URL(uri);
+    const username = url.pathname.split('/')[1];
+    return `@${username}@${url.host}`;
   }
-  return value;
-};
-
-export const g1UrlToPublicKey = (value: string) => {
-  if (value && value.startsWith(CESIUM_APP_URL)) {
-    const results = CESIUM_APP_REGEX.exec(value);
-    if (results) return results[1];
-  }
-  return value;
-};
-
-export const formatUsername = (uri: string) => {
-  const url = new URL(uri);
-  const username = url.pathname.split('/')[1];
-  return `@${username}@${url.host}`;
 };
 
 /**
@@ -123,7 +106,7 @@ export const mulberry32 = (seed: number) => {
 export const localhostRegex = /(127\.0\.0\.[0-9]{1,3}|localhost|\[::1\])/;
 
 export const isLocalURL = (url: string) => {
-  return new RegExp(`^${localhostRegex.source}$`).test((new URL(url)).hostname);
+  return new RegExp(`^${localhostRegex.source}$`).test(new URL(url).hostname);
 };
 
 export const isUri = (uri: string) => {
@@ -248,7 +231,13 @@ export const downloadFile = (blob: Blob, filename: string) => {
   URL.revokeObjectURL(blobUrl);
 };
 
-export const arraysEqual = (a1 : [], a2 : []) : boolean =>
-  arrayFromLdField(a1).length === arrayFromLdField(a2).length && arrayFromLdField(a1).every(i => arrayFromLdField(a2).includes(i));
+export const arraysEqual = (a1: [], a2: []): boolean =>
+  arrayFromLdField(a1).length === arrayFromLdField(a2).length &&
+  arrayFromLdField(a1).every(i => arrayFromLdField(a2).includes(i));
 
-export const delay = (t : number) => new Promise(resolve => setTimeout(resolve, t));
+export const delay = (t: number) => new Promise(resolve => setTimeout(resolve, t));
+
+export const stripHtmlTags = (html: string) => {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || '';
+};

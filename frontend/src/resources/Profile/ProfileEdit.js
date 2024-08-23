@@ -1,18 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import {
-  SaveButton,
-  SimpleForm,
-  TextInput,
-  Toolbar,
-  useTranslate,
-  ImageField,
-  useGetIdentity,
-  useNotify
-} from 'react-admin';
+import { SaveButton, SimpleForm, TextInput, Toolbar, ImageField, useGetIdentity, useNotify } from 'react-admin';
 import { ImageInput } from '@semapps/input-components';
 import Edit from '../../layout/Edit';
 import ProfileTitle from './ProfileTitle';
-import { g1PublicKeyToUrl, g1UrlToPublicKey } from '../../utils';
 import BlockAnonymous from '../../common/BlockAnonymous';
 import QuickCreateLocationInput from '../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput';
 
@@ -23,7 +13,6 @@ const ToolbarWithoutDelete = props => (
 );
 
 export const ProfileEdit = () => {
-  const translate = useTranslate();
   const notify = useNotify();
   const { refetch: refetchIdentity } = useGetIdentity();
 
@@ -49,6 +38,7 @@ export const ProfileEdit = () => {
             refetchIdentity();
           }
         }}
+        actions={[]}
       >
         <SimpleForm toolbar={<ToolbarWithoutDelete />}>
           <TextInput source="vcard:given-name" fullWidth />
@@ -61,13 +51,6 @@ export const ProfileEdit = () => {
             reference="Location"
             source="vcard:hasAddress"
             onChange={handleLocationChange}
-          />
-          <TextInput
-            source="foaf:tipjar"
-            parse={v => g1PublicKeyToUrl(v)}
-            format={v => g1UrlToPublicKey(v)}
-            helperText={translate('app.helper.g1_tipjar_input')}
-            fullWidth
           />
         </SimpleForm>
       </Edit>

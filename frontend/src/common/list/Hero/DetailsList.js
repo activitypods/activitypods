@@ -19,6 +19,7 @@ const DetailsList = ({ children }) => {
   const classes = useStyles();
   const translate = useTranslate();
   const { record, resource } = useShowContext();
+  if (!record) return null;
 
   return (
     <Box>

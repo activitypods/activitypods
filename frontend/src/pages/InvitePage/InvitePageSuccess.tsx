@@ -14,8 +14,7 @@ const InvitePageSuccess = ({ inviterProfile, ownProfile }: { inviterProfile: any
 
   // It takes a while for the new invitee to be authorized to see the profile, so we might have to wait a bit.
   const onContinue = useCallback(() => {
-    // Get the inviter's profile URI in the current users's profiles container.
-    navigate(`/Profile/${encodeURIComponent(inviterProfile.id as string)}/show`);
+    navigate(`/network/${inviterProfile.describes}`);
   }, []);
 
   return (

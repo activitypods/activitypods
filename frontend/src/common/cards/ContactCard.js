@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { Box, Card, Typography, Avatar } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { useRecordContext } from 'react-admin';
+import { TextField, ReferenceField, useRecordContext } from 'react-admin';
 import { useCollection } from '@semapps/activitypub-components';
 import { formatUsername } from '../../utils';
 import RemoveContactButton from '../buttons/RemoveContactButton';
@@ -9,6 +9,7 @@ import AcceptContactRequestButton from '../buttons/AcceptContactRequestButton';
 import RejectContactRequestButton from '../buttons/RejectContactRequestButton';
 import IgnoreContactRequestButton from '../buttons/IgnoreContactRequestButton';
 import IgnoreContactButton from '../buttons/IgnoreContactButton';
+import AvatarField from '../fields/AvatarField';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -62,7 +63,7 @@ const ContactCard = () => {
   const { items: contactRequests, refetch: refetchRequests } = useCollection('apods:contactRequests');
 
   const contactRequest = useMemo(
-    () => contactRequests?.find(activity => record && activity.actor === record.describes),
+    () => contactRequests?.find(activity => record && activity.actor === record.id),
     [contactRequests, record]
   );
 
@@ -76,18 +77,20 @@ const ContactCard = () => {
     <Card className={classes.root}>
       <Box className={classes.title}>
         <Box display="flex" justifyContent="center" className={classes.avatarWrapper}>
-          <Avatar src={record['vcard:photo']} className={classes.avatar} />
+          <ReferenceField source="url" reference="Profile" link={false}>
+            <AvatarField source="vcard:photo" className={classes.avatar} />
+          </ReferenceField>
         </Box>
       </Box>
       <Box className={classes.block}>
-        <Typography variant="h2" align="center">
-          {record['vcard:given-name']}
-        </Typography>
-        <Typography align="center">{formatUsername(record.describes)}</Typography>
+        <ReferenceField source="url" reference="Profile" link={false}>
+          <TextField source="vcard:given-name" component="p" variant="h2" align="center" />
+        </ReferenceField>
+        <Typography align="center">{formatUsername(record.id)}</Typography>
       </Box>
-      {(contacts?.includes(record.describes) || contactRequest) && (
+      {(contacts?.includes(record.id) || contactRequest) && (
         <Box className={classes.button} pb={3} pr={3} pl={3}>
-          {contacts?.includes(record.describes) && (
+          {contacts?.includes(record.id) && (
             <RemoveContactButton refetch={refetchContacts} variant="contained" color="secondary" fullWidth />
           )}
           {contactRequest && (

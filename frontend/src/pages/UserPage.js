@@ -20,7 +20,7 @@ const UserPage = () => {
   // }, [contacts, contactsLoaded, webfinger, params, setIsContact, isContact]);
 
   useEffect(() => {
-    const contactFormUrl = `/Profile/create/?id=${params.id}`;
+    const contactFormUrl = `/network/request/?id=${params.id}`;
     if (identity?.id) {
       navigate(contactFormUrl);
     } else if (!isLoading) {

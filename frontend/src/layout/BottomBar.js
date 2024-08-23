@@ -39,13 +39,13 @@ const BottomBar = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname === '/MyData/') {
-      setValue('data');
-    } else if (location.pathname.startsWith('/Profile')) {
-      setValue('contacts');
-    } else if (location.pathname.startsWith('/App')) {
+    if (location.pathname.startsWith('/network') || location.pathname.startsWith('/Group')) {
+      setValue('network');
+    } else if (location.pathname.startsWith('/apps')) {
       setValue('apps');
-    } else if (location.pathname.startsWith('/settings')) {
+    } else if (location.pathname.startsWith('/data')) {
+      setValue('data');
+    } else {
       setValue('settings');
     }
   }, [location.pathname, setValue]);
@@ -64,10 +64,10 @@ const BottomBar = () => {
         <BottomNavigation showLabels className={classes.bottomNav} value={value} onChange={onChange}>
           <BottomNavigationAction
             label={translate('app.page.contacts_short')}
-            value="contacts"
+            value="network"
             icon={<PeopleAltIcon />}
             component={Link}
-            to="/Profile"
+            to="/network"
             classes={{ selected: classes.selected }}
           />
           <BottomNavigationAction

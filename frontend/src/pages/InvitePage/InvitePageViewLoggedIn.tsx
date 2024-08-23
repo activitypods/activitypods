@@ -50,7 +50,7 @@ const InvitePageViewLoggedIn = ({
           'sec:capability': capabilityUri
         })
         .then(() => {
-          navigate(`/Profile/${encodeURIComponent(inviterProfile.id as string)}/show`);
+          navigate(`/network/${inviterProfile.describes}`);
         });
     }
   }, [profileIsConnected]);

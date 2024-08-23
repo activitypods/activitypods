@@ -31,7 +31,7 @@ const AppBar = ({ title, logout }) => {
         <Grid container>
           <Grid item xs={6}>
             <Typography variant="h1" className={classes.title}>
-              <Link to="/Profile">{title}</Link>
+              <Link to="/network">{title}</Link>
             </Typography>
           </Grid>
           <Grid item xs={6}>

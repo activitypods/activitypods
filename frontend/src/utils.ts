@@ -236,3 +236,8 @@ export const arraysEqual = (a1: [], a2: []): boolean =>
   arrayFromLdField(a1).every(i => arrayFromLdField(a2).includes(i));
 
 export const delay = (t: number) => new Promise(resolve => setTimeout(resolve, t));
+
+export const stripHtmlTags = (html: string) => {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || '';
+};

@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { TextField, DateField, ReferenceField, useTranslate, Button } from 'react-admin';
+import {
+  TextField,
+  DateField,
+  ReferenceField,
+  useTranslate,
+  Button,
+  useGetOne,
+  RecordContextProvider,
+  ResourceContextProvider
+} from 'react-admin';
 import { useParams, Link } from 'react-router-dom';
 import { useWebfinger } from '@semapps/activitypub-components';
 import ListIcon from '@mui/icons-material/List';
@@ -12,6 +21,9 @@ import MainList from '../../common/list/MainList/MainList';
 import BlockAnonymous from '../../common/BlockAnonymous';
 import TagsListEdit from '../../common/tags/TagsListEdit';
 import ProfileTitle from '../../resources/Profile/ProfileTitle';
+import ShowView from '../../layout/ShowView';
+import ValueField from '../../common/fields/ValueField';
+import { stripHtmlTags } from '../../utils';
 
 const NetworkActorPage = () => {
   const translate = useTranslate();
@@ -23,63 +35,57 @@ const NetworkActorPage = () => {
     webfinger.fetch(webfingerId).then(uri => setActorUri(uri));
   }, [webfinger, webfingerId, setActorUri]);
 
-  if (!actorUri) return null;
+  const { data: actor } = useGetOne('Actor', { id: actorUri }, { enabled: !!actorUri });
+  const { data: profile } = useGetOne('Profile', { id: actor?.url }, { enabled: !!actor?.url });
+
+  if (!actor) return null;
 
   return (
     <BlockAnonymous>
-      <Show
-        resource="Actor"
-        id={actorUri}
-        title={
-          <ReferenceField source="url" reference="Profile" link={false}>
-            <ProfileTitle />
-          </ReferenceField>
-        }
-        actions={[
-          <Button component={Link} to="/network" label="ra.action.list">
-            <ListIcon />
-          </Button>
-        ]}
-        asides={[<ContactCard />]}
-      >
-        <Hero image="vcard:photo">
-          <ReferenceField
-            label={translate('resources.Profile.fields.vcard:given-name')}
-            source="url"
-            reference="Profile"
-            link={false}
+      <ResourceContextProvider value="Actor">
+        <RecordContextProvider value={actor}>
+          <ShowView
+            title={profile?.['vcard:given-name'] || actor.name || actor.preferredUsername}
+            actions={[
+              <Button component={Link} to="/network" label="ra.action.list">
+                <ListIcon />
+              </Button>
+            ]}
+            asides={[<ContactCard actor={actor} profile={profile} />]}
           >
-            <TextField source="vcard:given-name" />
-          </ReferenceField>
-          <UsernameField source="id" />
-          <ReferenceField
-            label={translate('resources.Profile.fields.vcard:note')}
-            source="url"
-            reference="Profile"
-            link={false}
-          >
-            <TextField source="vcard:note" />
-          </ReferenceField>
-          <DateField
-            source="dc:created"
-            locales={CONFIG.DEFAULT_LOCALE}
-            options={{ month: 'long', day: 'numeric', year: 'numeric' }}
-          />
-          <TagsListEdit
-            source="id"
-            addLabel
-            label={translate('app.group.group')}
-            relationshipPredicate="vcard:hasMember"
-            namePredicate="vcard:label"
-            avatarPredicate="vcard:photo"
-            tagResource="Group"
-            recordIdPredicate="id"
-          />
-        </Hero>
-        <MainList>
-          <ContactField source="id" label={translate('app.action.send_message')} />
-        </MainList>
-      </Show>
+            <Hero image={profile?.['vcard:photo'] || actor.icon?.url}>
+              <ValueField
+                value={profile?.['vcard:given-name'] || actor.name || actor.preferredUsername}
+                label={translate('resources.Profile.fields.vcard:given-name')}
+              />
+              <UsernameField source="id" />
+              <ValueField
+                value={profile?.['vcard:note'] || stripHtmlTags(actor.summary)}
+                label={translate('resources.Profile.fields.vcard:note')}
+                sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', mr: 4 }}
+              />
+              <DateField
+                source="dc:created"
+                locales={CONFIG.DEFAULT_LOCALE}
+                options={{ month: 'long', day: 'numeric', year: 'numeric' }}
+              />
+              <TagsListEdit
+                source="id"
+                addLabel
+                label={translate('app.group.group')}
+                relationshipPredicate="vcard:hasMember"
+                namePredicate="vcard:label"
+                avatarPredicate="vcard:photo"
+                tagResource="Group"
+                recordIdPredicate="id"
+              />
+            </Hero>
+            <MainList>
+              <ContactField source="id" label={translate('app.action.send_message')} />
+            </MainList>
+          </ShowView>
+        </RecordContextProvider>
+      </ResourceContextProvider>
     </BlockAnonymous>
   );
 };

@@ -1,9 +1,7 @@
 import React from 'react';
-import { ReferenceField } from 'react-admin';
-import { Grid } from '@mui/material';
+import { Avatar, Grid } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import DetailsList from './DetailsList';
-import AvatarField from '../../fields/AvatarField';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -30,9 +28,7 @@ const Hero = ({ children, image }) => {
     <div className={classes.root}>
       <Grid container spacing={7}>
         <Grid item xs={12} sm={3}>
-          <ReferenceField source="url" reference="Profile" link={false}>
-            <AvatarField source={image} className={classes.avatar} />
-          </ReferenceField>
+          <Avatar src={image} className={classes.avatar} />
         </Grid>
         <Grid item xs={12} sm={9}>
           <DetailsList>{children}</DetailsList>

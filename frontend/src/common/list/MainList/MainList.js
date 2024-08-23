@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTranslate, getFieldLabelTranslationArgs, useShowContext } from 'react-admin';
+import { useTranslate, getFieldLabelTranslationArgs, useRecordContext, useResourceContext } from 'react-admin';
 import { Box } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import LargeLabel from './LargeLabel';
@@ -18,8 +18,9 @@ const useStyles = makeStyles(() => ({
 const MainList = ({ children, divider, Label = LargeLabel }) => {
   const translate = useTranslate();
   const classes = useStyles();
-  const { isLoading, record, resource } = useShowContext();
-  if (isLoading) return null;
+  const record = useRecordContext();
+  const resource = useResourceContext();
+  if (!record) return null;
 
   return (
     <Box>

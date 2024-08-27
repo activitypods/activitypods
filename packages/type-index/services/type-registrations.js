@@ -332,11 +332,12 @@ module.exports = {
         const accounts = await ctx.call('auth.account.find');
         const registeredContainers = await ctx.call('ldp.registry.list');
         // Go through each Pod
-        for (const { webId, podUri } of accounts) {
+        for (const { webId } of accounts) {
+          const podUrl = await ctx.call('pod.getUrl', { webId });
           // Go through each registered container
           for (const container of Object.values(registeredContainers)) {
             if (container.podsContainer !== true) {
-              const containerUri = urlJoin(podUri, container.path);
+              const containerUri = urlJoin(podUrl, container.path);
               for (const type of arrayOf(container.acceptedTypes)) {
                 await this.actions.register({ type, containerUri, webId }, { parentCtx: ctx });
               }

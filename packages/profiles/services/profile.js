@@ -24,7 +24,7 @@ module.exports = {
   dependencies: ['activitypub', 'webacl'],
   events: {
     async 'auth.registered'(ctx) {
-      const { webId, profileData } = ctx.params;
+      const { webId } = ctx.params;
       const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
       await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
@@ -34,11 +34,6 @@ module.exports = {
           containerUri,
           resource: {
             '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
-            'vcard:fn': profileData.familyName
-              ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
-              : profileData.name,
-            'vcard:given-name': profileData.name,
-            'vcard:family-name': profileData.familyName,
             describes: webId
           },
           contentType: MIME_TYPES.JSON,

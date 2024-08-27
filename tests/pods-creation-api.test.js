@@ -122,6 +122,8 @@ describe('Test pods creation via API', () => {
           proxyUrl: BASE_URL + '/alice/proxy',
           'void:sparqlEndpoint': BASE_URL + '/alice/sparql'
         },
+        'pim:storage': BASE_URL + '/alice/data',
+        'solid:oidcIssuer': BASE_URL,
         url: expect.anything()
       });
     });
@@ -156,12 +158,12 @@ describe('Test pods creation via API', () => {
 
   test('Alice profile can be fetched', async () => {
     await expect(fetchServer(alice.url)).resolves.toMatchObject({
-      json: { 'vcard:given-name': 'Alice', describes: alice.id }
+      json: { describes: alice.id }
     });
   });
 
   test('Alice can post on her Pod', async () => {
-    const { status, headers } = await fetchServer(urlJoin(alice.id, 'data'), {
+    const { status, headers } = await fetchServer(alice['pim:storage'], {
       method: 'POST',
       body: {
         '@context': 'https://activitypods.org/context.json',
@@ -175,7 +177,7 @@ describe('Test pods creation via API', () => {
     projectUri = headers.get('Location');
     expect(projectUri).not.toBeUndefined();
 
-    await expect(fetchServer(urlJoin(alice.id, 'data'))).resolves.toMatchObject({
+    await expect(fetchServer(alice['pim:storage'])).resolves.toMatchObject({
       json: {
         type: ['ldp:Container', 'ldp:BasicContainer'],
         'ldp:contains': expect.arrayContaining([

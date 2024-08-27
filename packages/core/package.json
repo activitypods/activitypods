@@ -25,7 +25,7 @@
     "@semapps/mime-types": "0.9.1",
     "@semapps/nodeinfo": "0.9.1",
     "@semapps/ontologies": "0.9.1",
-    "@semapps/pod": "0.9.1",
+    "@semapps/solid": "file:/home/sebastien/Code/semapps/src/middleware/packages/solid",
     "@semapps/sparql-endpoint": "0.9.1",
     "@semapps/sync": "0.9.1",
     "@semapps/triplestore": "0.9.1",

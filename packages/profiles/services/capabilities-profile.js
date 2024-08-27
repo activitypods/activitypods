@@ -67,12 +67,9 @@ const CapabilitiesProfileService = {
     addCapsContainersWhereMissing: {
       handler: async function (ctx) {
         /** @type {string[]} */
-        const datasets = await ctx.call('pod.list');
-
-        for (let dataset of datasets) {
-          const [account] = await ctx.call('auth.account.find', { query: { username: dataset } });
+        for (const account of await ctx.call('auth.account.find')) {
           const webId = account.webId;
-          ctx.meta.dataset = dataset;
+          ctx.meta.dataset = account.username;
 
           const { url: profileUri } = await ctx.call('ldp.resource.get', {
             resourceUri: webId,
@@ -94,7 +91,7 @@ const CapabilitiesProfileService = {
           );
 
           if (!hasInviteCap) {
-            this.logger.info('Migration: Adding invite capability for dataset ' + dataset + '...');
+            this.logger.info('Migration: Adding invite capability for dataset ' + account.username + '...');
             await this.actions.createProfileCapability({ webId });
           }
         }

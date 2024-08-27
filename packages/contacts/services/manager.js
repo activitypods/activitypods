@@ -78,6 +78,7 @@ module.exports = {
           throw new Error(`The actor ${activity.actor} cannot ask to remove actor ${activity.object.id}`);
 
         const actorToDelete = activity.object.id;
+        const podUrl = await ctx.call('pod.getUrl', { webId: actorToDelete });
 
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
@@ -102,7 +103,7 @@ module.exports = {
             SELECT DISTINCT ?resourceUri 
             WHERE {
               ?resourceUri ?p ?o .
-              FILTER( STRSTARTS( STR(?resourceUri), "${urlJoin(actorToDelete, 'data', '/')}" ) ) .
+              FILTER( STRSTARTS( STR(?resourceUri), "${urlJoin(podUrl, '/')}" ) ) .
             }
           `,
           accept: MIME_TYPES.JSON,
@@ -128,7 +129,7 @@ module.exports = {
             WHERE {
               <${recipientUri}> ldp:inbox ?recipientInbox .
               ?recipientInbox as:items ?activityUrl .
-              FILTER( STRSTARTS( STR(?activityUrl), "${urlJoin(actorToDelete, 'data', '/')}" ) ) .
+              FILTER( STRSTARTS( STR(?activityUrl), "${urlJoin(podUrl, '/')}" ) ) .
             }
           `,
           webId: 'system',

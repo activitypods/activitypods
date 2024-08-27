@@ -8,9 +8,7 @@
         "up": {
           "detached": true
         },
-        "files": [
-          "${workspaceFolder}/docker-compose.yml",
-        ]
+        "files": ["${workspaceFolder}/docker-compose.yml"]
       }
     },
     {
@@ -18,9 +16,7 @@
       "type": "docker-compose",
       "dockerCompose": {
         "down": true,
-        "files": [
-          "${workspaceFolder}/docker-compose.yml",
-        ]
+        "files": ["${workspaceFolder}/docker-compose.yml"]
       }
     },
     {
@@ -30,9 +26,7 @@
         "up": {
           "detached": true
         },
-        "files": [
-          "${workspaceFolder}/docker-compose-test.yml",
-        ]
+        "files": ["${workspaceFolder}/docker-compose-test.yml"]
       },
       "dependsOn": "Stop dev containers"
     },
@@ -41,9 +35,7 @@
       "type": "docker-compose",
       "dockerCompose": {
         "down": true,
-        "files": [
-          "${workspaceFolder}/docker-compose-test.yml",
-        ]
+        "files": ["${workspaceFolder}/docker-compose-test.yml"]
       }
     }
   ]

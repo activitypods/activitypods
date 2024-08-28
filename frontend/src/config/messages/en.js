@@ -171,7 +171,8 @@ module.exports = {
       app_upgrade_cancel: 'Uninstall the application ?',
       app_upgrade_cancel_description:
         "The application cannot work if you don't give it the authorizations it requires. Do you want to uninstall this application ?",
-      default_app_changed: 'The default app has been successfully changed'
+      default_app_changed: 'The default app has been successfully changed',
+      backend_offline: 'The backend is offline. Please come back later.'
     },
     notification: {
       contact_request_accepted: 'Contact request accepted',

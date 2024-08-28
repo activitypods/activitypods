@@ -8,8 +8,7 @@ const useGetAppStatus = () => {
   return useCallback(
     async appUri => {
       if (identity?.id) {
-        // TODO Use solid:oidcIssuer predicate when it will be available
-        const oidcIssuer = new URL(identity?.id).origin;
+        const oidcIssuer = identity?.webIdData?.['solid:oidcIssuer'] || new URL(identity?.id).origin;
         const endpointUrl = new URL(urlJoin(oidcIssuer, '.well-known/app-status'));
         endpointUrl.searchParams.append('appUri', appUri);
         const token = localStorage.getItem('token');

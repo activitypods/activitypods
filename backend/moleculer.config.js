@@ -37,11 +37,5 @@ module.exports = {
       level: 'info'
     }
   },
-  transporter: {
-    type: 'TCP'
-    // options: {
-    //   udpDiscovery: false,
-    //   port: 3421
-    // }
-  }
+  transporter: CONFIG.REDIS_TRANSPORTER_URL || undefined
 };

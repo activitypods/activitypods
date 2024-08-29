@@ -61,15 +61,13 @@ const initializePodProvider = async () => {
     await clearDataset(dataset);
   }
 
-  await clearRedisDb(`redis://localhost:6379/11`);
-  await clearRedisDb(`redis://localhost:6379/12`);
+  await clearRedisDb(CONFIG.QUEUE_SERVICE_URL);
+  await clearRedisDb(CONFIG.REDIS_OIDC_PROVIDER_URL);
 
   const broker = new ServiceBroker({
     nodeID: `test-node`,
     logger: false,
-    transporter: {
-      type: 'TCP'
-    }
+    transporter: CONFIG.REDIS_TRANSPORTER_URL
   });
 
   await broker.start();

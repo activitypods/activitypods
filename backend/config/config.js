@@ -6,7 +6,7 @@ const path = require('path');
 
 module.exports = {
   INSTANCE_NAME: process.env.SEMAPPS_INSTANCE_NAME,
-  HOME_URL: process.env.SEMAPPS_HOME_URL,
+  BASE_URL: process.env.SEMAPPS_HOME_URL,
   PORT: process.env.SEMAPPS_PORT,
   FRONTEND_URL: process.env.SEMAPPS_FRONTEND_URL,
   DEFAULT_LOCALE: process.env.SEMAPPS_DEFAULT_LOCALE,
@@ -31,10 +31,6 @@ module.exports = {
   /** @deprecated */
   BACKUP_FUSEKI_DATASETS_PATH: process.env.SEMAPPS_BACKUP_FUSEKI_DATASETS_PATH,
   FUSEKI_BASE: process.env.FUSEKI_BASE || path.join(process.env.SEMAPPS_BACKUP_FUSEKI_DATASETS_PATH || '', '..'),
-  AUTH_TYPE: process.env.SEMAPPS_AUTH_TYPE || 'local',
-  AUTH_OIDC_ISSUER: process.env.SEMAPPS_AUTH_OIDC_ISSUER,
-  AUTH_OIDC_CLIENT_ID: process.env.SEMAPPS_AUTH_OIDC_CLIENT_ID,
-  AUTH_OIDC_CLIENT_SECRET: process.env.SEMAPPS_AUTH_OIDC_CLIENT_SECRET,
   AUTH_RESERVED_USER_NAMES: process.env.SEMAPPS_AUTH_RESERVED_USER_NAMES.split(','),
   AUTH_ACCOUNTS_DATASET: process.env.SEMAPPS_AUTH_ACCOUNTS_DATASET
 };

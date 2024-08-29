@@ -2,6 +2,58 @@
 # yarn lockfile v1
 
 
+"@activitypods/events@2.0.0-alpha.11":
+  version "2.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@activitypods/events/-/events-2.0.0-alpha.11.tgz#cfaed98927de7488edb8ce6cac97d3b4ea6ae5b6"
+  integrity sha512-7y6qLxoppZnnw3mhwtklJWNqGTx3rsHmWHJ1qewWR90di/pwCDeKEMXj0FNQW2Ec0j7999rb/b/OHVgHkd2ADg==
+  dependencies:
+    "@activitypods/announcer" "2.0.0-alpha.11"
+    "@semapps/activitypub" "0.9.1"
+    "@semapps/ldp" "0.9.1"
+    "@semapps/mime-types" "0.9.1"
+    moleculer-cron "^0.0.2"
+
+"@activitypods/messages@2.0.0-alpha.11":
+  version "2.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@activitypods/messages/-/messages-2.0.0-alpha.11.tgz#3671a0f33b6a19dcf973547a56c4e1b86ad10e4a"
+  integrity sha512-Uu7K0bH1GQ1/zlkswrX8Rwd9ooUoRJbdSGmNEVR4toWto6rOIKJPcrc0vw3Vp+gY0GzbllVhfmTzOLY61Sb6+Q==
+  dependencies:
+    "@semapps/activitypub" "0.9.1"
+    "@semapps/ldp" "0.9.1"
+
+"@activitypods/ontologies@2.0.0-alpha.11":
+  version "2.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@activitypods/ontologies/-/ontologies-2.0.0-alpha.11.tgz#38c321afcb91ff417fc41c365e8c73b4f4fdcead"
+  integrity sha512-rcxNllUY2yNbKVe+KOuNOsK7AULOWMN+9ouTaJyM2u65mQxmjOECgMX+nGCe4ge6NhxzhZ+m7Bk+t9A9UM1Uew==
+
+"@activitypods/profiles@2.0.0-alpha.11":
+  version "2.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@activitypods/profiles/-/profiles-2.0.0-alpha.11.tgz#5b76fc11154303658693fbd8f06cd284f1e4d3f6"
+  integrity sha512-CUVB68JsVgZImEpXhB0ptg6B8pplpykzrJpPH6FrtyT6Y+uZdRY0D443irlLftWiZvV/YFE/BJSf6mrFm/QMaQ==
+  dependencies:
+    "@semapps/activitypub" "0.9.1"
+    "@semapps/ldp" "0.9.1"
+    "@semapps/mime-types" "0.9.1"
+
+"@activitypods/solid-notifications@2.0.0-alpha.11":
+  version "2.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@activitypods/solid-notifications/-/solid-notifications-2.0.0-alpha.11.tgz#77c111754947f8b928d7a437e233dc0c8f598e64"
+  integrity sha512-u8GK+qupMFF0eaSvImSoQHAbd6iifEe03xA0dkr5ma++5eh+ygd8sDT9i0NNDhSyx7Lz5/+YT2aEBa40cUKlkw==
+  dependencies:
+    http-link-header "^1.1.1"
+    moment "2.30.1"
+    uuid "^9.0.1"
+
+"@activitypods/type-index@2.0.0-alpha.11":
+  version "2.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@activitypods/type-index/-/type-index-2.0.0-alpha.11.tgz#49ef545d59bee467b2b48bd960a33aceb12b52ae"
+  integrity sha512-am3FEJeogQjBuXAOVulyTVeKg+E7shmBNPLpAJ9/1Z1xuSLWF3f8G1h17t0cR6KAeZBAQFDVT3vlkkveannSNw==
+  dependencies:
+    "@rdfjs/data-model" "^1.3.4"
+    "@semapps/ldp" "0.9.1"
+    "@semapps/mime-types" "0.9.1"
+    url-join "^4.0.1"
+
 "@ampproject/remapping@^2.2.0":
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/@ampproject/remapping/-/remapping-2.3.0.tgz#ed441b6fa600072520ce18b43d2c8cc8caecc7f4"
@@ -1601,20 +1653,6 @@
   dependencies:
     url-join "^4.0.1"
 
-"@semapps/notifications@0.9.1":
-  version "0.9.1"
-  resolved "https://registry.yarnpkg.com/@semapps/notifications/-/notifications-0.9.1.tgz#207b780dc4bcfe458dbc6a789a1ef54f55cc014f"
-  integrity sha512-XfQgKPErx6bLrJ8tCvAqzrWRjwZ5l89wrO6ux+L+hkEpjXas3WIuVWToKGJ7FW6EEXW/9SQzvWdm0NUmGmdWvA==
-  dependencies:
-    "@semapps/ldp" "0.9.1"
-    "@semapps/triplestore" "0.9.1"
-    cron-parser "^4.3.0"
-    expo-server-sdk "^3.4.0"
-    moleculer "^0.14.18"
-    moleculer-db "^0.8.15"
-    moleculer-mail "^1.2.5"
-    url-join "^4.0.1"
-
 "@semapps/ontologies@0.9.1":
   version "0.9.1"
   resolved "https://registry.yarnpkg.com/@semapps/ontologies/-/ontologies-0.9.1.tgz#c97220b6dd6db438b083892e3fffebca1a518cde"
@@ -1631,9 +1669,18 @@
     "@semapps/activitypub" "0.9.1"
     "@semapps/ldp" "0.9.1"
     "@semapps/middlewares" "0.9.1"
+    "@semapps/mime-types" "0.9.1"
     "@semapps/ontologies" "0.9.1"
+    "@semapps/triplestore" "0.9.1"
     "@semapps/webid" "0.9.1"
+    http-link-header "^1.1.1"
+    moleculer "^0.14.19"
+    moleculer-bull "0.2.8"
+    moleculer-db "^0.8.16"
+    moment "2.30.1"
+    node-fetch "^2.6.6"
     url-join "^4.0.1"
+    uuid "^9.0.1"
 
 "@semapps/sparql-endpoint@0.9.1":
   version "0.9.1"
@@ -3752,7 +3799,7 @@ cron-parser@^2.13.0:
     is-nan "^1.3.0"
     moment-timezone "^0.5.31"
 
-cron-parser@^4.2.0, cron-parser@^4.3.0:
+cron-parser@^4.2.0:
   version "4.9.0"
   resolved "https://registry.yarnpkg.com/cron-parser/-/cron-parser-4.9.0.tgz#0340694af3e46a0894978c6f52a6dbb5c0f11ad5"
   integrity sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==
@@ -5030,15 +5077,6 @@ expect@^27.5.1:
     jest-matcher-utils "^27.5.1"
     jest-message-util "^27.5.1"
 
-expo-server-sdk@^3.4.0:
-  version "3.10.0"
-  resolved "https://registry.yarnpkg.com/expo-server-sdk/-/expo-server-sdk-3.10.0.tgz#ad4c475667b4f81dba39bd9fa837c4886658380c"
-  integrity sha512-isymUVz18Syp9G+TPs2MVZ6WdMoyLw8hDLhpywOd8JqM6iGTka6Dr8Dzq7mjGQ8C8486rxLawZx/W+ps+vkjLQ==
-  dependencies:
-    node-fetch "^2.6.0"
-    promise-limit "^2.7.0"
-    promise-retry "^2.0.1"
-
 exponential-backoff@^3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/exponential-backoff/-/exponential-backoff-3.1.1.tgz#64ac7526fe341ab18a39016cd22c787d01e00bf6"
@@ -6210,7 +6248,7 @@ internal-slot@^1.0.7:
     hasown "^2.0.0"
     side-channel "^1.0.4"
 
-ioredis@^4.0.0, ioredis@^4.17.3, ioredis@^4.27.0:
+ioredis@^4.0.0, ioredis@^4.27.0:
   version "4.28.5"
   resolved "https://registry.yarnpkg.com/ioredis/-/ioredis-4.28.5.tgz#5c149e6a8d76a7f8fa8a504ffc85b7d5b6797f9f"
   integrity sha512-3GYo0GJtLqgNXj4YhrisLaNNvWSNwSS2wS4OELGfGxH8I69+XfNdnmV1AyN+ZqMh0i7eX+SWjrwFKDBDgfBC1A==
@@ -8364,7 +8402,7 @@ moleculer-cron@^0.0.2:
   dependencies:
     cron "^1.3.0"
 
-moleculer-db@^0.8.15, moleculer-db@^0.8.16:
+moleculer-db@^0.8.16:
   version "0.8.25"
   resolved "https://registry.yarnpkg.com/moleculer-db/-/moleculer-db-0.8.25.tgz#c3bc227874bb2f8cc9f34334b68bd0bbb690d532"
   integrity sha512-cPSbfX56jAM//RFaXcTxzo2FtKa3QIsC0AmPIJNJSpPUI8mlt5M+Uo2mUY5zv/Yzb4QUFbRNyfxd+OO6WBkFgg==
@@ -8571,7 +8609,7 @@ node-fetch@2.6.7:
   dependencies:
     whatwg-url "^5.0.0"
 
-node-fetch@^2.6.0, node-fetch@^2.6.12, node-fetch@^2.6.6, node-fetch@^2.6.7:
+node-fetch@^2.6.12, node-fetch@^2.6.6, node-fetch@^2.6.7:
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.7.0.tgz#d0f0fa6e3e2dc1d27efcd8ad99d550bda94d187d"
   integrity sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==
@@ -9579,11 +9617,6 @@ promise-inflight@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/promise-inflight/-/promise-inflight-1.0.1.tgz#98472870bf228132fcbdd868129bad12c3c029e3"
   integrity sha512-6zWPyEOFaQBJYcGMHBKTKJ3u6TBsnMFOIZSa6ce1e/ZrrsOlnHRHbabMjLiBYKp+n44X9eUI6VUPaukCXHuG4g==
-
-promise-limit@^2.7.0:
-  version "2.7.0"
-  resolved "https://registry.yarnpkg.com/promise-limit/-/promise-limit-2.7.0.tgz#eb5737c33342a030eaeaecea9b3d3a93cb592b26"
-  integrity sha512-7nJ6v5lnJsXwGprnGXga4wx6d1POjvi5Qmf1ivTRxTjH4Z/9Czja/UCMLVmB9N93GeWOU93XaFaEt6jbuoagNw==
 
 promise-polyfill@^1.1.6:
   version "1.1.6"

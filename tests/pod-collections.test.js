@@ -1,6 +1,5 @@
-const path = require('path');
 const urlJoin = require('url-join');
-const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
+const { initializePodProvider, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 
 jest.setTimeout(100000);
@@ -18,14 +17,7 @@ describe('Test AS collections handling', () => {
     collectionUri;
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
-
-    podServer = await initialize(3000, 'settings');
-    podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
-    await podServer.start();
+    podServer = await initializePodProvider();
 
     appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();

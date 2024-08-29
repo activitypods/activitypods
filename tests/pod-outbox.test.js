@@ -1,7 +1,6 @@
-const path = require('path');
 const urlJoin = require('url-join');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
+const { initializeAppServer, clearDataset, listDatasets, installApp, initializePodProvider } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const Example2AppService = require('./apps/example2.app');
 const { OBJECT_TYPES, ACTIVITY_TYPES } = require('@semapps/activitypub');
@@ -25,14 +24,7 @@ describe('Test Pod outbox posting', () => {
     noteUri;
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
-
-    podServer = await initialize(3000, 'settings');
-    podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
-    await podServer.start();
+    podServer = await initializePodProvider();
 
     appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();

@@ -5,5 +5,4 @@
 /jwt/*.key.pub
 /uploads
 /imports
-/templates
 /exports

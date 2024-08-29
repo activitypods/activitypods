@@ -1,6 +1,6 @@
 const { WebAclMiddleware, CacherMiddleware } = require('@semapps/webacl');
 const { ObjectsWatcherMiddleware } = require('@semapps/sync');
-const { AppControlMiddleware } = require('@activitypods/core');
+const AppControlMiddleware = require('./middlewares/app-control');
 const CONFIG = require('./config/config');
 const errorHandler = require('./config/errorHandler');
 
@@ -25,9 +25,9 @@ module.exports = {
   // See https://moleculer.services/docs/0.14/configuration.html
   middlewares: [
     CacherMiddleware(cacherConfig), // Set the cacher before the WebAcl middleware
-    WebAclMiddleware({ baseUrl: CONFIG.HOME_URL, podProvider: true }),
-    ObjectsWatcherMiddleware({ baseUrl: CONFIG.HOME_URL, podProvider: true, postWithoutRecipients: true }),
-    AppControlMiddleware({ baseUrl: CONFIG.HOME_URL })
+    WebAclMiddleware({ baseUrl: CONFIG.BASE_URL, podProvider: true }),
+    ObjectsWatcherMiddleware({ baseUrl: CONFIG.BASE_URL, podProvider: true, postWithoutRecipients: true }),
+    AppControlMiddleware({ baseUrl: CONFIG.BASE_URL })
   ],
   errorHandler,
   logger: {

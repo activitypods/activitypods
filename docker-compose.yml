@@ -35,7 +35,7 @@ services:
     container_name: arena
     restart: always
     volumes:
-      - ./arena.json:/opt/arena/src/server/config/index.json
+      - ./config/docker/arena.json:/opt/arena/src/server/config/index.json
     depends_on:
       - redis
     ports:

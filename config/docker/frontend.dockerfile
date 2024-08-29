@@ -17,7 +17,7 @@ RUN yarn install && yarn cache clean
 
 RUN yarn run build
 
-ADD docker-entrypoint.sh /app/frontend
+ADD config/docker/docker-entrypoint.sh /app/frontend
 
 RUN ["chmod", "+x", "docker-entrypoint.sh"]
 

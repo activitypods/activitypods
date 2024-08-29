@@ -8,7 +8,7 @@ RUN apk add --update --no-cache autoconf bash libtool automake python3 py3-pip a
 RUN yarn global add pm2
 
 ADD backend /app/backend
-ADD ecosystem.config.js /app/backend
+ADD config/docker/ecosystem.config.js /app/backend
 
 WORKDIR /app/backend
 

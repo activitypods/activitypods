@@ -1,10 +1,7 @@
-const path = require('path');
-const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { arrayOf } = require('@semapps/ldp');
-const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
+const { initializeAppServer, clearDataset, listDatasets, installApp, initializePodProvider } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const ExampleAppV2Service = require('./apps/example-v2.app');
 
@@ -13,18 +10,7 @@ jest.setTimeout(80000);
 const APP_URI = 'http://localhost:3001/app';
 
 describe('Test app upgrade', () => {
-  let podServer,
-    alice,
-    appServer,
-    oldApp,
-    app,
-    eventsContainerUri,
-    placesContainerUri,
-    requiredAccessNeedGroup,
-    optionalAccessNeedGroup,
-    requiredAccessGrant,
-    optionalAccessGrant,
-    appRegistration;
+  let podProvider, alice, appServer, oldApp, app, requiredAccessNeedGroup;
 
   beforeAll(async () => {
     const datasets = await listDatasets();
@@ -32,13 +18,11 @@ describe('Test app upgrade', () => {
       await clearDataset(dataset);
     }
 
-    podServer = await initialize(3000, 'settings');
-    podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
-    await podServer.start();
+    podProvider = await initializePodProvider();
 
     const actorData = require(`./data/actor1.json`);
-    const { webId } = await podServer.call('auth.signup', actorData);
-    alice = await podServer.call(
+    const { webId } = await podProvider.call('auth.signup', actorData);
+    alice = await podProvider.call(
       'activitypub.actor.awaitCreateComplete',
       {
         actorUri: webId,
@@ -47,7 +31,7 @@ describe('Test app upgrade', () => {
       { meta: { dataset: actorData.username } }
     );
     alice.call = (actionName, params, options = {}) =>
-      podServer.call(actionName, params, {
+      podProvider.call(actionName, params, {
         ...options,
         meta: { ...options.meta, webId, dataset: alice.preferredUsername }
       });
@@ -59,7 +43,7 @@ describe('Test app upgrade', () => {
   }, 80000);
 
   afterAll(async () => {
-    await podServer.stop();
+    await podProvider.stop();
     await appServer.stop();
   });
 

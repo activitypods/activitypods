@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "moleculer-runner --repl --hot services/*.service.js apps/*.app.js",
     "start": "moleculer-runner services/*.service.js apps/*.app.js",
-    "test": "jest --detectOpenHandles --verbose"
+    "test": "NODE_ENV=test moleculer-runner --repl services/*.service.js apps/*.app.js"
   },
   "dependencies": {
     "@activitypods/announcer": "2.0.0-alpha.11",

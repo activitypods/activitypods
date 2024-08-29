@@ -18,7 +18,9 @@ const cacherConfig = CONFIG.REDIS_CACHE_URL
     }
   : undefined;
 
+/** @type {import('moleculer').BrokerOptions} */
 module.exports = {
+  nodeID: 'pod-provider',
   // You can set all ServiceBroker configurations here
   // See https://moleculer.services/docs/0.14/configuration.html
   middlewares: [
@@ -34,5 +36,12 @@ module.exports = {
       formatter: 'short',
       level: 'info'
     }
+  },
+  transporter: {
+    type: 'TCP'
+    // options: {
+    //   udpDiscovery: false,
+    //   port: 3421
+    // }
   }
 };

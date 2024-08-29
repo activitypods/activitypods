@@ -1,9 +1,8 @@
-const path = require('path');
 const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { arrayOf } = require('@semapps/ldp');
-const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
+const { initializePodProvider, initializeAppServer, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 
@@ -13,7 +12,7 @@ const APP_URI = 'http://localhost:3001/app';
 const APP2_URI = 'http://localhost:3002/app';
 
 describe('Test app installation', () => {
-  let podServer,
+  let podProvider,
     alice,
     appServer,
     appServer2,
@@ -27,18 +26,11 @@ describe('Test app installation', () => {
     appRegistration;
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
-
-    podServer = await initialize(3000, 'settings');
-    podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
-    await podServer.start();
+    podProvider = await initializePodProvider();
 
     const actorData = require(`./data/actor1.json`);
-    const { webId } = await podServer.call('auth.signup', actorData);
-    alice = await podServer.call(
+    const { webId } = await podProvider.call('auth.signup', actorData);
+    alice = await podProvider.call(
       'activitypub.actor.awaitCreateComplete',
       {
         actorUri: webId,
@@ -47,7 +39,7 @@ describe('Test app installation', () => {
       { meta: { dataset: actorData.username } }
     );
     alice.call = (actionName, params, options = {}) =>
-      podServer.call(actionName, params, {
+      podProvider.call(actionName, params, {
         ...options,
         meta: { ...options.meta, webId, dataset: alice.preferredUsername }
       });
@@ -60,7 +52,7 @@ describe('Test app installation', () => {
   }, 80000);
 
   afterAll(async () => {
-    await podServer.stop();
+    await podProvider.stop();
     await appServer.stop();
     await appServer2.stop();
   });

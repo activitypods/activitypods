@@ -9,12 +9,9 @@ const { NodeinfoService } = require('@semapps/nodeinfo');
 const { ProxyService } = require('@semapps/crypto');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
 const { WebAclMiddleware } = require('@semapps/webacl');
-const { ObjectsWatcherMiddleware } = require('@semapps/sync');
-const { CoreService, AppControlMiddleware } = require('@activitypods/core');
-const { apods, interop, oidc, notify } = require('@activitypods/ontologies');
+const { interop, oidc, notify } = require('@semapps/ontologies');
+const { apods } = require('@activitypods/ontologies');
 const { NotificationListenerService } = require('@activitypods/solid-notifications');
-const { AnnouncerService } = require('@activitypods/announcer');
-const { ProfilesApp } = require('@activitypods/profiles');
 const CONFIG = require('./config');
 
 Error.stackTraceLimit = Infinity;
@@ -52,73 +49,33 @@ const clearDataset = dataset =>
     }
   });
 
-const clearQueue = async redisUrl => {
+const clearRedisDb = async redisUrl => {
   const redisClient = new Redis(redisUrl);
   await redisClient.flushdb();
   redisClient.disconnect();
 };
 
-const initialize = async (port, settingsDataset, queueServiceDb = 0) => {
-  const baseUrl = `http://localhost:${port}/`;
-  const queueServiceUrl = `redis://localhost:6379/${queueServiceDb}`;
+const initializePodProvider = async () => {
+  const datasets = await listDatasets();
+  for (let dataset of datasets) {
+    await clearDataset(dataset);
+  }
 
-  await clearQueue(queueServiceUrl);
+  await clearRedisDb(`redis://localhost:6379/11`);
+  await clearRedisDb(`redis://localhost:6379/12`);
 
   const broker = new ServiceBroker({
-    nodeID: `server${port}`,
-    middlewares: [
-      // Uncomment the next line run all tests with memory cacher
-      // CacherMiddleware({ type: 'Memory' }),
-      WebAclMiddleware({ baseUrl, podProvider: true }),
-      ObjectsWatcherMiddleware({ baseUrl, podProvider: true, postWithoutRecipients: true }),
-      AppControlMiddleware({ baseUrl })
-    ],
-    logger
-  });
-
-  broker.createService({
-    mixins: [CoreService],
-    settings: {
-      baseUrl,
-      baseDir: path.resolve(__dirname),
-      frontendUrl: 'https://example.app/',
-      triplestore: {
-        url: CONFIG.SPARQL_ENDPOINT,
-        user: CONFIG.JENA_USER,
-        password: CONFIG.JENA_PASSWORD,
-        fusekiBase: CONFIG.FUSEKI_BASE
-      },
-      queueServiceUrl,
-      oidcProvider: {
-        redisUrl: CONFIG.REDIS_OIDC_PROVIDER_URL
-      },
-      auth: {
-        accountsDataset: settingsDataset
-      },
-      settingsDataset,
-      notifications: {
-        mail: {
-          from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
-          transport: {
-            host: CONFIG.SMTP_HOST,
-            port: CONFIG.SMTP_PORT,
-            secure: CONFIG.SMTP_SECURE,
-            auth: {
-              user: CONFIG.SMTP_USER,
-              pass: CONFIG.SMTP_PASS
-            }
-          }
-        }
-      },
-      api: {
-        port
-      }
+    nodeID: `test-node`,
+    logger: false,
+    transporter: {
+      type: 'TCP'
     }
   });
 
-  broker.createService({ mixins: [AnnouncerService] });
+  await broker.start();
 
-  broker.createService({ mixins: [ProfilesApp] });
+  // If the service is available, it means we are connected to the Pod provider broker
+  await broker.waitForServices(['ldp']);
 
   return broker;
 };
@@ -127,7 +84,7 @@ const initializeAppServer = async (port, mainDataset, settingsDataset, queueServ
   const baseUrl = `http://localhost:${port}/`;
   const queueServiceUrl = `redis://localhost:6379/${queueServiceDb}`;
 
-  await clearQueue(queueServiceUrl);
+  await clearRedisDb(queueServiceUrl);
 
   const broker = new ServiceBroker({
     nodeID: `server${port}`,
@@ -245,7 +202,8 @@ const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRig
 module.exports = {
   listDatasets,
   clearDataset,
-  initialize,
+  clearRedisDb,
+  initializePodProvider,
   initializeAppServer,
   getAppAccessNeeds,
   installApp

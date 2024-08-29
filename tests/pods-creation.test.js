@@ -1,36 +1,20 @@
-const path = require('path');
 const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { initialize, clearDataset, listDatasets } = require('./initialize');
+const { initializePodProvider } = require('./initialize');
 
 jest.setTimeout(80000);
 
 const NUM_PODS = 1;
 
-const initializeBroker = async (port, accountsDataset) => {
-  const broker = await initialize(port, accountsDataset);
-
-  broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
-
-  await broker.start();
-
-  return broker;
-};
-
-describe('Test pods creation', mode => {
+describe('Test pods creation', () => {
   let actors = [],
     broker,
     alice,
     projectUri;
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
-
-    broker = await initializeBroker(3000, 'settings');
+    broker = await initializePodProvider();
 
     for (let i = 1; i <= NUM_PODS; i++) {
       broker[i] = broker;

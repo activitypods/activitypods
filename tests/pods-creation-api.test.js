@@ -1,22 +1,11 @@
 const waitForExpect = require('wait-for-expect');
-const path = require('path');
 const urlJoin = require('url-join');
 const fetch = require('node-fetch');
-const { initialize, clearDataset, listDatasets } = require('./initialize');
+const { initializePodProvider } = require('./initialize');
 
 jest.setTimeout(50000);
 
 const BASE_URL = 'http://localhost:3000';
-
-const initializeBroker = async (port, accountsDataset) => {
-  const broker = await initialize(port, accountsDataset);
-
-  broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
-
-  await broker.start();
-
-  return broker;
-};
 
 describe('Test pods creation via API', () => {
   let broker, token, alice, projectUri;
@@ -71,12 +60,7 @@ describe('Test pods creation via API', () => {
   };
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
-
-    broker = await initializeBroker(3000, 'settings');
+    broker = await initializePodProvider();
   });
 
   afterAll(async () => {

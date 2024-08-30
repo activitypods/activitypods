@@ -2,7 +2,6 @@ const { triple, namedNode } = require('@rdfjs/data-model');
 const { ControlledContainerMixin, DereferenceMixin } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTOR_TYPES } = require('@semapps/activitypub');
-const { interopContext } = require('@activitypods/core');
 
 module.exports = {
   name: 'actors',
@@ -37,7 +36,6 @@ module.exports = {
             {
               slug: 'app',
               resource: {
-                '@context': ['https://www.w3.org/ns/activitystreams', interopContext],
                 type: [ACTOR_TYPES.APPLICATION, 'interop:Application'],
                 preferredUsername: 'app',
                 name: app.name,

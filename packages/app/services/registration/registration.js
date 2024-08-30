@@ -101,14 +101,21 @@ module.exports = {
         try {
           // ENSURE A LOCAL APP REGISTRATION ALREADY EXIST
 
-          const localAppRegistration = await ctx.call('ldp.remote.getStored', { resourceUri: activity.object.id });
+          let localAppRegistration;
 
-          if (!localAppRegistration) {
-            throw new MoleculerError(
-              `No application registration found for this user. Create it first.`,
-              400,
-              'BAD REQUEST'
-            );
+          try {
+            localAppRegistration = await ctx.call('ldp.remote.getStored', { resourceUri: activity.object.id });
+          } catch (e) {
+            if (e.code === 404) {
+              throw new MoleculerError(
+                `No application registration found for this user. Create it first.`,
+                400,
+                'BAD REQUEST'
+              );
+            } else {
+              console.error(e);
+              throw e;
+            }
           }
 
           // CHECK ACCESS NEEDS ARE STILL SATISFIED

@@ -1,7 +1,6 @@
-const path = require('path');
 const urlJoin = require('url-join');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
+const { connectPodProvider, clearAllData, initializeAppServer, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const Example2AppService = require('./apps/example2.app');
 
@@ -17,21 +16,16 @@ const APP2_URI = urlJoin(APP2_SERVER_BASE_URL, 'app');
 
 describe('Test Pod resources handling', () => {
   let actors = [],
-    podServer,
+    podProvider,
     alice,
     appServer,
     app2Server,
     eventUri;
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
+    await clearAllData();
 
-    podServer = await initialize(3000, 'settings');
-    podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
-    await podServer.start();
+    podProvider = await connectPodProvider();
 
     appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();
@@ -41,8 +35,8 @@ describe('Test Pod resources handling', () => {
 
     for (let i = 1; i <= NUM_PODS; i++) {
       const actorData = require(`./data/actor${i}.json`);
-      const { webId } = await podServer.call('auth.signup', actorData);
-      actors[i] = await podServer.call(
+      const { webId } = await podProvider.call('auth.signup', actorData);
+      actors[i] = await podProvider.call(
         'activitypub.actor.awaitCreateComplete',
         {
           actorUri: webId,
@@ -51,7 +45,7 @@ describe('Test Pod resources handling', () => {
         { meta: { dataset: actorData.username } }
       );
       actors[i].call = (actionName, params, options = {}) =>
-        podServer.call(actionName, params, {
+        podProvider.call(actionName, params, {
           ...options,
           meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
         });
@@ -64,7 +58,7 @@ describe('Test Pod resources handling', () => {
   }, 100000);
 
   afterAll(async () => {
-    await podServer.stop();
+    await podProvider.stop();
     await appServer.stop();
   });
 

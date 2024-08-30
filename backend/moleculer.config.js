@@ -3,6 +3,7 @@ const { ObjectsWatcherMiddleware } = require('@semapps/sync');
 const AppControlMiddleware = require('./middlewares/app-control');
 const CONFIG = require('./config/config');
 const errorHandler = require('./config/errorHandler');
+const RdfJSONSerializer = require('./RdfJSONSerializer');
 
 Error.stackTraceLimit = Infinity;
 
@@ -37,5 +38,6 @@ module.exports = {
       level: 'info'
     }
   },
-  transporter: CONFIG.REDIS_TRANSPORTER_URL || undefined
+  transporter: CONFIG.REDIS_TRANSPORTER_URL || undefined,
+  serializer: CONFIG.REDIS_TRANSPORTER_URL ? new RdfJSONSerializer() : undefined
 };

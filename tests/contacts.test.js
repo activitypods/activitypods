@@ -1,28 +1,17 @@
-const path = require('path');
 const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { arrayOf } = require('@semapps/ldp');
-const { initialize, clearDataset, listDatasets } = require('./initialize');
-const { fetchMails, clearMails } = require('./utils');
+const { connectPodProvider, clearAllData } = require('./initialize');
+const { fetchMails } = require('./utils');
 
 jest.setTimeout(80000);
 
 const NUM_PODS = 3;
 
-const initializeBroker = async (port, accountsDataset, queueServiceDb) => {
-  const broker = await initialize(port, accountsDataset, queueServiceDb);
-
-  broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
-
-  await broker.start();
-
-  return broker;
-};
-
-describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app', mode => {
+describe('Test contacts features', () => {
   let actors = [],
-    broker,
+    podProvider,
     alice,
     bob,
     craig,
@@ -32,29 +21,14 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
     eventUri;
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
+    clearAllData();
 
-    clearMails();
-
-    if (mode === 'single-server') {
-      broker = await initializeBroker(3000, 'settings', 0);
-    } else {
-      broker = [];
-    }
+    podProvider = await connectPodProvider();
 
     for (let i = 1; i <= NUM_PODS; i++) {
-      if (mode === 'multi-server') {
-        broker[i] = await initializeBroker(3000 + i, 'settings' + i, i);
-      } else {
-        broker[i] = broker;
-      }
-
       const actorData = require(`./data/actor${i}.json`);
-      const { webId } = await broker[i].call('auth.signup', actorData);
-      actors[i] = await broker[i].call(
+      const { webId } = await podProvider.call('auth.signup', actorData);
+      actors[i] = await podProvider.call(
         'activitypub.actor.awaitCreateComplete',
         {
           actorUri: webId,
@@ -63,7 +37,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
         { meta: { dataset: actorData.username } }
       );
       actors[i].call = (actionName, params, options = {}) =>
-        broker[i].call(actionName, params, {
+        podProvider.call(actionName, params, {
           ...options,
           meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
         });
@@ -75,13 +49,7 @@ describe.each(['single-server', 'multi-server'])('In mode %s, test contacts app'
   });
 
   afterAll(async () => {
-    if (mode === 'multi-server') {
-      for (let i = 1; i <= NUM_PODS; i++) {
-        await broker[i].stop();
-      }
-    } else {
-      await broker.stop();
-    }
+    await podProvider.stop();
   });
 
   test('Alice offers her contact to Bob and Craig', async () => {

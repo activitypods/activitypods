@@ -1,4 +1,4 @@
-const { ControlledContainerMixin, defaultToArray } = require('@semapps/ldp');
+const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 
 module.exports = {
@@ -19,7 +19,7 @@ module.exports = {
       },
       async onEmit(ctx, activity, emitterUri) {
         // Ensure the recipients are in the contacts WebACL group of the emitter so they can see his profile (and respond him)
-        for (let targetUri of defaultToArray(activity.to)) {
+        for (let targetUri of arrayOf(activity.to)) {
           await ctx.call('webacl.group.addMember', {
             groupSlug: new URL(emitterUri).pathname + '/contacts',
             memberUri: targetUri,

@@ -3,16 +3,17 @@ const Redis = require('ioredis');
 const { ServiceBroker } = require('moleculer');
 const { AuthAccountService } = require('@semapps/auth');
 const { CoreService: SemAppsCoreService } = require('@semapps/core');
-const { delay } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { NodeinfoService } = require('@semapps/nodeinfo');
 const { ProxyService } = require('@semapps/crypto');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
 const { WebAclMiddleware } = require('@semapps/webacl');
-const { interop, oidc, notify } = require('@semapps/ontologies');
-const { apods } = require('@activitypods/ontologies');
+const { interop, oidc, notify, apods } = require('@semapps/ontologies');
 const { NotificationListenerService } = require('@activitypods/solid-notifications');
 const CONFIG = require('./config');
+const { ACTIVITY_TYPES } = require('@semapps/activitypub');
+const RdfJSONSerializer = require('../backend/RdfJSONSerializer');
+const { clearMails } = require('./utils');
 
 Error.stackTraceLimit = Infinity;
 
@@ -55,7 +56,7 @@ const clearRedisDb = async redisUrl => {
   redisClient.disconnect();
 };
 
-const initializePodProvider = async () => {
+const clearAllData = async () => {
   const datasets = await listDatasets();
   for (let dataset of datasets) {
     await clearDataset(dataset);
@@ -64,16 +65,26 @@ const initializePodProvider = async () => {
   await clearRedisDb(CONFIG.QUEUE_SERVICE_URL);
   await clearRedisDb(CONFIG.REDIS_OIDC_PROVIDER_URL);
 
+  await clearMails();
+};
+
+const connectPodProvider = async () => {
+  // Connect to the Pod provider broker with a Redis transporter
   const broker = new ServiceBroker({
     nodeID: `test-node`,
     logger: false,
-    transporter: CONFIG.REDIS_TRANSPORTER_URL
+    transporter: CONFIG.REDIS_TRANSPORTER_URL,
+    serializer: new RdfJSONSerializer()
   });
 
   await broker.start();
 
   // If the service is available, it means we are connected to the Pod provider broker
   await broker.waitForServices(['ldp']);
+
+  // Reset internal cache (the channels have been deleted, but they are still in a this.channels array)
+  await broker.waitForServices(['solid-notifications.provider.webhook']);
+  await broker.call('solid-notifications.provider.webhook.resetCache');
 
   return broker;
 };
@@ -166,7 +177,7 @@ const getAppAccessNeeds = async (actor, appUri) => {
   return [requiredAccessNeedGroup, optionalAccessNeedGroup];
 };
 
-const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRights) => {
+const installApp = async (actor, appUri, waitForAccept = true, acceptedAccessNeeds, acceptedSpecialRights) => {
   // If the accepted needs are not specified, use the app required access needs
   if (!acceptedAccessNeeds && !acceptedSpecialRights) {
     const [requiredAccessNeedGroup] = await getAppAccessNeeds(actor, appUri);
@@ -174,7 +185,10 @@ const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRig
     acceptedSpecialRights = requiredAccessNeedGroup['apods:hasSpecialRights'];
   }
 
-  await actor.call('activitypub.outbox.post', {
+  const publishedAfter = new Date().toISOString();
+
+  // Do not await here
+  actor.call('activitypub.outbox.post', {
     collectionUri: actor.outbox,
     type: 'apods:Install',
     object: appUri,
@@ -182,26 +196,36 @@ const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRig
     'apods:acceptedSpecialRights': acceptedSpecialRights
   });
 
-  do {
-    const outbox = await actor.call('activitypub.collection.get', {
-      resourceUri: actor.outbox,
-      page: 1
+  const createRegistrationActivity = await actor.call('activitypub.outbox.awaitActivity', {
+    collectionUri: actor.outbox,
+    matcher: {
+      type: ACTIVITY_TYPES.CREATE,
+      to: appUri
+    },
+    publishedAfter
+  });
+
+  console.log('createRegistrationActivity', createRegistrationActivity);
+
+  if (waitForAccept) {
+    await actor.call('activitypub.inbox.awaitActivity', {
+      collectionUri: actor.inbox,
+      matcher: {
+        type: ACTIVITY_TYPES.ACCEPT,
+        object: createRegistrationActivity.id
+      }
     });
+  }
 
-    const firstItem = outbox?.orderedItems[0];
-
-    if (firstItem.type === 'Create' && firstItem.to === appUri) {
-      return [firstItem.id, firstItem.object];
-    }
-    await delay(500);
-  } while (true);
+  return createRegistrationActivity;
 };
 
 module.exports = {
   listDatasets,
   clearDataset,
   clearRedisDb,
-  initializePodProvider,
+  clearAllData,
+  connectPodProvider,
   initializeAppServer,
   getAppAccessNeeds,
   installApp

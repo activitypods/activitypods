@@ -1,5 +1,5 @@
 const urlJoin = require('url-join');
-const { defaultToArray } = require('@semapps/ldp');
+const { arrayOf } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
@@ -135,7 +135,7 @@ module.exports = {
 
         // Add all targeted actors to the collection and WebACL group
         // TODO check if we could not use activity.to instead of activity.target (and change this everywhere)
-        for (let actorUri of defaultToArray(activity.target)) {
+        for (let actorUri of arrayOf(activity.target)) {
           await ctx.call('activitypub.collection.add', {
             collectionUri: announcesCollectionUri,
             item: actorUri
@@ -237,7 +237,7 @@ module.exports = {
           await this.actions.giveRightsAfterAnnouncersCollectionCreate({ objectUri: object.id }, { parentCtx: ctx });
 
           // Add all announcers to the collection and WebACL group
-          for (let actorUri of defaultToArray(activity.target)) {
+          for (let actorUri of arrayOf(activity.target)) {
             await ctx.call('activitypub.collection.add', {
               collectionUri: announcersCollectionUri,
               item: actorUri

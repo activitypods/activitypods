@@ -1,7 +1,7 @@
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { initializeAppServer, clearDataset, listDatasets, installApp, initializePodProvider } = require('./initialize');
+const { connectPodProvider, clearAllData, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const ExampleAppV2Service = require('./apps/example-v2.app');
 
@@ -13,12 +13,9 @@ describe('Test app upgrade', () => {
   let podProvider, alice, appServer, oldApp, app, requiredAccessNeedGroup;
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
+    await clearAllData();
 
-    podProvider = await initializePodProvider();
+    podProvider = await connectPodProvider();
 
     const actorData = require(`./data/actor1.json`);
     const { webId } = await podProvider.call('auth.signup', actorData);
@@ -113,13 +110,15 @@ describe('Test app upgrade', () => {
   });
 
   test('User upgrade but does not accept all required access needs', async () => {
-    await alice.call('activitypub.outbox.post', {
-      collectionUri: alice.outbox,
-      type: 'apods:Upgrade',
-      object: APP_URI,
-      'apods:acceptedAccessNeeds': [],
-      'apods:acceptedSpecialRights': requiredAccessNeedGroup['apods:hasSpecialRights']
-    });
+    await expect(
+      alice.call('activitypub.outbox.post', {
+        collectionUri: alice.outbox,
+        type: 'apods:Upgrade',
+        object: APP_URI,
+        'apods:acceptedAccessNeeds': [],
+        'apods:acceptedSpecialRights': requiredAccessNeedGroup['apods:hasSpecialRights']
+      })
+    ).resolves.not.toThrow();
 
     await waitForExpect(async () => {
       const inbox = await alice.call('activitypub.collection.get', {
@@ -136,13 +135,15 @@ describe('Test app upgrade', () => {
   });
 
   test('User upgrade and accept all required access needs', async () => {
-    await alice.call('activitypub.outbox.post', {
-      collectionUri: alice.outbox,
-      type: 'apods:Upgrade',
-      object: APP_URI,
-      'apods:acceptedAccessNeeds': requiredAccessNeedGroup['interop:hasAccessNeed'],
-      'apods:acceptedSpecialRights': requiredAccessNeedGroup['apods:hasSpecialRights']
-    });
+    await expect(
+      alice.call('activitypub.outbox.post', {
+        collectionUri: alice.outbox,
+        type: 'apods:Upgrade',
+        object: APP_URI,
+        'apods:acceptedAccessNeeds': requiredAccessNeedGroup['interop:hasAccessNeed'],
+        'apods:acceptedSpecialRights': requiredAccessNeedGroup['apods:hasSpecialRights']
+      })
+    ).resolves.not.toThrow();
 
     await waitForExpect(async () => {
       const inbox = await alice.call('activitypub.collection.get', {

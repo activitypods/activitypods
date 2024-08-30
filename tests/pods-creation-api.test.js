@@ -1,14 +1,14 @@
 const waitForExpect = require('wait-for-expect');
 const urlJoin = require('url-join');
 const fetch = require('node-fetch');
-const { initializePodProvider } = require('./initialize');
+const { connectPodProvider, clearAllData } = require('./initialize');
 
 jest.setTimeout(50000);
 
 const BASE_URL = 'http://localhost:3000';
 
 describe('Test pods creation via API', () => {
-  let broker, token, alice, projectUri;
+  let podProvider, token, alice, projectUri;
 
   const fetchServer = (path, options = {}) => {
     if (!path) throw new Error('No path provided to fetchServer');
@@ -60,11 +60,13 @@ describe('Test pods creation via API', () => {
   };
 
   beforeAll(async () => {
-    broker = await initializePodProvider();
+    await clearAllData();
+
+    podProvider = await connectPodProvider();
   });
 
   afterAll(async () => {
-    await broker.stop();
+    await podProvider.stop();
   });
 
   test('Alice signup for a pod', async () => {

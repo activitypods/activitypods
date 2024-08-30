@@ -1,6 +1,6 @@
 const urlJoin = require('url-join');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { initializeAppServer, clearDataset, listDatasets, installApp, initializePodProvider } = require('./initialize');
+const { connectPodProvider, clearAllData, installApp, initializePodProvider } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const Example2AppService = require('./apps/example2.app');
 const { OBJECT_TYPES, ACTIVITY_TYPES } = require('@semapps/activitypub');
@@ -17,14 +17,16 @@ const APP2_URI = urlJoin(APP2_SERVER_BASE_URL, 'app');
 
 describe('Test Pod outbox posting', () => {
   let actors = [],
-    podServer,
+    podProvider,
     alice,
     appServer,
     app2Server,
     noteUri;
 
   beforeAll(async () => {
-    podServer = await initializePodProvider();
+    await clearAllData();
+
+    podProvider = await connectPodProvider();
 
     appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();
@@ -34,8 +36,8 @@ describe('Test Pod outbox posting', () => {
 
     for (let i = 1; i <= NUM_PODS; i++) {
       const actorData = require(`./data/actor${i}.json`);
-      const { webId } = await podServer.call('auth.signup', actorData);
-      actors[i] = await podServer.call(
+      const { webId } = await podProvider.call('auth.signup', actorData);
+      actors[i] = await podProvider.call(
         'activitypub.actor.awaitCreateComplete',
         {
           actorUri: webId,
@@ -44,7 +46,7 @@ describe('Test Pod outbox posting', () => {
         { meta: { dataset: actorData.username } }
       );
       actors[i].call = (actionName, params, options = {}) =>
-        podServer.call(actionName, params, {
+        podProvider.call(actionName, params, {
           ...options,
           meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
         });
@@ -57,7 +59,7 @@ describe('Test Pod outbox posting', () => {
   }, 120000);
 
   afterAll(async () => {
-    await podServer.stop();
+    await podProvider.stop();
     await appServer.stop();
     await app2Server.stop();
   });

@@ -1,6 +1,5 @@
 const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { interopContext } = require('@activitypods/core');
 const { arraysEqual } = require('../../utils');
 const { necessityMapping } = require('../../mappings');
 
@@ -62,7 +61,6 @@ module.exports = {
               haveAccessNeedsChanged = true;
               const newAccessNeedUri = await ctx.call('access-needs.post', {
                 resource: {
-                  '@context': interopContext,
                   '@type': 'interop:AccessNeed',
                   'interop:accessNecessity': necessityMapping[necessity],
                   'interop:accessMode': accessNeed.accessMode,
@@ -109,7 +107,6 @@ module.exports = {
             const accessNeedGroupUri = await this.actions.post(
               {
                 resource: {
-                  '@context': interopContext,
                   '@type': 'interop:AccessNeedGroup',
                   'interop:accessNecessity': necessityMapping[necessity],
                   'interop:accessScenario': 'interop:PersonalAccess',

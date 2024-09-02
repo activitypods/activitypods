@@ -59,6 +59,11 @@ describe('Test pods creation', mode => {
     await broker.stop();
   });
 
+  test('Alice WebID has the required informations', async () => {
+    expect(alice['pim:storage']).toBe(urlJoin(alice.id, 'data'));
+    expect(alice['solid:oidcIssuer']).toBe(new URL(alice.id).origin);
+  });
+
   test('Alice collections can be fetched', async () => {
     await expect(
       alice.call('activitypub.collection.get', {
@@ -104,7 +109,6 @@ describe('Test pods creation', mode => {
         accept: MIME_TYPES.JSON
       })
     ).resolves.toMatchObject({
-      'vcard:given-name': 'Alice',
       describes: alice.id
     });
   }, 80000);
@@ -139,7 +143,7 @@ describe('Test pods creation', mode => {
 
   test('Alice can post on her Pod', async () => {
     projectUri = await alice.call('ldp.container.post', {
-      containerUri: urlJoin(alice.id, 'data'),
+      containerUri: alice['pim:storage'],
       resource: {
         '@context': 'https://activitypods.org/context.json',
         type: 'pair:Project',

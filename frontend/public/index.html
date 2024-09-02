@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <link rel="stylesheet" href="%PUBLIC_URL%/fonts/fonts.css" />
+    <!-- Initialize the global CONFIG object to avoid the app to crash if the config script does not load -->
+    <!-- <script>window.CONFIG = {};</script> -->
     <script id="config-script" src="%REACT_APP_CONFIG_URL%"></script>
   </head>
   <body>

@@ -1,0 +1,42 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start dev containers",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "up": {
+          "detached": true
+        },
+        "files": ["${workspaceFolder}/docker-compose.yml"]
+      }
+    },
+    {
+      "label": "Stop dev containers",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "down": true,
+        "files": ["${workspaceFolder}/docker-compose.yml"]
+      }
+    },
+    {
+      "label": "Start test containers",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "up": {
+          "detached": true
+        },
+        "files": ["${workspaceFolder}/docker-compose-test.yml"]
+      },
+      "dependsOn": "Stop dev containers"
+    },
+    {
+      "label": "Stop test containers",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "down": true,
+        "files": ["${workspaceFolder}/docker-compose-test.yml"]
+      }
+    }
+  ]
+}

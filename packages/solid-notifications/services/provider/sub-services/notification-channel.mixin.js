@@ -250,9 +250,7 @@ module.exports = {
     async loadChannelsFromDb({ removeOldChannels }) {
       // Load all channels from all Pods
       await Promise.all(
-        (await this.broker.call('pod.list')).map(async dataset => {
-          // Why not use auth.account.find here?
-          const webId = urlJoin(this.settings.baseUrl, dataset);
+        (await this.broker.call('auth.account.find')).map(async ({ webId }) => {
           const container = await this.actions.list({ webId });
           for (const channel of arrayOf(container['ldp:contains'])) {
             // Remove channels where endAt is in the past.

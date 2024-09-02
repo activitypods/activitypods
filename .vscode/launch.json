@@ -5,9 +5,7 @@
       "type": "node",
       "request": "launch",
       "name": "Jest: Current File",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "env": {
         "NODE_OPTIONS": "--experimental-vm-modules"
       },
@@ -16,7 +14,8 @@
       "console": "integratedTerminal",
       "localRoot": "${workspaceFolder}",
       "remoteRoot": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/tests/.env"
+      "envFile": "${workspaceFolder}/tests/.env",
+      "preLaunchTask": "Start test containers"
     }
   ]
 }

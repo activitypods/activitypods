@@ -1,9 +1,60 @@
+const urlJoin = require('url-join');
 const { triple, namedNode, literal } = require('@rdfjs/data-model');
 const CONFIG = require('../config/config');
 
 module.exports = {
   name: 'migration',
   actions: {
+    async migrateAllPods(ctx) {
+      for (const account of await ctx.call('auth.account.find')) {
+        this.logger.info(`Migrating Pod of ${account.webId}...`);
+
+        // TODO Handle Pod versioning
+
+        this.actions.addSolidPredicates(account, { parentCtx: ctx });
+        this.actions.attachCollectionsToContainer(account, { parentCtx: ctx });
+        this.actions.migratePreferredLocale(account, { parentCtx: ctx });
+      }
+    },
+    async addSolidPredicates(ctx) {
+      const account = ctx.params;
+      this.logger.info(`Migrating solid predicates...`);
+
+      if (account.podUri) {
+        await ctx.call('ldp.resource.patch', {
+          resourceUri: account.webId,
+          triplesToAdd: [
+            triple(
+              namedNode(account.webId),
+              namedNode('http://www.w3.org/ns/pim/space#storage'),
+              namedNode(account.podUri)
+            )
+          ],
+          webId: 'system'
+        });
+
+        await ctx.call('ldp.resource.patch', {
+          resourceUri: account.webId,
+          triplesToAdd: [
+            triple(
+              namedNode(account.webId),
+              namedNode('http://www.w3.org/ns/solid/terms#oidcIssuer'),
+              namedNode(new URL(account.webId).origin)
+            )
+          ],
+          webId: 'system'
+        });
+
+        await ctx.call('auth.account.update', {
+          ...account,
+          podUri: undefined
+        });
+
+        this.logger.info(`DONE`);
+      } else {
+        this.logger.warn(`No preferred locale found for ${account.webId}`);
+      }
+    },
     async updateCollectionsOptions(ctx) {
       await ctx.call('activitypub.follow.updateCollectionsOptions');
       await ctx.call('activitypub.inbox.updateCollectionsOptions');
@@ -25,26 +76,26 @@ module.exports = {
       // TODO persist options for the /announces and /announcers services
     },
     async attachCollectionsToContainer(ctx) {
-      for (let dataset of await ctx.call('pod.list')) {
-        const collectionsContainerUri = urlJoin(CONFIG.HOME_URL, dataset, '/data/as/collection');
+      const { username: dataset } = ctx.params;
 
-        this.logger.info(`Attaching all collections in ${dataset} dataset to ${collectionsContainerUri}`);
+      const collectionsContainerUri = urlJoin(CONFIG.HOME_URL, dataset, '/data/as/collection');
 
-        await ctx.call('triplestore.update', {
-          query: `
-            PREFIX as: <https://www.w3.org/ns/activitystreams#>
-            PREFIX ldp: <http://www.w3.org/ns/ldp#>
-            INSERT {
-              <${collectionsContainerUri}> ldp:contains ?collectionUri
-            }
-            WHERE {
-              ?collectionUri a as:Collection
-            }
-          `,
-          webId: 'system',
-          dataset
-        });
-      }
+      this.logger.info(`Attaching all collections in ${dataset} dataset to ${collectionsContainerUri}`);
+
+      await ctx.call('triplestore.update', {
+        query: `
+          PREFIX as: <https://www.w3.org/ns/activitystreams#>
+          PREFIX ldp: <http://www.w3.org/ns/ldp#>
+          INSERT {
+            <${collectionsContainerUri}> ldp:contains ?collectionUri
+          }
+          WHERE {
+            ?collectionUri a as:Collection
+          }
+        `,
+        webId: 'system',
+        dataset
+      });
     },
     async registerClassDescriptions(ctx) {
       await ctx.call('profiles.profile.registerClassDescriptionForAll');
@@ -52,29 +103,29 @@ module.exports = {
       await ctx.call('profiles.contactgroup.registerClassDescriptionForAll');
     },
     async migratePreferredLocale(ctx) {
-      for (let dataset of await ctx.call('pod.list')) {
-        const [account] = await ctx.call('auth.account.find', { query: { username: dataset } });
-        if (account.preferredLocale) {
-          this.logger.info(`Migrating preferred locale for ${account.webId}`);
-          await ctx.call('ldp.resource.patch', {
-            resourceUri: account.webId,
-            triplesToAdd: [
-              triple(
-                namedNode(account.webId),
-                namedNode('http://schema.org/knowsLanguage'),
-                literal(account.preferredLocale)
-              )
-            ],
-            webId: 'system'
-          });
+      const account = ctx.params;
+      this.logger.info(`Migrating preferred locale...`);
 
-          await ctx.call('auth.account.update', {
-            id: account['@id'],
-            preferredLocale: undefined
-          });
-        } else {
-          this.logger.warn(`No preferred locale found for ${account.webId}`);
-        }
+      if (account.preferredLocale) {
+        await ctx.call('ldp.resource.patch', {
+          resourceUri: account.webId,
+          triplesToAdd: [
+            triple(
+              namedNode(account.webId),
+              namedNode('http://schema.org/knowsLanguage'),
+              literal(account.preferredLocale)
+            )
+          ],
+          webId: 'system'
+        });
+
+        await ctx.call('auth.account.update', {
+          ...account,
+          preferredLocale: undefined
+        });
+        this.logger.info('DONE');
+      } else {
+        this.logger.warn(`No preferred locale found`);
       }
     }
   }

@@ -70,14 +70,15 @@ module.exports = {
     },
     async migrate(ctx) {
       const accounts = await ctx.call('auth.account.find');
-      for (const { webId, podUri } of accounts) {
+      for (const { webId } of accounts) {
         this.logger.info(`Migrating ${webId}...`);
+        const podUrl = await ctx.call('pod.getUrl', { webId });
         await this.actions.createAndAttachToWebId({ webId }, { parentCtx: ctx });
 
         // Go through each registered container and persist them
         const registeredContainers = await ctx.call('ldp.registry.list');
         for (const container of Object.values(registeredContainers)) {
-          const containerUri = urlJoin(podUri, container.path);
+          const containerUri = urlJoin(podUrl, container.path);
           for (const type of arrayOf(container.acceptedTypes)) {
             await ctx.call('type-registrations.register', { type, containerUri, webId });
             if (container.description) {
@@ -94,7 +95,7 @@ module.exports = {
   },
   events: {
     async 'auth.registered'(ctx) {
-      const { webId, accountData } = ctx.params;
+      const { webId } = ctx.params;
 
       // Wait until the /solid/type-index container has been created for the user
       const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
@@ -111,7 +112,8 @@ module.exports = {
       // Go through each registered container
       for (const container of Object.values(registeredContainers)) {
         if (container.podsContainer !== true) {
-          const containerUri = urlJoin(accountData.podUri, container.path);
+          const podUrl = await ctx.call('pod.getUrl', { webId });
+          const containerUri = urlJoin(podUrl, container.path);
           for (const type of arrayOf(container.acceptedTypes)) {
             await ctx.call('type-registrations.register', { type, containerUri, webId });
             if (container.description) {

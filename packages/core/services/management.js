@@ -155,6 +155,7 @@ const ManagementService = {
           throw404('Actor not found.');
         }
         const dataset = actor.username;
+        const podUrl = await ctx.call('pod.getUrl', { webId: actorUri });
 
         // If there has been an export less than 5 minutes ago, we won't create a new one.
         // The last one might have stopped during download.
@@ -196,7 +197,7 @@ const ManagementService = {
         const uploadsPath = path.join('./uploads/', dataset, 'data');
         (await this.getFilesInDir(uploadsPath)).forEach(relativeFileName => {
           // Reconstruct the URI of the file
-          const fileUri = urlJoin(actor.podUri, relativeFileName);
+          const fileUri = urlJoin(podUrl, relativeFileName);
           // Add file to archive under /non-rdf/<encoded-uri>
           archive.file(path.join(uploadsPath, relativeFileName), { name: `non-rdf/${encodeURIComponent(fileUri)}` });
         });

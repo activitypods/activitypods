@@ -127,7 +127,8 @@ module.exports = {
           this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${resourceType}`);
 
           // Create the container and attach it to its parent(s)
-          containersUris[0] = urlJoin(webId, 'data', containerPath);
+          const podUrl = await ctx.call('pod.getUrl', { webId });
+          containersUris[0] = urlJoin(podUrl, containerPath);
           await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId });
 
           // If the resource type is invalid, an error will be thrown here

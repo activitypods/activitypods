@@ -5,8 +5,19 @@ const { ActivityPubService, FULL_ACTOR_TYPES } = require('@semapps/activitypub')
 const { AuthLocalService, AuthOIDCService } = require('@semapps/auth');
 const { JsonLdService } = require('@semapps/jsonld');
 const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
-const { OntologiesService, dc, syreen, mp, pair, void: voidOntology } = require('@semapps/ontologies');
-const { PodService } = require('@semapps/pod');
+const {
+  OntologiesService,
+  dc,
+  syreen,
+  mp,
+  pair,
+  void: voidOntology,
+  interop,
+  notify,
+  oidc,
+  solid
+} = require('@semapps/ontologies');
+const { PodService } = require('@semapps/solid');
 const { NodeinfoService } = require('@semapps/nodeinfo');
 const { SignatureService, ProxyService, KeysService } = require('@semapps/crypto');
 const { SynchronizerService } = require('@semapps/sync');
@@ -18,7 +29,7 @@ const { WebIdService } = require('@semapps/webid');
 const { AnnouncerService } = require('@activitypods/announcer');
 const { NotificationProviderService } = require('@activitypods/solid-notifications');
 const { TypeIndexesService } = require('@activitypods/type-index');
-const { apods, interop, notify, oidc, solid } = require('@activitypods/ontologies');
+const { apods } = require('@activitypods/ontologies');
 const { ManagementService } = require('./services/management');
 const ApiService = require('./services/api');
 const AppOpenerService = require('./services/app-opener');
@@ -148,13 +159,14 @@ const CoreService = {
         baseUrl,
         acceptedTypes: Object.values(FULL_ACTOR_TYPES),
         podProvider: true,
-        podsContainer: true
+        podsContainer: true // Will register the container but not create LDP containers on a dataset
       },
       hooks: {
         before: {
           async createWebId(ctx) {
             const { nick } = ctx.params;
             await ctx.call('pod.create', { username: nick });
+            ctx.params['solid:oidcIssuer'] = baseUrl.replace(/\/$/, ''); // Remove trailing slash if it exists
           }
         }
       }
@@ -299,8 +311,8 @@ const CoreService = {
       },
       actions: {
         async getUsersCount(ctx) {
-          const pods = await ctx.call('pod.list');
-          const totalPods = pods.length;
+          const accounts = await ctx.call('auth.account.find');
+          const totalPods = accounts.length;
           return {
             total: totalPods,
             activeHalfYear: totalPods,

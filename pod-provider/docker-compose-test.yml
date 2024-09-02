@@ -18,7 +18,7 @@ services:
       - '6379:6379'
     volumes:
       - ./data/redis_test:/data:z
-    command: [ 'redis-server', '--appendonly', 'yes' ]
+    command: ['redis-server', '--appendonly', 'yes']
 
   # We don't use the published image because we want to test the current version of the code
   backend:
@@ -30,7 +30,7 @@ services:
       - redis
     restart: always
     expose:
-      - "3000"
+      - '3000'
     ports:
       - '3000:3000'
     environment:

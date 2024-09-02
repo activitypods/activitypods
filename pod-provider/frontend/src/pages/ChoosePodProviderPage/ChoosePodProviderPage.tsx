@@ -130,7 +130,7 @@ const ChoosePodProviderPage = ({
 
   // If we are on a local server, don't allow to select remote Pod providers as it will not work
   const podProviders = isLocalURL(CONFIG.BACKEND_URL)
-    ? [localPodProviderObject] 
+    ? [localPodProviderObject]
     : uniqueBy(provider => provider['apods:baseUrl'] as string, [...customPodProviders, ...(podProvidersRaw || [])]);
 
   const providerSelected = useCallback(

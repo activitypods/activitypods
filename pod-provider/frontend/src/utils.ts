@@ -12,7 +12,7 @@ export const formatUsername = (uri?: string) => {
  * @param {*} value A non-array value, an array or undefined.
  * @returns
  */
-export const arrayFromLdField = (value: any | any[]) => {
+export const arrayOf = (value: any | any[]) => {
   // If the field is null-ish, we suppose there are no values.
   if (value === null || value === undefined) {
     return [];
@@ -232,8 +232,7 @@ export const downloadFile = (blob: Blob, filename: string) => {
 };
 
 export const arraysEqual = (a1: [], a2: []): boolean =>
-  arrayFromLdField(a1).length === arrayFromLdField(a2).length &&
-  arrayFromLdField(a1).every(i => arrayFromLdField(a2).includes(i));
+  arrayOf(a1).length === arrayOf(a2).length && arrayOf(a1).every(i => arrayOf(a2).includes(i));
 
 export const delay = (t: number) => new Promise(resolve => setTimeout(resolve, t));
 

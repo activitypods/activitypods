@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { arrayFromLdField } from '../utils';
+import { arrayOf } from '../utils';
 import { useDataProvider } from 'react-admin';
 
 const useGrants = appUri => {
@@ -16,11 +16,11 @@ const useGrants = appUri => {
       });
       for (const accessGrant of accessGrants) {
         if (accessGrant['apods:hasSpecialRights']) {
-          g = [...g, ...arrayFromLdField(accessGrant['apods:hasSpecialRights'])];
+          g = [...g, ...arrayOf(accessGrant['apods:hasSpecialRights'])];
         }
         if (accessGrant['interop:hasDataGrant']) {
           const { data: dataGrants } = await dataProvider.getMany('DataGrant', {
-            ids: arrayFromLdField(accessGrant['interop:hasDataGrant'])
+            ids: arrayOf(accessGrant['interop:hasDataGrant'])
           });
           g = [...g, ...dataGrants];
         }

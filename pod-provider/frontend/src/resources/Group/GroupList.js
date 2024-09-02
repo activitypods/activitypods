@@ -4,7 +4,7 @@ import { Avatar } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import List from '../../layout/List';
-import { arrayFromLdField } from '../../utils';
+import { arrayOf } from '../../utils';
 
 const GroupList = () => {
   useCheckAuthenticated();
@@ -13,9 +13,7 @@ const GroupList = () => {
     <List title={translate('app.page.groups')}>
       <SimpleList
         primaryText={<TextField source="vcard:label" />}
-        secondaryText={record =>
-          `${translate('app.group.members')}: ${arrayFromLdField(record['vcard:hasMember']).length}`
-        }
+        secondaryText={record => `${translate('app.group.members')}: ${arrayOf(record['vcard:hasMember']).length}`}
         linkType="edit"
         leftAvatar={() => (
           <Avatar>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchUtils, useGetList } from 'react-admin';
-import { arrayFromLdField } from '../utils';
+import { arrayOf } from '../utils';
 
 const useClassDescriptions = application => {
   const [appData, setAppData] = useState([]);
@@ -13,10 +13,10 @@ const useClassDescriptions = application => {
       try {
         if (application && currentData && !loading && !loaded) {
           setLoading(true);
-          for (const accessDescriptionSetUri of arrayFromLdField(application['interop:hasAccessDescriptionSet'])) {
+          for (const accessDescriptionSetUri of arrayOf(application['interop:hasAccessDescriptionSet'])) {
             const { json: accessDescriptionSet } = await fetchUtils.fetchJson(accessDescriptionSetUri);
             if (accessDescriptionSet['interop:usesLanguage'] === CONFIG.DEFAULT_LOCALE) {
-              for (const classDescriptionUri of arrayFromLdField(accessDescriptionSet['apods:hasClassDescription'])) {
+              for (const classDescriptionUri of arrayOf(accessDescriptionSet['apods:hasClassDescription'])) {
                 const { json: classDescription } = await fetchUtils.fetchJson(classDescriptionUri);
                 setAppData(oldData => {
                   oldData.push(classDescription);

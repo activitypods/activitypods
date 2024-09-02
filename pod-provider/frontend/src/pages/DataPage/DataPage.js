@@ -6,7 +6,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import FolderIcon from '@mui/icons-material/Folder';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import useTypeRegistrations from '../../hooks/useTypeRegistrations';
-import { arrayFromLdField } from '../../utils';
+import { arrayOf } from '../../utils';
 
 const useStyles = makeStyles(() => ({
   listItem: {
@@ -54,7 +54,7 @@ const DataPage = () => {
                   </ListItemAvatar>
                   <ListItemText
                     primary={typeRegistration['skos:prefLabel']}
-                    secondary={arrayFromLdField(typeRegistration['solid:forClass']).join(', ')}
+                    secondary={arrayOf(typeRegistration['solid:forClass']).join(', ')}
                     className={classes.listItemText}
                   />
                 </ListItemButton>

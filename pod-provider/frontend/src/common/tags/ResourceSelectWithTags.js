@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useGetList, useTranslate } from 'react-admin';
 import { Checkbox, ListItemAvatar, Avatar, Typography, TextField, Chip, Autocomplete } from '@mui/material';
-import { arrayFromLdField, colorFromString } from '../../utils';
+import { arrayOf, colorFromString } from '../../utils';
 
 /**
  * @typedef {import('react-admin').Record} Record
@@ -105,7 +105,7 @@ const ResourceSelectWithTags = props => {
   // We use this helper to identify selected tags, since those are not part
   // of the values list (i.e. selectedResourceIds).
   const isTagSelected = tag => {
-    const tagOwners = arrayFromLdField(tag[relationshipPredicate]);
+    const tagOwners = arrayOf(tag[relationshipPredicate]);
     if (tagOwners.length === 0) return false;
     const selectedOwnerIds = selectedResourceIds.map(id => resourceToOwnerIds[id]);
     return tagOwners.every(ownerId => selectedOwnerIds.includes(ownerId));
@@ -119,9 +119,7 @@ const ResourceSelectWithTags = props => {
     // If the option is a tag, we need to add / remove all resources that have this tag.
     if (tagData[optionId]) {
       const clickedTag = tagData[optionId];
-      const resourceIds = arrayFromLdField(clickedTag[relationshipPredicate]).map(
-        ownersId => ownerToResourceIds[ownersId]
-      );
+      const resourceIds = arrayOf(clickedTag[relationshipPredicate]).map(ownersId => ownerToResourceIds[ownersId]);
 
       // If the tag was selected...
       // (We can't check `reason` here, because the tags are not part of the values list.)

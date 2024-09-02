@@ -10,7 +10,7 @@ import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { arrayFromLdField } from '../../utils';
+import { arrayOf } from '../../utils';
 
 const specialRights = {
   'apods:ReadInbox': {
@@ -71,10 +71,10 @@ const AccessNeedsList = ({
       } else {
         const accessRights = [];
 
-        const hasRead = arrayFromLdField(accessNeed['interop:accessMode']).includes('acl:Read');
-        const hasAppend = arrayFromLdField(accessNeed['interop:accessMode']).includes('acl:Append');
-        const hasWrite = arrayFromLdField(accessNeed['interop:accessMode']).includes('acl:Write');
-        const hasControl = arrayFromLdField(accessNeed['interop:accessMode']).includes('acl:Control');
+        const hasRead = arrayOf(accessNeed['interop:accessMode']).includes('acl:Read');
+        const hasAppend = arrayOf(accessNeed['interop:accessMode']).includes('acl:Append');
+        const hasWrite = arrayOf(accessNeed['interop:accessMode']).includes('acl:Write');
+        const hasControl = arrayOf(accessNeed['interop:accessMode']).includes('acl:Control');
 
         if (hasRead) accessRights.push(translate('app.authorization.read'));
         if (hasAppend) accessRights.push(translate('app.authorization.append'));
@@ -84,10 +84,10 @@ const AccessNeedsList = ({
         // Get description from local TypeRegistrations first, to prevent apps to fool users about what they request
         const description =
           typeRegistrations?.find(reg =>
-            arrayFromLdField(reg['solid:forClass']).includes(accessNeed['apods:registeredClass'])
+            arrayOf(reg['solid:forClass']).includes(accessNeed['apods:registeredClass'])
           ) ||
           classDescriptions?.find(desc =>
-            arrayFromLdField(desc['apods:describedClass']).includes(accessNeed['apods:registeredClass'])
+            arrayOf(desc['apods:describedClass']).includes(accessNeed['apods:registeredClass'])
           );
 
         return {
@@ -136,7 +136,7 @@ const AccessNeedsList = ({
         const parsedAccessNeed = parseAccessNeed(accessNeed);
         if (!parsedAccessNeed) return null;
         const { label, icon } = parsedAccessNeed;
-        const checked = arrayFromLdField(allowedAccessNeeds).some(a => a === accessNeed || a === accessNeed?.id);
+        const checked = arrayOf(allowedAccessNeeds).some(a => a === accessNeed || a === accessNeed?.id);
         return (
           <ListItem key={i} sx={{ p: 0 }}>
             <ListItemIcon sx={{ minWidth: 36 }}>{React.createElement(icon)}</ListItemIcon>

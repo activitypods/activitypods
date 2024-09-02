@@ -4,6 +4,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import { useTranslate } from 'react-admin';
 import useActor from '../../hooks/useActor';
+import { arrayOf } from '../../utils';
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -74,7 +75,7 @@ const ResourceCard = ({ resource, typeRegistration }) => {
         <Box sx={{ mt: 1, mb: 3, textAlign: 'center' }}>
           <a
             href={`${typeRegistration['apods:openEndpoint']}?type=${encodeURIComponent(
-              typeRegistration['solid:forClass']
+              arrayOf(typeRegistration['solid:forClass'])?.[0]
             )}&uri=${encodeURIComponent(resource?.resourceUri.value)}&mode=show`}
             target="_blank"
             rel="noreferrer"

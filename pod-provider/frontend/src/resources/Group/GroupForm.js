@@ -20,7 +20,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import GroupIcon from '@mui/icons-material/Group';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { ReferenceField } from '@semapps/field-components';
-import { arrayFromLdField } from '../../utils';
+import { arrayOf } from '../../utils';
 import UsernameField from '../../common/fields/UsernameField';
 import ResourceSelectWithTags from '../../common/tags/ResourceSelectWithTags';
 
@@ -44,7 +44,7 @@ export const GroupFormContent = () => {
 
   const group = useRecordContext();
   // Watch out: group['vcard:hasMember'] contains the actor URIs, not the profile URIs.
-  const [memberIds, setMemberIds] = React.useState(arrayFromLdField(group?.['vcard:hasMember']));
+  const [memberIds, setMemberIds] = React.useState(arrayOf(group?.['vcard:hasMember']));
 
   const listControllerProps = useListController({
     resource: 'Profile',

@@ -5,7 +5,7 @@ import AppsIcon from '@mui/icons-material/Apps';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { triple, namedNode } from '@rdfjs/data-model';
-import { arrayFromLdField } from '../../utils';
+import { arrayOf } from '../../utils';
 
 const AppMenuItem = ({ appUri, isDefault, ...rest }) => {
   const { data: app, isLoading } = useGetOne('App', { id: appUri });
@@ -62,7 +62,7 @@ const SetDefaultAppButton = ({ typeRegistration, refetch, color }) => {
         <AppsIcon />
       </Button>
       <Menu anchorEl={anchorEl} open={!!anchorEl} onClose={handleClose}>
-        {arrayFromLdField(typeRegistration['apods:availableApps']).map(appUri => (
+        {arrayOf(typeRegistration['apods:availableApps']).map(appUri => (
           <AppMenuItem
             key={appUri}
             appUri={appUri}

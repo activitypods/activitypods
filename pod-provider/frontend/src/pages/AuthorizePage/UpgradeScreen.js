@@ -11,7 +11,7 @@ import AccessNeedsList from './AccessNeedsList';
 import ProgressMessage from '../../common/ProgressMessage';
 import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import AppHeader from './AppHeader';
-import { arrayFromLdField } from '../../utils';
+import { arrayOf } from '../../utils';
 import useUninstallApp from '../../hooks/useUninstallApp';
 
 const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
@@ -107,9 +107,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
                     g['apods:registeredClass'] === accessNeed['apods:registeredClass'] &&
                     // Every mode in the access need must be in the existing grant.
                     // If the existing grant has more access mode, we will not ask user consent to remove it
-                    arrayFromLdField(accessNeed['interop:accessMode']).every(m =>
-                      arrayFromLdField(g['interop:accessMode']).includes(m)
-                    )
+                    arrayOf(accessNeed['interop:accessMode']).every(m => arrayOf(g['interop:accessMode']).includes(m))
                 );
 
           if (matchingGrant) {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchUtils } from 'react-admin';
-import { arrayFromLdField } from '../utils';
+import { arrayOf } from '../utils';
 
 const useAccessNeeds = application => {
   const [requiredAccessNeeds, setRequiredAccessNeeds] = useState([]);
@@ -13,9 +13,9 @@ const useAccessNeeds = application => {
       try {
         if (application && !loading && !loaded) {
           setLoading(true);
-          for (const accessNeedGroupUri of arrayFromLdField(application['interop:hasAccessNeedGroup'])) {
+          for (const accessNeedGroupUri of arrayOf(application['interop:hasAccessNeedGroup'])) {
             const { json: accessNeedGroup } = await fetchUtils.fetchJson(accessNeedGroupUri);
-            for (const accessNeedUri of arrayFromLdField(accessNeedGroup['interop:hasAccessNeed'])) {
+            for (const accessNeedUri of arrayOf(accessNeedGroup['interop:hasAccessNeed'])) {
               const { json: accessNeed } = await fetchUtils.fetchJson(accessNeedUri);
               if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
                 setRequiredAccessNeeds(a => [...a, accessNeed]);
@@ -23,7 +23,7 @@ const useAccessNeeds = application => {
                 setOptionalAccessNeeds(a => [...a, accessNeed]);
               }
             }
-            for (const specialRight of arrayFromLdField(accessNeedGroup['apods:hasSpecialRights'])) {
+            for (const specialRight of arrayOf(accessNeedGroup['apods:hasSpecialRights'])) {
               if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
                 setRequiredAccessNeeds(a => [...a, specialRight]);
               } else {

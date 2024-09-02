@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useGetIdentity, useDataProvider } from 'react-admin';
-import { arrayFromLdField } from '../utils';
+import { arrayOf } from '../utils';
 
 const useTypeRegistrations = () => {
   const { data: identity } = useGetIdentity();
@@ -11,7 +11,7 @@ const useTypeRegistrations = () => {
     const { json: typeIndex } = await dataProvider.fetch(identity?.webIdData?.['solid:publicTypeIndex']);
     if (typeIndex) {
       setTypeRegistrations(
-        arrayFromLdField(typeIndex['solid:hasTypeRegistration']).map(reg => ({
+        arrayOf(typeIndex['solid:hasTypeRegistration']).map(reg => ({
           '@context': typeIndex['@context'],
           ...reg
         }))

@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
 import EditIcon from '@mui/icons-material/Edit';
-import { arrayFromLdField, colorFromString } from '../../utils';
+import { arrayOf, colorFromString } from '../../utils';
 
 const colors = ['lightblue', 'lightgreen', 'lightpink', 'lightyellow', 'lightgrey'];
 
@@ -95,7 +95,7 @@ const TagsListEdit = props => {
     newTagMemberships => {
       // First, compute the updated tag states.
       const newTagData = tagDataState.map(tagObject => {
-        const originalTagMemberships = arrayFromLdField(tagObject[relationshipPredicate]);
+        const originalTagMemberships = arrayOf(tagObject[relationshipPredicate]);
         const isOriginallyMember = originalTagMemberships.includes(recordId);
         const isNowMember = newTagMemberships.includes(tagObject[tagIdPredicate]);
 
@@ -140,7 +140,7 @@ const TagsListEdit = props => {
         // The color or a color generated from the name.
         color: tagObject[colorPredicate] || (showColors && colorFromString(tagObject[namePredicate])),
         avatar: tagObject[avatarPredicate],
-        owners: arrayFromLdField(tagObject[relationshipPredicate])
+        owners: arrayOf(tagObject[relationshipPredicate])
       })),
     [avatarPredicate, colorPredicate, namePredicate, relationshipPredicate, showColors, tagDataState, tagIdPredicate]
   );

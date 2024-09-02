@@ -1,5 +1,4 @@
 {
-  "version": "2.0.0-alpha.11",
   "private": true,
   "scripts": {
     "version": "lerna version --force-publish='*' --exact",
@@ -13,6 +12,6 @@
     "lerna": "^8.1.3"
   },
   "workspaces": [
-    "packages/*"
+    "app"
   ]
 }

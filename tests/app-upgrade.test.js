@@ -1,10 +1,7 @@
-const path = require('path');
-const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { arrayOf } = require('@semapps/ldp');
-const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
+const { connectPodProvider, clearAllData, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const ExampleAppV2Service = require('./apps/example-v2.app');
 
@@ -13,32 +10,16 @@ jest.setTimeout(80000);
 const APP_URI = 'http://localhost:3001/app';
 
 describe('Test app upgrade', () => {
-  let podServer,
-    alice,
-    appServer,
-    oldApp,
-    app,
-    eventsContainerUri,
-    placesContainerUri,
-    requiredAccessNeedGroup,
-    optionalAccessNeedGroup,
-    requiredAccessGrant,
-    optionalAccessGrant,
-    appRegistration;
+  let podProvider, alice, appServer, oldApp, app, requiredAccessNeedGroup;
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
+    await clearAllData();
 
-    podServer = await initialize(3000, 'settings');
-    podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
-    await podServer.start();
+    podProvider = await connectPodProvider();
 
     const actorData = require(`./data/actor1.json`);
-    const { webId } = await podServer.call('auth.signup', actorData);
-    alice = await podServer.call(
+    const { webId } = await podProvider.call('auth.signup', actorData);
+    alice = await podProvider.call(
       'activitypub.actor.awaitCreateComplete',
       {
         actorUri: webId,
@@ -47,7 +28,7 @@ describe('Test app upgrade', () => {
       { meta: { dataset: actorData.username } }
     );
     alice.call = (actionName, params, options = {}) =>
-      podServer.call(actionName, params, {
+      podProvider.call(actionName, params, {
         ...options,
         meta: { ...options.meta, webId, dataset: alice.preferredUsername }
       });
@@ -59,7 +40,7 @@ describe('Test app upgrade', () => {
   }, 80000);
 
   afterAll(async () => {
-    await podServer.stop();
+    await podProvider.stop();
     await appServer.stop();
   });
 
@@ -129,13 +110,15 @@ describe('Test app upgrade', () => {
   });
 
   test('User upgrade but does not accept all required access needs', async () => {
-    await alice.call('activitypub.outbox.post', {
-      collectionUri: alice.outbox,
-      type: 'apods:Upgrade',
-      object: APP_URI,
-      'apods:acceptedAccessNeeds': [],
-      'apods:acceptedSpecialRights': requiredAccessNeedGroup['apods:hasSpecialRights']
-    });
+    await expect(
+      alice.call('activitypub.outbox.post', {
+        collectionUri: alice.outbox,
+        type: 'apods:Upgrade',
+        object: APP_URI,
+        'apods:acceptedAccessNeeds': [],
+        'apods:acceptedSpecialRights': requiredAccessNeedGroup['apods:hasSpecialRights']
+      })
+    ).resolves.not.toThrow();
 
     await waitForExpect(async () => {
       const inbox = await alice.call('activitypub.collection.get', {
@@ -152,13 +135,15 @@ describe('Test app upgrade', () => {
   });
 
   test('User upgrade and accept all required access needs', async () => {
-    await alice.call('activitypub.outbox.post', {
-      collectionUri: alice.outbox,
-      type: 'apods:Upgrade',
-      object: APP_URI,
-      'apods:acceptedAccessNeeds': requiredAccessNeedGroup['interop:hasAccessNeed'],
-      'apods:acceptedSpecialRights': requiredAccessNeedGroup['apods:hasSpecialRights']
-    });
+    await expect(
+      alice.call('activitypub.outbox.post', {
+        collectionUri: alice.outbox,
+        type: 'apods:Upgrade',
+        object: APP_URI,
+        'apods:acceptedAccessNeeds': requiredAccessNeedGroup['interop:hasAccessNeed'],
+        'apods:acceptedSpecialRights': requiredAccessNeedGroup['apods:hasSpecialRights']
+      })
+    ).resolves.not.toThrow();
 
     await waitForExpect(async () => {
       const inbox = await alice.call('activitypub.collection.get', {

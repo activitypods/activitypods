@@ -1,6 +1,5 @@
-const path = require('path');
 const urlJoin = require('url-join');
-const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
+const { connectPodProvider, clearAllData, initializeAppServer, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 
 jest.setTimeout(100000);
@@ -12,28 +11,23 @@ const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
 describe('Test AS collections handling', () => {
   let actors = [],
-    podServer,
+    podProvider,
     alice,
     appServer,
     collectionUri;
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
+    await clearAllData();
 
-    podServer = await initialize(3000, 'settings');
-    podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
-    await podServer.start();
+    podProvider = await connectPodProvider();
 
     appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();
 
     for (let i = 1; i <= NUM_PODS; i++) {
       const actorData = require(`./data/actor${i}.json`);
-      const { webId } = await podServer.call('auth.signup', actorData);
-      actors[i] = await podServer.call(
+      const { webId } = await podProvider.call('auth.signup', actorData);
+      actors[i] = await podProvider.call(
         'activitypub.actor.awaitCreateComplete',
         {
           actorUri: webId,
@@ -42,7 +36,7 @@ describe('Test AS collections handling', () => {
         { meta: { dataset: actorData.username } }
       );
       actors[i].call = (actionName, params, options = {}) =>
-        podServer.call(actionName, params, {
+        podProvider.call(actionName, params, {
           ...options,
           meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
         });
@@ -54,7 +48,7 @@ describe('Test AS collections handling', () => {
   }, 100000);
 
   afterAll(async () => {
-    await podServer.stop();
+    await podProvider.stop();
     await appServer.stop();
   });
 

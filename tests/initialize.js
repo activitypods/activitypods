@@ -3,18 +3,16 @@ const Redis = require('ioredis');
 const { ServiceBroker } = require('moleculer');
 const { AuthAccountService } = require('@semapps/auth');
 const { CoreService: SemAppsCoreService } = require('@semapps/core');
-const { delay } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { NodeinfoService } = require('@semapps/nodeinfo');
 const { ProxyService } = require('@semapps/crypto');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
 const { WebAclMiddleware } = require('@semapps/webacl');
-const { ObjectsWatcherMiddleware } = require('@semapps/sync');
-const { CoreService, AppControlMiddleware } = require('@activitypods/core');
-const { apods, interop, oidc, notify } = require('@activitypods/ontologies');
-const { NotificationListenerService } = require('@activitypods/solid-notifications');
-const { AnnouncerService } = require('@activitypods/announcer');
-const { ProfilesApp } = require('@activitypods/profiles');
+const { interop, oidc, notify, apods } = require('@semapps/ontologies');
+const { NotificationsListenerService } = require('@semapps/solid');
+const { ACTIVITY_TYPES } = require('@semapps/activitypub');
+const RdfJSONSerializer = require('../pod-provider/backend/RdfJSONSerializer');
+const { clearMails } = require('./utils');
 const CONFIG = require('./config');
 
 Error.stackTraceLimit = Infinity;
@@ -52,73 +50,41 @@ const clearDataset = dataset =>
     }
   });
 
-const clearQueue = async redisUrl => {
+const clearRedisDb = async redisUrl => {
   const redisClient = new Redis(redisUrl);
   await redisClient.flushdb();
   redisClient.disconnect();
 };
 
-const initialize = async (port, settingsDataset, queueServiceDb = 0) => {
-  const baseUrl = `http://localhost:${port}/`;
-  const queueServiceUrl = `redis://localhost:6379/${queueServiceDb}`;
+const clearAllData = async () => {
+  const datasets = await listDatasets();
+  for (let dataset of datasets) {
+    await clearDataset(dataset);
+  }
 
-  await clearQueue(queueServiceUrl);
+  await clearRedisDb(CONFIG.QUEUE_SERVICE_URL);
+  await clearRedisDb(CONFIG.REDIS_OIDC_PROVIDER_URL);
 
+  await clearMails();
+};
+
+const connectPodProvider = async () => {
+  // Connect to the Pod provider broker with a Redis transporter
   const broker = new ServiceBroker({
-    nodeID: `server${port}`,
-    middlewares: [
-      // Uncomment the next line run all tests with memory cacher
-      // CacherMiddleware({ type: 'Memory' }),
-      WebAclMiddleware({ baseUrl, podProvider: true }),
-      ObjectsWatcherMiddleware({ baseUrl, podProvider: true, postWithoutRecipients: true }),
-      AppControlMiddleware({ baseUrl })
-    ],
-    logger
+    nodeID: `test-node`,
+    logger: false,
+    transporter: CONFIG.REDIS_TRANSPORTER_URL,
+    serializer: new RdfJSONSerializer()
   });
 
-  broker.createService({
-    mixins: [CoreService],
-    settings: {
-      baseUrl,
-      baseDir: path.resolve(__dirname),
-      frontendUrl: 'https://example.app/',
-      triplestore: {
-        url: CONFIG.SPARQL_ENDPOINT,
-        user: CONFIG.JENA_USER,
-        password: CONFIG.JENA_PASSWORD,
-        fusekiBase: CONFIG.FUSEKI_BASE
-      },
-      queueServiceUrl,
-      oidcProvider: {
-        redisUrl: CONFIG.REDIS_OIDC_PROVIDER_URL
-      },
-      auth: {
-        accountsDataset: settingsDataset
-      },
-      settingsDataset,
-      notifications: {
-        mail: {
-          from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
-          transport: {
-            host: CONFIG.SMTP_HOST,
-            port: CONFIG.SMTP_PORT,
-            secure: CONFIG.SMTP_SECURE,
-            auth: {
-              user: CONFIG.SMTP_USER,
-              pass: CONFIG.SMTP_PASS
-            }
-          }
-        }
-      },
-      api: {
-        port
-      }
-    }
-  });
+  await broker.start();
 
-  broker.createService({ mixins: [AnnouncerService] });
+  // If the service is available, it means we are connected to the Pod provider broker
+  await broker.waitForServices(['ldp']);
 
-  broker.createService({ mixins: [ProfilesApp] });
+  // Reset internal cache (the channels have been deleted, but they are still in a this.channels array)
+  await broker.waitForServices(['solid-notifications.provider.webhook']);
+  await broker.call('solid-notifications.provider.webhook.resetCache');
 
   return broker;
 };
@@ -127,7 +93,7 @@ const initializeAppServer = async (port, mainDataset, settingsDataset, queueServ
   const baseUrl = `http://localhost:${port}/`;
   const queueServiceUrl = `redis://localhost:6379/${queueServiceDb}`;
 
-  await clearQueue(queueServiceUrl);
+  await clearRedisDb(queueServiceUrl);
 
   const broker = new ServiceBroker({
     nodeID: `server${port}`,
@@ -175,7 +141,7 @@ const initializeAppServer = async (port, mainDataset, settingsDataset, queueServ
   });
 
   broker.createService({
-    mixins: [NotificationListenerService],
+    mixins: [NotificationsListenerService],
     adapter: new TripleStoreAdapter({ type: 'WebhookChannelListener', dataset: settingsDataset }),
     settings: {
       baseUrl
@@ -211,7 +177,7 @@ const getAppAccessNeeds = async (actor, appUri) => {
   return [requiredAccessNeedGroup, optionalAccessNeedGroup];
 };
 
-const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRights) => {
+const installApp = async (actor, appUri, waitForAccept = true, acceptedAccessNeeds, acceptedSpecialRights) => {
   // If the accepted needs are not specified, use the app required access needs
   if (!acceptedAccessNeeds && !acceptedSpecialRights) {
     const [requiredAccessNeedGroup] = await getAppAccessNeeds(actor, appUri);
@@ -219,7 +185,10 @@ const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRig
     acceptedSpecialRights = requiredAccessNeedGroup['apods:hasSpecialRights'];
   }
 
-  await actor.call('activitypub.outbox.post', {
+  const publishedAfter = new Date().toISOString();
+
+  // Do not await here
+  actor.call('activitypub.outbox.post', {
     collectionUri: actor.outbox,
     type: 'apods:Install',
     object: appUri,
@@ -227,25 +196,36 @@ const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRig
     'apods:acceptedSpecialRights': acceptedSpecialRights
   });
 
-  do {
-    const outbox = await actor.call('activitypub.collection.get', {
-      resourceUri: actor.outbox,
-      page: 1
+  const createRegistrationActivity = await actor.call('activitypub.outbox.awaitActivity', {
+    collectionUri: actor.outbox,
+    matcher: {
+      type: ACTIVITY_TYPES.CREATE,
+      to: appUri
+    },
+    publishedAfter
+  });
+
+  console.log('createRegistrationActivity', createRegistrationActivity);
+
+  if (waitForAccept) {
+    await actor.call('activitypub.inbox.awaitActivity', {
+      collectionUri: actor.inbox,
+      matcher: {
+        type: ACTIVITY_TYPES.ACCEPT,
+        object: createRegistrationActivity.id
+      }
     });
+  }
 
-    const firstItem = outbox?.orderedItems[0];
-
-    if (firstItem.type === 'Create' && firstItem.to === appUri) {
-      return [firstItem.id, firstItem.object];
-    }
-    await delay(500);
-  } while (true);
+  return createRegistrationActivity;
 };
 
 module.exports = {
   listDatasets,
   clearDataset,
-  initialize,
+  clearRedisDb,
+  clearAllData,
+  connectPodProvider,
   initializeAppServer,
   getAppAccessNeeds,
   installApp

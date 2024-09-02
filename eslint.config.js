@@ -2,10 +2,10 @@ const eslintJs = require('@eslint/js');
 const prettier = require('eslint-plugin-prettier');
 const tsEslint = require('typescript-eslint');
 // const eslintJest = require('eslint-plugin-jest');
-const eslintTsRules = require('./conf/eslint-ts-rules');
-const eslintJsRules = require('./conf/eslint-js-rules');
-const eslintReactRules = require('./conf/eslint-react-rules');
-const eslintGeneralRules = require('./conf/eslint-general-rules');
+const eslintTsRules = require('./config/eslint/ts-rules');
+const eslintJsRules = require('./config/eslint/js-rules');
+const eslintReactRules = require('./config/eslint/react-rules');
+const eslintGeneralRules = require('./config/eslint/general-rules');
 const globals = require('globals');
 
 module.exports = tsEslint.config(
@@ -81,7 +81,7 @@ module.exports = tsEslint.config(
   },
   // Node globals
   {
-    files: ['packages/**', 'deploy/**', 'backend/**', 'tests/**', 'app-boilerplate/**', 'conf/*'],
+    files: ['app-framework/**', 'pod-provider/backend/**', 'tests/**', 'conf/*'],
     languageOptions: { globals: { ...globals.node } }
   },
   // Rules
@@ -91,7 +91,7 @@ module.exports = tsEslint.config(
   ...eslintTsRules,
   ...eslintJsRules,
   {
-    files: ['frontend/**']
+    files: ['pod-provider/frontend/**']
   },
   // Tests
   {

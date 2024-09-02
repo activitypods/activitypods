@@ -1,43 +1,27 @@
-const path = require('path');
 const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { initialize, clearDataset, listDatasets } = require('./initialize');
+const { connectPodProvider, clearAllData } = require('./initialize');
 
 jest.setTimeout(80000);
 
 const NUM_PODS = 1;
 
-const initializeBroker = async (port, accountsDataset) => {
-  const broker = await initialize(port, accountsDataset);
-
-  broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
-
-  await broker.start();
-
-  return broker;
-};
-
-describe('Test pods creation', mode => {
+describe('Test pods creation', () => {
   let actors = [],
-    broker,
+    podProvider,
     alice,
     projectUri;
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
+    await clearAllData();
 
-    broker = await initializeBroker(3000, 'settings');
+    podProvider = await connectPodProvider();
 
     for (let i = 1; i <= NUM_PODS; i++) {
-      broker[i] = broker;
-
       const actorData = require(`./data/actor${i}.json`);
-      const { webId } = await broker[i].call('auth.signup', actorData);
-      actors[i] = await broker[i].call(
+      const { webId } = await podProvider.call('auth.signup', actorData);
+      actors[i] = await podProvider.call(
         'activitypub.actor.awaitCreateComplete',
         {
           actorUri: webId,
@@ -46,7 +30,7 @@ describe('Test pods creation', mode => {
         { meta: { dataset: actorData.username } }
       );
       actors[i].call = (actionName, params, options = {}) =>
-        broker[i].call(actionName, params, {
+        podProvider.call(actionName, params, {
           ...options,
           meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
         });
@@ -56,7 +40,7 @@ describe('Test pods creation', mode => {
   }, 80000);
 
   afterAll(async () => {
-    await broker.stop();
+    await podProvider.stop();
   });
 
   test('Alice WebID has the required informations', async () => {

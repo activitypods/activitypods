@@ -1,9 +1,8 @@
-const path = require('path');
 const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { arrayOf } = require('@semapps/ldp');
-const { initialize, initializeAppServer, clearDataset, listDatasets, installApp } = require('./initialize');
+const { connectPodProvider, clearAllData, initializeAppServer, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 
@@ -13,7 +12,7 @@ const APP_URI = 'http://localhost:3001/app';
 const APP2_URI = 'http://localhost:3002/app';
 
 describe('Test app installation', () => {
-  let podServer,
+  let podProvider,
     alice,
     appServer,
     appServer2,
@@ -27,18 +26,13 @@ describe('Test app installation', () => {
     appRegistration;
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
+    await clearAllData();
 
-    podServer = await initialize(3000, 'settings');
-    podServer.loadService(path.resolve(__dirname, './services/profiles.app.js'));
-    await podServer.start();
+    podProvider = await connectPodProvider();
 
     const actorData = require(`./data/actor1.json`);
-    const { webId } = await podServer.call('auth.signup', actorData);
-    alice = await podServer.call(
+    const { webId } = await podProvider.call('auth.signup', actorData);
+    alice = await podProvider.call(
       'activitypub.actor.awaitCreateComplete',
       {
         actorUri: webId,
@@ -47,7 +41,7 @@ describe('Test app installation', () => {
       { meta: { dataset: actorData.username } }
     );
     alice.call = (actionName, params, options = {}) =>
-      podServer.call(actionName, params, {
+      podProvider.call(actionName, params, {
         ...options,
         meta: { ...options.meta, webId, dataset: alice.preferredUsername }
       });
@@ -60,7 +54,7 @@ describe('Test app installation', () => {
   }, 80000);
 
   afterAll(async () => {
-    await podServer.stop();
+    await podProvider.stop();
     await appServer.stop();
     await appServer2.stop();
   });
@@ -139,19 +133,21 @@ describe('Test app installation', () => {
   });
 
   test('User installs app and grants all access needs', async () => {
-    await alice.call('activitypub.outbox.post', {
-      collectionUri: alice.outbox,
-      type: 'apods:Install',
-      object: APP_URI,
-      'apods:acceptedAccessNeeds': [
-        requiredAccessNeedGroup['interop:hasAccessNeed'],
-        optionalAccessNeedGroup['interop:hasAccessNeed']
-      ],
-      'apods:acceptedSpecialRights': [
-        requiredAccessNeedGroup['apods:hasSpecialRights'],
-        optionalAccessNeedGroup['apods:hasSpecialRights']
-      ]
-    });
+    await expect(
+      alice.call('activitypub.outbox.post', {
+        collectionUri: alice.outbox,
+        type: 'apods:Install',
+        object: APP_URI,
+        'apods:acceptedAccessNeeds': [
+          requiredAccessNeedGroup['interop:hasAccessNeed'],
+          optionalAccessNeedGroup['interop:hasAccessNeed']
+        ],
+        'apods:acceptedSpecialRights': [
+          requiredAccessNeedGroup['apods:hasSpecialRights'],
+          optionalAccessNeedGroup['apods:hasSpecialRights']
+        ]
+      })
+    ).resolves.not.toThrow();
 
     let appRegistrationUri, creationActivityUri;
 
@@ -500,14 +496,16 @@ describe('Test app installation', () => {
   });
 
   test('User uninstalls app', async () => {
-    await alice.call('activitypub.outbox.post', {
-      collectionUri: alice.outbox,
-      type: ACTIVITY_TYPES.UNDO,
-      object: {
-        type: 'apods:Install',
-        object: APP_URI
-      }
-    });
+    await expect(
+      alice.call('activitypub.outbox.post', {
+        collectionUri: alice.outbox,
+        type: ACTIVITY_TYPES.UNDO,
+        object: {
+          type: 'apods:Install',
+          object: APP_URI
+        }
+      })
+    ).resolves.not.toThrow();
 
     let appRegistrationUri;
 
@@ -612,31 +610,30 @@ describe('Test app installation', () => {
   });
 
   test('User installs app and do not grant required access needs', async () => {
-    const [creationActivityUri, appRegistrationUri] = await installApp(
+    const createRegistrationActivity = await installApp(
       alice,
       APP_URI,
+      false,
       optionalAccessNeedGroup['interop:hasAccessNeed'],
       optionalAccessNeedGroup['apods:hasSpecialRights']
     );
 
-    await waitForExpect(async () => {
-      const inbox = await alice.call('activitypub.collection.get', {
-        resourceUri: alice.inbox,
-        page: 1
-      });
-
-      expect(inbox?.orderedItems[0]).toMatchObject({
-        type: ACTIVITY_TYPES.REJECT,
-        object: creationActivityUri,
-        summary: 'One or more required access needs have not been granted'
-      });
-    });
+    await expect(
+      alice.call('activitypub.inbox.awaitActivity', {
+        collectionUri: alice.inbox,
+        matcher: {
+          type: ACTIVITY_TYPES.REJECT,
+          object: createRegistrationActivity.id,
+          summary: 'One or more required access needs have not been granted'
+        }
+      })
+    ).resolves.not.toThrow();
 
     // The ApplicationRegistration should be deleted
     await waitForExpect(async () => {
       await expect(
         alice.call('ldp.resource.get', {
-          resourceUri: appRegistrationUri,
+          resourceUri: createRegistrationActivity.object,
           accept: MIME_TYPES.JSON
         })
       ).rejects.toThrow();
@@ -644,24 +641,15 @@ describe('Test app installation', () => {
   });
 
   test('User installs app and only grant required access needs', async () => {
-    const [creationActivityUri] = await installApp(
-      alice,
-      APP_URI,
-      requiredAccessNeedGroup['interop:hasAccessNeed'],
-      requiredAccessNeedGroup['apods:hasSpecialRights']
-    );
-
-    await waitForExpect(async () => {
-      const inbox = await alice.call('activitypub.collection.get', {
-        resourceUri: alice.inbox,
-        page: 1
-      });
-
-      expect(inbox?.orderedItems[0]).toMatchObject({
-        type: ACTIVITY_TYPES.ACCEPT,
-        object: creationActivityUri
-      });
-    });
+    await expect(
+      installApp(
+        alice,
+        APP_URI,
+        true,
+        requiredAccessNeedGroup['interop:hasAccessNeed'],
+        requiredAccessNeedGroup['apods:hasSpecialRights']
+      )
+    ).resolves.not.toThrow();
   });
 
   test('User installs app 2 which has same requirements', async () => {

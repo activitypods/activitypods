@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./config/docker/backend.dockerfile
+    image: activitypods/backend:${TAG:-latest}
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./config/docker/frontend.dockerfile
+    image: activitypods/frontend:${TAG:-latest}
+    env_file:
+      - ./frontend/.env
+
+  arena:
+    build:
+      context: .
+      dockerfile: ./config/docker/arena.dockerfile
+    image: activitypods/arena:${TAG:-latest}
+    environment:
+      REDIS_HOST: 'redis'

@@ -14,8 +14,7 @@
       "console": "integratedTerminal",
       "localRoot": "${workspaceFolder}",
       "remoteRoot": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/tests/.env",
-      "preLaunchTask": "Start test containers"
+      "envFile": "${workspaceFolder}/tests/.env"
     }
   ]
 }

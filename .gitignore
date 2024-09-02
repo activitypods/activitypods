@@ -3,7 +3,7 @@ node_modules
 /data
 yarn-error.log
 
-/app-boilerplate/backend/.env.local
+/pod-provider/backend/.env.local
 /app-boilerplate/backend/.env.*.local
 /app-boilerplate/backend/actors/
 /app-boilerplate/backend/jwt/*.key
@@ -15,3 +15,5 @@ yarn-error.log
 /app-boilerplate/frontend/yalc.lock
 
 /uploads
+
+/pod-provider/data

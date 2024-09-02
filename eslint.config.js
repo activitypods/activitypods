@@ -81,7 +81,7 @@ module.exports = tsEslint.config(
   },
   // Node globals
   {
-    files: ['packages/**', 'deploy/**', 'backend/**', 'tests/**', 'app-boilerplate/**', 'conf/*'],
+    files: ['app-framework/**', 'pod-provider/backend/**', 'tests/**', 'conf/*'],
     languageOptions: { globals: { ...globals.node } }
   },
   // Rules
@@ -91,7 +91,7 @@ module.exports = tsEslint.config(
   ...eslintTsRules,
   ...eslintJsRules,
   {
-    files: ['frontend/**']
+    files: ['pod-provider/frontend/**']
   },
   // Tests
   {

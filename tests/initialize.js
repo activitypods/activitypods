@@ -9,11 +9,11 @@ const { ProxyService } = require('@semapps/crypto');
 const { TripleStoreAdapter } = require('@semapps/triplestore');
 const { WebAclMiddleware } = require('@semapps/webacl');
 const { interop, oidc, notify, apods } = require('@semapps/ontologies');
-const { NotificationListenerService } = require('@activitypods/solid-notifications');
-const CONFIG = require('./config');
+const { NotificationsListenerService } = require('@semapps/solid');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const RdfJSONSerializer = require('../backend/RdfJSONSerializer');
+const RdfJSONSerializer = require('../pod-provider/backend/RdfJSONSerializer');
 const { clearMails } = require('./utils');
+const CONFIG = require('./config');
 
 Error.stackTraceLimit = Infinity;
 
@@ -141,7 +141,7 @@ const initializeAppServer = async (port, mainDataset, settingsDataset, queueServ
   });
 
   broker.createService({
-    mixins: [NotificationListenerService],
+    mixins: [NotificationsListenerService],
     adapter: new TripleStoreAdapter({ type: 'WebhookChannelListener', dataset: settingsDataset }),
     settings: {
       baseUrl

@@ -1,4 +1,4 @@
-const { AppService } = require('@activitypods/app');
+const { AppService } = require('../../app-framework/app');
 const { AS_PREFIX } = require('@semapps/activitypub');
 
 module.exports = {

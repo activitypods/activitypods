@@ -1,7 +1,13 @@
 {
   "name": "activitypods-frontend",
-  "version": "1.1.0",
-  "private": true,
+"version": "2.0.0-alpha.11",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "eject": "react-scripts eject",
+    "link-semapps-packages": "yalc link @semapps/activitypub-components @semapps/auth-provider @semapps/date-components @semapps/field-components @semapps/geo-components @semapps/input-components @semapps/list-components @semapps/markdown-components @semapps/semantic-data-provider",
+    "unlink-semapps-packages": "yalc remove --all && rm -rf node_modules/@semapps && yarn install --force"
+  },
   "dependencies": {
     "@mui/icons-material": "^5.14.13",
     "@mui/material": "^5.14.13",
@@ -42,13 +48,6 @@
     "react-scripts": "^5.0.1",
     "typescript": "^5.2.2",
     "yalc": "1.0.0-pre.53"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "eject": "react-scripts eject",
-    "link-semapps-packages": "yalc link @semapps/activitypub-components @semapps/auth-provider @semapps/date-components @semapps/field-components @semapps/geo-components @semapps/input-components @semapps/list-components @semapps/markdown-components @semapps/semantic-data-provider",
-    "unlink-semapps-packages": "yalc remove --all && rm -rf node_modules/@semapps && yarn install --force"
   },
   "browserslist": [
     ">0.2%",

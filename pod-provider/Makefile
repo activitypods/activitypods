@@ -22,7 +22,10 @@ compact-datasets:
 # Test
 
 start-test: 
-	$(DOCKER_COMPOSE_TEST) up -d
+	$(DOCKER_COMPOSE_TEST) up -d fuseki_test redis arena mailcatcher
+
+start-test-with-pod-provider: 
+	$(DOCKER_COMPOSE_TEST) up -d --build
 
 build-test: 
 	$(DOCKER_COMPOSE_TEST) build

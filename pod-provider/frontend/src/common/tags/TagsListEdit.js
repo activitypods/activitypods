@@ -14,7 +14,7 @@ import {
   Menu
 } from '@mui/material';
 import ControlPointIcon from '@mui/icons-material/ControlPoint';
-import EditIcon from '@mui/icons-material//Edit';
+import EditIcon from '@mui/icons-material/Edit';
 import { arrayFromLdField, colorFromString } from '../../utils';
 
 const colors = ['lightblue', 'lightgreen', 'lightpink', 'lightyellow', 'lightgrey'];

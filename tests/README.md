@@ -8,7 +8,7 @@ There is be two options for launching the Pod provider for tests:
 
 ### 1. Directly on the local machine
 
-Call `make start-test-no-provider` on the root directory to start all Docker containers (except the Pod provider container)
+Call `make start-test` on the root directory to start all Docker containers, except the Pod provider container.
 
 Call `yarn run test` from the /backend directory. This will use the `.env.test` file to start the Pod provider with the Jena Fuseki and Redis dataset (it is not the same one as if you run `yarn run dev`)
 
@@ -23,7 +23,7 @@ Disadvantages:
 
 ### 2. In a Docker container
 
-Call `make start-test` on the root directory to start all Docker containers, including the Pod provider container.
+Call `make start-test-with-pod-provider` on the root directory to start all Docker containers, including the Pod provider container.
 
 The Pod provider will be rebuilt (`yarn install` will be run only if the package.json file has been modified)
 
@@ -34,6 +34,7 @@ Advantages:
 
 Disadvantages:
 
+- You must restart the container when you do changes to the Pod provider code
 - Keeping symlinks is not possible, so you won't be able to modify SemApps packages and link them.
   - It may be possible with Yalc (which is already used on the SemApps frontend components)
 
@@ -55,7 +56,7 @@ Note that running all tests suites at the same time sometimes generate errors th
 
 We have configured the `launch.json` configuration file so that you can run tests with a single command, and it will do that in Debug mode.
 
-Just open the test suite you want to run, and press F4.
+Just open the test suite you want to run, and press F5.
 
 ### Run
 

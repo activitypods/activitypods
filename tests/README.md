@@ -1,5 +1,7 @@
 # Integration tests
 
+This directory contains code to automatically test ActivityPods' [Pod provider](../pod-provider/), as well as its [app framework](../app-framework/).
+
 ## Preparation
 
 Before running the tests, you need to launch the Pod provider, as well as various tools such as Jena Fuseki, Redis and Mailcatcher. The tests will run in an independant process and connect to the Pod provider [thanks to Moleculer networking abilities](https://moleculer.services/docs/0.14/networking). You will be able to interact with the ServiceBroker of the Pod provider, call any services, etc.
@@ -57,8 +59,6 @@ Note that running all tests suites at the same time sometimes generate errors th
 We have configured the `launch.json` configuration file so that you can run tests with a single command, and it will do that in Debug mode.
 
 Just open the test suite you want to run, and press F5.
-
-### Run
 
 ## Data visualization tools
 

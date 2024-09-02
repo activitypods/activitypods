@@ -1,4 +1,5 @@
 {
+  "private": true,
   "scripts": {
     "version": "lerna version --force-publish='*' --exact",
     "publish": "lerna publish from-package --dist-tag latest",

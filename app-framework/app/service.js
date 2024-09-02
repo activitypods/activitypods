@@ -1,5 +1,4 @@
 const QueueMixin = require('moleculer-bull');
-const { triple, namedNode } = require('@rdfjs/data-model');
 const { arrayOf } = require('@semapps/ldp');
 const AccessDescriptionSetService = require('./services/registration/access-description-sets');
 const AccessNeedsService = require('./services/registration/access-needs');

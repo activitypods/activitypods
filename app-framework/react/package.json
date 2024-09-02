@@ -1,0 +1,38 @@
+{
+  "name": "@activitypods/react",
+  "version": "2.0.0-alpha.12",
+  "description": "React-Admin components for ActivityPods apps",
+  "license": "Apache-2.0",
+  "author": "Virtual Assembly",
+  "source": "src/index.ts",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.es.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "parcel build && yalc publish --push --changed",
+    "watch": "nodemon --ext ts,tsx,js --watch src --exec 'yarn build'"
+  },
+  "dependencies": {
+    "@mui/icons-material": "^5.14.13",
+    "@mui/material": "^5.14.13",
+    "@semapps/activitypub-components": "0.8.0",
+    "@semapps/semantic-data-provider": "0.8.0",
+    "react": "^18.2.0",
+    "react-admin": "^4.11.0",
+    "react-router-dom": "^6.1.0",
+    "url-join": "^4.0.1"
+  },
+  "devDependencies": {
+    "@parcel/packager-ts": "2.12.0",
+    "@parcel/transformer-typescript-types": "2.12.0",
+    "@types/url-join": "^4.0.1",
+    "typescript": ">=3.0.0",
+    "yalc": "^1.0.0-pre.53"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

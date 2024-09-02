@@ -11,7 +11,7 @@ const globals = require('globals');
 module.exports = tsEslint.config(
   // Ignore
   {
-    ignores: ['**/dist/**', 'data/**']
+    ignores: ['**/dist/*', 'pod-provider/data/**']
   },
   // Globals
   {
@@ -81,7 +81,7 @@ module.exports = tsEslint.config(
   },
   // Node globals
   {
-    files: ['app-framework/**', 'pod-provider/backend/**', 'tests/**', 'conf/*'],
+    files: ['app-framework/app/**', 'pod-provider/backend/**', 'tests/**', 'conf/*'],
     languageOptions: { globals: { ...globals.node } }
   },
   // Rules

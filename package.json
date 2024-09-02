@@ -1,7 +1,7 @@
 {
   "scripts": {
     "prettier": "prettier --write '**/*.{js,ts,json,tsx,jsx}'",
-    "preinstall": "git config core.hooksPath .git-hooks",
+    "preinstall": "git config core.hooksPath config/git-hooks",
     "lint": "eslint .",
     "lint-files": "eslint",
     "typecheck": "tsc --noEmit"

@@ -11,7 +11,7 @@ RUN yarn global add pm2
 
 ADD docker/ecosystem.config.js /app/backend
 
-# Install packages and immediately remove cache to reduce layer size
+# Install packages first so that Docker doesn't run `yarn install` if the packages haven't changed
 # See https://making.close.com/posts/reduce-docker-image-size
 ADD backend/package.json /app/backend
 ADD backend/yarn.lock /app/backend

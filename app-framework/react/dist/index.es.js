@@ -1,13 +1,13 @@
-import {useState as $hgUW1$useState, useCallback as $hgUW1$useCallback, useEffect as $hgUW1$useEffect, useLayoutEffect as $hgUW1$useLayoutEffect, Fragment as $hgUW1$Fragment} from "react";
-import $hgUW1$urljoin from "url-join";
-import {useGetIdentity as $hgUW1$useGetIdentity, useNotify as $hgUW1$useNotify, useLocaleState as $hgUW1$useLocaleState, useLogin as $hgUW1$useLogin, useLogout as $hgUW1$useLogout, useTranslate as $hgUW1$useTranslate, useRedirect as $hgUW1$useRedirect} from "react-admin";
-import {useNodeinfo as $hgUW1$useNodeinfo} from "@semapps/activitypub-components";
-import {jsx as $hgUW1$jsx, jsxs as $hgUW1$jsxs} from "react/jsx-runtime";
-import {useSearchParams as $hgUW1$useSearchParams, useNavigate as $hgUW1$useNavigate} from "react-router-dom";
-import {Box as $hgUW1$Box, Card as $hgUW1$Card, Avatar as $hgUW1$Avatar, Typography as $hgUW1$Typography, List as $hgUW1$List, Divider as $hgUW1$Divider, ListItem as $hgUW1$ListItem, ListItemButton as $hgUW1$ListItemButton, ListItemAvatar as $hgUW1$ListItemAvatar, ListItemText as $hgUW1$ListItemText} from "@mui/material";
-import $hgUW1$muiiconsmaterialLock from "@mui/icons-material/Lock";
-import $hgUW1$muiiconsmaterialStorage from "@mui/icons-material/Storage";
-import {useDataModels as $hgUW1$useDataModels} from "@semapps/semantic-data-provider";
+import {useState as $iLwJW$useState, useCallback as $iLwJW$useCallback, useEffect as $iLwJW$useEffect, useLayoutEffect as $iLwJW$useLayoutEffect, Fragment as $iLwJW$Fragment} from "react";
+import $iLwJW$urljoin from "url-join";
+import {useGetIdentity as $iLwJW$useGetIdentity, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useLogout as $iLwJW$useLogout, useTranslate as $iLwJW$useTranslate, useRedirect as $iLwJW$useRedirect} from "react-admin";
+import {useNodeinfo as $iLwJW$useNodeinfo} from "@semapps/activitypub-components";
+import {jsx as $iLwJW$jsx, jsxs as $iLwJW$jsxs} from "react/jsx-runtime";
+import {useSearchParams as $iLwJW$useSearchParams, useNavigate as $iLwJW$useNavigate} from "react-router-dom";
+import {Box as $iLwJW$Box, Card as $iLwJW$Card, Avatar as $iLwJW$Avatar, Typography as $iLwJW$Typography, List as $iLwJW$List, Divider as $iLwJW$Divider, ListItem as $iLwJW$ListItem, ListItemButton as $iLwJW$ListItemButton, ListItemAvatar as $iLwJW$ListItemAvatar, ListItemText as $iLwJW$ListItemText} from "@mui/material";
+import $iLwJW$muiiconsmaterialLock from "@mui/icons-material/Lock";
+import $iLwJW$muiiconsmaterialStorage from "@mui/icons-material/Storage";
+import {useDataModels as $iLwJW$useDataModels} from "@semapps/semantic-data-provider";
 
 // Components
 
@@ -18,17 +18,17 @@ import {useDataModels as $hgUW1$useDataModels} from "@semapps/semantic-data-prov
  * Call the /.well-known/app-status endpoint to check the status of the app
  * If the app backend is offline, display an error message
  * If the app need to be upgraded, redirect the user to the /authorize page
- */ const $108dda5a21c124cd$var$BackgroundChecks = ({ clientId: clientId, children: children })=>{
-    const { data: identity, isLoading: isIdentityLoading } = (0, $hgUW1$useGetIdentity)();
-    const notify = (0, $hgUW1$useNotify)();
-    const [appStatus, setAppStatus] = (0, $hgUW1$useState)();
-    const nodeinfo = (0, $hgUW1$useNodeinfo)(identity?.id ? new URL(identity?.id).host : undefined);
+ */ const $2957839fe06af793$var$BackgroundChecks = ({ clientId: clientId, children: children })=>{
+    const { data: identity, isLoading: isIdentityLoading } = (0, $iLwJW$useGetIdentity)();
+    const notify = (0, $iLwJW$useNotify)();
+    const [appStatus, setAppStatus] = (0, $iLwJW$useState)();
+    const nodeinfo = (0, $iLwJW$useNodeinfo)(identity?.id ? new URL(identity?.id).host : undefined);
     const isLoggedOut = !isIdentityLoading && !identity?.id;
-    const checkAppStatus = (0, $hgUW1$useCallback)(async ()=>{
+    const checkAppStatus = (0, $iLwJW$useCallback)(async ()=>{
         // Only proceed if the tab is visible
         if (!document.hidden && identity?.id) {
             const oidcIssuer = new URL(identity?.id).origin;
-            const endpointUrl = (0, $hgUW1$urljoin)(oidcIssuer, ".well-known/app-status");
+            const endpointUrl = (0, $iLwJW$urljoin)(oidcIssuer, ".well-known/app-status");
             const token = localStorage.getItem("token");
             try {
                 // Don't use dataProvider.fetch as it would go through the proxy
@@ -68,7 +68,7 @@ import {useDataModels as $hgUW1$useDataModels} from "@semapps/semantic-data-prov
         setAppStatus,
         document
     ]);
-    (0, $hgUW1$useEffect)(()=>{
+    (0, $iLwJW$useEffect)(()=>{
         if (identity?.id && nodeinfo) {
             checkAppStatus();
             const timerId = setInterval(checkAppStatus, 120000);
@@ -79,7 +79,7 @@ import {useDataModels as $hgUW1$useDataModels} from "@semapps/semantic-data-prov
         nodeinfo,
         checkAppStatus
     ]);
-    (0, $hgUW1$useLayoutEffect)(()=>{
+    (0, $iLwJW$useLayoutEffect)(()=>{
         document.addEventListener("visibilitychange", checkAppStatus);
         return ()=>document.removeEventListener("visibilitychange", checkAppStatus);
     }, [
@@ -89,7 +89,7 @@ import {useDataModels as $hgUW1$useDataModels} from "@semapps/semantic-data-prov
     if (isLoggedOut || appStatus?.onlineBackend === true && appStatus?.installed === true && appStatus?.upgradeNeeded === false) return children;
     else return null;
 };
-var $108dda5a21c124cd$export$2e2bcd8739ae039 = $108dda5a21c124cd$var$BackgroundChecks;
+var $2957839fe06af793$export$2e2bcd8739ae039 = $2957839fe06af793$var$BackgroundChecks;
 
 
 
@@ -103,19 +103,19 @@ var $108dda5a21c124cd$export$2e2bcd8739ae039 = $108dda5a21c124cd$var$BackgroundC
  * Display a list of Pod providers that we can log in
  * This list is taken from the https://activitypods.org/data/pod-providers endpoint
  * It is possible to replace it with a custom list of Pod providers
- */ const $19bdbb31e5826e00$var$PodLoginPageView = ({ text: text, customPodProviders: customPodProviders })=>{
-    const notify = (0, $hgUW1$useNotify)();
-    const [searchParams] = (0, $hgUW1$useSearchParams)();
-    const [locale] = (0, $hgUW1$useLocaleState)();
-    const login = (0, $hgUW1$useLogin)();
-    const logout = (0, $hgUW1$useLogout)();
-    const translate = (0, $hgUW1$useTranslate)();
-    const redirect = (0, $hgUW1$useRedirect)();
-    const { data: identity, isLoading: isIdentityLoading } = (0, $hgUW1$useGetIdentity)();
-    const [podProviders, setPodProviders] = (0, $hgUW1$useState)(customPodProviders || []);
+ */ const $e235591816215308$var$PodLoginPageView = ({ text: text, customPodProviders: customPodProviders })=>{
+    const notify = (0, $iLwJW$useNotify)();
+    const [searchParams] = (0, $iLwJW$useSearchParams)();
+    const [locale] = (0, $iLwJW$useLocaleState)();
+    const login = (0, $iLwJW$useLogin)();
+    const logout = (0, $iLwJW$useLogout)();
+    const translate = (0, $iLwJW$useTranslate)();
+    const redirect = (0, $iLwJW$useRedirect)();
+    const { data: identity, isLoading: isIdentityLoading } = (0, $iLwJW$useGetIdentity)();
+    const [podProviders, setPodProviders] = (0, $iLwJW$useState)(customPodProviders || []);
     const isSignup = searchParams.has("signup");
     const redirectUrl = searchParams.get("redirect");
-    (0, $hgUW1$useEffect)(()=>{
+    (0, $iLwJW$useEffect)(()=>{
         (async ()=>{
             if (podProviders.length < 1) {
                 const results = await fetch("https://activitypods.org/data/pod-providers", {
@@ -139,7 +139,7 @@ var $108dda5a21c124cd$export$2e2bcd8739ae039 = $108dda5a21c124cd$var$BackgroundC
         notify,
         locale
     ]);
-    (0, $hgUW1$useEffect)(()=>{
+    (0, $iLwJW$useEffect)(()=>{
         if (searchParams.has("iss")) // Automatically login if Pod provider is known
         login({
             issuer: searchParams.get("iss")
@@ -158,31 +158,31 @@ var $108dda5a21c124cd$export$2e2bcd8739ae039 = $108dda5a21c124cd$var$BackgroundC
         redirectUrl
     ]);
     if (isIdentityLoading) return null;
-    return /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$Box), {
+    return /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Box), {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        children: /*#__PURE__*/ (0, $hgUW1$jsxs)((0, $hgUW1$Card), {
+        children: /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$Card), {
             sx: {
                 minWidth: 300,
                 maxWidth: 350,
                 marginTop: "6em"
             },
             children: [
-                /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$Box), {
+                /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Box), {
                     sx: {
                         margin: "1em",
                         display: "flex",
                         justifyContent: "center"
                     },
-                    children: /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$Avatar), {
-                        children: /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$muiiconsmaterialLock), {})
+                    children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Avatar), {
+                        children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$muiiconsmaterialLock), {})
                     })
                 }),
-                /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$Box), {
+                /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Box), {
                     pl: 2,
                     pr: 2,
-                    children: /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$Typography), {
+                    children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Typography), {
                         variant: "body2",
                         sx: {
                             textAlign: "center",
@@ -191,30 +191,30 @@ var $108dda5a21c124cd$export$2e2bcd8739ae039 = $108dda5a21c124cd$var$BackgroundC
                         children: text || translate("auth.message.choose_pod_provider")
                     })
                 }),
-                /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$Box), {
+                /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Box), {
                     m: 2,
-                    children: /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$List), {
+                    children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$List), {
                         sx: {
                             paddingTop: 0,
                             paddingBottom: 0
                         },
-                        children: podProviders.map((podProvider, i)=>/*#__PURE__*/ (0, $hgUW1$jsxs)((0, $hgUW1$Fragment), {
+                        children: podProviders.map((podProvider, i)=>/*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$Fragment), {
                                 children: [
-                                    /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$Divider), {}),
-                                    /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$ListItem), {
-                                        children: /*#__PURE__*/ (0, $hgUW1$jsxs)((0, $hgUW1$ListItemButton), {
+                                    /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Divider), {}),
+                                    /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItem), {
+                                        children: /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$ListItemButton), {
                                             onClick: ()=>login({
                                                     issuer: podProvider["apods:baseUrl"],
                                                     redirect: redirectUrl || undefined,
                                                     isSignup: isSignup
                                                 }),
                                             children: [
-                                                /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$ListItemAvatar), {
-                                                    children: /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$Avatar), {
-                                                        children: /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$muiiconsmaterialStorage), {})
+                                                /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemAvatar), {
+                                                    children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Avatar), {
+                                                        children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$muiiconsmaterialStorage), {})
                                                     })
                                                 }),
-                                                /*#__PURE__*/ (0, $hgUW1$jsx)((0, $hgUW1$ListItemText), {
+                                                /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemText), {
                                                     primary: new URL(podProvider["apods:baseUrl"]).host,
                                                     secondary: podProvider["apods:area"]
                                                 })
@@ -229,13 +229,13 @@ var $108dda5a21c124cd$export$2e2bcd8739ae039 = $108dda5a21c124cd$var$BackgroundC
         })
     });
 };
-var $19bdbb31e5826e00$export$2e2bcd8739ae039 = $19bdbb31e5826e00$var$PodLoginPageView;
+var $e235591816215308$export$2e2bcd8739ae039 = $e235591816215308$var$PodLoginPageView;
 
 
 
 
 
-const $b95f7ef91db4a4a8$var$prefix = (uri, ontologies)=>{
+const $1a88c39afebe872d$var$prefix = (uri, ontologies)=>{
     if (!uri) return;
     if (!uri.startsWith("http")) return uri; // If it is already prefixed
     const ontology = ontologies.find((o)=>uri.startsWith(o.url));
@@ -248,13 +248,13 @@ const $b95f7ef91db4a4a8$var$prefix = (uri, ontologies)=>{
  * If a `uri` search param is passed, redirect to the resource's show page
  * If no matching types are found, simply redirect to the homepage
  * This page is called from the data browser in the Pod provider
- */ const $b95f7ef91db4a4a8$var$RedirectPage = ({ ontologies: ontologies })=>{
-    const dataModels = (0, $hgUW1$useDataModels)();
-    const navigate = (0, $hgUW1$useNavigate)();
-    const [searchParams] = (0, $hgUW1$useSearchParams)();
-    (0, $hgUW1$useEffect)(()=>{
+ */ const $1a88c39afebe872d$var$RedirectPage = ({ ontologies: ontologies })=>{
+    const dataModels = (0, $iLwJW$useDataModels)();
+    const navigate = (0, $iLwJW$useNavigate)();
+    const [searchParams] = (0, $iLwJW$useSearchParams)();
+    (0, $iLwJW$useEffect)(()=>{
         if (dataModels) {
-            const prefixedType = $b95f7ef91db4a4a8$var$prefix(searchParams.get("type"), ontologies);
+            const prefixedType = $1a88c39afebe872d$var$prefix(searchParams.get("type"), ontologies);
             const resource = prefixedType && Object.keys(dataModels).find((key)=>dataModels[key].types && dataModels[key].types.includes(prefixedType));
             if (searchParams.has("uri")) navigate(`/${resource}/${encodeURIComponent(searchParams.get("uri"))}${searchParams.get("mode") === "show" ? "/show" : ""}`);
             else if (resource) navigate(`/${resource}`);
@@ -267,10 +267,10 @@ const $b95f7ef91db4a4a8$var$prefix = (uri, ontologies)=>{
     ]);
     return null;
 };
-var $b95f7ef91db4a4a8$export$2e2bcd8739ae039 = $b95f7ef91db4a4a8$var$RedirectPage;
+var $1a88c39afebe872d$export$2e2bcd8739ae039 = $1a88c39afebe872d$var$RedirectPage;
 
 
 
 
-export {$108dda5a21c124cd$export$2e2bcd8739ae039 as BackgroundChecks, $19bdbb31e5826e00$export$2e2bcd8739ae039 as PodLoginPage, $b95f7ef91db4a4a8$export$2e2bcd8739ae039 as RedirectPage};
+export {$2957839fe06af793$export$2e2bcd8739ae039 as BackgroundChecks, $e235591816215308$export$2e2bcd8739ae039 as PodLoginPage, $1a88c39afebe872d$export$2e2bcd8739ae039 as RedirectPage};
 //# sourceMappingURL=index.es.js.map

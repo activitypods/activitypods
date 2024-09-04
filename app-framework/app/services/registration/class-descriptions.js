@@ -12,10 +12,7 @@ module.exports = {
     activateTombstones: false
   },
   async started() {
-    await this.broker.call('ontologies.register', {
-      ...skos,
-      overwrite: true
-    });
+    await this.broker.call('ontologies.register', skos);
   },
   actions: {
     put() {

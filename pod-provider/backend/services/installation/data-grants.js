@@ -109,7 +109,8 @@ module.exports = {
           if (prefix) {
             const namespace = await ctx.call('ontologies.findNamespace', { prefix });
 
-            await ctx.call('ontologies.register', { prefix, namespace });
+            // We only want to persist custom ontologies (not used by core services)
+            await ctx.call('ontologies.register', { prefix, namespace, persist: true });
 
             ontology = { prefix, namespace };
           }

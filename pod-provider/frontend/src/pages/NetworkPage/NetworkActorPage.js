@@ -32,7 +32,11 @@ const NetworkActorPage = () => {
   const [actorUri, setActorUri] = useState();
 
   useEffect(() => {
-    webfinger.fetch(webfingerId).then(uri => setActorUri(uri));
+    if (webfingerId?.startsWith('http')) {
+      setActorUri(webfingerId);
+    } else {
+      webfinger.fetch(webfingerId).then(uri => setActorUri(uri));
+    }
   }, [webfinger, webfingerId, setActorUri]);
 
   const { data: actor } = useGetOne('Actor', { id: actorUri }, { enabled: !!actorUri });

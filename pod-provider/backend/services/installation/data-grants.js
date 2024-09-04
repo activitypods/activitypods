@@ -87,6 +87,9 @@ module.exports = {
         const resourceType = resource['apods:registeredClass'];
         const accessMode = arrayOf(resource['interop:accessMode']);
 
+        if (!isURL(resourceType))
+          throw new Error(`DataGrant apods:registeredClass property must be a full URI. Received ${resourceType}`);
+
         // Match a string of type ldp:Container
         const regex = /^([^:]+):([^:]+)$/gm;
 

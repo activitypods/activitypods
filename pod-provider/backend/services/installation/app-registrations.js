@@ -44,13 +44,20 @@ module.exports = {
                 dataGrantsUris.push(dataGrant.id);
               } else {
                 const accessNeed = await ctx.call('ldp.remote.get', { resourceUri: accessNeedUri });
+
+                // The data-grants.post before hook requires an expanded type. Expand it now since we have the context.
+                const [expandedRegisteredClass] = await ctx.call('jsonld.parser.expandTypes', {
+                  types: [accessNeed['apods:registeredClass']],
+                  context: accessNeed['@context']
+                });
+
                 dataGrantsUris.push(
                   await ctx.call('data-grants.post', {
                     resource: {
                       type: 'interop:DataGrant',
                       'interop:dataOwner': podOwner,
                       'interop:grantee': appUri,
-                      'apods:registeredClass': accessNeed['apods:registeredClass'],
+                      'apods:registeredClass': expandedRegisteredClass,
                       'interop:accessMode': accessNeed['interop:accessMode'],
                       'interop:scopeOfGrant': 'interop:All',
                       'interop:satisfiesAccessNeed': accessNeedUri

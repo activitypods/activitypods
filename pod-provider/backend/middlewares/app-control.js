@@ -11,7 +11,9 @@ const DEFAULT_ALLOWED_TYPES = [
   'OrderedCollection',
   'Tombstone',
   'semapps:File',
-  'acl:Authorization'
+  'acl:Authorization',
+  'notify:WebSocketChannel2023',
+  'notify:WebhookChannel2023'
 ];
 
 // TODO use cache to improve performances
@@ -82,14 +84,11 @@ const AppControlMiddleware = ({ baseUrl }) => ({
 
         // Ensure the application has the right to create this resource
         if (ctx.params.method === 'POST') {
-          const resource = await ctx.call('ldp.remote.getNetwork', { resourceUri: url, webId: podOwner });
-          if (hasType(resource, 'ldp:Container')) {
-            throw new E.ForbiddenError(`Cannot post to ${url} because it is not a container`);
-          }
+          const resource = JSON.parse(ctx.params.body);
 
           const resourceTypes = await ctx.call('jsonld.parser.expandTypes', {
-            types: ctx.params.body.type || ctx.params.body['@type'],
-            context: ctx.params.body['@context']
+            types: resource.type || resource['@type'],
+            context: resource['@context']
           });
 
           const allowedTypes = await getAllowedTypes(ctx, appUri, podOwner, 'acl:Write');
@@ -115,7 +114,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
             : result.type || result['@type'];
 
           resourceTypes = await ctx.call('jsonld.parser.expandTypes', {
-            types: resourceTypes,
+            types: arrayOf(resourceTypes),
             context: result['@context']
           });
 

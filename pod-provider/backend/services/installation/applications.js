@@ -49,7 +49,7 @@ module.exports = {
 
           const [appExpandedType] = await ctx.call('jsonld.parser.expandTypes', {
             types: [classDescription['apods:describedClass']],
-            contenxt: classDescription['@context']
+            context: classDescription['@context']
           });
 
           if (expandedType === appExpandedType) {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useLayoutEffect } from 'react';
+import urlJoin from 'url-join';
 import ErrorMessage from './ErrorMessage';
 
 const BackgroundChecks = ({ children }) => {
@@ -8,7 +9,7 @@ const BackgroundChecks = ({ children }) => {
     // Only proceed if the tab is visible
     if (!document.hidden) {
       try {
-        const response = await fetch(process.env.REACT_APP_CONFIG_URL);
+        const response = await fetch(urlJoin(CONFIG.BACKEND_URL, '.well-known/config.js'));
         setIsOnline(response.ok);
       } catch (e) {
         setIsOnline(false);

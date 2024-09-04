@@ -1,3 +1,4 @@
+const path = require('path');
 const urlJoin = require('url-join');
 const { arrayOf } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
@@ -93,7 +94,10 @@ module.exports = {
       });
 
       const announcersGroupUri = getAnnouncersGroupUri(objectUri);
-      await ctx.call('webacl.group.create', { groupUri: announcersGroupUri, webId: object['dc:creator'] });
+      const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcersGroupUri, webId: 'system' });
+      if (!groupExist) {
+        await ctx.call('webacl.group.create', { groupUri: announcersGroupUri, webId: object['dc:creator'] });
+      }
 
       // Give read rights to announcers for the list of announces
       await ctx.call('webacl.resource.addRights', {
@@ -191,7 +195,7 @@ module.exports = {
               this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${expandedType}`);
 
               // Create the container and attach it to its parent(s)
-              const podUrl = await ctx.call('pod.getUrl', { webId });
+              const podUrl = await ctx.call('pod.getUrl', { webId: recipientUri });
               containersUris[0] = urlJoin(podUrl, containerPath);
               await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId: recipientUri });
 

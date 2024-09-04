@@ -1,13 +1,16 @@
-import {useState as $iLwJW$useState, useCallback as $iLwJW$useCallback, useEffect as $iLwJW$useEffect, useLayoutEffect as $iLwJW$useLayoutEffect, Fragment as $iLwJW$Fragment} from "react";
+import {useState as $iLwJW$useState, useCallback as $iLwJW$useCallback, useEffect as $iLwJW$useEffect, useLayoutEffect as $iLwJW$useLayoutEffect, Fragment as $iLwJW$Fragment, useMemo as $iLwJW$useMemo} from "react";
 import $iLwJW$urljoin from "url-join";
-import {useGetIdentity as $iLwJW$useGetIdentity, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useLogout as $iLwJW$useLogout, useTranslate as $iLwJW$useTranslate, useRedirect as $iLwJW$useRedirect} from "react-admin";
-import {useNodeinfo as $iLwJW$useNodeinfo} from "@semapps/activitypub-components";
-import {jsx as $iLwJW$jsx, jsxs as $iLwJW$jsxs} from "react/jsx-runtime";
+import {useGetIdentity as $iLwJW$useGetIdentity, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useLogout as $iLwJW$useLogout, useTranslate as $iLwJW$useTranslate, useRedirect as $iLwJW$useRedirect, useRecordContext as $iLwJW$useRecordContext, Button as $iLwJW$Button, useGetList as $iLwJW$useGetList} from "react-admin";
+import {useNodeinfo as $iLwJW$useNodeinfo, useCollection as $iLwJW$useCollection, useOutbox as $iLwJW$useOutbox, ACTIVITY_TYPES as $iLwJW$ACTIVITY_TYPES} from "@semapps/activitypub-components";
+import {jsx as $iLwJW$jsx, jsxs as $iLwJW$jsxs, Fragment as $iLwJW$Fragment1} from "react/jsx-runtime";
 import {useSearchParams as $iLwJW$useSearchParams, useNavigate as $iLwJW$useNavigate} from "react-router-dom";
-import {Box as $iLwJW$Box, Card as $iLwJW$Card, Avatar as $iLwJW$Avatar, Typography as $iLwJW$Typography, List as $iLwJW$List, Divider as $iLwJW$Divider, ListItem as $iLwJW$ListItem, ListItemButton as $iLwJW$ListItemButton, ListItemAvatar as $iLwJW$ListItemAvatar, ListItemText as $iLwJW$ListItemText} from "@mui/material";
+import {Box as $iLwJW$Box, Card as $iLwJW$Card, Avatar as $iLwJW$Avatar, Typography as $iLwJW$Typography, List as $iLwJW$List, Divider as $iLwJW$Divider, ListItem as $iLwJW$ListItem, ListItemButton as $iLwJW$ListItemButton, ListItemAvatar as $iLwJW$ListItemAvatar, ListItemText as $iLwJW$ListItemText, useMediaQuery as $iLwJW$useMediaQuery, Dialog as $iLwJW$Dialog, DialogTitle as $iLwJW$DialogTitle, DialogContent as $iLwJW$DialogContent, DialogActions as $iLwJW$DialogActions, Button as $iLwJW$Button1, TextField as $iLwJW$TextField, CircularProgress as $iLwJW$CircularProgress, Switch as $iLwJW$Switch} from "@mui/material";
 import $iLwJW$muiiconsmaterialLock from "@mui/icons-material/Lock";
 import $iLwJW$muiiconsmaterialStorage from "@mui/icons-material/Storage";
 import {useDataModels as $iLwJW$useDataModels} from "@semapps/semantic-data-provider";
+import $iLwJW$muiiconsmaterialShare from "@mui/icons-material/Share";
+import $iLwJW$muistylesmakeStyles from "@mui/styles/makeStyles";
+import $iLwJW$muiiconsmaterialGroup from "@mui/icons-material/Group";
 
 // Components
 
@@ -272,5 +275,670 @@ var $1a88c39afebe872d$export$2e2bcd8739ae039 = $1a88c39afebe872d$var$RedirectPag
 
 
 
-export {$2957839fe06af793$export$2e2bcd8739ae039 as BackgroundChecks, $e235591816215308$export$2e2bcd8739ae039 as PodLoginPage, $1a88c39afebe872d$export$2e2bcd8739ae039 as RedirectPage};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const $93d7a9f3166de761$export$1b2abdd92765429 = (uri)=>{
+    const url = new URL(uri);
+    const username = url.pathname.split("/")[1];
+    return "@" + username + "@" + url.host;
+};
+const $93d7a9f3166de761$export$e57ff0f701c44363 = (value)=>{
+    // If the field is null-ish, we suppose there are no values.
+    if (!value) return [];
+    // Return as is.
+    if (Array.isArray(value)) return value;
+    // Single value is made an array.
+    return [
+        value
+    ];
+};
+
+
+/**
+ * @typedef {import("./GroupContactsItem").InvitationState} InvitationState
+ */ const $3d109438326dd070$var$useStyles = (0, $iLwJW$muistylesmakeStyles)((theme)=>({
+        listItem: {
+            paddingLeft: 0,
+            paddingRight: 0
+        },
+        primaryText: {
+            width: "30%",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            flexBasis: "100%"
+        },
+        secondaryText: {
+            textAlign: "center",
+            width: "60%",
+            fontStyle: "italic",
+            color: "grey"
+        },
+        avatarItem: {
+            minWidth: 50
+        },
+        avatar: {
+            backgroundImage: `radial-gradient(circle at 50% 3em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`
+        }
+    }));
+/**
+ * @param {Object} props
+ * @param {import("react-admin").Record} props.record
+ * @param {InvitationState} [props.invitation]
+ * @param {(invitations: Record<string, InvitationState>) => void} props.onChange
+ * @param {boolean} props.isCreator
+ */ const $3d109438326dd070$var$ContactItem = ({ record: record, invitation: invitation, onChange: onChange, isCreator: isCreator })=>{
+    const classes = $3d109438326dd070$var$useStyles();
+    const translate = (0, $iLwJW$useTranslate)();
+    // The invitation may still be undefined. In that case, create a default one.
+    // TODO: Maybe, this should be handled in the ShareDialog instead?
+    const invitationState = invitation || {
+        canView: false,
+        canShare: false,
+        viewReadonly: false,
+        shareReadonly: !isCreator
+    };
+    const changeCanView = ()=>{
+        const newViewState = !invitationState.canView;
+        onChange({
+            [record.describes]: {
+                ...invitationState,
+                canView: newViewState,
+                // Set to false, if the user can't view the record anymore.
+                canShare: newViewState && invitationState.canShare
+            }
+        });
+    };
+    const changeCanShare = ()=>{
+        const newShareState = !invitationState.canShare;
+        onChange({
+            [record.describes]: {
+                ...invitationState,
+                canShare: newShareState,
+                // Set to true, if the user can share the record.
+                canView: newShareState || invitationState.canView
+            }
+        });
+    };
+    return /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$ListItem), {
+        className: classes.listItem,
+        children: [
+            /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemAvatar), {
+                className: classes.avatarItem,
+                children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Avatar), {
+                    src: record?.["vcard:photo"],
+                    className: classes.avatar,
+                    children: record["vcard:given-name"]?.[0]
+                })
+            }),
+            /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemText), {
+                className: classes.primaryText,
+                primary: record["vcard:given-name"],
+                secondary: (0, $93d7a9f3166de761$export$1b2abdd92765429)(record.describes)
+            }),
+            /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemText), {
+                className: classes.secondaryText,
+                primary: translate("apods.permission.view"),
+                secondary: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Switch), {
+                    size: "small",
+                    checked: invitationState.canView || invitationState.canShare,
+                    disabled: invitationState.viewReadonly,
+                    onClick: changeCanView
+                })
+            }),
+            isCreator && /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemText), {
+                className: classes.secondaryText,
+                primary: translate("apods.permission.share"),
+                secondary: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Switch), {
+                    size: "small",
+                    checked: invitationState.canShare,
+                    disabled: invitationState.shareReadonly,
+                    onClick: changeCanShare
+                })
+            })
+        ]
+    });
+};
+var $3d109438326dd070$export$2e2bcd8739ae039 = $3d109438326dd070$var$ContactItem;
+
+
+
+
+
+
+
+
+
+/** @typedef {import("./ShareDialog").InvitationState} InvitationState */ const $c78c4dd8a63b7af2$var$useStyles = (0, $iLwJW$muistylesmakeStyles)((theme)=>({
+        listItem: {
+            paddingLeft: 0,
+            paddingRight: 0
+        },
+        primaryText: {
+            width: "30%",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            flexBasis: "100%"
+        },
+        secondaryText: {
+            textAlign: "center",
+            width: "60%",
+            fontStyle: "italic",
+            color: "grey"
+        },
+        avatarItem: {
+            minWidth: 50
+        },
+        avatar: {
+            backgroundImage: `radial-gradient(circle at 50% 3em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`
+        }
+    }));
+/**
+ * @param {Object} props
+ * @param {import("react-admin").Record} props.group
+ * @param {Record<string, InvitationState} props.invitations
+ * @param {(invitations: Record<string, InvitationState>) => void} props.onChange
+ * @param {boolean} props.isCreator
+ */ const $c78c4dd8a63b7af2$var$GroupContactsItem = ({ group: group, onChange: onChange, invitations: invitations, isCreator: isCreator })=>{
+    const classes = $c78c4dd8a63b7af2$var$useStyles();
+    const translate = (0, $iLwJW$useTranslate)();
+    const groupMemberIds = (0, $93d7a9f3166de761$export$e57ff0f701c44363)(group?.["vcard:hasMember"]);
+    const viewChecked = groupMemberIds.every((memberId)=>invitations[memberId]?.canView || invitations[memberId]?.canShare);
+    const shareChecked = groupMemberIds.every((memberId)=>invitations[memberId]?.canShare);
+    const viewSwitchReadonly = groupMemberIds.every((memberId)=>invitations[memberId]?.viewReadonly || invitations[memberId]?.shareReadonly);
+    const shareSwitchReadonly = groupMemberIds.every((memberId)=>invitations[memberId]?.shareReadonly);
+    const switchShare = (0, $iLwJW$useCallback)(()=>{
+        // Create invitation object for every group member.
+        const newInvitations = Object.fromEntries(groupMemberIds.map((memberId)=>{
+            if (invitations[memberId]?.shareReadonly) return [
+                undefined,
+                undefined
+            ];
+            else {
+                const newShareState = !shareChecked;
+                return [
+                    memberId,
+                    {
+                        ...invitations[memberId],
+                        canShare: newShareState,
+                        canView: newShareState || viewChecked
+                    }
+                ];
+            }
+        }).filter(([key, val])=>key && val));
+        onChange(newInvitations);
+    }, [
+        shareChecked,
+        viewChecked,
+        invitations,
+        onChange,
+        groupMemberIds
+    ]);
+    const switchView = (0, $iLwJW$useCallback)(()=>{
+        // Create invitation object for every group member.
+        const newInvitations = Object.fromEntries(groupMemberIds.map((memberId)=>{
+            if (invitations[memberId]?.viewReadonly) return [
+                undefined,
+                undefined
+            ];
+            else {
+                const newViewState = !viewChecked;
+                return [
+                    memberId,
+                    {
+                        ...invitations[memberId],
+                        canView: newViewState,
+                        canShare: newViewState && shareChecked
+                    }
+                ];
+            }
+        }).filter(([key, val])=>key && val));
+        onChange(newInvitations);
+    }, [
+        viewChecked,
+        shareChecked,
+        invitations,
+        onChange,
+        groupMemberIds
+    ]);
+    return /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$ListItem), {
+        className: classes.listItem,
+        children: [
+            /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemAvatar), {
+                className: classes.avatarItem,
+                children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Avatar), {
+                    src: group?.["vcard:photo"],
+                    className: classes.avatar,
+                    children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$muiiconsmaterialGroup), {})
+                })
+            }),
+            /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemText), {
+                className: classes.primaryText,
+                primary: group?.["vcard:label"]
+            }),
+            /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemText), {
+                className: classes.secondaryText,
+                primary: translate("apods.permission.view"),
+                secondary: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Switch), {
+                    size: "small",
+                    checked: viewChecked,
+                    disabled: viewSwitchReadonly || !group,
+                    onClick: switchView
+                })
+            }),
+            isCreator && /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemText), {
+                className: classes.secondaryText,
+                primary: translate("apods.permission.share"),
+                secondary: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Switch), {
+                    size: "small",
+                    checked: shareChecked,
+                    disabled: shareSwitchReadonly || !group,
+                    onClick: switchShare
+                })
+            })
+        ]
+    });
+};
+var $c78c4dd8a63b7af2$export$2e2bcd8739ae039 = $c78c4dd8a63b7af2$var$GroupContactsItem;
+
+
+
+/**
+ * @typedef {import('./ShareDialog').InvitationState} InvitationState
+ */ const $353d7b2d3f8a843f$var$useStyles = (0, $iLwJW$muistylesmakeStyles)((theme)=>({
+        list: {
+            width: "98%",
+            maxWidth: "98%",
+            backgroundColor: theme.palette.background.paper,
+            padding: 0
+        }
+    }));
+/**
+ * @param {Object} props
+ * @param {Record<string, InvitationState} props.invitations
+ * @param {(invitations: Record<string, InvitationState) => void} props.onChange
+ * @param {boolean} props.isCreator
+ */ const $353d7b2d3f8a843f$var$ContactsShareList = ({ invitations: invitations, onChange: onChange, organizerUri: organizerUri, isCreator: isCreator, profileResource: profileResource, groupResource: groupResource })=>{
+    const classes = $353d7b2d3f8a843f$var$useStyles();
+    const translate = (0, $iLwJW$useTranslate)();
+    const [searchText, setSearchText] = (0, $iLwJW$useState)("");
+    const { data: profilesData, isLoading: loadingProfiles } = (0, $iLwJW$useGetList)(profileResource, {
+        pagination: {
+            page: 1,
+            perPage: 1000
+        },
+        sort: {
+            field: "vcard:given-name",
+            order: "ASC"
+        }
+    });
+    const { data: groupsData, isLoading: loadingGroups } = (0, $iLwJW$useGetList)(groupResource, {
+        pagination: {
+            page: 1,
+            perPage: 1000
+        },
+        sort: {
+            field: "vcard:label",
+            order: "ASC"
+        }
+    });
+    // Filter here (instead of using the `filter.q` param above) to avoid triggering a SPARQL query on every character change
+    const profilesFiltered = (0, $iLwJW$useMemo)(()=>profilesData?.filter((profile)=>profile.describes !== organizerUri).filter((profile)=>(profile["vcard:given-name"] || "").toLocaleLowerCase().includes(searchText.toLocaleLowerCase()) || (0, $93d7a9f3166de761$export$1b2abdd92765429)(profile.describes).toLocaleLowerCase().includes(searchText.toLocaleLowerCase())), [
+        profilesData,
+        searchText,
+        organizerUri
+    ]);
+    const groupsFiltered = (0, $iLwJW$useMemo)(()=>{
+        return groupsData?.filter((group)=>(group["vcard:label"] || "").toLocaleLowerCase().includes(searchText.toLocaleLowerCase()));
+    }, [
+        groupsData,
+        searchText
+    ]);
+    return /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$List), {
+        dense: true,
+        className: classes.list,
+        children: [
+            /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$TextField), {
+                type: "search",
+                value: searchText,
+                onChange: (event)=>setSearchText(event.target.value),
+                label: translate("apods.action.search"),
+                fullWidth: true,
+                size: "small",
+                margin: "dense"
+            }),
+            groupsFiltered?.map((group)=>/*#__PURE__*/ (0, $iLwJW$jsx)((0, $c78c4dd8a63b7af2$export$2e2bcd8739ae039), {
+                    group: group,
+                    invitations: invitations,
+                    onChange: onChange,
+                    isCreator: isCreator
+                }, group.id)),
+            profilesFiltered?.map((profile)=>/*#__PURE__*/ (0, $iLwJW$jsx)((0, $3d109438326dd070$export$2e2bcd8739ae039), {
+                    record: profile,
+                    invitation: invitations[profile.describes],
+                    onChange: onChange,
+                    isCreator: isCreator
+                }, profile.id)),
+            (loadingProfiles || loadingGroups) && /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Box), {
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: 250,
+                children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$CircularProgress), {
+                    size: 60,
+                    thickness: 6
+                })
+            }),
+            !loadingProfiles && (profilesFiltered?.length, false)
+        ]
+    });
+};
+var $353d7b2d3f8a843f$export$2e2bcd8739ae039 = $353d7b2d3f8a843f$var$ContactsShareList;
+
+
+/**
+ * @typedef InvitationState
+ * @property {boolean} canView
+ * @property {boolean} canShare
+ * @property {boolean} viewReadonly
+ * @property {boolean} shareReadonly
+ */ const $79f089d541db8101$var$useStyles = (0, $iLwJW$muistylesmakeStyles)((theme)=>({
+        dialogPaper: {
+            margin: 16
+        },
+        title: {
+            padding: 24,
+            paddingBottom: 8,
+            [theme.breakpoints.down("sm")]: {
+                padding: 16,
+                paddingBottom: 4
+            }
+        },
+        actions: {
+            padding: 15,
+            height: 38
+        },
+        list: {
+            width: "100%",
+            maxWidth: "100%",
+            backgroundColor: theme.palette.background.paper,
+            padding: 0
+        },
+        listForm: {
+            paddingTop: 0,
+            paddingBottom: 0,
+            paddingRight: 0,
+            marginRight: 24,
+            height: 400,
+            [theme.breakpoints.down("sm")]: {
+                padding: "0px 16px",
+                margin: 0,
+                height: "unset" // Full screen height for mobile
+            }
+        }
+    }));
+const $79f089d541db8101$var$ShareDialog = ({ close: close, resourceUri: resourceUri, profileResource: profileResource, groupResource: groupResource })=>{
+    const classes = $79f089d541db8101$var$useStyles();
+    const { data: identity } = (0, $iLwJW$useGetIdentity)();
+    const record = (0, $iLwJW$useRecordContext)();
+    const translate = (0, $iLwJW$useTranslate)();
+    const creatorUri = record?.["dc:creator"];
+    const isCreator = creatorUri && creatorUri === identity?.id;
+    const { items: announces } = (0, $iLwJW$useCollection)(record?.["apods:announces"]);
+    const { items: announcers } = (0, $iLwJW$useCollection)(record?.["apods:announcers"]);
+    /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */ const [invitations, setInvitations] = (0, $iLwJW$useState)({});
+    // To keep track of changes...
+    /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */ const [newInvitations, setNewInvitations] = (0, $iLwJW$useState)({});
+    /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */ const [savedInvitations, setSavedInvitations] = (0, $iLwJW$useState)({});
+    const [sendingInvitation, setSendingInvitation] = (0, $iLwJW$useState)(false);
+    const xs = (0, $iLwJW$useMediaQuery)((theme)=>theme.breakpoints.down("xs"), {
+        noSsr: true
+    });
+    const outbox = (0, $iLwJW$useOutbox)();
+    const notify = (0, $iLwJW$useNotify)();
+    // To begin, populate present invitations.
+    // Announcers and announces that are already in the collection are readonly.
+    (0, $iLwJW$useEffect)(()=>{
+        const invitations = [
+            ...announces,
+            ...announcers
+        ].reduce((acc, actorUri)=>{
+            const canView = announces.includes(actorUri);
+            const canShare = announcers.includes(actorUri);
+            return {
+                ...acc,
+                [actorUri]: {
+                    canView: canView,
+                    canShare: canShare,
+                    viewReadonly: canView,
+                    shareReadonly: canShare
+                }
+            };
+        }, {});
+        setInvitations(invitations);
+        setSavedInvitations(invitations);
+    }, [
+        announces,
+        announcers,
+        setInvitations,
+        setSavedInvitations
+    ]);
+    /** @param {Record<string, InvitationState} changedRights */ const onChange = (0, $iLwJW$useCallback)((changedRights)=>{
+        // Compare changedRights to invitations, to know where we need to update the collection.
+        const newInvitationsUnfiltered = {
+            ...newInvitations,
+            ...changedRights
+        };
+        const changedInvitations = Object.fromEntries(Object.entries(newInvitationsUnfiltered).filter(([actorUri, newInvitation])=>{
+            const oldInvitation = savedInvitations[actorUri];
+            return !!newInvitation.canView !== (!!oldInvitation?.canView || !!oldInvitation?.canShare) || !!newInvitation.canShare !== !!oldInvitation?.canShare;
+        }));
+        setNewInvitations(changedInvitations);
+        setInvitations({
+            ...savedInvitations,
+            ...changedInvitations
+        });
+    }, [
+        newInvitations,
+        savedInvitations
+    ]);
+    const sendInvitations = (0, $iLwJW$useCallback)(async ()=>{
+        setSendingInvitation(true);
+        const actorsWithNewViewRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canView && !savedInvitations[actorUri]?.canView);
+        if (actorsWithNewViewRight.length > 0) {
+            if (isCreator) await outbox.post({
+                type: (0, $iLwJW$ACTIVITY_TYPES).ANNOUNCE,
+                actor: outbox.owner,
+                object: resourceUri,
+                target: actorsWithNewViewRight,
+                to: actorsWithNewViewRight
+            });
+            else // Offer the organizer to invite these people
+            await outbox.post({
+                type: (0, $iLwJW$ACTIVITY_TYPES).OFFER,
+                actor: outbox.owner,
+                object: {
+                    type: (0, $iLwJW$ACTIVITY_TYPES).ANNOUNCE,
+                    actor: outbox.owner,
+                    object: resourceUri,
+                    target: actorsWithNewViewRight
+                },
+                target: record["dc:creator"],
+                to: record["dc:creator"]
+            });
+        }
+        const actorsWithNewShareRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canShare);
+        if (actorsWithNewShareRight.length > 0) await outbox.post({
+            type: (0, $iLwJW$ACTIVITY_TYPES).OFFER,
+            actor: outbox.owner,
+            object: {
+                type: (0, $iLwJW$ACTIVITY_TYPES).ANNOUNCE,
+                object: resourceUri
+            },
+            target: actorsWithNewShareRight,
+            to: actorsWithNewShareRight
+        });
+        notify("apods.notification.invitation_sent", {
+            type: "success",
+            messageArgs: {
+                smart_count: Object.keys(newInvitations).length
+            }
+        });
+        close();
+    }, [
+        outbox,
+        notify,
+        savedInvitations,
+        newInvitations,
+        isCreator,
+        close,
+        record,
+        resourceUri,
+        setSendingInvitation
+    ]);
+    if (!identity) return null;
+    return /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$Dialog), {
+        fullWidth: !xs,
+        open: true,
+        onClose: close,
+        classes: {
+            paper: classes.dialogPaper
+        },
+        children: [
+            /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$DialogTitle), {
+                className: classes.title,
+                children: translate("apods.action.share")
+            }),
+            /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$DialogContent), {
+                className: classes.listForm,
+                children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $353d7b2d3f8a843f$export$2e2bcd8739ae039), {
+                    invitations: invitations,
+                    onChange: onChange,
+                    organizerUri: creatorUri,
+                    isCreator: isCreator,
+                    profileResource: profileResource,
+                    groupResource: groupResource
+                })
+            }),
+            /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$DialogActions), {
+                className: classes.actions,
+                children: [
+                    /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Button1), {
+                        variant: "text",
+                        size: "medium",
+                        onClick: close,
+                        children: translate("ra.action.close")
+                    }),
+                    Object.keys(newInvitations).length > 0 && /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Button1), {
+                        variant: "contained",
+                        color: "primary",
+                        size: "medium",
+                        onClick: sendInvitations,
+                        disabled: sendingInvitation,
+                        children: translate("apods.action.send_invitation", {
+                            smart_count: Object.keys(newInvitations).length
+                        })
+                    })
+                ]
+            })
+        ]
+    });
+};
+var $79f089d541db8101$export$2e2bcd8739ae039 = $79f089d541db8101$var$ShareDialog;
+
+
+/**
+ * Allow to share the record in the current RecordContext
+ * Use the `Announce` and `Offer > Announce` activities handled by ActivityPods
+ */ const $47fb439769024aa7$var$ShareButton = ({ profileResource: profileResource = "Profile", groupResource: groupResource = "Group" })=>{
+    const [shareOpen, setShareOpen] = (0, $iLwJW$useState)(false);
+    const record = (0, $iLwJW$useRecordContext)();
+    const { error: error, isLoading: isLoading } = (0, $iLwJW$useCollection)(record?.["apods:announces"]);
+    const translate = (0, $iLwJW$useTranslate)();
+    // If the user can see the list of announces, it means he can share
+    if (!isLoading && !error) return /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$Fragment1), {
+        children: [
+            /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Button), {
+                label: translate("apods.action.share"),
+                onClick: ()=>setShareOpen(true),
+                children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$muiiconsmaterialShare), {})
+            }),
+            shareOpen && /*#__PURE__*/ (0, $iLwJW$jsx)((0, $79f089d541db8101$export$2e2bcd8739ae039), {
+                resourceUri: record.id,
+                close: ()=>setShareOpen(false),
+                profileResource: profileResource,
+                groupResource: groupResource
+            })
+        ]
+    });
+    else return null;
+};
+var $47fb439769024aa7$export$2e2bcd8739ae039 = $47fb439769024aa7$var$ShareButton;
+
+
+// Model https://github.com/marmelab/react-admin/blob/master/packages/ra-language-french/src/index.ts
+var $4b2a6afceae7f301$export$2e2bcd8739ae039 = {
+    apods: {
+        action: {
+            search: "Search",
+            share: "Share",
+            send_invitation: "Send invitation |||| Send %{smart_count} invitations"
+        },
+        helper: {
+            no_contact: "You must add contacts to your network to share resources with them"
+        },
+        notification: {
+            invitation_sent: "1 invitation sent |||| %{smart_count} invitations sent"
+        },
+        permission: {
+            view: "Allowed to view",
+            share: "Invite own contacts"
+        }
+    }
+};
+
+
+// Model https://github.com/marmelab/react-admin/blob/master/packages/ra-language-french/src/index.ts
+var $5de716308b366acb$export$2e2bcd8739ae039 = {
+    app: {
+        action: {
+            search: "Rechercher",
+            send_invitation: "Envoyer l'invitation |||| Envoyer %{smart_count} invitations",
+            share: "Partager"
+        },
+        helper: {
+            no_contact: "Vous devez ajouter des contacts \xe0 votre r\xe9seau pour leur partager des ressources"
+        },
+        notification: {
+            invitation_sent: "1 invitation envoy\xe9e |||| %{smart_count} invitations envoy\xe9es"
+        },
+        permission: {
+            view: "Droit de voir",
+            share: "Inviter ses contacts"
+        }
+    }
+};
+
+
+
+
+export {$2957839fe06af793$export$2e2bcd8739ae039 as BackgroundChecks, $e235591816215308$export$2e2bcd8739ae039 as PodLoginPage, $1a88c39afebe872d$export$2e2bcd8739ae039 as RedirectPage, $47fb439769024aa7$export$2e2bcd8739ae039 as ShareButton, $4b2a6afceae7f301$export$2e2bcd8739ae039 as englishMessages, $5de716308b366acb$export$2e2bcd8739ae039 as frenchMessages};
 //# sourceMappingURL=index.es.js.map

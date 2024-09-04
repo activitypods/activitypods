@@ -23,6 +23,7 @@
   "peerDependencies": {
     "@mui/icons-material": "^5.13.1",
     "@mui/material": "^5.13.1",
+    "@mui/styles": "^5.13.1",
     "react": "^18.2.0",
     "react-admin": "^4.11.0",
     "react-router-dom": "^6.1.0"
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@mui/icons-material": "^5.13.1",
     "@mui/material": "^5.13.1",
+    "@mui/styles": "^5.13.1",
     "@parcel/packager-ts": "2.12.0",
     "@parcel/transformer-typescript-types": "2.12.0",
     "@types/url-join": "^4.0.1",

@@ -44,5 +44,44 @@ export const RedirectPage: FunctionComponent<_Props2>;
 type _Props2 = {
     ontologies: [Ontology];
 };
+export const englishMessages: {
+    apods: {
+        action: {
+            search: string;
+            share: string;
+            send_invitation: string;
+        };
+        helper: {
+            no_contact: string;
+        };
+        notification: {
+            invitation_sent: string;
+        };
+        permission: {
+            view: string;
+            share: string;
+        };
+    };
+};
+export const frenchMessages: {
+    app: {
+        action: {
+            search: string;
+            send_invitation: string;
+            share: string;
+        };
+        helper: {
+            no_contact: string;
+        };
+        notification: {
+            invitation_sent: string;
+        };
+        permission: {
+            view: string;
+            share: string;
+        };
+    };
+};
+export { default as ShareButton } from './components/ShareButton/ShareButton';
 
 //# sourceMappingURL=index.d.ts.map

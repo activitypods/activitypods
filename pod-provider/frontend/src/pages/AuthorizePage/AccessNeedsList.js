@@ -81,14 +81,17 @@ const AccessNeedsList = ({
         if (hasWrite) accessRights.push(translate('app.authorization.write'));
         if (hasControl) accessRights.push(translate('app.authorization.control'));
 
+        const matchingTypeRegistration = typeRegistrations?.find(reg =>
+          arrayOf(reg['solid:forClass']).includes(accessNeed['apods:registeredClass'])
+        );
+
+        const matchingClassDescription = classDescriptions?.find(desc =>
+          arrayOf(desc['apods:describedClass']).includes(accessNeed['apods:registeredClass'])
+        );
+
         // Get description from local TypeRegistrations first, to prevent apps to fool users about what they request
         const description =
-          typeRegistrations?.find(reg =>
-            arrayOf(reg['solid:forClass']).includes(accessNeed['apods:registeredClass'])
-          ) ||
-          classDescriptions?.find(desc =>
-            arrayOf(desc['apods:describedClass']).includes(accessNeed['apods:registeredClass'])
-          );
+          matchingTypeRegistration?.['skos:prefLabel'] || matchingClassDescription?.['skos:prefLabel'];
 
         return {
           label: (
@@ -96,7 +99,7 @@ const AccessNeedsList = ({
               {accessRights.join('/')}{' '}
               {description ? (
                 <span title={accessNeed['apods:registeredClass']} style={{ textDecoration: 'underline dotted grey' }}>
-                  {description['skos:prefLabel']}
+                  {description}
                 </span>
               ) : (
                 accessNeed['apods:registeredClass']

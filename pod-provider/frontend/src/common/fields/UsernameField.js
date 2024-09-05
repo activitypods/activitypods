@@ -26,7 +26,7 @@ const UsernameField = ({ showCopyButton }) => {
 
   if (!record) return null;
 
-  const actorServer = new URL(record.id).hostname;
+  const actorServer = new URL(record.id).host;
   const webfingerId = `@${record.preferredUsername}@${actorServer}`;
 
   return (

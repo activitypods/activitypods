@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  TextField,
   DateField,
-  ReferenceField,
   useTranslate,
   Button,
   useGetOne,
@@ -12,7 +10,6 @@ import {
 import { useParams, Link } from 'react-router-dom';
 import { useWebfinger } from '@semapps/activitypub-components';
 import ListIcon from '@mui/icons-material/List';
-import Show from '../../layout/Show';
 import Hero from '../../common/list/Hero/Hero';
 import ContactCard from '../../common/cards/ContactCard';
 import UsernameField from '../../common/fields/UsernameField';
@@ -20,7 +17,6 @@ import ContactField from '../../common/fields/ContactField';
 import MainList from '../../common/list/MainList/MainList';
 import BlockAnonymous from '../../common/BlockAnonymous';
 import TagsListEdit from '../../common/tags/TagsListEdit';
-import ProfileTitle from '../../resources/Profile/ProfileTitle';
 import ShowView from '../../layout/ShowView';
 import ValueField from '../../common/fields/ValueField';
 import { stripHtmlTags } from '../../utils';

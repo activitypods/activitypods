@@ -237,6 +237,8 @@ export const arraysEqual = (a1: [], a2: []): boolean =>
 export const delay = (t: number) => new Promise(resolve => setTimeout(resolve, t));
 
 export const stripHtmlTags = (html: string) => {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  return doc.body.textContent || '';
+  if (html) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent;
+  }
 };

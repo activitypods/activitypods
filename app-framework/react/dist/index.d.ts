@@ -1,16 +1,16 @@
-import { FunctionComponent, ReactNode } from "react";
+import { FunctionComponent, ReactNode } from 'react';
 type Ontology = {
-    prefix: string;
-    owl?: string;
-    url: string;
+  prefix: string;
+  owl?: string;
+  url: string;
 };
 type PodProvider = {
-    id?: string;
-    type?: string;
-    'apods:baseUrl': string;
-    'apods:area'?: string;
-    'apods:locales'?: string;
-    'apods:providedBy'?: string;
+  id?: string;
+  type?: string;
+  'apods:baseUrl': string;
+  'apods:area'?: string;
+  'apods:locales'?: string;
+  'apods:providedBy'?: string;
 };
 /**
  * Call the /.well-known/app-status endpoint to check the status of the app
@@ -19,8 +19,8 @@ type PodProvider = {
  */
 export const BackgroundChecks: FunctionComponent<Props>;
 type Props = {
-    clientId: string;
-    children: ReactNode;
+  clientId: string;
+  children: ReactNode;
 };
 /**
  * Display a list of Pod providers that we can log in
@@ -29,8 +29,8 @@ type Props = {
  */
 export const PodLoginPage: FunctionComponent<_Props1>;
 type _Props1 = {
-    text?: string;
-    customPodProviders: [PodProvider];
+  text?: string;
+  customPodProviders: [PodProvider];
 };
 /**
  * Look for the `type` search param and compare it with React-Admin resources
@@ -42,58 +42,58 @@ type _Props1 = {
  */
 export const RedirectPage: FunctionComponent<_Props2>;
 type _Props2 = {
-    ontologies: [Ontology];
+  ontologies: [Ontology];
 };
 export const UserMenu: FunctionComponent;
 export const englishMessages: {
-    apods: {
-        action: {
-            search: string;
-            share: string;
-            send_invitation: string;
-        };
-        helper: {
-            no_contact: string;
-        };
-        notification: {
-            invitation_sent: string;
-        };
-        permission: {
-            view: string;
-            share: string;
-        };
-        user_menu: {
-            network: string;
-            apps: string;
-            data: string;
-            settings: string;
-        };
+  apods: {
+    action: {
+      search: string;
+      share: string;
+      send_invitation: string;
     };
+    helper: {
+      no_contact: string;
+    };
+    notification: {
+      invitation_sent: string;
+    };
+    permission: {
+      view: string;
+      share: string;
+    };
+    user_menu: {
+      network: string;
+      apps: string;
+      data: string;
+      settings: string;
+    };
+  };
 };
 export const frenchMessages: {
-    app: {
-        action: {
-            search: string;
-            send_invitation: string;
-            share: string;
-        };
-        helper: {
-            no_contact: string;
-        };
-        notification: {
-            invitation_sent: string;
-        };
-        permission: {
-            view: string;
-            share: string;
-        };
-        user_menu: {
-            network: string;
-            apps: string;
-            data: string;
-            settings: string;
-        };
+  app: {
+    action: {
+      search: string;
+      send_invitation: string;
+      share: string;
     };
+    helper: {
+      no_contact: string;
+    };
+    notification: {
+      invitation_sent: string;
+    };
+    permission: {
+      view: string;
+      share: string;
+    };
+    user_menu: {
+      network: string;
+      apps: string;
+      data: string;
+      settings: string;
+    };
+  };
 };
 export { default as ShareButton } from './components/ShareButton/ShareButton';
 export { default as ShareDialog } from './components/ShareButton/ShareDialog';

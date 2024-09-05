@@ -26,8 +26,7 @@ const DetailsList = ({ children }) => {
     <Box>
       {React.Children.map(children, (field, i) =>
         field &&
-        record[field.props.source] &&
-        (!Array.isArray(record[field.props.source]) || record[field.props.source].length > 0) &&
+        (field.props.source ? record[field.props.source] : field.props.value) &&
         React.isValidElement(field) ? (
           <div key={i}>
             {field.props.label !== false ? (

@@ -61,9 +61,9 @@ module.exports = {
     },
     // Delete DataGrants which are not linked to an AccessNeed (may happen on app upgrade)
     async deleteOrphans(ctx) {
-      const { podOwner } = ctx.params;
-      const container = await this.actions.list({ webId: podOwner }, { parentCtx: ctx });
-      for (const dataGrant of arrayOf(container?.['ldp:contains'])) {
+      const { appUri, podOwner } = ctx.params;
+      const dataGrants = await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx });
+      for (const dataGrant of dataGrants) {
         try {
           await ctx.call('ldp.remote.get', { resourceUri: dataGrant['interop:satisfiesAccessNeed'] });
         } catch (e) {

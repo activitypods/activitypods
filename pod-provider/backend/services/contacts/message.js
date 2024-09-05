@@ -41,7 +41,7 @@ module.exports = {
                   en: 'Reply',
                   fr: 'Répondre'
                 },
-                link: '/Profile/{{encodeUri emitterProfile.id}}/show'
+                link: '/network/{{encodeUri emitter.id}}'
               }
             ]
           },

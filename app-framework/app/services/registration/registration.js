@@ -3,7 +3,7 @@ const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
-  name: 'registration',
+  name: 'app.registration',
   mixins: [ActivitiesHandlerMixin],
   activities: {
     createAppRegistration: {

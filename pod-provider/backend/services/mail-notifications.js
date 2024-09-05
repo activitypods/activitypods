@@ -23,7 +23,7 @@ module.exports = {
     from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
     transport,
     data: {
-      color: CONFIG.FRONTEND_COLOR
+      color: CONFIG.COLOR_PRIMARY
     }
   },
   async started() {
@@ -65,7 +65,8 @@ module.exports = {
           actions: arrayOf(values.actions).map(action => ({
             caption: action.caption,
             link: action.link.startsWith('http') ? action.link : urlJoin(this.settings.frontendUrl, action.link)
-          }))
+          })),
+          ...this.settings.data
         }
       });
     }
@@ -90,7 +91,8 @@ module.exports = {
             title: activity.name,
             content: activity.content,
             contentWithBr: activity.content ? activity.content.replace(/\r\n|\r|\n/g, '<br />') : undefined,
-            actions: arrayOf(activity.url).map(url => ({ caption: url.name, link: url.href }))
+            actions: arrayOf(activity.url).map(url => ({ caption: url.name, link: url.href })),
+            ...this.settings.data
           }
         });
       }
@@ -99,6 +101,7 @@ module.exports = {
   methods: {
     async queueMail(ctx, title, payload) {
       payload.template = 'single-mail';
+      console.log('payload', payload);
       if (this.createJob) {
         return this.createJob('sendMail', title, payload);
       }

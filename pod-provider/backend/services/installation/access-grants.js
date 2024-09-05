@@ -20,8 +20,8 @@ module.exports = {
     patch() {
       throw new Error(`The resources of type interop:AccessGrant are immutable`);
     },
-    // Get all the special rights given to an application
-    async getSpecialRights(ctx) {
+    // Get all the AccessGrants granted to an application
+    async getForApp(ctx) {
       const { appUri, podOwner } = ctx.params;
 
       const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
@@ -38,7 +38,15 @@ module.exports = {
         { parentCtx: ctx }
       );
 
-      return arrayOf(filteredContainer['ldp:contains']).reduce((acc, cur) => {
+      return arrayOf(filteredContainer['ldp:contains']);
+    },
+    // Get all the special rights granted to an application
+    async getSpecialRights(ctx) {
+      const { appUri, podOwner } = ctx.params;
+
+      const accessGrants = await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx });
+
+      return accessGrants.reduce((acc, cur) => {
         if (cur['apods:hasSpecialRights']) acc.push(...arrayOf(cur['apods:hasSpecialRights']));
         return acc;
       }, []);
@@ -62,9 +70,9 @@ module.exports = {
     },
     // Delete AccessGrants which are not linked to an AccessNeedGroup (may happen on app upgrade)
     async deleteOrphans(ctx) {
-      const { podOwner } = ctx.params;
-      const container = await this.actions.list({ webId: podOwner }, { parentCtx: ctx });
-      for (const accessGrant of arrayOf(container?.['ldp:contains'])) {
+      const { appUri, podOwner } = ctx.params;
+      const accessGrants = await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx });
+      for (const accessGrant of accessGrants) {
         try {
           await ctx.call('ldp.remote.get', { resourceUri: accessGrant['interop:hasAccessNeedGroup'] });
         } catch (e) {

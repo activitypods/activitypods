@@ -11,7 +11,7 @@ const CONTACT_REQUEST_MAPPING = {
         en: 'View',
         fr: 'Voir'
       },
-      link: '/Profile/{{encodeUri emitterProfile.id}}/show'
+      link: '/network/{{encodeUri emitter.id}}'
     }
   ]
 };
@@ -31,7 +31,7 @@ const AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING = {
         en: 'View',
         fr: 'Voir'
       },
-      link: '/Profile/{{encodeUri emitterProfile.id}}/show'
+      link: '/network/{{encodeUri emitter.id}}'
     }
   ]
 };
@@ -51,7 +51,7 @@ const ACCEPT_CONTACT_REQUEST_MAPPING = {
         en: 'View',
         fr: 'Voir'
       },
-      link: '/Profile/{{encodeUri emitterProfile.id}}/show'
+      link: '/network/{{encodeUri emitter.id}}'
     }
   ]
 };

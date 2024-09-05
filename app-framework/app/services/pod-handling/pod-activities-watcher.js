@@ -78,7 +78,7 @@ module.exports = {
       // Ignore Remove activities
       if (type !== 'Add') return;
 
-      this.logger.warn(`Detected activity ${object} in collection ${target}`);
+      this.logger.info(`Detected activity ${object} in collection ${target}`);
 
       // TODO properly find the pod owner URI from the target
       // Apparently not specified by Solid https://forum.solidproject.org/t/discovering-webid-owner-of-a-particular-resource/2490

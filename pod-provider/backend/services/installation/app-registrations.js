@@ -24,8 +24,8 @@ module.exports = {
       let accessGrantsUris = [];
 
       // First clean up orphans grants. This will remove all associated rights before they are added back below.
-      await ctx.call('data-grants.deleteOrphans', { podOwner });
-      await ctx.call('access-grants.deleteOrphans', { podOwner });
+      await ctx.call('data-grants.deleteOrphans', { appUri, podOwner });
+      await ctx.call('access-grants.deleteOrphans', { appUri, podOwner });
 
       // Get the app from the remote server, not the local cache
       const app = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri });

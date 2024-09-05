@@ -16,6 +16,12 @@ export default {
     permission: {
       view: 'Allowed to view',
       share: 'Invite own contacts'
+    },
+    user_menu: {
+      network: 'My network',
+      apps: 'My applications',
+      data: 'My data',
+      settings: 'Settings'
     }
   }
 };

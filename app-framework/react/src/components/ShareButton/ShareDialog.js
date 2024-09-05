@@ -49,7 +49,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ShareDialog = ({ close, resourceUri, profileResource, groupResource }) => {
+const ShareDialog = ({ close, resourceUri, profileResource = 'Profile', groupResource = 'Group' }) => {
   const classes = useStyles();
   const { data: identity } = useGetIdentity();
   const record = useRecordContext();
@@ -57,7 +57,7 @@ const ShareDialog = ({ close, resourceUri, profileResource, groupResource }) => 
   const creatorUri = record?.['dc:creator'];
   const isCreator = creatorUri && creatorUri === identity?.id;
   const { items: announces } = useCollection(record?.['apods:announces']);
-  const { items: announcers } = useCollection(record?.['apods:announcers']);
+  const { items: announcers } = useCollection(isCreator ? record?.['apods:announcers'] : undefined);
   /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */
   const [invitations, setInvitations] = useState({});
   // To keep track of changes...

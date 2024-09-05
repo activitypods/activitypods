@@ -1,16 +1,19 @@
 import {useState as $iLwJW$useState, useCallback as $iLwJW$useCallback, useEffect as $iLwJW$useEffect, useLayoutEffect as $iLwJW$useLayoutEffect, Fragment as $iLwJW$Fragment, useMemo as $iLwJW$useMemo} from "react";
 import $iLwJW$urljoin from "url-join";
-import {useGetIdentity as $iLwJW$useGetIdentity, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useLogout as $iLwJW$useLogout, useTranslate as $iLwJW$useTranslate, useRedirect as $iLwJW$useRedirect, useRecordContext as $iLwJW$useRecordContext, Button as $iLwJW$Button, useGetList as $iLwJW$useGetList} from "react-admin";
+import {useGetIdentity as $iLwJW$useGetIdentity, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useLogout as $iLwJW$useLogout, useTranslate as $iLwJW$useTranslate, useRedirect as $iLwJW$useRedirect, useRecordContext as $iLwJW$useRecordContext, Button as $iLwJW$Button, useGetList as $iLwJW$useGetList, UserMenu as $iLwJW$UserMenu, Logout as $iLwJW$Logout, MenuItemLink as $iLwJW$MenuItemLink} from "react-admin";
 import {useNodeinfo as $iLwJW$useNodeinfo, useCollection as $iLwJW$useCollection, useOutbox as $iLwJW$useOutbox, ACTIVITY_TYPES as $iLwJW$ACTIVITY_TYPES} from "@semapps/activitypub-components";
 import {jsx as $iLwJW$jsx, jsxs as $iLwJW$jsxs, Fragment as $iLwJW$Fragment1} from "react/jsx-runtime";
 import {useSearchParams as $iLwJW$useSearchParams, useNavigate as $iLwJW$useNavigate} from "react-router-dom";
-import {Box as $iLwJW$Box, Card as $iLwJW$Card, Avatar as $iLwJW$Avatar, Typography as $iLwJW$Typography, List as $iLwJW$List, Divider as $iLwJW$Divider, ListItem as $iLwJW$ListItem, ListItemButton as $iLwJW$ListItemButton, ListItemAvatar as $iLwJW$ListItemAvatar, ListItemText as $iLwJW$ListItemText, useMediaQuery as $iLwJW$useMediaQuery, Dialog as $iLwJW$Dialog, DialogTitle as $iLwJW$DialogTitle, DialogContent as $iLwJW$DialogContent, DialogActions as $iLwJW$DialogActions, Button as $iLwJW$Button1, TextField as $iLwJW$TextField, CircularProgress as $iLwJW$CircularProgress, Switch as $iLwJW$Switch} from "@mui/material";
+import {Box as $iLwJW$Box, Card as $iLwJW$Card, Avatar as $iLwJW$Avatar, Typography as $iLwJW$Typography, List as $iLwJW$List, Divider as $iLwJW$Divider, ListItem as $iLwJW$ListItem, ListItemButton as $iLwJW$ListItemButton, ListItemAvatar as $iLwJW$ListItemAvatar, ListItemText as $iLwJW$ListItemText, useMediaQuery as $iLwJW$useMediaQuery, Dialog as $iLwJW$Dialog, DialogTitle as $iLwJW$DialogTitle, DialogContent as $iLwJW$DialogContent, DialogActions as $iLwJW$DialogActions, Button as $iLwJW$Button1, TextField as $iLwJW$TextField, CircularProgress as $iLwJW$CircularProgress, Switch as $iLwJW$Switch, MenuItem as $iLwJW$MenuItem, ListItemIcon as $iLwJW$ListItemIcon} from "@mui/material";
 import $iLwJW$muiiconsmaterialLock from "@mui/icons-material/Lock";
 import $iLwJW$muiiconsmaterialStorage from "@mui/icons-material/Storage";
 import {useDataModels as $iLwJW$useDataModels} from "@semapps/semantic-data-provider";
 import $iLwJW$muiiconsmaterialShare from "@mui/icons-material/Share";
 import $iLwJW$muistylesmakeStyles from "@mui/styles/makeStyles";
 import $iLwJW$muiiconsmaterialGroup from "@mui/icons-material/Group";
+import $iLwJW$muiiconsmaterialPeopleAlt from "@mui/icons-material/PeopleAlt";
+import $iLwJW$muiiconsmaterialApps from "@mui/icons-material/Apps";
+import $iLwJW$muiiconsmaterialSettings from "@mui/icons-material/Settings";
 
 // Components
 
@@ -579,6 +582,7 @@ var $c78c4dd8a63b7af2$export$2e2bcd8739ae039 = $c78c4dd8a63b7af2$var$GroupContac
  */ const $353d7b2d3f8a843f$var$ContactsShareList = ({ invitations: invitations, onChange: onChange, organizerUri: organizerUri, isCreator: isCreator, profileResource: profileResource, groupResource: groupResource })=>{
     const classes = $353d7b2d3f8a843f$var$useStyles();
     const translate = (0, $iLwJW$useTranslate)();
+    const { data: identity } = (0, $iLwJW$useGetIdentity)();
     const [searchText, setSearchText] = (0, $iLwJW$useState)("");
     const { data: profilesData, isLoading: loadingProfiles } = (0, $iLwJW$useGetList)(profileResource, {
         pagination: {
@@ -601,10 +605,11 @@ var $c78c4dd8a63b7af2$export$2e2bcd8739ae039 = $c78c4dd8a63b7af2$var$GroupContac
         }
     });
     // Filter here (instead of using the `filter.q` param above) to avoid triggering a SPARQL query on every character change
-    const profilesFiltered = (0, $iLwJW$useMemo)(()=>profilesData?.filter((profile)=>profile.describes !== organizerUri).filter((profile)=>(profile["vcard:given-name"] || "").toLocaleLowerCase().includes(searchText.toLocaleLowerCase()) || (0, $93d7a9f3166de761$export$1b2abdd92765429)(profile.describes).toLocaleLowerCase().includes(searchText.toLocaleLowerCase())), [
+    const profilesFiltered = (0, $iLwJW$useMemo)(()=>profilesData?.filter((profile)=>profile.describes !== organizerUri && profile.describes !== identity?.id).filter((profile)=>(profile["vcard:given-name"] || "").toLocaleLowerCase().includes(searchText.toLocaleLowerCase()) || (0, $93d7a9f3166de761$export$1b2abdd92765429)(profile.describes).toLocaleLowerCase().includes(searchText.toLocaleLowerCase())), [
         profilesData,
         searchText,
-        organizerUri
+        organizerUri,
+        identity
     ]);
     const groupsFiltered = (0, $iLwJW$useMemo)(()=>{
         return groupsData?.filter((group)=>(group["vcard:label"] || "").toLocaleLowerCase().includes(searchText.toLocaleLowerCase()));
@@ -695,7 +700,7 @@ var $353d7b2d3f8a843f$export$2e2bcd8739ae039 = $353d7b2d3f8a843f$var$ContactsSha
             }
         }
     }));
-const $79f089d541db8101$var$ShareDialog = ({ close: close, resourceUri: resourceUri, profileResource: profileResource, groupResource: groupResource })=>{
+const $79f089d541db8101$var$ShareDialog = ({ close: close, resourceUri: resourceUri, profileResource: profileResource = "Profile", groupResource: groupResource = "Group" })=>{
     const classes = $79f089d541db8101$var$useStyles();
     const { data: identity } = (0, $iLwJW$useGetIdentity)();
     const record = (0, $iLwJW$useRecordContext)();
@@ -703,7 +708,7 @@ const $79f089d541db8101$var$ShareDialog = ({ close: close, resourceUri: resource
     const creatorUri = record?.["dc:creator"];
     const isCreator = creatorUri && creatorUri === identity?.id;
     const { items: announces } = (0, $iLwJW$useCollection)(record?.["apods:announces"]);
-    const { items: announcers } = (0, $iLwJW$useCollection)(record?.["apods:announcers"]);
+    const { items: announcers } = (0, $iLwJW$useCollection)(isCreator ? record?.["apods:announcers"] : undefined);
     /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */ const [invitations, setInvitations] = (0, $iLwJW$useState)({});
     // To keep track of changes...
     /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */ const [newInvitations, setNewInvitations] = (0, $iLwJW$useState)({});
@@ -894,6 +899,82 @@ var $79f089d541db8101$export$2e2bcd8739ae039 = $79f089d541db8101$var$ShareDialog
 var $47fb439769024aa7$export$2e2bcd8739ae039 = $47fb439769024aa7$var$ShareButton;
 
 
+
+
+
+
+
+
+
+
+
+
+
+const $f86de5ead054b96d$var$UserMenu = ()=>{
+    const { data: identity } = (0, $iLwJW$useGetIdentity)();
+    const nodeinfo = (0, $iLwJW$useNodeinfo)(identity?.webIdData?.["solid:oidcIssuer"] && new URL(identity?.webIdData?.["solid:oidcIssuer"]).host);
+    const translate = (0, $iLwJW$useTranslate)();
+    if (identity?.id && !nodeinfo) return null;
+    return /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$UserMenu), {
+        children: identity?.id ? [
+            /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$MenuItem), {
+                component: "a",
+                href: (0, $iLwJW$urljoin)(nodeinfo?.metadata?.frontend_url, "network"),
+                children: [
+                    /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemIcon), {
+                        children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$muiiconsmaterialPeopleAlt), {})
+                    }),
+                    /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemText), {
+                        children: translate("apods.user_menu.network")
+                    })
+                ]
+            }, "network"),
+            /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$MenuItem), {
+                component: "a",
+                href: (0, $iLwJW$urljoin)(nodeinfo?.metadata?.frontend_url, "apps"),
+                children: [
+                    /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemIcon), {
+                        children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$muiiconsmaterialApps), {})
+                    }),
+                    /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemText), {
+                        children: translate("apods.user_menu.apps")
+                    })
+                ]
+            }, "apps"),
+            /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$MenuItem), {
+                component: "a",
+                href: (0, $iLwJW$urljoin)(nodeinfo?.metadata?.frontend_url, "data"),
+                children: [
+                    /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemIcon), {
+                        children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$muiiconsmaterialStorage), {})
+                    }),
+                    /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemText), {
+                        children: translate("apods.user_menu.data")
+                    })
+                ]
+            }, "data"),
+            /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$MenuItem), {
+                component: "a",
+                href: (0, $iLwJW$urljoin)(nodeinfo?.metadata?.frontend_url, "settings"),
+                children: [
+                    /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemIcon), {
+                        children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$muiiconsmaterialSettings), {})
+                    }),
+                    /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$ListItemText), {
+                        children: translate("apods.user_menu.settings")
+                    })
+                ]
+            }, "settings"),
+            /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Logout), {}, "logout")
+        ] : /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$MenuItemLink), {
+            to: "/login",
+            primaryText: translate("ra.auth.sign_in")
+        })
+    });
+};
+var $f86de5ead054b96d$export$2e2bcd8739ae039 = $f86de5ead054b96d$var$UserMenu;
+
+
 // Model https://github.com/marmelab/react-admin/blob/master/packages/ra-language-french/src/index.ts
 var $4b2a6afceae7f301$export$2e2bcd8739ae039 = {
     apods: {
@@ -911,6 +992,12 @@ var $4b2a6afceae7f301$export$2e2bcd8739ae039 = {
         permission: {
             view: "Allowed to view",
             share: "Invite own contacts"
+        },
+        user_menu: {
+            network: "My network",
+            apps: "My applications",
+            data: "My data",
+            settings: "Settings"
         }
     }
 };
@@ -933,6 +1020,12 @@ var $5de716308b366acb$export$2e2bcd8739ae039 = {
         permission: {
             view: "Droit de voir",
             share: "Inviter ses contacts"
+        },
+        user_menu: {
+            network: "Mon r\xe9seau",
+            apps: "Mes applis",
+            data: "Mes donn\xe9es",
+            settings: "Param\xe8tres"
         }
     }
 };
@@ -940,5 +1033,5 @@ var $5de716308b366acb$export$2e2bcd8739ae039 = {
 
 
 
-export {$2957839fe06af793$export$2e2bcd8739ae039 as BackgroundChecks, $e235591816215308$export$2e2bcd8739ae039 as PodLoginPage, $1a88c39afebe872d$export$2e2bcd8739ae039 as RedirectPage, $47fb439769024aa7$export$2e2bcd8739ae039 as ShareButton, $4b2a6afceae7f301$export$2e2bcd8739ae039 as englishMessages, $5de716308b366acb$export$2e2bcd8739ae039 as frenchMessages};
+export {$2957839fe06af793$export$2e2bcd8739ae039 as BackgroundChecks, $e235591816215308$export$2e2bcd8739ae039 as PodLoginPage, $1a88c39afebe872d$export$2e2bcd8739ae039 as RedirectPage, $47fb439769024aa7$export$2e2bcd8739ae039 as ShareButton, $79f089d541db8101$export$2e2bcd8739ae039 as ShareDialog, $f86de5ead054b96d$export$2e2bcd8739ae039 as UserMenu, $4b2a6afceae7f301$export$2e2bcd8739ae039 as englishMessages, $5de716308b366acb$export$2e2bcd8739ae039 as frenchMessages};
 //# sourceMappingURL=index.es.js.map

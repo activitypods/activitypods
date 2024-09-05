@@ -11,6 +11,9 @@ var $fvx3m$semappssemanticdataprovider = require("@semapps/semantic-data-provide
 var $fvx3m$muiiconsmaterialShare = require("@mui/icons-material/Share");
 var $fvx3m$muistylesmakeStyles = require("@mui/styles/makeStyles");
 var $fvx3m$muiiconsmaterialGroup = require("@mui/icons-material/Group");
+var $fvx3m$muiiconsmaterialPeopleAlt = require("@mui/icons-material/PeopleAlt");
+var $fvx3m$muiiconsmaterialApps = require("@mui/icons-material/Apps");
+var $fvx3m$muiiconsmaterialSettings = require("@mui/icons-material/Settings");
 
 
 function $parcel$export(e, n, v, s) {
@@ -25,6 +28,8 @@ $parcel$export(module.exports, "BackgroundChecks", () => $88874b19fd1a9965$expor
 $parcel$export(module.exports, "PodLoginPage", () => $474875ae41bcd76f$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "RedirectPage", () => $691cae6a20c06149$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "ShareButton", () => $c30b6e8e8f4f1d51$export$2e2bcd8739ae039);
+$parcel$export(module.exports, "ShareDialog", () => $8ffb7dd40d703ae5$export$2e2bcd8739ae039);
+$parcel$export(module.exports, "UserMenu", () => $fc1368eec161415d$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "englishMessages", () => $4b1314efa6ba34c8$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "frenchMessages", () => $7955e6b2ad1a54ef$export$2e2bcd8739ae039);
 // Components
@@ -594,6 +599,7 @@ var $35582d4b0c1bf8ac$export$2e2bcd8739ae039 = $35582d4b0c1bf8ac$var$GroupContac
  */ const $d4e71d4ba572ee47$var$ContactsShareList = ({ invitations: invitations, onChange: onChange, organizerUri: organizerUri, isCreator: isCreator, profileResource: profileResource, groupResource: groupResource })=>{
     const classes = $d4e71d4ba572ee47$var$useStyles();
     const translate = (0, $fvx3m$reactadmin.useTranslate)();
+    const { data: identity } = (0, $fvx3m$reactadmin.useGetIdentity)();
     const [searchText, setSearchText] = (0, $fvx3m$react.useState)("");
     const { data: profilesData, isLoading: loadingProfiles } = (0, $fvx3m$reactadmin.useGetList)(profileResource, {
         pagination: {
@@ -616,10 +622,11 @@ var $35582d4b0c1bf8ac$export$2e2bcd8739ae039 = $35582d4b0c1bf8ac$var$GroupContac
         }
     });
     // Filter here (instead of using the `filter.q` param above) to avoid triggering a SPARQL query on every character change
-    const profilesFiltered = (0, $fvx3m$react.useMemo)(()=>profilesData?.filter((profile)=>profile.describes !== organizerUri).filter((profile)=>(profile["vcard:given-name"] || "").toLocaleLowerCase().includes(searchText.toLocaleLowerCase()) || (0, $f21bc75053423cc3$export$1b2abdd92765429)(profile.describes).toLocaleLowerCase().includes(searchText.toLocaleLowerCase())), [
+    const profilesFiltered = (0, $fvx3m$react.useMemo)(()=>profilesData?.filter((profile)=>profile.describes !== organizerUri && profile.describes !== identity?.id).filter((profile)=>(profile["vcard:given-name"] || "").toLocaleLowerCase().includes(searchText.toLocaleLowerCase()) || (0, $f21bc75053423cc3$export$1b2abdd92765429)(profile.describes).toLocaleLowerCase().includes(searchText.toLocaleLowerCase())), [
         profilesData,
         searchText,
-        organizerUri
+        organizerUri,
+        identity
     ]);
     const groupsFiltered = (0, $fvx3m$react.useMemo)(()=>{
         return groupsData?.filter((group)=>(group["vcard:label"] || "").toLocaleLowerCase().includes(searchText.toLocaleLowerCase()));
@@ -710,7 +717,7 @@ var $d4e71d4ba572ee47$export$2e2bcd8739ae039 = $d4e71d4ba572ee47$var$ContactsSha
             }
         }
     }));
-const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resourceUri, profileResource: profileResource, groupResource: groupResource })=>{
+const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resourceUri, profileResource: profileResource = "Profile", groupResource: groupResource = "Group" })=>{
     const classes = $8ffb7dd40d703ae5$var$useStyles();
     const { data: identity } = (0, $fvx3m$reactadmin.useGetIdentity)();
     const record = (0, $fvx3m$reactadmin.useRecordContext)();
@@ -718,7 +725,7 @@ const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resource
     const creatorUri = record?.["dc:creator"];
     const isCreator = creatorUri && creatorUri === identity?.id;
     const { items: announces } = (0, $fvx3m$semappsactivitypubcomponents.useCollection)(record?.["apods:announces"]);
-    const { items: announcers } = (0, $fvx3m$semappsactivitypubcomponents.useCollection)(record?.["apods:announcers"]);
+    const { items: announcers } = (0, $fvx3m$semappsactivitypubcomponents.useCollection)(isCreator ? record?.["apods:announcers"] : undefined);
     /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */ const [invitations, setInvitations] = (0, $fvx3m$react.useState)({});
     // To keep track of changes...
     /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */ const [newInvitations, setNewInvitations] = (0, $fvx3m$react.useState)({});
@@ -909,6 +916,82 @@ var $8ffb7dd40d703ae5$export$2e2bcd8739ae039 = $8ffb7dd40d703ae5$var$ShareDialog
 var $c30b6e8e8f4f1d51$export$2e2bcd8739ae039 = $c30b6e8e8f4f1d51$var$ShareButton;
 
 
+
+
+
+
+
+
+
+
+
+
+
+const $fc1368eec161415d$var$UserMenu = ()=>{
+    const { data: identity } = (0, $fvx3m$reactadmin.useGetIdentity)();
+    const nodeinfo = (0, $fvx3m$semappsactivitypubcomponents.useNodeinfo)(identity?.webIdData?.["solid:oidcIssuer"] && new URL(identity?.webIdData?.["solid:oidcIssuer"]).host);
+    const translate = (0, $fvx3m$reactadmin.useTranslate)();
+    if (identity?.id && !nodeinfo) return null;
+    return /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$reactadmin.UserMenu), {
+        children: identity?.id ? [
+            /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsxs)((0, $fvx3m$muimaterial.MenuItem), {
+                component: "a",
+                href: (0, ($parcel$interopDefault($fvx3m$urljoin)))(nodeinfo?.metadata?.frontend_url, "network"),
+                children: [
+                    /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.ListItemIcon), {
+                        children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, ($parcel$interopDefault($fvx3m$muiiconsmaterialPeopleAlt))), {})
+                    }),
+                    /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.ListItemText), {
+                        children: translate("apods.user_menu.network")
+                    })
+                ]
+            }, "network"),
+            /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsxs)((0, $fvx3m$muimaterial.MenuItem), {
+                component: "a",
+                href: (0, ($parcel$interopDefault($fvx3m$urljoin)))(nodeinfo?.metadata?.frontend_url, "apps"),
+                children: [
+                    /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.ListItemIcon), {
+                        children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, ($parcel$interopDefault($fvx3m$muiiconsmaterialApps))), {})
+                    }),
+                    /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.ListItemText), {
+                        children: translate("apods.user_menu.apps")
+                    })
+                ]
+            }, "apps"),
+            /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsxs)((0, $fvx3m$muimaterial.MenuItem), {
+                component: "a",
+                href: (0, ($parcel$interopDefault($fvx3m$urljoin)))(nodeinfo?.metadata?.frontend_url, "data"),
+                children: [
+                    /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.ListItemIcon), {
+                        children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, ($parcel$interopDefault($fvx3m$muiiconsmaterialStorage))), {})
+                    }),
+                    /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.ListItemText), {
+                        children: translate("apods.user_menu.data")
+                    })
+                ]
+            }, "data"),
+            /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsxs)((0, $fvx3m$muimaterial.MenuItem), {
+                component: "a",
+                href: (0, ($parcel$interopDefault($fvx3m$urljoin)))(nodeinfo?.metadata?.frontend_url, "settings"),
+                children: [
+                    /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.ListItemIcon), {
+                        children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, ($parcel$interopDefault($fvx3m$muiiconsmaterialSettings))), {})
+                    }),
+                    /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.ListItemText), {
+                        children: translate("apods.user_menu.settings")
+                    })
+                ]
+            }, "settings"),
+            /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$reactadmin.Logout), {}, "logout")
+        ] : /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$reactadmin.MenuItemLink), {
+            to: "/login",
+            primaryText: translate("ra.auth.sign_in")
+        })
+    });
+};
+var $fc1368eec161415d$export$2e2bcd8739ae039 = $fc1368eec161415d$var$UserMenu;
+
+
 // Model https://github.com/marmelab/react-admin/blob/master/packages/ra-language-french/src/index.ts
 var $4b1314efa6ba34c8$export$2e2bcd8739ae039 = {
     apods: {
@@ -926,6 +1009,12 @@ var $4b1314efa6ba34c8$export$2e2bcd8739ae039 = {
         permission: {
             view: "Allowed to view",
             share: "Invite own contacts"
+        },
+        user_menu: {
+            network: "My network",
+            apps: "My applications",
+            data: "My data",
+            settings: "Settings"
         }
     }
 };
@@ -948,6 +1037,12 @@ var $7955e6b2ad1a54ef$export$2e2bcd8739ae039 = {
         permission: {
             view: "Droit de voir",
             share: "Inviter ses contacts"
+        },
+        user_menu: {
+            network: "Mon r\xe9seau",
+            apps: "Mes applis",
+            data: "Mes donn\xe9es",
+            settings: "Param\xe8tres"
         }
     }
 };

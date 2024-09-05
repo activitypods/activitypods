@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useGetList, useTranslate } from 'react-admin';
+import { useGetList, useTranslate, useGetIdentity } from 'react-admin';
 import { List, Box, CircularProgress, TextField, Alert } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import ContactItem from './ContactItem';
@@ -28,6 +28,7 @@ const useStyles = makeStyles(theme => ({
 const ContactsShareList = ({ invitations, onChange, organizerUri, isCreator, profileResource, groupResource }) => {
   const classes = useStyles();
   const translate = useTranslate();
+  const { data: identity } = useGetIdentity();
   const [searchText, setSearchText] = useState('');
 
   const { data: profilesData, isLoading: loadingProfiles } = useGetList(profileResource, {
@@ -43,13 +44,13 @@ const ContactsShareList = ({ invitations, onChange, organizerUri, isCreator, pro
   const profilesFiltered = useMemo(
     () =>
       profilesData
-        ?.filter(profile => profile.describes !== organizerUri)
+        ?.filter(profile => profile.describes !== organizerUri && profile.describes !== identity?.id)
         .filter(
           profile =>
             (profile['vcard:given-name'] || '').toLocaleLowerCase().includes(searchText.toLocaleLowerCase()) ||
             formatUsername(profile.describes).toLocaleLowerCase().includes(searchText.toLocaleLowerCase())
         ),
-    [profilesData, searchText, organizerUri]
+    [profilesData, searchText, organizerUri, identity]
   );
   const groupsFiltered = useMemo(() => {
     return groupsData?.filter(group =>

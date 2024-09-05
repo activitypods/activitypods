@@ -44,6 +44,7 @@ export const RedirectPage: FunctionComponent<_Props2>;
 type _Props2 = {
     ontologies: [Ontology];
 };
+export const UserMenu: FunctionComponent;
 export const englishMessages: {
     apods: {
         action: {
@@ -60,6 +61,12 @@ export const englishMessages: {
         permission: {
             view: string;
             share: string;
+        };
+        user_menu: {
+            network: string;
+            apps: string;
+            data: string;
+            settings: string;
         };
     };
 };
@@ -80,8 +87,15 @@ export const frenchMessages: {
             view: string;
             share: string;
         };
+        user_menu: {
+            network: string;
+            apps: string;
+            data: string;
+            settings: string;
+        };
     };
 };
 export { default as ShareButton } from './components/ShareButton/ShareButton';
+export { default as ShareDialog } from './components/ShareButton/ShareDialog';
 
 //# sourceMappingURL=index.d.ts.map

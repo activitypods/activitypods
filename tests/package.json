@@ -1,6 +1,5 @@
 {
   "name": "activitypods-tests",
-  "version": "2.0.0-alpha.11",
   "private": true,
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles --verbose"

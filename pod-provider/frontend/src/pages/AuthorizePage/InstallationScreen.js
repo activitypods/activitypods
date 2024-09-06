@@ -14,8 +14,8 @@ import AppHeader from './AppHeader';
 const InstallationScreen = ({ application, accessApp, isTrustedApp }) => {
   const [isInstalling, setIsInstalling] = useState(false);
   const [allowedAccessNeeds, setAllowedAccessNeeds] = useState();
-  const outbox = useOutbox();
-  const inbox = useInbox();
+  const outbox = useOutbox({ liveUpdates: true });
+  const inbox = useInbox({ liveUpdates: true });
   const translate = useTranslate();
   const notify = useNotify();
 
@@ -37,6 +37,7 @@ const InstallationScreen = ({ application, accessApp, isTrustedApp }) => {
       setIsInstalling(true);
 
       await outbox.awaitWebSocketConnection();
+      await inbox.awaitWebSocketConnection();
 
       // Do not await to ensure we don't miss the activities
       outbox.post({

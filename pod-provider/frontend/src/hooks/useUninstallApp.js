@@ -5,8 +5,8 @@ import { useOutbox, ACTIVITY_TYPES, useInbox } from '@semapps/activitypub-compon
 
 const useUninstallApp = app => {
   const notify = useNotify();
-  const outbox = useOutbox();
-  const inbox = useInbox();
+  const outbox = useOutbox({ liveUpdates: true });
+  const inbox = useInbox({ liveUpdates: true });
 
   const uninstallApp = useCallback(async () => {
     try {

@@ -16,8 +16,8 @@
     "watch": "nodemon --ext ts,tsx,js --watch src --exec 'yarn build'"
   },
   "dependencies": {
-    "@semapps/activitypub-components": "0.8.0",
-    "@semapps/semantic-data-provider": "0.8.0",
+    "@semapps/activitypub-components": "0.8.1",
+    "@semapps/semantic-data-provider": "0.8.1",
     "url-join": "^4.0.1"
   },
   "peerDependencies": {

@@ -20,8 +20,8 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
   const [allowedAccessNeeds, setAllowedAccessNeeds] = useState([]);
   const [grantedAccessNeeds, setGrantedAccessNeeds] = useState([]);
   const [missingAccessNeeds, setMissingAccessNeeds] = useState({ required: [], optional: [] });
-  const outbox = useOutbox();
-  const inbox = useInbox();
+  const outbox = useOutbox({ liveUpdates: true });
+  const inbox = useInbox({ liveUpdates: true });
   const translate = useTranslate();
   const notify = useNotify();
   const uninstallApp = useUninstallApp(application);
@@ -39,6 +39,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
           setStep('upgrading');
 
           await outbox.awaitWebSocketConnection();
+          await inbox.awaitWebSocketConnection();
 
           // Do not await to ensure we don't miss the activities below
           outbox.post({

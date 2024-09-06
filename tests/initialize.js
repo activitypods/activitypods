@@ -205,8 +205,6 @@ const installApp = async (actor, appUri, waitForAccept = true, acceptedAccessNee
     publishedAfter
   });
 
-  console.log('createRegistrationActivity', createRegistrationActivity);
-
   if (waitForAccept) {
     await actor.call('activitypub.inbox.awaitActivity', {
       collectionUri: actor.inbox,

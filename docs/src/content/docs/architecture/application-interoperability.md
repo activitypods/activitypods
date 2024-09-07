@@ -34,33 +34,6 @@ We've also decided not to use [ShapeTrees](https://shapetrees.org) for the time 
 - Pods only create `AccessGrants` and `DataGrants`, not `AccessAuthorizations` and `DataAuthorizations`. Grants can be shared with the registered application, while Authorizations cannot. The only difference between them is a `grantedWith` predicate in `AccessAuthorizations` that indicates which app was used to manage authorizations (but we manage that internally anyway).
 - Pods don't declare `RegistrySet`, `ApplicationRegistry`, `AuthorizationRegistry` as they are not visible from the outside. We just read `ApplicationRegistrations`, `AccessGrants` and `DataGrants` in their dedicated containers.
 
-## Type Indexes
-
-**Added in:** `activitypods@2.0`
-
-We have implemented a basic [TypeIndex](https://github.com/solid/type-indexes), that is linked to the WebID with the `solid:publicTypeIndex` predicate.
-
-Since we don't support yet RDF documents (planned for version 3.0), we use a custom `solid:hasTypeRegistration` predicate to link the `solid:TypeIndex` with the various `solid:TypeRegistration`, and we dereference them for easier handling. See [this issue](https://github.com/solid/type-indexes/issues/29) for more details.
-
-```
-{
-   "id":"https://mypod.store/sro/data/9abafd71-39d9-47f2-8a1d-a50cb6a0a5c6",
-   "type":[ "solid:TypeIndex", "solid:ListedDocument"],
-   "solid:hasTypeRegistration":[
-      {
-         "id":"https://mypod.store/sro/data/da9c1935-1c9d-4660-81de-183657c2a7a7",
-         "type":"solid:TypeRegistration",
-         "dc:created":"2024-07-02T15:41:41.252Z",
-         "dc:creator":"https://mypod.store/sro",
-         "dc:modified":"2024-07-02T15:41:41.252Z",
-         "solid:forClass":"vcard:Group",
-         "solid:instanceContainer":"https://mypod.store/sro/data/vcard/group"
-      },
-      ...
-   ]
-}
-```
-
 ## Class descriptions
 
 **Added in:** `activitypods@2.0`
@@ -74,13 +47,17 @@ Applications can describe the types of resources (classes) they use. This enable
   "apods:describedBy": "https://welcometomyplace.org",
   "skos:prefLabel": "Events",
   "apods:labelPredicate": "https://www.w3.org/ns/activitystreams#name",
-  "apods:openEndpoint": "https://welcometomyplace.org/r"
+  "apods:openEndpoint": "https://welcometomyplace.org/r",
+  "apods:icon": "https://welcometomyplace.org/logo192.png"
 }
 ```
 
-- `skos:prefLabel` is the
-- `apods:labelPredicate` indicates the predicate to be used to obtain the resource label. This displays the resource label in the data browser.
-- `apods:openEndpoint` is the URL
+The following predicates are used:
+
+- `skos:prefLabel`: A human-readable label of the resource type
+- `apods:labelPredicate`: The predicate used to label the resource
+- `apods:openEndpoint`: An URL that can be used to open the resources
+- `apods:icon`: An image to describe the resource type
 
 Class descriptions are located in the `interop:AccessDescriptionSet`
 
@@ -91,3 +68,39 @@ Class descriptions are located in the `interop:AccessDescriptionSet`
   "apods:hasClassDescription": "https://mypod.store/alice/data/eba0227a-3bbb-4582-b879
 }
 ```
+
+## Type Indexes
+
+**Added in:** `activitypods@2.0`
+
+[TypeIndexes](https://github.com/solid/type-indexes) are Solid's recommended method to discover in what LDP containers the resources are being stored. In ActivityPods, we have implemented a public TypeIndex, that is linked to the WebID with the `solid:publicTypeIndex` predicate.
+
+Since we don't support yet RDF documents (planned for version 3.0), we use a custom `solid:hasTypeRegistration` predicate to link the `solid:TypeIndex` with the various `solid:TypeRegistration`, and we dereference them for easier handling. See [this issue](https://github.com/solid/type-indexes/issues/29) for more details.
+
+```
+{
+   "id":"https://mypod.store/sro/data/9abafd71-39d9-47f2-8a1d-a50cb6a0a5c6",
+   "type":[ "solid:TypeIndex", "solid:ListedDocument"],
+   "solid:hasTypeRegistration":[
+      {
+         "id":"https://mypod.store/sro/data/da9c1935-1c9d-4660-81de-183657c2a7a7",
+         "type":"solid:TypeRegistration",
+         "solid:forClass":"vcard:Group",
+         "solid:instanceContainer":"https://mypod.store/sro/data/vcard/group"
+      },
+      ...
+   ]
+}
+```
+
+In addition to the `solid:forClass` and `solid:instanceContainer` predicates used by TypeRegistrations to indicate, respectively, the types and their container's URI, we are also persisting predicates that are used by the Pod provider's data browser. They are the same as the [ClassDescription](#class-description).
+
+- `skos:prefLabel`: A human-readable label of the resource type
+- `apods:labelPredicate`: The predicate used to label the resource
+- `apods:openEndpoint`: An URL that can be used to open the resources
+- `apods:icon`: An image to describe the resource type
+
+Additionaly, two predicates are used in relation with apps registration:
+
+- `apods:defaultApp`: The default app with which to open the resource type
+- `apods:availableApps`: All the apps that are able to handle this resource type

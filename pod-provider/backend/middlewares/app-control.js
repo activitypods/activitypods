@@ -9,6 +9,8 @@ const DEFAULT_ALLOWED_TYPES = [
   ...Object.values(ACTIVITY_TYPES),
   'Collection',
   'OrderedCollection',
+  'CollectionPage',
+  'OrderedCollectionPage',
   'Tombstone',
   'semapps:File',
   'acl:Authorization',
@@ -94,7 +96,9 @@ const AppControlMiddleware = ({ baseUrl }) => ({
           const allowedTypes = await getAllowedTypes(ctx, appUri, podOwner, 'acl:Write');
 
           if (!resourceTypes.some(t => allowedTypes.includes(t))) {
-            throw new E.ForbiddenError(`The type of the resource being posted doesn't match any authorized types`);
+            throw new E.ForbiddenError(
+              `Some of the resources' types being posted (${resourceTypes.join(', ')}) are not authorized`
+            );
           }
         }
 
@@ -119,7 +123,9 @@ const AppControlMiddleware = ({ baseUrl }) => ({
           });
 
           if (!resourceTypes.some(t => allowedTypes.includes(t))) {
-            throw new E.ForbiddenError(`The type of the resource being fetched doesn't match any authorized types`);
+            throw new E.ForbiddenError(
+              `Some of the resources' types being fetched (${resourceTypes.join(', ')}) are not authorized`
+            );
           }
         }
 

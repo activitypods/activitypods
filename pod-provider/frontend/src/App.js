@@ -13,9 +13,11 @@ import Layout from './layout/Layout';
 import theme from './config/theme';
 
 import HomePage from './pages/HomePage';
-import DataPage from './pages/DataPage/DataPage';
-import DataTypePage from './pages/DataPage/DataTypePage';
+import DataPage from './pages/DataPage/DataListPage';
+import DataContainerPage from './pages/DataPage/DataContainerScreen';
+import DataResourcePage from './pages/DataPage/DataShowPage';
 import SettingsPage from './pages/SettingsPage/SettingsPage';
+import AdvancedSettingsPage from './pages/SettingsPage/AdvancedSettingsPage';
 import SettingsPasswordPage from './pages/SettingsPage/SettingsPasswordPage';
 import SettingsEmailPage from './pages/SettingsPage/SettingsEmailPage';
 import SettingsExportPodPage from './pages/SettingsPage/SettingsExportPodPage';
@@ -69,14 +71,17 @@ const App = () => (
         </CustomRoutes>
         <CustomRoutes>
           <Route path="/apps" element={<ApplicationsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/settings/email" element={<SettingsEmailPage />} />
-          <Route path="/settings/password" element={<SettingsPasswordPage />} />
-          <Route path="/settings/export-pod" element={<SettingsExportPodPage />} />
-          <Route path="/settings/delete-pod" element={<SettingsDeletePodPage />} />
+          <Route path="/settings">
+            <Route index element={<SettingsPage />} />
+            <Route path="advanced" element={<AdvancedSettingsPage />} />
+            <Route path="email" element={<SettingsEmailPage />} />
+            <Route path="password" element={<SettingsPasswordPage />} />
+            <Route path="export-pod" element={<SettingsExportPodPage />} />
+            <Route path="delete-pod" element={<SettingsDeletePodPage />} />
+          </Route>
           <Route path="/data">
             <Route index element={<DataPage />} />
-            <Route path=":containerUri" element={<DataTypePage />} />
+            <Route path=":resourceUri" element={<DataResourcePage />} />
           </Route>
           <Route path="/network">
             <Route index element={<NetworkPage />} />

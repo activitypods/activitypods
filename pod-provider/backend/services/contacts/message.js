@@ -7,7 +7,13 @@ module.exports = {
   settings: {
     acceptedTypes: 'as:Note',
     permissions: {},
-    newResourcesPermissions: {}
+    newResourcesPermissions: {},
+    description: {
+      labelMap: {
+        en: 'Messages',
+        fr: 'Messages'
+      }
+    }
   },
   activities: {
     createNote: {

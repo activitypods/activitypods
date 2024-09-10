@@ -54,6 +54,7 @@ module.exports = {
       apps_short: 'Apps',
       settings: 'Settings',
       settings_short: 'Settings',
+      settings_advanced: 'Advanced settings',
       available_apps: 'Available applications',
       addresses: 'My addresses',
       settings_email: 'Update email address',
@@ -85,7 +86,8 @@ module.exports = {
       addresses: 'My addresses',
       address: '%{smart_count} address |||| %{smart_count} addresses',
       export: 'Export all my data',
-      delete: 'Delete my Pod'
+      delete: 'Delete my Pod',
+      developer_mode: 'Developer mode'
     },
     authorization: {
       required: 'Required access',

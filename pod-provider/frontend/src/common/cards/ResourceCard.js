@@ -33,11 +33,14 @@ const ResourceCard = ({ resource, typeRegistration }) => {
   const translate = useTranslate();
   const classes = useStyles();
 
-  const actor = useActor(resource?.creator.value);
+  const actor = useActor(resource['dc:creator']);
 
-  const created = new Date(resource?.created.value);
-  const modified = new Date(resource?.modified.value);
+  const created = resource['dc:created'] && new Date(resource['dc:created']);
+  const modified = resource['dc:modified'] && new Date(resource['dc:modified']);
   const dateTimeFormat = new Intl.DateTimeFormat(CONFIG.DEFAULT_LOCALE);
+
+  // TODO Use JSON-LD parser to use full URIs
+  const labelPredicate = typeRegistration?.['apods:labelPredicate']?.replace('as:', '');
 
   if (!resource) return null;
 
@@ -45,38 +48,55 @@ const ResourceCard = ({ resource, typeRegistration }) => {
     <Card>
       <Box className={classes.title}>
         <Box display="flex" justifyContent="center" className={classes.avatarWrapper}>
-          <Avatar src={typeRegistration['apods:icon']} className={classes.avatar}>
+          <Avatar src={typeRegistration?.['apods:icon']} className={classes.avatar}>
             <InsertDriveFileIcon sx={{ width: 100, height: 100 }} />
           </Avatar>
         </Box>
       </Box>
-      <Typography variant="h4" sx={{ mt: 10, textAlign: 'center' }}>
-        {resource?.label.value}
+      <Typography
+        variant="h4"
+        sx={{
+          mt: 10,
+          pl: 2,
+          pr: 2,
+          textAlign: 'center',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}
+      >
+        {typeRegistration && resource[labelPredicate]}
       </Typography>
       <Box p={2}>
         <Table size="small">
           <TableBody>
-            <TableRow>
-              <TableCell>{translate('app.input.creator')}</TableCell>
-              <TableCell align="right">{actor.name}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>{translate('app.input.created')}</TableCell>
-              <TableCell align="right">{dateTimeFormat.format(created)}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>{translate('app.input.modified')}</TableCell>
-              <TableCell align="right">{dateTimeFormat.format(modified)}</TableCell>
-            </TableRow>
+            {actor.name && (
+              <TableRow>
+                <TableCell>{translate('app.input.creator')}</TableCell>
+                <TableCell align="right">{actor.name}</TableCell>
+              </TableRow>
+            )}
+            {created && (
+              <TableRow>
+                <TableCell>{translate('app.input.created')}</TableCell>
+                <TableCell align="right">{dateTimeFormat.format(created)}</TableCell>
+              </TableRow>
+            )}
+            {modified && (
+              <TableRow>
+                <TableCell>{translate('app.input.modified')}</TableCell>
+                <TableCell align="right">{dateTimeFormat.format(modified)}</TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </Box>
-      {typeRegistration['apods:openEndpoint'] && (
+      {typeRegistration?.['apods:openEndpoint'] && (
         <Box sx={{ mt: 1, mb: 3, textAlign: 'center' }}>
           <a
             href={`${typeRegistration['apods:openEndpoint']}?type=${encodeURIComponent(
               arrayOf(typeRegistration['solid:forClass'])?.[0]
-            )}&uri=${encodeURIComponent(resource?.resourceUri.value)}&mode=show`}
+            )}&uri=${encodeURIComponent(resource.id || resource['@id'])}&mode=show`}
             target="_blank"
             rel="noreferrer"
           >

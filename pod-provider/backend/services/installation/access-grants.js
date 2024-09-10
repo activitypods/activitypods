@@ -16,7 +16,7 @@ module.exports = {
       labelMap: {
         en: 'Access Grants'
       },
-      developerMode: true
+      internal: true
     }
   },
   actions: {

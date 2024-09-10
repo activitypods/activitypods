@@ -17,7 +17,7 @@ module.exports = {
       labelMap: {
         en: 'Data Grants'
       },
-      developerMode: true
+      internal: true
     }
   },
   dependencies: ['ldp', 'ldp.registry', 'pod'],

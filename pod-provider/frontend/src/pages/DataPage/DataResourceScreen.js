@@ -47,6 +47,7 @@ const DataResourceScreen = ({ resource }) => {
           displayDataTypes={false}
           displayObjectSize={false}
           enableClipboard={false}
+          highlightUpdates={false}
         >
           <JsonView.String
             render={({ children, style, ...rest }, { value, keyName }) => {

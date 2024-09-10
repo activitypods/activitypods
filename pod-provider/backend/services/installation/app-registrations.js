@@ -21,7 +21,7 @@ module.exports = {
       labelMap: {
         en: 'Application Registrations'
       },
-      developerMode: true
+      internal: true
     }
   },
   actions: {

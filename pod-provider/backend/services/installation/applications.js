@@ -11,7 +11,7 @@ module.exports = {
         en: 'Applications'
       },
       labelPredicate: 'interop:applicationName',
-      developerMode: true
+      internal: true
     }
   },
   actions: {

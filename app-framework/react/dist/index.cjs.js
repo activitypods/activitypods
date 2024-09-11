@@ -200,6 +200,16 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
         notify,
         locale
     ]);
+    // Immediately logout if required
+    (0, $fvx3m$react.useEffect)(()=>{
+        if (searchParams.has("logout")) logout({
+            redirectUrl: redirectUrl
+        });
+    }, [
+        searchParams,
+        logout,
+        redirectUrl
+    ]);
     (0, $fvx3m$react.useEffect)(()=>{
         if (!isIdentityLoading) {
             if (identity?.id) redirect("/");
@@ -207,18 +217,13 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
             login({
                 issuer: searchParams.get("iss")
             });
-            else if (searchParams.has("logout")) logout({
-                redirectUrl: redirectUrl
-            });
         }
     }, [
         searchParams,
         login,
-        logout,
         identity,
         isIdentityLoading,
-        redirect,
-        redirectUrl
+        redirect
     ]);
     if (isIdentityLoading) return null;
     return /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Box), {

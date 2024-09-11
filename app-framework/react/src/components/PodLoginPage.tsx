@@ -59,6 +59,13 @@ const PodLoginPageView: FunctionComponent<Props> = ({ text, customPodProviders }
     })();
   }, [podProviders, setPodProviders, notify, locale]);
 
+  // Immediately logout if required
+  useEffect(() => {
+    if (searchParams.has('logout')) {
+      logout({ redirectUrl });
+    }
+  }, [searchParams, logout, redirectUrl]);
+
   useEffect(() => {
     if (!isIdentityLoading) {
       if (identity?.id) {
@@ -66,11 +73,9 @@ const PodLoginPageView: FunctionComponent<Props> = ({ text, customPodProviders }
       } else if (searchParams.has('iss')) {
         // Automatically login if Pod provider is known
         login({ issuer: searchParams.get('iss') });
-      } else if (searchParams.has('logout')) {
-        logout({ redirectUrl });
       }
     }
-  }, [searchParams, login, logout, identity, isIdentityLoading, redirect, redirectUrl]);
+  }, [searchParams, login, identity, isIdentityLoading, redirect]);
 
   if (isIdentityLoading) return null;
 

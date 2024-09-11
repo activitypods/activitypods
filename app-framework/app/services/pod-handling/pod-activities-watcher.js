@@ -1,4 +1,4 @@
-const { getContainerFromUri, arrayOf, isObject } = require('@semapps/ldp');
+const { getContainerFromUri, arrayOf, isObject, isURL } = require('@semapps/ldp');
 const { matchActivity } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { objectDepth } = require('../../utils');
@@ -111,8 +111,10 @@ module.exports = {
         }
       };
 
-      // TODO get the cached activity to ensure we have no authorization problems
-      const activity = await fetcher(object);
+      // Mastodon sometimes send unfetchable activities (like `Accept` activities)
+      // In this case, the notification includes the whole activity, and we don't need to fetch it
+      // TODO In the case of remote activities, get the cached activity to reduce risks of permission problems
+      const activity = isURL(object) ? await fetcher(object) : object;
       if (!activity) {
         this.logger.warn(`Could not fetch activity ${object} received by ${actorUri}`);
         return false;

@@ -33,9 +33,9 @@ module.exports = {
           WHERE {
             ?classDescription apods:describedClass <${type}> .
             ?classDescription skos:prefLabel "${label}" .
-            ?classDescription apods:labelPredicate <${labelPredicate}> .
-            ?classDescription apods:openEndpoint "${openEndpoint}" .
-            ?classDescription apods:icon "${icon}" .
+            ${labelPredicate ? `?classDescription apods:labelPredicate <${labelPredicate}> .` : ''}
+            ${openEndpoint ? `?classDescription apods:openEndpoint "${openEndpoint}" .` : ''}
+            ${icon ? `?classDescription apods:icon "${icon}" .` : ''}
             ?classDescription a apods:ClassDescription .
             ?set apods:hasClassDescription ?classDescription .
             ?set interop:usesLanguage "${locale}"^^<http://www.w3.org/2001/XMLSchema#language>

@@ -30,9 +30,11 @@ module.exports = {
        */
       for (const [type, classDescription] of Object.entries(classDescriptions)) {
         const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
-        const [expandedLabelPredicate] = await ctx.call('jsonld.parser.expandTypes', {
-          types: [classDescription.labelPredicate]
-        });
+        const [expandedLabelPredicate] = classDescription.labelPredicate
+          ? await ctx.call('jsonld.parser.expandTypes', {
+              types: [classDescription.labelPredicate]
+            })
+          : [undefined];
 
         for (const locale of Object.keys(classDescription.label)) {
           const existingClassDescriptionUri = await ctx.call('class-descriptions.findExisting', {

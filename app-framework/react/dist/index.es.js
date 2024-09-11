@@ -20,16 +20,36 @@ import $iLwJW$muiiconsmaterialSettings from "@mui/icons-material/Settings";
 
 
 
+const $93d7a9f3166de761$export$1b2abdd92765429 = (uri)=>{
+    const url = new URL(uri);
+    const username = url.pathname.split("/")[1];
+    return "@" + username + "@" + url.host;
+};
+const $93d7a9f3166de761$export$e57ff0f701c44363 = (value)=>{
+    // If the field is null-ish, we suppose there are no values.
+    if (!value) return [];
+    // Return as is.
+    if (Array.isArray(value)) return value;
+    // Single value is made an array.
+    return [
+        value
+    ];
+};
+
+
 /**
  * Call the /.well-known/app-status endpoint to check the status of the app
- * If the app backend is offline, display an error message
+ * If the app backend is offline or not installed, display an error message
  * If the app need to be upgraded, redirect the user to the /authorize page
- */ const $2957839fe06af793$var$BackgroundChecks = ({ clientId: clientId, children: children })=>{
+ * If the app is not listening to the provided URLs, display an error message
+ * Check this every 2 minutes or whenever the window becomes visible again
+ */ const $2957839fe06af793$var$BackgroundChecks = ({ clientId: clientId, listeningTo: listeningTo = [], children: children })=>{
     const { data: identity, isLoading: isIdentityLoading } = (0, $iLwJW$useGetIdentity)();
     const notify = (0, $iLwJW$useNotify)();
-    const [appStatus, setAppStatus] = (0, $iLwJW$useState)();
+    const [appStatusChecked, setAppStatusChecked] = (0, $iLwJW$useState)(false);
     const nodeinfo = (0, $iLwJW$useNodeinfo)(identity?.id ? new URL(identity?.id).host : undefined);
     const isLoggedOut = !isIdentityLoading && !identity?.id;
+    if (!clientId) throw new Error(`Missing clientId prop for BackgroundChecks component`);
     const checkAppStatus = (0, $iLwJW$useCallback)(async ()=>{
         // Only proceed if the tab is visible
         if (!document.hidden && identity?.id) {
@@ -47,23 +67,41 @@ import $iLwJW$muiiconsmaterialSettings from "@mui/icons-material/Settings";
                 if (response.ok) {
                     const appStatus = await response.json();
                     if (appStatus) {
-                        setAppStatus(appStatus);
-                        if (!appStatus.onlineBackend) notify(`The app backend is offline`, {
-                            type: "error"
-                        });
-                        else if (!appStatus.installed) notify(`The app is not installed`, {
-                            type: "error"
-                        });
-                        else if (appStatus.upgradeNeeded) {
+                        if (!appStatus.onlineBackend) {
+                            notify("apods.error.app_offline", {
+                                type: "error"
+                            });
+                            return;
+                        }
+                        if (!appStatus.installed) {
+                            notify("apods.error.app_not_installed", {
+                                type: "error"
+                            });
+                            return;
+                        }
+                        if (appStatus.upgradeNeeded) {
                             const consentUrl = new URL(nodeinfo?.metadata?.consent_url);
                             consentUrl.searchParams.append("client_id", clientId);
                             consentUrl.searchParams.append("redirect", window.location.href);
                             window.location.href = consentUrl.toString();
+                            return;
                         }
+                        if (listeningTo.length > 0) {
+                            for (const uri of listeningTo)if (!(0, $93d7a9f3166de761$export$e57ff0f701c44363)(appStatus.webhookChannels).some((c)=>c.topic === uri)) {
+                                notify("apods.error.app_not_listening", {
+                                    messageArgs: {
+                                        uri: uri
+                                    },
+                                    type: "error"
+                                });
+                                return;
+                            }
+                        }
+                        setAppStatusChecked(true);
                     }
                 }
             } catch (e) {
-                notify(`Unable to check app status`, {
+                notify("apods.error.app_status_unavailable", {
                     type: "error"
                 });
             }
@@ -71,7 +109,7 @@ import $iLwJW$muiiconsmaterialSettings from "@mui/icons-material/Settings";
     }, [
         identity,
         nodeinfo,
-        setAppStatus,
+        setAppStatusChecked,
         document
     ]);
     (0, $iLwJW$useEffect)(()=>{
@@ -92,7 +130,7 @@ import $iLwJW$muiiconsmaterialSettings from "@mui/icons-material/Settings";
         checkAppStatus
     ]);
     // TODO display error message instead of notifications
-    if (isLoggedOut || appStatus?.onlineBackend === true && appStatus?.installed === true && appStatus?.upgradeNeeded === false) return children;
+    if (isLoggedOut || appStatusChecked) return children;
     else return null;
 };
 var $2957839fe06af793$export$2e2bcd8739ae039 = $2957839fe06af793$var$BackgroundChecks;
@@ -298,22 +336,6 @@ var $1a88c39afebe872d$export$2e2bcd8739ae039 = $1a88c39afebe872d$var$RedirectPag
 
 
 
-
-const $93d7a9f3166de761$export$1b2abdd92765429 = (uri)=>{
-    const url = new URL(uri);
-    const username = url.pathname.split("/")[1];
-    return "@" + username + "@" + url.host;
-};
-const $93d7a9f3166de761$export$e57ff0f701c44363 = (value)=>{
-    // If the field is null-ish, we suppose there are no values.
-    if (!value) return [];
-    // Return as is.
-    if (Array.isArray(value)) return value;
-    // Single value is made an array.
-    return [
-        value
-    ];
-};
 
 
 /**
@@ -995,6 +1017,12 @@ var $4b2a6afceae7f301$export$2e2bcd8739ae039 = {
             view: "Allowed to view",
             share: "Invite own contacts"
         },
+        error: {
+            app_status_unavailable: "Unable to check app status",
+            app_offline: "The app backend is offline",
+            app_not_installed: "The app is not installed",
+            app_not_listening: "The app is not listening to %{uri}"
+        },
         user_menu: {
             network: "My network",
             apps: "My applications",
@@ -1022,6 +1050,12 @@ var $5de716308b366acb$export$2e2bcd8739ae039 = {
         permission: {
             view: "Droit de voir",
             share: "Inviter ses contacts"
+        },
+        error: {
+            app_status_unavailable: "Impossible de v\xe9rifier le statut de l'application",
+            app_offline: "L'application est hors ligne",
+            app_not_installed: "L'application n'est pas install\xe9e",
+            app_not_listening: "L'application n'\xe9coute pas %{uri}"
         },
         user_menu: {
             network: "Mon r\xe9seau",

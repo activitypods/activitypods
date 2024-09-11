@@ -1,7 +1,15 @@
+export type WebhookChannel = {
+  id: string;
+  topic: string;
+  sendTo: string;
+  webId: string;
+};
+
 export type AppStatus = {
   onlineBackend: boolean;
   installed?: boolean;
   upgradeNeeded?: boolean;
+  webhookChannels: WebhookChannel[];
 };
 
 export type Ontology = {

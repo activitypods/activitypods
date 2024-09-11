@@ -17,6 +17,12 @@ export default {
       view: 'Droit de voir',
       share: 'Inviter ses contacts'
     },
+    error: {
+      app_status_unavailable: "Impossible de vérifier le statut de l'application",
+      app_offline: "L'application est hors ligne",
+      app_not_installed: "L'application n'est pas installée",
+      app_not_listening: "L'application n'écoute pas %{uri}"
+    },
     user_menu: {
       network: 'Mon réseau',
       apps: 'Mes applis',

@@ -1,26 +1,29 @@
-import { FunctionComponent, ReactNode } from 'react';
+import { FunctionComponent, ReactNode } from "react";
 type Ontology = {
-  prefix: string;
-  owl?: string;
-  url: string;
+    prefix: string;
+    owl?: string;
+    url: string;
 };
 type PodProvider = {
-  id?: string;
-  type?: string;
-  'apods:baseUrl': string;
-  'apods:area'?: string;
-  'apods:locales'?: string;
-  'apods:providedBy'?: string;
+    id?: string;
+    type?: string;
+    'apods:baseUrl': string;
+    'apods:area'?: string;
+    'apods:locales'?: string;
+    'apods:providedBy'?: string;
 };
 /**
  * Call the /.well-known/app-status endpoint to check the status of the app
- * If the app backend is offline, display an error message
+ * If the app backend is offline or not installed, display an error message
  * If the app need to be upgraded, redirect the user to the /authorize page
+ * If the app is not listening to the provided URLs, display an error message
+ * Check this every 2 minutes or whenever the window becomes visible again
  */
 export const BackgroundChecks: FunctionComponent<Props>;
 type Props = {
-  clientId: string;
-  children: ReactNode;
+    clientId: string;
+    listeningTo?: string[];
+    children: ReactNode;
 };
 /**
  * Display a list of Pod providers that we can log in
@@ -29,8 +32,8 @@ type Props = {
  */
 export const PodLoginPage: FunctionComponent<_Props1>;
 type _Props1 = {
-  text?: string;
-  customPodProviders: [PodProvider];
+    text?: string;
+    customPodProviders: [PodProvider];
 };
 /**
  * Look for the `type` search param and compare it with React-Admin resources
@@ -42,58 +45,70 @@ type _Props1 = {
  */
 export const RedirectPage: FunctionComponent<_Props2>;
 type _Props2 = {
-  ontologies: [Ontology];
+    ontologies: [Ontology];
 };
 export const UserMenu: FunctionComponent;
 export const englishMessages: {
-  apods: {
-    action: {
-      search: string;
-      share: string;
-      send_invitation: string;
+    apods: {
+        action: {
+            search: string;
+            share: string;
+            send_invitation: string;
+        };
+        helper: {
+            no_contact: string;
+        };
+        notification: {
+            invitation_sent: string;
+        };
+        permission: {
+            view: string;
+            share: string;
+        };
+        error: {
+            app_status_unavailable: string;
+            app_offline: string;
+            app_not_installed: string;
+            app_not_listening: string;
+        };
+        user_menu: {
+            network: string;
+            apps: string;
+            data: string;
+            settings: string;
+        };
     };
-    helper: {
-      no_contact: string;
-    };
-    notification: {
-      invitation_sent: string;
-    };
-    permission: {
-      view: string;
-      share: string;
-    };
-    user_menu: {
-      network: string;
-      apps: string;
-      data: string;
-      settings: string;
-    };
-  };
 };
 export const frenchMessages: {
-  app: {
-    action: {
-      search: string;
-      send_invitation: string;
-      share: string;
+    app: {
+        action: {
+            search: string;
+            send_invitation: string;
+            share: string;
+        };
+        helper: {
+            no_contact: string;
+        };
+        notification: {
+            invitation_sent: string;
+        };
+        permission: {
+            view: string;
+            share: string;
+        };
+        error: {
+            app_status_unavailable: string;
+            app_offline: string;
+            app_not_installed: string;
+            app_not_listening: string;
+        };
+        user_menu: {
+            network: string;
+            apps: string;
+            data: string;
+            settings: string;
+        };
     };
-    helper: {
-      no_contact: string;
-    };
-    notification: {
-      invitation_sent: string;
-    };
-    permission: {
-      view: string;
-      share: string;
-    };
-    user_menu: {
-      network: string;
-      apps: string;
-      data: string;
-      settings: string;
-    };
-  };
 };
 export { default as ShareButton } from './components/ShareButton/ShareButton';
 export { default as ShareDialog } from './components/ShareButton/ShareDialog';

@@ -7,8 +7,9 @@ const queueOptions =
   process.env.NODE_ENV === 'test'
     ? {}
     : {
-        // Try again after 3 minutes and until 12 hours later
-        attempts: 8,
+        // Try again after 3 minutes and until 48 hours later
+        // Method to calculate it: Math.round((Math.pow(2, attemptsMade) - 1) * delay)
+        attempts: 10,
         backoff: { type: 'exponential', delay: '180000' }
       };
 

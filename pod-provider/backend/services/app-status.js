@@ -35,11 +35,16 @@ const AppStatusService = {
         onlineBackend = false;
       }
 
+      const webhookChannels = installed
+        ? await ctx.call('solid-notifications.provider.webhook.getAppChannels', { appUri, webId })
+        : undefined;
+
       return {
         onlineBackend,
         installed,
         upgradeNeeded:
-          onlineBackend && installed ? localAppData['dc:modified'] != remoteAppData['dc:modified'] : undefined
+          onlineBackend && installed ? localAppData['dc:modified'] != remoteAppData['dc:modified'] : undefined,
+        webhookChannels
       };
     }
   }

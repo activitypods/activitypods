@@ -17,14 +17,13 @@ const InstalledApps = ({ installedApps, trustedApps }) => {
     }
   }, [notify, searchParams]);
 
-  if (installedApps?.length === 0) return null;
-
   return (
     <>
       <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>
         {translate('app.page.apps')}
       </Typography>
       <Box mt={1} mb={5}>
+        {installedApps?.length === 0 && translate('app.message.no_app_registration')}
         <Grid container spacing={xs ? 1 : 3}>
           {installedApps?.map(installedApp => {
             const isTrustedApp = trustedApps?.some(baseUrl => baseUrl === installedApp.id) || false;

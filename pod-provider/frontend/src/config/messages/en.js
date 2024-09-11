@@ -165,7 +165,7 @@ module.exports = {
       you_participated_to_same_event: 'You participated to the same event',
       verified_app: 'Verified application',
       verified: 'Verified',
-      no_app_registration: 'You have no application installed',
+      no_app_registration: 'You have no installed application',
       connection_successful: 'You are now connected!',
       pod_creation_progress: 'Your Pod is being created...',
       app_installation_progress: 'App installation in progress...',

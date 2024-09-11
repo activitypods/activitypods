@@ -11,8 +11,10 @@ module.exports = {
         type: 'apods:Install'
       },
       async onEmit(ctx, activity, emitterUri) {
+        const appUri = activity.object;
+
         const appRegistration = await ctx.call('app-registrations.getForApp', {
-          appUri: activity.object,
+          appUri,
           podOwner: emitterUri
         });
 
@@ -25,7 +27,7 @@ module.exports = {
         }
 
         const appRegistrationUri = await ctx.call('app-registrations.createOrUpdate', {
-          appUri: activity.object,
+          appUri,
           podOwner: emitterUri,
           acceptedAccessNeeds: activity['apods:acceptedAccessNeeds'],
           acceptedSpecialRights: activity['apods:acceptedSpecialRights']
@@ -35,8 +37,13 @@ module.exports = {
           collectionUri: urlJoin(emitterUri, 'outbox'),
           '@type': ACTIVITY_TYPES.CREATE,
           object: appRegistrationUri,
-          to: activity.object
+          to: appUri
         });
+
+        if (this.broker.cacher) {
+          // Invalidate all rights of the application on the Pod as they may now be completely different
+          await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: emitterUri });
+        }
       }
     },
     upgrade: {
@@ -44,8 +51,10 @@ module.exports = {
         type: 'apods:Upgrade'
       },
       async onEmit(ctx, activity, emitterUri) {
+        const appUri = activity.object;
+
         const appRegistrationUri = await ctx.call('app-registrations.createOrUpdate', {
-          appUri: activity.object,
+          appUri,
           podOwner: emitterUri,
           acceptedAccessNeeds: activity['apods:acceptedAccessNeeds'],
           acceptedSpecialRights: activity['apods:acceptedSpecialRights']
@@ -55,8 +64,13 @@ module.exports = {
           collectionUri: urlJoin(emitterUri, 'outbox'),
           '@type': ACTIVITY_TYPES.UPDATE,
           object: appRegistrationUri,
-          to: activity.object
+          to: appUri
         });
+
+        if (this.broker.cacher) {
+          // Invalidate all rights of the application on the Pod as they may now be completely different
+          await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: emitterUri });
+        }
       }
     },
     rejectAppRegistration: {
@@ -93,6 +107,14 @@ module.exports = {
           resourceUri: appRegistrationUri,
           webId: recipientUri
         });
+
+        if (this.broker.cacher) {
+          // Invalidate all rights of the application on the Pod as they may now be completely different
+          await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', {
+            webId: activity.actor,
+            podOwner: recipientUri
+          });
+        }
       }
     },
     uninstall: {
@@ -119,6 +141,11 @@ module.exports = {
             object: appRegistration.id || appRegistration['@id'],
             to: appUri
           });
+
+          if (this.broker.cacher) {
+            // Invalidate all rights of the application on the Pod as they may now be completely different
+            await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: emitterUri });
+          }
         }
       }
     }

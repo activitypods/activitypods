@@ -23,10 +23,10 @@ const InstalledApps = ({ installedApps, trustedApps }) => {
         {translate('app.page.apps')}
       </Typography>
       <Box mt={1} mb={5}>
-        {installedApps?.length === 0 && translate('app.message.no_app_registration')}
+        {installedApps?.length === 0 && <Typography mb={5}>{translate('app.message.no_app_registration')}</Typography>}
         <Grid container spacing={xs ? 1 : 3}>
           {installedApps?.map(installedApp => {
-            const isTrustedApp = trustedApps?.some(baseUrl => baseUrl === installedApp.id) || false;
+            const isTrustedApp = trustedApps?.some(trustedApp => trustedApp.id === installedApp.id) || false;
             return (
               <Grid key={installedApp.id} item xs={12} sm={6}>
                 <ApplicationCard app={installedApp} isTrustedApp={isTrustedApp} isInstalled />

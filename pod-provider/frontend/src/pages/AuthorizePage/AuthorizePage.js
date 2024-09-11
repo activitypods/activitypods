@@ -19,7 +19,7 @@ const AuthorizePage = () => {
   const appUri = searchParams.get('client_id');
   const redirectTo = searchParams.get('redirect');
   const interactionId = searchParams.get('interaction_id');
-  const isTrustedApp = trustedApps?.some(baseUrl => baseUrl === new URL(appUri).origin) || false;
+  const isTrustedApp = trustedApps?.some(trustedApp => trustedApp.id === appUri) || false;
 
   const { data: application } = useGetOne('App', { id: appUri });
   const { data: appRegistrations, isLoading } = useGetList('AppRegistration', { page: 1, perPage: Infinity });

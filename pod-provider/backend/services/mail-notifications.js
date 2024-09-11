@@ -101,7 +101,6 @@ module.exports = {
   methods: {
     async queueMail(ctx, title, payload) {
       payload.template = 'single-mail';
-      console.log('payload', payload);
       if (this.createJob) {
         return this.createJob('sendMail', title, payload);
       }

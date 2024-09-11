@@ -183,10 +183,10 @@ export const validateBaseUrl = (uri: string, allowAddHttp: boolean) => {
 
 export const localPodProviderObject = {
   type: 'apods:PodProvider',
-  'apods:area': 'Local server',
-  'apods:locales': CONFIG.DEFAULT_LOCALE,
   'apods:baseUrl': CONFIG.BACKEND_URL,
-  'apods:providedBy': CONFIG.INSTANCE_NAME
+  'apods:locales': CONFIG.DEFAULT_LOCALE,
+  'apods:area': CONFIG.INSTANCE_AREA,
+  'apods:providedBy': CONFIG.INSTANCE_OWNER
 };
 
 /**

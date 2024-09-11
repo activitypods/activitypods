@@ -19,6 +19,8 @@ module.exports = {
         window.CONFIG = {
           INSTANCE_NAME: "${process.env.SEMAPPS_INSTANCE_NAME}",
           INSTANCE_DESCRIPTION: "${process.env.SEMAPPS_INSTANCE_DESCRIPTION}",
+          INSTANCE_OWNER: "${process.env.SEMAPPS_INSTANCE_OWNER}",
+          INSTANCE_AREA: "${process.env.SEMAPPS_INSTANCE_AREA}",
           DEFAULT_LOCALE: "${process.env.SEMAPPS_DEFAULT_LOCALE}",
           BACKEND_URL: "${process.env.SEMAPPS_HOME_URL}",
           MAPBOX_ACCESS_TOKEN: "${process.env.SEMAPPS_MAPBOX_ACCESS_TOKEN}",

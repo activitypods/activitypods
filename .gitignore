@@ -6,6 +6,8 @@ yarn-error.log
 
 /pod-provider/data
 
+/app-framework/react/dist
+
 .parcel-cache
 
 .yalc

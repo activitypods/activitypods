@@ -166,7 +166,7 @@ module.exports = {
           consent: { grantId }
         });
       } else {
-        throw new Error(`No interaction found with ID ${interactionId}`);
+        throw new Error(`No interaction found with ID ${interactionId}. It may have expired.`);
       }
     }
   },
@@ -177,7 +177,7 @@ module.exports = {
         interaction.result = result;
         await interaction.save(interaction.exp - Math.floor(Date.now() / 1000));
       } else {
-        throw new Error(`No interaction found with ID ${interactionId}`);
+        throw new Error(`No interaction found with ID ${interactionId}. It may have expired.`);
       }
     }
   }

@@ -140,7 +140,9 @@ module.exports = (settings, privateJwk) => ({
     // Since we currently use ID tokens instead of Access tokens with DPOP, keep it active for one year.
     // Community Solid Server use one hour (3600s) which is a g)ood default if it is used only to generate an access token
     IdToken: 31536000,
-    Interaction: 3600,
+    // 3 hours, just in case the user take long to login or authorize. Community Solid Server uses one hour (3600s)
+    // If interaction expires on authorization, an error notification will be shown. If the user tries to install again the app, it will work.
+    Interaction: 10800,
     RefreshToken: 86400,
     // Keep session open for one year, like the ID token. On Community Solid Server, it is 14 days (1209600s)
     Session: 31536000

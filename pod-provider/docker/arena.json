@@ -40,35 +40,35 @@
       "hostId": "app",
       "host": "redis",
       "port": 6379,
-      "db": 8
+      "db": 12
     },
     {
       "name": "processInbox",
       "hostId": "app",
       "host": "redis",
       "port": 6379,
-      "db": 8
+      "db": 12
     },
     {
       "name": "processOutbox",
       "hostId": "app",
       "host": "redis",
       "port": 6379,
-      "db": 8
+      "db": 12
     },
     {
       "name": "registerListener",
       "hostId": "app",
       "host": "redis",
       "port": 6379,
-      "db": 8
+      "db": 12
     },
     {
       "name": "timeout",
       "hostId": "app",
       "host": "redis",
       "port": 6379,
-      "db": 8
+      "db": 12
     }
   ]
 }

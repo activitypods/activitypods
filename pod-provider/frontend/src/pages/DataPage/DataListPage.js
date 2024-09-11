@@ -1,9 +1,20 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslate } from 'react-admin';
-import { Box, Typography, List, ListItem, ListItemButton, Avatar, ListItemAvatar, ListItemText } from '@mui/material';
+import {
+  Badge,
+  Box,
+  Typography,
+  List,
+  ListItem,
+  ListItemButton,
+  Avatar,
+  ListItemAvatar,
+  ListItemText
+} from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import FolderIcon from '@mui/icons-material/Folder';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import { arrayOf } from '../../utils';
@@ -42,16 +53,29 @@ const DataPage = () => {
         <List>
           {typeRegistrations
             ?.filter(r => r['skos:prefLabel'] && (!r['apods:internal'] || developerMode))
-            .sort(r => (r['apods:internal'] ? 1 : -1))
+            .sort((a, b) => b['skos:prefLabel'].localeCompare(a['skos:prefLabel']))
+            .sort((a, b) => (a['apods:internal'] && !b['apods:internal'] ? 1 : -1))
             .map(typeRegistration => (
               <ListItem className={classes.listItem} key={typeRegistration.id}>
                 <ListItemButton
                   onClick={() => navigate(`/data/${encodeURIComponent(typeRegistration['solid:instanceContainer'])}`)}
                 >
                   <ListItemAvatar>
-                    <Avatar src={typeRegistration?.['apods:icon']}>
-                      <FolderIcon />
-                    </Avatar>
+                    {typeRegistration['apods:internal'] ? (
+                      <Badge
+                        badgeContent={<SettingsIcon sx={{ width: 16, height: 16, color: 'grey' }} />}
+                        overlap="circular"
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                      >
+                        <Avatar src={typeRegistration?.['apods:icon']}>
+                          <FolderIcon />
+                        </Avatar>
+                      </Badge>
+                    ) : (
+                      <Avatar src={typeRegistration?.['apods:icon']}>
+                        <FolderIcon />
+                      </Avatar>
+                    )}
                   </ListItemAvatar>
                   <ListItemText
                     primary={typeRegistration['skos:prefLabel']}

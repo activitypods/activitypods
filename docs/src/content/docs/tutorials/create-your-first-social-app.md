@@ -109,7 +109,11 @@ A browser window should automatically be launched. If not, you can access the ap
 
 ## Play with the boilerplate
 
-The "Hot module reload" feature is activated on both frontend and code, so you can do changes to the code and it will be visible almost immediately.
+The "Hot module reload" feature is activated on the frontend, so you can do changes to the code and it will be visible almost immediately.
+
+:::note
+The "Hot module reload" feature has been temporarily disabled for the backend as it causes [performance issues](https://github.com/activitypods/activitypods/issues/215). You will need to restart the server whenever you make a change.
+:::
 
 For the frontend, check the excellent [React-Admin documentation](https://marmelab.com/react-admin/Readme.html) to find what you can do. Have a look at [SemApps website](https://semapps.org/docs/frontend) for specific components.
 

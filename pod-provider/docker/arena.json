@@ -37,38 +37,38 @@
     },
     {
       "name": "remotePost",
-      "hostId": "app",
+      "hostId": "app-boilerplate",
       "host": "redis",
       "port": 6379,
-      "db": 12
+      "db": 11
     },
     {
       "name": "processInbox",
-      "hostId": "app",
+      "hostId": "app-boilerplate",
       "host": "redis",
       "port": 6379,
-      "db": 12
+      "db": 11
     },
     {
       "name": "processOutbox",
-      "hostId": "app",
+      "hostId": "app-boilerplate",
       "host": "redis",
       "port": 6379,
-      "db": 12
+      "db": 11
     },
     {
       "name": "registerListener",
-      "hostId": "app",
+      "hostId": "app-boilerplate",
       "host": "redis",
       "port": 6379,
-      "db": 12
+      "db": 11
     },
     {
       "name": "timeout",
-      "hostId": "app",
+      "hostId": "app-boilerplate",
       "host": "redis",
       "port": 6379,
-      "db": 12
+      "db": 11
     }
   ]
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslate, useGetList } from 'react-admin';
+import { useTranslate } from 'react-admin';
 import { Box, Typography, List, ListItem, ListItemButton, Avatar, ListItemAvatar, ListItemText } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -28,20 +28,21 @@ const DataPage = () => {
   const translate = useTranslate();
   const navigate = useNavigate();
   const classes = useStyles();
+  const developerMode = !!localStorage.getItem('developer_mode');
   const { data: typeRegistrations } = useTypeRegistrations();
 
   if (!typeRegistrations) return null;
 
   return (
     <>
-      <Typography variant="h2" component="h1" sx={{ mt: 2 }}>
+      <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>
         {translate('app.page.data')}
       </Typography>
       <Box>
         <List>
           {typeRegistrations
-            ?.filter(r => r['skos:prefLabel'])
-            ?.sort(a => (a['apods:defaultApp'] ? -1 : 1))
+            ?.filter(r => r['skos:prefLabel'] && (!r['apods:internal'] || developerMode))
+            .sort(r => (r['apods:internal'] ? 1 : -1))
             .map(typeRegistration => (
               <ListItem className={classes.listItem} key={typeRegistration.id}>
                 <ListItemButton

@@ -29,7 +29,7 @@ const NetworkRequestPage = () => {
 
   return (
     <>
-      <Typography variant="h2" component="h1" sx={{ mt: 2 }}>
+      <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>
         {translate('app.page.add_contact')}
       </Typography>
       <Box mt={1}>

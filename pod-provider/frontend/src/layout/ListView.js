@@ -9,7 +9,7 @@ const ListView = ({ asides, actions = [<CreateButton />], title, children }) => 
     <SplitView asides={asides}>
       <Grid container sx={{ mt: 2 }}>
         <Grid item xs={8}>
-          <Typography variant="h2" component="h1">
+          <Typography variant="h2" component="h1" noWrap>
             {title || defaultTitle}
           </Typography>
         </Grid>

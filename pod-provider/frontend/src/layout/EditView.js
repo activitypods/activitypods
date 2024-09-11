@@ -6,7 +6,7 @@ const EditView = ({ title, actions = [<ListButton />, <ShowButton />], children 
   <>
     <Grid container sx={{ mt: 2 }}>
       <Grid item xs={8}>
-        <Typography variant="h2" component="h1">
+        <Typography variant="h2" component="h1" noWrap>
           {title}
         </Typography>
       </Grid>

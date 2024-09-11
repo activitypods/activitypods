@@ -16,7 +16,13 @@ module.exports = {
       }
     },
     excludeFromMirror: true,
-    activateTombstones: false
+    activateTombstones: false,
+    description: {
+      labelMap: {
+        en: 'Application Registrations'
+      },
+      internal: true
+    }
   },
   actions: {
     async createOrUpdate(ctx) {

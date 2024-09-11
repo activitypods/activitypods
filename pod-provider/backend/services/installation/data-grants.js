@@ -12,7 +12,13 @@ module.exports = {
       }
     },
     excludeFromMirror: true,
-    activateTombstones: false
+    activateTombstones: false,
+    description: {
+      labelMap: {
+        en: 'Data Grants'
+      },
+      internal: true
+    }
   },
   dependencies: ['ldp', 'ldp.registry', 'pod'],
   actions: {

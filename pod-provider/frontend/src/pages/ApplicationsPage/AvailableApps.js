@@ -16,7 +16,7 @@ const AvailableApps = ({ installedApps, trustedApps }) => {
 
   return (
     <>
-      <Typography variant="h2" component="h1" sx={{ mt: 2 }}>
+      <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>
         {translate('app.page.available_apps')}
       </Typography>
       <Box mt={1}>

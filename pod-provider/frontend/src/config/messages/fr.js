@@ -55,6 +55,7 @@ module.exports = {
       addresses: 'Mes adresses',
       settings: 'Paramètres',
       settings_short: 'Paramètres',
+      settings_advanced: 'Paramètres avancés',
       settings_email: 'Modifier mon mail',
       settings_password: 'Modifier mon mot de passe',
       add_contact: 'Demander une mise en relation',
@@ -74,7 +75,10 @@ module.exports = {
       email: 'Adresse mail',
       password: 'Mot de passe',
       addresses: 'Mes adresses',
-      address: '%{smart_count} adresse |||| %{smart_count} adresses'
+      address: '%{smart_count} adresse |||| %{smart_count} adresses',
+      export: 'Exporter toutes mes données',
+      delete: 'Effacer mon compte',
+      developer_mode: 'Mode développeur'
     },
     authorization: {
       required: 'Accès requis',
@@ -137,10 +141,8 @@ module.exports = {
       authorize_install: "Pour être installée, l'application requiert les autorisations suivantes",
       authorize_upgrade:
         "L'application a été mise à jour et requiert maintenant les nouvelles autorisations ci-dessous",
-
       invite_text_logged_out:
         "Un espace personnel est l'endroit où vous stockez vos données. Tout comme les comptes email, il est décentralisé, ce qui vous permet de choisir un fournisseur de confiance. Au lieu de créer un nouveau compte pour chaque nouvelle application, vous pourrez utiliser le même compte. Les applications compatibles stockeront les données dans votre espace.",
-
       invite_text_logged_in:
         "En acceptant l'invitation, %{username} sera ajouté à vos contacts. Par ailleurs, vous lui donnez le droit de voir votre profil et de vous ajouter à ses propre contacts",
       choose_provider_text_signup:

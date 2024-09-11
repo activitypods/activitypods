@@ -11,7 +11,13 @@ module.exports = {
       }
     },
     excludeFromMirror: true,
-    activateTombstones: false
+    activateTombstones: false,
+    description: {
+      labelMap: {
+        en: 'Access Grants'
+      },
+      internal: true
+    }
   },
   actions: {
     put() {

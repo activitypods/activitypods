@@ -44,7 +44,7 @@ const AdvancedSettingsPage = () => {
             actionIcon={<DownloadIcon />}
           />
           <SettingsItem
-            onClick={() => navigate('/settings/export-pod')}
+            onClick={() => navigate('/settings/delete-pod')}
             icon={<DeleteIcon color="error" />}
             label="app.setting.delete"
             actionIcon={<HighlightOffIcon color="error" />}

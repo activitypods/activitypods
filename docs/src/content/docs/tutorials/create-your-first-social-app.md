@@ -1,7 +1,7 @@
 ---
 title: Create your first social app
 sidebar:
-  order: 2
+  order: 0
 ---
 
 We created a boilerplate to help you quickly setup a social app in a local environment, and connect it with a local Pod provider. In just a few minutes, you should be able to play with your first ActivityPods-compatible app!

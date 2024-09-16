@@ -40,7 +40,7 @@ const DataResourceScreen = ({ resource }) => {
       ]}
       asides={[<ResourceCard resource={resource} typeRegistration={typeRegistration} />]}
     >
-      <Card sx={{ p: 2 }}>
+      <Card sx={{ p: 2, overflowX: 'auto' }}>
         <JsonView
           value={resource}
           shortenTextAfterLength={0}
@@ -48,6 +48,7 @@ const DataResourceScreen = ({ resource }) => {
           displayObjectSize={false}
           enableClipboard={false}
           highlightUpdates={false}
+          style={{ minWidth: '750px' }}
         >
           <JsonView.String
             render={({ children, style, ...rest }, { value, keyName }) => {

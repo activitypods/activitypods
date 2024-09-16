@@ -14,7 +14,6 @@ import theme from './config/theme';
 
 import HomePage from './pages/HomePage';
 import DataPage from './pages/DataPage/DataListPage';
-import DataContainerPage from './pages/DataPage/DataContainerScreen';
 import DataResourcePage from './pages/DataPage/DataShowPage';
 import SettingsPage from './pages/SettingsPage/SettingsPage';
 import AdvancedSettingsPage from './pages/SettingsPage/AdvancedSettingsPage';
@@ -70,7 +69,16 @@ const App = () => (
           <Route path="/invite/:capability" element={<InvitePage />} />
         </CustomRoutes>
         <CustomRoutes>
+          <Route path="/network">
+            <Route index element={<NetworkPage />} />
+            <Route path="request" element={<NetworkRequestPage />} />
+            <Route path=":webfingerId" element={<NetworkActorPage />} />
+          </Route>
           <Route path="/apps" element={<ApplicationsPage />} />
+          <Route path="/data">
+            <Route index element={<DataPage />} />
+            <Route path=":resourceUri" element={<DataResourcePage />} />
+          </Route>
           <Route path="/settings">
             <Route index element={<SettingsPage />} />
             <Route path="advanced" element={<AdvancedSettingsPage />} />
@@ -78,15 +86,6 @@ const App = () => (
             <Route path="password" element={<SettingsPasswordPage />} />
             <Route path="export-pod" element={<SettingsExportPodPage />} />
             <Route path="delete-pod" element={<SettingsDeletePodPage />} />
-          </Route>
-          <Route path="/data">
-            <Route index element={<DataPage />} />
-            <Route path=":resourceUri" element={<DataResourcePage />} />
-          </Route>
-          <Route path="/network">
-            <Route index element={<NetworkPage />} />
-            <Route path="request" element={<NetworkRequestPage />} />
-            <Route path=":webfingerId" element={<NetworkActorPage />} />
           </Route>
         </CustomRoutes>
       </Admin>

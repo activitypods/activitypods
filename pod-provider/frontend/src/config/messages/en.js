@@ -232,7 +232,7 @@ module.exports = {
     steps: {
       title: 'How does it work?',
       1: {
-        title: 'I create my personal space (POD)',
+        title: 'I create my personal online datastore (Pod)',
         text: "One place for all my data, it's about time!"
       },
       2: {
@@ -240,7 +240,7 @@ module.exports = {
         text: 'Meetings, classified ads... and many more to come!'
       },
       3: {
-        title: 'My data is securely stored on my POD',
+        title: 'My data is securely stored on my Pod',
         text: "Applications' administrators do not have access to it."
       },
       4: {

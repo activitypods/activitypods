@@ -56,7 +56,22 @@ publish-backend-latest:
 	$(DOCKER_COMPOSE_PUBLISH) build backend
 	$(DOCKER_COMPOSE_PUBLISH) push backend
 
+publish-frontend-arm64:
+	export TAG=arm64
+	$(DOCKER_COMPOSE_PUBLISH) build frontend
+	$(DOCKER_COMPOSE_PUBLISH) push frontend
+
+publish-backend-arm64:
+	export TAG=arm64
+	$(DOCKER_COMPOSE_PUBLISH) build backend
+	$(DOCKER_COMPOSE_PUBLISH) push backend
+
 publish-arena:
+	export TAG=latest
+	$(DOCKER_COMPOSE_PUBLISH) build arena
+	$(DOCKER_COMPOSE_PUBLISH) push arena
+
+publish-arena-arm64:
 	export TAG=latest
 	$(DOCKER_COMPOSE_PUBLISH) build arena
 	$(DOCKER_COMPOSE_PUBLISH) push arena

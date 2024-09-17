@@ -49,6 +49,13 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         }
 
         const appUri = ctx.meta.webId;
+        const { origin: appBaseUrl } = new URL(appUri);
+
+        // Bypass checks if user is querying the app backend
+        // Can happen if the app needs the user to be authenticated
+        if (url.startsWith(appBaseUrl)) {
+          return next(ctx);
+        }
 
         // Ensure we are fetching remote data (otherwise this could be a security issue)
         if (url.startsWith(podOwner)) {
@@ -113,6 +120,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         if (result && ctx.params.method === 'GET') {
           const allowedTypes = await getAllowedTypes(ctx, appUri, podOwner, 'acl:Read');
 
+          // TODO If the resource is a LDP container, ensure that all contained resources types are allowed
           let resourceTypes = result['@graph']
             ? [].concat(result['@graph'].map(r => r.type || r['@type']))
             : result.type || result['@type'];

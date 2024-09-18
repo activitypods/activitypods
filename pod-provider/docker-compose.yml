@@ -12,7 +12,7 @@ services:
       ADMIN_PASSWORD: 'admin'
 
   mailcatcher:
-    image: dockage/mailcatcher:0.7.1
+    image: dockage/mailcatcher
     container_name: mailcatcher
     ports:
       - '1080:1080'

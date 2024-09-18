@@ -54,6 +54,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         // Bypass checks if user is querying the app backend
         // Can happen if the app needs the user to be authenticated
         if (url.startsWith(appBaseUrl)) {
+          ctx.meta.webId = podOwner;
           return next(ctx);
         }
 

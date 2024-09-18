@@ -3,12 +3,18 @@ services:
     build:
       context: .
       dockerfile: ./docker/backend.dockerfile
+      platforms:
+        - linux/arm64
+        - linux/amd64
     image: activitypods/backend:${TAG:-latest}
 
   frontend:
     build:
       context: .
       dockerfile: ./docker/frontend.dockerfile
+      platforms:
+        - linux/arm64
+        - linux/amd64
     image: activitypods/frontend:${TAG:-latest}
     env_file:
       - ./frontend/.env
@@ -17,6 +23,9 @@ services:
     build:
       context: .
       dockerfile: ./docker/arena.dockerfile
+      platforms:
+        - linux/arm64
+        - linux/amd64
     image: activitypods/arena:${TAG:-latest}
     environment:
       REDIS_HOST: 'redis'

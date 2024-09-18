@@ -1,6 +1,6 @@
 DOCKER_COMPOSE_DEV=docker compose
 DOCKER_COMPOSE_TEST=docker compose -f docker-compose-test.yml
-DOCKER_COMPOSE_PUBLISH=docker compose -f docker-compose-publish.yml
+DOCKER_COMPOSE_PUBLISH=COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compose -f docker-compose-publish.yml
 
 # Development
 
@@ -38,40 +38,20 @@ stop-test:
 
 publish-frontend:
 	export TAG=`git describe --tags --abbrev=0`
-	$(DOCKER_COMPOSE_PUBLISH) build frontend
-	$(DOCKER_COMPOSE_PUBLISH) push frontend
+	$(DOCKER_COMPOSE_PUBLISH) build --push frontend
 
 publish-backend:
 	export TAG=`git describe --tags --abbrev=0`
-	$(DOCKER_COMPOSE_PUBLISH) build backend
-	$(DOCKER_COMPOSE_PUBLISH) push backend
+	$(DOCKER_COMPOSE_PUBLISH) build --push backend
 
 publish-frontend-latest:
 	export TAG=latest
-	$(DOCKER_COMPOSE_PUBLISH) build frontend
-	$(DOCKER_COMPOSE_PUBLISH) push frontend
+	$(DOCKER_COMPOSE_PUBLISH) build --push frontend
 
 publish-backend-latest:
 	export TAG=latest
-	$(DOCKER_COMPOSE_PUBLISH) build backend
-	$(DOCKER_COMPOSE_PUBLISH) push backend
-
-publish-frontend-arm64:
-	export TAG=arm64
-	$(DOCKER_COMPOSE_PUBLISH) build frontend
-	$(DOCKER_COMPOSE_PUBLISH) push frontend
-
-publish-backend-arm64:
-	export TAG=arm64
-	$(DOCKER_COMPOSE_PUBLISH) build backend
-	$(DOCKER_COMPOSE_PUBLISH) push backend
+	$(DOCKER_COMPOSE_PUBLISH) build --push backend
 
 publish-arena:
 	export TAG=latest
-	$(DOCKER_COMPOSE_PUBLISH) build arena
-	$(DOCKER_COMPOSE_PUBLISH) push arena
-
-publish-arena-arm64:
-	export TAG=latest
-	$(DOCKER_COMPOSE_PUBLISH) build arena
-	$(DOCKER_COMPOSE_PUBLISH) push arena
+	$(DOCKER_COMPOSE_PUBLISH) build --push arena

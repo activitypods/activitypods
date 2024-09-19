@@ -22,6 +22,10 @@ await ctx.call('pod-permissions.add', {
 
 To give a permission to all users, you should use `acl:agentClass` for the `agentPredicate` and `http://xmlns.com/foaf/0.1/Agent` for the `agentUri`.
 
+:::note
+Your application must have requested the `acl:Control` access need for the resource type.
+:::
+
 ## Creating WAC groups
 
 The [`PodWacGroupsService`](../../reference/pod-wac-groups-service) allows you to create or delete WAC groups, as well as add or remove members from these groups.

@@ -1,7 +1,7 @@
 // Model https://github.com/marmelab/react-admin/blob/master/packages/ra-language-french/src/index.ts
 
 export default {
-  app: {
+  apods: {
     action: {
       search: 'Rechercher',
       send_invitation: "Envoyer l'invitation |||| Envoyer %{smart_count} invitations",

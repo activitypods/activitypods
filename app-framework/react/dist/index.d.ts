@@ -80,7 +80,7 @@ export const englishMessages: {
     };
 };
 export const frenchMessages: {
-    app: {
+    apods: {
         action: {
             search: string;
             send_invitation: string;

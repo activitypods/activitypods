@@ -1040,7 +1040,7 @@ var $4b2a6afceae7f301$export$2e2bcd8739ae039 = {
 
 // Model https://github.com/marmelab/react-admin/blob/master/packages/ra-language-french/src/index.ts
 var $5de716308b366acb$export$2e2bcd8739ae039 = {
-    app: {
+    apods: {
         action: {
             search: "Rechercher",
             send_invitation: "Envoyer l'invitation |||| Envoyer %{smart_count} invitations",

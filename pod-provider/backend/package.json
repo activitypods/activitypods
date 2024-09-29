@@ -25,6 +25,7 @@
     "@semapps/jsonld": "0.9.5",
     "@semapps/ldp": "0.9.5",
     "@semapps/middlewares": "0.9.5",
+    "@semapps/migration": "0.9.5",
     "@semapps/mime-types": "0.9.5",
     "@semapps/nodeinfo": "0.9.5",
     "@semapps/ontologies": "0.9.5",

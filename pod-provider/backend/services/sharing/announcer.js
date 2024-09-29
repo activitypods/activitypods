@@ -110,6 +110,17 @@ module.exports = {
         },
         webId: object['dc:creator']
       });
+    },
+    async updateCollectionsOptions(ctx) {
+      const { dataset } = ctx.params;
+      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        collection: this.settings.announcesCollectionOptions,
+        dataset
+      });
+      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        collection: this.settings.announcersCollectionOptions,
+        dataset
+      });
     }
   },
   activities: {

@@ -1,6 +1,5 @@
 const urlJoin = require('url-join');
 const { triple, namedNode, literal } = require('@rdfjs/data-model');
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { MigrationService } = require('@semapps/migration');
@@ -44,7 +43,6 @@ module.exports = {
 
           // Apps
           await this.actions.useNewMutualAidNamespace(account, { parentCtx: ctx });
-          await this.actions.installApp({ ...account, appUri: 'http://localhost:3002/app' }, { parentCtx: ctx });
 
           await ctx.call('auth.account.update', {
             id: account['@id'],
@@ -373,52 +371,6 @@ module.exports = {
           dataset
         });
       }
-    },
-    async installApp(ctx) {
-      const { webId, appUri } = ctx.params;
-
-      const actor = await ctx.call('ldp.resource.get', { resourceUri: webId, accept: MIME_TYPES.JSON });
-      const app = await ctx.call('ldp.resource.get', { resourceUri: appUri, accept: MIME_TYPES.JSON });
-
-      let requiredAccessNeeds, requiredSpecialRights;
-      for (const accessNeedGroupUri of arrayOf(app['interop:hasAccessNeedGroup'])) {
-        const accessNeedGroup = await ctx.call('ldp.resource.get', {
-          resourceUri: accessNeedGroupUri,
-          accept: MIME_TYPES.JSON
-        });
-        if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
-          requiredAccessNeeds = accessNeedGroup['interop:hasAccessNeed'];
-          requiredSpecialRights = accessNeedGroup['apods:hasSpecialRights'];
-        }
-      }
-
-      const publishedAfter = new Date().toISOString();
-
-      // Do not await here
-      ctx.call('activitypub.outbox.post', {
-        collectionUri: actor.outbox,
-        type: 'apods:Install',
-        object: appUri,
-        'apods:acceptedAccessNeeds': requiredAccessNeeds,
-        'apods:acceptedSpecialRights': requiredSpecialRights
-      });
-
-      const createRegistrationActivity = await ctx.call('activitypub.outbox.awaitActivity', {
-        collectionUri: actor.outbox,
-        matcher: {
-          type: ACTIVITY_TYPES.CREATE,
-          to: appUri
-        },
-        publishedAfter
-      });
-
-      await ctx.call('activitypub.inbox.awaitActivity', {
-        collectionUri: actor.inbox,
-        matcher: {
-          type: ACTIVITY_TYPES.ACCEPT,
-          object: createRegistrationActivity.id
-        }
-      });
     }
   }
 };

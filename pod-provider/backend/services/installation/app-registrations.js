@@ -168,7 +168,8 @@ module.exports = {
           filters: {
             'http://www.w3.org/ns/solid/interop#registeredAgent': appUri,
             'http://www.w3.org/ns/solid/interop#registeredBy': podOwner
-          }
+          },
+          webId: 'system'
         },
         { parentCtx: ctx }
       );

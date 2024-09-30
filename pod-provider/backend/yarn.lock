@@ -635,6 +635,14 @@
     memory-streams "^0.1.3"
     moleculer "^0.14.18"
 
+"@semapps/migration@0.9.5":
+  version "0.9.5"
+  resolved "https://registry.yarnpkg.com/@semapps/migration/-/migration-0.9.5.tgz#ae725d1513618c7ce4b6405ed3565487f6698085"
+  integrity sha512-qwF0knXfZ1OikE1y5u1Z5Tpqa2blxToCjQQcLxw09/atMBk4sLIAc/bcaeiEV1heDi3U01ZEVJqFZfFGB5w99A==
+  dependencies:
+    "@semapps/ldp" "0.9.5"
+    "@semapps/webacl" "0.9.5"
+
 "@semapps/mime-types@0.9.5":
   version "0.9.5"
   resolved "https://registry.yarnpkg.com/@semapps/mime-types/-/mime-types-0.9.5.tgz#31f5a5ad9515addf6602ba5fdf469ac1aa9948be"

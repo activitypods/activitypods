@@ -129,7 +129,7 @@ module.exports = {
     },
     async findExistingByLocale(ctx) {
       const descriptionSets = await this.actions.list({}, { parentCtx: ctx });
-      return Object.fromEntries(descriptionSets['ldp:contains']?.map(set => [set['interop:usesLanguage'], set]));
+      return Object.fromEntries(descriptionSets['ldp:contains']?.map(set => [set['interop:usesLanguage'], set]) ?? []);
     }
   },
   hooks: {

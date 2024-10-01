@@ -62,14 +62,34 @@ const InstallationScreen = ({ application, accessApp, isTrustedApp }) => {
 
       // TODO Allow to pass an object, and automatically dereference it, like on the @semapps/activitypub matchActivity util
       const createRegistrationActivity = await outbox.awaitActivity(
-        activity => activity.type === 'Create' && activity.to === application.id
+        activity => {
+          console.log(
+            'activity received in outbox:',
+            activity,
+            activity.type === 'Create' && activity.to === application.id
+          );
+          return activity.type === 'Create' && activity.to === application.id;
+        },
+        { timeout: 70_000 }
       );
 
       await inbox.awaitActivity(
-        activity =>
-          activity.type === 'Accept' &&
-          activity.actor === application.id &&
-          activity.object === createRegistrationActivity.id
+        activity => {
+          console.log(
+            'activity received in inbox',
+            activity,
+            activity.type === 'Accept' &&
+              activity.actor === application.id &&
+              activity.object === createRegistrationActivity.id
+          );
+
+          return (
+            activity.type === 'Accept' &&
+            activity.actor === application.id &&
+            activity.object === createRegistrationActivity.id
+          );
+        },
+        { timeout: 70_000 }
       );
 
       await accessApp();

@@ -3,7 +3,7 @@ const { triple, namedNode, literal } = require('@rdfjs/data-model');
 const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { MigrationService } = require('@semapps/migration');
-const CONFIG = require('../config/config');
+const CONFIG = require('../../config/config');
 
 module.exports = {
   name: 'migration',

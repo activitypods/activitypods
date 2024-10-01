@@ -21,6 +21,7 @@
     "@rdfjs/formats": "4.0.0",
     "@semapps/activitypub": "0.9.6",
     "@semapps/auth": "0.9.6",
+    "@semapps/backup": "0.9.6",
     "@semapps/crypto": "0.9.6",
     "@semapps/jsonld": "0.9.6",
     "@semapps/ldp": "0.9.6",

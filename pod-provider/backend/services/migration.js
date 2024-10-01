@@ -1,19 +1,82 @@
 const urlJoin = require('url-join');
 const { triple, namedNode, literal } = require('@rdfjs/data-model');
+const { arrayOf } = require('@semapps/ldp');
+const { MIME_TYPES } = require('@semapps/mime-types');
+const { MigrationService } = require('@semapps/migration');
 const CONFIG = require('../config/config');
 
 module.exports = {
   name: 'migration',
+  mixins: [MigrationService],
+  settings: {
+    baseUrl: CONFIG.BASE_URL
+  },
   actions: {
-    async migrateAllPods(ctx) {
-      for (const account of await ctx.call('auth.account.find')) {
-        this.logger.info(`Migrating Pod of ${account.webId}...`);
+    async migrate(ctx) {
+      const { username } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
-        // TODO Handle Pod versioning
+      for (let account of accounts) {
+        if (account.version === '2.0.0') {
+          this.logger.info(`Pod of ${account.webId} is already on v2, skipping...`);
+        } else {
+          this.logger.info(`Migrating Pod of ${account.webId}...`);
 
-        this.actions.addSolidPredicates(account, { parentCtx: ctx });
-        this.actions.attachCollectionsToContainer(account, { parentCtx: ctx });
-        this.actions.migratePreferredLocale(account, { parentCtx: ctx });
+          ctx.meta.dataset = account.username;
+          ctx.meta.webId = account.webId;
+          ctx.meta.skipObjectsWatcher = true; // We don't want to trigger an Update
+
+          // WebID
+          await this.actions.migratePreferredLocale(account, { parentCtx: ctx });
+          await this.actions.addSolidPredicates(account, { parentCtx: ctx });
+          await this.actions.addTypeIndex(account, { parentCtx: ctx });
+
+          // Collections
+          await this.actions.attachCollectionsToContainer(account, { parentCtx: ctx });
+          await this.actions.deleteEmptyCollections(account, { parentCtx: ctx });
+          await this.actions.persistCollectionsOptions(account, { parentCtx: ctx });
+
+          // Containers
+          await this.actions.createNewContainers(account, { parentCtx: ctx });
+          await this.actions.attachResourcesToNewContainers(account, { parentCtx: ctx });
+          await this.actions.deleteUnusedContainers(account, { parentCtx: ctx });
+
+          // Apps
+          await this.actions.useNewMutualAidNamespace(account, { parentCtx: ctx });
+
+          await ctx.call('auth.account.update', {
+            id: account['@id'],
+            ...account,
+            version: '2.0.0'
+          });
+        }
+      }
+    },
+    async migratePreferredLocale(ctx) {
+      const account = ctx.params;
+      this.logger.info(`Migrating preferred locale...`);
+
+      if (account.preferredLocale) {
+        await ctx.call('ldp.resource.patch', {
+          resourceUri: account.webId,
+          triplesToAdd: [
+            triple(
+              namedNode(account.webId),
+              namedNode('http://schema.org/knowsLanguage'),
+              literal(account.preferredLocale)
+            )
+          ],
+          webId: 'system'
+        });
+
+        await ctx.call('auth.account.update', {
+          id: account['@id'],
+          ...account,
+          preferredLocale: undefined
+        });
+        this.logger.info('DONE');
+      } else {
+        this.logger.warn(`No preferred locale found`);
       }
     },
     async addSolidPredicates(ctx) {
@@ -46,34 +109,44 @@ module.exports = {
         });
 
         await ctx.call('auth.account.update', {
+          id: account['@id'],
           ...account,
           podUri: undefined
         });
 
         this.logger.info(`DONE`);
       } else {
-        this.logger.warn(`No preferred locale found for ${account.webId}`);
+        this.logger.warn(`No pod URI found for ${account.webId}`);
       }
     },
-    async updateCollectionsOptions(ctx) {
-      await ctx.call('activitypub.follow.updateCollectionsOptions');
-      await ctx.call('activitypub.inbox.updateCollectionsOptions');
-      await ctx.call('activitypub.outbox.updateCollectionsOptions');
-      await ctx.call('activitypub.like.updateCollectionsOptions');
-      await ctx.call('activitypub.reply.updateCollectionsOptions');
-      await ctx.call('contacts.manager.updateCollectionsOptions');
-      await ctx.call('contacts.request.updateCollectionsOptions');
+    async addTypeIndex(ctx) {
+      const { webId } = ctx.params;
+      const webIdData = await ctx.call('ldp.resource.get', { resourceUri: webId, accept: MIME_TYPES.JSON, webId });
 
-      // Persist options of existing /attendees collections, even if they are now handled by the app backend
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: {
-          attachPredicate: 'http://activitypods.org/ns/core#attendees',
-          ordered: false,
-          dereferenceItems: false
+      if (webIdData['solid:publicTypeIndex']) {
+        this.logger.warn(`Skipping TypeIndex as it is already attached to ${webId}...`);
+      } else {
+        this.logger.info(`Adding TypeIndex to ${webId}...`);
+
+        const podUrl = await ctx.call('pod.getUrl', { webId });
+        await ctx.call('type-indexes.createAndAttachToWebId', { webId });
+
+        // Go through each registered container and persist them
+        const registeredContainers = await ctx.call('ldp.registry.list');
+        for (const container of Object.values(registeredContainers)) {
+          const containerUri = urlJoin(podUrl, container.path);
+          for (const type of arrayOf(container.acceptedTypes)) {
+            await ctx.call('type-registrations.register', { type, containerUri, webId });
+            if (container.description) {
+              await ctx.call('type-registrations.attachDescription', {
+                type,
+                webId,
+                ...container.description
+              });
+            }
+          }
         }
-      });
-
-      // TODO persist options for the /announces and /announcers services
+      }
     },
     async attachCollectionsToContainer(ctx) {
       const { username: dataset } = ctx.params;
@@ -97,35 +170,206 @@ module.exports = {
         dataset
       });
     },
-    async registerClassDescriptions(ctx) {
-      await ctx.call('profiles.profile.registerClassDescriptionForAll');
-      await ctx.call('profiles.location.registerClassDescriptionForAll');
-      await ctx.call('profiles.contactgroup.registerClassDescriptionForAll');
-    },
-    async migratePreferredLocale(ctx) {
-      const account = ctx.params;
-      this.logger.info(`Migrating preferred locale...`);
+    async deleteEmptyCollections(ctx) {
+      const { username: dataset, webId } = ctx.params;
 
-      if (account.preferredLocale) {
-        await ctx.call('ldp.resource.patch', {
-          resourceUri: account.webId,
-          triplesToAdd: [
-            triple(
-              namedNode(account.webId),
-              namedNode('http://schema.org/knowsLanguage'),
-              literal(account.preferredLocale)
-            )
-          ],
+      // Collections which are now created on the fly
+      const attachPredicates = ['likes', 'replies'];
+
+      for (let attachPredicate of attachPredicates) {
+        attachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
+
+        this.logger.info(`Getting all collections in dataset ${dataset} attached with predicate ${attachPredicate}...`);
+
+        const results = await ctx.call('triplestore.query', {
+          query: `
+            SELECT ?objectUri ?collectionUri
+            WHERE {
+              ?objectUri <${attachPredicate}> ?collectionUri .
+              FILTER (isuri(?objectUri))
+              FILTER (strstarts(str(?collectionUri), "${webId}"))
+            }
+          `,
+          accept: MIME_TYPES.JSON,
+          webId: 'system',
+          dataset
+        });
+
+        for (const [objectUri, collectionUri] of results.map(r => [r.objectUri.value, r.collectionUri.value])) {
+          const isEmpty = await ctx.call('activitypub.collection.isEmpty', { collectionUri });
+          if (isEmpty) {
+            const exist = await ctx.call('ldp.resource.exist', { resourceUri: collectionUri, webId: 'system' });
+            if (exist) {
+              this.logger.info(`Collection ${collectionUri} is empty, deleting it...`);
+              await ctx.call('ldp.resource.delete', { resourceUri: collectionUri, webId });
+            }
+            await ctx.call('ldp.resource.patch', {
+              resourceUri: objectUri,
+              triplesToAdd: [triple(namedNode(objectUri), namedNode(attachPredicate), namedNode(collectionUri))],
+              webId: 'system'
+            });
+          }
+        }
+      }
+    },
+    async persistCollectionsOptions(ctx) {
+      const { username: dataset } = ctx.params;
+
+      await ctx.call('activitypub.follow.updateCollectionsOptions', { dataset });
+      await ctx.call('activitypub.inbox.updateCollectionsOptions', { dataset });
+      await ctx.call('activitypub.outbox.updateCollectionsOptions', { dataset });
+      await ctx.call('activitypub.like.updateCollectionsOptions', { dataset });
+      await ctx.call('activitypub.reply.updateCollectionsOptions', { dataset });
+      await ctx.call('contacts.manager.updateCollectionsOptions', { dataset });
+      await ctx.call('contacts.request.updateCollectionsOptions', { dataset });
+      await ctx.call('announcer.updateCollectionsOptions', { dataset });
+
+      // Persist options of existing /attendees collections, even if they are now handled by the app backend
+      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        collection: {
+          attachPredicate: 'http://activitypods.org/ns/core#attendees',
+          ordered: false,
+          dereferenceItems: false
+        },
+        dataset
+      });
+    },
+    async createNewContainers(ctx) {
+      const { webId, username: dataset } = ctx.params;
+      const podUrl = await ctx.call('pod.getUrl', { webId });
+
+      // Go through each registered containers, create and attach it
+      const registeredContainers = await ctx.call('ldp.registry.list', { dataset });
+      for (const container of Object.values(registeredContainers)) {
+        if (!container.podsContainer) {
+          const containerUri = urlJoin(podUrl, container.path);
+          this.logger.info(`Creating new container ${containerUri}`);
+          await ctx.call('ldp.container.createAndAttach', { containerUri, webId });
+        }
+      }
+
+      // App containers (they are not registered yet, but create them before the apps installation)
+      const appContainersPaths = ['/as/event', '/maid/offer', '/maid/request'];
+      for (const appContainerPath of appContainersPaths) {
+        const appContainerUri = urlJoin(podUrl, appContainerPath);
+        this.logger.info(`Creating new app container ${appContainerUri}`);
+        await ctx.call('ldp.container.createAndAttach', { containerUri: appContainerUri, webId });
+      }
+    },
+    async attachResourcesToNewContainers(ctx) {
+      const { webId } = ctx.params;
+
+      const containersMapping = {
+        '/files': '/semapps/file',
+        '/profiles': '/vcard/individual',
+        '/locations': '/vcard/location',
+        '/events': '/as/event',
+        '/notes': '/as/note',
+        '/activities': '/as/activity',
+        '/offers': '/maid/offer',
+        '/requests': '/maid/request',
+        '/groups': '/vcard/group'
+      };
+
+      for (const [oldPath, newPath] of Object.entries(containersMapping)) {
+        const oldContainerUri = urlJoin(webId, 'data', oldPath);
+        const newContainerUri = urlJoin(webId, 'data', newPath);
+
+        this.logger.info(`Moving all resources from ${oldContainerUri} to ${newContainerUri}`);
+
+        const resourcesUris = await ctx.call('ldp.container.getUris', { containerUri: oldContainerUri });
+
+        for (const resourceUri of resourcesUris) {
+          try {
+            await ctx.call('ldp.container.attach', {
+              containerUri: newContainerUri,
+              resourceUri,
+              webId: 'system'
+            });
+
+            await ctx.call('ldp.container.detach', {
+              containerUri: oldContainerUri,
+              resourceUri,
+              webId: 'system'
+            });
+          } catch (e) {
+            this.logger.warn(
+              `Could not attach ${resourceUri} to new container ${newContainerUri}. Error: ${e.message}`
+            );
+          }
+        }
+
+        const isEmpty = await ctx.call('ldp.container.isEmpty', { containerUri: oldContainerUri, webId });
+
+        if (isEmpty) {
+          this.logger.info(`Deleting empty container ${oldContainerUri}`);
+          await ctx.call('ldp.container.delete', { containerUri: oldContainerUri, webId });
+        } else {
+          this.logger.warn(`Cannot delete old container ${oldContainerUri} as it is not empty`);
+        }
+      }
+    },
+    async deleteUnusedContainers(ctx) {
+      const { webId } = ctx.params;
+
+      // Containers which are not used anymore in v2
+      const unusedContainersPaths = ['/projects', '/skills', '/syreen', '/front-apps'];
+
+      for (const unusedContainerPath of unusedContainersPaths) {
+        const unusedContainerUri = urlJoin(webId, 'data', unusedContainerPath);
+        this.logger.info(`Deleting unused container ${unusedContainerUri}`);
+        await ctx.call('ldp.container.delete', { containerUri: unusedContainerUri, webId });
+      }
+    },
+    async useNewMutualAidNamespace(ctx) {
+      const { username: dataset } = ctx.params;
+
+      const types = [
+        'GiftOffer',
+        'BarterOffer',
+        'LoanOffer',
+        'SaleOffer',
+        'Offer',
+        'GiftRequest',
+        'BarterRequest',
+        'LoanRequest',
+        'PurchaseRequest',
+        'Request'
+      ];
+
+      for (const type of types) {
+        await ctx.call('triplestore.update', {
+          query: `
+            DELETE { ?s a <http://virtual-assembly.org/ontologies/pair-mp#${type}> . }
+            INSERT { ?s a <https://mutual-aid.app/ns/core#${type}> . }
+            WHERE { ?s a <http://virtual-assembly.org/ontologies/pair-mp#${type}> . }
+          `,
+          dataset,
           webId: 'system'
         });
+      }
 
-        await ctx.call('auth.account.update', {
-          ...account,
-          preferredLocale: undefined
+      const predicates = [
+        'offerOfResourceType',
+        'requestOfResourceType',
+        'hasGeoCondition',
+        'hasTimeCondition',
+        'hasReciprocityCondition',
+        'amount',
+        'maxAmount',
+        'currency',
+        'inExchangeOf',
+        'maxDuration',
+        'minDuration',
+        'expirationDate'
+      ];
+
+      for (const predicate of predicates) {
+        await this.actions.replacePredicate({
+          oldPredicate: `http://virtual-assembly.org/ontologies/pair-mp#${predicate}`,
+          newPredicate: `https://mutual-aid.app/ns/core#${predicate}`,
+          dataset
         });
-        this.logger.info('DONE');
-      } else {
-        this.logger.warn(`No preferred locale found`);
       }
     }
   }

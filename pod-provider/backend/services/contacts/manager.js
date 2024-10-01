@@ -21,8 +21,10 @@ module.exports = {
   },
   actions: {
     async updateCollectionsOptions(ctx) {
+      const { dataset } = ctx.params;
       await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.ignoredContactsCollectionOptions
+        collection: this.settings.ignoredContactsCollectionOptions,
+        dataset
       });
     }
   },

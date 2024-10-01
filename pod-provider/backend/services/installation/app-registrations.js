@@ -1,4 +1,5 @@
 const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 // Return true if all elements of a1 can be found on a2. Order does not matter.
@@ -179,6 +180,65 @@ module.exports = {
     async isRegistered(ctx) {
       const { appUri, podOwner } = ctx.params;
       return !!(await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx }));
+    },
+    async installApp(ctx) {
+      const { username, appUri } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const { username: dataset, webId } of accounts) {
+        ctx.meta.dataset = dataset;
+        ctx.meta.webId = webId;
+
+        const isRegistered = await ctx.call('app-registrations.isRegistered', { appUri, podOwner: webId });
+        if (isRegistered) {
+          this.logger.info(`App is already installed for ${webId}, skipping...`);
+        } else {
+          this.logger.info(`Installing app on ${webId}...`);
+
+          const actor = await ctx.call('ldp.resource.get', { resourceUri: webId, accept: MIME_TYPES.JSON });
+          const app = await ctx.call('ldp.resource.get', { resourceUri: appUri, accept: MIME_TYPES.JSON });
+
+          let requiredAccessNeeds, requiredSpecialRights;
+          for (const accessNeedGroupUri of arrayOf(app['interop:hasAccessNeedGroup'])) {
+            const accessNeedGroup = await ctx.call('ldp.resource.get', {
+              resourceUri: accessNeedGroupUri,
+              accept: MIME_TYPES.JSON
+            });
+            if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
+              requiredAccessNeeds = accessNeedGroup['interop:hasAccessNeed'];
+              requiredSpecialRights = accessNeedGroup['apods:hasSpecialRights'];
+            }
+          }
+
+          const publishedAfter = new Date().toISOString();
+
+          // Do not await here
+          ctx.call('activitypub.outbox.post', {
+            collectionUri: actor.outbox,
+            type: 'apods:Install',
+            object: appUri,
+            'apods:acceptedAccessNeeds': requiredAccessNeeds,
+            'apods:acceptedSpecialRights': requiredSpecialRights
+          });
+
+          const createRegistrationActivity = await ctx.call('activitypub.outbox.awaitActivity', {
+            collectionUri: actor.outbox,
+            matcher: {
+              type: ACTIVITY_TYPES.CREATE,
+              to: appUri
+            },
+            publishedAfter
+          });
+
+          await ctx.call('activitypub.inbox.awaitActivity', {
+            collectionUri: actor.inbox,
+            matcher: {
+              type: ACTIVITY_TYPES.ACCEPT,
+              object: createRegistrationActivity.id
+            }
+          });
+        }
+      }
     }
   },
   hooks: {

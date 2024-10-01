@@ -50,14 +50,18 @@ module.exports = {
   },
   actions: {
     async updateCollectionsOptions(ctx) {
+      const { dataset } = ctx.params;
       await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.contactsCollectionOptions
+        collection: this.settings.contactsCollectionOptions,
+        dataset
       });
       await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.contactRequestsCollectionOptions
+        collection: this.settings.contactRequestsCollectionOptions,
+        dataset
       });
       await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.rejectedContactsCollectionOptions
+        collection: this.settings.rejectedContactsCollectionOptions,
+        dataset
       });
     }
   },

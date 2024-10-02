@@ -313,12 +313,27 @@ module.exports = {
       const { webId } = ctx.params;
 
       // Containers which are not used anymore in v2
-      const unusedContainersPaths = ['/projects', '/skills', '/syreen', '/front-apps'];
+      const unusedContainersPaths = [
+        '/projects',
+        '/skills',
+        '/syreen/offers',
+        '/syreen/projects',
+        '/syreen',
+        '/front-apps'
+      ];
+
+      // Prevent tombstones to be created
+      ctx.meta.activateTombstones = false;
 
       for (const unusedContainerPath of unusedContainersPaths) {
         const unusedContainerUri = urlJoin(webId, 'data', unusedContainerPath);
         this.logger.info(`Deleting unused container ${unusedContainerUri}`);
-        await ctx.call('ldp.container.delete', { containerUri: unusedContainerUri, webId });
+        try {
+          await ctx.call('ldp.container.clear', { containerUri: unusedContainerUri, webId: 'system' });
+          await ctx.call('ldp.container.delete', { containerUri: unusedContainerUri, webId: 'system' });
+        } catch (e) {
+          this.logger.error(`Could not deleted unused container ${unusedContainerUri}. Error:`, e);
+        }
       }
     },
     async useNewMutualAidNamespace(ctx) {

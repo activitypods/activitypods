@@ -201,7 +201,7 @@ module.exports = {
             const exist = await ctx.call('ldp.resource.exist', { resourceUri: collectionUri, webId: 'system' });
             if (exist) {
               this.logger.info(`Collection ${collectionUri} is empty, deleting it...`);
-              await ctx.call('ldp.resource.delete', { resourceUri: collectionUri, webId });
+              await ctx.call('ldp.resource.delete', { resourceUri: collectionUri, webId: 'system' });
             }
             await ctx.call('ldp.resource.patch', {
               resourceUri: objectUri,

@@ -14,6 +14,7 @@ module.exports = {
       }
     },
     copyMethod: CONFIG.BACKUP_COPY_METHOD,
+    deleteFusekiBackupsAfterCopy: true,
     remoteServer: {
       path: CONFIG.BACKUP_SERVER_PATH,
       host: CONFIG.BACKUP_SERVER_HOST,

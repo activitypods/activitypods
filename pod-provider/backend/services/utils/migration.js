@@ -205,7 +205,7 @@ module.exports = {
             }
             await ctx.call('ldp.resource.patch', {
               resourceUri: objectUri,
-              triplesToAdd: [triple(namedNode(objectUri), namedNode(attachPredicate), namedNode(collectionUri))],
+              triplesToRemove: [triple(namedNode(objectUri), namedNode(attachPredicate), namedNode(collectionUri))],
               webId: 'system'
             });
           }

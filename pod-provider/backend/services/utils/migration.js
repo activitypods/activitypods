@@ -329,10 +329,11 @@ module.exports = {
         const unusedContainerUri = urlJoin(webId, 'data', unusedContainerPath);
         this.logger.info(`Deleting unused container ${unusedContainerUri}`);
         try {
-          await ctx.call('ldp.container.clear', { containerUri: unusedContainerUri, webId: 'system' });
+          // Use the webId of the Pod owner in case we need to delete a remote resource (webId is mandatory)
+          await ctx.call('ldp.container.clear', { containerUri: unusedContainerUri, webId });
           await ctx.call('ldp.container.delete', { containerUri: unusedContainerUri, webId: 'system' });
         } catch (e) {
-          this.logger.error(`Could not deleted unused container ${unusedContainerUri}. Error:`, e);
+          this.logger.error(`Could not delete unused container ${unusedContainerUri}. Error:`, e);
         }
       }
     },

@@ -29,7 +29,8 @@ module.exports = {
       description: null,
       author: null,
       thumbnail: null,
-      frontUrl: null
+      frontUrl: null,
+      supportedLocales: []
     },
     oidc: {
       clientUri: null,

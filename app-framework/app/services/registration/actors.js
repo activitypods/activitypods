@@ -53,7 +53,8 @@ module.exports = {
                 'oidc:grant_types': ['refresh_token', 'authorization_code'],
                 'oidc:response_types': ['code'],
                 'oidc:default_max_age': 3600,
-                'oidc:require_auth_time': true
+                'oidc:require_auth_time': true,
+                'dc:language': app.supportedLocales
               },
               contentType: MIME_TYPES.JSON,
               webId: 'system'
@@ -101,7 +102,8 @@ module.exports = {
               'oidc:post_logout_redirect_uris': oidc.postLogoutRedirectUris,
               'oidc:client_uri': oidc.clientUri,
               'oidc:logo_uri': app.thumbnail,
-              'oidc:tos_uri': oidc.tosUri
+              'oidc:tos_uri': oidc.tosUri,
+              'dc:language': app.supportedLocales
             },
             contentType: MIME_TYPES.JSON,
             webId: 'system'

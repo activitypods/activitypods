@@ -6,12 +6,13 @@ import AvailableApps from './AvailableApps';
 import { isLocalURL } from '../../utils';
 
 const ApplicationsPage = () => {
-  useCheckAuthenticated();
+  const { identity } = useCheckAuthenticated();
   const { data: installedApps, isLoading: isInstalledAppsLoading } = useGetList('App', {
     page: 1,
     perPage: Infinity
   });
   const { data: trustedApps, isLoading: isTrustedAppsLoading } = useGetList('TrustedApp', {
+    filter: { 'dc:language': identity?.webIdData?.['schema:knowsLanguage'] },
     page: 1,
     perPage: Infinity
   });

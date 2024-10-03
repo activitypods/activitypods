@@ -72,7 +72,9 @@ module.exports = {
             await ctx.call('data-grants.attach', { resourceUri: dataGrant.id || dataGrant['@id'] });
           }
 
-          await ctx.emit('app.registered', { appRegistration, accessGrants, dataGrants });
+          // REGISTER LISTENERS
+
+          await ctx.emit('pod-activities-watcher.registerListenersBasedOnAccessGrants', { accessGrants });
         } catch (e) {
           if (e.code !== 400) console.error(e);
           await ctx.call('activitypub.outbox.post', {

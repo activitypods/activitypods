@@ -68,14 +68,16 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
 
           // TODO Allow to pass an object, and automatically dereference it, like on the @semapps/activitypub matchActivity util
           const updateRegistrationActivity = await outbox.awaitActivity(
-            activity => activity.type === 'Update' && activity.to === application.id
+            activity => activity.type === 'Update' && activity.to === application.id,
+            { timeout: 60000 }
           );
 
           await inbox.awaitActivity(
             activity =>
               activity.type === 'Accept' &&
               activity.actor === application.id &&
-              activity.object === updateRegistrationActivity.id
+              activity.object === updateRegistrationActivity.id,
+            { timeout: 60000 }
           );
 
           await accessApp();

@@ -28,12 +28,14 @@ const useUninstallApp = app => {
 
       // TODO Allow to pass an object, and automatically dereference it, like on the @semapps/activitypub matchActivity util
       const deleteRegistrationActivity = await outbox.awaitActivity(
-        activity => activity.type === 'Delete' && activity.to === app.id
+        activity => activity.type === 'Delete' && activity.to === app.id,
+        { timeout: 60000 }
       );
 
       await inbox.awaitActivity(
         activity =>
-          activity.type === 'Accept' && activity.actor === app.id && activity.object === deleteRegistrationActivity.id
+          activity.type === 'Accept' && activity.actor === app.id && activity.object === deleteRegistrationActivity.id,
+        { timeout: 60000 }
       );
 
       const currentUrl = new URL(window.location);

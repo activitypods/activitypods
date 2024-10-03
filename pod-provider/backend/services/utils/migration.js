@@ -433,6 +433,24 @@ module.exports = {
           webId: 'system'
         });
       }
+    },
+    async deleteAppRegistrations(ctx) {
+      const { username } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const { webId, username: dataset } of accounts) {
+        ctx.meta.dataset = dataset;
+        ctx.meta.webId = webId;
+
+        this.logger.info(`Deleting app registrations of ${webId}...`);
+
+        const container = await ctx.call('app-registrations.list', { webId });
+
+        for (let appRegistration of arrayOf(container['ldp:contains'])) {
+          this.logger.info(`Deleting app ${appRegistration['interop:registeredAgent']}...`);
+          await ctx.call('app-registrations.delete', { resourceUri: appRegistration.id, webId });
+        }
+      }
     }
   }
 };

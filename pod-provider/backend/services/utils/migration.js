@@ -413,6 +413,20 @@ module.exports = {
           webId: 'system'
         });
 
+        // Prevent maid:Offer to be in the pair:hasType
+        await ctx.call('triplestore.update', {
+          query: `
+            PREFIX maid: <https://mutual-aid.app/ns/core#>
+            PREFIX pair: <http://virtual-assembly.org/ontologies/pair#>
+            DELETE 
+            WHERE { 
+              ?s pair:hasType maid:Offer
+            }
+          `,
+          dataset,
+          webId: 'system'
+        });
+
         await ctx.call('triplestore.update', {
           query: `
             PREFIX maid: <https://mutual-aid.app/ns/core#>
@@ -427,6 +441,20 @@ module.exports = {
             WHERE { 
               VALUES ?type { maid:GiftRequest maid:BarterRequest maid:LoanRequest maid:PurchaseRequest maid:Request } .
               ?s a ?type . 
+            }
+          `,
+          dataset,
+          webId: 'system'
+        });
+
+        // Prevent maid:Request to be in the pair:hasType
+        await ctx.call('triplestore.update', {
+          query: `
+            PREFIX maid: <https://mutual-aid.app/ns/core#>
+            PREFIX pair: <http://virtual-assembly.org/ontologies/pair#>
+            DELETE 
+            WHERE { 
+              ?s pair:hasType maid:Request
             }
           `,
           dataset,

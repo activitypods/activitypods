@@ -166,7 +166,7 @@ module.exports = {
           dataset
         });
 
-        await ctx.call('activitypub.outbox.post', {
+        ctx.call('activitypub.outbox.post', {
           collectionUri: recipient.outbox,
           type: ACTIVITY_TYPES.ACCEPT,
           object: activity.id,

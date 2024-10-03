@@ -387,6 +387,52 @@ module.exports = {
           dataset
         });
       }
+    },
+    async migrateMutualAidData(ctx) {
+      const { username } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (let { username: dataset } of accounts) {
+        await ctx.call('triplestore.update', {
+          query: `
+            PREFIX maid: <https://mutual-aid.app/ns/core#>
+            PREFIX pair: <http://virtual-assembly.org/ontologies/pair#>
+            DELETE { 
+              ?s a ?type . 
+            }
+            INSERT { 
+              ?s a maid:Offer . 
+              ?s pair:hasType ?type
+            }
+            WHERE { 
+              VALUES ?type { maid:GiftOffer maid:BarterOffer maid:LoanOffer maid:SaleOffer maid:Offer } .
+              ?s a ?type . 
+            }
+          `,
+          dataset,
+          webId: 'system'
+        });
+
+        await ctx.call('triplestore.update', {
+          query: `
+            PREFIX maid: <https://mutual-aid.app/ns/core#>
+            PREFIX pair: <http://virtual-assembly.org/ontologies/pair#>
+            DELETE { 
+              ?s a ?type . 
+            }
+            INSERT { 
+              ?s a maid:Request . 
+              ?s pair:hasType ?type
+            }
+            WHERE { 
+              VALUES ?type { maid:GiftRequest maid:BarterRequest maid:LoanRequest maid:PurchaseRequest maid:Request } .
+              ?s a ?type . 
+            }
+          `,
+          dataset,
+          webId: 'system'
+        });
+      }
     }
   }
 };

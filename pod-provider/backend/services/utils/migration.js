@@ -434,6 +434,34 @@ module.exports = {
         });
       }
     },
+    async migrateWtmpData(ctx) {
+      // https://data.welcometomyplace.org/formats/music -> https://welcometomyplace.org/api/apods/event-format/music
+
+      const { username } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const { username: dataset } of accounts) {
+        await ctx.call('triplestore.update', {
+          query: `
+            PREFIX apods: <http://activitypods.org/ns/core#>
+            DELETE {
+              ?s apods:hasFormat ?format .
+            }
+            INSERT {
+              ?s apods:hasFormat ?newFormat .
+            }
+            WHERE 
+            { 
+              ?s apods:hasFormat ?format .
+              FILTER(REGEX(STR(?format), "https://data.welcometomyplace.org/formats", "i"))
+              BIND(URI(REPLACE(STR(?format), "https://data.welcometomyplace.org/formats", "https://welcometomyplace.org/api", "i")) AS ?newFormat)
+            }
+          `,
+          dataset,
+          webId: 'system'
+        });
+      }
+    },
     async deleteAppRegistrations(ctx) {
       const { username } = ctx.params;
       const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });

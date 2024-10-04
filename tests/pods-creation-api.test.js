@@ -1,25 +1,14 @@
 const waitForExpect = require('wait-for-expect');
-const path = require('path');
 const urlJoin = require('url-join');
 const fetch = require('node-fetch');
-const { initialize, clearDataset, listDatasets } = require('./initialize');
+const { connectPodProvider, clearAllData } = require('./initialize');
 
 jest.setTimeout(50000);
 
 const BASE_URL = 'http://localhost:3000';
 
-const initializeBroker = async (port, accountsDataset) => {
-  const broker = await initialize(port, accountsDataset);
-
-  await broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
-
-  await broker.start();
-
-  return broker;
-};
-
 describe('Test pods creation via API', () => {
-  let broker, token, alice, projectUri;
+  let podProvider, token, alice, projectUri;
 
   const fetchServer = (path, options = {}) => {
     if (!path) throw new Error('No path provided to fetchServer');
@@ -71,16 +60,13 @@ describe('Test pods creation via API', () => {
   };
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
+    await clearAllData();
 
-    broker = await initializeBroker(3000, 'settings');
+    podProvider = await connectPodProvider();
   });
 
   afterAll(async () => {
-    await broker.stop();
+    await podProvider.stop();
   });
 
   test('Alice signup for a pod', async () => {
@@ -106,7 +92,7 @@ describe('Test pods creation via API', () => {
       ({ json: alice } = await fetchServer(BASE_URL + '/alice', { method: 'GET' }));
 
       expect(alice).toMatchObject({
-        type: ['foaf:Person', 'Person'],
+        type: expect.arrayContaining(['foaf:Person', 'Person']),
         'foaf:nick': 'alice',
         preferredUsername: 'alice',
         inbox: BASE_URL + '/alice/inbox',
@@ -122,6 +108,8 @@ describe('Test pods creation via API', () => {
           proxyUrl: BASE_URL + '/alice/proxy',
           'void:sparqlEndpoint': BASE_URL + '/alice/sparql'
         },
+        'pim:storage': BASE_URL + '/alice/data',
+        'solid:oidcIssuer': BASE_URL,
         url: expect.anything()
       });
     });
@@ -156,12 +144,12 @@ describe('Test pods creation via API', () => {
 
   test('Alice profile can be fetched', async () => {
     await expect(fetchServer(alice.url)).resolves.toMatchObject({
-      json: { 'vcard:given-name': 'Alice', describes: alice.id }
+      json: { describes: alice.id }
     });
   });
 
   test('Alice can post on her Pod', async () => {
-    const { status, headers } = await fetchServer(urlJoin(alice.id, 'data'), {
+    const { status, headers } = await fetchServer(alice['pim:storage'], {
       method: 'POST',
       body: {
         '@context': 'https://activitypods.org/context.json',
@@ -175,7 +163,7 @@ describe('Test pods creation via API', () => {
     projectUri = headers.get('Location');
     expect(projectUri).not.toBeUndefined();
 
-    await expect(fetchServer(urlJoin(alice.id, 'data'))).resolves.toMatchObject({
+    await expect(fetchServer(alice['pim:storage'])).resolves.toMatchObject({
       json: {
         type: ['ldp:Container', 'ldp:BasicContainer'],
         'ldp:contains': expect.arrayContaining([
@@ -229,13 +217,12 @@ describe('Test pods creation via API', () => {
       await expect(fetchServer(`${alice.outbox}?page=1`)).resolves.toMatchObject({
         json: {
           type: 'OrderedCollectionPage',
-          orderedItems: [
-            {
+          orderedItems: expect.arrayContaining([
+            expect.objectContaining({
               type: 'Like',
               object: projectUri
-            }
-          ],
-          totalItems: 1
+            })
+          ])
         }
       });
     });

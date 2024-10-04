@@ -1,20 +1,23 @@
 {
   "name": "activitypods-tests",
-  "version": "1.5.1",
   "private": true,
   "scripts": {
-    "test": "jest --detectOpenHandles --verbose"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles --verbose"
   },
   "dependencies": {
-    "@activitypods/contacts": "1.5.1",
-    "@activitypods/core": "1.5.1",
-    "@activitypods/events": "1.5.1",
-    "@activitypods/messages": "1.5.1",
-    "@activitypods/profiles": "1.5.1",
-    "@semapps/activitypub": "0.6.1",
-    "@semapps/ldp": "0.6.1",
-    "@semapps/mime-types": "0.6.1",
+    "@semapps/activitypub": "0.9.2",
+    "@semapps/auth": "0.9.2",
+    "@semapps/core": "0.9.2",
+    "@semapps/ldp": "0.9.2",
+    "@semapps/nodeinfo": "0.9.2",
+    "@semapps/crypto": "0.9.2",
+    "@semapps/triplestore": "0.9.2",
+    "@semapps/mime-types": "0.9.2",
+    "@semapps/webacl": "0.9.2",
+    "@semapps/ontologies": "0.9.2",
+    "@semapps/solid": "0.9.2",
     "dotenv-flow": "^3.2.0",
+    "ioredis": "^4.27.0",
     "moleculer": "^0.14.19",
     "node-fetch": "^2.6.6",
     "url-join": "^4.0.1",
@@ -22,6 +25,10 @@
   },
   "devDependencies": {
     "@types/node-fetch": "^2.6.6",
-    "jest": "^27.4.0"
+    "jest": "^27.4.0",
+    "wait-for-expect": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

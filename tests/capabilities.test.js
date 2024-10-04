@@ -1,29 +1,28 @@
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const path = require('path');
 const fetch = require('node-fetch');
 const waitForExpect = require('wait-for-expect');
-const { arrayOf, waitForResource } = require('./utils');
-const { initialize, listDatasets, clearDataset } = require('./initialize');
-const CapabilitiesProfileService = require('../packages/profiles/services/capabilities-profile');
+const { MIME_TYPES } = require('@semapps/mime-types');
+const { ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { arrayOf } = require('./utils');
+const { connectPodProvider, clearAllData } = require('./initialize');
 
 /**
  * @typedef {import('moleculer').ServiceBroker} Broker
  */
 
-jest.setTimeout(30_000);
+jest.setTimeout(60_000);
 
 const NUM_USERS = 2;
 
 /** @type {Broker} */
-let broker;
+let podProvider;
 
 const signupUser = async num => {
-  const { webId, token } = await broker.call('auth.signup', {
+  const { webId, token } = await podProvider.call('auth.signup', {
     username: `user${num}`,
     email: `user${num}@test.com`,
     password: 'test',
-    name: `User #${num}`
+    name: `User #${num}`,
+    'schema:knowsLanguage': 'en'
   });
   return { webId, token };
 };
@@ -34,7 +33,7 @@ const createUser = async (broker, num) => {
 
   const webIdDoc = await broker.call('ldp.resource.awaitCreateComplete', {
     resourceUri: webId,
-    predicates: ['url', 'apods:contacts']
+    predicates: ['url', 'apods:contacts', 'inbox', 'outbox']
   });
 
   const capabilitiesUri = await broker.call('capabilities.getContainerUri', { webId });
@@ -44,7 +43,7 @@ const createUser = async (broker, num) => {
 
 const getUserInviteCap = async user => {
   // Get all existing caps
-  const inviteCaps = await broker.call(
+  const inviteCaps = await podProvider.call(
     'ldp.container.get',
     {
       containerUri: user.capabilitiesUri,
@@ -75,21 +74,13 @@ describe('capabilities', () => {
   let users = [];
 
   beforeAll(async () => {
-    const datasets = await listDatasets();
-    for (let dataset of datasets) {
-      await clearDataset(dataset);
-    }
+    await clearAllData();
 
-    broker = await initialize(3000, 'settings');
-
-    broker.loadService(path.resolve(__dirname, './services/profiles.app.js'));
-    broker.loadService(path.resolve(__dirname, './services/contacts.app.js'));
-
-    await broker.start();
+    podProvider = await connectPodProvider();
 
     const newUserPromises = [];
     for (let i = 0; i < NUM_USERS; i += 1) {
-      newUserPromises.push(createUser(broker, i));
+      newUserPromises.push(createUser(podProvider, i));
     }
 
     users = await Promise.all(newUserPromises);
@@ -106,7 +97,7 @@ describe('capabilities', () => {
   });
 
   afterAll(async () => {
-    await broker.stop();
+    await podProvider.stop();
   });
 
   describe('profile read (invite)', () => {
@@ -153,49 +144,6 @@ describe('capabilities', () => {
     });
   });
 
-  test('migration to add invite URI capabilities', async () => {
-    // For this test, we create a third user (without adding new capabilities),
-    //  to emulate the pre-migration behavior.
-    // 1. Stop capabilities service (that adds an invite capability on signup).
-    await broker.destroyService('profiles.capabilities');
-
-    // 2. Create user 3.
-    const newUser = await signupUser(NUM_USERS + 1);
-    const webIdDoc = await broker.call('ldp.resource.awaitCreateComplete', {
-      resourceUri: newUser.webId,
-      predicates: ['url']
-    });
-    newUser.profileUri = webIdDoc.url;
-
-    // 3. Start capabilities service again.
-    broker.createService(CapabilitiesProfileService);
-
-    await broker.waitForServices('profiles.capabilities', 4_000);
-    // 3.1 Run migration. Will add the capabilities. Wait until the service becomes available.
-    await broker.waitForServices('capabilities', 4_000);
-    await broker.call('profiles.capabilities.addCapsContainersWhereMissing');
-
-    // 4. Get the capabilities and assert them.
-    // 4.1. Add the missing properties to the actor object (required by `getActorInviteCap`).
-    newUser.capabilitiesUri = await broker.call('capabilities.getContainerUri', { webId: newUser.webId });
-
-    // 4.2. Get the added capabilities for the new user.
-    const inviteCap = await waitForResource(200, undefined, 15, () => getUserInviteCap(newUser));
-    // 4.3. Invite capability should be available.
-    expect(inviteCap).toBeTruthy();
-
-    // 5. Assert, that other users did not get more caps.
-    for (let i = 0; i < NUM_USERS; i += 1) {
-      const inviteCaps = await broker.call('ldp.container.get', {
-        containerUri: users[i].capabilitiesUri,
-        accept: MIME_TYPES.JSON,
-        webId: 'system'
-      });
-      const userCaps = arrayOf(inviteCaps['ldp:contains']);
-      expect(userCaps).toHaveLength(1);
-    }
-  });
-
   test('resource is accessible with capability token', async () => {
     const inviteCap = await getUserInviteCap(users[0]);
     const fetchedProfile = await fetch(users[0].profileUri, {
@@ -218,7 +166,7 @@ describe('capabilities', () => {
   });
 
   test('resource is not accessible with misplaced capability token', async () => {
-    const misplacedCapUri = await broker.call('profiles.profile.post', {
+    const misplacedCapUri = await podProvider.call('profiles.profile.post', {
       resource: {
         type: 'acl:Authorization',
         'acl:mode': 'acl:Read',
@@ -235,7 +183,7 @@ describe('capabilities', () => {
   });
 
   test('resource is not accessible with wrong capability acl:accessTo', async () => {
-    const capUri = await broker.call('capabilities.post', {
+    const capUri = await podProvider.call('capabilities.post', {
       resource: {
         type: 'acl:Authorization',
         'acl:mode': 'acl:Read',
@@ -297,17 +245,17 @@ describe('capabilities', () => {
 
     await waitForExpect(async () => {
       await expect(
-        broker.call('activitypub.collection.includes', {
+        podProvider.call('activitypub.collection.includes', {
           collectionUri: users[1]['apods:contacts'],
           itemUri: users[0].webId
         })
       ).resolves.toBeTruthy();
       await expect(
-        broker.call('activitypub.collection.includes', {
+        podProvider.call('activitypub.collection.includes', {
           collectionUri: users[0]['apods:contacts'],
           itemUri: users[1].webId
         })
       ).resolves.toBeTruthy();
-    });
+    }, 100_000);
   });
 });

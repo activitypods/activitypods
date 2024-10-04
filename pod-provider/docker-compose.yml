@@ -1,0 +1,46 @@
+services:
+  fuseki:
+    image: semapps/jena-fuseki-webacl
+    container_name: fuseki
+    volumes:
+      - ./data/fuseki:/fuseki:z
+    ports:
+      - '3030:3030'
+    expose:
+      - '3030'
+    environment:
+      ADMIN_PASSWORD: 'admin'
+
+  mailcatcher:
+    image: dockage/mailcatcher
+    container_name: mailcatcher
+    ports:
+      - '1080:1080'
+      - '1025:1025'
+    restart: on-failure
+
+  redis:
+    image: redis
+    container_name: redis
+    expose:
+      - '6379'
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./data/redis:/data:z
+    command: ['redis-server', '--appendonly', 'yes']
+
+  arena:
+    image: activitypods/arena
+    container_name: arena
+    restart: always
+    volumes:
+      - ./docker/arena.json:/opt/arena/src/server/config/index.json
+    depends_on:
+      - redis
+    ports:
+      - '4567:4567'
+    expose:
+      - '4567'
+    environment:
+      REDIS_HOST: 'redis'

@@ -1,0 +1,74 @@
+{
+  "queues": [
+    {
+      "name": "sendMail",
+      "hostId": "pod-provider",
+      "host": "redis",
+      "port": 6379,
+      "db": 1
+    },
+    {
+      "name": "remotePost",
+      "hostId": "pod-provider",
+      "host": "redis",
+      "port": 6379,
+      "db": 1
+    },
+    {
+      "name": "processInbox",
+      "hostId": "pod-provider",
+      "host": "redis",
+      "port": 6379,
+      "db": 1
+    },
+    {
+      "name": "processOutbox",
+      "hostId": "pod-provider",
+      "host": "redis",
+      "port": 6379,
+      "db": 1
+    },
+    {
+      "name": "webhookPost",
+      "hostId": "pod-provider",
+      "host": "redis",
+      "port": 6379,
+      "db": 1
+    },
+    {
+      "name": "remotePost",
+      "hostId": "app-boilerplate",
+      "host": "redis",
+      "port": 6379,
+      "db": 11
+    },
+    {
+      "name": "processInbox",
+      "hostId": "app-boilerplate",
+      "host": "redis",
+      "port": 6379,
+      "db": 11
+    },
+    {
+      "name": "processOutbox",
+      "hostId": "app-boilerplate",
+      "host": "redis",
+      "port": 6379,
+      "db": 11
+    },
+    {
+      "name": "registerListener",
+      "hostId": "app-boilerplate",
+      "host": "redis",
+      "port": 6379,
+      "db": 11
+    },
+    {
+      "name": "timeout",
+      "hostId": "app-boilerplate",
+      "host": "redis",
+      "port": 6379,
+      "db": 11
+    }
+  ]
+}

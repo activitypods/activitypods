@@ -1,0 +1,61 @@
+{
+  "name": "activitypods-backend",
+  "description": "ActivityPods backend",
+  "license": "Apache-2.0",
+  "author": "Virtual Assembly",
+  "homepage": "https://activitypods.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/assemblee-virtuelle/activitypods.git",
+    "directory": "pod-provider/backend"
+  },
+  "scripts": {
+    "dev": "moleculer-runner --repl --hot services/*.js services/**/*.js",
+    "start": "moleculer-runner services/*.js services/**/*.js",
+    "test": "NODE_ENV=test moleculer-runner --repl services/*.js services/**/*.js",
+    "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
+    "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid"
+  },
+  "dependencies": {
+    "@rdfjs/formats": "4.0.0",
+    "@semapps/activitypub": "1.0.0",
+    "@semapps/auth": "1.0.0",
+    "@semapps/backup": "1.0.0",
+    "@semapps/crypto": "1.0.0",
+    "@semapps/jsonld": "1.0.0",
+    "@semapps/ldp": "1.0.0",
+    "@semapps/middlewares": "1.0.0",
+    "@semapps/migration": "1.0.0",
+    "@semapps/mime-types": "1.0.0",
+    "@semapps/nodeinfo": "1.0.0",
+    "@semapps/ontologies": "1.0.0",
+    "@semapps/solid": "1.0.0",
+    "@semapps/sparql-endpoint": "1.0.0",
+    "@semapps/sync": "1.0.0",
+    "@semapps/triplestore": "1.0.0",
+    "@semapps/webacl": "1.0.0",
+    "@semapps/webfinger": "1.0.0",
+    "@semapps/webid": "1.0.0",
+    "@types/archiver": "6.0.2",
+    "@types/rdfjs__formats": "^4.0.1",
+    "archiver": "^7.0.1",
+    "dotenv-flow": "^3.2.0",
+    "handlebars": "^4.7.7",
+    "ioredis": "^4.27.0",
+    "jose": "^5.1.1",
+    "lodash": "4.17.21",
+    "moleculer": "^0.14.19",
+    "moleculer-bull": "0.2.8",
+    "moleculer-repl": "^0.6.6",
+    "moleculer-web": "^0.10.7",
+    "node-fetch": "^2.6.6",
+    "oidc-provider": "^8.4.1",
+    "readable-stream": "^4.5.2",
+    "sanitize-html": "^2.6.1",
+    "url-join": "^4.0.1",
+    "ws": "^8.17.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

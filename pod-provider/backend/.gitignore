@@ -1,0 +1,10 @@
+.env.local
+.env.*.local
+/actors/*.key
+/actors/*.key.pub
+/actors/old
+/jwt/*.key
+/jwt/*.key.pub
+/uploads
+/imports
+/exports

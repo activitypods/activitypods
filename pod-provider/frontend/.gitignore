@@ -1,0 +1,4 @@
+.env.local
+.yalc
+yalc.lock
+build

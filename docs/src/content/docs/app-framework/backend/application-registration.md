@@ -40,8 +40,7 @@ module.exports = {
         {
           registeredClass: 'http://www.w3.org/2006/vcard/ns#Individual',
           accessMode: 'acl:Read'
-        },
-        'apods:SendNotification'
+        }
       ]
     },
     queueServiceUrl: CONFIG.QUEUE_SERVICE_URL

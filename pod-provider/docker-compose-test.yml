@@ -1,0 +1,64 @@
+services:
+  fuseki_test:
+    image: semapps/jena-fuseki-webacl
+    volumes:
+      - ./data/fuseki_test:/fuseki:z
+    ports:
+      - '3040:3030'
+    expose:
+      - '3040'
+    environment:
+      ADMIN_PASSWORD: 'admin'
+
+  redis:
+    image: redis
+    expose:
+      - '6379'
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./data/redis_test:/data:z
+    command: ['redis-server', '--appendonly', 'yes']
+
+  # We don't use the published image because we want to test the current version of the code
+  backend:
+    build:
+      context: .
+      dockerfile: ./docker/backend.dockerfile
+    depends_on:
+      - fuseki_test
+      - redis
+    restart: always
+    expose:
+      - '3000'
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: test
+      SEMAPPS_SPARQL_ENDPOINT: http://fuseki_test:3030/
+      SEMAPPS_QUEUE_SERVICE_URL: redis://redis:6379/11
+      SEMAPPS_REDIS_TRANSPORTER_URL: redis://redis:6379/12
+      SEMAPPS_REDIS_OIDC_PROVIDER_URL: redis://redis:6379/13
+      SEMAPPS_SMTP_HOST: mailcatcher
+
+  arena:
+    image: activitypods/arena
+    container_name: arena
+    restart: always
+    volumes:
+      - ./docker/arena-test.json:/opt/arena/src/server/config/index.json
+    depends_on:
+      - redis
+    ports:
+      - '4567:4567'
+    expose:
+      - '4567'
+    environment:
+      REDIS_HOST: 'redis'
+
+  mailcatcher:
+    image: dockage/mailcatcher:0.7.1
+    ports:
+      - '1080:1080'
+      - '1025:1025'
+    restart: on-failure

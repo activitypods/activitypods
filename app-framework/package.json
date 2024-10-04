@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "scripts": {
+    "version": "lerna version --force-publish='*' --exact",
+    "publish": "lerna publish from-package --dist-tag latest",
+    "link-all": "lerna exec --parallel --scope @activitypods/app -- yarn link && lerna exec --parallel --scope @activitypods/react -- yalc publish --push --changed",
+    "unlink-all": "lerna exec --parallel --scope @activitypods/app -- yarn unlink",
+    "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid && yalc link @semapps/activitypub-components @semapps/auth-provider @semapps/date-components @semapps/field-components @semapps/geo-components @semapps/input-components @semapps/list-components @semapps/markdown-components @semapps/semantic-data-provider",
+    "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid && yalc remove --all && rm -rf node_modules/@semapps && yarn install --force"
+  },
+  "devDependencies": {
+    "lerna": "^8.1.3",
+    "nodemon": "^3.0.1",
+    "parcel": "^2.10.1"
+  },
+  "workspaces": [
+    "app",
+    "react",
+    ".yalc/*",
+    ".yalc/@*/*"
+  ]
+}

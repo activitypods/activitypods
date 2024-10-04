@@ -160,8 +160,8 @@ module.exports = {
         if (arrayOf(accessGrant['apods:hasSpecialRights']).includes('apods:ReadInbox')) {
           this.createJob(
             'registerListener',
-            accessGrant['interop:grantee'] + ' inbox',
-            { actorUri: accessGrant['interop:grantee'], collectionPredicate: 'inbox' },
+            accessGrant['interop:grantedBy'] + ' inbox',
+            { actorUri: accessGrant['interop:grantedBy'], collectionPredicate: 'inbox' },
             queueOptions
           );
         }
@@ -170,8 +170,8 @@ module.exports = {
         if (arrayOf(accessGrant['apods:hasSpecialRights']).includes('apods:ReadOutbox')) {
           this.createJob(
             'registerListener',
-            accessGrant['interop:registeredBy'] + ' outbox',
-            { actorUri: accessGrant['interop:registeredBy'], collectionPredicate: 'outbox' },
+            accessGrant['interop:grantedBy'] + ' outbox',
+            { actorUri: accessGrant['interop:grantedBy'], collectionPredicate: 'outbox' },
             queueOptions
           );
         }

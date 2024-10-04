@@ -48,15 +48,6 @@ module.exports = {
             throw new MoleculerError('One or more required access needs have not been granted', 400, 'BAD REQUEST');
           }
 
-          // SEND BACK ACCEPT ACTIVITY
-
-          await ctx.call('activitypub.outbox.post', {
-            collectionUri: outboxUri,
-            type: ACTIVITY_TYPES.ACCEPT,
-            object: activity.id,
-            to: activity.actor
-          });
-
           // STORE APP REGISTRATION AND GRANTS IN LOCAL CACHE
 
           await ctx.call('ldp.remote.store', { resource: appRegistration });
@@ -74,7 +65,16 @@ module.exports = {
 
           // REGISTER LISTENERS
 
-          await ctx.emit('pod-activities-watcher.registerListenersBasedOnAccessGrants', { accessGrants });
+          await ctx.call('pod-activities-watcher.registerListenersBasedOnAccessGrants', { accessGrants });
+
+          // SEND BACK ACCEPT ACTIVITY
+
+          await ctx.call('activitypub.outbox.post', {
+            collectionUri: outboxUri,
+            type: ACTIVITY_TYPES.ACCEPT,
+            object: activity.id,
+            to: activity.actor
+          });
         } catch (e) {
           if (e.code !== 400) console.error(e);
           await ctx.call('activitypub.outbox.post', {

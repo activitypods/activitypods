@@ -4,7 +4,7 @@
 
 # ActivityPods
 
-Check out [our website](https://activitypods.org) and the [documentation](https://docs.activitypods.org) for more informations.
+Check out [our website](https://activitypods.org) and the [documentation](https://docs.activitypods.org) for more information.
 
 ## Content
 
@@ -15,7 +15,7 @@ This repository includes:
 - [The documentation website](./docs)
 - [Integration tests](./tests/)
 
-Click on the above links for more informations.
+Click on the above links for more information.
 
 ## Cleaning up
 

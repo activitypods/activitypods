@@ -56,6 +56,7 @@ const App = () => (
         theme={theme}
         store={memoryStore()}
         queryClient={queryClient}
+        disableTelemetry
       >
         {Object.entries(resources).map(([key, resource]) => (
           <Resource key={key} name={key} {...resource.config} />

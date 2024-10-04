@@ -1,6 +1,7 @@
 const path = require('path');
 const urlJoin = require('url-join');
 const Handlebars = require('handlebars');
+const sanitizeHtml = require('sanitize-html');
 const MailService = require('moleculer-mail');
 const QueueService = require('moleculer-bull');
 const { ActivitiesHandlerMixin } = require('@semapps/activitypub');
@@ -15,7 +16,8 @@ module.exports = {
     frontendUrl: CONFIG.FRONTEND_URL,
     handlebars: {
       helpers: {
-        encodeUri: uri => encodeURIComponent(uri)
+        encodeUri: uri => encodeURIComponent(uri),
+        removeHtmlTags: text => sanitizeHtml(text, { allowedTags: [] }).trim()
       }
     },
     // See moleculer-mail doc https://github.com/moleculerjs/moleculer-addons/tree/master/packages/moleculer-mail

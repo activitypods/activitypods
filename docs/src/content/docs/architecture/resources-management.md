@@ -84,28 +84,29 @@ In ActivityPub, [ActivityStreams collections](https://www.w3.org/TR/activitystre
 
 Collections have their own paging system. They can be ordered or unordered. Also, they can dereference the items they contain (this is the case for the inbox) or only display their URIs (like the `as:followers` collection).
 
-However, no API has been defined to create custom collections or add/remove items from existing collections.
-
 ### Create custom collection
 
-In ActivityPods, ActivityStreams collections can be POSTed as regular LDP resources.
+In SemApps, ActivityStreams collections can be POSTed as regular LDP resources. The target container should be `/as/collection`.
 
 The `@type` can be a `as:Collection` or a `as:OrderedCollection`, depending on weither you need items to be ordered or not.
 
-In the case of a `as:OrderedCollection`, you must also indicate the `apods:sortField` and `apods:sortOrder`.
+In the case of a `as:OrderedCollection`, you must also indicate the `semapps:sortPredicate` and `semapps:sortOrder`.
 
-We have added a boolean `apods:dereferenceItems` in order to declare if the items should be dereferenced or not.
+We have added a `semapps:dereferenceItems` in order to declare if the items should be dereferenced or not, and `semapps:itemsPerPage` to activate pagination.
 
 ```json
 {
   "@context": [
     "https://www.w3.org/ns/activitystreams",
-    { "apods": "http://activitypods.org/ns/core#", "dc": "http://purl.org/dc/terms/" }
+    {
+      "semapps": "http://semapps.org/ns/core#"
+    }
   ],
   "@type": "OrderedCollection",
-  "apods:sortField": "dc:created",
-  "apods:sortOrder": "apods:AscOrder", // or "apods:DescOrder"
-  "apods:dereferenceItems": true
+  "semapps:sortPredicate": "as:published",
+  "semapps:sortOrder": "semapps:DescOrder", // or "semapps:AscOrder"
+  "semapps:dereferenceItems": false,
+  "semapps:itemsPerPage": undefined // No pagination per default
 }
 ```
 
@@ -124,8 +125,6 @@ DELETE DATA {
   <https://mypod.store/alice/followers> as:items <https://mypod.store/craig> .
 }
 ```
-
-For ordered collections, you should use the `as:orderedItems` predicate.
 
 ## SPARQL endpoint
 

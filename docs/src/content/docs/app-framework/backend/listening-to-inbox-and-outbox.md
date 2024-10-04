@@ -4,15 +4,15 @@ sidebar:
   order: 3
 ---
 
-To listen to a Pod's inbox and outbox, applications can use [Solid Notifications](../design/live-update.md#solid-notifications), and for backend-to-backend we recommend webhook subscriptions.
+To listen to a Pod's inbox and outbox, applications can use [Solid Notifications](/design/live-update/#solid-notifications), and for backend-to-backend we recommend webhook subscriptions.
 
 The mechanism for generating webhooks and subscribing to collections can be tedious, so fortunately we provide services and mixins that make this much easier.
 
-## `PodActivitiesWatcherService`
+## Watching for activities
 
-This service, which is automatically created by the `AppService`, will check for all users who have granted the special `apods:ReadInbox' and `apods:ReadOutbox' permissions, and will automatically subscribe to webhooks.
+We provide a [`PodActivitiesWatcherService`](/reference/pod-activities-watcher-service). It will check for all users who have granted the `apods:ReadInbox' and `apods:ReadOutbox' special rights, and will automatically subscribe to webhooks.
 
-Each service can monitor certain types of activity like this:
+Each service can monitor certain types of activity by calling the service's `watch` action like this:
 
 ```js
 await ctx.call('pod-activities-watcher.watch', {
@@ -32,7 +32,7 @@ In the above example, whenever an activity matching the `Invite > Event` pattern
 
 This action receives as parameters `key` (the custom key passed above), `boxType` ("inbox" or "outbox"), `dereferencedActivity` (the activity dereferenced according to the provided pattern), and `actorUri` (the URI of the actor who owns the inbox or outbox).
 
-## `PodActivitiesHandlerMixin`
+## Services dedicated to handling activities
 
 To make things even simpler, we also provide a `PodActivitiesHandlerMixin` that can be integrated into any service.
 
@@ -53,7 +53,7 @@ module.exports = {
         }
       },
       async onEmit(ctx, activity, actorUri) {
-        console.log(`You sent an invitation to ${activity.object.name}!`);
+        console.log(`You sent an invitation for ${activity.object.name}!`);
       },
       async onReceive(ctx, activity, actorUri) {
         console.log(`You have been invited to ${activity.object.name}!`);

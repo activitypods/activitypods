@@ -6,16 +6,18 @@ export default defineConfig({
   site: 'https://docs.activitypods.org',
   integrations: [
     starlight({
-      title: 'DOCS',
+      title: 'Docs (preview)',
       logo: {
-        src: './src/assets/logo.svg'
+        src: './src/assets/full-logo.png'
       },
+      customCss: ['@fontsource/pt-sans/400.css', '@fontsource/pt-sans/700.css', './src/styles/custom.css'],
       editLink: {
         baseUrl: 'https://github.com/assemblee-virtuelle/activitypods/edit/master/docs/'
       },
       social: {
         github: 'https://github.com/assemblee-virtuelle/activitypods',
-        mastodon: 'https://fosstodon.org/@activitypods'
+        mastodon: 'https://fosstodon.org/@activitypods',
+        matrix: 'https://matrix.to/#/#activitypods:matrix.org'
       },
       sidebar: [
         {
@@ -23,16 +25,25 @@ export default defineConfig({
           autogenerate: { directory: 'tutorials' }
         },
         {
-          label: 'App backend',
-          autogenerate: { directory: 'backend' }
+          label: 'App framework',
+          items: [
+            {
+              label: 'Backend',
+              autogenerate: { directory: 'app-framework/backend' }
+            },
+            {
+              label: 'Frontend',
+              autogenerate: { directory: 'app-framework/frontend' }
+            }
+          ]
         },
         {
-          label: 'App frontend',
-          autogenerate: { directory: 'frontend' }
+          label: 'Pods architecture',
+          autogenerate: { directory: 'architecture' }
         },
         {
-          label: 'Design',
-          autogenerate: { directory: 'design' }
+          label: 'Reference',
+          autogenerate: { directory: 'reference' }
         }
       ],
       components: {

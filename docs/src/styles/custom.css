@@ -1,0 +1,10 @@
+:root {
+  --sl-font: 'PT Sans', serif;
+  --sl-color-banner-bg: #7c4dff;
+  --sl-color-accent: #7c4dff;
+}
+
+.site-title {
+  gap: 0.75rem !important;
+  color: black !important;
+}

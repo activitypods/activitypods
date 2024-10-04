@@ -30,7 +30,7 @@ This leads to the `/.well-known/solid` endpoint which includes links to availabl
 
 ### Webhooks subscription
 
-To subscribe to the http://localhost:3000/foo resource using WebSockets, you use an authenticated POST request to send the following JSON-LD document to the server, at http://localhost:3000/.notifications/WebhookChannel2023/:
+To subscribe to the http://localhost:3000/foo resource using webhooks, you use an authenticated POST request to send the following JSON-LD document to the server, at http://localhost:3000/.notifications/WebhookChannel2023/:
 
 ```json
 {
@@ -42,6 +42,20 @@ To subscribe to the http://localhost:3000/foo resource using WebSockets, you use
 ```
 
 The `sendTo` predicate is the Webhook URL of your server, the URL to which you want the notifications to be sent.
+
+### WebSockets subscription
+
+To subscribe to the http://localhost:3000/foo resource using WebSockets, you use an authenticated POST request to send the following JSON-LD document to the server, at http://localhost:3000/.notifications/WebSocketChannel2023/:
+
+```json
+{
+  "@context": ["https://www.w3.org/ns/solid/notifications-context/v1"],
+  "type": "http://www.w3.org/ns/solid/notifications#WebhookChannel2023",
+  "topic": "http://localhost:3000/foo"
+}
+```
+
+The server will send back a subscription resource, in which the `notify:receiveFrom` predicate indicates the WebSocket channel.
 
 ### Notification types
 

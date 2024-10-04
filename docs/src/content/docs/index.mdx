@@ -5,21 +5,21 @@ i18nReady: true
 tableOfContents: false
 editUrl: false
 next: false
-# banner:
-#   content: |
-#     <a href="https://astro.build/blog/astro-4/">Astro version 4.0 is here!</a>
-#     Are you ready to upgrade? <a href="/en/guides/upgrade-to/v4/">Read our upgrade guide</a>.
+banner:
+  content: |
+    This documentation is for ActivityPods 2.0, which will be released this spring.
+    <a href="https://activitypods.org/the-road-to-activitypods-2-0/" target="_blank">Read more</a>.
 hero:
   title: ActivityPods Docs
   tagline: Guides and resources to help you build with the ActivityPods framework
   actions:
     - text: Get started
       icon: rocket
-      link: /en/install/auto/
+      link: /app-framework/backend/introduction
       variant: primary
     - text: Learn about ActivityPods' architecture
       icon: right-arrow
-      link: /en/concepts/why-astro/
+      link: /architecture/application-interoperability/
 ---
 
 import { CardGrid } from '@astrojs/starlight/components';
@@ -27,29 +27,29 @@ import Card from '../../components/Card.astro';
 import ListCard from '../../components/ListCard.astro';
 
 <CardGrid>
-  <Card title="Setup your own Pod provider" icon="laptop">
-    Explore [Astro starter themes](https://astro.build/themes/) for blogs, portfolios, docs, landing pages, SaaS, marketing, ecommerce sites, and more!
+  <Card title="Deploy your own Pod provider" icon="laptop">
+    Thanks to Docker, deploying your own Pod provider is easy ! [Follow our tutorial](/tutorials/deploy-your-own-pod-provider/) to started.
+  </Card>
+  <Card title="Create your first social app" icon="star">
+    We provide [an example app](/tutorials/create-your-first-social-app/) that you can run in 30 minutes and connect to any existing Pod provider.
   </Card>
 
-{' '}
-
-<Card title="Create your first social app" icon="star">
-  Complete our introductory [Build a Blog Tutorial](/en/tutorial/0-introduction/) to learn the basics and create your
-  first Astro site.
-</Card>
-
-{' '}
-
-<ListCard title="App backend" icon="open-book">
-  - [Astro's main features](/en/concepts/why-astro/) - [Island architecture](/en/concepts/islands/) - [Astro
-  components](/en/basics/astro-components/) - [The Astro template syntax](/en/basics/astro-syntax/)
-</ListCard>
-
-  <ListCard title="App frontend" icon="puzzle">
-    - [Add integrations like React, and Tailwind](/en/guides/integrations-guide/)
-    - [Create type safe content collections](/en/guides/content-collections/)
-    - [Enhance navigation with view transitions](/en/guides/view-transitions/)
-    - [Connect a headless CMS to your project](/en/guides/cms/) 
+  <ListCard title="Pods architecture" icon="puzzle">
+    - [Application interoperability](/architecture/application-interoperability/)
+    - [Identity](/architecture/identity/)
+    - [Authentication](/architecture/authentication/)
+    - [Authorization](/architecture/authorization/) 
+    - [Resources management](/architecture/resources-management/) 
+    - [Live update](/architecture/live-update/) 
+  </ListCard>
+  <ListCard title="App framework guides" icon="puzzle">
+    - [Application registration](/app-framework/backend/application-registration/)
+    - [Reading and writing resources](/app-framework/backend/reading-and-writing-resources/)
+    - [Listening to inbox & outbox](/app-framework/backend/listening-to-inbox-and-outbox/)
+    - [Posting as the user](/app-framework/backend/posting-as-the-user/)
+    - [Handling permissions](/app-framework/backend/handling-permissions/) 
+    - [Handling collections](/app-framework/backend/handling-collections/) 
+    - [Sending notifications](/app-framework/backend/sending-notifications/) 
   </ListCard>
 </CardGrid>
 

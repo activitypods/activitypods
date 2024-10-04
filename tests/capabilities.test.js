@@ -121,7 +121,7 @@ describe('capabilities', () => {
     test('owner can GET capability container resources', async () => {
       // Make an authenticated fetch for user0.
       const fetchRes = await fetch(users[0].capabilitiesUri, {
-        headers: { authorization: `Bearer ${users[0].token}` }
+        headers: { authorization: `Bearer ${users[0].token}`, accept: MIME_TYPES.JSON }
       });
       const jsonRes = await fetchRes.json();
       const caps = jsonRes['ldp:contains'];
@@ -129,14 +129,16 @@ describe('capabilities', () => {
     });
 
     test('anonymous user cannot get container', async () => {
-      const { status } = await fetch(users[0].capabilitiesUri);
+      const { status } = await fetch(users[0].capabilitiesUri, {
+        headers: { accept: MIME_TYPES.JSON }
+      });
       expect(status).toBe(404);
     });
 
     test('other user cannot get container', async () => {
       // Make an authenticated fetch for user0, fetching user0's caps.
       const { status } = await fetch(users[0].capabilitiesUri, {
-        headers: { Authorization: `Bearer ${users[1].token}` }
+        headers: { Authorization: `Bearer ${users[1].token}`, accept: MIME_TYPES.JSON }
       });
       expect(status).toBe(404);
     });
@@ -145,7 +147,7 @@ describe('capabilities', () => {
   test('resource is accessible with capability token', async () => {
     const inviteCap = await getUserInviteCap(users[0]);
     const fetchedProfile = await fetch(users[0].profileUri, {
-      headers: { authorization: `Capability ${inviteCap.id}` }
+      headers: { authorization: `Capability ${inviteCap.id}`, accept: MIME_TYPES.JSON }
     });
 
     expect(fetchedProfile.ok).toBeTruthy();
@@ -158,7 +160,7 @@ describe('capabilities', () => {
   test('resource is not accessible with wrong capability token', async () => {
     const inviteCap = await getUserInviteCap(users[0]);
     const fetchedProfile = await fetch(users[1].profileUri, {
-      headers: { authorization: `Capability ${inviteCap.id}` }
+      headers: { authorization: `Capability ${inviteCap.id}`, accept: MIME_TYPES.JSON }
     });
     expect(fetchedProfile.ok).toBeFalsy();
   });
@@ -174,7 +176,7 @@ describe('capabilities', () => {
       webId: users[0].webId
     });
     const fetchedProfile = await fetch(users[0].profileUri, {
-      headers: { authorization: `Capability ${misplacedCapUri}` }
+      headers: { authorization: `Capability ${misplacedCapUri}`, accept: MIME_TYPES.JSON }
     });
 
     expect(fetchedProfile.ok).toBeFalsy();
@@ -191,20 +193,22 @@ describe('capabilities', () => {
       webId: users[0].webId
     });
     const fetchedProfile = await fetch(users[0].profileUri, {
-      headers: { authorization: `Capability ${capUri}` }
+      headers: { authorization: `Capability ${capUri}`, accept: MIME_TYPES.JSON }
     });
 
     expect(fetchedProfile.ok).toBeFalsy();
   });
 
   test('resource is not accessible without capability token', async () => {
-    const fetchedProfile = await fetch(users[0].profileUri);
+    const fetchedProfile = await fetch(users[0].profileUri, {
+      headers: { accept: MIME_TYPES.JSON }
+    });
     expect(fetchedProfile.ok).toBeFalsy();
   });
 
   test('resource is not accessible without invalid capability URI', async () => {
     const fetchedProfile = await fetch(users[1].profileUri, {
-      headers: { authorization: `Capability not-a-uri ha` }
+      headers: { authorization: `Capability not-a-uri ha`, accept: MIME_TYPES.JSON }
     });
     expect(fetchedProfile.ok).toBeFalsy();
   });
@@ -212,7 +216,7 @@ describe('capabilities', () => {
   test('resource is not accessible with non-existing capability', async () => {
     const inviteCap = await getUserInviteCap(users[0]);
     const fetchedProfile = await fetch(users[1].profileUri, {
-      headers: { authorization: `Capability ${inviteCap.id}-some-more-chars` }
+      headers: { authorization: `Capability ${inviteCap.id}-some-more-chars`, accept: MIME_TYPES.JSON }
     });
     expect(fetchedProfile.ok).toBeFalsy();
   });

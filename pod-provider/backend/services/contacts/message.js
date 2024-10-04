@@ -40,10 +40,10 @@ module.exports = {
           return await ctx.call('mail-notifications.notify', {
             template: {
               title: {
-                en: `{{#if activity.object.summary}}{{{activity.object.summary}}}{{else}}{{{emitterProfile.vcard:given-name}}} sent you a message{{/if}}`,
-                fr: `{{#if activity.object.summary}}{{{activity.object.summary}}}{{else}}{{{emitterProfile.vcard:given-name}}} vous a envoyé un message{{/if}}`
+                en: `{{#if activity.object.summary}}{{{activity.object.summary}}}{{else}}{{#if emitterProfile.vcard:given-name}}{{{emitterProfile.vcard:given-name}}}{{else}}{{{emitter.name}}}{{/if}} sent you a message{{/if}}`,
+                fr: `{{#if activity.object.summary}}{{{activity.object.summary}}}{{else}}{{#if emitterProfile.vcard:given-name}}{{{emitterProfile.vcard:given-name}}}{{else}}{{{emitter.name}}}{{/if}} vous a envoyé un message{{/if}}`
               },
-              content: '{{activity.object.content}}',
+              content: '{{removeHtmlTags activity.object.content}}',
               actions: [
                 {
                   caption: {

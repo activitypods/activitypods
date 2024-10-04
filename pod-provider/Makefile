@@ -36,6 +36,9 @@ stop-test:
 
 # Publish
 
+init-container-builder:
+	docker buildx create --name container-builder --driver docker-container --use --bootstrap
+
 publish-frontend:
 	export TAG=`git describe --tags --abbrev=0`
 	$(DOCKER_COMPOSE_PUBLISH) build --push frontend

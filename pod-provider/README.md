@@ -71,10 +71,17 @@ make compact-datasets
 To publish the Docker images on AMD/ARM platforms, first create the [BuildX container](https://docs.docker.com/build/building/multi-platform/#create-a-custom-builder):
 
 ```
-docker buildx create --name container-builder --driver docker-container --use --bootstrap
+make init-container-builder
 ```
 
-Then call these commands:
+Call these commands to publish the Docker images with the tag of the current Git version:
+
+```
+make publish-backend
+make publish-frontend
+```
+
+Call these commands to publish the Docker images with the "latest" tag:
 
 ```
 make publish-backend-latest

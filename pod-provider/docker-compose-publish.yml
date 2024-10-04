@@ -6,7 +6,7 @@ services:
       platforms:
         - linux/arm64
         - linux/amd64
-    image: activitypods/backend:${TAG:-latest}
+    image: activitypods/backend:${TAG}
 
   frontend:
     build:
@@ -15,7 +15,7 @@ services:
       platforms:
         - linux/arm64
         - linux/amd64
-    image: activitypods/frontend:${TAG:-latest}
+    image: activitypods/frontend:${TAG}
     env_file:
       - ./frontend/.env
 
@@ -26,6 +26,6 @@ services:
       platforms:
         - linux/arm64
         - linux/amd64
-    image: activitypods/arena:${TAG:-latest}
+    image: activitypods/arena:${TAG}
     environment:
       REDIS_HOST: 'redis'

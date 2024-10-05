@@ -6,7 +6,7 @@ export default defineConfig({
   site: 'https://docs.activitypods.org',
   integrations: [
     starlight({
-      title: 'Docs (preview)',
+      title: 'ActivityPods Docs',
       logo: {
         src: './src/assets/full-logo.png'
       },
@@ -47,7 +47,8 @@ export default defineConfig({
         }
       ],
       components: {
-        Hero: './src/components/Hero.astro'
+        Hero: './src/components/Hero.astro',
+        SiteTitle: './src/components/SiteTitle.astro'
       }
     })
   ]

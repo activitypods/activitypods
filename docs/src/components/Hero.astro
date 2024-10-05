@@ -7,105 +7,101 @@ const { title, tagline, actions } = hero!;
 ---
 
 <div class="hero">
-	<div class="grid-bg"></div>
-	<div id="_top" class="hero-content stack" style="--stack-gap: 2rem;">
-		<div class="stack" style="--stack-gap: 1rem;">
-			<h1>Activity<span style="color: #7c4dff;">Pods</span> Docs (preview)</h1>
-			<p set:html={tagline} />
-		</div>
-		<div class="sl-flex actions">
-			{
-				actions.map(({ link, icon, text, variant }) => (
-					<Button {link} {variant} {icon} set:html={text} />
-				))
-			}
-		</div>
-	</div>
+  <div class="grid-bg"></div>
+  <div id="_top" class="hero-content stack" style="--stack-gap: 2rem;">
+    <div class="stack" style="--stack-gap: 1rem;">
+      <h1>Activity<span style="color: #7c4dff;">Pods</span> Docs</h1>
+      <p set:html={tagline} />
+    </div>
+    <div class="sl-flex actions">
+      {actions.map(({ link, icon, text, variant }) => <Button {link} {variant} {icon} set:html={text} />)}
+    </div>
+  </div>
 </div>
 
 <style>
-	.hero {
-		position: relative;
-		margin: -1.5rem calc(-1 * var(--sl-content-pad-x));
-	}
+  .hero {
+    position: relative;
+    margin: -1.5rem calc(-1 * var(--sl-content-pad-x));
+  }
 
-	.grid-bg {
-		z-index: -1;
-		position: absolute;
-		content: '';
-		inset: 0;
-	}
+  .grid-bg {
+    z-index: -1;
+    position: absolute;
+    content: '';
+    inset: 0;
+  }
 
-	.stack {
-		display: flex;
-		flex-direction: column;
-		gap: var(--stack-gap, 1.5rem);
-	}
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stack-gap, 1.5rem);
+  }
 
-	.hero-content {
-		padding: 3rem var(--sl-content-pad-x);
-		text-align: center;
-	}
+  .hero-content {
+    padding: 3rem var(--sl-content-pad-x);
+    text-align: center;
+  }
 
-	h1 {
-		font-size: var(--sl-text-5xl);
-		line-height: var(--sl-line-height-headings);
-		font-weight: 600;
-		color: var(--sl-color-white);
-	}
-	.actions {
-		flex-wrap: wrap;
-		gap: 1rem 2rem;
-		justify-content: center;
-	}
+  h1 {
+    font-size: var(--sl-text-5xl);
+    line-height: var(--sl-line-height-headings);
+    font-weight: 600;
+    color: var(--sl-color-white);
+  }
+  .actions {
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    justify-content: center;
+  }
 
-	:global([data-has-hero] .main-pane) {
-		--sl-content-margin-inline: 0;
-		width: 100%;
-	}
+  :global([data-has-hero] .main-pane) {
+    --sl-content-margin-inline: 0;
+    width: 100%;
+  }
 
-	@media (min-width: 32rem) {
-		.hero-content {
-			max-width: 36rem;
-			padding-block: 5rem;
-		}
+  @media (min-width: 32rem) {
+    .hero-content {
+      max-width: 36rem;
+      padding-block: 5rem;
+    }
 
-		h1 {
-			font-size: var(--sl-text-6xl);
-		}
-	}
+    h1 {
+      font-size: var(--sl-text-6xl);
+    }
+  }
 
-	:global([data-has-hero] .sl-container) {
-		max-width: 100%;
-	}
+  :global([data-has-hero] .sl-container) {
+    max-width: 100%;
+  }
 
-	.hero-content,
-	:global([data-has-hero] .sl-markdown-content) {
-		max-width: 72rem;
-		margin-inline: auto;
-	}
+  .hero-content,
+  :global([data-has-hero] .sl-markdown-content) {
+    max-width: 72rem;
+    margin-inline: auto;
+  }
 
-	@media (min-width: 78rem) {
-		.hero {
-			display: grid;
-		}
-		.hero > :global(*) {
-			/* Position all elements in the hero on top of each other in the same grid area. */
-			grid-area: 1 / 1 / -1 / -1;
-		}
+  @media (min-width: 78rem) {
+    .hero {
+      display: grid;
+    }
+    .hero > :global(*) {
+      /* Position all elements in the hero on top of each other in the same grid area. */
+      grid-area: 1 / 1 / -1 / -1;
+    }
 
-		.hero-content {
-			width: 100%;
-			text-align: start;
-			align-self: center;
-		}
-		.hero-content > * {
-			/* Limit the content width so it doesn’t overlap with facepile elements. */
-			max-width: calc(100% - 20rem);
-		}
+    .hero-content {
+      width: 100%;
+      text-align: start;
+      align-self: center;
+    }
+    .hero-content > * {
+      /* Limit the content width so it doesn’t overlap with facepile elements. */
+      max-width: calc(100% - 20rem);
+    }
 
-		.actions {
-			justify-content: start;
-		}
-	}
+    .actions {
+      justify-content: start;
+    }
+  }
 </style>

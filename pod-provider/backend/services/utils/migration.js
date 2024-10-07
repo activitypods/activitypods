@@ -244,7 +244,7 @@ module.exports = {
         if (!container.podsContainer) {
           const containerUri = urlJoin(podUrl, container.path);
           this.logger.info(`Creating new container ${containerUri}`);
-          await ctx.call('ldp.container.createAndAttach', { containerUri, webId });
+          await ctx.call('ldp.container.createAndAttach', { containerUri, permissions: container.permissions, webId });
         }
       }
 
@@ -505,6 +505,33 @@ module.exports = {
         for (let appRegistration of arrayOf(container['ldp:contains'])) {
           this.logger.info(`Deleting app ${appRegistration['interop:registeredAgent']}...`);
           await ctx.call('app-registrations.delete', { resourceUri: appRegistration.id, webId });
+        }
+      }
+    },
+    async addContainersRights(ctx) {
+      const { username } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const { webId, username: dataset } of accounts) {
+        ctx.meta.dataset = dataset;
+        ctx.meta.webId = webId;
+
+        const podUrl = await ctx.call('pod.getUrl', { webId });
+        const registeredContainers = await ctx.call('ldp.registry.list', { dataset });
+
+        for (const { permissions, podsContainer, path } of Object.values(registeredContainers)) {
+          if (permissions && !podsContainer) {
+            const containerUri = urlJoin(podUrl, path);
+            const containerRights = typeof permissions === 'function' ? permissions(webId, ctx) : permissions;
+
+            this.logger.info(`Adding rights for container ${containerUri}...`);
+
+            await ctx.call('webacl.resource.addRights', {
+              resourceUri: containerUri,
+              additionalRights: containerRights,
+              webId: 'system'
+            });
+          }
         }
       }
     }

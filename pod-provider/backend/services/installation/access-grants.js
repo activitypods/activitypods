@@ -157,6 +157,10 @@ module.exports = {
         await ctx.call('webacl.resource.addRights', {
           resourceUri: await ctx.call('files.getContainerUri', { webId }),
           additionalRights: {
+            user: {
+              uri: appUri,
+              write: true
+            },
             default: {
               user: {
                 uri: appUri,

@@ -522,7 +522,7 @@ module.exports = {
         for (const { permissions, podsContainer, path } of Object.values(registeredContainers)) {
           if (permissions && !podsContainer) {
             const containerUri = urlJoin(podUrl, path);
-            const containerRights = typeof permissions === 'function' ? permissions(webId, ctx) : permissions;
+            const containerRights = typeof permissions === 'function' ? permissions('system', ctx) : permissions;
 
             this.logger.info(`Adding rights for container ${containerUri}...`);
 

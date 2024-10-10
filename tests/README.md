@@ -6,13 +6,13 @@ This directory contains code to automatically test ActivityPods' [Pod provider](
 
 Before running the tests, you need to launch the Pod provider, as well as various tools such as Jena Fuseki, Redis and Mailcatcher. The tests will run in an independant process and connect to the Pod provider [thanks to Moleculer networking abilities](https://moleculer.services/docs/0.14/networking). You will be able to interact with the ServiceBroker of the Pod provider, call any services, etc.
 
-There is be two options for launching the Pod provider for tests:
+There are two methods for launching the Pod provider for tests:
 
 ### 1. Directly on the local machine
 
 Call `make start-test` on the root directory to start all Docker containers, except the Pod provider container.
 
-Call `yarn run test` from the /backend directory. This will use the `.env.test` file to start the Pod provider with the Jena Fuseki and Redis dataset (it is not the same one as if you run `yarn run dev`)
+Call `yarn run test` from the `/pod-provider/backend` directory. This will use the `.env.test` file to start the Pod provider with the Jena Fuseki and Redis dataset (it is not the same one as if you run `yarn run dev`)
 
 Advantages:
 
@@ -73,7 +73,7 @@ Finally, you can have a look at the log produced by the Pod provider.
 ## Restrictions
 
 - You should consider the Pod provider as a whole software to play with. You can, in theory, add other services, destroy services, but we don't recommend it as it may have unwanted effects on other tests (in that case, you should probably stop and restart the ServiceBroker)
-- Before running any test suite, Jest will clear all Jena Fuseki datasets, Redis databases, but it will not restart the PodProvider to increase speed. So you should avoid keeping informations in memory (with the `this` variable) as it will not be cleared on the next.
+- Before running any test suite, Jest will clear all Jena Fuseki datasets, Redis databases, but it will not restart the PodProvider to increase speed. So you should avoid keeping information in memory (with the `this` variable) as it will not be cleared on the next.
   - To increase performance, prefer to use the builtin [Moleculer caching features](https://moleculer.services/docs/0.14/caching), which is not activated by default on tests.
   - If you cannot do without this in-memory information, you can create an action (eg. `clearCache`) and call it from within the `connectPodProvider` function just after the broker start.
 - To communicate with the Pod provider, data are serialized as JSON and stored in a Redis database. So you cannot (inside the tests), call an action or emit an event with a function or non-serializable objects. And indeed it is a bad practice in Moleculer, even if it works for local actions and events.

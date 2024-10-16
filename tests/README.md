@@ -2,15 +2,15 @@
 
 This directory contains code to automatically test ActivityPods' [Pod provider](../pod-provider/), as well as its [app framework](../app-framework/).
 
-## Preparation
+## Launch the Pod provider
 
-Before running the tests, you need to launch the Pod provider, as well as various tools such as Jena Fuseki, Redis and Mailcatcher. The tests will run in an independant process and connect to the Pod provider [thanks to Moleculer networking abilities](https://moleculer.services/docs/0.14/networking). You will be able to interact with the ServiceBroker of the Pod provider, call any services, etc.
+Before running the tests, you need to launch the Pod provider, as well as various tools such as Jena Fuseki, Redis and Mailcatcher. The tests will run in an independent process and connect to the Pod provider [thanks to Moleculer networking abilities](https://moleculer.services/docs/0.14/networking). You will be able to interact with the ServiceBroker of the Pod provider, call any services, etc.
 
 There are two methods for launching the Pod provider for tests:
 
 ### 1. Directly on the local machine
 
-Call `make start-test` on the root directory to start all Docker containers, except the Pod provider container.
+Call `make start-test` from the `/pod-provider` directory to start all Docker containers, except the Pod provider container.
 
 Call `yarn run test` from the `/pod-provider/backend` directory. This will use the `.env.test` file to start the Pod provider with the Jena Fuseki and Redis dataset (it is not the same one as if you run `yarn run dev`)
 
@@ -25,7 +25,7 @@ Disadvantages:
 
 ### 2. In a Docker container
 
-Call `make start-test-with-pod-provider` on the root directory to start all Docker containers, including the Pod provider container.
+Call `make start-test-with-pod-provider` from the `/pod-provider` directory to start all Docker containers, including the Pod provider container.
 
 The Pod provider will be rebuilt (`yarn install` will be run only if the package.json file has been modified)
 
@@ -40,9 +40,22 @@ Disadvantages:
 - Keeping symlinks is not possible, so you won't be able to modify SemApps packages and link them.
   - It may be possible with Yalc (which is already used on the SemApps frontend components)
 
-## Running the tests
+## Install packages
 
-Once the Pod provider is launched, you can run the tests, either individually or all together.
+```bash
+cd tests
+yarn install
+```
+
+If you made changes to SemApps packages, you can run this command to link them:
+
+```
+yarn run link-semapps-packages
+```
+
+## Run the tests
+
+You are now ready to run the tests, either individually or all together.
 
 ### With the command line
 

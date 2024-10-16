@@ -1,6 +1,6 @@
 const urlJoin = require('url-join');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { connectPodProvider, clearAllData, installApp, initializePodProvider } = require('./initialize');
+const { connectPodProvider, clearAllData, installApp, initializeAppServer } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const Example2AppService = require('./apps/example2.app');
 const { OBJECT_TYPES, ACTIVITY_TYPES } = require('@semapps/activitypub');

@@ -1,7 +1,7 @@
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { connectPodProvider, clearAllData, installApp } = require('./initialize');
+const { connectPodProvider, clearAllData, installApp, initializeAppServer } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const ExampleAppV2Service = require('./apps/example-v2.app');
 

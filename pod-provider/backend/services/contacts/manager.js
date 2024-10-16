@@ -166,12 +166,16 @@ module.exports = {
           dataset
         });
 
-        ctx.call('activitypub.outbox.post', {
-          collectionUri: recipient.outbox,
-          type: ACTIVITY_TYPES.ACCEPT,
-          object: activity.id,
-          to: activity.actor
-        });
+        // Ensure the actor requesting deletion still exists before sending back an Accept activity
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
+        if (emitter && emitter.inbox) {
+          ctx.call('activitypub.outbox.post', {
+            collectionUri: recipient.outbox,
+            type: ACTIVITY_TYPES.ACCEPT,
+            object: activity.id,
+            to: activity.actor
+          });
+        }
       }
     }
   }

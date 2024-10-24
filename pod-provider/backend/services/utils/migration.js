@@ -33,7 +33,6 @@ module.exports = {
 
           // Collections
           await this.actions.attachCollectionsToContainer(account, { parentCtx: ctx });
-          await this.actions.deleteEmptyCollections(account, { parentCtx: ctx });
           await this.actions.persistCollectionsOptions(account, { parentCtx: ctx });
 
           // Containers
@@ -169,48 +168,6 @@ module.exports = {
         webId: 'system',
         dataset
       });
-    },
-    async deleteEmptyCollections(ctx) {
-      const { username: dataset, webId } = ctx.params;
-
-      // Collections which are now created on the fly
-      const attachPredicates = ['likes', 'replies'];
-
-      for (let attachPredicate of attachPredicates) {
-        attachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
-
-        this.logger.info(`Getting all collections in dataset ${dataset} attached with predicate ${attachPredicate}...`);
-
-        const results = await ctx.call('triplestore.query', {
-          query: `
-            SELECT ?objectUri ?collectionUri
-            WHERE {
-              ?objectUri <${attachPredicate}> ?collectionUri .
-              FILTER (isuri(?objectUri))
-              FILTER (strstarts(str(?collectionUri), "${webId}"))
-            }
-          `,
-          accept: MIME_TYPES.JSON,
-          webId: 'system',
-          dataset
-        });
-
-        for (const [objectUri, collectionUri] of results.map(r => [r.objectUri.value, r.collectionUri.value])) {
-          const isEmpty = await ctx.call('activitypub.collection.isEmpty', { collectionUri });
-          if (isEmpty) {
-            const exist = await ctx.call('ldp.resource.exist', { resourceUri: collectionUri, webId: 'system' });
-            if (exist) {
-              this.logger.info(`Collection ${collectionUri} is empty, deleting it...`);
-              await ctx.call('ldp.resource.delete', { resourceUri: collectionUri, webId: 'system' });
-            }
-            await ctx.call('ldp.resource.patch', {
-              resourceUri: objectUri,
-              triplesToRemove: [triple(namedNode(objectUri), namedNode(attachPredicate), namedNode(collectionUri))],
-              webId: 'system'
-            });
-          }
-        }
-      }
     },
     async persistCollectionsOptions(ctx) {
       const { username: dataset } = ctx.params;

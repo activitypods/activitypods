@@ -89,6 +89,56 @@ module.exports = {
           }
         }
       }
+    },
+    async deleteEmptyCollections(ctx) {
+      const { username } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const { webId, username: dataset } of accounts) {
+        ctx.meta.dataset = dataset;
+        ctx.meta.webId = webId;
+
+        // Collections which are now created on the fly
+        const attachPredicates = ['likes', 'replies'];
+
+        for (let attachPredicate of attachPredicates) {
+          attachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
+
+          this.logger.info(
+            `Getting all collections in dataset ${dataset} attached with predicate ${attachPredicate}...`
+          );
+
+          const results = await ctx.call('triplestore.query', {
+            query: `
+            SELECT ?objectUri ?collectionUri
+            WHERE {
+              ?objectUri <${attachPredicate}> ?collectionUri .
+              FILTER (isuri(?objectUri))
+              FILTER (strstarts(str(?collectionUri), "${webId}"))
+            }
+          `,
+            accept: MIME_TYPES.JSON,
+            webId: 'system',
+            dataset
+          });
+
+          for (const [objectUri, collectionUri] of results.map(r => [r.objectUri.value, r.collectionUri.value])) {
+            const isEmpty = await ctx.call('activitypub.collection.isEmpty', { collectionUri });
+            if (isEmpty) {
+              const exist = await ctx.call('ldp.resource.exist', { resourceUri: collectionUri, webId: 'system' });
+              if (exist) {
+                this.logger.info(`Collection ${collectionUri} is empty, deleting it...`);
+                await ctx.call('ldp.resource.delete', { resourceUri: collectionUri, webId: 'system' });
+              }
+              await ctx.call('ldp.resource.patch', {
+                resourceUri: objectUri,
+                triplesToRemove: [triple(namedNode(objectUri), namedNode(attachPredicate), namedNode(collectionUri))],
+                webId: 'system'
+              });
+            }
+          }
+        }
+      }
     }
   }
 };

@@ -274,6 +274,9 @@ const AppControlMiddleware = ({ baseUrl }) => ({
               `The application has no permission to query the SPARQL endpoint (apods:QuerySparqlEndpoint)`
             );
           }
+
+          // Temporarily disable WAC permissions check on public SPARQL endpoint to see how it impacts performances
+          ctx.meta.webId = podOwner;
         }
 
         return next(ctx);

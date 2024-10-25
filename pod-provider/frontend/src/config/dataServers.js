@@ -19,7 +19,8 @@ const dataServers = {
         'interop:AccessGrant': ['/interop/access-grant'],
         'interop:DataGrant': ['/interop/data-grant'],
         'solid:TypeRegistration': ['/solid/type-registration'],
-        'apods:ClassDescription': ['/apods/class-description']
+        'apods:ClassDescription': ['/apods/class-description'],
+        'acl:Authorization': ['/capabilities']
       }
     },
     uploadsContainer: '/semapps/file'

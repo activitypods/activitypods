@@ -139,6 +139,50 @@ module.exports = {
           }
         }
       }
+    },
+    async changeBaseUrl(ctx) {
+      const { username, oldBaseUrl, newBaseUrl } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const { username: dataset } of accounts) {
+        await ctx.call('triplestore.update', {
+          query: `
+            DELETE {
+              ?s ?p ?oldO .
+            }
+            INSERT {
+              ?s ?p ?newO .
+            }
+            WHERE 
+            { 
+              ?s ?p ?oldO .
+              FILTER(REGEX(STR(?oldO), "${oldBaseUrl}", "i"))
+              BIND(URI(REPLACE(STR(?oldO), "${oldBaseUrl}", "${newBaseUrl}", "i")) AS ?newO)
+            }
+          `,
+          dataset,
+          webId: 'system'
+        });
+
+        await ctx.call('triplestore.update', {
+          query: `
+            DELETE {
+              ?oldS ?p ?o .
+            }
+            INSERT {
+              ?newS ?p ?o .
+            }
+            WHERE 
+            { 
+              ?oldS ?p ?o .
+              FILTER(REGEX(STR(?oldS), "${oldBaseUrl}", "i"))
+              BIND(URI(REPLACE(STR(?oldS), "${oldBaseUrl}", "${newBaseUrl}", "i")) AS ?newS)
+            }
+          `,
+          dataset,
+          webId: 'system'
+        });
+      }
     }
   }
 };

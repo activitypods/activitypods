@@ -142,6 +142,43 @@ module.exports = {
         }
       }
     },
+    async deleteDoubleNameFromProfiles(ctx) {
+      const { username } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const { webId, username: dataset } of accounts) {
+        this.logger.info(`Inspecting Pod of ${webId}...`);
+        ctx.meta.dataset = dataset;
+        ctx.meta.webId = webId;
+
+        const container = await ctx.call('profiles.profile.list');
+
+        for (const profile of container['ldp:contains']) {
+          if (profile['vcard:given-name'] && Array.isArray(profile['vcard:given-name'])) {
+            this.logger.info(
+              `Found an array in profile name (${profile['vcard:given-name'].join(', ')}) ! Deleting it from ${profile.id}`
+            );
+            const firstName = profile['vcard:given-name'][0];
+            await ctx.call('triplestore.query', {
+              query: `
+                DELETE {
+                  <${profile.id}> <http://www.w3.org/2006/vcard/ns#given-name> ?s
+                }
+                INSERT {
+                  <${profile.id}> <http://www.w3.org/2006/vcard/ns#given-name> "${firstName}"
+                }
+                WHERE {
+                  <${profile.id}> <http://www.w3.org/2006/vcard/ns#given-name> ?s
+                }
+              `,
+              accept: MIME_TYPES.JSON,
+              webId: 'system',
+              dataset
+            });
+          }
+        }
+      }
+    },
     async changeBaseUrl(ctx) {
       const { username, oldBaseUrl, newBaseUrl } = ctx.params;
       const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });

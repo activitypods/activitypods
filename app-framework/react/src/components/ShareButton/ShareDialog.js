@@ -126,7 +126,7 @@ const ShareDialog = ({ close, resourceUri, profileResource = 'Profile', groupRes
     );
     if (actorsWithNewViewRight.length > 0) {
       if (isCreator) {
-        await outbox.post({
+        outbox.post({
           type: ACTIVITY_TYPES.ANNOUNCE,
           actor: outbox.owner,
           object: resourceUri,
@@ -135,7 +135,7 @@ const ShareDialog = ({ close, resourceUri, profileResource = 'Profile', groupRes
         });
       } else {
         // Offer the organizer to invite these people
-        await outbox.post({
+        outbox.post({
           type: ACTIVITY_TYPES.OFFER,
           actor: outbox.owner,
           object: {
@@ -152,7 +152,7 @@ const ShareDialog = ({ close, resourceUri, profileResource = 'Profile', groupRes
 
     const actorsWithNewShareRight = Object.keys(newInvitations).filter(actorUri => newInvitations[actorUri].canShare);
     if (actorsWithNewShareRight.length > 0) {
-      await outbox.post({
+      outbox.post({
         type: ACTIVITY_TYPES.OFFER,
         actor: outbox.owner,
         object: {

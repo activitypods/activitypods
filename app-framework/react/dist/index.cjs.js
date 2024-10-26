@@ -815,7 +815,7 @@ const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resource
         setSendingInvitation(true);
         const actorsWithNewViewRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canView && !savedInvitations[actorUri]?.canView);
         if (actorsWithNewViewRight.length > 0) {
-            if (isCreator) await outbox.post({
+            if (isCreator) outbox.post({
                 type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
                 actor: outbox.owner,
                 object: resourceUri,
@@ -823,7 +823,7 @@ const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resource
                 to: actorsWithNewViewRight
             });
             else // Offer the organizer to invite these people
-            await outbox.post({
+            outbox.post({
                 type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).OFFER,
                 actor: outbox.owner,
                 object: {
@@ -837,7 +837,7 @@ const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resource
             });
         }
         const actorsWithNewShareRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canShare);
-        if (actorsWithNewShareRight.length > 0) await outbox.post({
+        if (actorsWithNewShareRight.length > 0) outbox.post({
             type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).OFFER,
             actor: outbox.owner,
             object: {

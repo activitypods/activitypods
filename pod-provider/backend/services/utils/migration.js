@@ -1,6 +1,6 @@
 const urlJoin = require('url-join');
 const { triple, namedNode, literal } = require('@rdfjs/data-model');
-const { arrayOf, getParentContainerUri } = require('@semapps/ldp');
+const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { MigrationService } = require('@semapps/migration');
 const CONFIG = require('../../config/config');

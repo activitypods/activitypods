@@ -1,5 +1,6 @@
 const urlJoin = require('url-join');
 const { arrayOf, getParentContainerUri } = require('@semapps/ldp');
+const { MIME_TYPES } = require('@semapps/mime-types');
 
 /**
  * Service to repair Pods data

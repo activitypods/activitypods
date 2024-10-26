@@ -1,6 +1,6 @@
 {
   "name": "@activitypods/app",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Base services for ActivityPods backend apps",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",

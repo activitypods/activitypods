@@ -159,7 +159,7 @@ module.exports = {
               `Found an array in profile name (${profile['vcard:given-name'].join(', ')}) ! Deleting it from ${profile.id}`
             );
             const firstName = profile['vcard:given-name'][0];
-            await ctx.call('triplestore.query', {
+            await ctx.call('triplestore.update', {
               query: `
                 DELETE {
                   <${profile.id}> <http://www.w3.org/2006/vcard/ns#given-name> ?s
@@ -171,7 +171,6 @@ module.exports = {
                   <${profile.id}> <http://www.w3.org/2006/vcard/ns#given-name> ?s
                 }
               `,
-              accept: MIME_TYPES.JSON,
               webId: 'system',
               dataset
             });

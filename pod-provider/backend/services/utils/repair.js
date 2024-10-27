@@ -183,6 +183,8 @@ module.exports = {
       const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
       for (const { username: dataset } of accounts) {
+        this.logger.info(`Changing base URL for dataset ${dataset}...`);
+
         await ctx.call('triplestore.update', {
           query: `
             DELETE {
@@ -215,6 +217,56 @@ module.exports = {
               ?oldS ?p ?o .
               FILTER(REGEX(STR(?oldS), "${oldBaseUrl}", "i"))
               BIND(URI(REPLACE(STR(?oldS), "${oldBaseUrl}", "${newBaseUrl}", "i")) AS ?newS)
+            }
+          `,
+          dataset,
+          webId: 'system'
+        });
+
+        await ctx.call('triplestore.update', {
+          query: `
+            DELETE {
+              GRAPH <http://semapps.org/webacl> { 
+                ?s ?p ?oldO . 
+              }
+            }
+            INSERT {
+              GRAPH <http://semapps.org/webacl> { 
+                ?s ?p ?newO .
+              }
+            }
+            WHERE 
+            { 
+              GRAPH <http://semapps.org/webacl> { 
+                ?s ?p ?oldO .
+                FILTER(REGEX(STR(?oldO), "${oldBaseUrl}", "i"))
+                BIND(URI(REPLACE(STR(?oldO), "${oldBaseUrl}", "${newBaseUrl}", "i")) AS ?newO)
+              }
+            }
+          `,
+          dataset,
+          webId: 'system'
+        });
+
+        await ctx.call('triplestore.update', {
+          query: `
+            DELETE {
+              GRAPH <http://semapps.org/webacl> { 
+                ?oldS ?p ?o .
+              }
+            }
+            INSERT {
+              GRAPH <http://semapps.org/webacl> { 
+                ?newS ?p ?o .
+              }
+            }
+            WHERE 
+            { 
+              GRAPH <http://semapps.org/webacl> { 
+                ?oldS ?p ?o .
+                FILTER(REGEX(STR(?oldS), "${oldBaseUrl}", "i"))
+                BIND(URI(REPLACE(STR(?oldS), "${oldBaseUrl}", "${newBaseUrl}", "i")) AS ?newS)
+              }
             }
           `,
           dataset,

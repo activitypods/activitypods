@@ -29,8 +29,8 @@ module.exports = {
       select: 'Sélectionner',
       connect: "Accepter l'invitation",
       continue: 'Continuer',
-      delete_pod: 'Effacer toutes mes données',
-      export_pod: 'Télécharger mes données',
+      delete_pod: 'Effacer mon compte',
+      export_pod: 'Exporter mes données',
       set_default_app: 'Définir appli par défaut'
     },
     group: {
@@ -68,7 +68,15 @@ module.exports = {
       invite_connect: '%{username} souhaite vous inviter dans son réseau',
       choose_provider: 'Choisissez un hébergeur',
       choose_custom_provider: 'Choisir un autre hébergeur',
-      invite_success: 'Connection établie !'
+      invite_success: 'Connection établie !',
+      delete_pod: 'Effacer mon compte',
+      export_pod: 'Exporter mes données'
+    },
+    description: {
+      delete_pod: `En continuant, vous effacerez votre espace de données personnel et toutes les données qui s'y trouvent. Cette action est irréversible! Nous vous conseillons d'exporter d'abord vos données (dans les paramètres avancés). Pour continuer, tapez "%{confirm_text}".`,
+      delete_pod_confirm_text: 'effacer mon compte',
+      export_pod:
+        'Vous pouvez télécharger toutes les données de votre espace de donnée personnel. Cette action peut prendre un certain temps.'
     },
     setting: {
       profile: 'Mon profil',
@@ -116,7 +124,9 @@ module.exports = {
       provider_url: "URL de l'espace personnel (POD)",
       creator: 'Créé par',
       created: 'Créé le',
-      modified: 'Modifié le'
+      modified: 'Modifié le',
+      confirm_delete: 'Confirmer la suppression',
+      with_backups: 'Inclure les backups de la base de donnée (si disponibles)'
     },
     helper: {
       add_contact:

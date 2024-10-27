@@ -70,8 +70,8 @@ module.exports = {
       choose_provider: 'Choose data space provider',
       choose_custom_provider: 'Choose custom provider',
       invite_success: 'Success!',
-      delete_pod: 'Delete My Pod',
-      export_pod: 'Export My Data'
+      delete_pod: 'Delete my Pod',
+      export_pod: 'Export my data'
     },
     description: {
       delete_pod:

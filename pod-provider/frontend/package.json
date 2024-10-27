@@ -35,6 +35,7 @@
     "react-admin": "^4.11.0",
     "react-copy-to-clipboard": "^5.0.4",
     "react-dom": "^18.2.0",
+    "react-helmet": "^6.1.0",
     "react-hook-form": "^7.47.0",
     "react-query": "^3.39.3",
     "react-router-dom": "^6.17.0",

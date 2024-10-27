@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet';
 import { Box, Container, useMediaQuery } from '@mui/material';
 import ScrollToTop from './ScrollToTop';
 import AppBar from './AppBar';
@@ -11,6 +12,9 @@ const Layout = props => {
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
   return (
     <BackgroundChecks>
+      <Helmet>
+        <title>{title}</title>
+      </Helmet>
       <ScrollToTop />
       <AppBar title={title} />
       {!xs && <MenuBar />}

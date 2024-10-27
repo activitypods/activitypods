@@ -46,10 +46,10 @@ publish-backend:
 	TAG=`git describe --tags --abbrev=0` $(DOCKER_COMPOSE_PUBLISH) build --push backend
 
 publish-frontend-latest:
-	TAG=latest $(DOCKER_COMPOSE_PUBLISH) build --push frontend
+	TAG=`git describe --tags --abbrev=0` $(DOCKER_COMPOSE_PUBLISH) build --push frontend && TAG=latest $(DOCKER_COMPOSE_PUBLISH) build --push frontend
 
 publish-backend-latest:
-	TAG=latest $(DOCKER_COMPOSE_PUBLISH) build --push backend
+	TAG=`git describe --tags --abbrev=0` $(DOCKER_COMPOSE_PUBLISH) build --push backend && TAG=latest $(DOCKER_COMPOSE_PUBLISH) build --push backend
 
 publish-arena:
 	TAG=latest $(DOCKER_COMPOSE_PUBLISH) build --push arena

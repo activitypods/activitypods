@@ -36,7 +36,7 @@ const SettingsExportPodPage = () => {
 
   return (
     <>
-      <Typography variant="h2" component="h1" noWrap>
+      <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>
         {translate('app.page.export_pod')}
       </Typography>
       <Box mt={1}>

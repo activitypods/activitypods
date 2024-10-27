@@ -27,7 +27,7 @@ const SettingsDeletePodPage = () => {
 
   return (
     <>
-      <Typography variant="h2" component="h1" noWrap>
+      <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>
         {translate('app.page.delete_pod')}
       </Typography>
       <Box mt={1}>
@@ -37,7 +37,6 @@ const SettingsDeletePodPage = () => {
               confirm_text: translate('app.description.delete_pod_confirm_text')
             })}
           </Typography>
-
           <TextField
             sx={{ mt: 1 }}
             label={translate('app.input.confirm_delete')}
@@ -46,7 +45,6 @@ const SettingsDeletePodPage = () => {
             onChange={e => setConfirmInput(e.target.value)}
             fullWidth
           />
-
           <Button
             sx={{ mt: 1 }}
             disabled={deletedClicked || confirmInput !== translate('app.description.delete_pod_confirm_text')}

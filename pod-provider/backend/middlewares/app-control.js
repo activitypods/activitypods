@@ -1,6 +1,6 @@
 const urlJoin = require('url-join');
 const { Errors: E } = require('moleculer-web');
-const { arrayOf, hasType, getParentContainerUri } = require('@semapps/ldp');
+const { arrayOf, hasType, getWebIdFromUri, getParentContainerUri } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
@@ -280,6 +280,36 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         }
 
         return next(ctx);
+      };
+    } else if (action.name === 'activitypub.collection.get') {
+      return async ctx => {
+        const { resourceUri: collectionUri } = ctx.params;
+        const podOwner = getWebIdFromUri(collectionUri);
+
+        // Bypass checks if user is acting on their own
+        if (ctx.meta.webId === podOwner) {
+          return next(ctx);
+        }
+
+        // If the webId is a registered application
+        if (await ctx.call('app-registrations.isRegistered', { appUri: ctx.meta.webId, podOwner })) {
+          const appUri = ctx.meta.webId;
+
+          // If the app is trying to get the outbox or inbox, use webId system to improve performances
+          if (collectionUri === urlJoin(podOwner, 'outbox')) {
+            const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
+            if (specialRights.includes('apods:ReadOutbox')) {
+              ctx.params.webId = 'system';
+            }
+          } else if (collectionUri === urlJoin(podOwner, 'inbox')) {
+            const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
+            if (specialRights.includes('apods:ReadInbox')) {
+              ctx.params.webId = 'system';
+            }
+          }
+        }
+
+        return await next(ctx);
       };
     }
 

@@ -75,7 +75,7 @@ const ManagementService = {
         const dataset = actor.username;
 
         // Delete account information settings data.
-        await this.broker.call('auth.account.setTombstone', { webId: actorUri });
+        await ctx.call('auth.account.setTombstone', { webId: actorUri });
 
         // Delete uploads.
         const uploadsPath = path.join('./uploads/', dataset);
@@ -83,7 +83,7 @@ const ManagementService = {
 
         // Delete backups.
         if (this.broker.registry.hasService('backup')) {
-          await this.broker.call('backup.deleteDataset', { iKnowWhatImDoing, dataset });
+          await ctx.call('backup.deleteDataset', { iKnowWhatImDoing, dataset });
         }
 
         // Send `Delete` activity to the outside world (so they delete cached data and contact info, etc.).
@@ -96,10 +96,12 @@ const ManagementService = {
           webId: 'system',
           accept: MIME_TYPES.JSON
         });
-        const contactsCollection = await this.broker.call('activitypub.collections.get', {
+
+        const contactsCollection = await ctx.call('activitypub.collection.get', {
           resourceUri: contacts,
           webId: 'system'
         });
+
         await ctx.call(
           'activitypub.outbox.post',
           {

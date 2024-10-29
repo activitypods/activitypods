@@ -8,7 +8,6 @@ module.exports = {
     localServer: {
       fusekiBase: CONFIG.FUSEKI_BASE,
       otherDirsPaths: {
-        actors: path.resolve(__dirname, '../../actors'),
         jwt: path.resolve(__dirname, '../../jwt'),
         uploads: path.resolve(__dirname, '../../uploads')
       }

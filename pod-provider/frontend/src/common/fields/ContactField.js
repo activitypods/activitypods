@@ -4,6 +4,7 @@ import { Box, Button, Alert } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { useOutbox, useCollection, OBJECT_TYPES } from '@semapps/activitypub-components';
 import makeStyles from '@mui/styles/makeStyles';
+import useActor from '../../hooks/useActor';
 
 const useStyles = makeStyles(() => ({
   input: {
@@ -21,6 +22,7 @@ const ContactField = ({ source, context }) => {
   const { data: identity } = useGetIdentity();
   const { items: contacts } = useCollection('apods:contacts');
   const { items: attendees } = useCollection(record?.['apods:attendees']);
+  const actor = useActor(record?.id);
 
   if (!record) return null;
 
@@ -49,7 +51,7 @@ const ContactField = ({ source, context }) => {
       {!isOwner && contacts && !contacts.includes(record[source]) && (
         <Box mb={1}>
           <Alert severity="warning">
-            {translate('app.helper.message_profile_show_right', { username: record?.['vcard:given-name'] })}
+            {translate('app.helper.message_profile_show_right', { username: actor.name })}
           </Alert>
         </Box>
       )}

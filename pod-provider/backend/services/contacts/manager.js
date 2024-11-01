@@ -1,7 +1,13 @@
 const urlJoin = require('url-join');
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT, DELETE_ACTOR } = require('../../config/patterns');
+const {
+  ADD_CONTACT,
+  REMOVE_CONTACT,
+  IGNORE_CONTACT,
+  UNDO_IGNORE_CONTACT,
+  DELETE_ACTOR
+} = require('../../config/patterns');
 
 module.exports = {
   name: 'contacts.manager',
@@ -29,6 +35,31 @@ module.exports = {
     }
   },
   activities: {
+    addContact: {
+      match: ADD_CONTACT,
+      async onEmit(ctx, activity, emitterUri) {
+        if (!activity.origin) throw new Error('The origin property is missing from the Add activity');
+
+        if (!activity.origin.startsWith(emitterUri))
+          throw new Error(`Cannot add to collection ${activity.origin} as it is not owned by the emitter`);
+
+        await ctx.call('activitypub.collection.add', {
+          collectionUri: activity.origin,
+          item: activity.object.id
+        });
+
+        if (activity.object.url) {
+          await ctx.call('ldp.remote.store', {
+            resourceUri: activity.object.url,
+            webId: emitterUri
+          });
+          await ctx.call('profiles.profile.attach', {
+            resourceUri: activity.object.url,
+            webId: emitterUri
+          });
+        }
+      }
+    },
     removeContact: {
       match: REMOVE_CONTACT,
       async onEmit(ctx, activity, emitterUri) {
@@ -42,10 +73,12 @@ module.exports = {
           item: activity.object.id
         });
 
-        await ctx.call('ldp.remote.delete', {
-          resourceUri: activity.object.url,
-          webId: emitterUri
-        });
+        if (activity.object.url) {
+          await ctx.call('ldp.remote.delete', {
+            resourceUri: activity.object.url,
+            webId: emitterUri
+          });
+        }
       }
     },
     ignoreContact: {

@@ -8,12 +8,12 @@ const ListView = ({ asides, actions = [<CreateButton />], title, children }) => 
   return (
     <SplitView asides={asides}>
       <Grid container sx={{ mt: 2 }}>
-        <Grid item xs={8}>
+        <Grid item xs={7}>
           <Typography variant="h2" component="h1" noWrap>
             {title || defaultTitle}
           </Typography>
         </Grid>
-        <Grid item xs={4}>
+        <Grid item xs={5}>
           <Box display="flex" alignItems="middle" justifyContent="right">
             {actions.map((action, key) => React.cloneElement(action, { key, color: 'black' }))}
           </Box>

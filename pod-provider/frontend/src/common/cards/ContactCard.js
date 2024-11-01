@@ -2,6 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import { Box, Card, Typography, Avatar } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useCollection } from '@semapps/activitypub-components';
+import AddContactButton from '../buttons/AddContactButton';
 import RemoveContactButton from '../buttons/RemoveContactButton';
 import AcceptContactRequestButton from '../buttons/AcceptContactRequestButton';
 import RejectContactRequestButton from '../buttons/RejectContactRequestButton';
@@ -84,42 +85,42 @@ const ContactCard = ({ actor, profile }) => {
           @{actor.preferredUsername}@{actorServer}
         </Typography>
       </Box>
-      {(contacts?.includes(actor.id) || contactRequest) && (
-        <Box className={classes.button} pb={3} pr={3} pl={3}>
-          {contacts?.includes(actor.id) && (
-            <RemoveContactButton refetch={refetchContacts} variant="contained" color="secondary" fullWidth />
-          )}
-          {contactRequest && (
-            <>
-              <AcceptContactRequestButton
+      <Box className={classes.button} pb={3} pr={3} pl={3}>
+        {contacts?.includes(actor.id) ? (
+          <RemoveContactButton refetch={refetchContacts} variant="contained" color="secondary" fullWidth />
+        ) : (
+          <AddContactButton refetch={refetchContacts} variant="contained" color="secondary" fullWidth />
+        )}
+        {contactRequest && (
+          <>
+            <AcceptContactRequestButton
+              activity={contactRequest}
+              refetch={refetchAll}
+              variant="contained"
+              color="primary"
+              fullWidth
+            />
+            {contactRequest.context ? (
+              <IgnoreContactRequestButton
                 activity={contactRequest}
                 refetch={refetchAll}
                 variant="contained"
-                color="primary"
+                color="grey"
                 fullWidth
               />
-              {contactRequest.context ? (
-                <IgnoreContactRequestButton
-                  activity={contactRequest}
-                  refetch={refetchAll}
-                  variant="contained"
-                  color="grey"
-                  fullWidth
-                />
-              ) : (
-                <RejectContactRequestButton
-                  activity={contactRequest}
-                  refetch={refetchAll}
-                  variant="contained"
-                  color="grey"
-                  fullWidth
-                />
-              )}
-            </>
-          )}
-          {!contactRequest && <IgnoreContactButton variant="contained" color="primary" fullWidth />}
-        </Box>
-      )}
+            ) : (
+              <RejectContactRequestButton
+                activity={contactRequest}
+                refetch={refetchAll}
+                variant="contained"
+                color="grey"
+                fullWidth
+              />
+            )}
+          </>
+        )}
+        {!contactRequest && <IgnoreContactButton variant="contained" color="primary" fullWidth />}
+      </Box>
     </Card>
   );
 };

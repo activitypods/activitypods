@@ -20,7 +20,7 @@ const NetworkPage = () => {
       resource="Profile"
       title={translate('app.page.contacts')}
       actions={[
-        <Button component={Link} to="/network/request" label="app.action.add_contact">
+        <Button component={Link} to="/network/request" label="app.action.send_request">
           <AddIcon />
         </Button>,
         <MyGroupsButton />

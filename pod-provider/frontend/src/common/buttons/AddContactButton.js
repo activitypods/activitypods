@@ -3,7 +3,7 @@ import { useNotify, useTranslate, useRecordContext } from 'react-admin';
 import { Button } from '@mui/material';
 import { useCollection, useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 
-const RemoveContactButton = ({ refetch, ...rest }) => {
+const AddContactButton = ({ refetch, ...rest }) => {
   const [disabled, setDisabled] = useState(false);
   const outbox = useOutbox();
   const notify = useNotify();
@@ -11,18 +11,18 @@ const RemoveContactButton = ({ refetch, ...rest }) => {
   const record = useRecordContext();
   const { url } = useCollection('apods:contacts');
 
-  const remove = useCallback(async () => {
+  const add = useCallback(async () => {
     setDisabled(true);
     try {
       await outbox.post({
-        type: ACTIVITY_TYPES.REMOVE,
+        type: ACTIVITY_TYPES.ADD,
         actor: outbox.owner,
         object: record.id,
         origin: url
       });
       setTimeout(() => {
         refetch();
-        notify('app.notification.contact_removed');
+        notify('app.notification.contact_added');
         setDisabled(false);
       }, 3000);
     } catch (e) {
@@ -34,10 +34,10 @@ const RemoveContactButton = ({ refetch, ...rest }) => {
   if (!record) return null;
 
   return (
-    <Button onClick={remove} disabled={disabled} {...rest}>
-      {translate('app.action.remove_contact')}
+    <Button onClick={add} disabled={disabled} {...rest}>
+      {translate('app.action.add_contact')}
     </Button>
   );
 };
 
-export default RemoveContactButton;
+export default AddContactButton;

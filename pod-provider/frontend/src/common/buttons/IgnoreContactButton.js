@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { useShowContext, useNotify, useTranslate } from 'react-admin';
+import { useShowContext, useNotify, useTranslate, useRecordContext } from 'react-admin';
 import { Button } from '@mui/material';
 import { useCollection, useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 
@@ -8,7 +8,7 @@ const IgnoreContactButton = ({ ...rest }) => {
   const outbox = useOutbox();
   const notify = useNotify();
   const translate = useTranslate();
-  const { record } = useShowContext();
+  const record = useRecordContext();
   const { url, items: ignoredContacts, refetch: refetchIgnored } = useCollection('apods:ignoredContacts');
 
   const ignore = useCallback(async () => {

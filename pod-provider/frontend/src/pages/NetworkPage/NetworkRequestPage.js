@@ -12,7 +12,7 @@ const AddContactToolbar = props => {
     <Toolbar {...props}>
       <SaveButton
         icon={<SendIcon />}
-        label={translate('app.action.add_contact')}
+        label={translate('app.action.send_request')}
         variant="contained"
         color="secondary"
       />

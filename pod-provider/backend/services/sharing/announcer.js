@@ -84,7 +84,7 @@ module.exports = {
 
       const object = await ctx.call('ldp.resource.awaitCreateComplete', {
         resourceUri: objectUri,
-        predicates: ['apods:announcers']
+        predicates: ['apods:announcers', 'apods:announces']
       });
 
       // Add the creator to the list of announcers

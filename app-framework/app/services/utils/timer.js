@@ -72,7 +72,7 @@ module.exports = {
     timeout: {
       name: '*',
       async process(job) {
-        const { actionName, params } = job.data?.data;
+        const { actionName, params } = job.data;
         job.progress(0);
         const result = await this.broker.call(actionName, params);
         job.progress(100);

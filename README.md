@@ -17,14 +17,6 @@ This repository includes:
 
 Click on the above links for more information.
 
-## Cleaning up
-
-Fuseki requires regular compacting, or it will eat up all your disk space. It must be done with Fuseki stopped. In dev environment, you can use the following command which will first stop all containers, compact all datasets (including those used by tests), and then start again all containers.
-
-```bash
-./compact.sh
-```
-
 ## Funding
 
 This project is funded through the [NGI0 Entrust Fund](https://nlnet.nl/entrust), a fund

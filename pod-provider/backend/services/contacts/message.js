@@ -34,9 +34,9 @@ module.exports = {
         }
       },
       async onReceive(ctx, activity, recipientUri) {
-        // For now, only send notification for direct messages (only one recipient, not sent through followers list)
+        // For now, only send notification for direct messages (not sent through followers list, nor CCed)
         // Otherwise we may get dozens of messages from Mastodon actors, which should be read on Mastopod feed
-        if (activity.to === recipientUri && !activity.cc && !activity.bto && !activity.bcc) {
+        if (arrayOf(activity.to).includes(recipientUri)) {
           return await ctx.call('mail-notifications.notify', {
             template: {
               title: {

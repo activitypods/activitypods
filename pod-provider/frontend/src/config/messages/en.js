@@ -60,6 +60,7 @@ module.exports = {
       addresses: 'My addresses',
       settings_email: 'Update email address',
       settings_password: 'Update password',
+      settings_locale: 'Change language',
       add_contact: 'Send a connection request',
       create_profile: 'Create your profile',
       authorize: 'Authorization required',
@@ -86,6 +87,7 @@ module.exports = {
       password: 'Password',
       addresses: 'My addresses',
       address: '%{smart_count} address |||| %{smart_count} addresses',
+      locale: 'Language',
       export: 'Export all my data',
       delete: 'Delete my Pod',
       developer_mode: 'Developer mode'
@@ -196,6 +198,7 @@ module.exports = {
       password_changed: 'Password changed successfully',
       new_password_error: 'An error occurred',
       invalid_password: 'Invalid password',
+      locale_changed: 'Language changed successfully',
       get_settings_error: 'An error occurred',
       update_settings_error: 'An error occurred',
       verified_applications_load_failed: 'Unable to load the list of verified applications',

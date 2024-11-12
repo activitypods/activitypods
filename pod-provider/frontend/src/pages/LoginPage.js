@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import urlJoin from 'url-join';
-import { useDataProvider } from 'react-admin';
+import { useDataProvider, useLocaleState } from 'react-admin';
 import { LocalLoginPage } from '@semapps/auth-provider';
 import { useSearchParams } from 'react-router-dom';
 import scorer from '../config/scorer';
@@ -9,6 +9,7 @@ const LoginPage = () => {
   const dataProvider = useDataProvider();
   const [searchParams] = useSearchParams();
   const interactionId = searchParams.get('interaction_id');
+  const [locale] = useLocaleState();
 
   const finishInteraction = useCallback(async () => {
     if (interactionId) {
@@ -41,7 +42,7 @@ const LoginPage = () => {
       allowUsername
       onLogin={onLogin}
       onSignup={onSignup}
-      additionalSignupValues={{ 'schema:knowsLanguage': CONFIG.DEFAULT_LOCALE }}
+      additionalSignupValues={{ 'schema:knowsLanguage': locale }}
       passwordScorer={scorer}
     />
   );

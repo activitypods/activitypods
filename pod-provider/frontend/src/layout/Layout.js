@@ -6,6 +6,7 @@ import AppBar from './AppBar';
 import MenuBar from './MenuBar';
 import BottomBar from './BottomBar';
 import BackgroundChecks from '../common/BackgroundCheck';
+import UpdateLocale from '../common/UpdateLocale';
 
 const Layout = props => {
   const { children, title } = props;
@@ -16,6 +17,7 @@ const Layout = props => {
         <title>{title}</title>
       </Helmet>
       <ScrollToTop />
+      <UpdateLocale />
       <AppBar title={title} />
       {!xs && <MenuBar />}
       <Container disableGutters={xs}>

@@ -2,16 +2,19 @@
 // See https://github.com/kerimdzhanov/dotenv-flow for more details
 require('dotenv-flow').config();
 
-const path = require('path');
-
 module.exports = {
   INSTANCE_NAME: process.env.SEMAPPS_INSTANCE_NAME,
+  INSTANCE_DESCRIPTION: process.env.SEMAPPS_INSTANCE_DESCRIPTION,
+  INSTANCE_OWNER: process.env.SEMAPPS_INSTANCE_OWNER,
+  INSTANCE_AREA: process.env.SEMAPPS_INSTANCE_AREA,
   BASE_URL: process.env.SEMAPPS_HOME_URL,
   PORT: process.env.SEMAPPS_PORT,
   FRONTEND_URL: process.env.SEMAPPS_FRONTEND_URL,
   COLOR_PRIMARY: process.env.SEMAPPS_COLOR_PRIMARY,
   COLOR_SECONDARY: process.env.SEMAPPS_COLOR_SECONDARY,
+  AVAILABLE_LOCALES: process.env.SEMAPPS_AVAILABLE_LOCALES.split(','),
   DEFAULT_LOCALE: process.env.SEMAPPS_DEFAULT_LOCALE,
+  MAPBOX_ACCESS_TOKEN: process.env.SEMAPPS_MAPBOX_ACCESS_TOKEN,
   // Fuseki
   SPARQL_ENDPOINT: process.env.SEMAPPS_SPARQL_ENDPOINT,
   JENA_USER: process.env.SEMAPPS_JENA_USER,

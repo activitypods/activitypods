@@ -31,13 +31,24 @@ module.exports = {
     AppControlMiddleware({ baseUrl: CONFIG.BASE_URL })
   ],
   errorHandler,
-  logger: {
-    type: 'Console',
-    options: {
-      formatter: 'short',
-      level: 'info'
+  logger: [
+    {
+      type: 'Console',
+      options: {
+        formatter: 'short',
+        level: 'info'
+      }
+    },
+    {
+      type: 'File',
+      options: {
+        formatter: 'short',
+        level: 'error',
+        folder: './logs',
+        filename: 'moleculer-errors-{date}.log'
+      }
     }
-  },
+  ],
   transporter: CONFIG.REDIS_TRANSPORTER_URL || undefined,
   serializer: CONFIG.REDIS_TRANSPORTER_URL ? new RdfJSONSerializer() : undefined
 };

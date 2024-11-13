@@ -2,6 +2,8 @@ const path = require('path');
 const CONFIG = require('../config/config');
 
 const POD_PROVIDER_TYPES = [
+  'https://www.w3.org/ns/activitystreams#Person',
+  'http://xmlns.com/foaf/0.1/Person',
   'http://www.w3.org/2006/vcard/ns#Individual',
   'https://www.w3.org/ns/activitystreams#Profile',
   'http://www.w3.org/2006/vcard/ns#Location',

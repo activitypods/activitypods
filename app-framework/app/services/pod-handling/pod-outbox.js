@@ -17,7 +17,7 @@ module.exports = {
 
       const actor = await ctx.call('activitypub.actor.get', { actorUri, webId: appUri });
 
-      const { headers } = await ctx.call('signature.proxy.query', {
+      const response = await ctx.call('signature.proxy.query', {
         url: actor.outbox,
         method: 'POST',
         headers: {
@@ -27,7 +27,13 @@ module.exports = {
         actorUri: appUri
       });
 
-      return headers.location;
+      if (response.ok) {
+        return response.headers.location;
+      } else {
+        this.logger.error(
+          `Could not POST to ${actorUri} outbox. Error ${response.status} (${response.statusText}). Body: ${JSON.stringify(activity)}`
+        );
+      }
     }
   }
 };

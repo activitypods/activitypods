@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Box, Button, Typography, useMediaQuery, Container, Avatar } from '@mui/material';
+import { Box, Button, Typography, Container, Avatar } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { Link, useGetIdentity, useTranslate, useRedirect } from 'react-admin';
 
@@ -79,7 +79,6 @@ const HomePage = () => {
   const { data: identity, isLoading } = useGetIdentity();
   const redirect = useRedirect();
   const translate = useTranslate();
-  const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
   useEffect(() => {
     if (!isLoading && identity?.id) {

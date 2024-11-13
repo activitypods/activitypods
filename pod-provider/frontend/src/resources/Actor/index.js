@@ -1,6 +1,11 @@
+import ActorShow from './ActorShow';
+
 export default {
+  config: {
+    show: ActorShow
+  },
   dataModel: {
-    types: ['as:Actor']
+    types: ['as:Person', 'foaf:Person']
   },
   translations: {
     en: {

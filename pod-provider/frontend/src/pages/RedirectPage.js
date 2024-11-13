@@ -20,14 +20,16 @@ const RedirectPage = () => {
       const resource = Object.keys(dataModels).find(
         key => dataModels[key].types && dataModels[key].types.includes(prefixedType)
       );
-      if (searchParams.has('uri')) {
-        navigate(
-          `/${resource}/${encodeURIComponent(searchParams.get('uri'))}${
-            searchParams.get('mode') === 'show' ? '/show' : ''
-          }`
-        );
-      } else if (resource) {
-        navigate(`/${resource}`);
+      if (resource) {
+        if (searchParams.has('uri')) {
+          navigate(
+            `/${resource}/${encodeURIComponent(searchParams.get('uri'))}${
+              searchParams.get('mode') === 'show' ? '/show' : ''
+            }`
+          );
+        } else {
+          navigate(`/${resource}`);
+        }
       } else {
         navigate('/network');
       }

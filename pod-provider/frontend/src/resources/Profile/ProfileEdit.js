@@ -1,5 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { SaveButton, SimpleForm, TextInput, Toolbar, ImageField, useGetIdentity, useNotify } from 'react-admin';
+import {
+  SaveButton,
+  SimpleForm,
+  TextInput,
+  Toolbar,
+  ImageField,
+  useGetIdentity,
+  useNotify,
+  ShowButton
+} from 'react-admin';
 import { ImageInput } from '@semapps/input-components';
 import Edit from '../../layout/Edit';
 import ProfileTitle from './ProfileTitle';
@@ -38,7 +47,7 @@ export const ProfileEdit = () => {
             refetchIdentity();
           }
         }}
-        actions={[]}
+        actions={[<ShowButton />]}
       >
         <SimpleForm toolbar={<ToolbarWithoutDelete />}>
           <TextInput source="vcard:given-name" fullWidth />

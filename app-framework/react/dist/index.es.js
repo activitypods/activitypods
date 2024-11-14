@@ -931,6 +931,23 @@ var $47fb439769024aa7$export$2e2bcd8739ae039 = $47fb439769024aa7$var$ShareButton
 
 
 
+// Set the app locale to the user's locale, if it is set
+const $034aa6c1ffa79e6e$var$SyncUserLocale = ()=>{
+    const [locale, setLocale] = (0, $iLwJW$useLocaleState)();
+    const { data: identity } = (0, $iLwJW$useGetIdentity)();
+    (0, $iLwJW$useEffect)(()=>{
+        if (identity?.webIdData?.["schema:knowsLanguage"] && identity?.webIdData?.["schema:knowsLanguage"] !== locale) setLocale(identity?.webIdData?.["schema:knowsLanguage"]);
+    }, [
+        locale,
+        setLocale,
+        identity
+    ]);
+};
+var $034aa6c1ffa79e6e$export$2e2bcd8739ae039 = $034aa6c1ffa79e6e$var$SyncUserLocale;
+
+
+
+
 
 
 
@@ -1074,5 +1091,5 @@ var $5de716308b366acb$export$2e2bcd8739ae039 = {
 
 
 
-export {$2957839fe06af793$export$2e2bcd8739ae039 as BackgroundChecks, $e235591816215308$export$2e2bcd8739ae039 as PodLoginPage, $1a88c39afebe872d$export$2e2bcd8739ae039 as RedirectPage, $47fb439769024aa7$export$2e2bcd8739ae039 as ShareButton, $79f089d541db8101$export$2e2bcd8739ae039 as ShareDialog, $f86de5ead054b96d$export$2e2bcd8739ae039 as UserMenu, $4b2a6afceae7f301$export$2e2bcd8739ae039 as englishMessages, $5de716308b366acb$export$2e2bcd8739ae039 as frenchMessages};
+export {$2957839fe06af793$export$2e2bcd8739ae039 as BackgroundChecks, $e235591816215308$export$2e2bcd8739ae039 as PodLoginPage, $1a88c39afebe872d$export$2e2bcd8739ae039 as RedirectPage, $47fb439769024aa7$export$2e2bcd8739ae039 as ShareButton, $79f089d541db8101$export$2e2bcd8739ae039 as ShareDialog, $034aa6c1ffa79e6e$export$2e2bcd8739ae039 as SyncUserLocale, $f86de5ead054b96d$export$2e2bcd8739ae039 as UserMenu, $4b2a6afceae7f301$export$2e2bcd8739ae039 as englishMessages, $5de716308b366acb$export$2e2bcd8739ae039 as frenchMessages};
 //# sourceMappingURL=index.es.js.map

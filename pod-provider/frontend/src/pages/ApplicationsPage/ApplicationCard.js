@@ -1,11 +1,12 @@
 import React from 'react';
-import { useTranslate } from 'react-admin';
+import { useLocaleState, useTranslate } from 'react-admin';
 import { Card, Typography, Button, Chip, IconButton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useNodeinfo } from '@semapps/activitypub-components';
 import DoneIcon from '@mui/icons-material/Done';
 import DeleteIcon from '@mui/icons-material/Delete';
 import useUninstallApp from '../../hooks/useUninstallApp';
+import { getLangString } from '../../utils';
 
 const useStyles = makeStyles(theme => ({
   card: {
@@ -56,6 +57,7 @@ const useStyles = makeStyles(theme => ({
 const ApplicationCard = ({ app, isTrustedApp, isInstalled }) => {
   const classes = useStyles();
   const translate = useTranslate();
+  const [locale] = useLocaleState();
   const appDomain = new URL(app.id).host;
   const nodeinfo = useNodeinfo(appDomain);
   const uninstallApp = useUninstallApp(app);
@@ -67,7 +69,7 @@ const ApplicationCard = ({ app, isTrustedApp, isInstalled }) => {
         {app['interop:applicationName']}
       </Typography>
       <Typography variant="body2" className={classes.description}>
-        {app['interop:applicationDescription']}
+        {getLangString(app['interop:applicationDescription'], locale)}
       </Typography>
       <Typography variant="body2" className={classes.url}>
         {appDomain}

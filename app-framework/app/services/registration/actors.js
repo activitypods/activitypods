@@ -20,6 +20,14 @@ module.exports = {
       let actorUri = actorAccount?.webId;
       const actorExist = actorUri && (await ctx.call('ldp.resource.exist', { resourceUri: actorUri }));
 
+      const description =
+        typeof app.description === 'string'
+          ? app.description
+          : Object.entries(app.description).map(([key, value]) => ({
+              '@value': value,
+              '@language': key
+            }));
+
       if (!actorExist) {
         this.logger.info(`Actor ${actorUri} does not exist yet, creating it...`);
 
@@ -40,7 +48,7 @@ module.exports = {
                 preferredUsername: 'app',
                 name: app.name,
                 'interop:applicationName': app.name,
-                'interop:applicationDescription': app.description,
+                'interop:applicationDescription': description,
                 'interop:applicationAuthor': app.author,
                 'interop:applicationThumbnail': app.thumbnail,
                 'oidc:client_name': app.name,
@@ -94,7 +102,7 @@ module.exports = {
               ...actor,
               name: app.name,
               'interop:applicationName': app.name,
-              'interop:applicationDescription': app.description,
+              'interop:applicationDescription': description,
               'interop:applicationAuthor': app.author,
               'interop:applicationThumbnail': app.thumbnail,
               'oidc:client_name': app.name,

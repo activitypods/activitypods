@@ -83,7 +83,7 @@ class RedisAdapter {
           }
         });
         if (response.status !== 200) {
-          throw new Error(`Unable to access data at ${id}: ${await response.text()}`);
+          throw new Error(`Unable to access data at ${id}. Error ${response.status} ${await response.text()}`);
         }
         const data = await response.text();
         let json;

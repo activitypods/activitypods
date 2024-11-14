@@ -99,11 +99,10 @@ module.exports = {
             });
             return resource; // First get the resource, then return it, otherwise the try/catch will not work
           } catch (e) {
-            if (e.status === 401 || e.status === 403 || e.status === 404) {
-              return false;
-            } else {
-              throw new Error(e);
+            if (e.status !== 401 && e.status !== 403 && e.status !== 404) {
+              this.logger.error(`Could not fetch ${resourceUri}. Error ${e.status} ${e.statusText})`);
             }
+            return false;
           }
         } else {
           const { ok, body } = await ctx.call('pod-resources.get', { resourceUri, actorUri });

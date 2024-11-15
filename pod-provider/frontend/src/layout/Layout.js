@@ -6,18 +6,18 @@ import AppBar from './AppBar';
 import MenuBar from './MenuBar';
 import BottomBar from './BottomBar';
 import BackgroundChecks from '../common/BackgroundCheck';
-import UpdateLocale from '../common/UpdateLocale';
+import SyncUserLocale from '../common/SyncUserLocale';
 
 const Layout = props => {
   const { children, title } = props;
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
   return (
     <BackgroundChecks>
+      <SyncUserLocale />
       <Helmet>
         <title>{title}</title>
       </Helmet>
       <ScrollToTop />
-      <UpdateLocale />
       <AppBar title={title} />
       {!xs && <MenuBar />}
       <Container disableGutters={xs}>

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useGetIdentity, useLocaleState } from 'react-admin';
 
 // Set the app locale to the user's locale, if it is set
-const UpdateLocale = () => {
+const SyncUserLocale = () => {
   const [locale, setLocale] = useLocaleState();
   const { data: identity } = useGetIdentity();
 
@@ -13,4 +13,4 @@ const UpdateLocale = () => {
   }, [locale, setLocale, identity]);
 };
 
-export default UpdateLocale;
+export default SyncUserLocale;

@@ -2,7 +2,7 @@ export {};
 
 interface GlobalConfig {
   INSTANCE_NAME: string;
-  INSTANCE_DESCRIPTION: string;
+  INSTANCE_DESCRIPTION: object;
   INSTANCE_OWNER: string;
   INSTANCE_AREA: string;
   AVAILABLE_LOCALES: string[];

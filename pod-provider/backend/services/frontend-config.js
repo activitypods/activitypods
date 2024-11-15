@@ -20,7 +20,9 @@ module.exports = {
       return `
         window.CONFIG = {
           INSTANCE_NAME: "${CONFIG.INSTANCE_NAME}",
-          INSTANCE_DESCRIPTION: "${CONFIG.INSTANCE_DESCRIPTION}",
+          INSTANCE_DESCRIPTION: {${Object.entries(CONFIG.INSTANCE_DESCRIPTION)
+            .map(([key, value]) => `${key}: "${value}"`)
+            .join(', ')}},
           INSTANCE_OWNER: "${CONFIG.INSTANCE_OWNER}",
           INSTANCE_AREA: "${CONFIG.INSTANCE_AREA}",
           AVAILABLE_LOCALES: [${CONFIG.AVAILABLE_LOCALES.map(l => `"${l}"`).join(', ')}],

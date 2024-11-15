@@ -112,6 +112,12 @@ module.exports = {
         if (!(activity.actor === activity.object.id))
           throw new Error(`The actor ${activity.actor} cannot ask to remove actor ${activity.object.id}`);
 
+        // Temporarily stop processing Mastodon delete requests because they are too many and Fuseki ends up crashing
+        // See https://github.com/activitypods/activitypods/issues/347
+        if (activity?.id.endsWith('#delete')) {
+          return;
+        }
+
         const actorToDelete = activity.object.id;
         const podUrl = await ctx.call('pod.getUrl', { webId: actorToDelete });
 

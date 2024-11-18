@@ -6,12 +6,14 @@ import AppBar from './AppBar';
 import MenuBar from './MenuBar';
 import BottomBar from './BottomBar';
 import BackgroundChecks from '../common/BackgroundCheck';
+import SyncUserLocale from '../common/SyncUserLocale';
 
 const Layout = props => {
   const { children, title } = props;
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
   return (
     <BackgroundChecks>
+      <SyncUserLocale />
       <Helmet>
         <title>{title}</title>
       </Helmet>

@@ -29,6 +29,7 @@ $parcel$export(module.exports, "PodLoginPage", () => $474875ae41bcd76f$export$2e
 $parcel$export(module.exports, "RedirectPage", () => $691cae6a20c06149$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "ShareButton", () => $c30b6e8e8f4f1d51$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "ShareDialog", () => $8ffb7dd40d703ae5$export$2e2bcd8739ae039);
+$parcel$export(module.exports, "SyncUserLocale", () => $bbda9bb45dcd2801$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "UserMenu", () => $fc1368eec161415d$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "englishMessages", () => $4b1314efa6ba34c8$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "frenchMessages", () => $7955e6b2ad1a54ef$export$2e2bcd8739ae039);
@@ -944,6 +945,23 @@ var $8ffb7dd40d703ae5$export$2e2bcd8739ae039 = $8ffb7dd40d703ae5$var$ShareDialog
 };
 var $c30b6e8e8f4f1d51$export$2e2bcd8739ae039 = $c30b6e8e8f4f1d51$var$ShareButton;
 
+
+
+
+
+// Set the app locale to the user's locale, if it is set
+const $bbda9bb45dcd2801$var$SyncUserLocale = ()=>{
+    const [locale, setLocale] = (0, $fvx3m$reactadmin.useLocaleState)();
+    const { data: identity } = (0, $fvx3m$reactadmin.useGetIdentity)();
+    (0, $fvx3m$react.useEffect)(()=>{
+        if (identity?.webIdData?.["schema:knowsLanguage"] && identity?.webIdData?.["schema:knowsLanguage"] !== locale) setLocale(identity?.webIdData?.["schema:knowsLanguage"]);
+    }, [
+        locale,
+        setLocale,
+        identity
+    ]);
+};
+var $bbda9bb45dcd2801$export$2e2bcd8739ae039 = $bbda9bb45dcd2801$var$SyncUserLocale;
 
 
 

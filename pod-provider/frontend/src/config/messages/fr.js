@@ -59,6 +59,7 @@ module.exports = {
       settings_advanced: 'Paramètres avancés',
       settings_email: 'Modifier mon mail',
       settings_password: 'Modifier mon mot de passe',
+      settings_locale: 'Changer ma langue',
       add_contact: 'Demander une mise en relation',
       create_profile: 'Créez votre profil',
       authorize: 'Autorisation requise',
@@ -85,6 +86,7 @@ module.exports = {
       password: 'Mot de passe',
       addresses: 'Mes adresses',
       address: '%{smart_count} adresse |||| %{smart_count} adresses',
+      locale: 'Langue',
       export: 'Exporter toutes mes données',
       delete: 'Effacer mon compte',
       developer_mode: 'Mode développeur'
@@ -200,6 +202,7 @@ module.exports = {
       password_changed: 'Le mot de passe a été changé avec succès',
       new_password_error: "Une erreur s'est produite",
       invalid_password: 'Mot de passe incorrect',
+      locale_changed: 'La langue a été changée avec succès',
       get_settings_error: "Une erreur s'est produite",
       update_settings_error: "Une erreur s'est produite",
       verified_applications_load_failed: 'Impossible de charger la liste des applications vérifiées',
@@ -238,15 +241,15 @@ module.exports = {
     steps: {
       title: 'Comment ça marche ?',
       1: {
-        title: 'Je crée mon espace personnel (POD)',
+        title: 'Je crée mon espace de donnée personnel (Pod)',
         text: "Un seul endroit pour toutes mes données, c'est pas trop tôt !"
       },
       2: {
-        title: 'Je me connecte aux applications compatibles',
+        title: 'Je me connecte aux applis compatibles',
         text: "Rencontres, petites annonces... et beaucoup d'autres à venir !"
       },
       3: {
-        title: 'Mes données sont enregistrées sur mon POD',
+        title: 'Mes données sont enregistrées sur mon Pod',
         text: "Les administrateurs des applications n'y ont pas accès."
       },
       4: {

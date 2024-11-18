@@ -242,3 +242,11 @@ export const stripHtmlTags = (html: string) => {
     return doc.body.textContent;
   }
 };
+
+export const getLangString = (value: string | LangString[], locale: string): string | undefined => {
+  if (Array.isArray(value)) {
+    return (value.find(d => d['@language'] === locale) || value.find(d => d['@language'] === 'en'))?.['@value'];
+  } else {
+    return value;
+  }
+};

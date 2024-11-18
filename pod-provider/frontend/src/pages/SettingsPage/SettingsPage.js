@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { useTranslate, useGetList, useAuthProvider, useNotify, useCreatePath, useGetIdentity } from 'react-admin';
+import {
+  useTranslate,
+  useGetList,
+  useAuthProvider,
+  useNotify,
+  useCreatePath,
+  useGetIdentity,
+  useLocaleState
+} from 'react-admin';
 import { Box, Typography, List } from '@mui/material';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { useNavigate } from 'react-router-dom';
@@ -10,10 +18,12 @@ import PlaceIcon from '@mui/icons-material/Place';
 import LockIcon from '@mui/icons-material/Lock';
 import LinkIcon from '@mui/icons-material/Link';
 import TuneIcon from '@mui/icons-material/Tune';
+import TranslateIcon from '@mui/icons-material/Translate';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import useContactLink from '../../hooks/useContactLink';
 import SettingsItem from './SettingsItem';
+import { availableLocales } from '../../config/i18nProvider';
 
 const SettingsPage = () => {
   useCheckAuthenticated();
@@ -21,6 +31,7 @@ const SettingsPage = () => {
   const authProvider = useAuthProvider();
   const navigate = useNavigate();
   const { data: identity } = useGetIdentity();
+  const [locale] = useLocaleState();
   const createPath = useCreatePath();
   const notify = useNotify();
   const [accountSettings, setAccountSettings] = useState({});
@@ -62,6 +73,12 @@ const SettingsPage = () => {
             icon={<LockIcon />}
             label="app.setting.password"
             value="***************"
+          />
+          <SettingsItem
+            onClick={() => navigate('/settings/locale')}
+            icon={<TranslateIcon />}
+            label="app.setting.locale"
+            value={availableLocales.find(l => l.locale === locale)?.name}
           />
           <CopyToClipboard text={contactLink}>
             <SettingsItem

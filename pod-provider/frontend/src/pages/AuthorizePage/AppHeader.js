@@ -1,6 +1,8 @@
 import React from 'react';
+import { useLocaleState } from 'react-admin';
 import { Typography, Box, Chip } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import { getLangString } from '../../utils';
 
 const useStyles = makeStyles(() => ({
   app: {
@@ -36,6 +38,8 @@ const useStyles = makeStyles(() => ({
 
 const AppHeader = ({ application, isTrustedApp }) => {
   const classes = useStyles();
+  const [locale] = useLocaleState();
+
   return (
     <Box pt={1} pb={0}>
       <div className={classes.app}>
@@ -47,7 +51,7 @@ const AppHeader = ({ application, isTrustedApp }) => {
         <Typography variant="h4" className={classes.appTitle}>
           {application['interop:applicationName']}
         </Typography>
-        <Typography variant="body2">{application['interop:applicationDescription']}</Typography>
+        <Typography variant="body2">{getLangString(application['interop:applicationDescription'], locale)}</Typography>
         <Typography variant="body2" className={classes.appUrl}>
           {new URL(application.id).host}
         </Typography>

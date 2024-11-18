@@ -1,3 +1,4 @@
+import { resolveBrowserLocale } from 'react-admin';
 import polyglotI18nProvider from 'ra-i18n-polyglot';
 import raEnglishMessages from 'ra-language-english';
 import raFrenchMessages from 'ra-language-french';
@@ -30,6 +31,14 @@ const getMessages = lang => {
   }
 };
 
-const i18nProvider = polyglotI18nProvider(getMessages, CONFIG.DEFAULT_LOCALE);
+export const locales = [
+  { locale: 'en', name: 'English' },
+  { locale: 'fr', name: 'Français' }
+];
+
+// Filter locales based on the Pod provider settings
+export const availableLocales = locales.filter(e => CONFIG.AVAILABLE_LOCALES.includes(e.locale));
+
+const i18nProvider = polyglotI18nProvider(getMessages, resolveBrowserLocale(CONFIG.DEFAULT_LOCALE), availableLocales);
 
 export default i18nProvider;

@@ -112,5 +112,6 @@ export const frenchMessages: {
 };
 export { default as ShareButton } from './components/ShareButton/ShareButton';
 export { default as ShareDialog } from './components/ShareButton/ShareDialog';
+export { default as SyncUserLocale } from './components/SyncUserLocale';
 
 //# sourceMappingURL=index.d.ts.map

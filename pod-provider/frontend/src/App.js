@@ -1,5 +1,5 @@
 import React from 'react';
-import { Admin, Resource, CustomRoutes, memoryStore } from 'react-admin';
+import { Admin, Resource, CustomRoutes, localStorageStore } from 'react-admin';
 import { BrowserRouter, Route } from 'react-router-dom';
 import { QueryClient } from 'react-query';
 import { StyledEngineProvider } from '@mui/material/styles';
@@ -31,6 +31,7 @@ import LoginPage from './pages/LoginPage';
 import NetworkPage from './pages/NetworkPage/NetworkPage';
 import NetworkActorPage from './pages/NetworkPage/NetworkActorPage';
 import NetworkRequestPage from './pages/NetworkPage/NetworkRequestPage';
+import SettingsLocalePage from './pages/SettingsPage/SettingsLocalePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,7 +55,7 @@ const App = () => (
         loginPage={LoginPage}
         layout={Layout}
         theme={theme}
-        store={memoryStore()}
+        store={localStorageStore()}
         queryClient={queryClient}
         disableTelemetry
       >
@@ -85,6 +86,7 @@ const App = () => (
             <Route path="advanced" element={<AdvancedSettingsPage />} />
             <Route path="email" element={<SettingsEmailPage />} />
             <Route path="password" element={<SettingsPasswordPage />} />
+            <Route path="locale" element={<SettingsLocalePage />} />
             <Route path="export-pod" element={<SettingsExportPodPage />} />
             <Route path="delete-pod" element={<SettingsDeletePodPage />} />
           </Route>

@@ -59,8 +59,8 @@ Copy the `.env.backend` file to a `.env.backend.local` file (`cp .env.backend .e
 
 ```dotenv
 SEMAPPS_INSTANCE_NAME=MyPod.store
-SEMAPPS_INSTANCE_DESCRIPTION="A Pod provider open to all!"
-SEMAPPS_DEFAULT_LOCALE=en # Available locales: en, fr
+SEMAPPS_INSTANCE_DESCRIPTION_EN="A Pod provider open to all!"
+SEMAPPS_INSTANCE_DESCRIPTION_FR="Un hébergeur de Pod ouvert à tous et à toutes!"
 
 # Frontend config
 SEMAPPS_MAPBOX_ACCESS_TOKEN=

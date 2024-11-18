@@ -44,3 +44,13 @@ services:
       - '4567'
     environment:
       REDIS_HOST: 'redis'
+
+  tripleadmin:
+    image: mguihal/tripleadmin
+    container_name: tripleadmin
+    depends_on:
+      - fuseki
+    ports:
+      - '3033:3033'
+    extra_hosts:
+      - 'localhost:host-gateway'

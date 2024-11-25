@@ -104,7 +104,7 @@ describe('Test Pod outbox posting', () => {
         },
         actorUri: alice.id
       })
-    ).rejects.toThrow();
+    ).resolves.toBe(false);
   });
 
   test('Create a resource for which I have write permission', async () => {
@@ -160,7 +160,7 @@ describe('Test Pod outbox posting', () => {
         },
         actorUri: alice.id
       })
-    ).rejects.toThrow();
+    ).resolves.toBe(false);
   });
 
   test('Update a resource for which app has no write permission', async () => {
@@ -189,7 +189,7 @@ describe('Test Pod outbox posting', () => {
         },
         actorUri: alice.id
       })
-    ).rejects.toThrow();
+    ).resolves.toBe(false);
   });
 
   test('Update a resource which does not exist', async () => {
@@ -205,7 +205,7 @@ describe('Test Pod outbox posting', () => {
         },
         actorUri: alice.id
       })
-    ).rejects.toThrow();
+    ).resolves.toBe(false);
   });
 
   test('Delete a resource for which app has no write permission', async () => {
@@ -217,6 +217,6 @@ describe('Test Pod outbox posting', () => {
         },
         actorUri: alice.id
       })
-    ).rejects.toThrow();
+    ).resolves.toBe(false);
   });
 });

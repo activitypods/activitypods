@@ -33,6 +33,7 @@ module.exports = {
         this.logger.error(
           `Could not POST to ${actorUri} outbox. Error ${response.status} (${response.statusText}). Body: ${JSON.stringify(activity)}`
         );
+        return false;
       }
     }
   }

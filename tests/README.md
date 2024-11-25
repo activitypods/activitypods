@@ -49,7 +49,7 @@ yarn install
 
 If you made changes to SemApps packages, you can run this command to link them:
 
-```
+```bash
 yarn run link-semapps-packages
 ```
 

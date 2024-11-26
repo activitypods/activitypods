@@ -6,7 +6,7 @@ sidebar:
 
 ## Web Access Control (WAC)
 
-We support the full [WAC specification](https://solid.github.io/web-access-control-spec/).
+We support the full [WAC specification](https://solid.github.io/web-access-control-spec/), except the `WAC-Allow` header [#837](https://github.com/assemblee-virtuelle/semapps/issues/837)
 
 ## Access Control Policy
 

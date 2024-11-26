@@ -167,15 +167,15 @@ module.exports = {
       async onReceive(ctx, activity, recipientUri) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
-        const resource = await ctx.call('ldp.resource.get', {
-          resourceUri,
-          accept: MIME_TYPES.JSON,
-          webId: recipientUri
-        });
-
-        // Sometimes when reposting, a recipient may be the original announcer
+        // Sometimes, when reposting, a recipient may be the original announcer
         // So ensure this is a remote resource before storing it locally
-        if (await ctx.call('ldp.remote.isRemote', { resourceUri, webId: recipientUri })) {
+        if (!resourceUri.startsWith(urlJoin(recipientUri, '/'))) {
+          const resource = await ctx.call('ldp.resource.get', {
+            resourceUri,
+            accept: MIME_TYPES.JSON,
+            webId: recipientUri
+          });
+
           try {
             // Cache remote object (we want to be able to fetch it with SPARQL)
             await ctx.call('ldp.remote.store', {

@@ -11,7 +11,8 @@ export default {
     icon: GroupIcon,
     options: {
       label: 'Group'
-    }
+    },
+    recordRepresentation: 'vcard:given-name'
   },
   dataModel: {
     types: ['vcard:Group'],

@@ -7,7 +7,8 @@ export default {
     show: ProfileShow,
     options: {
       label: 'Profiles'
-    }
+    },
+    recordRepresentation: 'vcard:given-name'
   },
   dataModel: {
     types: ['vcard:Individual', 'as:Profile']

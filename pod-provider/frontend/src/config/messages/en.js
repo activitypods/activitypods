@@ -55,6 +55,7 @@ module.exports = {
       apps_short: 'Apps',
       settings: 'Settings',
       settings_short: 'Settings',
+      settings_profiles: 'My profiles',
       settings_advanced: 'Advanced settings',
       available_apps: 'Available applications',
       addresses: 'My addresses',
@@ -82,7 +83,12 @@ module.exports = {
       export_pod: 'You can export and download all your data as a backup. The action might take a short while.'
     },
     setting: {
-      profile: 'My profile',
+      profiles: 'My profiles',
+      profile: '%{smart_count} profile |||| %{smart_count} profiles',
+      private_profile: 'My private profile',
+      private_profile_desc: 'Visible only by my contact',
+      public_profile: 'My public profile',
+      public_profile_desc: 'Visible by everyone, without restriction',
       email: 'Email address',
       password: 'Password',
       addresses: 'My addresses',
@@ -160,7 +166,8 @@ module.exports = {
       choose_custom_provider:
         'If the provider you are looking for is not listed, you can enter its address here (e.g. https://my-provider.example).',
       choose_pod_provider:
-        'The pod provider is the place where your data space is located. Like with an email provider, it will store your data.'
+        'The pod provider is the place where your data space is located. Like with an email provider, it will store your data.',
+      username_cannot_be_modified: 'The user ID cannot be modified'
     },
     message: {
       copied_to_clipboard: 'Copied !',

@@ -7,7 +7,7 @@ import {
   RecordContextProvider,
   ResourceContextProvider
 } from 'react-admin';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useWebfinger } from '@semapps/activitypub-components';
 import ListIcon from '@mui/icons-material/List';
 import Hero from '../../common/list/Hero/Hero';
@@ -24,6 +24,7 @@ import { stripHtmlTags } from '../../utils';
 const NetworkActorPage = () => {
   const translate = useTranslate();
   const { webfingerId } = useParams();
+  const [searchParams] = useSearchParams();
   const webfinger = useWebfinger();
   const [actorUri, setActorUri] = useState();
 
@@ -36,7 +37,16 @@ const NetworkActorPage = () => {
   }, [webfinger, webfingerId, setActorUri]);
 
   const { data: actor } = useGetOne('Actor', { id: actorUri }, { enabled: !!actorUri });
-  const { data: profile } = useGetOne('Profile', { id: actor?.url }, { enabled: !!actor?.url });
+
+  console.log('searchParams', searchParams.has('public'), !searchParams.has('public') && !!actor?.url);
+
+  const { data: profile } = useGetOne(
+    'Profile',
+    { id: actor?.url },
+    { enabled: !!searchParams.has('public') && !!actor?.url }
+  );
+
+  console.log('profile', profile);
 
   if (!actor) return null;
 

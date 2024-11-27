@@ -32,6 +32,7 @@ import NetworkPage from './pages/NetworkPage/NetworkPage';
 import NetworkActorPage from './pages/NetworkPage/NetworkActorPage';
 import NetworkRequestPage from './pages/NetworkPage/NetworkRequestPage';
 import SettingsLocalePage from './pages/SettingsPage/SettingsLocalePage';
+import SettingsProfilesPage from './pages/SettingsPage/SettingsProfilesPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,10 +84,11 @@ const App = () => (
           </Route>
           <Route path="/settings">
             <Route index element={<SettingsPage />} />
-            <Route path="advanced" element={<AdvancedSettingsPage />} />
+            <Route path="profiles" element={<SettingsProfilesPage />} />
             <Route path="email" element={<SettingsEmailPage />} />
             <Route path="password" element={<SettingsPasswordPage />} />
             <Route path="locale" element={<SettingsLocalePage />} />
+            <Route path="advanced" element={<AdvancedSettingsPage />} />
             <Route path="export-pod" element={<SettingsExportPodPage />} />
             <Route path="delete-pod" element={<SettingsDeletePodPage />} />
           </Route>

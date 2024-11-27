@@ -1,25 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import {
-  SaveButton,
-  SimpleForm,
-  TextInput,
-  Toolbar,
-  ImageField,
-  useGetIdentity,
-  useNotify,
-  ShowButton
-} from 'react-admin';
+import { SimpleForm, TextInput, ImageField, useGetIdentity, useNotify, ShowButton } from 'react-admin';
 import { ImageInput } from '@semapps/input-components';
 import Edit from '../../layout/Edit';
-import ProfileTitle from './ProfileTitle';
 import BlockAnonymous from '../../common/BlockAnonymous';
 import QuickCreateLocationInput from '../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput';
-
-const ToolbarWithoutDelete = props => (
-  <Toolbar {...props}>
-    <SaveButton />
-  </Toolbar>
-);
+import ToolbarWithoutDelete from '../../common/ToolbarWithoutDelete';
 
 export const ProfileEdit = () => {
   const notify = useNotify();
@@ -35,7 +20,6 @@ export const ProfileEdit = () => {
   return (
     <BlockAnonymous>
       <Edit
-        title={<ProfileTitle />}
         transform={data => ({ ...data, 'vcard:fn': data['vcard:given-name'] })}
         mutationMode="pessimistic"
         mutationOptions={{

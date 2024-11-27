@@ -11,7 +11,8 @@ export default {
     icon: PlaceIcon,
     options: {
       label: 'Adresses'
-    }
+    },
+    recordRepresentation: 'vcard:given-name'
   },
   dataModel: {
     types: ['vcard:Location'],

@@ -1,13 +1,58 @@
 import React, { useCallback } from 'react';
-import { SimpleForm, TextInput, ImageField, useGetIdentity, useNotify, ShowButton, useDataProvider } from 'react-admin';
+import {
+  SimpleForm,
+  TextInput,
+  ImageField,
+  useGetIdentity,
+  useNotify,
+  Button,
+  useDataProvider,
+  useTranslate,
+  useCreatePath,
+  useRecordContext
+} from 'react-admin';
+import { Link } from 'react-router-dom';
+import { Box, Alert } from '@mui/material';
 import { ImageInput } from '@semapps/input-components';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import Edit from '../../layout/Edit';
 import BlockAnonymous from '../../common/BlockAnonymous';
 import ToolbarWithoutDelete from '../../common/ToolbarWithoutDelete';
+import useWebfingerId from '../../hooks/useWebfingerId';
+
+const PublicProfileWarning = () => {
+  const translate = useTranslate();
+  const record = useRecordContext();
+  const createPath = useCreatePath();
+
+  return (
+    <Box mb={1} width="100%">
+      <Alert severity="warning">
+        {translate('app.helper.public_profile_view')}
+        &nbsp;
+        <Link to={createPath({ resource: 'Profile', id: record?.url, type: 'edit' })} style={{ color: 'inherit' }}>
+          {translate('app.action.view_private_profile')}
+        </Link>
+      </Alert>
+    </Box>
+  );
+};
+
+const ShowPublicProfileButton = props => {
+  const record = useRecordContext();
+  const webfingerId = useWebfingerId(record?.id);
+  return (
+    <Button label="ra.action.show" href={`/network/${webfingerId}?public=true`} {...props}>
+      <VisibilityIcon />
+    </Button>
+  );
+};
 
 export const ActorEdit = () => {
   const notify = useNotify();
+  const translate = useTranslate();
   const { data: identity, refetch: refetchIdentity } = useGetIdentity();
+
   const dataProvider = useDataProvider();
 
   const transform = useCallback(
@@ -43,8 +88,15 @@ export const ActorEdit = () => {
 
   return (
     <BlockAnonymous>
-      <Edit transform={transform} mutationMode="pessimistic" mutationOptions={{ onSuccess }} actions={[<ShowButton />]}>
+      <Edit
+        title={translate('app.setting.public_profile')}
+        transform={transform}
+        mutationMode="pessimistic"
+        mutationOptions={{ onSuccess }}
+        actions={[<ShowPublicProfileButton />]}
+      >
         <SimpleForm toolbar={<ToolbarWithoutDelete />}>
+          <PublicProfileWarning />
           <TextInput
             source="preferredUsername"
             fullWidth
@@ -57,7 +109,6 @@ export const ActorEdit = () => {
             source="icon"
             accept="image/*"
             format={v => {
-              console.log('v', v);
               if (v?.url) {
                 return { src: v.url };
               } else if (v?.fileToDelete) {

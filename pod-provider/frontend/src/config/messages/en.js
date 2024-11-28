@@ -33,7 +33,9 @@ module.exports = {
       continue: 'Continue',
       delete_pod: 'Delete all my data',
       export_pod: 'Download my data',
-      set_default_app: 'Set default app'
+      set_default_app: 'Set default app',
+      view_private_profile: 'View your private profile',
+      view_public_profile: 'View your public profile'
     },
     group: {
       members: 'Members',
@@ -167,7 +169,9 @@ module.exports = {
         'If the provider you are looking for is not listed, you can enter its address here (e.g. https://my-provider.example).',
       choose_pod_provider:
         'The pod provider is the place where your data space is located. Like with an email provider, it will store your data.',
-      username_cannot_be_modified: 'The user ID cannot be modified'
+      username_cannot_be_modified: 'The user ID cannot be modified',
+      public_profile_view: 'You are viewing your public profile, visible by everyone',
+      private_profile_view: 'You are viewing your private profile, visible only by your contacts'
     },
     message: {
       copied_to_clipboard: 'Copied !',

@@ -1,6 +1,8 @@
 import React, { useMemo, useCallback } from 'react';
-import { Box, Card, Typography, Avatar } from '@mui/material';
+import { useCreatePath, useTranslate } from 'react-admin';
+import { Box, Card, Typography, Avatar, Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import { Link } from 'react-router-dom';
 import { useCollection } from '@semapps/activitypub-components';
 import AddContactButton from '../buttons/AddContactButton';
 import RemoveContactButton from '../buttons/RemoveContactButton';
@@ -54,8 +56,10 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ContactCard = ({ actor, profile }) => {
+const ContactCard = ({ actor, publicProfileOnly }) => {
   const classes = useStyles();
+  const createPath = useCreatePath();
+  const translate = useTranslate();
   const { items: contacts, refetch: refetchContacts } = useCollection('apods:contacts');
   const { items: contactRequests, refetch: refetchRequests } = useCollection('apods:contactRequests');
 
@@ -68,29 +72,26 @@ const ContactCard = ({ actor, profile }) => {
     await Promise.all([refetchContacts(), refetchRequests()]);
   }, [refetchContacts, refetchRequests]);
 
-  const actorServer = new URL(actor.id).hostname;
-
   return (
     <Card className={classes.root}>
       <Box className={classes.title}>
         <Box display="flex" justifyContent="center" className={classes.avatarWrapper}>
-          <Avatar src={profile?.['vcard:photo'] || actor.icon?.url} className={classes.avatar} />
+          <Avatar src={actor.image} className={classes.avatar} />
         </Box>
       </Box>
       <Box className={classes.block}>
         <Typography variant="h2" align="center">
-          {profile?.['vcard:given-name'] || actor.name || actor.preferredUsername}
+          {actor.name}
         </Typography>
-        <Typography align="center">
-          @{actor.preferredUsername}@{actorServer}
-        </Typography>
+        <Typography align="center">{actor.webfinger}</Typography>
       </Box>
       <Box className={classes.button} pb={3} pr={3} pl={3}>
-        {contacts?.includes(actor.id) ? (
-          <RemoveContactButton refetch={refetchContacts} variant="contained" color="secondary" fullWidth />
-        ) : (
-          <AddContactButton refetch={refetchContacts} variant="contained" color="secondary" fullWidth />
-        )}
+        {!actor.isLoggedUser &&
+          (contacts?.includes(actor.id) ? (
+            <RemoveContactButton refetch={refetchContacts} variant="contained" color="secondary" fullWidth />
+          ) : (
+            <AddContactButton refetch={refetchContacts} variant="contained" color="secondary" fullWidth />
+          ))}
         {contactRequest && (
           <>
             <AcceptContactRequestButton
@@ -119,7 +120,22 @@ const ContactCard = ({ actor, profile }) => {
             )}
           </>
         )}
-        {!contactRequest && <IgnoreContactButton variant="contained" color="primary" fullWidth />}
+        {!actor.isLoggedUser && !contactRequest && (
+          <IgnoreContactButton variant="contained" color="primary" fullWidth />
+        )}
+        {actor.isLoggedUser && (
+          <Link
+            to={createPath(
+              publicProfileOnly
+                ? { resource: 'Actor', id: actor.id, type: 'edit' }
+                : { resource: 'Profile', id: actor.url, type: 'edit' }
+            )}
+          >
+            <Button variant="contained" color="secondary" type="submit">
+              {translate('app.action.edit_profile')}
+            </Button>
+          </Link>
+        )}
       </Box>
     </Card>
   );

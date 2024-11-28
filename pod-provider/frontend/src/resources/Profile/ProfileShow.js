@@ -10,7 +10,7 @@ const RedirectToActorPage = () => {
   useEffect(() => {
     if (record) {
       const username = formatUsername(record.describes);
-      navigate(`/network/${username}`);
+      navigate(`/network/${username}`, { replace: true });
     }
   }, [navigate, record]);
 

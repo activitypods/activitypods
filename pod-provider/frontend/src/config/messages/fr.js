@@ -10,6 +10,8 @@ module.exports = {
       add_location: 'Ajouter une adresse',
       copy: 'Copier dans votre presse-papier',
       edit_profile: 'Éditer mon profil',
+      edit_public_profile: 'Éditer le profil public',
+      edit_private_profile: 'Éditer le profil privé',
       ignore: 'Ignorer',
       ignore_contact: 'Ignorer',
       ignore_contact_request: 'Ignorer la demande',

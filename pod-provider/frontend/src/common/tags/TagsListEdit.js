@@ -207,7 +207,6 @@ const TagsListEdit = props => {
 
   return (
     <>
-      {isLoadingAllTags && <LoadingIndicator />}
       {selectedTags?.map(tag => (
         <Chip
           key={tag.id}

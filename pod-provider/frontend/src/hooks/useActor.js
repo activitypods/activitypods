@@ -14,7 +14,7 @@ const useActor = (actorUri, options = {}) => {
 
   const webfinger = useWebfingerId(actorUri);
 
-  const { data: privateProfile } = useGetOne(
+  const { data: privateProfile, isLoading: isPrivateProfileLoading } = useGetOne(
     'Profile',
     { id: webId?.url },
     { enabled: !!webId?.url && loadPrivateProfile }
@@ -33,7 +33,7 @@ const useActor = (actorUri, options = {}) => {
       : stripHtmlTags(webId?.summary),
     privateProfile,
     webfinger,
-    isLoading: isWebIdLoading
+    isLoading: isWebIdLoading || isPrivateProfileLoading
   };
 };
 

@@ -121,8 +121,7 @@ const NetworkActorPage = () => {
                 />
               )}
             </Hero>
-
-            <ResourceContextProvider value="Profile">
+            {/* <ResourceContextProvider value="Profile">
               <RecordContextProvider value={actor.privateProfile}>
                 <MainList>
                   <ReferenceField reference="Location" source="vcard:hasAddress" link={false}>
@@ -148,10 +147,10 @@ const NetworkActorPage = () => {
                   </ReferenceField>
                 </MainList>
               </RecordContextProvider>
-            </ResourceContextProvider>
-            {/* <MainList>
+            </ResourceContextProvider> */}
+            <MainList>
               {!actor.isLoggedUser && <ContactField source="id" label={translate('app.action.send_message')} />}
-            </MainList> */}
+            </MainList>
           </ShowView>
         </RecordContextProvider>
       </ResourceContextProvider>

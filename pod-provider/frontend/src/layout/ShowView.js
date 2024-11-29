@@ -27,7 +27,9 @@ const ShowView = ({ asides, title, actions, children }) => {
           </Box>
         </Grid>
       </Grid>
-      <Box mt={1}>{children}</Box>
+      <Box mt={1} mb={3}>
+        {children}
+      </Box>
     </SplitView>
   );
 };

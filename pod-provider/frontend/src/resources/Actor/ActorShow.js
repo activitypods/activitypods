@@ -9,7 +9,7 @@ const ActorShow = () => {
 
   useEffect(() => {
     const username = formatUsername(recordId);
-    navigate(`/network/${username}`);
+    navigate(`/network/${username}`, { replace: true });
   }, [navigate, recordId]);
 
   return null;

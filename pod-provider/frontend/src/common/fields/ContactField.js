@@ -20,7 +20,7 @@ const ContactField = ({ source, context }) => {
   const outbox = useOutbox();
   const translate = useTranslate();
   const { data: identity } = useGetIdentity();
-  const { items: contacts } = useCollection('apods:contacts');
+  const { items: contacts, isLoading: isContactsLoading } = useCollection('apods:contacts');
   const { items: attendees } = useCollection(record?.['apods:attendees']);
   const actor = useActor(record?.id);
 
@@ -48,7 +48,7 @@ const ContactField = ({ source, context }) => {
 
   return (
     <Form onSubmit={onSubmit}>
-      {!isOwner && contacts && !contacts.includes(record[source]) && (
+      {!isOwner && !isContactsLoading && !contacts.includes(record[source]) && (
         <Box mb={1}>
           <Alert severity="warning">
             {translate('app.helper.message_profile_show_right', { username: actor.name })}

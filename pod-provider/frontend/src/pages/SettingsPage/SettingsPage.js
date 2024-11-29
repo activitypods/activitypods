@@ -51,10 +51,11 @@ const SettingsPage = () => {
       <Box>
         <List>
           <SettingsItem
-            onClick={() => navigate(createPath({ resource: 'Profile', id: identity?.profileData?.id, type: 'edit' }))}
+            onClick={() => navigate('/settings/profiles')}
             icon={<PersonIcon />}
-            label="app.setting.profile"
-            value={identity?.fullName}
+            label="app.setting.profiles"
+            value={translate('app.setting.profile', { smart_count: 2 })}
+            actionIcon={<ArrowForwardIosIcon />}
           />
           <SettingsItem
             onClick={() => navigate('/Location')}

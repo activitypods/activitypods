@@ -10,6 +10,8 @@ module.exports = {
       add_location: 'Ajouter une adresse',
       copy: 'Copier dans votre presse-papier',
       edit_profile: 'Éditer mon profil',
+      edit_public_profile: 'Éditer le profil public',
+      edit_private_profile: 'Éditer le profil privé',
       ignore: 'Ignorer',
       ignore_contact: 'Ignorer',
       ignore_contact_request: 'Ignorer la demande',
@@ -32,7 +34,9 @@ module.exports = {
       continue: 'Continuer',
       delete_pod: 'Effacer mon compte',
       export_pod: 'Exporter mes données',
-      set_default_app: 'Définir appli par défaut'
+      set_default_app: 'Définir appli par défaut',
+      view_private_profile: 'Voir votre profil privé',
+      view_public_profile: 'Voir votre profil public'
     },
     group: {
       members: 'Membres',
@@ -56,6 +60,7 @@ module.exports = {
       addresses: 'Mes adresses',
       settings: 'Paramètres',
       settings_short: 'Paramètres',
+      settings_profiles: 'Mes profils',
       settings_advanced: 'Paramètres avancés',
       settings_email: 'Modifier mon mail',
       settings_password: 'Modifier mon mot de passe',
@@ -81,7 +86,12 @@ module.exports = {
         'Vous pouvez télécharger toutes les données de votre espace de donnée personnel. Cette action peut prendre un certain temps.'
     },
     setting: {
-      profile: 'Mon profil',
+      profiles: 'Mes profils',
+      profile: '%{smart_count} profil |||| %{smart_count} profils',
+      private_profile: 'Mon profil privé',
+      private_profile_desc: 'Visible seulement par mes contacts',
+      public_profile: 'Mon profil public',
+      public_profile_desc: 'Visible de tout le monde, sans restriction',
       email: 'Adresse mail',
       password: 'Mot de passe',
       addresses: 'Mes adresses',
@@ -164,7 +174,10 @@ module.exports = {
       choose_pod_provider:
         'The pod provider is the place where your data space is located. Like with an email provider, it will store your data.',
       choose_custom_provider:
-        "Si l'hébergeur que vous recherchez n'est pas listé, vous pouvez entrer son adresse ci-dessous (par exemple https://mon-fournisseur.com)."
+        "Si l'hébergeur que vous recherchez n'est pas listé, vous pouvez entrer son adresse ci-dessous (par exemple https://mon-fournisseur.com).",
+      username_cannot_be_modified: 'Votre identifiant ne peut être modifié',
+      public_profile_view: 'Vous visualisez votre profil public, visible de tout le monde.',
+      private_profile_view: 'Vous visualisez votre profil privé, visible seulement de vos contacts.'
     },
     message: {
       copied_to_clipboard: 'Copié !',

@@ -6,9 +6,11 @@ import makeStyles from '@mui/styles/makeStyles';
 
 const useStyles = makeStyles(() => ({
   line: {
-    borderBottom: '1px solid #e0e0e0',
-    marginTop: -6,
-    marginBottom: 7
+    borderBottom: '1px solid #e0e0e0'
+  },
+  container: {
+    marginTop: 0,
+    marginBottom: 0
   },
   item: {
     padding: '12px !important'
@@ -28,10 +30,10 @@ const DetailsList = ({ children }) => {
         field &&
         (field.props.source ? record[field.props.source] : field.props.value) &&
         React.isValidElement(field) ? (
-          <div key={i}>
+          <div key={i} className={classes.line}>
             {field.props.label !== false ? (
-              <Grid container spacing={3} className={classes.line}>
-                <Grid item xs={3} className={classes.item}>
+              <Grid container spacing={3} className={classes.container}>
+                <Grid item xs={4} sm={3} className={classes.item}>
                   <Typography color="textSecondary" align="right" variant="body2">
                     {translate(
                       ...getFieldLabelTranslationArgs({
@@ -42,7 +44,7 @@ const DetailsList = ({ children }) => {
                     )}
                   </Typography>
                 </Grid>
-                <Grid item xs={9} className={classes.item}>
+                <Grid item xs={8} sm={9} className={classes.item}>
                   <Typography variant="body2" component="div">
                     {field}
                   </Typography>

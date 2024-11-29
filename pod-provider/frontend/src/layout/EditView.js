@@ -1,5 +1,5 @@
 import React from 'react';
-import { ListButton, ShowButton } from 'react-admin';
+import { ListButton, ShowButton, RecordRepresentation } from 'react-admin';
 import { Box, Typography, Grid, Card } from '@mui/material';
 
 const EditView = ({ title, actions = [<ListButton />, <ShowButton />], children }) => (
@@ -7,7 +7,7 @@ const EditView = ({ title, actions = [<ListButton />, <ShowButton />], children 
     <Grid container sx={{ mt: 2 }}>
       <Grid item xs={8}>
         <Typography variant="h2" component="h1" noWrap>
-          {title}
+          {title || <RecordRepresentation />}
         </Typography>
       </Grid>
       <Grid item xs={4}>

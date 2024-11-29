@@ -1,42 +1,39 @@
-import { useMemo } from 'react';
 import { useGetOne, useGetIdentity } from 'react-admin';
-import { formatUsername } from '../utils';
+import { stripHtmlTags } from '../utils';
+import useWebfingerId from './useWebfingerId';
 
-const useActor = actorUri => {
+const useActor = (actorUri, options = {}) => {
+  const { loadPrivateProfile = true } = options;
   const { data: identity } = useGetIdentity();
 
   const { data: webId, isLoading: isWebIdLoading } = useGetOne(
     'Actor',
-    {
-      id: actorUri
-    },
-    {
-      enabled: !!actorUri,
-      staleTime: Infinity
-    }
+    { id: actorUri },
+    { enabled: !!actorUri, staleTime: Infinity }
   );
 
-  const { data: profile, isLoading: isProfileLoading } = useGetOne(
+  const webfinger = useWebfingerId(actorUri);
+
+  const { data: privateProfile, isLoading: isPrivateProfileLoading } = useGetOne(
     'Profile',
-    {
-      id: webId?.url
-    },
-    {
-      enabled: !!webId?.url,
-      staleTime: Infinity
-    }
+    { id: webId?.url },
+    { enabled: !!webId?.url && loadPrivateProfile }
   );
-
-  const username = useMemo(() => actorUri && formatUsername(actorUri), [actorUri]);
 
   return {
     ...webId,
     uri: actorUri,
     isLoggedUser: actorUri === identity?.id,
-    name: profile?.['vcard:given-name'] || webId?.name || webId?.['foaf:nick'] || webId?.preferredUsername,
-    image: profile?.['vcard:photo'] || webId?.icon?.url,
-    username,
-    isLoading: isWebIdLoading || isProfileLoading
+    name: loadPrivateProfile
+      ? privateProfile?.['vcard:given-name'] || webId?.name || webId?.['foaf:nick'] || webId?.preferredUsername
+      : webId?.name || webId?.['foaf:nick'] || webId?.preferredUsername,
+    image: loadPrivateProfile ? privateProfile?.['vcard:photo'] || webId?.icon?.url : webId?.icon?.url,
+    summary: loadPrivateProfile
+      ? privateProfile?.['vcard:note'] || stripHtmlTags(webId?.summary)
+      : stripHtmlTags(webId?.summary),
+    privateProfile,
+    webfinger,
+    isLoading: isWebIdLoading || isPrivateProfileLoading
   };
 };
 

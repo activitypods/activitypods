@@ -33,7 +33,9 @@ const InvitePageViewLoggedOut = ({
         <span>
           {translate('app.helper.invite_text_logged_out')}
           &nbsp;
-          <a href="https://activitypods.org/">{translate('app.helper.more_about_pods')}</a>
+          <a href="https://activitypods.org/" target="_blank" rel="noopener noreferrer">
+            {translate('app.helper.more_about_pods')}
+          </a>
         </span>
       }
     >

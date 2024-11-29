@@ -75,8 +75,6 @@ const NetworkActorPage = () => {
 
   const actor = useActor(actorUri, { loadPrivateProfile: !publicProfileOnly });
 
-  console.log('profile', actor.privateProfile);
-
   if (actor.isLoading) return null;
 
   return (
@@ -129,22 +127,19 @@ const NetworkActorPage = () => {
                 <MainList>
                   <ReferenceField reference="Location" source="vcard:hasAddress" link={false}>
                     <MapField
-                      address={record => {
-                        console.log('record map', record);
-                        return (
-                          <>
-                            {record?.['vcard:given-name'] + ', ' + record?.['vcard:hasAddress']?.['vcard:given-name']}
-                            {record?.['vcard:note'] && (
-                              <Box mb={2} mt={2}>
-                                <Alert severity="info">
-                                  <strong>{translate('resources.Location.fields.vcard:note')}</strong>:{' '}
-                                  {record?.['vcard:note']}
-                                </Alert>
-                              </Box>
-                            )}
-                          </>
-                        );
-                      }}
+                      address={record => (
+                        <>
+                          {record?.['vcard:given-name'] + ', ' + record?.['vcard:hasAddress']?.['vcard:given-name']}
+                          {record?.['vcard:note'] && (
+                            <Box mb={2} mt={2}>
+                              <Alert severity="info">
+                                <strong>{translate('resources.Location.fields.vcard:note')}</strong>:{' '}
+                                {record?.['vcard:note']}
+                              </Alert>
+                            </Box>
+                          )}
+                        </>
+                      )}
                       latitude={record => record?.['vcard:hasAddress']?.['vcard:hasGeo']?.['vcard:latitude']}
                       longitude={record => record?.['vcard:hasAddress']?.['vcard:hasGeo']?.['vcard:longitude']}
                       height={xs ? 250 : 400}

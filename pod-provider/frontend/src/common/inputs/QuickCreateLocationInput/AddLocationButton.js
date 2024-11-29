@@ -90,7 +90,7 @@ const AddLocationButton = ({ reference, source, onChange }) => {
             }
           >
             <DialogContent>
-              <TextInput source="vcard:given-name" fullWidth />
+              <TextInput resource="Location" source="vcard:given-name" fullWidth />
               <LocationInput
                 mapboxConfig={{
                   access_token: CONFIG.MAPBOX_ACCESS_TOKEN,
@@ -117,10 +117,20 @@ const AddLocationButton = ({ reference, source, onChange }) => {
                 fullWidth
                 variant="filled"
               />
-              <TextInput source="vcard:note" fullWidth helperText={translate('app.helper.location_comment')} />
+              <TextInput
+                resource="Location"
+                source="vcard:note"
+                fullWidth
+                helperText={translate('app.helper.location_comment')}
+              />
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setShowDialog(false)} disabled={isLoading} startIcon={<IconCancel />}>
+              <Button
+                onClick={() => setShowDialog(false)}
+                disabled={isLoading}
+                startIcon={<IconCancel />}
+                color="black"
+              >
                 {translate('ra.action.cancel')}
               </Button>
               <SaveButton disabled={isLoading} />

@@ -6,7 +6,7 @@ import DetailsList from './DetailsList';
 const useStyles = makeStyles(theme => ({
   root: {
     flexGrow: 1,
-    margin: theme.spacing(-1),
+    marginTop: theme.spacing(2),
     marginLeft: 4,
     marginRight: 4,
     marginBottom: theme.spacing(2),

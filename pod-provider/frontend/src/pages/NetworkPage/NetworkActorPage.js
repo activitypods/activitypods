@@ -96,7 +96,7 @@ const NetworkActorPage = () => {
             }
             asides={[<ContactCard actor={actor} publicProfileOnly={publicProfileOnly} />]}
           >
-            <ProfileWarning publicProfileOnly={publicProfileOnly} />
+            {actor.isLoggedUser && <ProfileWarning publicProfileOnly={publicProfileOnly} />}
             <Hero image={actor.image}>
               <ValueField value={actor.name} label={translate('resources.Profile.fields.vcard:given-name')} />
               <ValueField value={actor.webfinger} label={translate('resources.Actor.fields.preferredUsername')} />

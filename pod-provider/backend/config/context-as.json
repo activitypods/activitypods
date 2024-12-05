@@ -258,6 +258,10 @@
       "@id": "as:published",
       "@type": "xsd:dateTime"
     },
+    "publishedTimestamp": {
+      "@id": "as:publishedTimestamp",
+      "@type": "xsd:integer"
+    },
     "radius": {
       "@id": "as:radius",
       "@type": "xsd:float"

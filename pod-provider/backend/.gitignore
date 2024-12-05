@@ -9,3 +9,5 @@
 /imports
 /exports
 /logs
+/benchmark/*
+!/benchmark/.gitkeep

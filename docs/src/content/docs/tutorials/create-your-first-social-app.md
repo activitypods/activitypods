@@ -78,7 +78,7 @@ The Fuseki interface is accessible at http://localhost:3030. In local environmen
 If there is a problem, in particular if the second link is not working, you can access the Pod provider backend with this command `make attach-activitypods`. This will give you access to ActivityPods' Moleculer CLI. [Moleculer](https://moleculer.services/) is the microservice framework that all ActivityPods services run on. If there are errors, they will be displayed here.
 :::
 
-## Launch the backend
+## Launch the app backend
 
 Although Docker could also be used to launch the application backend, we recommend to launch it outside of Docker to avoid the usual problems we encounter in containerized environments.
 The boilerplate application backend uses the [Moleculer](https://moleculer.services/) microservice framework for node.js as well.
@@ -95,7 +95,7 @@ This will bootstrap the server and, if there are no errors, finish with a messag
 
 You can see the application details at http://localhost:3001/app
 
-## Launch the frontend
+## Launch the app frontend
 
 Now you can launch the app frontend.
 
@@ -105,7 +105,7 @@ yarn install
 yarn run dev
 ```
 
-A browser window should automatically be launched. If not, you can access the app frontend at http://localhost:4000
+A browser window should automatically be launched. If not, you can access the app frontend at http://localhost:4001
 
 ## Play with the boilerplate
 

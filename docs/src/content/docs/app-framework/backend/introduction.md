@@ -17,7 +17,7 @@ But you can easily extend the backend to handle side effects or "business logic"
 - [Handling collections](../handling-collections/)
 - [Sending notifications](../sending-notifications/)
 
-We use [SemApps](https://semapps.org), which itself rely on the [Moleculer](https://moleculer.service) micro-services framework.
+We use [SemApps](https://semapps.org), which itself rely on the [Moleculer](https://moleculer.services) micro-services framework.
 
 ## Developing with other languages
 

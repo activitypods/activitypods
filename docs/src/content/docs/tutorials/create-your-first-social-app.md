@@ -14,6 +14,8 @@ We created a boilerplate to help you quickly setup a social app in a local envir
 - [NodeJS](https://nodejs.org) 20.0 or above
 - [Yarn](https://yarnpkg.com/)
 
+4Gb of RAM is required for Jena Fuseki to work properly.
+
 ## Clone the boilerplate repository
 
 First clone and initialize the [boilerplate repository](https://github.com/activitypods/app-boilerplate):

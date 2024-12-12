@@ -7,6 +7,8 @@ const queueOptions =
   process.env.NODE_ENV === 'test'
     ? {}
     : {
+        // Keep completed jobs for 3 days
+        removeOnComplete: { age: 259200 },
         // Try again after 3 minutes and until 48 hours later
         // Method to calculate it: Math.round((Math.pow(2, attemptsMade) - 1) * delay)
         attempts: 10,

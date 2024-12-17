@@ -112,11 +112,11 @@ const NetworkActorPage = () => {
                 <TagsListEdit
                   source="id"
                   addLabel
-                  label={translate('app.group.group')}
+                  label={translate('app.tag.tag')}
                   relationshipPredicate="vcard:hasMember"
                   namePredicate="vcard:label"
                   avatarPredicate="vcard:photo"
-                  tagResource="Group"
+                  tagResource="Tag"
                   recordIdPredicate="id"
                 />
               )}

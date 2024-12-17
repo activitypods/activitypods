@@ -38,15 +38,15 @@ module.exports = {
       view_private_profile: 'Voir votre profil privé',
       view_public_profile: 'Voir votre profil public'
     },
-    group: {
-      members: 'Membres',
-      no_members: "Le groupe n'a pas encore de membres",
-      label: 'Nom du groupe',
+    tag: {
+      members: 'Contacts',
+      no_members: "L'étiquette n'a pas encore été attribuée",
+      label: 'Nom',
       remove_members: 'Retirer sélection',
       profile_name: 'Nom',
-      group: 'Groupe',
+      tag: 'Étiquette',
       profile: 'Profil',
-      create: 'Nouveau groupe',
+      create: 'Nouvelle étiquette',
       add_members: 'Ajouter des membres'
     },
     page: {
@@ -68,8 +68,8 @@ module.exports = {
       add_contact: 'Demander une mise en relation',
       create_profile: 'Créez votre profil',
       authorize: 'Autorisation requise',
-      groups: 'Mes groupes',
-      groups_short: 'Groupes',
+      groups: 'Étiquettes',
+      groups_short: 'Étiquettes',
       invite: '%{username} souhaite vous inviter dans son réseau',
       invite_loading: "Chargement de l'invitation...",
       invite_connect: '%{username} souhaite vous inviter dans son réseau',

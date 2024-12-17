@@ -5,7 +5,7 @@ export { default as AppRegistration } from './AppRegistration';
 export { default as Capability } from './Capability';
 export { default as ClassDescription } from './ClassDescription';
 export { default as DataGrant } from './DataGrant';
-export { default as Group } from './Group';
+export { default as Tag } from './Tag';
 export { default as Location } from './Location';
 export { default as PodProvider } from './PodProvider';
 export { default as Profile } from './Profile';

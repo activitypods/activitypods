@@ -12,12 +12,14 @@ import {
   useRecordContext,
   useListController,
   SimpleList,
-  required
+  required,
+  ShowButton,
+  useCreatePath
 } from 'react-admin';
 import { useFormContext } from 'react-hook-form';
 import { Avatar, ListItemAvatar, useMediaQuery } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
-import GroupIcon from '@mui/icons-material/Group';
+import SellOutlinedIcon from '@mui/icons-material/SellOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { ReferenceField } from '@semapps/field-components';
 import { arrayOf } from '../../utils';
@@ -27,7 +29,7 @@ import ResourceSelectWithTags from '../../common/tags/ResourceSelectWithTags';
 const arraysEqual = (arr1, arr2) =>
   arr1?.length === arr2?.length && arr1.every((value, index) => value === arr2[index]);
 
-const AvatarItem = ({ source, label }) => {
+const AvatarItem = ({ source }) => {
   const record = useRecordContext();
   return (
     <ListItemAvatar>
@@ -38,8 +40,9 @@ const AvatarItem = ({ source, label }) => {
   );
 };
 
-export const GroupFormContent = () => {
+export const TagFormContent = () => {
   const translate = useTranslate();
+  const createPath = useCreatePath();
   const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
 
   const group = useRecordContext();
@@ -93,10 +96,10 @@ export const GroupFormContent = () => {
 
   return (
     <>
-      <TextInput source="vcard:label" fullWidth label={translate('app.group.label')} validate={[required()]} />
-      <h3>{translate('app.group.members')}</h3>
+      <TextInput source="vcard:label" fullWidth label={translate('app.tag.label')} validate={[required()]} />
+      <h3>{translate('app.tag.members')}</h3>
       <ResourceSelectWithTags
-        title={translate('app.group.add_members')}
+        title={translate('app.tag.add_members')}
         labelResourcePredicate="vcard:given-name"
         labelTagPredicate="vcard:label"
         relationshipPredicate="vcard:hasMember"
@@ -104,13 +107,13 @@ export const GroupFormContent = () => {
         avatarTagPredicate="vcard:photo"
         ownerIdResourcePredicate="describes"
         resourceDefaultIcon={<PersonIcon />}
-        tagDefaultIcon={<GroupIcon />}
+        tagDefaultIcon={<SellOutlinedIcon />}
         // We have a custom datagrid to render the selected users so don't show them here.
         renderTags={() => null}
         entityResource="Profile"
-        tagResource="Group"
-        tagName={translate('app.group.group')}
-        resourceName={translate('app.group.profile')}
+        tagResource="Tag"
+        tagName={translate('app.tag.group')}
+        resourceName={translate('app.tag.profile')}
         // The selected member ids.
         value={filteredProfileData?.map(p => p.id) || []}
         onSelectionChange={onMemberChange}
@@ -124,28 +127,19 @@ export const GroupFormContent = () => {
         value={{ ...listControllerProps, data: filteredProfileData, total: filteredProfileData?.length }}
       >
         <ListView
-          title={translate('app.group.members')}
+          title={translate('app.tag.members')}
           hasCreate={false}
           actions={false}
           pagination={false}
           sx={{ width: '100%' }}
-          empty={<>{translate('app.group.no_members')}</>}
+          empty={<>{translate('app.tag.no_members')}</>}
         >
           {isSmall ? (
             <SimpleList
-              empty={<>{translate('app.group.no_members')}</>}
-              // leftIcon={() => <PersonIcon />}
-              leftIcon={props => (
-                <ReferenceField label="Avatar" source="id" reference="Profile" basePath="/Group" sortable={false}>
-                  <AvatarItem source="vcard:photo" label="vcard:given-name" />
-                </ReferenceField>
-              )}
-              primaryText={() => (
-                <ReferenceField source="id" reference="Profile" basePath="/Group" sortBy="vcard:given-name">
-                  <TextField source="vcard:given-name" label={translate('app.group.profile_name')} fullWidth />
-                </ReferenceField>
-              )}
-              linkType={() => ''}
+              empty={<>{translate('app.tag.no_members')}</>}
+              leftIcon={() => <AvatarItem source="vcard:photo" label="vcard:given-name" />}
+              primaryText={() => <TextField source="vcard:given-name" label={translate('app.tag.profile_name')} />}
+              linkType={record => createPath({ resource: 'Profile', type: 'show', id: record?.id })}
             />
           ) : (
             <Datagrid
@@ -155,7 +149,7 @@ export const GroupFormContent = () => {
                     onDeleteMembers(listControllerProps.selectedIds);
                     unselectMemberIds();
                   }}
-                  label={translate('app.group.remove_members')}
+                  label={translate('app.tag.remove_members')}
                   disabled={isLoading}
                   sx={{ color: 'red' }}
                 >
@@ -163,24 +157,18 @@ export const GroupFormContent = () => {
                 </Button>
               }
             >
-              <ReferenceField label="" source="id" reference="Profile" sortable={false} link="show">
-                <AvatarItem source="vcard:photo" label="vcard:given-name" />
-              </ReferenceField>
+              <AvatarItem source="vcard:photo" label="" sortable={false} />
+              <TextField label={translate('app.tag.profile_name')} source="vcard:given-name" />
               <ReferenceField
-                label={translate('app.group.profile_name')}
-                source="id"
-                reference="Profile"
-                sortBy="vcard:given-name"
-                link="show"
-              >
-                <TextField source="vcard:given-name" label={translate('app.group.profile_name')} fullWidth />
-              </ReferenceField>
-              <UsernameField
                 source="describes"
+                reference="Actor"
                 label={translate('app.input.user_id')}
                 sortable={false}
-                showCopyButton={false}
-              />
+                link={false}
+              >
+                <UsernameField showCopyButton={false} />
+              </ReferenceField>
+              <ShowButton resource="Profile" color="black" />
             </Datagrid>
           )}
         </ListView>
@@ -189,16 +177,14 @@ export const GroupFormContent = () => {
   );
 };
 
-const GroupForm = props => {
-  return (
-    <SimpleForm
-      redirect="list"
-      style={{ MuiIconButtonRoot: { paddingRight: '8px', backgroundColor: 'inherit' } }}
-      {...props}
-    >
-      <GroupFormContent />
-    </SimpleForm>
-  );
-};
+const TagForm = props => (
+  <SimpleForm
+    redirect="list"
+    style={{ MuiIconButtonRoot: { paddingRight: '8px', backgroundColor: 'inherit' } }}
+    {...props}
+  >
+    <TagFormContent />
+  </SimpleForm>
+);
 
-export default GroupForm;
+export default TagForm;

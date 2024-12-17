@@ -1,8 +1,8 @@
-const { PodService } = require('@semapps/solid');
+const { StorageService } = require('@semapps/solid');
 const CONFIG = require('../../config/config');
 
 module.exports = {
-  mixins: [PodService],
+  mixins: [StorageService],
   settings: {
     baseUrl: CONFIG.BASE_URL
   }

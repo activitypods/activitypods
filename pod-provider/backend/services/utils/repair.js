@@ -42,7 +42,7 @@ module.exports = {
         ctx.meta.dataset = dataset;
         ctx.meta.webId = webId;
 
-        const podUrl = await ctx.call('pod.getUrl', { webId });
+        const podUrl = await ctx.call('solid-storage.getUrl', { webId });
         const registeredContainers = await ctx.call('ldp.registry.list', { dataset });
 
         for (const { permissions, podsContainer, path } of Object.values(registeredContainers)) {

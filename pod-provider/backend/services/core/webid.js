@@ -15,7 +15,7 @@ module.exports = {
     before: {
       async createWebId(ctx) {
         const { nick } = ctx.params;
-        await ctx.call('pod.create', { username: nick });
+        await ctx.call('solid-storage.create', { username: nick });
         ctx.params['solid:oidcIssuer'] = CONFIG.BASE_URL.replace(/\/$/, ''); // Remove trailing slash if it exists
       }
     }

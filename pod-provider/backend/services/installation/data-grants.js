@@ -20,7 +20,7 @@ module.exports = {
       internal: true
     }
   },
-  dependencies: ['ldp', 'ldp.registry', 'pod'],
+  dependencies: ['ldp', 'ldp.registry'],
   actions: {
     put() {
       throw new Error(`The resources of type interop:DataGrant are immutable`);
@@ -137,7 +137,7 @@ module.exports = {
           this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${resourceType}`);
 
           // Create the container and attach it to its parent(s)
-          const podUrl = await ctx.call('pod.getUrl', { webId });
+          const podUrl = await ctx.call('solid-storage.getUrl', { webId });
           containersUris[0] = urlJoin(podUrl, containerPath);
           await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId });
 

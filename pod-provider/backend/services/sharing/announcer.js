@@ -206,7 +206,7 @@ module.exports = {
               this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${expandedType}`);
 
               // Create the container and attach it to its parent(s)
-              const podUrl = await ctx.call('pod.getUrl', { webId: recipientUri });
+              const podUrl = await ctx.call('solid-storage.getUrl', { webId: recipientUri });
               containersUris[0] = urlJoin(podUrl, containerPath);
               await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId: recipientUri });
 

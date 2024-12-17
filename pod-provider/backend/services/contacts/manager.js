@@ -119,7 +119,7 @@ module.exports = {
         }
 
         const actorToDelete = activity.object.id;
-        const podUrl = await ctx.call('pod.getUrl', { webId: actorToDelete });
+        const podUrl = await ctx.call('solid-storage.getUrl', { webId: actorToDelete });
 
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 

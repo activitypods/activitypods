@@ -1,10 +1,83 @@
 const urlJoin = require('url-join');
+const { triple, namedNode, literal } = require('@rdfjs/data-model');
 const { MoleculerError } = require('moleculer').Errors;
+const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
+const CONFIG = require('../../config/config');
 
 module.exports = {
-  name: 'installer',
-  mixins: [ActivitiesHandlerMixin],
+  name: 'auth-agent',
+  mixins: [ActivitiesHandlerMixin, ControlledContainerMixin],
+  settings: {
+    acceptedTypes: ['interop:AuthorizationAgent'],
+    description: {
+      labelMap: {
+        en: 'Authorization Agents'
+      },
+      internal: true
+    }
+  },
+  actions: {
+    // Action from the ControlledContainerMixin, called when we do GET or HEAD requests on resources
+    async getHeaderLinks(ctx) {
+      // Only return header if the fetch is made by a registered app
+      if (ctx.meta.impersonatedUser) {
+        const appUri = ctx.meta.webId;
+        const podOwner = ctx.meta.impersonatedUser;
+
+        const appRegistration = await ctx.call('app-registrations.getForApp', { appUri, podOwner });
+
+        if (appRegistration) {
+          return [
+            {
+              uri: appRegistration['interop:registeredAgent'],
+              anchor: appRegistration.id || appRegistration['@id'],
+              rel: 'http://www.w3.org/ns/solid/interop#registeredAgent'
+            }
+          ];
+        }
+      }
+    },
+    async initializeAgent(ctx) {
+      const { webId } = ctx.params;
+      const agentUri = await this.actions.post(
+        {
+          resource: {
+            type: 'interop:AuthorizationAgent',
+            'interop:hasAuthorizationRedirectEndpoint': urlJoin(CONFIG.FRONTEND_URL, 'authorize')
+          },
+          webId
+        },
+        { parentCtx: ctx }
+      );
+
+      await ctx.call('ldp.resource.patch', {
+        resourceUri: webId,
+        triplesToAdd: [
+          triple(
+            namedNode(webId),
+            namedNode('http://www.w3.org/ns/solid/interop#hasAuthorizationAgent'),
+            namedNode(agentUri)
+          )
+        ],
+        webId: 'system'
+      });
+    },
+    async getAgent(ctx) {
+      const { webId } = ctx.params;
+      const container = await this.actions.list({ webId }, { parentCtx: ctx });
+      const resources = arrayOf(container['ldp:includes']);
+      if (resources.length > 0) {
+        return resources[0];
+      }
+    }
+  },
+  events: {
+    async 'auth.registered'(ctx) {
+      const { webId } = ctx.params;
+      await this.actions.initializeAgent({ webId }, { parentCtx: ctx });
+    }
+  },
   activities: {
     install: {
       match: {

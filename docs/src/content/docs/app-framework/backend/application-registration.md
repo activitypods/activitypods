@@ -4,7 +4,7 @@ sidebar:
   order: 1
 ---
 
-Application registration is a complex process [as can be read here](../../design/application-interoperability/). Fortunately, we handle it behind the scene so you have nothing to do except configuring a few settings.
+Application registration is a complex process [as can be read here](../../architecture/application-interoperability/). Fortunately, we handle it behind the scene so you have nothing to do except configuring a few settings.
 
 ## `AppService`
 

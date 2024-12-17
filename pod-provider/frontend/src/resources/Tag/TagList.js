@@ -1,23 +1,23 @@
 import React from 'react';
 import { useTranslate, SimpleList, TextField } from 'react-admin';
 import { Avatar } from '@mui/material';
-import GroupIcon from '@mui/icons-material/Group';
+import SellOutlinedIcon from '@mui/icons-material/SellOutlined';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import List from '../../layout/List';
 import { arrayOf } from '../../utils';
 
-const GroupList = () => {
+const TagList = () => {
   useCheckAuthenticated();
   const translate = useTranslate();
   return (
     <List title={translate('app.page.groups')}>
       <SimpleList
         primaryText={<TextField source="vcard:label" />}
-        secondaryText={record => `${translate('app.group.members')}: ${arrayOf(record['vcard:hasMember']).length}`}
+        secondaryText={record => `${translate('app.tag.members')}: ${arrayOf(record['vcard:hasMember']).length}`}
         linkType="edit"
         leftAvatar={() => (
           <Avatar>
-            <GroupIcon />
+            <SellOutlinedIcon />
           </Avatar>
         )}
         rowSx={(record, index) => ({
@@ -33,4 +33,4 @@ const GroupList = () => {
   );
 };
 
-export default GroupList;
+export default TagList;

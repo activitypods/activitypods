@@ -257,11 +257,11 @@ const TagsListEdit = props => {
           aria-labelledby="form-dialog-title"
         >
           <form onSubmit={handleCreateTag}>
-            <DialogTitle id="form-dialog-title">{translate('app.group.create')}</DialogTitle>
+            <DialogTitle id="form-dialog-title">{translate('app.tag.create')}</DialogTitle>
             <DialogContent>
               <TextField
                 autoFocus
-                label={translate('app.group.label')}
+                label={translate('app.tag.label')}
                 fullWidth
                 value={newTagName}
                 onChange={event => setNewTagName(event.target.value)}

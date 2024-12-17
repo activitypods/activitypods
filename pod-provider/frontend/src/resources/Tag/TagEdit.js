@@ -1,15 +1,15 @@
 import React from 'react';
 import { ListButton } from 'react-admin';
 import Edit from '../../layout/Edit';
-import GroupForm from './GroupForm';
+import TagForm from './TagForm';
 import BlockAnonymous from '../../common/BlockAnonymous';
 
-export const GroupEdit = () => (
+export const TagEdit = () => (
   <BlockAnonymous>
     <Edit actions={[<ListButton />]}>
-      <GroupForm />
+      <TagForm />
     </Edit>
   </BlockAnonymous>
 );
 
-export default GroupEdit;
+export default TagEdit;

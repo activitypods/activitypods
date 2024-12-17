@@ -39,15 +39,15 @@ module.exports = {
       view_private_profile: 'View your private profile',
       view_public_profile: 'View your public profile'
     },
-    group: {
+    tag: {
       members: 'Members',
-      no_members: "The group doesn't have any member yet",
-      label: "Group's name",
+      no_members: "The tag hasn't been attributed yet",
+      label: 'Name',
       remove_members: 'Remove selected',
       profile_name: 'Name',
-      group: 'Group',
+      tag: 'Tag',
       profile: 'Profile',
-      create: 'New group',
+      create: 'New tag',
       add_members: 'Add members'
     },
     page: {
@@ -69,8 +69,8 @@ module.exports = {
       add_contact: 'Send a connection request',
       create_profile: 'Create your profile',
       authorize: 'Authorization required',
-      groups: 'My groups',
-      groups_short: 'Groups',
+      groups: 'Tags',
+      groups_short: 'Tags',
       invite: '%{username} invited you to their network',
       invite_loading: 'Invitation loading...',
       invite_connect: 'Do you want to connect with %{username}?',

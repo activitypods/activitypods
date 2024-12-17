@@ -7,7 +7,7 @@ import { useCheckAuthenticated } from '@semapps/auth-provider';
 import List from '../../layout/List';
 import ProfileCard from '../../common/cards/ProfileCard';
 import ShareContactCard from '../../common/cards/ShareContactCard';
-import MyGroupsButton from '../../common/buttons/MyGroupsButton';
+import TagsButton from '../../common/buttons/TagsButton';
 import ContactRequestsBlock from '../../common/blocks/ContactRequestsBlock';
 import { formatUsername } from '../../utils';
 
@@ -23,7 +23,7 @@ const NetworkPage = () => {
         <Button component={Link} to="/network/request" label="app.action.send_request">
           <AddIcon />
         </Button>,
-        <MyGroupsButton />
+        <TagsButton />
       ]}
       asides={[<ProfileCard />, <ShareContactCard />]}
       sort={{ field: 'vcard:given-name', order: 'ASC' }}

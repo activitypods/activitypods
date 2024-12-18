@@ -33,6 +33,9 @@ import NetworkActorPage from './pages/NetworkPage/NetworkActorPage';
 import NetworkRequestPage from './pages/NetworkPage/NetworkRequestPage';
 import SettingsLocalePage from './pages/SettingsPage/SettingsLocalePage';
 import SettingsProfilesPage from './pages/SettingsPage/SettingsProfilesPage';
+import CreateGroupPage from './pages/CreateGroupPage';
+import GroupSettingsPage from './pages/SettingsPage/GroupSettingsPage';
+import PublicProfilePage from './pages/SettingsPage/PublicProfilePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,6 +73,9 @@ const App = () => (
           <Route path="/initialize" element={<ProfileCreatePage />} />
           <Route path="/authorize" element={<AuthorizePage />} />
           <Route path="/invite/:capability" element={<InvitePage />} />
+          <Route path="/groups">
+            <Route path="create" element={<CreateGroupPage />} />
+          </Route>
         </CustomRoutes>
         <CustomRoutes>
           <Route path="/network">
@@ -91,6 +97,14 @@ const App = () => (
             <Route path="advanced" element={<AdvancedSettingsPage />} />
             <Route path="export-pod" element={<SettingsExportPodPage />} />
             <Route path="delete-pod" element={<SettingsDeletePodPage />} />
+          </Route>
+          <Route path="/group/:groupId">
+            <Route path="settings">
+              <Route index element={<GroupSettingsPage />} />
+              <Route path="profile" element={<PublicProfilePage />} />
+              <Route path="export-pod" element={<SettingsExportPodPage />} />
+              <Route path="delete-pod" element={<SettingsDeletePodPage />} />
+            </Route>
           </Route>
         </CustomRoutes>
       </Admin>

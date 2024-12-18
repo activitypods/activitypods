@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslate, Link } from 'react-admin';
 import { Box, Container, Breadcrumbs } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import useRealmContext from '../hooks/useRealmContext';
 
 const useStyles = makeStyles(theme => ({
   menuBar: {
@@ -23,20 +24,28 @@ const useStyles = makeStyles(theme => ({
 const MenuBar = () => {
   const classes = useStyles();
   const translate = useTranslate();
+  const { isGroup, isLoading, data } = useRealmContext();
+  if (isLoading) return null;
   return (
     <Box className={classes.menuBar}>
       <Container>
         <Breadcrumbs separator="|">
-          <Link to="/network" className={classes.link}>
-            {translate('app.page.contacts')}
-          </Link>
-          <Link to="/apps" className={classes.link}>
-            {translate('app.page.apps')}
-          </Link>
-          <Link to="/data" className={classes.link}>
-            {translate('app.page.data')}
-          </Link>
-          <Link to="/settings" className={classes.link}>
+          {!isGroup && (
+            <Link to="/network" className={classes.link}>
+              {translate('app.page.contacts')}
+            </Link>
+          )}
+          {!isGroup && (
+            <Link to="/apps" className={classes.link}>
+              {translate('app.page.apps')}
+            </Link>
+          )}
+          {!isGroup && (
+            <Link to="/data" className={classes.link}>
+              {translate('app.page.data')}
+            </Link>
+          )}
+          <Link to={isGroup ? `/group/${data.webfingerId}/settings` : '/settings'} className={classes.link}>
             {translate('app.page.settings')}
           </Link>
         </Breadcrumbs>

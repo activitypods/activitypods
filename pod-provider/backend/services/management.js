@@ -37,11 +37,11 @@ const ManagementService = {
     this.broker.call('api.addRoute', {
       route: {
         name: 'management',
-        path: path.join(basePath, '/.management/'),
+        path: path.join(basePath, '/.account/'),
         authentication: true,
         aliases: {
-          'POST /actor/:actorUri/export': 'management.exportActor',
-          'DELETE /actor/:actorUri': 'management.deleteActor'
+          'POST /:actorUri/export': 'management.exportAccount',
+          'DELETE /:actorUri': 'management.deleteAccount'
         }
       }
     });
@@ -49,30 +49,31 @@ const ManagementService = {
     if (!fs.existsSync(this.settings.exportDir)) fs.mkdirSync(this.settings.exportDir);
   },
   actions: {
-    deleteActor: {
+    deleteAccount: {
       params: {
-        actorUri: { type: 'string' },
-        iKnowWhatImDoing: { type: 'boolean', default: false, convert: true }
+        actorUri: { type: 'string' }
       },
       async handler(ctx) {
-        const { actorUri, iKnowWhatImDoing } = ctx.params;
+        const { actorUri } = ctx.params;
         const { webId } = ctx.meta;
-        if (!iKnowWhatImDoing) {
-          throw new Error(
-            'Please confirm that you know what you are doing and set the `iKnowWhatImDoing` parameter to `true`.'
-          );
-        }
-
-        if (!webId || (webId !== 'system' && webId !== actorUri)) {
-          throw403('You are not allowed to delete this actor.');
-        }
 
         // Validate that the actor exists.
-        const actor = await ctx.call('auth.account.findByWebId', { webId: actorUri });
-        if (!actor) {
+        const account = await ctx.call('auth.account.findByWebId', { webId: actorUri });
+        if (!account) {
           throw404('Actor not found.');
         }
-        const dataset = actor.username;
+
+        if (account.group) {
+          if (!webId || (webId !== 'system' && webId !== actorUri)) {
+            throw403('You are not allowed to delete this actor.');
+          }
+        } else {
+          if (!webId || (webId !== 'system' && webId !== actorUri)) {
+            throw403('You are not allowed to delete this actor.');
+          }
+        }
+
+        const dataset = account.username;
 
         // Delete account information settings data.
         await ctx.call('auth.account.setTombstone', { webId: actorUri });
@@ -139,7 +140,7 @@ const ManagementService = {
      * If a backup exists which is younger than five minutes, the existing backup is served.
      * @returns {Promise<object>} The backup file promise as returned by `fs.promises.readFile`
      */
-    exportActor: {
+    exportAccount: {
       params: {
         actorUri: { type: 'string' },
         withBackups: { type: 'boolean', default: false, convert: true },
@@ -160,7 +161,7 @@ const ManagementService = {
           throw404('Actor not found.');
         }
         const dataset = actor.username;
-        const podUrl = await ctx.call('pod.getUrl', { webId: actorUri });
+        const podUrl = await ctx.call('solid-storage.getUrl', { webId: actorUri });
 
         // If there has been an export less than 5 minutes ago, we won't create a new one.
         // The last one might have stopped during download.

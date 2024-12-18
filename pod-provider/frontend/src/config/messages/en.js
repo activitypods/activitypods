@@ -37,7 +37,8 @@ module.exports = {
       export_pod: 'Download my data',
       set_default_app: 'Set default app',
       view_private_profile: 'View your private profile',
-      view_public_profile: 'View your public profile'
+      view_public_profile: 'View your public profile',
+      create_group: 'Create group'
     },
     tag: {
       members: 'Members',
@@ -77,13 +78,13 @@ module.exports = {
       choose_provider: 'Choose data space provider',
       choose_custom_provider: 'Choose custom provider',
       invite_success: 'Success!',
-      delete_pod: 'Delete my Pod',
-      export_pod: 'Export my data'
+      delete_pod: 'Delete account',
+      export_pod: 'Export all data'
     },
     description: {
       delete_pod:
         'By continuing, you will delete your pod. This is irreversible! Please consider exporting all your data first (see settings). If you want to continue, type "%{confirm_text}".',
-      delete_pod_confirm_text: 'delete my pod',
+      delete_pod_confirm_text: 'delete account',
       export_pod: 'You can export and download all your data as a backup. The action might take a short while.'
     },
     setting: {

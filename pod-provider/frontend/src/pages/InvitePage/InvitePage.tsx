@@ -6,7 +6,7 @@ import { Box, CircularProgress } from '@mui/material';
 import InvitePageViewLoggedOut from './InvitePageViewLoggedOut';
 import InvitePageViewLoggedIn from './InvitePageViewLoggedIn';
 import InvitePageSuccess from './InvitePageSuccess';
-import ChoosePodProviderPage from './InvitePageProviderSelect';
+import InvitePageProviderSelect from './InvitePageProviderSelect';
 import SimpleBox from '../../layout/SimpleBox';
 
 /** The URI is expected to be encoded in the URI fragment in the SearchParams format. */
@@ -73,7 +73,7 @@ const InvitePage = () => {
 
   if (showProviderSelect) {
     return (
-      <ChoosePodProviderPage
+      <InvitePageProviderSelect
         isSignup={showProviderSelect === 'signup'}
         capabilityUri={capabilityUri}
         onCancel={() => {

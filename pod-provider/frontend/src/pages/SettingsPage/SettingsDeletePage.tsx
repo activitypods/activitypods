@@ -1,29 +1,36 @@
 import React, { useCallback, useState } from 'react';
-import { useGetIdentity, useLogout, useNotify, useTranslate } from 'react-admin';
+import urlJoin from 'url-join';
+import { useLogout, useNotify, useTranslate } from 'react-admin';
 import { Box, Card, Typography, TextField, Button, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import urlJoin from 'url-join';
+import useRealmContext from '../../hooks/useRealmContext';
 
-const SettingsDeletePodPage = () => {
+const SettingsDeletePage = () => {
   const translate = useTranslate();
-  const notify = useNotify();
   const logout = useLogout();
   const navigate = useNavigate();
-  const { data: identity } = useGetIdentity();
-
-  const [confirmInput, setConfirmInput] = React.useState('');
+  const notify = useNotify();
+  const { data, isGroup } = useRealmContext();
+  const [confirmInput, setConfirmInput] = useState('');
   const [deletedClicked, setDeletedClicked] = useState(false);
 
-  const onDeletePod = useCallback(() => {
+  const deleteAccount = useCallback(async () => {
     setDeletedClicked(true);
-    const token = localStorage.getItem('token');
-    const webId = encodeURIComponent(String(identity?.id));
+    const host = new URL(data.id).origin;
+    const username = data.webIdData.preferredUsername;
 
-    fetch(urlJoin(CONFIG.BACKEND_URL || '', '/.management/actor/', webId, '?iKnowWhatImDoing=true'), {
+    await fetch(urlJoin(host, '/.account/', username), {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(() => logout());
-  }, [notify, navigate, logout]);
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+
+    if (isGroup) {
+      notify('The account has been correctly deleted', { type: 'success' });
+      navigate('/network');
+    } else {
+      logout();
+    }
+  }, [setDeletedClicked, data, isGroup, navigate, notify, logout]);
 
   return (
     <>
@@ -50,7 +57,7 @@ const SettingsDeletePodPage = () => {
             disabled={deletedClicked || confirmInput !== translate('app.description.delete_pod_confirm_text')}
             variant="contained"
             color="error"
-            onClick={() => onDeletePod()}
+            onClick={() => deleteAccount()}
             endIcon={deletedClicked && <CircularProgress sx={{ scale: '0.7' }} />}
           >
             {translate('app.action.delete_pod')}
@@ -61,4 +68,4 @@ const SettingsDeletePodPage = () => {
   );
 };
 
-export default SettingsDeletePodPage;
+export default SettingsDeletePage;

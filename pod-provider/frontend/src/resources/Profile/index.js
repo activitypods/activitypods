@@ -1,9 +1,7 @@
-import ProfileEdit from './ProfileEdit';
 import ProfileShow from './ProfileShow';
 
 export default {
   config: {
-    edit: ProfileEdit,
     show: ProfileShow,
     options: {
       label: 'Profiles'

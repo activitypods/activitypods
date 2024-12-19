@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import {
-  useTranslate,
-  useGetList,
-  useAuthProvider,
-  useNotify,
-  useCreatePath,
-  useGetIdentity,
-  useLocaleState
-} from 'react-admin';
+import { useTranslate, useGetList, useAuthProvider, useNotify, useLocaleState } from 'react-admin';
 import { Box, Typography, List } from '@mui/material';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { useNavigate } from 'react-router-dom';
@@ -30,9 +22,7 @@ const SettingsPage = () => {
   const translate = useTranslate();
   const authProvider = useAuthProvider();
   const navigate = useNavigate();
-  const { data: identity } = useGetIdentity();
   const [locale] = useLocaleState();
-  const createPath = useCreatePath();
   const notify = useNotify();
   const [accountSettings, setAccountSettings] = useState({});
 

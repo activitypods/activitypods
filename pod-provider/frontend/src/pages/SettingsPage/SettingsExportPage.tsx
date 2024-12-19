@@ -1,38 +1,36 @@
 import React, { useCallback, useState } from 'react';
-import { useGetIdentity, useLogout, useNotify, useTranslate } from 'react-admin';
+import { useLogout, useNotify, useTranslate } from 'react-admin';
 import { Box, Card, Typography, Button, Checkbox, FormControlLabel, CircularProgress } from '@mui/material';
 import { Download } from '@mui/icons-material';
 import { downloadFile } from '../../utils';
 import urlJoin from 'url-join';
+import useRealmContext from '../../hooks/useRealmContext';
 
-const SettingsExportPodPage = () => {
+const SettingsExportPage = () => {
   const translate = useTranslate();
   const notify = useNotify();
   const logout = useLogout();
-  const { data: identity } = useGetIdentity();
+  const { data } = useRealmContext();
   const [isLoading, setIsLoading] = useState(false);
   const [withBackups, setWithBackups] = useState(false);
 
-  const onExportPod = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    const webId = encodeURIComponent(String(identity?.id));
+  const exportAccount = useCallback(async () => {
     setIsLoading(true);
-    await fetch(
-      urlJoin(CONFIG.BACKEND_URL || '', '/.management/actor/', webId, '/export', `?withBackups=${withBackups}`),
-      {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      }
-    ).then(async res => {
-      if (!(res.status >= 200 && res.status < 300)) {
-        notify(translate('app.notification.export_failed', { error: res.statusText }), { type: 'error' });
-        setIsLoading(false);
-        return;
-      }
-      downloadFile(await res.blob(), 'pod.zip');
-      setIsLoading(false);
+    const host = new URL(data.id).origin;
+    const username = data?.webIdData.preferredUsername;
+    const response = await fetch(urlJoin(host, '/.account/', username, '/export', `?withBackups=${withBackups}`), {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     });
-  }, [notify, logout, identity, withBackups]);
+    if (!(response.status >= 200 && response.status < 300)) {
+      notify('app.notification.export_failed', { messageArgs: { error: response.statusText }, type: 'error' });
+      setIsLoading(false);
+      return;
+    } else {
+      downloadFile(await response.blob(), 'data.zip');
+      setIsLoading(false);
+    }
+  }, [notify, logout, data, withBackups]);
 
   return (
     <>
@@ -56,7 +54,7 @@ const SettingsExportPodPage = () => {
               endIcon={isLoading && <CircularProgress sx={{ scale: '0.7' }} />}
               variant="contained"
               color="primary"
-              onClick={() => onExportPod()}
+              onClick={() => exportAccount()}
               disabled={isLoading}
             >
               {translate('app.action.export_pod')}
@@ -68,4 +66,4 @@ const SettingsExportPodPage = () => {
   );
 };
 
-export default SettingsExportPodPage;
+export default SettingsExportPage;

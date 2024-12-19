@@ -1,34 +1,21 @@
 import React, { useState, useCallback } from 'react';
-import {
-  SimpleForm,
-  TextInput,
-  ImageField,
-  useGetIdentity,
-  useNotify,
-  useTranslate,
-  useCreatePath,
-  useRecordContext,
-  ShowButton
-} from 'react-admin';
+import { SimpleForm, TextInput, ImageField, useGetIdentity, useNotify, useTranslate, ShowButton } from 'react-admin';
 import { Link } from 'react-router-dom';
 import { Box, Alert } from '@mui/material';
 import { ImageInput } from '@semapps/input-components';
-import Edit from '../../layout/Edit';
-import BlockAnonymous from '../../common/BlockAnonymous';
-import QuickCreateLocationInput from '../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput';
-import ToolbarWithoutDelete from '../../common/ToolbarWithoutDelete';
+import Edit from '../../../layout/Edit';
+import BlockAnonymous from '../../../common/BlockAnonymous';
+import QuickCreateLocationInput from '../../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput';
+import ToolbarWithoutDelete from '../../../common/ToolbarWithoutDelete';
 
 const PrivateProfileWarning = () => {
   const translate = useTranslate();
-  const record = useRecordContext();
-  const createPath = useCreatePath();
-
   return (
     <Box mb={1} width="100%">
       <Alert severity="warning">
         {translate('app.helper.private_profile_view')}
         &nbsp;
-        <Link to={createPath({ resource: 'Actor', id: record?.describes, type: 'edit' })} style={{ color: 'inherit' }}>
+        <Link to="../public" style={{ color: 'inherit' }}>
           {translate('app.action.view_public_profile')}
         </Link>
       </Alert>
@@ -36,11 +23,10 @@ const PrivateProfileWarning = () => {
   );
 };
 
-export const ProfileEdit = () => {
+export const PrivateProfilePage = () => {
   const notify = useNotify();
   const translate = useTranslate();
-
-  const { refetch: refetchIdentity } = useGetIdentity();
+  const { data: identity, refetch: refetchIdentity } = useGetIdentity();
 
   // Needed to trigger orm change and enable save button :
   // https://codesandbox.io/s/react-admin-v3-advanced-recipes-quick-createpreview-voyci
@@ -49,21 +35,23 @@ export const ProfileEdit = () => {
     setLocationVersion(locationVersion + 1);
   }, [locationVersion]);
 
+  const onSuccess = useCallback(() => {
+    notify('ra.notification.updated', {
+      messageArgs: { smart_count: 1 },
+      undoable: false
+    });
+    refetchIdentity();
+  }, [notify, refetchIdentity]);
+
   return (
     <BlockAnonymous>
       <Edit
         title={translate('app.setting.private_profile')}
+        resource="Profile"
+        id={identity?.profileData?.id}
         transform={data => ({ ...data, 'vcard:fn': data['vcard:given-name'] })}
         mutationMode="pessimistic"
-        mutationOptions={{
-          onSuccess: () => {
-            notify('ra.notification.updated', {
-              messageArgs: { smart_count: 1 },
-              undoable: false
-            });
-            refetchIdentity();
-          }
-        }}
+        mutationOptions={{ onSuccess }}
         actions={[<ShowButton />]}
       >
         <SimpleForm toolbar={<ToolbarWithoutDelete />}>
@@ -85,4 +73,4 @@ export const ProfileEdit = () => {
   );
 };
 
-export default ProfileEdit;
+export default PrivateProfilePage;

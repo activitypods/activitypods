@@ -3,34 +3,30 @@ import {
   SimpleForm,
   TextInput,
   ImageField,
-  useGetIdentity,
   useNotify,
   Button,
   useDataProvider,
   useTranslate,
-  useCreatePath,
   useRecordContext
 } from 'react-admin';
 import { Link } from 'react-router-dom';
 import { Box, Alert } from '@mui/material';
 import { ImageInput } from '@semapps/input-components';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import Edit from '../../layout/Edit';
-import BlockAnonymous from '../../common/BlockAnonymous';
-import ToolbarWithoutDelete from '../../common/ToolbarWithoutDelete';
-import useWebfingerId from '../../hooks/useWebfingerId';
+import Edit from '../../../layout/Edit';
+import BlockAnonymous from '../../../common/BlockAnonymous';
+import ToolbarWithoutDelete from '../../../common/ToolbarWithoutDelete';
+import useWebfingerId from '../../../hooks/useWebfingerId';
+import useRealmContext from '../../../hooks/useRealmContext';
 
 const PublicProfileWarning = () => {
   const translate = useTranslate();
-  const record = useRecordContext();
-  const createPath = useCreatePath();
-
   return (
     <Box mb={1} width="100%">
       <Alert severity="warning">
         {translate('app.helper.public_profile_view')}
         &nbsp;
-        <Link to={createPath({ resource: 'Profile', id: record?.url, type: 'edit' })} style={{ color: 'inherit' }}>
+        <Link to="../private" style={{ color: 'inherit' }}>
           {translate('app.action.view_private_profile')}
         </Link>
       </Alert>
@@ -48,10 +44,10 @@ const ShowPublicProfileButton = props => {
   );
 };
 
-export const ActorEdit = () => {
+export const PublicProfilePage = () => {
   const notify = useNotify();
   const translate = useTranslate();
-  const { data: identity, refetch: refetchIdentity } = useGetIdentity();
+  const { isGroup, data, isLoading, refetch } = useRealmContext();
 
   const dataProvider = useDataProvider();
 
@@ -71,11 +67,11 @@ export const ActorEdit = () => {
       return {
         ...rest,
         // Disabled inputs are not passed so we need to pass it manually
-        preferredUsername: identity?.webIdData?.preferredUsername,
+        preferredUsername: data?.webIdData?.preferredUsername,
         icon
       };
     },
-    [identity, dataProvider]
+    [data, dataProvider]
   );
 
   const onSuccess = useCallback(() => {
@@ -83,20 +79,24 @@ export const ActorEdit = () => {
       messageArgs: { smart_count: 1 },
       undoable: false
     });
-    refetchIdentity();
-  }, [notify, refetchIdentity]);
+    refetch();
+  }, [notify, refetch]);
+
+  if (isLoading) return null;
 
   return (
     <BlockAnonymous>
       <Edit
         title={translate('app.setting.public_profile')}
+        resource="Actor"
+        id={data?.id}
         transform={transform}
         mutationMode="pessimistic"
         mutationOptions={{ onSuccess }}
-        actions={[<ShowPublicProfileButton />]}
+        actions={!isGroup ? [<ShowPublicProfileButton />] : []}
       >
         <SimpleForm toolbar={<ToolbarWithoutDelete />}>
-          <PublicProfileWarning />
+          {!isGroup && <PublicProfileWarning />}
           <TextInput
             source="preferredUsername"
             fullWidth
@@ -126,4 +126,4 @@ export const ActorEdit = () => {
   );
 };
 
-export default ActorEdit;
+export default PublicProfilePage;

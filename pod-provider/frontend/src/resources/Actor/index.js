@@ -1,10 +1,8 @@
-import ActorEdit from './ActorEdit';
 import ActorShow from './ActorShow';
 
 export default {
   config: {
     show: ActorShow,
-    edit: ActorEdit,
     recordRepresentation: record => record.name || record.preferredUsername
   },
   dataModel: {

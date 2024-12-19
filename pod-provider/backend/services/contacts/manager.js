@@ -1,13 +1,8 @@
 const urlJoin = require('url-join');
-const { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
+const { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES, matchActivity } = require('@semapps/activitypub');
+const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const {
-  ADD_CONTACT,
-  REMOVE_CONTACT,
-  IGNORE_CONTACT,
-  UNDO_IGNORE_CONTACT,
-  DELETE_ACTOR
-} = require('../../config/patterns');
+const { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } = require('../../config/patterns');
 
 module.exports = {
   name: 'contacts.manager',
@@ -15,7 +10,7 @@ module.exports = {
   settings: {
     ignoredContactsCollectionOptions: {
       path: '/ignored-contacts',
-      attachToTypes: Object.values(ACTOR_TYPES),
+      attachToTypes: [ACTOR_TYPES.PERSON],
       attachPredicate: 'http://activitypods.org/ns/core#ignoredContacts',
       ordered: false,
       dereferenceItems: false
@@ -106,7 +101,15 @@ module.exports = {
       }
     },
     deleteActor: {
-      match: DELETE_ACTOR,
+      async match(activity, fetcher) {
+        if (activity.type === ACTIVITY_TYPES.DELETE) {
+          const dereferencedObject = await fetcher(activity.object);
+          if (Object.values(ACTOR_TYPES).some(t => arrayOf(dereferencedObject.type).includes(t))) {
+            return { match: true, dereferencedActivity: { ...activity, object: dereferencedObject } };
+          }
+        }
+        return { match: false, dereferencedActivity: activity };
+      },
       async onReceive(ctx, activity, recipientUri) {
         // See also https://swicg.github.io/activitypub-http-signature/#handling-deletes-of-actors for more sophisticated approaches.
         if (!(activity.actor === activity.object.id))
@@ -119,12 +122,21 @@ module.exports = {
         }
 
         const actorToDelete = activity.object.id;
-        const podUrl = await ctx.call('solid-storage.getUrl', { webId: actorToDelete });
+        const storageUrl = await ctx.call('solid-storage.getUrl', { webId: actorToDelete });
 
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
         const account = await ctx.call('auth.account.findByWebId', { webId: recipientUri });
         const dataset = account.username;
+
+        // If the recipient owns the group, remove it
+        if (arrayOf(account.owns).includes(actorToDelete)) {
+          await ctx.call(
+            'groups.undoClaim',
+            { username: dataset, groupWebId: actorToDelete },
+            { meta: { webId: recipientUri } }
+          );
+        }
 
         // Delete from all collections where this actor is included (contacts, followers, following...)
         await ctx.call('triplestore.update', {
@@ -144,7 +156,7 @@ module.exports = {
             SELECT DISTINCT ?resourceUri 
             WHERE {
               ?resourceUri ?p ?o .
-              FILTER( STRSTARTS( STR(?resourceUri), "${urlJoin(podUrl, '/')}" ) ) .
+              FILTER( STRSTARTS( STR(?resourceUri), "${urlJoin(storageUrl, '/')}" ) ) .
             }
           `,
           accept: MIME_TYPES.JSON,
@@ -170,7 +182,7 @@ module.exports = {
             WHERE {
               <${recipientUri}> ldp:inbox ?recipientInbox .
               ?recipientInbox as:items ?activityUrl .
-              FILTER( STRSTARTS( STR(?activityUrl), "${urlJoin(podUrl, '/')}" ) ) .
+              FILTER( STRSTARTS( STR(?activityUrl), "${urlJoin(storageUrl, '/')}" ) ) .
             }
           `,
           webId: 'system',

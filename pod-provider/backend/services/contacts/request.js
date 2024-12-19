@@ -19,21 +19,21 @@ module.exports = {
   settings: {
     contactsCollectionOptions: {
       path: '/contacts',
-      attachToTypes: Object.values(ACTOR_TYPES),
+      attachToTypes: [ACTOR_TYPES.PERSON],
       attachPredicate: 'http://activitypods.org/ns/core#contacts',
       ordered: false,
       dereferenceItems: false
     },
     contactRequestsCollectionOptions: {
       path: '/contact-requests',
-      attachToTypes: Object.values(ACTOR_TYPES),
+      attachToTypes: [ACTOR_TYPES.PERSON],
       attachPredicate: 'http://activitypods.org/ns/core#contactRequests',
       ordered: false,
       dereferenceItems: true
     },
     rejectedContactsCollectionOptions: {
       path: '/rejected-contacts',
-      attachToTypes: Object.values(ACTOR_TYPES),
+      attachToTypes: [ACTOR_TYPES.PERSON],
       attachPredicate: 'http://activitypods.org/ns/core#rejectedContacts',
       ordered: false,
       dereferenceItems: false

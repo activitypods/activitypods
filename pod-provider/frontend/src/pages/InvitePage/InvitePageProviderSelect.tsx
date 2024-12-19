@@ -1,7 +1,6 @@
 import React, { useCallback } from 'react';
+import urlJoin from 'url-join';
 import { useTranslate } from 'react-admin';
-import urljoin from 'url-join';
-
 import ChoosePodProviderPage from '../ChoosePodProviderPage/ChoosePodProviderPage';
 
 /**
@@ -21,14 +20,13 @@ const InvitePageProviderSelect: React.FC<{ capabilityUri: string; isSignup: bool
     const redirectTo = `/auth?${isSignup ? 'signup=true&' : ``}redirect=${encodeURIComponent(
       `/invite/${encodeURIComponent(capabilityUri)}`
     )}`;
-    const url = urljoin(podProviderUrl, redirectTo);
+    const url = urlJoin(podProviderUrl, redirectTo);
     window.location.href = url;
   }, []);
 
   return (
     <ChoosePodProviderPage
       detailsText={isSignup ? translate('app.helper.choose_provider_text_signup') : undefined}
-      customPodProviders={[]}
       onPodProviderSelected={onPodProviderSelected}
       onCancel={onCancel}
     />

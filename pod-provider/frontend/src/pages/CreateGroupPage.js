@@ -41,8 +41,8 @@ const CreateGroupPage = () => {
         const groupWebId = createGroupResponse.headers.get('Location');
 
         // Claim the group with the user webId
-        const claimGroupResponse = await dataProvider.fetch(
-          urlJoin(podProviderUrl, '.account', encodeURIComponent(identity?.id), 'claimGroup'),
+        await dataProvider.fetch(
+          urlJoin(podProviderUrl, '.account', identity.webIdData.preferredUsername, 'claimGroup'),
           {
             method: 'POST',
             body: JSON.stringify({ groupWebId }),
@@ -72,16 +72,21 @@ const CreateGroupPage = () => {
           await dataProvider.patch('Actor', {
             id: groupWebId,
             triplesToAdd: [
-              triple(namedNode(groupWebId), namedNode('http://xmlns.com/foaf/0.1/name'), literal(name))
+              triple(namedNode(groupWebId), namedNode('http://xmlns.com/foaf/0.1/name'), literal(name)),
+              triple(namedNode(groupWebId), namedNode('https://www.w3.org/ns/activitystreams#name'), literal(name))
               // triple(namedNode(groupWebId), namedNode('http://xmlns.com/foaf/0.1/depiction'), namedNode(imageUri))
             ]
           });
         }
+
+        notify(`Group successfully created`, { type: 'success' });
+
+        navigate(`/group/@${id}@${new URL(podProviderUrl).host}/settings`);
       } catch (e) {
         notify(`Could not create group. Error: ${e.message}`, { type: 'error' });
       }
     },
-    [podProviderUrl, identity, notify, dataProvider]
+    [podProviderUrl, identity, notify, dataProvider, navigate]
   );
 
   return !podProviderUrl ? (
@@ -92,7 +97,7 @@ const CreateGroupPage = () => {
     />
   ) : (
     <SimpleBox title={translate('app.action.create_group')} icon={<GroupAddIcon />}>
-      <Form onSubmit={onSubmit}>
+      <Form onSubmit={onSubmit} defaultValues={{ type: 'foaf:Group' }}>
         <TextInput source="id" label={translate('app.group.id')} fullWidth />
         <SelectInput
           source="type"

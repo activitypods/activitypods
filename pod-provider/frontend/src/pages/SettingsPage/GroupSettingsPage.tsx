@@ -31,13 +31,13 @@ const GroupSettingsPage = () => {
             value={data.fullName}
           />
           <SettingsItem
-            onClick={() => navigate(`/group/${data.webfingerId}/settings/export-pod`)}
+            onClick={() => navigate(`/group/${data.webfingerId}/settings/export`)}
             icon={<StorageIcon />}
             label="app.setting.export"
             actionIcon={<DownloadIcon />}
           />
           <SettingsItem
-            onClick={() => navigate(`/group/${data.webfingerId}/settings/delete-pod`)}
+            onClick={() => navigate(`/group/${data.webfingerId}/settings/delete`)}
             icon={<DeleteIcon color="error" />}
             label="app.setting.delete"
             actionIcon={<HighlightOffIcon color="error" />}

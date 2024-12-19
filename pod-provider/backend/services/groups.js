@@ -3,6 +3,7 @@ const urlJoin = require('url-join');
 const { Errors: E } = require('moleculer-web');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { arrayOf } = require('@semapps/ldp');
+const { throw403, throw404 } = require('@semapps/middlewares');
 const CONFIG = require('../config/config');
 
 const GroupsService = {
@@ -18,7 +19,7 @@ const GroupsService = {
         aliases: {
           'POST /groups': 'groups.create',
           'GET /groups': 'groups.list',
-          'POST /:actorUri/claimGroup': 'groups.claim'
+          'POST /:username/claimGroup': 'groups.claim'
         }
       }
     });
@@ -52,11 +53,21 @@ const GroupsService = {
       // Create storage
       const storageUrl = await ctx.call('solid-storage.create', { username: id });
 
+      // Create containers
+      const registeredContainers = await ctx.call('ldp.registry.list');
+      for (const { path, permissions } of Object.values(registeredContainers)) {
+        await ctx.call('ldp.container.createAndAttach', {
+          containerUri: urlJoin(storageUrl, path),
+          permissions, // Used by the WebAclMiddleware
+          webId: ownerWebId
+        });
+      }
+
       // Create WebID
       await await ctx.call('webid.create', {
         resource: {
           '@id': groupWebId,
-          '@type': type,
+          '@type': type === 'foaf:Organization' ? ['foaf:Organization', 'as:Organization'] : ['foaf:Group', 'as:Group'],
           'foaf:nick': id,
           'pim:storage': storageUrl
         },
@@ -68,6 +79,9 @@ const GroupsService = {
       await ctx.call('webacl.resource.addRights', {
         resourceUri: groupWebId,
         additionalRights: {
+          anon: {
+            read: true
+          },
           user: {
             uri: ownerWebId,
             read: true,
@@ -114,19 +128,37 @@ const GroupsService = {
       return arrayOf(ownerAccount.owns);
     },
     async claim(ctx) {
-      const { actorUri, groupWebId } = ctx.params;
+      const { username, groupWebId } = ctx.params;
       const webId = ctx.meta.webId;
 
-      if (!webId || (webId !== 'system' && webId !== actorUri)) {
+      const account = await ctx.call('auth.account.findByUsername', { username });
+      if (!account) throw404('Actor not found');
+
+      if (!webId || (webId !== 'system' && webId !== account.webId)) {
         throw403('You are not allowed to claim a group with this actor.');
       }
 
-      const ownerAccount = await ctx.call('auth.account.findByWebId', { webId });
-
-      // Attach group to owner account
+      // Attach group to account
       await ctx.call('auth.account.update', {
-        id: ownerAccount['@id'],
-        owns: ownerAccount.owns ? [...arrayOf(ownerAccount.owns), groupWebId] : groupWebId
+        id: account['@id'],
+        owns: account.owns ? [...arrayOf(account.owns), groupWebId] : groupWebId
+      });
+    },
+    async undoClaim(ctx) {
+      const { username, groupWebId } = ctx.params;
+      const webId = ctx.meta.webId;
+
+      const account = await ctx.call('auth.account.findByUsername', { username });
+      if (!account) throw404('Actor not found');
+
+      if (!webId || (webId !== 'system' && webId !== account.webId)) {
+        throw403('You are not allowed to undo a group claim with this actor.');
+      }
+
+      // Detach group from account
+      await ctx.call('auth.account.update', {
+        id: account['@id'],
+        owns: arrayOf(account.owns).filter(uri => uri !== groupWebId)
       });
     }
   }

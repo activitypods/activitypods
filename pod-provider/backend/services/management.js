@@ -37,11 +37,11 @@ const ManagementService = {
     this.broker.call('api.addRoute', {
       route: {
         name: 'management',
-        path: path.join(basePath, '/.account/'),
+        path: path.join(basePath, '/.account'),
         authentication: true,
         aliases: {
-          'POST /:actorUri/export': 'management.exportAccount',
-          'DELETE /:actorUri': 'management.deleteAccount'
+          'POST /:username/export': 'management.exportAccount',
+          'DELETE /:username': 'management.deleteAccount'
         }
       }
     });
@@ -51,85 +51,88 @@ const ManagementService = {
   actions: {
     deleteAccount: {
       params: {
-        actorUri: { type: 'string' }
+        username: { type: 'string' }
       },
       async handler(ctx) {
-        const { actorUri } = ctx.params;
-        const { webId } = ctx.meta;
+        const { username } = ctx.params;
+        const webId = ctx.meta.webId;
 
         // Validate that the actor exists.
-        const account = await ctx.call('auth.account.findByWebId', { webId: actorUri });
-        if (!account) {
-          throw404('Actor not found.');
-        }
+        const account = await ctx.call('auth.account.findByUsername', { username });
+        if (!account) throw404('Actor not found');
 
-        if (account.group) {
-          if (!webId || (webId !== 'system' && webId !== actorUri)) {
+        // Validate that the authenticated user has the right to delete
+        if (webId !== 'system') {
+          if (!webId) {
             throw403('You are not allowed to delete this actor.');
           }
-        } else {
-          if (!webId || (webId !== 'system' && webId !== actorUri)) {
+          if (account.group && !arrayOf(account.owner).includes(webId)) {
+            throw403('You are not allowed to delete this group.');
+          }
+          if (!account.group && webId !== account.webId) {
             throw403('You are not allowed to delete this actor.');
           }
         }
-
-        const dataset = account.username;
 
         // Delete account information settings data.
-        await ctx.call('auth.account.setTombstone', { webId: actorUri });
+        await ctx.call('auth.account.setTombstone', { webId: account.webId });
 
         // Delete uploads.
-        const uploadsPath = path.join('./uploads/', dataset);
+        const uploadsPath = path.join('./uploads/', username);
         await fs.promises.rm(uploadsPath, { recursive: true, force: true });
 
         // Delete backups.
         if (this.broker.registry.hasService('backup')) {
-          await ctx.call('backup.deleteDataset', { iKnowWhatImDoing, dataset });
+          await ctx.call('backup.deleteDataset', { dataset: username });
         }
 
         // Send `Delete` activity to the outside world (so they delete cached data and contact info, etc.).
-        const {
-          outbox,
-          followers,
-          'apods:contacts': contacts
-        } = await ctx.call('ldp.resource.get', {
-          resourceUri: actorUri,
-          webId: 'system',
-          accept: MIME_TYPES.JSON
-        });
+        const actor = await ctx.call('ldp.resource.get', { resourceUri: account.webId, accept: MIME_TYPES.JSON });
+        let recipients;
 
-        const contactsCollection = await ctx.call('activitypub.collection.get', {
-          resourceUri: contacts,
-          webId: 'system'
-        });
+        // Get recipients
+        // TODO In the future, it would be good to send the activity to as many servers as possible
+        // This is in order to delete cached versions of the account.
+        if (account.group) {
+          // TODO get the whole list of members and add them as recipients
+          recipients = [actor.followers, ...arrayOf(account.owner), PUBLIC_URI];
+        } else {
+          const contactsCollection = await ctx.call('activitypub.collection.get', {
+            resourceUri: actor['apods:contacts'],
+            webId: 'system'
+          });
+          recipients = [actor.followers, ...arrayOf(contactsCollection.items), PUBLIC_URI];
+        }
 
         await ctx.call(
           'activitypub.outbox.post',
           {
             '@context': 'https://www.w3.org/ns/activitystreams',
-            collectionUri: outbox,
+            collectionUri: actor.outbox,
             type: ACTIVITY_TYPES.DELETE,
-            object: actorUri,
-            actor: actorUri,
-            // TODO: In the future, it would be good to send the activity to as many servers as possible (not just followers).
-            //  This is in order to delete cached versions of the account.
-            to: [followers, ...arrayOf(contactsCollection.items), PUBLIC_URI]
+            object: actor.id,
+            actor: actor.id,
+            to: recipients
           },
-          // If we don't set this, we will trigger delete of the actor's webId document locally.
-          { meta: { doNotProcessObject: true } }
+          {
+            meta: {
+              webId: actor.id,
+              doNotProcessObject: true // If we don't set this, we will trigger delete of the actor's webId document locally.
+            }
+          }
         );
 
         // Wait for the actual deletion of the dataset until remote actors had time to process `Delete` action.
         // (Because they will need the webId's publicKey to validate the activity's signature.)
         if (this.createJob) {
-          this.createJob('deleteDataset', dataset, { dataset }, { delay: 24 * 60 * 60 * 1000 });
+          this.createJob('deleteDataset', username, { dataset: username }, { delay: 24 * 60 * 60 * 1000 });
           // Delete account after one year. Meanwhile, new users won't be able to register an account under this name.
-          this.createJob('deleteAccountInfo', dataset, { webId: actorUri }, { delay: 365 * 24 * 60 * 60 * 1000 });
+          this.createJob('deleteAccountInfo', username, { webId: actor.id }, { delay: 365 * 24 * 60 * 60 * 1000 });
         } else {
           // Moleculer scheduler not available. The timing here is a tradeoff
           //  between waiting a bit for the delete activity to have gone through
           //  and not relying on the server to be up for forever.
-          setTimeout(() => this.deleteDataset(dataset), 1000 * 60 * 5);
+          setTimeout(() => this.deleteDataset(username), 1000 * 60 * 5);
         }
       }
     },
@@ -142,40 +145,46 @@ const ManagementService = {
      */
     exportAccount: {
       params: {
-        actorUri: { type: 'string' },
+        username: { type: 'string' },
         withBackups: { type: 'boolean', default: false, convert: true },
         withSettings: { type: 'boolean', default: false, convert: true }
       },
       async handler(ctx) {
-        const { actorUri, withBackups, withSettings } = ctx.params;
+        const { username, withBackups, withSettings } = ctx.params;
+        const webId = ctx.meta.webId;
 
-        const webId = ctx.meta.webId || ctx.params.webId;
+        // Validate that the actor exists
+        const account = await ctx.call('auth.account.findByUsername', { username });
+        if (!account) throw404('Actor not found');
 
-        if (webId !== 'system' && webId !== actorUri) {
-          throw403('You are not allowed to export this actor.');
+        // Validate that the authenticated user has the right to export
+        if (webId !== 'system') {
+          if (!webId) {
+            throw403('You are not allowed to delete this actor.');
+          }
+          if (account.group && !arrayOf(account.owner).includes(webId)) {
+            throw403('You are not allowed to delete this group.');
+          }
+          if (!account.group && webId !== account.webId) {
+            throw403('You are not allowed to delete this actor.');
+          }
         }
 
-        // Validate that the actor exists.
-        const actor = await ctx.call('auth.account.findByWebId', { webId: actorUri });
-        if (!actor?.webId) {
-          throw404('Actor not found.');
-        }
-        const dataset = actor.username;
-        const podUrl = await ctx.call('solid-storage.getUrl', { webId: actorUri });
+        const storageUrl = await ctx.call('solid-storage.getUrl', { webId: account.webId });
 
         // If there has been an export less than 5 minutes ago, we won't create a new one.
         // The last one might have stopped during download.
-        const recentExport = await this.findRecentExport(dataset, this.settings.retainTmpExportsMs);
+        const recentExport = await this.findRecentExport(username, this.settings.retainTmpExportsMs);
         if (recentExport) {
           // Return file stream.
           ctx.meta.$responseType = 'application/zip';
           return fs.promises.readFile(recentExport);
         }
 
-        const serializedQuads = await this.createRdfDump(dataset, webId, withSettings);
+        const serializedQuads = await this.createRdfDump(username, account.webId, withSettings);
 
         const currentDateStr = new Date().toISOString().replace(/:/g, '-');
-        const fileName = path.join(this.settings.exportDir, `${dataset}_${currentDateStr}.zip`);
+        const fileName = path.join(this.settings.exportDir, `${username}_${currentDateStr}.zip`);
 
         // Create zip archiver.
         const archive = archiver('zip', {});
@@ -191,19 +200,19 @@ const ManagementService = {
         archive.append(serializedQuads, { name: 'rdf.nq' });
 
         // Add backup files, if desired and available.
-        if (withBackups && ctx.broker.registry.hasService('backup')) {
+        if (withBackups && this.broker.registry.hasService('backup')) {
           /** @type {string[]} */
-          const backupFilenames = await ctx.call('backup.listBackupsForDataset', { dataset });
+          const backupFilenames = await ctx.call('backup.listBackupsForDataset', { dataset: username });
           for (const backupFilename of backupFilenames) {
             archive.file(backupFilename, { name: `backups/${path.basename(backupFilename)}` });
           }
         }
 
         // Add non-rdf files.
-        const uploadsPath = path.join('./uploads/', dataset, 'data');
+        const uploadsPath = path.join('./uploads/', username, 'data');
         (await this.getFilesInDir(uploadsPath)).forEach(relativeFileName => {
           // Reconstruct the URI of the file
-          const fileUri = urlJoin(podUrl, relativeFileName);
+          const fileUri = urlJoin(storageUrl, relativeFileName);
           // Add file to archive under /non-rdf/<encoded-uri>
           archive.file(path.join(uploadsPath, relativeFileName), { name: `non-rdf/${encodeURIComponent(fileUri)}` });
         });
@@ -213,7 +222,7 @@ const ManagementService = {
 
         // Schedule cleanup of temporary export file
         if (this.createJob) {
-          this.createJob('cleanUpExports', dataset, { offsetMs: 1000 * 60 * 5 }, { delay: 1000 * 60 * 5 });
+          this.createJob('cleanUpExports', username, { offsetMs: 1000 * 60 * 5 }, { delay: 1000 * 60 * 5 });
         } else {
           setTimeout(() => this.deleteOutdatedExports(5 * 60 * 1000));
         }
@@ -224,7 +233,6 @@ const ManagementService = {
       }
     }
   },
-
   methods: {
     /**
      * Finds the most recent export for a given dataset, if it is within the `offsetMs` range. Otherwise returns `undefined`.
@@ -249,7 +257,6 @@ const ManagementService = {
 
       return recentExportFilename && path.join(this.settings.exportDir, recentExportFilename);
     },
-
     /**
      * Delete all exports in the export directory that are older than the given ms offset.
      * @param {number} offsetMs Offset in milliseconds
@@ -352,7 +359,6 @@ const ManagementService = {
       return serializedRdf;
     }
   },
-
   queues: {
     deleteDataset: {
       name: '*',
@@ -363,7 +369,6 @@ const ManagementService = {
         job.progress(100);
       }
     },
-
     deleteAccountInfo: {
       name: '*',
       async process(job) {
@@ -373,7 +378,6 @@ const ManagementService = {
         job.progress(100);
       }
     },
-
     cleanUpExports: {
       name: '*',
       async process(job) {

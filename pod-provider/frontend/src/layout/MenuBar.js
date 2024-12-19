@@ -24,8 +24,7 @@ const useStyles = makeStyles(theme => ({
 const MenuBar = () => {
   const classes = useStyles();
   const translate = useTranslate();
-  const { isGroup, isLoading, data } = useRealmContext();
-  if (isLoading) return null;
+  const { isGroup, data } = useRealmContext();
   return (
     <Box className={classes.menuBar}>
       <Container>
@@ -45,7 +44,7 @@ const MenuBar = () => {
               {translate('app.page.data')}
             </Link>
           )}
-          <Link to={isGroup ? `/group/${data.webfingerId}/settings` : '/settings'} className={classes.link}>
+          <Link to={isGroup ? `/group/${data?.webfingerId}/settings` : '/settings'} className={classes.link}>
             {translate('app.page.settings')}
           </Link>
         </Breadcrumbs>

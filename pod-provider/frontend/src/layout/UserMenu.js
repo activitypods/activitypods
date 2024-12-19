@@ -20,8 +20,6 @@ const UserMenu = ({ logout }) => {
   const open = Boolean(anchorEl);
   const handleClose = () => setAnchorEl(null);
 
-  console.log('realm', { isLoading, isGroup, data });
-
   if (isLoading) return null;
 
   return (

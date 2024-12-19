@@ -38,13 +38,13 @@ const AdvancedSettingsPage = () => {
             value={developerMode}
           />
           <SettingsItem
-            onClick={() => navigate('/settings/export-pod')}
+            onClick={() => navigate('/settings/export')}
             icon={<StorageIcon />}
             label="app.setting.export"
             actionIcon={<DownloadIcon />}
           />
           <SettingsItem
-            onClick={() => navigate('/settings/delete-pod')}
+            onClick={() => navigate('/settings/delete')}
             icon={<DeleteIcon color="error" />}
             label="app.setting.delete"
             actionIcon={<HighlightOffIcon color="error" />}

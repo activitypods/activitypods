@@ -31,11 +31,11 @@ export const availableLocales = locales.filter(e => CONFIG.AVAILABLE_LOCALES.inc
 const getResourcesMessages = lang =>
   Object.fromEntries(Object.entries(resources).map(([k, v]) => [k, v.translations ? v.translations[lang] : {}]));
 
-const getMessages = lang => {
-  if (Object.keys(availableLocales).includes(lang)) {
+const getMessages = locale => {
+  if (availableLocales.some(l => l.locale === locale)) {
     return {
-      ...messages[lang],
-      resources: getResourcesMessages(lang)
+      ...messages[locale],
+      resources: getResourcesMessages(locale)
     };
   } else {
     return {

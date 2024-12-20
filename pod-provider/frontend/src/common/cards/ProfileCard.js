@@ -56,12 +56,12 @@ const ProfileCard = () => {
     <Card className={classes.root}>
       <Box className={classes.title}>
         <Box display="flex" justifyContent="center" className={classes.avatarWrapper}>
-          <Avatar src={identity.profileData?.['vcard:photo']} className={classes.avatar} />
+          <Avatar src={identity.avatar} className={classes.avatar} />
         </Box>
       </Box>
       <Box className={classes.block}>
         <Typography variant="h2" align="center">
-          {identity.profileData?.['vcard:given-name']}
+          {identity.fullName}
         </Typography>
         <Typography align="center">{formatUsername(identity.id)}</Typography>
       </Box>

@@ -19,8 +19,8 @@ import SettingsPage from './pages/SettingsPage/SettingsPage';
 import AdvancedSettingsPage from './pages/SettingsPage/AdvancedSettingsPage';
 import SettingsPasswordPage from './pages/SettingsPage/SettingsPasswordPage';
 import SettingsEmailPage from './pages/SettingsPage/SettingsEmailPage';
-import SettingsExportPodPage from './pages/SettingsPage/SettingsExportPodPage';
-import SettingsDeletePodPage from './pages/SettingsPage/SettingsDeletePodPage';
+import SettingsExportPage from './pages/SettingsPage/SettingsExportPage';
+import SettingsDeletePage from './pages/SettingsPage/SettingsDeletePage';
 import ProfileCreatePage from './pages/ProfileCreatePage/ProfileCreatePage';
 import AuthorizePage from './pages/AuthorizePage/AuthorizePage';
 import UserPage from './pages/UserPage';
@@ -32,7 +32,11 @@ import NetworkPage from './pages/NetworkPage/NetworkPage';
 import NetworkActorPage from './pages/NetworkPage/NetworkActorPage';
 import NetworkRequestPage from './pages/NetworkPage/NetworkRequestPage';
 import SettingsLocalePage from './pages/SettingsPage/SettingsLocalePage';
-import SettingsProfilesPage from './pages/SettingsPage/SettingsProfilesPage';
+import SettingsProfilesPage from './pages/SettingsPage/ProfilesPage/SettingsProfilesPage';
+import CreateGroupPage from './pages/CreateGroupPage';
+import GroupSettingsPage from './pages/SettingsPage/GroupSettingsPage';
+import PublicProfilePage from './pages/SettingsPage/ProfilesPage/PublicProfilePage';
+import PrivateProfilePage from './pages/SettingsPage/ProfilesPage/PrivateProfilePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,6 +74,9 @@ const App = () => (
           <Route path="/initialize" element={<ProfileCreatePage />} />
           <Route path="/authorize" element={<AuthorizePage />} />
           <Route path="/invite/:capability" element={<InvitePage />} />
+          <Route path="/groups">
+            <Route path="create" element={<CreateGroupPage />} />
+          </Route>
         </CustomRoutes>
         <CustomRoutes>
           <Route path="/network">
@@ -84,13 +91,25 @@ const App = () => (
           </Route>
           <Route path="/settings">
             <Route index element={<SettingsPage />} />
-            <Route path="profiles" element={<SettingsProfilesPage />} />
+            <Route path="profiles">
+              <Route index element={<SettingsProfilesPage />} />
+              <Route path="public" element={<PublicProfilePage />} />
+              <Route path="private" element={<PrivateProfilePage />} />
+            </Route>
             <Route path="email" element={<SettingsEmailPage />} />
             <Route path="password" element={<SettingsPasswordPage />} />
             <Route path="locale" element={<SettingsLocalePage />} />
             <Route path="advanced" element={<AdvancedSettingsPage />} />
-            <Route path="export-pod" element={<SettingsExportPodPage />} />
-            <Route path="delete-pod" element={<SettingsDeletePodPage />} />
+            <Route path="export" element={<SettingsExportPage />} />
+            <Route path="delete" element={<SettingsDeletePage />} />
+          </Route>
+          <Route path="/group/:groupId">
+            <Route path="settings">
+              <Route index element={<GroupSettingsPage />} />
+              <Route path="profile" element={<PublicProfilePage />} />
+              <Route path="export" element={<SettingsExportPage />} />
+              <Route path="delete" element={<SettingsDeletePage />} />
+            </Route>
           </Route>
         </CustomRoutes>
       </Admin>

@@ -7,6 +7,7 @@ interface GlobalConfig {
   INSTANCE_AREA: string;
   AVAILABLE_LOCALES: string[];
   DEFAULT_LOCALE: string;
+  ENABLE_GROUPS: boolean;
   BACKEND_URL: string;
   MAPBOX_ACCESS_TOKEN: string;
   COLOR_PRIMARY: string;

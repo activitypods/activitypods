@@ -35,7 +35,7 @@ To subscribe to the http://localhost:3000/foo resource using webhooks, you use a
 ```json
 {
   "@context": ["https://www.w3.org/ns/solid/notifications-context/v1"],
-  "type": "http://www.w3.org/ns/solid/notifications#WebhookChannel2023",
+  "type": "WebhookChannel2023",
   "topic": "http://localhost:3000/foo",
   "sendTo": "https://example.com/webhook"
 }
@@ -50,7 +50,7 @@ To subscribe to the http://localhost:3000/foo resource using WebSockets, you use
 ```json
 {
   "@context": ["https://www.w3.org/ns/solid/notifications-context/v1"],
-  "type": "http://www.w3.org/ns/solid/notifications#WebhookChannel2023",
+  "type": "WebhookChannel2023",
   "topic": "http://localhost:3000/foo"
 }
 ```

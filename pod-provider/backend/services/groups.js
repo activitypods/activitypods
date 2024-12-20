@@ -79,9 +79,6 @@ const GroupsService = {
       await ctx.call('webacl.resource.addRights', {
         resourceUri: groupWebId,
         additionalRights: {
-          anon: {
-            read: true
-          },
           user: {
             uri: ownerWebId,
             read: true,

@@ -105,21 +105,23 @@ export const PublicProfilePage = () => {
           />
           <TextInput source="name" fullWidth />
           <TextInput source="summary" fullWidth />
-          <ImageInput
-            source="icon"
-            accept="image/*"
-            format={v => {
-              if (v?.url) {
-                return { src: v.url };
-              } else if (v?.fileToDelete) {
-                return {};
-              } else {
-                return v;
-              }
-            }}
-          >
-            <ImageField source="src" />
-          </ImageInput>
+          {!isGroup && (
+            <ImageInput
+              source="icon"
+              accept="image/*"
+              format={v => {
+                if (v?.url) {
+                  return { src: v.url };
+                } else if (v?.fileToDelete) {
+                  return {};
+                } else {
+                  return v;
+                }
+              }}
+            >
+              <ImageField source="src" />
+            </ImageInput>
+          )}
         </SimpleForm>
       </Edit>
     </BlockAnonymous>

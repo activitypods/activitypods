@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useGetList, useNotify, useTranslate } from 'react-admin';
+import { useGetList, useNotify, useTranslate, Button } from 'react-admin';
 import {
   List,
   ListItemButton,
@@ -7,8 +7,7 @@ import {
   ListItemAvatar,
   Avatar,
   Divider,
-  Button,
-  Grid,
+  Box,
   CircularProgress,
   ListItem
 } from '@mui/material';
@@ -77,66 +76,55 @@ const ChoosePodProviderPage = ({
   ) : (
     <SimpleBox title={translate('app.page.choose_provider')} text={text} infoText={detailsText}>
       {/* Pod Providers List */}
-      <Grid item>
-        <List>
-          {podProviders.map(podProvider => {
-            return (
-              <React.Fragment key={podProvider['apods:baseUrl']}>
-                <Divider />
-                <ListItemButton
-                  onClick={() => {
-                    providerSelected(podProvider['apods:baseUrl'] as string);
-                  }}
-                >
-                  <ListItemAvatar>
-                    <Avatar>
-                      <StorageIcon />
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText primary={podProvider['apods:baseUrl']} secondary={podProvider['apods:area']} />
-                </ListItemButton>
-              </React.Fragment>
-            );
-          })}
-          {isLoading && (
-            <ListItem sx={{ justifyContent: 'center' }}>
-              <CircularProgress />
-            </ListItem>
-          )}
-          {/* Allow to add another Pod provider only if we are on a remote server */}
-          {!isLocalURL(CONFIG.BACKEND_URL) && (
-            <>
+      <List>
+        {podProviders.map(podProvider => {
+          return (
+            <React.Fragment key={podProvider['apods:baseUrl']}>
               <Divider />
               <ListItemButton
                 onClick={() => {
-                  setInCustomProviderSelect(true);
+                  providerSelected(podProvider['apods:baseUrl'] as string);
                 }}
               >
                 <ListItemAvatar>
                   <Avatar>
-                    <AddIcon />
+                    <StorageIcon />
                   </Avatar>
                 </ListItemAvatar>
-                <ListItemText primary={translate('app.page.choose_custom_provider')} />
+                <ListItemText primary={podProvider['apods:baseUrl']} secondary={podProvider['apods:area']} />
               </ListItemButton>
-            </>
-          )}
-        </List>
-      </Grid>
-
-      {/* Go Back Button */}
-      <Grid item alignSelf="center">
-        <Button
-          variant="contained"
-          color="secondary"
-          fullWidth
-          onClick={() => {
-            onCancel();
-          }}
-        >
+            </React.Fragment>
+          );
+        })}
+        {isLoading && (
+          <ListItem sx={{ justifyContent: 'center' }}>
+            <CircularProgress />
+          </ListItem>
+        )}
+        {/* Allow to add another Pod provider only if we are on a remote server */}
+        {!isLocalURL(CONFIG.BACKEND_URL) && (
+          <>
+            <Divider />
+            <ListItemButton
+              onClick={() => {
+                setInCustomProviderSelect(true);
+              }}
+            >
+              <ListItemAvatar>
+                <Avatar>
+                  <AddIcon />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText primary={translate('app.page.choose_custom_provider')} />
+            </ListItemButton>
+          </>
+        )}
+      </List>
+      <Box display="flex" justifyContent="end" sx={{ pt: 2 }}>
+        <Button variant="contained" color="grey" onClick={() => onCancel()}>
           {translate('ra.action.back')}
         </Button>
-      </Grid>
+      </Box>
     </SimpleBox>
   );
 };

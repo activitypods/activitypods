@@ -45,7 +45,7 @@ const SimpleBox = ({
   return (
     <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="100vh">
       <Card className={classes.card} sx={{ padding: 2, display: 'flex', flexDirection: 'column', rowGap: 1 }}>
-        <Box pb={2} display="flex" justifyContent="start">
+        <Box pb={text ? 2 : 0} display="flex" justifyContent="start">
           {icon && React.cloneElement(icon, { fontSize: 'large', className: classes.icon })}
           <Typography variant="h4" className={classes.title}>
             {title}

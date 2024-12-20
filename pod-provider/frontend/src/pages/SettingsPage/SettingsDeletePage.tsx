@@ -25,8 +25,7 @@ const SettingsDeletePage = () => {
     });
 
     if (isGroup) {
-      notify('The account has been correctly deleted', { type: 'success' });
-      navigate('/network');
+      window.location.href = '/network';
     } else {
       logout();
     }

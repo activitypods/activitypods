@@ -23,7 +23,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const AppBar = ({ title, logout }) => {
+const AppBar = ({ title }) => {
   const classes = useStyles();
   return (
     <Box className={classes.topBar}>
@@ -36,7 +36,7 @@ const AppBar = ({ title, logout }) => {
           </Grid>
           <Grid item xs={6}>
             <Box display="flex" alignItems="start" justifyContent="right" pt={{ xs: 1, sm: 2 }}>
-              <UserMenu logout={logout} />
+              <UserMenu />
             </Box>
           </Grid>
         </Grid>

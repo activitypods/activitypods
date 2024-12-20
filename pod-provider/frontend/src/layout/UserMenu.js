@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button, useGetIdentity, useTranslate } from 'react-admin';
-import { Menu, MenuItem, Avatar, ListItemIcon, useMediaQuery, Divider } from '@mui/material';
+import { Button, useGetIdentity, useLogout, useTranslate } from 'react-admin';
+import { Menu, MenuItem, Avatar, ListItemIcon, useMediaQuery } from '@mui/material';
 import ExitIcon from '@mui/icons-material/PowerSettingsNew';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import GroupIcon from '@mui/icons-material/PeopleAlt';
@@ -9,9 +9,10 @@ import { Link } from 'react-router-dom';
 import useOwnedGroups from '../hooks/useOwnedGroups';
 import useRealmContext from '../hooks/useRealmContext';
 
-const UserMenu = ({ logout }) => {
+const UserMenu = () => {
   const translate = useTranslate();
   const { data: identity } = useGetIdentity();
+  const logout = useLogout();
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
   const { isLoading, isGroup, data } = useRealmContext();
   const groups = useOwnedGroups();
@@ -78,7 +79,6 @@ const UserMenu = ({ logout }) => {
             </MenuItem>
           </Link>
         ))}
-        <Divider variant="middle" />
         <Link to="/groups/create" style={{ textDecoration: 'none' }}>
           <MenuItem onClick={handleClose}>
             <ListItemIcon>
@@ -87,7 +87,7 @@ const UserMenu = ({ logout }) => {
             {translate('app.action.create_group')}
           </MenuItem>
         </Link>
-        <MenuItem onClick={logout}>
+        <MenuItem onClick={() => logout()}>
           <ListItemIcon>
             <ExitIcon />
           </ListItemIcon>

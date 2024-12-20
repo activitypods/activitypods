@@ -43,7 +43,14 @@ const SimpleBox = ({
 }) => {
   const classes = useStyles();
   return (
-    <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="100vh">
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      minHeight="100vh"
+      sx={{ pb: { xs: 0, sm: 10 } }}
+    >
       <Card className={classes.card} sx={{ padding: 2, display: 'flex', flexDirection: 'column', rowGap: 1 }}>
         <Box pb={text ? 2 : 0} display="flex" justifyContent="start">
           {icon && React.cloneElement(icon, { fontSize: 'large', className: classes.icon })}

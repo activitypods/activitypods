@@ -52,7 +52,7 @@ export const PublicProfilePage = () => {
   const dataProvider = useDataProvider();
 
   const transform = useCallback(
-    async ({ icon, ...rest }) => {
+    async ({ name, icon, ...rest }) => {
       if (icon?.rawFile) {
         const iconUrl = await dataProvider.uploadFile(icon.rawFile);
         icon = {
@@ -66,6 +66,8 @@ export const PublicProfilePage = () => {
       }
       return {
         ...rest,
+        name,
+        'foaf:name': name,
         // Disabled inputs are not passed so we need to pass it manually
         preferredUsername: data?.webIdData?.preferredUsername,
         icon
@@ -104,7 +106,7 @@ export const PublicProfilePage = () => {
             helperText="app.helper.username_cannot_be_modified"
           />
           <TextInput source="name" fullWidth />
-          <TextInput source="summary" fullWidth />
+          {!isGroup && <TextInput source="summary" fullWidth />}
           {!isGroup && (
             <ImageInput
               source="icon"

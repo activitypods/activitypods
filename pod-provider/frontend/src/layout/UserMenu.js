@@ -79,14 +79,16 @@ const UserMenu = () => {
             </MenuItem>
           </Link>
         ))}
-        <Link to="/groups/create" style={{ textDecoration: 'none' }}>
-          <MenuItem onClick={handleClose}>
-            <ListItemIcon>
-              <GroupAddIcon />
-            </ListItemIcon>
-            {translate('app.action.create_group')}
-          </MenuItem>
-        </Link>
+        {CONFIG.ENABLE_GROUPS && (
+          <Link to="/groups/create" style={{ textDecoration: 'none' }}>
+            <MenuItem onClick={handleClose}>
+              <ListItemIcon>
+                <GroupAddIcon />
+              </ListItemIcon>
+              {translate('app.action.create_group')}
+            </MenuItem>
+          </Link>
+        )}
         <MenuItem onClick={() => logout()}>
           <ListItemIcon>
             <ExitIcon />

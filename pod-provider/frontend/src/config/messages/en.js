@@ -83,16 +83,16 @@ module.exports = {
     },
     description: {
       delete_pod:
-        'By continuing, you will delete your pod. This is irreversible! Please consider exporting all your data first (see settings). If you want to continue, type "%{confirm_text}".',
+        'By continuing, you will delete your account and all your data. This action is irreversible! Please consider exporting your data first (see advanced settings). If you want to continue, type "%{confirm_text}".',
       delete_pod_confirm_text: 'delete account',
       export_pod: 'You can export and download all your data as a backup. The action might take a short while.'
     },
     setting: {
       profiles: 'My profiles',
       profile: '%{smart_count} profile |||| %{smart_count} profiles',
-      private_profile: 'My private profile',
+      private_profile: 'Private profile',
       private_profile_desc: 'Visible only by my contact',
-      public_profile: 'My public profile',
+      public_profile: 'Public profile',
       public_profile_desc: 'Visible by everyone, without restriction',
       email: 'Email address',
       password: 'Password',
@@ -174,7 +174,8 @@ module.exports = {
         'The pod provider is the place where your data space is located. Like with an email provider, it will store your data.',
       username_cannot_be_modified: 'The user ID cannot be modified',
       public_profile_view: 'You are viewing your public profile, visible by everyone',
-      private_profile_view: 'You are viewing your private profile, visible only by your contacts'
+      private_profile_view: 'You are viewing your private profile, visible only by your contacts',
+      create_group: 'Please select on the list below the provider that you wish to use to create your group'
     },
     message: {
       copied_to_clipboard: 'Copied !',
@@ -235,6 +236,14 @@ module.exports = {
       unknown: 'Unknown',
       location: "At %{name}'s",
       member_since: 'Member since'
+    },
+    group: {
+      id: 'Unique ID',
+      type: 'Type',
+      type_organization: 'Organization',
+      type_group: 'Group',
+      name: 'Name',
+      image: 'Logo'
     },
     validation: {
       email: 'Must be a valid email',

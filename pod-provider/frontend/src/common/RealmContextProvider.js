@@ -3,6 +3,7 @@ import { useDataProvider, useGetIdentity } from 'react-admin';
 import { useLocation } from 'react-router-dom';
 import { useWebfinger } from '@semapps/activitypub-components';
 import RealmContext from '../contexts/RealmContext';
+import { meta } from 'eslint-plugin-prettier';
 
 const RealmContextProvider = ({ children }) => {
   const [groupData, setGroupData] = useState();

@@ -21,7 +21,7 @@ A Linux server with 4Gb of RAM is required for Fuseki to work properly, otherwis
 
 ### Point your domains to your server IP
 
-You will need two domains, one for the backend, the other for the frontend. You can use sub-domains two. Go to your domain provider and point these sub-domains to your server IP (with a A-type registration).
+You will need two domains, one for the backend, the other for the frontend. We suggest to use a `app.` subdomain for the frontend. Go to your domain provider and point these two domains to your server IP (with a A-type registration).
 
 ### Clone the deployment repository
 

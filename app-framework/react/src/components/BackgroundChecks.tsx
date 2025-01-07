@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useLayoutEffect, FunctionComponent, ReactNode } from 'react';
 import urlJoin from 'url-join';
-import { useGetIdentity, useNotify } from 'react-admin';
+import { useGetIdentity, useNotify, useDataProvider } from 'react-admin';
 import { useNodeinfo } from '@semapps/activitypub-components';
 import { arrayOf } from '../utils';
 import type { AppStatus } from '../types';
@@ -14,6 +14,7 @@ import type { AppStatus } from '../types';
  */
 const BackgroundChecks: FunctionComponent<Props> = ({ clientId, listeningTo = [], children }) => {
   const { data: identity, isLoading: isIdentityLoading } = useGetIdentity();
+  const dataProvider = useDataProvider();
   const notify = useNotify();
   const [appStatusChecked, setAppStatusChecked] = useState<boolean>(false);
   const nodeinfo = useNodeinfo(identity?.id ? new URL(identity?.id as string).host : undefined);
@@ -48,10 +49,12 @@ const BackgroundChecks: FunctionComponent<Props> = ({ clientId, listeningTo = []
             }
 
             if (appStatus.upgradeNeeded) {
-              const consentUrl = new URL(nodeinfo?.metadata?.consent_url as 'string');
-              consentUrl.searchParams.append('client_id', clientId);
-              consentUrl.searchParams.append('redirect', window.location.href);
-              window.location.href = consentUrl.toString();
+              const { json: actor } = await dataProvider.fetch(identity.id);
+              const { json: authAgent } = await dataProvider.fetch(actor['interop:hasAuthorizationAgent']);
+              // No application registration found, redirect to the authorization agent
+              const redirectUrl = new URL(authAgent['interop:hasAuthorizationRedirectEndpoint']);
+              redirectUrl.searchParams.append('client_id', clientId);
+              window.location.href = redirectUrl.toString();
               return;
             }
 
@@ -68,10 +71,11 @@ const BackgroundChecks: FunctionComponent<Props> = ({ clientId, listeningTo = []
           }
         }
       } catch (e) {
+        console.error(e);
         notify('apods.error.app_status_unavailable', { type: 'error' });
       }
     }
-  }, [identity, nodeinfo, setAppStatusChecked, document]);
+  }, [identity, nodeinfo, setAppStatusChecked, document, dataProvider]);
 
   useEffect(() => {
     if (identity?.id && nodeinfo) {

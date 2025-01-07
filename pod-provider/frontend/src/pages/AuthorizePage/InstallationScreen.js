@@ -35,8 +35,6 @@ const InstallationScreen = ({ application, accessApp, isTrustedApp }) => {
     try {
       setIsInstalling(true);
 
-      console.log(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'install'));
-
       await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'install'), {
         method: 'POST',
         headers: new Headers({

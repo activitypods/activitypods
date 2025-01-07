@@ -65,6 +65,7 @@ const $f21bc75053423cc3$export$e57ff0f701c44363 = (value)=>{
  * Check this every 2 minutes or whenever the window becomes visible again
  */ const $88874b19fd1a9965$var$BackgroundChecks = ({ clientId: clientId, listeningTo: listeningTo = [], children: children })=>{
     const { data: identity, isLoading: isIdentityLoading } = (0, $fvx3m$reactadmin.useGetIdentity)();
+    const dataProvider = (0, $fvx3m$reactadmin.useDataProvider)();
     const notify = (0, $fvx3m$reactadmin.useNotify)();
     const [appStatusChecked, setAppStatusChecked] = (0, $fvx3m$react.useState)(false);
     const nodeinfo = (0, $fvx3m$semappsactivitypubcomponents.useNodeinfo)(identity?.id ? new URL(identity?.id).host : undefined);
@@ -100,10 +101,12 @@ const $f21bc75053423cc3$export$e57ff0f701c44363 = (value)=>{
                             return;
                         }
                         if (appStatus.upgradeNeeded) {
-                            const consentUrl = new URL(nodeinfo?.metadata?.consent_url);
-                            consentUrl.searchParams.append("client_id", clientId);
-                            consentUrl.searchParams.append("redirect", window.location.href);
-                            window.location.href = consentUrl.toString();
+                            const { json: actor } = await dataProvider.fetch(identity.id);
+                            const { json: authAgent } = await dataProvider.fetch(actor["interop:hasAuthorizationAgent"]);
+                            // No application registration found, redirect to the authorization agent
+                            const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
+                            redirectUrl.searchParams.append("client_id", clientId);
+                            window.location.href = redirectUrl.toString();
                             return;
                         }
                         if (listeningTo.length > 0) {
@@ -121,6 +124,7 @@ const $f21bc75053423cc3$export$e57ff0f701c44363 = (value)=>{
                     }
                 }
             } catch (e) {
+                console.error(e);
                 notify("apods.error.app_status_unavailable", {
                     type: "error"
                 });
@@ -130,7 +134,8 @@ const $f21bc75053423cc3$export$e57ff0f701c44363 = (value)=>{
         identity,
         nodeinfo,
         setAppStatusChecked,
-        document
+        document,
+        dataProvider
     ]);
     (0, $fvx3m$react.useEffect)(()=>{
         if (identity?.id && nodeinfo) {

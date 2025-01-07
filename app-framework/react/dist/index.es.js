@@ -1,6 +1,6 @@
 import {useState as $iLwJW$useState, useCallback as $iLwJW$useCallback, useEffect as $iLwJW$useEffect, useLayoutEffect as $iLwJW$useLayoutEffect, Fragment as $iLwJW$Fragment, useMemo as $iLwJW$useMemo} from "react";
 import $iLwJW$urljoin from "url-join";
-import {useGetIdentity as $iLwJW$useGetIdentity, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useLogout as $iLwJW$useLogout, useTranslate as $iLwJW$useTranslate, useRedirect as $iLwJW$useRedirect, useDataProvider as $iLwJW$useDataProvider, useRecordContext as $iLwJW$useRecordContext, Button as $iLwJW$Button, useGetList as $iLwJW$useGetList, UserMenu as $iLwJW$UserMenu, Logout as $iLwJW$Logout, MenuItemLink as $iLwJW$MenuItemLink} from "react-admin";
+import {useGetIdentity as $iLwJW$useGetIdentity, useDataProvider as $iLwJW$useDataProvider, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useLogout as $iLwJW$useLogout, useTranslate as $iLwJW$useTranslate, useRedirect as $iLwJW$useRedirect, useRecordContext as $iLwJW$useRecordContext, Button as $iLwJW$Button, useGetList as $iLwJW$useGetList, UserMenu as $iLwJW$UserMenu, Logout as $iLwJW$Logout, MenuItemLink as $iLwJW$MenuItemLink} from "react-admin";
 import {useNodeinfo as $iLwJW$useNodeinfo, useCollection as $iLwJW$useCollection, useOutbox as $iLwJW$useOutbox, ACTIVITY_TYPES as $iLwJW$ACTIVITY_TYPES} from "@semapps/activitypub-components";
 import {jsx as $iLwJW$jsx, jsxs as $iLwJW$jsxs, Fragment as $iLwJW$Fragment1} from "react/jsx-runtime";
 import $iLwJW$jwtdecode from "jwt-decode";
@@ -47,6 +47,7 @@ const $93d7a9f3166de761$export$e57ff0f701c44363 = (value)=>{
  * Check this every 2 minutes or whenever the window becomes visible again
  */ const $2957839fe06af793$var$BackgroundChecks = ({ clientId: clientId, listeningTo: listeningTo = [], children: children })=>{
     const { data: identity, isLoading: isIdentityLoading } = (0, $iLwJW$useGetIdentity)();
+    const dataProvider = (0, $iLwJW$useDataProvider)();
     const notify = (0, $iLwJW$useNotify)();
     const [appStatusChecked, setAppStatusChecked] = (0, $iLwJW$useState)(false);
     const nodeinfo = (0, $iLwJW$useNodeinfo)(identity?.id ? new URL(identity?.id).host : undefined);
@@ -82,10 +83,12 @@ const $93d7a9f3166de761$export$e57ff0f701c44363 = (value)=>{
                             return;
                         }
                         if (appStatus.upgradeNeeded) {
-                            const consentUrl = new URL(nodeinfo?.metadata?.consent_url);
-                            consentUrl.searchParams.append("client_id", clientId);
-                            consentUrl.searchParams.append("redirect", window.location.href);
-                            window.location.href = consentUrl.toString();
+                            const { json: actor } = await dataProvider.fetch(identity.id);
+                            const { json: authAgent } = await dataProvider.fetch(actor["interop:hasAuthorizationAgent"]);
+                            // No application registration found, redirect to the authorization agent
+                            const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
+                            redirectUrl.searchParams.append("client_id", clientId);
+                            window.location.href = redirectUrl.toString();
                             return;
                         }
                         if (listeningTo.length > 0) {
@@ -103,6 +106,7 @@ const $93d7a9f3166de761$export$e57ff0f701c44363 = (value)=>{
                     }
                 }
             } catch (e) {
+                console.error(e);
                 notify("apods.error.app_status_unavailable", {
                     type: "error"
                 });
@@ -112,7 +116,8 @@ const $93d7a9f3166de761$export$e57ff0f701c44363 = (value)=>{
         identity,
         nodeinfo,
         setAppStatusChecked,
-        document
+        document,
+        dataProvider
     ]);
     (0, $iLwJW$useEffect)(()=>{
         if (identity?.id && nodeinfo) {

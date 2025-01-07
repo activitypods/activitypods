@@ -107,7 +107,10 @@ module.exports = {
     },
     async install(ctx) {
       const { appUri, acceptedAccessNeeds, acceptedSpecialRights } = ctx.params;
+
       const webId = ctx.meta.webId;
+      const account = await ctx.call('auth.account.findByWebId', { webId });
+      ctx.meta.dataset = account.username;
 
       const app = await ctx.call('activitypub.actor.get', { actorUri: appUri, webId });
       const appRegistration = await ctx.call('app-registrations.getForApp', { appUri, podOwner: webId });
@@ -146,7 +149,10 @@ module.exports = {
     },
     async upgrade(ctx) {
       const { appUri, acceptedAccessNeeds, acceptedSpecialRights } = ctx.params;
+
       const webId = ctx.meta.webId;
+      const account = await ctx.call('auth.account.findByWebId', { webId });
+      ctx.meta.dataset = account.username;
 
       const app = await ctx.call('activitypub.actor.get', { actorUri: appUri, webId });
 
@@ -176,7 +182,10 @@ module.exports = {
     },
     async uninstall(ctx) {
       const { appUri } = ctx.params;
+
       const webId = ctx.meta.webId;
+      const account = await ctx.call('auth.account.findByWebId', { webId });
+      ctx.meta.dataset = account.username;
 
       const app = await ctx.call('activitypub.actor.get', { actorUri: appUri, webId });
       const appRegistration = await ctx.call('app-registrations.getForApp', { appUri, podOwner: webId });

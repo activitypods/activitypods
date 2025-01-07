@@ -9,7 +9,12 @@ module.exports = {
     baseUrl: CONFIG.BASE_URL,
     acceptedTypes: Object.values(FULL_ACTOR_TYPES),
     podProvider: true,
-    podsContainer: true // Will register the container but not create LDP containers on a dataset
+    podsContainer: true, // Will register the container but not create LDP containers on a dataset
+    newResourcesPermissions: {
+      anon: {
+        read: true
+      }
+    }
   },
   hooks: {
     before: {

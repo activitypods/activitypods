@@ -39,7 +39,7 @@ const BottomBar = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname.startsWith('/network') || location.pathname.startsWith('/Group')) {
+    if (location.pathname.startsWith('/network') || location.pathname.startsWith('/Tag')) {
       setValue('network');
     } else if (location.pathname.startsWith('/apps')) {
       setValue('apps');

@@ -36,17 +36,18 @@ module.exports = {
       export_pod: 'Exporter mes données',
       set_default_app: 'Définir appli par défaut',
       view_private_profile: 'Voir votre profil privé',
-      view_public_profile: 'Voir votre profil public'
+      view_public_profile: 'Voir votre profil public',
+      create_group: 'Créer un groupe'
     },
-    group: {
-      members: 'Membres',
-      no_members: "Le groupe n'a pas encore de membres",
-      label: 'Nom du groupe',
+    tag: {
+      members: 'Contacts',
+      no_members: "L'étiquette n'a pas encore été attribuée",
+      label: 'Nom',
       remove_members: 'Retirer sélection',
       profile_name: 'Nom',
-      group: 'Groupe',
+      tag: 'Étiquette',
       profile: 'Profil',
-      create: 'Nouveau groupe',
+      create: 'Nouvelle étiquette',
       add_members: 'Ajouter des membres'
     },
     page: {
@@ -68,37 +69,37 @@ module.exports = {
       add_contact: 'Demander une mise en relation',
       create_profile: 'Créez votre profil',
       authorize: 'Autorisation requise',
-      groups: 'Mes groupes',
-      groups_short: 'Groupes',
+      groups: 'Étiquettes',
+      groups_short: 'Étiquettes',
       invite: '%{username} souhaite vous inviter dans son réseau',
       invite_loading: "Chargement de l'invitation...",
       invite_connect: '%{username} souhaite vous inviter dans son réseau',
       choose_provider: 'Choisissez un hébergeur',
       choose_custom_provider: 'Choisir un autre hébergeur',
       invite_success: 'Connection établie !',
-      delete_pod: 'Effacer mon compte',
-      export_pod: 'Exporter mes données'
+      delete_pod: 'Effacer le compte',
+      export_pod: 'Exporter les données'
     },
     description: {
-      delete_pod: `En continuant, vous effacerez votre espace de données personnel et toutes les données qui s'y trouvent. Cette action est irréversible! Nous vous conseillons d'exporter d'abord vos données (dans les paramètres avancés). Pour continuer, tapez "%{confirm_text}".`,
-      delete_pod_confirm_text: 'effacer mon compte',
+      delete_pod: `En continuant, vous effacerez votre espace de données et toutes les données qui s'y trouvent. Cette action est irréversible! Nous vous conseillons d'exporter d'abord vos données (dans les paramètres avancés). Pour continuer, tapez "%{confirm_text}".`,
+      delete_pod_confirm_text: 'effacer compte',
       export_pod:
-        'Vous pouvez télécharger toutes les données de votre espace de donnée personnel. Cette action peut prendre un certain temps.'
+        'Vous pouvez télécharger toutes les données de votre espace de donnée. Cette action peut prendre un certain temps.'
     },
     setting: {
       profiles: 'Mes profils',
       profile: '%{smart_count} profil |||| %{smart_count} profils',
-      private_profile: 'Mon profil privé',
+      private_profile: 'Profil privé',
       private_profile_desc: 'Visible seulement par mes contacts',
-      public_profile: 'Mon profil public',
+      public_profile: 'Profil public',
       public_profile_desc: 'Visible de tout le monde, sans restriction',
       email: 'Adresse mail',
       password: 'Mot de passe',
       addresses: 'Mes adresses',
       address: '%{smart_count} adresse |||| %{smart_count} adresses',
       locale: 'Langue',
-      export: 'Exporter toutes mes données',
-      delete: 'Effacer mon compte',
+      export: 'Exporter les données',
+      delete: 'Effacer le compte',
       developer_mode: 'Mode développeur'
     },
     authorization: {
@@ -177,7 +178,9 @@ module.exports = {
         "Si l'hébergeur que vous recherchez n'est pas listé, vous pouvez entrer son adresse ci-dessous (par exemple https://mon-fournisseur.com).",
       username_cannot_be_modified: 'Votre identifiant ne peut être modifié',
       public_profile_view: 'Vous visualisez votre profil public, visible de tout le monde.',
-      private_profile_view: 'Vous visualisez votre profil privé, visible seulement de vos contacts.'
+      private_profile_view: 'Vous visualisez votre profil privé, visible seulement de vos contacts.',
+      create_group:
+        'Veuillez sélectionner dans la liste ci-dessous le fournisseur que vous souhaitez utiliser pour créer votre groupe'
     },
     message: {
       copied_to_clipboard: 'Copié !',
@@ -238,6 +241,14 @@ module.exports = {
       unknown: 'Inconnu',
       location: 'Chez %{name}',
       member_since: 'Membre depuis'
+    },
+    group: {
+      id: 'Identifiant unique',
+      type: 'Type',
+      type_organization: 'Organisation',
+      type_group: 'Groupe',
+      name: 'Nom',
+      image: 'Logo'
     },
     validation: {
       email: 'Doit être un email valide',

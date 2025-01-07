@@ -1,16 +1,16 @@
 import React from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import Create from '../../layout/Create';
-import GroupForm from './GroupForm';
+import TagForm from './TagForm';
 
-export const GroupCreate = props => {
+export const TagCreate = props => {
   const { identity } = useCheckAuthenticated();
   if (!identity) return null;
   return (
     <Create {...props}>
-      <GroupForm />
+      <TagForm />
     </Create>
   );
 };
 
-export default GroupCreate;
+export default TagCreate;

@@ -124,13 +124,7 @@ const ContactCard = ({ actor, publicProfileOnly }) => {
           <IgnoreContactButton variant="contained" color="primary" fullWidth />
         )}
         {actor.isLoggedUser && (
-          <Link
-            to={createPath(
-              publicProfileOnly
-                ? { resource: 'Actor', id: actor.id, type: 'edit' }
-                : { resource: 'Profile', id: actor.url, type: 'edit' }
-            )}
-          >
+          <Link to={publicProfileOnly ? '/settings/profiles/public' : '/settings/profiles/private'}>
             <Button variant="contained" color="secondary" type="submit">
               {translate('app.action.edit_profile')}
             </Button>

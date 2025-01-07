@@ -1,12 +1,14 @@
 import {useState as $iLwJW$useState, useCallback as $iLwJW$useCallback, useEffect as $iLwJW$useEffect, useLayoutEffect as $iLwJW$useLayoutEffect, Fragment as $iLwJW$Fragment, useMemo as $iLwJW$useMemo} from "react";
 import $iLwJW$urljoin from "url-join";
-import {useGetIdentity as $iLwJW$useGetIdentity, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useLogout as $iLwJW$useLogout, useTranslate as $iLwJW$useTranslate, useRedirect as $iLwJW$useRedirect, useRecordContext as $iLwJW$useRecordContext, Button as $iLwJW$Button, useGetList as $iLwJW$useGetList, UserMenu as $iLwJW$UserMenu, Logout as $iLwJW$Logout, MenuItemLink as $iLwJW$MenuItemLink} from "react-admin";
+import {useGetIdentity as $iLwJW$useGetIdentity, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useLogout as $iLwJW$useLogout, useTranslate as $iLwJW$useTranslate, useRedirect as $iLwJW$useRedirect, useDataProvider as $iLwJW$useDataProvider, useRecordContext as $iLwJW$useRecordContext, Button as $iLwJW$Button, useGetList as $iLwJW$useGetList, UserMenu as $iLwJW$UserMenu, Logout as $iLwJW$Logout, MenuItemLink as $iLwJW$MenuItemLink} from "react-admin";
 import {useNodeinfo as $iLwJW$useNodeinfo, useCollection as $iLwJW$useCollection, useOutbox as $iLwJW$useOutbox, ACTIVITY_TYPES as $iLwJW$ACTIVITY_TYPES} from "@semapps/activitypub-components";
 import {jsx as $iLwJW$jsx, jsxs as $iLwJW$jsxs, Fragment as $iLwJW$Fragment1} from "react/jsx-runtime";
+import $iLwJW$jwtdecode from "jwt-decode";
 import {useSearchParams as $iLwJW$useSearchParams, useNavigate as $iLwJW$useNavigate} from "react-router-dom";
 import {Box as $iLwJW$Box, Card as $iLwJW$Card, Avatar as $iLwJW$Avatar, Typography as $iLwJW$Typography, List as $iLwJW$List, Divider as $iLwJW$Divider, ListItem as $iLwJW$ListItem, ListItemButton as $iLwJW$ListItemButton, ListItemAvatar as $iLwJW$ListItemAvatar, ListItemText as $iLwJW$ListItemText, useMediaQuery as $iLwJW$useMediaQuery, Dialog as $iLwJW$Dialog, DialogTitle as $iLwJW$DialogTitle, DialogContent as $iLwJW$DialogContent, DialogActions as $iLwJW$DialogActions, Button as $iLwJW$Button1, TextField as $iLwJW$TextField, CircularProgress as $iLwJW$CircularProgress, Switch as $iLwJW$Switch, MenuItem as $iLwJW$MenuItem, ListItemIcon as $iLwJW$ListItemIcon} from "@mui/material";
 import $iLwJW$muiiconsmaterialLock from "@mui/icons-material/Lock";
 import $iLwJW$muiiconsmaterialStorage from "@mui/icons-material/Storage";
+import $iLwJW$httplinkheader from "http-link-header";
 import {useDataModels as $iLwJW$useDataModels} from "@semapps/semantic-data-provider";
 import $iLwJW$muiiconsmaterialShare from "@mui/icons-material/Share";
 import $iLwJW$muistylesmakeStyles from "@mui/styles/makeStyles";
@@ -143,11 +145,48 @@ var $2957839fe06af793$export$2e2bcd8739ae039 = $2957839fe06af793$var$BackgroundC
 
 
 
+
+
+
+
+/**
+ * Return a function that look if an app (clientId) is registered with an user (webId)
+ * If not, it redirects to the endpoint provided by the user's authorization agent
+ * See https://solid.github.io/data-interoperability-panel/specification/#authorization-agent
+ */ const $27e56b6748904a8d$var$useRegisterApp = ()=>{
+    const dataProvider = (0, $iLwJW$useDataProvider)();
+    const registerApp = (0, $iLwJW$useCallback)(async (clientId, webId)=>{
+        const { json: actor } = await dataProvider.fetch(webId);
+        const authAgentUri = actor["interop:hasAuthorizationAgent"];
+        if (authAgentUri) {
+            // Find if an application registration is linked to this user
+            // See https://solid.github.io/data-interoperability-panel/specification/#agent-registration-discovery
+            const { headers: headers, json: authAgent } = await dataProvider.fetch(authAgentUri);
+            const linkHeader = (0, $iLwJW$httplinkheader).parse(headers.get("Link"));
+            const registeredAgentLinkHeader = linkHeader.rel("http://www.w3.org/ns/solid/interop#registeredAgent");
+            if (registeredAgentLinkHeader.length > 0) {
+                const appRegistrationUri = registeredAgentLinkHeader[0].anchor;
+                return appRegistrationUri;
+            } else {
+                // No application registration found, redirect to the authorization agent
+                const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
+                redirectUrl.searchParams.append("client_id", clientId);
+                window.location.href = redirectUrl.toString();
+            }
+        }
+    }, [
+        dataProvider
+    ]);
+    return registerApp;
+};
+var $27e56b6748904a8d$export$2e2bcd8739ae039 = $27e56b6748904a8d$var$useRegisterApp;
+
+
 /**
  * Display a list of Pod providers that we can log in
  * This list is taken from the https://activitypods.org/data/pod-providers endpoint
  * It is possible to replace it with a custom list of Pod providers
- */ const $e235591816215308$var$PodLoginPageView = ({ text: text, customPodProviders: customPodProviders })=>{
+ */ const $4a72285bffb5f50f$var$LoginPage = ({ text: text, clientId: clientId, customPodProviders: customPodProviders })=>{
     const notify = (0, $iLwJW$useNotify)();
     const [searchParams] = (0, $iLwJW$useSearchParams)();
     const [locale] = (0, $iLwJW$useLocaleState)();
@@ -157,8 +196,10 @@ var $2957839fe06af793$export$2e2bcd8739ae039 = $2957839fe06af793$var$BackgroundC
     const redirect = (0, $iLwJW$useRedirect)();
     const { data: identity, isLoading: isIdentityLoading } = (0, $iLwJW$useGetIdentity)();
     const [podProviders, setPodProviders] = (0, $iLwJW$useState)(customPodProviders || []);
+    const [isRegistered, setIsRegistered] = (0, $iLwJW$useState)(false);
     const isSignup = searchParams.has("signup");
-    const redirectUrl = searchParams.get("redirect");
+    const redirectUrl = searchParams.get("redirect") || "/";
+    const registerApp = (0, $27e56b6748904a8d$export$2e2bcd8739ae039)();
     (0, $iLwJW$useEffect)(()=>{
         (async ()=>{
             if (podProviders.length < 1) {
@@ -183,30 +224,42 @@ var $2957839fe06af793$export$2e2bcd8739ae039 = $2957839fe06af793$var$BackgroundC
         notify,
         locale
     ]);
-    // Immediately logout if required
     (0, $iLwJW$useEffect)(()=>{
-        if (searchParams.has("logout")) logout({
+        if (searchParams.has("iss")) // Automatically login if Pod provider is known
+        login({
+            issuer: searchParams.get("iss")
+        });
+        else if (searchParams.has("register_app")) {
+            // Identity is not available yet because we can't fetch the user profile
+            // So get the webId by decoding the token
+            const token = localStorage.getItem("token");
+            if (token) {
+                const payload = (0, $iLwJW$jwtdecode)(token);
+                registerApp(clientId, payload?.webid).then((appRegistrationUri)=>{
+                    if (appRegistrationUri) setIsRegistered(true);
+                });
+            }
+        } else if (searchParams.has("logout")) // Immediately logout if required
+        logout({
             redirectUrl: redirectUrl
         });
     }, [
         searchParams,
+        login,
+        registerApp,
+        clientId,
+        setIsRegistered,
         logout,
         redirectUrl
     ]);
     (0, $iLwJW$useEffect)(()=>{
-        if (!isIdentityLoading) {
-            if (identity?.id) redirect("/");
-            else if (searchParams.has("iss")) // Automatically login if Pod provider is known
-            login({
-                issuer: searchParams.get("iss")
-            });
-        }
+        if (!isIdentityLoading && identity?.id && isRegistered) redirect(redirectUrl);
     }, [
-        searchParams,
-        login,
         identity,
         isIdentityLoading,
-        redirect
+        isRegistered,
+        redirect,
+        redirectUrl
     ]);
     if (isIdentityLoading) return null;
     return /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Box), {
@@ -256,7 +309,7 @@ var $2957839fe06af793$export$2e2bcd8739ae039 = $2957839fe06af793$var$BackgroundC
                                         children: /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$ListItemButton), {
                                             onClick: ()=>login({
                                                     issuer: podProvider["apods:baseUrl"],
-                                                    redirect: redirectUrl || undefined,
+                                                    redirect: "/login?register_app=true",
                                                     isSignup: isSignup
                                                 }),
                                             children: [
@@ -280,7 +333,7 @@ var $2957839fe06af793$export$2e2bcd8739ae039 = $2957839fe06af793$var$BackgroundC
         })
     });
 };
-var $e235591816215308$export$2e2bcd8739ae039 = $e235591816215308$var$PodLoginPageView;
+var $4a72285bffb5f50f$export$2e2bcd8739ae039 = $4a72285bffb5f50f$var$LoginPage;
 
 
 
@@ -932,7 +985,7 @@ var $47fb439769024aa7$export$2e2bcd8739ae039 = $47fb439769024aa7$var$ShareButton
 
 
 // Set the app locale to the user's locale, if it is set
-const $034aa6c1ffa79e6e$var$SyncUserLocale = ()=>{
+const $e3472ca7f9a4764c$var$SyncUserLocale = ()=>{
     const [locale, setLocale] = (0, $iLwJW$useLocaleState)();
     const { data: identity } = (0, $iLwJW$useGetIdentity)();
     (0, $iLwJW$useEffect)(()=>{
@@ -943,7 +996,7 @@ const $034aa6c1ffa79e6e$var$SyncUserLocale = ()=>{
         identity
     ]);
 };
-var $034aa6c1ffa79e6e$export$2e2bcd8739ae039 = $034aa6c1ffa79e6e$var$SyncUserLocale;
+var $e3472ca7f9a4764c$export$2e2bcd8739ae039 = $e3472ca7f9a4764c$var$SyncUserLocale;
 
 
 
@@ -1091,5 +1144,5 @@ var $5de716308b366acb$export$2e2bcd8739ae039 = {
 
 
 
-export {$2957839fe06af793$export$2e2bcd8739ae039 as BackgroundChecks, $e235591816215308$export$2e2bcd8739ae039 as PodLoginPage, $1a88c39afebe872d$export$2e2bcd8739ae039 as RedirectPage, $47fb439769024aa7$export$2e2bcd8739ae039 as ShareButton, $79f089d541db8101$export$2e2bcd8739ae039 as ShareDialog, $034aa6c1ffa79e6e$export$2e2bcd8739ae039 as SyncUserLocale, $f86de5ead054b96d$export$2e2bcd8739ae039 as UserMenu, $4b2a6afceae7f301$export$2e2bcd8739ae039 as englishMessages, $5de716308b366acb$export$2e2bcd8739ae039 as frenchMessages};
+export {$2957839fe06af793$export$2e2bcd8739ae039 as BackgroundChecks, $4a72285bffb5f50f$export$2e2bcd8739ae039 as LoginPage, $1a88c39afebe872d$export$2e2bcd8739ae039 as RedirectPage, $47fb439769024aa7$export$2e2bcd8739ae039 as ShareButton, $79f089d541db8101$export$2e2bcd8739ae039 as ShareDialog, $e3472ca7f9a4764c$export$2e2bcd8739ae039 as SyncUserLocale, $f86de5ead054b96d$export$2e2bcd8739ae039 as UserMenu, $4b2a6afceae7f301$export$2e2bcd8739ae039 as englishMessages, $5de716308b366acb$export$2e2bcd8739ae039 as frenchMessages};
 //# sourceMappingURL=index.es.js.map

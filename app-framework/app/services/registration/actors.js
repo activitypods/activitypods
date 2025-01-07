@@ -1,3 +1,4 @@
+const urlJoin = require('url-join');
 const { triple, namedNode } = require('@rdfjs/data-model');
 const { ControlledContainerMixin, DereferenceMixin } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
@@ -51,6 +52,8 @@ module.exports = {
                 'interop:applicationDescription': description,
                 'interop:applicationAuthor': app.author,
                 'interop:applicationThumbnail': app.thumbnail,
+                'interop:hasAuthorizationCallbackEndpoint':
+                  app.authCallbackEndpoint || urlJoin(app.frontUrl, 'login') + '?register_app=true',
                 'oidc:client_name': app.name,
                 'oidc:redirect_uris': oidc.redirectUris,
                 'oidc:post_logout_redirect_uris': oidc.postLogoutRedirectUris,
@@ -105,6 +108,8 @@ module.exports = {
               'interop:applicationDescription': description,
               'interop:applicationAuthor': app.author,
               'interop:applicationThumbnail': app.thumbnail,
+              'interop:hasAuthorizationCallbackEndpoint':
+                app.authCallbackEndpoint || urlJoin(app.frontUrl, 'login') + '?register_app=true',
               'oidc:client_name': app.name,
               'oidc:redirect_uris': oidc.redirectUris,
               'oidc:post_logout_redirect_uris': oidc.postLogoutRedirectUris,

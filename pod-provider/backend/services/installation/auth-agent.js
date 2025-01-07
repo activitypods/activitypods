@@ -1,21 +1,50 @@
+const path = require('path');
 const urlJoin = require('url-join');
 const { triple, namedNode, literal } = require('@rdfjs/data-model');
 const { MoleculerError } = require('moleculer').Errors;
 const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
-const { ActivitiesHandlerMixin, ACTIVITY_TYPES } = require('@semapps/activitypub');
+const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const CONFIG = require('../../config/config');
+const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
   name: 'auth-agent',
-  mixins: [ActivitiesHandlerMixin, ControlledContainerMixin],
+  mixins: [ControlledContainerMixin],
+  dependencies: ['api', 'ldp'],
   settings: {
     acceptedTypes: ['interop:AuthorizationAgent'],
+    excludeFromMirror: true,
+    activateTombstones: false,
+    newResourcesPermissions: {
+      anon: {
+        read: true
+      }
+    },
     description: {
       labelMap: {
         en: 'Authorization Agents'
       },
       internal: true
     }
+  },
+  async started() {
+    const basePath = await this.broker.call('ldp.getBasePath');
+    await this.broker.call('api.addRoute', {
+      route: {
+        name: 'auth-agent',
+        path: path.join(basePath, '/.auth-agent'),
+        authorization: true,
+        authentication: false,
+        bodyParsers: {
+          json: true
+        },
+        aliases: {
+          'POST /install': 'auth-agent.install',
+          'POST /upgrade': 'auth-agent.upgrade',
+          'POST /uninstall': 'auth-agent.uninstall'
+        }
+      }
+    });
   },
   actions: {
     // Action from the ControlledContainerMixin, called when we do GET or HEAD requests on resources
@@ -40,12 +69,17 @@ module.exports = {
     },
     async initializeAgent(ctx) {
       const { webId } = ctx.params;
+
+      const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
+      await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
+
       const agentUri = await this.actions.post(
         {
           resource: {
             type: 'interop:AuthorizationAgent',
             'interop:hasAuthorizationRedirectEndpoint': urlJoin(CONFIG.FRONTEND_URL, 'authorize')
           },
+          contentType: MIME_TYPES.JSON,
           webId
         },
         { parentCtx: ctx }
@@ -70,157 +104,113 @@ module.exports = {
       if (resources.length > 0) {
         return resources[0];
       }
+    },
+    async install(ctx) {
+      const { appUri, acceptedAccessNeeds, acceptedSpecialRights } = ctx.params;
+      const webId = ctx.meta.webId;
+
+      const app = await ctx.call('activitypub.actor.get', { actorUri: appUri, webId });
+      const appRegistration = await ctx.call('app-registrations.getForApp', { appUri, podOwner: webId });
+
+      if (appRegistration) {
+        throw new MoleculerError(
+          `User already has an application registration. Upgrade or uninstall the app first.`,
+          400,
+          'BAD REQUEST'
+        );
+      }
+
+      const appRegistrationUri = await ctx.call('app-registrations.createOrUpdate', {
+        appUri,
+        podOwner: webId,
+        acceptedAccessNeeds,
+        acceptedSpecialRights
+      });
+
+      if (this.broker.cacher) {
+        // Invalidate all rights of the application on the Pod as they may now be completely different
+        await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: webId });
+      }
+
+      // If the app is an ActivityPub actor, send notification
+      if (app.inbox) {
+        await ctx.call('activitypub.outbox.post', {
+          collectionUri: urlJoin(webId, 'outbox'),
+          '@type': ACTIVITY_TYPES.CREATE,
+          object: appRegistrationUri,
+          to: appUri
+        });
+      }
+
+      return appRegistrationUri;
+    },
+    async upgrade(ctx) {
+      const { appUri, acceptedAccessNeeds, acceptedSpecialRights } = ctx.params;
+      const webId = ctx.meta.webId;
+
+      const app = await ctx.call('activitypub.actor.get', { actorUri: appUri, webId });
+
+      const appRegistrationUri = await ctx.call('app-registrations.createOrUpdate', {
+        appUri,
+        podOwner: webId,
+        acceptedAccessNeeds,
+        acceptedSpecialRights
+      });
+
+      if (this.broker.cacher) {
+        // Invalidate all rights of the application on the Pod as they may now be completely different
+        await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: webId });
+      }
+
+      // If the app is an ActivityPub actor, send notification
+      if (app.inbox) {
+        await ctx.call('activitypub.outbox.post', {
+          collectionUri: urlJoin(webId, 'outbox'),
+          '@type': ACTIVITY_TYPES.UPDATE,
+          object: appRegistrationUri,
+          to: appUri
+        });
+      }
+
+      return appRegistrationUri;
+    },
+    async uninstall(ctx) {
+      const { appUri } = ctx.params;
+      const webId = ctx.meta.webId;
+
+      const app = await ctx.call('activitypub.actor.get', { actorUri: appUri, webId });
+      const appRegistration = await ctx.call('app-registrations.getForApp', { appUri, podOwner: webId });
+
+      if (appRegistration) {
+        // Immediately delete existing webhooks channels to avoid permissions errors later
+        await ctx.call('solid-notifications.provider.webhook.deleteAppChannels', { appUri, webId });
+
+        await ctx.call('app-registrations.delete', {
+          resourceUri: appRegistration.id,
+          webId
+        });
+
+        // If the app is an ActivityPub actor, send notification
+        if (app.inbox) {
+          await ctx.call('activitypub.outbox.post', {
+            collectionUri: urlJoin(webId, 'outbox'),
+            type: ACTIVITY_TYPES.DELETE,
+            object: appRegistration.id || appRegistration['@id'],
+            to: appUri
+          });
+        }
+
+        if (this.broker.cacher) {
+          // Invalidate all rights of the application on the Pod as they may now be completely different
+          await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: webId });
+        }
+      }
     }
   },
   events: {
     async 'auth.registered'(ctx) {
       const { webId } = ctx.params;
       await this.actions.initializeAgent({ webId }, { parentCtx: ctx });
-    }
-  },
-  activities: {
-    install: {
-      match: {
-        type: 'apods:Install'
-      },
-      async onEmit(ctx, activity, emitterUri) {
-        const appUri = activity.object;
-
-        const appRegistration = await ctx.call('app-registrations.getForApp', {
-          appUri,
-          podOwner: emitterUri
-        });
-
-        if (appRegistration) {
-          throw new MoleculerError(
-            `User already has an application registration. Upgrade or uninstall the app first.`,
-            400,
-            'BAD REQUEST'
-          );
-        }
-
-        const appRegistrationUri = await ctx.call('app-registrations.createOrUpdate', {
-          appUri,
-          podOwner: emitterUri,
-          acceptedAccessNeeds: activity['apods:acceptedAccessNeeds'],
-          acceptedSpecialRights: activity['apods:acceptedSpecialRights']
-        });
-
-        await ctx.call('activitypub.outbox.post', {
-          collectionUri: urlJoin(emitterUri, 'outbox'),
-          '@type': ACTIVITY_TYPES.CREATE,
-          object: appRegistrationUri,
-          to: appUri
-        });
-
-        if (this.broker.cacher) {
-          // Invalidate all rights of the application on the Pod as they may now be completely different
-          await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: emitterUri });
-        }
-      }
-    },
-    upgrade: {
-      match: {
-        type: 'apods:Upgrade'
-      },
-      async onEmit(ctx, activity, emitterUri) {
-        const appUri = activity.object;
-
-        const appRegistrationUri = await ctx.call('app-registrations.createOrUpdate', {
-          appUri,
-          podOwner: emitterUri,
-          acceptedAccessNeeds: activity['apods:acceptedAccessNeeds'],
-          acceptedSpecialRights: activity['apods:acceptedSpecialRights']
-        });
-
-        await ctx.call('activitypub.outbox.post', {
-          collectionUri: urlJoin(emitterUri, 'outbox'),
-          '@type': ACTIVITY_TYPES.UPDATE,
-          object: appRegistrationUri,
-          to: appUri
-        });
-
-        if (this.broker.cacher) {
-          // Invalidate all rights of the application on the Pod as they may now be completely different
-          await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: emitterUri });
-        }
-      }
-    },
-    rejectAppRegistration: {
-      match: {
-        type: ACTIVITY_TYPES.REJECT,
-        object: {
-          type: ACTIVITY_TYPES.CREATE,
-          object: {
-            type: 'interop:ApplicationRegistration'
-          }
-        }
-      },
-      async onReceive(ctx, activity, recipientUri) {
-        const appRegistrationUri = activity.object.object.id;
-
-        const appRegistration = await ctx.call('app-registrations.get', {
-          resourceUri: appRegistrationUri,
-          webId: recipientUri
-        });
-
-        // SECURITY CHECKS
-
-        if (appRegistration['interop:registeredBy'] !== recipientUri) {
-          throw new Error(`The ApplicationRegistration ${appRegistrationUri} is not owned by ${recipientUri}`);
-        }
-
-        if (appRegistration['interop:registeredAgent'] !== activity.actor) {
-          throw new Error(`The ApplicationRegistration ${appRegistrationUri} is not for actor ${activity.actor}`);
-        }
-
-        // DELETE APPLICATION REGISTRATION (THIS WILL ALSO DELETE ALL ASSOCIATED GRANTS)
-
-        await ctx.call('app-registrations.delete', {
-          resourceUri: appRegistrationUri,
-          webId: recipientUri
-        });
-
-        if (this.broker.cacher) {
-          // Invalidate all rights of the application on the Pod as they may now be completely different
-          await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', {
-            webId: activity.actor,
-            podOwner: recipientUri
-          });
-        }
-      }
-    },
-    uninstall: {
-      match: {
-        type: ACTIVITY_TYPES.UNDO,
-        object: {
-          type: 'apods:Install'
-        }
-      },
-      async onEmit(ctx, activity, emitterUri) {
-        const appUri = activity.object.object;
-        const podOwner = emitterUri;
-
-        const appRegistration = await ctx.call('app-registrations.getForApp', { appUri, podOwner });
-
-        if (appRegistration) {
-          // Immediately delete existing webhooks channels to avoid permissions errors later
-          await ctx.call('solid-notifications.provider.webhook.deleteAppChannels', { appUri, webId: emitterUri });
-
-          // Delete registration locally (through activitypub.object.process) and warn the app to delete its cache
-          await ctx.call('activitypub.outbox.post', {
-            collectionUri: urlJoin(emitterUri, 'outbox'),
-            type: ACTIVITY_TYPES.DELETE,
-            object: appRegistration.id || appRegistration['@id'],
-            to: appUri
-          });
-
-          if (this.broker.cacher) {
-            // Invalidate all rights of the application on the Pod as they may now be completely different
-            await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: emitterUri });
-          }
-        }
-      }
     }
   }
 };

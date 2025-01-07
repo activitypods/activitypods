@@ -66,15 +66,6 @@ module.exports = {
           // REGISTER LISTENERS
 
           await ctx.call('pod-activities-watcher.registerListenersBasedOnAccessGrants', { accessGrants });
-
-          // SEND BACK ACCEPT ACTIVITY
-
-          await ctx.call('activitypub.outbox.post', {
-            collectionUri: outboxUri,
-            type: ACTIVITY_TYPES.ACCEPT,
-            object: activity.id,
-            to: activity.actor
-          });
         } catch (e) {
           if (e.code !== 400) console.error(e);
           await ctx.call('activitypub.outbox.post', {
@@ -131,15 +122,6 @@ module.exports = {
             throw new MoleculerError('One or more required access needs have not been granted', 400, 'BAD REQUEST');
           }
 
-          // SEND BACK ACCEPT ACTIVITY
-
-          await ctx.call('activitypub.outbox.post', {
-            collectionUri: outboxUri,
-            type: ACTIVITY_TYPES.ACCEPT,
-            object: activity.id,
-            to: activity.actor
-          });
-
           // UPDATE CACHE FOR APP REGISTRATION AND GRANTS
 
           await ctx.call('ldp.remote.store', { resource: appRegistration });
@@ -187,20 +169,6 @@ module.exports = {
         await ctx.call('app-registrations.delete', {
           resourceUri: appRegistration.id || appRegistration['@id'],
           webId: 'system'
-        });
-
-        // SEND BACK ACCEPT ACTIVITY
-
-        const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
-          actorUri: recipientUri,
-          predicate: 'outbox'
-        });
-
-        await ctx.call('activitypub.outbox.post', {
-          collectionUri: outboxUri,
-          type: ACTIVITY_TYPES.ACCEPT,
-          object: activity.id,
-          to: activity.actor
         });
       }
     }

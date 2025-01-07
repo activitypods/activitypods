@@ -18,6 +18,8 @@
   "dependencies": {
     "@semapps/activitypub-components": "1.0.1",
     "@semapps/semantic-data-provider": "1.0.1",
+    "http-link-header": "^1.1.1",
+    "jwt-decode": "^3.0.0",
     "url-join": "^4.0.1"
   },
   "peerDependencies": {

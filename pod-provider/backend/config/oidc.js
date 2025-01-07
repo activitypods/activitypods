@@ -109,19 +109,21 @@ module.exports = (settings, privateJwk) => ({
           return loginUrl.toString();
         }
 
-        case 'consent': {
-          const authorizeUrl = new URL(urlJoin(settings.frontendUrl, '/authorize'));
-          authorizeUrl.searchParams.set('interaction_id', interaction.jti);
-          authorizeUrl.searchParams.set('client_id', interaction?.params?.client_id);
-          authorizeUrl.searchParams.set('redirect', interaction.returnTo);
-          return authorizeUrl.toString();
-        }
-
         default: {
           console.error('Unknown interaction', interaction);
         }
       }
     }
+  },
+  // Inspired from https://github.com/panva/node-oidc-provider/blob/main/recipes/skip_consent.md
+  async loadExistingGrant(ctx) {
+    const grant = new ctx.oidc.provider.Grant({
+      clientId: ctx.oidc.client.clientId,
+      accountId: ctx.oidc.session.accountId
+    });
+    grant.addOIDCScope('openid profile offline_access webid');
+    await grant.save();
+    return grant;
   },
   // Solid OIDC requires pkce https://solid.github.io/solid-oidc/#concepts
   pkce: { methods: ['S256'], required: () => true },

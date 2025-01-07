@@ -3,10 +3,12 @@ var $fvx3m$urljoin = require("url-join");
 var $fvx3m$reactadmin = require("react-admin");
 var $fvx3m$semappsactivitypubcomponents = require("@semapps/activitypub-components");
 var $fvx3m$reactjsxruntime = require("react/jsx-runtime");
+var $fvx3m$jwtdecode = require("jwt-decode");
 var $fvx3m$reactrouterdom = require("react-router-dom");
 var $fvx3m$muimaterial = require("@mui/material");
 var $fvx3m$muiiconsmaterialLock = require("@mui/icons-material/Lock");
 var $fvx3m$muiiconsmaterialStorage = require("@mui/icons-material/Storage");
+var $fvx3m$httplinkheader = require("http-link-header");
 var $fvx3m$semappssemanticdataprovider = require("@semapps/semantic-data-provider");
 var $fvx3m$muiiconsmaterialShare = require("@mui/icons-material/Share");
 var $fvx3m$muistylesmakeStyles = require("@mui/styles/makeStyles");
@@ -25,11 +27,11 @@ function $parcel$interopDefault(a) {
 }
 
 $parcel$export(module.exports, "BackgroundChecks", () => $88874b19fd1a9965$export$2e2bcd8739ae039);
-$parcel$export(module.exports, "PodLoginPage", () => $474875ae41bcd76f$export$2e2bcd8739ae039);
+$parcel$export(module.exports, "LoginPage", () => $8c4e86009f42299d$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "RedirectPage", () => $691cae6a20c06149$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "ShareButton", () => $c30b6e8e8f4f1d51$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "ShareDialog", () => $8ffb7dd40d703ae5$export$2e2bcd8739ae039);
-$parcel$export(module.exports, "SyncUserLocale", () => $bbda9bb45dcd2801$export$2e2bcd8739ae039);
+$parcel$export(module.exports, "SyncUserLocale", () => $418040ff16c1a946$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "UserMenu", () => $fc1368eec161415d$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "englishMessages", () => $4b1314efa6ba34c8$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "frenchMessages", () => $7955e6b2ad1a54ef$export$2e2bcd8739ae039);
@@ -161,11 +163,48 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
 
 
 
+
+
+
+
+/**
+ * Return a function that look if an app (clientId) is registered with an user (webId)
+ * If not, it redirects to the endpoint provided by the user's authorization agent
+ * See https://solid.github.io/data-interoperability-panel/specification/#authorization-agent
+ */ const $9a8d0fd57dda054c$var$useRegisterApp = ()=>{
+    const dataProvider = (0, $fvx3m$reactadmin.useDataProvider)();
+    const registerApp = (0, $fvx3m$react.useCallback)(async (clientId, webId)=>{
+        const { json: actor } = await dataProvider.fetch(webId);
+        const authAgentUri = actor["interop:hasAuthorizationAgent"];
+        if (authAgentUri) {
+            // Find if an application registration is linked to this user
+            // See https://solid.github.io/data-interoperability-panel/specification/#agent-registration-discovery
+            const { headers: headers, json: authAgent } = await dataProvider.fetch(authAgentUri);
+            const linkHeader = (0, ($parcel$interopDefault($fvx3m$httplinkheader))).parse(headers.get("Link"));
+            const registeredAgentLinkHeader = linkHeader.rel("http://www.w3.org/ns/solid/interop#registeredAgent");
+            if (registeredAgentLinkHeader.length > 0) {
+                const appRegistrationUri = registeredAgentLinkHeader[0].anchor;
+                return appRegistrationUri;
+            } else {
+                // No application registration found, redirect to the authorization agent
+                const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
+                redirectUrl.searchParams.append("client_id", clientId);
+                window.location.href = redirectUrl.toString();
+            }
+        }
+    }, [
+        dataProvider
+    ]);
+    return registerApp;
+};
+var $9a8d0fd57dda054c$export$2e2bcd8739ae039 = $9a8d0fd57dda054c$var$useRegisterApp;
+
+
 /**
  * Display a list of Pod providers that we can log in
  * This list is taken from the https://activitypods.org/data/pod-providers endpoint
  * It is possible to replace it with a custom list of Pod providers
- */ const $474875ae41bcd76f$var$PodLoginPageView = ({ text: text, customPodProviders: customPodProviders })=>{
+ */ const $8c4e86009f42299d$var$LoginPage = ({ text: text, clientId: clientId, customPodProviders: customPodProviders })=>{
     const notify = (0, $fvx3m$reactadmin.useNotify)();
     const [searchParams] = (0, $fvx3m$reactrouterdom.useSearchParams)();
     const [locale] = (0, $fvx3m$reactadmin.useLocaleState)();
@@ -175,8 +214,10 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
     const redirect = (0, $fvx3m$reactadmin.useRedirect)();
     const { data: identity, isLoading: isIdentityLoading } = (0, $fvx3m$reactadmin.useGetIdentity)();
     const [podProviders, setPodProviders] = (0, $fvx3m$react.useState)(customPodProviders || []);
+    const [isRegistered, setIsRegistered] = (0, $fvx3m$react.useState)(false);
     const isSignup = searchParams.has("signup");
-    const redirectUrl = searchParams.get("redirect");
+    const redirectUrl = searchParams.get("redirect") || "/";
+    const registerApp = (0, $9a8d0fd57dda054c$export$2e2bcd8739ae039)();
     (0, $fvx3m$react.useEffect)(()=>{
         (async ()=>{
             if (podProviders.length < 1) {
@@ -201,30 +242,42 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
         notify,
         locale
     ]);
-    // Immediately logout if required
     (0, $fvx3m$react.useEffect)(()=>{
-        if (searchParams.has("logout")) logout({
+        if (searchParams.has("iss")) // Automatically login if Pod provider is known
+        login({
+            issuer: searchParams.get("iss")
+        });
+        else if (searchParams.has("register_app")) {
+            // Identity is not available yet because we can't fetch the user profile
+            // So get the webId by decoding the token
+            const token = localStorage.getItem("token");
+            if (token) {
+                const payload = (0, ($parcel$interopDefault($fvx3m$jwtdecode)))(token);
+                registerApp(clientId, payload?.webid).then((appRegistrationUri)=>{
+                    if (appRegistrationUri) setIsRegistered(true);
+                });
+            }
+        } else if (searchParams.has("logout")) // Immediately logout if required
+        logout({
             redirectUrl: redirectUrl
         });
     }, [
         searchParams,
+        login,
+        registerApp,
+        clientId,
+        setIsRegistered,
         logout,
         redirectUrl
     ]);
     (0, $fvx3m$react.useEffect)(()=>{
-        if (!isIdentityLoading) {
-            if (identity?.id) redirect("/");
-            else if (searchParams.has("iss")) // Automatically login if Pod provider is known
-            login({
-                issuer: searchParams.get("iss")
-            });
-        }
+        if (!isIdentityLoading && identity?.id && isRegistered) redirect(redirectUrl);
     }, [
-        searchParams,
-        login,
         identity,
         isIdentityLoading,
-        redirect
+        isRegistered,
+        redirect,
+        redirectUrl
     ]);
     if (isIdentityLoading) return null;
     return /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Box), {
@@ -274,7 +327,7 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
                                         children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsxs)((0, $fvx3m$muimaterial.ListItemButton), {
                                             onClick: ()=>login({
                                                     issuer: podProvider["apods:baseUrl"],
-                                                    redirect: redirectUrl || undefined,
+                                                    redirect: "/login?register_app=true",
                                                     isSignup: isSignup
                                                 }),
                                             children: [
@@ -298,7 +351,7 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
         })
     });
 };
-var $474875ae41bcd76f$export$2e2bcd8739ae039 = $474875ae41bcd76f$var$PodLoginPageView;
+var $8c4e86009f42299d$export$2e2bcd8739ae039 = $8c4e86009f42299d$var$LoginPage;
 
 
 
@@ -950,7 +1003,7 @@ var $c30b6e8e8f4f1d51$export$2e2bcd8739ae039 = $c30b6e8e8f4f1d51$var$ShareButton
 
 
 // Set the app locale to the user's locale, if it is set
-const $bbda9bb45dcd2801$var$SyncUserLocale = ()=>{
+const $418040ff16c1a946$var$SyncUserLocale = ()=>{
     const [locale, setLocale] = (0, $fvx3m$reactadmin.useLocaleState)();
     const { data: identity } = (0, $fvx3m$reactadmin.useGetIdentity)();
     (0, $fvx3m$react.useEffect)(()=>{
@@ -961,7 +1014,7 @@ const $bbda9bb45dcd2801$var$SyncUserLocale = ()=>{
         identity
     ]);
 };
-var $bbda9bb45dcd2801$export$2e2bcd8739ae039 = $bbda9bb45dcd2801$var$SyncUserLocale;
+var $418040ff16c1a946$export$2e2bcd8739ae039 = $418040ff16c1a946$var$SyncUserLocale;
 
 
 

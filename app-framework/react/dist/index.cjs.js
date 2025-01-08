@@ -1,11 +1,12 @@
 var $fvx3m$react = require("react");
-var $fvx3m$urljoin = require("url-join");
 var $fvx3m$reactadmin = require("react-admin");
 var $fvx3m$semappsactivitypubcomponents = require("@semapps/activitypub-components");
 var $fvx3m$reactjsxruntime = require("react/jsx-runtime");
+var $fvx3m$muimaterial = require("@mui/material");
+var $fvx3m$muiiconsmaterialError = require("@mui/icons-material/Error");
+var $fvx3m$urljoin = require("url-join");
 var $fvx3m$jwtdecode = require("jwt-decode");
 var $fvx3m$reactrouterdom = require("react-router-dom");
-var $fvx3m$muimaterial = require("@mui/material");
 var $fvx3m$muiiconsmaterialLock = require("@mui/icons-material/Lock");
 var $fvx3m$muiiconsmaterialStorage = require("@mui/icons-material/Storage");
 var $fvx3m$httplinkheader = require("http-link-header");
@@ -40,6 +41,8 @@ $parcel$export(module.exports, "frenchMessages", () => $7955e6b2ad1a54ef$export$
 
 
 
+
+
 const $f21bc75053423cc3$export$1b2abdd92765429 = (uri)=>{
     const url = new URL(uri);
     const username = url.pathname.split("/")[1];
@@ -55,6 +58,32 @@ const $f21bc75053423cc3$export$e57ff0f701c44363 = (value)=>{
         value
     ];
 };
+const $f21bc75053423cc3$export$1391212d75b2ee65 = (t)=>new Promise((resolve)=>setTimeout(resolve, t));
+
+
+
+
+
+const $c6f5b9530195abb8$var$useGetAppStatus = ()=>{
+    const { data: identity } = (0, $fvx3m$reactadmin.useGetIdentity)();
+    return (0, $fvx3m$react.useCallback)(async ()=>{
+        const oidcIssuer = new URL(identity?.id).origin;
+        const endpointUrl = (0, ($parcel$interopDefault($fvx3m$urljoin)))(oidcIssuer, ".well-known/app-status");
+        const token = localStorage.getItem("token");
+        // Don't use dataProvider.fetch as it would go through the proxy
+        const response = await fetch(endpointUrl, {
+            headers: new Headers({
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json"
+            })
+        });
+        if (response.ok) return await response.json();
+        else throw new Error(`Unable to fetch app status. Error ${response.status} (${response.statusText})`);
+    }, [
+        identity
+    ]);
+};
+var $c6f5b9530195abb8$export$2e2bcd8739ae039 = $c6f5b9530195abb8$var$useGetAppStatus;
 
 
 /**
@@ -66,76 +95,70 @@ const $f21bc75053423cc3$export$e57ff0f701c44363 = (value)=>{
  */ const $88874b19fd1a9965$var$BackgroundChecks = ({ clientId: clientId, listeningTo: listeningTo = [], children: children })=>{
     const { data: identity, isLoading: isIdentityLoading } = (0, $fvx3m$reactadmin.useGetIdentity)();
     const dataProvider = (0, $fvx3m$reactadmin.useDataProvider)();
-    const notify = (0, $fvx3m$reactadmin.useNotify)();
+    const translate = (0, $fvx3m$reactadmin.useTranslate)();
+    const logout = (0, $fvx3m$reactadmin.useLogout)();
     const [appStatusChecked, setAppStatusChecked] = (0, $fvx3m$react.useState)(false);
+    const [errorMessage, setErrorMessage] = (0, $fvx3m$react.useState)();
     const nodeinfo = (0, $fvx3m$semappsactivitypubcomponents.useNodeinfo)(identity?.id ? new URL(identity?.id).host : undefined);
+    const getAppStatus = (0, $c6f5b9530195abb8$export$2e2bcd8739ae039)();
     const isLoggedOut = !isIdentityLoading && !identity?.id;
     if (!clientId) throw new Error(`Missing clientId prop for BackgroundChecks component`);
     const checkAppStatus = (0, $fvx3m$react.useCallback)(async ()=>{
         // Only proceed if the tab is visible
-        if (!document.hidden && identity?.id) {
-            const oidcIssuer = new URL(identity?.id).origin;
-            const endpointUrl = (0, ($parcel$interopDefault($fvx3m$urljoin)))(oidcIssuer, ".well-known/app-status");
-            const token = localStorage.getItem("token");
-            try {
-                // Don't use dataProvider.fetch as it would go through the proxy
-                const response = await fetch(endpointUrl, {
-                    headers: new Headers({
-                        Authorization: `Bearer ${token}`,
-                        Accept: "application/json"
-                    })
-                });
-                if (response.ok) {
-                    const appStatus = await response.json();
-                    if (appStatus) {
-                        if (!appStatus.onlineBackend) {
-                            notify("apods.error.app_offline", {
-                                type: "error"
-                            });
-                            return;
+        if (!document.hidden && identity?.id) try {
+            let appStatus = await getAppStatus();
+            if (appStatus) {
+                if (!appStatus.onlineBackend) {
+                    setErrorMessage(translate("apods.error.app_offline"));
+                    return;
+                }
+                if (!appStatus.installed) {
+                    setErrorMessage(translate("apods.error.app_not_installed"));
+                    return;
+                }
+                if (appStatus.upgradeNeeded) {
+                    const { json: actor } = await dataProvider.fetch(identity.id);
+                    const { json: authAgent } = await dataProvider.fetch(actor["interop:hasAuthorizationAgent"]);
+                    const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
+                    redirectUrl.searchParams.append("client_id", clientId);
+                    window.location.href = redirectUrl.toString();
+                    return;
+                }
+                if (listeningTo.length > 0) {
+                    let numAttempts = 0, missingListener;
+                    do {
+                        missingListener = undefined;
+                        for (const uri of listeningTo)if (!(0, $f21bc75053423cc3$export$e57ff0f701c44363)(appStatus.webhookChannels).some((c)=>c.topic === uri)) missingListener = uri;
+                        // If one or more listener were not found, wait 1s and refetch the app status endpoint
+                        // This happens when the app was just registered, and the webhooks have not been created yet
+                        if (missingListener) {
+                            numAttempts++;
+                            await (0, $f21bc75053423cc3$export$1391212d75b2ee65)(1000);
+                            appStatus = await getAppStatus();
                         }
-                        if (!appStatus.installed) {
-                            notify("apods.error.app_not_installed", {
-                                type: "error"
-                            });
-                            return;
-                        }
-                        if (appStatus.upgradeNeeded) {
-                            const { json: actor } = await dataProvider.fetch(identity.id);
-                            const { json: authAgent } = await dataProvider.fetch(actor["interop:hasAuthorizationAgent"]);
-                            // No application registration found, redirect to the authorization agent
-                            const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
-                            redirectUrl.searchParams.append("client_id", clientId);
-                            window.location.href = redirectUrl.toString();
-                            return;
-                        }
-                        if (listeningTo.length > 0) {
-                            for (const uri of listeningTo)if (!(0, $f21bc75053423cc3$export$e57ff0f701c44363)(appStatus.webhookChannels).some((c)=>c.topic === uri)) {
-                                notify("apods.error.app_not_listening", {
-                                    messageArgs: {
-                                        uri: uri
-                                    },
-                                    type: "error"
-                                });
-                                return;
-                            }
-                        }
-                        setAppStatusChecked(true);
+                    }while (missingListener && numAttempts < 10);
+                    if (missingListener) {
+                        setErrorMessage(translate("apods.error.app_not_listening", {
+                            uri: missingListener
+                        }));
+                        return;
                     }
                 }
-            } catch (e) {
-                console.error(e);
-                notify("apods.error.app_status_unavailable", {
-                    type: "error"
-                });
+                setAppStatusChecked(true);
             }
+        } catch (e) {
+            console.error(e);
+            setErrorMessage(translate("apods.error.app_status_unavailable"));
         }
     }, [
         identity,
         nodeinfo,
+        getAppStatus,
         setAppStatusChecked,
         document,
-        dataProvider
+        dataProvider,
+        setErrorMessage,
+        translate
     ]);
     (0, $fvx3m$react.useEffect)(()=>{
         if (identity?.id && nodeinfo) {
@@ -154,9 +177,76 @@ const $f21bc75053423cc3$export$e57ff0f701c44363 = (value)=>{
     }, [
         checkAppStatus
     ]);
-    // TODO display error message instead of notifications
     if (isLoggedOut || appStatusChecked) return children;
-    else return null;
+    else if (errorMessage) return /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Box), {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        sx: {
+            minHeight: 400
+        },
+        children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsxs)((0, $fvx3m$muimaterial.Box), {
+            sx: {
+                backgroundColor: "red",
+                p: 2,
+                textAlign: "center"
+            },
+            children: [
+                /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, ($parcel$interopDefault($fvx3m$muiiconsmaterialError))), {
+                    sx: {
+                        width: 50,
+                        height: 50,
+                        color: "white"
+                    }
+                }),
+                /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Typography), {
+                    color: "white",
+                    children: errorMessage
+                }),
+                /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Button), {
+                    variant: "contained",
+                    color: "error",
+                    sx: {
+                        mt: 2,
+                        mr: 1
+                    },
+                    onClick: ()=>{
+                        setErrorMessage(undefined);
+                        checkAppStatus();
+                    },
+                    children: translate("ra.action.refresh")
+                }),
+                /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Button), {
+                    variant: "contained",
+                    color: "error",
+                    sx: {
+                        mt: 2
+                    },
+                    onClick: ()=>logout(),
+                    children: translate("ra.auth.logout")
+                })
+            ]
+        })
+    });
+    else // TODO wait 3s before display loader
+    return /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Box), {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        sx: {
+            minHeight: 400
+        },
+        children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.CircularProgress), {
+            size: 100,
+            thickness: 6,
+            sx: {
+                mb: 5,
+                color: "white"
+            }
+        })
+    });
 };
 var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundChecks;
 

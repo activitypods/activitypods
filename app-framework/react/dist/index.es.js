@@ -1,11 +1,12 @@
 import {useState as $iLwJW$useState, useCallback as $iLwJW$useCallback, useEffect as $iLwJW$useEffect, useLayoutEffect as $iLwJW$useLayoutEffect, Fragment as $iLwJW$Fragment, useMemo as $iLwJW$useMemo} from "react";
-import $iLwJW$urljoin from "url-join";
-import {useGetIdentity as $iLwJW$useGetIdentity, useDataProvider as $iLwJW$useDataProvider, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useLogout as $iLwJW$useLogout, useTranslate as $iLwJW$useTranslate, useRedirect as $iLwJW$useRedirect, useRecordContext as $iLwJW$useRecordContext, Button as $iLwJW$Button, useGetList as $iLwJW$useGetList, UserMenu as $iLwJW$UserMenu, Logout as $iLwJW$Logout, MenuItemLink as $iLwJW$MenuItemLink} from "react-admin";
+import {useGetIdentity as $iLwJW$useGetIdentity, useDataProvider as $iLwJW$useDataProvider, useTranslate as $iLwJW$useTranslate, useLogout as $iLwJW$useLogout, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useRedirect as $iLwJW$useRedirect, useRecordContext as $iLwJW$useRecordContext, Button as $iLwJW$Button1, useGetList as $iLwJW$useGetList, UserMenu as $iLwJW$UserMenu, Logout as $iLwJW$Logout, MenuItemLink as $iLwJW$MenuItemLink} from "react-admin";
 import {useNodeinfo as $iLwJW$useNodeinfo, useCollection as $iLwJW$useCollection, useOutbox as $iLwJW$useOutbox, ACTIVITY_TYPES as $iLwJW$ACTIVITY_TYPES} from "@semapps/activitypub-components";
 import {jsx as $iLwJW$jsx, jsxs as $iLwJW$jsxs, Fragment as $iLwJW$Fragment1} from "react/jsx-runtime";
+import {Box as $iLwJW$Box, Typography as $iLwJW$Typography, Button as $iLwJW$Button, CircularProgress as $iLwJW$CircularProgress, Card as $iLwJW$Card, Avatar as $iLwJW$Avatar, List as $iLwJW$List, Divider as $iLwJW$Divider, ListItem as $iLwJW$ListItem, ListItemButton as $iLwJW$ListItemButton, ListItemAvatar as $iLwJW$ListItemAvatar, ListItemText as $iLwJW$ListItemText, useMediaQuery as $iLwJW$useMediaQuery, Dialog as $iLwJW$Dialog, DialogTitle as $iLwJW$DialogTitle, DialogContent as $iLwJW$DialogContent, DialogActions as $iLwJW$DialogActions, TextField as $iLwJW$TextField, Switch as $iLwJW$Switch, MenuItem as $iLwJW$MenuItem, ListItemIcon as $iLwJW$ListItemIcon} from "@mui/material";
+import $iLwJW$muiiconsmaterialError from "@mui/icons-material/Error";
+import $iLwJW$urljoin from "url-join";
 import $iLwJW$jwtdecode from "jwt-decode";
 import {useSearchParams as $iLwJW$useSearchParams, useNavigate as $iLwJW$useNavigate} from "react-router-dom";
-import {Box as $iLwJW$Box, Card as $iLwJW$Card, Avatar as $iLwJW$Avatar, Typography as $iLwJW$Typography, List as $iLwJW$List, Divider as $iLwJW$Divider, ListItem as $iLwJW$ListItem, ListItemButton as $iLwJW$ListItemButton, ListItemAvatar as $iLwJW$ListItemAvatar, ListItemText as $iLwJW$ListItemText, useMediaQuery as $iLwJW$useMediaQuery, Dialog as $iLwJW$Dialog, DialogTitle as $iLwJW$DialogTitle, DialogContent as $iLwJW$DialogContent, DialogActions as $iLwJW$DialogActions, Button as $iLwJW$Button1, TextField as $iLwJW$TextField, CircularProgress as $iLwJW$CircularProgress, Switch as $iLwJW$Switch, MenuItem as $iLwJW$MenuItem, ListItemIcon as $iLwJW$ListItemIcon} from "@mui/material";
 import $iLwJW$muiiconsmaterialLock from "@mui/icons-material/Lock";
 import $iLwJW$muiiconsmaterialStorage from "@mui/icons-material/Storage";
 import $iLwJW$httplinkheader from "http-link-header";
@@ -18,6 +19,8 @@ import $iLwJW$muiiconsmaterialApps from "@mui/icons-material/Apps";
 import $iLwJW$muiiconsmaterialSettings from "@mui/icons-material/Settings";
 
 // Components
+
+
 
 
 
@@ -37,6 +40,32 @@ const $93d7a9f3166de761$export$e57ff0f701c44363 = (value)=>{
         value
     ];
 };
+const $93d7a9f3166de761$export$1391212d75b2ee65 = (t)=>new Promise((resolve)=>setTimeout(resolve, t));
+
+
+
+
+
+const $421a3f9f89d1fa03$var$useGetAppStatus = ()=>{
+    const { data: identity } = (0, $iLwJW$useGetIdentity)();
+    return (0, $iLwJW$useCallback)(async ()=>{
+        const oidcIssuer = new URL(identity?.id).origin;
+        const endpointUrl = (0, $iLwJW$urljoin)(oidcIssuer, ".well-known/app-status");
+        const token = localStorage.getItem("token");
+        // Don't use dataProvider.fetch as it would go through the proxy
+        const response = await fetch(endpointUrl, {
+            headers: new Headers({
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json"
+            })
+        });
+        if (response.ok) return await response.json();
+        else throw new Error(`Unable to fetch app status. Error ${response.status} (${response.statusText})`);
+    }, [
+        identity
+    ]);
+};
+var $421a3f9f89d1fa03$export$2e2bcd8739ae039 = $421a3f9f89d1fa03$var$useGetAppStatus;
 
 
 /**
@@ -48,76 +77,70 @@ const $93d7a9f3166de761$export$e57ff0f701c44363 = (value)=>{
  */ const $2957839fe06af793$var$BackgroundChecks = ({ clientId: clientId, listeningTo: listeningTo = [], children: children })=>{
     const { data: identity, isLoading: isIdentityLoading } = (0, $iLwJW$useGetIdentity)();
     const dataProvider = (0, $iLwJW$useDataProvider)();
-    const notify = (0, $iLwJW$useNotify)();
+    const translate = (0, $iLwJW$useTranslate)();
+    const logout = (0, $iLwJW$useLogout)();
     const [appStatusChecked, setAppStatusChecked] = (0, $iLwJW$useState)(false);
+    const [errorMessage, setErrorMessage] = (0, $iLwJW$useState)();
     const nodeinfo = (0, $iLwJW$useNodeinfo)(identity?.id ? new URL(identity?.id).host : undefined);
+    const getAppStatus = (0, $421a3f9f89d1fa03$export$2e2bcd8739ae039)();
     const isLoggedOut = !isIdentityLoading && !identity?.id;
     if (!clientId) throw new Error(`Missing clientId prop for BackgroundChecks component`);
     const checkAppStatus = (0, $iLwJW$useCallback)(async ()=>{
         // Only proceed if the tab is visible
-        if (!document.hidden && identity?.id) {
-            const oidcIssuer = new URL(identity?.id).origin;
-            const endpointUrl = (0, $iLwJW$urljoin)(oidcIssuer, ".well-known/app-status");
-            const token = localStorage.getItem("token");
-            try {
-                // Don't use dataProvider.fetch as it would go through the proxy
-                const response = await fetch(endpointUrl, {
-                    headers: new Headers({
-                        Authorization: `Bearer ${token}`,
-                        Accept: "application/json"
-                    })
-                });
-                if (response.ok) {
-                    const appStatus = await response.json();
-                    if (appStatus) {
-                        if (!appStatus.onlineBackend) {
-                            notify("apods.error.app_offline", {
-                                type: "error"
-                            });
-                            return;
+        if (!document.hidden && identity?.id) try {
+            let appStatus = await getAppStatus();
+            if (appStatus) {
+                if (!appStatus.onlineBackend) {
+                    setErrorMessage(translate("apods.error.app_offline"));
+                    return;
+                }
+                if (!appStatus.installed) {
+                    setErrorMessage(translate("apods.error.app_not_installed"));
+                    return;
+                }
+                if (appStatus.upgradeNeeded) {
+                    const { json: actor } = await dataProvider.fetch(identity.id);
+                    const { json: authAgent } = await dataProvider.fetch(actor["interop:hasAuthorizationAgent"]);
+                    const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
+                    redirectUrl.searchParams.append("client_id", clientId);
+                    window.location.href = redirectUrl.toString();
+                    return;
+                }
+                if (listeningTo.length > 0) {
+                    let numAttempts = 0, missingListener;
+                    do {
+                        missingListener = undefined;
+                        for (const uri of listeningTo)if (!(0, $93d7a9f3166de761$export$e57ff0f701c44363)(appStatus.webhookChannels).some((c)=>c.topic === uri)) missingListener = uri;
+                        // If one or more listener were not found, wait 1s and refetch the app status endpoint
+                        // This happens when the app was just registered, and the webhooks have not been created yet
+                        if (missingListener) {
+                            numAttempts++;
+                            await (0, $93d7a9f3166de761$export$1391212d75b2ee65)(1000);
+                            appStatus = await getAppStatus();
                         }
-                        if (!appStatus.installed) {
-                            notify("apods.error.app_not_installed", {
-                                type: "error"
-                            });
-                            return;
-                        }
-                        if (appStatus.upgradeNeeded) {
-                            const { json: actor } = await dataProvider.fetch(identity.id);
-                            const { json: authAgent } = await dataProvider.fetch(actor["interop:hasAuthorizationAgent"]);
-                            // No application registration found, redirect to the authorization agent
-                            const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
-                            redirectUrl.searchParams.append("client_id", clientId);
-                            window.location.href = redirectUrl.toString();
-                            return;
-                        }
-                        if (listeningTo.length > 0) {
-                            for (const uri of listeningTo)if (!(0, $93d7a9f3166de761$export$e57ff0f701c44363)(appStatus.webhookChannels).some((c)=>c.topic === uri)) {
-                                notify("apods.error.app_not_listening", {
-                                    messageArgs: {
-                                        uri: uri
-                                    },
-                                    type: "error"
-                                });
-                                return;
-                            }
-                        }
-                        setAppStatusChecked(true);
+                    }while (missingListener && numAttempts < 10);
+                    if (missingListener) {
+                        setErrorMessage(translate("apods.error.app_not_listening", {
+                            uri: missingListener
+                        }));
+                        return;
                     }
                 }
-            } catch (e) {
-                console.error(e);
-                notify("apods.error.app_status_unavailable", {
-                    type: "error"
-                });
+                setAppStatusChecked(true);
             }
+        } catch (e) {
+            console.error(e);
+            setErrorMessage(translate("apods.error.app_status_unavailable"));
         }
     }, [
         identity,
         nodeinfo,
+        getAppStatus,
         setAppStatusChecked,
         document,
-        dataProvider
+        dataProvider,
+        setErrorMessage,
+        translate
     ]);
     (0, $iLwJW$useEffect)(()=>{
         if (identity?.id && nodeinfo) {
@@ -136,9 +159,76 @@ const $93d7a9f3166de761$export$e57ff0f701c44363 = (value)=>{
     }, [
         checkAppStatus
     ]);
-    // TODO display error message instead of notifications
     if (isLoggedOut || appStatusChecked) return children;
-    else return null;
+    else if (errorMessage) return /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Box), {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        sx: {
+            minHeight: 400
+        },
+        children: /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$Box), {
+            sx: {
+                backgroundColor: "red",
+                p: 2,
+                textAlign: "center"
+            },
+            children: [
+                /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$muiiconsmaterialError), {
+                    sx: {
+                        width: 50,
+                        height: 50,
+                        color: "white"
+                    }
+                }),
+                /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Typography), {
+                    color: "white",
+                    children: errorMessage
+                }),
+                /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Button), {
+                    variant: "contained",
+                    color: "error",
+                    sx: {
+                        mt: 2,
+                        mr: 1
+                    },
+                    onClick: ()=>{
+                        setErrorMessage(undefined);
+                        checkAppStatus();
+                    },
+                    children: translate("ra.action.refresh")
+                }),
+                /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Button), {
+                    variant: "contained",
+                    color: "error",
+                    sx: {
+                        mt: 2
+                    },
+                    onClick: ()=>logout(),
+                    children: translate("ra.auth.logout")
+                })
+            ]
+        })
+    });
+    else // TODO wait 3s before display loader
+    return /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Box), {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        sx: {
+            minHeight: 400
+        },
+        children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$CircularProgress), {
+            size: 100,
+            thickness: 6,
+            sx: {
+                mb: 5,
+                color: "white"
+            }
+        })
+    });
 };
 var $2957839fe06af793$export$2e2bcd8739ae039 = $2957839fe06af793$var$BackgroundChecks;
 
@@ -933,13 +1023,13 @@ const $79f089d541db8101$var$ShareDialog = ({ close: close, resourceUri: resource
             /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$DialogActions), {
                 className: classes.actions,
                 children: [
-                    /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Button1), {
+                    /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Button), {
                         variant: "text",
                         size: "medium",
                         onClick: close,
                         children: translate("ra.action.close")
                     }),
-                    Object.keys(newInvitations).length > 0 && /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Button1), {
+                    Object.keys(newInvitations).length > 0 && /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Button), {
                         variant: "contained",
                         color: "primary",
                         size: "medium",
@@ -968,7 +1058,7 @@ var $79f089d541db8101$export$2e2bcd8739ae039 = $79f089d541db8101$var$ShareDialog
     // If the user can see the list of announces, it means he can share
     if (!isLoading && !error) return /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$Fragment1), {
         children: [
-            /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Button), {
+            /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Button1), {
                 label: translate("apods.action.share"),
                 onClick: ()=>setShareOpen(true),
                 children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$muiiconsmaterialShare), {})

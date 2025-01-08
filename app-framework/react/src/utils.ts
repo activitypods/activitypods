@@ -20,3 +20,5 @@ export const arrayOf = (value: any | [any] | undefined) => {
   // Single value is made an array.
   return [value];
 };
+
+export const delay = (t: number) => new Promise(resolve => setTimeout(resolve, t));

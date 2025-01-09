@@ -53,7 +53,7 @@ module.exports = {
                 'interop:applicationAuthor': app.author,
                 'interop:applicationThumbnail': app.thumbnail,
                 'interop:hasAuthorizationCallbackEndpoint':
-                  app.authCallbackEndpoint || urlJoin(app.frontUrl, 'login') + '?register_app=true',
+                  app.authCallbackEndpoint || (app.frontUrl && urlJoin(app.frontUrl, 'login') + '?register_app=true'),
                 'oidc:client_name': app.name,
                 'oidc:redirect_uris': oidc.redirectUris,
                 'oidc:post_logout_redirect_uris': oidc.postLogoutRedirectUris,
@@ -109,7 +109,7 @@ module.exports = {
               'interop:applicationAuthor': app.author,
               'interop:applicationThumbnail': app.thumbnail,
               'interop:hasAuthorizationCallbackEndpoint':
-                app.authCallbackEndpoint || urlJoin(app.frontUrl, 'login') + '?register_app=true',
+                app.authCallbackEndpoint || (app.frontUrl && urlJoin(app.frontUrl, 'login') + '?register_app=true'),
               'oidc:client_name': app.name,
               'oidc:redirect_uris': oidc.redirectUris,
               'oidc:post_logout_redirect_uris': oidc.postLogoutRedirectUris,

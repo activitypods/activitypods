@@ -15,6 +15,11 @@ module.exports = {
       'interop:hasAuthorizationRedirectEndpoint': urlJoin(CONFIG.FRONTEND_URL, 'authorize')
     },
     podProvider: true,
+    newResourcesPermissions: {
+      anon: {
+        read: true
+      }
+    },
     description: {
       labelMap: {
         en: 'Authorization Agents'

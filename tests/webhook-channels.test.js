@@ -68,10 +68,10 @@ describe('Test app installation', () => {
   test('Webhook channel is available', async () => {
     const { json: storage } = await fetchServer(urlJoin(POD_SERVER_BASE_URL, '.well-known/solid'));
 
-    expect(storage['@type']).toBe('http://www.w3.org/ns/pim/space#Storage');
+    expect(storage.type).toBe('pim:Storage');
     expect(storage['notify:subscription']).toHaveLength(2);
 
-    [_, webhookChannelSubscriptionUrl] = storage['notify:subscription'];
+    [webhookChannelSubscriptionUrl] = storage['notify:subscription'];
 
     const { json: webhookChannelSubscription } = await fetchServer(webhookChannelSubscriptionUrl);
 

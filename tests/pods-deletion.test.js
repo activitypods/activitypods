@@ -58,16 +58,14 @@ describe('Delete an actor', () => {
   });
 
   test('Actor Alice is not allowed to be deleted by Bob.', async () => {
-    await expect(bob.call('management.deleteActor', { actorUri: alice.id, iKnowWhatImDoing: true })).rejects.toThrow(
-      'Forbidden'
-    );
+    await expect(alice.call('management.deleteAccount', { username: 'bob' })).rejects.toThrow('Forbidden');
   });
 
   // This test will fail, if the server does not have write access on the triplestore directory.
   test.skip('Actor Alice is deleted (requires triplestore directory access).', async () => {
     const username = alice['foaf:nick'];
     // Delete Alice
-    await alice.call('management.deleteActor', { actorUri: alice.id, iKnowWhatImDoing: true });
+    await alice.call('management.deleteAccount', { username: 'alice' });
 
     // Check, that account information is limited to deletedAt, username, webId.
     const tombStoneAccount = await podProvider.call('auth.account.findByUsername', { username });

@@ -1,4 +1,5 @@
 import React, { FunctionComponent, Fragment, useEffect, useState } from 'react';
+import jwtDecode from 'jwt-decode';
 import { useNotify, useLocaleState, useTranslate, useLogin, useLogout, useGetIdentity, useRedirect } from 'react-admin';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -15,14 +16,15 @@ import {
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import StorageIcon from '@mui/icons-material/Storage';
-import type { PodProvider } from '../types';
+import type { PodProvider, SolidOIDCToken } from '../types';
+import useRegisterApp from '../hooks/useRegisterApp';
 
 /**
  * Display a list of Pod providers that we can log in
  * This list is taken from the https://activitypods.org/data/pod-providers endpoint
  * It is possible to replace it with a custom list of Pod providers
  */
-const PodLoginPageView: FunctionComponent<Props> = ({ text, customPodProviders }) => {
+const LoginPage: FunctionComponent<Props> = ({ text, clientId, customPodProviders }) => {
   const notify = useNotify();
   const [searchParams] = useSearchParams();
   const [locale] = useLocaleState();
@@ -32,8 +34,10 @@ const PodLoginPageView: FunctionComponent<Props> = ({ text, customPodProviders }
   const redirect = useRedirect();
   const { data: identity, isLoading: isIdentityLoading } = useGetIdentity();
   const [podProviders, setPodProviders] = useState<[PodProvider]>(customPodProviders || []);
+  const [isRegistered, setIsRegistered] = useState<boolean>(false);
   const isSignup = searchParams.has('signup');
-  const redirectUrl = searchParams.get('redirect');
+  const redirectUrl = searchParams.get('redirect') || '/';
+  const registerApp = useRegisterApp();
 
   useEffect(() => {
     (async () => {
@@ -59,23 +63,31 @@ const PodLoginPageView: FunctionComponent<Props> = ({ text, customPodProviders }
     })();
   }, [podProviders, setPodProviders, notify, locale]);
 
-  // Immediately logout if required
   useEffect(() => {
-    if (searchParams.has('logout')) {
+    if (searchParams.has('iss')) {
+      // Automatically login if Pod provider is known
+      login({ issuer: searchParams.get('iss') });
+    } else if (searchParams.has('register_app')) {
+      // Identity is not available yet because we can't fetch the user profile
+      // So get the webId by decoding the token
+      const token = localStorage.getItem('token');
+      if (token) {
+        const payload = jwtDecode(token) as SolidOIDCToken;
+        registerApp(clientId, payload?.webid).then(appRegistrationUri => {
+          if (appRegistrationUri) setIsRegistered(true);
+        });
+      }
+    } else if (searchParams.has('logout')) {
+      // Immediately logout if required
       logout({ redirectUrl });
     }
-  }, [searchParams, logout, redirectUrl]);
+  }, [searchParams, login, registerApp, clientId, setIsRegistered, logout, redirectUrl]);
 
   useEffect(() => {
-    if (!isIdentityLoading) {
-      if (identity?.id) {
-        redirect('/');
-      } else if (searchParams.has('iss')) {
-        // Automatically login if Pod provider is known
-        login({ issuer: searchParams.get('iss') });
-      }
+    if (!isIdentityLoading && identity?.id && isRegistered) {
+      redirect(redirectUrl);
     }
-  }, [searchParams, login, identity, isIdentityLoading, redirect]);
+  }, [identity, isIdentityLoading, isRegistered, redirect, redirectUrl]);
 
   if (isIdentityLoading) return null;
 
@@ -120,7 +132,7 @@ const PodLoginPageView: FunctionComponent<Props> = ({ text, customPodProviders }
                     onClick={() =>
                       login({
                         issuer: podProvider['apods:baseUrl'],
-                        redirect: redirectUrl || undefined,
+                        redirect: '/login?register_app=true',
                         isSignup
                       })
                     }
@@ -147,7 +159,8 @@ const PodLoginPageView: FunctionComponent<Props> = ({ text, customPodProviders }
 
 type Props = {
   text?: string;
+  clientId: string;
   customPodProviders: [PodProvider];
 };
 
-export default PodLoginPageView;
+export default LoginPage;

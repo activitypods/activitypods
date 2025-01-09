@@ -1,6 +1,6 @@
 const urlJoin = require('url-join');
 const fetch = require('node-fetch');
-const { WebSocket } = require('ws');
+const WebSocket = require('ws');
 const { delay } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { triple, namedNode, literal } = require('@rdfjs/data-model');
@@ -52,10 +52,10 @@ describe('Websocket channel', () => {
   test('Websocket channel subscription is available', async () => {
     const { json: storage } = await fetchServer(urlJoin(POD_SERVER_BASE_URL, '.well-known/solid'));
 
-    expect(storage['@type']).toBe('http://www.w3.org/ns/pim/space#Storage');
+    expect(storage.type).toBe('pim:Storage');
     expect(storage['notify:subscription']).toHaveLength(2);
 
-    [webSocketChannelSubscriptionUrl] = storage['notify:subscription'];
+    [_, webSocketChannelSubscriptionUrl] = storage['notify:subscription'];
 
     const { json: webSocketChannelSubscription } = await fetchServer(webSocketChannelSubscriptionUrl);
 

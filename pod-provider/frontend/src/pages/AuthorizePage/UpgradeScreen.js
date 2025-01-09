@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useTranslate, useNotify } from 'react-admin';
+import urlJoin from 'url-join';
+import { useTranslate, useNotify, useDataProvider } from 'react-admin';
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
-import { useOutbox, useInbox } from '@semapps/activitypub-components';
 import SimpleBox from '../../layout/SimpleBox';
 import useAccessNeeds from '../../hooks/useAccessNeeds';
 import useGrants from '../../hooks/useGrants';
@@ -20,8 +20,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
   const [allowedAccessNeeds, setAllowedAccessNeeds] = useState([]);
   const [grantedAccessNeeds, setGrantedAccessNeeds] = useState([]);
   const [missingAccessNeeds, setMissingAccessNeeds] = useState({ required: [], optional: [] });
-  const outbox = useOutbox({ liveUpdates: true });
-  const inbox = useInbox({ liveUpdates: true });
+  const dataProvider = useDataProvider();
   const translate = useTranslate();
   const notify = useNotify();
   const uninstallApp = useUninstallApp(application);
@@ -38,47 +37,17 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
         try {
           setStep('upgrading');
 
-          await outbox.awaitWebSocketConnection();
-          await inbox.awaitWebSocketConnection();
-
-          // Do not await to ensure we don't miss the activities below
-          outbox.post({
-            '@context': [
-              'https://www.w3.org/ns/activitystreams',
-              {
-                apods: 'http://activitypods.org/ns/core#',
-                'apods:acceptedAccessNeeds': {
-                  '@type': '@id'
-                },
-                'apods:acceptedSpecialRights': {
-                  '@type': '@id'
-                }
-              }
-            ],
-            type: 'apods:Upgrade',
-            actor: outbox.owner,
-            object: application.id,
-            'apods:acceptedAccessNeeds': [...grantedAccessNeeds, ...allowedAccessNeeds].filter(
-              a => !a.startsWith('apods:')
-            ),
-            'apods:acceptedSpecialRights': [...grantedAccessNeeds, ...allowedAccessNeeds].filter(a =>
-              a.startsWith('apods:')
-            )
+          await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'upgrade'), {
+            method: 'POST',
+            headers: new Headers({
+              'Content-Type': 'application/json'
+            }),
+            body: JSON.stringify({
+              appUri: application.id,
+              acceptedAccessNeeds: [...grantedAccessNeeds, ...allowedAccessNeeds].filter(a => !a.startsWith('apods:')),
+              acceptedSpecialRights: [...grantedAccessNeeds, ...allowedAccessNeeds].filter(a => a.startsWith('apods:'))
+            })
           });
-
-          // TODO Allow to pass an object, and automatically dereference it, like on the @semapps/activitypub matchActivity util
-          const updateRegistrationActivity = await outbox.awaitActivity(
-            activity => activity.type === 'Update' && activity.to === application.id,
-            { timeout: 60000 }
-          );
-
-          await inbox.awaitActivity(
-            activity =>
-              activity.type === 'Accept' &&
-              activity.actor === application.id &&
-              activity.object === updateRegistrationActivity.id,
-            { timeout: 60000 }
-          );
 
           await accessApp();
         } catch (e) {
@@ -87,7 +56,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
         }
       }
     })();
-  }, [outbox, inbox, notify, application, allowedAccessNeeds, grantedAccessNeeds, accessApp, step, setStep]);
+  }, [dataProvider, notify, application, allowedAccessNeeds, grantedAccessNeeds, accessApp, step, setStep]);
 
   useEffect(() => {
     if (accessNeedsLoaded && grantsLoaded && !step) {

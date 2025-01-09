@@ -1,8 +1,8 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { Link, useTranslate, useNotify } from 'react-admin';
+import urlJoin from 'url-join';
+import { Link, useTranslate, useNotify, useDataProvider } from 'react-admin';
 import { Box, Button } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
-import { useOutbox, useInbox } from '@semapps/activitypub-components';
 import SimpleBox from '../../layout/SimpleBox';
 import useAccessNeeds from '../../hooks/useAccessNeeds';
 import useClassDescriptions from '../../hooks/useClassDescriptions';
@@ -14,14 +14,13 @@ import AppHeader from './AppHeader';
 const InstallationScreen = ({ application, accessApp, isTrustedApp }) => {
   const [isInstalling, setIsInstalling] = useState(false);
   const [allowedAccessNeeds, setAllowedAccessNeeds] = useState();
-  const outbox = useOutbox({ liveUpdates: true });
-  const inbox = useInbox({ liveUpdates: true });
   const translate = useTranslate();
   const notify = useNotify();
 
   const { requiredAccessNeeds, optionalAccessNeeds, loaded } = useAccessNeeds(application);
   const { classDescriptions } = useClassDescriptions(application);
   const { data: typeRegistrations } = useTypeRegistrations();
+  const dataProvider = useDataProvider();
 
   useEffect(() => {
     if (loaded) {
@@ -36,50 +35,24 @@ const InstallationScreen = ({ application, accessApp, isTrustedApp }) => {
     try {
       setIsInstalling(true);
 
-      await outbox.awaitWebSocketConnection();
-      await inbox.awaitWebSocketConnection();
-
-      // Do not await to ensure we don't miss the activities
-      outbox.post({
-        '@context': [
-          'https://www.w3.org/ns/activitystreams',
-          {
-            apods: 'http://activitypods.org/ns/core#',
-            'apods:acceptedAccessNeeds': {
-              '@type': '@id'
-            },
-            'apods:acceptedSpecialRights': {
-              '@type': '@id'
-            }
-          }
-        ],
-        type: 'apods:Install',
-        actor: outbox.owner,
-        object: application.id,
-        'apods:acceptedAccessNeeds': allowedAccessNeeds.filter(a => !a.startsWith('apods:')),
-        'apods:acceptedSpecialRights': allowedAccessNeeds.filter(a => a.startsWith('apods:'))
+      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'install'), {
+        method: 'POST',
+        headers: new Headers({
+          'Content-Type': 'application/json'
+        }),
+        body: JSON.stringify({
+          appUri: application.id,
+          acceptedAccessNeeds: allowedAccessNeeds.filter(a => !a.startsWith('apods:')),
+          acceptedSpecialRights: allowedAccessNeeds.filter(a => a.startsWith('apods:'))
+        })
       });
-
-      // TODO Allow to pass an object, and automatically dereference it, like on the @semapps/activitypub matchActivity util
-      const createRegistrationActivity = await outbox.awaitActivity(
-        activity => activity.type === 'Create' && activity.to === application.id,
-        { timeout: 60000 }
-      );
-
-      await inbox.awaitActivity(
-        activity =>
-          activity.type === 'Accept' &&
-          activity.actor === application.id &&
-          activity.object === createRegistrationActivity.id,
-        { timeout: 60000 }
-      );
 
       await accessApp();
     } catch (e) {
       setIsInstalling(false);
       notify(`Error on app installation: ${e.message}`, { type: 'error' });
     }
-  }, [outbox, inbox, notify, application, allowedAccessNeeds, accessApp, setIsInstalling]);
+  }, [dataProvider, notify, application, allowedAccessNeeds, accessApp, setIsInstalling]);
 
   if (isInstalling) return <ProgressMessage message="app.message.app_installation_progress" />;
 

@@ -1,25 +1,20 @@
 const path = require('path');
 const urlJoin = require('url-join');
-const { triple, namedNode, literal } = require('@rdfjs/data-model');
+const { triple, namedNode } = require('@rdfjs/data-model');
 const { MoleculerError } = require('moleculer').Errors;
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+const { SingleResourceContainerMixin } = require('@semapps/ldp');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const CONFIG = require('../../config/config');
-const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
   name: 'auth-agent',
-  mixins: [ControlledContainerMixin],
-  dependencies: ['api', 'ldp'],
+  mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:AuthorizationAgent'],
-    excludeFromMirror: true,
-    activateTombstones: false,
-    newResourcesPermissions: {
-      anon: {
-        read: true
-      }
+    initialValue: {
+      'interop:hasAuthorizationRedirectEndpoint': urlJoin(CONFIG.FRONTEND_URL, 'authorize')
     },
+    podProvider: true,
     description: {
       labelMap: {
         en: 'Authorization Agents'
@@ -27,6 +22,7 @@ module.exports = {
       internal: true
     }
   },
+  dependencies: ['api', 'ldp'],
   async started() {
     const basePath = await this.broker.call('ldp.getBasePath');
     await this.broker.call('api.addRoute', {
@@ -65,44 +61,6 @@ module.exports = {
             }
           ];
         }
-      }
-    },
-    async initializeAgent(ctx) {
-      const { webId } = ctx.params;
-
-      const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
-      await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
-
-      const agentUri = await this.actions.post(
-        {
-          resource: {
-            type: 'interop:AuthorizationAgent',
-            'interop:hasAuthorizationRedirectEndpoint': urlJoin(CONFIG.FRONTEND_URL, 'authorize')
-          },
-          contentType: MIME_TYPES.JSON,
-          webId
-        },
-        { parentCtx: ctx }
-      );
-
-      await ctx.call('ldp.resource.patch', {
-        resourceUri: webId,
-        triplesToAdd: [
-          triple(
-            namedNode(webId),
-            namedNode('http://www.w3.org/ns/solid/interop#hasAuthorizationAgent'),
-            namedNode(agentUri)
-          )
-        ],
-        webId: 'system'
-      });
-    },
-    async getAgent(ctx) {
-      const { webId } = ctx.params;
-      const container = await this.actions.list({ webId }, { parentCtx: ctx });
-      const resources = arrayOf(container['ldp:includes']);
-      if (resources.length > 0) {
-        return resources[0];
       }
     },
     async install(ctx) {
@@ -216,10 +174,22 @@ module.exports = {
       }
     }
   },
-  events: {
-    async 'auth.registered'(ctx) {
-      const { webId } = ctx.params;
-      await this.actions.initializeAgent({ webId }, { parentCtx: ctx });
+  hooks: {
+    after: {
+      async post(ctx, res) {
+        await ctx.call('ldp.resource.patch', {
+          resourceUri: ctx.params.webId,
+          triplesToAdd: [
+            triple(
+              namedNode(ctx.params.webId),
+              namedNode('http://www.w3.org/ns/solid/interop#hasAuthorizationAgent'),
+              namedNode(res)
+            )
+          ],
+          webId: 'system'
+        });
+        return res;
+      }
     }
   }
 };

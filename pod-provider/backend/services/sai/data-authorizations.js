@@ -38,7 +38,7 @@ module.exports = {
       } else {
         const accessNeed = await ctx.call('ldp.remote.get', { resourceUri: accessNeedUri });
 
-        // The data-grants.post before hook requires an expanded type. Expand it now since we have the context.
+        // The data-authorizations.post before hook requires an expanded type. Expand it now since we have the context.
         const [expandedRegisteredClass] = await ctx.call('jsonld.parser.expandTypes', {
           types: [accessNeed['apods:registeredClass']],
           context: accessNeed['@context']
@@ -139,7 +139,7 @@ module.exports = {
       if (!ontology) throw new Error(`Could not register ontology for resource type ${registeredClass}`);
 
       // Check if containers with this type already exist (happens if another app registered the same type)
-      let containersUris = await this.broker.call('type-registrations.findContainersUris', {
+      let containersUris = await ctx.call('type-registrations.findContainersUris', {
         type: registeredClass,
         webId: podOwner
       });
@@ -156,7 +156,7 @@ module.exports = {
         await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId: podOwner });
 
         // If the resource type is invalid, an error will be thrown here
-        await this.broker.call('type-registrations.register', {
+        await ctx.call('type-registrations.register', {
           type: registeredClass,
           containerUri: containersUris[0],
           webId: podOwner
@@ -256,7 +256,7 @@ module.exports = {
         const resourceType = res.oldData['apods:registeredClass'];
         const accessMode = arrayOf(res.oldData['interop:accessMode']);
 
-        await this.broker.call('type-registrations.unbindApp', {
+        await ctx.call('type-registrations.unbindApp', {
           type: resourceType,
           appUri,
           webId

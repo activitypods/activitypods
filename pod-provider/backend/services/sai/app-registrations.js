@@ -126,25 +126,24 @@ module.exports = {
         return res;
       },
       async delete(ctx, res) {
-        const appRegistration = res.oldData;
+        const podOwner = res.oldData['interop:registeredBy'];
+        const appUri = res.oldData['interop:registeredAgent'];
 
-        // DELETE ALL RELATED GRANTS
+        // DELETE ALL RELATED AUTHORIZATIONS
+        // The related grants will also be deleted as a side effect
 
-        for (const accessGrantUri of arrayOf(appRegistration['interop:hasAccessGrant'])) {
-          const accessGrant = await ctx.call('access-grants.get', {
-            resourceUri: accessGrantUri,
-            webId: 'system'
-          });
+        const accessAuthorizations = await ctx.call('access-authorizations.getForApp', { appUri, podOwner });
 
-          for (const dataGrantUri of arrayOf(accessGrant['interop:hasDataGrant'])) {
-            await ctx.call('data-grants.delete', {
-              resourceUri: dataGrantUri,
+        for (const accessAuthorization of accessAuthorizations) {
+          for (const dataAuthorizationUri of arrayOf(accessAuthorization['interop:hasDataAuthorization'])) {
+            await ctx.call('data-authorizations.delete', {
+              resourceUri: dataAuthorizationUri,
               webId: 'system'
             });
           }
 
-          await ctx.call('access-grants.delete', {
-            resourceUri: accessGrantUri,
+          await ctx.call('access-authorizations.delete', {
+            resourceUri: accessAuthorization.id || accessAuthorization['@id'],
             webId: 'system'
           });
         }
@@ -152,7 +151,7 @@ module.exports = {
         // DELETE APPLICATION RESOURCE KEPT IN CACHE
 
         await ctx.call('applications.delete', {
-          resourceUri: appRegistration['interop:registeredAgent']
+          resourceUri: appUri
         });
 
         return res;

@@ -371,7 +371,7 @@ module.exports = {
 
         // Detach the AccessAuthorization from the AuthorizationRegistry
         await ctx.call('auth-registry.remove', {
-          podOwner: ctx.params.resource['interop:grantedBy'],
+          podOwner: res.oldData['interop:grantedBy'],
           accessAuthorizationUri: res.resourceUri
         });
 

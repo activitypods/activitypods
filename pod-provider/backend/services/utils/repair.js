@@ -10,6 +10,34 @@ module.exports = {
   name: 'repair',
   actions: {
     /**
+     * Install application with required access needs for the given users
+     */
+    async installApp(ctx) {
+      const { username, appUri } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const { username: dataset, webId } of accounts) {
+        ctx.meta.dataset = dataset;
+        ctx.meta.webId = webId;
+
+        const isRegistered = await ctx.call('app-registrations.isRegistered', { appUri, podOwner: webId });
+        if (isRegistered) {
+          this.logger.info(`App is already installed for ${webId}, skipping...`);
+        } else {
+          this.logger.info(`Installing app on ${webId}...`);
+
+          await ctx.call(
+            'auth-agent.install',
+            {
+              appUri,
+              acceptAllRequirements: true
+            },
+            { meta: { webId } }
+          );
+        }
+      }
+    },
+    /**
      * Delete all app registrations for the given user
      */
     async deleteAppRegistrations(ctx) {

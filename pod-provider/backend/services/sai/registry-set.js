@@ -1,3 +1,4 @@
+const { triple, namedNode } = require('@rdfjs/data-model');
 const { SingleResourceContainerMixin } = require('@semapps/ldp');
 
 module.exports = {

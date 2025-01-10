@@ -20,12 +20,12 @@ const DEFAULT_ALLOWED_TYPES = [
 
 // TODO use cache to improve performances
 const getAllowedTypes = async (ctx, appUri, podOwner, accessMode) => {
-  const dataGrants = await ctx.call('data-grants.getForApp', { appUri, podOwner });
+  const dataAuthorizations = await ctx.call('data-authorizations.getForApp', { appUri, podOwner });
 
   let types = [...DEFAULT_ALLOWED_TYPES];
-  for (const dataGrant of dataGrants) {
-    if (arrayOf(dataGrant['interop:accessMode']).includes(accessMode)) {
-      types.push(...arrayOf(dataGrant['apods:registeredClass']));
+  for (const dataAuthorization of dataAuthorizations) {
+    if (arrayOf(dataAuthorization['interop:accessMode']).includes(accessMode)) {
+      types.push(...arrayOf(dataAuthorization['apods:registeredClass']));
     }
   }
 
@@ -157,7 +157,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
           throw new E.ForbiddenError(`Only registered applications may post to the user outbox`);
         }
 
-        const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
+        const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
         if (!specialRights.includes('apods:PostOutbox')) {
           throw new E.ForbiddenError(`The application has no permission to post to the outbox (apods:PostOutbox)`);
         }
@@ -217,7 +217,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
           throw new E.ForbiddenError(`Only registered applications may handle ACL groups`);
         }
 
-        const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
+        const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
         if (!specialRights.includes('apods:CreateWacGroup')) {
           throw new E.ForbiddenError(`The application has no permission to handle ACL groups (apods:CreateWacGroup)`);
         }
@@ -238,7 +238,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         if (await ctx.call('app-registrations.isRegistered', { appUri: ctx.meta.webId, podOwner })) {
           const appUri = ctx.meta.webId;
 
-          const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
+          const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
           if (!specialRights.includes('apods:CreateWacGroup')) {
             throw new E.ForbiddenError(`The application has no permission to handle ACL groups (apods:CreateWacGroup)`);
           }
@@ -268,7 +268,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         if (await ctx.call('app-registrations.isRegistered', { appUri: ctx.meta.webId, podOwner })) {
           const appUri = ctx.meta.webId;
 
-          const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
+          const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
           if (!specialRights.includes('apods:QuerySparqlEndpoint')) {
             throw new E.ForbiddenError(
               `The application has no permission to query the SPARQL endpoint (apods:QuerySparqlEndpoint)`
@@ -297,12 +297,12 @@ const AppControlMiddleware = ({ baseUrl }) => ({
 
           // If the app is trying to get the outbox or inbox, use webId system to improve performances
           if (collectionUri === urlJoin(podOwner, 'outbox')) {
-            const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
+            const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
             if (specialRights.includes('apods:ReadOutbox')) {
               ctx.params.webId = 'system';
             }
           } else if (collectionUri === urlJoin(podOwner, 'inbox')) {
-            const specialRights = await ctx.call('access-grants.getSpecialRights', { appUri, podOwner });
+            const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
             if (specialRights.includes('apods:ReadInbox')) {
               ctx.params.webId = 'system';
             }

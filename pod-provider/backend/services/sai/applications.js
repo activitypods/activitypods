@@ -19,6 +19,28 @@ module.exports = {
       const { appUri } = ctx.params;
       return await ctx.call('ldp.remote.get', { resourceUri: appUri });
     },
+    /**
+     * Return the required access needs and special rights of the given application
+     */
+    async getRequirements(ctx) {
+      const { appUri } = ctx.params;
+      const app = await ctx.call('ldp.resource.get', { resourceUri: appUri, accept: MIME_TYPES.JSON });
+
+      let accessNeeds = [],
+        specialRights = [];
+      for (const accessNeedGroupUri of arrayOf(app['interop:hasAccessNeedGroup'])) {
+        const accessNeedGroup = await ctx.call('ldp.resource.get', {
+          resourceUri: accessNeedGroupUri,
+          accept: MIME_TYPES.JSON
+        });
+        if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
+          accessNeeds.push(...arrayOf(accessNeedGroup['interop:hasAccessNeed']));
+          specialRights.push(...arrayOf(accessNeedGroup['apods:hasSpecialRights']));
+        }
+      }
+
+      return { accessNeeds, specialRights };
+    },
     async getClassDescription(ctx) {
       const { type, appUri, podOwner } = ctx.params;
 

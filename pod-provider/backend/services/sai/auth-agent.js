@@ -69,7 +69,7 @@ module.exports = {
       }
     },
     async install(ctx) {
-      const { appUri, acceptedAccessNeeds, acceptedSpecialRights } = ctx.params;
+      let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
 
       const webId = ctx.meta.webId;
       const account = await ctx.call('auth.account.findByWebId', { webId });
@@ -84,6 +84,18 @@ module.exports = {
           400,
           'BAD REQUEST'
         );
+      }
+
+      if (acceptAllRequirements) {
+        if (!acceptedAccessNeeds || !acceptedSpecialRights) {
+          throw new Error(
+            `If acceptAllRequirements is true, you should not pass acceptedAccessNeeds or acceptedSpecialRights`
+          );
+        }
+
+        const requirements = await ctx.call('applications.getRequirements', { appUri });
+        acceptedAccessNeeds = requirements.accessNeeds;
+        acceptedSpecialRights = requirements.specialRights;
       }
 
       const appRegistrationUri = await ctx.call('app-registrations.createOrUpdate', {

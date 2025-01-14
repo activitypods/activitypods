@@ -68,6 +68,27 @@ module.exports = {
           this.logger.info(`Creating AuthorizationRegistry for ${webId}`);
           await ctx.call('auth-registry.initializeResource', { webId });
         }
+
+        const agentRegistryExist = await ctx.call('agent-registry.exist', { webId });
+        if (agentRegistryExist) {
+          this.logger.warn(`AgentRegistry already exist for ${webId}, skipping...`);
+        } else {
+          this.logger.info(`Creating AgentRegistry for ${webId}`);
+          await ctx.call('agent-registry.initializeResource', { webId });
+
+          const appRegistrationsContainer = await ctx.call('app-registrations.list', { webId });
+          const appRegistrations = arrayOf(appRegistrationsContainer['ldp:contains']);
+
+          for (const appRegistration of appRegistrations) {
+            this.logger.info(
+              `Adding ApplicationRegistration of ${appRegistration['interop:registeredAgent']} to AgentRegistry`
+            );
+            await ctx.call('agent-registry.add', {
+              podOwner: webId,
+              appRegistrationUri: appRegistration.id
+            });
+          }
+        }
       }
     },
     async generateAuthorizations(ctx) {

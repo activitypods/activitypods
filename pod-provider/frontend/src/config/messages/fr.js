@@ -17,8 +17,7 @@ module.exports = {
       ignore_contact_request: 'Ignorer la demande',
       login: 'Se connecter',
       open_app: "Ouvrir l'appli",
-      install_app: "Installer l'appli",
-      uninstall_app: "Désinstaller l'appli",
+      delete_app: "Supprimer l'appli",
       reject: 'Refuser',
       reject_contact_request: 'Rejeter la demande',
       remove_contact: 'Retirer de mes contacts',
@@ -27,8 +26,10 @@ module.exports = {
       send_request: 'Envoyer demande',
       signup: "S'inscrire",
       reset_password: 'Mot de passe oublié ?',
+      revoke_access: "Révoquer l'accès",
       set_new_password: 'Definir un nouveau mot de passe',
       undo_ignore_contact: 'Ne plus ignorer',
+      upgrade: 'Mettre à jour',
       select: 'Sélectionner',
       connect: "Accepter l'invitation",
       continue: 'Continuer',
@@ -86,6 +87,9 @@ module.exports = {
       export_pod:
         'Vous pouvez télécharger toutes les données de votre espace de donnée. Cette action peut prendre un certain temps.'
     },
+    dialog: {
+      app_permissions: "Permissions de l'application"
+    },
     setting: {
       profiles: 'Mes profils',
       profile: '%{smart_count} profil |||| %{smart_count} profils',
@@ -124,8 +128,7 @@ module.exports = {
       share_contact: 'Mon lien de contact'
     },
     block: {
-      contact_requests: 'Nouvelles demandes de contact',
-      g1_account: 'Compte G1'
+      contact_requests: 'Nouvelles demandes de contact'
     },
     input: {
       about_you: 'Quelques mots sur vous',
@@ -151,10 +154,6 @@ module.exports = {
       share_contact:
         'Pour vous connecter avec une personne que vous connaissez, vous pouvez lui envoyer le lien ci-dessous.',
       location_comment: 'Indications supplémentaires pour aider à trouver ce lieu',
-      g1_tipjar_field:
-        'Pour envoyer de la monnaie libre à cet utilisateur, copiez sa clé publique ci-dessous et utilisez-la dans le logiciel Cesium.',
-      g1_tipjar_input:
-        'La clé publique de votre compte Ğ1. Permet aux autres membres du réseau de facilement vous envoyer de la monnaie libre.',
       login: 'Je me connecte à mon espace personnel',
       signup: 'Je crée mon espace personnel',
       reset_password:
@@ -162,7 +161,7 @@ module.exports = {
       set_new_password: 'Veuillez entrer votre adresse mail et un nouveau mot de passe ci-dessous',
       create_profile:
         'Maintenant que votre compte est créé, veuillez créer votre profil. Celui-ci ne sera visible par défaut que des personnes que vous acceptez dans votre réseau.',
-      authorize_install: "Pour être installée, l'application requiert les autorisations suivantes",
+      authorize_install: "Pour être utilisée, l'application requiert les autorisations suivantes",
       authorize_upgrade:
         "L'application a été mise à jour et requiert maintenant les nouvelles autorisations ci-dessous",
       invite_text_logged_out:
@@ -188,12 +187,12 @@ module.exports = {
       you_participated_to_same_event: 'Vous avez participé à la même rencontre',
       verified_app: 'Application vérifiée',
       verified: 'Vérifiée',
-      no_app_registration: 'Aucune application installée',
+      no_app_registration: 'Aucune application enregistrée',
       connection_successful: 'Vous êtes maintenant connecté !',
       pod_creation_progress: 'Compte en cours de création...',
-      app_installation_progress: 'Installation en cours...',
+      app_registration_progress: 'Enregistrement en cours...',
       app_upgrade_progress: 'Mise à jour en cours...',
-      app_upgrade_cancel: "Désinstaller l'application ?",
+      app_upgrade_cancel: "Supprimer l'application ?",
       app_upgrade_cancel_description:
         "Cette application ne peut pas fonctionner si vous ne lui donnez pas les autorisations qu'elle demande. Est-ce que vous souhaitez désinstaller l'application ?",
       default_app_changed: "L'application par défaut a été changée",
@@ -223,7 +222,8 @@ module.exports = {
       update_settings_error: "Une erreur s'est produite",
       verified_applications_load_failed: 'Impossible de charger la liste des applications vérifiées',
       app_uninstallation_in_progress: "Désinstallation de l'application en cours...",
-      app_uninstalled: 'Application désinstallée',
+      app_uninstalled: 'Application supprimée',
+      app_upgraded: 'Application mise à jour',
       home_address_updated: 'Adresse du domicile mise à jour',
       home_address_deleted: 'Adresse du domicile enlevée',
       send_request_error: "Erreur lors de l'envoi de la demande : %{error}",

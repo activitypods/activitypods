@@ -6,16 +6,18 @@ import WarningIcon from '@mui/icons-material/Warning';
 import SimpleBox from '../../layout/SimpleBox';
 import useAccessNeeds from '../../hooks/useAccessNeeds';
 import useClassDescriptions from '../../hooks/useClassDescriptions';
-import AccessNeedsList from './AccessNeedsList';
+import AccessNeedsList from '../../common/list/AccessNeedsList';
 import ProgressMessage from '../../common/ProgressMessage';
 import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import AppHeader from './AppHeader';
+import useRegisterApp from '../../hooks/useRegisterApp';
 
-const InstallationScreen = ({ application, accessApp, isTrustedApp }) => {
-  const [isInstalling, setIsInstalling] = useState(false);
-  const [allowedAccessNeeds, setAllowedAccessNeeds] = useState();
+const RegistrationScreen = ({ application, accessApp, isTrustedApp }) => {
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [grantedAccessNeedsUris, setGrantedAccessNeedsUris] = useState();
   const translate = useTranslate();
   const notify = useNotify();
+  const registerApp = useRegisterApp();
 
   const { requiredAccessNeeds, optionalAccessNeeds, loaded } = useAccessNeeds(application);
   const { classDescriptions } = useClassDescriptions(application);
@@ -24,37 +26,27 @@ const InstallationScreen = ({ application, accessApp, isTrustedApp }) => {
 
   useEffect(() => {
     if (loaded) {
-      setAllowedAccessNeeds([
+      setGrantedAccessNeedsUris([
         ...requiredAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id)),
         ...optionalAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id))
       ]);
     }
-  }, [loaded, requiredAccessNeeds, optionalAccessNeeds, setAllowedAccessNeeds]);
+  }, [loaded, requiredAccessNeeds, optionalAccessNeeds, setGrantedAccessNeedsUris]);
 
   const installApp = useCallback(async () => {
     try {
-      setIsInstalling(true);
+      setIsRegistering(true);
 
-      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'install'), {
-        method: 'POST',
-        headers: new Headers({
-          'Content-Type': 'application/json'
-        }),
-        body: JSON.stringify({
-          appUri: application.id,
-          acceptedAccessNeeds: allowedAccessNeeds.filter(a => !a.startsWith('apods:')),
-          acceptedSpecialRights: allowedAccessNeeds.filter(a => a.startsWith('apods:'))
-        })
-      });
+      await registerApp({ appUri: application.id, grantedAccessNeeds: grantedAccessNeedsUris });
 
       await accessApp();
     } catch (e) {
-      setIsInstalling(false);
+      setIsRegistering(false);
       notify(`Error on app installation: ${e.message}`, { type: 'error' });
     }
-  }, [dataProvider, notify, application, allowedAccessNeeds, accessApp, setIsInstalling]);
+  }, [registerApp, notify, application, grantedAccessNeedsUris, accessApp, setIsRegistering]);
 
-  if (isInstalling) return <ProgressMessage message="app.message.app_installation_progress" />;
+  if (isRegistering) return <ProgressMessage message="app.message.app_registration_progress" />;
 
   return (
     <SimpleBox
@@ -68,15 +60,15 @@ const InstallationScreen = ({ application, accessApp, isTrustedApp }) => {
           <AccessNeedsList
             required
             accessNeeds={requiredAccessNeeds}
-            allowedAccessNeeds={allowedAccessNeeds}
-            setAllowedAccessNeeds={setAllowedAccessNeeds}
+            allowedAccessNeeds={grantedAccessNeedsUris}
+            setAllowedAccessNeeds={setGrantedAccessNeedsUris}
             classDescriptions={classDescriptions}
             typeRegistrations={typeRegistrations}
           />
           <AccessNeedsList
             accessNeeds={optionalAccessNeeds}
-            allowedAccessNeeds={allowedAccessNeeds}
-            setAllowedAccessNeeds={setAllowedAccessNeeds}
+            allowedAccessNeeds={grantedAccessNeedsUris}
+            setAllowedAccessNeeds={setGrantedAccessNeedsUris}
             classDescriptions={classDescriptions}
             typeRegistrations={typeRegistrations}
           />
@@ -96,4 +88,4 @@ const InstallationScreen = ({ application, accessApp, isTrustedApp }) => {
   );
 };
 
-export default InstallationScreen;
+export default RegistrationScreen;

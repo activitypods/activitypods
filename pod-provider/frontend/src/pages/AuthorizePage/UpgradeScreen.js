@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import urlJoin from 'url-join';
-import { useTranslate, useNotify, useDataProvider } from 'react-admin';
+import { useNotify, useTranslate } from 'react-admin';
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
 import SimpleBox from '../../layout/SimpleBox';
 import useAccessNeeds from '../../hooks/useAccessNeeds';
 import useGrants from '../../hooks/useGrants';
 import useClassDescriptions from '../../hooks/useClassDescriptions';
-import AccessNeedsList from './AccessNeedsList';
+import AccessNeedsList from '../../common/list/AccessNeedsList';
 import ProgressMessage from '../../common/ProgressMessage';
 import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import AppHeader from './AppHeader';
 import { arrayOf } from '../../utils';
-import useUninstallApp from '../../hooks/useUninstallApp';
+import useRemoveApp from '../../hooks/useRemoveApp';
+import useUpgradeApp from '../../hooks/useUpgradeApp';
 
 const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
   const [step, setStep] = useState();
@@ -20,10 +20,10 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
   const [allowedAccessNeeds, setAllowedAccessNeeds] = useState([]);
   const [grantedAccessNeeds, setGrantedAccessNeeds] = useState([]);
   const [missingAccessNeeds, setMissingAccessNeeds] = useState({ required: [], optional: [] });
-  const dataProvider = useDataProvider();
   const translate = useTranslate();
   const notify = useNotify();
-  const uninstallApp = useUninstallApp(application);
+  const removeApp = useRemoveApp();
+  const upgradeApp = useUpgradeApp();
 
   const { requiredAccessNeeds, optionalAccessNeeds, loaded: accessNeedsLoaded } = useAccessNeeds(application);
   const { classDescriptions } = useClassDescriptions(application);
@@ -37,16 +37,9 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
         try {
           setStep('upgrading');
 
-          await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'upgrade'), {
-            method: 'POST',
-            headers: new Headers({
-              'Content-Type': 'application/json'
-            }),
-            body: JSON.stringify({
-              appUri: application.id,
-              acceptedAccessNeeds: [...grantedAccessNeeds, ...allowedAccessNeeds].filter(a => !a.startsWith('apods:')),
-              acceptedSpecialRights: [...grantedAccessNeeds, ...allowedAccessNeeds].filter(a => a.startsWith('apods:'))
-            })
+          await upgradeApp({
+            appUri: application.id,
+            grantedAccessNeeds: [...grantedAccessNeeds, ...allowedAccessNeeds]
           });
 
           await accessApp();
@@ -56,7 +49,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
         }
       }
     })();
-  }, [dataProvider, notify, application, allowedAccessNeeds, grantedAccessNeeds, accessApp, step, setStep]);
+  }, [application, upgradeApp, allowedAccessNeeds, grantedAccessNeeds, accessApp, step, setStep]);
 
   useEffect(() => {
     if (accessNeedsLoaded && grantsLoaded && !step) {
@@ -164,7 +157,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
           <Button variant="contained" color="secondary" onClick={() => setRejectDialogOpen(false)}>
             {translate('ra.action.cancel')}
           </Button>
-          <Button variant="contained" color="error" onClick={() => uninstallApp()}>
+          <Button variant="contained" color="error" onClick={() => removeApp({ appUri: application.id })}>
             {translate('app.action.uninstall_app')}
           </Button>
         </DialogActions>

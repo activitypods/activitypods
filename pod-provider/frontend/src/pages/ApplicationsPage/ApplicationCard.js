@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocaleState, useTranslate } from 'react-admin';
 import { Card, Typography, Button, Chip, IconButton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { useNodeinfo } from '@semapps/activitypub-components';
 import DoneIcon from '@mui/icons-material/Done';
-import DeleteIcon from '@mui/icons-material/Delete';
-import useUninstallApp from '../../hooks/useUninstallApp';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { getLangString } from '../../utils';
+import AppSettingsDialog from './AppSettingsDialog';
 
 const useStyles = makeStyles(theme => ({
   card: {
@@ -54,13 +53,12 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ApplicationCard = ({ app, isTrustedApp, isInstalled }) => {
+const ApplicationCard = ({ app, isTrustedApp, isRegistered }) => {
+  const [openSettings, setOpenSettings] = useState(false);
   const classes = useStyles();
   const translate = useTranslate();
   const [locale] = useLocaleState();
   const appDomain = new URL(app.id).host;
-  const nodeinfo = useNodeinfo(appDomain);
-  const uninstallApp = useUninstallApp(app);
 
   return (
     <Card className={classes.card}>
@@ -84,19 +82,15 @@ const ApplicationCard = ({ app, isTrustedApp, isInstalled }) => {
           className={classes.appChip}
         />
       )}
-      <a
-        href={`${nodeinfo?.metadata?.login_url}?iss=${CONFIG.BACKEND_URL}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={classes.link}
-      >
-        <Button variant="contained">{translate(isInstalled ? 'app.action.open_app' : 'app.action.install_app')}</Button>
+      <a href={app['oidc:client_uri']} target="_blank" rel="noopener noreferrer" className={classes.link}>
+        <Button variant="contained">{translate('app.action.open_app')}</Button>
       </a>
-      {isInstalled && (
-        <IconButton onClick={() => uninstallApp()}>
-          <DeleteIcon />
+      {isRegistered && (
+        <IconButton onClick={() => setOpenSettings(true)}>
+          <SettingsIcon />
         </IconButton>
       )}
+      <AppSettingsDialog application={app} open={openSettings} onClose={() => setOpenSettings(false)} />
     </Card>
   );
 };

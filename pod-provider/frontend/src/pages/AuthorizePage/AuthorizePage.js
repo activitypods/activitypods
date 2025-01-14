@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import useTrustedApps from '../../hooks/useTrustedApps';
 import useGetAppStatus from '../../hooks/useGetAppStatus';
-import InstallationScreen from './InstallationScreen';
+import RegistrationScreen from './RegistrationScreen';
 import UpgradeScreen from './UpgradeScreen';
 
 const AuthorizePage = () => {
@@ -37,7 +37,7 @@ const AuthorizePage = () => {
       if (!isLoading && application?.id) {
         const appStatus = await getAppStatus(application.id);
         if (!appStatus.installed) {
-          setScreen('install');
+          setScreen('register');
         } else if (appStatus.upgradeNeeded) {
           setScreen('upgrade');
         } else {
@@ -48,8 +48,8 @@ const AuthorizePage = () => {
   }, [appRegistrations, isLoading, application, accessApp, getAppStatus, setScreen]);
 
   switch (screen) {
-    case 'install':
-      return <InstallationScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
+    case 'register':
+      return <RegistrationScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
 
     case 'upgrade':
       return <UpgradeScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;

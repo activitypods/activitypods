@@ -322,6 +322,15 @@ module.exports = {
       async post(ctx, res) {
         const podOwner = ctx.params.resource['interop:grantedBy'];
 
+        // Attach the AccessAuthorization to the AuthorizationRegistry
+        await ctx.call('auth-registry.add', {
+          podOwner,
+          accessAuthorizationUri: res
+        });
+
+        // For migration, we don't want this to go further
+        if (ctx.meta.isMigration === true) return;
+
         // Add permissions based on the special rights
         await this.actions.addPermissionsFromSpecialRights(
           {
@@ -331,12 +340,6 @@ module.exports = {
           },
           { parentCtx: ctx }
         );
-
-        // Attach the AccessAuthorization to the AuthorizationRegistry
-        await ctx.call('auth-registry.add', {
-          podOwner,
-          accessAuthorizationUri: res
-        });
 
         // Get DataGrants corresponding to DataAuthorizations
         let dataGrantsUris = [];

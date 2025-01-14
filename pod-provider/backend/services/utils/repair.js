@@ -59,6 +59,32 @@ module.exports = {
       }
     },
     /**
+     * Create missing containers for the given user
+     */
+    async createMissingContainers(ctx) {
+      const { username } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const { webId, username: dataset } of accounts) {
+        ctx.meta.dataset = dataset;
+        const storageUrl = await ctx.call('solid-storage.getUrl', { webId });
+
+        const registeredContainers = await ctx.call('ldp.registry.list');
+        for (const container of Object.values(registeredContainers)) {
+          const containerUri = urlJoin(storageUrl, container.path);
+          const containerExist = await ctx.call('ldp.container.exist', { containerUri, webId });
+          if (!containerExist) {
+            this.logger.info(`Container ${containerUri} doesn't exist yet. Creating it...`);
+            await ctx.call('ldp.container.createAndAttach', {
+              containerUri,
+              permissions: container.permissions,
+              webId
+            });
+          }
+        }
+      }
+    },
+    /**
      * Refresh the permissions of every registered containers
      * Similar to webacl.resource.refreshContainersRights but works with Pods
      */

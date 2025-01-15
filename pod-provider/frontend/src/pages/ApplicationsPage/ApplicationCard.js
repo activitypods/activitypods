@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { useLocaleState, useTranslate } from 'react-admin';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocaleState, useTranslate, fetchUtils } from 'react-admin';
 import { Card, Typography, Button, Chip, IconButton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import DoneIcon from '@mui/icons-material/Done';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
+import LoopIcon from '@mui/icons-material/Loop';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { getLangString } from '../../utils';
+import { arraysEqual, getLangString } from '../../utils';
 import AppSettingsDialog from './AppSettingsDialog';
 
 const useStyles = makeStyles(theme => ({
@@ -39,7 +41,7 @@ const useStyles = makeStyles(theme => ({
     fontStyle: 'italic'
   },
   appChip: {
-    backgroundColor: '#8bd78b',
+    // backgroundColor: '#8bd78b',
     marginTop: 6,
     [theme.breakpoints.up('sm')]: {
       marginTop: 0,
@@ -55,10 +57,34 @@ const useStyles = makeStyles(theme => ({
 
 const ApplicationCard = ({ app, isTrustedApp, isRegistered }) => {
   const [openSettings, setOpenSettings] = useState(false);
+  const [remoteApp, setRemoteApp] = useState();
+  const [isOffline, setIsOffline] = useState(false);
   const classes = useStyles();
   const translate = useTranslate();
   const [locale] = useLocaleState();
   const appDomain = new URL(app.id).host;
+
+  useEffect(() => {
+    (async () => {
+      try {
+        // Don't use the data provider because we don't want to use the proxy
+        const { json, status } = await fetchUtils.fetchJson(app.id);
+        if (status === 200) {
+          setRemoteApp(json);
+        } else {
+          setIsOffline(true);
+        }
+      } catch (e) {
+        setIsOffline(true);
+      }
+    })();
+  }, [app, setRemoteApp, setIsOffline]);
+
+  const isUpgradeRequired = useMemo(() => {
+    if (remoteApp) {
+      return !arraysEqual(app['interop:hasAccessNeedGroup'], remoteApp['interop:hasAccessNeedGroup']);
+    }
+  }, [app, remoteApp]);
 
   return (
     <Card className={classes.card}>
@@ -72,18 +98,45 @@ const ApplicationCard = ({ app, isTrustedApp, isRegistered }) => {
       <Typography variant="body2" className={classes.url}>
         {appDomain}
       </Typography>
-      {isTrustedApp && (
+      {isOffline ? (
         <Chip
           size="small"
-          label={translate('app.message.verified')}
-          color="primary"
+          label={translate('app.message.offline')}
+          color="error"
           onDelete={() => {}}
-          deleteIcon={<DoneIcon />}
+          deleteIcon={<CloudOffIcon />}
           className={classes.appChip}
         />
+      ) : isUpgradeRequired ? (
+        <Chip
+          size="small"
+          label={translate('app.message.upgrade_required')}
+          color="warning"
+          onDelete={() => {}}
+          deleteIcon={<LoopIcon />}
+          className={classes.appChip}
+        />
+      ) : (
+        isTrustedApp && (
+          <Chip
+            size="small"
+            label={translate('app.message.verified')}
+            color="success"
+            onDelete={() => {}}
+            deleteIcon={<DoneIcon />}
+            className={classes.appChip}
+          />
+        )
       )}
-      <a href={app['oidc:client_uri']} target="_blank" rel="noopener noreferrer" className={classes.link}>
-        <Button variant="contained">{translate('app.action.open_app')}</Button>
+      <a
+        href={isOffline ? undefined : app['oidc:client_uri']}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={classes.link}
+      >
+        <Button variant="contained" disabled={isOffline}>
+          {translate('app.action.open_app')}
+        </Button>
       </a>
       {isRegistered && (
         <IconButton onClick={() => setOpenSettings(true)}>
@@ -91,7 +144,11 @@ const ApplicationCard = ({ app, isTrustedApp, isRegistered }) => {
         </IconButton>
       )}
       {openSettings && (
-        <AppSettingsDialog application={app} open={openSettings} onClose={() => setOpenSettings(false)} />
+        <AppSettingsDialog
+          application={isOffline ? app : remoteApp} // If the app is offline, show permissions from the locally-stored app
+          open={openSettings}
+          onClose={() => setOpenSettings(false)}
+        />
       )}
     </Card>
   );

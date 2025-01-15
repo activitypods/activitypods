@@ -175,7 +175,9 @@ module.exports = {
       username_cannot_be_modified: 'The user ID cannot be modified',
       public_profile_view: 'You are viewing your public profile, visible by everyone',
       private_profile_view: 'You are viewing your private profile, visible only by your contacts',
-      create_group: 'Please select on the list below the provider that you wish to use to create your group'
+      create_group: 'Please select on the list below the provider that you wish to use to create your group',
+      cannot_show_permissions_of_offline_app:
+        'The application is offline so we cannot show you the permissions you granted it in a human-readable way. You may still revoke all permissions by clicking on the button below.'
     },
     message: {
       copied_to_clipboard: 'Copied !',
@@ -183,6 +185,8 @@ module.exports = {
       you_participated_to_same_event: 'You participated to the same event',
       verified_app: 'Verified application',
       verified: 'Verified',
+      offline: 'Offline',
+      upgrade_required: 'Upgrade required',
       no_app_registration: 'You have no registered application',
       connection_successful: 'You are now connected!',
       pod_creation_progress: 'Your Pod is being created...',

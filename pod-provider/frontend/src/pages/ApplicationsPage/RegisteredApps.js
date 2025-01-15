@@ -12,7 +12,7 @@ const RegisteredApps = ({ registeredApps, trustedApps }) => {
 
   useEffect(() => {
     if (searchParams.has('uninstalled')) {
-      notify('app.notification.app_uninstalled', { type: 'success' });
+      notify('app.notification.app_removed', { type: 'success' });
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, [notify, searchParams]);

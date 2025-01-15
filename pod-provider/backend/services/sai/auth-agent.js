@@ -162,7 +162,7 @@ module.exports = {
       const account = await ctx.call('auth.account.findByWebId', { webId });
       ctx.meta.dataset = account.username;
 
-      const app = await ctx.call('activitypub.actor.get', { actorUri: appUri, webId });
+      const app = await ctx.call('applications.get', { appUri, webId });
       const appRegistration = await ctx.call('app-registrations.getForApp', { appUri, podOwner: webId });
 
       if (appRegistration) {

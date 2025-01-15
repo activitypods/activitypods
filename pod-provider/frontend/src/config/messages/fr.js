@@ -179,7 +179,9 @@ module.exports = {
       public_profile_view: 'Vous visualisez votre profil public, visible de tout le monde.',
       private_profile_view: 'Vous visualisez votre profil privé, visible seulement de vos contacts.',
       create_group:
-        'Veuillez sélectionner dans la liste ci-dessous le fournisseur que vous souhaitez utiliser pour créer votre groupe'
+        'Veuillez sélectionner dans la liste ci-dessous le fournisseur que vous souhaitez utiliser pour créer votre groupe',
+      cannot_show_permissions_of_offline_app:
+        "L'application étant hors ligne, nous ne pouvons pas vous montrer les autorisations que vous lui avez accordées de manière lisible. Vous pouvez toujours révoquer toutes les autorisations en cliquant sur le bouton ci-dessous."
     },
     message: {
       copied_to_clipboard: 'Copié !',
@@ -187,6 +189,8 @@ module.exports = {
       you_participated_to_same_event: 'Vous avez participé à la même rencontre',
       verified_app: 'Application vérifiée',
       verified: 'Vérifiée',
+      offline: 'Hors ligne',
+      upgrade_required: 'Mise à jour requise',
       no_app_registration: 'Aucune application enregistrée',
       connection_successful: 'Vous êtes maintenant connecté !',
       pod_creation_progress: 'Compte en cours de création...',

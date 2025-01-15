@@ -7,11 +7,12 @@ const useClassDescriptions = application => {
   const { data: currentData } = useGetList('ClassDescription');
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        if (application && currentData && !loading && !loaded) {
+        if (application && currentData && !loading && !loaded && !error) {
           setLoading(true);
           for (const accessDescriptionSetUri of arrayOf(application['interop:hasAccessDescriptionSet'])) {
             const { json: accessDescriptionSet } = await fetchUtils.fetchJson(accessDescriptionSetUri);
@@ -30,12 +31,13 @@ const useClassDescriptions = application => {
         }
       } catch (e) {
         console.error(e);
+        setError(e.message);
         setLoading(false);
       }
     })();
-  }, [application, currentData, setAppData, loading, setLoading, loaded, setLoaded]);
+  }, [application, currentData, setAppData, loading, setLoading, loaded, setLoaded, error, setError]);
 
-  return { classDescriptions: loaded ? [...appData, ...currentData] : [], loading, loaded };
+  return { classDescriptions: loaded ? [...appData, ...currentData] : [], loading, loaded, error };
 };
 
 export default useClassDescriptions;

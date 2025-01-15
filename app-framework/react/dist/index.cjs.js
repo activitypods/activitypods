@@ -5,11 +5,11 @@ var $fvx3m$reactjsxruntime = require("react/jsx-runtime");
 var $fvx3m$muimaterial = require("@mui/material");
 var $fvx3m$muiiconsmaterialError = require("@mui/icons-material/Error");
 var $fvx3m$urljoin = require("url-join");
+var $fvx3m$httplinkheader = require("http-link-header");
 var $fvx3m$jwtdecode = require("jwt-decode");
 var $fvx3m$reactrouterdom = require("react-router-dom");
 var $fvx3m$muiiconsmaterialLock = require("@mui/icons-material/Lock");
 var $fvx3m$muiiconsmaterialStorage = require("@mui/icons-material/Storage");
-var $fvx3m$httplinkheader = require("http-link-header");
 var $fvx3m$semappssemanticdataprovider = require("@semapps/semantic-data-provider");
 var $fvx3m$muiiconsmaterialShare = require("@mui/icons-material/Share");
 var $fvx3m$muistylesmakeStyles = require("@mui/styles/makeStyles");
@@ -86,6 +86,42 @@ const $c6f5b9530195abb8$var$useGetAppStatus = ()=>{
 var $c6f5b9530195abb8$export$2e2bcd8739ae039 = $c6f5b9530195abb8$var$useGetAppStatus;
 
 
+
+
+
+/**
+ * Return a function that look if an app (clientId) is registered with an user (webId)
+ * If not, it redirects to the endpoint provided by the user's authorization agent
+ * See https://solid.github.io/data-interoperability-panel/specification/#authorization-agent
+ */ const $9a8d0fd57dda054c$var$useRegisterApp = ()=>{
+    const dataProvider = (0, $fvx3m$reactadmin.useDataProvider)();
+    const registerApp = (0, $fvx3m$react.useCallback)(async (clientId, webId)=>{
+        const { json: actor } = await dataProvider.fetch(webId);
+        const authAgentUri = actor["interop:hasAuthorizationAgent"];
+        if (authAgentUri) {
+            // Find if an application registration is linked to this user
+            // See https://solid.github.io/data-interoperability-panel/specification/#agent-registration-discovery
+            const { headers: headers, json: authAgent } = await dataProvider.fetch(authAgentUri);
+            const linkHeader = (0, ($parcel$interopDefault($fvx3m$httplinkheader))).parse(headers.get("Link"));
+            const registeredAgentLinkHeader = linkHeader.rel("http://www.w3.org/ns/solid/interop#registeredAgent");
+            if (registeredAgentLinkHeader.length > 0) {
+                const appRegistrationUri = registeredAgentLinkHeader[0].anchor;
+                return appRegistrationUri;
+            } else {
+                // No application registration found, redirect to the authorization agent
+                const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
+                redirectUrl.searchParams.append("client_id", clientId);
+                window.location.href = redirectUrl.toString();
+            }
+        }
+    }, [
+        dataProvider
+    ]);
+    return registerApp;
+};
+var $9a8d0fd57dda054c$export$2e2bcd8739ae039 = $9a8d0fd57dda054c$var$useRegisterApp;
+
+
 /**
  * Call the /.well-known/app-status endpoint to check the status of the app
  * If the app backend is offline or not installed, display an error message
@@ -100,6 +136,7 @@ var $c6f5b9530195abb8$export$2e2bcd8739ae039 = $c6f5b9530195abb8$var$useGetAppSt
     const [appStatusChecked, setAppStatusChecked] = (0, $fvx3m$react.useState)(false);
     const [errorMessage, setErrorMessage] = (0, $fvx3m$react.useState)();
     const nodeinfo = (0, $fvx3m$semappsactivitypubcomponents.useNodeinfo)(identity?.id ? new URL(identity?.id).host : undefined);
+    const registerApp = (0, $9a8d0fd57dda054c$export$2e2bcd8739ae039)();
     const getAppStatus = (0, $c6f5b9530195abb8$export$2e2bcd8739ae039)();
     const isLoggedOut = !isIdentityLoading && !identity?.id;
     if (!clientId) throw new Error(`Missing clientId prop for BackgroundChecks component`);
@@ -113,7 +150,8 @@ var $c6f5b9530195abb8$export$2e2bcd8739ae039 = $c6f5b9530195abb8$var$useGetAppSt
                     return;
                 }
                 if (!appStatus.installed) {
-                    setErrorMessage(translate("apods.error.app_not_installed"));
+                    setErrorMessage(translate("apods.error.app_not_registered"));
+                    await registerApp(clientId, identity.id);
                     return;
                 }
                 if (appStatus.upgradeNeeded) {
@@ -158,7 +196,9 @@ var $c6f5b9530195abb8$export$2e2bcd8739ae039 = $c6f5b9530195abb8$var$useGetAppSt
         document,
         dataProvider,
         setErrorMessage,
-        translate
+        translate,
+        registerApp,
+        clientId
     ]);
     (0, $fvx3m$react.useEffect)(()=>{
         if (identity?.id && nodeinfo) {
@@ -258,41 +298,6 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
 
 
 
-
-
-
-
-/**
- * Return a function that look if an app (clientId) is registered with an user (webId)
- * If not, it redirects to the endpoint provided by the user's authorization agent
- * See https://solid.github.io/data-interoperability-panel/specification/#authorization-agent
- */ const $9a8d0fd57dda054c$var$useRegisterApp = ()=>{
-    const dataProvider = (0, $fvx3m$reactadmin.useDataProvider)();
-    const registerApp = (0, $fvx3m$react.useCallback)(async (clientId, webId)=>{
-        const { json: actor } = await dataProvider.fetch(webId);
-        const authAgentUri = actor["interop:hasAuthorizationAgent"];
-        if (authAgentUri) {
-            // Find if an application registration is linked to this user
-            // See https://solid.github.io/data-interoperability-panel/specification/#agent-registration-discovery
-            const { headers: headers, json: authAgent } = await dataProvider.fetch(authAgentUri);
-            const linkHeader = (0, ($parcel$interopDefault($fvx3m$httplinkheader))).parse(headers.get("Link"));
-            const registeredAgentLinkHeader = linkHeader.rel("http://www.w3.org/ns/solid/interop#registeredAgent");
-            if (registeredAgentLinkHeader.length > 0) {
-                const appRegistrationUri = registeredAgentLinkHeader[0].anchor;
-                return appRegistrationUri;
-            } else {
-                // No application registration found, redirect to the authorization agent
-                const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
-                redirectUrl.searchParams.append("client_id", clientId);
-                window.location.href = redirectUrl.toString();
-            }
-        }
-    }, [
-        dataProvider
-    ]);
-    return registerApp;
-};
-var $9a8d0fd57dda054c$export$2e2bcd8739ae039 = $9a8d0fd57dda054c$var$useRegisterApp;
 
 
 /**
@@ -1208,7 +1213,7 @@ var $4b1314efa6ba34c8$export$2e2bcd8739ae039 = {
         error: {
             app_status_unavailable: "Unable to check app status",
             app_offline: "The app backend is offline",
-            app_not_installed: "The app is not installed",
+            app_not_registered: "The app is not registered",
             app_not_listening: "The app is not listening to %{uri}"
         },
         user_menu: {
@@ -1242,7 +1247,7 @@ var $7955e6b2ad1a54ef$export$2e2bcd8739ae039 = {
         error: {
             app_status_unavailable: "Impossible de v\xe9rifier le statut de l'application",
             app_offline: "L'application est hors ligne",
-            app_not_installed: "L'application n'est pas install\xe9e",
+            app_not_registered: "L'application n'est pas enregistr\xe9e",
             app_not_listening: "L'application n'\xe9coute pas %{uri}"
         },
         user_menu: {

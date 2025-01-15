@@ -20,7 +20,7 @@ export default {
     error: {
       app_status_unavailable: "Impossible de vérifier le statut de l'application",
       app_offline: "L'application est hors ligne",
-      app_not_installed: "L'application n'est pas installée",
+      app_not_registered: "L'application n'est pas enregistrée",
       app_not_listening: "L'application n'écoute pas %{uri}"
     },
     user_menu: {

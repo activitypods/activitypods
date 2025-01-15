@@ -5,6 +5,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import { useNodeinfo } from '@semapps/activitypub-components';
 import { arrayOf, delay } from '../utils';
 import useGetAppStatus from '../hooks/useGetAppStatus';
+import useRegisterApp from '../hooks/useRegisterApp';
 
 /**
  * Call the /.well-known/app-status endpoint to check the status of the app
@@ -21,6 +22,7 @@ const BackgroundChecks: FunctionComponent<Props> = ({ clientId, listeningTo = []
   const [appStatusChecked, setAppStatusChecked] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const nodeinfo = useNodeinfo(identity?.id ? new URL(identity?.id as string).host : undefined);
+  const registerApp = useRegisterApp();
   const getAppStatus = useGetAppStatus();
 
   const isLoggedOut = !isIdentityLoading && !identity?.id;
@@ -39,7 +41,8 @@ const BackgroundChecks: FunctionComponent<Props> = ({ clientId, listeningTo = []
           }
 
           if (!appStatus.installed) {
-            setErrorMessage(translate('apods.error.app_not_installed'));
+            setErrorMessage(translate('apods.error.app_not_registered'));
+            await registerApp(clientId, identity.id as string);
             return;
           }
 
@@ -87,7 +90,18 @@ const BackgroundChecks: FunctionComponent<Props> = ({ clientId, listeningTo = []
         setErrorMessage(translate('apods.error.app_status_unavailable'));
       }
     }
-  }, [identity, nodeinfo, getAppStatus, setAppStatusChecked, document, dataProvider, setErrorMessage, translate]);
+  }, [
+    identity,
+    nodeinfo,
+    getAppStatus,
+    setAppStatusChecked,
+    document,
+    dataProvider,
+    setErrorMessage,
+    translate,
+    registerApp,
+    clientId
+  ]);
 
   useEffect(() => {
     if (identity?.id && nodeinfo) {

@@ -8,6 +8,7 @@ import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import CloseIcon from '@mui/icons-material/Close';
 import BlockIcon from '@mui/icons-material/Block';
 import LoopIcon from '@mui/icons-material/Loop';
+import useGrants from '../../hooks/useGrants';
 import useUpgradeApp from '../../hooks/useUpgradeApp';
 import useRemoveApp from '../../hooks/useRemoveApp';
 import { arraysEqual } from '../../utils';
@@ -15,42 +16,53 @@ import { arraysEqual } from '../../utils';
 const AppSettingsDialog = ({ application, open, onClose }) => {
   const [oldAccessNeedsUris, setOldAccessNeedsUris] = useState();
   const [newAccessNeedsUris, setNewAccessNeedsUris] = useState();
+  const [isPending, setIsPending] = useState(false);
   const translate = useTranslate();
   const notify = useNotify();
 
-  const { requiredAccessNeeds, optionalAccessNeeds, loaded } = useAccessNeeds(application);
+  const { requiredAccessNeeds, optionalAccessNeeds } = useAccessNeeds(application);
+  const { grants, loaded: grantsLoaded, refetch: refetchGrants } = useGrants(application.id);
   const { classDescriptions } = useClassDescriptions(application);
   const { data: typeRegistrations } = useTypeRegistrations();
   const removeApp = useRemoveApp();
   const upgradeApp = useUpgradeApp();
 
   useEffect(() => {
-    if (loaded) {
-      const accessNeedsUris = [
-        ...requiredAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id)),
-        ...optionalAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id))
-      ];
-      setOldAccessNeedsUris(accessNeedsUris);
-      setNewAccessNeedsUris(accessNeedsUris);
+    if (grantsLoaded) {
+      setOldAccessNeedsUris(grants.map(a => (typeof a === 'string' ? a : a?.['interop:satisfiesAccessNeed'])));
+      setNewAccessNeedsUris(grants.map(a => (typeof a === 'string' ? a : a?.['interop:satisfiesAccessNeed'])));
     }
-  }, [loaded, requiredAccessNeeds, optionalAccessNeeds, setOldAccessNeedsUris, setNewAccessNeedsUris]);
+  }, [grantsLoaded, grants, setOldAccessNeedsUris, setNewAccessNeedsUris]);
 
   const onRemove = useCallback(() => {
-    removeApp({ appUri: application.id });
-  }, [removeApp, application]);
+    try {
+      notify('app.notification.app_removal_in_progress');
+      setIsPending(true);
+      // This will redirect to the app logout and then back to the applications page
+      removeApp({ application });
+    } catch (e) {
+      setIsPending(false);
+      notify(`Error on app removal: ${e.message}`, { type: 'error' });
+    }
+  }, [removeApp, application, setIsPending, notify]);
 
   const onUpgrade = useCallback(async () => {
     try {
+      notify(`app.notification.app_upgrade_progress`);
+      setIsPending(true);
       await upgradeApp({
         appUri: application.id,
         grantedAccessNeeds: newAccessNeedsUris
       });
-
       notify(`app.notification.app_upgraded`, { type: 'success' });
+      setIsPending(false);
+      onClose();
+      refetchGrants();
     } catch (e) {
+      setIsPending(false);
       notify(`Error on app upgrade: ${e.message}`, { type: 'error' });
     }
-  }, [upgradeApp, newAccessNeedsUris]);
+  }, [upgradeApp, newAccessNeedsUris, setIsPending, onClose, notify, refetchGrants]);
 
   // Will be true if there is a difference between the old and the new access needs
   const showUpgradeButton = useMemo(() => {
@@ -89,9 +101,16 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
           label="app.action.revoke_access"
           startIcon={<BlockIcon />}
           onClick={onRemove}
+          disabled={isPending}
         />
         {showUpgradeButton && (
-          <Button variant="contained" label="app.action.upgrade" startIcon={<LoopIcon />} onClick={onUpgrade} />
+          <Button
+            variant="contained"
+            label="app.action.upgrade"
+            startIcon={<LoopIcon />}
+            onClick={onUpgrade}
+            disabled={isPending}
+          />
         )}
       </DialogActions>
     </Dialog>

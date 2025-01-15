@@ -90,7 +90,9 @@ const ApplicationCard = ({ app, isTrustedApp, isRegistered }) => {
           <SettingsIcon />
         </IconButton>
       )}
-      <AppSettingsDialog application={app} open={openSettings} onClose={() => setOpenSettings(false)} />
+      {openSettings && (
+        <AppSettingsDialog application={app} open={openSettings} onClose={() => setOpenSettings(false)} />
+      )}
     </Card>
   );
 };

@@ -22,11 +22,9 @@ const ApplicationsPage = () => {
   return (
     <>
       <RegisteredApps registeredApps={registeredApps} trustedApps={trustedApps} />
-      {
-        /*!isLocalURL(CONFIG.BACKEND_URL) && */ !isTrustedAppsLoading && (
-          <AvailableApps registeredApps={registeredApps} trustedApps={trustedApps} />
-        )
-      }
+      {!isLocalURL(CONFIG.BACKEND_URL) && !isTrustedAppsLoading && (
+        <AvailableApps registeredApps={registeredApps} trustedApps={trustedApps} />
+      )}
     </>
   );
 };

@@ -7,23 +7,17 @@ const useRemoveApp = () => {
   const dataProvider = useDataProvider();
 
   const removeApp = useCallback(
-    async ({ appUri }) => {
-      try {
-        notify('app.notification.app_uninstallation_in_progress');
+    async ({ application }) => {
+      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'remove-app'), {
+        method: 'POST',
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ appUri: application.id })
+      });
 
-        await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'uninstall'), {
-          method: 'POST',
-          headers: new Headers({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ appUri })
-        });
-
-        const currentUrl = new URL(window.location);
-        const logoutUrl = new URL(app['oidc:post_logout_redirect_uris']);
-        logoutUrl.searchParams.append('redirect', urlJoin(currentUrl.origin, '/apps?uninstalled=true'));
-        window.location.href = logoutUrl.toString();
-      } catch (e) {
-        notify(`Error on app installation: ${e.message}`, { type: 'error' });
-      }
+      const currentUrl = new URL(window.location);
+      const logoutUrl = new URL(application['oidc:post_logout_redirect_uris']);
+      logoutUrl.searchParams.append('redirect', urlJoin(currentUrl.origin, '/apps?uninstalled=true'));
+      window.location.href = logoutUrl.toString();
     },
     [dataProvider, notify]
   );

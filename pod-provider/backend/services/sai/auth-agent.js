@@ -40,9 +40,9 @@ module.exports = {
           json: true
         },
         aliases: {
-          'POST /install': 'auth-agent.install',
-          'POST /upgrade': 'auth-agent.upgrade',
-          'POST /uninstall': 'auth-agent.uninstall'
+          'POST /register-app': 'auth-agent.registerApp',
+          'POST /upgrade-app': 'auth-agent.upgradeApp',
+          'POST /remove-app': 'auth-agent.removeApp'
         }
       }
     });
@@ -68,7 +68,7 @@ module.exports = {
         }
       }
     },
-    async install(ctx) {
+    async registerApp(ctx) {
       let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
 
       const webId = ctx.meta.webId;
@@ -122,7 +122,7 @@ module.exports = {
 
       return appRegistrationUri;
     },
-    async upgrade(ctx) {
+    async upgradeApp(ctx) {
       const { appUri, acceptedAccessNeeds, acceptedSpecialRights } = ctx.params;
 
       const webId = ctx.meta.webId;
@@ -155,7 +155,7 @@ module.exports = {
 
       return appRegistrationUri;
     },
-    async uninstall(ctx) {
+    async removeApp(ctx) {
       const { appUri } = ctx.params;
 
       const webId = ctx.meta.webId;

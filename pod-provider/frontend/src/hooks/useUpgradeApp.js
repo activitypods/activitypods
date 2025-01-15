@@ -7,7 +7,7 @@ const useUpgradeApp = () => {
 
   const upgradeApp = useCallback(
     async ({ appUri, grantedAccessNeeds }) => {
-      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'upgrade'), {
+      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'upgrade-app'), {
         method: 'POST',
         headers: new Headers({
           'Content-Type': 'application/json'

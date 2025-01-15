@@ -57,13 +57,14 @@ module.exports = {
           }
         }
 
+        // Check if an access grant already exist for this AccessNeedGroup
+        const accessAuthorization = await this.actions.getByAccessNeedGroup(
+          { accessNeedGroupUri, podOwner },
+          { parentCtx: ctx }
+        );
+
         // Only created the corresponding AccessAuthorization if a right was granted
         if (dataAuthorizationsUris.length > 0 || specialRightsUris.length > 0) {
-          // Check if an access grant already exist for this Access
-          const accessAuthorization = await this.actions.getByAccessNeedGroup(
-            { accessNeedGroupUri, podOwner },
-            { parentCtx: ctx }
-          );
           if (
             accessAuthorization &&
             arraysEqual(accessAuthorization['interop:hasDataAuthorization'], dataAuthorizationsUris) &&
@@ -76,12 +77,9 @@ module.exports = {
           } else {
             if (accessAuthorization) {
               this.logger.info(
-                `Deleting ${accessAuthorization.id} before recreating one as it does not grant the same rights`
+                `Deleting access authorization ${accessAuthorization.id} before recreating one as it does not grant the same rights`
               );
-              await ctx.call('access-grants.delete', {
-                resourceUri: accessGrant.id,
-                webId: podOwner
-              });
+              await this.actions.delete({ resourceUri: accessAuthorization.id, webId: podOwner });
             }
             accessAuthorizationsUris.push(
               await this.actions.post(
@@ -102,6 +100,11 @@ module.exports = {
               )
             );
           }
+        } else if (accessAuthorization) {
+          this.logger.info(
+            `Deleting access authorization ${accessAuthorization.id} as no related access needs were granted`
+          );
+          await this.actions.delete({ resourceUri: accessAuthorization.id, webId: podOwner });
         }
       }
     },

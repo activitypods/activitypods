@@ -46,7 +46,7 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp }) => {
     }
   }, [registerApp, notify, application, grantedAccessNeedsUris, accessApp, setIsRegistering]);
 
-  if (isRegistering) return <ProgressMessage message="app.message.app_registration_progress" />;
+  if (isRegistering) return <ProgressMessage message="app.notification.app_registration_progress" />;
 
   return (
     <SimpleBox

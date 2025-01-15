@@ -7,7 +7,7 @@ const useRegisterApp = () => {
 
   const registerApp = useCallback(
     async ({ appUri, grantedAccessNeeds }) => {
-      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'install'), {
+      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'register-app'), {
         method: 'POST',
         headers: new Headers({
           'Content-Type': 'application/json'

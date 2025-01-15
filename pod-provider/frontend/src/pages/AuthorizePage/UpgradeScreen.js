@@ -112,7 +112,17 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
     setStep
   ]);
 
-  if (step !== 'ask') return <ProgressMessage message="app.message.app_upgrade_progress" />;
+  const onRemove = useCallback(() => {
+    try {
+      notify('app.notification.app_removal_in_progress');
+      // This will redirect to the app logout and then back to the applications page
+      removeApp({ application });
+    } catch (e) {
+      notify(`Error on app removal: ${e.message}`, { type: 'error' });
+    }
+  }, [removeApp, notify, application]);
+
+  if (step !== 'ask') return <ProgressMessage message="app.notification.app_upgrade_progress" />;
 
   return (
     <SimpleBox
@@ -157,7 +167,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
           <Button variant="contained" color="secondary" onClick={() => setRejectDialogOpen(false)}>
             {translate('ra.action.cancel')}
           </Button>
-          <Button variant="contained" color="error" onClick={() => removeApp({ appUri: application.id })}>
+          <Button variant="contained" color="error" onClick={onRemove}>
             {translate('app.action.uninstall_app')}
           </Button>
         </DialogActions>

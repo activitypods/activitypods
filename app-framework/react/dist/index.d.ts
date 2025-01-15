@@ -70,7 +70,7 @@ export const englishMessages: {
         error: {
             app_status_unavailable: string;
             app_offline: string;
-            app_not_installed: string;
+            app_not_registered: string;
             app_not_listening: string;
         };
         user_menu: {
@@ -101,7 +101,7 @@ export const frenchMessages: {
         error: {
             app_status_unavailable: string;
             app_offline: string;
-            app_not_installed: string;
+            app_not_registered: string;
             app_not_listening: string;
         };
         user_menu: {

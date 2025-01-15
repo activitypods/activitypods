@@ -15,8 +15,7 @@ module.exports = {
     },
     protocols: ['activitypub'],
     metadata: {
-      frontend_url: CONFIG.FRONTEND_URL,
-      login_url: CONFIG.FRONTEND_URL && urlJoin(CONFIG.FRONTEND_URL, 'login')
+      frontend_url: CONFIG.FRONTEND_URL
     }
   },
   actions: {

@@ -20,7 +20,7 @@ export default {
     error: {
       app_status_unavailable: 'Unable to check app status',
       app_offline: 'The app backend is offline',
-      app_not_installed: 'The app is not installed',
+      app_not_registered: 'The app is not registered',
       app_not_listening: 'The app is not listening to %{uri}'
     },
     user_menu: {

@@ -115,6 +115,12 @@ module.exports = {
         await ctx.call('ldp.remote.store', { resourceUri: appUri, webId });
         await ctx.call('applications.attach', { resourceUri: appUri, webId });
 
+        // Add the ApplicationRegistration to the AgentRegistry
+        await ctx.call('agent-registry.add', {
+          podOwner: webId,
+          appRegistrationUri: res
+        });
+
         return res;
       },
       async put(ctx, res) {
@@ -152,6 +158,13 @@ module.exports = {
 
         await ctx.call('applications.delete', {
           resourceUri: appUri
+        });
+
+        // REMOVE APPLICATION REGISTRATION FROM AGENT REGISTRY
+
+        await ctx.call('agent-registry.remove', {
+          podOwner,
+          appRegistrationUri: res.resourceUri
         });
 
         return res;

@@ -5,11 +5,11 @@ import {jsx as $iLwJW$jsx, jsxs as $iLwJW$jsxs, Fragment as $iLwJW$Fragment1} fr
 import {Box as $iLwJW$Box, Typography as $iLwJW$Typography, Button as $iLwJW$Button, CircularProgress as $iLwJW$CircularProgress, Card as $iLwJW$Card, Avatar as $iLwJW$Avatar, List as $iLwJW$List, Divider as $iLwJW$Divider, ListItem as $iLwJW$ListItem, ListItemButton as $iLwJW$ListItemButton, ListItemAvatar as $iLwJW$ListItemAvatar, ListItemText as $iLwJW$ListItemText, useMediaQuery as $iLwJW$useMediaQuery, Dialog as $iLwJW$Dialog, DialogTitle as $iLwJW$DialogTitle, DialogContent as $iLwJW$DialogContent, DialogActions as $iLwJW$DialogActions, TextField as $iLwJW$TextField, Switch as $iLwJW$Switch, MenuItem as $iLwJW$MenuItem, ListItemIcon as $iLwJW$ListItemIcon} from "@mui/material";
 import $iLwJW$muiiconsmaterialError from "@mui/icons-material/Error";
 import $iLwJW$urljoin from "url-join";
+import $iLwJW$httplinkheader from "http-link-header";
 import $iLwJW$jwtdecode from "jwt-decode";
 import {useSearchParams as $iLwJW$useSearchParams, useNavigate as $iLwJW$useNavigate} from "react-router-dom";
 import $iLwJW$muiiconsmaterialLock from "@mui/icons-material/Lock";
 import $iLwJW$muiiconsmaterialStorage from "@mui/icons-material/Storage";
-import $iLwJW$httplinkheader from "http-link-header";
 import {useDataModels as $iLwJW$useDataModels} from "@semapps/semantic-data-provider";
 import $iLwJW$muiiconsmaterialShare from "@mui/icons-material/Share";
 import $iLwJW$muistylesmakeStyles from "@mui/styles/makeStyles";
@@ -68,6 +68,42 @@ const $421a3f9f89d1fa03$var$useGetAppStatus = ()=>{
 var $421a3f9f89d1fa03$export$2e2bcd8739ae039 = $421a3f9f89d1fa03$var$useGetAppStatus;
 
 
+
+
+
+/**
+ * Return a function that look if an app (clientId) is registered with an user (webId)
+ * If not, it redirects to the endpoint provided by the user's authorization agent
+ * See https://solid.github.io/data-interoperability-panel/specification/#authorization-agent
+ */ const $27e56b6748904a8d$var$useRegisterApp = ()=>{
+    const dataProvider = (0, $iLwJW$useDataProvider)();
+    const registerApp = (0, $iLwJW$useCallback)(async (clientId, webId)=>{
+        const { json: actor } = await dataProvider.fetch(webId);
+        const authAgentUri = actor["interop:hasAuthorizationAgent"];
+        if (authAgentUri) {
+            // Find if an application registration is linked to this user
+            // See https://solid.github.io/data-interoperability-panel/specification/#agent-registration-discovery
+            const { headers: headers, json: authAgent } = await dataProvider.fetch(authAgentUri);
+            const linkHeader = (0, $iLwJW$httplinkheader).parse(headers.get("Link"));
+            const registeredAgentLinkHeader = linkHeader.rel("http://www.w3.org/ns/solid/interop#registeredAgent");
+            if (registeredAgentLinkHeader.length > 0) {
+                const appRegistrationUri = registeredAgentLinkHeader[0].anchor;
+                return appRegistrationUri;
+            } else {
+                // No application registration found, redirect to the authorization agent
+                const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
+                redirectUrl.searchParams.append("client_id", clientId);
+                window.location.href = redirectUrl.toString();
+            }
+        }
+    }, [
+        dataProvider
+    ]);
+    return registerApp;
+};
+var $27e56b6748904a8d$export$2e2bcd8739ae039 = $27e56b6748904a8d$var$useRegisterApp;
+
+
 /**
  * Call the /.well-known/app-status endpoint to check the status of the app
  * If the app backend is offline or not installed, display an error message
@@ -82,6 +118,7 @@ var $421a3f9f89d1fa03$export$2e2bcd8739ae039 = $421a3f9f89d1fa03$var$useGetAppSt
     const [appStatusChecked, setAppStatusChecked] = (0, $iLwJW$useState)(false);
     const [errorMessage, setErrorMessage] = (0, $iLwJW$useState)();
     const nodeinfo = (0, $iLwJW$useNodeinfo)(identity?.id ? new URL(identity?.id).host : undefined);
+    const registerApp = (0, $27e56b6748904a8d$export$2e2bcd8739ae039)();
     const getAppStatus = (0, $421a3f9f89d1fa03$export$2e2bcd8739ae039)();
     const isLoggedOut = !isIdentityLoading && !identity?.id;
     if (!clientId) throw new Error(`Missing clientId prop for BackgroundChecks component`);
@@ -95,7 +132,8 @@ var $421a3f9f89d1fa03$export$2e2bcd8739ae039 = $421a3f9f89d1fa03$var$useGetAppSt
                     return;
                 }
                 if (!appStatus.installed) {
-                    setErrorMessage(translate("apods.error.app_not_installed"));
+                    setErrorMessage(translate("apods.error.app_not_registered"));
+                    await registerApp(clientId, identity.id);
                     return;
                 }
                 if (appStatus.upgradeNeeded) {
@@ -140,7 +178,9 @@ var $421a3f9f89d1fa03$export$2e2bcd8739ae039 = $421a3f9f89d1fa03$var$useGetAppSt
         document,
         dataProvider,
         setErrorMessage,
-        translate
+        translate,
+        registerApp,
+        clientId
     ]);
     (0, $iLwJW$useEffect)(()=>{
         if (identity?.id && nodeinfo) {
@@ -240,41 +280,6 @@ var $2957839fe06af793$export$2e2bcd8739ae039 = $2957839fe06af793$var$BackgroundC
 
 
 
-
-
-
-
-/**
- * Return a function that look if an app (clientId) is registered with an user (webId)
- * If not, it redirects to the endpoint provided by the user's authorization agent
- * See https://solid.github.io/data-interoperability-panel/specification/#authorization-agent
- */ const $27e56b6748904a8d$var$useRegisterApp = ()=>{
-    const dataProvider = (0, $iLwJW$useDataProvider)();
-    const registerApp = (0, $iLwJW$useCallback)(async (clientId, webId)=>{
-        const { json: actor } = await dataProvider.fetch(webId);
-        const authAgentUri = actor["interop:hasAuthorizationAgent"];
-        if (authAgentUri) {
-            // Find if an application registration is linked to this user
-            // See https://solid.github.io/data-interoperability-panel/specification/#agent-registration-discovery
-            const { headers: headers, json: authAgent } = await dataProvider.fetch(authAgentUri);
-            const linkHeader = (0, $iLwJW$httplinkheader).parse(headers.get("Link"));
-            const registeredAgentLinkHeader = linkHeader.rel("http://www.w3.org/ns/solid/interop#registeredAgent");
-            if (registeredAgentLinkHeader.length > 0) {
-                const appRegistrationUri = registeredAgentLinkHeader[0].anchor;
-                return appRegistrationUri;
-            } else {
-                // No application registration found, redirect to the authorization agent
-                const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
-                redirectUrl.searchParams.append("client_id", clientId);
-                window.location.href = redirectUrl.toString();
-            }
-        }
-    }, [
-        dataProvider
-    ]);
-    return registerApp;
-};
-var $27e56b6748904a8d$export$2e2bcd8739ae039 = $27e56b6748904a8d$var$useRegisterApp;
 
 
 /**
@@ -1190,7 +1195,7 @@ var $4b2a6afceae7f301$export$2e2bcd8739ae039 = {
         error: {
             app_status_unavailable: "Unable to check app status",
             app_offline: "The app backend is offline",
-            app_not_installed: "The app is not installed",
+            app_not_registered: "The app is not registered",
             app_not_listening: "The app is not listening to %{uri}"
         },
         user_menu: {
@@ -1224,7 +1229,7 @@ var $5de716308b366acb$export$2e2bcd8739ae039 = {
         error: {
             app_status_unavailable: "Impossible de v\xe9rifier le statut de l'application",
             app_offline: "L'application est hors ligne",
-            app_not_installed: "L'application n'est pas install\xe9e",
+            app_not_registered: "L'application n'est pas enregistr\xe9e",
             app_not_listening: "L'application n'\xe9coute pas %{uri}"
         },
         user_menu: {

@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { useTranslate, useNotify } from 'react-admin';
+import { useNotify, useTranslate } from 'react-admin';
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
-import { useOutbox, useInbox } from '@semapps/activitypub-components';
 import SimpleBox from '../../layout/SimpleBox';
 import useAccessNeeds from '../../hooks/useAccessNeeds';
 import useGrants from '../../hooks/useGrants';
 import useClassDescriptions from '../../hooks/useClassDescriptions';
-import AccessNeedsList from './AccessNeedsList';
+import AccessNeedsList from '../../common/list/AccessNeedsList';
 import ProgressMessage from '../../common/ProgressMessage';
 import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import AppHeader from './AppHeader';
 import { arrayOf } from '../../utils';
-import useUninstallApp from '../../hooks/useUninstallApp';
+import useRemoveApp from '../../hooks/useRemoveApp';
+import useUpgradeApp from '../../hooks/useUpgradeApp';
 
 const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
   const [step, setStep] = useState();
@@ -20,11 +20,10 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
   const [allowedAccessNeeds, setAllowedAccessNeeds] = useState([]);
   const [grantedAccessNeeds, setGrantedAccessNeeds] = useState([]);
   const [missingAccessNeeds, setMissingAccessNeeds] = useState({ required: [], optional: [] });
-  const outbox = useOutbox({ liveUpdates: true });
-  const inbox = useInbox({ liveUpdates: true });
   const translate = useTranslate();
   const notify = useNotify();
-  const uninstallApp = useUninstallApp(application);
+  const removeApp = useRemoveApp();
+  const upgradeApp = useUpgradeApp();
 
   const { requiredAccessNeeds, optionalAccessNeeds, loaded: accessNeedsLoaded } = useAccessNeeds(application);
   const { classDescriptions } = useClassDescriptions(application);
@@ -38,47 +37,10 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
         try {
           setStep('upgrading');
 
-          await outbox.awaitWebSocketConnection();
-          await inbox.awaitWebSocketConnection();
-
-          // Do not await to ensure we don't miss the activities below
-          outbox.post({
-            '@context': [
-              'https://www.w3.org/ns/activitystreams',
-              {
-                apods: 'http://activitypods.org/ns/core#',
-                'apods:acceptedAccessNeeds': {
-                  '@type': '@id'
-                },
-                'apods:acceptedSpecialRights': {
-                  '@type': '@id'
-                }
-              }
-            ],
-            type: 'apods:Upgrade',
-            actor: outbox.owner,
-            object: application.id,
-            'apods:acceptedAccessNeeds': [...grantedAccessNeeds, ...allowedAccessNeeds].filter(
-              a => !a.startsWith('apods:')
-            ),
-            'apods:acceptedSpecialRights': [...grantedAccessNeeds, ...allowedAccessNeeds].filter(a =>
-              a.startsWith('apods:')
-            )
+          await upgradeApp({
+            appUri: application.id,
+            grantedAccessNeeds: [...grantedAccessNeeds, ...allowedAccessNeeds]
           });
-
-          // TODO Allow to pass an object, and automatically dereference it, like on the @semapps/activitypub matchActivity util
-          const updateRegistrationActivity = await outbox.awaitActivity(
-            activity => activity.type === 'Update' && activity.to === application.id,
-            { timeout: 60000 }
-          );
-
-          await inbox.awaitActivity(
-            activity =>
-              activity.type === 'Accept' &&
-              activity.actor === application.id &&
-              activity.object === updateRegistrationActivity.id,
-            { timeout: 60000 }
-          );
 
           await accessApp();
         } catch (e) {
@@ -87,7 +49,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
         }
       }
     })();
-  }, [outbox, inbox, notify, application, allowedAccessNeeds, grantedAccessNeeds, accessApp, step, setStep]);
+  }, [application, upgradeApp, allowedAccessNeeds, grantedAccessNeeds, accessApp, step, setStep]);
 
   useEffect(() => {
     if (accessNeedsLoaded && grantsLoaded && !step) {
@@ -150,7 +112,17 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
     setStep
   ]);
 
-  if (step !== 'ask') return <ProgressMessage message="app.message.app_upgrade_progress" />;
+  const onRemove = useCallback(() => {
+    try {
+      notify('app.notification.app_removal_in_progress');
+      // This will redirect to the app logout and then back to the applications page
+      removeApp({ application });
+    } catch (e) {
+      notify(`Error on app removal: ${e.message}`, { type: 'error' });
+    }
+  }, [removeApp, notify, application]);
+
+  if (step !== 'ask') return <ProgressMessage message="app.notification.app_upgrade_progress" />;
 
   return (
     <SimpleBox
@@ -195,7 +167,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
           <Button variant="contained" color="secondary" onClick={() => setRejectDialogOpen(false)}>
             {translate('ra.action.cancel')}
           </Button>
-          <Button variant="contained" color="error" onClick={() => uninstallApp()}>
+          <Button variant="contained" color="error" onClick={onRemove}>
             {translate('app.action.uninstall_app')}
           </Button>
         </DialogActions>

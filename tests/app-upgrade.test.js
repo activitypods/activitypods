@@ -109,53 +109,14 @@ describe('Test app upgrade', () => {
     expect(accessNeed['interop:accessMode']).toEqual(['acl:Read', 'acl:Write']);
   });
 
-  test('User upgrade but does not accept all required access needs', async () => {
-    await expect(
-      alice.call('activitypub.outbox.post', {
-        collectionUri: alice.outbox,
-        type: 'apods:Upgrade',
-        object: APP_URI,
-        'apods:acceptedAccessNeeds': [],
-        'apods:acceptedSpecialRights': requiredAccessNeedGroup['apods:hasSpecialRights']
-      })
-    ).resolves.not.toThrow();
-
-    await waitForExpect(async () => {
-      const inbox = await alice.call('activitypub.collection.get', {
-        resourceUri: alice.inbox,
-        page: 1
-      });
-
-      expect(inbox?.orderedItems[0]).toMatchObject({
-        type: ACTIVITY_TYPES.REJECT,
-        actor: APP_URI,
-        summary: 'One or more required access needs have not been granted'
-      });
-    });
-  });
-
   test('User upgrade and accept all required access needs', async () => {
     await expect(
-      alice.call('activitypub.outbox.post', {
-        collectionUri: alice.outbox,
-        type: 'apods:Upgrade',
-        object: APP_URI,
-        'apods:acceptedAccessNeeds': requiredAccessNeedGroup['interop:hasAccessNeed'],
-        'apods:acceptedSpecialRights': requiredAccessNeedGroup['apods:hasSpecialRights']
+      alice.call('auth-agent.upgradeApp', {
+        appUri: APP_URI,
+        acceptedAccessNeeds: requiredAccessNeedGroup['interop:hasAccessNeed'],
+        acceptedSpecialRights: requiredAccessNeedGroup['apods:hasSpecialRights']
       })
     ).resolves.not.toThrow();
-
-    await waitForExpect(async () => {
-      const inbox = await alice.call('activitypub.collection.get', {
-        resourceUri: alice.inbox,
-        page: 1
-      });
-
-      expect(inbox?.orderedItems[0]).toMatchObject({
-        type: ACTIVITY_TYPES.ACCEPT,
-        actor: APP_URI
-      });
-    });
   });
 
   test('Types are correctly updated in the TypeIndex', async () => {

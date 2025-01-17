@@ -1,11 +1,10 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { useGetList, useGetOne, useDataProvider } from 'react-admin';
-import urlJoin from 'url-join';
+import { useGetList, useGetOne, useNotify } from 'react-admin';
 import { useSearchParams } from 'react-router-dom';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import useTrustedApps from '../../hooks/useTrustedApps';
 import useGetAppStatus from '../../hooks/useGetAppStatus';
-import InstallationScreen from './InstallationScreen';
+import RegistrationScreen from './RegistrationScreen';
 import UpgradeScreen from './UpgradeScreen';
 
 const AuthorizePage = () => {
@@ -14,35 +13,31 @@ const AuthorizePage = () => {
   const trustedApps = useTrustedApps();
   const [searchParams] = useSearchParams();
   const getAppStatus = useGetAppStatus();
-  const dataProvider = useDataProvider();
+  const notify = useNotify();
 
   const appUri = searchParams.get('client_id');
-  const redirectTo = searchParams.get('redirect');
-  const interactionId = searchParams.get('interaction_id');
   const isTrustedApp = trustedApps?.some(trustedApp => trustedApp.id === appUri) || false;
 
   const { data: application } = useGetOne('App', { id: appUri });
   const { data: appRegistrations, isLoading } = useGetList('AppRegistration', { page: 1, perPage: Infinity });
 
   const accessApp = useCallback(async () => {
-    // There is no interactionId in case of upgrade
-    if (interactionId) {
-      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.oidc/consent-completed'), {
-        method: 'POST',
-        body: JSON.stringify({ interactionId }),
-        headers: new Headers({ 'Content-Type': 'application/json' })
+    const redirectUrl = application['interop:hasAuthorizationCallbackEndpoint'];
+    if (redirectUrl) {
+      window.location.href = application['interop:hasAuthorizationCallbackEndpoint'];
+    } else {
+      notify('Cannot redirect to app because no interop:hasAuthorizationCallbackEndpoint is defined', {
+        type: 'error'
       });
     }
-
-    window.location.href = redirectTo;
-  }, [dataProvider, interactionId, redirectTo]);
+  }, [application, notify]);
 
   useEffect(() => {
     (async () => {
       if (!isLoading && application?.id) {
         const appStatus = await getAppStatus(application.id);
         if (!appStatus.installed) {
-          setScreen('install');
+          setScreen('register');
         } else if (appStatus.upgradeNeeded) {
           setScreen('upgrade');
         } else {
@@ -53,8 +48,8 @@ const AuthorizePage = () => {
   }, [appRegistrations, isLoading, application, accessApp, getAppStatus, setScreen]);
 
   switch (screen) {
-    case 'install':
-      return <InstallationScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
+    case 'register':
+      return <RegistrationScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
 
     case 'upgrade':
       return <UpgradeScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;

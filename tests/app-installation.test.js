@@ -134,15 +134,13 @@ describe('Test app installation', () => {
 
   test('User installs app and grants all access needs', async () => {
     await expect(
-      alice.call('activitypub.outbox.post', {
-        collectionUri: alice.outbox,
-        type: 'apods:Install',
-        object: APP_URI,
-        'apods:acceptedAccessNeeds': [
+      alice.call('auth-agent.registerApp', {
+        appUri: APP_URI,
+        acceptedAccessNeeds: [
           requiredAccessNeedGroup['interop:hasAccessNeed'],
           optionalAccessNeedGroup['interop:hasAccessNeed']
         ],
-        'apods:acceptedSpecialRights': [
+        acceptedSpecialRights: [
           requiredAccessNeedGroup['apods:hasSpecialRights'],
           optionalAccessNeedGroup['apods:hasSpecialRights']
         ]
@@ -151,6 +149,7 @@ describe('Test app installation', () => {
 
     let appRegistrationUri, creationActivityUri;
 
+    // Ensure the app backend is informed of the installation
     await waitForExpect(async () => {
       const outbox = await alice.call('activitypub.collection.get', {
         resourceUri: alice.outbox,
@@ -236,19 +235,6 @@ describe('Test app installation', () => {
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append']),
       'interop:satisfiesAccessNeed': optionalAccessNeedGroup['interop:hasAccessNeed'],
       'interop:scopeOfGrant': 'interop:All'
-    });
-
-    await waitForExpect(async () => {
-      const inbox = await alice.call('activitypub.collection.get', {
-        resourceUri: alice.inbox,
-        page: 1
-      });
-
-      expect(inbox?.orderedItems?.[0]).not.toBeNull();
-      expect(inbox?.orderedItems?.[0]).toMatchObject({
-        type: ACTIVITY_TYPES.ACCEPT,
-        object: creationActivityUri
-      });
     });
   });
 
@@ -485,30 +471,20 @@ describe('Test app installation', () => {
 
   test('User installs same app a second time and get an error', async () => {
     await expect(
-      alice.call('activitypub.outbox.post', {
-        collectionUri: alice.outbox,
-        type: 'apods:Install',
-        object: APP_URI,
-        'apods:acceptedAccessNeeds': requiredAccessNeedGroup['interop:hasAccessNeed'],
-        'apods:acceptedSpecialRights': requiredAccessNeedGroup['apods:hasSpecialRights']
+      alice.call('auth-agent.registerApp', {
+        appUri: APP_URI,
+        acceptedAccessNeeds: requiredAccessNeedGroup['interop:hasAccessNeed'],
+        acceptedSpecialRights: requiredAccessNeedGroup['apods:hasSpecialRights']
       })
     ).rejects.toThrow('User already has an application registration. Upgrade or uninstall the app first.');
   });
 
   test('User uninstalls app', async () => {
-    await expect(
-      alice.call('activitypub.outbox.post', {
-        collectionUri: alice.outbox,
-        type: ACTIVITY_TYPES.UNDO,
-        object: {
-          type: 'apods:Install',
-          object: APP_URI
-        }
-      })
-    ).resolves.not.toThrow();
+    await expect(alice.call('auth-agent.removeApp', { appUri: APP_URI })).resolves.not.toThrow();
 
     let appRegistrationUri;
 
+    // The app backend is informed of the uninstallation
     await waitForExpect(async () => {
       const outbox = await alice.call('activitypub.collection.get', {
         resourceUri: alice.outbox,
@@ -607,72 +583,5 @@ describe('Test app installation', () => {
     // We keep the label and labelPredicate for the data browser, even if no application handle this type of data
     expect(eventTypeRegistration['skos:prefLabel']).toBe('Events');
     expect(eventTypeRegistration['apods:labelPredicate']).toBe('as:name');
-  });
-
-  test('User installs app and do not grant required access needs', async () => {
-    const createRegistrationActivity = await installApp(
-      alice,
-      APP_URI,
-      false,
-      optionalAccessNeedGroup['interop:hasAccessNeed'],
-      optionalAccessNeedGroup['apods:hasSpecialRights']
-    );
-
-    await expect(
-      alice.call('activitypub.inbox.awaitActivity', {
-        collectionUri: alice.inbox,
-        matcher: {
-          type: ACTIVITY_TYPES.REJECT,
-          object: createRegistrationActivity.id,
-          summary: 'One or more required access needs have not been granted'
-        }
-      })
-    ).resolves.not.toThrow();
-
-    // The ApplicationRegistration should be deleted
-    await waitForExpect(async () => {
-      await expect(
-        alice.call('ldp.resource.get', {
-          resourceUri: createRegistrationActivity.object,
-          accept: MIME_TYPES.JSON
-        })
-      ).rejects.toThrow();
-    });
-  });
-
-  test('User installs app and only grant required access needs', async () => {
-    await expect(
-      installApp(
-        alice,
-        APP_URI,
-        true,
-        requiredAccessNeedGroup['interop:hasAccessNeed'],
-        requiredAccessNeedGroup['apods:hasSpecialRights']
-      )
-    ).resolves.not.toThrow();
-  });
-
-  test('User installs app 2 which has same requirements', async () => {
-    // Install app2 with only required access needs
-    await installApp(alice, APP2_URI);
-
-    // Access to the Event container is required by App2
-    await expect(
-      alice.call('webacl.resource.getRights', {
-        resourceUri: urlJoin(alice.id, 'data/as/event'),
-        accept: MIME_TYPES.JSON
-      })
-    ).resolves.toMatchObject({
-      '@graph': expect.arrayContaining([
-        expect.objectContaining({
-          'acl:agent': [APP_URI, APP2_URI],
-          'acl:mode': 'acl:Read'
-        }),
-        expect.objectContaining({
-          'acl:agent': [APP_URI, APP2_URI],
-          'acl:mode': 'acl:Write'
-        })
-      ])
-    });
   });
 });

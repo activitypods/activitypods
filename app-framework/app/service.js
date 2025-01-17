@@ -30,6 +30,7 @@ module.exports = {
       author: null,
       thumbnail: null,
       frontUrl: null,
+      authCallbackEndpoint: null, // If not defined, will use the front URL + /login?register_app=true
       supportedLocales: []
     },
     oidc: {

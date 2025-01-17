@@ -3,13 +3,13 @@ import { useTranslate } from 'react-admin';
 import { Box, Typography, Grid, useMediaQuery } from '@mui/material';
 import ApplicationCard from './ApplicationCard';
 
-const AvailableApps = ({ installedApps, trustedApps }) => {
+const AvailableApps = ({ registeredApps, trustedApps }) => {
   const translate = useTranslate();
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
   // Filter out applications which are already installed
   const availableApps = trustedApps?.filter(
-    trustedApp => !installedApps.some(installedApp => installedApp.id === trustedApp.id)
+    trustedApp => !registeredApps.some(registerApp => registerApp.id === trustedApp.id)
   );
 
   if (availableApps?.length === 0) return null;
@@ -22,7 +22,7 @@ const AvailableApps = ({ installedApps, trustedApps }) => {
       <Box mt={1}>
         <Grid container spacing={xs ? 1 : 3}>
           {availableApps.map(app => (
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6} key={app.id}>
               <ApplicationCard app={app} isTrustedApp isInstalled={false} />
             </Grid>
           ))}

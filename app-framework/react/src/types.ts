@@ -26,3 +26,14 @@ export type PodProvider = {
   'apods:locales'?: string;
   'apods:providedBy'?: string;
 };
+
+export type SolidOIDCToken = {
+  azp: string;
+  sub: string;
+  webid: string;
+  at_hash: string;
+  aud: string;
+  exp: number;
+  iat: number;
+  iss: string;
+};

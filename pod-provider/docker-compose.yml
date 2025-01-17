@@ -54,3 +54,6 @@ services:
       - '3033:3033'
     extra_hosts:
       - 'localhost:host-gateway'
+    environment:
+      - TRIPLEADMIN_HOST=http://localhost:3030/
+      - TRIPLEADMIN_USERNAME=admin

@@ -1,10 +1,13 @@
 var $fvx3m$react = require("react");
-var $fvx3m$urljoin = require("url-join");
 var $fvx3m$reactadmin = require("react-admin");
 var $fvx3m$semappsactivitypubcomponents = require("@semapps/activitypub-components");
 var $fvx3m$reactjsxruntime = require("react/jsx-runtime");
-var $fvx3m$reactrouterdom = require("react-router-dom");
 var $fvx3m$muimaterial = require("@mui/material");
+var $fvx3m$muiiconsmaterialError = require("@mui/icons-material/Error");
+var $fvx3m$urljoin = require("url-join");
+var $fvx3m$httplinkheader = require("http-link-header");
+var $fvx3m$jwtdecode = require("jwt-decode");
+var $fvx3m$reactrouterdom = require("react-router-dom");
 var $fvx3m$muiiconsmaterialLock = require("@mui/icons-material/Lock");
 var $fvx3m$muiiconsmaterialStorage = require("@mui/icons-material/Storage");
 var $fvx3m$semappssemanticdataprovider = require("@semapps/semantic-data-provider");
@@ -25,15 +28,17 @@ function $parcel$interopDefault(a) {
 }
 
 $parcel$export(module.exports, "BackgroundChecks", () => $88874b19fd1a9965$export$2e2bcd8739ae039);
-$parcel$export(module.exports, "PodLoginPage", () => $474875ae41bcd76f$export$2e2bcd8739ae039);
+$parcel$export(module.exports, "LoginPage", () => $8c4e86009f42299d$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "RedirectPage", () => $691cae6a20c06149$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "ShareButton", () => $c30b6e8e8f4f1d51$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "ShareDialog", () => $8ffb7dd40d703ae5$export$2e2bcd8739ae039);
-$parcel$export(module.exports, "SyncUserLocale", () => $bbda9bb45dcd2801$export$2e2bcd8739ae039);
+$parcel$export(module.exports, "SyncUserLocale", () => $418040ff16c1a946$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "UserMenu", () => $fc1368eec161415d$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "englishMessages", () => $4b1314efa6ba34c8$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "frenchMessages", () => $7955e6b2ad1a54ef$export$2e2bcd8739ae039);
 // Components
+
+
 
 
 
@@ -53,6 +58,68 @@ const $f21bc75053423cc3$export$e57ff0f701c44363 = (value)=>{
         value
     ];
 };
+const $f21bc75053423cc3$export$1391212d75b2ee65 = (t)=>new Promise((resolve)=>setTimeout(resolve, t));
+
+
+
+
+
+const $c6f5b9530195abb8$var$useGetAppStatus = ()=>{
+    const { data: identity } = (0, $fvx3m$reactadmin.useGetIdentity)();
+    return (0, $fvx3m$react.useCallback)(async ()=>{
+        const oidcIssuer = new URL(identity?.id).origin;
+        const endpointUrl = (0, ($parcel$interopDefault($fvx3m$urljoin)))(oidcIssuer, ".well-known/app-status");
+        const token = localStorage.getItem("token");
+        // Don't use dataProvider.fetch as it would go through the proxy
+        const response = await fetch(endpointUrl, {
+            headers: new Headers({
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json"
+            })
+        });
+        if (response.ok) return await response.json();
+        else throw new Error(`Unable to fetch app status. Error ${response.status} (${response.statusText})`);
+    }, [
+        identity
+    ]);
+};
+var $c6f5b9530195abb8$export$2e2bcd8739ae039 = $c6f5b9530195abb8$var$useGetAppStatus;
+
+
+
+
+
+/**
+ * Return a function that look if an app (clientId) is registered with an user (webId)
+ * If not, it redirects to the endpoint provided by the user's authorization agent
+ * See https://solid.github.io/data-interoperability-panel/specification/#authorization-agent
+ */ const $9a8d0fd57dda054c$var$useRegisterApp = ()=>{
+    const dataProvider = (0, $fvx3m$reactadmin.useDataProvider)();
+    const registerApp = (0, $fvx3m$react.useCallback)(async (clientId, webId)=>{
+        const { json: actor } = await dataProvider.fetch(webId);
+        const authAgentUri = actor["interop:hasAuthorizationAgent"];
+        if (authAgentUri) {
+            // Find if an application registration is linked to this user
+            // See https://solid.github.io/data-interoperability-panel/specification/#agent-registration-discovery
+            const { headers: headers, json: authAgent } = await dataProvider.fetch(authAgentUri);
+            const linkHeader = (0, ($parcel$interopDefault($fvx3m$httplinkheader))).parse(headers.get("Link"));
+            const registeredAgentLinkHeader = linkHeader.rel("http://www.w3.org/ns/solid/interop#registeredAgent");
+            if (registeredAgentLinkHeader.length > 0) {
+                const appRegistrationUri = registeredAgentLinkHeader[0].anchor;
+                return appRegistrationUri;
+            } else {
+                // No application registration found, redirect to the authorization agent
+                const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
+                redirectUrl.searchParams.append("client_id", clientId);
+                window.location.href = redirectUrl.toString();
+            }
+        }
+    }, [
+        dataProvider
+    ]);
+    return registerApp;
+};
+var $9a8d0fd57dda054c$export$2e2bcd8739ae039 = $9a8d0fd57dda054c$var$useRegisterApp;
 
 
 /**
@@ -63,72 +130,75 @@ const $f21bc75053423cc3$export$e57ff0f701c44363 = (value)=>{
  * Check this every 2 minutes or whenever the window becomes visible again
  */ const $88874b19fd1a9965$var$BackgroundChecks = ({ clientId: clientId, listeningTo: listeningTo = [], children: children })=>{
     const { data: identity, isLoading: isIdentityLoading } = (0, $fvx3m$reactadmin.useGetIdentity)();
-    const notify = (0, $fvx3m$reactadmin.useNotify)();
+    const dataProvider = (0, $fvx3m$reactadmin.useDataProvider)();
+    const translate = (0, $fvx3m$reactadmin.useTranslate)();
+    const logout = (0, $fvx3m$reactadmin.useLogout)();
     const [appStatusChecked, setAppStatusChecked] = (0, $fvx3m$react.useState)(false);
+    const [errorMessage, setErrorMessage] = (0, $fvx3m$react.useState)();
     const nodeinfo = (0, $fvx3m$semappsactivitypubcomponents.useNodeinfo)(identity?.id ? new URL(identity?.id).host : undefined);
+    const registerApp = (0, $9a8d0fd57dda054c$export$2e2bcd8739ae039)();
+    const getAppStatus = (0, $c6f5b9530195abb8$export$2e2bcd8739ae039)();
     const isLoggedOut = !isIdentityLoading && !identity?.id;
     if (!clientId) throw new Error(`Missing clientId prop for BackgroundChecks component`);
     const checkAppStatus = (0, $fvx3m$react.useCallback)(async ()=>{
         // Only proceed if the tab is visible
-        if (!document.hidden && identity?.id) {
-            const oidcIssuer = new URL(identity?.id).origin;
-            const endpointUrl = (0, ($parcel$interopDefault($fvx3m$urljoin)))(oidcIssuer, ".well-known/app-status");
-            const token = localStorage.getItem("token");
-            try {
-                // Don't use dataProvider.fetch as it would go through the proxy
-                const response = await fetch(endpointUrl, {
-                    headers: new Headers({
-                        Authorization: `Bearer ${token}`,
-                        Accept: "application/json"
-                    })
-                });
-                if (response.ok) {
-                    const appStatus = await response.json();
-                    if (appStatus) {
-                        if (!appStatus.onlineBackend) {
-                            notify("apods.error.app_offline", {
-                                type: "error"
-                            });
-                            return;
+        if (!document.hidden && identity?.id) try {
+            let appStatus = await getAppStatus();
+            if (appStatus) {
+                if (!appStatus.onlineBackend) {
+                    setErrorMessage(translate("apods.error.app_offline"));
+                    return;
+                }
+                if (!appStatus.installed) {
+                    setErrorMessage(translate("apods.error.app_not_registered"));
+                    await registerApp(clientId, identity.id);
+                    return;
+                }
+                if (appStatus.upgradeNeeded) {
+                    const { json: actor } = await dataProvider.fetch(identity.id);
+                    const { json: authAgent } = await dataProvider.fetch(actor["interop:hasAuthorizationAgent"]);
+                    const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
+                    redirectUrl.searchParams.append("client_id", clientId);
+                    window.location.href = redirectUrl.toString();
+                    return;
+                }
+                if (listeningTo.length > 0) {
+                    let numAttempts = 0, missingListener;
+                    do {
+                        missingListener = undefined;
+                        for (const uri of listeningTo)if (!(0, $f21bc75053423cc3$export$e57ff0f701c44363)(appStatus.webhookChannels).some((c)=>c.topic === uri)) missingListener = uri;
+                        // If one or more listener were not found, wait 1s and refetch the app status endpoint
+                        // This happens when the app was just registered, and the webhooks have not been created yet
+                        if (missingListener) {
+                            numAttempts++;
+                            await (0, $f21bc75053423cc3$export$1391212d75b2ee65)(1000);
+                            appStatus = await getAppStatus();
                         }
-                        if (!appStatus.installed) {
-                            notify("apods.error.app_not_installed", {
-                                type: "error"
-                            });
-                            return;
-                        }
-                        if (appStatus.upgradeNeeded) {
-                            const consentUrl = new URL(nodeinfo?.metadata?.consent_url);
-                            consentUrl.searchParams.append("client_id", clientId);
-                            consentUrl.searchParams.append("redirect", window.location.href);
-                            window.location.href = consentUrl.toString();
-                            return;
-                        }
-                        if (listeningTo.length > 0) {
-                            for (const uri of listeningTo)if (!(0, $f21bc75053423cc3$export$e57ff0f701c44363)(appStatus.webhookChannels).some((c)=>c.topic === uri)) {
-                                notify("apods.error.app_not_listening", {
-                                    messageArgs: {
-                                        uri: uri
-                                    },
-                                    type: "error"
-                                });
-                                return;
-                            }
-                        }
-                        setAppStatusChecked(true);
+                    }while (missingListener && numAttempts < 10);
+                    if (missingListener) {
+                        setErrorMessage(translate("apods.error.app_not_listening", {
+                            uri: missingListener
+                        }));
+                        return;
                     }
                 }
-            } catch (e) {
-                notify("apods.error.app_status_unavailable", {
-                    type: "error"
-                });
+                setAppStatusChecked(true);
             }
+        } catch (e) {
+            console.error(e);
+            setErrorMessage(translate("apods.error.app_status_unavailable"));
         }
     }, [
         identity,
         nodeinfo,
+        getAppStatus,
         setAppStatusChecked,
-        document
+        document,
+        dataProvider,
+        setErrorMessage,
+        translate,
+        registerApp,
+        clientId
     ]);
     (0, $fvx3m$react.useEffect)(()=>{
         if (identity?.id && nodeinfo) {
@@ -147,11 +217,80 @@ const $f21bc75053423cc3$export$e57ff0f701c44363 = (value)=>{
     }, [
         checkAppStatus
     ]);
-    // TODO display error message instead of notifications
     if (isLoggedOut || appStatusChecked) return children;
-    else return null;
+    else if (errorMessage) return /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Box), {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        sx: {
+            minHeight: 400
+        },
+        children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsxs)((0, $fvx3m$muimaterial.Box), {
+            sx: {
+                backgroundColor: "red",
+                p: 2,
+                textAlign: "center"
+            },
+            children: [
+                /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, ($parcel$interopDefault($fvx3m$muiiconsmaterialError))), {
+                    sx: {
+                        width: 50,
+                        height: 50,
+                        color: "white"
+                    }
+                }),
+                /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Typography), {
+                    color: "white",
+                    children: errorMessage
+                }),
+                /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Button), {
+                    variant: "contained",
+                    color: "error",
+                    sx: {
+                        mt: 2,
+                        mr: 1
+                    },
+                    onClick: ()=>{
+                        setErrorMessage(undefined);
+                        checkAppStatus();
+                    },
+                    children: translate("ra.action.refresh")
+                }),
+                /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Button), {
+                    variant: "contained",
+                    color: "error",
+                    sx: {
+                        mt: 2
+                    },
+                    onClick: ()=>logout(),
+                    children: translate("ra.auth.logout")
+                })
+            ]
+        })
+    });
+    else // TODO wait 3s before display loader
+    return /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Box), {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        sx: {
+            minHeight: 400
+        },
+        children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.CircularProgress), {
+            size: 100,
+            thickness: 6,
+            sx: {
+                mb: 5,
+                color: "white"
+            }
+        })
+    });
 };
 var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundChecks;
+
+
 
 
 
@@ -165,7 +304,7 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
  * Display a list of Pod providers that we can log in
  * This list is taken from the https://activitypods.org/data/pod-providers endpoint
  * It is possible to replace it with a custom list of Pod providers
- */ const $474875ae41bcd76f$var$PodLoginPageView = ({ text: text, customPodProviders: customPodProviders })=>{
+ */ const $8c4e86009f42299d$var$LoginPage = ({ text: text, clientId: clientId, customPodProviders: customPodProviders })=>{
     const notify = (0, $fvx3m$reactadmin.useNotify)();
     const [searchParams] = (0, $fvx3m$reactrouterdom.useSearchParams)();
     const [locale] = (0, $fvx3m$reactadmin.useLocaleState)();
@@ -175,8 +314,10 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
     const redirect = (0, $fvx3m$reactadmin.useRedirect)();
     const { data: identity, isLoading: isIdentityLoading } = (0, $fvx3m$reactadmin.useGetIdentity)();
     const [podProviders, setPodProviders] = (0, $fvx3m$react.useState)(customPodProviders || []);
+    const [isRegistered, setIsRegistered] = (0, $fvx3m$react.useState)(false);
     const isSignup = searchParams.has("signup");
-    const redirectUrl = searchParams.get("redirect");
+    const redirectUrl = searchParams.get("redirect") || "/";
+    const registerApp = (0, $9a8d0fd57dda054c$export$2e2bcd8739ae039)();
     (0, $fvx3m$react.useEffect)(()=>{
         (async ()=>{
             if (podProviders.length < 1) {
@@ -201,30 +342,42 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
         notify,
         locale
     ]);
-    // Immediately logout if required
     (0, $fvx3m$react.useEffect)(()=>{
-        if (searchParams.has("logout")) logout({
+        if (searchParams.has("iss")) // Automatically login if Pod provider is known
+        login({
+            issuer: searchParams.get("iss")
+        });
+        else if (searchParams.has("register_app")) {
+            // Identity is not available yet because we can't fetch the user profile
+            // So get the webId by decoding the token
+            const token = localStorage.getItem("token");
+            if (token) {
+                const payload = (0, ($parcel$interopDefault($fvx3m$jwtdecode)))(token);
+                registerApp(clientId, payload?.webid).then((appRegistrationUri)=>{
+                    if (appRegistrationUri) setIsRegistered(true);
+                });
+            }
+        } else if (searchParams.has("logout")) // Immediately logout if required
+        logout({
             redirectUrl: redirectUrl
         });
     }, [
         searchParams,
+        login,
+        registerApp,
+        clientId,
+        setIsRegistered,
         logout,
         redirectUrl
     ]);
     (0, $fvx3m$react.useEffect)(()=>{
-        if (!isIdentityLoading) {
-            if (identity?.id) redirect("/");
-            else if (searchParams.has("iss")) // Automatically login if Pod provider is known
-            login({
-                issuer: searchParams.get("iss")
-            });
-        }
+        if (!isIdentityLoading && identity?.id && isRegistered) redirect(redirectUrl);
     }, [
-        searchParams,
-        login,
         identity,
         isIdentityLoading,
-        redirect
+        isRegistered,
+        redirect,
+        redirectUrl
     ]);
     if (isIdentityLoading) return null;
     return /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Box), {
@@ -274,7 +427,7 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
                                         children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsxs)((0, $fvx3m$muimaterial.ListItemButton), {
                                             onClick: ()=>login({
                                                     issuer: podProvider["apods:baseUrl"],
-                                                    redirect: redirectUrl || undefined,
+                                                    redirect: "/login?register_app=true",
                                                     isSignup: isSignup
                                                 }),
                                             children: [
@@ -298,7 +451,7 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
         })
     });
 };
-var $474875ae41bcd76f$export$2e2bcd8739ae039 = $474875ae41bcd76f$var$PodLoginPageView;
+var $8c4e86009f42299d$export$2e2bcd8739ae039 = $8c4e86009f42299d$var$LoginPage;
 
 
 
@@ -950,7 +1103,7 @@ var $c30b6e8e8f4f1d51$export$2e2bcd8739ae039 = $c30b6e8e8f4f1d51$var$ShareButton
 
 
 // Set the app locale to the user's locale, if it is set
-const $bbda9bb45dcd2801$var$SyncUserLocale = ()=>{
+const $418040ff16c1a946$var$SyncUserLocale = ()=>{
     const [locale, setLocale] = (0, $fvx3m$reactadmin.useLocaleState)();
     const { data: identity } = (0, $fvx3m$reactadmin.useGetIdentity)();
     (0, $fvx3m$react.useEffect)(()=>{
@@ -961,7 +1114,7 @@ const $bbda9bb45dcd2801$var$SyncUserLocale = ()=>{
         identity
     ]);
 };
-var $bbda9bb45dcd2801$export$2e2bcd8739ae039 = $bbda9bb45dcd2801$var$SyncUserLocale;
+var $418040ff16c1a946$export$2e2bcd8739ae039 = $418040ff16c1a946$var$SyncUserLocale;
 
 
 
@@ -1060,7 +1213,7 @@ var $4b1314efa6ba34c8$export$2e2bcd8739ae039 = {
         error: {
             app_status_unavailable: "Unable to check app status",
             app_offline: "The app backend is offline",
-            app_not_installed: "The app is not installed",
+            app_not_registered: "The app is not registered",
             app_not_listening: "The app is not listening to %{uri}"
         },
         user_menu: {
@@ -1094,7 +1247,7 @@ var $7955e6b2ad1a54ef$export$2e2bcd8739ae039 = {
         error: {
             app_status_unavailable: "Impossible de v\xe9rifier le statut de l'application",
             app_offline: "L'application est hors ligne",
-            app_not_installed: "L'application n'est pas install\xe9e",
+            app_not_registered: "L'application n'est pas enregistr\xe9e",
             app_not_listening: "L'application n'\xe9coute pas %{uri}"
         },
         user_menu: {

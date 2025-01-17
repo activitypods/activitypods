@@ -1,6 +1,6 @@
 // Components
 export { default as BackgroundChecks } from './components/BackgroundChecks';
-export { default as PodLoginPage } from './components/PodLoginPage';
+export { default as LoginPage } from './components/LoginPage';
 export { default as RedirectPage } from './components/RedirectPage';
 export { default as ShareButton } from './components/ShareButton/ShareButton';
 export { default as ShareDialog } from './components/ShareButton/ShareDialog';

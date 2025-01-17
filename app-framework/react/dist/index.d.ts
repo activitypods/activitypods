@@ -30,9 +30,10 @@ type Props = {
  * This list is taken from the https://activitypods.org/data/pod-providers endpoint
  * It is possible to replace it with a custom list of Pod providers
  */
-export const PodLoginPage: FunctionComponent<_Props1>;
+export const LoginPage: FunctionComponent<_Props1>;
 type _Props1 = {
     text?: string;
+    clientId: string;
     customPodProviders: [PodProvider];
 };
 /**
@@ -47,6 +48,7 @@ export const RedirectPage: FunctionComponent<_Props2>;
 type _Props2 = {
     ontologies: [Ontology];
 };
+export const SyncUserLocale: () => void;
 export const UserMenu: FunctionComponent;
 export const englishMessages: {
     apods: {
@@ -68,7 +70,7 @@ export const englishMessages: {
         error: {
             app_status_unavailable: string;
             app_offline: string;
-            app_not_installed: string;
+            app_not_registered: string;
             app_not_listening: string;
         };
         user_menu: {
@@ -99,7 +101,7 @@ export const frenchMessages: {
         error: {
             app_status_unavailable: string;
             app_offline: string;
-            app_not_installed: string;
+            app_not_registered: string;
             app_not_listening: string;
         };
         user_menu: {
@@ -112,6 +114,5 @@ export const frenchMessages: {
 };
 export { default as ShareButton } from './components/ShareButton/ShareButton';
 export { default as ShareDialog } from './components/ShareButton/ShareDialog';
-export { default as SyncUserLocale } from './components/SyncUserLocale';
 
 //# sourceMappingURL=index.d.ts.map

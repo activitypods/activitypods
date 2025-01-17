@@ -17,8 +17,7 @@ module.exports = {
       ignore_contact_request: 'Ignore contact request',
       login: 'Login with an account',
       open_app: 'Open application',
-      install_app: 'Install application',
-      uninstall_app: 'Uninstall application',
+      delete_app: 'Delete application',
       open: 'Open',
       reject: 'Reject',
       reject_contact_request: 'Reject contact request',
@@ -28,8 +27,10 @@ module.exports = {
       send_request: 'Send request',
       signup: 'Signup',
       reset_password: 'Reset password',
+      revoke_access: 'Revoke access',
       set_new_password: 'Set new password',
       undo_ignore_contact: 'No longer ignore',
+      upgrade: 'Upgrade',
       select: 'Select',
       connect: 'Connect',
       continue: 'Continue',
@@ -81,6 +82,9 @@ module.exports = {
       delete_pod: 'Delete account',
       export_pod: 'Export all data'
     },
+    dialog: {
+      app_permissions: 'Application permissions'
+    },
     description: {
       delete_pod:
         'By continuing, you will delete your account and all your data. This action is irreversible! Please consider exporting your data first (see advanced settings). If you want to continue, type "%{confirm_text}".',
@@ -125,8 +129,7 @@ module.exports = {
       share_contact: 'My contact link'
     },
     block: {
-      contact_requests: 'New contact requests',
-      g1_account: 'G1 account'
+      contact_requests: 'New contact requests'
     },
     input: {
       about_you: 'A few words about you',
@@ -150,16 +153,13 @@ module.exports = {
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',
       share_contact: 'To connect with someone you know, you can send them the link below.',
       location_comment: 'Additional information to help find this place',
-      g1_tipjar_field:
-        'To send G1 money to this user, copy his public key below and use it inside the Cesium software.',
-      g1_tipjar_input: 'The public key of your Ğ1 account. This will allow other members to easily send you money.',
       login: 'Sign in to your personal space',
       signup: 'Create your personal space',
       reset_password: 'Enter your email address below and we will send you a link to reset your password',
       set_new_password: 'Please enter your email address and a new password below',
       create_profile:
         'Now that your account is created, please create your profile. By default, your profile will only be visible to the people you accept into your network.',
-      authorize_install: 'To be installed, the app requires the following authorizations',
+      authorize_install: 'To be registered, the app requires the following authorizations',
       authorize_upgrade: 'The app has been updated and now requires the following additional authorizations',
       invite_text_logged_out:
         "A personal data space is in some way similar to an email account; It's decentralized, so you can choose where your personal data is stored. Instead of creating a new account for every new app, you can login to compatible apps using your data space account. Apps then store your data in your data space.",
@@ -175,7 +175,9 @@ module.exports = {
       username_cannot_be_modified: 'The user ID cannot be modified',
       public_profile_view: 'You are viewing your public profile, visible by everyone',
       private_profile_view: 'You are viewing your private profile, visible only by your contacts',
-      create_group: 'Please select on the list below the provider that you wish to use to create your group'
+      create_group: 'Please select on the list below the provider that you wish to use to create your group',
+      cannot_show_permissions_of_offline_app:
+        'The application is offline so we cannot show you the permissions you granted it in a human-readable way. You may still revoke all permissions by clicking on the button below.'
     },
     message: {
       copied_to_clipboard: 'Copied !',
@@ -183,12 +185,12 @@ module.exports = {
       you_participated_to_same_event: 'You participated to the same event',
       verified_app: 'Verified application',
       verified: 'Verified',
-      no_app_registration: 'You have no installed application',
+      offline: 'Offline',
+      upgrade_required: 'Upgrade required',
+      no_app_registration: 'You have no registered application',
       connection_successful: 'You are now connected!',
       pod_creation_progress: 'Your Pod is being created...',
-      app_installation_progress: 'App installation in progress...',
-      app_upgrade_progress: 'App upgrade in progress...',
-      app_upgrade_cancel: 'Uninstall the application ?',
+      app_upgrade_cancel: 'Delete the application ?',
       app_upgrade_cancel_description:
         "The application cannot work if you don't give it the authorizations it requires. Do you want to uninstall this application ?",
       default_app_changed: 'The default app has been successfully changed',
@@ -217,8 +219,11 @@ module.exports = {
       get_settings_error: 'An error occurred',
       update_settings_error: 'An error occurred',
       verified_applications_load_failed: 'Unable to load the list of verified applications',
-      app_uninstallation_in_progress: 'Application uninstallation in progress...',
-      app_uninstalled: 'Application uninstalled',
+      app_registration_progress: 'App registration in progress...',
+      app_upgrade_progress: 'App upgrade in progress...',
+      app_removal_in_progress: 'Application removal in progress...',
+      app_upgraded: 'Application upgraded',
+      app_removed: 'Application removed',
       home_address_updated: 'Home address updated',
       home_address_deleted: 'Home address deleted',
       send_request_error: 'Error while sending the request: %{error}',

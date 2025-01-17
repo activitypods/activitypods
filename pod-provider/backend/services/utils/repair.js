@@ -10,6 +10,34 @@ module.exports = {
   name: 'repair',
   actions: {
     /**
+     * Install application with required access needs for the given users
+     */
+    async installApp(ctx) {
+      const { username, appUri } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const { username: dataset, webId } of accounts) {
+        ctx.meta.dataset = dataset;
+        ctx.meta.webId = webId;
+
+        const isRegistered = await ctx.call('app-registrations.isRegistered', { appUri, podOwner: webId });
+        if (isRegistered) {
+          this.logger.info(`App is already installed for ${webId}, skipping...`);
+        } else {
+          this.logger.info(`Installing app on ${webId}...`);
+
+          await ctx.call(
+            'auth-agent.registerApp',
+            {
+              appUri,
+              acceptAllRequirements: true
+            },
+            { meta: { webId } }
+          );
+        }
+      }
+    },
+    /**
      * Delete all app registrations for the given user
      */
     async deleteAppRegistrations(ctx) {
@@ -27,6 +55,32 @@ module.exports = {
         for (let appRegistration of arrayOf(container['ldp:contains'])) {
           this.logger.info(`Deleting app ${appRegistration['interop:registeredAgent']}...`);
           await ctx.call('app-registrations.delete', { resourceUri: appRegistration.id, webId });
+        }
+      }
+    },
+    /**
+     * Create missing containers for the given user
+     */
+    async createMissingContainers(ctx) {
+      const { username } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const { webId, username: dataset } of accounts) {
+        ctx.meta.dataset = dataset;
+        const storageUrl = await ctx.call('solid-storage.getUrl', { webId });
+
+        const registeredContainers = await ctx.call('ldp.registry.list');
+        for (const container of Object.values(registeredContainers)) {
+          const containerUri = urlJoin(storageUrl, container.path);
+          const containerExist = await ctx.call('ldp.container.exist', { containerUri, webId });
+          if (!containerExist) {
+            this.logger.info(`Container ${containerUri} doesn't exist yet. Creating it...`);
+            await ctx.call('ldp.container.createAndAttach', {
+              containerUri,
+              permissions: container.permissions,
+              webId
+            });
+          }
         }
       }
     },

@@ -27,7 +27,7 @@ module.exports = {
           this.logger.info(`Installing app on ${webId}...`);
 
           await ctx.call(
-            'auth-agent.install',
+            'auth-agent.registerApp',
             {
               appUri,
               acceptAllRequirements: true

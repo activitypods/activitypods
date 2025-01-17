@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "moleculer-runner --repl --hot services/*.js services/**/*.js",
     "start": "moleculer-runner services/*.js services/**/*.js",
-    "test": "NODE_ENV=test moleculer-runner --repl services/*.js services/**/*.js",
+    "test": "NODE_ENV=test moleculer-runner --repl --hot services/*.js services/**/*.js",
     "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
     "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid"
   },

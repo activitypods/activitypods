@@ -205,7 +205,7 @@ const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRig
     acceptedSpecialRights = requiredAccessNeedGroup['apods:hasSpecialRights'];
   }
 
-  await actor.call('auth-agent.install', {
+  await actor.call('auth-agent.registerApp', {
     appUri,
     acceptedAccessNeeds,
     acceptedSpecialRights

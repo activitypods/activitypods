@@ -237,6 +237,9 @@ module.exports = {
           });
         }
 
+        // Persist the container URI so that the app doesn't need to fetch the whole TypeIndex
+        ctx.params.resource['apods:registeredContainer'] = containersUris;
+
         // Create a DataGrant with the same data, but replace interop:scopeOfAuthorization with interop:scopeOfGrant
         await ctx.call('data-grants.post', {
           resource: {
@@ -247,9 +250,6 @@ module.exports = {
           },
           contentType: MIME_TYPES.JSON
         });
-
-        // Persist the container URI so that the app doesn't need to fetch the whole TypeIndex
-        ctx.params.resource['apods:registeredContainer'] = containersUris;
       }
     },
     after: {

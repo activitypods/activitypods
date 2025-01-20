@@ -11,6 +11,37 @@ module.exports = {
     baseUrl: CONFIG.BASE_URL
   },
   actions: {
+    async migrate(ctx) {
+      const { username, version } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const account of accounts) {
+        if (account.version === version) {
+          this.logger.info(`Pod of ${account.webId} is already on v${version}, skipping...`);
+        } else {
+          this.logger.info(`Migrating Pod of ${account.webId} to v${version}...`);
+
+          ctx.meta.dataset = account.username;
+          ctx.meta.webId = account.webId;
+          ctx.meta.skipObjectsWatcher = true; // We don't want to trigger an Update
+
+          if (version === '2.0.5') {
+            await ctx.call('repair.createMissingContainers', { username: account.username });
+            await this.actions.addAuthorizationAgent({ username: account.username }, { parentCtx: ctx });
+            await this.actions.generateRegistries({ username: account.username }, { parentCtx: ctx });
+            await this.actions.generateAuthorizations({ username: account.username }, { parentCtx: ctx });
+          } else {
+            throw new Error(`No migration exist for version ${version}`);
+          }
+
+          await ctx.call('auth.account.update', {
+            id: account['@id'],
+            ...account,
+            version
+          });
+        }
+      }
+    },
     async addAuthorizationAgent(ctx) {
       const { username } = ctx.params;
       const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });

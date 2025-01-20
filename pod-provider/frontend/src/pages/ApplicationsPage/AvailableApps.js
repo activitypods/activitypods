@@ -7,7 +7,7 @@ const AvailableApps = ({ registeredApps, trustedApps }) => {
   const translate = useTranslate();
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
-  // Filter out applications which are already installed
+  // Filter out applications which are already registered
   const availableApps = trustedApps?.filter(
     trustedApp => !registeredApps.some(registerApp => registerApp.id === trustedApp.id)
   );
@@ -23,7 +23,7 @@ const AvailableApps = ({ registeredApps, trustedApps }) => {
         <Grid container spacing={xs ? 1 : 3}>
           {availableApps.map(app => (
             <Grid item xs={12} sm={6} key={app.id}>
-              <ApplicationCard app={app} isTrustedApp isInstalled={false} />
+              <ApplicationCard app={app} isTrustedApp isRegistered={false} />
             </Grid>
           ))}
         </Grid>

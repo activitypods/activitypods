@@ -168,7 +168,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
             {translate('ra.action.cancel')}
           </Button>
           <Button variant="contained" color="error" onClick={onRemove}>
-            {translate('app.action.uninstall_app')}
+            {translate('app.action.revoke_access')}
           </Button>
         </DialogActions>
       </Dialog>

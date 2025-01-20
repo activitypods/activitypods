@@ -1,6 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import urlJoin from 'url-join';
-import { Link, useTranslate, useNotify, useDataProvider } from 'react-admin';
+import { Link, useTranslate, useNotify } from 'react-admin';
 import { Box, Button } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
 import SimpleBox from '../../layout/SimpleBox';
@@ -22,7 +21,6 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp }) => {
   const { requiredAccessNeeds, optionalAccessNeeds, loaded } = useAccessNeeds(application);
   const { classDescriptions } = useClassDescriptions(application);
   const { data: typeRegistrations } = useTypeRegistrations();
-  const dataProvider = useDataProvider();
 
   useEffect(() => {
     if (loaded) {
@@ -33,7 +31,7 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp }) => {
     }
   }, [loaded, requiredAccessNeeds, optionalAccessNeeds, setGrantedAccessNeedsUris]);
 
-  const installApp = useCallback(async () => {
+  const onRegister = useCallback(async () => {
     try {
       setIsRegistering(true);
 
@@ -42,7 +40,7 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp }) => {
       await accessApp();
     } catch (e) {
       setIsRegistering(false);
-      notify(`Error on app installation: ${e.message}`, { type: 'error' });
+      notify(`Error on app registration: ${e.message}`, { type: 'error' });
     }
   }, [registerApp, notify, application, grantedAccessNeedsUris, accessApp, setIsRegistering]);
 
@@ -52,7 +50,7 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp }) => {
     <SimpleBox
       title={translate('app.page.authorize')}
       icon={<WarningIcon />}
-      text={translate('app.helper.authorize_install')}
+      text={translate('app.helper.authorize_register')}
     >
       {application && (
         <>
@@ -75,7 +73,7 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp }) => {
         </>
       )}
       <Box display="flex" justifyContent="end">
-        <Button variant="contained" color="secondary" onClick={installApp} sx={{ ml: 10 }}>
+        <Button variant="contained" color="secondary" onClick={onRegister} sx={{ ml: 10 }}>
           {translate('app.action.accept')}
         </Button>
         <Link to="/apps">

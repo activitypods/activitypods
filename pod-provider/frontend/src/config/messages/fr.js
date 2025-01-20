@@ -161,7 +161,7 @@ module.exports = {
       set_new_password: 'Veuillez entrer votre adresse mail et un nouveau mot de passe ci-dessous',
       create_profile:
         'Maintenant que votre compte est créé, veuillez créer votre profil. Celui-ci ne sera visible par défaut que des personnes que vous acceptez dans votre réseau.',
-      authorize_install: "Pour être utilisée, l'application requiert les autorisations suivantes",
+      authorize_register: "Pour être utilisée, l'application requiert les autorisations suivantes",
       authorize_upgrade:
         "L'application a été mise à jour et requiert maintenant les nouvelles autorisations ci-dessous",
       invite_text_logged_out:
@@ -196,7 +196,7 @@ module.exports = {
       pod_creation_progress: 'Compte en cours de création...',
       app_upgrade_cancel: "Supprimer l'application ?",
       app_upgrade_cancel_description:
-        "Cette application ne peut pas fonctionner si vous ne lui donnez pas les autorisations qu'elle demande. Est-ce que vous souhaitez désinstaller l'application ?",
+        "Cette application ne peut pas fonctionner si vous ne lui donnez pas les autorisations qu'elle demande. Est-ce que vous souhaitez supprimer l'application ?",
       default_app_changed: "L'application par défaut a été changée",
       backend_offline: 'Le serveur est en panne. Merci de revenir plus tard.'
     },

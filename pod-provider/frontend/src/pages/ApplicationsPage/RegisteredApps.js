@@ -11,7 +11,7 @@ const RegisteredApps = ({ registeredApps, trustedApps }) => {
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
   useEffect(() => {
-    if (searchParams.has('uninstalled')) {
+    if (searchParams.has('removed')) {
       notify('app.notification.app_removed', { type: 'success' });
       window.history.replaceState(null, '', window.location.pathname);
     }

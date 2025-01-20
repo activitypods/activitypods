@@ -16,7 +16,7 @@ const useRemoveApp = () => {
 
       const currentUrl = new URL(window.location);
       const logoutUrl = new URL(application['oidc:post_logout_redirect_uris']);
-      logoutUrl.searchParams.append('redirect', urlJoin(currentUrl.origin, '/apps?uninstalled=true'));
+      logoutUrl.searchParams.append('redirect', urlJoin(currentUrl.origin, '/apps?removed=true'));
       window.location.href = logoutUrl.toString();
     },
     [dataProvider, notify]

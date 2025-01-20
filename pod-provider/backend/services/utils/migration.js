@@ -140,45 +140,63 @@ module.exports = {
           for (const dataGrantUri of arrayOf(accessGrant['interop:hasDataGrant'])) {
             const dataGrant = await ctx.call('data-grants.get', { resourceUri: dataGrantUri, webId });
 
-            this.logger.info(`Generating DataAuthorization from DataGrant ${dataGrant.id}`);
+            const dataAuthorization = await ctx.call('data-authorizations.getByAccessNeed', {
+              accessNeedUri: dataGrant['interop:satisfiesAccessNeed'],
+              podOwner: webId
+            });
 
-            dataAuthorizationsUris.push(
-              await ctx.call(
-                'data-authorizations.post',
-                {
-                  resource: {
-                    ...dataGrant,
-                    type: 'interop:DataAuthorization',
-                    id: undefined,
-                    'interop:scopeOfAuthorization': dataGrant['interop:scopeOfGrant'],
-                    'interop:scopeOfGrant': undefined
+            if (dataAuthorization) {
+              this.logger.warn(`DataAuthorization for DataGrant ${dataGrant.id} already exist, skipping...`);
+              dataAuthorizationsUris.push(dataAuthorization.id);
+            } else {
+              this.logger.info(`Generating DataAuthorization from DataGrant ${dataGrant.id}`);
+              dataAuthorizationsUris.push(
+                await ctx.call(
+                  'data-authorizations.post',
+                  {
+                    resource: {
+                      ...dataGrant,
+                      type: 'interop:DataAuthorization',
+                      id: undefined,
+                      'interop:scopeOfAuthorization': dataGrant['interop:scopeOfGrant'],
+                      'interop:scopeOfGrant': undefined
+                    },
+                    contentType: MIME_TYPES.JSON,
+                    webId
                   },
-                  contentType: MIME_TYPES.JSON,
-                  webId
-                },
-                { meta: { isMigration: true } }
-              )
-            );
+                  { meta: { isMigration: true } }
+                )
+              );
+            }
           }
 
-          this.logger.info(`Generating AccessAuthorization from AccessGrant ${accessGrant.id}`);
+          const accessAuthorization = await ctx.call('access-authorizations.getByAccessNeedGroup', {
+            accessNeedGroupUri: accessGrant['interop:hasAccessNeedGroup'],
+            podOwner: webId
+          });
 
-          await ctx.call(
-            'access-authorizations.post',
-            {
-              resource: {
-                ...accessGrant,
-                type: 'interop:AccessAuthorization',
-                id: undefined,
-                'interop:grantedWith': authAgentUri,
-                'interop:hasDataGrant': undefined,
-                'interop:hasDataAuthorization': dataAuthorizationsUris
+          if (accessAuthorization) {
+            this.logger.warn(`AccessAuthorization for AccessGrant ${accessGrant.id} already exist, skipping...`);
+          } else {
+            this.logger.info(`Generating AccessAuthorization from AccessGrant ${accessGrant.id}`);
+
+            await ctx.call(
+              'access-authorizations.post',
+              {
+                resource: {
+                  ...accessGrant,
+                  type: 'interop:AccessAuthorization',
+                  id: undefined,
+                  'interop:grantedWith': authAgentUri,
+                  'interop:hasDataGrant': undefined,
+                  'interop:hasDataAuthorization': dataAuthorizationsUris
+                },
+                contentType: MIME_TYPES.JSON,
+                webId
               },
-              contentType: MIME_TYPES.JSON,
-              webId
-            },
-            { meta: { isMigration: true } }
-          );
+              { meta: { isMigration: true } }
+            );
+          }
         }
       }
     }

@@ -6,7 +6,7 @@ const { MigrationService } = require('@semapps/migration');
 const CONFIG = require('../../config/config');
 
 module.exports = {
-  name: 'migration-v2',
+  name: 'migration-2-0-0',
   mixins: [MigrationService],
   settings: {
     baseUrl: CONFIG.BASE_URL

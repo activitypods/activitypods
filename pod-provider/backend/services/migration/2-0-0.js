@@ -128,7 +128,7 @@ module.exports = {
         this.logger.info(`Adding TypeIndex to ${webId}...`);
 
         const podUrl = await ctx.call('solid-storage.getUrl', { webId });
-        await ctx.call('type-indexes.createAndAttachToWebId', { webId });
+        await ctx.call('type-indexes.createPublicIndex', { webId });
 
         // Go through each registered container and persist them
         const registeredContainers = await ctx.call('ldp.registry.list');

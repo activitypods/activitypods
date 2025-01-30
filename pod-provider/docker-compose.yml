@@ -11,6 +11,12 @@ services:
     environment:
       ADMIN_PASSWORD: 'admin'
 
+  shapes:
+    image: activitypods/shapes
+    container_name: shapes
+    ports:
+      - '8000:3000'
+
   mailcatcher:
     image: dockage/mailcatcher
     container_name: mailcatcher
@@ -28,7 +34,7 @@ services:
       - '6379:6379'
     volumes:
       - ./data/redis:/data:z
-    command: ['redis-server', '--appendonly', 'yes']
+    command: [ 'redis-server', '--appendonly', 'yes' ]
 
   arena:
     image: activitypods/arena

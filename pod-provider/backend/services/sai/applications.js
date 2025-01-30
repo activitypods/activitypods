@@ -6,13 +6,7 @@ module.exports = {
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:Application'],
-    description: {
-      labelMap: {
-        en: 'Applications'
-      },
-      labelPredicate: 'interop:applicationName',
-      internal: true
-    }
+    private: true
   },
   actions: {
     async get(ctx) {

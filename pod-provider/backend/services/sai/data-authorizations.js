@@ -1,5 +1,4 @@
-const urlJoin = require('url-join');
-const { ControlledContainerMixin, isURL, arrayOf } = require('@semapps/ldp');
+const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 module.exports = {
@@ -9,12 +8,7 @@ module.exports = {
     acceptedTypes: ['interop:DataAuthorization'],
     excludeFromMirror: true,
     activateTombstones: false,
-    description: {
-      labelMap: {
-        en: 'Data Authorizations'
-      },
-      internal: true
-    }
+    private: true
   },
   actions: {
     put() {

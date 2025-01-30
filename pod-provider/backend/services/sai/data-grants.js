@@ -12,12 +12,7 @@ module.exports = {
     },
     excludeFromMirror: true,
     activateTombstones: false,
-    description: {
-      labelMap: {
-        en: 'Data Grants'
-      },
-      internal: true
-    }
+    private: true
   },
   dependencies: ['ldp', 'ldp.registry'],
   actions: {

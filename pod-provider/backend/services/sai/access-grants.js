@@ -12,12 +12,7 @@ module.exports = {
     },
     excludeFromMirror: true,
     activateTombstones: false,
-    description: {
-      labelMap: {
-        en: 'Access Grants'
-      },
-      internal: true
-    }
+    private: true
   },
   actions: {
     put() {

@@ -61,12 +61,14 @@ export const PrivateProfilePage = () => {
           <ImageInput source="vcard:photo" accept="image/*">
             <ImageField source="src" />
           </ImageInput>
-          <QuickCreateLocationInput
-            version={locationVersion}
-            reference="Location"
-            source="vcard:hasAddress"
-            onChange={handleLocationChange}
-          />
+          {CONFIG.MAPBOX_ACCESS_TOKEN && (
+            <QuickCreateLocationInput
+              version={locationVersion}
+              reference="Location"
+              source="vcard:hasAddress"
+              onChange={handleLocationChange}
+            />
+          )}
         </SimpleForm>
       </Edit>
     </BlockAnonymous>

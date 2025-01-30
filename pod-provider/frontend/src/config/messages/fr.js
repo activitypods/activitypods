@@ -181,7 +181,9 @@ module.exports = {
       create_group:
         'Veuillez sélectionner dans la liste ci-dessous le fournisseur que vous souhaitez utiliser pour créer votre groupe',
       cannot_show_permissions_of_offline_app:
-        "L'application étant hors ligne, nous ne pouvons pas vous montrer les autorisations que vous lui avez accordées de manière lisible. Vous pouvez toujours révoquer toutes les autorisations en cliquant sur le bouton ci-dessous."
+        "L'application étant hors ligne, nous ne pouvons pas vous montrer les autorisations que vous lui avez accordées de manière lisible. Vous pouvez toujours révoquer toutes les autorisations en cliquant sur le bouton ci-dessous.",
+      cannot_add_addresses:
+        "Vous ne pouvez pas ajouter d'adresses car votre hébergeur n'a pas configuré d'access token pour MapBox"
     },
     message: {
       copied_to_clipboard: 'Copié !',

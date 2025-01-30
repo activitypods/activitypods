@@ -177,7 +177,8 @@ module.exports = {
       private_profile_view: 'You are viewing your private profile, visible only by your contacts',
       create_group: 'Please select on the list below the provider that you wish to use to create your group',
       cannot_show_permissions_of_offline_app:
-        'The application is offline so we cannot show you the permissions you granted it in a human-readable way. You may still revoke all permissions by clicking on the button below.'
+        'The application is offline so we cannot show you the permissions you granted it in a human-readable way. You may still revoke all permissions by clicking on the button below.',
+      cannot_add_addresses: 'You cannot add addresses because your provider did not configure a MapBox access token'
     },
     message: {
       copied_to_clipboard: 'Copied !',

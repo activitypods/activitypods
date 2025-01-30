@@ -1,7 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useListContext, useTranslate, useGetIdentity, useDataProvider, useCreatePath, useNotify } from 'react-admin';
-import { Switch, List as MUIList, ListItem, ListItemButton, ListItemAvatar, ListItemText, Avatar } from '@mui/material';
+import {
+  Switch,
+  List as MUIList,
+  ListItem,
+  ListItemButton,
+  ListItemAvatar,
+  ListItemText,
+  Avatar,
+  Alert
+} from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import PlaceIcon from '@mui/icons-material/Place';
 import List from '../../layout/List';
@@ -92,6 +101,14 @@ const ListWithSwitches = () => {
 
 const LocationList = () => {
   const translate = useTranslate();
+
+  if (!CONFIG.MAPBOX_ACCESS_TOKEN) {
+    return (
+      <Alert severity="error" sx={{ mt: 3 }}>
+        {translate('app.helper.cannot_add_addresses')}
+      </Alert>
+    );
+  }
 
   return (
     <List title={translate('app.page.addresses')} pagination={false} perPage={1000}>

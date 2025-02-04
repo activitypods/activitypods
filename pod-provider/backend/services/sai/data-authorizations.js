@@ -8,7 +8,7 @@ module.exports = {
     acceptedTypes: ['interop:DataAuthorization'],
     excludeFromMirror: true,
     activateTombstones: false,
-    private: true
+    typeIndex: 'private'
   },
   actions: {
     put() {

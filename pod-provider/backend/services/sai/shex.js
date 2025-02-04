@@ -11,7 +11,7 @@ module.exports = {
     async getType(ctx) {
       const { shapeUri } = ctx.params;
 
-      const response = await fetch(shapeUri, { headers: { Accept: 'text/shex' } });
+      const response = await fetch(shapeUri, { headers: { Accept: '*/*' } }); // TODO use text/shex
       if (!response.ok) return false;
 
       const shexC = await response.text();

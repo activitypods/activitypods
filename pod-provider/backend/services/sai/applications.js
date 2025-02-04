@@ -6,7 +6,7 @@ module.exports = {
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:Application'],
-    private: true
+    typeIndex: 'private'
   },
   actions: {
     async get(ctx) {

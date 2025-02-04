@@ -19,12 +19,6 @@ module.exports = {
       anon: {
         read: true
       }
-    },
-    description: {
-      labelMap: {
-        en: 'Authorization Agents'
-      },
-      internal: true
     }
   },
   dependencies: ['api', 'ldp'],

@@ -5,6 +5,9 @@ const { getDatasetFromUri } = require('@semapps/ldp');
 module.exports = {
   name: 'data-registrations',
   actions: {
+    /**
+     * Create a DataRegistration AND a LDP container in a given storage
+     */
     async generateFromShapeTree(ctx) {
       const { shapeTreeUri, podOwner } = ctx.params;
 
@@ -13,8 +16,10 @@ module.exports = {
 
       // Get registered class from shapeTree
       const shapeTree = await ctx.call('shape-trees.get', { resourceUri: shapeTreeUri });
-      const registeredClass = await ctx.call('shex.getType', { shapeUri: shapeTree['st:shape'] });
-      if (!registeredClass) throw new Error(`Could not find class required by shape ${shapeTree['st:shape']}`);
+      const shapeUri = shapeTree[0]['http://www.w3.org/ns/shapetrees#shape']?.[0]?.['@id'];
+      if (!shapeUri) throw new Error(`Could not find shape from shape tree ${shapeTreeUri}`);
+      const registeredClass = await ctx.call('shex.getType', { shapeUri });
+      if (!registeredClass) throw new Error(`Could not find class required by shape ${shapeUri}`);
 
       // Generate a path for the new container
       const containerPath = await ctx.call('ldp.container.getPath', { resourceType: registeredClass });
@@ -24,14 +29,24 @@ module.exports = {
       const containerUri = urlJoin(podUrl, containerPath);
       await ctx.call('ldp.container.createAndAttach', { containerUri, webId: podOwner });
 
-      // Attach the DataRegistration predicates to the newly-created LDP container
-      const authAgentUri = await ctx.call('auth-agent.getResourceUri', { webId: podOwner });
+      await this.actions.attachToContainer({ shapeTreeUri, containerUri, podOwner }, { parentCtx: ctx });
+
+      return containerUri;
+    },
+    /**
+     * Attach the DataRegistration predicates to an existing LDP container
+     */
+    async attachToContainer(ctx) {
+      const { shapeTreeUri, containerUri, podOwner } = ctx.params;
+
+      const authAgentUri = await ctx.call('auth-agent.waitForResourceCreation', { webId: podOwner });
       const registeredAt = new Date().toISOString();
+
       await ctx.call('triplestore.update', {
         query: `
           PREFIX interop: <http://www.w3.org/ns/solid/interop#>
           PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          INSERT {
+          INSERT DATA {
             <${containerUri}> a interop:DataRegistration .
             <${containerUri}> interop:registeredBy <${podOwner}> . 
             <${containerUri}> interop:registeredWith <${authAgentUri}> .
@@ -45,16 +60,11 @@ module.exports = {
         dataset: getDatasetFromUri(podOwner)
       });
 
-      // If the resource type is invalid, an error will be thrown here
-      await ctx.call('type-registrations.register', {
-        type: registeredClass,
-        containerUri,
-        webId: podOwner
-      });
-
-      return containerUri;
+      // TODO Refresh cache
     },
-    // Get the DataRegistration linked with a shape tree
+    /**
+     * Get the DataRegistration linked with a shape tree
+     */
     async getByShapeTree(ctx) {
       const { shapeTreeUri, podOwner } = ctx.params;
 
@@ -108,6 +118,23 @@ module.exports = {
       if (!ontology) throw new Error(`Could not register ontology for resource type ${registeredClass}`);
 
       return ontology;
+    }
+  },
+  events: {
+    async 'ldp.container.created'(ctx) {
+      const { containerUri, options, webId } = ctx.params;
+
+      // If a shape tree is in the container option of the newly-created container, attach
+      if (options?.shapeTreeUri) {
+        await this.actions.attachToContainer(
+          {
+            shapeTreeUri: options.shapeTreeUri,
+            containerUri,
+            podOwner: webId
+          },
+          { parentCtx: ctx }
+        );
+      }
     }
   }
 };

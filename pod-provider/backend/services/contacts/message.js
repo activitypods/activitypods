@@ -7,9 +7,11 @@ module.exports = {
   name: 'contacts.message',
   mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
   settings: {
-    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, '/as/Note'),
+    acceptedTypes: ['as:Note'],
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'trees/as/Note'),
     permissions: {},
-    newResourcesPermissions: {}
+    newResourcesPermissions: {},
+    typeIndex: 'public'
   },
   activities: {
     createNote: {

@@ -10,9 +10,12 @@ module.exports = {
   mixins: [ControlledContainerMixin],
   settings: {
     // ControlledContainerMixin settings
-    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, '/as/Profile'),
+    path: '/vcard/individual',
+    acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'trees/as/Profile'),
     permissions: {},
-    newResourcesPermissions: {}
+    newResourcesPermissions: {},
+    typeIndex: 'public'
   },
   dependencies: ['activitypub', 'webacl'],
   events: {

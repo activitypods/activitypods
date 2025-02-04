@@ -12,7 +12,7 @@ module.exports = {
     },
     excludeFromMirror: true,
     activateTombstones: false,
-    private: true
+    typeIndex: 'private'
   },
   dependencies: ['ldp', 'ldp.registry'],
   actions: {

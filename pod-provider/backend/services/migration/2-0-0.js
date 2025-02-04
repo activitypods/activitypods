@@ -134,16 +134,11 @@ module.exports = {
         const registeredContainers = await ctx.call('ldp.registry.list');
         for (const container of Object.values(registeredContainers)) {
           const containerUri = urlJoin(podUrl, container.path);
-          for (const type of arrayOf(container.acceptedTypes)) {
-            await ctx.call('type-registrations.register', { type, containerUri, webId });
-            if (container.description) {
-              await ctx.call('type-registrations.attachDescription', {
-                type,
-                webId,
-                ...container.description
-              });
-            }
-          }
+          await ctx.call('type-registrations.register', {
+            types: arrayOf(container.acceptedTypes),
+            containerUri,
+            webId
+          });
         }
       }
     },

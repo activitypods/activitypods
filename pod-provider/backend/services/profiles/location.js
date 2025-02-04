@@ -7,10 +7,12 @@ module.exports = {
   name: 'profiles.location',
   mixins: [ControlledContainerMixin],
   settings: {
-    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, '/vcard/Location'),
+    acceptedTypes: ['vcard:Location'],
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'trees/vcard/Location'),
     excludeFromMirror: true,
     permissions: {},
-    newResourcesPermissions: {}
+    newResourcesPermissions: {},
+    typeIndex: 'public'
   },
   actions: {
     async getHomeLocation(ctx) {

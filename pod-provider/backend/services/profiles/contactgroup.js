@@ -7,8 +7,10 @@ module.exports = {
   mixins: [ControlledContainerMixin],
   settings: {
     // ControlledContainerMixin settings
-    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, '/vcard/Group'),
+    acceptedTypes: ['vcard:Group'],
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'trees/vcard/Group'),
     permissions: {},
-    newResourcesPermissions: {}
+    newResourcesPermissions: {},
+    typeIndex: 'public'
   }
 };

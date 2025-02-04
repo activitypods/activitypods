@@ -8,6 +8,7 @@ build:
 	$(DOCKER_COMPOSE_DEV) build
 
 start: 
+	mkdir -p ./data/shapes
 	$(DOCKER_COMPOSE_DEV) up -d
 
 stop:

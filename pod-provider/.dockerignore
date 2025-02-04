@@ -8,4 +8,7 @@ backend/jwt
 
 frontend/.yalc
 
-data/
+data/fuseki
+data/fuseki_test
+data/redis
+data/redis_test

@@ -14,6 +14,8 @@ services:
   shapes:
     image: activitypods/shapes
     container_name: shapes
+    volumes:
+      - shapes:/app/shapes:z
     ports:
       - '8000:3000'
 
@@ -63,3 +65,11 @@ services:
     environment:
       - TRIPLEADMIN_HOST=http://localhost:3030/
       - TRIPLEADMIN_USERNAME=admin
+
+volumes:
+  shapes:
+    driver: local
+    driver_opts:
+      type: none
+      device: "./data/shapes"
+      o: bind

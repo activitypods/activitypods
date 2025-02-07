@@ -4,10 +4,8 @@ import { Box, Button } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
 import SimpleBox from '../../layout/SimpleBox';
 import useAccessNeeds from '../../hooks/useAccessNeeds';
-import useClassDescriptions from '../../hooks/useClassDescriptions';
 import AccessNeedsList from '../../common/list/AccessNeedsList';
 import ProgressMessage from '../../common/ProgressMessage';
-import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import AppHeader from './AppHeader';
 import useRegisterApp from '../../hooks/useRegisterApp';
 
@@ -19,8 +17,6 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp }) => {
   const registerApp = useRegisterApp();
 
   const { requiredAccessNeeds, optionalAccessNeeds, loaded } = useAccessNeeds(application);
-  const { classDescriptions } = useClassDescriptions(application);
-  const { data: typeRegistrations } = useTypeRegistrations();
 
   useEffect(() => {
     if (loaded) {
@@ -60,15 +56,11 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp }) => {
             accessNeeds={requiredAccessNeeds}
             allowedAccessNeeds={grantedAccessNeedsUris}
             setAllowedAccessNeeds={setGrantedAccessNeedsUris}
-            classDescriptions={classDescriptions}
-            typeRegistrations={typeRegistrations}
           />
           <AccessNeedsList
             accessNeeds={optionalAccessNeeds}
             allowedAccessNeeds={grantedAccessNeedsUris}
             setAllowedAccessNeeds={setGrantedAccessNeedsUris}
-            classDescriptions={classDescriptions}
-            typeRegistrations={typeRegistrations}
           />
         </>
       )}

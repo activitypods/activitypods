@@ -5,10 +5,8 @@ import WarningIcon from '@mui/icons-material/Warning';
 import SimpleBox from '../../layout/SimpleBox';
 import useAccessNeeds from '../../hooks/useAccessNeeds';
 import useGrants from '../../hooks/useGrants';
-import useClassDescriptions from '../../hooks/useClassDescriptions';
 import AccessNeedsList from '../../common/list/AccessNeedsList';
 import ProgressMessage from '../../common/ProgressMessage';
-import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import AppHeader from './AppHeader';
 import { arrayOf } from '../../utils';
 import useRemoveApp from '../../hooks/useRemoveApp';
@@ -26,8 +24,6 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
   const upgradeApp = useUpgradeApp();
 
   const { requiredAccessNeeds, optionalAccessNeeds, loaded: accessNeedsLoaded } = useAccessNeeds(application);
-  const { classDescriptions } = useClassDescriptions(application);
-  const { data: typeRegistrations } = useTypeRegistrations();
 
   const { grants, loaded: grantsLoaded } = useGrants(application.id);
 
@@ -138,15 +134,11 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
             accessNeeds={missingAccessNeeds.required}
             allowedAccessNeeds={allowedAccessNeeds}
             setAllowedAccessNeeds={setAllowedAccessNeeds}
-            classDescriptions={classDescriptions}
-            typeRegistrations={typeRegistrations}
           />
           <AccessNeedsList
             accessNeeds={missingAccessNeeds.optional}
             allowedAccessNeeds={allowedAccessNeeds}
             setAllowedAccessNeeds={setAllowedAccessNeeds}
-            classDescriptions={classDescriptions}
-            typeRegistrations={typeRegistrations}
           />
         </>
       )}

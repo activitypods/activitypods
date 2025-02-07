@@ -1,12 +1,10 @@
 const QueueMixin = require('moleculer-bull');
 const { arrayOf } = require('@semapps/ldp');
-const AccessDescriptionSetService = require('./services/registration/access-description-sets');
 const AccessNeedsService = require('./services/registration/access-needs');
 const AccessNeedsGroupsService = require('./services/registration/access-needs-groups');
 const ActorsService = require('./services/registration/actors');
 const AppRegistrationsService = require('./services/registration/app-registrations');
 const AccessGrantsService = require('./services/registration/access-grants');
-const ClassDescriptionService = require('./services/registration/class-descriptions');
 const DataGrantsService = require('./services/registration/data-grants');
 const RegistrationService = require('./services/registration/registration');
 const PodActivitiesWatcherService = require('./services/pod-handling/pod-activities-watcher');
@@ -43,7 +41,6 @@ module.exports = {
       required: [],
       optional: []
     },
-    classDescriptions: {},
     queueServiceUrl: null
   },
   dependencies: [
@@ -54,9 +51,7 @@ module.exports = {
     'ldp.registry',
     'ldp.resource',
     'actors',
-    'access-needs-groups',
-    'class-descriptions',
-    'access-description-sets'
+    'access-needs-groups'
   ],
   created() {
     if (!this.settings.queueServiceUrl) {
@@ -73,9 +68,6 @@ module.exports = {
     this.broker.createService({ mixins: [AppRegistrationsService] });
     this.broker.createService({ mixins: [DataGrantsService] });
     this.broker.createService({ mixins: [AccessGrantsService] });
-
-    this.broker.createService({ mixins: [AccessDescriptionSetService] });
-    this.broker.createService({ mixins: [ClassDescriptionService] });
 
     // Pod handling
     this.broker.createService({
@@ -101,7 +93,7 @@ module.exports = {
     this.broker.createService({ mixins: [TranslatorService] });
   },
   async started() {
-    const { app, oidc, accessNeeds, classDescriptions } = this.settings;
+    const { app, oidc, accessNeeds } = this.settings;
 
     this.appActor = await this.broker.call('actors.createOrUpdateApp', { app, oidc });
 
@@ -118,8 +110,6 @@ module.exports = {
         optional: arrayOf(accessNeeds.optional)
       }
     });
-
-    await this.broker.call('access-description-sets.createOrUpdate', { classDescriptions, appUri: this.appActor.id });
   },
   actions: {
     get() {

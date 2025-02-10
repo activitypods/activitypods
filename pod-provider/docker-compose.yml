@@ -11,14 +11,6 @@ services:
     environment:
       ADMIN_PASSWORD: 'admin'
 
-  shapes:
-    build:
-      context: .
-      dockerfile: ./docker/shapes.dockerfile
-    container_name: shapes
-    ports:
-      - '8000:3000'
-
   mailcatcher:
     image: dockage/mailcatcher
     container_name: mailcatcher

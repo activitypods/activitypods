@@ -8,7 +8,7 @@ build:
 	$(DOCKER_COMPOSE_DEV) build
 
 start: 
-	$(DOCKER_COMPOSE_DEV) up -d --build
+	$(DOCKER_COMPOSE_DEV) up -d
 
 stop:
 	$(DOCKER_COMPOSE_DEV) down

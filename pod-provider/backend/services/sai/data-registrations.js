@@ -1,6 +1,6 @@
 const urlJoin = require('url-join');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { getDatasetFromUri } = require('@semapps/ldp');
+const { getDatasetFromUri, hasType } = require('@semapps/ldp');
 
 module.exports = {
   name: 'data-registrations',
@@ -47,28 +47,61 @@ module.exports = {
     async attachToContainer(ctx) {
       const { shapeTreeUri, containerUri, podOwner } = ctx.params;
 
-      const authAgentUri = await ctx.call('auth-agent.waitForResourceCreation', { webId: podOwner });
-      const registeredAt = new Date().toISOString();
+      const container = await ctx.call('ldp.container.get', { containerUri, accept: MIME_TYPES.JSON, webId: 'system' });
 
-      await ctx.call('triplestore.update', {
-        query: `
-          PREFIX interop: <http://www.w3.org/ns/solid/interop#>
-          PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          INSERT DATA {
-            <${containerUri}> a interop:DataRegistration .
-            <${containerUri}> interop:registeredBy <${podOwner}> . 
-            <${containerUri}> interop:registeredWith <${authAgentUri}> .
-            <${containerUri}> interop:registeredAt "${registeredAt}"^^xsd:dateTime .
-            <${containerUri}> interop:updatedAt "${registeredAt}"^^xsd:dateTime .
-            <${containerUri}> interop:registeredShapeTree <${shapeTreeUri}> .
-          }
-        `,
-        accept: MIME_TYPES.JSON,
-        webId: 'system',
-        dataset: getDatasetFromUri(podOwner)
-      });
+      const currentData = new Date().toISOString();
 
-      // TODO Refresh cache
+      if (hasType(container, 'interop:DataRegistration')) {
+        // Only update the DataRegistration if the shapeTreeUri is different
+        if (shapeTreeUri !== container['interop:registeredShapeTree']) {
+          await ctx.call('triplestore.update', {
+            query: `
+              PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+              PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+              DELETE {
+                <${containerUri}> interop:updatedAt ?updatedAt .
+                <${containerUri}> interop:registeredShapeTree ?shapeTree .
+              } 
+              INSERT {
+                <${containerUri}> interop:updatedAt "${currentData}"^^xsd:dateTime .
+                <${containerUri}> interop:registeredShapeTree <${shapeTreeUri}> .
+              }
+              WHERE {
+                <${containerUri}> interop:updatedAt ?updatedAt .
+                <${containerUri}> interop:registeredShapeTree ?shapeTree .
+              }
+            `,
+            accept: MIME_TYPES.JSON,
+            webId: 'system',
+            dataset: getDatasetFromUri(podOwner)
+          });
+        }
+      } else {
+        const authAgentUri = await ctx.call('auth-agent.waitForResourceCreation', { webId: podOwner });
+
+        await ctx.call('triplestore.update', {
+          query: `
+            PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            INSERT DATA {
+              <${containerUri}> a interop:DataRegistration .
+              <${containerUri}> interop:registeredBy <${podOwner}> . 
+              <${containerUri}> interop:registeredWith <${authAgentUri}> .
+              <${containerUri}> interop:registeredAt "${currentData}"^^xsd:dateTime .
+              <${containerUri}> interop:updatedAt "${currentData}"^^xsd:dateTime .
+              <${containerUri}> interop:registeredShapeTree <${shapeTreeUri}> .
+            }
+          `,
+          accept: MIME_TYPES.JSON,
+          webId: 'system',
+          dataset: getDatasetFromUri(podOwner)
+        });
+      }
+
+      if (this.broker.cacher) {
+        // We don't want to invalidate the cache of all resources within the container, so consider the container like a resource
+        await ctx.call('ldp.cache.invalidateResource', { resourceUri: containerUri });
+      }
     },
     /**
      * Get the DataRegistration linked with a shape tree

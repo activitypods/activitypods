@@ -25,19 +25,25 @@ module.exports = {
           ctx.meta.webId = webId;
           ctx.meta.skipObjectsWatcher = true; // We don't want to trigger an Update
 
-          await ctx.call('repair.createMissingContainers', { username });
-          await this.actions.generatePrivateTypeIndex({ webId }, { parentCtx: ctx });
-          await ctx.call('type-registrations.resetFromRegistry', { webId });
-          await ctx.call('webacl.resource.refreshContainersRights', { webId });
-          await this.actions.attachDataRegistrationToContainers({ webId }, { parentCtx: ctx });
-          await ctx.call('repair.upgradeAllApps', { username });
+          try {
+            await ctx.call('repair.createMissingContainers', { username });
+            await this.actions.generatePrivateTypeIndex({ webId }, { parentCtx: ctx });
+            await ctx.call('type-registrations.resetFromRegistry', { webId });
+            await ctx.call('webacl.resource.refreshContainersRights', { webId });
+            await this.actions.attachDataRegistrationToContainers({ webId }, { parentCtx: ctx });
+            await ctx.call('repair.upgradeAllApps', { username });
 
-          await ctx.call('auth.account.update', {
-            webId,
-            username,
-            version: MIGRATION_VERSION,
-            ...rest
-          });
+            await ctx.call('auth.account.update', {
+              id: rest['@id'],
+              webId,
+              username,
+              version: MIGRATION_VERSION,
+              ...rest
+            });
+          } catch (e) {
+            this.logger.error(`Unable to migrate Pod of ${webId} to ${MIGRATION_VERSION}. Error: ${e.message}`);
+            console.error(e);
+          }
         }
       }
     },
@@ -69,6 +75,9 @@ module.exports = {
       for (const options of Object.values(registeredContainers)) {
         if (options.shapeTreeUri) {
           const containerUri = urlJoin(podUrl, options.path);
+
+          this.logger.info(`Attaching a DataRegistration to ${containerUri}`);
+
           await ctx.call('data-registrations.attachToContainer', {
             shapeTreeUri: options.shapeTreeUri,
             containerUri,

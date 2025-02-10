@@ -32,7 +32,7 @@ module.exports = {
       } else {
         const accessNeed = await ctx.call('ldp.remote.get', { resourceUri: accessNeedUri });
 
-        const dataRegistration = await ctx.call('data-registrations.generateFromShapeTree', {
+        const dataRegistrationUri = await ctx.call('data-registrations.generateFromShapeTree', {
           shapeTreeUri: accessNeed['interop:registeredShapeTree'],
           podOwner
         });
@@ -43,7 +43,7 @@ module.exports = {
             'interop:dataOwner': podOwner,
             'interop:grantee': appUri,
             'interop:registeredShapeTree': accessNeed['interop:registeredShapeTree'],
-            'interop:hasDataRegistration': dataRegistration.id,
+            'interop:hasDataRegistration': dataRegistrationUri,
             'interop:accessMode': accessNeed['interop:accessMode'],
             'interop:scopeOfAuthorization': 'interop:All',
             'interop:satisfiesAccessNeed': accessNeedUri
@@ -123,13 +123,15 @@ module.exports = {
         const shapeTreeUri = resource['interop:registeredShapeTree'];
         const accessMode = arrayOf(resource['interop:accessMode']);
 
+        console.log('shapeTreeUri', shapeTreeUri, podOwner);
         const containerUri = await ctx.call('data-registrations.generateFromShapeTree', { shapeTreeUri, podOwner });
+        console.log('containerUri', containerUri);
 
-        await this.broker.call('type-registrations.bindApp', {
-          containerUri,
-          appUri,
-          webId: podOwner
-        });
+        // await this.broker.call('type-registrations.bindApp', {
+        //   containerUri,
+        //   appUri,
+        //   webId: podOwner
+        // });
 
         // Give read-write permission to the application
         // For details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
@@ -177,11 +179,11 @@ module.exports = {
 
         const containerUri = await ctx.call('data-registrations.getByShapeTree', { shapeTreeUri, podOwner });
 
-        await ctx.call('type-registrations.unbindApp', {
-          containerUri,
-          appUri,
-          webId: podOwner
-        });
+        // await ctx.call('type-registrations.unbindApp', {
+        //   containerUri,
+        //   appUri,
+        //   webId: podOwner
+        // });
 
         // Mirror of what is done on the above hook
         await ctx.call('webacl.resource.removeRights', {

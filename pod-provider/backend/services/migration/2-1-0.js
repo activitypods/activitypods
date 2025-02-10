@@ -1,5 +1,8 @@
+const urlJoin = require('url-join');
 const { MigrationService } = require('@semapps/migration');
 const CONFIG = require('../../config/config');
+
+const MIGRATION_VERSION = '2.1.0';
 
 module.exports = {
   name: 'migration-2-1-0',
@@ -9,53 +12,68 @@ module.exports = {
   },
   actions: {
     async migrate(ctx) {
-      const { username, version } = ctx.params;
-      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
-
-      for (const account of accounts) {
-        // if (account.version === version) {
-        //   this.logger.info(`Pod of ${account.webId} is already on v${version}, skipping...`);
-        // } else {
-        this.logger.info(`Migrating Pod of ${account.webId} to v${version}...`);
-
-        ctx.meta.dataset = account.username;
-        ctx.meta.webId = account.webId;
-        ctx.meta.skipObjectsWatcher = true; // We don't want to trigger an Update
-
-        if (version === '2.1.0') {
-          await ctx.call('repair.createMissingContainers', { username: account.username });
-          await this.actions.generatePrivateTypeIndex({ username: account.username }, { parentCtx: ctx });
-        } else {
-          throw new Error(`No migration exist for version ${version}`);
-        }
-
-        await ctx.call('auth.account.update', {
-          id: account['@id'],
-          ...account,
-          version
-        });
-        // }
-      }
-    },
-    async generatePrivateTypeIndex(ctx) {
       const { username } = ctx.params;
       const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
-      for (const { webId } of accounts) {
-        const preferencesFileExist = await ctx.call('solid-preferences-file.exist', { webId });
-        if (preferencesFileExist) {
-          this.logger.warn(`PreferencesFile already exist for ${webId}, skipping...`);
+      for (const { webId, username, version, ...rest } of accounts) {
+        if (version === MIGRATION_VERSION) {
+          this.logger.info(`Pod of ${webId} is already on v${MIGRATION_VERSION}, skipping...`);
         } else {
-          this.logger.info(`Creating PreferencesFile for ${webId}`);
-          await ctx.call('solid-preferences-file.initializeResource', { webId });
-        }
+          this.logger.info(`Migrating Pod of ${webId} to v${MIGRATION_VERSION}...`);
 
-        const privateIndex = await ctx.call('type-indexes.getPrivateIndex', { webId });
-        if (privateIndex) {
-          this.logger.warn(`The private TypeIndex already exist for ${webId}, skipping...`);
-        } else {
-          this.logger.info(`Creating private TypeIndex for ${webId}`);
-          await ctx.call('type-indexes.createPrivateIndex', { webId });
+          ctx.meta.dataset = username;
+          ctx.meta.webId = webId;
+          ctx.meta.skipObjectsWatcher = true; // We don't want to trigger an Update
+
+          await ctx.call('repair.createMissingContainers', { username });
+          await this.actions.generatePrivateTypeIndex({ webId }, { parentCtx: ctx });
+          await ctx.call('type-registrations.resetFromRegistry', { webId });
+          await ctx.call('webacl.resource.refreshContainersRights', { webId });
+          await this.actions.attachDataRegistrationToContainers({ webId }, { parentCtx: ctx });
+          await ctx.call('repair.upgradeAllApps', { username });
+
+          await ctx.call('auth.account.update', {
+            webId,
+            username,
+            version: MIGRATION_VERSION,
+            ...rest
+          });
+        }
+      }
+    },
+    async generatePrivateTypeIndex(ctx) {
+      const { webId } = ctx.params;
+
+      const preferencesFileExist = await ctx.call('solid-preferences-file.exist', { webId });
+      if (preferencesFileExist) {
+        this.logger.warn(`PreferencesFile already exist for ${webId}, skipping...`);
+      } else {
+        this.logger.info(`Creating PreferencesFile for ${webId}`);
+        await ctx.call('solid-preferences-file.initializeResource', { webId });
+      }
+
+      const privateIndex = await ctx.call('type-indexes.getPrivateIndex', { webId });
+      if (privateIndex) {
+        this.logger.warn(`The private TypeIndex already exist for ${webId}, skipping...`);
+      } else {
+        this.logger.info(`Creating private TypeIndex for ${webId}`);
+        await ctx.call('type-indexes.createPrivateIndex', { webId });
+      }
+    },
+    async attachDataRegistrationToContainers(ctx) {
+      const { webId } = ctx.params;
+
+      const registeredContainers = await ctx.call('ldp.registry.list');
+      const podUrl = await ctx.call('solid-storage.getUrl', { webId });
+
+      for (const options of Object.values(registeredContainers)) {
+        if (options.shapeTreeUri) {
+          const containerUri = urlJoin(podUrl, options.path);
+          await ctx.call('data-registrations.attachToContainer', {
+            shapeTreeUri: options.shapeTreeUri,
+            containerUri,
+            podOwner: webId
+          });
         }
       }
     }

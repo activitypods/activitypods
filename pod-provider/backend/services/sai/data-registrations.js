@@ -12,7 +12,7 @@ module.exports = {
       const { shapeTreeUri, podOwner } = ctx.params;
 
       const existingDataRegistration = await this.actions.getByShapeTree({ shapeTreeUri, podOwner });
-      if (existingDataRegistration) return existingDataRegistration.id;
+      if (existingDataRegistration) return existingDataRegistration;
 
       // Get registered class from shapeTree
       const shapeTree = await ctx.call('shape-trees.get', { resourceUri: shapeTreeUri });
@@ -28,6 +28,14 @@ module.exports = {
       const podUrl = await ctx.call('solid-storage.getUrl', { webId: podOwner });
       const containerUri = urlJoin(podUrl, containerPath);
       await ctx.call('ldp.container.createAndAttach', { containerUri, webId: podOwner });
+
+      // Register the class on the type index
+      await ctx.call('type-registrations.register', {
+        types: [registeredClass],
+        containerUri,
+        webId,
+        private: false
+      });
 
       await this.actions.attachToContainer({ shapeTreeUri, containerUri, podOwner }, { parentCtx: ctx });
 

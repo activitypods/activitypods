@@ -1,11 +1,8 @@
 /backend/.env.local
 
-/data/fuseki
-/data/fuseki_test
-/data/redis
-/data/redis_test
+/data
 
 # To copy the container shapes to the host, the /data/shapes directory need to be created
 # We create it on `make start`. However we don't want to commit shapes and shape trees.
-/data/shapes/shex
-/data/shapes/trees
+shapes/shex
+shapes/trees

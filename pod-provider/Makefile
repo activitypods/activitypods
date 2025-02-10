@@ -8,8 +8,7 @@ build:
 	$(DOCKER_COMPOSE_DEV) build
 
 start: 
-	mkdir -p ./data/shapes
-	$(DOCKER_COMPOSE_DEV) up -d
+	$(DOCKER_COMPOSE_DEV) up -d --build
 
 stop:
 	$(DOCKER_COMPOSE_DEV) down

@@ -12,10 +12,10 @@ services:
       ADMIN_PASSWORD: 'admin'
 
   shapes:
-    image: activitypods/shapes
+    build:
+      context: .
+      dockerfile: ./docker/shapes.dockerfile
     container_name: shapes
-    volumes:
-      - shapes:/app/shapes:z
     ports:
       - '8000:3000'
 
@@ -36,7 +36,7 @@ services:
       - '6379:6379'
     volumes:
       - ./data/redis:/data:z
-    command: ['redis-server', '--appendonly', 'yes']
+    command: [ 'redis-server', '--appendonly', 'yes' ]
 
   arena:
     image: activitypods/arena

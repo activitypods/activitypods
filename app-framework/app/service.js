@@ -17,6 +17,7 @@ const PodResourcesService = require('./services/pod-handling/pod-resources');
 const PodWacGroupsService = require('./services/pod-handling/pod-wac-groups');
 const TimerService = require('./services/utils/timer');
 const TranslatorService = require('./services/utils/translator');
+const MigrationService = require('./services/utils/migration');
 
 module.exports = {
   name: 'app',
@@ -91,6 +92,7 @@ module.exports = {
       mixins: [TimerService, QueueMixin(this.settings.queueServiceUrl)]
     });
     this.broker.createService({ mixins: [TranslatorService] });
+    this.broker.createService({ mixins: [MigrationService], settings: { baseUrl: this.settings.baseUrl } });
   },
   async started() {
     const { app, oidc, accessNeeds } = this.settings;

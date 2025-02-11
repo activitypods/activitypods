@@ -4,7 +4,8 @@ const PodActivitiesHandlerMixin = require('./pod-activities-handler');
 module.exports = {
   mixins: [PodActivitiesHandlerMixin],
   settings: {
-    type: null
+    type: null,
+    shapeTreeUri: null
   },
   dependencies: ['pod-resources'],
   created() {
@@ -85,8 +86,8 @@ module.exports = {
       return await ctx.call('pod-resources.delete', ctx.params);
     },
     async getContainerUri(ctx) {
-      return await ctx.call('data-grants.getContainerByType', {
-        type: this.settings.type,
+      return await ctx.call('data-grants.getContainerByShapeTree', {
+        shapeTreeUri: this.settings.shapeTreeUri,
         podOwner: ctx.params.actorUri
       });
     }

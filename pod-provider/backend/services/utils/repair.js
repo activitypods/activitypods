@@ -22,9 +22,9 @@ module.exports = {
 
         const isRegistered = await ctx.call('app-registrations.isRegistered', { appUri, podOwner: webId });
         if (isRegistered) {
-          this.logger.info(`App is already installed for ${webId}, skipping...`);
+          this.logger.info(`App ${appUri} is already installed for ${webId}, skipping...`);
         } else {
-          this.logger.info(`Installing app on ${webId}...`);
+          this.logger.info(`Installing app ${appUri} on ${webId}...`);
 
           await ctx.call(
             'auth-agent.registerApp',
@@ -59,6 +59,31 @@ module.exports = {
       }
     },
     /**
+     * Upgrade all existing applications, accepting all required access needs
+     * TODO: find existing optional access needs, and grant them also
+     */
+    async upgradeAllApps(ctx) {
+      const { username } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const { webId } of accounts) {
+        const container = await ctx.call('applications.list', { webId });
+
+        for (let application of arrayOf(container['ldp:contains'])) {
+          this.logger.info(`Upgrading app ${application.id} for ${webId}...`);
+
+          await ctx.call(
+            'auth-agent.upgradeApp',
+            {
+              appUri: application.id,
+              acceptAllRequirements: true
+            },
+            { meta: { webId } }
+          );
+        }
+      }
+    },
+    /**
      * Create missing containers for the given user
      */
     async createMissingContainers(ctx) {
@@ -79,37 +104,6 @@ module.exports = {
               containerUri,
               permissions: container.permissions,
               webId
-            });
-          }
-        }
-      }
-    },
-    /**
-     * Refresh the permissions of every registered containers
-     * Similar to webacl.resource.refreshContainersRights but works with Pods
-     */
-    async addContainersRights(ctx) {
-      const { username } = ctx.params;
-      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
-
-      for (const { webId, username: dataset } of accounts) {
-        ctx.meta.dataset = dataset;
-        ctx.meta.webId = webId;
-
-        const podUrl = await ctx.call('solid-storage.getUrl', { webId });
-        const registeredContainers = await ctx.call('ldp.registry.list', { dataset });
-
-        for (const { permissions, podsContainer, path } of Object.values(registeredContainers)) {
-          if (permissions && !podsContainer) {
-            const containerUri = urlJoin(podUrl, path);
-            const containerRights = typeof permissions === 'function' ? permissions('system', ctx) : permissions;
-
-            this.logger.info(`Adding rights for container ${containerUri}...`);
-
-            await ctx.call('webacl.resource.addRights', {
-              resourceUri: containerUri,
-              additionalRights: containerRights,
-              webId: 'system'
             });
           }
         }

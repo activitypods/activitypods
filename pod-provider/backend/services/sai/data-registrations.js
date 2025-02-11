@@ -33,7 +33,7 @@ module.exports = {
       await ctx.call('type-registrations.register', {
         types: [registeredClass],
         containerUri,
-        webId,
+        webId: podOwner,
         private: false
       });
 

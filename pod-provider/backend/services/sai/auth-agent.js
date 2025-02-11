@@ -69,7 +69,9 @@ module.exports = {
       const account = await ctx.call('auth.account.findByWebId', { webId });
       ctx.meta.dataset = account.username;
 
-      const app = await ctx.call('activitypub.actor.get', { actorUri: appUri, webId });
+      // Force to get through network
+      const app = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri });
+
       const appRegistration = await ctx.call('app-registrations.getForApp', { appUri, podOwner: webId });
 
       if (appRegistration) {
@@ -81,7 +83,7 @@ module.exports = {
       }
 
       if (acceptAllRequirements) {
-        if (!acceptedAccessNeeds || !acceptedSpecialRights) {
+        if (acceptedAccessNeeds || acceptedSpecialRights) {
           throw new Error(
             `If acceptAllRequirements is true, you should not pass acceptedAccessNeeds or acceptedSpecialRights`
           );
@@ -123,10 +125,11 @@ module.exports = {
       const account = await ctx.call('auth.account.findByWebId', { webId });
       ctx.meta.dataset = account.username;
 
-      const app = await ctx.call('activitypub.actor.get', { actorUri: appUri, webId });
+      // Force to get through network
+      const app = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri });
 
       if (acceptAllRequirements) {
-        if (!acceptedAccessNeeds || !acceptedSpecialRights) {
+        if (acceptedAccessNeeds || acceptedSpecialRights) {
           throw new Error(
             `If acceptAllRequirements is true, you should not pass acceptedAccessNeeds or acceptedSpecialRights`
           );

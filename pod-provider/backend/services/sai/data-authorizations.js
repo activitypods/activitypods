@@ -123,9 +123,7 @@ module.exports = {
         const shapeTreeUri = resource['interop:registeredShapeTree'];
         const accessMode = arrayOf(resource['interop:accessMode']);
 
-        console.log('shapeTreeUri', shapeTreeUri, podOwner);
         const containerUri = await ctx.call('data-registrations.generateFromShapeTree', { shapeTreeUri, podOwner });
-        console.log('containerUri', containerUri);
 
         // await this.broker.call('type-registrations.bindApp', {
         //   containerUri,
@@ -179,33 +177,36 @@ module.exports = {
 
         const containerUri = await ctx.call('data-registrations.getByShapeTree', { shapeTreeUri, podOwner });
 
-        // await ctx.call('type-registrations.unbindApp', {
-        //   containerUri,
-        //   appUri,
-        //   webId: podOwner
-        // });
+        // In case of a migration, no container will be found so skip this part
+        if (containerUri) {
+          // await ctx.call('type-registrations.unbindApp', {
+          //   containerUri,
+          //   appUri,
+          //   webId: podOwner
+          // });
 
-        // Mirror of what is done on the above hook
-        await ctx.call('webacl.resource.removeRights', {
-          resourceUri: containerUri,
-          rights: {
-            user: {
-              uri: appUri,
-              read: accessMode.includes('acl:Read'),
-              write: accessMode.includes('acl:Write')
-            },
-            default: {
+          // Mirror of what is done on the above hook
+          await ctx.call('webacl.resource.removeRights', {
+            resourceUri: containerUri,
+            rights: {
               user: {
                 uri: appUri,
                 read: accessMode.includes('acl:Read'),
-                append: accessMode.includes('acl:Append'),
-                write: accessMode.includes('acl:Write'),
-                control: accessMode.includes('acl:Control')
+                write: accessMode.includes('acl:Write')
+              },
+              default: {
+                user: {
+                  uri: appUri,
+                  read: accessMode.includes('acl:Read'),
+                  append: accessMode.includes('acl:Append'),
+                  write: accessMode.includes('acl:Write'),
+                  control: accessMode.includes('acl:Control')
+                }
               }
-            }
-          },
-          webId: 'system'
-        });
+            },
+            webId: 'system'
+          });
+        }
 
         // Delete DataGrant that match the same AccessNeed
         const dataGrant = await ctx.call('data-grants.getByAccessNeed', {

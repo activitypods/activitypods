@@ -18,7 +18,9 @@ module.exports = {
      */
     async getRequirements(ctx) {
       const { appUri } = ctx.params;
-      const app = await ctx.call('ldp.resource.get', { resourceUri: appUri, accept: MIME_TYPES.JSON });
+
+      // Force to get through network, so that we have the latest Access Need Group
+      const app = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri });
 
       let accessNeeds = [],
         specialRights = [];

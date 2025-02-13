@@ -98,6 +98,12 @@ module.exports = {
         });
       }
 
+      // Attach the DataRegistration to the DataRegistry
+      await ctx.call('data-registry.add', {
+        podOwner,
+        dataRegistrationUri: containerUri
+      });
+
       if (this.broker.cacher) {
         // We don't want to invalidate the cache of all resources within the container, so consider the container like a resource
         await ctx.call('ldp.cache.invalidateResource', { resourceUri: containerUri });

@@ -30,6 +30,7 @@ module.exports = {
             await this.actions.generatePrivateTypeIndex({ webId }, { parentCtx: ctx });
             await ctx.call('type-registrations.resetFromRegistry', { webId });
             await ctx.call('webacl.resource.refreshContainersRights', { webId });
+            await this.actions.generateDataRegistry({ webId }, { parentCtx: ctx });
             await this.actions.attachDataRegistrationToContainers({ webId }, { parentCtx: ctx });
             await ctx.call('repair.upgradeAllApps', { username });
 
@@ -64,6 +65,17 @@ module.exports = {
       } else {
         this.logger.info(`Creating private TypeIndex for ${webId}`);
         await ctx.call('type-indexes.createPrivateIndex', { webId });
+      }
+    },
+    async generateDataRegistry(ctx) {
+      const { webId } = ctx.params;
+
+      const dataRegistryExist = await ctx.call('data-registry.exist', { webId });
+      if (dataRegistryExist) {
+        this.logger.warn(`DataRegistry already exist for ${webId}, skipping...`);
+      } else {
+        this.logger.info(`Creating DataRegistry for ${webId}`);
+        await ctx.call('data-registry.initializeResource', { webId });
       }
     },
     async attachDataRegistrationToContainers(ctx) {

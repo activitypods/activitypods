@@ -1,21 +1,18 @@
+const urlJoin = require('url-join');
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const CONFIG = require('../../config/config');
 
 module.exports = {
   name: 'profiles.location',
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['vcard:Location'],
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'trees/vcard/Location'),
     excludeFromMirror: true,
     permissions: {},
     newResourcesPermissions: {},
-    description: {
-      labelMap: {
-        en: 'Addresses',
-        fr: 'Adresses'
-      },
-      labelPredicate: 'vcard:given-name'
-    }
+    typeIndex: 'public'
   },
   actions: {
     async getHomeLocation(ctx) {

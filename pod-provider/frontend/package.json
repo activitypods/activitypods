@@ -20,6 +20,7 @@
     "@semapps/input-components": "1.0.4",
     "@semapps/list-components": "1.0.4",
     "@semapps/semantic-data-provider": "1.0.4",
+    "@shexjs/parser": "^1.0.0-alpha.28",
     "@uiw/react-json-view": "^2.0.0-alpha.27",
     "dashify": "2.0.0",
     "jsonld": "^5.2.0",

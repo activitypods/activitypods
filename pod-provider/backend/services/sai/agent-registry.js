@@ -6,13 +6,7 @@ module.exports = {
   mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:AgentRegistry'],
-    podProvider: true,
-    description: {
-      labelMap: {
-        en: 'Agent Registries'
-      },
-      internal: true
-    }
+    podProvider: true
   },
   dependencies: ['registry-set'],
   actions: {

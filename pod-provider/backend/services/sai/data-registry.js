@@ -2,27 +2,27 @@ const { triple, namedNode } = require('@rdfjs/data-model');
 const { SingleResourceContainerMixin } = require('@semapps/ldp');
 
 module.exports = {
-  name: 'auth-registry',
+  name: 'data-registry',
   mixins: [SingleResourceContainerMixin],
   settings: {
-    acceptedTypes: ['interop:AuthorizationRegistry'],
+    acceptedTypes: ['interop:DataRegistry'],
     podProvider: true
   },
   dependencies: ['registry-set'],
   actions: {
     async add(ctx) {
-      const { podOwner, accessAuthorizationUri } = ctx.params;
+      const { podOwner, dataRegistrationUri } = ctx.params;
 
-      const authRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+      const dataRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
 
       await this.actions.patch(
         {
-          resourceUri: authRegistryUri,
+          resourceUri: dataRegistryUri,
           triplesToAdd: [
             triple(
-              namedNode(authRegistryUri),
-              namedNode('http://www.w3.org/ns/solid/interop#hasAccessAuthorization'),
-              namedNode(accessAuthorizationUri)
+              namedNode(dataRegistryUri),
+              namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistration'),
+              namedNode(dataRegistrationUri)
             )
           ],
           webId: 'system'
@@ -31,18 +31,18 @@ module.exports = {
       );
     },
     async remove(ctx) {
-      const { podOwner, accessAuthorizationUri } = ctx.params;
+      const { podOwner, dataRegistrationUri } = ctx.params;
 
-      const authRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+      const dataRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
 
       await this.actions.patch(
         {
-          resourceUri: authRegistryUri,
+          resourceUri: dataRegistryUri,
           triplesToRemove: [
             triple(
-              namedNode(authRegistryUri),
-              namedNode('http://www.w3.org/ns/solid/interop#hasAccessAuthorization'),
-              namedNode(accessAuthorizationUri)
+              namedNode(dataRegistryUri),
+              namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistration'),
+              namedNode(dataRegistrationUri)
             )
           ],
           webId: 'system'
@@ -61,7 +61,7 @@ module.exports = {
           triplesToAdd: [
             triple(
               namedNode(registrySetUri),
-              namedNode('http://www.w3.org/ns/solid/interop#hasAuthorizationRegistry'),
+              namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistry'),
               namedNode(res)
             )
           ],

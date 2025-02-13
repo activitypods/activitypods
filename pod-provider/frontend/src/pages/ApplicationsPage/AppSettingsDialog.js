@@ -2,9 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useTranslate, Button, useNotify, useRefresh } from 'react-admin';
 import { Dialog, DialogTitle, DialogActions, DialogContent, IconButton, Alert } from '@mui/material';
 import useAccessNeeds from '../../hooks/useAccessNeeds';
-import useClassDescriptions from '../../hooks/useClassDescriptions';
 import AccessNeedsList from '../../common/list/AccessNeedsList';
-import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import CloseIcon from '@mui/icons-material/Close';
 import BlockIcon from '@mui/icons-material/Block';
 import LoopIcon from '@mui/icons-material/Loop';
@@ -28,8 +26,6 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
     error: accessNeedsError
   } = useAccessNeeds(application);
   const { grants, loaded: grantsLoaded } = useGrants(application.id);
-  const { classDescriptions } = useClassDescriptions(application);
-  const { data: typeRegistrations } = useTypeRegistrations();
   const removeApp = useRemoveApp();
   const upgradeApp = useUpgradeApp();
 
@@ -114,15 +110,11 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
               accessNeeds={requiredAccessNeeds}
               allowedAccessNeeds={newAccessNeedsUris}
               setAllowedAccessNeeds={setNewAccessNeedsUris}
-              classDescriptions={classDescriptions}
-              typeRegistrations={typeRegistrations}
             />
             <AccessNeedsList
               accessNeeds={optionalAccessNeeds}
               allowedAccessNeeds={newAccessNeedsUris}
               setAllowedAccessNeeds={setNewAccessNeedsUris}
-              classDescriptions={classDescriptions}
-              typeRegistrations={typeRegistrations}
             />
           </>
         )}

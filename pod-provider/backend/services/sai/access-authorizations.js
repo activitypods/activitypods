@@ -13,12 +13,7 @@ module.exports = {
     acceptedTypes: ['interop:AccessAuthorization'],
     excludeFromMirror: true,
     activateTombstones: false,
-    description: {
-      labelMap: {
-        en: 'Access Authorizations'
-      },
-      internal: true
-    }
+    typeIndex: 'private'
   },
   actions: {
     put() {

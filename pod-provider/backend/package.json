@@ -36,6 +36,7 @@
     "@semapps/webacl": "1.0.10",
     "@semapps/webfinger": "1.0.10",
     "@semapps/webid": "1.0.10",
+    "@shexjs/parser": "^1.0.0-alpha.28",
     "@types/archiver": "6.0.2",
     "@types/rdfjs__formats": "^4.0.1",
     "archiver": "^7.0.1",

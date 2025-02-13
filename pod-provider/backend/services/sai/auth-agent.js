@@ -19,12 +19,6 @@ module.exports = {
       anon: {
         read: true
       }
-    },
-    description: {
-      labelMap: {
-        en: 'Authorization Agents'
-      },
-      internal: true
     }
   },
   dependencies: ['api', 'ldp'],
@@ -75,7 +69,9 @@ module.exports = {
       const account = await ctx.call('auth.account.findByWebId', { webId });
       ctx.meta.dataset = account.username;
 
-      const app = await ctx.call('activitypub.actor.get', { actorUri: appUri, webId });
+      // Force to get through network
+      const app = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri });
+
       const appRegistration = await ctx.call('app-registrations.getForApp', { appUri, podOwner: webId });
 
       if (appRegistration) {
@@ -87,7 +83,7 @@ module.exports = {
       }
 
       if (acceptAllRequirements) {
-        if (!acceptedAccessNeeds || !acceptedSpecialRights) {
+        if (acceptedAccessNeeds || acceptedSpecialRights) {
           throw new Error(
             `If acceptAllRequirements is true, you should not pass acceptedAccessNeeds or acceptedSpecialRights`
           );
@@ -123,13 +119,26 @@ module.exports = {
       return appRegistrationUri;
     },
     async upgradeApp(ctx) {
-      const { appUri, acceptedAccessNeeds, acceptedSpecialRights } = ctx.params;
+      let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
 
       const webId = ctx.meta.webId;
       const account = await ctx.call('auth.account.findByWebId', { webId });
       ctx.meta.dataset = account.username;
 
-      const app = await ctx.call('activitypub.actor.get', { actorUri: appUri, webId });
+      // Force to get through network
+      const app = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri });
+
+      if (acceptAllRequirements) {
+        if (acceptedAccessNeeds || acceptedSpecialRights) {
+          throw new Error(
+            `If acceptAllRequirements is true, you should not pass acceptedAccessNeeds or acceptedSpecialRights`
+          );
+        }
+
+        const requirements = await ctx.call('applications.getRequirements', { appUri });
+        acceptedAccessNeeds = requirements.accessNeeds;
+        acceptedSpecialRights = requirements.specialRights;
+      }
 
       const appRegistrationUri = await ctx.call('app-registrations.createOrUpdate', {
         appUri,

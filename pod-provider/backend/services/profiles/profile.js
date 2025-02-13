@@ -1,7 +1,9 @@
+const urlJoin = require('url-join');
 const { triple, namedNode } = require('@rdfjs/data-model');
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { OBJECT_TYPES, AS_PREFIX } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const CONFIG = require('../../config/config');
 
 module.exports = {
   name: 'profiles.profile',
@@ -10,15 +12,10 @@ module.exports = {
     // ControlledContainerMixin settings
     path: '/vcard/individual',
     acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'trees/as/Profile'),
     permissions: {},
     newResourcesPermissions: {},
-    description: {
-      labelMap: {
-        en: 'Profiles',
-        fr: 'Profils'
-      },
-      labelPredicate: 'vcard:given-name'
-    }
+    typeIndex: 'public'
   },
   dependencies: ['activitypub', 'webacl'],
   events: {

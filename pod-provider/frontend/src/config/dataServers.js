@@ -31,12 +31,12 @@ const dataServers = {
       {
         server: 'activitypods',
         path: '/pod-providers',
-        types: ['apods:PodProvider'],
+        types: ['apods:PodProvider']
       },
       {
         server: 'activitypods',
         path: '/trusted-apps',
-        types: ['interop:Application'],
+        types: ['interop:Application']
       }
     ],
     // void: false,

@@ -100,7 +100,9 @@ const DataContainerScreen = ({ container }) => {
                     )}
                   </ListItemAvatar>
                   <ListItemText
-                    primary={containerDescription.labelPredicate ? resource[containerDescription.labelPredicate] : resourceUri}
+                    primary={
+                      containerDescription.labelPredicate ? resource[containerDescription.labelPredicate] : resourceUri
+                    }
                     secondary={containerDescription.labelPredicate ? resourceUri : undefined}
                     className={classes.listItemText}
                   />

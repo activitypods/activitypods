@@ -53,9 +53,7 @@ const DataListPage = () => {
         <List>
           {containers?.map(container => (
             <ListItem className={classes.listItem} key={container.uri}>
-              <ListItemButton
-                onClick={() => navigate(`/data/${encodeURIComponent(container.uri)}`)}
-              >
+              <ListItemButton onClick={() => navigate(`/data/${encodeURIComponent(container.uri)}`)}>
                 <ListItemAvatar>
                   {container.private === true ? (
                     <Badge
@@ -73,7 +71,11 @@ const DataListPage = () => {
                     </Avatar>
                   )}
                 </ListItemAvatar>
-                <ListItemText primary={container.label[locale]} secondary={container.types?.join(', ')} className={classes.listItemText} />
+                <ListItemText
+                  primary={container.label[locale]}
+                  secondary={container.types?.join(', ')}
+                  className={classes.listItemText}
+                />
               </ListItemButton>
             </ListItem>
           ))}

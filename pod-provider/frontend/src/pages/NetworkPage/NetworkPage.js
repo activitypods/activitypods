@@ -25,9 +25,12 @@ const NetworkPage = () => {
         resource="Profile"
         title={translate('app.page.contacts')}
         actions={[
-          <Button component={Link} to="/network/request" label="app.action.send_request">
-            <AddIcon />
-          </Button>,
+          <Button
+            to="/network/request"
+            component={Link}
+            label="app.action.send_request"
+            startIcon={<AddIcon />}
+          />,
           <TagsButton />
         ]}
         asides={[<ProfileCard />, <ShareContactCard />]}

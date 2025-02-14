@@ -4,6 +4,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import { useGetIdentity } from 'react-admin';
 import { formatUsername } from '../../utils';
 import EditProfileButton from '../buttons/EditProfileButton';
+import { useTranslate } from 'react-admin';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -66,12 +67,17 @@ const useStyles = makeStyles(theme => ({
 const ProfileCard = () => {
   const classes = useStyles();
   const { data: identity } = useGetIdentity();
+  const translate = useTranslate();
   if (!identity) return null;
   return (
     <Card className={classes.root}>
       <Box className={classes.title}>
         <Box display="flex" justifyContent="center" className={classes.avatarWrapper}>
-          <Avatar src={identity.avatar} className={classes.avatar} />
+          <Avatar 
+            src={identity.avatar} 
+            className={classes.avatar}
+            alt={translate('app.accessibility.your_profile_picture')}
+          />
         </Box>
       </Box>
       <Box className={classes.block}>

@@ -301,5 +301,9 @@ module.exports = {
       user_id: "@user@server.com",
       about_you: "Hello, I would like to add you to my network...",
     },
+    accessibility: {
+      profile_picture_of: "%{name}'s profile picture",
+      your_profile_picture: "Your profile picture",
+    }
   }
 };

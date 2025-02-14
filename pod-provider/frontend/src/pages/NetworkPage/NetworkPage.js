@@ -42,7 +42,12 @@ const NetworkPage = () => {
           primaryText={record => record['vcard:given-name']}
           secondaryText={record => formatUsername(record.describes)}
           leftAvatar={record => (
-            <Avatar src={record['vcard:photo']}>{record['vcard:given-name']?.toUpperCase()?.[0]}</Avatar>
+            <Avatar 
+              src={record['vcard:photo']} 
+              alt={translate('app.accessibility.profile_picture_of', { name: record['vcard:given-name'] })}
+            >
+              {record['vcard:given-name']?.toUpperCase()?.[0]}
+            </Avatar>
           )}
           linkType={record => `/network/${formatUsername(record.describes)}`}
           linkProps={record => ({

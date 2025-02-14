@@ -116,16 +116,24 @@ const HomePage = () => {
               {CONFIG.INSTANCE_DESCRIPTION[locale] || CONFIG.INSTANCE_DESCRIPTION.en}
             </Typography>
             <Box display="flex" flexDirection="row" pt={3} pb={3} alignItems="center" justifyContent="center">
-              <Link to="/login?signup">
-                <Button variant="contained" color="secondary" className={classes.button}>
-                  {translate('auth.action.signup')}
-                </Button>
-              </Link>
-              <Link to="/login">
-                <Button variant="contained" color="secondary" className={classes.button}>
-                  {translate('ra.auth.sign_in')}
-                </Button>
-              </Link>
+              <Button
+                variant="contained"
+                color="secondary"
+                className={classes.button}
+                component={Link}
+                to="/login?signup"
+              >
+                {translate('auth.action.signup')}
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                className={classes.button}
+                component={Link}
+                to="/login"
+              >
+                {translate('ra.auth.sign_in')}
+              </Button>
             </Box>
           </Box>
         </Box>

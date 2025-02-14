@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Card, Typography, TextField } from '@mui/material';
+import { Box, Card, Typography, Paper } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useTranslate } from 'react-admin';
 import CopyButton from '../buttons/CopyButton';
@@ -30,10 +30,21 @@ const useStyles = makeStyles(theme => ({
       padding: '12px !important'
     }
   },
-  textField: {
-    paddingTop: 6,
+  linkContainer: {
+    marginTop: 8,
+    padding: '8px 12px',
+    backgroundColor: theme.palette.grey[100],
+    borderRadius: 4,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    wordBreak: 'break-all'
+  },
+  link: {
+    fontSize: '0.9rem',
     [theme.breakpoints.down('sm')]: {
-      fontSize: '0.9rem'
+      fontSize: '0.85rem'
     }
   }
 }));
@@ -50,14 +61,26 @@ const ShareContactCard = () => {
       </Box>
       <Box className={classes.block} p={2}>
         <Typography variant="body2">{translate('app.helper.share_contact')}</Typography>
-        <TextField
-          variant="filled"
-          margin="dense"
-          value={contactLink}
-          fullWidth
-          InputLabelProps={{ shrink: false }}
-          InputProps={{ endAdornment: <CopyButton text={contactLink} />, classes: { input: classes.textField } }}
-        />
+        <Paper 
+          component="div" 
+          variant="outlined" 
+          className={classes.linkContainer}
+          role="region"
+          aria-label={translate('app.accessibility.invitation_link')}
+        >
+          <Typography 
+            variant="body2" 
+            className={classes.link}
+            component="span"
+            aria-label={translate('app.accessibility.copy_invitation_link')}
+          >
+            {contactLink}
+          </Typography>
+          <CopyButton 
+            text={contactLink} 
+            aria-label={translate('app.accessibility.copy_invitation_link_button')}
+          />
+        </Paper>
       </Box>
     </Card>
   );

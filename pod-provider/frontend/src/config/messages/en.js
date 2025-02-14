@@ -304,6 +304,9 @@ module.exports = {
     accessibility: {
       profile_picture_of: "%{name}'s profile picture",
       your_profile_picture: "Your profile picture",
+      invitation_link: "Invitation link to copy",
+      copy_invitation_link: "Here is your invitation link to share",
+      copy_invitation_link_button: "Copy invitation link to clipboard"
     }
   }
 };

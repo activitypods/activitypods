@@ -139,7 +139,10 @@ const ApplicationCard = ({ app, isTrustedApp, isRegistered }) => {
         </Button>
       </a>
       {isRegistered && (
-        <IconButton onClick={() => setOpenSettings(true)}>
+        <IconButton 
+          onClick={() => setOpenSettings(true)}
+          aria-label={translate('app.action.app_settings')}
+        >
           <SettingsIcon />
         </IconButton>
       )}

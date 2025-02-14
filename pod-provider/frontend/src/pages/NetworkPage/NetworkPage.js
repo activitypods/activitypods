@@ -45,6 +45,9 @@ const NetworkPage = () => {
             <Avatar src={record['vcard:photo']}>{record['vcard:given-name']?.toUpperCase()?.[0]}</Avatar>
           )}
           linkType={record => `/network/${formatUsername(record.describes)}`}
+          linkProps={record => ({
+            'aria-label': translate('app.action.view_contact_profile', { name: record['vcard:given-name'] })
+          })}
           rowSx={() => ({
             backgroundColor: 'white',
             p: 1,

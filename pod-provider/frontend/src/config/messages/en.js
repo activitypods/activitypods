@@ -40,7 +40,9 @@ module.exports = {
       view_private_profile: 'View your private profile',
       view_public_profile: 'View your public profile',
       create_group: 'Create group',
-      skip_to_main: 'Skip to main content'
+      skip_to_main: 'Skip to main content',
+      view_contact_profile: "View %{name}'s profile",
+      edit_profile: 'Edit your profile'
     },
     tag: {
       members: 'Members',
@@ -149,6 +151,8 @@ module.exports = {
     },
     helper: {
       add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',
+      user_id: "Enter the ID of the person you want to contact",
+      about_you: "Introduce yourself briefly so the person can identify you",
       message_profile_show_right:
         'Sending a message to %{username} will give him/her the right to see your profile, in order to be able to respond.',
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',
@@ -292,6 +296,10 @@ module.exports = {
       network: 'My Network - %{appName}',
       create_group: 'Create Group - %{appName}',
       group_settings: '%{groupName} Settings - %{appName}'
-    }
+    },
+    placeholder: {
+      user_id: "@user@server.com",
+      about_you: "Hello, I would like to add you to my network...",
+    },
   }
 };

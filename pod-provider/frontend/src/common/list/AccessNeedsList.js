@@ -144,7 +144,13 @@ const AccessNeedsList = ({
           <ListItem key={i} sx={{ p: 0 }}>
             <ListItemIcon sx={{ minWidth: 36 }}>{React.createElement(icon)}</ListItemIcon>
             <ListItemText primary={label} />
-            <Switch edge="end" onChange={() => toggle(accessNeed, checked)} checked={checked} disabled={required} />
+            <Switch 
+              edge="end" 
+              onChange={() => toggle(accessNeed, checked)} 
+              checked={checked} 
+              disabled={required}
+              aria-label={typeof label === 'string' ? label : translate('app.authorization.toggle_permission', { permission: accessNeed['apods:registeredClass'] || accessNeed })}
+            />
           </ListItem>
         );
       })}

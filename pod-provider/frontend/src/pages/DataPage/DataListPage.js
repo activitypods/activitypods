@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslate } from 'react-admin';
+import { useTranslate, useLocaleState } from 'react-admin';
 import {
   Badge,
   Box,
@@ -16,8 +16,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import FolderIcon from '@mui/icons-material/Folder';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import useTypeRegistrations from '../../hooks/useTypeRegistrations';
-import { arrayOf } from '../../utils';
+import { useContainers } from '@semapps/semantic-data-provider';
 
 const useStyles = makeStyles(() => ({
   listItem: {
@@ -34,15 +33,16 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const DataPage = () => {
+const DataListPage = () => {
   useCheckAuthenticated();
   const translate = useTranslate();
   const navigate = useNavigate();
   const classes = useStyles();
+  const [locale] = useLocaleState();
   const developerMode = !!localStorage.getItem('developer_mode');
-  const { data: typeRegistrations } = useTypeRegistrations();
+  const containers = useContainers({ serverKeys: ['user'] });
 
-  if (!typeRegistrations) return null;
+  console.log('containers', containers);
 
   return (
     <>
@@ -51,44 +51,36 @@ const DataPage = () => {
       </Typography>
       <Box>
         <List>
-          {typeRegistrations
-            ?.filter(r => r['skos:prefLabel'] && (!r['apods:internal'] || developerMode))
-            .sort((a, b) => b['skos:prefLabel'].localeCompare(a['skos:prefLabel']))
-            .sort((a, b) => (a['apods:internal'] && !b['apods:internal'] ? 1 : -1))
-            .map(typeRegistration => (
-              <ListItem className={classes.listItem} key={typeRegistration.id}>
-                <ListItemButton
-                  onClick={() => navigate(`/data/${encodeURIComponent(typeRegistration['solid:instanceContainer'])}`)}
-                >
-                  <ListItemAvatar>
-                    {typeRegistration['apods:internal'] ? (
-                      <Badge
-                        badgeContent={<SettingsIcon sx={{ width: 16, height: 16, color: 'grey' }} />}
-                        overlap="circular"
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                      >
-                        <Avatar src={typeRegistration?.['apods:icon']}>
-                          <FolderIcon />
-                        </Avatar>
-                      </Badge>
-                    ) : (
-                      <Avatar src={typeRegistration?.['apods:icon']}>
+          {containers?.map(container => (
+            <ListItem className={classes.listItem} key={container.uri}>
+              <ListItemButton
+                onClick={() => navigate(`/data/${encodeURIComponent(container.uri)}`)}
+              >
+                <ListItemAvatar>
+                  {container.private === true ? (
+                    <Badge
+                      badgeContent={<SettingsIcon sx={{ width: 16, height: 16, color: 'grey' }} />}
+                      overlap="circular"
+                      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    >
+                      <Avatar>
                         <FolderIcon />
                       </Avatar>
-                    )}
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={typeRegistration['skos:prefLabel']}
-                    secondary={arrayOf(typeRegistration['solid:forClass']).join(', ')}
-                    className={classes.listItemText}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
+                    </Badge>
+                  ) : (
+                    <Avatar>
+                      <FolderIcon />
+                    </Avatar>
+                  )}
+                </ListItemAvatar>
+                <ListItemText primary={container.label[locale]} secondary={container.types?.join(', ')} className={classes.listItemText} />
+              </ListItemButton>
+            </ListItem>
+          ))}
         </List>
       </Box>
     </>
   );
 };
 
-export default DataPage;
+export default DataListPage;

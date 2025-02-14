@@ -3,30 +3,18 @@ import { Link } from 'react-router-dom';
 import { Card } from '@mui/material';
 import { useGetIdentity } from 'react-admin';
 import ShowView from '../../layout/ShowView';
-import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import JsonView from '@uiw/react-json-view';
-import { arrayOf } from '../../utils';
 import BackButton from '../../common/buttons/BackButton';
 import ResourceCard from '../../common/cards/ResourceCard';
+import { useContainers } from '@semapps/semantic-data-provider';
 
 const DataResourceScreen = ({ resource }) => {
   const { data: identity } = useGetIdentity();
-  const { data: typeRegistrations } = useTypeRegistrations();
+  const containers = useContainers({ types: resource.type || resource['@type'] });
 
-  const typeRegistration = useMemo(
-    () =>
-      typeRegistrations?.find(reg =>
-        arrayOf(reg['solid:forClass']).some(t1 =>
-          arrayOf(resource.type || resource['@type']).find(t2 => t1 === t2 || t1 === `as:${t2}`)
-        )
-      ),
-    [resource, typeRegistrations]
-  );
+  console.log('containers', resource.type || resource['@type'], containers);
 
-  // TODO Use JSON-LD parser to use full URIs
-  const labelPredicate = typeRegistration && typeRegistration['apods:labelPredicate']?.replace('as:', '');
-
-  if (!typeRegistrations) return null;
+  return null;
 
   return (
     <ShowView

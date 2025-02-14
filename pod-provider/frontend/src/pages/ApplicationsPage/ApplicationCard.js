@@ -103,18 +103,20 @@ const ApplicationCard = ({ app, isTrustedApp, isRegistered }) => {
           size="small"
           label={translate('app.message.offline')}
           color="error"
-          onDelete={() => {}}
-          deleteIcon={<CloudOffIcon />}
+          icon={<CloudOffIcon />}
           className={classes.appChip}
+          tabIndex={-1}
+          aria-hidden="true"
         />
       ) : isUpgradeRequired ? (
         <Chip
           size="small"
           label={translate('app.message.upgrade_required')}
           color="warning"
-          onDelete={() => {}}
-          deleteIcon={<LoopIcon />}
+          icon={<LoopIcon />}
           className={classes.appChip}
+          tabIndex={-1}
+          aria-hidden="true"
         />
       ) : (
         isTrustedApp && (
@@ -122,9 +124,10 @@ const ApplicationCard = ({ app, isTrustedApp, isRegistered }) => {
             size="small"
             label={translate('app.message.verified')}
             color="success"
-            onDelete={() => {}}
-            deleteIcon={<DoneIcon />}
+            icon={<DoneIcon />}
             className={classes.appChip}
+            tabIndex={-1}
+            aria-hidden="true"
           />
         )
       )}

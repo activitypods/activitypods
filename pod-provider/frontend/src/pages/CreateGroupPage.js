@@ -115,7 +115,7 @@ const CreateGroupPage = () => {
           <ImageField source="src" />
         </ImageInput> */}
         <Box display="flex" justifyContent="end" sx={{ pt: 2 }}>
-          <Button variant="contained" color="grey" onClick={() => setPodProviderUrl()}>
+          <Button variant="outlined" onClick={() => setPodProviderUrl()}>
             {translate('ra.action.back')}
           </Button>
           <SaveButton sx={{ ml: 1 }} />

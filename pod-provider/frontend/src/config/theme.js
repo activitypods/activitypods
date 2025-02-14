@@ -1,5 +1,6 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, darken } from '@mui/material/styles';
 import { defaultTheme as raTheme } from 'react-admin';
+import { grey } from '@mui/material/colors';
 const muiTheme = createTheme();
 const fontFamily = '"Open Sans", "sans-serif"';
 const theme = createTheme({
@@ -13,9 +14,6 @@ const theme = createTheme({
     },
     black: {
       main: '#000'
-    },
-    grey: {
-      main: '#BDBDBD'
     }
   },
   typography: {
@@ -108,12 +106,68 @@ const theme = createTheme({
     ...raTheme.components,
     MuiButton: {
       styleOverrides: {
-        contained: {
+        root: {
           borderRadius: 8,
           paddingLeft: 15,
           paddingRight: 15,
           height: 36,
-          minWidth: 100
+          minWidth: 100,
+        },
+        contained: {
+          color: '#000', // To keep great contrast with the primary color (WCAG 2.1 standards)
+          '&:hover': {
+            color: '#FFFFFF',
+          },
+        },
+        containedSecondary: {
+          color: '#FFFF'  
+        },
+        outlined: {
+          backgroundColor: '#FFFFFF',
+          borderColor: CONFIG.COLOR_PRIMARY,
+          color: darken(CONFIG.COLOR_PRIMARY, 0.2),
+          borderWidth: 1.5, // Meilleure visibilité
+          '&:hover': {
+            color: darken(CONFIG.COLOR_PRIMARY, 0.6),
+            borderColor: darken(CONFIG.COLOR_PRIMARY, 0.6),
+          },
+          '&:focus': {
+            outline: `2px solid darken(CONFIG.COLOR_PRIMARY, 0.6)`,
+            outlineOffset: 2,
+          },
+          '&.Mui-disabled': {
+            borderColor: grey[300],
+            color: grey[500],
+          }
+        },
+      }
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          '&.Mui-focused': {
+            color: darken(CONFIG.COLOR_PRIMARY, 0.5) // Darker color for better contrast (WCAG 2.1 standards)
+          },
+          '&.Mui-disabled': {
+            color: grey[700],
+          }
+        }
+      }
+    },
+    MuiListItemText: {
+      styleOverrides: {
+        secondary: {
+          color: grey[800] // Improve contrast of the grey activityPub identifiers (WCAG 2.1 standards)
+        }
+      }
+    },
+    MuiFormHelperText: {
+      styleOverrides: {
+        root: {
+          color: grey[900],
+          '&.Mui-disabled': {
+            color: grey[700],
+          }
         }
       }
     },

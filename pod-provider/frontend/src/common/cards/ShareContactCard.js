@@ -14,7 +14,7 @@ const useStyles = makeStyles(theme => ({
     backgroundRepeat: 'no-repeat',
     backgroundSize: 'cover',
     backgroundImage: `radial-gradient(circle at 50% 8em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
-    color: theme.palette.primary.contrastText,
+    color: theme.palette.black,
     padding: '10px 14px',
     [theme.breakpoints.down('sm')]: {
       padding: '8px 16px'

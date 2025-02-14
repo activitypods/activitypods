@@ -38,7 +38,8 @@ module.exports = {
       set_default_app: 'Définir appli par défaut',
       view_private_profile: 'Voir votre profil privé',
       view_public_profile: 'Voir votre profil public',
-      create_group: 'Créer un groupe'
+      create_group: 'Créer un groupe',
+      skip_to_main: 'Passer au contenu principal'
     },
     tag: {
       members: 'Contacts',

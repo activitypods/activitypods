@@ -39,7 +39,8 @@ module.exports = {
       set_default_app: 'Set default app',
       view_private_profile: 'View your private profile',
       view_public_profile: 'View your public profile',
-      create_group: 'Create group'
+      create_group: 'Create group',
+      skip_to_main: 'Skip to main content'
     },
     tag: {
       members: 'Members',

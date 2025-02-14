@@ -8,7 +8,11 @@ import useContactLink from '../../hooks/useContactLink';
 const useStyles = makeStyles(theme => ({
   root: {
     marginTop: 5,
-    marginBottom: 24
+    marginBottom: 24,
+    [theme.breakpoints.down('sm')]: {
+      marginTop: 16,
+      marginBottom: 16
+    }
   },
   title: {
     backgroundRepeat: 'no-repeat',
@@ -21,10 +25,16 @@ const useStyles = makeStyles(theme => ({
     }
   },
   block: {
-    backgroundColor: 'white'
+    backgroundColor: 'white',
+    [theme.breakpoints.down('sm')]: {
+      padding: '12px !important'
+    }
   },
   textField: {
-    paddingTop: 6
+    paddingTop: 6,
+    [theme.breakpoints.down('sm')]: {
+      fontSize: '0.9rem'
+    }
   }
 }));
 

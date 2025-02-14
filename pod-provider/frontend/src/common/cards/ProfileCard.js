@@ -8,7 +8,11 @@ import EditProfileButton from '../buttons/EditProfileButton';
 const useStyles = makeStyles(theme => ({
   root: {
     marginTop: 5,
-    marginBottom: 24
+    marginBottom: 24,
+    [theme.breakpoints.down('sm')]: {
+      marginTop: 16,
+      marginBottom: 16
+    }
   },
   title: {
     backgroundRepeat: 'no-repeat',
@@ -16,7 +20,10 @@ const useStyles = makeStyles(theme => ({
     backgroundImage: `radial-gradient(circle at 50% 14em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
     color: theme.palette.primary.contrastText,
     height: 85,
-    position: 'relative'
+    position: 'relative',
+    [theme.breakpoints.down('sm')]: {
+      height: 70
+    }
   },
   avatarWrapper: {
     position: 'absolute',
@@ -28,12 +35,20 @@ const useStyles = makeStyles(theme => ({
   },
   avatar: {
     width: 150,
-    height: 150
+    height: 150,
+    [theme.breakpoints.down('sm')]: {
+      width: 100,
+      height: 100
+    }
   },
   block: {
     backgroundColor: 'white',
     paddingTop: 80,
-    paddingBottom: 20
+    paddingBottom: 20,
+    [theme.breakpoints.down('sm')]: {
+      paddingTop: 50,
+      paddingBottom: 16
+    }
   },
   button: {
     backgroundColor: 'white',

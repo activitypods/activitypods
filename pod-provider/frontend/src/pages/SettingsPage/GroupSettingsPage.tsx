@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslate } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, List } from '@mui/material';
+import { Helmet } from 'react-helmet';
 import StorageIcon from '@mui/icons-material/Storage';
 import DownloadIcon from '@mui/icons-material/Download';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
@@ -19,6 +20,14 @@ const GroupSettingsPage = () => {
 
   return (
     <>
+      <Helmet>
+        <title>
+          {translate('app.titles.group_settings', {
+            groupName: data.fullName,
+            appName: CONFIG.INSTANCE_NAME
+          })}
+        </title>
+      </Helmet>
       <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>
         {translate('app.page.settings')}
       </Typography>

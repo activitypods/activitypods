@@ -1,8 +1,9 @@
 import { useCallback } from 'react';
 import urlJoin from 'url-join';
-import { useDataProvider, useLocaleState } from 'react-admin';
+import { useDataProvider, useLocaleState, useTranslate } from 'react-admin';
 import { LocalLoginPage } from '@semapps/auth-provider';
 import { useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import scorer from '../config/scorer';
 
 const LoginPage = () => {
@@ -10,6 +11,8 @@ const LoginPage = () => {
   const [searchParams] = useSearchParams();
   const interactionId = searchParams.get('interaction_id');
   const [locale] = useLocaleState();
+  const translate = useTranslate();
+  const isSignup = searchParams.get('signup') !== null;
 
   const finishInteraction = useCallback(async () => {
     if (interactionId) {
@@ -38,13 +41,22 @@ const LoginPage = () => {
   );
 
   return (
-    <LocalLoginPage
-      allowUsername
-      onLogin={onLogin}
-      onSignup={onSignup}
-      additionalSignupValues={{ 'schema:knowsLanguage': locale }}
-      passwordScorer={scorer}
-    />
+    <>
+      <Helmet>
+        <title>
+          {translate(isSignup ? 'app.titles.signup' : 'app.titles.login', {
+            appName: CONFIG.INSTANCE_NAME
+          })}
+        </title>
+      </Helmet>
+      <LocalLoginPage
+        allowUsername
+        onLogin={onLogin}
+        onSignup={onSignup}
+        additionalSignupValues={{ 'schema:knowsLanguage': locale }}
+        passwordScorer={scorer}
+      />
+    </>
   );
 };
 

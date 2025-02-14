@@ -286,6 +286,16 @@ module.exports = {
         title: 'Je choisis avec qui je partage mes données',
         text: 'A tout moment, je sais qui voit mes données. Je peux révoquer les droits.'
       }
+    },
+    titles: {
+      home: 'Bienvenue - %{appName}',
+      login: 'Connexion - %{appName}',
+      signup: 'Inscription - %{appName}',
+      applications: 'Mes Applications - %{appName}',
+      settings: 'Paramètres - %{appName}',
+      network: 'Mon Réseau - %{appName}',
+      create_group: 'Créer un Groupe - %{appName}',
+      group_settings: 'Paramètres de %{groupName} - %{appName}'
     }
   }
 };

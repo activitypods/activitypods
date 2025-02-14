@@ -16,6 +16,7 @@ import FileCopyIcon from '@mui/icons-material/FileCopy';
 import useContactLink from '../../hooks/useContactLink';
 import SettingsItem from './SettingsItem';
 import { availableLocales } from '../../config/i18nProvider';
+import { Helmet } from 'react-helmet';
 
 const SettingsPage = () => {
   useCheckAuthenticated();
@@ -35,6 +36,9 @@ const SettingsPage = () => {
 
   return (
     <>
+      <Helmet>
+        <title>{translate('app.titles.settings', { appName: CONFIG.INSTANCE_NAME })}</title>
+      </Helmet>
       <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>
         {translate('app.page.settings')}
       </Typography>

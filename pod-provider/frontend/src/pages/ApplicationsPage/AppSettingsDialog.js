@@ -100,7 +100,11 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
     <Dialog open={open} onClose={onClose} maxWidth="xs">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', pb: 1 }}>
         {translate('app.dialog.app_permissions')}
-        <IconButton sx={{ ml: 'auto' }} onClick={onClose}>
+        <IconButton 
+          sx={{ ml: 'auto' }} 
+          onClick={onClose}
+          aria-label={translate('ra.action.close')}
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -132,6 +136,7 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
           variant="contained"
           color="error"
           label="app.action.revoke_access"
+          aria-label={translate('app.action.revoke_access')}
           startIcon={<BlockIcon />}
           onClick={onRemove}
           disabled={isPending}
@@ -140,6 +145,7 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
           <Button
             variant="contained"
             label="app.action.upgrade"
+            aria-label={translate('app.action.upgrade')}
             startIcon={<LoopIcon />}
             onClick={onUpgrade}
             disabled={isPending}

@@ -38,7 +38,10 @@ module.exports = {
       set_default_app: 'Définir appli par défaut',
       view_private_profile: 'Voir votre profil privé',
       view_public_profile: 'Voir votre profil public',
-      create_group: 'Créer un groupe'
+      create_group: 'Créer un groupe',
+      skip_to_main: 'Passer au contenu principal',
+      view_contact_profile: 'Voir le profil de %{name}',
+      edit_profile: 'Modifier votre profil'
     },
     tag: {
       members: 'Contacts',
@@ -148,6 +151,8 @@ module.exports = {
     helper: {
       add_contact:
         "Pour faire une demande de mise en relation, vous devez connaître l'identifiant de la personne (au format @bob@serveur.com).",
+      user_id: "Entrez l'identifiant de la personne que vous souhaitez contacter",
+      about_you: "Présentez-vous brièvement pour que la personne puisse vous identifier",
       message_profile_show_right:
         'Envoyer un message à %{username} lui donnera le droit de voir votre profil, pour lui permettre de vous répondre.',
       profile_visibility: "Votre profil n'est visible que des personnes que vous avez accepté dans votre réseau",
@@ -286,6 +291,24 @@ module.exports = {
         title: 'Je choisis avec qui je partage mes données',
         text: 'A tout moment, je sais qui voit mes données. Je peux révoquer les droits.'
       }
+    },
+    titles: {
+      home: 'Bienvenue - %{appName}',
+      login: 'Connexion - %{appName}',
+      signup: 'Inscription - %{appName}',
+      applications: 'Mes Applications - %{appName}',
+      settings: 'Paramètres - %{appName}',
+      network: 'Mon Réseau - %{appName}',
+      create_group: 'Créer un Groupe - %{appName}',
+      group_settings: 'Paramètres de %{groupName} - %{appName}'
+    },
+    placeholder: {
+      user_id: "@utilisateur@serveur.com",
+      about_you: "Bonjour, je souhaiterais vous ajouter à mon réseau...",
+    },
+    accessibility: {
+      profile_picture_of: "Photo de profil de %{name}",
+      your_profile_picture: "Votre photo de profil",
     }
   }
 };

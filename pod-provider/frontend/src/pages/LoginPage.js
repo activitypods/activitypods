@@ -4,7 +4,31 @@ import { useDataProvider, useLocaleState, useTranslate } from 'react-admin';
 import { LocalLoginPage } from '@semapps/auth-provider';
 import { useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
+import { Box, Button } from '@mui/material';
+import { Link } from 'react-router-dom';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import scorer from '../config/scorer';
+
+const LoginPageWrapper = ({ children }) => {
+  const translate = useTranslate();
+  return (
+    <Box sx={{ position: 'relative', width: '100%' }}>
+      <Box sx={{ position: 'absolute', top: 16, left: 16, zIndex: 1 }}>
+        <Link to="/" style={{ textDecoration: 'none' }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<ArrowBackIcon />}
+            aria-label={translate('ra.action.back')}
+          >
+            {translate('ra.action.back')}
+          </Button>
+        </Link>
+      </Box>
+      {children}
+    </Box>
+  );
+};
 
 const LoginPage = () => {
   const dataProvider = useDataProvider();
@@ -49,13 +73,15 @@ const LoginPage = () => {
           })}
         </title>
       </Helmet>
-      <LocalLoginPage
-        allowUsername
-        onLogin={onLogin}
-        onSignup={onSignup}
-        additionalSignupValues={{ 'schema:knowsLanguage': locale }}
-        passwordScorer={scorer}
-      />
+      <LoginPageWrapper>
+        <LocalLoginPage
+          allowUsername
+          onLogin={onLogin}
+          onSignup={onSignup}
+          additionalSignupValues={{ 'schema:knowsLanguage': locale }}
+          passwordScorer={scorer}
+        />
+      </LoginPageWrapper>
     </>
   );
 };

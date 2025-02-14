@@ -51,6 +51,11 @@ const useStyles = makeStyles(theme => ({
       marginTop: 'calc(100vw - 30px)'
     }
   },
+  stepsList: {
+    listStyle: 'none',
+    padding: 0,
+    margin: 0
+  },
   step: {
     position: 'relative',
     paddingLeft: 90,
@@ -129,13 +134,15 @@ const HomePage = () => {
             {translate('app.steps.title')}
           </Typography>
           <Container>
-            {[1, 2, 3, 4].map(i => (
-              <Box className={classes.step} key={i}>
-                <Avatar className={classes.number}>{i}</Avatar>
-                <Typography variant="h4">{translate(`app.steps.${i}.title`)}</Typography>
-                <Typography>{translate(`app.steps.${i}.text`)}</Typography>
-              </Box>
-            ))}
+            <ol className={classes.stepsList}>
+              {[1, 2, 3, 4].map(i => (
+                <li className={classes.step} key={i}>
+                  <Avatar className={classes.number}>{i}</Avatar>
+                  <Typography variant="h4">{translate(`app.steps.${i}.title`)}</Typography>
+                  <Typography>{translate(`app.steps.${i}.text`)}</Typography>
+                </li>
+              ))}
+            </ol>
           </Container>
         </Box>
       </Box>

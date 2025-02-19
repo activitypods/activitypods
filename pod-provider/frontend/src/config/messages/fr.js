@@ -309,9 +309,16 @@ module.exports = {
     accessibility: {
       profile_picture_of: "Photo de profil de %{name}",
       your_profile_picture: "Votre photo de profil",
-      invitation_link: "Lien d'invitation à copier",
-      copy_invitation_link: "Voici votre lien d'invitation à partager",
-      copy_invitation_link_button: "Copier le lien d'invitation dans le presse-papier"
+      invitation_link: "Lien d'invitation",
+      copy_invitation_link: "Lien d'invitation à copier",
+      copy_invitation_link_button: "Copier le lien",
+      skip_link_description: "Ce lien apparaît lorsqu'il reçoit le focus et permet d'accéder directement au contenu principal de la page en sautant la navigation",
+      network_link_description: "Accéder à la page de votre réseau de contacts",
+      apps_link_description: "Accéder à la page de gestion de vos applications",
+      data_link_description: "Accéder à la page de gestion de vos données personnelles",
+      settings_link_description: "Accéder à la page des paramètres de votre compte",
+      contact_list_profile_picture: "Cette photo apparaît dans la liste de vos contacts et permet d'identifier visuellement %{name}",
+      contact_list_profile_link: "Cliquez pour accéder au profil détaillé de %{name} et voir toutes ses informations"
     }
   }
 };

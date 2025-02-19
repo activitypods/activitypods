@@ -69,6 +69,8 @@ const BottomBar = () => {
             component={Link}
             to="/network"
             classes={{ selected: classes.selected }}
+            aria-label={translate('app.page.contacts')}
+            aria-description={translate('app.accessibility.network_link_description')}
           />
           <BottomNavigationAction
             label={translate('app.page.apps_short')}
@@ -77,6 +79,8 @@ const BottomBar = () => {
             component={Link}
             to="/apps"
             classes={{ selected: classes.selected }}
+            aria-label={translate('app.page.apps')}
+            aria-description={translate('app.accessibility.apps_link_description')}
           />
           <BottomNavigationAction
             label={translate('app.page.data_short')}
@@ -85,6 +89,8 @@ const BottomBar = () => {
             component={Link}
             to="/data"
             classes={{ selected: classes.selected }}
+            aria-label={translate('app.page.data')}
+            aria-description={translate('app.accessibility.data_link_description')}
           />
           <BottomNavigationAction
             label={translate('app.page.settings_short')}
@@ -93,6 +99,8 @@ const BottomBar = () => {
             component={Link}
             to="/settings"
             classes={{ selected: classes.selected }}
+            aria-label={translate('app.page.settings')}
+            aria-description={translate('app.accessibility.settings_link_description')}
           />
         </BottomNavigation>
       </AppBar>

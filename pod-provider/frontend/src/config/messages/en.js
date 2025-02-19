@@ -304,9 +304,16 @@ module.exports = {
     accessibility: {
       profile_picture_of: "%{name}'s profile picture",
       your_profile_picture: "Your profile picture",
-      invitation_link: "Invitation link to copy",
-      copy_invitation_link: "Here is your invitation link to share",
-      copy_invitation_link_button: "Copy invitation link to clipboard"
+      invitation_link: "Invitation link",
+      copy_invitation_link: "Invitation link to copy",
+      copy_invitation_link_button: "Copy link",
+      skip_link_description: "This link appears when focused and allows you to skip directly to the main content of the page, bypassing navigation",
+      network_link_description: "Access your network contacts page",
+      apps_link_description: "Access your applications management page",
+      data_link_description: "Access your personal data management page", 
+      settings_link_description: "Access your account settings page",
+      contact_list_profile_picture: "This picture appears in your contacts list and helps visually identify %{name}",
+      contact_list_profile_link: "Click to access %{name}'s detailed profile and view all their information"
     }
   }
 };

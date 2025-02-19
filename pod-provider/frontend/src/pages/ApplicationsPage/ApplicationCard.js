@@ -37,7 +37,7 @@ const useStyles = makeStyles(theme => ({
   url: {
     marginTop: 6,
     marginBottom: 12,
-    color: 'grey',
+    color: 'grey[400]',
     fontStyle: 'italic'
   },
   appChip: {
@@ -137,7 +137,7 @@ const ApplicationCard = ({ app, isTrustedApp, isRegistered }) => {
         rel="noopener noreferrer"
         className={classes.link}
       >
-        <Button variant="contained" disabled={isOffline}>
+        <Button variant="contained" color="secondary" disabled={isOffline}>
           {translate('app.action.open_app')}
         </Button>
       </a>

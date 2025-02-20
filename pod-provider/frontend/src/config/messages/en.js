@@ -26,6 +26,7 @@ module.exports = {
       send_message: 'Send message',
       send_request: 'Send request',
       signup: 'Signup',
+      sign_in: 'Log in',
       reset_password: 'Reset password',
       revoke_access: 'Revoke access',
       set_new_password: 'Set new password',

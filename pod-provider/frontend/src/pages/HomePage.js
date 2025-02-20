@@ -123,7 +123,7 @@ const HomePage = () => {
                 component={Link}
                 to="/login?signup"
               >
-                {translate('auth.action.signup')}
+                {translate('app.action.signup')}
               </Button>
               <Button
                 variant="contained"
@@ -132,7 +132,7 @@ const HomePage = () => {
                 component={Link}
                 to="/login"
               >
-                {translate('ra.auth.sign_in')}
+                {translate('app.action.sign_in')}
               </Button>
             </Box>
           </Box>

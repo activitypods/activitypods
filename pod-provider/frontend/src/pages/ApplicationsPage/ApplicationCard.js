@@ -37,7 +37,7 @@ const useStyles = makeStyles(theme => ({
   url: {
     marginTop: 6,
     marginBottom: 12,
-    color: 'grey',
+    color: 'grey[400]',
     fontStyle: 'italic'
   },
   appChip: {
@@ -103,18 +103,20 @@ const ApplicationCard = ({ app, isTrustedApp, isRegistered }) => {
           size="small"
           label={translate('app.message.offline')}
           color="error"
-          onDelete={() => {}}
-          deleteIcon={<CloudOffIcon />}
+          icon={<CloudOffIcon />}
           className={classes.appChip}
+          tabIndex={-1}
+          aria-hidden="true"
         />
       ) : isUpgradeRequired ? (
         <Chip
           size="small"
           label={translate('app.message.upgrade_required')}
           color="warning"
-          onDelete={() => {}}
-          deleteIcon={<LoopIcon />}
+          icon={<LoopIcon />}
           className={classes.appChip}
+          tabIndex={-1}
+          aria-hidden="true"
         />
       ) : (
         isTrustedApp && (
@@ -122,9 +124,10 @@ const ApplicationCard = ({ app, isTrustedApp, isRegistered }) => {
             size="small"
             label={translate('app.message.verified')}
             color="success"
-            onDelete={() => {}}
-            deleteIcon={<DoneIcon />}
+            icon={<DoneIcon />}
             className={classes.appChip}
+            tabIndex={-1}
+            aria-hidden="true"
           />
         )
       )}
@@ -134,12 +137,15 @@ const ApplicationCard = ({ app, isTrustedApp, isRegistered }) => {
         rel="noopener noreferrer"
         className={classes.link}
       >
-        <Button variant="contained" disabled={isOffline}>
+        <Button variant="contained" color="secondary" disabled={isOffline}>
           {translate('app.action.open_app')}
         </Button>
       </a>
       {isRegistered && (
-        <IconButton onClick={() => setOpenSettings(true)}>
+        <IconButton 
+          onClick={() => setOpenSettings(true)}
+          aria-label={translate('app.action.app_settings')}
+        >
           <SettingsIcon />
         </IconButton>
       )}

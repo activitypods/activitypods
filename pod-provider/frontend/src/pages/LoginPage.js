@@ -1,15 +1,42 @@
 import { useCallback } from 'react';
 import urlJoin from 'url-join';
-import { useDataProvider, useLocaleState } from 'react-admin';
+import { useDataProvider, useLocaleState, useTranslate } from 'react-admin';
 import { LocalLoginPage } from '@semapps/auth-provider';
 import { useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
+import { Box, Button } from '@mui/material';
+import { Link } from 'react-router-dom';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import scorer from '../config/scorer';
+
+const LoginPageWrapper = ({ children }) => {
+  const translate = useTranslate();
+  return (
+    <Box sx={{ position: 'relative', width: '100%' }}>
+      <Box sx={{ position: 'absolute', top: 16, left: 16, zIndex: 1 }}>
+        <Link to="/" style={{ textDecoration: 'none' }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<ArrowBackIcon />}
+            aria-label={translate('ra.action.back')}
+          >
+            {translate('ra.action.back')}
+          </Button>
+        </Link>
+      </Box>
+      {children}
+    </Box>
+  );
+};
 
 const LoginPage = () => {
   const dataProvider = useDataProvider();
   const [searchParams] = useSearchParams();
   const interactionId = searchParams.get('interaction_id');
   const [locale] = useLocaleState();
+  const translate = useTranslate();
+  const isSignup = searchParams.get('signup') !== null;
 
   const finishInteraction = useCallback(async () => {
     if (interactionId) {
@@ -38,13 +65,24 @@ const LoginPage = () => {
   );
 
   return (
-    <LocalLoginPage
-      allowUsername
-      onLogin={onLogin}
-      onSignup={onSignup}
-      additionalSignupValues={{ 'schema:knowsLanguage': locale }}
-      passwordScorer={scorer}
-    />
+    <>
+      <Helmet>
+        <title>
+          {translate(isSignup ? 'app.titles.signup' : 'app.titles.login', {
+            appName: CONFIG.INSTANCE_NAME
+          })}
+        </title>
+      </Helmet>
+      <LoginPageWrapper>
+        <LocalLoginPage
+          allowUsername
+          onLogin={onLogin}
+          onSignup={onSignup}
+          additionalSignupValues={{ 'schema:knowsLanguage': locale }}
+          passwordScorer={scorer}
+        />
+      </LoginPageWrapper>
+    </>
   );
 };
 

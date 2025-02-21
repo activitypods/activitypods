@@ -8,5 +8,5 @@ export default dataProvider({
   resources: Object.fromEntries(Object.entries(resources).map(([k, v]) => [k, v.dataModel])),
   ontologies,
   returnFailedResources: true,
-  preloadPlugins: [configureUserStorage, fetchDataRegistry]
+  plugins: [configureUserStorage(), fetchDataRegistry()]
 });

@@ -24,17 +24,21 @@ const useFetchShapeTree = () => {
       label: { '@id': 'skos:prefLabel', '@container': '@language' }
     });
 
-    const response = await fetch(shapeTree.shape, { headers: { Accept: '*/*' } }); // TODO use text/shex
-    if (!response.ok) return false;
+    if (shapeTree.shape) {
+      const response = await fetch(shapeTree.shape, { headers: { Accept: '*/*' } }); // TODO use text/shex
+      if (!response.ok) return false;
 
-    const shexC = await response.text();
-    const shexJ = shexParser.parse(shexC);
+      const shexC = await response.text();
+      const shexJ = shexParser.parse(shexC);
 
-    const type = shexJ?.shapes?.[0]?.shapeExpr?.expression?.expressions.find(
-      expr => expr.predicate === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
-    )?.valueExpr?.values?.[0];
+      const type = shexJ?.shapes?.[0]?.shapeExpr?.expression?.expressions.find(
+        expr => expr.predicate === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
+      )?.valueExpr?.values?.[0];
 
-    return { ...shapeTree, type };
+      return { ...shapeTree, type };
+    } else {
+      return shapeTree;
+    }
   }, []);
 
   return fetchShapeTree;

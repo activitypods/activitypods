@@ -10,23 +10,17 @@ import { useContainers } from '@semapps/semantic-data-provider';
 
 const DataResourceScreen = ({ resource }) => {
   const { data: identity } = useGetIdentity();
-  const containers = useContainers({ types: resource.type || resource['@type'] });
+  const [container] = useContainers({ types: resource.type || resource['@type'] });
 
-  console.log('containers', resource.type || resource['@type'], containers);
-
-  return null;
+  console.log('container', container);
 
   return (
     <ShowView
-      title={(typeRegistration && resource[labelPredicate]) || resource.id || resource['@id']}
+      title={(container && resource[container.labelPredicate]) || resource.id || resource['@id']}
       actions={[
-        typeRegistration ? (
-          <BackButton to={`/data/${encodeURIComponent(typeRegistration['solid:instanceContainer'])}`} />
-        ) : (
-          <BackButton to="/data" />
-        )
+        container ? <BackButton to={`/data/${encodeURIComponent(container.uri)}`} /> : <BackButton to="/data" />
       ]}
-      asides={[<ResourceCard resource={resource} typeRegistration={typeRegistration} />]}
+      asides={[<ResourceCard resource={resource} container={container} />]}
     >
       <Card sx={{ p: 2, overflowX: 'auto' }}>
         <JsonView

@@ -47,6 +47,8 @@ const DataContainerScreen = ({ container }) => {
   const developerMode = !!localStorage.getItem('developer_mode');
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
+  console.log('container', container);
+
   const containers = useContainers({ serverKeys: ['user'] });
   const containerDescription = useMemo(() => containers.find(c => c.uri === container.id), [containers, container]);
 

@@ -17,7 +17,6 @@ export default {
   dataModel: {
     types: ['vcard:Location'],
     list: {
-      servers: 'pod',
       blankNodes: ['vcard:hasAddress/vcard:hasGeo']
     }
   },

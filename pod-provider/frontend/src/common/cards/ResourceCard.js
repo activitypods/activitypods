@@ -29,7 +29,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ResourceCard = ({ resource, typeRegistration }) => {
+const ResourceCard = ({ resource, container }) => {
   const translate = useTranslate();
   const classes = useStyles();
 
@@ -39,16 +39,13 @@ const ResourceCard = ({ resource, typeRegistration }) => {
   const modified = resource['dc:modified'] && new Date(resource['dc:modified']);
   const dateTimeFormat = new Intl.DateTimeFormat(CONFIG.DEFAULT_LOCALE);
 
-  // TODO Use JSON-LD parser to use full URIs
-  const labelPredicate = typeRegistration?.['apods:labelPredicate']?.replace('as:', '');
-
   if (!resource) return null;
 
   return (
     <Card>
       <Box className={classes.title}>
         <Box display="flex" justifyContent="center" className={classes.avatarWrapper}>
-          <Avatar src={typeRegistration?.['apods:icon']} className={classes.avatar}>
+          <Avatar /*src={typeRegistration?.['apods:icon']}*/ className={classes.avatar}>
             <InsertDriveFileIcon sx={{ width: 100, height: 100 }} />
           </Avatar>
         </Box>
@@ -65,7 +62,7 @@ const ResourceCard = ({ resource, typeRegistration }) => {
           textOverflow: 'ellipsis'
         }}
       >
-        {typeRegistration && resource[labelPredicate]}
+        {container && resource[container.labelPredicate]}
       </Typography>
       <Box p={2}>
         <Table size="small">
@@ -91,7 +88,7 @@ const ResourceCard = ({ resource, typeRegistration }) => {
           </TableBody>
         </Table>
       </Box>
-      {typeRegistration?.['apods:openEndpoint'] && (
+      {/*typeRegistration?.['apods:openEndpoint'] && (
         <Box sx={{ mt: 1, mb: 3, textAlign: 'center' }}>
           <a
             href={`${typeRegistration['apods:openEndpoint']}?type=${encodeURIComponent(
@@ -105,7 +102,7 @@ const ResourceCard = ({ resource, typeRegistration }) => {
             </Button>
           </a>
         </Box>
-      )}
+      )*/}
     </Card>
   );
 };

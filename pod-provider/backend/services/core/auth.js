@@ -1,6 +1,7 @@
 const path = require('path');
 const urlJoin = require('url-join');
 const { AuthLocalService } = require('@semapps/auth');
+const { arrayOf } = require('@semapps/ldp');
 const CONFIG = require('../../config/config');
 const transport = require('../../config/transport');
 
@@ -20,6 +21,36 @@ module.exports = {
       defaults: {
         locale: CONFIG.DEFAULT_LOCALE,
         frontUrl: CONFIG.FRONTEND_URL
+      }
+    }
+  },
+  hooks: {
+    after: {
+      async signup(ctx, res) {
+        const { webId } = res;
+
+        await ctx.call('auth-agent.waitForResourceCreation', { webId });
+        await ctx.call('agent-registry.waitForResourceCreation', { webId });
+        await ctx.call('auth-registry.waitForResourceCreation', { webId });
+        await ctx.call('data-registry.waitForResourceCreation', { webId });
+
+        await ctx.call('activitypub.actor.awaitCreateComplete', {
+          actorUri: webId,
+          additionalKeys: [
+            'pim:storage',
+            'pim:preferencesFile',
+            'interop:hasAuthorizationAgent',
+            'interop:hasRegistrySet',
+            'solid:publicTypeIndex'
+          ]
+        });
+
+        // Wait until all data and type registrations are created
+        // This is necessary for the data provider to be able to load all containers
+        await ctx.call('data-registry.awaitCreateComplete', { webId });
+        await ctx.call('type-indexes.awaitCreateComplete', { webId });
+
+        return res;
       }
     }
   }

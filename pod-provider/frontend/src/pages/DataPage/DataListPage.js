@@ -42,8 +42,6 @@ const DataListPage = () => {
   const developerMode = !!localStorage.getItem('developer_mode');
   const containers = useContainers({ serverKeys: ['user'] });
 
-  console.log('containers', containers);
-
   return (
     <>
       <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>

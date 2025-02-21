@@ -29,7 +29,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ResourceCard = ({ resource, container }) => {
+const ResourceCard = ({ resource, labelPredicate }) => {
   const translate = useTranslate();
   const classes = useStyles();
 
@@ -62,7 +62,7 @@ const ResourceCard = ({ resource, container }) => {
           textOverflow: 'ellipsis'
         }}
       >
-        {container && resource[container.labelPredicate]}
+        {resource[labelPredicate]}
       </Typography>
       <Box p={2}>
         <Table size="small">

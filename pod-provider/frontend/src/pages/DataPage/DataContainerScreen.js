@@ -16,11 +16,11 @@ import {
 import makeStyles from '@mui/styles/makeStyles';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import CachedIcon from '@mui/icons-material/Cached';
+import { useContainers, useCompactPredicate } from '@semapps/semantic-data-provider';
 import ListView from '../../layout/ListView';
 import ResourceCard from '../../common/cards/ResourceCard';
 import BackButton from '../../common/buttons/BackButton';
 import { arrayOf } from '../../utils';
-import { useContainers } from '@semapps/semantic-data-provider';
 
 const useStyles = makeStyles(() => ({
   listItem: {
@@ -37,7 +37,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const DataContainerScreen = ({ container }) => {
+const DataContainerScreen = ({ containerData }) => {
   const { data: identity } = useGetIdentity();
   const classes = useStyles();
   const navigate = useNavigate();
@@ -47,10 +47,9 @@ const DataContainerScreen = ({ container }) => {
   const developerMode = !!localStorage.getItem('developer_mode');
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
-  console.log('container', container);
-
   const containers = useContainers({ serverKeys: ['user'] });
-  const containerDescription = useMemo(() => containers.find(c => c.uri === container.id), [containers, container]);
+  const container = useMemo(() => containers.find(c => c.uri === containerData.id), [containers, containerData]);
+  const labelPredicate = useCompactPredicate(container?.labelPredicate, containerData['@context']);
 
   const onSelect = useCallback(
     resource => {
@@ -63,17 +62,17 @@ const DataContainerScreen = ({ container }) => {
     [developerMode, navigate, setSelected]
   );
 
-  const resources = arrayOf(container['ldp:contains']);
+  const resources = arrayOf(containerData['ldp:contains']);
 
-  if (!containerDescription) return null;
+  if (!container) return null;
 
   return (
     <ListView
-      title={containerDescription.label[locale] || container.id || container['@id']}
+      title={container.label[locale] || containerData.id || containerData['@id']}
       actions={[
         <BackButton to="/data" /> /*<SetDefaultAppButton typeRegistration={typeRegistration} refetch={refetch} />*/
       ]}
-      asides={selected && !xs ? [<ResourceCard resource={selected} /*typeRegistration={typeRegistration}*/ />] : null}
+      asides={selected && !xs ? [<ResourceCard resource={selected} labelPredicate={labelPredicate} />] : null}
     >
       <Box>
         <List>
@@ -81,6 +80,7 @@ const DataContainerScreen = ({ container }) => {
           {resources.map(resource => {
             const resourceUri = resource.id || resource['@id'];
             const isLocal = resourceUri.startsWith(identity?.id);
+            const label = labelPredicate && resource[labelPredicate];
             return (
               <ListItem className={classes.listItem} key={resourceUri}>
                 <ListItemButton onClick={() => onSelect(resource)}>
@@ -102,10 +102,8 @@ const DataContainerScreen = ({ container }) => {
                     )}
                   </ListItemAvatar>
                   <ListItemText
-                    primary={
-                      containerDescription.labelPredicate ? resource[containerDescription.labelPredicate] : resourceUri
-                    }
-                    secondary={containerDescription.labelPredicate ? resourceUri : undefined}
+                    primary={label || resourceUri}
+                    secondary={label ? resourceUri : undefined}
                     className={classes.listItemText}
                   />
                 </ListItemButton>

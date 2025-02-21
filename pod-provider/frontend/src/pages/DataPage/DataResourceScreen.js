@@ -6,25 +6,24 @@ import ShowView from '../../layout/ShowView';
 import JsonView from '@uiw/react-json-view';
 import BackButton from '../../common/buttons/BackButton';
 import ResourceCard from '../../common/cards/ResourceCard';
-import { useContainers } from '@semapps/semantic-data-provider';
+import { useContainers, useCompactPredicate } from '@semapps/semantic-data-provider';
 
-const DataResourceScreen = ({ resource }) => {
+const DataResourceScreen = ({ resourceData }) => {
   const { data: identity } = useGetIdentity();
-  const [container] = useContainers({ types: resource.type || resource['@type'] });
-
-  console.log('container', container);
+  const [container] = useContainers({ types: resourceData.type || resourceData['@type'] });
+  const labelPredicate = useCompactPredicate(container?.labelPredicate, resourceData['@context']);
 
   return (
     <ShowView
-      title={(container && resource[container.labelPredicate]) || resource.id || resource['@id']}
+      title={(labelPredicate && resourceData[labelPredicate]) || resourceData.id || resourceData['@id']}
       actions={[
         container ? <BackButton to={`/data/${encodeURIComponent(container.uri)}`} /> : <BackButton to="/data" />
       ]}
-      asides={[<ResourceCard resource={resource} container={container} />]}
+      asides={[<ResourceCard resource={resourceData} labelPredicate={labelPredicate} />]}
     >
       <Card sx={{ p: 2, overflowX: 'auto' }}>
         <JsonView
-          value={resource}
+          value={resourceData}
           shortenTextAfterLength={0}
           displayDataTypes={false}
           displayObjectSize={false}
@@ -34,7 +33,7 @@ const DataResourceScreen = ({ resource }) => {
         >
           <JsonView.String
             render={({ children, style, ...rest }, { value, keyName }) => {
-              if (value?.startsWith(identity.id) && value !== (resource.id || resource['@id'])) {
+              if (value?.startsWith(identity?.id) && value !== (resourceData.id || resourceData['@id'])) {
                 return (
                   <Link to={`/data/${encodeURIComponent(value)}`} style={{ ...style, cursor: 'pointer' }} {...rest}>
                     {children}

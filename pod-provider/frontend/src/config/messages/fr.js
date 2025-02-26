@@ -310,9 +310,7 @@ module.exports = {
     accessibility: {
       profile_picture_of: "Photo de profil de %{name}",
       your_profile_picture: "Votre photo de profil",
-      invitation_link: "Lien d'invitation",
-      copy_invitation_link: "Lien d'invitation à copier",
-      copy_invitation_link_button: "Copier le lien",
+      copy_invitation_link_button: "Copier le lien d'invitation",
       skip_link_description: "Ce lien apparaît lorsqu'il reçoit le focus et permet d'accéder directement au contenu principal de la page en sautant la navigation",
       network_link_description: "Accéder à la page de votre réseau de contacts",
       apps_link_description: "Accéder à la page de gestion de vos applications",

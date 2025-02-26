@@ -1,8 +1,9 @@
-import React from 'react';
-import { Box, Card, Typography, Paper } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Card, Typography, Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useTranslate } from 'react-admin';
-import CopyButton from '../buttons/CopyButton';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import useContactLink from '../../hooks/useContactLink';
 
 const useStyles = makeStyles(theme => ({
@@ -30,29 +31,20 @@ const useStyles = makeStyles(theme => ({
       padding: '12px !important'
     }
   },
-  linkContainer: {
-    marginTop: 8,
-    padding: '8px 12px',
-    backgroundColor: theme.palette.grey[100],
-    borderRadius: 4,
+  buttonContainer: {
+    marginTop: 16,
     display: 'flex',
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-    wordBreak: 'break-all'
+    gap: 8
   },
-  link: {
-    fontSize: '0.9rem',
-    [theme.breakpoints.down('sm')]: {
-      fontSize: '0.85rem'
-    }
-  }
 }));
 
 const ShareContactCard = () => {
   const classes = useStyles();
   const translate = useTranslate();
   const contactLink = useContactLink();
+  const [copied, setCopied] = useState(false);
 
   return (
     <Card className={classes.root}>
@@ -61,26 +53,21 @@ const ShareContactCard = () => {
       </Box>
       <Box className={classes.block} p={2}>
         <Typography variant="body2">{translate('app.helper.share_contact')}</Typography>
-        <Paper 
-          component="div" 
-          variant="outlined" 
-          className={classes.linkContainer}
-          role="region"
-          aria-label={translate('app.accessibility.invitation_link')}
-        >
-          <Typography 
-            variant="body2" 
-            className={classes.link}
-            component="span"
-            aria-label={translate('app.accessibility.copy_invitation_link')}
-          >
+        <Box className={classes.buttonContainer}>
+          <span style={{ display: 'none' }}>
             {contactLink}
-          </Typography>
-          <CopyButton 
-            text={contactLink} 
-            aria-label={translate('app.accessibility.copy_invitation_link_button')}
-          />
-        </Paper>
+          </span>
+          <CopyToClipboard text={contactLink} onCopy={() => setCopied(true)}>
+            <Button
+              variant="contained"
+              color="secondary"
+              endIcon={<ContentCopyIcon />}
+              aria-label={translate('app.accessibility.copy_invitation_link_button')}
+            >
+              {translate(copied ? 'app.message.copied_to_clipboard' : 'app.action.copy')}
+            </Button>
+          </CopyToClipboard>
+        </Box>
       </Box>
     </Card>
   );

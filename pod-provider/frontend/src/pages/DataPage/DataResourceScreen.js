@@ -6,11 +6,11 @@ import ShowView from '../../layout/ShowView';
 import JsonView from '@uiw/react-json-view';
 import BackButton from '../../common/buttons/BackButton';
 import ResourceCard from '../../common/cards/ResourceCard';
-import { useContainers, useCompactPredicate } from '@semapps/semantic-data-provider';
+import { useContainersByTypes, useCompactPredicate } from '@semapps/semantic-data-provider';
 
 const DataResourceScreen = ({ resourceData }) => {
   const { data: identity } = useGetIdentity();
-  const [container] = useContainers({ types: resourceData.type || resourceData['@type'] });
+  const [container] = useContainersByTypes(resourceData.type || resourceData['@type']);
   const labelPredicate = useCompactPredicate(container?.labelPredicate, resourceData['@context']);
 
   return (

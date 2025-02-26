@@ -16,7 +16,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import FolderIcon from '@mui/icons-material/Folder';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { useContainers } from '@semapps/semantic-data-provider';
+import { useContainers, useGetPrefixFromUri } from '@semapps/semantic-data-provider';
 
 const useStyles = makeStyles(() => ({
   listItem: {
@@ -39,8 +39,9 @@ const DataListPage = () => {
   const navigate = useNavigate();
   const classes = useStyles();
   const [locale] = useLocaleState();
+  const getPrefixFromUri = useGetPrefixFromUri();
   const developerMode = !!localStorage.getItem('developer_mode');
-  const containers = useContainers({ serverKeys: ['user'] });
+  const containers = useContainers(undefined, 'user');
 
   return (
     <>
@@ -49,34 +50,36 @@ const DataListPage = () => {
       </Typography>
       <Box>
         <List>
-          {containers?.map(container => (
-            <ListItem className={classes.listItem} key={container.uri}>
-              <ListItemButton onClick={() => navigate(`/data/${encodeURIComponent(container.uri)}`)}>
-                <ListItemAvatar>
-                  {container.private === true ? (
-                    <Badge
-                      badgeContent={<SettingsIcon sx={{ width: 16, height: 16, color: 'grey' }} />}
-                      overlap="circular"
-                      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                    >
+          {containers
+            ?.filter(container => !container.private || developerMode)
+            .map(container => (
+              <ListItem className={classes.listItem} key={container.uri}>
+                <ListItemButton onClick={() => navigate(`/data/${encodeURIComponent(container.uri)}`)}>
+                  <ListItemAvatar>
+                    {container.private === true ? (
+                      <Badge
+                        badgeContent={<SettingsIcon sx={{ width: 16, height: 16, color: 'grey' }} />}
+                        overlap="circular"
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                      >
+                        <Avatar>
+                          <FolderIcon />
+                        </Avatar>
+                      </Badge>
+                    ) : (
                       <Avatar>
                         <FolderIcon />
                       </Avatar>
-                    </Badge>
-                  ) : (
-                    <Avatar>
-                      <FolderIcon />
-                    </Avatar>
-                  )}
-                </ListItemAvatar>
-                <ListItemText
-                  primary={container.label[locale]}
-                  secondary={container.types?.join(', ')}
-                  className={classes.listItemText}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
+                    )}
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={container.label?.[locale] || container.label?.en}
+                    secondary={container.types?.map(uri => getPrefixFromUri(uri)).join(', ')}
+                    className={classes.listItemText}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
         </List>
       </Box>
     </>

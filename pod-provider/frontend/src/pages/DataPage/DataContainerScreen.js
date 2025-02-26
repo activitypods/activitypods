@@ -16,7 +16,7 @@ import {
 import makeStyles from '@mui/styles/makeStyles';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import CachedIcon from '@mui/icons-material/Cached';
-import { useContainers, useCompactPredicate } from '@semapps/semantic-data-provider';
+import { useContainerByUri, useCompactPredicate } from '@semapps/semantic-data-provider';
 import ListView from '../../layout/ListView';
 import ResourceCard from '../../common/cards/ResourceCard';
 import BackButton from '../../common/buttons/BackButton';
@@ -47,8 +47,7 @@ const DataContainerScreen = ({ containerData }) => {
   const developerMode = !!localStorage.getItem('developer_mode');
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
-  const containers = useContainers({ serverKeys: ['user'] });
-  const container = useMemo(() => containers.find(c => c.uri === containerData.id), [containers, containerData]);
+  const container = useContainerByUri(containerData.id || containerData['@id']);
   const labelPredicate = useCompactPredicate(container?.labelPredicate, containerData['@context']);
 
   const onSelect = useCallback(
@@ -68,7 +67,7 @@ const DataContainerScreen = ({ containerData }) => {
 
   return (
     <ListView
-      title={container.label[locale] || containerData.id || containerData['@id']}
+      title={container.label[locale] || container.label.en || containerData.id || containerData['@id']}
       actions={[
         <BackButton to="/data" /> /*<SetDefaultAppButton typeRegistration={typeRegistration} refetch={refetch} />*/
       ]}

@@ -3,10 +3,10 @@ import urlJoin from 'url-join';
 import { useDataProvider, useLocaleState, useTranslate } from 'react-admin';
 import { LocalLoginPage } from '@semapps/auth-provider';
 import { useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
 import { Box, Button } from '@mui/material';
 import { Link } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Header from '../common/Header';
 import scorer from '../config/scorer';
 
 const LoginPageWrapper = ({ children }) => {
@@ -66,13 +66,7 @@ const LoginPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>
-          {translate(isSignup ? 'app.titles.signup' : 'app.titles.login', {
-            appName: CONFIG.INSTANCE_NAME
-          })}
-        </title>
-      </Helmet>
+      <Header title={isSignup ? 'app.titles.signup' : 'app.titles.login'} />
       <LoginPageWrapper>
         <LocalLoginPage
           allowUsername

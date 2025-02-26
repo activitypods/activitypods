@@ -13,10 +13,10 @@ import TuneIcon from '@mui/icons-material/Tune';
 import TranslateIcon from '@mui/icons-material/Translate';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
+import Header from '../../common/Header';
 import useContactLink from '../../hooks/useContactLink';
 import SettingsItem from './SettingsItem';
 import { availableLocales } from '../../config/i18nProvider';
-import { Helmet } from 'react-helmet';
 
 const SettingsPage = () => {
   useCheckAuthenticated();
@@ -36,9 +36,7 @@ const SettingsPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{translate('app.titles.settings', { appName: CONFIG.INSTANCE_NAME })}</title>
-      </Helmet>
+      <Header title="app.titles.settings" />
       <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>
         {translate('app.page.settings')}
       </Typography>

@@ -292,11 +292,11 @@ module.exports = {
       home: 'Welcome - %{appName}',
       login: 'Login - %{appName}',
       signup: 'Sign up - %{appName}',
-      applications: 'My Applications - %{appName}',
+      applications: 'My applications - %{appName}',
       settings: 'Settings - %{appName}',
-      network: 'My Network - %{appName}',
-      create_group: 'Create Group - %{appName}',
-      group_settings: '%{groupName} Settings - %{appName}'
+      network: 'My network - %{appName}',
+      create_group: 'Create group - %{appName}',
+      group_settings: 'Group settings of %{groupName} - %{appName}'
     },
     placeholder: {
       user_id: "@user@server.com",

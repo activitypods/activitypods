@@ -19,7 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import SimpleBox from '../layout/SimpleBox';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import { Box } from '@mui/material';
-import { Helmet } from 'react-helmet';
+import Header from '../common/Header';
 
 const CreateGroupPage = () => {
   const translate = useTranslate();
@@ -94,9 +94,7 @@ const CreateGroupPage = () => {
 
   return !podProviderUrl ? (
     <>
-      <Helmet>
-        <title>{translate('app.titles.create_group', { appName: CONFIG.INSTANCE_NAME })}</title>
-      </Helmet>
+      <Header title="app.titles.create_group" />
       <ChoosePodProviderPage
         text={translate('app.helper.create_group')}
         onPodProviderSelected={setPodProviderUrl}
@@ -105,9 +103,7 @@ const CreateGroupPage = () => {
     </>
   ) : (
     <>
-      <Helmet>
-        <title>{translate('app.titles.create_group', { appName: CONFIG.INSTANCE_NAME })}</title>
-      </Helmet>
+      <Header title="app.titles.create_group" />
       <SimpleBox title={translate('app.action.create_group')} icon={<GroupAddIcon />}>
         <Form onSubmit={onSubmit} defaultValues={{ type: 'foaf:Group' }}>
           <TextInput source="id" label={translate('app.group.id')} fullWidth />

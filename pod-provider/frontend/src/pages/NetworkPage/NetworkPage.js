@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, useTranslate, SimpleList } from 'react-admin';
 import { Link } from 'react-router-dom';
 import { Avatar } from '@mui/material';
-import { Helmet } from 'react-helmet';
+import Header from '../../common/Header';
 import AddIcon from '@mui/icons-material/Add';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import List from '../../layout/List';
@@ -18,9 +18,7 @@ const NetworkPage = () => {
   if (!identity?.id) return null;
   return (
     <>
-      <Helmet>
-        <title>{translate('app.titles.network', { appName: CONFIG.INSTANCE_NAME })}</title>
-      </Helmet>
+      <Header title="app.titles.network" />
       <List
         resource="Profile"
         title={translate('app.page.contacts')}

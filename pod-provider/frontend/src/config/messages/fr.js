@@ -297,11 +297,11 @@ module.exports = {
       home: 'Bienvenue - %{appName}',
       login: 'Connexion - %{appName}',
       signup: 'Inscription - %{appName}',
-      applications: 'Mes Applications - %{appName}',
+      applications: 'Mes applications - %{appName}',
       settings: 'Paramètres - %{appName}',
-      network: 'Mon Réseau - %{appName}',
-      create_group: 'Créer un Groupe - %{appName}',
-      group_settings: 'Paramètres de %{groupName} - %{appName}'
+      network: 'Mon réseau - %{appName}',
+      create_group: 'Créer un groupe - %{appName}',
+      group_settings: 'Paramètres du groupe %{groupName} - %{appName}',
     },
     placeholder: {
       user_id: "@utilisateur@serveur.com",

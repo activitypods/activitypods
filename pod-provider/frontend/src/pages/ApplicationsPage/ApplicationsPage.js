@@ -1,7 +1,7 @@
 import React from 'react';
 import { useGetList, useTranslate } from 'react-admin';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { Helmet } from 'react-helmet';
+import Header from '../../common/Header';
 import RegisteredApps from './RegisteredApps';
 import AvailableApps from './AvailableApps';
 import { isLocalURL } from '../../utils';
@@ -23,9 +23,7 @@ const ApplicationsPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{translate('app.titles.applications', { appName: CONFIG.INSTANCE_NAME })}</title>
-      </Helmet>
+      <Header title="app.titles.applications" />
       <RegisteredApps registeredApps={registeredApps} trustedApps={trustedApps} />
       {!isLocalURL(CONFIG.BACKEND_URL) && !isTrustedAppsLoading && (
         <AvailableApps registeredApps={registeredApps} trustedApps={trustedApps} />

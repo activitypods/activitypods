@@ -3,7 +3,7 @@ import { Box, Button, Typography, Container, Avatar } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { Link, useGetIdentity, useTranslate, useRedirect, LocalesMenuButton, useLocaleState } from 'react-admin';
 import { availableLocales } from '../config/i18nProvider';
-import { Helmet } from 'react-helmet';
+import Header from '../common/Header';
 
 const useStyles = makeStyles(theme => ({
   '@global': {
@@ -98,9 +98,7 @@ const HomePage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{translate('app.titles.home', { appName: CONFIG.INSTANCE_NAME })}</title>
-      </Helmet>
+      <Header title="app.page.home" />
       {availableLocales.length > 1 && (
         <Box sx={{ position: 'absolute', top: 0, right: 0, p: 1, zIndex: 20 }}>
           <LocalesMenuButton />

@@ -9,6 +9,7 @@ module.exports = {
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:ApplicationRegistration'],
+    permissions: {},
     newResourcesPermissions: {}
   },
   actions: {

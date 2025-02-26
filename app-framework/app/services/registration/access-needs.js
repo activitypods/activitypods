@@ -7,6 +7,7 @@ module.exports = {
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:AccessNeed'],
+    permissions: {},
     readOnly: true,
     activateTombstones: false
   },

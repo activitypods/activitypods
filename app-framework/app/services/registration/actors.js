@@ -10,6 +10,7 @@ module.exports = {
   settings: {
     path: '/as/actor',
     acceptedTypes: [ACTOR_TYPES.APPLICATION, 'interop:Application'],
+    permissions: {},
     readOnly: true,
     dereferencePlan: [{ property: 'publicKey' }, { property: 'assertionMethod' }]
   },

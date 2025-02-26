@@ -9,6 +9,7 @@ module.exports = {
   settings: {
     // ControlledContainerMixin settings
     acceptedTypes: ['interop:AccessNeedGroup'],
+    permissions: {},
     readOnly: true,
     activateTombstones: false
   },

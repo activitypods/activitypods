@@ -8,7 +8,7 @@ module.exports = {
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['vcard:Location'],
-    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'trees/vcard/Location'),
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location'),
     excludeFromMirror: true,
     permissions: {},
     newResourcesPermissions: {},

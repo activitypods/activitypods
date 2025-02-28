@@ -8,7 +8,6 @@ module.exports = {
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:AccessGrant'],
-    permissions: {},
     newResourcesPermissions: {}
   },
   actions: {

@@ -15,10 +15,9 @@ module.exports = {
       if (existingDataRegistration) return existingDataRegistration;
 
       // Get registered class from shapeTree
-      const shapeTree = await ctx.call('shape-trees.get', { resourceUri: shapeTreeUri });
-      const shapeUri = shapeTree[0]['http://www.w3.org/ns/shapetrees#shape']?.[0]?.['@id'];
+      const shapeUri = await ctx.call('shape-trees.getShapeUri', { resourceUri: shapeTreeUri });
       if (!shapeUri) throw new Error(`Could not find shape from shape tree ${shapeTreeUri}`);
-      const registeredClass = await ctx.call('shex.getType', { shapeUri });
+      const [registeredClass] = await ctx.call('shacl.getTypes', { resourceUri: shapeUri });
       if (!registeredClass) throw new Error(`Could not find class required by shape ${shapeUri}`);
 
       // Generate a path for the new container

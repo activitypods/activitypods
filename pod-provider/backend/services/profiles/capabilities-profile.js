@@ -47,6 +47,8 @@ const CapabilitiesProfileService = {
           accept: MIME_TYPES.JSON
         });
 
+        // Create a new credentialSubject with acl permissions and allowed action to exchange contact.
+
         if (profileUri) {
           // Add an invite capability.
           const inviteCapUri = await ctx.call(

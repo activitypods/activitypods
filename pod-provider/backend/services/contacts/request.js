@@ -144,7 +144,6 @@ module.exports = {
             });
 
             // No need to add the user to contact requests.
-            return;
           }
         }
 
@@ -291,14 +290,4 @@ module.exports = {
       }
     }
   }
-};
-
-/**
- * Right now, it's assumed that an Offer > Add > Profile activity with a
- * capability attached is an contact request by invite link. Thus an invite capability.
- * @param activity The activity object.
- * @returns
- */
-const activityHasInviteCapability = activity => {
-  return !!activity?.['sec:capability'];
 };

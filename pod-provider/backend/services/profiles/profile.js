@@ -12,7 +12,7 @@ module.exports = {
     // ControlledContainerMixin settings
     path: '/vcard/individual',
     acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
-    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'trees/as/Profile'),
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Profile'),
     permissions: {},
     newResourcesPermissions: {},
     typeIndex: 'public'

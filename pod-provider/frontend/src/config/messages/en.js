@@ -26,6 +26,7 @@ module.exports = {
       send_message: 'Send message',
       send_request: 'Send request',
       signup: 'Signup',
+      sign_in: 'Log in',
       reset_password: 'Reset password',
       revoke_access: 'Revoke access',
       set_new_password: 'Set new password',
@@ -39,7 +40,10 @@ module.exports = {
       set_default_app: 'Set default app',
       view_private_profile: 'View your private profile',
       view_public_profile: 'View your public profile',
-      create_group: 'Create group'
+      create_group: 'Create group',
+      skip_to_main: 'Skip to main content',
+      view_contact_profile: "View %{name}'s profile",
+      edit_profile: 'Edit your profile'
     },
     tag: {
       members: 'Members',
@@ -148,6 +152,8 @@ module.exports = {
     },
     helper: {
       add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',
+      user_id: "Enter the ID of the person you want to contact",
+      about_you: "Introduce yourself briefly so the person can identify you",
       message_profile_show_right:
         'Sending a message to %{username} will give him/her the right to see your profile, in order to be able to respond.',
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',
@@ -281,6 +287,32 @@ module.exports = {
         title: 'I choose who I share my data with',
         text: 'At any time, I know who sees my data. I can revoke the rights.'
       }
+    },
+    titles: {
+      home: 'Welcome - %{appName}',
+      login: 'Login - %{appName}',
+      signup: 'Sign up - %{appName}',
+      applications: 'My applications - %{appName}',
+      settings: 'Settings - %{appName}',
+      network: 'My network - %{appName}',
+      create_group: 'Create group - %{appName}',
+      group_settings: 'Group settings of %{groupName} - %{appName}'
+    },
+    placeholder: {
+      user_id: "@user@server.com",
+      about_you: "Hello, I would like to add you to my network...",
+    },
+    accessibility: {
+      profile_picture_of: "%{name}'s profile picture",
+      your_profile_picture: "Your profile picture",
+      copy_invitation_link_button: "Copy your invitation link",
+      skip_link_description: "This link appears when focused and allows you to skip directly to the main content of the page, bypassing navigation",
+      network_link_description: "Access your network contacts page",
+      apps_link_description: "Access your applications management page",
+      data_link_description: "Access your personal data management page", 
+      settings_link_description: "Access your account settings page",
+      contact_list_profile_picture: "This picture appears in your contacts list and helps visually identify %{name}",
+      contact_list_profile_link: "Click to access %{name}'s detailed profile and view all their information"
     }
   }
 };

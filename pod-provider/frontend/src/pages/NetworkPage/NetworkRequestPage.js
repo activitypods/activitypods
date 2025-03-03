@@ -13,6 +13,7 @@ const AddContactToolbar = props => {
       <SaveButton
         icon={<SendIcon />}
         label={translate('app.action.send_request')}
+        aria-label={translate('app.action.send_request')}
         variant="contained"
         color="secondary"
       />
@@ -43,8 +44,24 @@ const NetworkRequestPage = () => {
               {translate('app.helper.add_contact')}
             </Alert>
             <br />
-            <TextInput source="id" label={translate('app.input.user_id')} fullWidth />
-            <TextInput source="content" label={translate('app.input.about_you')} fullWidth />
+            <TextInput 
+              source="id" 
+              label={translate('app.input.user_id')}
+              helperText={translate('app.helper.user_id')}
+              placeholder={translate('app.placeholder.user_id')}
+              aria-describedby="user-id-helper-text"
+              fullWidth 
+            />
+            <TextInput 
+              source="content" 
+              label={translate('app.input.about_you')}
+              helperText={translate('app.helper.about_you')}
+              placeholder={translate('app.placeholder.about_you')}
+              aria-describedby="about-you-helper-text"
+              multiline
+              rows={3}
+              fullWidth 
+            />
           </SimpleForm>
         </Card>
       </Box>

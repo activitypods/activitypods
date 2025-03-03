@@ -30,21 +30,41 @@ const MenuBar = () => {
       <Container>
         <Breadcrumbs separator="|">
           {!isGroup && (
-            <Link to="/network" className={classes.link}>
+            <Link 
+              to="/network" 
+              className={classes.link}
+              aria-label={translate('app.page.contacts')}
+              aria-description={translate('app.accessibility.network_link_description')}
+            >
               {translate('app.page.contacts')}
             </Link>
           )}
           {!isGroup && (
-            <Link to="/apps" className={classes.link}>
+            <Link 
+              to="/apps" 
+              className={classes.link}
+              aria-label={translate('app.page.apps')}
+              aria-description={translate('app.accessibility.apps_link_description')}
+            >
               {translate('app.page.apps')}
             </Link>
           )}
           {!isGroup && (
-            <Link to="/data" className={classes.link}>
+            <Link 
+              to="/data" 
+              className={classes.link}
+              aria-label={translate('app.page.data')}
+              aria-description={translate('app.accessibility.data_link_description')}
+            >
               {translate('app.page.data')}
             </Link>
           )}
-          <Link to={isGroup ? `/group/${data?.webfingerId}/settings` : '/settings'} className={classes.link}>
+          <Link 
+            to={isGroup ? `/group/${data?.webfingerId}/settings` : '/settings'} 
+            className={classes.link}
+            aria-label={translate('app.page.settings')}
+            aria-description={translate('app.accessibility.settings_link_description')}
+          >
             {translate('app.page.settings')}
           </Link>
         </Breadcrumbs>

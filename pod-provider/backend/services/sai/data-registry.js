@@ -1,5 +1,5 @@
 const { triple, namedNode } = require('@rdfjs/data-model');
-const { SingleResourceContainerMixin } = require('@semapps/ldp');
+const { SingleResourceContainerMixin, arrayOf, delay } = require('@semapps/ldp');
 
 module.exports = {
   name: 'data-registry',
@@ -13,7 +13,7 @@ module.exports = {
     async add(ctx) {
       const { podOwner, dataRegistrationUri } = ctx.params;
 
-      const dataRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+      const dataRegistryUri = await this.actions.waitForResourceCreation({ webId: podOwner }, { parentCtx: ctx });
 
       await this.actions.patch(
         {
@@ -25,7 +25,7 @@ module.exports = {
               namedNode(dataRegistrationUri)
             )
           ],
-          webId: 'system'
+          webId: podOwner
         },
         { parentCtx: ctx }
       );
@@ -33,7 +33,7 @@ module.exports = {
     async remove(ctx) {
       const { podOwner, dataRegistrationUri } = ctx.params;
 
-      const dataRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+      const dataRegistryUri = await this.actions.waitForResourceCreation({ webId: podOwner }, { parentCtx: ctx });
 
       await this.actions.patch(
         {
@@ -45,10 +45,32 @@ module.exports = {
               namedNode(dataRegistrationUri)
             )
           ],
-          webId: 'system'
+          webId: podOwner
         },
         { parentCtx: ctx }
       );
+    },
+    /**
+     * Wait until all data registrations have been created for the newly-created user
+     */
+    async awaitCreateComplete(ctx) {
+      const { webId } = ctx.params;
+
+      const containers = await ctx.call('ldp.registry.list');
+      const numContainersWithShapeTree = Object.values(containers).filter(container => container.shapeTreeUri).length;
+
+      let numDataRegistrations;
+      let attempts = 0;
+      do {
+        attempts += 1;
+        if (attempts > 1) await delay(1000);
+        const dataRegistry = await this.actions.get({ webId }, { parentCtx: ctx });
+        numDataRegistrations = arrayOf(dataRegistry['interop:hasDataRegistration']).length;
+        if (attempts > 30)
+          throw new Error(
+            `After 30s, user ${webId} has only ${numDataRegistrations} data registrations. Expecting ${numContainersWithShapeTree}`
+          );
+      } while (numDataRegistrations < numContainersWithShapeTree);
     }
   },
   hooks: {

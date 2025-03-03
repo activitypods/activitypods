@@ -14,7 +14,7 @@ module.exports = {
     const publicKeyPath = path.resolve(this.settings.jwtPath, 'jwk' + this.settings.alg + '.key.pub');
 
     if (!fs.existsSync(privateKeyPath) && !fs.existsSync(publicKeyPath)) {
-      console.log('JWK not found, generating...');
+      this.logger.info('JWK not found, generating...');
       if (!fs.existsSync(this.settings.jwtPath)) {
         fs.mkdirSync(this.settings.jwtPath);
       }

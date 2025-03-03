@@ -8,7 +8,7 @@ module.exports = {
   mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
   settings: {
     acceptedTypes: ['as:Note'],
-    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'trees/as/Note'),
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Note'),
     permissions: {},
     newResourcesPermissions: {},
     typeIndex: 'public'

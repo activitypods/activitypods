@@ -26,9 +26,9 @@ const useFetchShapeTree = () => {
         headers: new Headers({ Accept: 'application/ld+json' })
       });
 
-      const [type] = shape?.[0]?.['http://www.w3.org/ns/shacl#targetClass']?.map(node => node?.['@id']);
+      const types = shape?.[0]?.['http://www.w3.org/ns/shacl#targetClass']?.map(node => node?.['@id']);
 
-      return { ...shapeTree, type };
+      return { ...shapeTree, types };
     } else {
       return shapeTree;
     }

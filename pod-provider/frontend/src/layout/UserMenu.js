@@ -27,12 +27,12 @@ const UserMenu = () => {
     <>
       <Button
         onClick={e => setAnchorEl(e.currentTarget)}
-        label={data.fullName}
+        label={data?.fullName}
         color="black"
         sx={{ textTransform: 'none', fontSize: '14px', padding: '6px 8px' }}
       >
-        {data.avatar ? (
-          <Avatar alt={data.fullName} src={data.avatar} sx={{ width: 24, height: 24 }} />
+        {data?.avatar ? (
+          <Avatar alt={data?.fullName} src={data?.avatar} sx={{ width: 24, height: 24 }} />
         ) : isGroup ? (
           <GroupIcon />
         ) : (

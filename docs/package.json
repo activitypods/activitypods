@@ -14,7 +14,7 @@
     "@astrojs/starlight": "^0.19.0",
     "@fontsource/pt-sans": "^5.0.12",
     "astro": "^4.3.5",
-    "sharp": "^0.32.5",
+    "sharp": "^0.33.5",
     "typescript": "^5.3.3"
   }
 }

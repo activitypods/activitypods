@@ -55,7 +55,7 @@ describe('Websocket channel', () => {
     expect(storage.type).toBe('pim:Storage');
     expect(storage['notify:subscription']).toHaveLength(2);
 
-    [_, webSocketChannelSubscriptionUrl] = storage['notify:subscription'];
+    webSocketChannelSubscriptionUrl = storage['notify:subscription'].find(uri => uri.includes('/WebSocketChannel2023'));
 
     const { json: webSocketChannelSubscription } = await fetchServer(webSocketChannelSubscriptionUrl);
 

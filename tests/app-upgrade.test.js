@@ -1,9 +1,10 @@
+const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { connectPodProvider, clearAllData, installApp, initializeAppServer } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const ExampleAppV2Service = require('./apps/example-v2.app');
+const CONFIG = require('./config');
 
 jest.setTimeout(80000);
 
@@ -101,7 +102,7 @@ describe('Test app upgrade', () => {
 
     expect(accessNeed).toMatchObject({
       type: 'interop:AccessNeed',
-      'apods:registeredClass': 'as:Event',
+      'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
       'interop:accessNecessity': 'interop:AccessRequired'
     });
 
@@ -117,23 +118,5 @@ describe('Test app upgrade', () => {
         acceptedSpecialRights: requiredAccessNeedGroup['apods:hasSpecialRights']
       })
     ).resolves.not.toThrow();
-  });
-
-  test('Types are correctly updated in the TypeIndex', async () => {
-    const typeIndex = await alice.call('type-indexes.get', {
-      resourceUri: alice['solid:publicTypeIndex'],
-      accept: MIME_TYPES.JSON
-    });
-
-    // The prefLabel and openEndpoint must have changed
-    expect(typeIndex['solid:hasTypeRegistration']).toContainEqual(
-      expect.objectContaining({
-        'solid:forClass': 'as:Event',
-        'apods:defaultApp': APP_URI,
-        'apods:availableApps': APP_URI,
-        'skos:prefLabel': 'Meetings',
-        'apods:openEndpoint': 'https://example.app/redirect'
-      })
-    );
   });
 });

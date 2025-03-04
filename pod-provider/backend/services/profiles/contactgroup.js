@@ -1,4 +1,6 @@
+const urlJoin = require('url-join');
 const { ControlledContainerMixin } = require('@semapps/ldp');
+const CONFIG = require('../../config/config');
 
 module.exports = {
   name: 'profiles.contactgroup',
@@ -6,14 +8,9 @@ module.exports = {
   settings: {
     // ControlledContainerMixin settings
     acceptedTypes: ['vcard:Group'],
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Group'),
     permissions: {},
     newResourcesPermissions: {},
-    description: {
-      labelMap: {
-        en: 'Groups',
-        fr: 'Groupes'
-      },
-      labelPredicate: 'vcard:label'
-    }
+    typeIndex: 'public'
   }
 };

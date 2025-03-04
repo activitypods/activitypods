@@ -72,10 +72,8 @@ module.exports = {
       async onReceive(ctx, activity) {
         // ENSURE A LOCAL APP REGISTRATION ALREADY EXIST
 
-        let localAppRegistration;
-
         try {
-          localAppRegistration = await ctx.call('ldp.remote.getStored', { resourceUri: activity.object.id });
+          await ctx.call('ldp.remote.getStored', { resourceUri: activity.object.id });
         } catch (e) {
           if (e.code === 404) {
             throw new MoleculerError(

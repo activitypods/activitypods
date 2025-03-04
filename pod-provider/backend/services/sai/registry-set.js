@@ -6,13 +6,7 @@ module.exports = {
   mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:RegistrySet'],
-    podProvider: true,
-    description: {
-      labelMap: {
-        en: 'Registry Sets'
-      },
-      internal: true
-    }
+    podProvider: true
   },
   hooks: {
     after: {

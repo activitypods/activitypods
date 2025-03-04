@@ -3,46 +3,27 @@ import { Link } from 'react-router-dom';
 import { Card } from '@mui/material';
 import { useGetIdentity } from 'react-admin';
 import ShowView from '../../layout/ShowView';
-import useTypeRegistrations from '../../hooks/useTypeRegistrations';
 import JsonView from '@uiw/react-json-view';
-import { arrayOf } from '../../utils';
 import BackButton from '../../common/buttons/BackButton';
 import ResourceCard from '../../common/cards/ResourceCard';
+import { useContainersByTypes, useCompactPredicate } from '@semapps/semantic-data-provider';
 
-const DataResourceScreen = ({ resource }) => {
+const DataResourceScreen = ({ resourceData }) => {
   const { data: identity } = useGetIdentity();
-  const { data: typeRegistrations } = useTypeRegistrations();
-
-  const typeRegistration = useMemo(
-    () =>
-      typeRegistrations?.find(reg =>
-        arrayOf(reg['solid:forClass']).some(t1 =>
-          arrayOf(resource.type || resource['@type']).find(t2 => t1 === t2 || t1 === `as:${t2}`)
-        )
-      ),
-    [resource, typeRegistrations]
-  );
-
-  // TODO Use JSON-LD parser to use full URIs
-  const labelPredicate = typeRegistration && typeRegistration['apods:labelPredicate']?.replace('as:', '');
-
-  if (!typeRegistrations) return null;
+  const [container] = useContainersByTypes(resourceData.type || resourceData['@type']);
+  const labelPredicate = useCompactPredicate(container?.labelPredicate, resourceData['@context']);
 
   return (
     <ShowView
-      title={(typeRegistration && resource[labelPredicate]) || resource.id || resource['@id']}
+      title={(labelPredicate && resourceData[labelPredicate]) || resourceData.id || resourceData['@id']}
       actions={[
-        typeRegistration ? (
-          <BackButton to={`/data/${encodeURIComponent(typeRegistration['solid:instanceContainer'])}`} />
-        ) : (
-          <BackButton to="/data" />
-        )
+        container ? <BackButton to={`/data/${encodeURIComponent(container.uri)}`} /> : <BackButton to="/data" />
       ]}
-      asides={[<ResourceCard resource={resource} typeRegistration={typeRegistration} />]}
+      asides={[<ResourceCard resource={resourceData} labelPredicate={labelPredicate} />]}
     >
       <Card sx={{ p: 2, overflowX: 'auto' }}>
         <JsonView
-          value={resource}
+          value={resourceData}
           shortenTextAfterLength={0}
           displayDataTypes={false}
           displayObjectSize={false}
@@ -52,7 +33,7 @@ const DataResourceScreen = ({ resource }) => {
         >
           <JsonView.String
             render={({ children, style, ...rest }, { value, keyName }) => {
-              if (value?.startsWith(identity.id) && value !== (resource.id || resource['@id'])) {
+              if (value?.startsWith(identity?.id) && value !== (resourceData.id || resourceData['@id'])) {
                 return (
                   <Link to={`/data/${encodeURIComponent(value)}`} style={{ ...style, cursor: 'pointer' }} {...rest}>
                     {children}

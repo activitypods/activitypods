@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslate } from 'react-admin';
+import { useTranslate, useLocaleState } from 'react-admin';
 import {
   Badge,
   Box,
@@ -16,8 +16,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import FolderIcon from '@mui/icons-material/Folder';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import useTypeRegistrations from '../../hooks/useTypeRegistrations';
-import { arrayOf } from '../../utils';
+import { useContainers, useGetPrefixFromUri } from '@semapps/semantic-data-provider';
 
 const useStyles = makeStyles(() => ({
   listItem: {
@@ -34,15 +33,15 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const DataPage = () => {
+const DataListPage = () => {
   useCheckAuthenticated();
   const translate = useTranslate();
   const navigate = useNavigate();
   const classes = useStyles();
+  const [locale] = useLocaleState();
+  const getPrefixFromUri = useGetPrefixFromUri();
   const developerMode = !!localStorage.getItem('developer_mode');
-  const { data: typeRegistrations } = useTypeRegistrations();
-
-  if (!typeRegistrations) return null;
+  const containers = useContainers(undefined, 'user');
 
   return (
     <>
@@ -51,35 +50,31 @@ const DataPage = () => {
       </Typography>
       <Box>
         <List>
-          {typeRegistrations
-            ?.filter(r => r['skos:prefLabel'] && (!r['apods:internal'] || developerMode))
-            .sort((a, b) => b['skos:prefLabel'].localeCompare(a['skos:prefLabel']))
-            .sort((a, b) => (a['apods:internal'] && !b['apods:internal'] ? 1 : -1))
-            .map(typeRegistration => (
-              <ListItem className={classes.listItem} key={typeRegistration.id}>
-                <ListItemButton
-                  onClick={() => navigate(`/data/${encodeURIComponent(typeRegistration['solid:instanceContainer'])}`)}
-                >
+          {containers
+            ?.filter(container => !container.private || developerMode)
+            .map(container => (
+              <ListItem className={classes.listItem} key={container.uri}>
+                <ListItemButton onClick={() => navigate(`/data/${encodeURIComponent(container.uri)}`)}>
                   <ListItemAvatar>
-                    {typeRegistration['apods:internal'] ? (
+                    {container.private === true ? (
                       <Badge
                         badgeContent={<SettingsIcon sx={{ width: 16, height: 16, color: 'grey' }} />}
                         overlap="circular"
                         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                       >
-                        <Avatar src={typeRegistration?.['apods:icon']}>
+                        <Avatar>
                           <FolderIcon />
                         </Avatar>
                       </Badge>
                     ) : (
-                      <Avatar src={typeRegistration?.['apods:icon']}>
+                      <Avatar>
                         <FolderIcon />
                       </Avatar>
                     )}
                   </ListItemAvatar>
                   <ListItemText
-                    primary={typeRegistration['skos:prefLabel']}
-                    secondary={arrayOf(typeRegistration['solid:forClass']).join(', ')}
+                    primary={container.label?.[locale] || container.label?.en}
+                    secondary={container.types?.map(uri => getPrefixFromUri(uri)).join(', ')}
                     className={classes.listItemText}
                   />
                 </ListItemButton>
@@ -91,4 +86,4 @@ const DataPage = () => {
   );
 };
 
-export default DataPage;
+export default DataListPage;

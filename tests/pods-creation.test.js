@@ -46,6 +46,9 @@ describe('Test pods creation', () => {
   test('Alice WebID has the required informations', async () => {
     expect(alice['pim:storage']).toBe(urlJoin(alice.id, 'data'));
     expect(alice['solid:oidcIssuer']).toBe(new URL(alice.id).origin);
+    expect(alice['solid:publicTypeIndex']).toBeDefined();
+    expect(alice['interop:hasAuthorizationAgent']).toBeDefined();
+    expect(alice['interop:hasRegistrySet']).toBeDefined();
   });
 
   test('Alice collections can be fetched', async () => {
@@ -117,9 +120,7 @@ describe('Test pods creation', () => {
       expect(typeIndex['solid:hasTypeRegistration']).toContainEqual(
         expect.objectContaining({
           'solid:forClass': expect.arrayContaining(['as:Profile', 'vcard:Individual']),
-          'solid:instanceContainer': urlJoin(alice.id, '/data/vcard/individual'),
-          'skos:prefLabel': 'Profiles',
-          'apods:labelPredicate': 'vcard:given-name'
+          'solid:instanceContainer': urlJoin(alice.id, '/data/vcard/individual')
         })
       );
     });

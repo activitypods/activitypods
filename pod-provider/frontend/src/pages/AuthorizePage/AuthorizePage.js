@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { useGetList, useGetOne, useNotify } from 'react-admin';
+import { useGetIdentity, useGetList, useGetOne, useNotify } from 'react-admin';
 import { useSearchParams } from 'react-router-dom';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import useTrustedApps from '../../hooks/useTrustedApps';
@@ -13,6 +13,7 @@ const AuthorizePage = () => {
   const trustedApps = useTrustedApps();
   const [searchParams] = useSearchParams();
   const getAppStatus = useGetAppStatus();
+  const { data: identity } = useGetIdentity();
   const notify = useNotify();
 
   const appUri = searchParams.get('client_id');
@@ -33,9 +34,8 @@ const AuthorizePage = () => {
   }, [application, notify]);
 
   useEffect(() => {
-    (async () => {
-      if (!isLoading && application?.id) {
-        const appStatus = await getAppStatus(application.id);
+    if (!isLoading && application?.id && identity?.id) {
+      getAppStatus(application.id, identity).then(appStatus => {
         if (!appStatus.installed) {
           setScreen('register');
         } else if (appStatus.upgradeNeeded) {
@@ -43,9 +43,9 @@ const AuthorizePage = () => {
         } else {
           accessApp();
         }
-      }
-    })();
-  }, [appRegistrations, isLoading, application, accessApp, getAppStatus, setScreen]);
+      });
+    }
+  }, [appRegistrations, isLoading, application, accessApp, getAppStatus, setScreen, identity]);
 
   switch (screen) {
     case 'register':

@@ -1,12 +1,12 @@
 const urlJoin = require('url-join');
 const { Errors: E } = require('moleculer-web');
 const { arrayOf, hasType, getWebIdFromUri, getParentContainerUri } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
+const { FULL_ACTIVITY_TYPES, FULL_ACTOR_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 
 const DEFAULT_ALLOWED_TYPES = [
-  ...Object.values(ACTOR_TYPES),
-  ...Object.values(ACTIVITY_TYPES),
+  ...Object.values(FULL_ACTOR_TYPES),
+  ...Object.values(FULL_ACTIVITY_TYPES),
   'Collection',
   'OrderedCollection',
   'CollectionPage',
@@ -25,7 +25,10 @@ const getAllowedTypes = async (ctx, appUri, podOwner, accessMode) => {
   let types = [...DEFAULT_ALLOWED_TYPES];
   for (const dataAuthorization of dataAuthorizations) {
     if (arrayOf(dataAuthorization['interop:accessMode']).includes(accessMode)) {
-      types.push(...arrayOf(dataAuthorization['apods:registeredClass']));
+      const shapeUri = await ctx.call('shape-trees.getShapeUri', {
+        resourceUri: dataAuthorization['interop:registeredShapeTree']
+      });
+      types.push(...(await ctx.call('shacl.getTypes', { resourceUri: shapeUri })));
     }
   }
 
@@ -131,7 +134,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
             context: result['@context']
           });
 
-          if (!resourceTypes.some(t => allowedTypes.includes(t))) {
+          if (resourceTypes.length > 0 && !resourceTypes.some(t => allowedTypes.includes(t))) {
             throw new E.ForbiddenError(
               `Some of the resources' types being fetched (${resourceTypes.join(', ')}) are not authorized`
             );

@@ -18,12 +18,12 @@ module.exports = {
       throw new Error(`The resources of type interop:AccessNeed are immutable`);
     },
     async find(ctx) {
-      const { necessity, registeredClassUri, accessMode } = ctx.params;
+      const { shapeTreeUri, accessMode, necessity } = ctx.params;
 
       const filteredContainer = await this.actions.list(
         {
           filters: {
-            'http://activitypods.org/ns/core#registeredClass': registeredClassUri,
+            'http://www.w3.org/ns/solid/interop#registeredShapeTree': shapeTreeUri,
             'http://www.w3.org/ns/solid/interop#accessNecessity': necessityMapping[necessity]
           },
           webId: 'system'

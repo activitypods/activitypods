@@ -23,6 +23,7 @@
     "handlebars": "^4.7.7",
     "http-link-header": "^1.1.1",
     "moleculer": "^0.14.19",
+    "moleculer-bull": "^0.2.5",
     "sparqljs": "^3.5.2",
     "speakingurl": "^14.0.1",
     "url-join": "^4.0.1"

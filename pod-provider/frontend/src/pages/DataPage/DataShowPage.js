@@ -10,14 +10,14 @@ import DataResourceScreen from './DataResourceScreen';
 const DataShowPage = () => {
   useCheckAuthenticated();
   const { resourceUri } = useParams();
-  const { data: resource, isLoaded } = useResource(resourceUri);
+  const { data: resourceData, isLoaded } = useResource(resourceUri);
 
   if (!isLoaded) {
     return <CircularProgress />;
-  } else if (arrayOf(resource.type || resource['@type']).includes('ldp:Container')) {
-    return <DataContainerScreen container={resource} />;
+  } else if (arrayOf(resourceData.type || resourceData['@type']).includes('ldp:Container')) {
+    return <DataContainerScreen containerData={resourceData} />;
   } else {
-    return <DataResourceScreen resource={resource} />;
+    return <DataResourceScreen resourceData={resourceData} />;
   }
 };
 

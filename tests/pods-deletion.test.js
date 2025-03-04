@@ -79,10 +79,10 @@ describe('Delete an actor', () => {
     const allAccounts = await podProvider.call('auth.account.find');
     expect(allAccounts.find(acc => acc.username === username)).toBeFalsy();
 
-    // Check, if uploads are empty.
-    expect(fs.existsSync(`./uploads/${username}`)).toBeFalsy();
+    // Check if uploads are empty.
+    expect(fs.existsSync(path.join(__dirname, './uploads/', username))).toBeFalsy();
 
-    // Check, if backups are deleted.
+    // Check if backups are deleted.
     // expect(fs.readdirSync(path.join(CONFIG.FUSEKI_BASE, 'backups')).find(file => file.includes(username))).toBeFalsy();
   }, 80_000);
 
@@ -133,7 +133,7 @@ describe('Delete an actor', () => {
     expect(account).toHaveProperty('hashedPassword');
 
     // Check, that uploads are not empty.
-    expect(fs.existsSync(path.join('./uploads/', username))).toBeTruthy();
+    expect(fs.existsSync(path.join(__dirname, './uploads/', username))).toBeTruthy();
 
     // Check, that backups are not deleted.
     // expect(

@@ -11,18 +11,17 @@ module.exports = {
     newResourcesPermissions: {}
   },
   actions: {
-    async getContainerByType(ctx) {
-      const { type, podOwner } = ctx.params;
+    async getContainerByShapeTree(ctx) {
+      const { shapeTreeUri, podOwner } = ctx.params;
 
       const app = await ctx.call('app.get');
       const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
-      const [fullTypeUri] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
 
       const filteredContainer = await this.actions.list(
         {
           containerUri,
           filters: {
-            'http://activitypods.org/ns/core#registeredClass': fullTypeUri,
+            'http://www.w3.org/ns/solid/interop#registeredShapeTree': shapeTreeUri,
             'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
             'http://www.w3.org/ns/solid/interop#grantee': app.id
           },
@@ -31,7 +30,7 @@ module.exports = {
         { parentCtx: ctx }
       );
 
-      return filteredContainer['ldp:contains']?.[0]?.['apods:registeredContainer'];
+      return filteredContainer['ldp:contains']?.[0]?.['interop:hasDataRegistration'];
     },
     // Delete cached DataGrants which are not linked anymore to an AccessNeed (may happen on app upgrade)
     async deleteOrphans(ctx) {

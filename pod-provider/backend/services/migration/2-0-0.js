@@ -6,7 +6,7 @@ const { MigrationService } = require('@semapps/migration');
 const CONFIG = require('../../config/config');
 
 module.exports = {
-  name: 'migration-v2',
+  name: 'migration-2-0-0',
   mixins: [MigrationService],
   settings: {
     baseUrl: CONFIG.BASE_URL
@@ -128,22 +128,17 @@ module.exports = {
         this.logger.info(`Adding TypeIndex to ${webId}...`);
 
         const podUrl = await ctx.call('solid-storage.getUrl', { webId });
-        await ctx.call('type-indexes.createAndAttachToWebId', { webId });
+        await ctx.call('type-indexes.createPublicIndex', { webId });
 
         // Go through each registered container and persist them
         const registeredContainers = await ctx.call('ldp.registry.list');
         for (const container of Object.values(registeredContainers)) {
           const containerUri = urlJoin(podUrl, container.path);
-          for (const type of arrayOf(container.acceptedTypes)) {
-            await ctx.call('type-registrations.register', { type, containerUri, webId });
-            if (container.description) {
-              await ctx.call('type-registrations.attachDescription', {
-                type,
-                webId,
-                ...container.description
-              });
-            }
-          }
+          await ctx.call('type-registrations.register', {
+            types: arrayOf(container.acceptedTypes),
+            containerUri,
+            webId
+          });
         }
       }
     },

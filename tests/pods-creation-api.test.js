@@ -110,6 +110,8 @@ describe('Test pods creation via API', () => {
         },
         'pim:storage': BASE_URL + '/alice/data',
         'solid:oidcIssuer': BASE_URL,
+        'interop:hasAuthorizationAgent': expect.anything(),
+        'interop:hasRegistrySet': expect.anything(),
         url: expect.anything()
       });
     });

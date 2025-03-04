@@ -73,15 +73,19 @@ const LoginPage: FunctionComponent<Props> = ({ text, clientId, customPodProvider
       const token = localStorage.getItem('token');
       if (token) {
         const payload = jwtDecode(token) as SolidOIDCToken;
-        registerApp(clientId, payload?.webid).then(appRegistrationUri => {
-          if (appRegistrationUri) setIsRegistered(true);
-        });
+        registerApp(clientId, payload?.webid)
+          .then(appRegistrationUri => {
+            if (appRegistrationUri) setIsRegistered(true);
+          })
+          .catch(error => {
+            notify(error.message, { type: 'error' });
+          });
       }
     } else if (searchParams.has('logout')) {
       // Immediately logout if required
       logout({ redirectUrl });
     }
-  }, [searchParams, login, registerApp, clientId, setIsRegistered, logout, redirectUrl]);
+  }, [searchParams, login, registerApp, clientId, setIsRegistered, notify, logout, redirectUrl]);
 
   useEffect(() => {
     if (!isIdentityLoading && identity?.id && isRegistered) {

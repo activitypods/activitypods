@@ -3,6 +3,7 @@ import { Box, Button, Typography, Container, Avatar } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { Link, useGetIdentity, useTranslate, useRedirect, LocalesMenuButton, useLocaleState } from 'react-admin';
 import { availableLocales } from '../config/i18nProvider';
+import Header from '../common/Header';
 
 const useStyles = makeStyles(theme => ({
   '@global': {
@@ -50,6 +51,11 @@ const useStyles = makeStyles(theme => ({
       marginTop: 'calc(100vw - 30px)'
     }
   },
+  stepsList: {
+    listStyle: 'none',
+    padding: 0,
+    margin: 0
+  },
   step: {
     position: 'relative',
     paddingLeft: 90,
@@ -92,6 +98,7 @@ const HomePage = () => {
 
   return (
     <>
+      <Header title="app.page.home" />
       {availableLocales.length > 1 && (
         <Box sx={{ position: 'absolute', top: 0, right: 0, p: 1, zIndex: 20 }}>
           <LocalesMenuButton />
@@ -107,16 +114,24 @@ const HomePage = () => {
               {CONFIG.INSTANCE_DESCRIPTION[locale] || CONFIG.INSTANCE_DESCRIPTION.en}
             </Typography>
             <Box display="flex" flexDirection="row" pt={3} pb={3} alignItems="center" justifyContent="center">
-              <Link to="/login?signup">
-                <Button variant="contained" color="secondary" className={classes.button}>
-                  {translate('auth.action.signup')}
-                </Button>
-              </Link>
-              <Link to="/login">
-                <Button variant="contained" color="secondary" className={classes.button}>
-                  {translate('ra.auth.sign_in')}
-                </Button>
-              </Link>
+              <Button
+                variant="contained"
+                color="secondary"
+                className={classes.button}
+                component={Link}
+                to="/login?signup"
+              >
+                {translate('app.action.signup')}
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                className={classes.button}
+                component={Link}
+                to="/login"
+              >
+                {translate('app.action.sign_in')}
+              </Button>
             </Box>
           </Box>
         </Box>
@@ -125,13 +140,15 @@ const HomePage = () => {
             {translate('app.steps.title')}
           </Typography>
           <Container>
-            {[1, 2, 3, 4].map(i => (
-              <Box className={classes.step} key={i}>
-                <Avatar className={classes.number}>{i}</Avatar>
-                <Typography variant="h4">{translate(`app.steps.${i}.title`)}</Typography>
-                <Typography>{translate(`app.steps.${i}.text`)}</Typography>
-              </Box>
-            ))}
+            <ol className={classes.stepsList}>
+              {[1, 2, 3, 4].map(i => (
+                <li className={classes.step} key={i}>
+                  <Avatar className={classes.number}>{i}</Avatar>
+                  <Typography variant="h4">{translate(`app.steps.${i}.title`)}</Typography>
+                  <Typography>{translate(`app.steps.${i}.text`)}</Typography>
+                </li>
+              ))}
+            </ol>
           </Container>
         </Box>
       </Box>

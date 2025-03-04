@@ -8,6 +8,7 @@ import BottomBar from './BottomBar';
 import BackgroundChecks from '../common/BackgroundCheck';
 import SyncUserLocale from '../common/SyncUserLocale';
 import GroupContextProvider from '../common/RealmContextProvider';
+import SkipLink from './SkipLink';
 
 const Layout = props => {
   const { children, title } = props;
@@ -20,10 +21,17 @@ const Layout = props => {
           <title>{title}</title>
         </Helmet>
         <ScrollToTop />
+        <SkipLink />
         <AppBar title={title} />
         {!xs && <MenuBar />}
         <Container disableGutters={xs}>
-          <Box mt={{ xs: 2, sm: 2 }} m={{ xs: 2, sm: 0 }} mb={8}>
+          <Box 
+            component="main"
+            id="main"
+            mt={{ xs: 2, sm: 2 }} 
+            m={{ xs: 2, sm: 0 }} 
+            mb={8}
+          >
             {children}
           </Box>
         </Container>

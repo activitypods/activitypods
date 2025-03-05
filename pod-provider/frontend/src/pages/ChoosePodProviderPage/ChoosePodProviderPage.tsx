@@ -121,9 +121,7 @@ const ChoosePodProviderPage = ({
         )}
       </List>
       <Box display="flex" justifyContent="end" sx={{ pt: 2 }}>
-        <Button variant="contained" color="grey" onClick={() => onCancel()}>
-          {translate('ra.action.back')}
-        </Button>
+        <Button variant="contained" label={translate('ra.action.back')} color="info" onClick={() => onCancel()} />
       </Box>
     </SimpleBox>
   );

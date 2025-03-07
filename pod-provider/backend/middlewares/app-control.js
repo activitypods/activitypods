@@ -28,7 +28,10 @@ const getAllowedTypes = async (ctx, appUri, podOwner, accessMode) => {
       const shapeUri = await ctx.call('shape-trees.getShapeUri', {
         resourceUri: dataAuthorization['interop:registeredShapeTree']
       });
-      types.push(...(await ctx.call('shacl.getTypes', { resourceUri: shapeUri })));
+      // Binary resources don't have a shape
+      if (shapeUri) {
+        types.push(...(await ctx.call('shacl.getTypes', { resourceUri: shapeUri })));
+      }
     }
   }
 

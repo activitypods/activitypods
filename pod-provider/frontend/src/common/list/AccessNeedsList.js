@@ -87,11 +87,11 @@ const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowed
             <span>
               {accessRights.join('/')}{' '}
               {shapeTree.label ? (
-                <span title={shapeTree.types.join(', ')} style={{ textDecoration: 'underline dotted grey' }}>
+                <span title={shapeTree.types?.join(', ')} style={{ textDecoration: 'underline dotted grey' }}>
                   {shapeTree.label[locale]}
                 </span>
               ) : (
-                shapeTree.types.join(', ')
+                shapeTree.types?.join(', ')
               )}
             </span>
           ),

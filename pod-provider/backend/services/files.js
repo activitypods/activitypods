@@ -7,7 +7,7 @@ module.exports = {
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['semapps:File'],
-    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/semapps/File'),
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/File'),
     excludeFromMirror: true,
     // TODO load all images with tokens so files can be hidden by default
     // https://javascript.plainenglish.io/loading-images-with-authorization-8aab33663ba6

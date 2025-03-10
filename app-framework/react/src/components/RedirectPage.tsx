@@ -1,14 +1,6 @@
 import { FunctionComponent, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useDataModels } from '@semapps/semantic-data-provider';
-import type { Ontology } from '../types';
-
-const prefix = (uri: string | null, ontologies: [Ontology]) => {
-  if (!uri) return;
-  if (!uri.startsWith('http')) return uri; // If it is already prefixed
-  const ontology = ontologies.find(o => uri.startsWith(o.url));
-  return ontology && uri.replace(ontology.url, ontology.prefix + ':');
-};
+import { useDataProviderConfig, getUriFromPrefix } from '@semapps/semantic-data-provider';
 
 /**
  * Look for the `type` search param and compare it with React-Admin resources
@@ -18,36 +10,36 @@ const prefix = (uri: string | null, ontologies: [Ontology]) => {
  * If no matching types are found, simply redirect to the homepage
  * This page is called from the data browser in the Pod provider
  */
-const RedirectPage: FunctionComponent<Props> = ({ ontologies }) => {
-  const dataModels = useDataModels();
+const RedirectPage: FunctionComponent = () => {
+  const config = useDataProviderConfig();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    if (dataModels) {
-      const prefixedType = prefix(searchParams.get('type'), ontologies);
-      const resource =
-        prefixedType &&
-        Object.keys(dataModels).find(key => dataModels[key].types && dataModels[key].types.includes(prefixedType));
-      if (searchParams.has('uri')) {
+    if (config) {
+      const { ontologies, resources } = config;
+      let resourceId;
+
+      if (searchParams.has('type')) {
+        const fullTypeUri = getUriFromPrefix(searchParams.get('type')!, ontologies);
+        resourceId = Object.keys(resources).find(key => resources[key].types?.includes(fullTypeUri));
+      }
+
+      if (searchParams.has('uri') && resourceId) {
         navigate(
-          `/${resource}/${encodeURIComponent(searchParams.get('uri') as string)}${
+          `/${resourceId}/${encodeURIComponent(searchParams.get('uri') as string)}${
             searchParams.get('mode') === 'show' ? '/show' : ''
           }`
         );
-      } else if (resource) {
-        navigate(`/${resource}`);
+      } else if (resourceId) {
+        navigate(`/${resourceId}`);
       } else {
         navigate('/');
       }
     }
-  }, [dataModels, searchParams, navigate]);
+  }, [config, searchParams, navigate]);
 
   return null;
-};
-
-type Props = {
-  ontologies: [Ontology];
 };
 
 export default RedirectPage;

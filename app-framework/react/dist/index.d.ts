@@ -1,9 +1,4 @@
 import { FunctionComponent, ReactNode } from "react";
-type Ontology = {
-    prefix: string;
-    owl?: string;
-    url: string;
-};
 type PodProvider = {
     id?: string;
     type?: string;
@@ -44,10 +39,7 @@ type _Props1 = {
  * If no matching types are found, simply redirect to the homepage
  * This page is called from the data browser in the Pod provider
  */
-export const RedirectPage: FunctionComponent<_Props2>;
-type _Props2 = {
-    ontologies: [Ontology];
-};
+export const RedirectPage: FunctionComponent;
 export const SyncUserLocale: () => void;
 export const UserMenu: FunctionComponent;
 export const englishMessages: {

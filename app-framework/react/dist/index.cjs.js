@@ -457,12 +457,6 @@ var $8c4e86009f42299d$export$2e2bcd8739ae039 = $8c4e86009f42299d$var$LoginPage;
 
 
 
-const $691cae6a20c06149$var$prefix = (uri, ontologies)=>{
-    if (!uri) return;
-    if (!uri.startsWith("http")) return uri; // If it is already prefixed
-    const ontology = ontologies.find((o)=>uri.startsWith(o.url));
-    return ontology && uri.replace(ontology.url, ontology.prefix + ":");
-};
 /**
  * Look for the `type` search param and compare it with React-Admin resources
  * Can be a full or a prefixed URI, in which case the component looks in the `ontologies` prop
@@ -470,20 +464,24 @@ const $691cae6a20c06149$var$prefix = (uri, ontologies)=>{
  * If a `uri` search param is passed, redirect to the resource's show page
  * If no matching types are found, simply redirect to the homepage
  * This page is called from the data browser in the Pod provider
- */ const $691cae6a20c06149$var$RedirectPage = ({ ontologies: ontologies })=>{
-    const dataModels = (0, $fvx3m$semappssemanticdataprovider.useDataModels)();
+ */ const $691cae6a20c06149$var$RedirectPage = ()=>{
+    const config = (0, $fvx3m$semappssemanticdataprovider.useDataProviderConfig)();
     const navigate = (0, $fvx3m$reactrouterdom.useNavigate)();
     const [searchParams] = (0, $fvx3m$reactrouterdom.useSearchParams)();
     (0, $fvx3m$react.useEffect)(()=>{
-        if (dataModels) {
-            const prefixedType = $691cae6a20c06149$var$prefix(searchParams.get("type"), ontologies);
-            const resource = prefixedType && Object.keys(dataModels).find((key)=>dataModels[key].types && dataModels[key].types.includes(prefixedType));
-            if (searchParams.has("uri")) navigate(`/${resource}/${encodeURIComponent(searchParams.get("uri"))}${searchParams.get("mode") === "show" ? "/show" : ""}`);
-            else if (resource) navigate(`/${resource}`);
+        if (config) {
+            const { ontologies: ontologies, resources: resources } = config;
+            let resourceId;
+            if (searchParams.has("type")) {
+                const fullTypeUri = (0, $fvx3m$semappssemanticdataprovider.getUriFromPrefix)(searchParams.get("type"), ontologies);
+                resourceId = Object.keys(resources).find((key)=>resources[key].types?.includes(fullTypeUri));
+            }
+            if (searchParams.has("uri") && resourceId) navigate(`/${resourceId}/${encodeURIComponent(searchParams.get("uri"))}${searchParams.get("mode") === "show" ? "/show" : ""}`);
+            else if (resourceId) navigate(`/${resourceId}`);
             else navigate("/");
         }
     }, [
-        dataModels,
+        config,
         searchParams,
         navigate
     ]);

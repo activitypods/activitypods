@@ -1,40 +1,42 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useDataModels } from '@semapps/semantic-data-provider';
-import ontologies from '../config/ontologies.json';
+import { useDataProviderConfig, getUriFromPrefix } from '@semapps/semantic-data-provider';
 
-const prefix = uri => {
-  if (!uri.startsWith('http')) return uri; // If it is already prefixed
-  const ontology = ontologies.find(o => uri.startsWith(o.url));
-  return uri.replace(ontology.url, ontology.prefix + ':');
-};
-
+/**
+ * Look for the `type` search param and compare it with React-Admin resources
+ * Can be a full or a prefixed URI, in which case the component looks in the `ontologies` prop
+ * If a matching resource is found, redirect to the resource's list page
+ * If a `uri` search param is passed, redirect to the resource's show page
+ * If no matching types are found, simply redirect to the homepage
+ */
 const RedirectPage = () => {
-  const dataModels = useDataModels();
+  const config = useDataProviderConfig();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    if (dataModels) {
-      const prefixedType = prefix(searchParams.get('type'));
-      const resource = Object.keys(dataModels).find(
-        key => dataModels[key].types && dataModels[key].types.includes(prefixedType)
-      );
-      if (resource) {
-        if (searchParams.has('uri')) {
-          navigate(
-            `/${resource}/${encodeURIComponent(searchParams.get('uri'))}${
-              searchParams.get('mode') === 'show' ? '/show' : ''
-            }`
-          );
-        } else {
-          navigate(`/${resource}`);
-        }
+    if (config) {
+      const { ontologies, resources } = config;
+      let resourceId;
+
+      if (searchParams.has('type')) {
+        const fullTypeUri = getUriFromPrefix(searchParams.get('type'), ontologies);
+        resourceId = Object.keys(resources).find(key => resources[key].types?.includes(fullTypeUri));
+      }
+
+      if (searchParams.has('uri') && resourceId) {
+        navigate(
+          `/${resourceId}/${encodeURIComponent(searchParams.get('uri'))}${
+            searchParams.get('mode') === 'show' ? '/show' : ''
+          }`
+        );
+      } else if (resourceId) {
+        navigate(`/${resourceId}`);
       } else {
-        navigate('/network');
+        navigate('/');
       }
     }
-  }, [dataModels, searchParams, navigate]);
+  }, [config, searchParams, navigate]);
 
   return null;
 };

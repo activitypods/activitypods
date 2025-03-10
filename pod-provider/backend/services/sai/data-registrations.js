@@ -1,6 +1,6 @@
 const urlJoin = require('url-join');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { getDatasetFromUri, hasType } = require('@semapps/ldp');
+const { getDatasetFromUri, hasType, isURL } = require('@semapps/ldp');
 
 module.exports = {
   name: 'data-registrations',
@@ -19,6 +19,9 @@ module.exports = {
       if (!shapeUri) throw new Error(`Could not find shape from shape tree ${shapeTreeUri}`);
       const [registeredClass] = await ctx.call('shacl.getTypes', { resourceUri: shapeUri });
       if (!registeredClass) throw new Error(`Could not find class required by shape ${shapeUri}`);
+
+      // Register ontology, otherwise the ldp.container.getPath action will fail
+      await this.actions.registerOntologyFromClass({ registeredClass }, { parentCtx: ctx });
 
       // Generate a path for the new container
       const containerPath = await ctx.call('ldp.container.getPath', { resourceType: registeredClass });
@@ -131,7 +134,7 @@ module.exports = {
 
       return results[0]?.dataRegistrationUri?.value;
     },
-    async registerOntologyFromClass() {
+    async registerOntologyFromClass(ctx) {
       const { registeredClass } = ctx.params;
 
       // Match a string of type ldp:Container

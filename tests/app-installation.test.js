@@ -148,9 +148,13 @@ describe('Test app installation', () => {
 
     // Ensure the app backend is informed of the installation
     await waitForExpect(async () => {
+      const outboxMenu = await alice.call('activitypub.collection.get', {
+        resourceUri: alice.outbox
+      });
+
       const outbox = await alice.call('activitypub.collection.get', {
         resourceUri: alice.outbox,
-        page: 1
+        afterEq: new URL(outboxMenu?.first).searchParams.get('afterEq')
       });
 
       expect(outbox?.orderedItems[0]).toMatchObject({
@@ -457,9 +461,13 @@ describe('Test app installation', () => {
 
     // The app backend is informed of the uninstallation
     await waitForExpect(async () => {
+      const outboxMenu = await alice.call('activitypub.collection.get', {
+        resourceUri: alice.outbox,
+      });
+
       const outbox = await alice.call('activitypub.collection.get', {
         resourceUri: alice.outbox,
-        page: 1
+        afterEq: new URL(outboxMenu?.first).searchParams.get('afterEq')
       });
 
       expect(outbox?.orderedItems[0]).toMatchObject({

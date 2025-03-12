@@ -452,10 +452,15 @@ describe('Test contacts features', () => {
 
     await waitForExpect(async () => {
       // TODO new action to only get most recent item in collection
-      const outbox = await bob.call('activitypub.collection.get', {
-        resourceUri: bob.inbox,
-        page: 1
+      const outboxMenu = await bob.call('activitypub.collection.get', {
+        resourceUri: bob.inbox
       });
+
+      const outbox = await alice.call('activitypub.collection.get', {
+        resourceUri: alice.outbox,
+        afterEq: new URL(outboxMenu?.first).searchParams.get('afterEq')
+      });
+
       await expect(arrayOf(outbox.orderedItems)[0]).toMatchObject({
         type: ACTIVITY_TYPES.ACCEPT,
         object: activity.id,

@@ -177,10 +177,14 @@ describe('Test pods creation', () => {
       object: projectUri
     });
 
+    const outboxMenu = await alice.call('activitypub.collection.get', {
+      resourceUri: alice.outbox
+    });
+
     await expect(
       alice.call('activitypub.collection.get', {
         resourceUri: alice.outbox,
-        page: 1
+        afterEq: new URL(outboxMenu?.first).searchParams.get('afterEq')
       })
     ).resolves.toMatchObject({
       type: 'OrderedCollectionPage',

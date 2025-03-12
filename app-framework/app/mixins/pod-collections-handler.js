@@ -3,7 +3,7 @@ const PodResourcesHandlerMixin = require('./pod-resources-handler');
 module.exports = {
   mixins: [PodResourcesHandlerMixin],
   settings: {
-    type: null,
+    shapeTreeUri: null,
     attachPredicate: null,
     collectionOptions: {
       ordered: false,

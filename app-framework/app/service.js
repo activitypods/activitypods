@@ -15,6 +15,8 @@ const PodOutboxService = require('./services/pod-handling/pod-outbox');
 const PodPermissionsService = require('./services/pod-handling/pod-permissions');
 const PodResourcesService = require('./services/pod-handling/pod-resources');
 const PodWacGroupsService = require('./services/pod-handling/pod-wac-groups');
+const ShaclService = require('./services/utils/shacl');
+const ShapeTreesService = require('./services/utils/shape-trees');
 const TimerService = require('./services/utils/timer');
 const TranslatorService = require('./services/utils/translator');
 const MigrationService = require('./services/utils/migration');
@@ -88,6 +90,8 @@ module.exports = {
     this.broker.createService({ mixins: [PodWacGroupsService] });
 
     // Utils
+    this.broker.createService({ mixins: [ShaclService] });
+    this.broker.createService({ mixins: [ShapeTreesService] });
     this.broker.createService({
       mixins: [TimerService, QueueMixin(this.settings.queueServiceUrl)]
     });

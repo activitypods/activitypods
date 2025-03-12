@@ -462,7 +462,7 @@ describe('Test app installation', () => {
     // The app backend is informed of the uninstallation
     await waitForExpect(async () => {
       const outboxMenu = await alice.call('activitypub.collection.get', {
-        resourceUri: alice.outbox,
+        resourceUri: alice.outbox
       });
 
       const outbox = await alice.call('activitypub.collection.get', {

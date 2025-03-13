@@ -6,7 +6,7 @@ module.exports = {
   mixins: [PodActivitiesHandlerMixin, ShapeTreeFetcherMixin],
   settings: {
     shapeTreeUri: null,
-    types: null // Automatically set by the ShapeTreeFetcherMixin
+    type: null // Automatically set by the ShapeTreeFetcherMixin
   },
   dependencies: ['pod-resources'],
   actions: {
@@ -55,7 +55,7 @@ module.exports = {
           {
             type: ACTIVITY_TYPES.CREATE,
             object: {
-              type: this.settings.types
+              type: this.settings.type
             }
           },
           activity,
@@ -73,7 +73,7 @@ module.exports = {
           {
             type: ACTIVITY_TYPES.UPDATE,
             object: {
-              type: this.settings.types
+              type: this.settings.type
             }
           },
           activity,
@@ -92,7 +92,7 @@ module.exports = {
             type: ACTIVITY_TYPES.DELETE,
             object: {
               type: OBJECT_TYPES.TOMBSTONE,
-              formerType: this.settings.types
+              formerType: this.settings.type
             }
           },
           activity,

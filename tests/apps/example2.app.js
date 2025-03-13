@@ -1,5 +1,6 @@
+const urlJoin = require('url-join');
 const { AppService } = require('../../app-framework/app');
-const { AS_PREFIX } = require('@semapps/activitypub');
+const CONFIG = require('../config');
 
 module.exports = {
   mixins: [AppService],
@@ -11,13 +12,13 @@ module.exports = {
     accessNeeds: {
       required: [
         {
-          registeredClass: AS_PREFIX + 'Event',
+          shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
           accessMode: ['acl:Read', 'acl:Write']
         }
       ],
       optional: [
         {
-          registeredClass: AS_PREFIX + 'Place',
+          shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location'),
           accessMode: ['acl:Read', 'acl:Append']
         }
       ]

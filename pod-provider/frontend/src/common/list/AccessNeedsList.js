@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import { useTranslate } from 'react-admin';
+import React, { useCallback, useState, useEffect } from 'react';
+import { useTranslate, useLocaleState } from 'react-admin';
 import { List, ListItem, ListItemIcon, ListItemText, ListSubheader, Switch } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
@@ -11,6 +11,7 @@ import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { arrayOf } from '../../utils';
+import useFetchShapeTree from '../../hooks/useFetchShapeTree';
 
 const specialRights = {
   'apods:ReadInbox': {
@@ -43,33 +44,33 @@ const specialRights = {
   }
 };
 
-const AccessNeedsList = ({
-  accessNeeds,
-  required,
-  allowedAccessNeeds,
-  setAllowedAccessNeeds,
-  classDescriptions,
-  typeRegistrations
-}) => {
+const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowedAccessNeeds }) => {
   const translate = useTranslate();
+  const [locale] = useLocaleState();
+  const fetchShapeTree = useFetchShapeTree();
+  const [parsedAccessNeeds, setParsedAccessNeeds] = useState([]);
 
   const parseAccessNeed = useCallback(
-    accessNeed => {
+    async accessNeed => {
       if (typeof accessNeed === 'string') {
         const specialRight = specialRights[accessNeed];
         if (specialRight) {
           return {
             label: translate(specialRight.label),
-            icon: specialRight.icon
+            icon: specialRight.icon,
+            accessNeed
           };
         } else {
           return {
             label: translate('app.authorization.unknown', { key: accessNeed }),
-            icon: HelpOutlineIcon
+            icon: HelpOutlineIcon,
+            accessNeed
           };
         }
       } else {
         const accessRights = [];
+
+        const shapeTree = await fetchShapeTree(accessNeed['interop:registeredShapeTree']);
 
         const hasRead = arrayOf(accessNeed['interop:accessMode']).includes('acl:Read');
         const hasAppend = arrayOf(accessNeed['interop:accessMode']).includes('acl:Append');
@@ -81,36 +82,25 @@ const AccessNeedsList = ({
         if (hasWrite) accessRights.push(translate('app.authorization.write'));
         if (hasControl) accessRights.push(translate('app.authorization.control'));
 
-        const matchingTypeRegistration = typeRegistrations?.find(reg =>
-          arrayOf(reg['solid:forClass']).includes(accessNeed['apods:registeredClass'])
-        );
-
-        const matchingClassDescription = classDescriptions?.find(desc =>
-          arrayOf(desc['apods:describedClass']).includes(accessNeed['apods:registeredClass'])
-        );
-
-        // Get description from local TypeRegistrations first, to prevent apps to fool users about what they request
-        const description =
-          matchingTypeRegistration?.['skos:prefLabel'] || matchingClassDescription?.['skos:prefLabel'];
-
         return {
           label: (
             <span>
               {accessRights.join('/')}{' '}
-              {description ? (
-                <span title={accessNeed['apods:registeredClass']} style={{ textDecoration: 'underline dotted grey' }}>
-                  {description}
+              {shapeTree.label ? (
+                <span title={shapeTree.types?.join(', ')} style={{ textDecoration: 'underline dotted grey' }}>
+                  {shapeTree.label[locale]}
                 </span>
               ) : (
-                accessNeed['apods:registeredClass']
+                shapeTree.types?.join(', ')
               )}
             </span>
           ),
-          icon: hasAppend || hasWrite ? CreateNewFolderIcon : FolderIcon
+          icon: hasAppend || hasWrite ? CreateNewFolderIcon : FolderIcon,
+          accessNeed
         };
       }
     },
-    [translate, classDescriptions]
+    [translate, locale]
   );
 
   const toggle = useCallback(
@@ -124,6 +114,12 @@ const AccessNeedsList = ({
     [setAllowedAccessNeeds]
   );
 
+  useEffect(() => {
+    Promise.all(accessNeeds.map(accessNeed => parseAccessNeed(accessNeed))).then(results =>
+      setParsedAccessNeeds(results)
+    );
+  }, [accessNeeds, setParsedAccessNeeds]);
+
   if (accessNeeds.length === 0) return null;
 
   return (
@@ -135,21 +131,24 @@ const AccessNeedsList = ({
         </ListSubheader>
       }
     >
-      {accessNeeds.map((accessNeed, i) => {
-        const parsedAccessNeed = parseAccessNeed(accessNeed);
-        if (!parsedAccessNeed) return null;
-        const { label, icon } = parsedAccessNeed;
+      {parsedAccessNeeds.map(({ label, icon, accessNeed }, i) => {
         const checked = arrayOf(allowedAccessNeeds).some(a => a === accessNeed || a === accessNeed?.id);
         return (
           <ListItem key={i} sx={{ p: 0 }}>
             <ListItemIcon sx={{ minWidth: 36 }}>{React.createElement(icon)}</ListItemIcon>
             <ListItemText primary={label} />
-            <Switch 
-              edge="end" 
-              onChange={() => toggle(accessNeed, checked)} 
-              checked={checked} 
+            <Switch
+              edge="end"
+              onChange={() => toggle(accessNeed, checked)}
+              checked={checked}
               disabled={required}
-              aria-label={typeof label === 'string' ? label : translate('app.authorization.toggle_permission', { permission: accessNeed['apods:registeredClass'] || accessNeed })}
+              aria-label={
+                typeof label === 'string'
+                  ? label
+                  : translate('app.authorization.toggle_permission', {
+                      permission: accessNeed['apods:registeredClass'] || accessNeed
+                    })
+              }
             />
           </ListItem>
         );

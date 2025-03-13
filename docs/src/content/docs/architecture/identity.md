@@ -10,11 +10,13 @@ All ActivityPub actors are also WebIDs.
 
 ```json
 {
-  "@context": "https://activitypods.org/context.json",
+  "@context": ["https://www.w3.org/ns/activitystreams", "https://mypod.store/.well-known/context.jsonld"],
   "id": "https://mypod.store/alice",
   "type": ["foaf:Person", "Person"],
   "dc:created": "2023-01-13T11:42:45.636Z",
   "dc:modified": "2023-01-13T11:42:48.389Z",
+  "pim:storage": "https://mypod.store/alice/data",
+  "solid:oidcIssuer": "https://mypod.store",
   "foaf:nick": "alice",
   "preferredUsername": "alice",
   "inbox": "https://mypod.store/alice/inbox",
@@ -33,5 +35,3 @@ All ActivityPub actors are also WebIDs.
   "url": "https://mypod.store/alice/data/profiles/63c143b75ea9720d1b484a39"
 }
 ```
-
-Some Solid predicates are still missing ([#122](https://github.com/assemblee-virtuelle/activitypods/issues/122))

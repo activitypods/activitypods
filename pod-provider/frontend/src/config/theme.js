@@ -111,16 +111,16 @@ const theme = createTheme({
           paddingLeft: 15,
           paddingRight: 15,
           height: 36,
-          minWidth: 100,
+          minWidth: 100
         },
         contained: {
           color: '#000', // To keep great contrast with the primary color (WCAG 2.1 standards)
           '&:hover': {
-            color: '#FFFFFF',
-          },
+            color: '#FFFFFF'
+          }
         },
         containedSecondary: {
-          color: '#FFFF'  
+          color: '#FFFF'
         },
         outlined: {
           backgroundColor: '#FFFFFF',
@@ -129,17 +129,17 @@ const theme = createTheme({
           borderWidth: 1.5, // Meilleure visibilité
           '&:hover': {
             color: darken(CONFIG.COLOR_PRIMARY, 0.6),
-            borderColor: darken(CONFIG.COLOR_PRIMARY, 0.6),
+            borderColor: darken(CONFIG.COLOR_PRIMARY, 0.6)
           },
           '&:focus': {
             outline: `2px solid darken(CONFIG.COLOR_PRIMARY, 0.6)`,
-            outlineOffset: 2,
+            outlineOffset: 2
           },
           '&.Mui-disabled': {
             borderColor: grey[300],
-            color: grey[500],
+            color: grey[500]
           }
-        },
+        }
       }
     },
     MuiInputLabel: {
@@ -149,7 +149,7 @@ const theme = createTheme({
             color: darken(CONFIG.COLOR_PRIMARY, 0.5) // Darker color for better contrast (WCAG 2.1 standards)
           },
           '&.Mui-disabled': {
-            color: grey[700],
+            color: grey[700]
           }
         }
       }
@@ -166,7 +166,7 @@ const theme = createTheme({
         root: {
           color: grey[900],
           '&.Mui-disabled': {
-            color: grey[700],
+            color: grey[700]
           }
         }
       }

@@ -20,10 +20,10 @@ const GroupSettingsPage = () => {
 
   return (
     <>
-      <Header 
+      <Header
         title="app.titles.group_settings"
-        titleVariables={{ 
-          groupName: data.fullName 
+        titleVariables={{
+          groupName: data.fullName
         }}
       />
       <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>

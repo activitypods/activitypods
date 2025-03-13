@@ -10,7 +10,7 @@ import $iLwJW$jwtdecode from "jwt-decode";
 import {useSearchParams as $iLwJW$useSearchParams, useNavigate as $iLwJW$useNavigate} from "react-router-dom";
 import $iLwJW$muiiconsmaterialLock from "@mui/icons-material/Lock";
 import $iLwJW$muiiconsmaterialStorage from "@mui/icons-material/Storage";
-import {useDataModels as $iLwJW$useDataModels} from "@semapps/semantic-data-provider";
+import {useDataProviderConfig as $iLwJW$useDataProviderConfig, getUriFromPrefix as $iLwJW$getUriFromPrefix} from "@semapps/semantic-data-provider";
 import $iLwJW$muiiconsmaterialShare from "@mui/icons-material/Share";
 import $iLwJW$muistylesmakeStyles from "@mui/styles/makeStyles";
 import $iLwJW$muiiconsmaterialGroup from "@mui/icons-material/Group";
@@ -439,12 +439,6 @@ var $4a72285bffb5f50f$export$2e2bcd8739ae039 = $4a72285bffb5f50f$var$LoginPage;
 
 
 
-const $1a88c39afebe872d$var$prefix = (uri, ontologies)=>{
-    if (!uri) return;
-    if (!uri.startsWith("http")) return uri; // If it is already prefixed
-    const ontology = ontologies.find((o)=>uri.startsWith(o.url));
-    return ontology && uri.replace(ontology.url, ontology.prefix + ":");
-};
 /**
  * Look for the `type` search param and compare it with React-Admin resources
  * Can be a full or a prefixed URI, in which case the component looks in the `ontologies` prop
@@ -452,20 +446,24 @@ const $1a88c39afebe872d$var$prefix = (uri, ontologies)=>{
  * If a `uri` search param is passed, redirect to the resource's show page
  * If no matching types are found, simply redirect to the homepage
  * This page is called from the data browser in the Pod provider
- */ const $1a88c39afebe872d$var$RedirectPage = ({ ontologies: ontologies })=>{
-    const dataModels = (0, $iLwJW$useDataModels)();
+ */ const $1a88c39afebe872d$var$RedirectPage = ()=>{
+    const config = (0, $iLwJW$useDataProviderConfig)();
     const navigate = (0, $iLwJW$useNavigate)();
     const [searchParams] = (0, $iLwJW$useSearchParams)();
     (0, $iLwJW$useEffect)(()=>{
-        if (dataModels) {
-            const prefixedType = $1a88c39afebe872d$var$prefix(searchParams.get("type"), ontologies);
-            const resource = prefixedType && Object.keys(dataModels).find((key)=>dataModels[key].types && dataModels[key].types.includes(prefixedType));
-            if (searchParams.has("uri")) navigate(`/${resource}/${encodeURIComponent(searchParams.get("uri"))}${searchParams.get("mode") === "show" ? "/show" : ""}`);
-            else if (resource) navigate(`/${resource}`);
+        if (config) {
+            const { ontologies: ontologies, resources: resources } = config;
+            let resourceId;
+            if (searchParams.has("type")) {
+                const fullTypeUri = (0, $iLwJW$getUriFromPrefix)(searchParams.get("type"), ontologies);
+                resourceId = Object.keys(resources).find((key)=>resources[key].types?.includes(fullTypeUri));
+            }
+            if (searchParams.has("uri") && resourceId) navigate(`/${resourceId}/${encodeURIComponent(searchParams.get("uri"))}${searchParams.get("mode") === "show" ? "/show" : ""}`);
+            else if (resourceId) navigate(`/${resourceId}`);
             else navigate("/");
         }
     }, [
-        dataModels,
+        config,
         searchParams,
         navigate
     ]);

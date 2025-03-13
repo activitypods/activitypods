@@ -5,7 +5,7 @@ const { MIME_TYPES } = require('@semapps/mime-types');
 const CONFIG = require('../../config/config');
 
 module.exports = {
-  name: 'migration',
+  name: 'migration-2-0-5',
   mixins: [MigrationService],
   settings: {
     baseUrl: CONFIG.BASE_URL

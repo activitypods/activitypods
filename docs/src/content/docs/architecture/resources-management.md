@@ -10,7 +10,7 @@ Each Solid Pod must comply with the [Linked Data Platform](https://www.w3.org/TR
 
 ### Formats
 
-We support both JSON-LD and Turtle format.
+We support mainly the JSON-LD format. Turtle support is very weak, but will fixed in 2025.
 
 ### Containers
 
@@ -33,18 +33,10 @@ There is an [issue](https://github.com/assemblee-virtuelle/semapps/issues/1192) 
 ### PATCH method
 
 LDP resources and containers can be selectively modified using the HTTP `PATCH` method. This method is important because it limits the risk of overwriting data, as with the simpler `PUT` method.
-However, due to the way RDF resources are formatted, the `PATCH` method cannot be used like more regular REST-based APIs.
-Many solutions have been proposed in the semantic web community to solve this problem:
 
-- [LD Patch](https://www.w3.org/TR/ldpatch/)
-- [SPARQL 1.1 Update](http://www.w3.org/TR/sparql11-http-rdf-update/#http-patch)
-- [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch)
-- [TurtlePatch](http://www.w3.org/2001/sw/wiki/TurtlePatch)
-- [RDF Patch](http://afs.github.io/rdf-patch/)
+Initially, the recommended method for Solid servers was [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch) and this is what we implemented. In [2021](https://github.com/solid/specification/issues/332), it was switched to a new N3 Patch method, as described in the [Solid spec](https://solid.github.io/specification/protocol#writing-resources).
 
-Initially, the recommended method for Solid servers was [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch) and this is what we implemented. In [2021](https://github.com/solid/specification/issues/332), it was switched to a new N3 Patch method, as described in the [Solid spec](https://solid.github.io/specification/protocol#writing-resources). It is not yet a W3C standard.
-
-Until the N3 Patch method is standardized, we will continue to use the [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch) format.
+We plan to support N3 Patch in 2025.
 
 ##### SparqlPatch update to modify a LDP resource.
 

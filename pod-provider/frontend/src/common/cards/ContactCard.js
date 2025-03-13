@@ -76,8 +76,8 @@ const ContactCard = ({ actor, publicProfileOnly }) => {
     <Card className={classes.root}>
       <Box className={classes.title}>
         <Box display="flex" justifyContent="center" className={classes.avatarWrapper}>
-          <Avatar 
-            src={actor.image} 
+          <Avatar
+            src={actor.image}
             className={classes.avatar}
             aria-label={translate('app.user.profile_picture', { name: actor.name })}
           />

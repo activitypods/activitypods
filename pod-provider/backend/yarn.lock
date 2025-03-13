@@ -516,17 +516,17 @@
     localforage "^1.9.0"
     util "^0.12.4"
 
-"@semapps/activitypub@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/activitypub/-/activitypub-1.0.10.tgz#b636c49c329818a909db5d813f26dac031e43e6f"
-  integrity sha512-ddJJsAoql+3qWXq53RtEt8p1SvGhhjai1HJljacz+tVmptkZX7u8/vXrWpXMtn6z+A+CpVpSEFjnyRZ6M0eKYw==
+"@semapps/activitypub@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/activitypub/-/activitypub-1.1.0.tgz#13653823a79d24c446bb06f030c5763961bd9e6c"
+  integrity sha512-oWqX4QkkSPB6x101CauiM3u/2higsuc5wel5HGqM6bVNmprF0ezDb1nwYuIFmLRPaKMEq0BfkzAMXI+OvVOUXQ==
   dependencies:
     "@rdfjs/data-model" "^1.3.4"
-    "@semapps/ldp" "1.0.10"
-    "@semapps/middlewares" "1.0.10"
-    "@semapps/mime-types" "1.0.10"
-    "@semapps/ontologies" "1.0.10"
-    "@semapps/triplestore" "1.0.10"
+    "@semapps/ldp" "1.1.0"
+    "@semapps/middlewares" "1.1.0"
+    "@semapps/mime-types" "1.1.0"
+    "@semapps/ontologies" "1.1.0"
+    "@semapps/triplestore" "1.1.0"
     handlebars "^4.7.7"
     moleculer "^0.14.18"
     moleculer-bull "^0.2.5"
@@ -536,15 +536,15 @@
     sparqljs "^3.5.2"
     url-join "^4.0.1"
 
-"@semapps/auth@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/auth/-/auth-1.0.10.tgz#2df333e2b37027062cbdf6e71c62d86ae702fa9a"
-  integrity sha512-+mWR5rW0kewjEO8wNaS2PAjeaBy/r/ukQ89zCuUWSLwVbQtLo397rWC8epZGrRJzyM9TTxUA+8se0bo4oATwhA==
+"@semapps/auth@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/auth/-/auth-1.1.0.tgz#096fb37267dca6524cb09ad5339ddd91051a048b"
+  integrity sha512-zz3bSMiDwxNAabjp4F+jdIW1kFCjLI0uljPE3e4AzjFtKOgNWRPaofXag78FqVtbdTwzIP8lYXSyDX3aM3T3Ig==
   dependencies:
-    "@semapps/ldp" "1.0.10"
-    "@semapps/middlewares" "1.0.10"
-    "@semapps/mime-types" "1.0.10"
-    "@semapps/triplestore" "1.0.10"
+    "@semapps/ldp" "1.1.0"
+    "@semapps/middlewares" "1.1.0"
+    "@semapps/mime-types" "1.1.0"
+    "@semapps/triplestore" "1.1.0"
     bcrypt "^5.0.1"
     express-session "^1.17.0"
     jsonwebtoken "^8.5.1"
@@ -559,10 +559,10 @@
     pug "^3.0.2"
     url-join "^4.0.1"
 
-"@semapps/backup@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/backup/-/backup-1.0.10.tgz#c2f02c825c4b8ef219b9c43470f67890da9b01d8"
-  integrity sha512-3fkpDgIDSF/qPZRSorMGUrpJ/rJgBH3X98epaidE+1oJOrwNSPAwXrgSqL9T89omZ+U6wb5PbWUoaVG2xsmpUw==
+"@semapps/backup@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/backup/-/backup-1.1.0.tgz#2c438e6059319d92fb7f1585af7daf8ddb3017d5"
+  integrity sha512-TVw3fqb08YGwwVtAKFPYP3ljLqQ4e9UDQonHHzuG7PS3o4RWjTDOTg+LuD+jB8mJUjCgyMh15yEUGw+QFgGV2w==
   dependencies:
     cron "^1.8.2"
     fs-extra "^10.0.0"
@@ -570,10 +570,10 @@
     rsync "^0.6.1"
     ssh2-sftp-client "^7.2.1"
 
-"@semapps/crypto@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/crypto/-/crypto-1.0.10.tgz#134e655c7afca4d26a41df7cfc2c4fc139855eda"
-  integrity sha512-sKGkqdtwTS2et7CWPGRfLdiO6FwCwxFxPsfQRIDEnSUmw0MKl8Kt79y57PzOCgWwo8td9hTsFPREF08upse9DQ==
+"@semapps/crypto@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/crypto/-/crypto-1.1.0.tgz#27e014a8c506c3d049c8eec969abf9dd0b5b0248"
+  integrity sha512-J42KMdcGOwFQFj2tle6etdnvhpUQloG7DCyNAXTjlYgaDh8PRbji6lBGHHxO7CtpAo9N+rLx4GWe7kEFPAErrg==
   dependencies:
     "@digitalbazaar/data-integrity" "^2.1.0"
     "@digitalbazaar/ed25519-multikey" "^1.1.0"
@@ -582,10 +582,10 @@
     "@digitalbazaar/eddsa-2022-cryptosuite" "^1.0.0"
     "@digitalbazaar/vc" "^6.2.0"
     "@rdfjs/data-model" "^1.3.4"
-    "@semapps/ldp" "1.0.10"
-    "@semapps/middlewares" "1.0.10"
-    "@semapps/mime-types" "1.0.10"
-    "@semapps/ontologies" "1.0.10"
+    "@semapps/ldp" "1.1.0"
+    "@semapps/middlewares" "1.1.0"
+    "@semapps/mime-types" "1.1.0"
+    "@semapps/ontologies" "1.1.0"
     crypto-ld "^7.0.0"
     http-signature "^1.3.4"
     http-signature-header "^1.3.1"
@@ -597,10 +597,10 @@
     url-join "^4.0.1"
     vc-js "^0.6.4"
 
-"@semapps/jsonld@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/jsonld/-/jsonld-1.0.10.tgz#cd932a892b6e982a7e9d8e94b2525da5e36ece1e"
-  integrity sha512-5Fi02v+newcPwnJTX8QIfZGuL+1X55Epe2TXU1hvP32R6aZ2lEqfbEneSnUxCNlg22eRoJILk6o8IqRdnY6HPQ==
+"@semapps/jsonld@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/jsonld/-/jsonld-1.1.0.tgz#2915a9efaada1b1229ec61d876a1c7ac22c15b62"
+  integrity sha512-js9ZndqEDpBOlIReJWubXXYciwbMzTnTIsGKbj5cE+hxGX5RCPfq1DXdXVBYCpwZLM7VyOlJZ4KrTCUeln0r6w==
   dependencies:
     jsonld "^3.3.2"
     jsonld-context-parser "2.4.0"
@@ -609,16 +609,16 @@
     streamify-string "^1.0.1"
     url-join "^4.0.1"
 
-"@semapps/ldp@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/ldp/-/ldp-1.0.10.tgz#ac09d77b10782d18a7ca5c2781983620d2913f1e"
-  integrity sha512-3RHJ1/hGUdCH9oNFYVrvCpliqg6uEGmFjHXcnaJwE60oJjMgd5rylsG6zUrZK6ArGwSTiQK9mTQiqMlup/SDEw==
+"@semapps/ldp@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/ldp/-/ldp-1.1.0.tgz#d83dd836e36f2d0fd2d2b51f3e63ae0ef9a92ac7"
+  integrity sha512-9/yqDZTGz6t8Kz3zMNYDFPoSFg+jFa388yO91kLX0DUItLrpXTvHW3Pm8B6uFbcUv3Zb4IhqDRD9Su3ipmn2/Q==
   dependencies:
     "@rdfjs/data-model" "^1.3.4"
-    "@semapps/middlewares" "1.0.10"
-    "@semapps/mime-types" "1.0.10"
-    "@semapps/ontologies" "1.0.10"
-    "@semapps/triplestore" "1.0.10"
+    "@semapps/middlewares" "1.1.0"
+    "@semapps/mime-types" "1.1.0"
+    "@semapps/ontologies" "1.1.0"
+    "@semapps/triplestore" "1.1.0"
     dashify "^2.0.0"
     http-link-header "^1.1.1"
     mime-types "^2.1.35"
@@ -636,64 +636,64 @@
     url-join "^4.0.1"
     uuid "^9.0.1"
 
-"@semapps/middlewares@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/middlewares/-/middlewares-1.0.10.tgz#100122e0b76c6a964199f3888dbd94ab00a113de"
-  integrity sha512-eyWJr5XLJ93Rw90fjw8WxAOHbrDMyAjjK5HG6zaxeYct7DsVBXB8mgIBmqkl+q/GZddY9j4kNGBjx4sm5JLhuA==
+"@semapps/middlewares@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/middlewares/-/middlewares-1.1.0.tgz#c33ab9d15bdb645bda10316872e820b114be301a"
+  integrity sha512-GHUsKWUxeg5vut4zX2E05U1bLVF37rU7yV7CKN9KsO8NF+JCIotcOqDJWHvNz6wKbo9Exn1h/chKI5IDdvM8JQ==
   dependencies:
-    "@semapps/mime-types" "1.0.10"
+    "@semapps/mime-types" "1.1.0"
     busboy "^0.3.1"
     memory-streams "^0.1.3"
     moleculer "^0.14.18"
 
-"@semapps/migration@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/migration/-/migration-1.0.10.tgz#f50ed83e04312cfc4e3301c4ddcb46fdbbb8c1d5"
-  integrity sha512-c+U+c3ELBiZG7wq18MF4tEDWUGsBq7Q558YVNRykC3s33TAIGRfFFt1yluv9S5k+FD+KIyEmJd4ZoeRcXZYrGg==
+"@semapps/migration@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/migration/-/migration-1.1.0.tgz#2eeaa7c04073429ca732c1d3bb719ab1dbfb9c85"
+  integrity sha512-fUwfDybB1n+G5qwZeI0fxkExudJ3sizGW2Yg0dWBiWjKbweRIUfFWCk1yoTuTMXk3awgdUXQjfXBkbg7WW93wg==
   dependencies:
-    "@semapps/ldp" "1.0.10"
-    "@semapps/webacl" "1.0.10"
+    "@semapps/ldp" "1.1.0"
+    "@semapps/webacl" "1.1.0"
 
-"@semapps/mime-types@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/mime-types/-/mime-types-1.0.10.tgz#4724b72ffb91e832da94909efb739be3606e3977"
-  integrity sha512-QfAlYiuYhZktn+AsJvo4U2bgcuVsVm5JQDVSz5E2amVlfrkB0U9clUsSGkktBy0p6kUmkuD8m54uJx9fSnrARg==
+"@semapps/mime-types@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/mime-types/-/mime-types-1.1.0.tgz#eae3f535574841fe5369dbed7fbf7cfdc04736af"
+  integrity sha512-PNKQPkC3S6HICxjXcpdu0rsDJ2LAlI6eMddmDRYB/zLaLJDvYBv1s4vopffsx+5Q7mpaLSI3bv9tEVlgVYCBsw==
   dependencies:
     moleculer "^0.14.18"
     negotiator "^0.6.2"
 
-"@semapps/nodeinfo@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/nodeinfo/-/nodeinfo-1.0.10.tgz#f1eab1029606c8327e67c40e63a52d4426e8e9f5"
-  integrity sha512-aYDtcWlW2TWun2ljVBmSpA+g7584FP7GzQLoK9I5cq+ANQqfIHvIdhamJM5MshNx3t68b3hkIydK14Eg4DhuEA==
+"@semapps/nodeinfo@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/nodeinfo/-/nodeinfo-1.1.0.tgz#5700689b595ac2d8dc3a26112fabcf4b91c03991"
+  integrity sha512-Q7ZwZ9S7tbrqv/CVXJHHQhsU9VVaLUuiC1VXpnZvrLN+RFauKxbxYFIqPTpzXBIg5/sPKcbzt25xrvZriyODgA==
   dependencies:
     url-join "^4.0.1"
 
-"@semapps/ontologies@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/ontologies/-/ontologies-1.0.10.tgz#77eeb691fc06e85a7a40d4630c5e755bfba5c34e"
-  integrity sha512-FBJ+ZT0cxpYrxbO/y4RO+aew4Ljfv8p+AQbCbPeJIDNd9lXiL4IgqEsBHobYuvvs6JiCjIttURzbYOxExZBk6Q==
+"@semapps/ontologies@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/ontologies/-/ontologies-1.1.0.tgz#9cce69930103d36f883d8f1d5aa2c671cf1059b4"
+  integrity sha512-Fh9O7KL/FF64QutGV54H/8ciRbrGX0+NVsQVa7CGnWyU/s5a3kbdm/XQzU/+eglZI+XokhKNGOqynLwUtY4NmQ==
   dependencies:
-    "@semapps/triplestore" "1.0.10"
+    "@semapps/triplestore" "1.1.0"
     moleculer-db "^0.8.16"
     node-fetch "^2.6.6"
 
-"@semapps/solid@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/solid/-/solid-1.0.10.tgz#98545591e013c14165da1bb5406ca4ae1df8f870"
-  integrity sha512-6XgxpDSCaQRApVhgFEmLulu4ED5caY3uqaPI52el58lqFGSYoL1FweFo0c+t1WHcyvllgk5hYa2ebkc6lRVC0Q==
+"@semapps/solid@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/solid/-/solid-1.1.0.tgz#7ded1e555d401f3ca7fbdc6a2919c8862bc83952"
+  integrity sha512-NYVqglJZUTgvnr5D+HRhGYIMRXJgL4PLNTbEELksN9upPxHhCzbsCeD269RYts7/wSjfj1fM9j2/0kEDnnFr9A==
   dependencies:
     "@rdfjs/data-model" "^1.3.4"
-    "@semapps/activitypub" "1.0.10"
-    "@semapps/ldp" "1.0.10"
-    "@semapps/middlewares" "1.0.10"
-    "@semapps/mime-types" "1.0.10"
-    "@semapps/ontologies" "1.0.10"
-    "@semapps/triplestore" "1.0.10"
-    "@semapps/webid" "1.0.10"
+    "@semapps/activitypub" "1.1.0"
+    "@semapps/ldp" "1.1.0"
+    "@semapps/middlewares" "1.1.0"
+    "@semapps/mime-types" "1.1.0"
+    "@semapps/ontologies" "1.1.0"
+    "@semapps/triplestore" "1.1.0"
+    "@semapps/webid" "1.1.0"
     http-link-header "^1.1.1"
     moleculer "^0.14.19"
-    moleculer-bull "0.2.8"
+    moleculer-bull "^0.2.5"
     moleculer-db "^0.8.16"
     moleculer-web "^0.10.0-beta1"
     moment "2.30.1"
@@ -701,38 +701,38 @@
     url-join "^4.0.1"
     uuid "^9.0.1"
 
-"@semapps/sparql-endpoint@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/sparql-endpoint/-/sparql-endpoint-1.0.10.tgz#a77d47a704385493fa45aa0691eefb3a327e51a5"
-  integrity sha512-hfaOMOQBXQpWVNsU7tIrHjxcq3kMRjqnaXeI3xvCJ44XuFZLZp2oFm0ICvdNvN3KPrbcp8uUSbFfXTdTnzCGmA==
+"@semapps/sparql-endpoint@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/sparql-endpoint/-/sparql-endpoint-1.1.0.tgz#4621b5e4d9c13d65e8ece2c34d7b367536bf2bda"
+  integrity sha512-lI3iuBDA9OIhaEw/p6ucBVQS9Z0O7dVUzJwVeVy0wox5n0x8PIPKda/VcBqmjXjHbpYtXRfCbwLgNBPQvbLLow==
   dependencies:
     "@rdfjs/data-model" "^1.3.4"
-    "@semapps/middlewares" "1.0.10"
-    "@semapps/mime-types" "1.0.10"
-    "@semapps/triplestore" "1.0.10"
+    "@semapps/middlewares" "1.1.0"
+    "@semapps/mime-types" "1.1.0"
+    "@semapps/triplestore" "1.1.0"
     moleculer "^0.14.18"
     moleculer-web "^0.10.0-beta1"
     url-join "^4.0.1"
 
-"@semapps/sync@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/sync/-/sync-1.0.10.tgz#bebe73963ae62025c9d36261ec71d8f292e17c0c"
-  integrity sha512-MVL/uoxQMxCg0WNtJGB4JSyiCTWrAkWuh5AF/eFGO/0q/nYbqe8nLr2Q6wKqfGW+hesiM5s86OjWZECpa008eQ==
+"@semapps/sync@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/sync/-/sync-1.1.0.tgz#0fddc3ce0e3fd20bf6bed6b266d3c79f546f8b65"
+  integrity sha512-/yJSLxGCTcJdhUEcC2hMmZzx3RP1ea0hIb7AE+70QqK8Be71sjHJ4pSpXKyN2A75OoL/IONzEUvIPrl164fysg==
   dependencies:
-    "@semapps/activitypub" "1.0.10"
-    "@semapps/ldp" "1.0.10"
-    "@semapps/mime-types" "1.0.10"
+    "@semapps/activitypub" "1.1.0"
+    "@semapps/ldp" "1.1.0"
+    "@semapps/mime-types" "1.1.0"
     moleculer "^0.14.17"
     node-fetch "^2.6.6"
     url-join "^4.0.1"
 
-"@semapps/triplestore@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/triplestore/-/triplestore-1.0.10.tgz#c52a6bae54380eb353afee0c26147b95bd8c045e"
-  integrity sha512-mBO2nm8W35M4vNL4jiUWq8VFE1iVIzKVSQdLNq/vPPqFW09aSqz26xe5qiqAi4NzWnQ0Gdjjecnuasi3lW/uGw==
+"@semapps/triplestore@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/triplestore/-/triplestore-1.1.0.tgz#bcb7d84df871e97b34bb77ba6f81ab59593d6a27"
+  integrity sha512-TrRqDopt7YPylj/s2cyARkB+a4nvj7/sSzkAehd0IP5Mdn/xvbDs5Yj+xnnGlDbELbzj0z39cMqzLSRqZKumIw==
   dependencies:
-    "@semapps/middlewares" "1.0.10"
-    "@semapps/mime-types" "1.0.10"
+    "@semapps/middlewares" "1.1.0"
+    "@semapps/mime-types" "1.1.0"
     jsonld "^3.3.2"
     moleculer "^0.14.29"
     negotiator "^0.6.2"
@@ -743,17 +743,17 @@
     url-join "^4.0.1"
     uuid "^9.0.1"
 
-"@semapps/webacl@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/webacl/-/webacl-1.0.10.tgz#0f0df147dc2f6457b7255435a03a97539ca3f2e6"
-  integrity sha512-gN2zLNRNZFbS9tUXtlKIcfHPxPr+bhBoQLGeNNP9x5JjMRTFeQhyvukiF474JBfALWSLHh9Yw2dQW9yxf/GDDQ==
+"@semapps/webacl@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/webacl/-/webacl-1.1.0.tgz#3eee1289e9df883e166ba6d055ada0994eddd3ee"
+  integrity sha512-f+iLttFEfJw7kb0JObaBoDK5KO5DdTE0N67OFn3Ny+IOaZedZCjclBl+5ttcNH01H5bzilPe+UJmw29DmQSjJg==
   dependencies:
-    "@semapps/activitypub" "1.0.10"
-    "@semapps/ldp" "1.0.10"
-    "@semapps/middlewares" "1.0.10"
-    "@semapps/mime-types" "1.0.10"
-    "@semapps/ontologies" "1.0.10"
-    "@semapps/triplestore" "1.0.10"
+    "@semapps/activitypub" "1.1.0"
+    "@semapps/ldp" "1.1.0"
+    "@semapps/middlewares" "1.1.0"
+    "@semapps/mime-types" "1.1.0"
+    "@semapps/ontologies" "1.1.0"
+    "@semapps/triplestore" "1.1.0"
     jsonld-streaming-serializer "^1.2.0"
     moleculer "^0.14.18"
     n3 "^1.8.0"
@@ -762,23 +762,23 @@
     streamify-string "^1.0.1"
     url-join "^4.0.1"
 
-"@semapps/webfinger@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/webfinger/-/webfinger-1.0.10.tgz#f7eb50fb08e660e37662a3cdf9bbe61fa3a09274"
-  integrity sha512-U8YtiDJW1rHpz76MynGzwU4ma6TbjFqO9pMw5/c4Cme5aH1/ULdhD37GZ1Ewl2ZMf30VoAwpma8VIfoDYR6Gng==
+"@semapps/webfinger@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/webfinger/-/webfinger-1.1.0.tgz#066fccb2d0c245aac945cc04b3a966010c2fc679"
+  integrity sha512-n7mzPKVmmdrIzPuBhFSK5LUJDaT8NCwO5+m4CN8FRMdQxmjfeytwy8MdMcFGNDHIbi7nIZX/Ij/waIkv3Iz7RA==
   dependencies:
-    "@semapps/mime-types" "1.0.10"
+    "@semapps/mime-types" "1.1.0"
     node-fetch "^2.6.6"
 
-"@semapps/webid@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@semapps/webid/-/webid-1.0.10.tgz#7ea0e529ad15adfa5537fd8b1d16d0fc348e93fa"
-  integrity sha512-5slHR9SkO2QDRIy7ygrJpI+tKNaDD9yDJkwEgRgPh+2j8pSDZarJO7RQuIy+U4y0InmtoO705Rxd7D42de3Yug==
+"@semapps/webid@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@semapps/webid/-/webid-1.1.0.tgz#5759f5afe98d4e88262bc06703074a11d29bd4bb"
+  integrity sha512-qEECQbDXxNof6fo0tAwsk4uYOUsN/96dW9Ql5ugvuR5QeVFB1YKddOpGAVcSDXK25M/A8nP84K8/xswoZy5Kgg==
   dependencies:
-    "@semapps/activitypub" "1.0.10"
-    "@semapps/ldp" "1.0.10"
-    "@semapps/mime-types" "1.0.10"
-    "@semapps/ontologies" "1.0.10"
+    "@semapps/activitypub" "1.1.0"
+    "@semapps/ldp" "1.1.0"
+    "@semapps/mime-types" "1.1.0"
+    "@semapps/ontologies" "1.1.0"
     url-join "^4.0.1"
 
 "@sindresorhus/is@^4.0.0":

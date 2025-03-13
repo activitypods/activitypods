@@ -1,19 +1,17 @@
+const urlJoin = require('url-join');
 const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
+const CONFIG = require('../../config/config');
 
 module.exports = {
   name: 'contacts.message',
   mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
   settings: {
-    acceptedTypes: 'as:Note',
+    acceptedTypes: ['as:Note'],
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Note'),
     permissions: {},
     newResourcesPermissions: {},
-    description: {
-      labelMap: {
-        en: 'Messages',
-        fr: 'Messages'
-      }
-    }
+    typeIndex: 'public'
   },
   activities: {
     createNote: {

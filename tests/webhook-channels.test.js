@@ -71,7 +71,7 @@ describe('Test app installation', () => {
     expect(storage.type).toBe('pim:Storage');
     expect(storage['notify:subscription']).toHaveLength(2);
 
-    [webhookChannelSubscriptionUrl] = storage['notify:subscription'];
+    webhookChannelSubscriptionUrl = storage['notify:subscription'].find(uri => uri.includes('/WebhookChannel2023'));
 
     const { json: webhookChannelSubscription } = await fetchServer(webhookChannelSubscriptionUrl);
 

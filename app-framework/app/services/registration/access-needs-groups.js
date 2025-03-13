@@ -44,14 +44,10 @@ module.exports = {
           let haveAccessNeedsChanged = false;
 
           for (const accessNeed of accessNeeds.filter(a => typeof a !== 'string')) {
-            const [registeredClassUri] = await ctx.call('jsonld.parser.expandTypes', {
-              types: [accessNeed.registeredClass]
-            });
-
             const existingAccessNeed = await ctx.call('access-needs.find', {
-              necessity,
-              registeredClassUri,
-              accessMode: accessNeed.accessMode
+              shapeTreeUri: accessNeed.shapeTreeUri,
+              accessMode: accessNeed.accessMode,
+              necessity
             });
 
             if (existingAccessNeed) {
@@ -62,9 +58,9 @@ module.exports = {
               const newAccessNeedUri = await ctx.call('access-needs.post', {
                 resource: {
                   '@type': 'interop:AccessNeed',
-                  'interop:accessNecessity': necessityMapping[necessity],
+                  'interop:registeredShapeTree': accessNeed.shapeTreeUri,
                   'interop:accessMode': accessNeed.accessMode,
-                  'apods:registeredClass': registeredClassUri
+                  'interop:accessNecessity': necessityMapping[necessity]
                 },
                 contentType: MIME_TYPES.JSON,
                 webId: 'system'

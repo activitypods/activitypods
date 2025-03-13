@@ -1,58 +1,14 @@
-const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
+const { ACTIVITY_TYPES, OBJECT_TYPES, matchActivity } = require('@semapps/activitypub');
 const PodActivitiesHandlerMixin = require('./pod-activities-handler');
+const ShapeTreeFetcherMixin = require('./shape-tree-fetcher');
 
 module.exports = {
-  mixins: [PodActivitiesHandlerMixin],
+  mixins: [PodActivitiesHandlerMixin, ShapeTreeFetcherMixin],
   settings: {
-    type: null
+    shapeTreeUri: null,
+    type: null // Automatically set by the ShapeTreeFetcherMixin
   },
   dependencies: ['pod-resources'],
-  created() {
-    if (!this.schema.activities) this.schema.activities = {};
-
-    if (this.onCreate) {
-      this.schema.activities.create = {
-        match: {
-          type: ACTIVITY_TYPES.CREATE,
-          object: {
-            type: this.settings.type
-          }
-        },
-        async onEmit(ctx, activity) {
-          await this.onCreate(ctx, activity.object, activity.actor);
-        }
-      };
-    }
-
-    if (this.onUpdate) {
-      this.schema.activities.update = {
-        match: {
-          type: ACTIVITY_TYPES.UPDATE,
-          object: {
-            type: this.settings.type
-          }
-        },
-        async onEmit(ctx, activity) {
-          await this.onUpdate(ctx, activity.object, activity.actor);
-        }
-      };
-    }
-
-    if (this.onDelete) {
-      this.schema.activities.delete = {
-        match: {
-          type: ACTIVITY_TYPES.DELETE,
-          object: {
-            type: OBJECT_TYPES.TOMBSTONE,
-            formerType: this.settings.type
-          }
-        },
-        async onEmit(ctx, activity) {
-          await this.onDelete(ctx, activity.object.id, activity.actor);
-        }
-      };
-    }
-  },
   actions: {
     async post(ctx) {
       if (!ctx.params.containerUri) {
@@ -85,10 +41,67 @@ module.exports = {
       return await ctx.call('pod-resources.delete', ctx.params);
     },
     async getContainerUri(ctx) {
-      return await ctx.call('data-grants.getContainerByType', {
-        type: this.settings.type,
+      return await ctx.call('data-grants.getContainerByShapeTree', {
+        shapeTreeUri: this.settings.shapeTreeUri,
         podOwner: ctx.params.actorUri
       });
+    }
+  },
+  activities: {
+    create: {
+      async match(activity, fetcher) {
+        if (!this.onCreate) return { match: false, dereferencedActivity: activity };
+        return matchActivity(
+          {
+            type: ACTIVITY_TYPES.CREATE,
+            object: {
+              type: this.settings.type
+            }
+          },
+          activity,
+          fetcher
+        );
+      },
+      async onEmit(ctx, activity) {
+        await this.onCreate(ctx, activity.object, activity.actor);
+      }
+    },
+    update: {
+      async match(activity, fetcher) {
+        if (!this.onUpdate) return { match: false, dereferencedActivity: activity };
+        return matchActivity(
+          {
+            type: ACTIVITY_TYPES.UPDATE,
+            object: {
+              type: this.settings.type
+            }
+          },
+          activity,
+          fetcher
+        );
+      },
+      async onEmit(ctx, activity) {
+        await this.onUpdate(ctx, activity.object, activity.actor);
+      }
+    },
+    delete: {
+      async match(activity, fetcher) {
+        if (!this.onUpdate) return { match: false, dereferencedActivity: activity };
+        return matchActivity(
+          {
+            type: ACTIVITY_TYPES.DELETE,
+            object: {
+              type: OBJECT_TYPES.TOMBSTONE,
+              formerType: this.settings.type
+            }
+          },
+          activity,
+          fetcher
+        );
+      },
+      async onEmit(ctx, activity) {
+        await this.onUpdate(ctx, activity.object, activity.actor);
+      }
     }
   }
 };

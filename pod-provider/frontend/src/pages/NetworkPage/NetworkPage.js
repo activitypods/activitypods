@@ -23,12 +23,7 @@ const NetworkPage = () => {
         resource="Profile"
         title={translate('app.page.contacts')}
         actions={[
-          <Button
-            to="/network/request"
-            component={Link}
-            label="app.action.send_request"
-            startIcon={<AddIcon />}
-          />,
+          <Button to="/network/request" component={Link} label="app.action.send_request" startIcon={<AddIcon />} />,
           <TagsButton />
         ]}
         asides={[<ProfileCard />, <ShareContactCard />]}
@@ -40,8 +35,8 @@ const NetworkPage = () => {
           primaryText={record => record['vcard:given-name']}
           secondaryText={record => formatUsername(record.describes)}
           leftAvatar={record => (
-            <Avatar 
-              src={record['vcard:photo']} 
+            <Avatar
+              src={record['vcard:photo']}
               alt={translate('app.accessibility.profile_picture_of', { name: record['vcard:given-name'] })}
             >
               {record['vcard:given-name']?.toUpperCase()?.[0]}

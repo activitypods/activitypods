@@ -166,16 +166,16 @@ module.exports = {
       });
     },
     async createAndAttachMissing(ctx) {
-      const { type, attachPredicate, collectionOptions } = ctx.params;
+      const { shapeTreeUri, attachPredicate, collectionOptions } = ctx.params;
 
       const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
 
       // Go through all pods
       for (let podOwner of await ctx.call('app-registrations.getRegisteredPods')) {
         this.logger.info(`Going through resources of ${podOwner}...`);
-        // Find the container for this type
-        const containerUri = await ctx.call('data-grants.getContainerByType', { type, podOwner });
-        if (!containerUri) throw new Error(`No container found with type ${type} on pod ${podOwner}`);
+        // Find the container for this shape tree
+        const containerUri = await ctx.call('data-grants.getContainerByShapeTree', { shapeTreeUri, podOwner });
+        if (!containerUri) throw new Error(`No container found with shape tree ${shapeTreeUri} on pod ${podOwner}`);
 
         const container = await ctx.call('pod-resources.list', { containerUri, actorUri: podOwner });
 

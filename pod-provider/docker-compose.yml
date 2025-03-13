@@ -28,7 +28,7 @@ services:
       - '6379:6379'
     volumes:
       - ./data/redis:/data:z
-    command: ['redis-server', '--appendonly', 'yes']
+    command: [ 'redis-server', '--appendonly', 'yes' ]
 
   arena:
     image: activitypods/arena
@@ -57,3 +57,11 @@ services:
     environment:
       - TRIPLEADMIN_HOST=http://localhost:3030/
       - TRIPLEADMIN_USERNAME=admin
+
+volumes:
+  shapes:
+    driver: local
+    driver_opts:
+      type: none
+      device: './data/shapes'
+      o: bind

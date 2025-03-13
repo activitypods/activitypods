@@ -6,13 +6,7 @@ module.exports = {
   mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:AuthorizationRegistry'],
-    podProvider: true,
-    description: {
-      labelMap: {
-        en: 'Authorization Registries'
-      },
-      internal: true
-    }
+    podProvider: true
   },
   dependencies: ['registry-set'],
   actions: {

@@ -153,7 +153,7 @@ module.exports = {
       add_contact:
         "Pour faire une demande de mise en relation, vous devez connaître l'identifiant de la personne (au format @bob@serveur.com).",
       user_id: "Entrez l'identifiant de la personne que vous souhaitez contacter",
-      about_you: "Présentez-vous brièvement pour que la personne puisse vous identifier",
+      about_you: 'Présentez-vous brièvement pour que la personne puisse vous identifier',
       message_profile_show_right:
         'Envoyer un message à %{username} lui donnera le droit de voir votre profil, pour lui permettre de vous répondre.',
       profile_visibility: "Votre profil n'est visible que des personnes que vous avez accepté dans votre réseau",
@@ -301,23 +301,25 @@ module.exports = {
       settings: 'Paramètres - %{appName}',
       network: 'Mon réseau - %{appName}',
       create_group: 'Créer un groupe - %{appName}',
-      group_settings: 'Paramètres du groupe %{groupName} - %{appName}',
+      group_settings: 'Paramètres du groupe %{groupName} - %{appName}'
     },
     placeholder: {
-      user_id: "@utilisateur@serveur.com",
-      about_you: "Bonjour, je souhaiterais vous ajouter à mon réseau...",
+      user_id: '@utilisateur@serveur.com',
+      about_you: 'Bonjour, je souhaiterais vous ajouter à mon réseau...'
     },
     accessibility: {
-      profile_picture_of: "Photo de profil de %{name}",
-      your_profile_picture: "Votre photo de profil",
+      profile_picture_of: 'Photo de profil de %{name}',
+      your_profile_picture: 'Votre photo de profil',
       copy_invitation_link_button: "Copier le lien d'invitation",
-      skip_link_description: "Ce lien apparaît lorsqu'il reçoit le focus et permet d'accéder directement au contenu principal de la page en sautant la navigation",
-      network_link_description: "Accéder à la page de votre réseau de contacts",
-      apps_link_description: "Accéder à la page de gestion de vos applications",
-      data_link_description: "Accéder à la page de gestion de vos données personnelles",
-      settings_link_description: "Accéder à la page des paramètres de votre compte",
-      contact_list_profile_picture: "Cette photo apparaît dans la liste de vos contacts et permet d'identifier visuellement %{name}",
-      contact_list_profile_link: "Cliquez pour accéder au profil détaillé de %{name} et voir toutes ses informations"
+      skip_link_description:
+        "Ce lien apparaît lorsqu'il reçoit le focus et permet d'accéder directement au contenu principal de la page en sautant la navigation",
+      network_link_description: 'Accéder à la page de votre réseau de contacts',
+      apps_link_description: 'Accéder à la page de gestion de vos applications',
+      data_link_description: 'Accéder à la page de gestion de vos données personnelles',
+      settings_link_description: 'Accéder à la page des paramètres de votre compte',
+      contact_list_profile_picture:
+        "Cette photo apparaît dans la liste de vos contacts et permet d'identifier visuellement %{name}",
+      contact_list_profile_link: 'Cliquez pour accéder au profil détaillé de %{name} et voir toutes ses informations'
     }
   }
 };

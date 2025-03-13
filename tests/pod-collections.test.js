@@ -75,7 +75,7 @@ describe('Test AS collections handling', () => {
       type: 'Collection',
       summary: 'Friends list',
       'semapps:dereferenceItems': false,
-      totalItems: 0
+      items: []
     });
 
     await expect(
@@ -107,8 +107,7 @@ describe('Test AS collections handling', () => {
 
     expect(collection).toMatchObject({
       type: 'Collection',
-      items: 'http://localhost:3000/bob',
-      totalItems: 1
+      items: 'http://localhost:3000/bob'
     });
   });
 
@@ -126,8 +125,7 @@ describe('Test AS collections handling', () => {
 
     expect(collection).toMatchObject({
       type: 'Collection',
-      items: [],
-      totalItems: 0
+      items: []
     });
   });
 

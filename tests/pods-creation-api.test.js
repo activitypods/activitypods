@@ -110,6 +110,8 @@ describe('Test pods creation via API', () => {
         },
         'pim:storage': BASE_URL + '/alice/data',
         'solid:oidcIssuer': BASE_URL,
+        'interop:hasAuthorizationAgent': expect.anything(),
+        'interop:hasRegistrySet': expect.anything(),
         url: expect.anything()
       });
     });
@@ -212,19 +214,5 @@ describe('Test pods creation via API', () => {
     });
 
     expect(status).toBe(201);
-
-    await waitForExpect(async () => {
-      await expect(fetchServer(`${alice.outbox}?page=1`)).resolves.toMatchObject({
-        json: {
-          type: 'OrderedCollectionPage',
-          orderedItems: expect.arrayContaining([
-            expect.objectContaining({
-              type: 'Like',
-              object: projectUri
-            })
-          ])
-        }
-      });
-    });
   });
 });

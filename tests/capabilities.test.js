@@ -128,19 +128,19 @@ describe('capabilities', () => {
       expect(arrayOf(caps)).toHaveLength(1);
     });
 
-    test('anonymous user cannot get container', async () => {
-      const { status } = await fetch(users[0].capabilitiesUri, {
+    test('anonymous user get empty container', async () => {
+      const { json } = await fetch(users[0].capabilitiesUri, {
         headers: { accept: MIME_TYPES.JSON }
       });
-      expect(status).toBe(404);
+      expect(json['ldp:contains']).toBeUndefined();
     });
 
-    test('other user cannot get container', async () => {
+    test('other user get empty container', async () => {
       // Make an authenticated fetch for user0, fetching user0's caps.
-      const { status } = await fetch(users[0].capabilitiesUri, {
+      const { json } = await fetch(users[0].capabilitiesUri, {
         headers: { Authorization: `Bearer ${users[1].token}`, accept: MIME_TYPES.JSON }
       });
-      expect(status).toBe(404);
+      expect(json['ldp:contains']).toBeUndefined();
     });
   });
 

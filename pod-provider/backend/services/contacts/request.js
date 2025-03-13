@@ -12,6 +12,7 @@ const {
   ACCEPT_CONTACT_REQUEST_MAPPING,
   AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
 } = require('../../config/mappings');
+const hasActivityGrant = require('../utils/hasActivityGrant');
 
 module.exports = {
   name: 'contacts.request',
@@ -108,43 +109,50 @@ module.exports = {
           return;
         }
 
-        // Check, if an invite capability URI is present. If so, accept the request automatically.
-        if (activityHasInviteCapability(activity)) {
-          const capability = await ctx.call('auth.getValidateCapability', {
-            capabilityUri: activity['sec:capability'],
-            webId: recipientUri
+        // Check, if an invite capability is present. If so, accept the request automatically.
+        // TODO: Test.
+        if (
+          hasActivityGrant(activity, {
+            type: ACTIVITY_TYPES.OFFER,
+            actor: activity.actor,
+            object: {
+              type: ACTIVITY_TYPES.ADD,
+              target: recipientUri,
+              object: {
+                id: activity.actor?.id || activity.actor,
+                type: OBJECT_TYPES.PROFILE
+              }
+            }
+          })
+        ) {
+          const capabilityVerified = await ctx.call('crypto.vc.verifier.verifyCapabilityPresentation', {
+            verifiablePresentation: activity.capability
           });
-          const { url: profileUri } = await ctx.call('ldp.resource.get', {
-            resourceUri: recipientUri,
-            webId: 'system',
-            accept: MIME_TYPES.JSON
-          });
-          // Capability to read the profile implies automatic contact approval.
-          if (
-            capability.type === 'acl:Authorization' &&
-            capability['acl:mode'] === 'acl:Read' &&
-            capability['acl:accessTo'] === profileUri
-          ) {
-            // Send the accept.
-            await ctx.call('activitypub.outbox.post', {
-              collectionUri: recipient.outbox,
-              type: ACTIVITY_TYPES.ACCEPT,
-              actor: recipient.id,
-              object: activity.id,
-              to: activity.actor,
-              // TODO: this is semantically not so clean but the easiest way rn, to detect what kind of response this is.
-              'sec:capability': activity['sec:capability']
-            });
-
-            await ctx.call('mail-notifications.notify', {
-              template: AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING,
-              recipientUri,
-              activity,
-              context: activity.id
-            });
-
-            // No need to add the user to contact requests.
+          if (!capabilityVerified.verified) {
+            throw new Error(`Capability presentation verification failed: ${capabilityVerified.error}`);
           }
+
+          // Check that first issuer is the recipient.
+          if (!activity.capability.verifiableCredential[0].issuer === recipient.id) {
+            throw new Error('The first issuer of the capability should be the recipient of the contact request.');
+          }
+
+          // Send the accept.
+          await ctx.call('activitypub.outbox.post', {
+            collectionUri: recipient.outbox,
+            type: ACTIVITY_TYPES.ACCEPT,
+            actor: recipient.id,
+            object: activity.id,
+            to: activity.actor
+          });
+
+          // Notify about auto-accept.
+          await ctx.call('mail-notifications.notify', {
+            template: AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING,
+            recipientUri,
+            activity,
+            context: activity.id
+          });
         }
 
         // Check that a request by the same actor is not already waiting (if so, ignore it)

@@ -73,8 +73,8 @@ const ProfileCard = () => {
     <Card className={classes.root}>
       <Box className={classes.title}>
         <Box display="flex" justifyContent="center" className={classes.avatarWrapper}>
-          <Avatar 
-            src={identity.avatar} 
+          <Avatar
+            src={identity.avatar}
             className={classes.avatar}
             alt={translate('app.accessibility.your_profile_picture')}
           />

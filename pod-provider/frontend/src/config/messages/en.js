@@ -152,8 +152,8 @@ module.exports = {
     },
     helper: {
       add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',
-      user_id: "Enter the ID of the person you want to contact",
-      about_you: "Introduce yourself briefly so the person can identify you",
+      user_id: 'Enter the ID of the person you want to contact',
+      about_you: 'Introduce yourself briefly so the person can identify you',
       message_profile_show_right:
         'Sending a message to %{username} will give him/her the right to see your profile, in order to be able to respond.',
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',
@@ -299,19 +299,20 @@ module.exports = {
       group_settings: 'Group settings of %{groupName} - %{appName}'
     },
     placeholder: {
-      user_id: "@user@server.com",
-      about_you: "Hello, I would like to add you to my network...",
+      user_id: '@user@server.com',
+      about_you: 'Hello, I would like to add you to my network...'
     },
     accessibility: {
       profile_picture_of: "%{name}'s profile picture",
-      your_profile_picture: "Your profile picture",
-      copy_invitation_link_button: "Copy your invitation link",
-      skip_link_description: "This link appears when focused and allows you to skip directly to the main content of the page, bypassing navigation",
-      network_link_description: "Access your network contacts page",
-      apps_link_description: "Access your applications management page",
-      data_link_description: "Access your personal data management page", 
-      settings_link_description: "Access your account settings page",
-      contact_list_profile_picture: "This picture appears in your contacts list and helps visually identify %{name}",
+      your_profile_picture: 'Your profile picture',
+      copy_invitation_link_button: 'Copy your invitation link',
+      skip_link_description:
+        'This link appears when focused and allows you to skip directly to the main content of the page, bypassing navigation',
+      network_link_description: 'Access your network contacts page',
+      apps_link_description: 'Access your applications management page',
+      data_link_description: 'Access your personal data management page',
+      settings_link_description: 'Access your account settings page',
+      contact_list_profile_picture: 'This picture appears in your contacts list and helps visually identify %{name}',
       contact_list_profile_link: "Click to access %{name}'s detailed profile and view all their information"
     }
   }

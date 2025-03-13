@@ -15,13 +15,13 @@ const Header = ({ title, titleVariables, keywords, description }) => {
   const translate = useTranslate();
 
   const translatedTitle = React.useMemo(() => {
-    const translatedTitle = translate(title, { 
-      appName: CONFIG.INSTANCE_NAME, 
-      ...titleVariables 
+    const translatedTitle = translate(title, {
+      appName: CONFIG.INSTANCE_NAME,
+      ...titleVariables
     });
     return translatedTitle;
   }, [title, titleVariables, translate]);
-  
+
   return (
     <Helmet>
       <title>{translatedTitle}</title>
@@ -42,4 +42,4 @@ Header.defaultProps = {
   description: ''
 };
 
-export default Header; 
+export default Header;

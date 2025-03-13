@@ -7,7 +7,7 @@ const SplitView = ({ asides, children }) => {
   if (!asides) {
     return children;
   }
-  
+
   if (xs) {
     return (
       <Grid container spacing={2}>
@@ -24,7 +24,7 @@ const SplitView = ({ asides, children }) => {
       </Grid>
     );
   }
-  
+
   return (
     <Grid container spacing={3}>
       <Grid item xs={12} md={8} lg={9}>

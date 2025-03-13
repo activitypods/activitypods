@@ -1,5 +1,14 @@
 import { useState, useRef } from 'react';
-import { Button, Paper, Popper, MenuItem, MenuList, ClickAwayListener, ListItemIcon, ListItemText } from '@mui/material';
+import {
+  Button,
+  Paper,
+  Popper,
+  MenuItem,
+  MenuList,
+  ClickAwayListener,
+  ListItemIcon,
+  ListItemText
+} from '@mui/material';
 import { useTranslate } from 'react-admin';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import EditIcon from '@mui/icons-material/Edit';
@@ -35,19 +44,19 @@ const EditProfileButton = props => {
       >
         {translate('app.action.edit_profile')}
       </Button>
-      <Popper 
-        sx={{ zIndex: 1 }} 
-        open={open} 
-        anchorEl={anchorRef.current} 
-        placement="bottom" 
-        role="menu" 
+      <Popper
+        sx={{ zIndex: 1 }}
+        open={open}
+        anchorEl={anchorRef.current}
+        placement="bottom"
+        role="menu"
         id="profile-menu"
       >
         <Paper elevation={3} sx={{ mt: 1, minWidth: 200 }}>
           <ClickAwayListener onClickAway={() => setOpen(false)}>
             <MenuList>
-              <Link 
-                to="/settings/profiles/private" 
+              <Link
+                to="/settings/profiles/private"
                 style={{ textDecoration: 'none', color: 'inherit' }}
                 aria-label={translate('app.action.edit_private_profile')}
                 onClick={() => setOpen(false)}
@@ -59,8 +68,8 @@ const EditProfileButton = props => {
                   <ListItemText primary={translate('app.action.edit_private_profile')} />
                 </MenuItem>
               </Link>
-              <Link 
-                to="/settings/profiles/public" 
+              <Link
+                to="/settings/profiles/public"
                 style={{ textDecoration: 'none', color: 'inherit' }}
                 aria-label={translate('app.action.edit_public_profile')}
                 onClick={() => setOpen(false)}

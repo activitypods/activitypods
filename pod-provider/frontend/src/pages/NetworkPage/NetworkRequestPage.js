@@ -44,23 +44,23 @@ const NetworkRequestPage = () => {
               {translate('app.helper.add_contact')}
             </Alert>
             <br />
-            <TextInput 
-              source="id" 
+            <TextInput
+              source="id"
               label={translate('app.input.user_id')}
               helperText={translate('app.helper.user_id')}
               placeholder={translate('app.placeholder.user_id')}
               aria-describedby="user-id-helper-text"
-              fullWidth 
+              fullWidth
             />
-            <TextInput 
-              source="content" 
+            <TextInput
+              source="content"
               label={translate('app.input.about_you')}
               helperText={translate('app.helper.about_you')}
               placeholder={translate('app.placeholder.about_you')}
               aria-describedby="about-you-helper-text"
               multiline
               rows={3}
-              fullWidth 
+              fullWidth
             />
           </SimpleForm>
         </Card>

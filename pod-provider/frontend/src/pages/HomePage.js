@@ -123,13 +123,7 @@ const HomePage = () => {
               >
                 {translate('app.action.signup')}
               </Button>
-              <Button
-                variant="contained"
-                color="secondary"
-                className={classes.button}
-                component={Link}
-                to="/login"
-              >
+              <Button variant="contained" color="secondary" className={classes.button} component={Link} to="/login">
                 {translate('app.action.sign_in')}
               </Button>
             </Box>

@@ -96,11 +96,7 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
     <Dialog open={open} onClose={onClose} maxWidth="xs">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', pb: 1 }}>
         {translate('app.dialog.app_permissions')}
-        <IconButton 
-          sx={{ ml: 'auto' }} 
-          onClick={onClose}
-          aria-label={translate('ra.action.close')}
-        >
+        <IconButton sx={{ ml: 'auto' }} onClick={onClose} aria-label={translate('ra.action.close')}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>

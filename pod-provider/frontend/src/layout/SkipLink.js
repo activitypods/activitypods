@@ -16,18 +16,18 @@ const StyledLink = styled(Link)(({ theme }) => ({
     top: '0',
     width: 'auto',
     height: 'auto',
-    padding: theme.spacing(2),  
+    padding: theme.spacing(2),
     color: theme.palette.primary.main,
     backgroundColor: theme.palette.background.paper,
     textDecoration: 'none',
-    outline: `2px solid ${theme.palette.primary.main}`,
-  },
+    outline: `2px solid ${theme.palette.primary.main}`
+  }
 }));
 
 const SkipLink = () => {
   const translate = useTranslate();
-  
-  const handleClick = (event) => {
+
+  const handleClick = event => {
     event.preventDefault();
     const main = document.querySelector('main');
     if (main) {
@@ -39,14 +39,10 @@ const SkipLink = () => {
   };
 
   return (
-    <StyledLink
-      href="#main"
-      onClick={handleClick}
-      aria-label={translate('app.action.skip_to_main')}
-    >
+    <StyledLink href="#main" onClick={handleClick} aria-label={translate('app.action.skip_to_main')}>
       {translate('app.action.skip_to_main')}
     </StyledLink>
   );
 };
 
-export default SkipLink; 
+export default SkipLink;

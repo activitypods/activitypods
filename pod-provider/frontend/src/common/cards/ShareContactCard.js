@@ -37,7 +37,7 @@ const useStyles = makeStyles(theme => ({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8
-  },
+  }
 }));
 
 const ShareContactCard = () => {
@@ -54,9 +54,7 @@ const ShareContactCard = () => {
       <Box className={classes.block} p={2}>
         <Typography variant="body2">{translate('app.helper.share_contact')}</Typography>
         <Box className={classes.buttonContainer}>
-          <span style={{ display: 'none' }}>
-            {contactLink}
-          </span>
+          <span style={{ display: 'none' }}>{contactLink}</span>
           <CopyToClipboard text={contactLink} onCopy={() => setCopied(true)}>
             <Button
               variant="contained"

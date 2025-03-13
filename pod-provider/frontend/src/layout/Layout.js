@@ -25,13 +25,7 @@ const Layout = props => {
         <AppBar title={title} />
         {!xs && <MenuBar />}
         <Container disableGutters={xs}>
-          <Box 
-            component="main"
-            id="main"
-            mt={{ xs: 2, sm: 2 }} 
-            m={{ xs: 2, sm: 0 }} 
-            mb={8}
-          >
+          <Box component="main" id="main" mt={{ xs: 2, sm: 2 }} m={{ xs: 2, sm: 0 }} mb={8}>
             {children}
           </Box>
         </Container>

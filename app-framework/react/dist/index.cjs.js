@@ -113,7 +113,7 @@ var $c6f5b9530195abb8$export$2e2bcd8739ae039 = $c6f5b9530195abb8$var$useGetAppSt
                 redirectUrl.searchParams.append("client_id", clientId);
                 window.location.href = redirectUrl.toString();
             }
-        }
+        } else throw new Error(`apods.error.user_authorization_agent_not_found`);
     }, [
         dataProvider
     ]);
@@ -355,6 +355,10 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
                 const payload = (0, ($parcel$interopDefault($fvx3m$jwtdecode)))(token);
                 registerApp(clientId, payload?.webid).then((appRegistrationUri)=>{
                     if (appRegistrationUri) setIsRegistered(true);
+                }).catch((error)=>{
+                    notify(error.message, {
+                        type: "error"
+                    });
                 });
             }
         } else if (searchParams.has("logout")) // Immediately logout if required
@@ -367,6 +371,7 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
         registerApp,
         clientId,
         setIsRegistered,
+        notify,
         logout,
         redirectUrl
     ]);
@@ -1212,7 +1217,8 @@ var $4b1314efa6ba34c8$export$2e2bcd8739ae039 = {
             app_status_unavailable: "Unable to check app status",
             app_offline: "The app backend is offline",
             app_not_registered: "The app is not registered",
-            app_not_listening: "The app is not listening to %{uri}"
+            app_not_listening: "The app is not listening to %{uri}",
+            user_authorization_agent_not_found: "User authorization agent not found"
         },
         user_menu: {
             network: "My network",

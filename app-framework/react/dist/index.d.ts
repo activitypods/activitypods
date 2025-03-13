@@ -64,6 +64,7 @@ export const englishMessages: {
             app_offline: string;
             app_not_registered: string;
             app_not_listening: string;
+            user_authorization_agent_not_found: string;
         };
         user_menu: {
             network: string;

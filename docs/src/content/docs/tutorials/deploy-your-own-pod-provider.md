@@ -92,6 +92,10 @@ make start
 
 If there is a problem, you can see the backend logs with the `make logs` command. Errors will be displayed here. You can also call `make attach`, which will give you access to ActivityPods' Moleculer CLI ([Moleculer](https://moleculer.services/) is the microservice framework that all ActivityPods services run on.)
 
+:::warning
+If you are on Windows, please note that you might have to enable host networking on your docker engine to get the pod provider backend expose its port.
+:::
+
 ### Explore your server
 
 The frontend should now be available at the domain you chose. You can try to create an user.

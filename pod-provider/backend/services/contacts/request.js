@@ -14,6 +14,7 @@ const {
 } = require('../../config/mappings');
 const hasActivityGrant = require('../utils/hasActivityGrant');
 
+/** @type {import('moleculer').ServiceSchema} */
 module.exports = {
   name: 'contacts.request',
   mixins: [ActivitiesHandlerMixin],
@@ -125,16 +126,25 @@ module.exports = {
             }
           })
         ) {
-          const capabilityVerified = await ctx.call('crypto.vc.verifier.verifyCapabilityPresentation', {
+          const verificationResult = await ctx.call('crypto.vc.verifier.verifyCapabilityPresentation', {
             verifiablePresentation: activity.capability
           });
-          if (!capabilityVerified.verified) {
-            throw new Error(`Capability presentation verification failed: ${capabilityVerified.error}`);
+          if (!verificationResult.verified) {
+            ctx.broker.logger.warn(
+              'Capability presentation verification for contact request failed. Actor and error:',
+              activity.actor,
+              verificationResult.error
+            );
+            return;
           }
 
           // Check that first issuer is the recipient.
           if (!activity.capability.verifiableCredential[0].issuer === recipient.id) {
-            throw new Error('The first issuer of the capability should be the recipient of the contact request.');
+            ctx.broker.logger.warn(
+              'The first issuer of the capability should be the recipient of the contact request. Issuer and recipient:',
+              activity.capability.verifiableCredential[0].issuer,
+              recipient.id
+            );
           }
 
           // Send the accept.
@@ -153,6 +163,8 @@ module.exports = {
             activity,
             context: activity.id
           });
+
+          return;
         }
 
         // Check that a request by the same actor is not already waiting (if so, ignore it)

@@ -43,9 +43,11 @@ module.exports = {
   name: 'events',
   mixins: [PodResourcesHandlerMixin],
   settings: {
-    type: 'as:Event'
+    shapeTreeUri: 'https://shapes.activitypods.org/shapetrees/as/Event'
   }
 ```
+
+The `shapeTreeUri` must match a shape tree for which you requested access in the [application registration](../application-registration.md).
 
 ## Listening to resources changes
 

@@ -75,7 +75,7 @@ module.exports = {
   name: 'attendees',
   mixins: [PodCollectionsHandlerMixin],
   settings: {
-    type: 'as:Event',
+    shapeTreeUri: 'https://shapes.activitypods.org/shapetrees/as/Event'
     attachPredicate: 'http://activitypods.org/ns/core#attendees',
     collectionOptions: {
       ordered: false,
@@ -85,9 +85,9 @@ module.exports = {
 };
 ```
 
-With this new service, the application will listen for creation of resources of type `as:Event` on the Pods it is installed, and automatically create and attach the collections.
+With this new service, the application will listen for creation of resources matching the provided shape tree on the Pods it is installed, and automatically create and attach the collections.
 
-If you want to attach collections to existing resources of type `as:Event`, you can call the `createAndAttachMissing` action.
+If you want to attach collections to existing resources, you can call the `createAndAttachMissing` action.
 
 ## Automatically creating WAC groups
 

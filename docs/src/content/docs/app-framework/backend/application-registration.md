@@ -30,7 +30,7 @@ module.exports = {
     accessNeeds: {
       required: [
         {
-          registeredClass: 'https://www.w3.org/ns/activitystreams#Event',
+          shapeTreeUri: 'https://shapes.activitypods.org/shapetrees/as/Event',
           accessMode: ['acl:Read', 'acl:Write']
         },
         'apods:ReadInbox',
@@ -38,7 +38,7 @@ module.exports = {
       ],
       optional: [
         {
-          registeredClass: 'http://www.w3.org/2006/vcard/ns#Individual',
+          shapeTreeUri: 'https://shapes.activitypods.org/shapetrees/as/Profile'
           accessMode: 'acl:Read'
         }
       ]
@@ -70,11 +70,11 @@ ActivityPods integrate a full OIDC provider. To register your application with t
 
 Access needs can be either `required` or `optional`. On the authorization screen, the user will be able to toggle out the optional access needs, but not the required access needs, since the application is not supposed to work without them.
 
-#### Resource types
+#### Shape trees
 
-You can define the resources classes that you want to interact with, either in read or write mode.
+You must define the shape trees of the data you need to interact with, as well as the access mode.
 
-If the resource classes is not yet handled by any other application, it will automatically create a LDP container, such as `/as/event` for ActivityStreams events. The ontology prefix is found using [prefix.cc](https://prefix.cc/). If you use a custom ontology which is not listed in this website, you will get an error, so be sure to add it yourself.
+If the shape tree is not yet handled by any other application, the Authorization Agent will automatically create a LDP container, such as `/as/event` for ActivityStreams events. The ontology prefix is found using [prefix.cc](https://prefix.cc/). If you use a custom ontology which is not listed in this website, you will get an error, so be sure to add it yourself.
 
 #### Special rights
 

@@ -64,7 +64,7 @@ SEMAPPS_INSTANCE_DESCRIPTION_FR="Un hébergeur de Pod ouvert à tous et à toute
 
 # Frontend config
 SEMAPPS_MAPBOX_ACCESS_TOKEN=
-SEMAPPS_COLOR_PRIMARY="#c9e265"
+SEMAPPS_COLOR_PRIMARY="#899a44"
 SEMAPPS_COLOR_SECONDARY="#314a62"
 
 # Email provider settings

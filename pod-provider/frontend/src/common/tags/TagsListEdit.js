@@ -221,7 +221,7 @@ const TagsListEdit = props => {
         size="small"
         onClick={handleOpen}
         label={translate('ra.action.add')}
-        color="primary"
+        color="secondary"
         sx={{ border: 0, mr: 1, mb: 1 }}
       />
       <Menu open={Boolean(menuAnchorEl)} onClose={handleClose} anchorEl={menuAnchorEl}>
@@ -244,7 +244,7 @@ const TagsListEdit = props => {
               icon={<EditIcon />}
               size="small"
               onClick={handleOpenCreateDialog}
-              color="primary"
+              color="secondary"
               label={translate('ra.action.create')}
             />
           </MenuItem>
@@ -283,10 +283,10 @@ const TagsListEdit = props => {
               )}
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setCreateDialogOpen(false)} color="primary">
+              <Button onClick={() => setCreateDialogOpen(false)} variant="outlined">
                 {translate('ra.action.cancel')}
               </Button>
-              <Button type="submit" color="primary" disabled={disabledCreateBtn}>
+              <Button type="submit" variant="contained" disabled={disabledCreateBtn}>
                 {translate('ra.action.create')}
               </Button>
             </DialogActions>

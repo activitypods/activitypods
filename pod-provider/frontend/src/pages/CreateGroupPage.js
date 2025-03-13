@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import SimpleBox from '../layout/SimpleBox';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import { Box } from '@mui/material';
+import Header from '../common/Header';
 
 const CreateGroupPage = () => {
   const translate = useTranslate();
@@ -92,36 +93,42 @@ const CreateGroupPage = () => {
   );
 
   return !podProviderUrl ? (
-    <ChoosePodProviderPage
-      text={translate('app.helper.create_group')}
-      onPodProviderSelected={setPodProviderUrl}
-      onCancel={() => navigate('/')}
-    />
+    <>
+      <Header title="app.titles.create_group" />
+      <ChoosePodProviderPage
+        text={translate('app.helper.create_group')}
+        onPodProviderSelected={setPodProviderUrl}
+        onCancel={() => navigate('/')}
+      />
+    </>
   ) : (
-    <SimpleBox title={translate('app.action.create_group')} icon={<GroupAddIcon />}>
-      <Form onSubmit={onSubmit} defaultValues={{ type: 'foaf:Group' }}>
-        <TextInput source="id" label={translate('app.group.id')} fullWidth />
-        <SelectInput
-          source="type"
-          label={translate('app.group.type')}
-          choices={[
-            { id: 'foaf:Group', name: translate('app.group.type_group') },
-            { id: 'foaf:Organization', name: translate('app.group.type_organization') }
-          ]}
-          fullWidth
-        />
-        <TextInput source="name" label={translate('app.group.name')} fullWidth />
-        {/* <ImageInput source="image" label={translate('app.group.image')} accept="image/*">
-          <ImageField source="src" />
-        </ImageInput> */}
-        <Box display="flex" justifyContent="end" sx={{ pt: 2 }}>
-          <Button variant="contained" color="grey" onClick={() => setPodProviderUrl()}>
-            {translate('ra.action.back')}
-          </Button>
-          <SaveButton sx={{ ml: 1 }} />
-        </Box>
-      </Form>
-    </SimpleBox>
+    <>
+      <Header title="app.titles.create_group" />
+      <SimpleBox title={translate('app.action.create_group')} icon={<GroupAddIcon />}>
+        <Form onSubmit={onSubmit} defaultValues={{ type: 'foaf:Group' }}>
+          <TextInput source="id" label={translate('app.group.id')} fullWidth />
+          <SelectInput
+            source="type"
+            label={translate('app.group.type')}
+            choices={[
+              { id: 'foaf:Group', name: translate('app.group.type_group') },
+              { id: 'foaf:Organization', name: translate('app.group.type_organization') }
+            ]}
+            fullWidth
+          />
+          <TextInput source="name" label={translate('app.group.name')} fullWidth />
+          {/* <ImageInput source="image" label={translate('app.group.image')} accept="image/*">
+            <ImageField source="src" />
+          </ImageInput> */}
+          <Box display="flex" justifyContent="end" sx={{ pt: 2 }}>
+            <Button variant="outlined" onClick={() => setPodProviderUrl()}>
+              {translate('ra.action.back')}
+            </Button>
+            <SaveButton sx={{ ml: 1 }} />
+          </Box>
+        </Form>
+      </SimpleBox>
+    </>
   );
 };
 

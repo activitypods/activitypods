@@ -31,6 +31,8 @@ const useRegisterApp = () => {
           redirectUrl.searchParams.append('client_id', clientId);
           window.location.href = redirectUrl.toString();
         }
+      } else {
+        throw new Error(`apods.error.user_authorization_agent_not_found`);
       }
     },
     [dataProvider]

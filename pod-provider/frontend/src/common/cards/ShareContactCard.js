@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { Box, Card, Typography, Button } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Card, Typography, Button, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useTranslate } from 'react-admin';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import useContactLink from '../../hooks/useContactLink';
+import useCreateContactLink from '../../hooks/useCreateContactLink';
+import { useNotify } from 'react-admin';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -43,8 +44,15 @@ const useStyles = makeStyles(theme => ({
 const ShareContactCard = () => {
   const classes = useStyles();
   const translate = useTranslate();
-  const contactLink = useContactLink();
+  const notify = useNotify();
+  const { createLink, link, status, errorDetails } = useCreateContactLink();
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (status === 'error') {
+      notify('app.notification.contact_link_creation_failed', { type: 'error', messageArgs: { error: errorDetails } });
+    }
+  }, [status, errorDetails, notify]);
 
   return (
     <Card className={classes.root}>
@@ -54,15 +62,23 @@ const ShareContactCard = () => {
       <Box className={classes.block} p={2}>
         <Typography variant="body2">{translate('app.helper.share_contact')}</Typography>
         <Box className={classes.buttonContainer}>
-          <span style={{ display: 'none' }}>{contactLink}</span>
-          <CopyToClipboard text={contactLink} onCopy={() => setCopied(true)}>
+          <span style={{ display: 'none' }}>{link}</span>
+          <CopyToClipboard text={link} onCopy={() => setCopied(true)}>
             <Button
               variant="contained"
               color="secondary"
-              endIcon={<ContentCopyIcon />}
+              endIcon={status === 'loading' ? <CircularProgress size={24} /> : <ContentCopyIcon />}
               aria-label={translate('app.accessibility.copy_invitation_link_button')}
+              onClick={() => createLink()}
+              disabled={status === 'loading'}
             >
-              {translate(copied ? 'app.message.copied_to_clipboard' : 'app.action.copy')}
+              {translate(
+                status === 'success' && copied
+                  ? 'app.message.copied_to_clipboard'
+                  : status === 'loading'
+                    ? 'app.message.loading'
+                    : 'app.action.copy'
+              )}
             </Button>
           </CopyToClipboard>
         </Box>

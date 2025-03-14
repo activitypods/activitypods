@@ -14,7 +14,7 @@ import TranslateIcon from '@mui/icons-material/Translate';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import Header from '../../common/Header';
-import useContactLink from '../../hooks/useContactLink';
+import useCreateContactLink from '../../hooks/useCreateContactLink';
 import SettingsItem from './SettingsItem';
 import { availableLocales } from '../../config/i18nProvider';
 
@@ -28,7 +28,7 @@ const SettingsPage = () => {
   const [accountSettings, setAccountSettings] = useState({});
 
   const { data } = useGetList('Location');
-  const contactLink = useContactLink();
+  const contactLink = useCreateContactLink();
 
   useEffect(() => {
     authProvider.getAccountSettings().then(res => setAccountSettings(res));

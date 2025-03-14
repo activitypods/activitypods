@@ -157,7 +157,7 @@ module.exports = {
       message_profile_show_right:
         'Sending a message to %{username} will give him/her the right to see your profile, in order to be able to respond.',
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',
-      share_contact: 'To connect with someone you know, you can send them the link below.',
+      share_contact: 'To connect with someone you know, you can create a link below.',
       location_comment: 'Additional information to help find this place',
       login: 'Sign in to your personal space',
       signup: 'Create your personal space',
@@ -240,6 +240,7 @@ module.exports = {
       invite_cap_missing: 'Unable to generate an invite link (missing capability)',
       invite_cap_profile_fetch_error: 'Error while fetching the profile associated with the invite link.',
       pod_provider_fetch_error: 'Error while looking for other pod providers: %{error}',
+      contact_link_creation_failed: 'Creating the contact link failed: %{error}',
       contact_link_copied: 'Contact link copied successfully',
       already_connected: 'You are already connected with the person who invited you.',
       export_failed: 'The export failed: %{error}'

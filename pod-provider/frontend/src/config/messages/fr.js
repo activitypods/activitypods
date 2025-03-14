@@ -157,8 +157,7 @@ module.exports = {
       message_profile_show_right:
         'Envoyer un message à %{username} lui donnera le droit de voir votre profil, pour lui permettre de vous répondre.',
       profile_visibility: "Votre profil n'est visible que des personnes que vous avez accepté dans votre réseau",
-      share_contact:
-        'Pour vous connecter avec une personne que vous connaissez, vous pouvez lui envoyer le lien ci-dessous.',
+      share_contact: 'Pour vous connecter à une personne que vous connaissez, vous pouvez créer un lien ci-dessous.',
       location_comment: 'Indications supplémentaires pour aider à trouver ce lieu',
       login: 'Je me connecte à mon espace personnel',
       signup: 'Je crée mon espace personnel',
@@ -246,6 +245,7 @@ module.exports = {
       invite_cap_missing: "Impossible de générer un lien d'invitation (missing capability)",
       invite_cap_profile_fetch_error: "Erreur lors de la recherche du profil associé au lien d'invitation",
       pod_provider_fetch_error: "Erreur lors de la recherche d'autres hébergeurs : %{error}",
+      contact_link_creation_failed: 'La création du lien de contact a échoué: %{error}',
       contact_link_copied: 'Lien de contact copié avec succès',
       already_connected: "Tu es déjà connecté avec la personne qui t'a invité."
     },

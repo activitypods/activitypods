@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import { useTranslate, useGetList, useAuthProvider, useNotify, useLocaleState } from 'react-admin';
-import { Box, Typography, List } from '@mui/material';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+import { Box, Typography, List, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import EmailIcon from '@mui/icons-material/Email';
 import PersonIcon from '@mui/icons-material/Person';
@@ -24,11 +23,14 @@ const SettingsPage = () => {
   const authProvider = useAuthProvider();
   const navigate = useNavigate();
   const [locale] = useLocaleState();
-  const notify = useNotify();
   const [accountSettings, setAccountSettings] = useState({});
 
   const { data } = useGetList('Location');
-  const contactLink = useCreateContactLink();
+  const contactLink = useCreateContactLink({ shouldCopy: true, shouldNotify: true });
+
+  const onCreateContactLinkClicked = () => {
+    contactLink.createLink();
+  };
 
   useEffect(() => {
     authProvider.getAccountSettings().then(res => setAccountSettings(res));
@@ -73,15 +75,13 @@ const SettingsPage = () => {
             label="app.setting.locale"
             value={availableLocales.find(l => l.locale === locale)?.name}
           />
-          <CopyToClipboard text={contactLink}>
-            <SettingsItem
-              onClick={() => notify('app.notification.contact_link_copied', { type: 'success' })}
-              icon={<LinkIcon />}
-              label="app.card.share_contact"
-              value={contactLink}
-              actionIcon={<FileCopyIcon />}
-            />
-          </CopyToClipboard>
+          <SettingsItem
+            onClick={onCreateContactLinkClicked}
+            icon={<LinkIcon />}
+            label="app.card.share_contact"
+            value={contactLink.link}
+            actionIcon={contactLink.status === 'loading' ? <CircularProgress size={24} /> : <FileCopyIcon />}
+          />
           <SettingsItem
             onClick={() => navigate('/settings/advanced')}
             icon={<TuneIcon />}

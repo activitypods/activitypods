@@ -9,6 +9,7 @@ module.exports = {
       add_contact: 'Ajouter à mes contacts',
       add_location: 'Ajouter une adresse',
       copy: 'Copier dans votre presse-papier',
+      create_invite_link: "Créer un lien d'invitation",
       edit_profile: 'Éditer mon profil',
       edit_public_profile: 'Éditer le profil public',
       edit_private_profile: 'Éditer le profil privé',
@@ -192,6 +193,7 @@ module.exports = {
     },
     message: {
       copied_to_clipboard: 'Copié !',
+      creating_invite_link: 'Créer...',
       no_condition: 'Aucune',
       you_participated_to_same_event: 'Vous avez participé à la même rencontre',
       verified_app: 'Application vérifiée',
@@ -246,6 +248,7 @@ module.exports = {
       invite_cap_profile_fetch_error: "Erreur lors de la recherche du profil associé au lien d'invitation",
       pod_provider_fetch_error: "Erreur lors de la recherche d'autres hébergeurs : %{error}",
       contact_link_creation_failed: 'La création du lien de contact a échoué: %{error}',
+      contact_link_copying_failed: 'La copie du lien de contact a échoué. Veuillez le copier manuellement : \n%{link}',
       contact_link_copied: 'Lien de contact copié avec succès',
       already_connected: "Tu es déjà connecté avec la personne qui t'a invité."
     },

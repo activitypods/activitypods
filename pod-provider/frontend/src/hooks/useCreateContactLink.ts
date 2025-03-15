@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useTranslate, useGetIdentity, useGetList, useDataProvider } from 'react-admin';
+import { useTranslate, useGetIdentity, useGetList, useDataProvider, useNotify } from 'react-admin';
 import urlJoin from 'url-join';
 import { arrayOf } from '../utils';
 import { FetchFn, SemanticDataProvider } from '@semapps/semantic-data-provider';
 import { ACTIVITY_TYPES, OBJECT_TYPES } from '@semapps/activitypub-components';
+import copy from 'copy-to-clipboard';
 
 // useState(translate('ra.page.loading'));
 const VC_API_SERVICE_TYPE = 'urn:tmp:vcService';
@@ -22,15 +23,20 @@ const requestContactCapability = async (fetchFn: FetchFn, webIdDoc: any, profile
     method: 'POST',
     body: JSON.stringify({
       credential: {
+        '@context': [
+          'https://www.w3.org/ns/credentials/v2',
+          { as: 'https://www.w3.org/ns/activitystreams#', apods: 'http://activitypods.org/ns/core#' }
+        ],
+        type: 'VerifiableCredential',
         name: 'Invite Link',
         credentialSubject: {
-          hasActivityGrant: {
-            type: ACTIVITY_TYPES.OFFER,
-            target: webIdDoc.id,
-            object: {
-              type: ACTIVITY_TYPES.ADD,
-              object: {
-                type: OBJECT_TYPES.PROFILE
+          'apods:hasActivityGrant': {
+            type: 'as:Offer',
+            'as:target': webIdDoc.id,
+            'as:object': {
+              type: 'as:Add',
+              'as:object': {
+                type: 'as:Profile'
               }
             }
           },
@@ -60,9 +66,15 @@ const requestContactCapability = async (fetchFn: FetchFn, webIdDoc: any, profile
   }
 };
 
-const useCreateContactLink = () => {
+const useCreateContactLink = (
+  { shouldCopy, shouldNotify }: { shouldCopy: boolean; shouldNotify: boolean | 'onError' } = {
+    shouldCopy: false,
+    shouldNotify: false
+  }
+) => {
   // Profile and WebId documents
   const { data: identity } = useGetIdentity();
+  const notify = useNotify();
   const webIdDoc = identity?.webIdData;
   const profileData = identity?.profileData;
 
@@ -72,33 +84,61 @@ const useCreateContactLink = () => {
   const [status, setStatus] = useState<'ready' | 'loading' | 'success' | 'error'>('ready');
   const [link, setLink] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<undefined | object>(undefined);
+  const [copied, setCopied] = useState(false);
 
   // Callback to trigger link creation.
   const createLink = useCallback(() => {
-    if (status === 'loading') return;
-    if (!webIdDoc || !profileData) return;
+    if (status === 'loading') return Promise.reject('A link is already being created.');
+    if (!webIdDoc || !profileData) return Promise.reject('WebId or profile data is not loaded yet.');
 
     setStatus('loading');
     setLink(null);
     setErrorDetails(undefined);
+    setCopied(false);
 
-    requestContactCapability(dataProvider.fetch, webIdDoc, profileData)
+    // Do the call.
+    return requestContactCapability(dataProvider.fetch, webIdDoc, profileData)
       .then(capabilityUri => {
         // Create the link that invitees can open in the frontend.
-        const inviteLInk = `${new URL(window.location.href).origin}/invite/${encodeURIComponent(capabilityUri)}`;
+        const inviteLink = `${new URL(window.location.href).origin}/invite/${encodeURIComponent(capabilityUri)}`;
 
         setStatus('success');
-        setLink(inviteLInk);
+        setLink(inviteLink);
         setErrorDetails(undefined);
+
+        // Copy to clipboard.
+        if (shouldCopy) {
+          const copied = copy(inviteLink);
+          setCopied(true);
+          // Notify about success/failure.
+          if (shouldNotify === true) {
+            if (copied) notify('app.notification.contact_link_copied', { type: 'success' });
+            else
+              notify('app.notification.contact_link_copying_failed', {
+                type: 'warning',
+                messageArgs: { link: inviteLink },
+                multiLine: true,
+                autoHideDuration: 15_000
+              });
+          }
+        }
+
+        return inviteLink;
       })
       .catch(error => {
         setStatus('error');
         setLink(null);
         setErrorDetails(error);
+
+        if (shouldNotify !== false)
+          notify('app.notification.contact_link_creation_failed', { type: 'error', messageArgs: { error } });
+
+        // Throw again so that the promise fails and can be caught again.
+        throw error;
       });
   }, [setStatus, setLink, setErrorDetails, webIdDoc, profileData]);
 
-  return useMemo(() => ({ createLink, status, link, errorDetails }), [createLink, status, link, errorDetails]);
+  return useMemo(() => ({ createLink, status, link, errorDetails, copied }), [createLink, status, link, errorDetails]);
 };
 
 export default useCreateContactLink;

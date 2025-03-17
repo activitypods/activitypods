@@ -49,7 +49,12 @@ module.exports = {
     async attachToContainer(ctx) {
       const { shapeTreeUri, containerUri, podOwner } = ctx.params;
 
-      const container = await ctx.call('ldp.container.get', { containerUri, accept: MIME_TYPES.JSON, webId: 'system' });
+      const container = await ctx.call('ldp.container.get', {
+        containerUri,
+        accept: MIME_TYPES.JSON,
+        webId: 'system',
+        doNotIncludeResources: true
+      });
 
       const currentData = new Date().toISOString();
 

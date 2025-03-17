@@ -98,7 +98,7 @@ const HomePage = () => {
 
   return (
     <>
-      <Header title="app.page.home" />
+      <Header title="app.titles.home" />
       {availableLocales.length > 1 && (
         <Box sx={{ position: 'absolute', top: 0, right: 0, p: 1, zIndex: 20 }}>
           <LocalesMenuButton />

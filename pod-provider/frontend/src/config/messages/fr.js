@@ -130,7 +130,7 @@ module.exports = {
     card: {
       add_contact: 'Ajouter un contact',
       contact_requests: 'Demandes de contact',
-      share_contact: 'Mon lien de contact'
+      share_contact: "Créer un lien d'invitation"
     },
     block: {
       contact_requests: 'Nouvelles demandes de contact'
@@ -241,7 +241,7 @@ module.exports = {
       home_address_deleted: 'Adresse du domicile enlevée',
       send_request_error: "Erreur lors de l'envoi de la demande : %{error}",
       connection_accepted: 'Vous avez accepté la demande de connexion.',
-      invite_cap_invalid: "Le lien d'invitation n'est pas valide",
+      invite_cap_invalid: "Le lien d'invitation n'est pas valide. Erreur:\n%{error}",
       invite_cap_fetch_error:
         "Une erreur s'est produite lors de la récupération de l'invitation. Elle pourrait ne pas être valide.\n%{error}",
       invite_cap_missing: "Impossible de générer un lien d'invitation (missing capability)",

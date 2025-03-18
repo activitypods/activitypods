@@ -74,7 +74,7 @@ module.exports = {
         // Add the user to the contacts WebACL group so he can see my profile
         for (let targetUri of arrayOf(activity.target)) {
           await ctx.call('webacl.group.addMember', {
-            groupSlug: `${new URL(emitterUri).pathname}/contacts`,
+            groupSlug: `${new URL(emitterUri).pathname}/contacts`, // This doesn't lead to the receiver having access to profile...?
             memberUri: targetUri,
             webId: emitterUri
           });

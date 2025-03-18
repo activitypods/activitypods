@@ -1,4 +1,4 @@
-import React, { useGetIdentity, useGetOne, useNotify, useTranslate } from 'react-admin';
+import React, { fetchUtils, useGetIdentity, useGetOne, useNotify, useTranslate } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { ACTIVITY_TYPES, useOutbox } from '@semapps/activitypub-components';
@@ -8,6 +8,13 @@ import InvitePageViewLoggedIn from './InvitePageViewLoggedIn';
 import InvitePageSuccess from './InvitePageSuccess';
 import InvitePageProviderSelect from './InvitePageProviderSelect';
 import SimpleBox from '../../layout/SimpleBox';
+import {
+  arrayOf,
+  fetchCapabilityResources,
+  fetchResourceWithCapability,
+  getWebIdFromResourceUri,
+  vcEndpointFromWebId
+} from '../../utils';
 
 /** The URI is expected to be encoded in the URI fragment in the SearchParams format. */
 const getCapabilityUri = (location: Location) => {
@@ -32,38 +39,42 @@ const InvitePage = () => {
   const notify = useNotify();
   const { data: identity } = useGetIdentity();
   const ownProfile = identity?.profileData;
-  const { data: capability, error: capabilityFetchError } = useGetOne('Capability', { id: capabilityUri });
 
   const outbox = useOutbox();
 
-  if (!capabilityUri) {
-    notify('app.notification.invite_cap_invalid', { type: 'error' });
-    navigate('/');
-  }
-  if (capabilityFetchError) {
-    notify('app.notification.invite_cap_fetch_error', {
-      type: 'error',
-      messageArgs: { error: JSON.stringify(capabilityFetchError) }
-    });
-    navigate('/');
-  }
-
-  // Fetch the inviter profile, once the capability document (with the inviter's profile URI) is available.
+  // Fetch the inviter profile and photo..
   useEffect(() => {
-    if (capability) {
-      fetch(capability['acl:accessTo'] as string, {
-        headers: { Accept: 'application/ld+json', Authorization: `Capability ${capabilityUri}` }
-      })
-        .then(async response => response.json())
-        .then(profile => {
-          setInviterProfile(profile);
-        })
-        .catch((err: Error) => {
-          notify('app.notification.invite_cap_profile_fetch_error', { error: err.message });
-          navigate('/');
-        });
+    if (!capabilityUri) {
+      notify('app.notification.invite_cap_invalid', {
+        type: 'error',
+        multiLine: true,
+        messageArgs: { error: 'No capability available' }
+      });
+      navigate('/');
+      return;
     }
-  }, [capability]);
+
+    fetchCapabilityResources(capabilityUri)
+      .then(resources => {
+        const imageBlob: Blob = resources.find(resource => resource.type?.includes('image/'));
+        const profileDoc = resources.find(resource => arrayOf(resource.type).includes('Profile'));
+
+        if (imageBlob && profileDoc) {
+          // Set the profile image as blob URI manually. Sorry, a bit hacky.
+          profileDoc['vcard:photo'] = URL.createObjectURL(imageBlob);
+        }
+
+        setInviterProfile(profileDoc);
+      })
+      .catch((err: Error) => {
+        notify('app.notification.invite_cap_invalid', {
+          type: 'error',
+          messageArgs: { error: err.message },
+          multiLine: true
+        });
+        navigate('/');
+      });
+  }, []);
 
   // There are multiple page options depending on the current state:
   // 1. Logged out => show invite page

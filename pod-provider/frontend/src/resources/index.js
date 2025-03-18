@@ -2,7 +2,6 @@ export { default as AccessGrant } from './AccessGrant';
 export { default as Actor } from './Actor';
 export { default as App } from './App';
 export { default as AppRegistration } from './AppRegistration';
-export { default as Capability } from './Capability';
 export { default as ClassDescription } from './ClassDescription';
 export { default as DataGrant } from './DataGrant';
 export { default as Tag } from './Tag';

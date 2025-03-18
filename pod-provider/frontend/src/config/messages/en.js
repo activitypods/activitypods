@@ -131,7 +131,7 @@ module.exports = {
     card: {
       add_contact: 'Add a contact',
       contact_requests: 'Contact requests',
-      share_contact: 'My contact link'
+      share_contact: 'Create contact link'
     },
     block: {
       contact_requests: 'New contact requests'
@@ -237,7 +237,7 @@ module.exports = {
       home_address_deleted: 'Home address deleted',
       send_request_error: 'Error while sending the request: %{error}',
       connection_accepted: 'You accepted the connection request.',
-      invite_cap_invalid: 'The invite link is not valid',
+      invite_cap_invalid: 'The invite link is not valid. Error:\n%{error}',
       invite_cap_fetch_error: 'Error occurred while fetching the invitation. It might not be valid. Error: %{error}',
       invite_cap_missing: 'Unable to generate an invite link (missing capability)',
       invite_cap_profile_fetch_error: 'Error while fetching the profile associated with the invite link.',

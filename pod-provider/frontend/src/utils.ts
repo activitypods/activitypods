@@ -1,3 +1,10 @@
+import { FetchFn } from '@semapps/semantic-data-provider';
+import jwt from 'jsonwebtoken';
+import { fetchUtils } from 'react-admin';
+import urlJoin from 'url-join';
+
+const VC_API_SERVICE_TYPE = 'urn:tmp:vcService';
+
 export const formatUsername = (uri?: string) => {
   if (uri) {
     const url = new URL(uri);
@@ -249,4 +256,115 @@ export const getLangString = (value: string | LangString[], locale: string): str
   } else {
     return value;
   }
+};
+
+export const getWebIdFromResourceUri = (resourceUri: string) => {
+  try {
+    const uri = new URL(resourceUri);
+    const username = /\/([^/]+)/.exec(uri.pathname)?.[1];
+    return username && `${uri.origin}/${username}`;
+  } catch (e) {
+    return undefined;
+  }
+};
+
+export const base64urlEncode = (str: string) => {
+  const bytes = new TextEncoder().encode(str);
+  const binString = Array.from(bytes, byte => String.fromCodePoint(byte)).join('');
+  return btoa(binString).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+};
+
+export const createUnsignedJwt = (payload: object) => {
+  const header = {
+    typ: 'JWT',
+    alg: 'none'
+  };
+
+  const encodedHeader = base64urlEncode(JSON.stringify(header));
+  const encodedPayload = base64urlEncode(JSON.stringify(payload));
+
+  return `${encodedHeader}.${encodedPayload}.`;
+};
+
+export const vcEndpointFromWebId = async (webId: any) => {
+  const webIdDoc = typeof webId === 'string' ? (await fetchUtils.fetchJson(webId)).json : webId;
+
+  return arrayOf(webIdDoc?.service).find(service => service?.type === VC_API_SERVICE_TYPE)?.serviceEndpoint;
+};
+
+/**
+ * Fetch a resource with a VC capability.
+ *
+ * @param resourceUri The resource to fetch
+ * @param capability The VC capability or it's URL
+ * @param vcEndpoint The VC endpoint of the fetching actor
+ * @param headers Optional headers for the resource fetch
+ * @returns The response of a (regular) `fetch` request to the resource.
+ */
+export const fetchResourceWithCapability = async ({
+  resourceUri,
+  capability,
+  headers = {}
+}: {
+  resourceUri: string;
+  capability: string | object;
+  headers: object;
+}) => {
+  // Fetch capability object, if necessary.
+  const capabilityObject = typeof capability === 'object' ? capability : (await fetchUtils.fetchJson(capability)).json;
+
+  // Create presentation from capability object.
+  const presentation = {
+    '@context': ['https://www.w3.org/ns/credentials/v2'],
+    type: 'VerifiablePresentation',
+    verifiableCredential: [capabilityObject]
+  };
+
+  // Encode presentation as jwt token.
+  const jwtPayload = createUnsignedJwt(presentation);
+
+  // Send request with bearer token in authorization header.
+  return fetch(resourceUri, {
+    headers: {
+      ...headers,
+      Authorization: `Bearer ${jwtPayload}`
+    }
+  });
+};
+
+/**
+ * Fetches all resources that a capability grants access to.
+ *
+ * @param capabilityUri URI of the capability which has a credentialSubject with `hasAuthorization`.
+ * @returns JSON, if the result is json-ish, or a Blob, if the result is an image.
+ */
+export const fetchCapabilityResources = async (capabilityUri: string) => {
+  return fetch(capabilityUri).then(async capRes => {
+    if (!capRes.ok) {
+      throw new Error('Capability fetch failed');
+    }
+    const capability = await capRes.json();
+    // The capability has a credentialSubject with `hasAuthorization`
+    const availableResources = arrayOf(capability?.credentialSubject?.['apods:hasAuthorization'])
+      .map(auth => auth['acl:accessTo'])
+      .flatMap(res => res?.id || res);
+
+    if (availableResources.length === 0) {
+      throw new Error('Invite link capability is empty');
+    }
+
+    // Fetch all resources that the capability grants access to.
+    return Promise.all(
+      availableResources.map(async resourceUri => {
+        const resourceRes = await fetchResourceWithCapability({
+          resourceUri,
+          capability,
+          headers: { Accept: '*/*' }
+        });
+        if (!resourceRes.ok) throw new Error('Error fetching resource', { cause: resourceRes });
+        if (resourceRes.headers.get('Content-Type')?.includes('json')) return resourceRes.json();
+        if (resourceRes.headers.get('Content-Type')?.includes('image')) return resourceRes.blob();
+      })
+    );
+  });
 };

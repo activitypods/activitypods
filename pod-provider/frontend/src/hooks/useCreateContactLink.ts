@@ -25,7 +25,11 @@ const requestContactCapability = async (fetchFn: FetchFn, webIdDoc: any, profile
       credential: {
         '@context': [
           'https://www.w3.org/ns/credentials/v2',
-          { as: 'https://www.w3.org/ns/activitystreams#', apods: 'http://activitypods.org/ns/core#' }
+          {
+            as: 'https://www.w3.org/ns/activitystreams#',
+            apods: 'http://activitypods.org/ns/core#',
+            acl: 'http://www.w3.org/ns/auth/acl#'
+          }
         ],
         type: 'VerifiableCredential',
         name: 'Invite Link',
@@ -40,10 +44,10 @@ const requestContactCapability = async (fetchFn: FetchFn, webIdDoc: any, profile
               }
             }
           },
-          hasAuthorization: {
+          'apods:hasAuthorization': {
             type: 'acl:Authorization',
             'acl:mode': 'acl:Read',
-            'acl:accessTo': [profileDoc.id, profileDoc['vcard:photo']]
+            'acl:accessTo': [].concat(profileDoc.id, profileDoc['vcard:photo'] || [])
           }
         }
       }
@@ -131,10 +135,14 @@ const useCreateContactLink = (
         setErrorDetails(error);
 
         if (shouldNotify !== false)
-          notify('app.notification.contact_link_creation_failed', { type: 'error', messageArgs: { error } });
+          notify('app.notification.contact_link_creation_failed', {
+            type: 'error',
+            messageArgs: { error },
+            multiLine: true
+          });
 
         // Throw again so that the promise fails and can be caught again.
-        throw error;
+        // throw error;
       });
   }, [setStatus, setLink, setErrorDetails, webIdDoc, profileData]);
 

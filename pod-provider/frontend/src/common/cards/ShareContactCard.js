@@ -44,16 +44,10 @@ const ShareContactCard = () => {
   const classes = useStyles();
   const translate = useTranslate();
   const notify = useNotify();
-  const { createLink, link, status, errorDetails, copied } = useCreateContactLink({
+  const { createLink, link, status, copied } = useCreateContactLink({
     shouldCopy: true,
     shouldNotify: 'onError'
   });
-
-  useEffect(() => {
-    if (status === 'error') {
-      notify('app.notification.contact_link_creation_failed', { type: 'error', messageArgs: { error: errorDetails } });
-    }
-  }, [status, errorDetails, notify]);
 
   const onCreateContactLinkClicked = () => {
     createLink();

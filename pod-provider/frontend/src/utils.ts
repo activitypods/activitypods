@@ -109,6 +109,14 @@ export const isLocalURL = (url: string) => {
   return new RegExp(`^${localhostRegex.source}$`).test(new URL(url).hostname);
 };
 
+// Return true if the resource can be displayed in the data browser
+export const isStorageUri = (url: string, webId: string) =>
+  url &&
+  (url === webId || url.startsWith(webId + '/')) &&
+  url !== webId + '/sparql' &&
+  url !== webId + '/proxy' &&
+  url !== webId + '/openApp';
+
 export const isUri = (uri: string) => {
   try {
     const url = new URL(uri);

@@ -258,3 +258,6 @@ export const getLangString = (value: string | LangString[], locale: string): str
     return value;
   }
 };
+
+// Check the value is a string starting with http and without any white space
+export const isURL = (value: any) => typeof value === 'string' && value.startsWith('http') && !/\s/g.test(value);

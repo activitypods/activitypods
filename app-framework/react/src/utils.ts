@@ -22,3 +22,6 @@ export const arrayOf = (value: any | [any] | undefined) => {
 };
 
 export const delay = (t: number) => new Promise(resolve => setTimeout(resolve, t));
+
+// Check the value is a string starting with http and without any white space
+export const isURL = (value: any) => typeof value === 'string' && value.startsWith('http') && !/\s/g.test(value);

@@ -1,0 +1,71 @@
+const { MIME_TYPES } = require('@semapps/mime-types');
+const { ACTIVITY_TYPES } = require('@semapps/activitypub');
+
+/**
+ * Service to create invite links with VC capabilities.
+ *
+ * @type {import('moleculer').ServiceSchema}
+ */
+const CapabilitiesProfileService = {
+  name: 'profiles.inviteLinks',
+
+  async started() {
+    const basePath = await this.broker.call('ldp.getBasePath');
+
+    await this.broker.call('api.addRoute', {
+      route: {
+        name: 'create-invite-link',
+        path: path.join(basePath, '/TODO'),
+        authorization: false,
+        authentication: true,
+        aliases: {
+          'GET /': 'profiles.inviteLinks.createInviteLink'
+        }
+      }
+    });
+  },
+  actions: {
+    createInviteCapability: {
+      params: {
+        webId: { type: 'string', optional: false }
+      },
+      /** Returns a URI to the capability that authorizes to read the profile and send a friends request. */
+      handler: async function (ctx) {
+        const { webId } = ctx.params;
+        const { url: profileUri } = await ctx.call('ldp.resource.get', {
+          resourceUri: webId,
+          webId: 'system',
+          accept: MIME_TYPES.JSON
+        });
+
+        if (!profileUri) {
+          this.logger.warn(`No profile URI found when creating invite capability for: ${webId}`);
+          return null;
+        }
+
+        // Add an invite capability.
+        const inviteCapability = await ctx.call('signature.data-integrity.createVC', {
+          credentialSubject: {
+            hasAuthorization: {
+              type: 'acl:Authorization',
+              'acl:accessTo': profileUri,
+              'acl:mode': 'acl:Read'
+            },
+            hasActivityGrant: {
+              type: ACTIVITY_TYPES.OFFER,
+              to: webId,
+              target: webId,
+              object: {
+                type: ACTIVITY_TYPES.ADD
+              }
+            }
+          }
+        });
+
+        return inviteCapability.id;
+      }
+    }
+  }
+};
+
+module.exports = CapabilitiesProfileService;

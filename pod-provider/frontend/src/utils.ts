@@ -1,9 +1,4 @@
-import { FetchFn } from '@semapps/semantic-data-provider';
-import jwt from 'jsonwebtoken';
 import { fetchUtils } from 'react-admin';
-import urlJoin from 'url-join';
-
-const VC_API_SERVICE_TYPE = 'urn:tmp:vcService';
 
 export const formatUsername = (uri?: string) => {
   if (uri) {
@@ -286,18 +281,11 @@ export const createUnsignedJwt = (payload: object) => {
   return `${encodedHeader}.${encodedPayload}.`;
 };
 
-export const vcEndpointFromWebId = async (webId: any) => {
-  const webIdDoc = typeof webId === 'string' ? (await fetchUtils.fetchJson(webId)).json : webId;
-
-  return arrayOf(webIdDoc?.service).find(service => service?.type === VC_API_SERVICE_TYPE)?.serviceEndpoint;
-};
-
 /**
  * Fetch a resource with a VC capability.
  *
  * @param resourceUri The resource to fetch
  * @param capability The VC capability or it's URL
- * @param vcEndpoint The VC endpoint of the fetching actor
  * @param headers Optional headers for the resource fetch
  * @returns The response of a (regular) `fetch` request to the resource.
  */

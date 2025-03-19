@@ -1,23 +1,14 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useTranslate, useGetIdentity, useGetList, useDataProvider, useNotify } from 'react-admin';
+import { useState, useCallback, useMemo } from 'react';
+import { useGetIdentity, useDataProvider, useNotify } from 'react-admin';
 import urlJoin from 'url-join';
-import { arrayOf } from '../utils';
 import { FetchFn, SemanticDataProvider } from '@semapps/semantic-data-provider';
-import { ACTIVITY_TYPES, OBJECT_TYPES } from '@semapps/activitypub-components';
 import copy from 'copy-to-clipboard';
 
-// useState(translate('ra.page.loading'));
-const VC_API_SERVICE_TYPE = 'urn:tmp:vcService';
+const VC_API_PATH = '/api/vc/v0.3';
 
 /** Creates a VC capability that's usable as an invite link. This returns the capability's URI, not the URI that the invitee can open in the frontend! */
 const requestContactCapability = async (fetchFn: FetchFn, webIdDoc: any, profileDoc: any) => {
-  const vcEndpointUri: string | undefined = arrayOf(webIdDoc?.service).find(
-    service => service.type === VC_API_SERVICE_TYPE
-  )?.serviceEndpoint;
-
-  if (!vcEndpointUri) {
-    throw new Error('Creating invite link capability failed. No VC API endpoint is available.');
-  }
+  const vcEndpointUri = urlJoin(webIdDoc?.id, VC_API_PATH);
 
   const result = await fetchFn(urlJoin(vcEndpointUri, 'credentials/issue'), {
     method: 'POST',

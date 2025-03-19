@@ -8,13 +8,7 @@ import InvitePageViewLoggedIn from './InvitePageViewLoggedIn';
 import InvitePageSuccess from './InvitePageSuccess';
 import InvitePageProviderSelect from './InvitePageProviderSelect';
 import SimpleBox from '../../layout/SimpleBox';
-import {
-  arrayOf,
-  fetchCapabilityResources,
-  fetchResourceWithCapability,
-  getWebIdFromResourceUri,
-  vcEndpointFromWebId
-} from '../../utils';
+import { arrayOf, fetchCapabilityResources } from '../../utils';
 
 /** The URI is expected to be encoded in the URI fragment in the SearchParams format. */
 const getCapabilityUri = (location: Location) => {

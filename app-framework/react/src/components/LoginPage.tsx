@@ -18,7 +18,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import StorageIcon from '@mui/icons-material/Storage';
 import type { PodProvider, SolidOIDCToken } from '../types';
 import useRegisterApp from '../hooks/useRegisterApp';
-import { isURL } from '../utils';
+import { isURL, isPath } from '../utils';
 
 /**
  * Display a list of Pod providers that we can log in
@@ -37,7 +37,8 @@ const LoginPage: FunctionComponent<Props> = ({ text, clientId, customPodProvider
   const [podProviders, setPodProviders] = useState<[PodProvider]>(customPodProviders || []);
   const [isRegistered, setIsRegistered] = useState<boolean>(false);
   const isSignup = searchParams.has('signup');
-  const redirectUrl = isURL(searchParams.get('redirect')) ? searchParams.get('redirect')! : '/';
+  const redirectUrl =
+    isURL(searchParams.get('redirect')) || isPath(searchParams.get('redirect')) ? searchParams.get('redirect')! : '/';
   const registerApp = useRegisterApp();
 
   useEffect(() => {

@@ -3,7 +3,7 @@ import { useGetIdentity, EditBase, useNotify, useRedirect } from 'react-admin';
 import { useSearchParams } from 'react-router-dom';
 import ProfileCreatePageView from './ProfileCreatePageView';
 import ProgressMessage from '../../common/ProgressMessage';
-import { isURL } from '../../utils';
+import { isURL, isPath } from '../../utils';
 
 const ProfileCreatePage = () => {
   const notify = useNotify();
@@ -33,7 +33,11 @@ const ProfileCreatePage = () => {
             undoable: false
           });
           refetchIdentity();
-          redirect(isURL(searchParams.get('redirect')) ? searchParams.get('redirect') : '/');
+          redirect(
+            isURL(searchParams.get('redirect')) || isPath(searchParams.get('redirect'))
+              ? searchParams.get('redirect')
+              : '/'
+          );
         }
       }}
     >

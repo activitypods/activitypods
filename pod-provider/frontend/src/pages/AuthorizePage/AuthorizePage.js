@@ -6,6 +6,7 @@ import useTrustedApps from '../../hooks/useTrustedApps';
 import useGetAppStatus from '../../hooks/useGetAppStatus';
 import RegistrationScreen from './RegistrationScreen';
 import UpgradeScreen from './UpgradeScreen';
+import { isURL } from '../../utils';
 
 const AuthorizePage = () => {
   useCheckAuthenticated();
@@ -25,7 +26,13 @@ const AuthorizePage = () => {
   const accessApp = useCallback(async () => {
     const redirectUrl = application['interop:hasAuthorizationCallbackEndpoint'];
     if (redirectUrl) {
-      window.location.href = application['interop:hasAuthorizationCallbackEndpoint'];
+      if (isURL(redirectUrl)) {
+        window.location.href = application['interop:hasAuthorizationCallbackEndpoint'];
+      } else {
+        notify('Cannot redirect to app because the interop:hasAuthorizationCallbackEndpoint is not a valid URL', {
+          type: 'error'
+        });
+      }
     } else {
       notify('Cannot redirect to app because no interop:hasAuthorizationCallbackEndpoint is defined', {
         type: 'error'

@@ -13,7 +13,8 @@ module.exports = {
       attachToTypes: [ACTOR_TYPES.PERSON],
       attachPredicate: 'http://activitypods.org/ns/core#ignoredContacts',
       ordered: false,
-      dereferenceItems: false
+      dereferenceItems: false,
+      permissions: {} // This collection is only visible by the Pod owner
     }
   },
   dependencies: ['activitypub.collections-registry', 'webacl'],

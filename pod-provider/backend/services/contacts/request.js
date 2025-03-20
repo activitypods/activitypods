@@ -22,21 +22,24 @@ module.exports = {
       attachToTypes: [ACTOR_TYPES.PERSON],
       attachPredicate: 'http://activitypods.org/ns/core#contacts',
       ordered: false,
-      dereferenceItems: false
+      dereferenceItems: false,
+      permissions: {} // This collection is only visible by the Pod owner
     },
     contactRequestsCollectionOptions: {
       path: '/contact-requests',
       attachToTypes: [ACTOR_TYPES.PERSON],
       attachPredicate: 'http://activitypods.org/ns/core#contactRequests',
       ordered: false,
-      dereferenceItems: true
+      dereferenceItems: true,
+      permissions: {} // This collection is only visible by the Pod owner
     },
     rejectedContactsCollectionOptions: {
       path: '/rejected-contacts',
       attachToTypes: [ACTOR_TYPES.PERSON],
       attachPredicate: 'http://activitypods.org/ns/core#rejectedContacts',
       ordered: false,
-      dereferenceItems: false
+      dereferenceItems: false,
+      permissions: {} // This collection is only visible by the Pod owner
     }
   },
   dependencies: ['activitypub.collections-registry', 'webacl'],

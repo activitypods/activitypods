@@ -1,7 +1,6 @@
 const path = require('path');
 const urlJoin = require('url-join');
 const { AuthLocalService } = require('@semapps/auth');
-const { arrayOf } = require('@semapps/ldp');
 const CONFIG = require('../../config/config');
 const transport = require('../../config/transport');
 
@@ -12,6 +11,8 @@ module.exports = {
     jwtPath: path.resolve(__dirname, '../../jwt'),
     accountsDataset: CONFIG.AUTH_ACCOUNTS_DATASET,
     reservedUsernames: CONFIG.AUTH_RESERVED_USER_NAMES,
+    minPasswordLength: 8, // Same as frontend requirement
+    minUsernameLength: 2,
     webIdSelection: ['nick', 'schema:knowsLanguage'],
     formUrl: CONFIG.FRONTEND_URL ? urlJoin(CONFIG.FRONTEND_URL, 'login') : undefined,
     podProvider: true,

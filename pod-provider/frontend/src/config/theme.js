@@ -108,6 +108,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 8,
+          height: 36,
           minWidth: 100
         },
         contained: {

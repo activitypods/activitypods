@@ -298,6 +298,7 @@ export const fetchResourceWithCapability = async ({
   capability: string | object;
   headers: object;
 }) => {
+  if (!capability) throw new Error('No capability is provided.');
   // Fetch capability object, if necessary.
   const capabilityObject = typeof capability === 'object' ? capability : (await fetchUtils.fetchJson(capability)).json;
 

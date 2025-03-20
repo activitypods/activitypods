@@ -271,7 +271,11 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         }
 
         // If the webId is a registered application, check it has the special right
-        if (await ctx.call('app-registrations.isRegistered', { appUri: ctx.meta.webId, podOwner })) {
+        if (
+          ctx.meta.webId !== 'anon' &&
+          ctx.meta.webId !== 'system' &&
+          (await ctx.call('app-registrations.isRegistered', { appUri: ctx.meta.webId, podOwner }))
+        ) {
           const appUri = ctx.meta.webId;
 
           const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
@@ -282,6 +286,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
           }
 
           // Temporarily disable WAC permissions check on public SPARQL endpoint to see how it impacts performances
+          // (In the WebaclMiddleware, for all triplestore actions, we set the webId to "system" if the webId is the Pod owner)
           ctx.meta.webId = podOwner;
         }
 

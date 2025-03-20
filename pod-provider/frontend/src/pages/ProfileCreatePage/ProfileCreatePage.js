@@ -32,9 +32,13 @@ const ProfileCreatePage = () => {
             messageArgs: { smart_count: 1 },
             undoable: false
           });
+
           refetchIdentity();
+
+          // The redirection URL should be the /.oidc/auth/auth/{interactionId} path of the backend
+          // If it is not, this is maybe a phishing attack so we shouldn't use it
           redirect(
-            isURL(searchParams.get('redirect')) || isPath(searchParams.get('redirect'))
+            isURL(searchParams.get('redirect')) && searchParams.get('redirect').startsWith(CONFIG.BACKEND_URL)
               ? searchParams.get('redirect')
               : '/'
           );

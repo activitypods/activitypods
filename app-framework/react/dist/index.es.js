@@ -1,5 +1,5 @@
 import {useState as $iLwJW$useState, useCallback as $iLwJW$useCallback, useEffect as $iLwJW$useEffect, useLayoutEffect as $iLwJW$useLayoutEffect, Fragment as $iLwJW$Fragment, useMemo as $iLwJW$useMemo} from "react";
-import {useGetIdentity as $iLwJW$useGetIdentity, useDataProvider as $iLwJW$useDataProvider, useTranslate as $iLwJW$useTranslate, useLogout as $iLwJW$useLogout, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useRedirect as $iLwJW$useRedirect, useRecordContext as $iLwJW$useRecordContext, Button as $iLwJW$Button1, useGetList as $iLwJW$useGetList, UserMenu as $iLwJW$UserMenu, Logout as $iLwJW$Logout, MenuItemLink as $iLwJW$MenuItemLink} from "react-admin";
+import {useGetIdentity as $iLwJW$useGetIdentity, useDataProvider as $iLwJW$useDataProvider, useTranslate as $iLwJW$useTranslate, useLogout as $iLwJW$useLogout, useRedirect as $iLwJW$useRedirect, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useRecordContext as $iLwJW$useRecordContext, Button as $iLwJW$Button1, useGetList as $iLwJW$useGetList, UserMenu as $iLwJW$UserMenu, Logout as $iLwJW$Logout, MenuItemLink as $iLwJW$MenuItemLink} from "react-admin";
 import {useNodeinfo as $iLwJW$useNodeinfo, useCollection as $iLwJW$useCollection, useOutbox as $iLwJW$useOutbox, ACTIVITY_TYPES as $iLwJW$ACTIVITY_TYPES} from "@semapps/activitypub-components";
 import {jsx as $iLwJW$jsx, jsxs as $iLwJW$jsxs, Fragment as $iLwJW$Fragment1} from "react/jsx-runtime";
 import {Box as $iLwJW$Box, Typography as $iLwJW$Typography, Button as $iLwJW$Button, CircularProgress as $iLwJW$CircularProgress, Card as $iLwJW$Card, Avatar as $iLwJW$Avatar, List as $iLwJW$List, Divider as $iLwJW$Divider, ListItem as $iLwJW$ListItem, ListItemButton as $iLwJW$ListItemButton, ListItemAvatar as $iLwJW$ListItemAvatar, ListItemText as $iLwJW$ListItemText, useMediaQuery as $iLwJW$useMediaQuery, Dialog as $iLwJW$Dialog, DialogTitle as $iLwJW$DialogTitle, DialogContent as $iLwJW$DialogContent, DialogActions as $iLwJW$DialogActions, TextField as $iLwJW$TextField, Switch as $iLwJW$Switch, MenuItem as $iLwJW$MenuItem, ListItemIcon as $iLwJW$ListItemIcon} from "@mui/material";
@@ -41,6 +41,8 @@ const $93d7a9f3166de761$export$e57ff0f701c44363 = (value)=>{
     ];
 };
 const $93d7a9f3166de761$export$1391212d75b2ee65 = (t)=>new Promise((resolve)=>setTimeout(resolve, t));
+const $93d7a9f3166de761$export$bab98af026af71ac = (value)=>typeof value === "string" && value.startsWith("http") && !/\s/g.test(value);
+const $93d7a9f3166de761$export$50ae7fb6f87de989 = (value)=>typeof value === "string" && value.startsWith("/") && !/\s/g.test(value);
 
 
 
@@ -90,10 +92,12 @@ var $421a3f9f89d1fa03$export$2e2bcd8739ae039 = $421a3f9f89d1fa03$var$useGetAppSt
                 const appRegistrationUri = registeredAgentLinkHeader[0].anchor;
                 return appRegistrationUri;
             } else {
+                // Save current path, so that the BackgroundChecks component may redirect there after registration
+                localStorage.setItem("redirect", window.location.pathname);
                 // No application registration found, redirect to the authorization agent
-                const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
-                redirectUrl.searchParams.append("client_id", clientId);
-                window.location.href = redirectUrl.toString();
+                const redirectToAuthAgentUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
+                redirectToAuthAgentUrl.searchParams.append("client_id", clientId);
+                window.location.href = redirectToAuthAgentUrl.toString();
             }
         } else throw new Error(`apods.error.user_authorization_agent_not_found`);
     }, [
@@ -120,6 +124,7 @@ var $27e56b6748904a8d$export$2e2bcd8739ae039 = $27e56b6748904a8d$var$useRegister
     const nodeinfo = (0, $iLwJW$useNodeinfo)(identity?.id ? new URL(identity?.id).host : undefined);
     const registerApp = (0, $27e56b6748904a8d$export$2e2bcd8739ae039)();
     const getAppStatus = (0, $421a3f9f89d1fa03$export$2e2bcd8739ae039)();
+    const redirect = (0, $iLwJW$useRedirect)();
     const isLoggedOut = !isIdentityLoading && !identity?.id;
     if (!clientId) throw new Error(`Missing clientId prop for BackgroundChecks component`);
     const checkAppStatus = (0, $iLwJW$useCallback)(async ()=>{
@@ -132,7 +137,6 @@ var $27e56b6748904a8d$export$2e2bcd8739ae039 = $27e56b6748904a8d$var$useRegister
                     return;
                 }
                 if (!appStatus.installed) {
-                    setErrorMessage(translate("apods.error.app_not_registered"));
                     await registerApp(clientId, identity.id);
                     return;
                 }
@@ -192,6 +196,11 @@ var $27e56b6748904a8d$export$2e2bcd8739ae039 = $27e56b6748904a8d$var$useRegister
         identity,
         nodeinfo,
         checkAppStatus
+    ]);
+    (0, $iLwJW$useEffect)(()=>{
+        if (localStorage.getItem("redirect")) redirect(localStorage.getItem("redirect"));
+    }, [
+        redirect
     ]);
     (0, $iLwJW$useLayoutEffect)(()=>{
         document.addEventListener("visibilitychange", checkAppStatus);
@@ -282,6 +291,7 @@ var $2957839fe06af793$export$2e2bcd8739ae039 = $2957839fe06af793$var$BackgroundC
 
 
 
+
 /**
  * Display a list of Pod providers that we can log in
  * This list is taken from the https://activitypods.org/data/pod-providers endpoint
@@ -298,7 +308,7 @@ var $2957839fe06af793$export$2e2bcd8739ae039 = $2957839fe06af793$var$BackgroundC
     const [podProviders, setPodProviders] = (0, $iLwJW$useState)(customPodProviders || []);
     const [isRegistered, setIsRegistered] = (0, $iLwJW$useState)(false);
     const isSignup = searchParams.has("signup");
-    const redirectUrl = searchParams.get("redirect") || "/";
+    const redirectUrl = (0, $93d7a9f3166de761$export$50ae7fb6f87de989)(searchParams.get("redirect")) ? searchParams.get("redirect") : "/";
     const registerApp = (0, $27e56b6748904a8d$export$2e2bcd8739ae039)();
     (0, $iLwJW$useEffect)(()=>{
         (async ()=>{
@@ -327,7 +337,8 @@ var $2957839fe06af793$export$2e2bcd8739ae039 = $2957839fe06af793$var$BackgroundC
     (0, $iLwJW$useEffect)(()=>{
         if (searchParams.has("iss")) // Automatically login if Pod provider is known
         login({
-            issuer: searchParams.get("iss")
+            issuer: searchParams.get("iss"),
+            redirect: redirectUrl
         });
         else if (searchParams.has("register_app")) {
             // Identity is not available yet because we can't fetch the user profile
@@ -414,7 +425,7 @@ var $2957839fe06af793$export$2e2bcd8739ae039 = $2957839fe06af793$var$BackgroundC
                                         children: /*#__PURE__*/ (0, $iLwJW$jsxs)((0, $iLwJW$ListItemButton), {
                                             onClick: ()=>login({
                                                     issuer: podProvider["apods:baseUrl"],
-                                                    redirect: "/login?register_app=true",
+                                                    redirect: redirectUrl,
                                                     isSignup: isSignup
                                                 }),
                                             children: [

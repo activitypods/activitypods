@@ -18,7 +18,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import StorageIcon from '@mui/icons-material/Storage';
 import type { PodProvider, SolidOIDCToken } from '../types';
 import useRegisterApp from '../hooks/useRegisterApp';
-import { isURL, isPath } from '../utils';
+import { isPath } from '../utils';
 
 /**
  * Display a list of Pod providers that we can log in
@@ -37,8 +37,7 @@ const LoginPage: FunctionComponent<Props> = ({ text, clientId, customPodProvider
   const [podProviders, setPodProviders] = useState<[PodProvider]>(customPodProviders || []);
   const [isRegistered, setIsRegistered] = useState<boolean>(false);
   const isSignup = searchParams.has('signup');
-  const redirectUrl =
-    isURL(searchParams.get('redirect')) || isPath(searchParams.get('redirect')) ? searchParams.get('redirect')! : '/';
+  const redirectUrl = isPath(searchParams.get('redirect')) ? searchParams.get('redirect')! : '/';
   const registerApp = useRegisterApp();
 
   useEffect(() => {
@@ -68,7 +67,7 @@ const LoginPage: FunctionComponent<Props> = ({ text, clientId, customPodProvider
   useEffect(() => {
     if (searchParams.has('iss')) {
       // Automatically login if Pod provider is known
-      login({ issuer: searchParams.get('iss') });
+      login({ issuer: searchParams.get('iss'), redirect: redirectUrl });
     } else if (searchParams.has('register_app')) {
       // Identity is not available yet because we can't fetch the user profile
       // So get the webId by decoding the token
@@ -138,7 +137,7 @@ const LoginPage: FunctionComponent<Props> = ({ text, clientId, customPodProvider
                     onClick={() =>
                       login({
                         issuer: podProvider['apods:baseUrl'],
-                        redirect: '/login?register_app=true',
+                        redirect: redirectUrl,
                         isSignup
                       })
                     }

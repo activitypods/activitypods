@@ -26,10 +26,13 @@ const useRegisterApp = () => {
           const appRegistrationUri = registeredAgentLinkHeader[0].anchor;
           return appRegistrationUri;
         } else {
+          // Save current path, so that the BackgroundChecks component may redirect there after registration
+          localStorage.setItem('redirect', window.location.pathname);
+
           // No application registration found, redirect to the authorization agent
-          const redirectUrl = new URL(authAgent['interop:hasAuthorizationRedirectEndpoint']);
-          redirectUrl.searchParams.append('client_id', clientId);
-          window.location.href = redirectUrl.toString();
+          const redirectToAuthAgentUrl = new URL(authAgent['interop:hasAuthorizationRedirectEndpoint']);
+          redirectToAuthAgentUrl.searchParams.append('client_id', clientId);
+          window.location.href = redirectToAuthAgentUrl.toString();
         }
       } else {
         throw new Error(`apods.error.user_authorization_agent_not_found`);

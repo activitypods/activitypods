@@ -53,4 +53,4 @@ const hasActivityGrant = (activity, templateActivity) => {
   });
 };
 
-module.exports = hasActivityGrant;
+module.exports = { hasActivityGrant };

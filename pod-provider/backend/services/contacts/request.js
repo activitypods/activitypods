@@ -12,7 +12,7 @@ const {
   ACCEPT_CONTACT_REQUEST_MAPPING,
   AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
 } = require('../../config/mappings');
-const hasActivityGrant = require('../utils/hasActivityGrant');
+const { hasActivityGrant } = require('../utils');
 
 /** @type {import('moleculer').ServiceSchema} */
 module.exports = {

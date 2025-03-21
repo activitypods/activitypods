@@ -1,5 +1,6 @@
 const path = require('path');
 const CONFIG = require('../config/config');
+const { sanitizeSparqlQuery } = require('@semapps/triplestore');
 
 const POD_PROVIDER_TYPES = [
   'https://www.w3.org/ns/activitystreams#Person',
@@ -34,7 +35,7 @@ module.exports = {
       // If resource type is not provided, guess it from the resource
       if (!type && uri) {
         const results = await ctx.call('triplestore.query', {
-          query: `
+          query: sanitizeSparqlQuery`
             SELECT ?type
             WHERE {
               <${uri}> a ?type .
@@ -61,7 +62,7 @@ module.exports = {
         appUri = CONFIG.FRONTEND_URL;
       } else {
         const results = await ctx.call('triplestore.query', {
-          query: `
+          query: sanitizeSparqlQuery`
             PREFIX interop: <http://www.w3.org/ns/solid/interop#>
             PREFIX apods: <http://activitypods.org/ns/core#>
             SELECT ?appUri

@@ -179,7 +179,6 @@ module.exports = {
       /**
        * On receipt of an announce activity (repost), cache it in the remote store,
        *  and attach it to type-index registered containers..
-       * // TODO: Is the latter thing necessary?
        */
       async onReceive(ctx, activity, recipientUri) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
@@ -229,7 +228,7 @@ module.exports = {
 
               // If the resource type is invalid, an error will be thrown here
               await this.broker.call('type-registrations.register', {
-                type: expandedType,
+                types: expandedType,
                 containerUri: containersUris[0],
                 webId: recipientUri
               });

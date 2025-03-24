@@ -242,9 +242,6 @@ module.exports = {
               });
             }
           }
-        } else {
-          // TODO:
-          // In case the recipient is the original announcer, we (can) add it to the shares collection.
         }
       }
     },

@@ -4,7 +4,7 @@ import urlJoin from 'url-join';
 import { FetchFn, SemanticDataProvider } from '@semapps/semantic-data-provider';
 import copy from 'copy-to-clipboard';
 
-const VC_API_PATH = '/api/vc/v0.3';
+const VC_API_PATH = '/vc/v0.3';
 
 /** Creates a VC capability that's usable as an invite link. This returns the capability's URI, not the URI that the invitee can open in the frontend! */
 const requestContactCapability = async (fetchFn: FetchFn, webIdDoc: any, profileDoc: any) => {
@@ -49,7 +49,7 @@ const requestContactCapability = async (fetchFn: FetchFn, webIdDoc: any, profile
     });
   });
 
-  const verifiableCredential = await result.json;
+  const verifiableCredential = result.json;
   const link = verifiableCredential?.id;
 
   if (link && result.status >= 200 && result.status < 300) {

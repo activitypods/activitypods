@@ -1965,6 +1965,23 @@
     localforage "^1.9.0"
     util "^0.12.4"
 
+"@semapps/activitypub-components@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@semapps/activitypub-components/-/activitypub-components-1.1.1.tgz#5e9b66df238d8fbfc43af1c57822fccf151a9348"
+  integrity sha512-7STMJCA8lYLx5tnloJn0kjMeA+S2B0TJHDkgdojhivA1fekD42xHne1e2QfQT1ySpCjOKCTVVyGcsduYMj1eRg==
+  dependencies:
+    "@semapps/auth-provider" "1.1.1"
+    "@semapps/field-components" "1.1.1"
+    "@semapps/semantic-data-provider" "1.1.1"
+    "@tiptap/core" "^2.0.0-beta.95"
+    "@tiptap/extension-mention" "^2.0.0-beta.95"
+    "@tiptap/extension-placeholder" "^2.0.0-beta.95"
+    "@tiptap/react" "^2.0.0-beta.95"
+    "@tiptap/suggestion" "^2.0.0-beta.95"
+    ra-input-rich-text "^4.11.0"
+    react-admin "^4.11.0"
+    tippy.js "^6.3.7"
+
 "@semapps/activitypub@1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@semapps/activitypub/-/activitypub-1.1.1.tgz#9f4135a6a989bc7ad241b36c157259a48a55763d"
@@ -1984,6 +2001,29 @@
     node-fetch "^2.6.6"
     sparqljs "^3.5.2"
     url-join "^4.0.1"
+
+"@semapps/auth-provider@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@semapps/auth-provider/-/auth-provider-1.1.1.tgz#bd97c3b9f7c542520762fee9a2c4864d28ab64b5"
+  integrity sha512-Hr1vUArYucITBAl9Njr95tIm3KDD/3RMWK0MPnYpqn1+/j/DXmacMji90xTAxzkq4RFNMPqxA5uK+vHmyE5exg==
+  dependencies:
+    "@semapps/semantic-data-provider" "1.1.1"
+    classnames "^2.3.2"
+    jwt-decode "^3.0.0"
+    lodash "^4.17.21"
+    oauth4webapi "^2.3.0"
+    react-hook-form "^7.43.9"
+    speakingurl "^14.0.1"
+    url-join "^4.0.1"
+
+"@semapps/field-components@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@semapps/field-components/-/field-components-1.1.1.tgz#cc8302df51835bba13a268042a8ba884c8e265c8"
+  integrity sha512-sE1D5sc0ZL6tJzQBJJ+Ly2bOmktOIkkvRVpNKSf6Hno+6jpKChnKnKBo8GqXDtx/3vuc8CyZyssbhNmSxPZcsw==
+  dependencies:
+    "@semapps/semantic-data-provider" "1.1.1"
+    lodash.debounce "^4.0.8"
+    react-icons "^4.4.0"
 
 "@semapps/ldp@1.1.1":
   version "1.1.1"
@@ -2046,6 +2086,21 @@
     "@semapps/triplestore" "1.1.1"
     moleculer-db "^0.8.16"
     node-fetch "^2.6.6"
+
+"@semapps/semantic-data-provider@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@semapps/semantic-data-provider/-/semantic-data-provider-1.1.1.tgz#87a1b380bbe0156a499a926f939850d135f2d3e6"
+  integrity sha512-UXscb1mdV3ugMyvybKW6EMEU3LtQvj5llz57O1I07WxzDnnBynzQw1G0FR6ZctwJE1vSQLloxcN4uzBFoVgZKA==
+  dependencies:
+    "@rdfjs/data-model" "^1.3.4"
+    change-case "^5.4.4"
+    crypto-js "^4.1.1"
+    http-link-header "1.1.3"
+    jsonld "^5.2.0"
+    jwt-decode "^3.0.0"
+    sparqljs "^3.5.1"
+    speakingurl "^14.0.1"
+    url-join "^4.0.1"
 
 "@semapps/triplestore@1.1.1":
   version "1.1.1"

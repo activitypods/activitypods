@@ -1,4 +1,4 @@
-import React, { fetchUtils, useGetIdentity, useGetOne, useNotify, useTranslate } from 'react-admin';
+import React, { useGetIdentity, useNotify, useTranslate } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { ACTIVITY_TYPES, useOutbox } from '@semapps/activitypub-components';

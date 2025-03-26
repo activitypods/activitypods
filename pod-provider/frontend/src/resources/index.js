@@ -3,6 +3,7 @@ export { default as Actor } from './Actor';
 export { default as App } from './App';
 export { default as AppRegistration } from './AppRegistration';
 export { default as ClassDescription } from './ClassDescription';
+export { default as VerifiableCredential } from './VerifiableCredential';
 export { default as DataGrant } from './DataGrant';
 export { default as Tag } from './Tag';
 export { default as Location } from './Location';

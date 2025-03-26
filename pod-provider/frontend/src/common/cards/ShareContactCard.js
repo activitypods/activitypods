@@ -5,6 +5,7 @@ import { useTranslate } from 'react-admin';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import useCreateContactLink from '../../hooks/useCreateContactLink';
 import { useNotify } from 'react-admin';
+import useContactLink from '../../hooks/useContactLink';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -43,11 +44,7 @@ const useStyles = makeStyles(theme => ({
 const ShareContactCard = () => {
   const classes = useStyles();
   const translate = useTranslate();
-  const notify = useNotify();
-  const { createLink, link, status, copied } = useCreateContactLink({
-    shouldCopy: true,
-    shouldNotify: 'onError'
-  });
+  const { contactLink, status, error } = useContactLink();
 
   const onCreateContactLinkClicked = () => {
     createLink();

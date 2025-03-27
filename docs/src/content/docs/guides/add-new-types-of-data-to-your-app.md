@@ -163,7 +163,7 @@ const App = () => (
     <Admin ...>
       // ... other resources here
       <Resource
-        name="Project"
+        name="projects"
         list={ProjectList}
         create={ProjectCreate}
       />

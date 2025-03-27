@@ -61,7 +61,7 @@ yarn install
 yarn start
 ```
 
-It is now available on http://localhost:8000
+It is now available on http://localhost:8000. You can see an example shape on http://localhost:8000/shapetrees/as/Event
 
 ### Using the local shape repository
 

@@ -20,7 +20,7 @@ const DEFAULT_ALLOWED_TYPES = [
 
 // TODO use cache to improve performances
 const getAllowedTypes = async (ctx, appUri, podOwner, accessMode) => {
-  const dataAuthorizations = await ctx.call('data-authorizations.getForApp', { appUri, podOwner });
+  const dataAuthorizations = await ctx.call('data-authorizations.getForAgent', { agentUri: appUri, podOwner });
 
   let types = [...DEFAULT_ALLOWED_TYPES];
   for (const dataAuthorization of dataAuthorizations) {

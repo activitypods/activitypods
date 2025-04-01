@@ -2,7 +2,7 @@ const path = require('path');
 const urlJoin = require('url-join');
 const { triple, namedNode } = require('@rdfjs/data-model');
 const { MoleculerError } = require('moleculer').Errors;
-const { SingleResourceContainerMixin } = require('@semapps/ldp');
+const { SingleResourceContainerMixin, getWebIdFromUri } = require('@semapps/ldp');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const CONFIG = require('../../config/config');
 
@@ -44,22 +44,28 @@ module.exports = {
   actions: {
     // Action from the ControlledContainerMixin, called when we do GET or HEAD requests on resources
     async getHeaderLinks(ctx) {
-      // Only return header if the fetch is made by a registered app
+      let agentRegistration;
+
       if (ctx.meta.impersonatedUser) {
-        const appUri = ctx.meta.webId;
+        // The fetch is made by a registered app
+        const agentUri = ctx.meta.webId;
         const podOwner = ctx.meta.impersonatedUser;
+        agentRegistration = await ctx.call('app-registrations.getForAgent', { agentUri, podOwner });
+      } else {
+        // The fetch is made by a social agent
+        const agentUri = ctx.meta.webId;
+        const podOwner = getWebIdFromUri(ctx.params.uri);
+        agentRegistration = await ctx.call('social-agent-registrations.getForAgent', { agentUri, podOwner });
+      }
 
-        const appRegistration = await ctx.call('app-registrations.getForApp', { appUri, podOwner });
-
-        if (appRegistration) {
-          return [
-            {
-              uri: appRegistration['interop:registeredAgent'],
-              anchor: appRegistration.id || appRegistration['@id'],
-              rel: 'http://www.w3.org/ns/solid/interop#registeredAgent'
-            }
-          ];
-        }
+      if (agentRegistration) {
+        return [
+          {
+            uri: agentRegistration['interop:registeredAgent'],
+            anchor: agentRegistration.id || agentRegistration['@id'],
+            rel: 'http://www.w3.org/ns/solid/interop#registeredAgent'
+          }
+        ];
       }
     },
     async registerApp(ctx) {
@@ -72,7 +78,7 @@ module.exports = {
       // Force to get through network
       const app = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri });
 
-      const appRegistration = await ctx.call('app-registrations.getForApp', { appUri, podOwner: webId });
+      const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner: webId });
 
       if (appRegistration) {
         throw new MoleculerError(
@@ -172,7 +178,7 @@ module.exports = {
       ctx.meta.dataset = account.username;
 
       const app = await ctx.call('applications.get', { appUri, webId });
-      const appRegistration = await ctx.call('app-registrations.getForApp', { appUri, podOwner: webId });
+      const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner: webId });
 
       if (appRegistration) {
         // Immediately delete existing webhooks channels to avoid permissions errors later

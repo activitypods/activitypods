@@ -71,9 +71,9 @@ module.exports = {
 
       return filteredContainer['ldp:contains']?.[0];
     },
-    // Get all the DataAuthorizations granted to an application
-    async getForApp(ctx) {
-      const { appUri, podOwner } = ctx.params;
+    // Get all the DataAuthorizations granted to an agent
+    async getForAgent(ctx) {
+      const { agentUri, podOwner } = ctx.params;
 
       const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
 
@@ -82,7 +82,7 @@ module.exports = {
           containerUri,
           filters: {
             'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
-            'http://www.w3.org/ns/solid/interop#grantee': appUri
+            'http://www.w3.org/ns/solid/interop#grantee': agentUri
           },
           webId: 'system'
         },
@@ -94,7 +94,7 @@ module.exports = {
     // Delete DataAuthorizations which are not linked anymore to an AccessNeed (may happen on app upgrade)
     async deleteOrphans(ctx) {
       const { appUri, podOwner } = ctx.params;
-      const dataAuthorizations = await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx });
+      const dataAuthorizations = await this.actions.getForAgent({ agentUri: appUri, podOwner }, { parentCtx: ctx });
       for (const dataAuthorization of dataAuthorizations) {
         try {
           await ctx.call('ldp.remote.get', { resourceUri: dataAuthorization['interop:satisfiesAccessNeed'] });

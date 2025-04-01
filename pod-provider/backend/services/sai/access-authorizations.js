@@ -103,9 +103,9 @@ module.exports = {
         }
       }
     },
-    // Get all the AccessAuthorizations granted to an application
-    async getForApp(ctx) {
-      const { appUri, podOwner } = ctx.params;
+    // Get all the AccessAuthorizations granted to an agent
+    async getForAgent(ctx) {
+      const { agentUri, podOwner } = ctx.params;
 
       const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
 
@@ -114,7 +114,7 @@ module.exports = {
           containerUri,
           filters: {
             'http://www.w3.org/ns/solid/interop#grantedBy': podOwner,
-            'http://www.w3.org/ns/solid/interop#grantee': appUri
+            'http://www.w3.org/ns/solid/interop#grantee': agentUri
           },
           webId: 'system'
         },
@@ -144,7 +144,7 @@ module.exports = {
     async getSpecialRights(ctx) {
       const { appUri, podOwner } = ctx.params;
 
-      const accessAuthorizations = await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx });
+      const accessAuthorizations = await this.actions.getForAgent({ agentUri: appUri, podOwner }, { parentCtx: ctx });
 
       return accessAuthorizations.reduce((acc, cur) => {
         if (cur['apods:hasSpecialRights']) acc.push(...arrayOf(cur['apods:hasSpecialRights']));
@@ -298,7 +298,7 @@ module.exports = {
     // Delete AccessAuthorizations which are not linked to an AccessNeedGroup (may happen on app upgrade)
     async deleteOrphans(ctx) {
       const { appUri, podOwner } = ctx.params;
-      const accessAuthorizations = await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx });
+      const accessAuthorizations = await this.actions.getForAgent({ agentUri: appUri, podOwner }, { parentCtx: ctx });
       for (const accessAuthorization of accessAuthorizations) {
         try {
           await ctx.call('ldp.remote.get', { resourceUri: accessAuthorization['interop:hasAccessNeedGroup'] });

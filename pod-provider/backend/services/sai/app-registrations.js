@@ -1,9 +1,10 @@
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+const { ControlledContainerMixin } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const AgentRegistrationsMixin = require('../../mixins/agent-registrations');
 
 module.exports = {
   name: 'app-registrations',
-  mixins: [ControlledContainerMixin],
+  mixins: [ControlledContainerMixin, AgentRegistrationsMixin],
   settings: {
     acceptedTypes: ['interop:ApplicationRegistration'],
     newResourcesPermissions: {
@@ -36,9 +37,9 @@ module.exports = {
       });
 
       // Retrieve the AccessGrants (which may, or may not, have changed)
-      const accessGrants = await ctx.call('access-grants.getForApp', { appUri, podOwner });
+      const accessGrants = await ctx.call('access-grants.getForAgent', { agentUri: appUri, podOwner });
 
-      const appRegistration = await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx });
+      const appRegistration = await this.actions.getForAgent({ agentUri: appUri, podOwner }, { parentCtx: ctx });
 
       if (appRegistration) {
         await this.actions.put(
@@ -73,29 +74,6 @@ module.exports = {
 
         return appRegistrationUri;
       }
-    },
-    async getForApp(ctx) {
-      const { appUri, podOwner } = ctx.params;
-
-      const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
-
-      const filteredContainer = await this.actions.list(
-        {
-          containerUri,
-          filters: {
-            'http://www.w3.org/ns/solid/interop#registeredAgent': appUri,
-            'http://www.w3.org/ns/solid/interop#registeredBy': podOwner
-          },
-          webId: 'system'
-        },
-        { parentCtx: ctx }
-      );
-
-      return filteredContainer['ldp:contains']?.[0];
-    },
-    async isRegistered(ctx) {
-      const { appUri, podOwner } = ctx.params;
-      return !!(await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx }));
     }
   },
   hooks: {
@@ -110,12 +88,6 @@ module.exports = {
         await ctx.call('ldp.remote.store', { resourceUri: appUri, webId });
         await ctx.call('applications.attach', { resourceUri: appUri, webId });
 
-        // Add the ApplicationRegistration to the AgentRegistry
-        await ctx.call('agent-registry.add', {
-          podOwner: webId,
-          appRegistrationUri: res
-        });
-
         return res;
       },
       async put(ctx, res) {
@@ -127,40 +99,9 @@ module.exports = {
         return res;
       },
       async delete(ctx, res) {
-        const podOwner = res.oldData['interop:registeredBy'];
+        // Delete Application resource kept in cache
         const appUri = res.oldData['interop:registeredAgent'];
-
-        // DELETE ALL RELATED AUTHORIZATIONS
-        // The related grants will also be deleted as a side effect
-
-        const accessAuthorizations = await ctx.call('access-authorizations.getForApp', { appUri, podOwner });
-
-        for (const accessAuthorization of accessAuthorizations) {
-          for (const dataAuthorizationUri of arrayOf(accessAuthorization['interop:hasDataAuthorization'])) {
-            await ctx.call('data-authorizations.delete', {
-              resourceUri: dataAuthorizationUri,
-              webId: 'system'
-            });
-          }
-
-          await ctx.call('access-authorizations.delete', {
-            resourceUri: accessAuthorization.id || accessAuthorization['@id'],
-            webId: 'system'
-          });
-        }
-
-        // DELETE APPLICATION RESOURCE KEPT IN CACHE
-
-        await ctx.call('applications.delete', {
-          resourceUri: appUri
-        });
-
-        // REMOVE APPLICATION REGISTRATION FROM AGENT REGISTRY
-
-        await ctx.call('agent-registry.remove', {
-          podOwner,
-          appRegistrationUri: res.resourceUri
-        });
+        await ctx.call('applications.delete', { resourceUri: appUri });
 
         return res;
       }

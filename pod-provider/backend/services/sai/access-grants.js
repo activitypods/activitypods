@@ -21,9 +21,9 @@ module.exports = {
     patch() {
       throw new Error(`The resources of type interop:AccessGrant are immutable`);
     },
-    // Get all the AccessGrants granted to an application
-    async getForApp(ctx) {
-      const { appUri, podOwner } = ctx.params;
+    // Get all the AccessGrants granted to an agent
+    async getForAgent(ctx) {
+      const { agentUri, podOwner } = ctx.params;
 
       const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
 
@@ -32,7 +32,7 @@ module.exports = {
           containerUri,
           filters: {
             'http://www.w3.org/ns/solid/interop#grantedBy': podOwner,
-            'http://www.w3.org/ns/solid/interop#grantee': appUri
+            'http://www.w3.org/ns/solid/interop#grantee': agentUri
           },
           webId: 'system'
         },

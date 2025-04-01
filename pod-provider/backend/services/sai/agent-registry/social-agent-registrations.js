@@ -1,5 +1,5 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
-const AgentRegistrationsMixin = require('../../mixins/agent-registrations');
+const AgentRegistrationsMixin = require('../../../mixins/agent-registrations');
 
 module.exports = {
   name: 'social-agent-registrations',

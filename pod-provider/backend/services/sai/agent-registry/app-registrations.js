@@ -1,6 +1,6 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const AgentRegistrationsMixin = require('../../mixins/agent-registrations');
+const AgentRegistrationsMixin = require('../../../mixins/agent-registrations');
 
 module.exports = {
   name: 'app-registrations',

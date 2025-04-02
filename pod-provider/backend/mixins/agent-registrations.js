@@ -4,8 +4,7 @@ const { arrayOf } = require('@semapps/ldp');
  * Mixin used by the AppRegistrationsService and SocialAgentRegistrationsService
  * See https://solid.github.io/data-interoperability-panel/specification/#ar
  */
-module.exports = {
-  name: 'agent-registrations',
+const AgentRegistrationsMixin = {
   actions: {
     async getForAgent(ctx) {
       const { agentUri, podOwner } = ctx.params;
@@ -81,3 +80,5 @@ module.exports = {
     }
   }
 };
+
+module.exports = AgentRegistrationsMixin;

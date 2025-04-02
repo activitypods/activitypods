@@ -386,7 +386,7 @@ export const createContactCapability = async (fetchFn: FetchFn, webIdDoc: any, p
             'as:object': {
               type: 'as:Add',
               'as:object': {
-                // type: 'as:Profile',
+                type: 'as:Profile',
                 id: profileDoc.id
               }
             }

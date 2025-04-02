@@ -17,6 +17,7 @@ const {
   ACCEPT_CONTACT_REQUEST_MAPPING,
   AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
 } = require('../../config/mappings');
+const { MIME_TYPES } = require('@semapps/mime-types');
 
 /** @type {import('moleculer').ServiceSchema} */
 module.exports = {
@@ -143,33 +144,45 @@ module.exports = {
     },
     inviteLinkContactRequest: {
       match: CONTACT_REQUEST,
-      capabilityGrantMatchFnGenerator: async ({ broker, recipientUri, activity }) => {
-        // This generates a function that is called on each ActivityGrant of the activity's capability.
+      async capabilityGrantMatchFnGenerator({ recipientUri, activity }) {
+        // Generate a function that is called on each ActivityGrant of the activity's capability.
 
-        const emitter = await this.broker.call('activitypub.actor.get', { actorUri: activity.actor });
+        const recipient = await this.broker.call('ldp.resource.get', {
+          resourceUri: recipientUri,
+          accept: MIME_TYPES.JSON
+        });
 
         return async grant => {
+          // Verify that the recipient issued the grant with the following structure.
           const { match } = await matchActivity(
             {
               type: ACTIVITY_TYPES.OFFER,
-              actor: activity.actor,
               object: {
                 type: ACTIVITY_TYPES.ADD,
                 object: {
-                  id: emitter.url,
-                  type: OBJECT_TYPES.PROFILE
+                  id: recipient.url
                 }
               }
             },
-            grant
+            grant,
+            uri => ({ id: uri }) // The URIs here are not resolved further.
           );
           return match;
         };
       },
 
+      async onEmit(ctx, activity, emitterUri) {
+        // Add the user to the contacts WebACL group so he can see my profile
+        for (let targetUri of arrayOf(activity.target)) {
+          await ctx.call('webacl.group.addMember', {
+            groupSlug: `${new URL(emitterUri).pathname}/contacts`, // This doesn't lead to the receiver having access to profile...?
+            memberUri: targetUri,
+            webId: emitterUri
+          });
+        }
+      },
       async onReceive(ctx, activity, recipientUri) {
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
-        const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
 
         // If the actor is already in my contacts, ignore this request (may happen for automatic post-event requests)
         if (
@@ -196,27 +209,6 @@ module.exports = {
             to: activity.actor
           });
           return;
-        }
-
-        const verificationResult = await ctx.call('crypto.vc.verifier.verifyCapabilityPresentation', {
-          verifiablePresentation: activity.capability
-        });
-        if (!verificationResult.verified) {
-          ctx.broker.logger.warn(
-            'Capability presentation verification for contact request failed. Actor and error:',
-            activity.actor,
-            verificationResult.error
-          );
-          return;
-        }
-
-        // Check that first issuer is the recipient.
-        if (!activity.capability.verifiableCredential[0].issuer === recipient.id) {
-          ctx.broker.logger.warn(
-            'The first issuer of the capability should be the recipient of the contact request. Issuer and recipient:',
-            activity.capability.verifiableCredential[0].issuer,
-            recipient.id
-          );
         }
 
         // Send the accept.

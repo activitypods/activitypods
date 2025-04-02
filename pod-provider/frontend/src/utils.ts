@@ -1,4 +1,15 @@
-import { fetchUtils } from 'react-admin';
+import urlJoin from 'url-join';
+import { FetchFn } from '@semapps/semantic-data-provider';
+const VC_API_PATH = '/vc/v0.3';
+
+const credentialContext = [
+  'https://www.w3.org/ns/credentials/v2',
+  {
+    as: 'https://www.w3.org/ns/activitystreams#',
+    apods: 'http://activitypods.org/ns/core#',
+    acl: 'http://www.w3.org/ns/auth/acl#'
+  }
+];
 
 export const formatUsername = (uri?: string) => {
   if (uri) {
@@ -304,7 +315,7 @@ export const fetchResourceWithCapability = async ({
 
   // Create presentation from capability object.
   const presentation = {
-    '@context': ['https://www.w3.org/ns/credentials/v2'],
+    '@context': credentialContext,
     type: 'VerifiablePresentation',
     verifiableCredential: [capabilityObject]
   };
@@ -356,4 +367,98 @@ export const fetchCapabilityResources = async (capabilityUri: string) => {
       })
     );
   });
+};
+
+/** Creates a VC capability that's usable as an invite link. This returns the capability's URI, not the URI that the invitee can open in the frontend! */
+export const createContactCapability = async (fetchFn: FetchFn, webIdDoc: any, profileDoc: any): Promise<string> => {
+  const vcEndpointUri = urlJoin(webIdDoc?.id, VC_API_PATH);
+
+  const result = await fetchFn(urlJoin(vcEndpointUri, 'credentials/issue'), {
+    method: 'POST',
+    body: JSON.stringify({
+      credential: {
+        '@context': credentialContext,
+        type: 'VerifiableCredential',
+        name: 'Invite Link',
+        credentialSubject: {
+          'apods:hasActivityGrant': {
+            type: 'as:Offer',
+            'as:object': {
+              type: 'as:Add',
+              'as:object': {
+                // type: 'as:Profile',
+                id: profileDoc.id
+              }
+            }
+          },
+          'apods:hasAuthorization': {
+            type: 'acl:Authorization',
+            'acl:mode': 'acl:Read',
+            'acl:accessTo': [].concat(profileDoc.id, profileDoc['vcard:photo'] || [])
+          }
+        }
+      }
+    })
+  }).catch(err => {
+    throw new Error('Creating invite link capability failed. An error occurred while requesting the VC endpoint.', {
+      cause: err
+    });
+  });
+
+  const verifiableCredential = result.json;
+  const link = verifiableCredential?.id;
+
+  if (link && result.status >= 200 && result.status < 300) {
+    return link;
+  } else {
+    throw new Error('Creating invite link capability failed. The VC endpoint returned an invalid response', {
+      cause: result
+    });
+  }
+};
+
+/**
+ * Create a Verifiable Presentation for a given Verifiable Credential.
+ * Obtains a challenge from the verifier and signs the presentation
+ * with the holder endpoint
+ */
+export const createPresentation = async ({
+  fetchFn,
+  holder,
+  verifier,
+  verifiableCredential
+}: {
+  fetchFn: FetchFn;
+  holder: string;
+  verifier: string;
+  verifiableCredential: string | object;
+}): Promise<any> => {
+  // Fetch VC if not already an object.
+  const vc =
+    typeof verifiableCredential === 'string' ? (await fetchFn(verifiableCredential)).json : verifiableCredential;
+
+  // Obtain challenge.
+  const {
+    json: { challenge }
+  } = await fetchFn(urlJoin(verifier, VC_API_PATH, 'challenges'), {
+    method: 'POST'
+  });
+
+  // Create/sign presentation from VC endpoint.
+  const { json: presentation } = await fetchFn(urlJoin(holder, VC_API_PATH, 'presentations/'), {
+    method: 'POST',
+    body: JSON.stringify({
+      presentation: {
+        '@context': credentialContext,
+        type: 'VerifiablePresentation',
+        verifiableCredential: [vc]
+      },
+      options: {
+        challenge,
+        persist: false
+      }
+    })
+  });
+
+  return presentation;
 };

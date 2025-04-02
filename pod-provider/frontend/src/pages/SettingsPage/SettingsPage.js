@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import { useTranslate, useGetList, useAuthProvider, useNotify, useLocaleState } from 'react-admin';
-import { Box, Typography, List, CircularProgress } from '@mui/material';
+import { Box, Typography, List } from '@mui/material';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { useNavigate } from 'react-router-dom';
 import EmailIcon from '@mui/icons-material/Email';
 import PersonIcon from '@mui/icons-material/Person';
@@ -13,7 +14,7 @@ import TranslateIcon from '@mui/icons-material/Translate';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import Header from '../../common/Header';
-import useCreateContactLink from '../../hooks/useCreateContactLink';
+import useContactLink from '../../hooks/useContactLink';
 import SettingsItem from './SettingsItem';
 import { availableLocales } from '../../config/i18nProvider';
 
@@ -23,14 +24,11 @@ const SettingsPage = () => {
   const authProvider = useAuthProvider();
   const navigate = useNavigate();
   const [locale] = useLocaleState();
+  const notify = useNotify();
   const [accountSettings, setAccountSettings] = useState({});
 
   const { data } = useGetList('Location');
-  const contactLink = useCreateContactLink({ shouldCopy: true, shouldNotify: true });
-
-  const onCreateContactLinkClicked = () => {
-    contactLink.createLink();
-  };
+  const { contactLink, error: contactLinkError, status: contactLinkStatus } = useContactLink();
 
   useEffect(() => {
     authProvider.getAccountSettings().then(res => setAccountSettings(res));
@@ -75,13 +73,23 @@ const SettingsPage = () => {
             label="app.setting.locale"
             value={availableLocales.find(l => l.locale === locale)?.name}
           />
-          <SettingsItem
-            onClick={onCreateContactLinkClicked}
-            icon={<LinkIcon />}
-            label="app.card.share_contact"
-            value={contactLink.link}
-            actionIcon={contactLink.status === 'loading' ? <CircularProgress size={24} /> : <FileCopyIcon />}
-          />
+          <CopyToClipboard text={contactLinkStatus === 'loaded' ? contactLink : undefined}>
+            <SettingsItem
+              onClick={() =>
+                contactLinkStatus === 'loaded' && notify('app.notification.contact_link_copied', { type: 'success' })
+              }
+              icon={<LinkIcon />}
+              label="app.card.share_contact"
+              value={
+                (contactLinkStatus === 'loaded' && contactLink) ||
+                translate(
+                  (contactLinkStatus === 'loading' && 'app.message.loading_invite_link') ||
+                    (contactLinkStatus === 'error' && 'app.message.loading_invite_link_failed')
+                )
+              }
+              actionIcon={<FileCopyIcon />}
+            />
+          </CopyToClipboard>
           <SettingsItem
             onClick={() => navigate('/settings/advanced')}
             icon={<TuneIcon />}

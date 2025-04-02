@@ -1,27 +1,58 @@
 import { useState, useEffect } from 'react';
-import { useTranslate, useGetIdentity, useGetList } from 'react-admin';
+import { useDataProvider, useGetIdentity, useGetList } from 'react-admin';
+import { createContactCapability } from '../utils';
+import { SemanticDataProvider } from '@semapps/semantic-data-provider';
+import { useQueryClient } from 'react-query';
 
+const inviteLinkFromCapUri = (capUri: string) => {
+  return `${new URL(window.location.href).origin}/invite/${encodeURIComponent(capUri)}`;
+};
+/**
+ * Loads or creates a contact link.
+ * @returns A contact link that can be used to invite others to one's profile.
+ */
 const useContactLink = () => {
-  const translate = useTranslate();
   const { data: identity } = useGetIdentity();
+  const { fetch: fetchFn } = useDataProvider<SemanticDataProvider>();
   const profileData = identity?.profileData;
-  const { data: credentials } = useGetList('VerifiableCredentials');
-  const [contactLink, setContactLink] = useState(translate('ra.page.loading'));
+  const webIdDoc = identity?.webIdData;
+
+  const { data: credentials, isSuccess: credentialsLoaded } = useGetList('VerifiableCredential');
+  const queryClient = useQueryClient();
+
+  const [contactLink, setContactLink] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<'loaded' | 'loading' | 'error'>('loading');
   const [error, setError] = useState<Error | undefined>(undefined);
 
+  const [creatingLink, setCreatingLink] = useState(false);
+
   useEffect(() => {
-    if (contactLink && profileData?.describes && credentials) {
-      const inviteCapability = credentials.find(vc => vc.name === 'Invite Link');
-      // vc.type === 'acl:Authorization' && vc['acl:mode'] === 'acl:Read' && vc['acl:accessTo'] === profileData.id;
+    if (!contactLink && !creatingLink && profileData?.describes && credentials && credentialsLoaded) {
+      // Try to find an invite link record in the VCs.
+      const inviteCapability = credentials.find(
+        vc => vc['https://schema.org/name'] ?? vc['schema:name'] ?? vc.name === 'Invite Link'
+      );
 
       if (inviteCapability) {
-        setContactLink(`${new URL(window.location.href).origin}/invite/${encodeURIComponent(inviteCapability.id)}`);
+        setContactLink(inviteLinkFromCapUri(inviteCapability.id));
+        setStatus('loaded');
       } else {
-        // TODO: create invite link.
+        setCreatingLink(true);
+        createContactCapability(fetchFn, webIdDoc, profileData)
+          .then(vcLink => {
+            setContactLink(inviteLinkFromCapUri(vcLink));
+            setStatus('loaded');
+            // Invalidate cache
+            queryClient.refetchQueries('VerifiableCredential');
+          })
+          .catch(error => {
+            setStatus('error');
+            setContactLink(undefined);
+            setError(error);
+          });
       }
     }
-  }, [profileData, contactLink, credentials]);
+  }, [profileData, contactLink, credentials, creatingLink, credentialsLoaded]);
 
   return { contactLink, status, error };
 };

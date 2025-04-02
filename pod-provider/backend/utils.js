@@ -28,11 +28,8 @@ const matchTemplateObj = (obj, template) => {
  *
  * Matching means that the object needs to have all fields the template has as well, i.e. is a superset.
  */
-const hasActivityGrant = (activity, templateActivity) => {
-  const capabilityPresentation = activity.capability;
-  if (!capabilityPresentation || !capabilityPresentation.verifiableCredential) return false;
-
-  const vcs = arrayOf(capabilityPresentation.verifiableCredential);
+const hasActivityGrant = (capabilityPresentation, templateActivity) => {
+  const vcs = arrayOf(capabilityPresentation?.verifiableCredential);
   if (vcs.length === 0) return false;
 
   const lastCredentialSubject = vcs[vcs.length - 1].credentialSubject;

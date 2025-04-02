@@ -21,8 +21,6 @@ const InvitePageViewLoggedIn = ({
   capabilityUri: string;
 }) => {
   const notify = useNotify();
-  const navigate = useNavigate();
-  const outbox = useOutbox();
   const [locale] = useLocaleState();
   const translate = useTranslate();
 
@@ -34,24 +32,10 @@ const InvitePageViewLoggedIn = ({
   useEffect(() => {
     if (profileIsConnected) {
       notify('app.notification.already_connected', { autoHideDuration: 5000, type: 'warning' });
+
       // It might be, that the inviter does not have the user's profile in their profile list.
       // So, we send the Accept > Offer > Add > Profile anyways (triggered by onConnectClicked).
-      outbox
-        .post({
-          '@context': 'https://activitypods.org/context.json',
-          type: ACTIVITY_TYPES.OFFER,
-          actor: ownProfile.describes,
-          to: inviterProfile.describes,
-          target: inviterProfile.describes,
-          object: {
-            type: ACTIVITY_TYPES.ADD,
-            object: ownProfile.id
-          },
-          'sec:capability': capabilityUri
-        })
-        .then(() => {
-          navigate(`/network/${inviterProfile.describes}`);
-        });
+      onConnectClick();
     }
   }, [profileIsConnected]);
 

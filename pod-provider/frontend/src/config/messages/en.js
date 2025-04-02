@@ -189,7 +189,8 @@ module.exports = {
     },
     message: {
       copied_to_clipboard: 'Copied !',
-      creating_invite_link: 'Creating...',
+      loading_invite_link: 'Loading...',
+      loading_invite_link_failed: 'Loading failed',
       no_condition: 'None',
       you_participated_to_same_event: 'You participated to the same event',
       verified_app: 'Verified application',

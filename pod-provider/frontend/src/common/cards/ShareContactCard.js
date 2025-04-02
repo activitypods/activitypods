@@ -1,10 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Card, Typography, Button, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useTranslate } from 'react-admin';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import useCreateContactLink from '../../hooks/useCreateContactLink';
-import { useNotify } from 'react-admin';
 import useContactLink from '../../hooks/useContactLink';
 
 const useStyles = makeStyles(theme => ({
@@ -45,10 +44,7 @@ const ShareContactCard = () => {
   const classes = useStyles();
   const translate = useTranslate();
   const { contactLink, status, error } = useContactLink();
-
-  const onCreateContactLinkClicked = () => {
-    createLink();
-  };
+  const [copied, setCopied] = useState(false);
 
   return (
     <Card className={classes.root}>
@@ -58,23 +54,23 @@ const ShareContactCard = () => {
       <Box className={classes.block} p={2}>
         <Typography variant="body2">{translate('app.helper.share_contact')}</Typography>
         <Box className={classes.buttonContainer}>
-          <span style={{ display: 'none' }}>{link}</span>
-          <Button
-            variant="contained"
-            color="secondary"
-            endIcon={status === 'loading' ? <CircularProgress size={24} /> : <ContentCopyIcon />}
-            aria-label={translate('app.accessibility.copy_invitation_link_button')}
-            onClick={onCreateContactLinkClicked}
-            disabled={status === 'loading'}
-          >
-            {translate(
-              status === 'success' && copied
-                ? 'app.message.copied_to_clipboard'
-                : status === 'loading'
-                  ? 'app.message.creating_invite_link'
-                  : 'app.action.create_invite_link'
-            )}
-          </Button>
+          <span style={{ display: 'none' }}>{contactLink}</span>
+          <CopyToClipboard text={contactLink} onCopy={() => setCopied(true)}>
+            <Button
+              variant="contained"
+              color="secondary"
+              endIcon={status === 'loading' ? <CircularProgress size={24} /> : <ContentCopyIcon />}
+              aria-label={translate('app.accessibility.copy_invitation_link_button')}
+              disabled={status !== 'loaded'}
+            >
+              {translate(
+                (copied && 'app.message.copied_to_clipboard') ||
+                  (status === 'loaded' && 'app.action.copy') ||
+                  (status === 'loading' && 'app.message.loading_invite_link') ||
+                  (status === 'error' && 'app.message.loading_invite_link_failed')
+              )}
+            </Button>
+          </CopyToClipboard>
         </Box>
       </Box>
     </Card>

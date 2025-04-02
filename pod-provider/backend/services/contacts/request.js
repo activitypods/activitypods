@@ -1,6 +1,11 @@
-const { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
+const {
+  ACTIVITY_TYPES,
+  ACTOR_TYPES,
+  ActivitiesHandlerMixin,
+  OBJECT_TYPES,
+  matchActivity
+} = require('@semapps/activitypub');
 const { arrayOf } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
 const {
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
@@ -12,7 +17,6 @@ const {
   ACCEPT_CONTACT_REQUEST_MAPPING,
   AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
 } = require('../../config/mappings');
-const { hasActivityGrant } = require('../utils');
 
 /** @type {import('moleculer').ServiceSchema} */
 module.exports = {
@@ -70,6 +74,7 @@ module.exports = {
   activities: {
     contactRequest: {
       match: CONTACT_REQUEST,
+
       async onEmit(ctx, activity, emitterUri) {
         // Add the user to the contacts WebACL group so he can see my profile
         for (let targetUri of arrayOf(activity.target)) {
@@ -110,63 +115,6 @@ module.exports = {
           return;
         }
 
-        // Check, if an invite capability is present. If so, accept the request automatically.
-        // TODO: Test.
-        if (
-          hasActivityGrant(activity, {
-            type: ACTIVITY_TYPES.OFFER,
-            actor: activity.actor,
-            object: {
-              type: ACTIVITY_TYPES.ADD,
-              target: recipientUri,
-              object: {
-                id: activity.actor?.id || activity.actor,
-                type: OBJECT_TYPES.PROFILE
-              }
-            }
-          })
-        ) {
-          const verificationResult = await ctx.call('crypto.vc.verifier.verifyCapabilityPresentation', {
-            verifiablePresentation: activity.capability
-          });
-          if (!verificationResult.verified) {
-            ctx.broker.logger.warn(
-              'Capability presentation verification for contact request failed. Actor and error:',
-              activity.actor,
-              verificationResult.error
-            );
-            return;
-          }
-
-          // Check that first issuer is the recipient.
-          if (!activity.capability.verifiableCredential[0].issuer === recipient.id) {
-            ctx.broker.logger.warn(
-              'The first issuer of the capability should be the recipient of the contact request. Issuer and recipient:',
-              activity.capability.verifiableCredential[0].issuer,
-              recipient.id
-            );
-          }
-
-          // Send the accept.
-          await ctx.call('activitypub.outbox.post', {
-            collectionUri: recipient.outbox,
-            type: ACTIVITY_TYPES.ACCEPT,
-            actor: recipient.id,
-            object: activity.id,
-            to: activity.actor
-          });
-
-          // Notify about auto-accept.
-          await ctx.call('mail-notifications.notify', {
-            template: AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING,
-            recipientUri,
-            activity,
-            context: activity.id
-          });
-
-          return;
-        }
-
         // Check that a request by the same actor is not already waiting (if so, ignore it)
         const collection = await ctx.call('activitypub.collection.get', {
           resourceUri: recipient['apods:contactRequests'],
@@ -191,6 +139,104 @@ module.exports = {
           activity,
           context: activity.id
         });
+      }
+    },
+    inviteLinkContactRequest: {
+      match: CONTACT_REQUEST,
+      capabilityGrantMatchFnGenerator: async ({ broker, recipientUri, activity }) => {
+        // This generates a function that is called on each ActivityGrant of the activity's capability.
+
+        const emitter = await this.broker.call('activitypub.actor.get', { actorUri: activity.actor });
+
+        return async grant => {
+          const { match } = await matchActivity(
+            {
+              type: ACTIVITY_TYPES.OFFER,
+              actor: activity.actor,
+              object: {
+                type: ACTIVITY_TYPES.ADD,
+                object: {
+                  id: emitter.url,
+                  type: OBJECT_TYPES.PROFILE
+                }
+              }
+            },
+            grant
+          );
+          return match;
+        };
+      },
+
+      async onReceive(ctx, activity, recipientUri) {
+        const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
+
+        // If the actor is already in my contacts, ignore this request (may happen for automatic post-event requests)
+        if (
+          await ctx.call('activitypub.collection.includes', {
+            collectionUri: recipient['apods:contacts'],
+            itemUri: activity.actor
+          })
+        ) {
+          return;
+        }
+
+        // If the request was already rejected, reject it again
+        if (
+          await ctx.call('activitypub.collection.includes', {
+            collectionUri: recipient['apods:rejectedContacts'],
+            itemUri: activity.actor
+          })
+        ) {
+          await ctx.call('activitypub.outbox.post', {
+            collectionUri: recipient.outbox,
+            type: ACTIVITY_TYPES.REJECT,
+            actor: recipient.id,
+            object: activity.id,
+            to: activity.actor
+          });
+          return;
+        }
+
+        const verificationResult = await ctx.call('crypto.vc.verifier.verifyCapabilityPresentation', {
+          verifiablePresentation: activity.capability
+        });
+        if (!verificationResult.verified) {
+          ctx.broker.logger.warn(
+            'Capability presentation verification for contact request failed. Actor and error:',
+            activity.actor,
+            verificationResult.error
+          );
+          return;
+        }
+
+        // Check that first issuer is the recipient.
+        if (!activity.capability.verifiableCredential[0].issuer === recipient.id) {
+          ctx.broker.logger.warn(
+            'The first issuer of the capability should be the recipient of the contact request. Issuer and recipient:',
+            activity.capability.verifiableCredential[0].issuer,
+            recipient.id
+          );
+        }
+
+        // Send the accept.
+        await ctx.call('activitypub.outbox.post', {
+          collectionUri: recipient.outbox,
+          type: ACTIVITY_TYPES.ACCEPT,
+          actor: recipient.id,
+          object: activity.id,
+          to: activity.actor
+        });
+
+        // Notify about auto-accept.
+        await ctx.call('mail-notifications.notify', {
+          template: AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING,
+          recipientUri,
+          activity,
+          context: activity.id
+        });
+
+        return;
       }
     },
     acceptContactRequest: {

@@ -20,16 +20,13 @@ module.exports = {
     async getForAgent(ctx) {
       const { agentUri, podOwner } = ctx.params;
 
-      const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
-
       const filteredContainer = await this.actions.list(
         {
-          containerUri,
           filters: {
             'http://www.w3.org/ns/solid/interop#grantedBy': podOwner,
             'http://www.w3.org/ns/solid/interop#grantee': agentUri
           },
-          webId: 'system'
+          webId: podOwner
         },
         { parentCtx: ctx }
       );

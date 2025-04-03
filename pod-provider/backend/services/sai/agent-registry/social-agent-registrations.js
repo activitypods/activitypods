@@ -1,7 +1,9 @@
+const path = require('path');
 const LinkHeader = require('http-link-header');
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const AgentRegistrationsMixin = require('../../../mixins/agent-registrations');
+const { arraysEqual } = require('../../../utils');
 
 module.exports = {
   name: 'social-agent-registrations',
@@ -17,24 +19,48 @@ module.exports = {
     activateTombstones: false,
     typeIndex: 'private'
   },
+  dependencies: ['api', 'ldp'],
+  async started() {
+    const basePath = await this.broker.call('ldp.getBasePath');
+    await this.broker.call('api.addRoute', {
+      route: {
+        name: 'auth-agent-authorizations',
+        path: path.join(basePath, '/.auth-agent/authorizations'),
+        authorization: true,
+        authentication: false,
+        bodyParsers: {
+          json: true
+        },
+        aliases: {
+          'PUT /': 'social-agent-registrations.updateAuthorizations'
+        }
+      }
+    });
+  },
   actions: {
     async createOrUpdate(ctx) {
-      const { agentUri, podOwner, label, note } = ctx.params;
+      const { agentUri, podOwner, accessGrantsUris, label, note } = ctx.params;
 
       const agentRegistration = await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx });
 
       if (agentRegistration) {
-        // If the label or note has changed, update the registration
-        if (agentRegistration['skos:prefLabel'] !== label && agentRegistration['skos:note'] !== note) {
+        // If the label, note or access grants have changed, update the registration
+        if (
+          agentRegistration['skos:prefLabel'] !== label ||
+          agentRegistration['skos:note'] !== note ||
+          !arraysEqual(agentRegistration['interop:hasAccessGrant'], accessGrantsUris)
+        ) {
           await this.actions.put(
             {
               resource: {
                 ...agentRegistration,
                 'interop:updatedAt': new Date().toISOString(),
+                'interop:hasAccessGrant': accessGrantsUris,
                 'skos:prefLabel': label,
                 'skos:note': note
               },
-              contentType: MIME_TYPES.JSON
+              contentType: MIME_TYPES.JSON,
+              webId: podOwner
             },
             { parentCtx: ctx }
           );
@@ -51,10 +77,12 @@ module.exports = {
               'interop:registeredAt': new Date().toISOString(),
               'interop:updatedAt': new Date().toISOString(),
               'interop:registeredAgent': agentUri,
+              'interop:hasAccessGrant': accessGrantsUris,
               'skos:prefLabel': label,
               'skos:note': note
             },
-            contentType: MIME_TYPES.JSON
+            contentType: MIME_TYPES.JSON,
+            webId: podOwner
           },
           { parentCtx: ctx }
         );
@@ -113,6 +141,46 @@ module.exports = {
 
       if (registeredAgentLinkHeader.length > 0) {
         return registeredAgentLinkHeader[0].anchor;
+      }
+    },
+    /**
+     * Generate or regenerate a social agent registration based on their access grants
+     */
+    async regenerate(ctx) {
+      const { agentUri, podOwner } = ctx.params;
+
+      const accessGrants = await ctx.call('access-grants.getForAgent', { agentUri, podOwner });
+      const accessGrantsUris = accessGrants.map(r => r.id || r['@id']);
+
+      await this.actions.createOrUpdate({ agentUri, podOwner, accessGrantsUris }, { parentCtx: ctx });
+    },
+    /**
+     * Mass-update access authorizations for a single resource
+     */
+    async updateAuthorizations(ctx) {
+      const { resourceUri, authorizations } = ctx.params;
+
+      const podOwner = ctx.meta.webId;
+      const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
+      ctx.meta.dataset = account.username;
+
+      for ({ grantee, accessModes } of authorizations) {
+        if (accessModes.length > 0) {
+          await ctx.call('access-authorizations.generateForSingleResource', {
+            resourceUri,
+            podOwner,
+            grantee,
+            accessModes
+          });
+        } else {
+          await ctx.call('access-authorizations.deleteForSingleResource', {
+            resourceUri,
+            podOwner,
+            grantee
+          });
+        }
+
+        await this.actions.regenerate({ agentUri: grantee, podOwner }, { parentCtx: ctx });
       }
     }
   }

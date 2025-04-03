@@ -44,8 +44,8 @@ const ShareScreen = ({ resourceUri, application, accessApp }) => {
   );
 
   const onShare = useCallback(async () => {
-    await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'share-resource'), {
-      method: 'POST',
+    await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/authorizations'), {
+      method: 'PUT',
       headers: new Headers({
         'Content-Type': 'application/json'
       }),

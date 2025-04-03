@@ -1,8 +1,6 @@
 import { Typography, Button, Grid } from '@mui/material';
 import React, { useEffect } from 'react';
 import { useGetOne, useLocaleState, useNotify, useTranslate } from 'react-admin';
-import { useNavigate } from 'react-router-dom';
-import { ACTIVITY_TYPES, useOutbox } from '@semapps/activitypub-components';
 import { formatUsername } from '../../utils';
 import ConnectAvatars from './ConnectAvatars';
 import SimpleBox from '../../layout/SimpleBox';

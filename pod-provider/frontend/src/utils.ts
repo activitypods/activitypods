@@ -346,7 +346,7 @@ export const fetchCapabilityResources = async (capabilityUri: string) => {
     const capability = await capRes.json();
     // The capability has a credentialSubject with `hasAuthorization`
     const availableResources = arrayOf(capability?.credentialSubject?.['apods:hasAuthorization'])
-      .map(auth => auth['acl:accessTo'])
+      .map(auth => auth['acl:accessTo']?.id || auth['acl:accessTo'])
       .flatMap(res => res?.id || res);
 
     if (availableResources.length === 0) {
@@ -383,18 +383,19 @@ export const createContactCapability = async (fetchFn: FetchFn, webIdDoc: any, p
         credentialSubject: {
           'apods:hasActivityGrant': {
             type: 'as:Offer',
+            'as:to': { '@id': webIdDoc.id },
+            'as:target': { '@id': webIdDoc.id },
             'as:object': {
               type: 'as:Add',
               'as:object': {
-                type: 'as:Profile',
-                id: profileDoc.id
+                type: 'as:Profile'
               }
             }
           },
           'apods:hasAuthorization': {
             type: 'acl:Authorization',
             'acl:mode': 'acl:Read',
-            'acl:accessTo': [].concat(profileDoc.id, profileDoc['vcard:photo'] || [])
+            'acl:accessTo': [].concat(profileDoc.id, profileDoc['vcard:photo'] || []).map(uri => ({ '@id': uri }))
           }
         }
       }

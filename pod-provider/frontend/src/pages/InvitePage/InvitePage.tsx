@@ -95,7 +95,7 @@ const InvitePage = () => {
   }
 
   // Logged in and inviter profile fetched.
-  if (identity?.id && inviterProfile) {
+  if (identity?.id && inviterProfile && ownProfile) {
     const onConnectClick = async () => {
       const capability = await createPresentation({
         fetchFn,
@@ -108,13 +108,13 @@ const InvitePage = () => {
           '@context': (await getConfig()).jsonContext,
           type: ACTIVITY_TYPES.OFFER,
           actor: identity.id,
-          to: inviterProfile.describes,
           target: inviterProfile.describes,
+          to: inviterProfile.describes,
           object: {
             type: ACTIVITY_TYPES.ADD,
             object: {
               type: OBJECT_TYPES.PROFILE,
-              id: inviterProfile.id
+              id: ownProfile.id
             }
           },
           capability: capability

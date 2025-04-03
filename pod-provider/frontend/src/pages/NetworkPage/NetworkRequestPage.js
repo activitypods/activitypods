@@ -58,8 +58,6 @@ const NetworkRequestPage = () => {
               helperText={translate('app.helper.about_you')}
               placeholder={translate('app.placeholder.about_you')}
               aria-describedby="about-you-helper-text"
-              multiline
-              rows={3}
               fullWidth
             />
           </SimpleForm>

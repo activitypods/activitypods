@@ -35,10 +35,11 @@ const ProfileCreatePage = () => {
 
           refetchIdentity();
 
-          // The redirection URL should be the /.oidc/auth/auth/{interactionId} path of the backend
+          // The redirect query param should be a local path or an URL in the backend (typically /.oidc/auth/auth/{interactionId})
           // If it is not, this is maybe a phishing attack so we shouldn't use it
           redirect(
-            isURL(searchParams.get('redirect')) && searchParams.get('redirect').startsWith(CONFIG.BACKEND_URL)
+            isPath(searchParams.get('redirect')) ||
+              (isURL(searchParams.get('redirect')) && searchParams.get('redirect').startsWith(CONFIG.BACKEND_URL))
               ? searchParams.get('redirect')
               : '/'
           );

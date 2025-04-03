@@ -32,7 +32,7 @@ const AppStatusService = {
 
       ctx.meta.dataset = getDatasetFromUri(webId);
 
-      const installed = await ctx.call('app-registrations.isRegistered', { appUri, podOwner: webId });
+      const installed = await ctx.call('app-registrations.isRegistered', { agentUri: appUri, podOwner: webId });
 
       const localAppData = installed && (await ctx.call('ldp.remote.getStored', { resourceUri: appUri, webId }));
 

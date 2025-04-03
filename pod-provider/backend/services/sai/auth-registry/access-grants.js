@@ -1,8 +1,9 @@
 const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+const ImmutableContainerMixin = require('../../../mixins/immutable-container-mixin');
 
 module.exports = {
   name: 'access-grants',
-  mixins: [ControlledContainerMixin],
+  mixins: [ControlledContainerMixin, ImmutableContainerMixin],
   settings: {
     acceptedTypes: ['interop:AccessGrant'],
     newResourcesPermissions: {
@@ -15,26 +16,17 @@ module.exports = {
     typeIndex: 'private'
   },
   actions: {
-    put() {
-      throw new Error(`The resources of type interop:AccessGrant are immutable`);
-    },
-    patch() {
-      throw new Error(`The resources of type interop:AccessGrant are immutable`);
-    },
-    // Get all the AccessGrants granted to an application
-    async getForApp(ctx) {
-      const { appUri, podOwner } = ctx.params;
-
-      const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
+    // Get all the AccessGrants granted to an agent
+    async getForAgent(ctx) {
+      const { agentUri, podOwner } = ctx.params;
 
       const filteredContainer = await this.actions.list(
         {
-          containerUri,
           filters: {
             'http://www.w3.org/ns/solid/interop#grantedBy': podOwner,
-            'http://www.w3.org/ns/solid/interop#grantee': appUri
+            'http://www.w3.org/ns/solid/interop#grantee': agentUri
           },
-          webId: 'system'
+          webId: podOwner
         },
         { parentCtx: ctx }
       );

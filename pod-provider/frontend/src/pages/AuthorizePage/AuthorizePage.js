@@ -6,6 +6,7 @@ import useTrustedApps from '../../hooks/useTrustedApps';
 import useGetAppStatus from '../../hooks/useGetAppStatus';
 import RegistrationScreen from './RegistrationScreen';
 import UpgradeScreen from './UpgradeScreen';
+import ShareScreen from './ShareScreen';
 import { isURL } from '../../utils';
 
 const AuthorizePage = () => {
@@ -18,6 +19,7 @@ const AuthorizePage = () => {
   const notify = useNotify();
 
   const appUri = searchParams.get('client_id');
+  const resourceUri = searchParams.get('resource');
   const isTrustedApp = trustedApps?.some(trustedApp => trustedApp.id === appUri) || false;
 
   const { data: application } = useGetOne('App', { id: appUri });
@@ -47,12 +49,14 @@ const AuthorizePage = () => {
           setScreen('register');
         } else if (appStatus.upgradeNeeded) {
           setScreen('upgrade');
+        } else if (resourceUri) {
+          setScreen('share');
         } else {
           accessApp();
         }
       });
     }
-  }, [appRegistrations, isLoading, application, accessApp, getAppStatus, setScreen, identity]);
+  }, [resourceUri, appRegistrations, isLoading, application, accessApp, getAppStatus, setScreen, identity]);
 
   switch (screen) {
     case 'register':
@@ -60,6 +64,9 @@ const AuthorizePage = () => {
 
     case 'upgrade':
       return <UpgradeScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
+
+    case 'share':
+      return <ShareScreen resourceUri={resourceUri} application={application} accessApp={accessApp} />;
 
     default:
       return null;

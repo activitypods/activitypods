@@ -9,5 +9,5 @@ export { default as Tag } from './Tag';
 export { default as Location } from './Location';
 export { default as PodProvider } from './PodProvider';
 export { default as Profile } from './Profile';
+export { default as SocialAgentRegistration } from './SocialAgentRegistration';
 export { default as TrustedApp } from './TrustedApp';
-export { default as TypeRegistration } from './TypeRegistration';

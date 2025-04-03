@@ -1,6 +1,6 @@
 const path = require('path');
 const LinkHeader = require('http-link-header');
-const { ControlledContainerMixin } = require('@semapps/ldp');
+const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const AgentRegistrationsMixin = require('../../../mixins/agent-registrations');
 const { arraysEqual } = require('../../../utils');
@@ -32,6 +32,7 @@ module.exports = {
           json: true
         },
         aliases: {
+          'GET /': 'social-agent-registrations.getAuthorizations',
           'PUT /': 'social-agent-registrations.updateAuthorizations'
         }
       }
@@ -182,6 +183,26 @@ module.exports = {
 
         await this.actions.regenerate({ agentUri: grantee, podOwner }, { parentCtx: ctx });
       }
+    },
+    async getAuthorizations(ctx) {
+      const { resource: resourceUri } = ctx.params;
+
+      const podOwner = ctx.meta.webId;
+      const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
+      ctx.meta.dataset = account.username;
+
+      const dataAuthorizations = await ctx.call('data-authorizations.getForSingleResource', {
+        resourceUri,
+        podOwner
+      });
+
+      return {
+        resourceUri,
+        authorizations: dataAuthorizations.map(auth => ({
+          grantee: auth['interop:grantee'],
+          accessModes: arrayOf(auth['interop:accessMode'])
+        }))
+      };
     }
   }
 };

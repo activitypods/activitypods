@@ -190,6 +190,24 @@ module.exports = {
         }
       }
     },
+    async getForSingleResource(ctx) {
+      const { resourceUri, podOwner } = ctx.params;
+
+      const filteredContainer = await this.actions.list(
+        {
+          filters: {
+            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
+            'http://www.w3.org/ns/solid/interop#hasDataInstance': resourceUri,
+            'http://www.w3.org/ns/solid/interop#scopeOfAuthorization':
+              'http://www.w3.org/ns/solid/interop#SelectedFromRegistry'
+          },
+          webId: podOwner
+        },
+        { parentCtx: ctx }
+      );
+
+      return arrayOf(filteredContainer['ldp:contains']);
+    },
     // Get the DataAuthorization linked with an AccessNeed
     async getByAccessNeed(ctx) {
       const { accessNeedUri, podOwner } = ctx.params;
@@ -205,7 +223,7 @@ module.exports = {
         { parentCtx: ctx }
       );
 
-      return filteredContainer['ldp:contains']?.[0];
+      return arrayOf(filteredContainer['ldp:contains'])[0];
     },
     // Get all the DataAuthorizations granted to an agent
     async getForAgent(ctx) {

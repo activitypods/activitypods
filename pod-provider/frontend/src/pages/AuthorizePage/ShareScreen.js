@@ -1,10 +1,11 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import urlJoin from 'url-join';
 import { useTranslate, useGetList, useDataProvider } from 'react-admin';
 import { Box, Button, List, ListItem, ListItemAvatar, ListItemText, Switch, Avatar } from '@mui/material';
 import SimpleBox from '../../layout/SimpleBox';
 import ShareIcon from '@mui/icons-material/Share';
 import useResource from '../../hooks/useResource';
+import { arrayOf } from '../../utils';
 
 const SocialAgent = ({ socialAgentRegistration, onSelect, selected }) => {
   return (
@@ -24,7 +25,9 @@ const ShareScreen = ({ resourceUri, application, accessApp }) => {
   const translate = useTranslate();
   const dataProvider = useDataProvider();
   const [selected, setSelected] = useState([]);
-  const { data: socialAgentRegistrations, isLoading } = useGetList('SocialAgentRegistration', {
+  const [authorizations, setAuthorizations] = useState();
+  const [authorizationsLoading, setAuthorizationsLoading] = useState(false);
+  const { data: socialAgentRegistrations } = useGetList('SocialAgentRegistration', {
     page: 1,
     perPage: Infinity
   });
@@ -42,6 +45,39 @@ const ShareScreen = ({ resourceUri, application, accessApp }) => {
     },
     [setSelected]
   );
+
+  useEffect(() => {
+    if (!authorizations && !authorizationsLoading) {
+      setAuthorizationsLoading(true);
+
+      const authorizationsUrl = new URL(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/authorizations'));
+      authorizationsUrl.searchParams.append('resource', resourceUri);
+
+      dataProvider
+        .fetch(authorizationsUrl.toString(), {
+          headers: new Headers({
+            Accept: 'application/json'
+          })
+        })
+        .then(({ json }) => {
+          setAuthorizations(json);
+          setSelected(
+            json?.authorizations
+              .filter(auth => arrayOf(auth.accessModes).includes('acl:Read'))
+              .map(auth => auth.grantee)
+          );
+          setAuthorizationsLoading(false);
+        });
+    }
+  }, [
+    resourceUri,
+    dataProvider,
+    setSelected,
+    authorizations,
+    setAuthorizations,
+    authorizationsLoading,
+    setAuthorizationsLoading
+  ]);
 
   const onShare = useCallback(async () => {
     await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/authorizations'), {

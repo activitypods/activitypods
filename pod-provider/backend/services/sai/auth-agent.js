@@ -36,7 +36,8 @@ module.exports = {
         aliases: {
           'POST /register-app': 'auth-agent.registerApp',
           'POST /upgrade-app': 'auth-agent.upgradeApp',
-          'POST /remove-app': 'auth-agent.removeApp'
+          'POST /remove-app': 'auth-agent.removeApp',
+          'POST /share-resource': 'auth-agent.shareResource'
         }
       }
     });
@@ -202,6 +203,30 @@ module.exports = {
         if (this.broker.cacher) {
           // Invalidate all rights of the application on the Pod as they may now be completely different
           await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: webId });
+        }
+      }
+    },
+    async shareResource(ctx) {
+      const { resourceUri, authorizations } = ctx.params;
+
+      const dataOwner = ctx.meta.webId;
+      const account = await ctx.call('auth.account.findByWebId', { webId: dataOwner });
+      ctx.meta.dataset = account.username;
+
+      for ({ grantee, accessModes } of authorizations) {
+        if (accessModes.length > 0) {
+          await ctx.call('data-authorizations.generateForSingleResource', {
+            resourceUri,
+            dataOwner,
+            grantee,
+            accessModes
+          });
+        } else {
+          await ctx.call('data-authorizations.deleteForSingleResource', {
+            resourceUri,
+            dataOwner,
+            grantee
+          });
         }
       }
     }

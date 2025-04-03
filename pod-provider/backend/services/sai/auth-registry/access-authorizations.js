@@ -1,9 +1,6 @@
 const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
-
-// Return true if all elements of a1 can be found on a2. Order does not matter.
-const arraysEqual = (a1, a2) =>
-  arrayOf(a1).length === arrayOf(a2).length && arrayOf(a1).every(i => arrayOf(a2).includes(i));
+const { arraysEqual } = require('../../../utils');
 
 // See https://solid.github.io/data-interoperability-panel/specification/#access-authorization
 module.exports = {

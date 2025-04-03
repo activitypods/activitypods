@@ -112,10 +112,7 @@ const InvitePage = () => {
           to: inviterProfile.describes,
           object: {
             type: ACTIVITY_TYPES.ADD,
-            object: {
-              type: OBJECT_TYPES.PROFILE,
-              id: ownProfile.id
-            }
+            object: ownProfile.id
           },
           capability: capability
         })

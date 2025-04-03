@@ -54,24 +54,24 @@ module.exports = {
       }
     },
     async generateForSingleResource(ctx) {
-      const { resourceUri, grantee, accessModes, dataOwner } = ctx.params;
+      const { resourceUri, grantee, accessModes, podOwner } = ctx.params;
 
       const dataRegistrationUri = await ctx.call('data-registrations.getByResourceUri', {
         resourceUri,
-        podOwner: dataOwner
+        podOwner
       });
 
       // Get existing data authorizations
       const filteredContainer = await this.actions.list(
         {
           filters: {
-            'http://www.w3.org/ns/solid/interop#dataOwner': dataOwner,
+            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
             'http://www.w3.org/ns/solid/interop#grantee': grantee,
             'http://www.w3.org/ns/solid/interop#hasDataRegistration': dataRegistrationUri,
             'http://www.w3.org/ns/solid/interop#scopeOfAuthorization':
               'http://www.w3.org/ns/solid/interop#SelectedFromRegistry'
           },
-          webId: dataOwner
+          webId: podOwner
         },
         { parentCtx: ctx }
       );
@@ -85,13 +85,13 @@ module.exports = {
       if (dataAuthorizationForResource) {
         if (arraysEqual(dataAuthorizationForResource['interop:accessMode'], accessModes)) {
           // If the same access mode was granted for this resource, skip it
-          this.logger.warn(
+          this.logger.info(
             `Resource ${resourceUri} is already shared to ${grantee} with access modes ${accessModes.join(', ')}`
           );
           return dataAuthorizationForResource.id || dataAuthorizationForResource['@id'];
         } else {
           // If the access modes was changed, delete the authorization for the resource (it will be recreated below)
-          await this.actions.deleteForSingleResource({ resourceUri, grantee, dataOwner });
+          await this.actions.deleteForSingleResource({ resourceUri, grantee, podOwner });
         }
       }
 
@@ -123,7 +123,7 @@ module.exports = {
           {
             resource: {
               type: 'interop:DataAuthorization',
-              'interop:dataOwner': dataOwner,
+              'interop:dataOwner': podOwner,
               'interop:grantee': grantee,
               'interop:registeredShapeTree': shapeTreeUri,
               'interop:hasDataRegistration': dataRegistrationUri,
@@ -140,23 +140,23 @@ module.exports = {
       }
     },
     async deleteForSingleResource(ctx) {
-      const { resourceUri, grantee, dataOwner } = ctx.params;
+      const { resourceUri, grantee, podOwner } = ctx.params;
 
       const dataRegistrationUri = await ctx.call('data-registrations.getByResourceUri', {
         resourceUri,
-        podOwner: dataOwner
+        podOwner: podOwner
       });
 
       const filteredContainer = await this.actions.list(
         {
           filters: {
-            'http://www.w3.org/ns/solid/interop#dataOwner': dataOwner,
+            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
             'http://www.w3.org/ns/solid/interop#grantee': grantee,
             'http://www.w3.org/ns/solid/interop#hasDataRegistration': dataRegistrationUri,
             'http://www.w3.org/ns/solid/interop#scopeOfAuthorization':
               'http://www.w3.org/ns/solid/interop#SelectedFromRegistry'
           },
-          webId: dataOwner
+          webId: podOwner
         },
         { parentCtx: ctx }
       );
@@ -169,7 +169,7 @@ module.exports = {
             await this.actions.delete(
               {
                 resourceUri: dataAuthorization.id || dataAuthorization['@id'],
-                webId: dataOwner
+                webId: podOwner
               },
               { parentCtx: ctx }
             );
@@ -182,7 +182,7 @@ module.exports = {
                   'interop:hasDataInstance': resourcesUris.filter(uri => uri !== resourceUri)
                 },
                 contentType: MIME_TYPES.JSON,
-                webId: dataOwner
+                webId: podOwner
               },
               { parentCtx: ctx }
             );

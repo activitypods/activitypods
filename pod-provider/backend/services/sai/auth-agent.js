@@ -209,22 +209,22 @@ module.exports = {
     async shareResource(ctx) {
       const { resourceUri, authorizations } = ctx.params;
 
-      const dataOwner = ctx.meta.webId;
-      const account = await ctx.call('auth.account.findByWebId', { webId: dataOwner });
+      const podOwner = ctx.meta.webId;
+      const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
       ctx.meta.dataset = account.username;
 
       for ({ grantee, accessModes } of authorizations) {
         if (accessModes.length > 0) {
-          await ctx.call('data-authorizations.generateForSingleResource', {
+          await ctx.call('access-authorizations.generateForSingleResource', {
             resourceUri,
-            dataOwner,
+            podOwner,
             grantee,
             accessModes
           });
         } else {
-          await ctx.call('data-authorizations.deleteForSingleResource', {
+          await ctx.call('access-authorizations.deleteForSingleResource', {
             resourceUri,
-            dataOwner,
+            podOwner,
             grantee
           });
         }

@@ -1,11 +1,12 @@
 const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { arraysEqual } = require('../../../utils');
+const ImmutableContainerMixin = require('../../../mixins/immutable-container-mixin');
 
 // See https://solid.github.io/data-interoperability-panel/specification/#access-authorization
 module.exports = {
   name: 'access-authorizations',
-  mixins: [ControlledContainerMixin],
+  mixins: [ControlledContainerMixin, ImmutableContainerMixin],
   settings: {
     acceptedTypes: ['interop:AccessAuthorization'],
     excludeFromMirror: true,
@@ -13,12 +14,6 @@ module.exports = {
     typeIndex: 'private'
   },
   actions: {
-    put() {
-      throw new Error(`The resources of type interop:AccessAuthorization are immutable`);
-    },
-    patch() {
-      throw new Error(`The resources of type interop:AccessAuthorization are immutable`);
-    },
     /**
      * Generate AccessAuthorizations based on a provided list of AccessNeedGroups
      */
@@ -100,20 +95,86 @@ module.exports = {
         }
       }
     },
+    async generateForSingleResource(ctx) {
+      const { resourceUri, grantee, accessModes, podOwner } = ctx.params;
+
+      await ctx.call('data-authorizations.generateForSingleResource', { resourceUri, grantee, accessModes, podOwner });
+
+      await this.actions.regenerate({ grantee, podOwner });
+    },
+    async deleteForSingleResource(ctx) {
+      const { resourceUri, grantee, podOwner } = ctx.params;
+
+      await ctx.call('data-authorizations.deleteForSingleResource', { resourceUri, grantee, podOwner });
+
+      await this.actions.regenerate({ grantee, podOwner });
+    },
+    /**
+     * Generate or regenerate a grantee's access authorization based on their data authorizations
+     */
+    async regenerate(ctx) {
+      const { grantee, podOwner } = ctx.params;
+
+      const [accessAuthorization] = await this.actions.getForAgent({ agentUri: grantee, podOwner }, { parentCtx: ctx });
+      const dataAuthorizations = await ctx.call('data-authorizations.getForAgent', {
+        agentUri: grantee,
+        podOwner
+      });
+      const dataAuthorizationsUris = dataAuthorizations.map(r => r.id || r['@id']);
+
+      if (accessAuthorization) {
+        if (dataAuthorizationsUris.length === 0) {
+          await this.actions.delete(
+            {
+              resourceUri: accessAuthorization.id || accessAuthorization['@id'],
+              webId: podOwner
+            },
+            { parentCtx: ctx }
+          );
+        } else if (!arraysEqual(accessAuthorization['interop:hasDataAuthorization'], dataAuthorizationsUris)) {
+          await this.actions.put(
+            {
+              resource: {
+                ...accessAuthorization,
+                'interop:hasDataAuthorization': dataAuthorizationsUris
+              },
+              contentType: MIME_TYPES.JSON,
+              webId: podOwner
+            },
+            { parentCtx: ctx }
+          );
+        }
+      } else {
+        if (dataAuthorizationsUris.length > 0) {
+          await this.actions.post(
+            {
+              resource: {
+                type: 'interop:AccessAuthorization',
+                'interop:grantedBy': podOwner,
+                'interop:grantedWith': await ctx.call('auth-agent.getResourceUri', { webId: podOwner }),
+                'interop:grantedAt': new Date().toISOString(),
+                'interop:grantee': grantee,
+                'interop:hasDataAuthorization': dataAuthorizationsUris
+              },
+              contentType: MIME_TYPES.JSON,
+              webId: podOwner
+            },
+            { parentCtx: ctx }
+          );
+        }
+      }
+    },
     // Get all the AccessAuthorizations granted to an agent
     async getForAgent(ctx) {
       const { agentUri, podOwner } = ctx.params;
 
-      const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
-
       const filteredContainer = await this.actions.list(
         {
-          containerUri,
           filters: {
             'http://www.w3.org/ns/solid/interop#grantedBy': podOwner,
             'http://www.w3.org/ns/solid/interop#grantee': agentUri
           },
-          webId: 'system'
+          webId: podOwner
         },
         { parentCtx: ctx }
       );
@@ -316,6 +377,8 @@ module.exports = {
     after: {
       async post(ctx, res) {
         const podOwner = ctx.params.resource['interop:grantedBy'];
+        const grantee = ctx.params.resource['interop:grantee'];
+        const specialRightsUris = arrayOf(ctx.params.resource['apods:hasSpecialRights']);
 
         // Attach the AccessAuthorization to the AuthorizationRegistry
         await ctx.call('auth-registry.add', {
@@ -327,14 +390,16 @@ module.exports = {
         if (ctx.meta.isMigration === true) return;
 
         // Add permissions based on the special rights
-        await this.actions.addPermissionsFromSpecialRights(
-          {
-            podOwner,
-            appUri: ctx.params.resource['interop:grantee'],
-            specialRightsUris: arrayOf(ctx.params.resource['apods:hasSpecialRights'])
-          },
-          { parentCtx: ctx }
-        );
+        if (specialRightsUris.length > 0) {
+          await this.actions.addPermissionsFromSpecialRights(
+            {
+              podOwner,
+              appUri: grantee,
+              specialRightsUris
+            },
+            { parentCtx: ctx }
+          );
+        }
 
         // Get DataGrants corresponding to DataAuthorizations
         let dataGrantsUris = [];
@@ -351,37 +416,35 @@ module.exports = {
             'interop:hasDataAuthorization': undefined,
             'interop:hasDataGrant': dataGrantsUris
           },
-          contentType: MIME_TYPES.JSON
+          contentType: MIME_TYPES.JSON,
+          webId: podOwner
         });
 
         return res;
       },
       // Mirror of the above hook
       async delete(ctx, res) {
-        await this.actions.removePermissionsFromSpecialRights(
-          {
-            podOwner: res.oldData['interop:grantedBy'],
-            appUri: res.oldData['interop:grantee'],
-            specialRightsUris: arrayOf(res.oldData['apods:hasSpecialRights'])
-          },
-          { parentCtx: ctx }
-        );
+        const podOwner = res.oldData['interop:grantedBy'];
+        const grantee = res.oldData['interop:grantee'];
+        const specialRightsUris = arrayOf(res.oldData['apods:hasSpecialRights']);
+        const accessNeedGroupUri = res.oldData['interop:hasAccessNeedGroup'];
+
+        if (specialRightsUris.length > 0) {
+          await this.actions.removePermissionsFromSpecialRights(
+            { podOwner, appUri: grantee, specialRightsUris },
+            { parentCtx: ctx }
+          );
+        }
 
         // Detach the AccessAuthorization from the AuthorizationRegistry
-        await ctx.call('auth-registry.remove', {
-          podOwner: res.oldData['interop:grantedBy'],
-          accessAuthorizationUri: res.resourceUri
-        });
+        await ctx.call('auth-registry.remove', { podOwner, accessAuthorizationUri: res.resourceUri });
 
         // Delete AccessGrant that match the same AccessNeedGroup
-        const accessGrant = await ctx.call('access-grants.getByAccessNeedGroup', {
-          accessNeedGroupUri: res.oldData['interop:hasAccessNeedGroup'],
-          podOwner: res.oldData['interop:grantedBy']
-        });
+        const accessGrant = await ctx.call('access-grants.getByAccessNeedGroup', { accessNeedGroupUri, podOwner });
         if (accessGrant) {
           await ctx.call('access-grants.delete', {
             resourceUri: accessGrant.id,
-            webId: 'system'
+            webId: podOwner
           });
         }
 

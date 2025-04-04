@@ -23,7 +23,7 @@ module.exports = {
     baseUrl: null
   },
   created() {
-    /** @type {import("./websocket").RegisteredEndpoint[]} */
+    /** @type {import("./websocket").Connection[]} */
     this.connections = [];
     if (!this.settings.baseUrl) throw new Error('The websocket api mixin requires the `baseUrl` setting.');
   },

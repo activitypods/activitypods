@@ -12,31 +12,9 @@ We support the full [WAC specification](https://solid.github.io/web-access-contr
 
 We do not support yet the [ACP specification](https://solid.github.io/authorization-panel/acp-specification/).
 
-## Capability URLs
+## Capabilities with Verifiable Credentials
 
-**Added in:** `activitypods@1.5`
+**Added in:** `activitypods@2.2`
 
-We implement capability resources which are defined as [WAC](https://solid.github.io/web-access-control-spec/) Authorizations:
-
-```json
-{
-  "@context": { "acl": "http://www.w3.org/ns/auth/acl#" },
-  "@id": "https://myserver.com/capabilities/k3kleict5ks3r4",
-  "@type": "acl:Authorization",
-  "acl:accessTo": "https://myserver.com/resource/x",
-  "acl:mode": "acl:Write"
-}
-```
-
-Anyone who know the capability URL can access its corresponding resource like this:
-
-```
-GET /capabilities/k3kleict5ks3r4 HTTP/1.1
-Host: myserver.com
-Accept: application/ld+json
-Authorization: Capability https://myserver.com/capabilities/k3kleict5ks3r4
-```
-
-The capability resource itself is not public, but it can be requested with its own URL in the `Authorization` header.
-
-We are currently working on an implementation of the [ZCAP-LD spec](https://w3c-ccg.github.io/zcap-spec/) to make capabilities more secure and extensible.
+We support capabilities based on Verifiable Credentials. For example, you can issue capabilities to read and write ACL-controlled resources and to perform certain types of ActivityPub activities (if the activity handler supports it).
+See the SemApps documentation for more: https://semapps.org/docs/middleware/crypto/verifiable-credentials.

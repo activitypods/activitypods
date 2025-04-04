@@ -7,6 +7,7 @@ const QueueService = require('moleculer-bull');
 const { throw403, throw404, throw500 } = require('@semapps/middlewares');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ACTIVITY_TYPES, PUBLIC_URI } = require('@semapps/activitypub');
+const { sanitizeSparqlQuery } = require('@semapps/triplestore');
 const { arrayOf } = require('@semapps/ldp');
 const CONFIG = require('../config/config');
 
@@ -328,10 +329,9 @@ const ManagementService = {
      * @returns {string} n-quads serialized dump of dataset and settings records.
      */
     async createRdfDump(dataset, webId, withSettings = false) {
-      const dumpQuery = `SELECT * { { ?s ?p ?o } UNION { GRAPH ?g { ?s ?p ?o } } }`;
       /** @type {object[]} */
       const datasetDump = await this.broker.call('triplestore.query', {
-        query: dumpQuery,
+        query: `SELECT * { { ?s ?p ?o } UNION { GRAPH ?g { ?s ?p ?o } } }`,
         webId: 'system',
         dataset,
         accept: MIME_TYPES.JSON
@@ -340,10 +340,12 @@ const ManagementService = {
         ? []
         : await this.broker.call('triplestore.query', {
             dataset: this.settings.settingsDataset,
-            query: `SELECT * WHERE {
-          ?s ?p ?o .
-          FILTER EXISTS { ?s <http://semapps.org/ns/core#webId> "${webId}" }
-        }`,
+            query: sanitizeSparqlQuery`
+              SELECT * WHERE {
+                ?s ?p ?o .
+                FILTER EXISTS { ?s <http://semapps.org/ns/core#webId> "${webId}" }
+              }
+            `,
             accept: MIME_TYPES.JSON
           });
       // Add settings graph to settings triples

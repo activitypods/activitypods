@@ -122,6 +122,14 @@ export const isLocalURL = (url: string) => {
   return new RegExp(`^${localhostRegex.source}$`).test(new URL(url).hostname);
 };
 
+// Return true if the resource can be displayed in the data browser
+export const isStorageUri = (url: string, webId: string) =>
+  url &&
+  (url === webId || url.startsWith(webId + '/')) &&
+  url !== webId + '/sparql' &&
+  url !== webId + '/proxy' &&
+  url !== webId + '/openApp';
+
 export const isUri = (uri: string) => {
   try {
     const url = new URL(uri);
@@ -463,3 +471,9 @@ export const createPresentation = async ({
 
   return presentation;
 };
+
+// Check the value is a string starting with http and without any white space
+export const isURL = (value: any) => typeof value === 'string' && value.startsWith('http') && !/\s/g.test(value);
+
+// Check the value is a string starting with / and without any white space
+export const isPath = (value: any) => typeof value === 'string' && value.startsWith('/') && !/\s/g.test(value);

@@ -41,6 +41,10 @@ make start
 
 This will also launch Jena Fuseki (the triplestore used to store semantic data) and Redis, which are needed by the Pod provider and will also be used by the application.
 
+:::warning
+If you are on Windows, please note that you might have to enable host networking on your docker engine to get the pod provider backend expose its port.
+:::
+
 :::note
 An alternative to creating a local Pod provider is to use a tunnel for your boilerplate app like [Ngrok](https://ngrok.com/), [zrok](https://zrok.io/) or [loophole](https://loophole.cloud/docs/guides/expose) so that your application backend is accessible from the web. Feel free to improve this guide if you chose this solution!
 :::

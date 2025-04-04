@@ -209,7 +209,8 @@ module.exports = {
       app_upgrade_cancel_description:
         "Cette application ne peut pas fonctionner si vous ne lui donnez pas les autorisations qu'elle demande. Est-ce que vous souhaitez supprimer l'application ?",
       default_app_changed: "L'application par défaut a été changée",
-      backend_offline: 'Le serveur est en panne. Merci de revenir plus tard.'
+      backend_offline: 'Le serveur est en panne. Merci de revenir plus tard.',
+      cannot_display_resource: 'Pour des raisons de sécurité, cette ressource ne peut être affichée ici'
     },
     notification: {
       contact_request_accepted: 'Demande de contact acceptée',

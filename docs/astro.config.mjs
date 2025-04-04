@@ -21,8 +21,8 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Tutorials',
-          autogenerate: { directory: 'tutorials' }
+          label: 'Guides',
+          autogenerate: { directory: 'guides' }
         },
         {
           label: 'App framework',

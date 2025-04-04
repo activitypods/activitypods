@@ -204,7 +204,8 @@ module.exports = {
       app_upgrade_cancel_description:
         "The application cannot work if you don't give it the authorizations it requires. Do you want to remove this application ?",
       default_app_changed: 'The default app has been successfully changed',
-      backend_offline: 'The backend is offline. Please come back later.'
+      backend_offline: 'The backend is offline. Please come back later.',
+      cannot_display_resource: 'For security reasons, this resource cannot be displayed here'
     },
     notification: {
       contact_request_accepted: 'Contact request accepted',

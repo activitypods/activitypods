@@ -27,7 +27,7 @@ module.exports = {
 
           try {
             await ctx.call('repair.createMissingContainers', { username });
-            await this.actions.generatePrivateTypeIndex({ webId }, { parentCtx: ctx });
+            await this.actions.generateTypeIndexes({ webId }, { parentCtx: ctx });
             await ctx.call('type-registrations.resetFromRegistry', { webId });
             await ctx.call('webacl.resource.refreshContainersRights', { webId });
             await this.actions.generateDataRegistry({ webId }, { parentCtx: ctx });
@@ -48,8 +48,16 @@ module.exports = {
         }
       }
     },
-    async generatePrivateTypeIndex(ctx) {
+    async generateTypeIndexes(ctx) {
       const { webId } = ctx.params;
+
+      const publicIndex = await ctx.call('type-indexes.getPublicIndex', { webId });
+      if (publicIndex) {
+        this.logger.warn(`The public TypeIndex already exist for ${webId}, skipping...`);
+      } else {
+        this.logger.info(`Creating public TypeIndex for ${webId}`);
+        await ctx.call('type-indexes.createPublicIndex', { webId });
+      }
 
       const preferencesFileExist = await ctx.call('solid-preferences-file.exist', { webId });
       if (preferencesFileExist) {

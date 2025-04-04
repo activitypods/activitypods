@@ -1,5 +1,6 @@
 const urlJoin = require('url-join');
-const { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES, matchActivity } = require('@semapps/activitypub');
+const { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
+const { sanitizeSparqlQuery } = require('@semapps/triplestore');
 const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } = require('../../config/patterns');
@@ -13,7 +14,8 @@ module.exports = {
       attachToTypes: [ACTOR_TYPES.PERSON],
       attachPredicate: 'http://activitypods.org/ns/core#ignoredContacts',
       ordered: false,
-      dereferenceItems: false
+      dereferenceItems: false,
+      permissions: {} // This collection is only visible by the Pod owner
     }
   },
   dependencies: ['activitypub.collections-registry', 'webacl'],
@@ -140,7 +142,7 @@ module.exports = {
 
         // Delete from all collections where this actor is included (contacts, followers, following...)
         await ctx.call('triplestore.update', {
-          query: `
+          query: sanitizeSparqlQuery`
             PREFIX as: <https://www.w3.org/ns/activitystreams#>
             DELETE WHERE {
               ?collection as:items <${actorToDelete}> .
@@ -191,7 +193,7 @@ module.exports = {
 
         // Remove actor from all ACL groups
         await ctx.call('triplestore.update', {
-          query: `
+          query: sanitizeSparqlQuery`
             PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
             DELETE WHERE {
               GRAPH <http://semapps.org/webacl> {
@@ -205,7 +207,7 @@ module.exports = {
 
         // Remove all rights of actor
         await ctx.call('triplestore.update', {
-          query: `
+          query: sanitizeSparqlQuery`
             PREFIX acl: <http://www.w3.org/ns/auth/acl#>
             DELETE WHERE {
               GRAPH <http://semapps.org/webacl> {

@@ -1,7 +1,7 @@
 ---
 title: Deploy your own Pod provider
 sidebar:
-  order: 1
+  order: 3
 ---
 
 This tutorial will show you how to deploy your own ActivityPods provider to production. If you want to deploy it locally, please have a look at the first part of the tutorial [Create your first social app](../create-your-first-social-app).
@@ -32,7 +32,7 @@ git clone https://github.com/activitypods/deployment.git activitypods
 cd activitypods
 ```
 
-### Install Docker with the Compose plugin
+### Install Docker
 
 We have prepared a script for this:
 
@@ -46,7 +46,7 @@ If that doesn't work with your server config, you can follow [Docker installatio
 
 Copy the `.env.example` file to a `.env` file (`cp .env.example .env`) and set your server settings. This file (that is not commited by Git) will be used when loading the docker-compose.yml file and it contains global, cross-containers settings.
 
-```dotenv
+```dotenv title=".env"
 BACKEND_DOMAIN_NAME=mypod.store
 FRONTEND_DOMAIN_NAME=app.mypod.store
 LETSENCRYPT_EMAIL=
@@ -57,7 +57,7 @@ FUSEKI_PASSWORD=
 
 Copy the `.env.backend` file to a `.env.backend.local` file (`cp .env.backend .env.backend.local`). All the environment variables in this file (that is not commited by Git) are used directly by the backend. You should only take care of the first part of the file:
 
-```dotenv
+```dotenv title=".env.backend.local"
 SEMAPPS_INSTANCE_NAME=MyPod.store
 SEMAPPS_INSTANCE_DESCRIPTION_EN="A Pod provider open to all!"
 SEMAPPS_INSTANCE_DESCRIPTION_FR="Un hébergeur de Pod ouvert à tous et à toutes!"
@@ -80,7 +80,7 @@ SEMAPPS_SMTP_PASS=
 SEMAPPS_COOKIE_SECRET=COOKIE-SECRET
 ```
 
-A [MapBox](https://mapbox.com) access token is required for the autocomplete feature of location field on the Pod provider frontend. Fortunately MapBox has a generous free tier with 100,000 requests per month, so you should not need to pay anything. But you still need to [get the token](https://docs.mapbox.com/help/getting-started/access-tokens/).
+A [MapBox](https://mapbox.com) access token is required for the autocomplete feature of location field on the Pod provider frontend. Fortunately MapBox has a generous free tier with 100,000 requests per month, so you should not need to pay anything. But you still need to [get the token](https://docs.mapbox.com/help/getting-started/access-tokens/), otherwise your users won't be able to add addresses.
 
 ### Deploy to production
 
@@ -91,6 +91,10 @@ make start
 ```
 
 If there is a problem, you can see the backend logs with the `make logs` command. Errors will be displayed here. You can also call `make attach`, which will give you access to ActivityPods' Moleculer CLI ([Moleculer](https://moleculer.services/) is the microservice framework that all ActivityPods services run on.)
+
+:::warning
+If you are on Windows, please note that you might have to enable host networking on your docker engine to get the pod provider backend expose its port.
+:::
 
 ### Explore your server
 

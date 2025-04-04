@@ -7,6 +7,7 @@ import JsonView from '@uiw/react-json-view';
 import BackButton from '../../common/buttons/BackButton';
 import ResourceCard from '../../common/cards/ResourceCard';
 import { useContainersByTypes, useCompactPredicate } from '@semapps/semantic-data-provider';
+import { isStorageUri } from '../../utils';
 
 const DataResourceScreen = ({ resourceData }) => {
   const { data: identity } = useGetIdentity();
@@ -33,7 +34,7 @@ const DataResourceScreen = ({ resourceData }) => {
         >
           <JsonView.String
             render={({ children, style, ...rest }, { value, keyName }) => {
-              if (value?.startsWith(identity?.id) && value !== (resourceData.id || resourceData['@id'])) {
+              if (isStorageUri(value, identity?.id) && value !== (resourceData.id || resourceData['@id'])) {
                 return (
                   <Link to={`/data/${encodeURIComponent(value)}`} style={{ ...style, cursor: 'pointer' }} {...rest}>
                     {children}

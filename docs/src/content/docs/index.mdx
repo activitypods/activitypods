@@ -23,22 +23,14 @@ import Card from '../../components/Card.astro';
 import ListCard from '../../components/ListCard.astro';
 
 <CardGrid>
-  <Card title="Deploy your own Pod provider" icon="laptop">
-    Thanks to Docker, deploying your own Pod provider is easy ! [Follow our tutorial](/tutorials/deploy-your-own-pod-provider/) to started.
-  </Card>
   <Card title="Create your first social app" icon="star">
-    We provide [an example app](/tutorials/create-your-first-social-app/) that you can run in 30 minutes and connect to any existing Pod provider.
+    We provide [an example app](/guides/create-your-first-social-app/) that you can run in 30 minutes and connect to any existing Pod provider.
+  </Card>
+  <Card title="Deploy your own Pod provider" icon="laptop">
+    Thanks to Docker, deploying your own Pod provider is easy ! [Follow our tutorial](/guides/deploy-your-own-pod-provider/) to started.
   </Card>
 
-  <ListCard title="Pods architecture" icon="puzzle">
-    - [Application interoperability](/architecture/application-interoperability/)
-    - [Identity](/architecture/identity/)
-    - [Authentication](/architecture/authentication/)
-    - [Authorization](/architecture/authorization/) 
-    - [Resources management](/architecture/resources-management/) 
-    - [Live update](/architecture/live-update/) 
-  </ListCard>
-  <ListCard title="App framework guides" icon="puzzle">
+  <ListCard title="App framework" icon="puzzle">
     - [Application registration](/app-framework/backend/application-registration/)
     - [Reading and writing resources](/app-framework/backend/reading-and-writing-resources/)
     - [Listening to inbox & outbox](/app-framework/backend/listening-to-inbox-and-outbox/)
@@ -46,6 +38,14 @@ import ListCard from '../../components/ListCard.astro';
     - [Handling permissions](/app-framework/backend/handling-permissions/) 
     - [Handling collections](/app-framework/backend/handling-collections/) 
     - [Sending notifications](/app-framework/backend/sending-notifications/) 
+  </ListCard>
+  <ListCard title="Pods architecture" icon="puzzle">
+    - [Application interoperability](/architecture/application-interoperability/)
+    - [Identity](/architecture/identity/)
+    - [Authentication](/architecture/authentication/)
+    - [Authorization](/architecture/authorization/) 
+    - [Resources management](/architecture/resources-management/) 
+    - [Live update](/architecture/live-update/) 
   </ListCard>
 </CardGrid>
 

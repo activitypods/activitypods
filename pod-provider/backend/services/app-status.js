@@ -1,4 +1,6 @@
+const { MoleculerError } = require('moleculer').Errors;
 const { getDatasetFromUri } = require('@semapps/ldp');
+const CONFIG = require('../config/config');
 
 const AppStatusService = {
   name: 'app-status',
@@ -19,6 +21,11 @@ const AppStatusService = {
     async get(ctx) {
       let onlineBackend = true,
         remoteAppData;
+
+      // Ensure appUri is not an internal URL
+      if (ctx.params.appUri && ctx.params.appUri.startsWith(CONFIG.BASE_URL)) {
+        throw new MoleculerError(`Invalid application URL`, 400, 'BAD_REQUEST');
+      }
 
       const appUri = ctx.meta.impersonatedUser ? ctx.meta.webId : ctx.params.appUri;
       const webId = ctx.meta.impersonatedUser || ctx.meta.webId;

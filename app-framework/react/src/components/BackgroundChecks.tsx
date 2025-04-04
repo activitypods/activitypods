@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useLayoutEffect, FunctionComponent, ReactNode } from 'react';
-import { useGetIdentity, useDataProvider, useTranslate, useLogout } from 'react-admin';
+import { useGetIdentity, useDataProvider, useTranslate, useLogout, useRedirect } from 'react-admin';
 import { Box, CircularProgress, Typography, Button } from '@mui/material';
 import ErrorIcon from '@mui/icons-material/Error';
 import { useNodeinfo } from '@semapps/activitypub-components';
@@ -24,6 +24,7 @@ const BackgroundChecks: FunctionComponent<Props> = ({ clientId, listeningTo = []
   const nodeinfo = useNodeinfo(identity?.id ? new URL(identity?.id as string).host : undefined);
   const registerApp = useRegisterApp();
   const getAppStatus = useGetAppStatus();
+  const redirect = useRedirect();
 
   const isLoggedOut = !isIdentityLoading && !identity?.id;
 
@@ -41,7 +42,6 @@ const BackgroundChecks: FunctionComponent<Props> = ({ clientId, listeningTo = []
           }
 
           if (!appStatus.installed) {
-            setErrorMessage(translate('apods.error.app_not_registered'));
             await registerApp(clientId, identity.id as string);
             return;
           }
@@ -110,6 +110,12 @@ const BackgroundChecks: FunctionComponent<Props> = ({ clientId, listeningTo = []
       return () => clearInterval(timerId);
     }
   }, [identity, nodeinfo, checkAppStatus]);
+
+  useEffect(() => {
+    if (localStorage.getItem('redirect')) {
+      redirect(localStorage.getItem('redirect')!);
+    }
+  }, [redirect]);
 
   useLayoutEffect(() => {
     document.addEventListener('visibilitychange', checkAppStatus);

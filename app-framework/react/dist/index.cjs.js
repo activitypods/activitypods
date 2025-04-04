@@ -59,6 +59,8 @@ const $f21bc75053423cc3$export$e57ff0f701c44363 = (value)=>{
     ];
 };
 const $f21bc75053423cc3$export$1391212d75b2ee65 = (t)=>new Promise((resolve)=>setTimeout(resolve, t));
+const $f21bc75053423cc3$export$bab98af026af71ac = (value)=>typeof value === "string" && value.startsWith("http") && !/\s/g.test(value);
+const $f21bc75053423cc3$export$50ae7fb6f87de989 = (value)=>typeof value === "string" && value.startsWith("/") && !/\s/g.test(value);
 
 
 
@@ -108,10 +110,12 @@ var $c6f5b9530195abb8$export$2e2bcd8739ae039 = $c6f5b9530195abb8$var$useGetAppSt
                 const appRegistrationUri = registeredAgentLinkHeader[0].anchor;
                 return appRegistrationUri;
             } else {
+                // Save current path, so that the BackgroundChecks component may redirect there after registration
+                localStorage.setItem("redirect", window.location.pathname);
                 // No application registration found, redirect to the authorization agent
-                const redirectUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
-                redirectUrl.searchParams.append("client_id", clientId);
-                window.location.href = redirectUrl.toString();
+                const redirectToAuthAgentUrl = new URL(authAgent["interop:hasAuthorizationRedirectEndpoint"]);
+                redirectToAuthAgentUrl.searchParams.append("client_id", clientId);
+                window.location.href = redirectToAuthAgentUrl.toString();
             }
         } else throw new Error(`apods.error.user_authorization_agent_not_found`);
     }, [
@@ -138,6 +142,7 @@ var $9a8d0fd57dda054c$export$2e2bcd8739ae039 = $9a8d0fd57dda054c$var$useRegister
     const nodeinfo = (0, $fvx3m$semappsactivitypubcomponents.useNodeinfo)(identity?.id ? new URL(identity?.id).host : undefined);
     const registerApp = (0, $9a8d0fd57dda054c$export$2e2bcd8739ae039)();
     const getAppStatus = (0, $c6f5b9530195abb8$export$2e2bcd8739ae039)();
+    const redirect = (0, $fvx3m$reactadmin.useRedirect)();
     const isLoggedOut = !isIdentityLoading && !identity?.id;
     if (!clientId) throw new Error(`Missing clientId prop for BackgroundChecks component`);
     const checkAppStatus = (0, $fvx3m$react.useCallback)(async ()=>{
@@ -150,7 +155,6 @@ var $9a8d0fd57dda054c$export$2e2bcd8739ae039 = $9a8d0fd57dda054c$var$useRegister
                     return;
                 }
                 if (!appStatus.installed) {
-                    setErrorMessage(translate("apods.error.app_not_registered"));
                     await registerApp(clientId, identity.id);
                     return;
                 }
@@ -210,6 +214,11 @@ var $9a8d0fd57dda054c$export$2e2bcd8739ae039 = $9a8d0fd57dda054c$var$useRegister
         identity,
         nodeinfo,
         checkAppStatus
+    ]);
+    (0, $fvx3m$react.useEffect)(()=>{
+        if (localStorage.getItem("redirect")) redirect(localStorage.getItem("redirect"));
+    }, [
+        redirect
     ]);
     (0, $fvx3m$react.useLayoutEffect)(()=>{
         document.addEventListener("visibilitychange", checkAppStatus);
@@ -300,6 +309,7 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
 
 
 
+
 /**
  * Display a list of Pod providers that we can log in
  * This list is taken from the https://activitypods.org/data/pod-providers endpoint
@@ -316,7 +326,7 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
     const [podProviders, setPodProviders] = (0, $fvx3m$react.useState)(customPodProviders || []);
     const [isRegistered, setIsRegistered] = (0, $fvx3m$react.useState)(false);
     const isSignup = searchParams.has("signup");
-    const redirectUrl = searchParams.get("redirect") || "/";
+    const redirectUrl = (0, $f21bc75053423cc3$export$50ae7fb6f87de989)(searchParams.get("redirect")) ? searchParams.get("redirect") : "/";
     const registerApp = (0, $9a8d0fd57dda054c$export$2e2bcd8739ae039)();
     (0, $fvx3m$react.useEffect)(()=>{
         (async ()=>{
@@ -345,7 +355,8 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
     (0, $fvx3m$react.useEffect)(()=>{
         if (searchParams.has("iss")) // Automatically login if Pod provider is known
         login({
-            issuer: searchParams.get("iss")
+            issuer: searchParams.get("iss"),
+            redirect: redirectUrl
         });
         else if (searchParams.has("register_app")) {
             // Identity is not available yet because we can't fetch the user profile
@@ -432,7 +443,7 @@ var $88874b19fd1a9965$export$2e2bcd8739ae039 = $88874b19fd1a9965$var$BackgroundC
                                         children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsxs)((0, $fvx3m$muimaterial.ListItemButton), {
                                             onClick: ()=>login({
                                                     issuer: podProvider["apods:baseUrl"],
-                                                    redirect: "/login?register_app=true",
+                                                    redirect: redirectUrl,
                                                     isSignup: isSignup
                                                 }),
                                             children: [

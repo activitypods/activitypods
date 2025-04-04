@@ -57,7 +57,9 @@ const InvitePage = () => {
         const profileDoc = resources.find(resource => arrayOf(resource.type).includes('Profile'));
 
         if (imageBlob && profileDoc) {
-          // Set the profile image as blob URI manually. Sorry, a bit hacky.
+          // Set the profile image as blob URI manually, sorry a bit hacky.
+          // We have to do this because setting the regular image URI would fail
+          // since the image needs to be fetched with the capability authorization.
           profileDoc['vcard:photo'] = URL.createObjectURL(imageBlob);
         }
 

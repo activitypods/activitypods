@@ -228,7 +228,7 @@ module.exports = {
 
               // If the resource type is invalid, an error will be thrown here
               await this.broker.call('type-registrations.register', {
-                types: expandedType,
+                types: [expandedType],
                 containerUri: containersUris[0],
                 webId: recipientUri
               });

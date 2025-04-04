@@ -194,6 +194,8 @@ module.exports = {
     message: {
       copied_to_clipboard: 'Copié !',
       creating_invite_link: 'Créer...',
+      loading_invite_link: 'Chargement en cours...',
+      loading_invite_link_failed: 'Échec du chargement',
       no_condition: 'Aucune',
       you_participated_to_same_event: 'Vous avez participé à la même rencontre',
       verified_app: 'Application vérifiée',

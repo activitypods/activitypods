@@ -9,6 +9,7 @@ module.exports = {
       add_contact: 'Ajouter à mes contacts',
       add_location: 'Ajouter une adresse',
       copy: 'Copier dans votre presse-papier',
+      create_invite_link: "Créer un lien d'invitation",
       edit_profile: 'Éditer mon profil',
       edit_public_profile: 'Éditer le profil public',
       edit_private_profile: 'Éditer le profil privé',
@@ -131,7 +132,7 @@ module.exports = {
     card: {
       add_contact: 'Ajouter un contact',
       contact_requests: 'Demandes de contact',
-      share_contact: 'Mon lien de contact'
+      share_contact: "Créer un lien d'invitation"
     },
     block: {
       contact_requests: 'Nouvelles demandes de contact'
@@ -159,8 +160,7 @@ module.exports = {
       message_profile_show_right:
         'Envoyer un message à %{username} lui donnera le droit de voir votre profil, pour lui permettre de vous répondre.',
       profile_visibility: "Votre profil n'est visible que des personnes que vous avez accepté dans votre réseau",
-      share_contact:
-        'Pour vous connecter avec une personne que vous connaissez, vous pouvez lui envoyer le lien ci-dessous.',
+      share_contact: 'Pour vous connecter à une personne que vous connaissez, vous pouvez créer un lien ci-dessous.',
       location_comment: 'Indications supplémentaires pour aider à trouver ce lieu',
       login: 'Je me connecte à mon espace personnel',
       signup: 'Je crée mon espace personnel',
@@ -196,6 +196,9 @@ module.exports = {
     },
     message: {
       copied_to_clipboard: 'Copié !',
+      creating_invite_link: 'Créer...',
+      loading_invite_link: 'Chargement en cours...',
+      loading_invite_link_failed: 'Échec du chargement',
       no_condition: 'Aucune',
       you_participated_to_same_event: 'Vous avez participé à la même rencontre',
       verified_app: 'Application vérifiée',
@@ -244,12 +247,14 @@ module.exports = {
       home_address_deleted: 'Adresse du domicile enlevée',
       send_request_error: "Erreur lors de l'envoi de la demande : %{error}",
       connection_accepted: 'Vous avez accepté la demande de connexion.',
-      invite_cap_invalid: "Le lien d'invitation n'est pas valide",
+      invite_cap_invalid: "Le lien d'invitation n'est pas valide. Erreur:\n%{error}",
       invite_cap_fetch_error:
         "Une erreur s'est produite lors de la récupération de l'invitation. Elle pourrait ne pas être valide.\n%{error}",
       invite_cap_missing: "Impossible de générer un lien d'invitation (missing capability)",
       invite_cap_profile_fetch_error: "Erreur lors de la recherche du profil associé au lien d'invitation",
       pod_provider_fetch_error: "Erreur lors de la recherche d'autres hébergeurs : %{error}",
+      contact_link_creation_failed: 'La création du lien de contact a échoué: %{error}',
+      contact_link_copying_failed: 'La copie du lien de contact a échoué. Veuillez le copier manuellement : \n%{link}',
       contact_link_copied: 'Lien de contact copié avec succès',
       already_connected: "Tu es déjà connecté avec la personne qui t'a invité."
     },

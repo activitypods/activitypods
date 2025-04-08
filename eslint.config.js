@@ -40,6 +40,7 @@ module.exports = tsEslint.config(
       'jsdoc/require-jsdoc': 'off',
       'jsdoc/require-param': 'off',
       'jsdoc/require-returns': 'off',
+      'jsdoc/tag-lines': 'off',
       'no-await-in-loop': 'off',
       'no-case-declarations': 'warn',
       'no-continue': 'off',

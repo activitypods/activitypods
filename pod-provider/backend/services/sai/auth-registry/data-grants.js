@@ -42,10 +42,20 @@ module.exports = {
         webId: podOwner
       });
 
-      return await this.actions.getByAccessNeed(
-        { accessNeedUri: dataAuthorization['interop:satisfiesAccessNeed'], podOwner },
+      const filteredContainer = await this.actions.list(
+        {
+          filters: {
+            'http://www.w3.org/ns/solid/interop#satisfiesAccessNeed': dataAuthorization['interop:satisfiesAccessNeed'],
+            'http://www.w3.org/ns/solid/interop#dataOwner': dataAuthorization['interop:dataOwner'],
+            'http://www.w3.org/ns/solid/interop#grantee': dataAuthorization['interop:grantee'],
+            'http://www.w3.org/ns/solid/interop#hasDataRegistration': dataAuthorization['interop:hasDataRegistration']
+          },
+          webId: podOwner
+        },
         { parentCtx: ctx }
       );
+
+      return filteredContainer['ldp:contains']?.[0];
     }
   }
 };

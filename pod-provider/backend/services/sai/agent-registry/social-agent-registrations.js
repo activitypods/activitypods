@@ -40,9 +40,11 @@ module.exports = {
   },
   actions: {
     async createOrUpdate(ctx) {
-      const { agentUri, podOwner, accessGrantsUris, label, note } = ctx.params;
+      let { agentUri, podOwner, accessGrantsUris, label, note } = ctx.params;
 
       const agentRegistration = await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx });
+
+      if (!label) label = await this.actions.getAgentName({ agentUri, podOwner }, { parentCtx: ctx });
 
       if (agentRegistration) {
         // If the label, note or access grants have changed, update the registration
@@ -107,12 +109,15 @@ module.exports = {
 
         // If a reciprocal registration was found, persist it
         if (reciprocalRegistrationUri) {
+          // We may now have access to the agent profile, so update the label if possible
+          const label = await this.actions.getAgentName({ agentUri, podOwner }, { parentCtx: ctx });
           await this.actions.put(
             {
               resource: {
                 ...agentRegistration,
                 'interop:updatedAt': new Date().toISOString(),
-                'interop:reciprocalRegistration': reciprocalRegistrationUri
+                'interop:reciprocalRegistration': reciprocalRegistrationUri,
+                'skos:prefLabel': label
               },
               contentType: MIME_TYPES.JSON
             },
@@ -144,6 +149,20 @@ module.exports = {
         return registeredAgentLinkHeader[0].anchor;
       }
     },
+    async getAgentName(ctx) {
+      const { agentUri, podOwner } = ctx.params;
+      try {
+        const agentProfile = await ctx.call('activitypub.actor.getProfile', {
+          actorUri: agentUri,
+          webId: podOwner
+        });
+        return agentProfile['vcard:given-name'];
+      } catch (e) {
+        // Can't get the private profile ? Use the webId
+        const agent = await ctx.call('activitypub.actor.get', { actorUri: agentUri });
+        return agent['foaf:name'] || agent.name || agent['foaf:nick'] || agent.preferredUsername;
+      }
+    },
     /**
      * Generate or regenerate a social agent registration based on their access grants
      */
@@ -154,6 +173,19 @@ module.exports = {
       const accessGrantsUris = accessGrants.map(r => r.id || r['@id']);
 
       await this.actions.createOrUpdate({ agentUri, podOwner, accessGrantsUris }, { parentCtx: ctx });
+    },
+    async addAuthorization(ctx) {
+      const { resourceUri, grantee, accessModes } = ctx.params;
+      const webId = ctx.params.webId || ctx.meta.webId;
+
+      await ctx.call('access-authorizations.generateForSingleResource', {
+        resourceUri,
+        podOwner: webId,
+        grantee,
+        accessModes
+      });
+
+      await this.actions.regenerate({ agentUri: grantee, podOwner: webId }, { parentCtx: ctx });
     },
     /**
      * Mass-update access authorizations for a single resource

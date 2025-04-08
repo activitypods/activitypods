@@ -78,7 +78,6 @@ module.exports = {
   activities: {
     contactRequest: {
       match: CONTACT_REQUEST,
-
       async onEmit(ctx, activity, emitterUri) {
         // Add the user to the contacts WebACL group so he can see my profile
         for (let targetUri of arrayOf(activity.target)) {
@@ -91,7 +90,14 @@ module.exports = {
           // Create the SocialAgentRegistration
           await ctx.call('social-agent-registrations.createOrUpdate', { agentUri: targetUri, podOwner: emitterUri });
 
-          // TODO share profile with SAI
+          // Share profile
+          // TODO setup a contacts group in SAI
+          const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+          await ctx.call('social-agent-registrations.addAuthorization', {
+            resourceUri: emitter.url,
+            grantee: targetUri,
+            accessModes: ['acl:Read']
+          });
         }
       },
       async onReceive(ctx, activity, recipientUri) {
@@ -157,7 +163,6 @@ module.exports = {
       match: CONTACT_REQUEST,
       async capabilityGrantMatchFnGenerator({ recipientUri, activity }) {
         // Generate a function that is called on each ActivityGrant of the activity's capability.
-
         return async grant => {
           // Verify that the recipient issued the grant with the following structure.
           const { match } = await matchActivity(
@@ -178,7 +183,6 @@ module.exports = {
           return match;
         };
       },
-
       async onReceive(ctx, activity, recipientUri) {
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
@@ -244,7 +248,13 @@ module.exports = {
         // Create a Social Agent Registration
         await ctx.call('social-agent-registrations.createOrUpdate', { agentUri: activity.to, podOwner: emitterUri });
 
-        // TODO share profile with SAI
+        // Share profile
+        // TODO setup a contacts group in SAI
+        await ctx.call('social-agent-registrations.addAuthorization', {
+          resourceUri: emitter.url,
+          grantee: activity.to,
+          accessModes: ['acl:Read']
+        });
 
         // Cache the other actor's profile
         await ctx.call('ldp.remote.store', {

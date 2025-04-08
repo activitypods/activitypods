@@ -15,6 +15,7 @@ const SocialAgent = ({ socialAgentRegistration, onSelect, selected }) => {
       </ListItemAvatar>
       <ListItemText
         primary={socialAgentRegistration['skos:prefLabel'] || socialAgentRegistration['interop:registeredAgent']}
+        secondary={socialAgentRegistration['skos:prefLabel'] && socialAgentRegistration['interop:registeredAgent']}
       />
       <Switch edge="end" onChange={onSelect} checked={selected} />
     </ListItem>

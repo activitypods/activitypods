@@ -1,8 +1,9 @@
 const { ControlledContainerMixin } = require('@semapps/ldp');
+const ImmutableContainerMixin = require('../../../mixins/immutable-container-mixin');
 
 module.exports = {
   name: 'data-grants',
-  mixins: [ControlledContainerMixin],
+  mixins: [ControlledContainerMixin, ImmutableContainerMixin],
   settings: {
     acceptedTypes: ['interop:DataGrant'],
     newResourcesPermissions: {
@@ -16,12 +17,6 @@ module.exports = {
   },
   dependencies: ['ldp', 'ldp.registry'],
   actions: {
-    put() {
-      throw new Error(`The resources of type interop:DataGrant are immutable`);
-    },
-    patch() {
-      throw new Error(`The resources of type interop:DataGrant are immutable`);
-    },
     // Get the DataGrant linked with an AccessNeed
     async getByAccessNeed(ctx) {
       const { accessNeedUri, podOwner } = ctx.params;
@@ -47,10 +42,20 @@ module.exports = {
         webId: podOwner
       });
 
-      return await this.actions.getByAccessNeed(
-        { accessNeedUri: dataAuthorization['interop:satisfiesAccessNeed'], podOwner },
+      const filteredContainer = await this.actions.list(
+        {
+          filters: {
+            'http://www.w3.org/ns/solid/interop#satisfiesAccessNeed': dataAuthorization['interop:satisfiesAccessNeed'],
+            'http://www.w3.org/ns/solid/interop#dataOwner': dataAuthorization['interop:dataOwner'],
+            'http://www.w3.org/ns/solid/interop#grantee': dataAuthorization['interop:grantee'],
+            'http://www.w3.org/ns/solid/interop#hasDataRegistration': dataAuthorization['interop:hasDataRegistration']
+          },
+          webId: podOwner
+        },
         { parentCtx: ctx }
       );
+
+      return filteredContainer['ldp:contains']?.[0];
     }
   }
 };

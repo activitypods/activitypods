@@ -1,6 +1,11 @@
-const { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
+const {
+  ACTIVITY_TYPES,
+  ACTOR_TYPES,
+  ActivitiesHandlerMixin,
+  OBJECT_TYPES,
+  matchActivity
+} = require('@semapps/activitypub');
 const { arrayOf } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
 const {
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
@@ -12,7 +17,9 @@ const {
   ACCEPT_CONTACT_REQUEST_MAPPING,
   AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
 } = require('../../config/mappings');
+const { MIME_TYPES } = require('@semapps/mime-types');
 
+/** @type {import('moleculer').ServiceSchema} */
 module.exports = {
   name: 'contacts.request',
   mixins: [ActivitiesHandlerMixin],
@@ -79,7 +86,102 @@ module.exports = {
             memberUri: targetUri,
             webId: emitterUri
           });
+
+          // Create the SocialAgentRegistration
+          await ctx.call('social-agent-registrations.createOrUpdate', { agentUri: targetUri, podOwner: emitterUri });
+
+          // Share profile
+          // TODO setup a contacts group in SAI
+          const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+          await ctx.call('social-agent-registrations.addAuthorization', {
+            resourceUri: emitter.url,
+            grantee: targetUri,
+            accessModes: ['acl:Read']
+          });
         }
+      },
+      async onReceive(ctx, activity, recipientUri) {
+        // Contact requests with capabilities are assumed to be coming from invite links. Those are handled separately below.
+        if (activity.capability) return;
+
+        const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
+
+        // If the actor is already in my contacts, ignore this request (may happen for automatic post-event requests)
+        if (
+          await ctx.call('activitypub.collection.includes', {
+            collectionUri: recipient['apods:contacts'],
+            itemUri: activity.actor
+          })
+        ) {
+          return;
+        }
+
+        // If the request was already rejected, reject it again
+        if (
+          await ctx.call('activitypub.collection.includes', {
+            collectionUri: recipient['apods:rejectedContacts'],
+            itemUri: activity.actor
+          })
+        ) {
+          await ctx.call('activitypub.outbox.post', {
+            collectionUri: recipient.outbox,
+            type: ACTIVITY_TYPES.REJECT,
+            actor: recipient.id,
+            object: activity.id,
+            to: activity.actor
+          });
+          return;
+        }
+
+        // Check that a request by the same actor is not already waiting (if so, ignore it)
+        const collection = await ctx.call('activitypub.collection.get', {
+          resourceUri: recipient['apods:contactRequests'],
+          webId: recipientUri
+        });
+        if (
+          collection &&
+          arrayOf(collection.items).length > 0 &&
+          arrayOf(collection.items).find(a => a.actor === activity.actor)
+        ) {
+          return;
+        }
+
+        await ctx.call('activitypub.collection.add', {
+          collectionUri: recipient['apods:contactRequests'],
+          item: activity
+        });
+
+        await ctx.call('mail-notifications.notify', {
+          template: CONTACT_REQUEST_MAPPING,
+          recipientUri,
+          activity,
+          context: activity.id
+        });
+      }
+    },
+    inviteLinkContactRequest: {
+      match: CONTACT_REQUEST,
+      async capabilityGrantMatchFnGenerator({ recipientUri, activity }) {
+        // Generate a function that is called on each ActivityGrant of the activity's capability.
+        return async grant => {
+          // Verify that the recipient issued the grant with the following structure.
+          const { match } = await matchActivity(
+            {
+              type: ACTIVITY_TYPES.OFFER,
+              to: recipientUri,
+              target: recipientUri,
+              object: {
+                type: ACTIVITY_TYPES.ADD,
+                object: {
+                  type: OBJECT_TYPES.PROFILE
+                }
+              }
+            },
+            grant,
+            uri => ({ id: uri }) // The URIs here are not resolved further.
+          );
+          return match;
+        };
       },
       async onReceive(ctx, activity, recipientUri) {
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
@@ -111,70 +213,24 @@ module.exports = {
           return;
         }
 
-        // Check, if an invite capability URI is present. If so, accept the request automatically.
-        if (activityHasInviteCapability(activity)) {
-          const capability = await ctx.call('auth.getValidateCapability', {
-            capabilityUri: activity['sec:capability'],
-            webId: recipientUri
-          });
-          const { url: profileUri } = await ctx.call('ldp.resource.get', {
-            resourceUri: recipientUri,
-            webId: 'system',
-            accept: MIME_TYPES.JSON
-          });
-          // Capability to read the profile implies automatic contact approval.
-          if (
-            capability.type === 'acl:Authorization' &&
-            capability['acl:mode'] === 'acl:Read' &&
-            capability['acl:accessTo'] === profileUri
-          ) {
-            // Send the accept.
-            await ctx.call('activitypub.outbox.post', {
-              collectionUri: recipient.outbox,
-              type: ACTIVITY_TYPES.ACCEPT,
-              actor: recipient.id,
-              object: activity.id,
-              to: activity.actor,
-              // TODO: this is semantically not so clean but the easiest way rn, to detect what kind of response this is.
-              'sec:capability': activity['sec:capability']
-            });
-
-            await ctx.call('mail-notifications.notify', {
-              template: AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING,
-              recipientUri,
-              activity,
-              context: activity.id
-            });
-
-            // No need to add the user to contact requests.
-            return;
-          }
-        }
-
-        // Check that a request by the same actor is not already waiting (if so, ignore it)
-        const collection = await ctx.call('activitypub.collection.get', {
-          resourceUri: recipient['apods:contactRequests'],
-          webId: recipientUri
-        });
-        if (
-          collection &&
-          arrayOf(collection.items).length > 0 &&
-          arrayOf(collection.items).find(a => a.actor === activity.actor)
-        ) {
-          return;
-        }
-
-        await ctx.call('activitypub.collection.add', {
-          collectionUri: recipient['apods:contactRequests'],
-          item: activity
+        // Send the accept.
+        await ctx.call('activitypub.outbox.post', {
+          collectionUri: recipient.outbox,
+          type: ACTIVITY_TYPES.ACCEPT,
+          actor: recipient.id,
+          object: activity.id,
+          to: activity.actor
         });
 
+        // Notify about auto-accept.
         await ctx.call('mail-notifications.notify', {
-          template: CONTACT_REQUEST_MAPPING,
+          template: AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING,
           recipientUri,
           activity,
           context: activity.id
         });
+
+        return;
       }
     },
     acceptContactRequest: {
@@ -182,32 +238,43 @@ module.exports = {
       async onEmit(ctx, activity, emitterUri) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
-        // 1. Add the other actor to the contacts WebACL group so he can see my profile
+        // Add the other actor to the contacts WebACL group so he can see my profile
         await ctx.call('webacl.group.addMember', {
           groupSlug: `${new URL(emitterUri).pathname}/contacts`,
           memberUri: activity.to,
           webId: emitterUri
         });
 
-        // 2. Cache the other actor's profile
+        // Create a Social Agent Registration
+        await ctx.call('social-agent-registrations.createOrUpdate', { agentUri: activity.to, podOwner: emitterUri });
+
+        // Share profile
+        // TODO setup a contacts group in SAI
+        await ctx.call('social-agent-registrations.addAuthorization', {
+          resourceUri: emitter.url,
+          grantee: activity.to,
+          accessModes: ['acl:Read']
+        });
+
+        // Cache the other actor's profile
         await ctx.call('ldp.remote.store', {
           resource: activity.object.object.object,
           webId: emitterUri
         });
 
-        // 3. Attach the other actor's profile to my profiles container
+        // Attach the other actor's profile to my profiles container
         await ctx.call('profiles.profile.attach', {
           resourceUri: activity.object.object.object.id,
           webId: emitterUri
         });
 
-        // 4. Add the other actor to my contacts list
+        // Add the other actor to my contacts list
         await ctx.call('activitypub.collection.add', {
           collectionUri: emitter['apods:contacts'],
           item: activity.object.actor
         });
 
-        // 5. Remove the activity from my contact requests
+        // Remove the activity from my contact requests
         await ctx.call('activitypub.collection.remove', {
           collectionUri: emitter['apods:contactRequests'],
           item: activity.object.id
@@ -216,6 +283,12 @@ module.exports = {
       async onReceive(ctx, activity, recipientUri) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
+
+        // The emitter should have created a Social Agent Registration, so we can now link it
+        await ctx.call('social-agent-registrations.addReciprocalRegistration', {
+          agentUri: activity.actor,
+          podOwner: recipientUri
+        });
 
         // Cache the other actor's profile (it should be visible now)
         await ctx.call('ldp.remote.store', {
@@ -237,7 +310,7 @@ module.exports = {
 
         // If the contact request was automatically accepted, or if the initial
         // request had a context (case for attendees matcher), don't send a notification
-        if (!activityHasInviteCapability(activity) && !activity.object.context) {
+        if (!activity.capability && !activity.object.context) {
           await ctx.call('mail-notifications.notify', {
             template: ACCEPT_CONTACT_REQUEST_MAPPING,
             recipientUri,
@@ -291,17 +364,21 @@ module.exports = {
           memberUri: activity.actor,
           webId: recipientUri
         });
+
+        // Delete the Social Agent Registration
+        // This will also delete all authorizations and grants associated with the user
+        const agentRegistration = await ctx.call('social-agent-registrations.getForAgent', {
+          agentUri: activity.actor,
+          podOwner: recipientUri
+        });
+
+        if (agentRegistration) {
+          await ctx.call('social-agent-registrations.delete', {
+            resourceUri: agentRegistration.id || agentRegistration['@id'],
+            webId: recipientUri
+          });
+        }
       }
     }
   }
-};
-
-/**
- * Right now, it's assumed that an Offer > Add > Profile activity with a
- * capability attached is an contact request by invite link. Thus an invite capability.
- * @param activity The activity object.
- * @returns
- */
-const activityHasInviteCapability = activity => {
-  return !!activity?.['sec:capability'];
 };

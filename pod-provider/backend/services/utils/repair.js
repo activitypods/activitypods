@@ -20,7 +20,7 @@ module.exports = {
         ctx.meta.dataset = dataset;
         ctx.meta.webId = webId;
 
-        const isRegistered = await ctx.call('app-registrations.isRegistered', { appUri, podOwner: webId });
+        const isRegistered = await ctx.call('app-registrations.isRegistered', { agentUri: appUri, podOwner: webId });
         if (isRegistered) {
           this.logger.info(`App ${appUri} is already installed for ${webId}, skipping...`);
         } else {

@@ -5,6 +5,16 @@ const { getDatasetFromUri, hasType, isURL } = require('@semapps/ldp');
 module.exports = {
   name: 'data-registrations',
   actions: {
+    async get(ctx) {
+      const { dataRegistrationUri } = ctx.params;
+
+      return await ctx.call('ldp.container.get', {
+        containerUri: dataRegistrationUri,
+        accept: MIME_TYPES.JSON,
+        webId: 'system',
+        doNotIncludeResources: true
+      });
+    },
     /**
      * Create a DataRegistration AND a LDP container in a given storage
      */
@@ -117,7 +127,7 @@ module.exports = {
       }
     },
     /**
-     * Get the DataRegistration linked with a shape tree
+     * Get the DataRegistration URI linked with a shape tree
      */
     async getByShapeTree(ctx) {
       const { shapeTreeUri, podOwner } = ctx.params;
@@ -129,6 +139,29 @@ module.exports = {
           WHERE {
             ?dataRegistrationUri interop:registeredShapeTree <${shapeTreeUri}> .
             ?dataRegistrationUri interop:registeredBy <${podOwner}> .
+            ?dataRegistrationUri a interop:DataRegistration .
+          }
+        `,
+        accept: MIME_TYPES.JSON,
+        webId: 'system',
+        dataset: getDatasetFromUri(podOwner)
+      });
+
+      return results[0]?.dataRegistrationUri?.value;
+    },
+    /**
+     * Get the DataRegistration URI of a resource
+     */
+    async getByResourceUri(ctx) {
+      const { resourceUri, podOwner } = ctx.params;
+
+      const results = await ctx.call('triplestore.query', {
+        query: `
+          PREFIX ldp: <http://www.w3.org/ns/ldp#>
+          PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+          SELECT ?dataRegistrationUri
+          WHERE {
+            ?dataRegistrationUri ldp:contains <${resourceUri}> .
             ?dataRegistrationUri a interop:DataRegistration .
           }
         `,

@@ -13,7 +13,7 @@ module.exports = {
       }
     },
     async set(ctx) {
-      const { key, time, actionName, params } = ctx.params;
+      const { key, time, actionName, params, repeat } = ctx.params;
 
       // Delete any existing timer with the same key
       await this.actions.delete({ key }, { parentCtx: ctx });
@@ -26,7 +26,8 @@ module.exports = {
           delay: new Date(time) - Date.now(),
           // Try again after 3 minutes and until 12 hours later
           attempts: 8,
-          backoff: { type: 'exponential', delay: '180000' }
+          backoff: { type: 'exponential', delay: '180000' },
+          repeat: repeat && { every: repeat }
         }
       );
     },

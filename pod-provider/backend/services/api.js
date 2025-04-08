@@ -55,7 +55,7 @@ module.exports = {
           // This is a OIDC provider-generated ID token
           return ctx.call('solid-oidc.authenticate', { route, req, res });
         }
-        // Otherwise it is a custom JWT token (used by ActivityPods frontend) or a capability URL
+        // Otherwise it is a custom JWT token (used by ActivityPods frontend)
         return ctx.call('auth.authenticate', { route, req, res });
       }
 
@@ -73,7 +73,7 @@ module.exports = {
           // This is a OIDC provider-generated ID token
           return ctx.call('solid-oidc.authorize', { route, req, res });
         }
-        // Otherwise it is a custom JWT token (used by ActivityPods frontend)
+        // Otherwise it is a custom JWT token (used by ActivityPods frontend) or a VC capability
         return ctx.call('auth.authorize', { route, req, res });
       }
       ctx.meta.webId = 'anon';

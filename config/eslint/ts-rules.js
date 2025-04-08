@@ -93,6 +93,7 @@ module.exports = tsEslint.config(
       'jsdoc/require-param': 'off',
       'jsdoc/require-param-type': 'off',
       'jsdoc/require-returns': 'off',
+      'jsdoc/tag-lines': 'off',
       'jsx-a11y/anchor-is-valid': 'off'
     }
   }

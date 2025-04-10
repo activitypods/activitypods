@@ -16,6 +16,5 @@
     "jsx": "react",
     "allowImportingTsExtensions": true,
     "rootDir": "./"
-  },
-  "include": ["./tests", "./pod-provider", "./config", "./app-framework"]
+  }
 }

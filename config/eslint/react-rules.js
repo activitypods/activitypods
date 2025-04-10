@@ -21,7 +21,7 @@ module.exports = tsEslint.config({
   languageOptions: {
     parser: tsEslint.parser,
     parserOptions: {
-      project: path.join(__dirname, '../tsconfig.json'),
+      project: path.join(__dirname, '../../tsconfig.json'),
       ecmaFeatures: { jsx: true },
       sourceType: 'module'
     },
@@ -46,26 +46,6 @@ module.exports = tsEslint.config({
     'react/no-array-index-key': 'warn',
     'react/no-unstable-nested-components': 'warn',
     'react/prop-types': 'warn',
-    'react/require-default-props': 'off',
-
-    // TODO: Leave them out, once react eslint is properly updated to eslint v9.
-    'react/destructuring-assignment': 'off',
-    'react/no-unstable-nested-components': 'off',
-    'react/jsx-no-undef': 'off',
-    'react/destructuring-assignment': 'off',
-    'react/no-array-index-key': 'off',
-    'react/jsx-uses-react': 'off',
-    'react/jsx-uses-vars': 'off',
-    'react/react-in-jsx-scope': 'off',
-    'react/no-string-refs': 'off',
-    'react/display-name': 'off',
-    'react/no-direct-mutation-state': 'off',
-    'react/require-render-return': 'off',
-    'react/jsx-no-constructed-context-values': 'off',
-    'react/no-danger-with-children': 'off',
-    'react/jsx-fragments': 'off',
-    'react/prop-types': 'off',
-    'react-hooks/exhaustive-deps': 'off',
-    'react-hooks/rules-of-hooks': 'off'
+    'react/require-default-props': 'off'
   }
 });

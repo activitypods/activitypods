@@ -9,7 +9,7 @@ module.exports = tsEslint.config(
     languageOptions: {
       parser: tsEslint.parser,
       parserOptions: {
-        project: path.join(__dirname, '../tsconfig.json')
+        project: path.join(__dirname, '../../tsconfig.json')
       }
     }
   },

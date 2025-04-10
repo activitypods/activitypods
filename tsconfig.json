@@ -9,12 +9,13 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react",
     "allowImportingTsExtensions": true,
     "rootDir": "./"
-  }
+  },
+  "include": ["./tests", "./pod-provider", "./config", "./app-framework"]
 }

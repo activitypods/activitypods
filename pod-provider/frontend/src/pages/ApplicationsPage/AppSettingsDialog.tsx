@@ -11,7 +11,7 @@ import useUpgradeApp from '../../hooks/useUpgradeApp';
 import useRemoveApp from '../../hooks/useRemoveApp';
 import { arraysEqual } from '../../utils';
 
-const AppSettingsDialog = ({ application, open, onClose }) => {
+const AppSettingsDialog = ({ application, open, onClose }: any) => {
   const [oldAccessNeedsUris, setOldAccessNeedsUris] = useState();
   const [newAccessNeedsUris, setNewAccessNeedsUris] = useState();
   const [isPending, setIsPending] = useState(false);
@@ -31,7 +31,9 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
 
   useEffect(() => {
     if (grantsLoaded && accessNeedsLoaded) {
+      // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
       const requiredAccessNeedsUris = requiredAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id));
+      // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
       const optionalAccessNeedsUris = optionalAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id));
       const grantedAccessNeedsUris = grants.map(a => (typeof a === 'string' ? a : a?.['interop:satisfiesAccessNeed']));
 
@@ -39,10 +41,12 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
       const grantedExistingAccessNeedsUris = grantedAccessNeedsUris.filter(
         uri => requiredAccessNeedsUris.includes(uri) || optionalAccessNeedsUris.includes(uri)
       );
+      // @ts-expect-error TS(2345): Argument of type 'never[]' is not assignable to pa... Remove this comment to see the full error message
       setOldAccessNeedsUris(grantedExistingAccessNeedsUris);
 
       // If there are new required access needs (in the remote app), automatically select them
       // This will display the "Upgrade" button so that the user can upgrade the app from here
+      // @ts-expect-error TS(2345): Argument of type 'any[]' is not assignable to para... Remove this comment to see the full error message
       setNewAccessNeedsUris([...new Set([...grantedExistingAccessNeedsUris, ...requiredAccessNeedsUris])]);
     }
   }, [
@@ -63,6 +67,7 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
       removeApp({ application });
     } catch (e) {
       setIsPending(false);
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       notify(`Error on app removal: ${e.message}`, { type: 'error' });
       console.error(e);
     }
@@ -82,6 +87,7 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
       onClose();
     } catch (e) {
       setIsPending(false);
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       notify(`Error on app upgrade: ${e.message}`, { type: 'error' });
       console.error(e);
     }
@@ -89,6 +95,7 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
 
   // Will be true if there is a difference between the old and the new access needs
   const showUpgradeButton = useMemo(() => {
+    // @ts-expect-error TS(2345): Argument of type 'undefined' is not assignable to ... Remove this comment to see the full error message
     return !arraysEqual(oldAccessNeedsUris, newAccessNeedsUris);
   }, [oldAccessNeedsUris, newAccessNeedsUris]);
 

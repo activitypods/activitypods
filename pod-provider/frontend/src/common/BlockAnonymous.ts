@@ -1,6 +1,6 @@
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 
-const BlockAnonymous = ({ message, children }) => {
+const BlockAnonymous = ({ message, children }: any) => {
   const { identity } = useCheckAuthenticated(message);
   if (identity?.id) {
     return children;

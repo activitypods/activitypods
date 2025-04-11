@@ -17,7 +17,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const DetailsList = ({ children }) => {
+const DetailsList = ({ children }: any) => {
   const classes = useStyles();
   const translate = useTranslate();
   const record = useRecordContext();
@@ -31,14 +31,17 @@ const DetailsList = ({ children }) => {
         (field.props.source ? record[field.props.source] : field.props.value) &&
         React.isValidElement(field) ? (
           <div key={i} className={classes.line}>
+            <>{/*  @ts-expect-error TS(2571): Object is of type 'unknown'.*/}</>
             {field.props.label !== false ? (
               <Grid container spacing={3} className={classes.container}>
                 <Grid item xs={4} sm={3} className={classes.item}>
                   <Typography color="textSecondary" align="right" variant="body2">
                     {translate(
                       ...getFieldLabelTranslationArgs({
+                        // @ts-expect-error TS(2571): Object is of type 'unknown'.
                         label: field.props.label,
                         resource,
+                        // @ts-expect-error TS(2571): Object is of type 'unknown'.
                         source: field.props.source
                       })
                     )}

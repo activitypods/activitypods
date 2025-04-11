@@ -5,7 +5,7 @@ import { Box, Card, Typography } from '@mui/material';
 import scorer from '../../config/scorer';
 
 const validateConfirmNewPassword = [
-  (value, { newPassword, confirmNewPassword }) => {
+  (value: any, { newPassword, confirmNewPassword }: any) => {
     if (!newPassword) return;
     if (newPassword !== confirmNewPassword) {
       return 'app.validation.confirmNewPassword';
@@ -16,17 +16,20 @@ const validateConfirmNewPassword = [
 const SettingsPasswordPage = () => {
   const translate = useTranslate();
   const notify = useNotify();
+  // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
   const { identity } = useCheckAuthenticated();
   const authProvider = useAuthProvider();
 
   const [newPassword, setNewPassword] = React.useState('');
 
   const onSubmit = useCallback(
-    async params => {
+    async (params: any) => {
       try {
         await authProvider.updateAccountSettings({ ...params });
+        // @ts-expect-error TS(2345): Argument of type 'string' is not assignable to par... Remove this comment to see the full error message
         notify('auth.message.account_settings_updated', 'success');
       } catch (error) {
+        // @ts-expect-error TS(2571): Object is of type 'unknown'.
         notify(error.message, { type: 'error' });
       }
     },

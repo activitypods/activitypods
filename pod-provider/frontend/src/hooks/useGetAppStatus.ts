@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import urlJoin from 'url-join';
 
 const useGetAppStatus = () => {
-  return useCallback(async (appUri, identity) => {
+  return useCallback(async (appUri: any, identity: any) => {
     if (!identity.id) throw new Error('Identity must be loaded before calling getAppStatus');
     const oidcIssuer = identity?.webIdData?.['solid:oidcIssuer'] || new URL(identity?.id).origin;
     const endpointUrl = new URL(urlJoin(oidcIssuer, '.well-known/app-status'));

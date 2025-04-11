@@ -9,15 +9,17 @@ import ResourceCard from '../../common/cards/ResourceCard';
 import { useContainersByTypes, useCompactPredicate } from '@semapps/semantic-data-provider';
 import { isStorageUri } from '../../utils';
 
-const DataResourceScreen = ({ resourceData }) => {
+const DataResourceScreen = ({ resourceData }: any) => {
   const { data: identity } = useGetIdentity();
   const [container] = useContainersByTypes(resourceData.type || resourceData['@type']);
+  // @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message
   const labelPredicate = useCompactPredicate(container?.labelPredicate, resourceData['@context']);
 
   return (
     <ShowView
       title={(labelPredicate && resourceData[labelPredicate]) || resourceData.id || resourceData['@id']}
       actions={[
+        // @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message
         container ? <BackButton to={`/data/${encodeURIComponent(container.uri)}`} /> : <BackButton to="/data" />
       ]}
       asides={[<ResourceCard resource={resourceData} labelPredicate={labelPredicate} />]}
@@ -34,8 +36,10 @@ const DataResourceScreen = ({ resourceData }) => {
         >
           <JsonView.String
             render={({ children, style, ...rest }, { value, keyName }) => {
+              // @ts-expect-error TS(2345): Argument of type 'unknown' is not assignable to pa... Remove this comment to see the full error message
               if (isStorageUri(value, identity?.id) && value !== (resourceData.id || resourceData['@id'])) {
                 return (
+                  // @ts-expect-error TS(2345): Argument of type 'unknown' is not assignable to pa... Remove this comment to see the full error message
                   <Link to={`/data/${encodeURIComponent(value)}`} style={{ ...style, cursor: 'pointer' }} {...rest}>
                     {children}
                   </Link>

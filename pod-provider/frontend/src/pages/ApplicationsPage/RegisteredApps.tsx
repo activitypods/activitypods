@@ -4,10 +4,11 @@ import { useTranslate, useNotify } from 'react-admin';
 import { Box, Typography, Grid, useMediaQuery } from '@mui/material';
 import ApplicationCard from './ApplicationCard';
 
-const RegisteredApps = ({ registeredApps, trustedApps }) => {
+const RegisteredApps = ({ registeredApps, trustedApps }: any) => {
   const notify = useNotify();
   const translate = useTranslate();
   const [searchParams] = useSearchParams();
+  // @ts-expect-error TS(2571): Object is of type 'unknown'.
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
   useEffect(() => {
@@ -25,8 +26,8 @@ const RegisteredApps = ({ registeredApps, trustedApps }) => {
       <Box mt={1} mb={5}>
         {registeredApps?.length === 0 && <Typography mb={5}>{translate('app.message.no_app_registration')}</Typography>}
         <Grid container spacing={xs ? 1 : 3}>
-          {registeredApps?.map(registeredApp => {
-            const isTrustedApp = trustedApps?.some(trustedApp => trustedApp.id === registeredApp.id) || false;
+          {registeredApps?.map((registeredApp: any) => {
+            const isTrustedApp = trustedApps?.some((trustedApp: any) => trustedApp.id === registeredApp.id) || false;
             return (
               <Grid key={registeredApp.id} item xs={12} sm={6}>
                 <ApplicationCard app={registeredApp} isTrustedApp={isTrustedApp} isRegistered />

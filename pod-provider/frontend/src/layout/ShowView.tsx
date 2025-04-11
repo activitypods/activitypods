@@ -3,7 +3,7 @@ import { ListButton, EditButton, useShowContext, usePermissions } from 'react-ad
 import { Box, Typography, Grid } from '@mui/material';
 import SplitView from './SplitView';
 
-const ShowView = ({ asides, title, actions, children }) => {
+const ShowView = ({ asides, title, actions, children }: any) => {
   const { record } = useShowContext();
   const { permissions } = usePermissions(record?.id);
   return (
@@ -17,11 +17,19 @@ const ShowView = ({ asides, title, actions, children }) => {
         <Grid item xs={4}>
           <Box display="flex" alignItems="middle" justifyContent="right">
             {actions ? (
-              actions.map((action, i) => React.cloneElement(action, { color: 'black', key: i }))
+              actions.map((action: any, i: any) => React.cloneElement(action, { color: 'black', key: i }))
             ) : (
               <>
-                <ListButton color="black" />
-                {permissions && permissions.some(p => p['acl:mode'] === 'acl:Write') && <EditButton color="black" />}
+                <ListButton
+                  // @ts-expect-error TS(2322): Type '"black"' is not assignable to type '"inherit... Remove this comment to see the full error message
+                  color="black"
+                />
+                {permissions && permissions.some((p: any) => p['acl:mode'] === 'acl:Write') && (
+                  <EditButton
+                    // @ts-expect-error TS(2322): Type '"black"' is not assignable to type '"inherit... Remove this comment to see the full error message
+                    color="black"
+                  />
+                )}
               </>
             )}
           </Box>

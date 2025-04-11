@@ -6,7 +6,7 @@ import { useCheckAuthenticated } from '@semapps/auth-provider';
 import SendIcon from '@mui/icons-material/Send';
 import useRequestContact from '../../hooks/useRequestContact';
 
-const AddContactToolbar = props => {
+const AddContactToolbar = (props: any) => {
   const translate = useTranslate();
   return (
     <Toolbar {...props}>
@@ -22,6 +22,7 @@ const AddContactToolbar = props => {
 };
 
 const NetworkRequestPage = () => {
+  // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
   useCheckAuthenticated();
   const requestContact = useRequestContact();
   const location = useLocation();

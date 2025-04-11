@@ -7,14 +7,17 @@ import AvailableApps from './AvailableApps';
 import { isLocalURL } from '../../utils';
 
 const ApplicationsPage = () => {
+  // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
   const { identity } = useCheckAuthenticated();
   const translate = useTranslate();
   const { data: registeredApps, isLoading: isRegisteredAppsLoading } = useGetList('App', {
+    // @ts-expect-error TS(2345): Argument of type '{ page: number; perPage: number;... Remove this comment to see the full error message
     page: 1,
     perPage: Infinity
   });
   const { data: trustedApps, isLoading: isTrustedAppsLoading } = useGetList('TrustedApp', {
     filter: { 'dc:language': identity?.webIdData?.['schema:knowsLanguage'] },
+    // @ts-expect-error TS(2345): Argument of type '{ filter: { 'dc:language': any; ... Remove this comment to see the full error message
     page: 1,
     perPage: Infinity
   });

@@ -8,8 +8,9 @@ import { Link } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Header from '../common/Header';
 import scorer from '../config/scorer';
+import React from 'react';
 
-const LoginPageWrapper = ({ children }) => {
+const LoginPageWrapper = ({ children }: any) => {
   const translate = useTranslate();
   return (
     <Box sx={{ position: 'relative', width: '100%' }}>
@@ -49,7 +50,7 @@ const LoginPage = () => {
   }, [interactionId, dataProvider]);
 
   const onLogin = useCallback(
-    async redirectUrl => {
+    async (redirectUrl: any) => {
       await finishInteraction();
       window.location.href = redirectUrl;
     },
@@ -57,7 +58,7 @@ const LoginPage = () => {
   );
 
   const onSignup = useCallback(
-    async redirectUrl => {
+    async (redirectUrl: any) => {
       await finishInteraction();
       window.location.href = `/initialize?redirect=${encodeURIComponent(redirectUrl)}`;
     },

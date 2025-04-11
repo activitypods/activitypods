@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { useWebfinger } from '@semapps/activitypub-components';
 import RealmContext from '../contexts/RealmContext';
 
-const RealmContextProvider = ({ children }) => {
+const RealmContextProvider = ({ children }: any) => {
   const [groupData, setGroupData] = useState();
   const [isGroupLoading, setIsGroupLoading] = useState(true);
   const { data: userData, isLoading: isUserLoading, refetch: refetchUser } = useGetIdentity();
@@ -23,6 +23,7 @@ const RealmContextProvider = ({ children }) => {
         .then(groupUri => dataProvider.getOne('Actor', { id: groupUri }))
         .then(({ data }) => {
           setGroupData({
+            // @ts-expect-error TS(2345): Argument of type '{ id: any; fullName: any; avatar... Remove this comment to see the full error message
             id: data.id,
             fullName: data['foaf:name'] || data['pair:label'],
             avatar: data.image || data.icon,
@@ -35,6 +36,7 @@ const RealmContextProvider = ({ children }) => {
   }, [isGroup, webfingerId, webfinger.fetch, dataProvider, setGroupData]);
 
   const refetchGroup = useCallback(async () => {
+    // @ts-expect-error TS(2532): Object is possibly 'undefined'.
     await dataProvider.getOne('Actor', { id: groupData.id });
   }, [groupData]);
 

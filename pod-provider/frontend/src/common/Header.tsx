@@ -1,4 +1,5 @@
 import React from 'react';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'reac... Remove this comment to see the full error message
 import { Helmet } from 'react-helmet';
 import { useTranslate } from 'react-admin';
 import PropTypes from 'prop-types';
@@ -11,7 +12,7 @@ import PropTypes from 'prop-types';
  * @param {string} [props.keywords] - Meta keywords for SEO
  * @param {string} [props.description] - Meta description for SEO
  */
-const Header = ({ title, titleVariables, keywords, description }) => {
+const Header = ({ title, titleVariables, keywords, description }: any) => {
   const translate = useTranslate();
 
   const translatedTitle = React.useMemo(() => {

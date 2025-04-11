@@ -9,6 +9,7 @@ import UpgradeScreen from './UpgradeScreen';
 import { isURL } from '../../utils';
 
 const AuthorizePage = () => {
+  // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
   useCheckAuthenticated();
   const [screen, setScreen] = useState();
   const trustedApps = useTrustedApps();
@@ -18,9 +19,11 @@ const AuthorizePage = () => {
   const notify = useNotify();
 
   const appUri = searchParams.get('client_id');
+  // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
   const isTrustedApp = trustedApps?.some(trustedApp => trustedApp.id === appUri) || false;
 
   const { data: application } = useGetOne('App', { id: appUri });
+  // @ts-expect-error TS(2345): Argument of type '{ page: number; perPage: number;... Remove this comment to see the full error message
   const { data: appRegistrations, isLoading } = useGetList('AppRegistration', { page: 1, perPage: Infinity });
 
   const accessApp = useCallback(async () => {
@@ -44,8 +47,10 @@ const AuthorizePage = () => {
     if (!isLoading && application?.id && identity?.id) {
       getAppStatus(application.id, identity).then(appStatus => {
         if (!appStatus.installed) {
+          // @ts-expect-error TS(2345): Argument of type '"register"' is not assignable to... Remove this comment to see the full error message
           setScreen('register');
         } else if (appStatus.upgradeNeeded) {
+          // @ts-expect-error TS(2345): Argument of type '"upgrade"' is not assignable to ... Remove this comment to see the full error message
           setScreen('upgrade');
         } else {
           accessApp();
@@ -55,9 +60,11 @@ const AuthorizePage = () => {
   }, [appRegistrations, isLoading, application, accessApp, getAppStatus, setScreen, identity]);
 
   switch (screen) {
+    // @ts-expect-error TS(2678): Type '"register"' is not comparable to type 'undef... Remove this comment to see the full error message
     case 'register':
       return <RegistrationScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
 
+    // @ts-expect-error TS(2678): Type '"upgrade"' is not comparable to type 'undefi... Remove this comment to see the full error message
     case 'upgrade':
       return <UpgradeScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
 

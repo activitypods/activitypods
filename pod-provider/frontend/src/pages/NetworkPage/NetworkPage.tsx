@@ -13,6 +13,7 @@ import ContactRequestsBlock from '../../common/blocks/ContactRequestsBlock';
 import { formatUsername } from '../../utils';
 
 const NetworkPage = () => {
+  // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
   const { identity } = useCheckAuthenticated();
   const translate = useTranslate();
   if (!identity?.id) return null;
@@ -43,7 +44,8 @@ const NetworkPage = () => {
             </Avatar>
           )}
           linkType={record => `/network/${formatUsername(record.describes)}`}
-          linkProps={record => ({
+          // @ts-expect-error TS(2322): Type '{ primaryText: (record: any) => any; seconda... Remove this comment to see the full error message
+          linkProps={(record: any) => ({
             'aria-label': translate('app.action.view_contact_profile', { name: record['vcard:given-name'] })
           })}
           rowSx={() => ({

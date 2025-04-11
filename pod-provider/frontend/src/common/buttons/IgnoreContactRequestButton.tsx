@@ -3,7 +3,7 @@ import { useNotify, useTranslate } from 'react-admin';
 import { Button } from '@mui/material';
 import { useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 
-const IgnoreContactRequestButton = ({ activity, refetch, children, ...rest }) => {
+const IgnoreContactRequestButton = ({ activity, refetch, children, ...rest }: any) => {
   const outbox = useOutbox();
   const notify = useNotify();
   const translate = useTranslate();
@@ -19,6 +19,7 @@ const IgnoreContactRequestButton = ({ activity, refetch, children, ...rest }) =>
       notify('app.notification.contact_request_ignored');
       setTimeout(refetch, 3000);
     } catch (e) {
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       notify(e.message, { type: 'error' });
     }
   }, [outbox, refetch, notify, activity]);

@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslate } from 'react-admin';
 import { Typography, Box, CircularProgress } from '@mui/material';
 
-const ProgressMessage = ({ message }) => {
+const ProgressMessage = ({ message }: any) => {
   const translate = useTranslate();
   return (
     <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" sx={{ minHeight: 400 }}>

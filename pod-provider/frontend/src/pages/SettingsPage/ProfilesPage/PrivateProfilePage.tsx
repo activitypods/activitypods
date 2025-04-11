@@ -40,6 +40,7 @@ export const PrivateProfilePage = () => {
       messageArgs: { smart_count: 1 },
       undoable: false
     });
+    // @ts-expect-error TS(2722): Cannot invoke an object which is possibly 'undefin... Remove this comment to see the full error message
     refetchIdentity();
   }, [notify, refetchIdentity]);
 
@@ -49,7 +50,10 @@ export const PrivateProfilePage = () => {
         title={translate('app.setting.private_profile')}
         resource="Profile"
         id={identity?.profileData?.id}
-        transform={data => ({ ...data, 'vcard:fn': data['vcard:given-name'] })}
+        transform={(data: any) => ({
+          ...data,
+          'vcard:fn': data['vcard:given-name']
+        })}
         mutationMode="pessimistic"
         mutationOptions={{ onSuccess }}
         actions={[<ShowButton />]}

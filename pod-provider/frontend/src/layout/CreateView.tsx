@@ -2,7 +2,7 @@ import React from 'react';
 import { ListButton, useCreateContext } from 'react-admin';
 import { Box, Typography, Grid, Card } from '@mui/material';
 
-const CreateView = ({ actions = [<ListButton />], children }) => {
+const CreateView = ({ actions = [<ListButton />], children }: any) => {
   const { defaultTitle } = useCreateContext();
   return (
     <>
@@ -14,6 +14,7 @@ const CreateView = ({ actions = [<ListButton />], children }) => {
         </Grid>
         <Grid item xs={4}>
           <Box display="flex" alignItems="middle" justifyContent="right">
+            <>{/* @ts-expect-error TS(7006): Parameter 'action' implicitly has an 'any' type. */}</>
             {actions.map((action, i) => React.cloneElement(action, { color: 'black', key: i }))}
           </Box>
         </Grid>

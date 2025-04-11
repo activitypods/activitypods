@@ -17,6 +17,7 @@ const useStyles = makeStyles(theme => ({
     bottom: 0
   },
   bottomNav: {
+    // @ts-expect-error TS(2339): Property 'palette' does not exist on type 'Default... Remove this comment to see the full error message
     borderTopColor: theme.palette.primary.main,
     borderTopStyle: 'solid',
     borderTopWidth: 4,
@@ -40,18 +41,22 @@ const BottomBar = () => {
 
   useEffect(() => {
     if (location.pathname.startsWith('/network') || location.pathname.startsWith('/Tag')) {
+      // @ts-expect-error TS(2345): Argument of type '"network"' is not assignable to ... Remove this comment to see the full error message
       setValue('network');
     } else if (location.pathname.startsWith('/apps')) {
+      // @ts-expect-error TS(2345): Argument of type '"apps"' is not assignable to par... Remove this comment to see the full error message
       setValue('apps');
     } else if (location.pathname.startsWith('/data')) {
+      // @ts-expect-error TS(2345): Argument of type '"data"' is not assignable to par... Remove this comment to see the full error message
       setValue('data');
     } else {
+      // @ts-expect-error TS(2345): Argument of type '"settings"' is not assignable to... Remove this comment to see the full error message
       setValue('settings');
     }
   }, [location.pathname, setValue]);
 
   const onChange = useCallback(
-    (e, newValue) => {
+    (e: any, newValue: any) => {
       setValue(newValue);
     },
     [setValue]

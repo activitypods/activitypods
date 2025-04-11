@@ -44,6 +44,7 @@ module.exports = {
       create_group: 'Create group',
       skip_to_main: 'Skip to main content',
       view_contact_profile: "View %{name}'s profile",
+      // @ts-expect-error TS(1117): An object literal cannot have multiple properties ... Remove this comment to see the full error message
       edit_profile: 'Edit your profile'
     },
     tag: {

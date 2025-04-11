@@ -8,6 +8,7 @@ import Header from '../common/Header';
 const useStyles = makeStyles(theme => ({
   '@global': {
     body: {
+      // @ts-expect-error TS(2339): Property 'palette' does not exist on type 'Default... Remove this comment to see the full error message
       backgroundColor: theme.palette.primary.main
     }
   },
@@ -19,6 +20,7 @@ const useStyles = makeStyles(theme => ({
     width: 460,
     position: 'absolute',
     top: -100,
+    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.down('sm')]: {
       width: '100vw',
       height: '100vw',
@@ -47,6 +49,7 @@ const useStyles = makeStyles(theme => ({
   },
   steps: {
     marginTop: 400,
+    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.down('sm')]: {
       marginTop: 'calc(100vw - 30px)'
     }
@@ -61,6 +64,7 @@ const useStyles = makeStyles(theme => ({
     paddingLeft: 90,
     marginBottom: 25,
     '& h4': {
+      // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
       [theme.breakpoints.down('sm')]: {
         fontWeight: 'bold',
         lineHeight: '1.2em',
@@ -75,6 +79,7 @@ const useStyles = makeStyles(theme => ({
     width: 70,
     height: 70,
     fontWeight: 'bold',
+    // @ts-expect-error TS(2339): Property 'palette' does not exist on type 'Default... Remove this comment to see the full error message
     color: theme.palette.primary.main,
     backgroundColor: 'white',
     fontSize: 50
@@ -111,6 +116,7 @@ const HomePage = () => {
               {CONFIG.INSTANCE_NAME}
             </Typography>
             <Typography align="center">
+              <>{/* @ts-ignore */}</>
               {CONFIG.INSTANCE_DESCRIPTION[locale] || CONFIG.INSTANCE_DESCRIPTION.en}
             </Typography>
             <Box display="flex" flexDirection="row" pt={3} pb={3} alignItems="center" justifyContent="center">

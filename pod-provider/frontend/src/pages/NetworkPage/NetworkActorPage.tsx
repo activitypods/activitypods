@@ -26,7 +26,7 @@ import ShowView from '../../layout/ShowView';
 import ValueField from '../../common/fields/ValueField';
 import useActor from '../../hooks/useActor';
 
-const EditPrivateProfileButton = props => {
+const EditPrivateProfileButton = (props: any) => {
   const record = useRecordContext();
   const createPath = useCreatePath();
   return (
@@ -36,7 +36,7 @@ const EditPrivateProfileButton = props => {
   );
 };
 
-const ProfileWarning = ({ publicProfileOnly }) => {
+const ProfileWarning = ({ publicProfileOnly }: any) => {
   const translate = useTranslate();
   const location = useLocation();
 
@@ -60,6 +60,7 @@ const NetworkActorPage = () => {
   const translate = useTranslate();
   const { webfingerId } = useParams();
   const [searchParams] = useSearchParams();
+  // @ts-expect-error TS(2571): Object is of type 'unknown'.
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
   const publicProfileOnly = searchParams.has('public');
   const webfinger = useWebfinger();
@@ -67,6 +68,7 @@ const NetworkActorPage = () => {
 
   useEffect(() => {
     if (webfingerId?.startsWith('http')) {
+      // @ts-expect-error TS(2345): Argument of type 'string' is not assignable to par... Remove this comment to see the full error message
       setActorUri(webfingerId);
     } else {
       webfinger.fetch(webfingerId).then(uri => setActorUri(uri));

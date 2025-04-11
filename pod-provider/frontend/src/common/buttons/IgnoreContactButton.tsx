@@ -26,6 +26,7 @@ const IgnoreContactButton = ({ ...rest }) => {
         setDisabled(false);
       }, 3000);
     } catch (e) {
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       notify(e.message, { type: 'error' });
       setDisabled(false);
     }
@@ -48,6 +49,7 @@ const IgnoreContactButton = ({ ...rest }) => {
         setDisabled(false);
       }, 3000);
     } catch (e) {
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       notify(e.message, { type: 'error' });
       setDisabled(false);
     }

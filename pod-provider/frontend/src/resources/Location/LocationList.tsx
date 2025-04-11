@@ -39,7 +39,7 @@ const ListWithSwitches = () => {
   }, [setCheckedId, identity]);
 
   const setHomeAddress = useCallback(
-    id => {
+    (id: any) => {
       // If click on current address, no home address
       if (id === checkedId) id = undefined;
       setCheckedId(id);
@@ -53,6 +53,7 @@ const ListWithSwitches = () => {
           previousData: identity?.profileData
         })
         .then(() => {
+          // @ts-expect-error TS(2722): Cannot invoke an object which is possibly 'undefin... Remove this comment to see the full error message
           refetchIdentity();
           if (id) {
             notify('app.notification.home_address_updated', { type: 'success' });

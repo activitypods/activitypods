@@ -20,12 +20,14 @@ const RedirectPage = () => {
       let resourceId;
 
       if (searchParams.has('type')) {
+        // @ts-expect-error TS(2345): Argument of type 'string | null' is not assignable... Remove this comment to see the full error message
         const fullTypeUri = getUriFromPrefix(searchParams.get('type'), ontologies);
         resourceId = Object.keys(resources).find(key => resources[key].types?.includes(fullTypeUri));
       }
 
       if (searchParams.has('uri') && resourceId) {
         navigate(
+          // @ts-expect-error TS(2345): Argument of type 'string | null' is not assignable... Remove this comment to see the full error message
           `/${resourceId}/${encodeURIComponent(searchParams.get('uri'))}${
             searchParams.get('mode') === 'show' ? '/show' : ''
           }`

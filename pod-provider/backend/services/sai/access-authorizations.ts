@@ -27,12 +27,12 @@ module.exports = {
      */
     async generateFromAccessNeedGroups(ctx) {
       const { accessNeedGroups, acceptedAccessNeeds, acceptedSpecialRights, podOwner, appUri } = ctx.params;
-      let accessAuthorizationsUris = [];
+      const accessAuthorizationsUris = [];
 
       for (const accessNeedGroupUri of arrayOf(accessNeedGroups)) {
         const accessNeedGroup = await ctx.call('ldp.remote.get', { resourceUri: accessNeedGroupUri });
-        let dataAuthorizationsUris = [];
-        let specialRightsUris = [];
+        const dataAuthorizationsUris = [];
+        const specialRightsUris = [];
 
         if (acceptedAccessNeeds) {
           for (const accessNeedUri of arrayOf(accessNeedGroup['interop:hasAccessNeed'])) {
@@ -340,7 +340,7 @@ module.exports = {
         );
 
         // Get DataGrants corresponding to DataAuthorizations
-        let dataGrantsUris = [];
+        const dataGrantsUris = [];
         for (const dataAuthorizationUri of arrayOf(ctx.params.resource['interop:hasDataAuthorization'])) {
           dataGrantsUris.push(await ctx.call('data-grants.getByDataAuthorization', { dataAuthorizationUri, podOwner }));
         }

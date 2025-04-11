@@ -8,7 +8,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const StickyBox = ({ children }) => {
+const StickyBox = ({ children }: any) => {
   const classes = useStyles();
   return (
     <ReactStickyBox offsetTop={20} className={classes.root}>

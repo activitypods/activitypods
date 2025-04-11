@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchUtils } from 'react-admin';
 import { arrayOf } from '../utils';
 
-const useAccessNeeds = application => {
+const useAccessNeeds = (application: any) => {
   const [requiredAccessNeeds, setRequiredAccessNeeds] = useState([]);
   const [optionalAccessNeeds, setOptionalAccessNeeds] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -19,15 +19,19 @@ const useAccessNeeds = application => {
             for (const accessNeedUri of arrayOf(accessNeedGroup['interop:hasAccessNeed'])) {
               const { json: accessNeed } = await fetchUtils.fetchJson(accessNeedUri);
               if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
+                // @ts-expect-error TS(2345): Argument of type '(a: never[]) => any[]' is not as... Remove this comment to see the full error message
                 setRequiredAccessNeeds(a => [...a, accessNeed]);
               } else {
+                // @ts-expect-error TS(2345): Argument of type '(a: never[]) => any[]' is not as... Remove this comment to see the full error message
                 setOptionalAccessNeeds(a => [...a, accessNeed]);
               }
             }
             for (const specialRight of arrayOf(accessNeedGroup['apods:hasSpecialRights'])) {
               if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
+                // @ts-expect-error TS(2345): Argument of type '(a: never[]) => any[]' is not as... Remove this comment to see the full error message
                 setRequiredAccessNeeds(a => [...a, specialRight]);
               } else {
+                // @ts-expect-error TS(2345): Argument of type '(a: never[]) => any[]' is not as... Remove this comment to see the full error message
                 setOptionalAccessNeeds(a => [...a, specialRight]);
               }
             }
@@ -38,6 +42,7 @@ const useAccessNeeds = application => {
       } catch (e) {
         console.error(e);
         setLoading(false);
+        // @ts-expect-error TS(2571): Object is of type 'unknown'.
         setError(e.message);
       }
     })();

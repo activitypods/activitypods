@@ -319,6 +319,7 @@ export const fetchResourceWithCapability = async ({
 }) => {
   if (!capability) throw new Error('No capability is provided.');
   // Fetch capability object, if necessary.
+  // @ts-expect-error TS(2304): Cannot find name 'fetchUtils'.
   const capabilityObject = typeof capability === 'object' ? capability : (await fetchUtils.fetchJson(capability)).json;
 
   // Create presentation from capability object.

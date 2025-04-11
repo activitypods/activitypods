@@ -13,7 +13,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const ContactField = ({ source, context }) => {
+const ContactField = ({ source, context }: any) => {
   const classes = useStyles();
   const record = useRecordContext();
   const notify = useNotify();
@@ -28,7 +28,7 @@ const ContactField = ({ source, context }) => {
 
   const isOwner = identity?.id === record[source];
 
-  const onSubmit = async values => {
+  const onSubmit = async (values: any) => {
     try {
       await outbox.post({
         type: OBJECT_TYPES.NOTE,
@@ -42,6 +42,7 @@ const ContactField = ({ source, context }) => {
       });
       notify('app.notification.message_sent', { type: 'success' });
     } catch (e) {
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       notify('app.notification.message_send_error', { type: 'error', messageArgs: { error: e.message } });
     }
   };

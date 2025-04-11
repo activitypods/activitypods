@@ -1,7 +1,7 @@
 import React from 'react';
 
 // Simple TextField which display a given value, without looking at the record
-const ValueField = ({ value, addLabel, ...rest }) => {
+const ValueField = ({ value, addLabel, ...rest }: any) => {
   return value && <span {...rest}>{value}</span>;
 };
 

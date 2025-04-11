@@ -3,7 +3,7 @@ import ActorShow from './ActorShow';
 export default {
   config: {
     show: ActorShow,
-    recordRepresentation: record => record.name || record.preferredUsername
+    recordRepresentation: (record: any) => record.name || record.preferredUsername
   },
   dataModel: {
     types: ['as:Person', 'foaf:Person']

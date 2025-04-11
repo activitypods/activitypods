@@ -7,7 +7,7 @@ import jsonld from 'jsonld';
  * and returns the compacted shape tree, as well as the class associated with the shape
  */
 const useFetchShapeTree = () => {
-  const fetchShapeTree = useCallback(async shapeTreeUri => {
+  const fetchShapeTree = useCallback(async (shapeTreeUri: any) => {
     const { json } = await fetchUtils.fetchJson(shapeTreeUri, {
       headers: new Headers({ Accept: 'application/ld+json' })
     });
@@ -26,7 +26,7 @@ const useFetchShapeTree = () => {
         headers: new Headers({ Accept: 'application/ld+json' })
       });
 
-      const types = shape?.[0]?.['http://www.w3.org/ns/shacl#targetClass']?.map(node => node?.['@id']);
+      const types = shape?.[0]?.['http://www.w3.org/ns/shacl#targetClass']?.map((node: any) => node?.['@id']);
 
       return { ...shapeTree, types };
     } else {

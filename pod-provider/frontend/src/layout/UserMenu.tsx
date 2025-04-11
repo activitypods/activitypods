@@ -13,7 +13,9 @@ const UserMenu = () => {
   const translate = useTranslate();
   const { data: identity } = useGetIdentity();
   const logout = useLogout();
+  // @ts-expect-error TS(2571): Object is of type 'unknown'.
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
+  // @ts-expect-error TS(2339): Property 'isLoading' does not exist on type 'unkno... Remove this comment to see the full error message
   const { isLoading, isGroup, data } = useRealmContext();
   const groups = useOwnedGroups();
 
@@ -26,8 +28,10 @@ const UserMenu = () => {
   return (
     <>
       <Button
+        // @ts-expect-error TS(2345): Argument of type 'EventTarget & HTMLButtonElement'... Remove this comment to see the full error message
         onClick={e => setAnchorEl(e.currentTarget)}
         label={data?.fullName}
+        // @ts-expect-error TS(2322): Type '"black"' is not assignable to type '"inherit... Remove this comment to see the full error message
         color="black"
         sx={{ textTransform: 'none', fontSize: '14px', padding: '6px 8px' }}
       >
@@ -63,7 +67,9 @@ const UserMenu = () => {
         </Link>
         {groups.map(group => (
           <Link
+            // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
             key={group.id}
+            // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
             to={`/group/@${group['foaf:nick']}@${new URL(group.id).host}/settings`}
             style={{ textDecoration: 'none' }}
           >

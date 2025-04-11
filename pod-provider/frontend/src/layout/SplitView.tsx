@@ -2,7 +2,8 @@ import React from 'react';
 import { Grid, useMediaQuery, Box } from '@mui/material';
 import StickyBox from './StickyBox';
 
-const SplitView = ({ asides, children }) => {
+const SplitView = ({ asides, children }: any) => {
+  // @ts-expect-error TS(2571): Object is of type 'unknown'.
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
   if (!asides) {
     return children;
@@ -15,7 +16,7 @@ const SplitView = ({ asides, children }) => {
           {children}
         </Grid>
         <Grid item xs={12} sx={{ mt: 1 }}>
-          {asides.map((aside, i) => (
+          {asides.map((aside: any, i: any) => (
             <Box key={i} sx={{ mb: i < asides.length - 1 ? 2 : 0 }}>
               {React.cloneElement(aside)}
             </Box>
@@ -31,7 +32,7 @@ const SplitView = ({ asides, children }) => {
         {children}
       </Grid>
       <Grid item mt={2} md={4} lg={3}>
-        <StickyBox>{asides.map((aside, i) => React.cloneElement(aside, { key: i }))}</StickyBox>
+        <StickyBox>{asides.map((aside: any, i: any) => React.cloneElement(aside, { key: i }))}</StickyBox>
       </Grid>
     </Grid>
   );

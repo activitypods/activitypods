@@ -40,7 +40,7 @@ import { arrayOf, colorFromString } from '../../utils';
  *
  * @param {import('@mui/material').AutocompleteProps & ResourceSelectWithTagsProps} props
  */
-const ResourceSelectWithTags = props => {
+const ResourceSelectWithTags = (props: any) => {
   const {
     relationshipPredicate,
     labelTagPredicate,
@@ -82,9 +82,11 @@ const ResourceSelectWithTags = props => {
 
   // Create a map from the tag's owner id to the resource id. Helpful for mapping the tag's owners to corresponding resources.
   const ownerToResourceIds = Object.fromEntries(
+    // @ts-expect-error TS(2571): Object is of type 'unknown'.
     Object.entries(resourceData).map(([id, resource]) => [resource[ownerIdResourcePredicate], id])
   );
   const resourceToOwnerIds = Object.fromEntries(
+    // @ts-expect-error TS(2571): Object is of type 'unknown'.
     Object.entries(resourceData).map(([id, resource]) => [id, resource[ownerIdResourcePredicate]])
   );
 
@@ -92,29 +94,34 @@ const ResourceSelectWithTags = props => {
   // First, all tags are shown, then all resources.
   const options = [
     ...Object.values(tagData)
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       .sort((tag1, tag2) => (tag1[labelTagPredicate] || '').localeCompare(tag2[labelTagPredicate]))
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       .map(tag => tag.id),
     ...Object.values(resourceData)
       .sort((resource1, resource2) =>
+        // @ts-expect-error TS(2571): Object is of type 'unknown'.
         (resource1[labelResourcePredicate] || '').localeCompare(resource2[labelResourcePredicate])
       )
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       .map(resource => resource.id)
     // Exclude ids that should not be shown.
   ].filter(id => !excludeIds.includes(id));
 
   // We use this helper to identify selected tags, since those are not part
   // of the values list (i.e. selectedResourceIds).
-  const isTagSelected = tag => {
+  const isTagSelected = (tag: any) => {
     const tagOwners = arrayOf(tag[relationshipPredicate]);
     if (tagOwners.length === 0) return false;
-    const selectedOwnerIds = selectedResourceIds.map(id => resourceToOwnerIds[id]);
+    const selectedOwnerIds = selectedResourceIds.map((id: any) => resourceToOwnerIds[id]);
     return tagOwners.every(ownerId => selectedOwnerIds.includes(ownerId));
   };
 
-  const handleChange = (event, values, reason, { option: optionId }) => {
+  // @ts-expect-error TS(7031): Binding element 'optionId' implicitly has an 'any'... Remove this comment to see the full error message
+  const handleChange = (event: any, values: any, reason: any, { option: optionId }) => {
     // Collect what resources to remove / add.
     const newSelectedResourceIds = [];
-    const deselectedResourceIds = [];
+    const deselectedResourceIds: any = [];
 
     // If the option is a tag, we need to add / remove all resources that have this tag.
     if (tagData[optionId]) {
@@ -147,7 +154,7 @@ const ResourceSelectWithTags = props => {
 
   const renderTagOption =
     renderTagOptionProp ||
-    function (props, tag, selected) {
+    function (props: any, tag: any, selected: any) {
       const tagColor = tag[colorTagPredicate] || (showColors && colorFromString(tag[labelTagPredicate]));
       return (
         <li {...props}>
@@ -183,7 +190,7 @@ const ResourceSelectWithTags = props => {
 
   const renderResourceOption =
     renderResourceOptionProp ||
-    function (props, option, selected) {
+    function (props: any, option: any, selected: any) {
       return (
         <li {...props}>
           <Checkbox checked={selected} />
@@ -218,7 +225,9 @@ const ResourceSelectWithTags = props => {
       multiple
       options={options}
       value={selectedResourceIds}
+      // @ts-expect-error TS(2538): Type 'unknown' cannot be used as an index type.
       groupBy={option => (tagData[option] ? tagName || tagResource : resourceName || entityResource)}
+      // @ts-expect-error TS(2538): Type 'unknown' cannot be used as an index type.
       getOptionLabel={id => resourceData[id]?.[labelResourcePredicate] || tagData[id]?.[labelTagPredicate] || ''}
       onChange={handleChange}
       renderInput={params => (
@@ -226,9 +235,13 @@ const ResourceSelectWithTags = props => {
       )}
       renderOption={(props, optionId) => {
         // If the option is a tag..
+        // @ts-expect-error TS(2538): Type 'unknown' cannot be used as an index type.
         if (tagData[optionId]) {
+          // @ts-expect-error TS(2538): Type 'unknown' cannot be used as an index type.
           return renderTagOption(props, tagData[optionId], isTagSelected(tagData[optionId]));
+          // @ts-expect-error TS(2538): Type 'unknown' cannot be used as an index type.
         } else if (resourceData[optionId]) {
+          // @ts-expect-error TS(2538): Type 'unknown' cannot be used as an index type.
           return renderResourceOption(props, resourceData[optionId], selectedResourceIds.includes(optionId));
         }
       }}

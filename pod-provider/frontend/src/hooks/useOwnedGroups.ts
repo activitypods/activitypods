@@ -9,15 +9,16 @@ const useOwnedGroups = () => {
 
   useEffect(() => {
     if (identity?.id) {
+      // @ts-expect-error TS(2345): Argument of type 'Identifier' is not assignable to... Remove this comment to see the full error message
       const podProviderUrl = new URL(identity.id).origin;
       dataProvider
         .fetch(urlJoin(podProviderUrl, '.account/groups'))
-        .then(({ json }) =>
+        .then(({ json }: any) =>
           dataProvider.getMany('Actor', {
             ids: json
           })
         )
-        .then(({ data }) => {
+        .then(({ data }: any) => {
           setGroups(data);
         });
     }

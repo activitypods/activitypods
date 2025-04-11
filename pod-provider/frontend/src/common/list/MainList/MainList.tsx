@@ -15,7 +15,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const MainList = ({ children, divider, Label = LargeLabel }) => {
+const MainList = ({ children, divider, Label = LargeLabel }: any) => {
   const translate = useTranslate();
   const classes = useStyles();
   const record = useRecordContext();
@@ -26,14 +26,18 @@ const MainList = ({ children, divider, Label = LargeLabel }) => {
     <Box>
       {React.Children.map(children, field =>
         field && record[field.props.source] && React.isValidElement(field) ? (
+          // @ts-expect-error TS(2571): Object is of type 'unknown'.
           <div key={field.props.source} className={divider ? classes.divider : null}>
+            <>{/* @ts-expect-error TS(2571): Object is of type 'unknown'. */}</>
             {field.props.label !== false ? (
               <>
                 <Label>
                   {translate(
                     ...getFieldLabelTranslationArgs({
+                      // @ts-expect-error TS(2571): Object is of type 'unknown'.
                       label: field.props.label,
                       resource,
+                      // @ts-expect-error TS(2571): Object is of type 'unknown'.
                       source: field.props.source
                     })
                   )}

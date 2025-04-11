@@ -2,7 +2,8 @@ import { useGetOne, useGetIdentity } from 'react-admin';
 import { stripHtmlTags } from '../utils';
 import useWebfingerId from './useWebfingerId';
 
-const useActor = (actorUri, options = {}) => {
+const useActor = (actorUri: any, options = {}) => {
+  // @ts-expect-error TS(2339): Property 'loadPrivateProfile' does not exist on ty... Remove this comment to see the full error message
   const { loadPrivateProfile = true } = options;
   const { data: identity } = useGetIdentity();
 

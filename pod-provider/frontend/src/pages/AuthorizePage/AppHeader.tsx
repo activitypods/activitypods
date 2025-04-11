@@ -36,7 +36,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const AppHeader = ({ application, isTrustedApp }) => {
+const AppHeader = ({ application, isTrustedApp }: any) => {
   const classes = useStyles();
   const [locale] = useLocaleState();
 
@@ -58,9 +58,11 @@ const AppHeader = ({ application, isTrustedApp }) => {
         {isTrustedApp && (
           <Chip
             size="small"
+            // @ts-expect-error TS(2304): Cannot find name 'translate'.
             label={translate('app.message.verified_app')}
             color="primary"
             onDelete={() => {}}
+            // @ts-expect-error TS(2304): Cannot find name 'DoneIcon'.
             deleteIcon={<DoneIcon />}
             className={classes.appChip}
           />

@@ -4,9 +4,6 @@ import { Avatar, Switch, ListItemAvatar, ListItemText, ListItem } from '@mui/mat
 import makeStyles from '@mui/styles/makeStyles';
 
 import { formatUsername } from '../../utils';
-/**
- * @typedef {import("./GroupContactsItem").InvitationState} InvitationState
- */
 
 const useStyles = makeStyles(theme => ({
   listItem: {
@@ -30,18 +27,22 @@ const useStyles = makeStyles(theme => ({
     minWidth: 50
   },
   avatar: {
+    // @ts-ignore
     backgroundImage: `radial-gradient(circle at 50% 3em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`
   }
 }));
 
-/**
- * @param {Object} props
- * @param {import("react-admin").Record} props.record
- * @param {InvitationState} [props.invitation]
- * @param {(invitations: Record<string, InvitationState>) => void} props.onChange
- * @param {boolean} props.isCreator
- */
-const ContactItem = ({ record, invitation, onChange, isCreator }) => {
+const ContactItem = ({
+  record,
+  invitation,
+  onChange,
+  isCreator
+}: {
+  record: any;
+  invitation?: any;
+  onChange: (invitations: Record<string, any>) => void;
+  isCreator: boolean;
+}) => {
   const classes = useStyles();
   const translate = useTranslate();
 

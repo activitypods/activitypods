@@ -14,6 +14,7 @@ const useStyles = makeStyles(theme => ({
   list: {
     width: '98%',
     maxWidth: '98%',
+    // @ts-ignore
     backgroundColor: theme.palette.background.paper,
     padding: 0
   }
@@ -25,7 +26,21 @@ const useStyles = makeStyles(theme => ({
  * @param {(invitations: Record<string, InvitationState) => void} props.onChange
  * @param {boolean} props.isCreator
  */
-const ContactsShareList = ({ invitations, onChange, organizerUri, isCreator, profileResource, groupResource }) => {
+const ContactsShareList = ({
+  invitations,
+  onChange,
+  organizerUri,
+  isCreator,
+  profileResource,
+  groupResource
+}: {
+  invitations: Record<string, any>;
+  organizerUri: string;
+  onChange: (invitations: Record<string, any>) => void;
+  isCreator: boolean;
+  profileResource: any;
+  groupResource: any;
+}) => {
   const classes = useStyles();
   const translate = useTranslate();
   const { data: identity } = useGetIdentity();
@@ -92,7 +107,7 @@ const ContactsShareList = ({ invitations, onChange, organizerUri, isCreator, pro
           <CircularProgress size={60} thickness={6} />
         </Box>
       )}
-      {!loadingProfiles && !profilesFiltered?.length === 0 && (
+      {!loadingProfiles && profilesFiltered?.length !== 0 && (
         <Alert severity="warning">{translate('apods.helper.no_contact')}</Alert>
       )}
     </List>

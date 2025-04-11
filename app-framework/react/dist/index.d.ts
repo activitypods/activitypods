@@ -1,4 +1,4 @@
-import { FunctionComponent, ReactNode } from "react";
+import React, { FunctionComponent, ReactNode } from "react";
 type PodProvider = {
     id?: string;
     type?: string;
@@ -40,6 +40,20 @@ type _Props1 = {
  * This page is called from the data browser in the Pod provider
  */
 export const RedirectPage: FunctionComponent;
+export const ShareDialog: ({ close, resourceUri, profileResource, groupResource }: {
+    close: any;
+    resourceUri: any;
+    profileResource?: string | undefined;
+    groupResource?: string | undefined;
+}) => React.JSX.Element | null;
+/**
+ * Allow to share the record in the current RecordContext
+ * Use the `Announce` and `Offer > Announce` activities handled by ActivityPods
+ */
+export const ShareButton: ({ profileResource, groupResource }: {
+    profileResource?: string | undefined;
+    groupResource?: string | undefined;
+}) => React.JSX.Element | null;
 export const SyncUserLocale: () => void;
 export const UserMenu: FunctionComponent;
 export const englishMessages: {
@@ -105,7 +119,5 @@ export const frenchMessages: {
         };
     };
 };
-export { default as ShareButton } from './components/ShareButton/ShareButton';
-export { default as ShareDialog } from './components/ShareButton/ShareDialog';
 
 //# sourceMappingURL=index.d.ts.map

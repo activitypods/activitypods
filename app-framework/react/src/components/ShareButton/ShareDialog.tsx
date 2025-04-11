@@ -20,6 +20,7 @@ const useStyles = makeStyles(theme => ({
   title: {
     padding: 24,
     paddingBottom: 8,
+    // @ts-ignore
     [theme.breakpoints.down('sm')]: {
       padding: 16,
       paddingBottom: 4
@@ -32,6 +33,7 @@ const useStyles = makeStyles(theme => ({
   list: {
     width: '100%',
     maxWidth: '100%',
+    // @ts-ignore
     backgroundColor: theme.palette.background.paper,
     padding: 0
   },
@@ -41,6 +43,7 @@ const useStyles = makeStyles(theme => ({
     paddingRight: 0,
     marginRight: 24,
     height: 400,
+    // @ts-ignore
     [theme.breakpoints.down('sm')]: {
       padding: '0px 16px',
       margin: 0,
@@ -49,6 +52,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
+// @ts-ignore
 const ShareDialog = ({ close, resourceUri, profileResource = 'Profile', groupResource = 'Group' }) => {
   const classes = useStyles();
   const { data: identity } = useGetIdentity();
@@ -62,10 +66,11 @@ const ShareDialog = ({ close, resourceUri, profileResource = 'Profile', groupRes
   const [invitations, setInvitations] = useState({});
   // To keep track of changes...
   /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */
-  const [newInvitations, setNewInvitations] = useState({});
+  const [newInvitations, setNewInvitations] = useState<Record<string, any>>({});
   /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */
-  const [savedInvitations, setSavedInvitations] = useState({});
+  const [savedInvitations, setSavedInvitations] = useState<Record<string, any>>({});
   const [sendingInvitation, setSendingInvitation] = useState(false);
+  // @ts-ignore
   const xs = useMediaQuery(theme => theme.breakpoints.down('xs'), {
     noSsr: true
   });
@@ -92,16 +97,15 @@ const ShareDialog = ({ close, resourceUri, profileResource = 'Profile', groupRes
     setSavedInvitations(invitations);
   }, [announces, announcers, setInvitations, setSavedInvitations]);
 
-  /** @param {Record<string, InvitationState} changedRights */
   const onChange = useCallback(
-    changedRights => {
+    (changedRights: Record<string, any>) => {
       // Compare changedRights to invitations, to know where we need to update the collection.
       const newInvitationsUnfiltered = {
         ...newInvitations,
         ...changedRights
       };
       const changedInvitations = Object.fromEntries(
-        Object.entries(newInvitationsUnfiltered).filter(([actorUri, newInvitation]) => {
+        Object.entries(newInvitationsUnfiltered).filter(([actorUri, newInvitation]: any) => {
           const oldInvitation = savedInvitations[actorUri];
           return (
             !!newInvitation.canView !== (!!oldInvitation?.canView || !!oldInvitation?.canShare) ||

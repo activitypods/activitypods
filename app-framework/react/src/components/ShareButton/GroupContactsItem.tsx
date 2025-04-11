@@ -29,18 +29,22 @@ const useStyles = makeStyles(theme => ({
     minWidth: 50
   },
   avatar: {
+    // @ts-ignore
     backgroundImage: `radial-gradient(circle at 50% 3em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`
   }
 }));
 
-/**
- * @param {Object} props
- * @param {import("react-admin").Record} props.group
- * @param {Record<string, InvitationState} props.invitations
- * @param {(invitations: Record<string, InvitationState>) => void} props.onChange
- * @param {boolean} props.isCreator
- */
-const GroupContactsItem = ({ group, onChange, invitations, isCreator }) => {
+const GroupContactsItem = ({
+  group,
+  invitations,
+  onChange,
+  isCreator
+}: {
+  group: any;
+  invitations: Record<string, any>;
+  onChange: (invitations: Record<string, any>) => void;
+  isCreator: boolean;
+}) => {
   const classes = useStyles();
   const translate = useTranslate();
 

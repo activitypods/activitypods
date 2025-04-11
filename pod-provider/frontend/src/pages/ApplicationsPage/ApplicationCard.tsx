@@ -26,6 +26,7 @@ const useStyles = makeStyles(theme => ({
   },
   title: {
     lineHeight: '25px',
+    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.down('sm')]: {
       lineHeight: '20px',
       fontSize: '1.3rem'
@@ -43,6 +44,7 @@ const useStyles = makeStyles(theme => ({
   appChip: {
     // backgroundColor: '#8bd78b',
     marginTop: 6,
+    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.up('sm')]: {
       marginTop: 0,
       position: 'absolute',
@@ -55,7 +57,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ApplicationCard = ({ app, isTrustedApp, isRegistered }) => {
+const ApplicationCard = ({ app, isTrustedApp, isRegistered }: any) => {
   const [openSettings, setOpenSettings] = useState(false);
   const [remoteApp, setRemoteApp] = useState();
   const [isOffline, setIsOffline] = useState(false);

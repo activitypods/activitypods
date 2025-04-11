@@ -10,7 +10,6 @@ module.exports = {
       add_location: 'Ajouter une adresse',
       copy: 'Copier dans votre presse-papier',
       create_invite_link: "Créer un lien d'invitation",
-      edit_profile: 'Éditer mon profil',
       edit_public_profile: 'Éditer le profil public',
       edit_private_profile: 'Éditer le profil privé',
       ignore: 'Ignorer',
@@ -43,6 +42,7 @@ module.exports = {
       create_group: 'Créer un groupe',
       skip_to_main: 'Passer au contenu principal',
       view_contact_profile: 'Voir le profil de %{name}',
+      // @ts-expect-error TS(1117): An object literal cannot have multiple properties ... Remove this comment to see the full error message
       edit_profile: 'Modifier votre profil'
     },
     tag: {

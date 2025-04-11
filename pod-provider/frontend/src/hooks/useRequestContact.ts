@@ -9,7 +9,7 @@ const useRequestContact = () => {
   const outbox = useOutbox();
 
   return useCallback(
-    async ({ id, content }) => {
+    async ({ id, content }: any) => {
       if (!identity?.profileData?.id) {
         notify('app.notification.profile_data_not_found', { type: 'error' });
       } else {

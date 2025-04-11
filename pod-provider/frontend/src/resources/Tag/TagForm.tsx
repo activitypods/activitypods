@@ -26,10 +26,10 @@ import { arrayOf } from '../../utils';
 import UsernameField from '../../common/fields/UsernameField';
 import ResourceSelectWithTags from '../../common/tags/ResourceSelectWithTags';
 
-const arraysEqual = (arr1, arr2) =>
-  arr1?.length === arr2?.length && arr1.every((value, index) => value === arr2[index]);
+const arraysEqual = (arr1: any, arr2: any) =>
+  arr1?.length === arr2?.length && arr1.every((value: any, index: any) => value === arr2[index]);
 
-const AvatarItem = ({ source }) => {
+const AvatarItem = ({ source }: any) => {
   const record = useRecordContext();
   return (
     <ListItemAvatar>
@@ -43,6 +43,7 @@ const AvatarItem = ({ source }) => {
 export const TagFormContent = () => {
   const translate = useTranslate();
   const createPath = useCreatePath();
+  // @ts-expect-error TS(2571): Object is of type 'unknown'.
   const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
 
   const group = useRecordContext();
@@ -52,6 +53,7 @@ export const TagFormContent = () => {
   const listControllerProps = useListController({
     resource: 'Profile',
     disableSyncWithLocation: true,
+    // @ts-expect-error TS(2345): Argument of type '{ resource: string; disableSyncW... Remove this comment to see the full error message
     page: 1,
     perPage: Infinity
   });
@@ -72,16 +74,17 @@ export const TagFormContent = () => {
 
   /** @param {{ ids: Identifier[] }} newProfileIds */
   const onMemberChange = useCallback(
+    // @ts-expect-error TS(7031): Binding element 'newProfileIds' implicitly has an ... Remove this comment to see the full error message
     ({ ids: newProfileIds }) => {
-      const changedMemberIds = newProfileIds.map(profileId => profileToMemberId[profileId]);
+      const changedMemberIds = newProfileIds.map((profileId: any) => profileToMemberId[profileId]);
       setMemberIds(changedMemberIds);
     },
     [profileToMemberId, setMemberIds]
   );
   /** @param {Identifier[]} removeProfileIds */
   const onDeleteMembers = useCallback(
-    removeProfileIds => {
-      const removeMemberIds = removeProfileIds.map(id => profileData.find(p => p.id === id)?.describes);
+    (removeProfileIds: any) => {
+      const removeMemberIds = removeProfileIds.map((id: any) => profileData.find(p => p.id === id)?.describes);
       setMemberIds(memberIds.filter(id => !removeMemberIds.includes(id)));
     },
     [profileData, memberIds, setMemberIds]
@@ -168,7 +171,11 @@ export const TagFormContent = () => {
               >
                 <UsernameField showCopyButton={false} />
               </ReferenceField>
-              <ShowButton resource="Profile" color="black" />
+              <ShowButton
+                resource="Profile"
+                // @ts-expect-error TS(2322): Type '"black"' is not assignable to type '"inherit... Remove this comment to see the full error message
+                color="black"
+              />
             </Datagrid>
           )}
         </ListView>
@@ -177,7 +184,7 @@ export const TagFormContent = () => {
   );
 };
 
-const TagForm = props => (
+const TagForm = (props: any) => (
   <SimpleForm
     redirect="list"
     style={{ MuiIconButtonRoot: { paddingRight: '8px', backgroundColor: 'inherit' } }}

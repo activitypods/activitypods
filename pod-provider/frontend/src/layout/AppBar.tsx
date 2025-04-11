@@ -6,6 +6,7 @@ import UserMenu from './UserMenu';
 
 const useStyles = makeStyles(theme => ({
   topBar: {
+    // @ts-expect-error TS(2339): Property 'palette' does not exist on type 'Default... Remove this comment to see the full error message
     backgroundColor: theme.palette.primary.main
   },
   title: {
@@ -13,6 +14,7 @@ const useStyles = makeStyles(theme => ({
     lineHeight: 0.8,
     paddingTop: '2rem',
 
+    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.down('sm')]: {
       paddingTop: '1.3rem',
       lineHeight: 0.8
@@ -23,7 +25,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const AppBar = ({ title }) => {
+const AppBar = ({ title }: any) => {
   const classes = useStyles();
   return (
     <Box className={classes.topBar}>

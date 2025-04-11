@@ -34,7 +34,7 @@ const PublicProfileWarning = () => {
   );
 };
 
-const ShowPublicProfileButton = props => {
+const ShowPublicProfileButton = (props: any) => {
   const record = useRecordContext();
   const webfingerId = useWebfingerId(record?.id);
   return (
@@ -47,12 +47,13 @@ const ShowPublicProfileButton = props => {
 export const PublicProfilePage = () => {
   const notify = useNotify();
   const translate = useTranslate();
+  // @ts-expect-error TS(2339): Property 'isGroup' does not exist on type 'unknown... Remove this comment to see the full error message
   const { isGroup, data, isLoading, refetch } = useRealmContext();
 
   const dataProvider = useDataProvider();
 
   const transform = useCallback(
-    async ({ name, icon, ...rest }) => {
+    async ({ name, icon, ...rest }: any) => {
       if (icon?.rawFile) {
         const iconUrl = await dataProvider.uploadFile(icon.rawFile);
         icon = {

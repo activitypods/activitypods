@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchUtils, useGetList } from 'react-admin';
 import { arrayOf } from '../utils';
 
-const useClassDescriptions = application => {
+const useClassDescriptions = (application: any) => {
   const [appData, setAppData] = useState([]);
   const { data: currentData } = useGetList('ClassDescription');
   const [loading, setLoading] = useState(false);
@@ -20,6 +20,7 @@ const useClassDescriptions = application => {
               for (const classDescriptionUri of arrayOf(accessDescriptionSet['apods:hasClassDescription'])) {
                 const { json: classDescription } = await fetchUtils.fetchJson(classDescriptionUri);
                 setAppData(oldData => {
+                  // @ts-expect-error TS(2345): Argument of type 'any' is not assignable to parame... Remove this comment to see the full error message
                   oldData.push(classDescription);
                   return oldData;
                 });
@@ -31,12 +32,14 @@ const useClassDescriptions = application => {
         }
       } catch (e) {
         console.error(e);
+        // @ts-expect-error TS(2571): Object is of type 'unknown'.
         setError(e.message);
         setLoading(false);
       }
     })();
   }, [application, currentData, setAppData, loading, setLoading, loaded, setLoaded, error, setError]);
 
+  // @ts-expect-error TS(2488): Type 'any[] | undefined' must have a '[Symbol.iter... Remove this comment to see the full error message
   return { classDescriptions: loaded ? [...appData, ...currentData] : [], loading, loaded, error };
 };
 

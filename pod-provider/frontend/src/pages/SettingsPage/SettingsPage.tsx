@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import { useTranslate, useGetList, useAuthProvider, useNotify, useLocaleState } from 'react-admin';
 import { Box, Typography, List } from '@mui/material';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'reac... Remove this comment to see the full error message
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { useNavigate } from 'react-router-dom';
 import EmailIcon from '@mui/icons-material/Email';
@@ -19,6 +20,7 @@ import SettingsItem from './SettingsItem';
 import { availableLocales } from '../../config/i18nProvider';
 
 const SettingsPage = () => {
+  // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
   useCheckAuthenticated();
   const translate = useTranslate();
   const authProvider = useAuthProvider();
@@ -31,7 +33,7 @@ const SettingsPage = () => {
   const { contactLink, error: contactLinkError, status: contactLinkStatus } = useContactLink();
 
   useEffect(() => {
-    authProvider.getAccountSettings().then(res => setAccountSettings(res));
+    authProvider.getAccountSettings().then((res: any) => setAccountSettings(res));
   }, [setAccountSettings, authProvider]);
 
   return (
@@ -59,6 +61,7 @@ const SettingsPage = () => {
             onClick={() => navigate('/settings/email')}
             icon={<EmailIcon />}
             label="app.setting.email"
+            // @ts-expect-error TS(2339): Property 'email' does not exist on type '{}'.
             value={accountSettings.email}
           />
           <SettingsItem
@@ -83,6 +86,7 @@ const SettingsPage = () => {
               value={
                 (contactLinkStatus === 'loaded' && contactLink) ||
                 translate(
+                  // @ts-expect-error TS(2345): Argument of type 'string | boolean' is not assigna... Remove this comment to see the full error message
                   (contactLinkStatus === 'loading' && 'app.message.loading_invite_link') ||
                     (contactLinkStatus === 'error' && 'app.message.loading_invite_link_failed')
                 )

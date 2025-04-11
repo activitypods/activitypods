@@ -12,7 +12,7 @@ import { arrayOf } from '../../utils';
 import useRemoveApp from '../../hooks/useRemoveApp';
 import useUpgradeApp from '../../hooks/useUpgradeApp';
 
-const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
+const UpgradeScreen = ({ application, accessApp, isTrustedApp }: any) => {
   const [step, setStep] = useState();
   const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
   const [allowedAccessNeeds, setAllowedAccessNeeds] = useState([]);
@@ -31,6 +31,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
     (async () => {
       if (step === 'upgrade') {
         try {
+          // @ts-expect-error TS(2345): Argument of type '"upgrading"' is not assignable t... Remove this comment to see the full error message
           setStep('upgrading');
 
           await upgradeApp({
@@ -40,7 +41,9 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
 
           await accessApp();
         } catch (e) {
+          // @ts-expect-error TS(2345): Argument of type '"error"' is not assignable to pa... Remove this comment to see the full error message
           setStep('error');
+          // @ts-expect-error TS(2571): Object is of type 'unknown'.
           notify(`Error on app upgrade: ${e.message}`, { type: 'error' });
         }
       }
@@ -49,6 +52,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
 
   useEffect(() => {
     if (accessNeedsLoaded && grantsLoaded && !step) {
+      // @ts-expect-error TS(2345): Argument of type '"preparation"' is not assignable... Remove this comment to see the full error message
       setStep('preparation');
 
       const grantedAccessNeeds = [];
@@ -72,26 +76,34 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
                 );
 
           if (matchingGrant) {
+            // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
             grantedAccessNeeds.push(typeof accessNeed === 'string' ? accessNeed : accessNeed.id);
           } else {
+            // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
             missingAccessNeeds[necessity].push(accessNeed);
           }
         }
       }
 
       setMissingAccessNeeds(missingAccessNeeds);
+      // @ts-expect-error TS(2345): Argument of type 'any[]' is not assignable to para... Remove this comment to see the full error message
       setGrantedAccessNeeds(grantedAccessNeeds);
+      // @ts-expect-error TS(2345): Argument of type 'any[]' is not assignable to para... Remove this comment to see the full error message
       setAllowedAccessNeeds([
+        // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
         ...missingAccessNeeds.required.map(a => (typeof a === 'string' ? a : a?.id)),
+        // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
         ...missingAccessNeeds.optional.map(a => (typeof a === 'string' ? a : a?.id))
       ]);
 
       // If at least one required access need is missing
       if (missingAccessNeeds.required.length > 0) {
         // Show screen to get consent
+        // @ts-expect-error TS(2345): Argument of type '"ask"' is not assignable to para... Remove this comment to see the full error message
         setStep('ask');
       } else {
         // Upgrade directly
+        // @ts-expect-error TS(2345): Argument of type '"upgrade"' is not assignable to ... Remove this comment to see the full error message
         setStep('upgrade');
       }
     }
@@ -114,6 +126,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
       // This will redirect to the app logout and then back to the applications page
       removeApp({ application });
     } catch (e) {
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       notify(`Error on app removal: ${e.message}`, { type: 'error' });
     }
   }, [removeApp, notify, application]);
@@ -143,7 +156,13 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
         </>
       )}
       <Box display="flex" justifyContent="end">
-        <Button variant="contained" color="secondary" onClick={() => setStep('upgrade')} sx={{ ml: 10 }}>
+        <Button
+          variant="contained"
+          color="secondary"
+          // @ts-expect-error TS(2345): Argument of type '"upgrade"' is not assignable to ... Remove this comment to see the full error message
+          onClick={() => setStep('upgrade')}
+          sx={{ ml: 10 }}
+        >
           {translate('app.action.accept')}
         </Button>
         <Button variant="contained" onClick={() => setRejectDialogOpen(true)} sx={{ ml: 1 }}>

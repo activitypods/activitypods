@@ -22,6 +22,7 @@ import { extractContext, LocationInput } from '@semapps/geo-components';
 const useStyles = makeStyles(theme => ({
   button: {
     margin: '12px 0 0 12px',
+    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.down('sm')]: {
       margin: '-12px 0 12px 0'
     }
@@ -29,7 +30,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 // https://codesandbox.io/s/react-admin-v3-advanced-recipes-quick-createpreview-voyci
-const AddLocationButton = ({ reference, source, onChange }) => {
+const AddLocationButton = ({ reference, source, onChange }: any) => {
   const form = useFormContext();
   const classes = useStyles();
   const { data: identity } = useGetIdentity();
@@ -39,7 +40,7 @@ const AddLocationButton = ({ reference, source, onChange }) => {
   const translate = useTranslate();
   const notify = useNotify();
 
-  const handleSubmit = async values => {
+  const handleSubmit = async (values: any) => {
     // needed to filter current form values
     const filteredValues = {
       'vcard:given-name': values['vcard:given-name'],
@@ -59,6 +60,7 @@ const AddLocationButton = ({ reference, source, onChange }) => {
           onChange();
         },
         onError: error => {
+          // @ts-expect-error TS(2571): Object is of type 'unknown'.
           notify(error.message, { type: 'error' });
         }
       }
@@ -91,6 +93,7 @@ const AddLocationButton = ({ reference, source, onChange }) => {
           >
             <DialogContent>
               <TextInput resource="Location" source="vcard:given-name" fullWidth />
+              <>{/* @ts-expect-error TS(2604) */}</>
               <LocationInput
                 mapboxConfig={{
                   access_token: CONFIG.MAPBOX_ACCESS_TOKEN,
@@ -98,7 +101,7 @@ const AddLocationButton = ({ reference, source, onChange }) => {
                   country: ['fr', 'be', 'ch']
                 }}
                 source="vcard:hasAddress"
-                parse={value => ({
+                parse={(value: any) => ({
                   type: 'vcard:Address',
                   'vcard:given-name': value.place_name,
                   'vcard:locality':
@@ -112,7 +115,7 @@ const AddLocationButton = ({ reference, source, onChange }) => {
                     'vcard:latitude': value.center[1]
                   }
                 })}
-                optionText={resource => resource['vcard:given-name']}
+                optionText={(resource: any) => resource['vcard:given-name']}
                 validate={[required()]}
                 fullWidth
                 variant="filled"
@@ -129,6 +132,7 @@ const AddLocationButton = ({ reference, source, onChange }) => {
                 onClick={() => setShowDialog(false)}
                 disabled={isLoading}
                 startIcon={<IconCancel />}
+                // @ts-expect-error TS(2769): No overload matches this call.
                 color="black"
               >
                 {translate('ra.action.cancel')}

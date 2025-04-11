@@ -14,6 +14,7 @@ const ProfileCreatePage = () => {
   // Reload profile unless profile is created
   useEffect(() => {
     if (!identity?.profileData?.id) {
+      // @ts-expect-error TS(2769): No overload matches this call.
       const intervalId = setInterval(refetchIdentity, 1000);
       return () => clearInterval(intervalId);
     }
@@ -38,7 +39,9 @@ const ProfileCreatePage = () => {
           // The redirect query param should be a local path or an URL in the backend (typically /.oidc/auth/auth/{interactionId})
           // If it is not, this is maybe a phishing attack so we shouldn't use it
           redirect(
+            // @ts-expect-error TS(2345): Argument of type 'string | null' is not assignable... Remove this comment to see the full error message
             isPath(searchParams.get('redirect')) ||
+              // @ts-expect-error TS(2531): Object is possibly 'null'.
               (isURL(searchParams.get('redirect')) && searchParams.get('redirect').startsWith(CONFIG.BACKEND_URL))
               ? searchParams.get('redirect')
               : '/'

@@ -12,6 +12,7 @@ const theme = createTheme({
     secondary: {
       main: CONFIG.COLOR_SECONDARY
     },
+    // @ts-expect-error TS(2322): Type '{ primary: { main: string; }; secondary: { m... Remove this comment to see the full error message
     black: {
       main: '#000'
     }
@@ -191,6 +192,7 @@ const theme = createTheme({
         }
       }
     },
+    // @ts-expect-error TS(2322): Type '{ MuiButton: { styleOverrides: { root: { bor... Remove this comment to see the full error message
     RaCreateButton: {
       styleOverrides: {
         root: {

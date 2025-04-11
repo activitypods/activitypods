@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDataProvider } from 'react-admin';
 
 // Fetch a single resource for which we don't know the type
-const useResource = (resourceUri, options = { enabled: true }) => {
+const useResource = (resourceUri: any, options = { enabled: true }) => {
   const dataProvider = useDataProvider();
   const [resource, setResource] = useState([]);
   const [isLoading, setIsLoading] = useState(true);

@@ -20,12 +20,13 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const UsernameField = ({ showCopyButton }) => {
+const UsernameField = ({ showCopyButton }: any) => {
   const record = useRecordContext();
   const classes = useStyles();
 
   if (!record) return null;
 
+  // @ts-expect-error TS(2345): Argument of type 'Identifier' is not assignable to... Remove this comment to see the full error message
   const actorServer = new URL(record.id).host;
   const webfingerId = `@${record.preferredUsername}@${actorServer}`;
 

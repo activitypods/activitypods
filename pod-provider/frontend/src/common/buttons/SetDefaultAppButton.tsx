@@ -7,7 +7,7 @@ import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { triple, namedNode } from '@rdfjs/data-model';
 import { arrayOf } from '../../utils';
 
-const AppMenuItem = ({ appUri, isDefault, ...rest }) => {
+const AppMenuItem = ({ appUri, isDefault, ...rest }: any) => {
   const { data: app, isLoading } = useGetOne('App', { id: appUri });
   if (isLoading) return null;
   return (
@@ -18,17 +18,17 @@ const AppMenuItem = ({ appUri, isDefault, ...rest }) => {
   );
 };
 
-const SetDefaultAppButton = ({ typeRegistration, refetch, color }) => {
+const SetDefaultAppButton = ({ typeRegistration, refetch, color }: any) => {
   const translate = useTranslate();
   const notify = useNotify();
   const dataProvider = useDataProvider();
   const [anchorEl, setAnchorEl] = useState(null);
 
-  const handleOpen = event => setAnchorEl(event.currentTarget);
+  const handleOpen = (event: any) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
 
   const selectDefaultApp = useCallback(
-    async appUri => {
+    async (appUri: any) => {
       await dataProvider.patch('TypeRegistration', {
         id: typeRegistration.id,
         triplesToAdd: [

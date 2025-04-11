@@ -19,7 +19,9 @@ const useStyles = makeStyles(theme => ({
   title: {
     backgroundRepeat: 'no-repeat',
     backgroundSize: 'cover',
+    // @ts-expect-error TS(2339): Property 'palette' does not exist on type 'Default... Remove this comment to see the full error message
     backgroundImage: `radial-gradient(circle at 50% 14em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
+    // @ts-expect-error TS(2339): Property 'palette' does not exist on type 'Default... Remove this comment to see the full error message
     color: theme.palette.primary.contrastText,
     height: 85,
     position: 'relative'
@@ -56,7 +58,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ContactCard = ({ actor, publicProfileOnly }) => {
+const ContactCard = ({ actor, publicProfileOnly }: any) => {
   const classes = useStyles();
   const createPath = useCreatePath();
   const translate = useTranslate();

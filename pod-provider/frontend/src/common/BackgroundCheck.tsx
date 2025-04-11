@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, useLayoutEffect } from 'react';
 import urlJoin from 'url-join';
 import ErrorMessage from './ErrorMessage';
 
-const BackgroundChecks = ({ children }) => {
+const BackgroundChecks = ({ children }: any) => {
   const [isOnline, setIsOnline] = useState();
 
   const checkBackendStatus = useCallback(async () => {
@@ -10,8 +10,10 @@ const BackgroundChecks = ({ children }) => {
     if (!document.hidden) {
       try {
         const response = await fetch(urlJoin(CONFIG.BACKEND_URL, '.well-known/config.js'));
+        // @ts-expect-error TS(2345): Argument of type 'boolean' is not assignable to pa... Remove this comment to see the full error message
         setIsOnline(response.ok);
       } catch (e) {
+        // @ts-expect-error TS(2345): Argument of type 'false' is not assignable to para... Remove this comment to see the full error message
         setIsOnline(false);
       }
     }
@@ -33,6 +35,7 @@ const BackgroundChecks = ({ children }) => {
   if (isOnline === true) {
     return children;
   } else if (isOnline === false) {
+    // @ts-expect-error TS(2686): 'React' refers to a UMD global, but the current fi... Remove this comment to see the full error message
     return <ErrorMessage message="app.message.backend_offline" />;
   }
   {

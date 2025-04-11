@@ -9,7 +9,7 @@ import ProgressMessage from '../../common/ProgressMessage';
 import AppHeader from './AppHeader';
 import useRegisterApp from '../../hooks/useRegisterApp';
 
-const RegistrationScreen = ({ application, accessApp, isTrustedApp }) => {
+const RegistrationScreen = ({ application, accessApp, isTrustedApp }: any) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [grantedAccessNeedsUris, setGrantedAccessNeedsUris] = useState();
   const translate = useTranslate();
@@ -20,8 +20,11 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp }) => {
 
   useEffect(() => {
     if (loaded) {
+      // @ts-expect-error TS(2345): Argument of type 'any[]' is not assignable to para... Remove this comment to see the full error message
       setGrantedAccessNeedsUris([
+        // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
         ...requiredAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id)),
+        // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
         ...optionalAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id))
       ]);
     }
@@ -36,6 +39,7 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp }) => {
       await accessApp();
     } catch (e) {
       setIsRegistering(false);
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       notify(`Error on app registration: ${e.message}`, { type: 'error' });
     }
   }, [registerApp, notify, application, grantedAccessNeedsUris, accessApp, setIsRegistering]);

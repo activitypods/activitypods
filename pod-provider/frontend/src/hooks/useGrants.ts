@@ -2,13 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { arrayOf } from '../utils';
 import { useDataProvider } from 'react-admin';
 
-const useGrants = appUri => {
+const useGrants = (appUri: any) => {
   const [grants, setGrants] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const dataProvider = useDataProvider();
 
   const fetchGrants = useCallback(async () => {
-    let g = [];
+    let g: any = [];
+    // @ts-expect-error TS(2345): Argument of type '{ filter: { 'http://www.w3.org/n... Remove this comment to see the full error message
     const { data: accessGrants } = await dataProvider.getList('AccessGrant', {
       filter: { 'http://www.w3.org/ns/solid/interop#grantee': appUri },
       pagination: { page: 1, perPage: Infinity }

@@ -7,6 +7,7 @@ import List from '../../layout/List';
 import { arrayOf } from '../../utils';
 
 const TagList = () => {
+  // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
   useCheckAuthenticated();
   const translate = useTranslate();
   return (

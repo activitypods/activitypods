@@ -7,6 +7,7 @@ import useRealmContext from '../hooks/useRealmContext';
 const useStyles = makeStyles(theme => ({
   menuBar: {
     backgroundColor: 'white',
+    // @ts-expect-error TS(2339): Property 'palette' does not exist on type 'Default... Remove this comment to see the full error message
     borderBottomColor: theme.palette.primary.main,
     borderBottomStyle: 'solid',
     borderBottomWidth: 4,
@@ -24,6 +25,7 @@ const useStyles = makeStyles(theme => ({
 const MenuBar = () => {
   const classes = useStyles();
   const translate = useTranslate();
+  // @ts-expect-error TS(2339): Property 'isGroup' does not exist on type 'unknown... Remove this comment to see the full error message
   const { isGroup, data } = useRealmContext();
   return (
     <Box className={classes.menuBar}>

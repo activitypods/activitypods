@@ -3,7 +3,7 @@ import { useNotify, useTranslate, useRecordContext } from 'react-admin';
 import { Button } from '@mui/material';
 import { useCollection, useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 
-const AddContactButton = ({ refetch, ...rest }) => {
+const AddContactButton = ({ refetch, ...rest }: any) => {
   const [disabled, setDisabled] = useState(false);
   const outbox = useOutbox();
   const notify = useNotify();
@@ -26,6 +26,7 @@ const AddContactButton = ({ refetch, ...rest }) => {
         setDisabled(false);
       }, 3000);
     } catch (e) {
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
       notify(e.message, { type: 'error' });
       setDisabled(false);
     }

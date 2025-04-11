@@ -44,15 +44,16 @@ const specialRights = {
   }
 };
 
-const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowedAccessNeeds }) => {
+const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowedAccessNeeds }: any) => {
   const translate = useTranslate();
   const [locale] = useLocaleState();
   const fetchShapeTree = useFetchShapeTree();
   const [parsedAccessNeeds, setParsedAccessNeeds] = useState([]);
 
   const parseAccessNeed = useCallback(
-    async accessNeed => {
+    async (accessNeed: any) => {
       if (typeof accessNeed === 'string') {
+        // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
         const specialRight = specialRights[accessNeed];
         if (specialRight) {
           return {
@@ -86,8 +87,10 @@ const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowed
           label: (
             <span>
               {accessRights.join('/')}{' '}
+              <>{/* @ts-expect-error TS(2339): Property 'label' does not exist on type 'NodeObjec... */} </>
               {shapeTree.label ? (
                 <span title={shapeTree.types?.join(', ')} style={{ textDecoration: 'underline dotted grey' }}>
+                  <>{/* @ts-expect-error TS(2339): Property 'label' does not exist on type 'NodeObjec...*/}</>
                   {shapeTree.label[locale]}
                 </span>
               ) : (
@@ -104,18 +107,19 @@ const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowed
   );
 
   const toggle = useCallback(
-    (accessNeed, checked) => {
+    (accessNeed: any, checked: any) => {
       if (checked) {
-        setAllowedAccessNeeds(a => a.filter(a => a !== accessNeed && a !== accessNeed?.id));
+        setAllowedAccessNeeds((a: any) => a.filter((a: any) => a !== accessNeed && a !== accessNeed?.id));
       } else {
-        setAllowedAccessNeeds(a => [...a, accessNeed?.id || accessNeed]);
+        setAllowedAccessNeeds((a: any) => [...a, accessNeed?.id || accessNeed]);
       }
     },
     [setAllowedAccessNeeds]
   );
 
   useEffect(() => {
-    Promise.all(accessNeeds.map(accessNeed => parseAccessNeed(accessNeed))).then(results =>
+    Promise.all(accessNeeds.map((accessNeed: any) => parseAccessNeed(accessNeed))).then(results =>
+      // @ts-expect-error TS(2345): Argument of type 'any[]' is not assignable to para... Remove this comment to see the full error message
       setParsedAccessNeeds(results)
     );
   }, [accessNeeds, setParsedAccessNeeds]);
@@ -132,6 +136,7 @@ const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowed
       }
     >
       {parsedAccessNeeds.map(({ label, icon, accessNeed }, i) => {
+        // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
         const checked = arrayOf(allowedAccessNeeds).some(a => a === accessNeed || a === accessNeed?.id);
         return (
           <ListItem key={i} sx={{ p: 0 }}>

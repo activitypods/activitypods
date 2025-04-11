@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, Button, useTranslate, useCreatePath } from 'react-admin';
 import SellOutlinedIcon from '@mui/icons-material/SellOutlined';
 
-const TagsButton = props => {
+const TagsButton = (props: any) => {
   const createPath = useCreatePath();
   const translate = useTranslate();
   return (

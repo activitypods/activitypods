@@ -30,11 +30,12 @@ const CreateGroupPage = () => {
   const [podProviderUrl, setPodProviderUrl] = useState();
 
   const onSubmit = useCallback(
-    async ({ id, type, name, image }) => {
+    async ({ id, type, name, image }: any) => {
       try {
         // TODO Find the group create endpoint by fetching the /.well-known/solid endpoint of the Pod provider
 
         // Create the group with the id and type
+        // @ts-expect-error TS(2345): Argument of type 'undefined' is not assignable to ... Remove this comment to see the full error message
         const createGroupResponse = await dataProvider.fetch(urlJoin(podProviderUrl, '.account/groups'), {
           method: 'POST',
           body: JSON.stringify({ id, type }),
@@ -45,6 +46,7 @@ const CreateGroupPage = () => {
 
         // Claim the group with the user webId
         await dataProvider.fetch(
+          // @ts-expect-error TS(2345): Argument of type 'undefined' is not assignable to ... Remove this comment to see the full error message
           urlJoin(podProviderUrl, '.account', identity.webIdData.preferredUsername, 'claimGroup'),
           {
             method: 'POST',
@@ -84,8 +86,10 @@ const CreateGroupPage = () => {
 
         notify(`Group successfully created`, { type: 'success' });
 
+        // @ts-expect-error TS(2345): Argument of type 'undefined' is not assignable to ... Remove this comment to see the full error message
         navigate(`/group/@${id}@${new URL(podProviderUrl).host}/settings`);
       } catch (e) {
+        // @ts-expect-error TS(2571): Object is of type 'unknown'.
         notify(`Could not create group. Error: ${e.message}`, { type: 'error' });
       }
     },
@@ -97,6 +101,7 @@ const CreateGroupPage = () => {
       <Header title="app.titles.create_group" />
       <ChoosePodProviderPage
         text={translate('app.helper.create_group')}
+        // @ts-expect-error TS(2322): Type 'Dispatch<SetStateAction<undefined>>' is not ... Remove this comment to see the full error message
         onPodProviderSelected={setPodProviderUrl}
         onCancel={() => navigate('/')}
       />
@@ -121,7 +126,13 @@ const CreateGroupPage = () => {
             <ImageField source="src" />
           </ImageInput> */}
           <Box display="flex" justifyContent="end" sx={{ pt: 2 }}>
-            <Button variant="outlined" onClick={() => setPodProviderUrl()}>
+            <>{/* @ts-ignore */}</>
+            <Button
+              variant="outlined"
+              // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
+              onClick={() => setPodProviderUrl()}
+            >
+              <>{/* @ts-ignore */}</>
               {translate('ra.action.back')}
             </Button>
             <SaveButton sx={{ ml: 1 }} />

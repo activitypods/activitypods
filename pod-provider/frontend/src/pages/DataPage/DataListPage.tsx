@@ -34,6 +34,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 const DataListPage = () => {
+  // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
   useCheckAuthenticated();
   const translate = useTranslate();
   const navigate = useNavigate();
@@ -54,7 +55,10 @@ const DataListPage = () => {
             ?.filter(container => !container.private || developerMode)
             .map(container => (
               <ListItem className={classes.listItem} key={container.uri}>
-                <ListItemButton onClick={() => navigate(`/data/${encodeURIComponent(container.uri)}`)}>
+                <ListItemButton
+                  // @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message
+                  onClick={() => navigate(`/data/${encodeURIComponent(container.uri)}`)}
+                >
                   <ListItemAvatar>
                     {container.private === true ? (
                       <Badge

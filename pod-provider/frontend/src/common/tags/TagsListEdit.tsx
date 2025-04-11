@@ -39,7 +39,7 @@ const colors = ['lightblue', 'lightgreen', 'lightpink', 'lightyellow', 'lightgre
  * @param {TagsListEditProps} props
  * @returns {JSX.Element | null}
  */
-const TagsListEdit = props => {
+const TagsListEdit = (props: any) => {
   const {
     relationshipPredicate,
     namePredicate,
@@ -79,6 +79,7 @@ const TagsListEdit = props => {
 
   // On changes coming from the data provider, we update that state.
   useEffect(() => {
+    // @ts-expect-error TS(2345): Argument of type 'any[] | undefined' is not assign... Remove this comment to see the full error message
     setTagDataState(tagData);
   }, [setTagDataState, tagData]);
 
@@ -92,7 +93,7 @@ const TagsListEdit = props => {
   );
 
   const setMemberships = useCallback(
-    newTagMemberships => {
+    (newTagMemberships: any) => {
       // First, compute the updated tag states.
       const newTagData = tagDataState.map(tagObject => {
         const originalTagMemberships = arrayOf(tagObject[relationshipPredicate]);
@@ -151,7 +152,7 @@ const TagsListEdit = props => {
   /**
    * @param {ReactDivMouseEvent} event
    */
-  const handleOpen = event => {
+  const handleOpen = (event: any) => {
     setMenuAnchorEl(event.currentTarget);
   };
 
@@ -162,14 +163,14 @@ const TagsListEdit = props => {
   /**
    * @param {Identifier} id
    */
-  const handleDeleteTag = id => {
+  const handleDeleteTag = (id: any) => {
     setMemberships(tagMemberships.filter(tagId => tagId !== id));
   };
 
   /**
    * @param {Identifier} id
    */
-  const handleAddTag = id => {
+  const handleAddTag = (id: any) => {
     setMemberships([...tagMemberships, id]);
     setMenuAnchorEl(null);
   };
@@ -183,7 +184,7 @@ const TagsListEdit = props => {
   /**
    * @param {ReactFormEvent} event
    */
-  const handleCreateTag = event => {
+  const handleCreateTag = (event: any) => {
     event.preventDefault();
     setDisabledCreateBtn(true);
     create(
@@ -301,7 +302,7 @@ const TagsListEdit = props => {
  * @param {RoundButtonProps} props
  * @returns {JSX.Element}
  */
-const RoundButton = props => (
+const RoundButton = (props: any) => (
   <Box
     component="button"
     type="button"

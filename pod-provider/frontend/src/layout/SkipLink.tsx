@@ -27,7 +27,7 @@ const StyledLink = styled(Link)(({ theme }) => ({
 const SkipLink = () => {
   const translate = useTranslate();
 
-  const handleClick = event => {
+  const handleClick = (event: any) => {
     event.preventDefault();
     const main = document.querySelector('main');
     if (main) {

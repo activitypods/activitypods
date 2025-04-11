@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslate, Button } from 'react-admin';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-const BackButton = ({ to, color }) => {
+const BackButton = ({ to, color }: any) => {
   const translate = useTranslate();
   return (
     <Link to={to}>

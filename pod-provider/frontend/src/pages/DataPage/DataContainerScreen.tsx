@@ -37,7 +37,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const DataContainerScreen = ({ containerData }) => {
+const DataContainerScreen = ({ containerData }: any) => {
   const { data: identity } = useGetIdentity();
   const classes = useStyles();
   const navigate = useNavigate();
@@ -45,13 +45,15 @@ const DataContainerScreen = ({ containerData }) => {
   const [selected, setSelected] = useState();
   const [locale] = useLocaleState();
   const developerMode = !!localStorage.getItem('developer_mode');
+  // @ts-expect-error TS(2571): Object is of type 'unknown'.
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
 
   const container = useContainerByUri(containerData.id || containerData['@id']);
+  // @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message
   const labelPredicate = useCompactPredicate(container?.labelPredicate, containerData['@context']);
 
   const onSelect = useCallback(
-    resource => {
+    (resource: any) => {
       if (developerMode) {
         navigate(`/data/${encodeURIComponent(resource.id || resource['@id'])}`);
       } else {
@@ -67,6 +69,7 @@ const DataContainerScreen = ({ containerData }) => {
 
   return (
     <ListView
+      // @ts-expect-error TS(2532): Object is possibly 'undefined'.
       title={container.label[locale] || container.label.en || containerData.id || containerData['@id']}
       actions={[
         <BackButton to="/data" /> /*<SetDefaultAppButton typeRegistration={typeRegistration} refetch={refetch} />*/
@@ -112,6 +115,7 @@ const DataContainerScreen = ({ containerData }) => {
         </List>
       </Box>
       {xs && (
+        // @ts-expect-error TS(2345): Argument of type 'null' is not assignable to param... Remove this comment to see the full error message
         <Dialog fullWidth open={!!selected} onClose={() => setSelected(null)}>
           <ResourceCard resource={selected} /*typeRegistration={typeRegistration}*/ />
         </Dialog>

@@ -19,20 +19,25 @@ const SettingsLocalePage = () => {
   const [locale] = useLocaleState();
 
   const onSubmit = useCallback(
-    async params => {
+    async (params: any) => {
       try {
         await dataProvider.update('Actor', {
+          // @ts-expect-error TS(2532): Object is possibly 'undefined'.
           id: identity.id,
           data: {
+            // @ts-expect-error TS(2532): Object is possibly 'undefined'.
             ...identity.webIdData,
             'schema:knowsLanguage': params.locale
           },
+          // @ts-expect-error TS(2532): Object is possibly 'undefined'.
           previousData: identity.webIdData
         });
         // Refetch the webId, so that frontend locale is automatically updated (through UpdateLocale component)
+        // @ts-expect-error TS(2722): Cannot invoke an object which is possibly 'undefin... Remove this comment to see the full error message
         await refetch();
         notify('app.notification.locale_changed', { type: 'success' });
       } catch (error) {
+        // @ts-expect-error TS(2571): Object is of type 'unknown'.
         notify(error.message, { type: 'error' });
       }
     },

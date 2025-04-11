@@ -54,6 +54,7 @@ const App = () => (
     <BrowserRouter>
       <Admin
         title={CONFIG.INSTANCE_NAME}
+        // @ts-expect-error TS(2322): Type '{ login: (params: any) => Promise<void>; han... Remove this comment to see the full error message
         authProvider={authProvider}
         dataProvider={dataProvider}
         i18nProvider={i18nProvider}
@@ -65,6 +66,7 @@ const App = () => (
         disableTelemetry
       >
         {Object.entries(resources).map(([key, resource]) => (
+          // @ts-expect-error TS(2339): Property 'config' does not exist on type '{ dataMo... Remove this comment to see the full error message
           <Resource key={key} name={key} {...resource.config} />
         ))}
         <CustomRoutes noLayout>

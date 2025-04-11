@@ -8,6 +8,7 @@ const validateEmail = [required(), email('app.validation.email')];
 const SettingsEmailPage = () => {
   const translate = useTranslate();
   const notify = useNotify();
+  // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
   const { identity } = useCheckAuthenticated();
   const authProvider = useAuthProvider();
 
@@ -17,17 +18,18 @@ const SettingsEmailPage = () => {
   });
 
   useEffect(() => {
-    authProvider.getAccountSettings().then(res => {
+    authProvider.getAccountSettings().then((res: any) => {
       setFormDefaultValue({ ...formDefaultValue, email: res.email });
     });
   }, [setFormDefaultValue, authProvider]);
 
   const onSubmit = useCallback(
-    async params => {
+    async (params: any) => {
       try {
         await authProvider.updateAccountSettings({ ...params });
         notify('auth.message.account_settings_updated', { type: 'success' });
       } catch (error) {
+        // @ts-expect-error TS(2571): Object is of type 'unknown'.
         notify(error.message, { type: 'error' });
       }
     },

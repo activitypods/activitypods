@@ -15,8 +15,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import LockIcon from '@mui/icons-material/Lock';
 import PublicIcon from '@mui/icons-material/Public';
 import { Link } from 'react-router-dom';
+import React from 'react';
 
-const EditProfileButton = props => {
+const EditProfileButton = (props: any) => {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef(null);
   const translate = useTranslate();

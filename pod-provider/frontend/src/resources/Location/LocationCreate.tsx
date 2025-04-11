@@ -5,6 +5,7 @@ import Create from '../../layout/Create';
 import LocationForm from './LocationForm';
 
 export const LocationCreate = () => {
+  // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
   const { identity } = useCheckAuthenticated();
   const translate = useTranslate();
   if (!identity) return null;

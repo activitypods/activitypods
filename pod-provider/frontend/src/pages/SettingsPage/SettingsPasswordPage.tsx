@@ -1,0 +1,85 @@
+import React, { useCallback } from 'react';
+import { useCheckAuthenticated, PasswordStrengthIndicator, validatePasswordStrength } from '@semapps/auth-provider';
+import { required, useAuthProvider, useNotify, useTranslate, SimpleForm, TextInput } from 'react-admin';
+import { Box, Card, Typography } from '@mui/material';
+import scorer from '../../config/scorer';
+
+const validateConfirmNewPassword = [
+  (value: any, { newPassword, confirmNewPassword }: any) => {
+    if (!newPassword) return;
+    if (newPassword !== confirmNewPassword) {
+      return 'app.validation.confirmNewPassword';
+    }
+  }
+];
+
+const SettingsPasswordPage = () => {
+  const translate = useTranslate();
+  const notify = useNotify();
+  // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
+  const { identity } = useCheckAuthenticated();
+  const authProvider = useAuthProvider();
+
+  const [newPassword, setNewPassword] = React.useState('');
+
+  const onSubmit = useCallback(
+    async (params: any) => {
+      try {
+        await authProvider.updateAccountSettings({ ...params });
+        // @ts-expect-error TS(2345): Argument of type 'string' is not assignable to par... Remove this comment to see the full error message
+        notify('auth.message.account_settings_updated', 'success');
+      } catch (error) {
+        // @ts-expect-error TS(2571): Object is of type 'unknown'.
+        notify(error.message, { type: 'error' });
+      }
+    },
+    [authProvider, notify]
+  );
+
+  if (!identity?.id) return null;
+
+  return (
+    <>
+      <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>
+        {translate('app.page.settings_password')}
+      </Typography>
+      <Box mt={1}>
+        <Card>
+          <SimpleForm onSubmit={onSubmit}>
+            <TextInput
+              label={translate('app.input.current_password')}
+              source="currentPassword"
+              type="password"
+              validate={required()}
+              fullWidth
+            />
+
+            <Typography variant="body2" style={{ marginBottom: 3 }}>
+              {translate('app.validation.password_strength')}:{' '}
+            </Typography>
+            <PasswordStrengthIndicator scorer={scorer} password={newPassword} sx={{ width: '100%' }} />
+            <TextInput
+              label={translate('app.input.new_password')}
+              source="newPassword"
+              type="password"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              validate={[validatePasswordStrength(scorer)]}
+              fullWidth
+            />
+
+            <TextInput
+              label={translate('app.input.confirm_new_password')}
+              source="confirmNewPassword"
+              type="password"
+              validate={validateConfirmNewPassword}
+              fullWidth
+            />
+          </SimpleForm>
+        </Card>
+      </Box>
+    </>
+  );
+};
+
+export default SettingsPasswordPage;

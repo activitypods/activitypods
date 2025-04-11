@@ -10,6 +10,7 @@ const SettingsExportPage = () => {
   const translate = useTranslate();
   const notify = useNotify();
   const logout = useLogout();
+  // @ts-expect-error TS(2339): Property 'data' does not exist on type 'unknown'.
   const { data } = useRealmContext();
   const [isLoading, setIsLoading] = useState(false);
   const [withBackups, setWithBackups] = useState(false);

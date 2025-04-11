@@ -10,6 +10,7 @@ const SettingsDeletePage = () => {
   const logout = useLogout();
   const navigate = useNavigate();
   const notify = useNotify();
+  // @ts-expect-error TS(2339): Property 'data' does not exist on type 'unknown'.
   const { data, isGroup } = useRealmContext();
   const [confirmInput, setConfirmInput] = useState('');
   const [deletedClicked, setDeletedClicked] = useState(false);

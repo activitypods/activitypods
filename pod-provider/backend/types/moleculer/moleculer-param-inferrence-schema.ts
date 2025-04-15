@@ -187,11 +187,10 @@ declare global {
   }
 }
 
-
-interface AvailableServices  {
+interface AvailableServices {
   'pre-service-1': { name: 'pre-service-1'; actions: { preAction: { params: {}; handler: () => {} } } };
 }
 
 type keys = keyof AvailableActions<AvailableServices>;
 
-let a:AvailableActions = {""}
+let a: AvailableActions = {};

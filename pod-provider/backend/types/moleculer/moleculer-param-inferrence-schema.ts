@@ -1,4 +1,5 @@
 import { ValidationRuleObject, ValidationSchema, ValidationSchemaMetaKeys } from 'fastest-validator';
+import { ServiceSchema, AvailableActions, AvailableServices } from 'moleculer';
 import { EnumType } from 'typescript';
 
 /*
@@ -122,6 +123,10 @@ function defineAction<Schema extends ValidatorSchema, Ret extends ReturnType<Act
   return action;
 }
 
+function defineService<Schema extends ServiceSchema>(schema: Schema): Schema {
+  return schema;
+}
+
 // Test method instance
 const method2 = defineAction({
   params: smallSchema,
@@ -147,3 +152,46 @@ const method2 = defineAction({
     return 'string' as string | number;
   }
 });
+
+const service = defineService({
+  name: 'service1',
+  actions: {
+    action1: {
+      params: { stringParam: {} }
+    }
+  }
+});
+
+declare global {
+  export namespace Moleculer {
+    export interface AvailableServices {
+      [service.name]: typeof service;
+    }
+  }
+}
+
+const service2 = defineService({
+  name: 'service2',
+  actions: {
+    action2: {
+      params: { stringParam: {} }
+    }
+  }
+});
+
+declare global {
+  export namespace Moleculer {
+    export interface AvailableServices {
+      [service2.name]: typeof service2;
+    }
+  }
+}
+
+
+interface AvailableServices  {
+  'pre-service-1': { name: 'pre-service-1'; actions: { preAction: { params: {}; handler: () => {} } } };
+}
+
+type keys = keyof AvailableActions<AvailableServices>;
+
+let a:AvailableActions = {""}

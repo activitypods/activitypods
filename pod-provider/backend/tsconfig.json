@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "typeRoots": ["./types", "./pod-provider/backend/types"]
+  }
+}

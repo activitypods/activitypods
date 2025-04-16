@@ -154,7 +154,7 @@ const method2 = defineAction({
 });
 
 const service = defineService({
-  name: 'service1',
+  name: 'service1' as const,
   actions: {
     action1: {
       params: { stringParam: {} }
@@ -164,14 +164,14 @@ const service = defineService({
 
 declare global {
   export namespace Moleculer {
-    export interface AvailableServices {
+    export interface AllServices {
       [service.name]: typeof service;
     }
   }
 }
 
 const service2 = defineService({
-  name: 'service2',
+  name: 'service2' as const,
   actions: {
     action2: {
       params: { stringParam: {} }
@@ -181,14 +181,12 @@ const service2 = defineService({
 
 declare global {
   export namespace Moleculer {
-    export interface AvailableServices {
+    export interface AllServices {
+      'pre-service-1': { name: 'pre-service-1'; actions: { preAction: { params: {}; handler: () => {} } } };
+
       [service2.name]: typeof service2;
     }
   }
-}
-
-interface AvailableServices {
-  'pre-service-1': { name: 'pre-service-1'; actions: { preAction: { params: {}; handler: () => {} } } };
 }
 
 type keys = keyof AvailableActions<AvailableServices>;

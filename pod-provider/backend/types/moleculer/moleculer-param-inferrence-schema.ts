@@ -36,7 +36,7 @@ type Action<Schema extends ValidatorSchema = {}, Ret extends any = unknown> = {
  */
 
 /** The object that is inferred from the schema. */
-type TypeOfSchema<Schema extends ParameterSchema> = {
+type TypeOfSchema<Schema extends ValidatorSchema> = {
   [Param in keyof Schema]: TypeOfSchemaParam<Schema[Param]>;
 };
 
@@ -158,7 +158,8 @@ const service = defineService({
   actions: {
     action1: {
       params: { stringParam: {} }
-    }
+    },
+    directAction: () => {}
   }
 });
 
@@ -174,7 +175,10 @@ const service2 = defineService({
   name: 'service2' as const,
   actions: {
     action2: {
-      params: { stringParam: { type: 'string' } }
+      params: { stringParam: { type: 'string' } },
+      handler(ctx) {
+        ctx.call('service2.action2', {});
+      }
     }
   }
 });
@@ -182,7 +186,10 @@ const service2 = defineService({
 declare global {
   export namespace Moleculer {
     export interface AllServices {
-      'pre-service-1': { name: 'pre-service-1'; actions: { preAction: { params: {}; handler: () => {} } } };
+      'pre-service-1': {
+        name: 'pre-service-1';
+        actions: { preAction: { params: { preAction1P: { type: 'number'; optional: true } }; handler: () => {} } };
+      };
 
       [service2.name]: typeof service2;
     }
@@ -192,3 +199,77 @@ declare global {
 type keys = keyof AvailableActions<AvailableServices>;
 
 let a: AvailableActions = {};
+
+type SomeNever = [string | never] extends [never] ? 'ex' : 'doesnt';
+
+// TODO: Check if param inference is working here.
+// TODO2: Check why it's not working in index.ts
+
+class ChatService extends Moleculer.Service {
+  constructor(broker: Moleculer.ServiceBroker) {
+    super(broker);
+
+    this.parseServiceSchema({
+      name: 'chat',
+      version: 'v1',
+      actions: {
+        // Error because it returns a string instead of boolean
+        async get(ctx) {
+          // Every ctx.call below is strongly typed based on the mapping
+          await ctx.call('does.not.exist');
+          await ctx.call('v1.chat.list');
+          await ctx.call('v1.characters.get');
+          await ctx.call('as', { id: 'x' });
+          await ctx.call('v1.characters.get', { id: 18 });
+          await ctx.call('v1.chat.get');
+          await ctx.call('v1.chat.get', { val: '18' });
+          await ctx.call('v1.chat.get', { val: 18 });
+          await ctx.call('service_1.fooAction');
+          const res = await ctx.call('service_1.fooAction', { fooParam1: '' });
+          await ctx.call('service_1.fooAction', { fooParam1: '' });
+          await ctx.call('pre-service-1.preAction', { preAction1P: undefined });
+
+          return ctx.params.val; // ctx.params.val is strictly typed as "string" based on the mapping above
+          // return true; // Using this return makes TypeScript happy
+        },
+        list: {
+          params: { p: { type: 'string' } },
+          // Error because it should return a number
+          handler(ctx) {
+            ctx.emit('Event1', 'hey'); // Works fine
+            ctx.emit('Event1'); // Error because a payload of type `string` is expected
+            ctx.emit('Event2', 'hey'); // Error because "Event2" takes no payload
+            ctx.emit('Unknown'); // Error because "Unknown" is not registered in events list
+
+            return 'plop';
+          }
+        },
+
+        // We can have extraneous actions.
+        // These will never be properly callable using ctx.call from inside a properly typed action, though.
+        // Notice the parameter ctx is not automatically typed because hello is not registered in the mapping.
+        // This can still be forced by providing the type explicitely but problems will arise somewhere else.
+        hello(ctx) {
+          return ctx.call('v1.char.hello');
+        }
+      },
+      events: {
+        Event1(payload, sender, eventName, ctx) {
+          console.log(payload); // Automatically typed as string
+        },
+        Event2(payload, sender, eventName, ctx) {
+          // Can't use `payload`
+        },
+        Event3: {
+          async handler(payload, sender, eventName, ctx) {
+            // res will be a number based on 'ServiceActions'
+            const res = await ctx.call('v1.chat.list');
+          }
+        },
+        Unknown(payload, sender, eventName, ctx) {
+          // Error, "Unknown" is not a known event.
+        }
+      }
+    });
+  }
+}

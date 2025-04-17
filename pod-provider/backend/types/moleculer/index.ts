@@ -626,29 +626,60 @@ declare global {
     // Converts a type union into a type intersection
     type UnionToIntersect<T> = (T extends any ? (x: T) => 0 : never) extends (x: infer R) => 0 ? R : never;
 
+    /** Get the parameter type of an action, if it exists. */
     type ParamTypeOfAction<Action extends ActionHandler | ActionSchema> = 'params' extends keyof Action
       ? TypeFromSchema<Action['params']>
-      : never;
+      : unknown;
 
+    /** Handler function from Handler (which can be a function or a action definitions). */
     type HandlerOfAction<Action extends ActionHandler | ActionSchema> = Action extends ActionHandler
       ? Action
       : 'handler' extends keyof Action
         ? Action['handler']
         : never;
 
+    // Call Functions
+
+    /** Helper to check if an object type has at least one non-optional property. */
+    type HasRequiredKeys<T> = [
+      keyof {
+        // Pick only keys that do not include undefined in their type.
+        [K in keyof T as undefined extends T[K] ? never : K]: T[K];
+      }
+    ] extends [never]
+      ? false
+      : true;
+
+    /** Decides if an action has at least one required (non-optional) param. */
+    type HasAtLeastOneRequiredParam<A extends ActionHandler | ActionSchema> =
+      ParamTypeOfAction<A> extends infer P
+        ? [unknown] extends [P]
+          ? false
+          : [keyof P] extends [never]
+            ? false
+            : HasRequiredKeys<P>
+        : false;
+
+    type ParamForAction<A extends ActionSchema | ActionHandler> =
+      HasAtLeastOneRequiredParam<A> extends true ? ParamTypeOfAction<A> : ParamTypeOfAction<A> | undefined;
+
+    type Call = {
+      <ActionName extends keyof AllActions | (string & {})>(
+        actionName: ActionName,
+        ...args: HasAtLeastOneRequiredParam<AllActions[ActionName]> extends true
+          ? [params: ParamTypeOfAction<AllActions[ActionName]>, opts?: CallingOptions]
+          : [params?: ParamTypeOfAction<AllActions[ActionName]>, opts?: CallingOptions]
+      ): ReturnType<HandlerOfAction<AllActions[ActionName]>>;
+    };
     type CallWithPayload = <ActionName extends keyof AllActions>(
       actionName: ActionName,
       params: ParamTypeOfAction<AllActions[ActionName]>, // ...
-      // actionName2: ActionName,
-      // params: TypeOfSchema<{ p1: { type: 'string' } }>, // TypeOfSchema<AllActions[ActionName]['params']>, // ...
       opts?: CallingOptions
     ) => ReturnType<HandlerOfAction<AllActions[ActionName]>>;
 
     type CallWithoutPayload = <ActionName extends keyof AllActions>(
-      actionName: ActionName
+      actionName: ActionName | string
     ) => ReturnType<HandlerOfAction<AllActions[ActionName]>>;
-
-    type Call = CallWithoutPayload | CallWithPayload;
 
     type EmitWithoutPayload<A extends Record<string, void>> = (eventName: keyof A) => Promise<void>;
     type EmitWithPayload<A extends Record<string, unknown>> = <K extends keyof A = keyof A>(
@@ -1406,7 +1437,7 @@ declare global {
         ctx?: Context
       ): ActionEndpoint | Errors.MoleculerRetryableError;
 
-      call: Call;
+      call: LegacyCall | Call;
       mcall<T>(def: Record<string, MCallDefinition>, opts?: MCallCallingOptions): Promise<Record<string, T>>;
       mcall<T>(def: MCallDefinition[], opts?: MCallCallingOptions): Promise<T[]>;
 

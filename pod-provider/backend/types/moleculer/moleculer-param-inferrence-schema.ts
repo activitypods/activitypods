@@ -174,7 +174,7 @@ const service2 = defineService({
   name: 'service2' as const,
   actions: {
     action2: {
-      params: { stringParam: {} }
+      params: { stringParam: { type: 'string' } }
     }
   }
 });

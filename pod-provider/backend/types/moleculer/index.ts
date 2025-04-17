@@ -1,7 +1,8 @@
 import type { EventEmitter2 } from 'eventemitter2';
 import type { BinaryLike, CipherCCMTypes, CipherGCMTypes, CipherKey, CipherOCBTypes } from 'crypto';
 import type { Worker } from 'cluster';
-import type { ValidationSchema } from 'fastest-validator';
+import type { ValidationRuleObject, ValidationSchema, ValidationSchemaMetaKeys } from 'fastest-validator';
+import { EnumType } from 'typescript';
 
 declare global {
   export namespace Moleculer {
@@ -48,16 +49,9 @@ declare global {
       trace(...args: any[]): void;
     }
 
-    type ActionHandler<
-      F extends ActionsMappingFunction = never,
-      ActionsMapping extends ActionsMappingBase = never,
-      EventsMapping extends EventsMappingBase = never
-    > = [F] extends [never]
-      ? ((ctx: Context<any, any, ActionsMapping, EventsMapping>) => Promise<any> | any) & ThisType<Service>
-      : ((
-          ctx: Context<Parameters<F>[0], any, ActionsMapping, EventsMapping>
-        ) => Promise<ReturnType<F>> | ReturnType<F>) &
-          ThisType<Service>;
+    type ActionHandler<F extends ActionsMappingFunction = never> = [F] extends [never]
+      ? ((ctx: Context<any, any>) => Promise<any> | any) & ThisType<Service>
+      : ((ctx: Context<Parameters<F>[0], any>) => Promise<ReturnType<F>> | ReturnType<F>) & ThisType<Service>;
 
     interface HotReloadOptions {
       modules?: string[];
@@ -458,17 +452,108 @@ declare global {
       basePath?: string;
     }
 
-    type ActionSchema<
-      F extends ActionsMappingFunction = never,
-      ActionsMapping extends ActionsMappingBase = never,
-      EventsMapping extends EventsMappingBase = never
-    > = {
+    /*
+     * DEFINITION TYPES
+     */
+
+    /** A schema like: `{p1: {type: "string"}, p2: {type: "boolean"}}` */
+    type ValidatorSchema = Record<
+      string,
+      ParameterSchema | ValidationRuleObject | ValidationRuleObject[] // Space for improvements.
+    > &
+      ValidationSchemaMetaKeys;
+
+    /** Schema of a single parameter, like `{type: "boolean", optional: true}` */
+    type ParameterSchema<DefaultType extends any = undefined> = (
+      | { optional?: true }
+      | { default?: DefaultType } // TODO: Bind this to the allowable schema definitions.
+    ) &
+      (
+        | { type: 'multi'; rules: ParameterSchema[] }
+        | { type: 'object'; params: Record<string, ParameterSchema> }
+        | { type: 'array'; items: keyof BasicValidatorTypeMap }
+        | { type: keyof BasicValidatorTypeMap }
+      );
+
+    /*
+     * # INFERENCE TYPES
+     */
+
+    /** The object that is inferred from the schema. */
+    type TypeFromSchema<Schema extends ValidationSchema | unknown> = Schema extends ValidationSchema
+      ? {
+          [Param in keyof Schema]: TypeFromSchemaParam<Schema[Param]>;
+        }
+      : never;
+
+    /** Infers type from fastest-validator schema property definition. */
+    type TypeFromSchemaParam<Param extends ParameterSchema> =
+      // Base type inferred from the `type` property
+      | TypeFromParsedParam<
+          Param['type'],
+          Param['items'], // 'items' extends keyof Param ? Extract<Param['items'], string>: undefined, // Present for arrays.
+          Param['params'], // 'params' extends keyof Param ? Param['params']: undefined, // Present for objects.
+          Param['rules'] // 'rules' extends keyof Param ? Param['rules']: undefined // Present for objects with multiple possible types.
+        >
+      // Include the type of `default` if it exists
+      | (Param extends { default: infer D } ? D & {} : never)
+      // Include `undefined` if `optional` is true
+      | (Param extends { optional: true } ? undefined : never);
+
+    /** Infers the type from a fastest-validator string type and processes array, object or multi parameters, if provided. */
+    type TypeFromParsedParam<
+      T extends string, // The basic type as string.
+      ItemTypeValue extends string = never, // If items property is present for array type.
+      ObjectSchema extends ParameterSchema = never, // ...
+      MultiTypeSchemas extends ParameterSchema[] = never // ...
+    > = T extends keyof BasicValidatorTypeMap
+      ? BasicValidatorTypeMap[T]
+      : T extends 'array'
+        ? Array<TypeFromParsedParam<ItemTypeValue>>
+        : T extends 'multi'
+          ? MultiType<MultiTypeSchemas>
+          : T extends 'object'
+            ? TypeFromSchema<ObjectSchema>
+            : never;
+
+    /** Fastest-validator types with primitive mapping.  */
+    type BasicValidatorTypeMap = {
+      any: any;
+      boolean: boolean;
+      class: any;
+      currency: string;
+      custom: any;
+      date: string;
+      email: string;
+      enum: EnumType;
+      equal: any;
+      forbidden: any;
+      function: Function;
+      luhn: string;
+      mac: string;
+      number: number;
+      objectID: any;
+      record: object;
+      string: string;
+      tuple: Array<unknown>;
+      url: string;
+      uuid: string;
+    };
+
+    /** Infers schema definitions from an array of schema properties into one type. */
+    type MultiType<ParameterSchemas extends ParameterSchema[] = []> = {
+      [Index in keyof ParameterSchemas]: TypeFromSchemaParam<ParameterSchemas[Index]>;
+    }[number];
+
+    // ---
+
+    type ActionSchema = {
       name?: string;
       visibility?: ActionVisibility;
       params?: ValidationSchema;
       service?: Service;
       cache?: boolean | ActionCacheOptions;
-      handler?: ActionHandler<F, ActionsMapping, EventsMapping>;
+      handler?: ActionHandler;
       tracing?: boolean | TracingActionOptions;
       bulkhead?: BulkheadOptions;
       circuitBreaker?: BrokerCircuitBreakerOptions;
@@ -506,23 +591,9 @@ declare global {
           ? DefaultIfNever<Default, Rest>
           : Default;
 
-    type ServiceActionsSchema<
-      ActionsMapping extends ActionsMappingBase = never,
-      ActionsEntry extends keyof ActionsMapping = never,
-      EventsMapping extends EventsMappingBase = never
-    > = [DefaultIfNever<never, [ActionsMapping, ActionsEntry]>] extends [never]
-      ? {
-          [key: string]:
-            | ActionHandler<never, ActionsMapping, EventsMapping>
-            | ActionSchema<never, ActionsMapping, EventsMapping>
-            | boolean;
-        }
-      : {
-          [P in keyof ActionsMapping[ActionsEntry]]?:
-            | ActionHandler<ActionsMapping[ActionsEntry][P], ActionsMapping, EventsMapping>
-            | ActionSchema<ActionsMapping[ActionsEntry][P], ActionsMapping, EventsMapping>
-            | boolean;
-        };
+    type ServiceActionsSchema<S = ServiceSettingSchema> = {
+      [key: string]: ActionSchema | ActionHandler | boolean;
+    } & ThisType<Service<S>>;
 
     class BrokerNode {
       id: string;
@@ -552,53 +623,32 @@ declare global {
       disconnected(): void;
     }
 
-    // Removes a level inside the object of objects by concatenating the keys.
-    // Requires TypeScript >= 4.1
-    type ConcatenateProps<A extends ActionsMappingBase, K extends keyof A & string> = {
-      [P in keyof A[K] & string as `${K}.${P}`]: A[K][P];
-    };
-
     // Converts a type union into a type intersection
     type UnionToIntersect<T> = (T extends any ? (x: T) => 0 : never) extends (x: infer R) => 0 ? R : never;
 
-    // Return the intersection of each value of properties of T.
-    type IntersectItems<T extends ActionsMappingBase> = UnionToIntersect<T[keyof T]>;
+    type ParamTypeOfAction<Action extends ActionHandler | ActionSchema> = 'params' extends keyof Action
+      ? TypeFromSchema<Action['params']>
+      : never;
 
-    // Make sure the functions always return promises.
-    type CallerReturnType<T extends ActionsMappingChildren> = {
-      [P in keyof T & string]: (...args: Parameters<T[P]>) => Promise<ReturnType<T[P]>>;
-    };
+    type HandlerOfAction<Action extends ActionHandler | ActionSchema> = Action extends ActionHandler
+      ? Action
+      : 'handler' extends keyof Action
+        ? Action['handler']
+        : never;
 
-    // CallableActions is the interface where every action is displayed using its fullname.
-    type CallableActions<A extends ActionsMappingBase> = IntersectItems<{
-      [Svc in keyof A & string]: CallerReturnType<ConcatenateProps<A, Svc>>;
-    }>;
-
-    // Helpers to filter based on the type of the values in an interface.
-    type KeysOfType<T, Filter, K extends keyof T = keyof T> = K extends (T[K] extends Filter ? K : never) ? K : never;
-    type MembersOfType<T, Filter> = Pick<T, KeysOfType<T, Filter>>;
-    type MembersNotOfType<T, Filter> = Omit<T, KeysOfType<T, Filter>>;
-
-    // Helpers to include or omit the payload depending on the number of parameters the function expects.
-    type CallWithoutPayload<A extends Record<string, () => any>> = <K extends keyof A = keyof A>(
-      actionName: K
-    ) => ReturnType<A[K]>;
-    type CallWithPayload<A extends Record<string, (arg: any) => any>> = <K extends keyof A = keyof A>(
-      actionName: K,
-      params: Parameters<A[K]>[0],
+    type CallWithPayload = <ActionName extends keyof AllActions>(
+      actionName: ActionName,
+      params: ParamTypeOfAction<AllActions[ActionName]>, // ...
+      // actionName2: ActionName,
+      // params: TypeOfSchema<{ p1: { type: 'string' } }>, // TypeOfSchema<AllActions[ActionName]['params']>, // ...
       opts?: CallingOptions
-    ) => ReturnType<A[K]>;
+    ) => ReturnType<HandlerOfAction<AllActions[ActionName]>>;
 
-    // Units all overloards for the function
-    type Call<
-      A extends ActionsMappingBase,
-      CActions extends CallableActions<A> = CallableActions<A>
-    > = CallWithoutPayload<MembersOfType<CActions, () => any>> &
-      CallWithPayload<MembersOfType<CActions, (arg: any) => any>>;
+    type CallWithoutPayload = <ActionName extends keyof AllActions>(
+      actionName: ActionName
+    ) => ReturnType<HandlerOfAction<AllActions[ActionName]>>;
 
-    // Not strictly typed call function
-    type LegacyCall = (<T>(actionName: string) => Promise<T>) &
-      (<T, P>(actionName: string, params: P, opts?: CallingOptions) => Promise<T>);
+    type Call = CallWithoutPayload | CallWithPayload;
 
     type EmitWithoutPayload<A extends Record<string, void>> = (eventName: keyof A) => Promise<void>;
     type EmitWithPayload<A extends Record<string, unknown>> = <K extends keyof A = keyof A>(
@@ -606,8 +656,7 @@ declare global {
       data: A[K]
     ) => Promise<void>;
 
-    type Emit<Events extends EventsMappingBase> = EmitWithoutPayload<MembersOfType<Events, void>> &
-      EmitWithPayload<MembersNotOfType<Events, void>>;
+    type Emit = EmitWithoutPayload & EmitWithPayload;
 
     // Not strictly typed call function
     type LegacyEmit = (<D>(eventName: string, data: D, opts: GenericObject) => Promise<void>) &
@@ -616,23 +665,18 @@ declare global {
       (<D>(eventName: string, data: D) => Promise<void>) &
       ((eventName: string) => Promise<void>);
 
-    class Context<
-      P = unknown,
-      M extends object = {},
-      ActionsMapping extends ActionsMappingBase = never,
-      EventsMapping extends EventsMappingBase = never
-    > {
-      constructor(broker: ServiceBroker<ActionsMapping, EventsMapping>, endpoint: Endpoint);
+    class Context<P = unknown, M extends object = {}, L = GenericObject> {
+      constructor(broker: ServiceBroker, endpoint: Endpoint);
 
       id: string;
-      broker: ServiceBroker<ActionsMapping, EventsMapping>;
+      broker: ServiceBroker;
       endpoint: Endpoint | null;
       action: ActionSchema | null;
       event: EventSchema | null;
       service: Service | null;
       nodeID: string | null;
 
-      eventName: ([EventsMapping] extends [never] ? string : keyof EventsMapping) | null;
+      eventName: string | null;
       eventType: string | null;
       eventGroups: string[] | null;
 
@@ -661,9 +705,11 @@ declare global {
       setEndpoint(endpoint: Endpoint): void;
       setParams(newParams: P, cloning?: boolean): void;
 
-      call: [ActionsMapping] extends [never] ? LegacyCall : Call<ActionsMapping>;
-      emit: [EventsMapping] extends [never] ? LegacyEmit : Emit<EventsMapping>;
-      broadcast: [EventsMapping] extends [never] ? LegacyEmit : Emit<EventsMapping>;
+      call: Call;
+      mcall<T>(def: Record<string, MCallDefinition>, opts?: MCallCallingOptions): Promise<Record<string, T>>;
+      mcall<T>(def: MCallDefinition[], opts?: MCallCallingOptions): Promise<T[]>;
+      emit: LegacyEmit | Emit;
+      broadcast: LegacyEmit | Emit;
 
       copy(endpoint: Endpoint): this;
       copy(): this;
@@ -688,57 +734,29 @@ declare global {
       [name: string]: any;
     }
 
-    type ServiceEventLegacyHandler<
-      EventsMapping extends EventsMappingBase = never,
-      EventName extends keyof EventsMapping = never,
-      ActionsMapping extends ActionsMappingBase = never
-    > = [DefaultIfNever<never, [EventName, EventsMapping]>] extends [never]
-      ? ((payload: any, sender: string, eventName: string, ctx: Context) => void) & ThisType<Service>
-      : ((
-          payload: EventsMapping[EventName],
-          sender: string,
-          eventName: EventName,
-          ctx: Context<EventsMapping[EventName], any, ActionsMapping, EventsMapping>
-        ) => void) &
-          ThisType<Service>;
+    type ServiceEventLegacyHandler = (
+      payload: any,
+      sender: string,
+      eventName: string,
+      ctx: Context
+    ) => (void | Promise<void>) & ThisType<Service>;
 
-    type ServiceEventHandler<
-      EventsMapping extends EventsMappingBase = never,
-      EventName extends keyof EventsMapping = never,
-      ActionsMapping extends ActionsMappingBase = never
-    > = [DefaultIfNever<never, [EventName, EventsMapping]>] extends [never]
-      ? ((ctx: Context) => void) & ThisType<Service>
-      : ((ctx: Context<EventsMapping[EventName], any, ActionsMapping, EventsMapping>) => void) & ThisType<Service>;
+    type ServiceEventHandler = (ctx: Context) => (void | Promise<void>) & ThisType<Service>;
 
-    type ServiceEvent<
-      EventsMapping extends EventsMappingBase = never,
-      EventName extends keyof EventsMapping = never,
-      ActionsMapping extends ActionsMappingBase = never
-    > = {
+    interface ServiceEvent {
       name?: string;
       group?: string;
       params?: ValidationSchema;
       context?: boolean;
       debounce?: number;
       throttle?: number;
-      handler?:
-        | ServiceEventHandler<EventsMapping, EventName, ActionsMapping>
-        | ServiceEventLegacyHandler<EventsMapping, EventName, ActionsMapping>;
-    };
+      handler?: ServiceEventHandler | ServiceEventLegacyHandler;
+    }
 
-    type ServiceEvents<
-      EventsMapping extends EventsMappingBase = never,
-      ActionsMapping extends ActionsMappingBase = never
-    > = [EventsMapping] extends [never]
-      ? {
-          [key: string]: ServiceEventHandler | ServiceEventLegacyHandler | ServiceEvent;
-        }
-      : {
-          [P in keyof EventsMapping]?:
-            | ServiceEventHandler<EventsMapping, P, ActionsMapping>
-            | ServiceEventLegacyHandler<EventsMapping, P, ActionsMapping>
-            | ServiceEvent<EventsMapping, P, ActionsMapping>;
-        };
+    type ServiceEvents<S = ServiceSettingSchema> = {
+      // TODO: [key: typeof EventHandler?]
+      [key: string]: ServiceEventHandler | ServiceEventLegacyHandler | ServiceEvent;
+    } & ThisType<Service<S>>;
 
     type ServiceMethods = { [key: string]: (...args: any[]) => any } & ThisType<Service>;
 
@@ -801,12 +819,6 @@ declare global {
     type ServiceSyncLifecycleHandler<S = ServiceSettingSchema, T = Service<S>> = (this: T) => void;
     type ServiceAsyncLifecycleHandler<S = ServiceSettingSchema, T = Service<S>> = (this: T) => void | Promise<void>;
 
-    // Types used to represent the mapping and its components
-    type ActionsMappingFunction = ((params: any) => unknown) | (() => unknown);
-    type ActionsMappingChildren = Record<string, ActionsMappingFunction>;
-    interface AvailableActions_ extends Record<string, ActionsMappingChildren> {}
-    type ActionsMappingBase = Record<string, ActionsMappingChildren> | AvailableActions_;
-
     /**
      * Service registry that every service should extend
      * using global [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html)
@@ -836,8 +848,7 @@ declare global {
       serviceKey1: {
         name: 'service_1';
         actions: {
-          fooAction: { handler: () => {}; params: { type: 'string' } };
-          fooActionfo: { handler: () => {}; params: {} };
+          fooAction: { handler: () => number; params: { fooParam1: { type: 'string' } } };
         };
       };
       serviceKey2: { name: 'service_2'; actions: { barAction: { handler: () => {}; params: {} } } };
@@ -848,41 +859,43 @@ declare global {
       [S in string & keyof AllServices]: AllServices[S];
     };
 
-    type ActionsOfServices<Services extends Record<string, ServiceSchema>> = {
+    type ActionsOfServices_<Services extends Record<string, ServiceSchema>> = {
       [SK in keyof Services]: {
         [A in keyof Services[SK]['actions'] as `${Services[SK]['name']}.${A & string}`]: Services[SK]['actions'][A];
       };
     }[keyof Services];
+    type ActionsOfServices<Services extends Record<string, ServiceSchema>> = Record<
+      keyof ActionsOfServices_<Services>,
+      ServiceActionsSchema
+    > &
+      ActionsOfServices_<Services>;
 
     /** All available actions, inferred from @see {AllServices}, mapped by their full name ("serviceName.actionName": Action). */
-    type AllActions = ActionsOfServices<AllServices_>;
+    type AllActions = UnionToIntersect<ActionsOfServices<AllServices_>>; // TODO: Do we need UnionToIntersect?
 
-    // Is "service_1" | "service_2"
+    // Test purposes
     type ServiceKey = keyof AllServices_;
-    type ActionKey = keyof UnionToIntersect<AllActions>;
+    type ActionKey = keyof AllActions;
+    type A1 = AllActions['service_1.fooAction' | 'pre-service-1.preAction'];
 
-    let key_good: ActionKey = 'service1.action1';
-    let key_bad: ActionKey = 'pre-service-1.does_not_exist';
+    type A1Param = TypeFromSchema<A1['params']>;
+
+    type TEMP = 'sdf' | unknown;
 
     interface EventsMappingBase extends Record<string, any> {}
 
-    interface ServiceSchema<
-      S = ServiceSettingSchema,
-      ActionsMapping extends ActionsMappingBase = never,
-      ActionsEntry extends keyof ActionsMapping = never,
-      EventsMapping = never
-    > {
+    interface ServiceSchema<S = ServiceSettingSchema, T = Service<S>> {
       name: string;
       version?: string | number;
-      settings?: [S] extends [never] ? ServiceSettingSchema : S;
+      settings?: S;
       dependencies?: string | ServiceDependency | (string | ServiceDependency)[];
       metadata?: any;
-      actions?: ServiceActionsSchema<ActionsMapping, ActionsEntry, EventsMapping>;
+      actions?: ServiceActionsSchema;
       mixins?: Partial<ServiceSchema>[];
       methods?: ServiceMethods;
       hooks?: ServiceHooks;
 
-      events?: ServiceEvents<EventsMapping, ActionsMapping>;
+      events?: ServiceEvents;
       created?: ServiceSyncLifecycleHandler<S, T> | ServiceSyncLifecycleHandler<S, T>[];
       started?: ServiceAsyncLifecycleHandler<S, T> | ServiceAsyncLifecycleHandler<S, T>[];
       stopped?: ServiceAsyncLifecycleHandler<S, T> | ServiceAsyncLifecycleHandler<S, T>[];
@@ -904,19 +917,10 @@ declare global {
       statuses: { name: string; available: boolean }[];
     }
 
-    class Service<
-      S = ServiceSettingSchema,
-      ActionsMapping extends ActionsMappingBase = never,
-      ActionsEntry extends keyof ActionsMapping = never,
-      EventsMapping extends EventsMappingBase = never
-    > implements ServiceSchema
-    {
-      constructor(
-        broker: ServiceBroker<ActionsMapping, EventsMapping>,
-        schema?: ServiceSchema<S, ActionsMapping, ActionsEntry, EventsMapping>
-      );
+    class Service<S = ServiceSettingSchema> implements ServiceSchema<S> {
+      constructor(broker: ServiceBroker, schema?: ServiceSchema<S>);
 
-      protected parseServiceSchema(schema: ServiceSchema<S, ActionsMapping, ActionsEntry, EventsMapping>): void;
+      protected parseServiceSchema(schema: ServiceSchema<S>): void;
 
       name: string;
       fullName: string;
@@ -924,9 +928,9 @@ declare global {
       settings: S;
       metadata: GenericObject;
       dependencies: string | ServiceDependency | (string | ServiceDependency)[];
-      schema: ServiceSchema<S, ActionsMapping, ActionsEntry, EventsMapping>;
-      originalSchema: ServiceSchema<S, ActionsMapping, ActionsEntry, EventsMapping>;
-      broker: ServiceBroker<ActionsMapping, EventsMapping>;
+      schema: ServiceSchema<S>;
+      originalSchema: ServiceSchema<S>;
+      broker: ServiceBroker;
       logger: LoggerInstance;
       actions: ServiceActions;
       Promise: PromiseConstructorLike;
@@ -1089,6 +1093,7 @@ declare global {
       strategyOptions?: GenericObject;
       preferLocal?: boolean;
       discoverer?: RegistryDiscovererOptions | BaseDiscoverer | string;
+      stopDelay?: number;
     }
 
     interface RegistryDiscovererOptions {
@@ -1325,10 +1330,7 @@ declare global {
       }
     }
 
-    class ServiceBroker<
-      ActionsMapping extends ActionsMappingBase = never,
-      EventsMapping extends EventsMappingBase = never
-    > {
+    class ServiceBroker {
       constructor(options?: BrokerOptions);
 
       options: BrokerOptions;
@@ -1404,14 +1406,13 @@ declare global {
         ctx?: Context
       ): ActionEndpoint | Errors.MoleculerRetryableError;
 
-      call: [ActionsMapping] extends [never] ? LegacyCall : Call<ActionsMapping>;
-      mcall<T>(
-        def: Array<MCallDefinition> | { [name: string]: MCallDefinition },
-        opts?: CallingOptions
-      ): Promise<Array<T> | T>;
-      emit: [EventsMapping] extends [never] ? LegacyEmit : Emit<EventsMapping>;
-      broadcast: [EventsMapping] extends [never] ? LegacyEmit : Emit<EventsMapping>;
-      broadcastLocal: [EventsMapping] extends [never] ? LegacyEmit : Emit<EventsMapping>;
+      call: Call;
+      mcall<T>(def: Record<string, MCallDefinition>, opts?: MCallCallingOptions): Promise<Record<string, T>>;
+      mcall<T>(def: MCallDefinition[], opts?: MCallCallingOptions): Promise<T[]>;
+
+      emit: LegacyEmit | Emit;
+      broadcast: LegacyEmit | Emit;
+      broadcastLocal: LegacyEmit | Emit;
 
       ping(): Promise<PongResponses>;
       ping(nodeID: string | string[], timeout?: number): Promise<PongResponse>;
@@ -2179,83 +2180,4 @@ declare global {
 
 export = Moleculer;
 
-// Test code below
-type ServiceActions = {
-  'v1.chat': {
-    get: (arg: { val: string }) => boolean;
-    list: () => number;
-  };
-  'v1.characters': {
-    get: (arg: { id: string }) => string;
-  };
-};
-
-type ServiceEvents = {
-  Event1: string;
-  Event2: void;
-  Event3: number;
-};
-
-class ChatService extends Moleculer.Service<never, ServiceActions, 'v1.chat', ServiceEvents> {
-  constructor(broker: Moleculer.ServiceBroker) {
-    super(broker);
-
-    this.parseServiceSchema({
-      name: 'chat',
-      version: 'v1',
-      actions: {
-        // Error because it returns a string instead of boolean
-        async get(ctx) {
-          // Every ctx.call below is strongly typed based on the mapping
-          await ctx.call('does.not.exist');
-          await ctx.call('v1.chat.list');
-          await ctx.call('v1.characters.get');
-          await ctx.call('v1.characters.get', { id: 'x' });
-          await ctx.call('v1.characters.get', { id: 18 });
-          await ctx.call('v1.chat.get');
-          await ctx.call('v1.chat.get', { val: '18' });
-          await ctx.call('v1.chat.get', { val: 18 });
-
-          return ctx.params.val; // ctx.params.val is strictly typed as "string" based on the mapping above
-          // return true; // Using this return makes TypeScript happy
-        },
-        list: {
-          // Error because it should return a number
-          handler(ctx) {
-            ctx.emit('Event1', 'hey'); // Works fine
-            ctx.emit('Event1'); // Error because a payload of type `string` is expected
-            ctx.emit('Event2', 'hey'); // Error because "Event2" takes no payload
-            ctx.emit('Unknown'); // Error because "Unknown" is not registered in events list
-
-            return 'plop';
-          }
-        },
-
-        // We can have extraneous actions.
-        // These will never be properly callable using ctx.call from inside a properly typed action, though.
-        // Notice the parameter ctx is not automatically typed because hello is not registered in the mapping.
-        // This can still be forced by providing the type explicitely but problems will arise somewhere else.
-        hello(ctx) {
-          return ctx.call('v1.char.hello');
-        }
-      },
-      events: {
-        Event1(payload, sender, eventName, ctx) {
-          console.log(payload); // Automatically typed as string
-        },
-        Event2(payload, sender, eventName, ctx) {
-          // Can't use `payload`
-        },
-        Event3: {
-          async handler(payload, sender, eventName, ctx) {
-            // res will be a number based on 'ServiceActions'
-            const res = await ctx.call('v1.chat.list');
-          }
-        },
-        Unknown(payload, sender, eventName, ctx) {
-          // Error, "Unknown" is not a known event.
-        }
-      }
-    });
-  }
-}
+// TODO: service versions

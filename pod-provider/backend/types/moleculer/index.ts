@@ -1,7 +1,11 @@
 import type { EventEmitter2 } from 'eventemitter2';
 import type { BinaryLike, CipherCCMTypes, CipherGCMTypes, CipherKey, CipherOCBTypes } from 'crypto';
 import type { Worker } from 'cluster';
-import type { ValidationRuleObject, ValidationSchema, ValidationSchemaMetaKeys } from 'fastest-validator';
+import type {
+  ValidationRuleObject,
+  ValidationSchema as FastestValidationSchema,
+  ValidationSchemaMetaKeys
+} from 'fastest-validator';
 import { EnumType } from 'typescript';
 
 declare global {
@@ -49,9 +53,10 @@ declare global {
       trace(...args: any[]): void;
     }
 
-    type ActionHandler<F extends ActionsMappingFunction = never> = [F] extends [never]
-      ? ((ctx: Context<any, any>) => Promise<any> | any) & ThisType<Service>
-      : ((ctx: Context<Parameters<F>[0], any>) => Promise<ReturnType<F>> | ReturnType<F>) & ThisType<Service>;
+    type ActionHandler<Params extends unknown = unknown, ReturnType = unknown> = ((
+      ctx: Context<Params>
+    ) => Promise<ReturnType> | ReturnType) &
+      ThisType<Service>;
 
     interface HotReloadOptions {
       modules?: string[];
@@ -480,7 +485,7 @@ declare global {
      */
 
     /** The object that is inferred from the schema. */
-    type TypeFromSchema<Schema extends ValidationSchema | unknown> = Schema extends ValidationSchema
+    type TypeFromSchema<Schema extends FastestValidationSchema | unknown> = Schema extends FastestValidationSchema
       ? {
           [Param in keyof Schema]: TypeFromSchemaParam<Schema[Param]>;
         }
@@ -545,86 +550,11 @@ declare global {
       [Index in keyof ParameterSchemas]: TypeFromSchemaParam<ParameterSchemas[Index]>;
     }[number];
 
-    // ---
-
-    type ActionSchema = {
-      name?: string;
-      visibility?: ActionVisibility;
-      params?: ValidationSchema;
-      service?: Service;
-      cache?: boolean | ActionCacheOptions;
-      handler?: ActionHandler;
-      tracing?: boolean | TracingActionOptions;
-      bulkhead?: BulkheadOptions;
-      circuitBreaker?: BrokerCircuitBreakerOptions;
-      retryPolicy?: RetryPolicyOptions;
-      fallback?: string | FallbackHandler;
-      hooks?: ActionHooks;
-
-      // See https://github.com/moleculerjs/moleculer/issues/467#issuecomment-705583471
-      [key: string]: string | boolean | any[] | number | Record<any, any> | null | undefined;
-    };
-
-    interface EventSchema {
-      name?: string;
-      group?: string;
-      params?: ValidationSchema;
-      service?: Service;
-      tracing?: boolean | TracingEventOptions;
-      bulkhead?: BulkheadOptions;
-      handler?: ActionHandler;
-      context?: boolean;
-
-      [key: string]: any;
-    }
-
-    // Resolves to the first member of a tuple
-    type First<T extends unknown[]> = T extends [infer U, ...infer _] ? U : never;
-
-    // Resolves to Default if any of the types in Tests are never.
-    // Otherwise, resolves to "ok"
-    type DefaultIfNever<Default, Tests extends unknown[]> = Tests extends []
-      ? 'ok'
-      : First<Tests> extends never
-        ? Default
-        : Tests extends [any, ...infer Rest]
-          ? DefaultIfNever<Default, Rest>
-          : Default;
-
-    type ServiceActionsSchema<S = ServiceSettingSchema> = {
-      [key: string]: ActionSchema | ActionHandler | boolean;
-    } & ThisType<Service<S>>;
-
-    class BrokerNode {
-      id: string;
-      instanceID: string | null;
-      available: boolean;
-      local: boolean;
-      lastHeartbeatTime: number;
-      config: GenericObject;
-      client: GenericObject;
-      metadata: GenericObject;
-
-      ipList: string[];
-      port: number | null;
-      hostname: string | null;
-      udpAddress: string | null;
-
-      rawInfo: GenericObject;
-      services: [GenericObject];
-
-      cpu: number | null;
-      cpuSeq: number | null;
-
-      seq: number;
-      offlineSince: number | null;
-
-      heartbeat(payload: GenericObject): void;
-      disconnected(): void;
-    }
-
-    // Converts a type union into a type intersection
+    /** Converts a type union into a type intersection */
     type UnionToIntersect<T> = (T extends any ? (x: T) => 0 : never) extends (x: infer R) => 0 ? R : never;
+
+    /** The following type wraps an object in a promise if it isn't one already. */
+    type Promisify<O> = O extends Promise<any> ? O : Promise<O>;
 
     /** Get the parameter type of an action, if it exists. */
     type ParamTypeOfAction<Action extends ActionHandler | ActionSchema> = 'params' extends keyof Action
@@ -660,43 +590,160 @@ declare global {
             : HasRequiredKeys<P>
         : false;
 
+    /**
+     * Infers the parameter type required by a given action. If the action requires at least one parameter,
+     * it is mandatory; otherwise, it is optional.
+     */
     type ParamForAction<A extends ActionSchema | ActionHandler> =
       HasAtLeastOneRequiredParam<A> extends true ? ParamTypeOfAction<A> : ParamTypeOfAction<A> | undefined;
 
+    /**
+     * Calls an action by name with appropriate parameter typing. For known actions, enforces correct parameter requirements;
+     * for unknown action names, defaults to an unknown parameter type.
+     */
     type Call = {
       <ActionName extends keyof AllActions | (string & {})>(
         actionName: ActionName,
-        ...args: HasAtLeastOneRequiredParam<AllActions[ActionName]> extends true
-          ? [params: ParamTypeOfAction<AllActions[ActionName]>, opts?: CallingOptions]
-          : [params?: ParamTypeOfAction<AllActions[ActionName]>, opts?: CallingOptions]
-      ): ReturnType<HandlerOfAction<AllActions[ActionName]>>;
+        ...args: ActionName extends keyof AllActions
+          ? HasAtLeastOneRequiredParam<AllActions[ActionName]> extends true
+            ? [params: ParamTypeOfAction<AllActions[ActionName]>, opts?: CallingOptions]
+            : [params?: ParamTypeOfAction<AllActions[ActionName]>, opts?: CallingOptions]
+          : [params?: unknown, opts?: CallingOptions]
+      ): Promisify<ActionName extends keyof AllActions ? ReturnType<HandlerOfAction<AllActions[ActionName]>> : unknown>;
     };
-    type CallWithPayload = <ActionName extends keyof AllActions>(
-      actionName: ActionName,
-      params: ParamTypeOfAction<AllActions[ActionName]>, // ...
-      opts?: CallingOptions
-    ) => ReturnType<HandlerOfAction<AllActions[ActionName]>>;
 
-    type CallWithoutPayload = <ActionName extends keyof AllActions>(
-      actionName: ActionName | string
-    ) => ReturnType<HandlerOfAction<AllActions[ActionName]>>;
+    /**
+     * Service registry that every service should extend
+     * using global [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html)
+     * as follow:
+     * ```ts
+     * const service = defineService({
+     *  name: 'service1',
+     *  actions: {
+     *    action1: {
+     *      params: { stringParam: {} }
+     *    }
+     *  }
+     * });
+     *
+     * declare global {
+     *   export namespace Moleculer {
+     *     export interface AvailableServices {
+     *       [service.name]: typeof service;
+     *     }
+     *   }
+     * }
+     * ```
+     *
+     **/
+    interface AllServices {}
 
-    type EmitWithoutPayload<A extends Record<string, void>> = (eventName: keyof A) => Promise<void>;
-    type EmitWithPayload<A extends Record<string, unknown>> = <K extends keyof A = keyof A>(
-      eventName: K,
-      data: A[K]
-    ) => Promise<void>;
+    // Since `AvailableServices` is not typed strongly, we do that here to see the services explicitly.
+    type AllServices_ = {
+      [S in string & keyof AllServices]: AllServices[S];
+    };
 
-    type Emit = EmitWithoutPayload & EmitWithPayload;
+    type ActionNameOfAction<Service extends ServiceSchema, Action extends string> =
+      // Version
+      `${Service['version'] extends string ? `${Service['version']}.` : Service['version'] extends number ? `v${Service['version']}.` : ``}${
+        // Service name
+        `${Service['name']}.${
+          // Action name
+          Action
+        }`
+      }`;
 
-    // Not strictly typed call function
-    type LegacyEmit = (<D>(eventName: string, data: D, opts: GenericObject) => Promise<void>) &
-      (<D>(eventName: string, data: D, groups: Array<string>) => Promise<void>) &
-      (<D>(eventName: string, data: D, groups: string) => Promise<void>) &
-      (<D>(eventName: string, data: D) => Promise<void>) &
-      ((eventName: string) => Promise<void>);
+    // Creates Record<action name, ServiceActionsSchema>
+    type ActionsOfServices_<Services extends Record<string, ServiceSchema>> = {
+      [SK in keyof Services]: {
+        [A in keyof Services[SK]['actions'] as ActionNameOfAction<
+          Services[SK],
+          A & string
+        >]: Services[SK]['actions'][A];
+      };
+    }[keyof Services];
 
-    class Context<P = unknown, M extends object = {}, L = GenericObject> {
+    /** Creates a type with the structure Record<`version.service.name`, ServiceActionsSchema>  */
+    type ActionsOfServices<Services extends Record<string, ServiceSchema>> = Record<
+      keyof ActionsOfServices_<Services>,
+      ServiceActionsSchema
+    > &
+      UnionToIntersect<ActionsOfServices_<Services>>;
+
+    /**
+     * All available actions, inferred from @see {AllServices},
+     * mapped by their full name like:
+     * `Record<"[v1.]serviceName.actionName": ServiceActionsSchema>`
+     *
+     **/
+    type AllActions = ActionsOfServices<AllServices_>;
+    type names = keyof AllActions;
+    // ALSO TODO: Why is `this` not bound when schema is defined in defineSchema without `satisfies`?
+
+    type ActionSchema<Schema extends ValidatorSchema = ValidatorSchema> = {
+      name?: string;
+      visibility?: ActionVisibility;
+      params?: Schema;
+      service?: Service;
+      cache?: boolean | ActionCacheOptions;
+      handler?: ActionHandler<TypeFromSchema<Schema>>;
+      tracing?: boolean | TracingActionOptions;
+      bulkhead?: BulkheadOptions;
+      circuitBreaker?: BrokerCircuitBreakerOptions;
+      retryPolicy?: RetryPolicyOptions;
+      fallback?: string | FallbackHandler;
+      hooks?: ActionHooks;
+
+      // See https://github.com/moleculerjs/moleculer/issues/467#issuecomment-705583471
+      [key: string]: string | boolean | any[] | number | Record<any, any> | null | undefined;
+    };
+
+    interface EventSchema<Schema extends FastestValidationSchema = {}> {
+      name?: string;
+      group?: string;
+      params?: Schema;
+      service?: Service;
+      tracing?: boolean | TracingEventOptions;
+      bulkhead?: BulkheadOptions;
+      handler?: ActionHandler<TypeFromSchema<Schema>>;
+      context?: boolean;
+
+      [key: string]: any;
+    }
+
+    type ServiceActionsSchema<S = ServiceSettingSchema> = {
+      [key: string]: ActionSchema | ActionHandler | boolean;
+    } & ThisType<Service<S>>;
+
+    class BrokerNode {
+      id: string;
+      instanceID: string | null;
+      available: boolean;
+      local: boolean;
+      lastHeartbeatTime: number;
+      config: GenericObject;
+      client: GenericObject;
+      metadata: GenericObject;
+
+      ipList: string[];
+      port: number | null;
+      hostname: string | null;
+      udpAddress: string | null;
+
+      rawInfo: GenericObject;
+      services: [GenericObject];
+
+      cpu: number | null;
+      cpuSeq: number | null;
+
+      seq: number;
+      offlineSince: number | null;
+
+      heartbeat(payload: GenericObject): void;
+      disconnected(): void;
+    }
+
+    class Context<Params = unknown, Meta extends object = {}, Locals = GenericObject> {
       constructor(broker: ServiceBroker, endpoint: Endpoint);
 
       id: string;
@@ -722,25 +769,35 @@ declare global {
       needAck: boolean | null;
       ackID: string | null;
 
-      locals: L;
+      locals: Locals;
 
       level: number;
 
-      params: P;
-      meta: M;
+      params: Params;
+      meta: Meta;
 
       requestID: string | null;
 
       cachedResult: boolean;
 
       setEndpoint(endpoint: Endpoint): void;
-      setParams(newParams: P, cloning?: boolean): void;
+      setParams(newParams: Params, cloning?: boolean): void;
 
       call: Call;
       mcall<T>(def: Record<string, MCallDefinition>, opts?: MCallCallingOptions): Promise<Record<string, T>>;
       mcall<T>(def: MCallDefinition[], opts?: MCallCallingOptions): Promise<T[]>;
-      emit: LegacyEmit | Emit;
-      broadcast: LegacyEmit | Emit;
+
+      emit<D>(eventName: string, data: D, opts: GenericObject): Promise<void>;
+      emit<D>(eventName: string, data: D, groups: string[]): Promise<void>;
+      emit<D>(eventName: string, data: D, groups: string): Promise<void>;
+      emit<D>(eventName: string, data: D): Promise<void>;
+      emit(eventName: string): Promise<void>;
+
+      broadcast<D>(eventName: string, data: D, opts: GenericObject): Promise<void>;
+      broadcast<D>(eventName: string, data: D, groups: string[]): Promise<void>;
+      broadcast<D>(eventName: string, data: D, groups: string): Promise<void>;
+      broadcast<D>(eventName: string, data: D): Promise<void>;
+      broadcast(eventName: string): Promise<void>;
 
       copy(endpoint: Endpoint): this;
       copy(): this;
@@ -772,20 +829,19 @@ declare global {
       ctx: Context
     ) => (void | Promise<void>) & ThisType<Service>;
 
-    type ServiceEventHandler = (ctx: Context) => (void | Promise<void>) & ThisType<Service>;
+    type ServiceEventHandler<Params = unknown> = ((ctx: Context<Params>) => void | Promise<void>) & ThisType<Service>;
 
-    interface ServiceEvent {
+    interface ServiceEvent<Schema extends FastestValidationSchema = {}> {
       name?: string;
       group?: string;
-      params?: ValidationSchema;
+      params?: Schema;
       context?: boolean;
       debounce?: number;
       throttle?: number;
-      handler?: ServiceEventHandler | ServiceEventLegacyHandler;
+      handler?: ServiceEventHandler<TypeFromSchema<Schema> | ServiceEventLegacyHandler>;
     }
 
     type ServiceEvents<S = ServiceSettingSchema> = {
-      // TODO: [key: typeof EventHandler?]
       [key: string]: ServiceEventHandler | ServiceEventLegacyHandler | ServiceEvent;
     } & ThisType<Service<S>>;
 
@@ -849,71 +905,6 @@ declare global {
 
     type ServiceSyncLifecycleHandler<S = ServiceSettingSchema, T = Service<S>> = (this: T) => void;
     type ServiceAsyncLifecycleHandler<S = ServiceSettingSchema, T = Service<S>> = (this: T) => void | Promise<void>;
-
-    /**
-     * Service registry that every service should extend
-     * using global [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html)
-     * as follow:
-     * ```ts
-     * const service = defineService({
-     *  name: 'service1',
-     *  actions: {
-     *    action1: {
-     *      params: { stringParam: {} }
-     *    }
-     *  }
-     * });
-     *
-     * declare global {
-     *   export namespace Moleculer {
-     *     export interface AvailableServices {
-     *       [service.name]: typeof service;
-     *     }
-     *   }
-     * }
-     * ```
-     *
-     **/
-    interface AllServices {
-      // Examples
-      serviceKey1: {
-        name: 'service_1';
-        actions: {
-          fooAction: { handler: () => number; params: { fooParam1: { type: 'string' } } };
-        };
-      };
-      serviceKey2: { name: 'service_2'; actions: { barAction: { handler: () => {}; params: {} } } };
-    }
-
-    // Since `AvailableServices` is not typed strongly, we do that here to see the services explicitly.
-    type AllServices_ = {
-      [S in string & keyof AllServices]: AllServices[S];
-    };
-
-    type ActionsOfServices_<Services extends Record<string, ServiceSchema>> = {
-      [SK in keyof Services]: {
-        [A in keyof Services[SK]['actions'] as `${Services[SK]['name']}.${A & string}`]: Services[SK]['actions'][A];
-      };
-    }[keyof Services];
-    type ActionsOfServices<Services extends Record<string, ServiceSchema>> = Record<
-      keyof ActionsOfServices_<Services>,
-      ServiceActionsSchema
-    > &
-      ActionsOfServices_<Services>;
-
-    /** All available actions, inferred from @see {AllServices}, mapped by their full name ("serviceName.actionName": Action). */
-    type AllActions = UnionToIntersect<ActionsOfServices<AllServices_>>; // TODO: Do we need UnionToIntersect?
-
-    // Test purposes
-    type ServiceKey = keyof AllServices_;
-    type ActionKey = keyof AllActions;
-    type A1 = AllActions['service_1.fooAction' | 'pre-service-1.preAction'];
-
-    type A1Param = TypeFromSchema<A1['params']>;
-
-    type TEMP = 'sdf' | unknown;
-
-    interface EventsMappingBase extends Record<string, any> {}
 
     interface ServiceSchema<S = ServiceSettingSchema, T = Service<S>> {
       name: string;
@@ -1437,13 +1428,27 @@ declare global {
         ctx?: Context
       ): ActionEndpoint | Errors.MoleculerRetryableError;
 
-      call: LegacyCall | Call;
+      call: Call;
       mcall<T>(def: Record<string, MCallDefinition>, opts?: MCallCallingOptions): Promise<Record<string, T>>;
       mcall<T>(def: MCallDefinition[], opts?: MCallCallingOptions): Promise<T[]>;
 
-      emit: LegacyEmit | Emit;
-      broadcast: LegacyEmit | Emit;
-      broadcastLocal: LegacyEmit | Emit;
+      emit<D>(eventName: string, data: D, opts: GenericObject): Promise<void>;
+      emit<D>(eventName: string, data: D, groups: string[]): Promise<void>;
+      emit<D>(eventName: string, data: D, groups: string): Promise<void>;
+      emit<D>(eventName: string, data: D): Promise<void>;
+      emit(eventName: string): Promise<void>;
+
+      broadcast<D>(eventName: string, data: D, opts: GenericObject): Promise<void>;
+      broadcast<D>(eventName: string, data: D, groups: string[]): Promise<void>;
+      broadcast<D>(eventName: string, data: D, groups: string): Promise<void>;
+      broadcast<D>(eventName: string, data: D): Promise<void>;
+      broadcast(eventName: string): Promise<void>;
+
+      broadcastLocal<D>(eventName: string, data: D, opts: GenericObject): Promise<void>;
+      broadcastLocal<D>(eventName: string, data: D, groups: string[]): Promise<void>;
+      broadcastLocal<D>(eventName: string, data: D, groups: string): Promise<void>;
+      broadcastLocal<D>(eventName: string, data: D): Promise<void>;
+      broadcastLocal(eventName: string): Promise<void>;
 
       ping(): Promise<PongResponses>;
       ping(nodeID: string | string[], timeout?: number): Promise<PongResponse>;
@@ -2210,5 +2215,3 @@ declare global {
 }
 
 export = Moleculer;
-
-// TODO: service versions

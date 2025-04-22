@@ -5,6 +5,7 @@ const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { ControlledContainerMixin } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const AgentRegistrationsMixin = require('../../../mixins/agent-registrations');
+const { arraysEqual } = require('../../../utils');
 
 module.exports = {
   name: 'app-registrations',
@@ -42,41 +43,24 @@ module.exports = {
   },
   actions: {
     async createOrUpdate(ctx) {
-      const { appUri, podOwner, acceptedAccessNeeds, acceptedSpecialRights } = ctx.params;
-
-      // First clean up orphans grants. This will remove all associated rights before they are added back below.
-      await ctx.call('data-authorizations.deleteOrphans', { appUri, podOwner });
-      await ctx.call('access-authorizations.deleteOrphans', { appUri, podOwner });
-
-      // Get the app from the remote server, not the local cache
-      const app = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri });
-
-      // Generate AccessAuthorizations, DataAuthorizations, AccessGrants and DataGrants, unless they already exists
-      await ctx.call('access-authorizations.generateFromAccessNeedGroups', {
-        accessNeedGroups: app['interop:hasAccessNeedGroup'],
-        acceptedAccessNeeds,
-        acceptedSpecialRights,
-        podOwner,
-        appUri
-      });
-
-      // Retrieve the AccessGrants (which may, or may not, have changed)
-      const accessGrants = await ctx.call('access-grants.getForAgent', { agentUri: appUri, podOwner });
+      const { appUri, podOwner, accessGrantsUris } = ctx.params;
 
       const appRegistration = await this.actions.getForAgent({ agentUri: appUri, podOwner }, { parentCtx: ctx });
 
       if (appRegistration) {
-        await this.actions.put(
-          {
-            resource: {
-              ...appRegistration,
-              'interop:updatedAt': new Date().toISOString(),
-              'interop:hasAccessGrant': accessGrants.map(r => r.id || r['@id'])
+        if (!arraysEqual(appRegistration['interop:hasAccessGrant'], accessGrantsUris)) {
+          await this.actions.put(
+            {
+              resource: {
+                ...appRegistration,
+                'interop:updatedAt': new Date().toISOString(),
+                'interop:hasAccessGrant': accessGrantsUris
+              },
+              contentType: MIME_TYPES.JSON
             },
-            contentType: MIME_TYPES.JSON
-          },
-          { parentCtx: ctx }
-        );
+            { parentCtx: ctx }
+          );
+        }
 
         return appRegistration.id;
       } else {
@@ -89,7 +73,7 @@ module.exports = {
               'interop:registeredAt': new Date().toISOString(),
               'interop:updatedAt': new Date().toISOString(),
               'interop:registeredAgent': appUri,
-              'interop:hasAccessGrant': accessGrants.map(r => r.id || r['@id'])
+              'interop:hasAccessGrant': accessGrantsUris
             },
             contentType: MIME_TYPES.JSON
           },
@@ -98,6 +82,23 @@ module.exports = {
 
         return appRegistrationUri;
       }
+    },
+    /**
+     * Generate or regenerate an app registration based on their access grants
+     */
+    async regenerate(ctx) {
+      const { appUri, podOwner } = ctx.params;
+
+      // Retrieve the AccessGrants (which may, or may not, have changed)
+      const accessGrants = await ctx.call('access-grants.getForAgent', { agentUri: appUri, podOwner });
+      const accessGrantsUris = accessGrants.map(r => r.id || r['@id']);
+
+      const appRegistrationUri = await this.actions.createOrUpdate(
+        { appUri, podOwner, accessGrantsUris },
+        { parentCtx: ctx }
+      );
+
+      return appRegistrationUri;
     },
     async register(ctx) {
       let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
@@ -131,12 +132,21 @@ module.exports = {
         acceptedSpecialRights = requirements.specialRights;
       }
 
-      const appRegistrationUri = await ctx.call('app-registrations.createOrUpdate', {
-        appUri,
-        podOwner: webId,
+      await ctx.call('access-authorizations.generateFromAccessNeedGroups', {
+        accessNeedGroups: app['interop:hasAccessNeedGroup'],
         acceptedAccessNeeds,
-        acceptedSpecialRights
+        acceptedSpecialRights,
+        podOwner: webId,
+        appUri
       });
+
+      const appRegistrationUri = await this.actions.regenerate(
+        {
+          appUri,
+          podOwner: webId
+        },
+        { parentCtx: ctx }
+      );
 
       if (this.broker.cacher) {
         // Invalidate all rights of the application on the Pod as they may now be completely different
@@ -177,12 +187,21 @@ module.exports = {
         acceptedSpecialRights = requirements.specialRights;
       }
 
-      const appRegistrationUri = await ctx.call('app-registrations.createOrUpdate', {
-        appUri,
-        podOwner: webId,
+      await ctx.call('access-authorizations.generateFromAccessNeedGroups', {
+        accessNeedGroups: app['interop:hasAccessNeedGroup'],
         acceptedAccessNeeds,
-        acceptedSpecialRights
+        acceptedSpecialRights,
+        podOwner: webId,
+        appUri
       });
+
+      const appRegistrationUri = await this.actions.regenerate(
+        {
+          appUri,
+          podOwner: webId
+        },
+        { parentCtx: ctx }
+      );
 
       if (this.broker.cacher) {
         // Invalidate all rights of the application on the Pod as they may now be completely different

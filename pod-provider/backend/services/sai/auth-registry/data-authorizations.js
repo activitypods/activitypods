@@ -1,11 +1,11 @@
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+const { ControlledContainerMixin, arrayOf, getId } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { arraysEqual } = require('../../../utils');
 const ImmutableContainerMixin = require('../../../mixins/immutable-container-mixin');
 
 module.exports = {
   name: 'data-authorizations',
-  mixins: [ControlledContainerMixin, ImmutableContainerMixin],
+  mixins: [ImmutableContainerMixin, ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:DataAuthorization'],
     excludeFromMirror: true,
@@ -88,7 +88,7 @@ module.exports = {
           this.logger.info(
             `Resource ${resourceUri} is already shared to ${grantee} with access modes ${accessModes.join(', ')}`
           );
-          return dataAuthorizationForResource.id || dataAuthorizationForResource['@id'];
+          return getId(dataAuthorizationForResource);
         } else {
           // If the access modes was changed, delete the authorization for the resource (it will be recreated below)
           await this.actions.deleteForSingleResource({ resourceUri, grantee, podOwner });
@@ -101,7 +101,7 @@ module.exports = {
 
       if (dataAuthorizationForAccessModes) {
         // If a data authorization exist with the same access modes, add the resource
-        await this.actions.put(
+        const { resourceUri: newDataAuthorizationUri } = await this.actions.put(
           {
             resource: {
               ...dataAuthorizationForAccessModes,
@@ -114,7 +114,7 @@ module.exports = {
           },
           { parentCtx: ctx }
         );
-        return dataAuthorizationForAccessModes.id || dataAuthorizationForAccessModes['@id'];
+        return newDataAuthorizationUri;
       } else {
         const dataRegistration = await ctx.call('data-registrations.get', { dataRegistrationUri });
         const shapeTreeUri = dataRegistration['interop:registeredShapeTree'];
@@ -168,7 +168,7 @@ module.exports = {
             // If the resource is the only one in the data authorization, delete it
             await this.actions.delete(
               {
-                resourceUri: dataAuthorization.id || dataAuthorization['@id'],
+                resourceUri: getId(dataAuthorization),
                 webId: podOwner
               },
               { parentCtx: ctx }
@@ -242,6 +242,22 @@ module.exports = {
 
       return arrayOf(filteredContainer['ldp:contains']);
     },
+    // List all data authorizations with `interop:All` scope
+    async listScopeAll(ctx) {
+      const { podOwner } = ctx.params;
+
+      const filteredContainer = await this.actions.list(
+        {
+          filters: {
+            'http://www.w3.org/ns/solid/interop#scopeOfAuthorization': 'http://www.w3.org/ns/solid/interop#All'
+          },
+          webId: podOwner
+        },
+        { parentCtx: ctx }
+      );
+
+      return arrayOf(filteredContainer['ldp:contains']);
+    },
     // Delete DataAuthorizations which are not linked anymore to an AccessNeed (may happen on app upgrade)
     async deleteOrphans(ctx) {
       const { appUri, podOwner } = ctx.params;
@@ -263,17 +279,17 @@ module.exports = {
     }
   },
   hooks: {
-    before: {
-      async post(ctx) {
+    after: {
+      async create(ctx, res) {
         // For migration, we don't want to handle the following side-effects
         if (ctx.meta.isMigration === true) return;
 
-        const { resource } = ctx.params;
-        const podOwner = resource['interop:dataOwner'];
-        const grantee = resource['interop:grantee'];
-        const shapeTreeUri = resource['interop:registeredShapeTree'];
-        const accessMode = arrayOf(resource['interop:accessMode']);
-        const scope = resource['interop:scopeOfAuthorization'];
+        const dataAuthorization = res.newData;
+        const podOwner = dataAuthorization['interop:dataOwner'];
+        const grantee = dataAuthorization['interop:grantee'];
+        const shapeTreeUri = dataAuthorization['interop:registeredShapeTree'];
+        const accessMode = arrayOf(dataAuthorization['interop:accessMode']);
+        const scope = dataAuthorization['interop:scopeOfAuthorization'];
 
         const containerUri = await ctx.call('data-registrations.getByShapeTree', { shapeTreeUri, podOwner });
 
@@ -309,10 +325,10 @@ module.exports = {
             webId: 'system'
           });
         } else if (scope === 'interop:SelectedFromRegistry') {
-          for (const resourceUri of arrayOf(resource['interop:hasDataInstance'])) {
+          for (const resourceUri of arrayOf(dataAuthorization['interop:hasDataInstance'])) {
             // Give read-write permission to the resources
             await ctx.call('webacl.resource.addRights', {
-              resourceUri: resourceUri,
+              resourceUri,
               additionalRights: {
                 // Container rights
                 user: {
@@ -328,19 +344,23 @@ module.exports = {
           }
         }
 
-        // Create a DataGrant with the same data, but replace interop:scopeOfAuthorization with interop:scopeOfGrant
-        await ctx.call('data-grants.post', {
-          resource: {
-            ...ctx.params.resource,
-            type: 'interop:DataGrant',
-            'interop:scopeOfGrant': ctx.params.resource['interop:scopeOfAuthorization'],
-            'interop:scopeOfAuthorization': undefined
-          },
-          contentType: MIME_TYPES.JSON
-        });
-      }
-    },
-    after: {
+        await ctx.call('data-grants.generateFromDataAuthorization', { dataAuthorization, podOwner });
+
+        if (scope === 'interop:All') {
+          // Generate delegated data grants for all shared resources with the same shape tree
+          const dataGrants = await ctx.call('social-agent-registrations.getSharedDataGrants', { podOwner });
+          for (const dataGrant of dataGrants) {
+            if (dataGrant['interop:registeredShapeTree'] === dataAuthorization['interop:registeredShapeTree']) {
+              await ctx.call('delegated-data-grants.generateForDataAuthorization', {
+                dataAuthorization,
+                dataGrant
+              });
+            }
+          }
+        }
+
+        return res;
+      },
       async delete(ctx, res) {
         const podOwner = res.oldData['interop:dataOwner'];
         const appUri = res.oldData['interop:grantee'];

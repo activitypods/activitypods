@@ -1,4 +1,4 @@
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+const { ControlledContainerMixin, arrayOf, getId } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { arraysEqual } = require('../../../utils');
 const ImmutableContainerMixin = require('../../../mixins/immutable-container-mixin');
@@ -6,7 +6,7 @@ const ImmutableContainerMixin = require('../../../mixins/immutable-container-mix
 // See https://solid.github.io/data-interoperability-panel/specification/#access-authorization
 module.exports = {
   name: 'access-authorizations',
-  mixins: [ControlledContainerMixin, ImmutableContainerMixin],
+  mixins: [ImmutableContainerMixin, ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:AccessAuthorization'],
     excludeFromMirror: true,
@@ -20,6 +20,10 @@ module.exports = {
     async generateFromAccessNeedGroups(ctx) {
       const { accessNeedGroups, acceptedAccessNeeds, acceptedSpecialRights, podOwner, appUri } = ctx.params;
       let accessAuthorizationsUris = [];
+
+      // First clean up orphans authorizations. This will remove all associated rights before they are added back below.
+      await ctx.call('data-authorizations.deleteOrphans', { appUri, podOwner });
+      await this.actions.deleteOrphans({ appUri, podOwner }, { parentCtx: ctx });
 
       for (const accessNeedGroupUri of arrayOf(accessNeedGroups)) {
         const accessNeedGroup = await ctx.call('ldp.remote.get', { resourceUri: accessNeedGroupUri });
@@ -94,6 +98,8 @@ module.exports = {
           await this.actions.delete({ resourceUri: accessAuthorization.id, webId: podOwner });
         }
       }
+
+      return accessAuthorizationsUris;
     },
     async generateForSingleResource(ctx) {
       const { resourceUri, grantee, accessModes, podOwner } = ctx.params;
@@ -196,7 +202,24 @@ module.exports = {
         { parentCtx: ctx }
       );
 
-      return filteredContainer['ldp:contains']?.[0];
+      return arrayOf(filteredContainer['ldp:contains'])[0];
+    },
+    // Get the parent AccessAuthorization of a DataAuthorization
+    async getByDataAuthorization(ctx) {
+      const { dataAuthorizationUri, podOwner } = ctx.params;
+
+      const filteredContainer = await this.actions.list(
+        {
+          filters: {
+            'http://www.w3.org/ns/solid/interop#grantedBy': podOwner,
+            'http://www.w3.org/ns/solid/interop#hasDataAuthorization': dataAuthorizationUri
+          },
+          webId: podOwner
+        },
+        { parentCtx: ctx }
+      );
+
+      return arrayOf(filteredContainer['ldp:contains'])[0];
     },
     // Get all the special rights granted to an application
     async getSpecialRights(ctx) {
@@ -375,15 +398,16 @@ module.exports = {
   },
   hooks: {
     after: {
-      async post(ctx, res) {
-        const podOwner = ctx.params.resource['interop:grantedBy'];
-        const grantee = ctx.params.resource['interop:grantee'];
-        const specialRightsUris = arrayOf(ctx.params.resource['apods:hasSpecialRights']);
+      async create(ctx, res) {
+        const accessAuthorization = res.newData;
+        const podOwner = accessAuthorization['interop:grantedBy'];
+        const grantee = accessAuthorization['interop:grantee'];
+        const specialRightsUris = arrayOf(accessAuthorization['apods:hasSpecialRights']);
 
         // Attach the AccessAuthorization to the AuthorizationRegistry
         await ctx.call('auth-registry.add', {
           podOwner,
-          accessAuthorizationUri: res
+          accessAuthorizationUri: getId(accessAuthorization)
         });
 
         // For migration, we don't want this to go further
@@ -401,24 +425,7 @@ module.exports = {
           );
         }
 
-        // Get DataGrants corresponding to DataAuthorizations
-        let dataGrantsUris = [];
-        for (const dataAuthorizationUri of arrayOf(ctx.params.resource['interop:hasDataAuthorization'])) {
-          dataGrantsUris.push(await ctx.call('data-grants.getByDataAuthorization', { dataAuthorizationUri, podOwner }));
-        }
-
-        // Create a AccessGrant with the same data, except interop:grantedWith and interop:hasDataAuthorization
-        await ctx.call('access-grants.post', {
-          resource: {
-            ...ctx.params.resource,
-            type: 'interop:AccessGrant',
-            'interop:grantedWith': undefined,
-            'interop:hasDataAuthorization': undefined,
-            'interop:hasDataGrant': dataGrantsUris
-          },
-          contentType: MIME_TYPES.JSON,
-          webId: podOwner
-        });
+        await ctx.call('access-grants.generateFromAccessAuthorization', { accessAuthorization, podOwner });
 
         return res;
       },

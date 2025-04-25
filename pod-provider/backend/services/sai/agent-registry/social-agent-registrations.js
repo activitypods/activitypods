@@ -42,27 +42,31 @@ module.exports = {
   },
   actions: {
     async createOrUpdate(ctx) {
-      let { agentUri, podOwner, accessGrantsUris, label, note } = ctx.params;
+      let { agentUri, podOwner, accessGrantsUris, reciprocalRegistrationUri, label, note } = ctx.params;
 
       const agentRegistration = await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx });
 
       if (!label) label = await this.actions.getAgentName({ agentUri, podOwner }, { parentCtx: ctx });
 
       if (agentRegistration) {
-        // If the label, note or access grants have changed, update the registration
+        // If some data has changed, update the registration
         if (
-          agentRegistration['skos:prefLabel'] !== label ||
-          agentRegistration['skos:note'] !== note ||
-          !arraysEqual(agentRegistration['interop:hasAccessGrant'], accessGrantsUris)
+          (label && agentRegistration['skos:prefLabel'] !== label) ||
+          (note && agentRegistration['skos:note'] !== note) ||
+          (reciprocalRegistrationUri &&
+            agentRegistration['interop:reciprocalRegistration'] !== reciprocalRegistrationUri) ||
+          (accessGrantsUris && !arraysEqual(agentRegistration['interop:hasAccessGrant'], accessGrantsUris))
         ) {
           await this.actions.put(
             {
               resource: {
                 ...agentRegistration,
                 'interop:updatedAt': new Date().toISOString(),
-                'interop:hasAccessGrant': accessGrantsUris,
-                'skos:prefLabel': label,
-                'skos:note': note
+                'interop:hasAccessGrant': accessGrantsUris || agentRegistration['interop:hasAccessGrant'],
+                'interop:reciprocalRegistration':
+                  reciprocalRegistrationUri || agentRegistration['interop:reciprocalRegistration'],
+                'skos:prefLabel': label || agentRegistration['skos:prefLabel'],
+                'skos:note': note || agentRegistration['skos:note']
               },
               contentType: MIME_TYPES.JSON,
               webId: podOwner
@@ -70,6 +74,7 @@ module.exports = {
             { parentCtx: ctx }
           );
 
+          // This shouldn't be necessary if we set excludeFromMirror to false
           await this.actions.notifyAgent(
             {
               agentRegistrationUri: getId(agentRegistration),
@@ -93,6 +98,7 @@ module.exports = {
               'interop:updatedAt': new Date().toISOString(),
               'interop:registeredAgent': agentUri,
               'interop:hasAccessGrant': accessGrantsUris,
+              'interop:reciprocalRegistration': reciprocalRegistrationUri,
               'skos:prefLabel': label,
               'skos:note': note
             },
@@ -102,8 +108,7 @@ module.exports = {
           { parentCtx: ctx }
         );
 
-        await this.actions.addReciprocalRegistration({ agentUri, podOwner }, { parentCtx: ctx });
-
+        // This shouldn't be necessary if we set excludeFromMirror to false
         await this.actions.notifyAgent(
           {
             agentRegistrationUri,
@@ -131,17 +136,11 @@ module.exports = {
 
         // If a reciprocal registration was found, persist it
         if (reciprocalRegistrationUri) {
-          // We may now have access to the agent profile, so update the label if possible
-          const label = await this.actions.getAgentName({ agentUri, podOwner }, { parentCtx: ctx });
-          await this.actions.put(
+          await this.actions.createOrUpdate(
             {
-              resource: {
-                ...agentRegistration,
-                'interop:updatedAt': new Date().toISOString(),
-                'interop:reciprocalRegistration': reciprocalRegistrationUri,
-                'skos:prefLabel': label
-              },
-              contentType: MIME_TYPES.JSON
+              agentUri,
+              podOwner,
+              reciprocalRegistrationUri
             },
             { parentCtx: ctx }
           );
@@ -219,6 +218,7 @@ module.exports = {
 
       return agentRegistrationUri;
     },
+    // Add an authorization for a resource to a given user
     async addAuthorization(ctx) {
       const { resourceUri, grantee, accessModes } = ctx.params;
       const webId = ctx.params.webId || ctx.meta.webId;
@@ -228,6 +228,19 @@ module.exports = {
         podOwner: webId,
         grantee,
         accessModes
+      });
+
+      await this.actions.regenerate({ agentUri: grantee, podOwner: webId }, { parentCtx: ctx });
+    },
+    // Remove an authorization for a resource to a given user
+    async removeAuthorization(ctx) {
+      const { resourceUri, grantee } = ctx.params;
+      const webId = ctx.params.webId || ctx.meta.webId;
+
+      await ctx.call('access-authorizations.deleteForSingleResource', {
+        resourceUri,
+        podOwner: webId,
+        grantee
       });
 
       await this.actions.regenerate({ agentUri: grantee, podOwner: webId }, { parentCtx: ctx });
@@ -281,27 +294,6 @@ module.exports = {
         }))
       };
     },
-    // Get all data grants associated with an agent registration
-    async getDataGrants(ctx) {
-      const { agentRegistration, podOwner } = ctx.params;
-      let dataGrants = [];
-
-      for (const accessGrantUri of arrayOf(agentRegistration['interop:hasAccessGrant'])) {
-        const accessGrant = await ctx.call('access-grants.get', {
-          resourceUri: accessGrantUri,
-          webId: podOwner
-        });
-        for (const dataGrantUri of arrayOf(accessGrant['interop:hasDataGrant'])) {
-          const dataGrant = await ctx.call('data-grants.get', {
-            resourceUri: dataGrantUri,
-            webId: podOwner
-          });
-          dataGrants.push(dataGrant);
-        }
-      }
-
-      return dataGrants;
-    },
     // Get all data grants that have been shared with pod owner through reciprocal registration
     async getSharedDataGrants(ctx) {
       const { podOwner } = ctx.params;
@@ -310,7 +302,7 @@ module.exports = {
       const registrationsContainer = await this.actions.list({ webId: podOwner });
 
       for (const registration of arrayOf(registrationsContainer['ldp:contains'])) {
-        if (registration['interop:reciprocalRegistration']) {
+        if (registration['interop:reciprocalRegistration'] && registration['interop:registeredBy'] === podOwner) {
           const reciprocalRegistration = await this.actions.get({
             resourceUri: registration['interop:reciprocalRegistration'],
             webId: podOwner
@@ -323,9 +315,87 @@ module.exports = {
       }
 
       return dataGrants;
+    },
+    /**
+     * Look at the provided social agent registration and, if needed,
+     * generate delegated data grants for apps that requested 'interop:All' scope for the same data
+     */
+    async updateAppRegistrations(ctx) {
+      const { socialAgentRegistration, podOwner } = ctx.params;
+      let appUris = [];
+
+      // Get all data grants from social agent registration (loop through access grants, then data grants)
+      const dataGrants = await this.actions.getDataGrants({ agentRegistration: socialAgentRegistration });
+
+      // Get all `interop:All` data authorization of the recipient
+      const dataAuthorizations = await ctx.call('data-authorizations.listScopeAll', { podOwner });
+
+      // Go through all data grants from social agent registration
+      for (const dataGrant of dataGrants) {
+        // Go through all `interop:All` data authorizations of the recipient
+        for (const dataAuthorization of dataAuthorizations) {
+          // We are only concerned with data authorizations that match the same shape tree as the data grant
+          if (dataAuthorization['interop:registeredShapeTree'] === dataGrant['interop:registeredShapeTree']) {
+            await ctx.call('delegated-data-grants.generateForDataAuthorization', {
+              dataAuthorization,
+              dataGrant
+            });
+
+            // Find the access authorization that is linking the data authorization
+            const accessAuthorization = await ctx.call('access-authorizations.getByDataAuthorization', {
+              dataAuthorizationUri: getId(dataAuthorization),
+              podOwner
+            });
+
+            // Regenerate the access grant based on the access authorization
+            await ctx.call('access-grants.generateFromAccessAuthorization', {
+              accessAuthorization,
+              podOwner
+            });
+
+            // Mark as app as needing (perhaps) an update of its registration
+            if (!appUris.includes(dataAuthorization['interop:grantee']))
+              appUris.push(dataAuthorization['interop:grantee']);
+          }
+        }
+      }
+
+      // Regenerate the app registrations
+      for (const appUri of appUris) {
+        await ctx.call('app-registrations.regenerate', {
+          appUri,
+          podOwner
+        });
+      }
     }
   },
   activities: {
+    createAgentRegistration: {
+      match: {
+        type: ACTIVITY_TYPES.CREATE,
+        object: {
+          type: 'interop:SocialAgentRegistration'
+        }
+      },
+      async onReceive(ctx, activity, recipientUri) {
+        const socialAgentRegistration = activity.object;
+
+        // Create a Social Agent Registration, if it doesn't exist yet
+        await this.actions.createOrUpdate(
+          {
+            agentUri: activity.actor,
+            podOwner: recipientUri,
+            reciprocalRegistrationUri: getId(socialAgentRegistration)
+          },
+          { parentCtx: ctx }
+        );
+
+        await this.actions.updateAppRegistrations(
+          { socialAgentRegistration, podOwner: recipientUri },
+          { parentCtx: ctx }
+        );
+      }
+    },
     updateAgentRegistration: {
       match: {
         type: ACTIVITY_TYPES.UPDATE,
@@ -334,52 +404,12 @@ module.exports = {
         }
       },
       async onReceive(ctx, activity, recipientUri) {
-        const agentRegistration = activity.object;
-        let appUris = [];
+        const socialAgentRegistration = activity.object;
 
-        // Get all data grants from social agent registration (loop through access grants, then data grants)
-        const dataGrants = await this.actions.getDataGrants({ agentRegistration });
-
-        // Get all `interop:All` data authorization of the recipient
-        const dataAuthorizations = await ctx.call('data-authorizations.listScopeAll', { podOwner: recipientUri });
-
-        // Go through all data grants from social agent registration
-        for (const dataGrant of dataGrants) {
-          // Go through all `interop:All` data authorizations of the recipient
-          for (const dataAuthorization of dataAuthorizations) {
-            // We are only concerned with data authorizations that match the same shape tree as the data grant
-            if (dataAuthorization['interop:registeredShapeTree'] === dataGrant['interop:registeredShapeTree']) {
-              await ctx.call('delegated-data-grants.generateForDataAuthorization', {
-                dataAuthorization,
-                dataGrant
-              });
-
-              // Find the access authorization that is linking the data authorization
-              const accessAuthorization = await ctx.call('access-authorizations.getByDataAuthorization', {
-                dataAuthorizationUri: getId(dataAuthorization),
-                podOwner: recipientUri
-              });
-
-              // Regenerate the access grant based on the access authorization
-              await ctx.call('access-grants.generateFromAccessAuthorization', {
-                accessAuthorization,
-                podOwner: recipientUri
-              });
-
-              // Mark as app as needing (perhaps) an update of its registration
-              if (!appUris.includes(dataAuthorization['interop:grantee']))
-                appUris.push(dataAuthorization['interop:grantee']);
-            }
-          }
-        }
-
-        // Regenerate the app registrations
-        for (const appUri of appUris) {
-          await ctx.call('app-registrations.regenerate', {
-            appUri,
-            podOwner: recipientUri
-          });
-        }
+        await this.actions.updateAppRegistrations(
+          { socialAgentRegistration, podOwner: recipientUri },
+          { parentCtx: ctx }
+        );
       }
     }
   }

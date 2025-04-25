@@ -75,7 +75,8 @@ module.exports = {
             {
               resource: {
                 ...delegatedDataGrant,
-                'interop:delegationOfGrant': getId(dataGrant.id)
+                'interop:hasDataInstance': dataGrant['interop:hasDataInstance'],
+                'interop:delegationOfGrant': getId(dataGrant)
               },
               contentType: MIME_TYPES.JSON,
               webId: dataAuthorization['interop:dataOwner']
@@ -94,7 +95,7 @@ module.exports = {
               type: 'interop:DelegatedDataGrant',
               'interop:grantee': dataAuthorization['interop:grantee'],
               'interop:satisfiesAccessNeed': dataAuthorization['interop:satisfiesAccessNeed'],
-              'interop:delegationOfGrant': getId(dataGrant.id)
+              'interop:delegationOfGrant': getId(dataGrant)
             },
             contentType: MIME_TYPES.JSON,
             webId: dataAuthorization['interop:dataOwner']
@@ -144,24 +145,5 @@ module.exports = {
 
       return arrayOf(filteredContainer['ldp:contains']);
     }
-    // Get the delegated data grant generated automatically from a `interop:All` data authorization, for a given data owner
-    // async getByDataAuthorizationAndDataOwner(ctx) {
-    //   const { dataAuthorization, dataOwner } = ctx.params;
-
-    //   const filteredContainer = await this.actions.list(
-    //     {
-    //       filters: {
-    //         'http://www.w3.org/ns/solid/interop#dataOwner': dataOwner,
-    //         'http://www.w3.org/ns/solid/interop#registeredShapeTree': dataAuthorization['interop:registeredShapeTree'],
-    //         'http://www.w3.org/ns/solid/interop#satisfiesAccessNeed': dataAuthorization['interop:satisfiesAccessNeed'],
-    //         'http://www.w3.org/ns/solid/interop#grantee': dataAuthorization['interop:grantee']
-    //       },
-    //       webId: dataAuthorization['interop:dataOwner']
-    //     },
-    //     { parentCtx: ctx }
-    //   );
-
-    //   return filteredContainer['ldp:contains']?.[0];
-    // }
   }
 };

@@ -134,7 +134,7 @@ describe('Test app installation', () => {
   });
 
   test('User installs app and grants all access needs', async () => {
-    appRegistrationUri = await alice.call('auth-agent.registerApp', {
+    appRegistrationUri = await alice.call('app-registrations.register', {
       appUri: APP_URI,
       acceptedAccessNeeds: [
         requiredAccessNeedGroup['interop:hasAccessNeed'],
@@ -180,7 +180,7 @@ describe('Test app installation', () => {
     });
 
     const accessGrants = await Promise.all(
-      appRegistration['interop:hasAccessGrant'].map(accessGrantUri =>
+      arrayOf(appRegistration['interop:hasAccessGrant']).map(accessGrantUri =>
         appServer.call('ldp.remote.get', {
           resourceUri: accessGrantUri,
           accept: MIME_TYPES.JSON
@@ -242,7 +242,7 @@ describe('Test app installation', () => {
     const authRegistry = await alice.call('auth-registry.get');
 
     const dataAuthorizations = await Promise.all(
-      authRegistry['interop:hasAccessAuthorization'].map(async accessAuthorizationUri => {
+      arrayOf(authRegistry['interop:hasAccessAuthorization']).map(async accessAuthorizationUri => {
         const accessAuthorization = await alice.call('access-authorizations.get', {
           resourceUri: accessAuthorizationUri
         });
@@ -446,7 +446,7 @@ describe('Test app installation', () => {
 
   test('User installs same app a second time and get an error', async () => {
     await expect(
-      alice.call('auth-agent.registerApp', {
+      alice.call('app-registrations.register', {
         appUri: APP_URI,
         acceptedAccessNeeds: requiredAccessNeedGroup['interop:hasAccessNeed'],
         acceptedSpecialRights: requiredAccessNeedGroup['apods:hasSpecialRights']

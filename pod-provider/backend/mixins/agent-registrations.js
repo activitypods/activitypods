@@ -28,6 +28,27 @@ const AgentRegistrationsMixin = {
     async isRegistered(ctx) {
       const { agentUri, podOwner } = ctx.params;
       return !!(await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx }));
+    },
+    // Get all data grants associated with an agent registration
+    async getDataGrants(ctx) {
+      const { agentRegistration, podOwner } = ctx.params;
+      let dataGrants = [];
+
+      for (const accessGrantUri of arrayOf(agentRegistration['interop:hasAccessGrant'])) {
+        const accessGrant = await ctx.call('access-grants.get', {
+          resourceUri: accessGrantUri,
+          webId: podOwner
+        });
+        for (const dataGrantUri of arrayOf(accessGrant['interop:hasDataGrant'])) {
+          const dataGrant = await ctx.call('data-grants.get', {
+            resourceUri: dataGrantUri,
+            webId: podOwner
+          });
+          dataGrants.push(dataGrant);
+        }
+      }
+
+      return dataGrants;
     }
   },
   hooks: {

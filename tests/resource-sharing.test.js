@@ -1,11 +1,13 @@
 const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { connectPodProvider, clearAllData } = require('./initialize');
-const ExampleAppService = require('./apps/example.app');
+const { OBJECT_TYPES } = require('@semapps/activitypub');
+const { MIME_TYPES } = require('@semapps/mime-types');
+const { connectPodProvider, clearAllData, initializeAppServer, installApp } = require('./initialize');
+const ExampleAppService = require('./apps/example3.app');
 const { arrayOf } = require('@semapps/ldp');
+const CONFIG = require('./config');
 
-jest.setTimeout(80000);
+jest.setTimeout(120000);
 
 const NUM_PODS = 3;
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
@@ -17,7 +19,11 @@ describe('Test resource sharing features', () => {
     alice,
     bob,
     craig,
-    eventUri;
+    eventUri,
+    event2Uri,
+    bobAppRegistration,
+    bobAppRegistrationUri,
+    aliceRegistrationForBob;
 
   beforeAll(async () => {
     clearAllData();
@@ -50,6 +56,7 @@ describe('Test resource sharing features', () => {
     craig = actors[3];
 
     await installApp(alice, APP_URI);
+    bobAppRegistrationUri = await installApp(bob, APP_URI);
   });
 
   afterAll(async () => {
@@ -67,24 +74,205 @@ describe('Test resource sharing features', () => {
     });
   });
 
-  test('Alice share her event with Bob', async () => {
+  test('Alice share her event with Bob and social agent registrations are created', async () => {
     await alice.call('social-agent-registrations.addAuthorization', {
       resourceUri: eventUri,
       grantee: bob.id,
       accessModes: ['acl:Read']
     });
 
+    // Alice created a social agent registration for Bob
     await waitForExpect(async () => {
-      const filteredContainer = await alice.call('social-agent-registrations.list', {
-        filters: {
-          'http://www.w3.org/ns/solid/interop#registeredAgent': bob.id
-        }
+      aliceRegistrationForBob = await alice.call('social-agent-registrations.getForAgent', {
+        agentUri: bob.id,
+        podOwner: alice.id
       });
-      expect(arrayOf(filteredContainer['ldp:contains'])).toHaveLength(1);
-      expect(arrayOf(filteredContainer['ldp:contains'])[0]).toMatch({
+      expect(aliceRegistrationForBob).toMatchObject({
         'interop:registeredAgent': bob.id,
         'interop:registeredBy': alice.id
       });
+    });
+
+    // Bob created a reciprocal registration for Alice
+    await waitForExpect(async () => {
+      const bobRegistrationForAlice = await bob.call('social-agent-registrations.getForAgent', {
+        agentUri: alice.id,
+        podOwner: bob.id
+      });
+      expect(bobRegistrationForAlice).toMatchObject({
+        'interop:registeredAgent': alice.id,
+        'interop:registeredBy': bob.id
+      });
+    });
+  });
+
+  test('A data grant for the event is declared in Bob registration', async () => {
+    const accessGrant = await alice.call('access-grants.get', {
+      resourceUri: aliceRegistrationForBob['interop:hasAccessGrant']
+    });
+
+    const dataGrant = await alice.call('data-grants.get', {
+      resourceUri: accessGrant['interop:hasDataGrant']
+    });
+
+    expect(dataGrant).toMatchObject({
+      type: 'interop:DataGrant',
+      'interop:dataOwner': alice.id,
+      'interop:grantee': bob.id,
+      'interop:hasDataInstance': eventUri,
+      'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
+      'interop:scopeOfGrant': 'interop:SelectedFromRegistry'
+    });
+  });
+
+  test('A delegated data grant is created by Bob AA for the application', async () => {
+    await waitForExpect(async () => {
+      bobAppRegistration = await bob.call('app-registrations.get', {
+        resourceUri: bobAppRegistrationUri
+      });
+
+      const dataGrants = await bob.call('app-registrations.getDataGrants', {
+        agentRegistration: bobAppRegistration,
+        podOwner: bob.id
+      });
+
+      expect(dataGrants).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'interop:DelegatedDataGrant',
+            'interop:accessMode': 'acl:Read',
+            'interop:dataOwner': alice.id,
+            'interop:grantee': APP_URI,
+            'interop:hasDataInstance': eventUri,
+            'interop:hasDataRegistration': urlJoin(alice.id, 'data/as/event'),
+            'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
+            'interop:scopeOfGrant': 'interop:SelectedFromRegistry'
+          })
+        ])
+      );
+    });
+  });
+
+  test('Craig installs the app after Alice shared her event and a delegated data grant is created', async () => {
+    await alice.call('social-agent-registrations.addAuthorization', {
+      resourceUri: eventUri,
+      grantee: craig.id,
+      accessModes: ['acl:Read']
+    });
+
+    const craigAppRegistrationUri = await installApp(craig, APP_URI);
+
+    await waitForExpect(async () => {
+      const craigAppRegistration = await craig.call('app-registrations.get', {
+        resourceUri: craigAppRegistrationUri
+      });
+
+      const dataGrants = await craig.call('app-registrations.getDataGrants', {
+        agentRegistration: craigAppRegistration,
+        podOwner: craig.id
+      });
+
+      expect(dataGrants).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'interop:DelegatedDataGrant',
+            'interop:accessMode': 'acl:Read',
+            'interop:dataOwner': alice.id,
+            'interop:grantee': APP_URI,
+            'interop:hasDataInstance': eventUri,
+            'interop:hasDataRegistration': urlJoin(alice.id, 'data/as/event'),
+            'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
+            'interop:scopeOfGrant': 'interop:SelectedFromRegistry'
+          })
+        ])
+      );
+    });
+  });
+
+  test('Alice shares another event with Bob', async () => {
+    event2Uri = await alice.call('ldp.container.post', {
+      containerUri: alice.id + '/data/as/event',
+      resource: {
+        type: OBJECT_TYPES.EVENT,
+        name: 'Barbecue in my garden'
+      },
+      contentType: MIME_TYPES.JSON
+    });
+
+    await alice.call('social-agent-registrations.addAuthorization', {
+      resourceUri: event2Uri,
+      grantee: bob.id,
+      accessModes: ['acl:Read']
+    });
+
+    // Alice registration for Bob is updated
+    await waitForExpect(async () => {
+      const updatedRegistration = await alice.call('social-agent-registrations.getForAgent', {
+        agentUri: bob.id,
+        podOwner: alice.id
+      });
+
+      await expect(
+        alice.call('social-agent-registrations.getDataGrants', {
+          agentRegistration: updatedRegistration,
+          podOwner: alice.id
+        })
+      ).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'interop:DataGrant',
+            'interop:dataOwner': alice.id,
+            'interop:grantee': bob.id,
+            'interop:hasDataInstance': expect.arrayContaining([eventUri, event2Uri]),
+            'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
+            'interop:scopeOfGrant': 'interop:SelectedFromRegistry'
+          })
+        ])
+      );
+    });
+
+    // Bob registration for Example App is updated
+    await waitForExpect(async () => {
+      const updatedRegistration = await bob.call('app-registrations.getForAgent', {
+        agentUri: APP_URI,
+        podOwner: bob.id
+      });
+
+      await expect(
+        bob.call('app-registrations.getDataGrants', {
+          agentRegistration: updatedRegistration,
+          podOwner: bob.id
+        })
+      ).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'interop:DelegatedDataGrant',
+            'interop:accessMode': 'acl:Read',
+            'interop:dataOwner': alice.id,
+            'interop:grantee': APP_URI,
+            'interop:hasDataInstance': expect.arrayContaining([eventUri, event2Uri]),
+            'interop:hasDataRegistration': urlJoin(alice.id, 'data/as/event'),
+            'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
+            'interop:scopeOfGrant': 'interop:SelectedFromRegistry'
+          })
+        ])
+      );
+    });
+  });
+
+  test('Alice un-share her event with Craig', async () => {
+    await alice.call('social-agent-registrations.removeAuthorization', {
+      resourceUri: eventUri,
+      grantee: craig.id
+    });
+
+    // Alice registration for Craig doesn't contain any access grant
+    await waitForExpect(async () => {
+      const craigRegistration = await alice.call('social-agent-registrations.getForAgent', {
+        agentUri: craig.id,
+        podOwner: alice.id
+      });
+      expect(craigRegistration['interop:hasAccessGrant']).toBeUndefined();
     });
   });
 });

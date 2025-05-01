@@ -1,7 +1,7 @@
 {
   "username": "bob",
   "email": "bob@test.com",
-  "password": "test",
+  "password": "Test1test",
   "name": "Bob",
   "schema:knowsLanguage": "en"
 }

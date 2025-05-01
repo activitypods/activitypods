@@ -678,7 +678,7 @@ declare global {
      **/
     type AllActions = ActionsOfServices<AllServices_>;
     type names = keyof AllActions;
-    // ALSO TODO: Why is `this` not bound when schema is defined in defineSchema without `satisfies`?
+    // ALSO TODO: Why is `this` not bound when schema is defined in `defineSchema` without `satisfies`?
 
     type ActionSchema<Schema extends ValidatorSchema = ValidatorSchema> = {
       name?: string;

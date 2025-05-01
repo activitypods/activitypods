@@ -203,32 +203,14 @@ const service3 = defineService({
       const any4: number = await ctx.call('service_1.fooAction'); // Fails because Required param
     },
     list: {
-      params: { p: { type: 'string' } },
-      // Error because it should return a number
+      params: { length: { type: 'number' } },
       handler(ctx) {
-        let a = ctx.params;
+        const { length } = ctx.params;
+        // TODO: length should be of type number here but is never.
         return 'plop';
       }
     }
   }
-  /*
-  events: {
-    Event1(payload, sender, eventName, ctx) {
-      console.log(payload); // Automatically typed as string
-    },
-    Event2(payload, sender, eventName, ctx) {
-      // Can't use `payload`
-    },
-    Event3: {
-      async handler(payload, sender, eventName, ctx) {
-        // res will be a number based on 'ServiceActions'
-        const res = await ctx.call('v1.chat.list');
-      }
-    },
-    Unknown(payload, sender, eventName, ctx) {
-      // Error, "Unknown" is not a known event.
-    }
-  } */
 });
 
 declare global {

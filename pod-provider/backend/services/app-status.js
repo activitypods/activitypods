@@ -1,6 +1,7 @@
 const { MoleculerError } = require('moleculer').Errors;
 const { getDatasetFromUri } = require('@semapps/ldp');
 const CONFIG = require('../config/config');
+const { arraysEqual } = require('../utils');
 
 const AppStatusService = {
   name: 'app-status',
@@ -46,11 +47,16 @@ const AppStatusService = {
         ? await ctx.call('solid-notifications.provider.webhook.getAppChannels', { appUri, webId })
         : undefined;
 
+      // A upgrade is needed if the access need group(s) have changed
+      const upgradeNeeded =
+        onlineBackend &&
+        installed &&
+        !arraysEqual(localAppData['interop:hasAccessNeedGroup'], remoteAppData['interop:hasAccessNeedGroup']);
+
       return {
         onlineBackend,
         installed,
-        upgradeNeeded:
-          onlineBackend && installed ? localAppData['dc:modified'] != remoteAppData['dc:modified'] : undefined,
+        upgradeNeeded,
         webhookChannels
       };
     }

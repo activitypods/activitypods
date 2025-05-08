@@ -20,14 +20,14 @@ module.exports = {
         ctx.meta.dataset = dataset;
         ctx.meta.webId = webId;
 
-        const isRegistered = await ctx.call('app-registrations.isRegistered', { appUri, podOwner: webId });
+        const isRegistered = await ctx.call('app-registrations.isRegistered', { agentUri: appUri, podOwner: webId });
         if (isRegistered) {
           this.logger.info(`App ${appUri} is already installed for ${webId}, skipping...`);
         } else {
           this.logger.info(`Installing app ${appUri} on ${webId}...`);
 
           await ctx.call(
-            'auth-agent.registerApp',
+            'app-registrations.register',
             {
               appUri,
               acceptAllRequirements: true
@@ -73,7 +73,7 @@ module.exports = {
           this.logger.info(`Upgrading app ${application.id} for ${webId}...`);
 
           await ctx.call(
-            'auth-agent.upgradeApp',
+            'app-registrations.upgrade',
             {
               appUri: application.id,
               acceptAllRequirements: true

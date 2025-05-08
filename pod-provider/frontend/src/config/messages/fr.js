@@ -27,6 +27,7 @@ module.exports = {
       send_request: 'Envoyer demande',
       signup: "S'inscrire",
       sign_in: 'Connexion',
+      share: 'Partager',
       reset_password: 'Mot de passe oublié ?',
       revoke_access: "Révoquer l'accès",
       set_new_password: 'Definir un nouveau mot de passe',
@@ -75,6 +76,7 @@ module.exports = {
       add_contact: 'Demander une mise en relation',
       create_profile: 'Créez votre profil',
       authorize: 'Autorisation requise',
+      share: 'Partager',
       groups: 'Étiquettes',
       groups_short: 'Étiquettes',
       invite: '%{username} souhaite vous inviter dans son réseau',
@@ -170,6 +172,7 @@ module.exports = {
       authorize_register: "Pour être utilisée, l'application requiert les autorisations suivantes",
       authorize_upgrade:
         "L'application a été mise à jour et requiert maintenant les nouvelles autorisations ci-dessous",
+      share: 'Sélectionner les contacts avec lesquels vous souhaitez partager la resource %{resourceName}',
       invite_text_logged_out:
         "Un espace personnel est l'endroit où vous stockez vos données. Tout comme les comptes email, il est décentralisé, ce qui vous permet de choisir un fournisseur de confiance. Au lieu de créer un nouveau compte pour chaque nouvelle application, vous pourrez utiliser le même compte. Les applications compatibles stockeront les données dans votre espace.",
       invite_text_logged_in:

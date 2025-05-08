@@ -15,12 +15,13 @@ const DEFAULT_ALLOWED_TYPES = [
   'semapps:File',
   'acl:Authorization',
   'notify:WebSocketChannel2023',
-  'notify:WebhookChannel2023'
+  'notify:WebhookChannel2023',
+  'interop:DataRegistration'
 ];
 
 // TODO use cache to improve performances
 const getAllowedTypes = async (ctx, appUri, podOwner, accessMode) => {
-  const dataAuthorizations = await ctx.call('data-authorizations.getForApp', { appUri, podOwner });
+  const dataAuthorizations = await ctx.call('data-authorizations.listByGrantee', { grantee: appUri, webId: podOwner });
 
   let types = [...DEFAULT_ALLOWED_TYPES];
   for (const dataAuthorization of dataAuthorizations) {
@@ -70,7 +71,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         }
 
         // Ensure the webId is a registered application
-        if (!(await ctx.call('app-registrations.isRegistered', { appUri, podOwner }))) {
+        if (!(await ctx.call('app-registrations.isRegistered', { agentUri: appUri, podOwner }))) {
           throw new E.ForbiddenError(`Only registered applications may fetch the proxy endpoint`);
         }
 
@@ -159,8 +160,8 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         const appUri = ctx.meta.webId;
 
         // Ensure the webId is a registered application
-        if (!(await ctx.call('app-registrations.isRegistered', { appUri, podOwner }))) {
-          throw new E.ForbiddenError(`Only registered applications may post to the user outbox`);
+        if (!(await ctx.call('app-registrations.isRegistered', { agentUri: appUri, podOwner }))) {
+          throw new E.ForbiddenError(`Only registered applications may post to the user outbox. WebID: ${appUri}`);
         }
 
         const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
@@ -219,7 +220,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         const appUri = ctx.meta.webId;
 
         // Ensure the webId is a registered application
-        if (!(await ctx.call('app-registrations.isRegistered', { appUri, podOwner }))) {
+        if (!(await ctx.call('app-registrations.isRegistered', { agentUri: appUri, podOwner }))) {
           throw new E.ForbiddenError(`Only registered applications may handle ACL groups`);
         }
 
@@ -241,7 +242,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         }
 
         // If the webId is a registered application, use the system webId to bypass WAC checks
-        if (await ctx.call('app-registrations.isRegistered', { appUri: ctx.meta.webId, podOwner })) {
+        if (await ctx.call('app-registrations.isRegistered', { agentUri: ctx.meta.webId, podOwner })) {
           const appUri = ctx.meta.webId;
 
           const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
@@ -274,7 +275,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         if (
           ctx.meta.webId !== 'anon' &&
           ctx.meta.webId !== 'system' &&
-          (await ctx.call('app-registrations.isRegistered', { appUri: ctx.meta.webId, podOwner }))
+          (await ctx.call('app-registrations.isRegistered', { agentUri: ctx.meta.webId, podOwner }))
         ) {
           const appUri = ctx.meta.webId;
 
@@ -303,7 +304,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         }
 
         // If the webId is a registered application
-        if (await ctx.call('app-registrations.isRegistered', { appUri: ctx.meta.webId, podOwner })) {
+        if (await ctx.call('app-registrations.isRegistered', { agentUri: ctx.meta.webId, podOwner })) {
           const appUri = ctx.meta.webId;
 
           // If the app is trying to get the outbox or inbox, use webId system to improve performances

@@ -133,6 +133,9 @@ const initializeAppServer = async (port, mainDataset, settingsDataset, queueServ
         fusekiBase: CONFIG.FUSEKI_BASE,
         mainDataset
       },
+      keys: {
+        actorsKeyPairsDir: null
+      },
       ontologies: [interop, oidc, apods, notify],
       activitypub: {
         queueServiceUrl
@@ -181,9 +184,10 @@ const getAppAccessNeeds = async (actor, appUri) => {
     accept: MIME_TYPES.JSON
   });
 
-  let accessNeedGroup;
+  let requiredAccessNeedGroup;
+  let optionalAccessNeedGroup;
   for (const accessNeedUri of app['interop:hasAccessNeedGroup']) {
-    accessNeedGroup = await actor.call('ldp.resource.get', {
+    const accessNeedGroup = await actor.call('ldp.resource.get', {
       resourceUri: accessNeedUri,
       accept: MIME_TYPES.JSON
     });
@@ -205,7 +209,7 @@ const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRig
     acceptedSpecialRights = requiredAccessNeedGroup['apods:hasSpecialRights'];
   }
 
-  await actor.call('auth-agent.registerApp', {
+  return await actor.call('app-registrations.register', {
     appUri,
     acceptedAccessNeeds,
     acceptedSpecialRights

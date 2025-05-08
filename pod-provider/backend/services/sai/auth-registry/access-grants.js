@@ -28,7 +28,11 @@ module.exports = {
           resourceUri: dataAuthorizationUri,
           webId: podOwner
         });
-        dataGrantsUris.push(await ctx.call('data-grants.getByDataAuthorization', { dataAuthorization }));
+        if (dataAuthorization['interop:dataOwner'] === podOwner) {
+          dataGrantsUris.push(await ctx.call('data-grants.getByDataAuthorization', { dataAuthorization }));
+        } else {
+          dataGrantsUris.push(await ctx.call('delegated-data-grants.getByDataAuthorization', { dataAuthorization }));
+        }
         if (dataAuthorization['interop:scopeOfAuthorization'] === 'interop:All') {
           dataGrantsUris.push(
             ...(await ctx.call('delegated-data-grants.listByDataAuthorization', { dataAuthorization }))

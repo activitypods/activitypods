@@ -4,7 +4,6 @@ const { OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { connectPodProvider, clearAllData, initializeAppServer, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example3.app');
-const { arrayOf } = require('@semapps/ldp');
 const CONFIG = require('./config');
 
 jest.setTimeout(120000);
@@ -16,9 +15,11 @@ const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 describe('Test resource sharing features', () => {
   let actors = [],
     podProvider,
+    appServer,
     alice,
     bob,
     craig,
+    eventContainerUri,
     eventUri,
     event2Uri,
     bobAppRegistration,
@@ -55,17 +56,23 @@ describe('Test resource sharing features', () => {
     bob = actors[2];
     craig = actors[3];
 
-    await installApp(alice, APP_URI);
     bobAppRegistrationUri = await installApp(bob, APP_URI);
   });
 
   afterAll(async () => {
     await podProvider.stop();
+    await appServer.stop();
   });
 
   test('Alice creates an event', async () => {
+    // Create container manually so that we don't need to install the app
+    eventContainerUri = await alice.call('data-registrations.generateFromShapeTree', {
+      shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
+      podOwner: alice.id
+    });
+
     eventUri = await alice.call('ldp.container.post', {
-      containerUri: alice.id + '/data/as/event',
+      containerUri: eventContainerUri,
       resource: {
         type: OBJECT_TYPES.EVENT,
         name: 'Birthday party !!'
@@ -103,6 +110,27 @@ describe('Test resource sharing features', () => {
         'interop:registeredAgent': alice.id,
         'interop:registeredBy': bob.id
       });
+    });
+  });
+
+  test('A data authorization is created in Alice storage', async () => {
+    await waitForExpect(async () => {
+      const dataAuthorizations = await alice.call('data-authorizations.listForSingleResource', {
+        resourceUri: eventUri
+      });
+
+      expect(dataAuthorizations).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'interop:DataAuthorization',
+            'interop:dataOwner': alice.id,
+            'interop:grantee': bob.id,
+            'interop:hasDataInstance': eventUri,
+            'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
+            'interop:scopeOfAuthorization': 'interop:SelectedFromRegistry'
+          })
+        ])
+      );
     });
   });
 
@@ -144,7 +172,7 @@ describe('Test resource sharing features', () => {
             'interop:dataOwner': alice.id,
             'interop:grantee': APP_URI,
             'interop:hasDataInstance': eventUri,
-            'interop:hasDataRegistration': urlJoin(alice.id, 'data/as/event'),
+            'interop:hasDataRegistration': eventContainerUri,
             'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
             'interop:scopeOfGrant': 'interop:SelectedFromRegistry'
           })
@@ -180,7 +208,7 @@ describe('Test resource sharing features', () => {
             'interop:dataOwner': alice.id,
             'interop:grantee': APP_URI,
             'interop:hasDataInstance': eventUri,
-            'interop:hasDataRegistration': urlJoin(alice.id, 'data/as/event'),
+            'interop:hasDataRegistration': eventContainerUri,
             'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
             'interop:scopeOfGrant': 'interop:SelectedFromRegistry'
           })
@@ -191,7 +219,7 @@ describe('Test resource sharing features', () => {
 
   test('Alice shares another event with Bob', async () => {
     event2Uri = await alice.call('ldp.container.post', {
-      containerUri: alice.id + '/data/as/event',
+      containerUri: eventContainerUri,
       resource: {
         type: OBJECT_TYPES.EVENT,
         name: 'Barbecue in my garden'
@@ -203,6 +231,27 @@ describe('Test resource sharing features', () => {
       resourceUri: event2Uri,
       grantee: bob.id,
       accessModes: ['acl:Read']
+    });
+
+    // Alice data authorization is regenerated
+    await waitForExpect(async () => {
+      const dataAuthorizations = await alice.call('data-authorizations.listForSingleResource', {
+        resourceUri: eventUri
+      });
+
+      expect(dataAuthorizations).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'interop:DataAuthorization',
+            'interop:dataOwner': alice.id,
+            'interop:grantee': bob.id,
+            'interop:hasDataInstance': expect.arrayContaining([eventUri, event2Uri]),
+            'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
+            'interop:scopeOfAuthorization': 'interop:SelectedFromRegistry',
+            'interop:replaces': expect.anything()
+          })
+        ])
+      );
     });
 
     // Alice registration for Bob is updated
@@ -225,7 +274,8 @@ describe('Test resource sharing features', () => {
             'interop:grantee': bob.id,
             'interop:hasDataInstance': expect.arrayContaining([eventUri, event2Uri]),
             'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
-            'interop:scopeOfGrant': 'interop:SelectedFromRegistry'
+            'interop:scopeOfGrant': 'interop:SelectedFromRegistry',
+            'interop:replaces': expect.anything()
           })
         ])
       );
@@ -251,7 +301,7 @@ describe('Test resource sharing features', () => {
             'interop:dataOwner': alice.id,
             'interop:grantee': APP_URI,
             'interop:hasDataInstance': expect.arrayContaining([eventUri, event2Uri]),
-            'interop:hasDataRegistration': urlJoin(alice.id, 'data/as/event'),
+            'interop:hasDataRegistration': eventContainerUri,
             'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
             'interop:scopeOfGrant': 'interop:SelectedFromRegistry'
           })

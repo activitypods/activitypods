@@ -15,12 +15,13 @@ const DEFAULT_ALLOWED_TYPES = [
   'semapps:File',
   'acl:Authorization',
   'notify:WebSocketChannel2023',
-  'notify:WebhookChannel2023'
+  'notify:WebhookChannel2023',
+  'interop:DataRegistration'
 ];
 
 // TODO use cache to improve performances
 const getAllowedTypes = async (ctx, appUri, podOwner, accessMode) => {
-  const dataAuthorizations = await ctx.call('data-authorizations.getForAgent', { agentUri: appUri, podOwner });
+  const dataAuthorizations = await ctx.call('data-authorizations.listByGrantee', { grantee: appUri, webId: podOwner });
 
   let types = [...DEFAULT_ALLOWED_TYPES];
   for (const dataAuthorization of dataAuthorizations) {
@@ -160,7 +161,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
 
         // Ensure the webId is a registered application
         if (!(await ctx.call('app-registrations.isRegistered', { agentUri: appUri, podOwner }))) {
-          throw new E.ForbiddenError(`Only registered applications may post to the user outbox`);
+          throw new E.ForbiddenError(`Only registered applications may post to the user outbox. WebID: ${appUri}`);
         }
 
         const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });

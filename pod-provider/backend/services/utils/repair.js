@@ -73,7 +73,7 @@ module.exports = {
           this.logger.info(`Upgrading app ${application.id} for ${webId}...`);
 
           await ctx.call(
-            'auth-agent.upgradeApp',
+            'app-registrations.upgrade',
             {
               appUri: application.id,
               acceptAllRequirements: true

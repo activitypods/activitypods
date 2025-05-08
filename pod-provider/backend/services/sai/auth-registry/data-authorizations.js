@@ -1,3 +1,4 @@
+const { MoleculerError } = require('moleculer').Errors;
 const { ControlledContainerMixin, arrayOf, getId } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { arraysEqual } = require('../../../utils');
@@ -54,24 +55,35 @@ module.exports = {
       }
     },
     async generateForSingleResource(ctx) {
-      const { resourceUri, grantee, accessModes, podOwner } = ctx.params;
+      const { resourceUri, grantee, accessModes, delegationAllowed, delegationLimit, webId } = ctx.params;
 
-      const dataRegistrationUri = await ctx.call('data-registrations.getByResourceUri', {
-        resourceUri,
-        podOwner
-      });
+      const dataRegistration = await ctx.call('data-registrations.getByResourceUri', { resourceUri, webId });
+      const dataOwner = dataRegistration['interop:registeredBy'];
+
+      // If the user is sharing a resource they don't own, ensure they have delegation right
+      if (dataOwner !== webId) {
+        const dataGrant = await ctx.call('data-grants.getByResourceUri', { resourceUri, webId });
+
+        if (
+          !dataGrant ||
+          dataGrant['interop:delegationAllowed'] !== true ||
+          (dataGrant['interop:delegationLimit'] && dataGrant['interop:delegationLimit'] < 1)
+        ) {
+          throw new MoleculerError('You are not allowed to share this resource', 403, 'FORBIDDEN');
+        }
+      }
 
       // Get existing data authorizations
       const filteredContainer = await this.actions.list(
         {
           filters: {
-            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
+            'http://www.w3.org/ns/solid/interop#dataOwner': dataOwner,
             'http://www.w3.org/ns/solid/interop#grantee': grantee,
-            'http://www.w3.org/ns/solid/interop#hasDataRegistration': dataRegistrationUri,
+            'http://www.w3.org/ns/solid/interop#hasDataRegistration': getId(dataRegistration),
             'http://www.w3.org/ns/solid/interop#scopeOfAuthorization':
               'http://www.w3.org/ns/solid/interop#SelectedFromRegistry'
           },
-          webId: podOwner
+          webId
         },
         { parentCtx: ctx }
       );
@@ -83,24 +95,32 @@ module.exports = {
       );
 
       if (dataAuthorizationForResource) {
-        if (arraysEqual(dataAuthorizationForResource['interop:accessMode'], accessModes)) {
+        if (
+          arraysEqual(dataAuthorizationForResource['interop:accessMode'], accessModes) &&
+          delegationAllowed === dataAuthorizationForResource['interop:delegationAllowed'] &&
+          delegationLimit === dataAuthorizationForResource['interop:delegationLimit']
+        ) {
           // If the same access mode was granted for this resource, skip it
           this.logger.info(
             `Resource ${resourceUri} is already shared to ${grantee} with access modes ${accessModes.join(', ')}`
           );
           return getId(dataAuthorizationForResource);
         } else {
-          // If the access modes was changed, delete the authorization for the resource (it will be recreated below)
-          await this.actions.deleteForSingleResource({ resourceUri, grantee, podOwner });
+          // If the properties have changed, delete the authorization for this single resource
+          await this.actions.deleteForSingleResource({ resourceUri, grantee, webId });
         }
       }
 
-      const dataAuthorizationForAccessModes = dataAuthorizations.find(auth =>
-        arraysEqual(arrayOf(auth['interop:accessMode']), arrayOf(accessModes))
+      // Check if a data authorization exist with the same access modes and delegation rights
+      const dataAuthorizationForAccessModes = dataAuthorizations.find(
+        auth =>
+          arraysEqual(arrayOf(auth['interop:accessMode']), arrayOf(accessModes)) &&
+          delegationAllowed === auth['interop:delegationAllowed'] &&
+          delegationLimit === auth['interop:delegationLimit']
       );
 
       if (dataAuthorizationForAccessModes) {
-        // If a data authorization exist with the same access modes, add the resource
+        // If a data authorization exist with the same properties, add the resource
         const { resourceUri: newDataAuthorizationUri } = await this.actions.put(
           {
             resource: {
@@ -116,20 +136,19 @@ module.exports = {
         );
         return newDataAuthorizationUri;
       } else {
-        const dataRegistration = await ctx.call('data-registrations.get', { dataRegistrationUri });
-        const shapeTreeUri = dataRegistration['interop:registeredShapeTree'];
-
         const newDataAuthorizationUri = await this.actions.post(
           {
             resource: {
               type: 'interop:DataAuthorization',
-              'interop:dataOwner': podOwner,
+              'interop:dataOwner': dataOwner,
               'interop:grantee': grantee,
-              'interop:registeredShapeTree': shapeTreeUri,
-              'interop:hasDataRegistration': dataRegistrationUri,
+              'interop:registeredShapeTree': dataRegistration['interop:registeredShapeTree'],
+              'interop:hasDataRegistration': getId(dataRegistration),
               'interop:hasDataInstance': resourceUri,
               'interop:accessMode': accessModes,
-              'interop:scopeOfAuthorization': 'interop:SelectedFromRegistry'
+              'interop:scopeOfAuthorization': 'interop:SelectedFromRegistry',
+              'interop:delegationAllowed': delegationAllowed,
+              'interop:delegationLimit': delegationLimit
             },
             contentType: MIME_TYPES.JSON
           },
@@ -140,23 +159,21 @@ module.exports = {
       }
     },
     async deleteForSingleResource(ctx) {
-      const { resourceUri, grantee, podOwner } = ctx.params;
+      const { resourceUri, grantee, webId } = ctx.params;
 
-      const dataRegistrationUri = await ctx.call('data-registrations.getByResourceUri', {
-        resourceUri,
-        podOwner: podOwner
-      });
+      const dataRegistration = await ctx.call('data-registrations.getByResourceUri', { resourceUri, webId });
+      const dataOwner = dataRegistration['interop:registeredBy'];
 
       const filteredContainer = await this.actions.list(
         {
           filters: {
-            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
+            'http://www.w3.org/ns/solid/interop#dataOwner': dataOwner,
             'http://www.w3.org/ns/solid/interop#grantee': grantee,
-            'http://www.w3.org/ns/solid/interop#hasDataRegistration': dataRegistrationUri,
+            'http://www.w3.org/ns/solid/interop#hasDataRegistration': getId(dataRegistration),
             'http://www.w3.org/ns/solid/interop#scopeOfAuthorization':
               'http://www.w3.org/ns/solid/interop#SelectedFromRegistry'
           },
-          webId: podOwner
+          webId
         },
         { parentCtx: ctx }
       );
@@ -169,7 +186,7 @@ module.exports = {
             await this.actions.delete(
               {
                 resourceUri: getId(dataAuthorization),
-                webId: podOwner
+                webId: 'system'
               },
               { parentCtx: ctx }
             );
@@ -182,7 +199,7 @@ module.exports = {
                   'interop:hasDataInstance': resourcesUris.filter(uri => uri !== resourceUri)
                 },
                 contentType: MIME_TYPES.JSON,
-                webId: podOwner
+                webId: 'system'
               },
               { parentCtx: ctx }
             );
@@ -190,18 +207,18 @@ module.exports = {
         }
       }
     },
-    async getForSingleResource(ctx) {
-      const { resourceUri, podOwner } = ctx.params;
+    async listForSingleResource(ctx) {
+      const { resourceUri } = ctx.params;
+      const webId = ctx.params.webId || ctx.meta.webId;
 
       const filteredContainer = await this.actions.list(
         {
           filters: {
-            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
             'http://www.w3.org/ns/solid/interop#hasDataInstance': resourceUri,
             'http://www.w3.org/ns/solid/interop#scopeOfAuthorization':
               'http://www.w3.org/ns/solid/interop#SelectedFromRegistry'
           },
-          webId: podOwner
+          webId
         },
         { parentCtx: ctx }
       );
@@ -226,16 +243,15 @@ module.exports = {
       return arrayOf(filteredContainer['ldp:contains'])[0];
     },
     // Get all the DataAuthorizations granted to an agent
-    async getForAgent(ctx) {
-      const { agentUri, podOwner } = ctx.params;
+    async listByGrantee(ctx) {
+      const { grantee, webId } = ctx.params;
 
       const filteredContainer = await this.actions.list(
         {
           filters: {
-            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
-            'http://www.w3.org/ns/solid/interop#grantee': agentUri
+            'http://www.w3.org/ns/solid/interop#grantee': grantee
           },
-          webId: podOwner
+          webId
         },
         { parentCtx: ctx }
       );
@@ -243,13 +259,15 @@ module.exports = {
       return arrayOf(filteredContainer['ldp:contains']);
     },
     // List all data authorizations with `interop:All` scope
+    // An optional shapeTreeUri param can be passed to filter by shape tree
     async listScopeAll(ctx) {
-      const { podOwner } = ctx.params;
+      const { podOwner, shapeTreeUri } = ctx.params;
 
       const filteredContainer = await this.actions.list(
         {
           filters: {
-            'http://www.w3.org/ns/solid/interop#scopeOfAuthorization': 'http://www.w3.org/ns/solid/interop#All'
+            'http://www.w3.org/ns/solid/interop#scopeOfAuthorization': 'http://www.w3.org/ns/solid/interop#All',
+            'http://www.w3.org/ns/solid/interop#registeredShapeTree': shapeTreeUri
           },
           webId: podOwner
         },
@@ -261,7 +279,10 @@ module.exports = {
     // Delete DataAuthorizations which are not linked anymore to an AccessNeed (may happen on app upgrade)
     async deleteOrphans(ctx) {
       const { appUri, podOwner } = ctx.params;
-      const dataAuthorizations = await this.actions.getForAgent({ agentUri: appUri, podOwner }, { parentCtx: ctx });
+      const dataAuthorizations = await this.actions.listByGrantee(
+        { grantee: appUri, webId: podOwner },
+        { parentCtx: ctx }
+      );
       for (const dataAuthorization of dataAuthorizations) {
         try {
           await ctx.call('ldp.remote.get', { resourceUri: dataAuthorization['interop:satisfiesAccessNeed'] });
@@ -285,73 +306,74 @@ module.exports = {
         if (ctx.meta.isMigration === true) return;
 
         const dataAuthorization = res.newData;
-        const podOwner = dataAuthorization['interop:dataOwner'];
+        const dataOwner = dataAuthorization['interop:dataOwner'];
         const grantee = dataAuthorization['interop:grantee'];
         const shapeTreeUri = dataAuthorization['interop:registeredShapeTree'];
         const accessMode = arrayOf(dataAuthorization['interop:accessMode']);
         const scope = dataAuthorization['interop:scopeOfAuthorization'];
+        const webId = ctx.params.webId || ctx.meta.webId;
 
-        const containerUri = await ctx.call('data-registrations.getByShapeTree', { shapeTreeUri, podOwner });
+        const containerUri = await ctx.call('data-registrations.getByShapeTree', { shapeTreeUri, podOwner: dataOwner });
 
-        // await this.broker.call('type-registrations.bindApp', {
-        //   containerUri,
-        //   appUri,
-        //   webId: podOwner
-        // });
-
-        // For mapping details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
-        if (scope === 'interop:All') {
-          // Give read-write permission to the whole container
-          await ctx.call('webacl.resource.addRights', {
-            resourceUri: containerUri,
-            additionalRights: {
-              // Container rights
-              user: {
-                uri: grantee,
-                read: accessMode.includes('acl:Read'),
-                write: accessMode.includes('acl:Write')
-              },
-              // Resources default rights
-              default: {
-                user: {
-                  uri: grantee,
-                  read: accessMode.includes('acl:Read'),
-                  append: accessMode.includes('acl:Append'),
-                  write: accessMode.includes('acl:Write'),
-                  control: accessMode.includes('acl:Control')
-                }
-              }
-            },
-            webId: 'system'
-          });
-        } else if (scope === 'interop:SelectedFromRegistry') {
-          for (const resourceUri of arrayOf(dataAuthorization['interop:hasDataInstance'])) {
-            // Give read-write permission to the resources
+        if (dataOwner === webId) {
+          // For mapping details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
+          if (scope === 'interop:All') {
+            // Give read-write permission to the whole container
             await ctx.call('webacl.resource.addRights', {
-              resourceUri,
+              resourceUri: containerUri,
               additionalRights: {
                 // Container rights
                 user: {
                   uri: grantee,
                   read: accessMode.includes('acl:Read'),
-                  append: accessMode.includes('acl:Append'),
-                  write: accessMode.includes('acl:Write'),
-                  control: accessMode.includes('acl:Control')
+                  write: accessMode.includes('acl:Write')
+                },
+                // Resources default rights
+                default: {
+                  user: {
+                    uri: grantee,
+                    read: accessMode.includes('acl:Read'),
+                    append: accessMode.includes('acl:Append'),
+                    write: accessMode.includes('acl:Write'),
+                    control: accessMode.includes('acl:Control')
+                  }
                 }
               },
               webId: 'system'
             });
+          } else if (scope === 'interop:SelectedFromRegistry') {
+            for (const resourceUri of arrayOf(dataAuthorization['interop:hasDataInstance'])) {
+              // Give read-write permission to the resources
+              await ctx.call('webacl.resource.addRights', {
+                resourceUri,
+                additionalRights: {
+                  // Container rights
+                  user: {
+                    uri: grantee,
+                    read: accessMode.includes('acl:Read'),
+                    append: accessMode.includes('acl:Append'),
+                    write: accessMode.includes('acl:Write'),
+                    control: accessMode.includes('acl:Control')
+                  }
+                },
+                webId: 'system'
+              });
+            }
           }
-        }
 
-        await ctx.call('data-grants.generateFromDataAuthorization', { dataAuthorization, podOwner });
+          await ctx.call('data-grants.generateFromDataAuthorization', { dataAuthorization });
+        } else {
+          await ctx.call('delegated-data-grants.generateFromDataAuthorization', {
+            dataAuthorization
+          });
+        }
 
         if (scope === 'interop:All') {
           // Generate delegated data grants for all shared resources with the same shape tree
-          const dataGrants = await ctx.call('social-agent-registrations.getSharedDataGrants', { podOwner });
+          const dataGrants = await ctx.call('social-agent-registrations.getSharedDataGrants', { podOwner: dataOwner });
           for (const dataGrant of dataGrants) {
             if (dataGrant['interop:registeredShapeTree'] === dataAuthorization['interop:registeredShapeTree']) {
-              await ctx.call('delegated-data-grants.generateForDataAuthorization', {
+              await ctx.call('delegated-data-grants.generateFromSingleScopeAllDataAuthorization', {
                 dataAuthorization,
                 dataGrant
               });
@@ -372,12 +394,6 @@ module.exports = {
 
         // In case of a migration, no container will be found so skip this part
         if (containerUri) {
-          // await ctx.call('type-registrations.unbindApp', {
-          //   containerUri,
-          //   appUri,
-          //   webId: podOwner
-          // });
-
           // Mirror of what is done on the above hook
           if (scope === 'interop:All') {
             await ctx.call('webacl.resource.removeRights', {

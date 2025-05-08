@@ -102,18 +102,25 @@ module.exports = {
       return accessAuthorizationsUris;
     },
     async generateForSingleResource(ctx) {
-      const { resourceUri, grantee, accessModes, podOwner } = ctx.params;
+      const { resourceUri, grantee, accessModes, delegationAllowed, delegationLimit, webId } = ctx.params;
 
-      await ctx.call('data-authorizations.generateForSingleResource', { resourceUri, grantee, accessModes, podOwner });
+      await ctx.call('data-authorizations.generateForSingleResource', {
+        resourceUri,
+        grantee,
+        accessModes,
+        delegationAllowed,
+        delegationLimit,
+        webId
+      });
 
-      await this.actions.regenerate({ grantee, podOwner });
+      await this.actions.regenerate({ grantee, podOwner: webId });
     },
     async deleteForSingleResource(ctx) {
-      const { resourceUri, grantee, podOwner } = ctx.params;
+      const { resourceUri, grantee, webId } = ctx.params;
 
-      await ctx.call('data-authorizations.deleteForSingleResource', { resourceUri, grantee, podOwner });
+      await ctx.call('data-authorizations.deleteForSingleResource', { resourceUri, grantee, webId });
 
-      await this.actions.regenerate({ grantee, podOwner });
+      await this.actions.regenerate({ grantee, podOwner: webId });
     },
     /**
      * Generate or regenerate a grantee's access authorization based on their data authorizations
@@ -121,10 +128,10 @@ module.exports = {
     async regenerate(ctx) {
       const { grantee, podOwner } = ctx.params;
 
-      const [accessAuthorization] = await this.actions.getForAgent({ agentUri: grantee, podOwner }, { parentCtx: ctx });
-      const dataAuthorizations = await ctx.call('data-authorizations.getForAgent', {
-        agentUri: grantee,
-        podOwner
+      const [accessAuthorization] = await this.actions.listByGrantee({ grantee, webId: podOwner }, { parentCtx: ctx });
+      const dataAuthorizations = await ctx.call('data-authorizations.listByGrantee', {
+        grantee,
+        webId: podOwner
       });
       const dataAuthorizationsUris = dataAuthorizations.map(r => r.id || r['@id']);
 
@@ -171,16 +178,15 @@ module.exports = {
       }
     },
     // Get all the AccessAuthorizations granted to an agent
-    async getForAgent(ctx) {
-      const { agentUri, podOwner } = ctx.params;
+    async listByGrantee(ctx) {
+      const { grantee, webId } = ctx.params;
 
       const filteredContainer = await this.actions.list(
         {
           filters: {
-            'http://www.w3.org/ns/solid/interop#grantedBy': podOwner,
-            'http://www.w3.org/ns/solid/interop#grantee': agentUri
+            'http://www.w3.org/ns/solid/interop#grantee': grantee
           },
-          webId: podOwner
+          webId
         },
         { parentCtx: ctx }
       );
@@ -225,7 +231,10 @@ module.exports = {
     async getSpecialRights(ctx) {
       const { appUri, podOwner } = ctx.params;
 
-      const accessAuthorizations = await this.actions.getForAgent({ agentUri: appUri, podOwner }, { parentCtx: ctx });
+      const accessAuthorizations = await this.actions.listByGrantee(
+        { grantee: appUri, webId: podOwner },
+        { parentCtx: ctx }
+      );
 
       return accessAuthorizations.reduce((acc, cur) => {
         if (cur['apods:hasSpecialRights']) acc.push(...arrayOf(cur['apods:hasSpecialRights']));
@@ -379,7 +388,10 @@ module.exports = {
     // Delete AccessAuthorizations which are not linked to an AccessNeedGroup (may happen on app upgrade)
     async deleteOrphans(ctx) {
       const { appUri, podOwner } = ctx.params;
-      const accessAuthorizations = await this.actions.getForAgent({ agentUri: appUri, podOwner }, { parentCtx: ctx });
+      const accessAuthorizations = await this.actions.listByGrantee(
+        { grantee: appUri, webId: podOwner },
+        { parentCtx: ctx }
+      );
       for (const accessAuthorization of accessAuthorizations) {
         try {
           await ctx.call('ldp.remote.get', { resourceUri: accessAuthorization['interop:hasAccessNeedGroup'] });

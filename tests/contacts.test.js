@@ -16,9 +16,7 @@ describe('Test contacts features', () => {
     bob,
     craig,
     contactRequestToBob,
-    contactRequestToCraig,
-    locationUri,
-    eventUri;
+    contactRequestToCraig;
 
   beforeAll(async () => {
     clearAllData();

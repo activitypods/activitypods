@@ -284,12 +284,6 @@ module.exports = {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
-        // The emitter should have created a Social Agent Registration, so we can now link it
-        await ctx.call('social-agent-registrations.addReciprocalRegistration', {
-          agentUri: activity.actor,
-          podOwner: recipientUri
-        });
-
         // Cache the other actor's profile (it should be visible now)
         await ctx.call('ldp.remote.store', {
           resourceUri: emitter.url,

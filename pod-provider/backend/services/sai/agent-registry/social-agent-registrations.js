@@ -73,17 +73,6 @@ module.exports = {
             },
             { parentCtx: ctx }
           );
-
-          // This shouldn't be necessary if we set excludeFromMirror to false
-          await this.actions.notifyAgent(
-            {
-              agentRegistrationUri: getId(agentRegistration),
-              agentUri,
-              podOwner,
-              activityType: ACTIVITY_TYPES.UPDATE
-            },
-            { parentCtx: ctx }
-          );
         }
 
         return agentRegistration.id;
@@ -220,14 +209,16 @@ module.exports = {
     },
     // Add an authorization for a resource to a given user
     async addAuthorization(ctx) {
-      const { resourceUri, grantee, accessModes } = ctx.params;
+      const { resourceUri, grantee, accessModes, delegationAllowed, delegationLimit } = ctx.params;
       const webId = ctx.params.webId || ctx.meta.webId;
 
       await ctx.call('access-authorizations.generateForSingleResource', {
         resourceUri,
-        podOwner: webId,
         grantee,
-        accessModes
+        accessModes,
+        delegationAllowed,
+        delegationLimit,
+        webId
       });
 
       await this.actions.regenerate({ agentUri: grantee, podOwner: webId }, { parentCtx: ctx });
@@ -239,8 +230,8 @@ module.exports = {
 
       await ctx.call('access-authorizations.deleteForSingleResource', {
         resourceUri,
-        podOwner: webId,
-        grantee
+        grantee,
+        webId
       });
 
       await this.actions.regenerate({ agentUri: grantee, podOwner: webId }, { parentCtx: ctx });
@@ -277,13 +268,13 @@ module.exports = {
     async getAuthorizations(ctx) {
       const { resource: resourceUri } = ctx.params;
 
-      const podOwner = ctx.meta.webId;
-      const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
+      const webId = ctx.meta.webId;
+      const account = await ctx.call('auth.account.findByWebId', { webId });
       ctx.meta.dataset = account.username;
 
-      const dataAuthorizations = await ctx.call('data-authorizations.getForSingleResource', {
+      const dataAuthorizations = await ctx.call('data-authorizations.listForSingleResource', {
         resourceUri,
-        podOwner
+        webId
       });
 
       return {
@@ -322,48 +313,28 @@ module.exports = {
      */
     async updateAppRegistrations(ctx) {
       const { socialAgentRegistration, podOwner } = ctx.params;
-      let appUris = [];
+      let allGrantees = [];
 
       // Get all data grants from social agent registration (loop through access grants, then data grants)
       const dataGrants = await this.actions.getDataGrants({ agentRegistration: socialAgentRegistration });
 
-      // Get all `interop:All` data authorization of the recipient
-      const dataAuthorizations = await ctx.call('data-authorizations.listScopeAll', { podOwner });
+      // TODO Filter out data grants which have not changed to improve performances
 
-      // Go through all data grants from social agent registration
       for (const dataGrant of dataGrants) {
-        // Go through all `interop:All` data authorizations of the recipient
-        for (const dataAuthorization of dataAuthorizations) {
-          // We are only concerned with data authorizations that match the same shape tree as the data grant
-          if (dataAuthorization['interop:registeredShapeTree'] === dataGrant['interop:registeredShapeTree']) {
-            await ctx.call('delegated-data-grants.generateForDataAuthorization', {
-              dataAuthorization,
-              dataGrant
-            });
+        // Generate delegated data grants for all data authorizations with `interop:All` scope
+        const grantees = await ctx.call('delegated-data-grants.generateFromAllScopeAllDataAuthorizations', {
+          dataGrant,
+          podOwner: recipientUri
+        });
 
-            // Find the access authorization that is linking the data authorization
-            const accessAuthorization = await ctx.call('access-authorizations.getByDataAuthorization', {
-              dataAuthorizationUri: getId(dataAuthorization),
-              podOwner
-            });
-
-            // Regenerate the access grant based on the access authorization
-            await ctx.call('access-grants.generateFromAccessAuthorization', {
-              accessAuthorization,
-              podOwner
-            });
-
-            // Mark as app as needing (perhaps) an update of its registration
-            if (!appUris.includes(dataAuthorization['interop:grantee']))
-              appUris.push(dataAuthorization['interop:grantee']);
-          }
-        }
+        allGrantees.push(...grantees);
       }
 
-      // Regenerate the app registrations
-      for (const appUri of appUris) {
+      // Regenerate the app registrations (remove duplicate grantees)
+      // TODO Also regenerate the social agent registrations
+      for (const grantee of [...new Set(allGrantees)]) {
         await ctx.call('app-registrations.regenerate', {
-          appUri,
+          appUri: grantee,
           podOwner
         });
       }
@@ -387,27 +358,6 @@ module.exports = {
             podOwner: recipientUri,
             reciprocalRegistrationUri: getId(socialAgentRegistration)
           },
-          { parentCtx: ctx }
-        );
-
-        await this.actions.updateAppRegistrations(
-          { socialAgentRegistration, podOwner: recipientUri },
-          { parentCtx: ctx }
-        );
-      }
-    },
-    updateAgentRegistration: {
-      match: {
-        type: ACTIVITY_TYPES.UPDATE,
-        object: {
-          type: 'interop:SocialAgentRegistration'
-        }
-      },
-      async onReceive(ctx, activity, recipientUri) {
-        const socialAgentRegistration = activity.object;
-
-        await this.actions.updateAppRegistrations(
-          { socialAgentRegistration, podOwner: recipientUri },
           { parentCtx: ctx }
         );
       }

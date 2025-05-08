@@ -3,15 +3,30 @@ const { getId } = require('@semapps/ldp');
 const ImmutableContainerMixin = {
   actions: {
     // TODO Change the URI but don't delete the resource to improve performance
-    // Warning: We must ensure all cache for the previous URL are invalidated
+    // Warning: If we do that, we must ensure all cache for the previous URL are invalidated
     async put(ctx) {
       const { resource, contentType } = ctx.params;
       const webId = ctx.params.webId || ctx.meta.webId;
-      const oldData = await this.actions.get({ resourceUri: getId(resource), webId });
-      await this.actions.delete({ resourceUri: getId(resource), webId });
+
+      // Extract old resource URI
+      const oldResourceUri = getId(resource);
       delete resource.id;
-      const resourceUri = await this.actions.post({ resource, contentType, webId });
-      return { resourceUri, oldData, newData: { id: resourceUri, ...resource }, webId };
+
+      // Get old resource (will be returned by the action)
+      const oldData = await this.actions.get({ resourceUri: oldResourceUri, webId });
+
+      // Post new resource
+      const newResourceUri = await this.actions.post({
+        resource: { ...resource, 'interop:replaces': oldResourceUri },
+        contentType,
+        webId
+      });
+
+      // Delete old resource
+      // Do that after creating the new resource, in case we want to compare them
+      await this.actions.delete({ resourceUri: oldResourceUri, webId });
+
+      return { resourceUri: newResourceUri, oldData, newData: { id: newResourceUri, ...resource }, webId };
     },
     patch() {
       throw new Error(

@@ -72,7 +72,10 @@ const AgentRegistrationsMixin = {
         // DELETE ALL RELATED AUTHORIZATIONS
         // The related grants will also be deleted as a side effect
 
-        const accessAuthorizations = await ctx.call('access-authorizations.getForAgent', { agentUri, podOwner });
+        const accessAuthorizations = await ctx.call('access-authorizations.listByGrantee', {
+          grantee: agentUri,
+          webId: podOwner
+        });
 
         for (const accessAuthorization of accessAuthorizations) {
           for (const dataAuthorizationUri of arrayOf(accessAuthorization['interop:hasDataAuthorization'])) {

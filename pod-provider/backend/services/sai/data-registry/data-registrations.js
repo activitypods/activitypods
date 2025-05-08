@@ -1,4 +1,5 @@
 const urlJoin = require('url-join');
+const { MoleculerError } = require('moleculer').Errors;
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { getDatasetFromUri, hasType, isURL } = require('@semapps/ldp');
 
@@ -8,12 +9,20 @@ module.exports = {
     async get(ctx) {
       const { dataRegistrationUri } = ctx.params;
 
-      return await ctx.call('ldp.container.get', {
-        containerUri: dataRegistrationUri,
-        accept: MIME_TYPES.JSON,
-        webId: 'system',
-        doNotIncludeResources: true
-      });
+      return await ctx.call(
+        'ldp.container.get',
+        {
+          containerUri: dataRegistrationUri,
+          accept: MIME_TYPES.JSON,
+          webId: 'system',
+          doNotIncludeResources: true
+        },
+        {
+          meta: {
+            dataset: getDatasetFromUri(dataRegistrationUri)
+          }
+        }
+      );
     },
     /**
      * Create a DataRegistration AND a LDP container in a given storage
@@ -42,12 +51,15 @@ module.exports = {
       await ctx.call('ldp.container.createAndAttach', { containerUri, webId: podOwner });
 
       // Register the class on the type index
-      await ctx.call('type-registrations.register', {
-        types: [registeredClass],
-        containerUri,
-        webId: podOwner,
-        private: false
-      });
+      const services = await this.broker.call('$node.services');
+      if (services.some(s => s.name === 'type-registrations')) {
+        await ctx.call('type-registrations.register', {
+          types: [registeredClass],
+          containerUri,
+          webId: podOwner,
+          private: false
+        });
+      }
 
       await this.actions.attachToContainer({ shapeTreeUri, containerUri, podOwner }, { parentCtx: ctx });
 
@@ -150,27 +162,41 @@ module.exports = {
       return results[0]?.dataRegistrationUri?.value;
     },
     /**
-     * Get the DataRegistration URI of a resource
+     * Get the data registration of a resource
      */
     async getByResourceUri(ctx) {
-      const { resourceUri, podOwner } = ctx.params;
+      const { resourceUri, webId } = ctx.params;
 
-      const results = await ctx.call('triplestore.query', {
-        query: `
-          PREFIX ldp: <http://www.w3.org/ns/ldp#>
-          PREFIX interop: <http://www.w3.org/ns/solid/interop#>
-          SELECT ?dataRegistrationUri
-          WHERE {
-            ?dataRegistrationUri ldp:contains <${resourceUri}> .
-            ?dataRegistrationUri a interop:DataRegistration .
-          }
-        `,
-        accept: MIME_TYPES.JSON,
-        webId: 'system',
-        dataset: getDatasetFromUri(podOwner)
-      });
+      const baseUrl = await ctx.call('ldp.getBaseUrl');
 
-      return results[0]?.dataRegistrationUri?.value;
+      if (resourceUri.startsWith(baseUrl)) {
+        const results = await ctx.call('triplestore.query', {
+          query: `
+            PREFIX ldp: <http://www.w3.org/ns/ldp#>
+            PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+            SELECT ?dataRegistrationUri
+            WHERE {
+              ?dataRegistrationUri ldp:contains <${resourceUri}> .
+              ?dataRegistrationUri a interop:DataRegistration .
+            }
+          `,
+          accept: MIME_TYPES.JSON,
+          webId: 'system',
+          dataset: getDatasetFromUri(resourceUri)
+        });
+
+        const dataRegistrationUri = results[0]?.dataRegistrationUri?.value;
+
+        if (dataRegistrationUri) {
+          return await this.actions.get({ dataRegistrationUri }, { parentCtx: ctx });
+        } else {
+          throw new MoleculerError(`Data registration not found`, 404, 'NOT_FOUND');
+        }
+      } else {
+        // TODO Fetch header of resource to find its data registration
+        // See https://github.com/solid/data-interoperability-panel/issues/326
+        throw new Error('Not implemented yet');
+      }
     },
     async registerOntologyFromClass(ctx) {
       const { registeredClass } = ctx.params;

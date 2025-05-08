@@ -11,7 +11,7 @@ jest.setTimeout(80000);
 const APP_URI = 'http://localhost:3001/app';
 
 describe('Test app upgrade', () => {
-  let podProvider, alice, appServer, oldApp, app, requiredAccessNeedGroup;
+  let podProvider, alice, appServer, oldApp, app, requiredAccessNeedGroup, optionalAccessNeedGroup;
 
   beforeAll(async () => {
     await clearAllData();
@@ -72,9 +72,8 @@ describe('Test app upgrade', () => {
     // The access need groups URIs have changed after upgrade (for the required access needs)
     expect(app['interop:hasAccessNeedGroup']).not.toEqual(oldApp['interop:hasAccessNeedGroup']);
 
-    let accessNeedGroup;
     for (const accessNeedUri of app['interop:hasAccessNeedGroup']) {
-      accessNeedGroup = await appServer.call('ldp.resource.get', {
+      const accessNeedGroup = await appServer.call('ldp.resource.get', {
         resourceUri: accessNeedUri,
         accept: MIME_TYPES.JSON
       });
@@ -112,7 +111,7 @@ describe('Test app upgrade', () => {
 
   test('User upgrade and accept all required access needs', async () => {
     await expect(
-      alice.call('auth-agent.upgradeApp', {
+      alice.call('app-registrations.upgrade', {
         appUri: APP_URI,
         acceptedAccessNeeds: requiredAccessNeedGroup['interop:hasAccessNeed'],
         acceptedSpecialRights: requiredAccessNeedGroup['apods:hasSpecialRights']

@@ -169,7 +169,8 @@ describe('Test app installation', () => {
     // Get the app registration from the app server (it should be public like AccessGrants and DataGrants)
     const appRegistration = await appServer.call('ldp.remote.get', {
       resourceUri: appRegistrationUri,
-      accept: MIME_TYPES.JSON
+      accept: MIME_TYPES.JSON,
+      webId: APP_URI
     });
 
     expect(appRegistration).toMatchObject({
@@ -183,7 +184,8 @@ describe('Test app installation', () => {
       arrayOf(appRegistration['interop:hasAccessGrant']).map(accessGrantUri =>
         appServer.call('ldp.remote.get', {
           resourceUri: accessGrantUri,
-          accept: MIME_TYPES.JSON
+          accept: MIME_TYPES.JSON,
+          webId: APP_URI
         })
       )
     );
@@ -201,7 +203,8 @@ describe('Test app installation', () => {
     await expect(
       appServer.call('ldp.remote.get', {
         resourceUri: requiredAccessGrant['interop:hasDataGrant'],
-        accept: MIME_TYPES.JSON
+        accept: MIME_TYPES.JSON,
+        webId: APP_URI
       })
     ).resolves.toMatchObject({
       type: 'interop:DataGrant',
@@ -211,7 +214,7 @@ describe('Test app installation', () => {
       'interop:grantee': APP_URI,
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Write', 'acl:Control']),
       'interop:satisfiesAccessNeed': requiredAccessNeedGroup['interop:hasAccessNeed'],
-      'interop:scopeOfGrant': 'interop:All'
+      'interop:scopeOfGrant': 'interop:AllFromRegistry'
     });
 
     expect(optionalAccessGrant).toMatchObject({
@@ -224,7 +227,8 @@ describe('Test app installation', () => {
     await expect(
       appServer.call('ldp.remote.get', {
         resourceUri: optionalAccessGrant['interop:hasDataGrant'],
-        accept: MIME_TYPES.JSON
+        accept: MIME_TYPES.JSON,
+        webId: APP_URI
       })
     ).resolves.toMatchObject({
       type: 'interop:DataGrant',
@@ -234,7 +238,7 @@ describe('Test app installation', () => {
       'interop:grantee': APP_URI,
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append']),
       'interop:satisfiesAccessNeed': optionalAccessNeedGroup['interop:hasAccessNeed'],
-      'interop:scopeOfGrant': 'interop:All'
+      'interop:scopeOfGrant': 'interop:AllFromRegistry'
     });
   });
 
@@ -455,7 +459,7 @@ describe('Test app installation', () => {
   });
 
   test('User uninstalls app', async () => {
-    await expect(alice.call('auth-agent.removeApp', { appUri: APP_URI })).resolves.not.toThrow();
+    await expect(alice.call('app-registrations.remove', { appUri: APP_URI })).resolves.not.toThrow();
 
     let appRegistrationUri;
 

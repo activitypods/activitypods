@@ -9,7 +9,8 @@ module.exports = {
   settings: {
     acceptedTypes: ['interop:AuthorizationAgent'],
     initialValue: {
-      'interop:hasAuthorizationRedirectEndpoint': urlJoin(CONFIG.FRONTEND_URL, 'authorize')
+      'interop:hasAuthorizationRedirectEndpoint': urlJoin(CONFIG.FRONTEND_URL, 'authorize'),
+      'interop:hasDelegationIssuanceEndpoint': urlJoin(CONFIG.BASE_URL, '.auth-agent/delegation/issue')
     },
     podProvider: true,
     newResourcesPermissions: {

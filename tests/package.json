@@ -7,9 +7,6 @@
     "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid"
   },
   "dependencies": {
-    "@babel/core": "^7.24.3",
-    "@babel/preset-env": "^7.24.3",
-    "@babel/preset-typescript": "^7.24.1",
     "@semapps/activitypub": "1.1.1",
     "@semapps/auth": "1.1.1",
     "@semapps/core": "1.1.1",
@@ -31,13 +28,12 @@
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "@types/node-fetch": "^2.6.6",
-    "babel-jest": "^29.7.0",
     "esbuild": "^0.25.4",
     "esbuild-jest": "^0.5.0",
     "jest": "^29.7.0",
     "wait-for-expect": "^3.0.2"
   },
   "engines": {
-    "node": ">=23"
+    "node": ">=22.12.0"
   }
 }

@@ -2,7 +2,7 @@
   "name": "activitypods-tests",
   "private": true,
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles --verbose",
+    "test": "jest --detectOpenHandles --verbose",
     "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
     "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid"
   },
@@ -10,14 +10,14 @@
     "@semapps/activitypub": "1.1.1",
     "@semapps/auth": "1.1.1",
     "@semapps/core": "1.1.1",
-    "@semapps/ldp": "1.1.1",
-    "@semapps/nodeinfo": "1.1.1",
     "@semapps/crypto": "1.1.1",
-    "@semapps/triplestore": "1.1.1",
+    "@semapps/ldp": "1.1.1",
     "@semapps/mime-types": "1.1.1",
-    "@semapps/webacl": "1.1.1",
+    "@semapps/nodeinfo": "1.1.1",
     "@semapps/ontologies": "1.1.1",
     "@semapps/solid": "1.1.1",
+    "@semapps/triplestore": "1.1.1",
+    "@semapps/webacl": "1.1.1",
     "dotenv-flow": "^3.2.0",
     "ioredis": "^4.27.0",
     "moleculer": "^0.14.19",
@@ -26,11 +26,14 @@
     "wait-for-expect": "^3.0.2"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@types/node-fetch": "^2.6.6",
-    "jest": "^27.4.0",
+    "esbuild": "^0.25.4",
+    "esbuild-jest": "^0.5.0",
+    "jest": "^29.7.0",
     "wait-for-expect": "^3.0.2"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   }
 }

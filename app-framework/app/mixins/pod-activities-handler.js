@@ -24,17 +24,18 @@ module.exports = {
 
       if (!activityHandler) {
         this.logger.warn(`Cannot process activity because no handler with key ${key} found`);
-        return;
+        return dereferencedActivity;
       }
 
       if (boxType === 'inbox' && activityHandler.onReceive) {
-        await activityHandler.onReceive.bind(this)(ctx, dereferencedActivity, actorUri);
+        return await activityHandler.onReceive.bind(this)(ctx, dereferencedActivity, actorUri);
       } else if (boxType === 'outbox' && activityHandler.onEmit) {
-        await activityHandler.onEmit.bind(this)(ctx, dereferencedActivity, actorUri);
+        return await activityHandler.onEmit.bind(this)(ctx, dereferencedActivity, actorUri);
       } else {
         this.logger.warn(
           `Cannot process activity because no onReceive or onEmit methods are associated with with key ${key}`
         );
+        return dereferencedActivity;
       }
     }
   }

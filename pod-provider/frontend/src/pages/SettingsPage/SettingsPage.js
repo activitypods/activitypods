@@ -28,7 +28,7 @@ const SettingsPage = () => {
   const [accountSettings, setAccountSettings] = useState({});
 
   const { data } = useGetList('Location');
-  const contactLink = useContactLink();
+  const { contactLink, error: contactLinkError, status: contactLinkStatus } = useContactLink();
 
   useEffect(() => {
     authProvider.getAccountSettings().then(res => setAccountSettings(res));
@@ -73,12 +73,20 @@ const SettingsPage = () => {
             label="app.setting.locale"
             value={availableLocales.find(l => l.locale === locale)?.name}
           />
-          <CopyToClipboard text={contactLink}>
+          <CopyToClipboard text={contactLinkStatus === 'loaded' ? contactLink : undefined}>
             <SettingsItem
-              onClick={() => notify('app.notification.contact_link_copied', { type: 'success' })}
+              onClick={() =>
+                contactLinkStatus === 'loaded' && notify('app.notification.contact_link_copied', { type: 'success' })
+              }
               icon={<LinkIcon />}
               label="app.card.share_contact"
-              value={contactLink}
+              value={
+                (contactLinkStatus === 'loaded' && contactLink) ||
+                translate(
+                  (contactLinkStatus === 'loading' && 'app.message.loading_invite_link') ||
+                    (contactLinkStatus === 'error' && 'app.message.loading_invite_link_failed')
+                )
+              }
               actionIcon={<FileCopyIcon />}
             />
           </CopyToClipboard>

@@ -13,18 +13,24 @@ const ImmutableContainerMixin = {
       delete resource.id;
 
       // Get old resource (will be returned by the action)
-      const oldData = await this.actions.get({ resourceUri: oldResourceUri, webId });
+      const oldData = await this.actions.get({ resourceUri: oldResourceUri, webId }, { parentCtx: ctx });
 
       // Post new resource
-      const newResourceUri = await this.actions.post({
-        resource: { ...resource, 'interop:replaces': oldResourceUri },
-        contentType,
-        webId
-      });
+      const newResourceUri = await this.actions.post(
+        {
+          resource: { ...resource, 'interop:replaces': oldResourceUri },
+          contentType,
+          webId
+        },
+        { parentCtx: ctx }
+      );
 
-      // Delete old resource
-      // Do that after creating the new resource, in case we want to compare them
-      await this.actions.delete({ resourceUri: oldResourceUri, webId });
+      // Delete old resource (after creating the new resource, in case we want to compare them)
+      // Don't generate a Delete activity to reduce the noise (old resources can be deleted with `interop:replaces`)
+      await this.actions.delete(
+        { resourceUri: oldResourceUri, webId },
+        { meta: { skipObjectsWatcher: true }, parentCtx: ctx }
+      );
 
       return { resourceUri: newResourceUri, oldData, newData: { id: newResourceUri, ...resource }, webId };
     },

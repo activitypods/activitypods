@@ -1,13 +1,14 @@
 const { ControlledContainerMixin, getId } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } = require('@semapps/activitypub');
 const ImmutableContainerMixin = require('../../../mixins/immutable-container-mixin');
+const DataGrantsMixin = require('../../../mixins/data-grants');
 
 module.exports = {
   name: 'data-grants',
-  mixins: [ImmutableContainerMixin, ControlledContainerMixin, ActivitiesHandlerMixin],
+  mixins: [ImmutableContainerMixin, ControlledContainerMixin, DataGrantsMixin],
   settings: {
     acceptedTypes: ['interop:DataGrant'],
+    excludeFromMirror: true,
     activateTombstones: false,
     typeIndex: 'private'
   },
@@ -89,105 +90,6 @@ module.exports = {
       );
 
       return filteredContainer['ldp:contains']?.[0];
-    }
-  },
-  hooks: {
-    after: {
-      async create(ctx, res) {
-        const dataGrant = res.newData;
-
-        await ctx.call('webacl.resource.addRights', {
-          resourceUri: getId(dataGrant),
-          additionalRights: {
-            user: {
-              uri: dataGrant['interop:grantee'],
-              read: true
-            }
-          },
-          webId: 'system'
-        });
-
-        const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
-          actorUri: dataGrant['interop:dataOwner'],
-          predicate: 'outbox'
-        });
-
-        await ctx.call(
-          'activitypub.outbox.post',
-          {
-            collectionUri: outboxUri,
-            type: ACTIVITY_TYPES.CREATE,
-            object: getId(dataGrant),
-            to: dataGrant['interop:grantee']
-          },
-          { meta: { webId: dataGrant['interop:grantedBy'] } }
-        );
-
-        return res;
-      }
-    }
-  },
-  activities: {
-    createDataGrant: {
-      // Match data grants and delegated data grants
-      async match(activity, fetcher) {
-        const { match, dereferencedActivity } = await matchActivity(
-          {
-            type: ACTIVITY_TYPES.CREATE,
-            object: {
-              type: 'interop:DataGrant'
-            }
-          },
-          activity,
-          fetcher
-        );
-        if (match) {
-          return { match, dereferencedActivity };
-        } else {
-          return await matchActivity(
-            {
-              type: ACTIVITY_TYPES.CREATE,
-              object: {
-                type: 'interop:DelegatedDataGrant'
-              }
-            },
-            activity,
-            fetcher
-          );
-        }
-      },
-      async onReceive(ctx, activity, recipientUri) {
-        const dataGrant = activity.object;
-
-        // Delete from cache the old data grant
-        if (dataGrant['interop:replaces']) {
-          try {
-            await ctx.call('ldp.remote.delete', {
-              resourceUri: dataGrant['interop:replaces'],
-              webId: recipientUri
-            });
-          } catch (e) {
-            this.logger.warn(
-              `Could not delete data grant ${dataGrant['interop:replaces']} on storage of ${recipientUri}. Ignoring...`
-            );
-          }
-        }
-
-        // Generate delegated data grants for all data authorizations with `interop:All` scope
-        const grantees = await ctx.call('delegated-data-grants.generateFromAllScopeAllDataAuthorizations', {
-          dataGrant,
-          podOwner: recipientUri
-        });
-
-        // Regenerate the app registrations if needed
-        // TODO Also regenerate the social agent registrations
-        for (const grantee of grantees) {
-          await ctx.call('app-registrations.regenerate', {
-            appUri: grantee,
-            podOwner: recipientUri
-          });
-        }
-      }
     }
   }
 };

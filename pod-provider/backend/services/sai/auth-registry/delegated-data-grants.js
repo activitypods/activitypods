@@ -1,106 +1,66 @@
-const path = require('path');
-const { MoleculerError } = require('moleculer').Errors;
 const { ControlledContainerMixin, arrayOf, getId, getDatasetFromUri } = require('@semapps/ldp');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { parseHeader, negotiateContentType, parseJson, parseTurtle } = require('@semapps/middlewares');
 const ImmutableContainerMixin = require('../../../mixins/immutable-container-mixin');
+const DataGrantsMixin = require('../../../mixins/data-grants');
 
 module.exports = {
   name: 'delegated-data-grants',
-  mixins: [ImmutableContainerMixin, ControlledContainerMixin],
+  mixins: [ImmutableContainerMixin, ControlledContainerMixin, DataGrantsMixin],
   settings: {
     acceptedTypes: ['interop:DelegatedDataGrant'],
-    newResourcesPermissions: {
-      anon: {
-        read: true
-      }
-    },
     excludeFromMirror: true,
     activateTombstones: false,
-    typeIndex: 'private',
-    readOnly: true
-  },
-  dependencies: ['ldp', 'api'],
-  async started() {
-    const basePath = await this.broker.call('ldp.getBasePath');
-    const middlewares = [parseHeader, negotiateContentType, parseJson, parseTurtle];
-    await this.broker.call('api.addRoute', {
-      route: {
-        name: 'auth-agent-delegation',
-        path: path.join(basePath, '/.auth-agent/delegation'),
-        authorization: true,
-        authentication: false,
-        bodyParsers: false,
-        aliases: {
-          'POST /issue': [...middlewares, 'delegated-data-grants.issue_api']
-        }
-      }
-    });
+    typeIndex: 'private'
   },
   actions: {
-    async issue_api(ctx) {
-      const delegatedDataGrant = ctx.params;
+    // If the delegated data grant posted should be created on the data owner's storage
+    // then do that and keep it in cache. Otherwise create it locally as usual.
+    async post(ctx) {
+      const { resource: delegatedDataGrant } = ctx.params;
+      const webId = ctx.params.webId || ctx.meta.webId || 'anon';
 
-      ctx.meta.dataset = getDatasetFromUri(delegatedDataGrant['interop:dataOwner']);
+      if (delegatedDataGrant['interop:dataOwner'] !== webId) {
+        const delegatedDataGrantUri = await ctx.call('delegation-issuer.remoteIssue', { delegatedDataGrant, webId });
 
-      const grantUri = await this.actions.issue({ delegatedDataGrant }, { parentCtx: ctx });
+        // Now the delegated data grant has been created and validated, store it locally
+        await ctx.call('ldp.remote.store', { resourceUri: delegatedDataGrantUri, webId });
+        await this.actions.attach({ resourceUri: delegatedDataGrantUri, webId }, { parentCtx: ctx });
 
-      ctx.meta.$responseHeaders = { Location: grantUri };
-      // We need to set this also here (in addition to above) or we get a Moleculer warning
-      ctx.meta.$location = grantUri;
-      ctx.meta.$statusCode = 201;
-    },
-    async issue(ctx) {
-      const { delegatedDataGrant } = ctx.params;
-      const webId = ctx.meta.webId;
-      const dataOwner = delegatedDataGrant['interop:dataOwner'];
-
-      const originalDataGrant = await ctx.call('data-grants.get', {
-        resourceUri: delegatedDataGrant['interop:delegationOfGrant'],
-        webId: dataOwner
-      });
-
-      if (delegatedDataGrant['interop:grantedBy'] !== webId) {
-        throw new MoleculerError('You cannot grant for someone else', 401, 'FORBIDDEN');
-      }
-
-      if (
-        originalDataGrant['interop:delegationAllowed'] !== true ||
-        (originalDataGrant['interop:delegationLimit'] && originalDataGrant['interop:delegationLimit'] < 1)
-      ) {
-        throw new MoleculerError('Delegation not allowed', 401, 'FORBIDDEN');
-      }
-
-      if (
-        originalDataGrant['interop:dataOwner'] !== delegatedDataGrant['interop:dataOwner'] ||
-        originalDataGrant['interop:scopeOfGrant'] !== delegatedDataGrant['interop:scopeOfGrant'] ||
-        originalDataGrant['interop:hasDataRegistration'] !== delegatedDataGrant['interop:hasDataRegistration'] ||
-        originalDataGrant['interop:registeredShapeTree'] !== delegatedDataGrant['interop:registeredShapeTree'] ||
-        originalDataGrant['interop:scopeOfGrant'] !== delegatedDataGrant['interop:scopeOfGrant'] ||
-        !arrayOf(delegatedDataGrant['interop:hasDataInstance']).every(uri =>
-          arrayOf(originalDataGrant['interop:hasDataInstance']).includes(uri)
-        ) ||
-        !arrayOf(delegatedDataGrant['interop:accessMode']).every(mode =>
-          arrayOf(originalDataGrant['interop:accessMode']).includes(mode)
-        )
-      ) {
-        throw new MoleculerError('Delegated data grant does not match original grant', 400, 'BAD REQUEST');
-      }
-
-      const grantUri = await this.actions.post(
-        {
-          resource: delegatedDataGrant,
-          contentType: MIME_TYPES.JSON,
-          webId: dataOwner
-        },
-        {
-          parentCtx: ctx
+        return delegatedDataGrantUri;
+      } else {
+        if (!ctx.params.containerUri) {
+          ctx.params.containerUri = await this.actions.getContainerUri({ webId: ctx.params.webId }, { parentCtx: ctx });
         }
-      );
 
-      return grantUri;
+        return await ctx.call('ldp.container.post', ctx.params);
+      }
     },
+    // async delete(ctx) {
+    //   const { resourceUri } = ctx.params;
+    //   const webId = ctx.params.webId || ctx.meta.webId || 'anon';
+
+    //   const delegatedDataGrant = await this.actions.get({ resourceUri, webId }, { parentCtx: ctx });
+
+    //   if (delegatedDataGrant['interop:dataOwner'] !== webId) {
+    //     await ctx.call('delegation-issuer.remoteDelete', { delegatedDataGrant, webId });
+
+    //     // Now the delegated data grant has been delete, delete the local cache
+    //     await ctx.call('ldp.remote.delete', { resourceUri, webId });
+    //     const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
+    //     await this.actions.detach({ resourceUri, containerUri, webId }, { parentCtx: ctx });
+
+    //     return {
+    //       resourceUri,
+    //       containersUris: [containerUri],
+    //       oldData: delegatedDataGrant,
+    //       webId,
+    //       dataset: ctx.meta.dataset
+    //     };
+    //   } else {
+    //     return await ctx.call('ldp.resource.delete', ctx.params);
+    //   }
+    // },
     // Generate the delegated data grants from all data authorizations with `interop:All` scope
     // Return the list of grantees, so that their registrations eventually may be regenerated
     async generateFromAllScopeAllDataAuthorizations(ctx) {
@@ -178,8 +138,7 @@ module.exports = {
                 'interop:hasDataInstance': dataGrant['interop:hasDataInstance'],
                 'interop:delegationOfGrant': getId(dataGrant)
               },
-              contentType: MIME_TYPES.JSON,
-              webId: dataAuthorization['interop:dataOwner']
+              contentType: MIME_TYPES.JSON
             },
             { parentCtx: ctx }
           );
@@ -194,11 +153,11 @@ module.exports = {
               id: undefined,
               type: 'interop:DelegatedDataGrant',
               'interop:grantee': dataAuthorization['interop:grantee'],
+              'interop:grantedBy': dataAuthorization['interop:grantedBy'],
               'interop:satisfiesAccessNeed': dataAuthorization['interop:satisfiesAccessNeed'],
               'interop:delegationOfGrant': getId(dataGrant)
             },
-            contentType: MIME_TYPES.JSON,
-            webId: dataAuthorization['interop:dataOwner']
+            contentType: MIME_TYPES.JSON
           },
           { parentCtx: ctx }
         );
@@ -223,51 +182,62 @@ module.exports = {
         dataGrant['interop:delegationAllowed'] &&
         (dataGrant['interop:delegationLimit'] === undefined || dataGrant['interop:delegationLimit'] > 1);
 
-      const baseUrl = await this.broker.call('ldp.getBaseUrl');
-
-      if (dataGrant['interop:dataOwner'].startsWith(baseUrl)) {
-        // User is on same server, call endpoint directly
-        const delegatedDataGrantUri = await this.actions.issue(
-          {
-            delegatedDataGrant: {
-              ...dataGrant,
-              id: undefined,
-              type: 'interop:DelegatedDataGrant',
-              'interop:grantee': dataAuthorization['interop:grantee'],
-              'interop:grantedBy': webId,
-              'interop:delegationOfGrant': getId(dataGrant),
-              'interop:delegationAllowed': delegationAllowed ? true : undefined,
-              'interop:delegationLimit':
-                delegationAllowed && dataGrant['interop:delegationLimit']
-                  ? dataGrant['interop:delegationLimit'] - 1
-                  : undefined
-            }
+      const delegatedDataGrantUri = await this.actions.post(
+        {
+          resource: {
+            ...dataGrant,
+            id: undefined,
+            type: 'interop:DelegatedDataGrant',
+            'interop:grantee': dataAuthorization['interop:grantee'],
+            'interop:grantedBy': webId,
+            'interop:delegationOfGrant': getId(dataGrant),
+            'interop:delegationAllowed': delegationAllowed ? true : undefined,
+            'interop:delegationLimit':
+              delegationAllowed && dataGrant['interop:delegationLimit']
+                ? dataGrant['interop:delegationLimit'] - 1
+                : undefined
           },
-          { meta: { dataset: getDatasetFromUri(dataGrant['interop:dataOwner']) }, parentCtx: ctx }
+          contentType: MIME_TYPES.JSON
+        },
+        { parentCtx: ctx }
+      );
+
+      // Notify the grantee of the delegated data grant, so that they may put it in cache
+      const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
+        actorUri: webId,
+        predicate: 'outbox'
+      });
+      await ctx.call('activitypub.outbox.post', {
+        collectionUri: outboxUri,
+        type: ACTIVITY_TYPES.CREATE,
+        object: delegatedDataGrantUri,
+        to: dataAuthorization['interop:grantee']
+      });
+
+      return delegatedDataGrantUri;
+    },
+    // Delete all delegated data grants linked with a data grant
+    async deleteByDataGrant(ctx) {
+      const { dataGrant } = ctx.params;
+
+      const filteredContainer = await this.actions.list(
+        {
+          filters: {
+            'http://www.w3.org/ns/solid/interop#delegationOfGrant': getId(dataGrant)
+          },
+          webId: dataGrant['interop:dataOwner']
+        },
+        { parentCtx: ctx }
+      );
+
+      for (const delegatedDataGrant of arrayOf(filteredContainer['ldp:contains'])) {
+        await this.actions.delete(
+          { resourceUri: getId(delegatedDataGrant), webId: dataGrant['interop:dataOwner'] },
+          { parentCtx: ctx }
         );
-
-        // Now the delegated data grant has been created and validated, store it locally
-        await ctx.call('ldp.remote.store', { resourceUri: delegatedDataGrantUri, webId });
-        await this.actions.attach({ resourceUri: delegatedDataGrantUri, webId }, { parentCtx: ctx });
-
-        // Notify the grantee of the delegated data grant, so that they may put it in cache
-        const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
-          actorUri: webId,
-          predicate: 'outbox'
-        });
-        await ctx.call('activitypub.outbox.post', {
-          collectionUri: outboxUri,
-          type: ACTIVITY_TYPES.CREATE,
-          object: delegatedDataGrantUri,
-          to: dataAuthorization['interop:grantee']
-        });
-
-        return delegatedDataGrantUri;
-      } else {
-        // TODO Fetch endpoint
       }
     },
-    // Get the DelegatedDataGrant linked with an DataGrant
+    // Get the delegated data grant generated for a grantee from a data grant
     async getByDataGrant(ctx) {
       const { dataGrantUri, grantee, podOwner } = ctx.params;
 
@@ -325,40 +295,6 @@ module.exports = {
       );
 
       return arrayOf(filteredContainer['ldp:contains']);
-    }
-  },
-  hooks: {
-    after: {
-      async create(ctx, res) {
-        const delegatedDataGrant = res.newData;
-
-        // The grantee must be able to read the grant
-        await ctx.call('webacl.resource.addRights', {
-          resourceUri: getId(delegatedDataGrant),
-          additionalRights: {
-            user: {
-              uri: delegatedDataGrant['interop:grantee'],
-              read: true
-            }
-          },
-          webId: 'system'
-        });
-
-        // The granter must be able to read and delete the grant
-        await ctx.call('webacl.resource.addRights', {
-          resourceUri: getId(delegatedDataGrant),
-          additionalRights: {
-            user: {
-              uri: delegatedDataGrant['interop:grantedBy'],
-              read: true,
-              write: true
-            }
-          },
-          webId: 'system'
-        });
-
-        return res;
-      }
     }
   }
 };

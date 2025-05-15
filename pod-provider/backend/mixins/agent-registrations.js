@@ -6,6 +6,22 @@ const { arrayOf } = require('@semapps/ldp');
  */
 const AgentRegistrationsMixin = {
   actions: {
+    /**
+     * Generate or regenerate an agent registration based on their access grants
+     */
+    async regenerate(ctx) {
+      const { agentUri, podOwner } = ctx.params;
+
+      const accessGrants = await ctx.call('access-grants.getForAgent', { agentUri, podOwner });
+      const accessGrantsUris = accessGrants.map(r => r.id || r['@id']);
+
+      const agentRegistrationUri = await this.actions.createOrUpdate(
+        { agentUri, podOwner, accessGrantsUris },
+        { parentCtx: ctx }
+      );
+
+      return agentRegistrationUri;
+    },
     async getForAgent(ctx) {
       const { agentUri, podOwner } = ctx.params;
 

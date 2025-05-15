@@ -1,6 +1,6 @@
 const path = require('path');
 const urlJoin = require('url-join');
-const { arrayOf } = require('@semapps/ldp');
+const { arrayOf, getDatasetFromUri } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const matchActivity = require('@semapps/activitypub/utils/matchActivity');
@@ -139,7 +139,6 @@ module.exports = {
           dereferencedActivity
         };
       },
-      /** Add read rights to announced (reposted) object, if announcer is owner. */
       async onEmit(ctx, activity, emitterUri) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
@@ -149,9 +148,30 @@ module.exports = {
           webId: emitterUri
         });
 
+        /**
+         * CHECK PERMISSIONS
+         */
+
         if (emitterUri !== resource['dc:creator']) {
-          throw new Error('Only the creator has the right to share the object ' + resourceUri);
+          if (!resource['apods:announcers']) {
+            this.logger.warn(`No announcers collection attached to object ${resource.id}, skipping...`);
+            return;
+          }
+
+          // Check if the emitter has a data grant which allow delegation
+          const isAnnouncer = await ctx.call('activitypub.collection.includes', {
+            collectionUri: resource['apods:announcers'],
+            itemUri: emitterUri
+          });
+
+          if (!isAnnouncer) {
+            throw new Error(`Actor ${emitterUri} was not given permission to announce the object ${resource.id}`);
+          }
         }
+
+        /**
+         * CREATE ANNOUNCES COLLECTION AND ADD RECIPIENTS
+         */
 
         const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
           objectUri: resourceUri,
@@ -160,30 +180,72 @@ module.exports = {
 
         await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
 
-        // Add all targeted actors to the collection and WebACL group
-        // TODO check if we could not use activity.to instead of activity.target (and change this everywhere)
-        for (let actorUri of arrayOf(activity.target)) {
+        // Add all recipients to the announces collection and WebACL group
+        for (let actorUri of arrayOf(activity.to)) {
           await ctx.call('activitypub.collection.add', {
             collectionUri: announcesCollectionUri,
             item: actorUri
           });
 
-          // TODO automatically synchronize the collection with the ACL group
           await ctx.call('webacl.group.addMember', {
             groupUri: getAnnouncesGroupUri(resourceUri),
             memberUri: actorUri,
             webId: resource['dc:creator']
           });
         }
+
+        /**
+         * CREATE ANNOUNCERS COLLECTION AND ADD RECIPIENTS (IF DELEGATION IS ALLOWED)
+         */
+
+        if (activity['interop:delegationAllowed']) {
+          if (emitterUri !== resource['dc:creator']) {
+            throw new Error(`Only the owner of ${resource.id} can allow delegation`);
+          }
+
+          const announcersCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
+            objectUri: resourceUri,
+            collection: this.settings.announcersCollectionOptions
+          });
+
+          await this.actions.giveRightsAfterAnnouncersCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
+
+          // Add all recipients to the announcers collection and WebACL group
+          for (let actorUri of arrayOf(activity.to)) {
+            await ctx.call('activitypub.collection.add', {
+              collectionUri: announcersCollectionUri,
+              item: actorUri
+            });
+
+            await ctx.call('webacl.group.addMember', {
+              groupUri: getAnnouncersGroupUri(resourceUri),
+              memberUri: actorUri,
+              webId: resource['dc:creator']
+            });
+          }
+        }
+
+        /**
+         * CREATE AUTHORIZATIONS FOR AGENTS
+         */
+
+        for (let actorUri of arrayOf(activity.to)) {
+          await ctx.call('social-agent-registrations.addAuthorization', {
+            resourceUri,
+            grantee: actorUri,
+            accessModes: ['acl:Read'],
+            delegationAllowed: !!activity['interop:delegationAllowed'],
+            delegationLimit: activity['interop:delegationLimit']
+          });
+        }
       },
       /**
-       * On receipt of an announce activity (repost), cache it in the remote store,
-       *  and attach it to type-index registered containers..
+       * On receipt of an announce activity, cache locally the announced object
        */
       async onReceive(ctx, activity, recipientUri) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
-        // Sometimes, when reposting, a recipient may be the original announcer
+        // Sometimes a recipient may be the original announcer
         // So ensure this is a remote resource before storing it locally
         if (!resourceUri.startsWith(urlJoin(recipientUri, '/'))) {
           const resource = await ctx.call('ldp.resource.get', {
@@ -244,87 +306,38 @@ module.exports = {
           }
         }
       }
-    },
-    offerAnnounce: {
-      async match(activity, fetcher) {
-        const { match, dereferencedActivity } = await matchActivity(
-          {
-            type: ACTIVITY_TYPES.OFFER,
-            object: {
-              type: ACTIVITY_TYPES.ANNOUNCE
-            }
-          },
-          activity,
-          fetcher
-        );
-        return {
-          match: match && !(await this.broker.call('activitypub.activity.isPublic', { activity })),
-          dereferencedActivity
-        };
-      },
-      async onEmit(ctx, activity) {
-        const object = await ctx.call('ldp.resource.get', {
-          resourceUri: typeof activity.object.object === 'string' ? activity.object.object : activity.object.object.id,
-          accept: MIME_TYPES.JSON
+    }
+  },
+  events: {
+    // When a delegated data grant is issued, add the grantee to the announces collection
+    // This hack will be gone when we can do without announces/announcers collections
+    async 'delegated-data-grants.issued'(ctx) {
+      const { delegatedDataGrant } = ctx.params;
+
+      // TODO find a better way to detect application data grants
+      if (delegatedDataGrant['interop:satisfiesAccessNeed']) {
+        this.logger.warn(`Delegated data grant is for application, skip adding to the announces collection...`);
+        return;
+      }
+
+      ctx.meta.webId = delegatedDataGrant['interop:dataOwner'];
+      ctx.meta.dataset = getDatasetFromUri(delegatedDataGrant['interop:dataOwner']);
+
+      for (const resourceUri of arrayOf(delegatedDataGrant['interop:hasDataInstance'])) {
+        const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
+          objectUri: resourceUri,
+          collection: this.settings.announcesCollectionOptions
         });
 
-        // If the emitter is the organizer, it means we want to give actors the right to announce the given object
-        if (activity.actor === object['dc:creator']) {
-          const announcersCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
-            objectUri: object.id,
-            collection: this.settings.announcersCollectionOptions
-          });
-
-          await this.actions.giveRightsAfterAnnouncersCollectionCreate({ objectUri: object.id }, { parentCtx: ctx });
-
-          // Add all announcers to the collection and WebACL group
-          for (let actorUri of arrayOf(activity.target)) {
-            await ctx.call('activitypub.collection.add', {
-              collectionUri: announcersCollectionUri,
-              item: actorUri
-            });
-
-            await ctx.call('webacl.group.addMember', {
-              groupUri: getAnnouncersGroupUri(object.id),
-              memberUri: actorUri,
-              webId: activity.object.object['dc:creator']
-            });
-          }
-        }
-      },
-      async onReceive(ctx, activity) {
-        const object = await ctx.call('ldp.resource.get', {
-          resourceUri: typeof activity.object.object === 'string' ? activity.object.object : activity.object.object.id,
-          accept: MIME_TYPES.JSON
+        await ctx.call('activitypub.collection.add', {
+          collectionUri: announcesCollectionUri,
+          item: delegatedDataGrant['interop:grantee']
         });
 
-        // If the offer is targeted to the organizer, it means we are an announcer and want him to announce the object to one of our contacts
-        if (activity.target === object['dc:creator']) {
-          if (!object['apods:announcers']) {
-            this.logger.warn(`No announcers collection attached to object ${object.id}, skipping...`);
-            return;
-          }
-
-          const creator = await ctx.call('activitypub.actor.get', { actorUri: object['dc:creator'] });
-
-          const isAnnouncer = await ctx.call('activitypub.collection.includes', {
-            collectionUri: object['apods:announcers'],
-            itemUri: activity.actor
-          });
-
-          if (!isAnnouncer) {
-            throw new Error(`Actor ${activity.actor} was not given permission to announce the object ${object.id}`);
-          }
-
-          await ctx.call('activitypub.outbox.post', {
-            collectionUri: creator.outbox,
-            type: ACTIVITY_TYPES.ANNOUNCE,
-            actor: creator.id,
-            object: object.id,
-            target: activity.object.target,
-            to: activity.object.target
-          });
-        }
+        await ctx.call('webacl.group.addMember', {
+          groupUri: getAnnouncesGroupUri(resourceUri),
+          memberUri: delegatedDataGrant['interop:grantee']
+        });
       }
     }
   }

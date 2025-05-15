@@ -39,6 +39,7 @@ module.exports = {
             resource: {
               type: 'interop:DataAuthorization',
               'interop:dataOwner': podOwner,
+              'interop:grantedBy': podOwner,
               'interop:grantee': appUri,
               'interop:registeredShapeTree': accessNeed['interop:registeredShapeTree'],
               'interop:hasDataRegistration': dataRegistrationUri,
@@ -141,6 +142,7 @@ module.exports = {
             resource: {
               type: 'interop:DataAuthorization',
               'interop:dataOwner': dataOwner,
+              'interop:grantedBy': webId,
               'interop:grantee': grantee,
               'interop:registeredShapeTree': dataRegistration['interop:registeredShapeTree'],
               'interop:hasDataRegistration': getId(dataRegistration),
@@ -307,61 +309,14 @@ module.exports = {
 
         const dataAuthorization = res.newData;
         const dataOwner = dataAuthorization['interop:dataOwner'];
-        const grantee = dataAuthorization['interop:grantee'];
-        const shapeTreeUri = dataAuthorization['interop:registeredShapeTree'];
-        const accessMode = arrayOf(dataAuthorization['interop:accessMode']);
         const scope = dataAuthorization['interop:scopeOfAuthorization'];
         const webId = ctx.params.webId || ctx.meta.webId;
 
-        const containerUri = await ctx.call('data-registrations.getByShapeTree', { shapeTreeUri, podOwner: dataOwner });
-
+        // Check if we need to generate a data grant or a delegated data grant
         if (dataOwner === webId) {
-          // For mapping details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
-          if (scope === 'interop:All') {
-            // Give read-write permission to the whole container
-            await ctx.call('webacl.resource.addRights', {
-              resourceUri: containerUri,
-              additionalRights: {
-                // Container rights
-                user: {
-                  uri: grantee,
-                  read: accessMode.includes('acl:Read'),
-                  write: accessMode.includes('acl:Write')
-                },
-                // Resources default rights
-                default: {
-                  user: {
-                    uri: grantee,
-                    read: accessMode.includes('acl:Read'),
-                    append: accessMode.includes('acl:Append'),
-                    write: accessMode.includes('acl:Write'),
-                    control: accessMode.includes('acl:Control')
-                  }
-                }
-              },
-              webId: 'system'
-            });
-          } else if (scope === 'interop:SelectedFromRegistry') {
-            for (const resourceUri of arrayOf(dataAuthorization['interop:hasDataInstance'])) {
-              // Give read-write permission to the resources
-              await ctx.call('webacl.resource.addRights', {
-                resourceUri,
-                additionalRights: {
-                  // Container rights
-                  user: {
-                    uri: grantee,
-                    read: accessMode.includes('acl:Read'),
-                    append: accessMode.includes('acl:Append'),
-                    write: accessMode.includes('acl:Write'),
-                    control: accessMode.includes('acl:Control')
-                  }
-                },
-                webId: 'system'
-              });
-            }
-          }
-
-          await ctx.call('data-grants.generateFromDataAuthorization', { dataAuthorization });
+          await ctx.call('data-grants.generateFromDataAuthorization', {
+            dataAuthorization
+          });
         } else {
           await ctx.call('delegated-data-grants.generateFromDataAuthorization', {
             dataAuthorization
@@ -384,62 +339,14 @@ module.exports = {
         return res;
       },
       async delete(ctx, res) {
-        const podOwner = res.oldData['interop:dataOwner'];
-        const appUri = res.oldData['interop:grantee'];
-        const shapeTreeUri = res.oldData['interop:registeredShapeTree'];
-        const accessMode = arrayOf(res.oldData['interop:accessMode']);
-        const scope = res.oldData['interop:scopeOfAuthorization'];
+        const dataAuthorization = res.oldData;
 
-        const containerUri = await ctx.call('data-registrations.getByShapeTree', { shapeTreeUri, podOwner });
-
-        // In case of a migration, no container will be found so skip this part
-        if (containerUri) {
-          // Mirror of what is done on the above hook
-          if (scope === 'interop:All') {
-            await ctx.call('webacl.resource.removeRights', {
-              resourceUri: containerUri,
-              rights: {
-                user: {
-                  uri: appUri,
-                  read: accessMode.includes('acl:Read'),
-                  write: accessMode.includes('acl:Write')
-                },
-                default: {
-                  user: {
-                    uri: appUri,
-                    read: accessMode.includes('acl:Read'),
-                    append: accessMode.includes('acl:Append'),
-                    write: accessMode.includes('acl:Write'),
-                    control: accessMode.includes('acl:Control')
-                  }
-                }
-              },
-              webId: 'system'
-            });
-          } else if (scope === 'interop:SelectedFromRegistry') {
-            for (const resourceUri of arrayOf(res.oldData['interop:hasDataInstance'])) {
-              await ctx.call('webacl.resource.removeRights', {
-                resourceUri,
-                rights: {
-                  user: {
-                    uri: appUri,
-                    read: accessMode.includes('acl:Read'),
-                    append: accessMode.includes('acl:Append'),
-                    write: accessMode.includes('acl:Write'),
-                    control: accessMode.includes('acl:Control')
-                  }
-                },
-                webId: 'system'
-              });
-            }
-          }
-        }
-
-        // Delete DataGrant that match the same AccessNeed
+        // Delete data grant that match the same access need
         const dataGrant = await ctx.call('data-grants.getByAccessNeed', {
-          accessNeedUri: res.oldData['interop:satisfiesAccessNeed'],
-          podOwner: res.oldData['interop:dataOwner']
+          accessNeedUri: dataAuthorization['interop:satisfiesAccessNeed'],
+          podOwner: dataAuthorization['interop:dataOwner']
         });
+
         if (dataGrant) {
           await ctx.call('data-grants.delete', {
             resourceUri: dataGrant.id,

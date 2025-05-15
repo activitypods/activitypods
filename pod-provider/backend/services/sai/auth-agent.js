@@ -19,7 +19,6 @@ module.exports = {
       }
     }
   },
-  dependencies: ['api', 'ldp'],
   actions: {
     // Action from the ControlledContainerMixin, called when we do GET or HEAD requests on resources
     async getHeaderLinks(ctx) {

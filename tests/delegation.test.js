@@ -2,26 +2,17 @@ const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { connectPodProvider, clearAllData, initializeAppServer, installApp } = require('./initialize');
+const { connectPodProvider, clearAllData, createActor, initializeAppServer, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example3.app');
 const CONFIG = require('./config');
 
 jest.setTimeout(120000);
 
-const NUM_PODS = 3;
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
 describe('Test delegation features', () => {
-  let actors = [],
-    podProvider,
-    appServer,
-    alice,
-    bob,
-    craig,
-    eventContainerUri,
-    eventUri,
-    craigAppRegistrationUri;
+  let podProvider, appServer, alice, bob, craig, eventContainerUri, eventUri, craigAppRegistrationUri;
 
   beforeAll(async () => {
     clearAllData();
@@ -31,27 +22,9 @@ describe('Test delegation features', () => {
     appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();
 
-    for (let i = 1; i <= NUM_PODS; i++) {
-      const actorData = require(`./data/actor${i}.json`);
-      const { webId } = await podProvider.call('auth.signup', actorData);
-      actors[i] = await podProvider.call(
-        'activitypub.actor.awaitCreateComplete',
-        {
-          actorUri: webId,
-          additionalKeys: ['url', 'apods:contacts', 'apods:contactRequests', 'apods:rejectedContacts']
-        },
-        { meta: { dataset: actorData.username } }
-      );
-      actors[i].call = (actionName, params, options = {}) =>
-        podProvider.call(actionName, params, {
-          ...options,
-          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
-        });
-    }
-
-    alice = actors[1];
-    bob = actors[2];
-    craig = actors[3];
+    alice = await createActor(podProvider, 'alice');
+    bob = await createActor(podProvider, 'bob');
+    craig = await createActor(podProvider, 'craig');
 
     // We only need to install the app for Craig
     craigAppRegistrationUri = await installApp(craig, APP_URI);
@@ -207,7 +180,7 @@ describe('Test delegation features', () => {
             'interop:accessMode': 'acl:Read',
             'interop:dataOwner': alice.id,
             'interop:grantee': APP_URI,
-            'interop:grantedBy': bob.id,
+            'interop:grantedBy': craig.id,
             'interop:hasDataInstance': eventUri,
             'interop:hasDataRegistration': eventContainerUri,
             'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
@@ -216,5 +189,13 @@ describe('Test delegation features', () => {
         ])
       );
     });
+
+    // Craig can fetch Alice event
+    await expect(
+      craig.call('ldp.resource.get', {
+        resourceUri: eventUri,
+        accept: MIME_TYPES.JSON
+      })
+    ).resolves.not.toThrow();
   });
 });

@@ -2,7 +2,7 @@ const path = require('path');
 const urlJoin = require('url-join');
 const { MoleculerError } = require('moleculer').Errors;
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { ControlledContainerMixin } = require('@semapps/ldp');
+const { ControlledContainerMixin, getId } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const AgentRegistrationsMixin = require('../../../mixins/agent-registrations');
 const { arraysEqual } = require('../../../utils');
@@ -43,9 +43,9 @@ module.exports = {
   },
   actions: {
     async createOrUpdate(ctx) {
-      const { appUri, podOwner, accessGrantsUris } = ctx.params;
+      const { agentUri, podOwner, accessGrantsUris } = ctx.params;
 
-      const appRegistration = await this.actions.getForAgent({ agentUri: appUri, podOwner }, { parentCtx: ctx });
+      const appRegistration = await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx });
 
       if (appRegistration) {
         if (!arraysEqual(appRegistration['interop:hasAccessGrant'], accessGrantsUris)) {
@@ -62,7 +62,7 @@ module.exports = {
           );
         }
 
-        return appRegistration.id;
+        return getId(appRegistration);
       } else {
         const appRegistrationUri = await this.actions.post(
           {
@@ -72,7 +72,7 @@ module.exports = {
               'interop:registeredWith': await ctx.call('auth-agent.getResourceUri', { webId: podOwner }),
               'interop:registeredAt': new Date().toISOString(),
               'interop:updatedAt': new Date().toISOString(),
-              'interop:registeredAgent': appUri,
+              'interop:registeredAgent': agentUri,
               'interop:hasAccessGrant': accessGrantsUris
             },
             contentType: MIME_TYPES.JSON
@@ -82,23 +82,6 @@ module.exports = {
 
         return appRegistrationUri;
       }
-    },
-    /**
-     * Generate or regenerate an app registration based on their access grants
-     */
-    async regenerate(ctx) {
-      const { appUri, podOwner } = ctx.params;
-
-      // Retrieve the AccessGrants (which may, or may not, have changed)
-      const accessGrants = await ctx.call('access-grants.getForAgent', { agentUri: appUri, podOwner });
-      const accessGrantsUris = accessGrants.map(r => r.id || r['@id']);
-
-      const appRegistrationUri = await this.actions.createOrUpdate(
-        { appUri, podOwner, accessGrantsUris },
-        { parentCtx: ctx }
-      );
-
-      return appRegistrationUri;
     },
     async register(ctx) {
       let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
@@ -142,7 +125,7 @@ module.exports = {
 
       const appRegistrationUri = await this.actions.regenerate(
         {
-          appUri,
+          agentUri: appUri,
           podOwner: webId
         },
         { parentCtx: ctx }
@@ -197,7 +180,7 @@ module.exports = {
 
       const appRegistrationUri = await this.actions.regenerate(
         {
-          appUri,
+          agentUri: appUri,
           podOwner: webId
         },
         { parentCtx: ctx }

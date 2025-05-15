@@ -2,19 +2,17 @@ const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { connectPodProvider, clearAllData, initializeAppServer, installApp } = require('./initialize');
+const { connectPodProvider, clearAllData, createActor, initializeAppServer, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example3.app');
 const CONFIG = require('./config');
 
 jest.setTimeout(120000);
 
-const NUM_PODS = 3;
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
 describe('Test resource sharing features', () => {
-  let actors = [],
-    podProvider,
+  let podProvider,
     appServer,
     alice,
     bob,
@@ -34,27 +32,9 @@ describe('Test resource sharing features', () => {
     appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();
 
-    for (let i = 1; i <= NUM_PODS; i++) {
-      const actorData = require(`./data/actor${i}.json`);
-      const { webId } = await podProvider.call('auth.signup', actorData);
-      actors[i] = await podProvider.call(
-        'activitypub.actor.awaitCreateComplete',
-        {
-          actorUri: webId,
-          additionalKeys: ['url', 'apods:contacts', 'apods:contactRequests', 'apods:rejectedContacts']
-        },
-        { meta: { dataset: actorData.username } }
-      );
-      actors[i].call = (actionName, params, options = {}) =>
-        podProvider.call(actionName, params, {
-          ...options,
-          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
-        });
-    }
-
-    alice = actors[1];
-    bob = actors[2];
-    craig = actors[3];
+    alice = await createActor(podProvider, 'alice');
+    bob = await createActor(podProvider, 'bob');
+    craig = await createActor(podProvider, 'craig');
 
     bobAppRegistrationUri = await installApp(bob, APP_URI);
   });
@@ -151,6 +131,14 @@ describe('Test resource sharing features', () => {
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
       'interop:scopeOfGrant': 'interop:SelectedFromRegistry'
     });
+
+    // Bob can fetch Alice event
+    await expect(
+      bob.call('ldp.resource.get', {
+        resourceUri: eventUri,
+        accept: MIME_TYPES.JSON
+      })
+    ).resolves.not.toThrow();
   });
 
   test('A delegated data grant is created by Bob AA for the application', async () => {
@@ -171,6 +159,7 @@ describe('Test resource sharing features', () => {
             'interop:accessMode': 'acl:Read',
             'interop:dataOwner': alice.id,
             'interop:grantee': APP_URI,
+            'interop:grantedBy': bob.id,
             'interop:hasDataInstance': eventUri,
             'interop:hasDataRegistration': eventContainerUri,
             'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
@@ -215,6 +204,14 @@ describe('Test resource sharing features', () => {
         ])
       );
     });
+
+    // Craig can fetch Alice event
+    await expect(
+      craig.call('ldp.resource.get', {
+        resourceUri: eventUri,
+        accept: MIME_TYPES.JSON
+      })
+    ).resolves.not.toThrow();
   });
 
   test('Alice shares another event with Bob', async () => {
@@ -308,6 +305,14 @@ describe('Test resource sharing features', () => {
         ])
       );
     });
+
+    // Bob can fetch Alice new event
+    await expect(
+      bob.call('ldp.resource.get', {
+        resourceUri: event2Uri,
+        accept: MIME_TYPES.JSON
+      })
+    ).resolves.not.toThrow();
   });
 
   test('Alice un-share her event with Craig', async () => {
@@ -323,6 +328,18 @@ describe('Test resource sharing features', () => {
         podOwner: alice.id
       });
       expect(craigRegistration['interop:hasAccessGrant']).toBeUndefined();
+    });
+
+    // TODO Check that delegated data grants has been removed from app registration
+
+    // Craig cannot fetch Alice event anymore
+    await waitForExpect(async () => {
+      await expect(
+        craig.call('ldp.resource.get', {
+          resourceUri: eventUri,
+          accept: MIME_TYPES.JSON
+        })
+      ).rejects.toThrow();
     });
   });
 });

@@ -1,5 +1,6 @@
 const path = require('path');
 const Redis = require('ioredis');
+const fs = require('fs');
 const { ServiceBroker } = require('moleculer');
 const { AuthAccountService } = require('@semapps/auth');
 const { CoreService: SemAppsCoreService } = require('@semapps/core');
@@ -178,6 +179,61 @@ const initializeAppServer = async (port, mainDataset, settingsDataset, queueServ
   return broker;
 };
 
+const createActor = async (podProvider, username = 'alice') => {
+  let defaultData = await fs.promises.readFile('./templates/actor_default.ttl', 'utf8');
+  let aclData = await fs.promises.readFile('./templates/actor_acl.ttl', 'utf8');
+  let settingsData = await fs.promises.readFile('./templates/actor_settings.ttl', 'utf8');
+
+  if (username !== 'alice') {
+    defaultData = defaultData.replaceAll('alice', username);
+    aclData = aclData.replaceAll('alice', username);
+    settingsData = settingsData.replaceAll('alice', username);
+  }
+
+  if (!(await podProvider.call('triplestore.dataset.exist', { dataset: 'settings' }))) {
+    await podProvider.call('triplestore.dataset.create', { dataset: 'settings', secure: false });
+  }
+
+  if (!(await podProvider.call('triplestore.dataset.exist', { dataset: username }))) {
+    await podProvider.call('triplestore.dataset.create', { dataset: username, secure: true });
+  }
+
+  await podProvider.call('triplestore.insert', {
+    resource: defaultData,
+    contentType: MIME_TYPES.TURTLE,
+    webId: 'system',
+    dataset: username
+  });
+
+  await podProvider.call('triplestore.insert', {
+    resource: aclData,
+    contentType: MIME_TYPES.TURTLE,
+    webId: 'system',
+    graphName: 'http://semapps.org/webacl',
+    dataset: username
+  });
+
+  await podProvider.call('triplestore.insert', {
+    resource: settingsData,
+    contentType: MIME_TYPES.TURTLE,
+    webId: 'system',
+    dataset: 'settings'
+  });
+
+  const webId = 'http://localhost:3000/' + username;
+
+  let actor = await podProvider.call('activitypub.actor.get', { actorUri: webId });
+
+  // Shortcut to make it easier to write tests
+  actor.call = (actionName, params, options = {}) =>
+    podProvider.call(actionName, params, {
+      ...options,
+      meta: { ...options.meta, webId, dataset: username }
+    });
+
+  return actor;
+};
+
 const getAppAccessNeeds = async (actor, appUri) => {
   const app = await actor.call('ldp.resource.get', {
     resourceUri: appUri,
@@ -223,6 +279,7 @@ module.exports = {
   clearAllData,
   connectPodProvider,
   initializeAppServer,
+  createActor,
   getAppAccessNeeds,
   installApp
 };

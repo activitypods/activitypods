@@ -1,0 +1,10 @@
+<urn:AuthAccount:alice>
+        a       <http://semapps.org/ns/core#AuthAccount> ;
+        <http://semapps.org/ns/core#email>
+                "alice@test.com" ;
+        <http://semapps.org/ns/core#hashedPassword>
+                "$2b$10$620biT1E6lVY4KT98vHOiOIV.XdK.QeN1GhM2YCjUsa858omkIAR6" ;
+        <http://semapps.org/ns/core#username>
+                "alice" ;
+        <http://semapps.org/ns/core#webId>
+                "http://localhost:3000/alice" .

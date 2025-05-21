@@ -33,10 +33,9 @@ module.exports = {
 
         // CHECK ACCESS NEEDS ARE SATISFIED
 
-        const { accessNeedsSatisfied, appRegistration, accessGrants, dataGrants } = await ctx.call(
-          'app-registrations.verify',
-          { appRegistrationUri: activity.object.id }
-        );
+        const { accessNeedsSatisfied, appRegistration, accessGrants } = await ctx.call('app-registrations.verify', {
+          appRegistrationUri: activity.object.id
+        });
 
         if (!accessNeedsSatisfied) {
           throw new MoleculerError('One or more required access needs have not been granted', 400, 'BAD REQUEST');
@@ -50,11 +49,6 @@ module.exports = {
         for (const accessGrant of accessGrants) {
           await ctx.call('ldp.remote.store', { resource: accessGrant });
           await ctx.call('access-grants.attach', { resourceUri: accessGrant.id || accessGrant['@id'] });
-        }
-
-        for (const dataGrant of dataGrants) {
-          await ctx.call('ldp.remote.store', { resource: dataGrant });
-          await ctx.call('data-grants.attach', { resourceUri: dataGrant.id || dataGrant['@id'] });
         }
 
         // REGISTER LISTENERS
@@ -89,10 +83,9 @@ module.exports = {
 
         // CHECK ACCESS NEEDS ARE STILL SATISFIED
 
-        const { accessNeedsSatisfied, appRegistration, accessGrants, dataGrants } = await ctx.call(
-          'app-registrations.verify',
-          { appRegistrationUri: activity.object.id }
-        );
+        const { accessNeedsSatisfied, appRegistration, accessGrants } = await ctx.call('app-registrations.verify', {
+          appRegistrationUri: activity.object.id
+        });
 
         if (!accessNeedsSatisfied) {
           throw new MoleculerError('One or more required access needs have not been granted', 400, 'BAD REQUEST');
@@ -108,17 +101,10 @@ module.exports = {
           await ctx.call('access-grants.attach', { resourceUri: accessGrant.id || accessGrant['@id'] });
         }
 
-        for (const dataGrant of dataGrants) {
-          // If the data grant is already cached, this will update the cache
-          await ctx.call('ldp.remote.store', { resource: dataGrant });
-          await ctx.call('data-grants.attach', { resourceUri: dataGrant.id || dataGrant['@id'] });
-        }
-
         // Remove any grant that is not linked anymore to an access need
         await ctx.call('access-grants.deleteOrphans', { podOwner: activity.actor });
-        await ctx.call('data-grants.deleteOrphans', { podOwner: activity.actor });
 
-        await ctx.emit('app.upgraded', { appRegistration, accessGrants, dataGrants });
+        await ctx.emit('app.upgraded', { appRegistration, accessGrants });
       }
     },
     deleteAppRegistration: {

@@ -59,18 +59,19 @@ describe('Test delegation features', () => {
       delegationLimit: 1
     });
 
-    // A data authorization is created with the delegation information
+    // An authorization is created with the delegation information
     await waitForExpect(async () => {
-      const dataAuthorizations = await alice.call('data-authorizations.listForSingleResource', {
+      const authorizations = await alice.call('access-authorizations.listForSingleResource', {
         resourceUri: eventUri
       });
 
-      expect(dataAuthorizations).toEqual(
+      expect(authorizations).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'interop:DataAuthorization',
+            type: 'interop:AccessAuthorization',
             'interop:dataOwner': alice.id,
             'interop:grantee': bob.id,
+            'interop:grantedBy': alice.id,
             'interop:hasDataInstance': eventUri,
             'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
             'interop:scopeOfAuthorization': 'interop:SelectedFromRegistry'
@@ -79,7 +80,7 @@ describe('Test delegation features', () => {
       );
     });
 
-    // A data grant is created with the delegation information
+    // A grant is created with the delegation information
     await waitForExpect(async () => {
       const bobRegistration = await alice.call('social-agent-registrations.getForAgent', {
         agentUri: bob.id,
@@ -87,16 +88,17 @@ describe('Test delegation features', () => {
       });
 
       await expect(
-        alice.call('social-agent-registrations.getDataGrants', {
+        alice.call('social-agent-registrations.getGrants', {
           agentRegistration: bobRegistration,
           podOwner: alice.id
         })
       ).resolves.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'interop:DataGrant',
+            type: 'interop:AccessGrant',
             'interop:dataOwner': alice.id,
             'interop:grantee': bob.id,
+            'interop:grantedBy': alice.id,
             'interop:hasDataInstance': eventUri,
             'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
             'interop:scopeOfGrant': 'interop:SelectedFromRegistry',
@@ -105,6 +107,25 @@ describe('Test delegation features', () => {
           })
         ])
       );
+    });
+
+    // The grant is stored in Bob storage
+    await waitForExpect(async () => {
+      await expect(
+        bob.call('access-grants.getByResourceUri', {
+          resourceUri: eventUri
+        })
+      ).resolves.toMatchObject({
+        type: 'interop:AccessGrant',
+        'interop:dataOwner': alice.id,
+        'interop:grantee': bob.id,
+        'interop:grantedBy': alice.id,
+        'interop:hasDataInstance': eventUri,
+        'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
+        'interop:scopeOfGrant': 'interop:SelectedFromRegistry',
+        'interop:delegationAllowed': true,
+        'interop:delegationLimit': 1
+      });
     });
   });
 
@@ -115,16 +136,16 @@ describe('Test delegation features', () => {
       accessModes: ['acl:Read']
     });
 
-    // A data authorization is created with the delegation information
+    // An authorization is created with the delegation information
     await waitForExpect(async () => {
-      const dataAuthorizations = await bob.call('data-authorizations.listForSingleResource', {
+      const authorizations = await bob.call('access-authorizations.listForSingleResource', {
         resourceUri: eventUri
       });
 
-      expect(dataAuthorizations).toEqual(
+      expect(authorizations).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'interop:DataAuthorization',
+            type: 'interop:AccessAuthorization',
             'interop:dataOwner': alice.id,
             'interop:grantee': craig.id,
             'interop:hasDataInstance': eventUri,
@@ -135,7 +156,7 @@ describe('Test delegation features', () => {
       );
     });
 
-    // A delegated data grant is created by Alice and shared with Craig
+    // A delegated grant is created by Alice and shared with Craig
     await waitForExpect(async () => {
       const craigRegistration = await bob.call('social-agent-registrations.getForAgent', {
         agentUri: craig.id,
@@ -143,14 +164,14 @@ describe('Test delegation features', () => {
       });
 
       await expect(
-        bob.call('social-agent-registrations.getDataGrants', {
+        bob.call('social-agent-registrations.getGrants', {
           agentRegistration: craigRegistration,
           podOwner: bob.id
         })
       ).resolves.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'interop:DelegatedDataGrant',
+            type: 'interop:DelegatedAccessGrant',
             'interop:dataOwner': alice.id,
             'interop:grantedBy': bob.id,
             'interop:grantee': craig.id,
@@ -162,21 +183,21 @@ describe('Test delegation features', () => {
       );
     });
 
-    // A delegated data grant is created by Craig for the application
+    // A delegated grant is created by Craig for the application
     await waitForExpect(async () => {
       const craigAppRegistration = await craig.call('app-registrations.get', {
         resourceUri: craigAppRegistrationUri
       });
 
-      const dataGrants = await craig.call('app-registrations.getDataGrants', {
+      const grants = await craig.call('app-registrations.getGrants', {
         agentRegistration: craigAppRegistration,
         podOwner: craig.id
       });
 
-      expect(dataGrants).toEqual(
+      expect(grants).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'interop:DelegatedDataGrant',
+            type: 'interop:DelegatedAccessGrant',
             'interop:accessMode': 'acl:Read',
             'interop:dataOwner': alice.id,
             'interop:grantee': APP_URI,

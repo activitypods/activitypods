@@ -1,25 +1,25 @@
-const { arrayOf, getId } = require('@semapps/ldp');
+const { arrayOf, getId, getType } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } = require('@semapps/activitypub');
 
 /**
- * Mixin used by the DataGrantsService and DelegatedDataGrantsService
+ * Mixin used by the AccessGrantsService and DelegatedAccessGrantsService
  */
-const DataGrantsMixin = {
+const AccessGrantsMixin = {
   mixins: [ActivitiesHandlerMixin],
   hooks: {
     after: {
       async create(ctx, res) {
-        const dataGrant = res.newData;
-        const grantee = dataGrant['interop:grantee'];
-        const accessMode = arrayOf(dataGrant['interop:accessMode']);
-        const scope = dataGrant['interop:scopeOfGrant'];
+        const grant = res.newData;
+        const grantee = grant['interop:grantee'];
+        const accessMode = arrayOf(grant['interop:accessMode']);
+        const scope = grant['interop:scopeOfGrant'];
 
         // The grantee must be able to read the grant
         await ctx.call('webacl.resource.addRights', {
-          resourceUri: getId(dataGrant),
+          resourceUri: getId(grant),
           additionalRights: {
             user: {
-              uri: dataGrant['interop:grantee'],
+              uri: grant['interop:grantee'],
               read: true
             }
           },
@@ -27,13 +27,13 @@ const DataGrantsMixin = {
         });
 
         // The granter must be able to read and delete the grant
-        // TODO don't do that for application data grants
-        if (dataGrant['interop:grantedBy'] !== dataGrant['interop:dataOwner']) {
+        // TODO don't do that for application grants
+        if (getType(grant) === 'interop:DelegatedAccessGrant') {
           await ctx.call('webacl.resource.addRights', {
-            resourceUri: getId(dataGrant),
+            resourceUri: getId(grant),
             additionalRights: {
               user: {
-                uri: dataGrant['interop:grantedBy'],
+                uri: grant['interop:grantedBy'],
                 read: true,
                 write: true
               }
@@ -42,11 +42,22 @@ const DataGrantsMixin = {
           });
         }
 
+        // Attach grant to agent registrations, unless it is a delegated grant (will be done by the issuer)
+        if (getType(grant) === 'interop:AccessGrant') {
+          // Assume grant linked to access needs are for applications
+          // TODO find a better way to identify application grants
+          if (grant['interop:satisfiesAccessNeed']) {
+            await ctx.call('app-registrations.addGrant', { grant });
+          } else {
+            await ctx.call('social-agent-registrations.addGrant', { grant });
+          }
+        }
+
         // For mapping details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
         if (scope === 'interop:AllFromRegistry') {
           // Give read-write permission to the whole container
           await ctx.call('webacl.resource.addRights', {
-            resourceUri: dataGrant['interop:hasDataRegistration'],
+            resourceUri: grant['interop:hasDataRegistration'],
             additionalRights: {
               // Container rights
               user: {
@@ -68,7 +79,7 @@ const DataGrantsMixin = {
             webId: 'system'
           });
         } else if (scope === 'interop:SelectedFromRegistry') {
-          for (const resourceUri of arrayOf(dataGrant['interop:hasDataInstance'])) {
+          for (const resourceUri of arrayOf(grant['interop:hasDataInstance'])) {
             // Give read-write permission to the resources
             await ctx.call('webacl.resource.addRights', {
               resourceUri,
@@ -85,11 +96,11 @@ const DataGrantsMixin = {
             });
           }
         } else {
-          throw new Error(`Unknown scope ${scope} for data grant ${getId(dataGrant)}`);
+          throw new Error(`Unknown scope ${scope} for access grant ${getId(grant)}`);
         }
 
         const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
-          actorUri: dataGrant['interop:dataOwner'],
+          actorUri: grant['interop:dataOwner'],
           predicate: 'outbox'
         });
 
@@ -98,21 +109,23 @@ const DataGrantsMixin = {
           {
             collectionUri: outboxUri,
             type: ACTIVITY_TYPES.CREATE,
-            object: getId(dataGrant),
-            to: dataGrant['interop:grantee']
+            object: getId(grant),
+            to: grant['interop:grantee']
           },
-          { meta: { webId: dataGrant['interop:dataOwner'] } }
+          { meta: { webId: grant['interop:dataOwner'] } }
         );
+
+        return res;
       },
       async delete(ctx, res) {
-        const dataGrant = res.oldData;
-        const appUri = dataGrant['interop:grantee'];
-        const accessMode = arrayOf(dataGrant['interop:accessMode']);
-        const scope = dataGrant['interop:scopeOfGrant'];
+        const grant = res.oldData;
+        const appUri = grant['interop:grantee'];
+        const accessMode = arrayOf(grant['interop:accessMode']);
+        const scope = grant['interop:scopeOfGrant'];
 
         if (scope === 'interop:AllFromRegistry') {
           await ctx.call('webacl.resource.removeRights', {
-            resourceUri: containerUri,
+            resourceUri: grant['interop:hasDataRegistration'],
             rights: {
               user: {
                 uri: appUri,
@@ -132,7 +145,7 @@ const DataGrantsMixin = {
             webId: 'system'
           });
         } else if (scope === 'interop:SelectedFromRegistry') {
-          for (const resourceUri of arrayOf(dataGrant['interop:hasDataInstance'])) {
+          for (const resourceUri of arrayOf(grant['interop:hasDataInstance'])) {
             await ctx.call('webacl.resource.removeRights', {
               resourceUri,
               rights: {
@@ -148,36 +161,46 @@ const DataGrantsMixin = {
             });
           }
         } else {
-          throw new Error(`Unknown scope ${scope} for data grant ${getId(dataGrant)}`);
+          throw new Error(`Unknown scope ${scope} for access grant ${getId(grant)}`);
         }
 
-        // Delete all delegated data grants generated from this data grant
-        await ctx.call('delegated-data-grants.deleteByDataGrant', { dataGrant });
+        // Detach grant from agent registrations, unless it is a delegated grant (will be done by the issuer)
+        if (getType(grant) === 'interop:AccessGrant') {
+          // Assume grant linked to access needs are for applications
+          // TODO find a better way to identify application grants
+          if (grant['interop:satisfiesAccessNeed']) {
+            await ctx.call('app-registrations.removeGrant', { grant });
+          } else {
+            await ctx.call('social-agent-registrations.removeGrant', { grant });
+          }
+        }
 
-        const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
-          actorUri: dataGrant['interop:dataOwner'],
-          predicate: 'outbox'
-        });
+        // Only send activity for access grants
+        // TODO: Warn grantees when delegated grants are deleted by the granter (except for app grants)
+        if (getType(grant) === 'interop:AccessGrant' && !ctx.params.doNotSendActivity) {
+          const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
+            actorUri: grant['interop:dataOwner'],
+            predicate: 'outbox'
+          });
 
-        await ctx.call(
-          'activitypub.outbox.post',
-          {
-            collectionUri: outboxUri,
-            type: ACTIVITY_TYPES.DELETE,
-            object: getId(dataGrant),
-            // In case of delegated data grant, send to user who created the grant ?
-            to:
-              dataGrant['interop:grantedBy'] !== dataGrant['interop:dataOwner']
-                ? dataGrant['interop:grantedBy']
-                : dataGrant['interop:grantee']
-          },
-          { meta: { webId: dataGrant['interop:dataOwner'] } }
-        );
+          await ctx.call(
+            'activitypub.outbox.post',
+            {
+              collectionUri: outboxUri,
+              type: ACTIVITY_TYPES.DELETE,
+              object: getId(grant),
+              to: grant['interop:grantee']
+            },
+            { meta: { webId: grant['interop:dataOwner'] } }
+          );
+        }
+
+        return res;
       }
     }
   },
   activities: {
-    createDataGrant: {
+    createGrant: {
       async match(activity, fetcher) {
         return matchActivity(
           {
@@ -191,36 +214,27 @@ const DataGrantsMixin = {
         );
       },
       async onReceive(ctx, activity, recipientUri) {
-        const dataGrant = activity.object;
+        const grant = activity.object;
 
-        // Delete from cache the old data grant
-        if (dataGrant['interop:replaces']) {
+        // Delete from cache the old grant
+        if (grant['interop:replaces']) {
           try {
             await ctx.call('ldp.remote.delete', {
-              resourceUri: dataGrant['interop:replaces'],
+              resourceUri: grant['interop:replaces'],
               webId: recipientUri
             });
           } catch (e) {
             this.logger.warn(
-              `Could not delete data grant ${dataGrant['interop:replaces']} on storage of ${recipientUri}. Ignoring...`
+              `Could not delete grant ${grant['interop:replaces']} on storage of ${recipientUri}. Ignoring...`
             );
           }
         }
 
-        // Generate delegated data grants for all data authorizations with `interop:All` scope
-        const grantees = await ctx.call('delegated-data-grants.generateFromAllScopeAllDataAuthorizations', {
-          dataGrant,
+        // Generate delegated grants for all authorizations with `interop:All` scope
+        await ctx.call('delegated-access-grants.generateFromAllScopeAllAuthorizations', {
+          grant,
           podOwner: recipientUri
         });
-
-        // Regenerate the app registrations if needed
-        // TODO Also regenerate the social agent registrations
-        for (const grantee of grantees) {
-          await ctx.call('app-registrations.regenerate', {
-            agentUri: grantee,
-            podOwner: recipientUri
-          });
-        }
       }
     },
     deleteDataGrant: {
@@ -238,12 +252,15 @@ const DataGrantsMixin = {
         );
       },
       async onReceive(ctx, activity, recipientUri) {
-        const dataGrant = activity.object;
+        const grant = activity.object;
 
-        console.log('DELETE GRANT CALLED', recipientUri, activity);
+        if (getType(grant) === 'interop:AccessGrant') {
+          // Delete all delegated access grants linked with this access grant
+          await ctx.call('delegated-access-grants.deleteByGrant', { grant, webId: recipientUri });
+        }
       }
     }
   }
 };
 
-module.exports = DataGrantsMixin;
+module.exports = AccessGrantsMixin;

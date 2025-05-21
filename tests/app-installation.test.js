@@ -1,8 +1,8 @@
 const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { arrayOf } = require('@semapps/ldp');
-const { connectPodProvider, clearAllData, initializeAppServer, installApp } = require('./initialize');
+const { arrayOf, getId } = require('@semapps/ldp');
+const { connectPodProvider, clearAllData, initializeAppServer, createActor } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const CONFIG = require('./config');
@@ -31,27 +31,13 @@ describe('Test app installation', () => {
 
     podProvider = await connectPodProvider();
 
-    const actorData = require(`./data/actor1.json`);
-    const { webId } = await podProvider.call('auth.signup', actorData);
-    alice = await podProvider.call(
-      'activitypub.actor.awaitCreateComplete',
-      {
-        actorUri: webId,
-        additionalKeys: ['url']
-      },
-      { meta: { dataset: actorData.username } }
-    );
-    alice.call = (actionName, params, options = {}) =>
-      podProvider.call(actionName, params, {
-        ...options,
-        meta: { ...options.meta, webId, dataset: alice.preferredUsername }
-      });
-
     appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();
 
     appServer2 = await initializeAppServer(3002, 'app2Data', 'app2_settings', 2, ExampleAppService);
     await appServer2.start();
+
+    alice = await createActor(podProvider, 'alice');
   }, 80000);
 
   afterAll(async () => {
@@ -166,21 +152,27 @@ describe('Test app installation', () => {
   });
 
   test('Application registration is correctly created', async () => {
-    // Get the app registration from the app server (it should be public like AccessGrants and DataGrants)
-    const appRegistration = await appServer.call('ldp.remote.get', {
-      resourceUri: appRegistrationUri,
-      accept: MIME_TYPES.JSON,
-      webId: APP_URI
+    let appRegistration;
+
+    // Get the app registration from the app server (it should be public like access grants)
+    await waitForExpect(async () => {
+      appRegistration = await appServer.call('ldp.remote.get', {
+        resourceUri: appRegistrationUri,
+        accept: MIME_TYPES.JSON,
+        webId: APP_URI
+      });
+
+      expect(appRegistration).toMatchObject({
+        type: 'interop:ApplicationRegistration',
+        'interop:registeredAgent': APP_URI,
+        'interop:registeredBy': alice.id,
+        'interop:hasAccessGrant': expect.arrayContaining([])
+      });
+
+      expect(appRegistration['interop:hasAccessGrant']).toHaveLength(2);
     });
 
-    expect(appRegistration).toMatchObject({
-      type: 'interop:ApplicationRegistration',
-      'interop:registeredAgent': APP_URI,
-      'interop:registeredBy': alice.id,
-      'interop:hasAccessGrant': expect.arrayContaining([])
-    });
-
-    const accessGrants = await Promise.all(
+    const grants = await Promise.all(
       arrayOf(appRegistration['interop:hasAccessGrant']).map(accessGrantUri =>
         appServer.call('ldp.remote.get', {
           resourceUri: accessGrantUri,
@@ -190,27 +182,19 @@ describe('Test app installation', () => {
       )
     );
 
-    requiredAccessGrant = accessGrants.find(g => g['interop:hasAccessNeedGroup'] === requiredAccessNeedGroup.id);
-    optionalAccessGrant = accessGrants.find(g => g['interop:hasAccessNeedGroup'] === optionalAccessNeedGroup.id);
+    requiredAccessGrant = grants.find(
+      g => g['interop:satisfiesAccessNeed'] === requiredAccessNeedGroup['interop:hasAccessNeed']
+    );
+    optionalAccessGrant = grants.find(
+      g => g['interop:satisfiesAccessNeed'] === optionalAccessNeedGroup['interop:hasAccessNeed']
+    );
 
     expect(requiredAccessGrant).toMatchObject({
       type: 'interop:AccessGrant',
-      'interop:grantedBy': alice.id,
-      'interop:grantee': APP_URI,
-      'interop:hasAccessNeedGroup': requiredAccessNeedGroup.id
-    });
-
-    await expect(
-      appServer.call('ldp.remote.get', {
-        resourceUri: requiredAccessGrant['interop:hasDataGrant'],
-        accept: MIME_TYPES.JSON,
-        webId: APP_URI
-      })
-    ).resolves.toMatchObject({
-      type: 'interop:DataGrant',
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
       'interop:hasDataRegistration': urlJoin(alice.id, 'data/as/event'),
       'interop:dataOwner': alice.id,
+      'interop:grantedBy': alice.id,
       'interop:grantee': APP_URI,
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Write', 'acl:Control']),
       'interop:satisfiesAccessNeed': requiredAccessNeedGroup['interop:hasAccessNeed'],
@@ -219,22 +203,10 @@ describe('Test app installation', () => {
 
     expect(optionalAccessGrant).toMatchObject({
       type: 'interop:AccessGrant',
-      'interop:grantedBy': alice.id,
-      'interop:grantee': APP_URI,
-      'interop:hasAccessNeedGroup': optionalAccessNeedGroup.id
-    });
-
-    await expect(
-      appServer.call('ldp.remote.get', {
-        resourceUri: optionalAccessGrant['interop:hasDataGrant'],
-        accept: MIME_TYPES.JSON,
-        webId: APP_URI
-      })
-    ).resolves.toMatchObject({
-      type: 'interop:DataGrant',
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location'),
       'interop:hasDataRegistration': urlJoin(alice.id, 'data/vcard/location'),
       'interop:dataOwner': alice.id,
+      'interop:grantedBy': alice.id,
       'interop:grantee': APP_URI,
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append']),
       'interop:satisfiesAccessNeed': optionalAccessNeedGroup['interop:hasAccessNeed'],
@@ -245,19 +217,15 @@ describe('Test app installation', () => {
   test('Authorizations are correctly created', async () => {
     const authRegistry = await alice.call('auth-registry.get');
 
-    const dataAuthorizations = await Promise.all(
-      arrayOf(authRegistry['interop:hasAccessAuthorization']).map(async accessAuthorizationUri => {
-        const accessAuthorization = await alice.call('access-authorizations.get', {
-          resourceUri: accessAuthorizationUri
-        });
-
-        return await alice.call('data-authorizations.get', {
-          resourceUri: accessAuthorization['interop:hasDataAuthorization']
+    const authorizations = await Promise.all(
+      arrayOf(authRegistry['interop:hasAccessAuthorization']).map(async authorizationUri => {
+        return await alice.call('access-authorizations.get', {
+          resourceUri: authorizationUri
         });
       })
     );
 
-    expect(dataAuthorizations).toContainEqual(
+    expect(authorizations).toContainEqual(
       expect.objectContaining({
         'interop:accessMode': expect.arrayContaining(['acl:Write', 'acl:Read', 'acl:Control']),
         'interop:hasDataRegistration': urlJoin(alice.id, 'data/as/event'),
@@ -455,11 +423,11 @@ describe('Test app installation', () => {
         acceptedAccessNeeds: requiredAccessNeedGroup['interop:hasAccessNeed'],
         acceptedSpecialRights: requiredAccessNeedGroup['apods:hasSpecialRights']
       })
-    ).rejects.toThrow('User already has an application registration. Upgrade or uninstall the app first.');
+    ).rejects.toThrow('User already has an application registration. Upgrade or remove the app first.');
   });
 
   test('User uninstalls app', async () => {
-    await expect(alice.call('app-registrations.remove', { appUri: APP_URI })).resolves.not.toThrow();
+    await alice.call('app-registrations.remove', { appUri: APP_URI });
 
     let appRegistrationUri;
 
@@ -503,11 +471,11 @@ describe('Test app installation', () => {
       ).rejects.toThrow();
     });
 
-    // A DataGrant should be deleted
+    // An access grant should be deleted
     await waitForExpect(async () => {
       await expect(
         alice.call('ldp.resource.get', {
-          resourceUri: requiredAccessGrant['interop:hasDataGrant'],
+          resourceUri: getId(requiredAccessGrant),
           accept: MIME_TYPES.JSON
         })
       ).rejects.toThrow();
@@ -517,7 +485,7 @@ describe('Test app installation', () => {
     await waitForExpect(async () => {
       await expect(
         appServer.call('ldp.remote.getStored', {
-          resourceUri: requiredAccessGrant['interop:hasDataGrant'],
+          resourceUri: getId(requiredAccessGrant),
           webId: 'system'
         })
       ).rejects.toThrow();

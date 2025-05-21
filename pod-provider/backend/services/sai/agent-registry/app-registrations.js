@@ -43,18 +43,18 @@ module.exports = {
   },
   actions: {
     async createOrUpdate(ctx) {
-      const { agentUri, podOwner, accessGrantsUris } = ctx.params;
+      const { agentUri, podOwner, specialRightsUris } = ctx.params;
 
       const appRegistration = await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx });
 
       if (appRegistration) {
-        if (!arraysEqual(appRegistration['interop:hasAccessGrant'], accessGrantsUris)) {
+        if (!arraysEqual(appRegistration['apods:hasSpecialRights'], specialRightsUris)) {
           await this.actions.put(
             {
               resource: {
                 ...appRegistration,
                 'interop:updatedAt': new Date().toISOString(),
-                'interop:hasAccessGrant': accessGrantsUris
+                'apods:hasSpecialRights': specialRightsUris
               },
               contentType: MIME_TYPES.JSON
             },
@@ -73,7 +73,7 @@ module.exports = {
               'interop:registeredAt': new Date().toISOString(),
               'interop:updatedAt': new Date().toISOString(),
               'interop:registeredAgent': agentUri,
-              'interop:hasAccessGrant': accessGrantsUris
+              'apods:hasSpecialRights': specialRightsUris
             },
             contentType: MIME_TYPES.JSON
           },
@@ -97,7 +97,7 @@ module.exports = {
 
       if (appRegistration) {
         throw new MoleculerError(
-          `User already has an application registration. Upgrade or uninstall the app first.`,
+          `User already has an application registration. Upgrade or remove the app first.`,
           400,
           'BAD REQUEST'
         );
@@ -115,21 +115,23 @@ module.exports = {
         acceptedSpecialRights = requirements.specialRights;
       }
 
-      await ctx.call('access-authorizations.generateFromAccessNeedGroups', {
-        accessNeedGroups: app['interop:hasAccessNeedGroup'],
-        acceptedAccessNeeds,
-        acceptedSpecialRights,
-        podOwner: webId,
-        appUri
-      });
-
-      const appRegistrationUri = await this.actions.regenerate(
-        {
-          agentUri: appUri,
-          podOwner: webId
-        },
+      // Generate the app registration. Access grants will be added later.
+      const appRegistrationUri = await this.actions.createOrUpdate(
+        { agentUri: appUri, podOwner: webId, specialRightsUris: acceptedSpecialRights },
         { parentCtx: ctx }
       );
+
+      await ctx.call('access-authorizations.generateFromAccessNeeds', {
+        accessNeedsUris: acceptedAccessNeeds,
+        podOwner: webId,
+        grantee: appUri
+      });
+
+      await ctx.call('special-rights.addPermissionsFromSpecialRights', {
+        podOwner: webId,
+        appUri,
+        specialRightsUris: acceptedSpecialRights
+      });
 
       if (this.broker.cacher) {
         // Invalidate all rights of the application on the Pod as they may now be completely different
@@ -155,6 +157,16 @@ module.exports = {
       const account = await ctx.call('auth.account.findByWebId', { webId });
       ctx.meta.dataset = account.username;
 
+      const oldAppRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner: webId });
+
+      if (!oldAppRegistration) {
+        throw new MoleculerError(
+          `User doesn't have a registration for this application. Register it first.`,
+          400,
+          'BAD REQUEST'
+        );
+      }
+
       // Force to get through network
       const app = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri });
 
@@ -170,21 +182,32 @@ module.exports = {
         acceptedSpecialRights = requirements.specialRights;
       }
 
-      await ctx.call('access-authorizations.generateFromAccessNeedGroups', {
-        accessNeedGroups: app['interop:hasAccessNeedGroup'],
-        acceptedAccessNeeds,
-        acceptedSpecialRights,
-        podOwner: webId,
-        appUri
-      });
-
-      const appRegistrationUri = await this.actions.regenerate(
-        {
-          agentUri: appUri,
-          podOwner: webId
-        },
+      // Update the app registration. Access grants will be added later.
+      const appRegistrationUri = await this.actions.createOrUpdate(
+        { agentUri: appUri, podOwner: webId, specialRightsUris: acceptedSpecialRights },
         { parentCtx: ctx }
       );
+
+      await ctx.call('access-authorizations.generateFromAccessNeeds', {
+        accessNeedsUris: acceptedAccessNeeds,
+        podOwner: webId,
+        grantee: appUri
+      });
+
+      // If the special rights changed, first remove the old rights, before adding the new ones
+      if (!arraysEqual(oldAppRegistration['apods:hasSpecialRights'], acceptedSpecialRights)) {
+        await ctx.call('special-rights.removePermissionsFromSpecialRights', {
+          podOwner: webId,
+          appUri,
+          specialRightsUris: oldAppRegistration['apods:hasSpecialRights']
+        });
+
+        await ctx.call('special-rights.addPermissionsFromSpecialRights', {
+          podOwner: webId,
+          appUri,
+          specialRightsUris: acceptedSpecialRights
+        });
+      }
 
       if (this.broker.cacher) {
         // Invalidate all rights of the application on the Pod as they may now be completely different
@@ -217,9 +240,13 @@ module.exports = {
         // Immediately delete existing webhooks channels to avoid permissions errors later
         await ctx.call('solid-notifications.provider.webhook.deleteAppChannels', { appUri, webId });
 
-        await ctx.call('app-registrations.delete', {
-          resourceUri: appRegistration.id,
-          webId
+        // This will also delete the authorizations and grants linked to the agent
+        await ctx.call('app-registrations.delete', { resourceUri: getId(appRegistration), webId });
+
+        await ctx.call('special-rights.removePermissionsFromSpecialRights', {
+          podOwner: webId,
+          appUri,
+          specialRightsUris: appRegistration['apods:hasSpecialRights']
         });
 
         // If the app is an ActivityPub actor, send notification
@@ -245,7 +272,7 @@ module.exports = {
         const appUri = ctx.params.resource['interop:registeredAgent'];
         const webId = ctx.params.resource['interop:registeredBy'];
 
-        // Keep in cache the Application resource. This is useful for:
+        // Keep in cache the Application resource. This is useful to:
         // - Display the application details in the app store even if it's offline
         // - Known when the app must be upgraded by comparing the dc:modified predicate
         await ctx.call('ldp.remote.store', { resourceUri: appUri, webId });

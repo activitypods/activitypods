@@ -18,18 +18,18 @@ module.exports = {
         authentication: false,
         bodyParsers: false,
         aliases: {
-          'POST /issue': [...middlewares, 'delegated-data-grants.issue_api']
+          'POST /issue': [...middlewares, 'delegation-issuer.issue_api']
         }
       }
     });
   },
   actions: {
     async issue_api(ctx) {
-      const delegatedDataGrant = ctx.params;
+      const delegatedGrant = ctx.params;
 
-      ctx.meta.dataset = getDatasetFromUri(delegatedDataGrant['interop:dataOwner']);
+      ctx.meta.dataset = getDatasetFromUri(delegatedGrant['interop:dataOwner']);
 
-      const grantUri = await this.actions.issue({ delegatedDataGrant }, { parentCtx: ctx });
+      const grantUri = await this.actions.issue({ delegatedGrant }, { parentCtx: ctx });
 
       ctx.meta.$responseHeaders = { Location: grantUri };
       // We need to set this also here (in addition to above) or we get a Moleculer warning
@@ -37,131 +37,62 @@ module.exports = {
       ctx.meta.$statusCode = 201;
     },
     async issue(ctx) {
-      const { delegatedDataGrant } = ctx.params;
+      const { delegatedGrant } = ctx.params;
       const webId = ctx.meta.webId;
-      const dataOwner = delegatedDataGrant['interop:dataOwner'];
+      const dataOwner = delegatedGrant['interop:dataOwner'];
 
-      const originalDataGrant = await ctx.call('data-grants.get', {
-        resourceUri: delegatedDataGrant['interop:delegationOfGrant'],
+      if (getId(delegatedGrant)) {
+        throw new Error(`Delegated access grant to issue cannot already have an ID. Found ${getId(delegatedGrant)}`);
+      }
+
+      const originalGrant = await ctx.call('access-grants.get', {
+        resourceUri: delegatedGrant['interop:delegationOfGrant'],
         webId: dataOwner
       });
 
-      if (delegatedDataGrant['interop:grantedBy'] !== webId) {
+      if (delegatedGrant['interop:grantedBy'] !== webId) {
         throw new MoleculerError('You cannot grant for someone else', 401, 'FORBIDDEN');
       }
 
       // Assume delegation is for an application if access needs are defined
-      // TODO Find a better method to identify application data grants
+      // TODO Find a better method to identify application grants
       if (
-        (originalDataGrant['interop:delegationAllowed'] !== true ||
-          (originalDataGrant['interop:delegationLimit'] && originalDataGrant['interop:delegationLimit'] < 1)) &&
-        !delegatedDataGrant['interop:satisfiesAccessNeed']
+        (originalGrant['interop:delegationAllowed'] !== true ||
+          (originalGrant['interop:delegationLimit'] && originalGrant['interop:delegationLimit'] < 1)) &&
+        !delegatedGrant['interop:satisfiesAccessNeed']
       ) {
         throw new MoleculerError('Delegation not allowed', 401, 'FORBIDDEN');
       }
 
       if (
-        originalDataGrant['interop:dataOwner'] !== delegatedDataGrant['interop:dataOwner'] ||
-        originalDataGrant['interop:scopeOfGrant'] !== delegatedDataGrant['interop:scopeOfGrant'] ||
-        originalDataGrant['interop:hasDataRegistration'] !== delegatedDataGrant['interop:hasDataRegistration'] ||
-        originalDataGrant['interop:registeredShapeTree'] !== delegatedDataGrant['interop:registeredShapeTree'] ||
-        originalDataGrant['interop:scopeOfGrant'] !== delegatedDataGrant['interop:scopeOfGrant'] ||
-        !arrayOf(delegatedDataGrant['interop:hasDataInstance']).every(uri =>
-          arrayOf(originalDataGrant['interop:hasDataInstance']).includes(uri)
+        originalGrant['interop:dataOwner'] !== delegatedGrant['interop:dataOwner'] ||
+        originalGrant['interop:scopeOfGrant'] !== delegatedGrant['interop:scopeOfGrant'] ||
+        originalGrant['interop:hasDataRegistration'] !== delegatedGrant['interop:hasDataRegistration'] ||
+        originalGrant['interop:registeredShapeTree'] !== delegatedGrant['interop:registeredShapeTree'] ||
+        originalGrant['interop:scopeOfGrant'] !== delegatedGrant['interop:scopeOfGrant'] ||
+        !arrayOf(delegatedGrant['interop:hasDataInstance']).every(uri =>
+          arrayOf(originalGrant['interop:hasDataInstance']).includes(uri)
         ) ||
-        !arrayOf(delegatedDataGrant['interop:accessMode']).every(mode =>
-          arrayOf(originalDataGrant['interop:accessMode']).includes(mode)
+        !arrayOf(delegatedGrant['interop:accessMode']).every(mode =>
+          arrayOf(originalGrant['interop:accessMode']).includes(mode)
         )
       ) {
-        throw new MoleculerError('Delegated data grant does not match original grant', 400, 'BAD REQUEST');
+        throw new MoleculerError('Delegated grant does not match original grant', 400, 'BAD REQUEST');
       }
 
-      const delegatedDataGrantUri = await ctx.call('delegated-data-grants.post', {
-        resource: delegatedDataGrant,
+      const delegatedGrantUri = await ctx.call('delegated-access-grants.post', {
+        resource: delegatedGrant,
         contentType: MIME_TYPES.JSON,
         webId: dataOwner
       });
 
       await ctx.emit(
-        'delegated-data-grants.issued',
-        { delegatedDataGrant: { id: delegatedDataGrantUri, ...delegatedDataGrant } }
+        'delegated-access-grants.issued',
+        { delegatedGrant: { id: delegatedGrantUri, ...delegatedGrant } }
         // { meta: { webId: null, dataset: null } }
       );
 
-      return delegatedDataGrantUri;
-    },
-    async remoteIssue(ctx) {
-      const { delegatedDataGrant } = ctx.params;
-      const webId = ctx.params.webId || ctx.meta.webId || 'anon';
-
-      const dataOwnerUri = delegatedDataGrant['interop:dataOwner'];
-      const baseUrl = await ctx.call('ldp.getBaseUrl');
-
-      if (dataOwnerUri.startsWith(baseUrl)) {
-        // User is on same server, call endpoint directly
-        return await this.actions.issue(
-          { delegatedDataGrant },
-          { meta: { dataset: getDatasetFromUri(dataOwnerUri), webId }, parentCtx: ctx }
-        );
-      } else {
-        const dataOwner = await ctx.call('activitypub.actor.get', { actorUri: dataOwnerUri });
-
-        if (!dataOwner['interop:hasAuthorizationAgent'])
-          throw new Error(`Data owner ${dataOwnerUri} has no authorization agent`);
-
-        const authorizationAgent = await ctx.call('authorization-agent.get', {
-          resourceUri: dataOwner['interop:hasAuthorizationAgent']
-        });
-
-        if (!authorizationAgent['interop:hasDelegationIssuanceEndpoint'])
-          throw new Error(`Data owner ${dataOwnerUri} has no delegation issuance endpoint`);
-
-        const response = await ctx.call('signature.proxy.query', {
-          url: authorizationAgent['interop:hasDelegationIssuanceEndpoint'],
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/ld+json'
-          },
-          body: JSON.stringify(delegatedDataGrant),
-          actorUri: webId
-        });
-
-        if (response.status === 201) {
-          return response.headers.get('Location');
-        } else {
-          throw new Error(
-            `Could not fetch ${authorizationAgent['interop:hasDelegationIssuanceEndpoint']}. Response code: ${response.status}`
-          );
-        }
-      }
-    },
-    async remoteDelete(ctx) {
-      const { delegatedDataGrant } = ctx.params;
-      const webId = ctx.params.webId || ctx.meta.webId || 'anon';
-
-      const dataOwnerUri = delegatedDataGrant['interop:dataOwner'];
-      const baseUrl = await ctx.call('ldp.getBaseUrl');
-
-      if (dataOwnerUri.startsWith(baseUrl)) {
-        // User is on same server, delete directly
-        await ctx.call(
-          'ldp.resource.delete',
-          { resourceUri: getId(delegatedDataGrant), webId },
-          { meta: { dataset: getDatasetFromUri(dataOwnerUri) }, parentCtx: ctx }
-        );
-      } else {
-        const response = await ctx.call('signature.proxy.query', {
-          url: getId(delegatedDataGrant),
-          method: 'DELETE',
-          actorUri: webId
-        });
-
-        if (response.status !== 204) {
-          throw new Error(
-            `Could not delete delegated data grant ${getId(delegatedDataGrant)}. Response code: ${response.status}`
-          );
-        }
-      }
+      return delegatedGrantUri;
     }
   }
 };

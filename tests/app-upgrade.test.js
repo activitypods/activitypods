@@ -1,7 +1,7 @@
 const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { connectPodProvider, clearAllData, installApp, initializeAppServer } = require('./initialize');
+const { connectPodProvider, clearAllData, installApp, createActor, initializeAppServer } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const ExampleAppV2Service = require('./apps/example-v2.app');
 const CONFIG = require('./config');
@@ -18,24 +18,10 @@ describe('Test app upgrade', () => {
 
     podProvider = await connectPodProvider();
 
-    const actorData = require(`./data/actor1.json`);
-    const { webId } = await podProvider.call('auth.signup', actorData);
-    alice = await podProvider.call(
-      'activitypub.actor.awaitCreateComplete',
-      {
-        actorUri: webId,
-        additionalKeys: ['url']
-      },
-      { meta: { dataset: actorData.username } }
-    );
-    alice.call = (actionName, params, options = {}) =>
-      podProvider.call(actionName, params, {
-        ...options,
-        meta: { ...options.meta, webId, dataset: alice.preferredUsername }
-      });
-
     appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();
+
+    alice = await createActor(podProvider, 'alice');
 
     await installApp(alice, APP_URI);
   }, 80000);

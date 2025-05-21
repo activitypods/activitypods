@@ -1,6 +1,7 @@
 const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { OBJECT_TYPES } = require('@semapps/activitypub');
+const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { connectPodProvider, clearAllData, createActor, initializeAppServer, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example3.app');
@@ -93,16 +94,16 @@ describe('Test resource sharing features', () => {
     });
   });
 
-  test('A data authorization is created in Alice storage', async () => {
+  test('An authorization is created in Alice storage', async () => {
     await waitForExpect(async () => {
-      const dataAuthorizations = await alice.call('data-authorizations.listForSingleResource', {
+      const authorizations = await alice.call('access-authorizations.listForSingleResource', {
         resourceUri: eventUri
       });
 
-      expect(dataAuthorizations).toEqual(
+      expect(authorizations).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'interop:DataAuthorization',
+            type: 'interop:AccessAuthorization',
             'interop:dataOwner': alice.id,
             'interop:grantee': bob.id,
             'interop:hasDataInstance': eventUri,
@@ -114,17 +115,13 @@ describe('Test resource sharing features', () => {
     });
   });
 
-  test('A data grant for the event is declared in Bob registration', async () => {
-    const accessGrant = await alice.call('access-grants.get', {
+  test('A grant for the event is declared in Bob registration', async () => {
+    const grant = await alice.call('access-grants.get', {
       resourceUri: aliceRegistrationForBob['interop:hasAccessGrant']
     });
 
-    const dataGrant = await alice.call('data-grants.get', {
-      resourceUri: accessGrant['interop:hasDataGrant']
-    });
-
-    expect(dataGrant).toMatchObject({
-      type: 'interop:DataGrant',
+    expect(grant).toMatchObject({
+      type: 'interop:AccessGrant',
       'interop:dataOwner': alice.id,
       'interop:grantee': bob.id,
       'interop:hasDataInstance': eventUri,
@@ -141,21 +138,21 @@ describe('Test resource sharing features', () => {
     ).resolves.not.toThrow();
   });
 
-  test('A delegated data grant is created by Bob AA for the application', async () => {
+  test('A delegated grant is created by Bob AA for the application', async () => {
     await waitForExpect(async () => {
       bobAppRegistration = await bob.call('app-registrations.get', {
         resourceUri: bobAppRegistrationUri
       });
 
-      const dataGrants = await bob.call('app-registrations.getDataGrants', {
+      const grants = await bob.call('app-registrations.getGrants', {
         agentRegistration: bobAppRegistration,
         podOwner: bob.id
       });
 
-      expect(dataGrants).toEqual(
+      expect(grants).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'interop:DelegatedDataGrant',
+            type: 'interop:DelegatedAccessGrant',
             'interop:accessMode': 'acl:Read',
             'interop:dataOwner': alice.id,
             'interop:grantee': APP_URI,
@@ -170,7 +167,7 @@ describe('Test resource sharing features', () => {
     });
   });
 
-  test('Craig installs the app after Alice shared her event and a delegated data grant is created', async () => {
+  test('Craig installs the app after Alice shared her event and a delegated grant is created', async () => {
     await alice.call('social-agent-registrations.addAuthorization', {
       resourceUri: eventUri,
       grantee: craig.id,
@@ -184,18 +181,19 @@ describe('Test resource sharing features', () => {
         resourceUri: craigAppRegistrationUri
       });
 
-      const dataGrants = await craig.call('app-registrations.getDataGrants', {
+      const grants = await craig.call('app-registrations.getGrants', {
         agentRegistration: craigAppRegistration,
         podOwner: craig.id
       });
 
-      expect(dataGrants).toEqual(
+      expect(grants).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'interop:DelegatedDataGrant',
+            type: 'interop:DelegatedAccessGrant',
             'interop:accessMode': 'acl:Read',
             'interop:dataOwner': alice.id,
             'interop:grantee': APP_URI,
+            'interop:grantedBy': craig.id,
             'interop:hasDataInstance': eventUri,
             'interop:hasDataRegistration': eventContainerUri,
             'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
@@ -230,16 +228,16 @@ describe('Test resource sharing features', () => {
       accessModes: ['acl:Read']
     });
 
-    // Alice data authorization is regenerated
+    // Alice authorization is regenerated
     await waitForExpect(async () => {
-      const dataAuthorizations = await alice.call('data-authorizations.listForSingleResource', {
+      const authorizations = await alice.call('access-authorizations.listForSingleResource', {
         resourceUri: eventUri
       });
 
-      expect(dataAuthorizations).toEqual(
+      expect(authorizations).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'interop:DataAuthorization',
+            type: 'interop:AccessAuthorization',
             'interop:dataOwner': alice.id,
             'interop:grantee': bob.id,
             'interop:hasDataInstance': expect.arrayContaining([eventUri, event2Uri]),
@@ -259,14 +257,14 @@ describe('Test resource sharing features', () => {
       });
 
       await expect(
-        alice.call('social-agent-registrations.getDataGrants', {
+        alice.call('social-agent-registrations.getGrants', {
           agentRegistration: updatedRegistration,
           podOwner: alice.id
         })
       ).resolves.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'interop:DataGrant',
+            type: 'interop:AccessGrant',
             'interop:dataOwner': alice.id,
             'interop:grantee': bob.id,
             'interop:hasDataInstance': expect.arrayContaining([eventUri, event2Uri]),
@@ -286,17 +284,18 @@ describe('Test resource sharing features', () => {
       });
 
       await expect(
-        bob.call('app-registrations.getDataGrants', {
+        bob.call('app-registrations.getGrants', {
           agentRegistration: updatedRegistration,
           podOwner: bob.id
         })
       ).resolves.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'interop:DelegatedDataGrant',
+            type: 'interop:DelegatedAccessGrant',
             'interop:accessMode': 'acl:Read',
             'interop:dataOwner': alice.id,
             'interop:grantee': APP_URI,
+            'interop:grantedBy': bob.id,
             'interop:hasDataInstance': expect.arrayContaining([eventUri, event2Uri]),
             'interop:hasDataRegistration': eventContainerUri,
             'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
@@ -330,7 +329,15 @@ describe('Test resource sharing features', () => {
       expect(craigRegistration['interop:hasAccessGrant']).toBeUndefined();
     });
 
-    // TODO Check that delegated data grants has been removed from app registration
+    // Delegated grants has been removed from app registration
+    await waitForExpect(async () => {
+      const updatedRegistration = await craig.call('app-registrations.getForAgent', {
+        agentUri: APP_URI,
+        podOwner: craig.id
+      });
+
+      expect(arrayOf(updatedRegistration['interop:hasAccessGrant'])).toHaveLength(1);
+    });
 
     // Craig cannot fetch Alice event anymore
     await waitForExpect(async () => {

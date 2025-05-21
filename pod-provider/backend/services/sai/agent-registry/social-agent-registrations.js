@@ -42,7 +42,7 @@ module.exports = {
   },
   actions: {
     async createOrUpdate(ctx) {
-      let { agentUri, podOwner, accessGrantsUris, reciprocalRegistrationUri, label, note } = ctx.params;
+      let { agentUri, podOwner, reciprocalRegistrationUri, label, note } = ctx.params;
 
       const agentRegistration = await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx });
 
@@ -54,15 +54,13 @@ module.exports = {
           (label && agentRegistration['skos:prefLabel'] !== label) ||
           (note && agentRegistration['skos:note'] !== note) ||
           (reciprocalRegistrationUri &&
-            agentRegistration['interop:reciprocalRegistration'] !== reciprocalRegistrationUri) ||
-          (accessGrantsUris && !arraysEqual(agentRegistration['interop:hasAccessGrant'], accessGrantsUris))
+            agentRegistration['interop:reciprocalRegistration'] !== reciprocalRegistrationUri)
         ) {
           await this.actions.put(
             {
               resource: {
                 ...agentRegistration,
                 'interop:updatedAt': new Date().toISOString(),
-                'interop:hasAccessGrant': accessGrantsUris || agentRegistration['interop:hasAccessGrant'],
                 'interop:reciprocalRegistration':
                   reciprocalRegistrationUri || agentRegistration['interop:reciprocalRegistration'],
                 'skos:prefLabel': label || agentRegistration['skos:prefLabel'],
@@ -86,7 +84,6 @@ module.exports = {
               'interop:registeredAt': new Date().toISOString(),
               'interop:updatedAt': new Date().toISOString(),
               'interop:registeredAgent': agentUri,
-              'interop:hasAccessGrant': accessGrantsUris,
               'interop:reciprocalRegistration': reciprocalRegistrationUri,
               'skos:prefLabel': label,
               'skos:note': note
@@ -183,12 +180,16 @@ module.exports = {
           predicate: 'outbox'
         });
 
-        await ctx.call('activitypub.outbox.post', {
-          collectionUri: outboxUri,
-          type: activityType,
-          object: agentRegistrationUri,
-          to: agentUri
-        });
+        await ctx.call(
+          'activitypub.outbox.post',
+          {
+            collectionUri: outboxUri,
+            type: activityType,
+            object: agentRegistrationUri,
+            to: agentUri
+          },
+          { meta: { webId: podOwner } }
+        );
       }
     },
     // Add an authorization for a resource to a given user
@@ -204,8 +205,6 @@ module.exports = {
         delegationLimit,
         webId
       });
-
-      await this.actions.regenerate({ agentUri: grantee, podOwner: webId }, { parentCtx: ctx });
     },
     // Remove an authorization for a resource to a given user
     async removeAuthorization(ctx) {
@@ -217,8 +216,6 @@ module.exports = {
         grantee,
         webId
       });
-
-      await this.actions.regenerate({ agentUri: grantee, podOwner: webId }, { parentCtx: ctx });
     },
     /**
      * Mass-update access authorizations for a single resource
@@ -245,8 +242,6 @@ module.exports = {
             grantee
           });
         }
-
-        await this.actions.regenerate({ agentUri: grantee, podOwner }, { parentCtx: ctx });
       }
     },
     async getAuthorizations(ctx) {
@@ -256,23 +251,23 @@ module.exports = {
       const account = await ctx.call('auth.account.findByWebId', { webId });
       ctx.meta.dataset = account.username;
 
-      const dataAuthorizations = await ctx.call('data-authorizations.listForSingleResource', {
+      const authorizations = await ctx.call('access-authorizations.listForSingleResource', {
         resourceUri,
         webId
       });
 
       return {
         resourceUri,
-        authorizations: dataAuthorizations.map(auth => ({
-          grantee: auth['interop:grantee'],
-          accessModes: arrayOf(auth['interop:accessMode'])
+        authorizations: authorizations.map(authorization => ({
+          grantee: authorization['interop:grantee'],
+          accessModes: arrayOf(authorization['interop:accessMode'])
         }))
       };
     },
-    // Get all data grants that have been shared with pod owner through reciprocal registration
-    async getSharedDataGrants(ctx) {
+    // Get all access grants that have been shared with pod owner through reciprocal registration
+    async getSharedGrants(ctx) {
       const { podOwner } = ctx.params;
-      let dataGrants = [];
+      let grants = [];
 
       const registrationsContainer = await this.actions.list({ webId: podOwner });
 
@@ -283,42 +278,28 @@ module.exports = {
             webId: podOwner
           });
 
-          dataGrants.push(
-            ...(await this.actions.getDataGrants({ agentRegistration: reciprocalRegistration, podOwner }))
-          );
+          grants.push(...(await this.actions.getGrants({ agentRegistration: reciprocalRegistration, podOwner })));
         }
       }
 
-      return dataGrants;
+      return grants;
     },
     /**
      * Look at the provided social agent registration and, if needed,
-     * generate delegated data grants for apps that requested 'interop:All' scope for the same data
+     * generate delegated grants for apps that requested 'interop:All' scope for the same data
      */
     async updateAppRegistrations(ctx) {
       const { socialAgentRegistration, podOwner } = ctx.params;
-      let allGrantees = [];
 
-      // Get all data grants from social agent registration (loop through access grants, then data grants)
-      const dataGrants = await this.actions.getDataGrants({ agentRegistration: socialAgentRegistration });
+      // Get all grants from agent registration
+      const grants = await this.actions.getGrants({ agentRegistration: socialAgentRegistration });
 
-      // TODO Filter out data grants which have not changed to improve performances
+      // TODO Filter out grants which have not changed to improve performances
 
-      for (const dataGrant of dataGrants) {
-        // Generate delegated data grants for all data authorizations with `interop:All` scope
-        const grantees = await ctx.call('delegated-data-grants.generateFromAllScopeAllDataAuthorizations', {
-          dataGrant,
-          podOwner: recipientUri
-        });
-
-        allGrantees.push(...grantees);
-      }
-
-      // Regenerate the app registrations (remove duplicate grantees)
-      // TODO Also regenerate the social agent registrations
-      for (const grantee of [...new Set(allGrantees)]) {
-        await ctx.call('app-registrations.regenerate', {
-          agentUri: grantee,
+      for (const grant of grants) {
+        // Generate delegated grants for all authorizations with `interop:All` scope
+        const grantees = await ctx.call('delegated-access-grants.generateFromAllScopeAllAuthorizations', {
+          grant,
           podOwner
         });
       }

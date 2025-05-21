@@ -265,109 +265,136 @@
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Control> .
 
-<http://localhost:3000/_acl/alice/data/14ea94d8-fbc6-4c08-afdf-667ca7d6c81f#Read>
+<http://localhost:3000/_acl/alice/data/179f6b65-7fe7-4d4d-ae29-ec3f5812c63a#Read>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/14ea94d8-fbc6-4c08-afdf-667ca7d6c81f> ;
-        <http://www.w3.org/ns/auth/acl#agentClass>
-                <http://xmlns.com/foaf/0.1/Agent> ;
-        <http://www.w3.org/ns/auth/acl#mode>
-                <http://www.w3.org/ns/auth/acl#Read> .
-
-<http://localhost:3000/_acl/alice/data/21e0cd74-78d8-48be-9f28-2a59d99b6a41#Read>
-        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
-        <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/21e0cd74-78d8-48be-9f28-2a59d99b6a41> ;
+                <http://localhost:3000/alice/data/179f6b65-7fe7-4d4d-ae29-ec3f5812c63a> ;
         <http://www.w3.org/ns/auth/acl#agentGroup>
                 <http://localhost:3000/_groups/alice/contacts> ;
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Read> .
 
-<http://localhost:3000/_acl/alice/data/1cf04b92-8bf9-42e9-8209-add9304c56c5#Read>
+<http://localhost:3000/_acl/alice/data/86066881-f807-4e22-8c23-08298a1b6b49#Read>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/1cf04b92-8bf9-42e9-8209-add9304c56c5> ;
+                <http://localhost:3000/alice/data/86066881-f807-4e22-8c23-08298a1b6b49> ;
         <http://www.w3.org/ns/auth/acl#agentClass>
                 <http://xmlns.com/foaf/0.1/Agent> ;
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Read> .
 
-<http://localhost:3000/_acl/alice/data/86f6c393-dc60-4be9-aedd-ccf332b41aad#Read>
+<http://localhost:3000/_acl/alice/data/7a569ad0-25de-4e76-ab15-771d8bedfb3f#Read>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/86f6c393-dc60-4be9-aedd-ccf332b41aad> ;
+                <http://localhost:3000/alice/data/7a569ad0-25de-4e76-ab15-771d8bedfb3f> ;
         <http://www.w3.org/ns/auth/acl#agentClass>
                 <http://xmlns.com/foaf/0.1/Agent> ;
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Read> .
 
-<http://localhost:3000/_acl/alice/data/32ec1db1-c02a-45bb-9e89-c9671609a500#Read>
+<http://localhost:3000/_acl/alice/data/ea34d84f-f3cd-4650-a433-7bec966f4cbf#Read>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/32ec1db1-c02a-45bb-9e89-c9671609a500> ;
+                <http://localhost:3000/alice/data/ea34d84f-f3cd-4650-a433-7bec966f4cbf> ;
         <http://www.w3.org/ns/auth/acl#agentClass>
                 <http://xmlns.com/foaf/0.1/Agent> ;
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Read> .
 
-<http://localhost:3000/_acl/alice/data/8b4d1908-759c-4fd2-a23d-3337caf631d2#Read>
+<http://localhost:3000/_acl/alice/data/20ae5e46-90ab-45ad-8631-ef3f4166e0a6#Read>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/8b4d1908-759c-4fd2-a23d-3337caf631d2> ;
+                <http://localhost:3000/alice/data/20ae5e46-90ab-45ad-8631-ef3f4166e0a6> ;
         <http://www.w3.org/ns/auth/acl#agentClass>
                 <http://xmlns.com/foaf/0.1/Agent> ;
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Read> .
 
-<http://localhost:3000/_acl/alice/data/169e9138-c69b-4da4-ae22-3f2380b61c97#Read>
+<http://localhost:3000/_acl/alice/data/86fc159d-1606-45cd-b9c0-fc74ca374f7c#Read>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/169e9138-c69b-4da4-ae22-3f2380b61c97> ;
+                <http://localhost:3000/alice/data/86fc159d-1606-45cd-b9c0-fc74ca374f7c> ;
         <http://www.w3.org/ns/auth/acl#agentClass>
                 <http://xmlns.com/foaf/0.1/Agent> ;
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Read> .
 
-<http://localhost:3000/_acl/alice/data/6f9496b5-8a1c-4915-b586-d7105c19c1c6#Read>
+<http://localhost:3000/_acl/alice/data/2268a703-b08f-4569-bc7d-211cc1b0a4ed#Read>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/6f9496b5-8a1c-4915-b586-d7105c19c1c6> ;
+                <http://localhost:3000/alice/data/2268a703-b08f-4569-bc7d-211cc1b0a4ed> ;
         <http://www.w3.org/ns/auth/acl#agentClass>
                 <http://xmlns.com/foaf/0.1/Agent> ;
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Read> .
 
-<http://localhost:3000/_acl/alice/data/5d8855ca-7c31-474c-a75b-8d05360ae188#Read>
+<http://localhost:3000/_acl/alice/data/27d1a048-392b-4ec9-a8a7-5675745dcac3#Read>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/5d8855ca-7c31-474c-a75b-8d05360ae188> ;
+                <http://localhost:3000/alice/data/27d1a048-392b-4ec9-a8a7-5675745dcac3> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba> ;
         <http://www.w3.org/ns/auth/acl#agent>
                 <http://localhost:3000/alice> ;
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Read> .
 
-<http://localhost:3000/_acl/alice/data/5d8855ca-7c31-474c-a75b-8d05360ae188#Write>
+<http://localhost:3000/_acl/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba#Write>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/5d8855ca-7c31-474c-a75b-8d05360ae188> ;
+                <http://localhost:3000/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba> ;
         <http://www.w3.org/ns/auth/acl#agent>
                 <http://localhost:3000/alice> ;
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Write> .
 
-<http://localhost:3000/_acl/alice/data/5d8855ca-7c31-474c-a75b-8d05360ae188#Control>
+<http://localhost:3000/_acl/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba#Control>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/5d8855ca-7c31-474c-a75b-8d05360ae188> ;
+                <http://localhost:3000/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba> ;
         <http://www.w3.org/ns/auth/acl#agent>
                 <http://localhost:3000/alice> ;
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Control> .
 
-<http://localhost:3000/_acl/alice/data/035b4a56-67a6-4dc5-b398-703fe0d9e1c6#Read>
+<http://localhost:3000/_acl/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558#Read>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/035b4a56-67a6-4dc5-b398-703fe0d9e1c6> ;
+                <http://localhost:3000/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558#Write>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558#Control>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .
+
+<http://localhost:3000/_acl/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea> ;
         <http://www.w3.org/ns/auth/acl#agent>
                 <http://localhost:3000/alice> ;
         <http://www.w3.org/ns/auth/acl#agentClass>
@@ -375,55 +402,28 @@
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Read> .
 
-<http://localhost:3000/_acl/alice/data/035b4a56-67a6-4dc5-b398-703fe0d9e1c6#Write>
+<http://localhost:3000/_acl/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea#Write>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/035b4a56-67a6-4dc5-b398-703fe0d9e1c6> ;
+                <http://localhost:3000/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea> ;
         <http://www.w3.org/ns/auth/acl#agent>
                 <http://localhost:3000/alice> ;
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Write> .
 
-<http://localhost:3000/_acl/alice/data/035b4a56-67a6-4dc5-b398-703fe0d9e1c6#Control>
+<http://localhost:3000/_acl/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea#Control>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/035b4a56-67a6-4dc5-b398-703fe0d9e1c6> ;
+                <http://localhost:3000/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea> ;
         <http://www.w3.org/ns/auth/acl#agent>
                 <http://localhost:3000/alice> ;
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Control> .
 
-<http://localhost:3000/_acl/alice/data/b53d65f9-7b87-4838-8953-a092161d6bf0#Read>
+<http://localhost:3000/_acl/alice/data/80358761-3506-462e-b709-e2b1465bbbea#Read>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/b53d65f9-7b87-4838-8953-a092161d6bf0> ;
-        <http://www.w3.org/ns/auth/acl#agent>
-                <http://localhost:3000/alice> ;
-        <http://www.w3.org/ns/auth/acl#mode>
-                <http://www.w3.org/ns/auth/acl#Read> .
-
-<http://localhost:3000/_acl/alice/data/b53d65f9-7b87-4838-8953-a092161d6bf0#Write>
-        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
-        <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/b53d65f9-7b87-4838-8953-a092161d6bf0> ;
-        <http://www.w3.org/ns/auth/acl#agent>
-                <http://localhost:3000/alice> ;
-        <http://www.w3.org/ns/auth/acl#mode>
-                <http://www.w3.org/ns/auth/acl#Write> .
-
-<http://localhost:3000/_acl/alice/data/b53d65f9-7b87-4838-8953-a092161d6bf0#Control>
-        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
-        <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/b53d65f9-7b87-4838-8953-a092161d6bf0> ;
-        <http://www.w3.org/ns/auth/acl#agent>
-                <http://localhost:3000/alice> ;
-        <http://www.w3.org/ns/auth/acl#mode>
-                <http://www.w3.org/ns/auth/acl#Control> .
-
-<http://localhost:3000/_acl/alice/data/a9f9b3cc-1fe5-4ce9-8c5b-7f67530adab1#Read>
-        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
-        <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/a9f9b3cc-1fe5-4ce9-8c5b-7f67530adab1> ;
+                <http://localhost:3000/alice/data/80358761-3506-462e-b709-e2b1465bbbea> ;
         <http://www.w3.org/ns/auth/acl#agent>
                 <http://localhost:3000/alice> ;
         <http://www.w3.org/ns/auth/acl#agentClass>
@@ -431,19 +431,19 @@
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Read> .
 
-<http://localhost:3000/_acl/alice/data/a9f9b3cc-1fe5-4ce9-8c5b-7f67530adab1#Write>
+<http://localhost:3000/_acl/alice/data/80358761-3506-462e-b709-e2b1465bbbea#Write>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/a9f9b3cc-1fe5-4ce9-8c5b-7f67530adab1> ;
+                <http://localhost:3000/alice/data/80358761-3506-462e-b709-e2b1465bbbea> ;
         <http://www.w3.org/ns/auth/acl#agent>
                 <http://localhost:3000/alice> ;
         <http://www.w3.org/ns/auth/acl#mode>
                 <http://www.w3.org/ns/auth/acl#Write> .
 
-<http://localhost:3000/_acl/alice/data/a9f9b3cc-1fe5-4ce9-8c5b-7f67530adab1#Control>
+<http://localhost:3000/_acl/alice/data/80358761-3506-462e-b709-e2b1465bbbea#Control>
         a       <http://www.w3.org/ns/auth/acl#Authorization> ;
         <http://www.w3.org/ns/auth/acl#accessTo>
-                <http://localhost:3000/alice/data/a9f9b3cc-1fe5-4ce9-8c5b-7f67530adab1> ;
+                <http://localhost:3000/alice/data/80358761-3506-462e-b709-e2b1465bbbea> ;
         <http://www.w3.org/ns/auth/acl#agent>
                 <http://localhost:3000/alice> ;
         <http://www.w3.org/ns/auth/acl#mode>

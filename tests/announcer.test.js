@@ -160,7 +160,7 @@ describe('Test sharing through announcer', () => {
     // Craig cannot fetch the announces collection
     await waitForExpect(async () => {
       await expect(
-        bob.call('ldp.resource.get', {
+        craig.call('ldp.resource.get', {
           resourceUri: event['apods:announces'],
           accept: MIME_TYPES.JSON
         })
@@ -170,7 +170,7 @@ describe('Test sharing through announcer', () => {
     // Craig cannot fetch the announcers collection
     await waitForExpect(async () => {
       await expect(
-        bob.call('ldp.resource.get', {
+        craig.call('ldp.resource.get', {
           resourceUri: event['apods:announcers'],
           accept: MIME_TYPES.JSON
         })

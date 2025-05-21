@@ -158,7 +158,7 @@ module.exports = {
             return;
           }
 
-          // Check if the emitter has a data grant which allow delegation
+          // Check if the emitter has a grant which allow delegation
           const isAnnouncer = await ctx.call('activitypub.collection.includes', {
             collectionUri: resource['apods:announcers'],
             itemUri: emitterUri
@@ -170,28 +170,45 @@ module.exports = {
         }
 
         /**
+         * CREATE AUTHORIZATIONS FOR AGENTS
+         */
+
+        for (let grantee of arrayOf(activity.to)) {
+          await ctx.call('social-agent-registrations.addAuthorization', {
+            resourceUri,
+            grantee,
+            accessModes: ['acl:Read'],
+            delegationAllowed: !!activity['interop:delegationAllowed'],
+            delegationLimit: activity['interop:delegationLimit']
+          });
+        }
+
+        /**
          * CREATE ANNOUNCES COLLECTION AND ADD RECIPIENTS
          */
 
-        const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
-          objectUri: resourceUri,
-          collection: this.settings.announcesCollectionOptions
-        });
-
-        await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
-
-        // Add all recipients to the announces collection and WebACL group
-        for (let actorUri of arrayOf(activity.to)) {
-          await ctx.call('activitypub.collection.add', {
-            collectionUri: announcesCollectionUri,
-            item: actorUri
+        // Skip this part if a delegation, will be done through the delegated-access-grants.issued event
+        if (emitterUri === resource['dc:creator']) {
+          const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
+            objectUri: resourceUri,
+            collection: this.settings.announcesCollectionOptions
           });
 
-          await ctx.call('webacl.group.addMember', {
-            groupUri: getAnnouncesGroupUri(resourceUri),
-            memberUri: actorUri,
-            webId: resource['dc:creator']
-          });
+          await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
+
+          // Add all recipients to the announces collection and WebACL group
+          for (let actorUri of arrayOf(activity.to)) {
+            await ctx.call('activitypub.collection.add', {
+              collectionUri: announcesCollectionUri,
+              item: actorUri
+            });
+
+            await ctx.call('webacl.group.addMember', {
+              groupUri: getAnnouncesGroupUri(resourceUri),
+              memberUri: actorUri,
+              webId: resource['dc:creator']
+            });
+          }
         }
 
         /**
@@ -224,20 +241,6 @@ module.exports = {
             });
           }
         }
-
-        /**
-         * CREATE AUTHORIZATIONS FOR AGENTS
-         */
-
-        for (let actorUri of arrayOf(activity.to)) {
-          await ctx.call('social-agent-registrations.addAuthorization', {
-            resourceUri,
-            grantee: actorUri,
-            accessModes: ['acl:Read'],
-            delegationAllowed: !!activity['interop:delegationAllowed'],
-            delegationLimit: activity['interop:delegationLimit']
-          });
-        }
       },
       /**
        * On receipt of an announce activity, cache locally the announced object
@@ -248,23 +251,11 @@ module.exports = {
         // Sometimes a recipient may be the original announcer
         // So ensure this is a remote resource before storing it locally
         if (!resourceUri.startsWith(urlJoin(recipientUri, '/'))) {
-          const resource = await ctx.call('ldp.resource.get', {
+          // Get the latest version of the resource and store it locally
+          const resource = await ctx.call('ldp.remote.store', {
             resourceUri,
-            accept: MIME_TYPES.JSON,
             webId: recipientUri
           });
-
-          try {
-            // Cache remote object (we want to be able to fetch it with SPARQL)
-            await ctx.call('ldp.remote.store', {
-              resource,
-              webId: recipientUri
-            });
-          } catch (e) {
-            this.logger.warn(
-              `Unable to cache remote object ${resourceUri} for actor ${recipientUri}. Message: ${e.message}`
-            );
-          }
 
           const expandedTypes = await ctx.call('jsonld.parser.expandTypes', {
             types: resource['@type'] || resource.type
@@ -309,21 +300,21 @@ module.exports = {
     }
   },
   events: {
-    // When a delegated data grant is issued, add the grantee to the announces collection
+    // When a delegated grant is issued, add the grantee to the announces collection
     // This hack will be gone when we can do without announces/announcers collections
-    async 'delegated-data-grants.issued'(ctx) {
-      const { delegatedDataGrant } = ctx.params;
+    async 'delegated-access-grants.issued'(ctx) {
+      const { delegatedGrant } = ctx.params;
 
-      // TODO find a better way to detect application data grants
-      if (delegatedDataGrant['interop:satisfiesAccessNeed']) {
-        this.logger.warn(`Delegated data grant is for application, skip adding to the announces collection...`);
+      // TODO find a better way to detect application grants
+      if (delegatedGrant['interop:satisfiesAccessNeed']) {
+        this.logger.warn(`Delegated grant is for application, skip adding to the announces collection...`);
         return;
       }
 
-      ctx.meta.webId = delegatedDataGrant['interop:dataOwner'];
-      ctx.meta.dataset = getDatasetFromUri(delegatedDataGrant['interop:dataOwner']);
+      ctx.meta.webId = delegatedGrant['interop:dataOwner'];
+      ctx.meta.dataset = getDatasetFromUri(delegatedGrant['interop:dataOwner']);
 
-      for (const resourceUri of arrayOf(delegatedDataGrant['interop:hasDataInstance'])) {
+      for (const resourceUri of arrayOf(delegatedGrant['interop:hasDataInstance'])) {
         const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
           objectUri: resourceUri,
           collection: this.settings.announcesCollectionOptions
@@ -331,12 +322,12 @@ module.exports = {
 
         await ctx.call('activitypub.collection.add', {
           collectionUri: announcesCollectionUri,
-          item: delegatedDataGrant['interop:grantee']
+          item: delegatedGrant['interop:grantee']
         });
 
         await ctx.call('webacl.group.addMember', {
           groupUri: getAnnouncesGroupUri(resourceUri),
-          memberUri: delegatedDataGrant['interop:grantee']
+          memberUri: delegatedGrant['interop:grantee']
         });
       }
     }

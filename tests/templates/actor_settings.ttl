@@ -3,7 +3,7 @@
         <http://semapps.org/ns/core#email>
                 "alice@test.com" ;
         <http://semapps.org/ns/core#hashedPassword>
-                "$2b$10$620biT1E6lVY4KT98vHOiOIV.XdK.QeN1GhM2YCjUsa858omkIAR6" ;
+                "$2b$10$bHz4fHfQthS5Ob2iGDL55uDAuFADuQlx5Js.yGrFKvGLXP.gYNqga" ;
         <http://semapps.org/ns/core#username>
                 "alice" ;
         <http://semapps.org/ns/core#webId>

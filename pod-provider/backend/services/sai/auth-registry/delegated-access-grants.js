@@ -30,7 +30,7 @@ module.exports = {
         const oldDataset = ctx.meta.dataset;
         ctx.meta.dataset = getDatasetFromUri(dataOwnerUri);
 
-        delegatedGrantUri = await ctx.call('delegation-issuer.issue', { delegatedGrant, webId });
+        delegatedGrantUri = await ctx.call('delegation-endpoint.issue', { delegatedGrant, webId });
 
         ctx.meta.dataset = oldDataset;
       } else {

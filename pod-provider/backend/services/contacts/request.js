@@ -93,7 +93,7 @@ module.exports = {
           // Share profile
           // TODO setup a contacts group in SAI
           const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
-          await ctx.call('social-agent-registrations.addAuthorization', {
+          await ctx.call('access-authorizations.addForSingleResource', {
             resourceUri: emitter.url,
             grantee: targetUri,
             accessModes: ['acl:Read']
@@ -250,7 +250,7 @@ module.exports = {
 
         // Share profile
         // TODO setup a contacts group in SAI
-        await ctx.call('social-agent-registrations.addAuthorization', {
+        await ctx.call('access-authorizations.addForSingleResource', {
           resourceUri: emitter.url,
           grantee: activity.to,
           accessModes: ['acl:Read']

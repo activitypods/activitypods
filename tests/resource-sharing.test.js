@@ -63,7 +63,7 @@ describe('Test resource sharing features', () => {
   });
 
   test('Alice share her event with Bob and social agent registrations are created', async () => {
-    await alice.call('social-agent-registrations.addAuthorization', {
+    await alice.call('access-authorizations.addForSingleResource', {
       resourceUri: eventUri,
       grantee: bob.id,
       accessModes: ['acl:Read']
@@ -168,7 +168,7 @@ describe('Test resource sharing features', () => {
   });
 
   test('Craig installs the app after Alice shared her event and a delegated grant is created', async () => {
-    await alice.call('social-agent-registrations.addAuthorization', {
+    await alice.call('access-authorizations.addForSingleResource', {
       resourceUri: eventUri,
       grantee: craig.id,
       accessModes: ['acl:Read']
@@ -222,7 +222,7 @@ describe('Test resource sharing features', () => {
       contentType: MIME_TYPES.JSON
     });
 
-    await alice.call('social-agent-registrations.addAuthorization', {
+    await alice.call('access-authorizations.addForSingleResource', {
       resourceUri: event2Uri,
       grantee: bob.id,
       accessModes: ['acl:Read']
@@ -315,7 +315,7 @@ describe('Test resource sharing features', () => {
   });
 
   test('Alice un-share her event with Craig', async () => {
-    await alice.call('social-agent-registrations.removeAuthorization', {
+    await alice.call('access-authorizations.removeForSingleResource', {
       resourceUri: eventUri,
       grantee: craig.id
     });

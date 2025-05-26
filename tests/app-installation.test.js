@@ -120,7 +120,7 @@ describe('Test app installation', () => {
   });
 
   test('User installs app and grants all access needs', async () => {
-    appRegistrationUri = await alice.call('app-registrations.register', {
+    appRegistrationUri = await alice.call('registration-endpoint.register', {
       appUri: APP_URI,
       acceptedAccessNeeds: [
         requiredAccessNeedGroup['interop:hasAccessNeed'],
@@ -418,7 +418,7 @@ describe('Test app installation', () => {
 
   test('User installs same app a second time and get an error', async () => {
     await expect(
-      alice.call('app-registrations.register', {
+      alice.call('registration-endpoint.register', {
         appUri: APP_URI,
         acceptedAccessNeeds: requiredAccessNeedGroup['interop:hasAccessNeed'],
         acceptedSpecialRights: requiredAccessNeedGroup['apods:hasSpecialRights']
@@ -427,7 +427,7 @@ describe('Test app installation', () => {
   });
 
   test('User uninstalls app', async () => {
-    await alice.call('app-registrations.remove', { appUri: APP_URI });
+    await alice.call('registration-endpoint.remove', { appUri: APP_URI });
 
     let appRegistrationUri;
 

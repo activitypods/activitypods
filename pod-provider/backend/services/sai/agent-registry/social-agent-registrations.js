@@ -1,10 +1,8 @@
-const path = require('path');
 const LinkHeader = require('http-link-header');
 const { ControlledContainerMixin, arrayOf, getId } = require('@semapps/ldp');
 const { ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const AgentRegistrationsMixin = require('../../../mixins/agent-registrations');
-const { arraysEqual } = require('../../../utils');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 
 module.exports = {
@@ -20,25 +18,6 @@ module.exports = {
     excludeFromMirror: true,
     activateTombstones: false,
     typeIndex: 'private'
-  },
-  dependencies: ['api', 'ldp'],
-  async started() {
-    const basePath = await this.broker.call('ldp.getBasePath');
-    await this.broker.call('api.addRoute', {
-      route: {
-        name: 'auth-agent-authorizations',
-        path: path.join(basePath, '/.auth-agent/authorizations'),
-        authorization: true,
-        authentication: false,
-        bodyParsers: {
-          json: true
-        },
-        aliases: {
-          'GET /': 'social-agent-registrations.getAuthorizations',
-          'PUT /': 'social-agent-registrations.updateAuthorizations'
-        }
-      }
-    });
   },
   actions: {
     async createOrUpdate(ctx) {
@@ -191,78 +170,6 @@ module.exports = {
           { meta: { webId: podOwner } }
         );
       }
-    },
-    // Add an authorization for a resource to a given user
-    async addAuthorization(ctx) {
-      const { resourceUri, grantee, accessModes, delegationAllowed, delegationLimit } = ctx.params;
-      const webId = ctx.params.webId || ctx.meta.webId;
-
-      await ctx.call('access-authorizations.generateForSingleResource', {
-        resourceUri,
-        grantee,
-        accessModes,
-        delegationAllowed,
-        delegationLimit,
-        webId
-      });
-    },
-    // Remove an authorization for a resource to a given user
-    async removeAuthorization(ctx) {
-      const { resourceUri, grantee } = ctx.params;
-      const webId = ctx.params.webId || ctx.meta.webId;
-
-      await ctx.call('access-authorizations.deleteForSingleResource', {
-        resourceUri,
-        grantee,
-        webId
-      });
-    },
-    /**
-     * Mass-update access authorizations for a single resource
-     */
-    async updateAuthorizations(ctx) {
-      const { resourceUri, authorizations } = ctx.params;
-
-      const podOwner = ctx.meta.webId;
-      const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
-      ctx.meta.dataset = account.username;
-
-      for ({ grantee, accessModes } of authorizations) {
-        if (accessModes.length > 0) {
-          await ctx.call('access-authorizations.generateForSingleResource', {
-            resourceUri,
-            podOwner,
-            grantee,
-            accessModes
-          });
-        } else {
-          await ctx.call('access-authorizations.deleteForSingleResource', {
-            resourceUri,
-            podOwner,
-            grantee
-          });
-        }
-      }
-    },
-    async getAuthorizations(ctx) {
-      const { resource: resourceUri } = ctx.params;
-
-      const webId = ctx.meta.webId;
-      const account = await ctx.call('auth.account.findByWebId', { webId });
-      ctx.meta.dataset = account.username;
-
-      const authorizations = await ctx.call('access-authorizations.listForSingleResource', {
-        resourceUri,
-        webId
-      });
-
-      return {
-        resourceUri,
-        authorizations: authorizations.map(authorization => ({
-          grantee: authorization['interop:grantee'],
-          accessModes: arrayOf(authorization['interop:accessMode'])
-        }))
-      };
     },
     // Get all access grants that have been shared with pod owner through reciprocal registration
     async getSharedGrants(ctx) {

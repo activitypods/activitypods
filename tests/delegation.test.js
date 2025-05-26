@@ -51,7 +51,7 @@ describe('Test delegation features', () => {
       contentType: MIME_TYPES.JSON
     });
 
-    await alice.call('social-agent-registrations.addAuthorization', {
+    await alice.call('access-authorizations.addForSingleResource', {
       resourceUri: eventUri,
       grantee: bob.id,
       accessModes: ['acl:Read'],
@@ -130,7 +130,7 @@ describe('Test delegation features', () => {
   });
 
   test('Bob shares Alice event with Craig', async () => {
-    await bob.call('social-agent-registrations.addAuthorization', {
+    await bob.call('access-authorizations.addForSingleResource', {
       resourceUri: eventUri,
       grantee: craig.id,
       accessModes: ['acl:Read']

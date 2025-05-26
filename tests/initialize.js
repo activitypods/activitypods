@@ -265,7 +265,7 @@ const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRig
     acceptedSpecialRights = requiredAccessNeedGroup['apods:hasSpecialRights'];
   }
 
-  return await actor.call('app-registrations.register', {
+  return await actor.call('registration-endpoint.register', {
     appUri,
     acceptedAccessNeeds,
     acceptedSpecialRights

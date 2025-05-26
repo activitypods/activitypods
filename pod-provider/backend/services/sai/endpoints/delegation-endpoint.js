@@ -5,20 +5,20 @@ const { MIME_TYPES } = require('@semapps/mime-types');
 const { parseHeader, negotiateContentType, parseJson, parseTurtle } = require('@semapps/middlewares');
 
 module.exports = {
-  name: 'delegation-issuer',
+  name: 'delegation-endpoint',
   dependencies: ['api', 'ldp'],
   async started() {
     const basePath = await this.broker.call('ldp.getBasePath');
     const middlewares = [parseHeader, negotiateContentType, parseJson, parseTurtle];
     await this.broker.call('api.addRoute', {
       route: {
-        name: 'auth-agent-delegation',
+        name: 'sai-delegation-endpoint',
         path: path.join(basePath, '/.auth-agent/delegation'),
         authorization: true,
         authentication: false,
         bodyParsers: false,
         aliases: {
-          'POST /issue': [...middlewares, 'delegation-issuer.issue_api']
+          'POST /issue': [...middlewares, 'delegation-endpoint.issue_api']
         }
       }
     });

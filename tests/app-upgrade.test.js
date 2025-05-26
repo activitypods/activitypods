@@ -97,7 +97,7 @@ describe('Test app upgrade', () => {
 
   test('User upgrade and accept all required access needs', async () => {
     await expect(
-      alice.call('app-registrations.upgrade', {
+      alice.call('registration-endpoint.upgrade', {
         appUri: APP_URI,
         acceptedAccessNeeds: requiredAccessNeedGroup['interop:hasAccessNeed'],
         acceptedSpecialRights: requiredAccessNeedGroup['apods:hasSpecialRights']

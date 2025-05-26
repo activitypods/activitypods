@@ -174,7 +174,7 @@ module.exports = {
          */
 
         for (let grantee of arrayOf(activity.to)) {
-          await ctx.call('social-agent-registrations.addAuthorization', {
+          await ctx.call('access-authorizations.addForSingleResource', {
             resourceUri,
             grantee,
             accessModes: ['acl:Read'],

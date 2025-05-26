@@ -14,9 +14,7 @@ module.exports = {
     typeIndex: 'private'
   },
   actions: {
-    /**
-     * Generate access authorizations from provided access needs
-     */
+    // Generate access authorizations from provided access needs
     async generateFromAccessNeeds(ctx) {
       const { accessNeedsUris, podOwner, grantee } = ctx.params;
       let authorizationsUris = [];
@@ -61,8 +59,10 @@ module.exports = {
 
       return authorizationsUris;
     },
-    async generateForSingleResource(ctx) {
-      const { resourceUri, grantee, accessModes, delegationAllowed, delegationLimit, webId } = ctx.params;
+    // Add an authorization for a single resource
+    async addForSingleResource(ctx) {
+      const { resourceUri, grantee, accessModes, delegationAllowed, delegationLimit } = ctx.params;
+      const webId = ctx.params.webId || ctx.meta.webId;
 
       const dataRegistration = await ctx.call('data-registrations.getByResourceUri', { resourceUri, webId });
       const dataOwner = dataRegistration['interop:registeredBy'];
@@ -114,7 +114,7 @@ module.exports = {
           return getId(authorizationForResource);
         } else {
           // If the properties have changed, delete the authorization for this single resource
-          await this.actions.deleteForSingleResource({ resourceUri, grantee, webId });
+          await this.actions.removeForSingleResource({ resourceUri, grantee, webId });
         }
       }
 
@@ -166,8 +166,10 @@ module.exports = {
         return newAuthorizationUri;
       }
     },
-    async deleteForSingleResource(ctx) {
-      const { resourceUri, grantee, webId } = ctx.params;
+    // Remove an authorization for a single resource
+    async removeForSingleResource(ctx) {
+      const { resourceUri, grantee } = ctx.params;
+      const webId = ctx.params.webId || ctx.meta.webId;
 
       const dataRegistration = await ctx.call('data-registrations.getByResourceUri', { resourceUri, webId });
       const dataOwner = dataRegistration['interop:registeredBy'];
@@ -215,6 +217,7 @@ module.exports = {
         }
       }
     },
+    // List all authorizations for a single resource
     async listForSingleResource(ctx) {
       const { resourceUri } = ctx.params;
       const webId = ctx.params.webId || ctx.meta.webId;

@@ -26,14 +26,10 @@ module.exports = {
         } else {
           this.logger.info(`Installing app ${appUri} on ${webId}...`);
 
-          await ctx.call(
-            'app-registrations.register',
-            {
-              appUri,
-              acceptAllRequirements: true
-            },
-            { meta: { webId } }
-          );
+          await ctx.call('registration-endpoint.register', {
+            appUri,
+            acceptAllRequirements: true
+          });
         }
       }
     },
@@ -66,20 +62,19 @@ module.exports = {
       const { username } = ctx.params;
       const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
-      for (const { webId } of accounts) {
+      for (const { webId, username: dataset } of accounts) {
+        ctx.meta.dataset = dataset;
+        ctx.meta.webId = webId;
+
         const container = await ctx.call('applications.list', { webId });
 
         for (let application of arrayOf(container['ldp:contains'])) {
           this.logger.info(`Upgrading app ${application.id} for ${webId}...`);
 
-          await ctx.call(
-            'app-registrations.upgrade',
-            {
-              appUri: application.id,
-              acceptAllRequirements: true
-            },
-            { meta: { webId } }
-          );
+          await ctx.call('registration-endpoint.upgrade', {
+            appUri: application.id,
+            acceptAllRequirements: true
+          });
         }
       }
     },

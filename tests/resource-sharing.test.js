@@ -349,4 +349,18 @@ describe('Test resource sharing features', () => {
       ).rejects.toThrow();
     });
   });
+
+  test('Bob remove the app and all delegated grants are deleted', async () => {
+    await bob.call('registration-endpoint.remove', {
+      appUri: APP_URI
+    });
+
+    await waitForExpect(async () => {
+      const delegatedGrants = await bob.call('delegated-access-grants.list');
+
+      console.log('delegatedGrants', delegatedGrants);
+
+      expect(arrayOf(delegatedGrants['ldp:contains'])).toHaveLength(0);
+    });
+  });
 });

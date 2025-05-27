@@ -148,7 +148,7 @@ const AgentRegistrationsMixin = {
         for (const authorization of authorizations) {
           await ctx.call('access-authorizations.delete', {
             resourceUri: getId(authorization),
-            webId: 'system'
+            webId: podOwner
           });
         }
 

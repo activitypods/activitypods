@@ -271,7 +271,11 @@ module.exports = {
       );
 
       for (const delegatedGrant of arrayOf(filteredContainer['ldp:contains'])) {
-        await this.actions.remoteDelete({ delegatedGrant, webId }, { parentCtx: ctx });
+        if (await ctx.call('ldp.remote.isRemote', { resourceUri: getId(delegatedGrant) })) {
+          await this.actions.remoteDelete({ delegatedGrant, webId }, { parentCtx: ctx });
+        } else {
+          await this.actions.delete({ resourceUri: getId(delegatedGrant) }, { parentCtx: ctx });
+        }
       }
     },
     // Get the delegated access grant generated for a grantee from a access grant

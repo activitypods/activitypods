@@ -2,6 +2,7 @@ const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { OBJECT_TYPES } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const { arrayOf } = require('@semapps/ldp');
 const { connectPodProvider, clearAllData, createActor, initializeAppServer, installApp } = require('./initialize');
 const ExampleAppService = require('./apps/example3.app');
 const CONFIG = require('./config');
@@ -218,5 +219,17 @@ describe('Test delegation features', () => {
         accept: MIME_TYPES.JSON
       })
     ).resolves.not.toThrow();
+  });
+
+  test('Craig remove the app and the delegated grant is deleted', async () => {
+    await craig.call('registration-endpoint.remove', {
+      appUri: APP_URI
+    });
+
+    // We should only have the delegated grant of Bob to Craig
+    await waitForExpect(async () => {
+      const delegatedGrants = await craig.call('delegated-access-grants.list');
+      expect(arrayOf(delegatedGrants['ldp:contains'])).toHaveLength(1);
+    });
   });
 });

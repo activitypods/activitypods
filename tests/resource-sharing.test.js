@@ -355,11 +355,15 @@ describe('Test resource sharing features', () => {
       appUri: APP_URI
     });
 
+    // All delegated grants have been removed from Alice's storage
+    await waitForExpect(async () => {
+      const delegatedGrants = await alice.call('delegated-access-grants.list');
+      expect(arrayOf(delegatedGrants['ldp:contains'])).toHaveLength(0);
+    });
+
+    // All delegated grants have been removed from Bob's storage
     await waitForExpect(async () => {
       const delegatedGrants = await bob.call('delegated-access-grants.list');
-
-      console.log('delegatedGrants', delegatedGrants);
-
       expect(arrayOf(delegatedGrants['ldp:contains'])).toHaveLength(0);
     });
   });

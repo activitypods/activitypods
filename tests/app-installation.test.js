@@ -196,6 +196,7 @@ describe('Test app installation', () => {
       'interop:dataOwner': alice.id,
       'interop:grantedBy': alice.id,
       'interop:grantee': APP_URI,
+      'interop:granteeType': 'interop:Application',
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Write', 'acl:Control']),
       'interop:satisfiesAccessNeed': requiredAccessNeedGroup['interop:hasAccessNeed'],
       'interop:scopeOfGrant': 'interop:AllFromRegistry'
@@ -208,6 +209,7 @@ describe('Test app installation', () => {
       'interop:dataOwner': alice.id,
       'interop:grantedBy': alice.id,
       'interop:grantee': APP_URI,
+      'interop:granteeType': 'interop:Application',
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append']),
       'interop:satisfiesAccessNeed': optionalAccessNeedGroup['interop:hasAccessNeed'],
       'interop:scopeOfGrant': 'interop:AllFromRegistry'

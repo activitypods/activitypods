@@ -51,15 +51,14 @@ module.exports = {
       });
 
       if (delegatedGrant['interop:grantedBy'] !== webId) {
-        throw new MoleculerError('You cannot grant for someone else', 401, 'FORBIDDEN');
+        throw new MoleculerError('You cannot grant access for someone else', 401, 'FORBIDDEN');
       }
 
-      // Assume delegation is for an application if access needs are defined
-      // TODO Find a better method to identify application grants
+      // Check delegation is allowed, except for applications
       if (
         (originalGrant['interop:delegationAllowed'] !== true ||
           (originalGrant['interop:delegationLimit'] && originalGrant['interop:delegationLimit'] < 1)) &&
-        !delegatedGrant['interop:satisfiesAccessNeed']
+        !delegatedGrant['interop:granteeType'] === 'interop:Application'
       ) {
         throw new MoleculerError('Delegation not allowed', 401, 'FORBIDDEN');
       }

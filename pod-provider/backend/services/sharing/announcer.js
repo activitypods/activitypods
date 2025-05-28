@@ -305,8 +305,7 @@ module.exports = {
     async 'delegated-access-grants.issued'(ctx) {
       const { delegatedGrant } = ctx.params;
 
-      // TODO find a better way to detect application grants
-      if (delegatedGrant['interop:satisfiesAccessNeed']) {
+      if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
         this.logger.warn(`Delegated grant is for application, skip adding to the announces collection...`);
         return;
       }
@@ -319,6 +318,8 @@ module.exports = {
           objectUri: resourceUri,
           collection: this.settings.announcesCollectionOptions
         });
+
+        await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
 
         await ctx.call('activitypub.collection.add', {
           collectionUri: announcesCollectionUri,

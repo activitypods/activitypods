@@ -70,8 +70,7 @@ module.exports = {
       await this.actions.attach({ resourceUri: delegatedGrantUri, webId }, { parentCtx: ctx });
 
       // Attach it to the agent registration
-      // TODO Find a better way to identify app access grants
-      if (delegatedGrant['interop:satisfiesAccessNeed']) {
+      if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
         await ctx.call('app-registrations.addGrant', { grant: delegatedGrant });
       } else {
         await ctx.call('social-agent-registrations.addGrant', { grant: delegatedGrant });
@@ -119,8 +118,7 @@ module.exports = {
       await this.actions.detach({ resourceUri: delegatedGrantUri, webId }, { parentCtx: ctx });
 
       // Detach it from the agent registration
-      // TODO Find a better way to identify app access grants
-      if (delegatedGrant['interop:satisfiesAccessNeed']) {
+      if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
         await ctx.call('app-registrations.removeGrant', { grant: delegatedGrant });
       } else {
         await ctx.call('social-agent-registrations.removeGrant', { grant: delegatedGrant });
@@ -195,6 +193,7 @@ module.exports = {
               id: undefined,
               type: 'interop:DelegatedAccessGrant',
               'interop:grantee': authorization['interop:grantee'],
+              'interop:granteeType': authorization['interop:granteeType'],
               'interop:grantedBy': authorization['interop:grantedBy'],
               'interop:satisfiesAccessNeed': authorization['interop:satisfiesAccessNeed'],
               'interop:delegationOfGrant': getId(grant)
@@ -231,6 +230,7 @@ module.exports = {
             id: undefined,
             type: 'interop:DelegatedAccessGrant',
             'interop:grantee': authorization['interop:grantee'],
+            'interop:granteeType': authorization['interop:granteeType'],
             'interop:grantedBy': webId,
             'interop:delegationOfGrant': getId(grant),
             'interop:delegationAllowed': delegationAllowed ? true : undefined,

@@ -42,6 +42,7 @@ module.exports = {
                 'interop:dataOwner': podOwner,
                 'interop:grantedBy': podOwner,
                 'interop:grantee': grantee,
+                'interop:granteeType': 'interop:Application',
                 'interop:registeredShapeTree': accessNeed['interop:registeredShapeTree'],
                 'interop:hasDataRegistration': dataRegistrationUri,
                 'interop:accessMode': accessNeed['interop:accessMode'],
@@ -114,6 +115,8 @@ module.exports = {
           return getId(authorizationForResource);
         } else {
           // If the properties have changed, delete the authorization for this single resource
+          // If other resources are shared with the same access authorization, they will be kept
+          // Otherwise, a Delete activity will be sent and then (below) a Create activity with the new grant
           await this.actions.removeForSingleResource({ resourceUri, grantee, webId });
         }
       }
@@ -150,6 +153,7 @@ module.exports = {
               'interop:dataOwner': dataOwner,
               'interop:grantedBy': webId,
               'interop:grantee': grantee,
+              'interop:granteeType': 'interop:SocialAgent',
               'interop:registeredShapeTree': dataRegistration['interop:registeredShapeTree'],
               'interop:hasDataRegistration': getId(dataRegistration),
               'interop:hasDataInstance': resourceUri,

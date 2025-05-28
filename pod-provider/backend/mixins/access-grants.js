@@ -27,7 +27,6 @@ const AccessGrantsMixin = {
         });
 
         // The granter must be able to read and delete the grant
-        // TODO don't do that for application grants
         if (getType(grant) === 'interop:DelegatedAccessGrant') {
           await ctx.call('webacl.resource.addRights', {
             resourceUri: getId(grant),
@@ -44,9 +43,7 @@ const AccessGrantsMixin = {
 
         // Attach grant to agent registrations, unless it is a delegated grant (will be done by the issuer)
         if (getType(grant) === 'interop:AccessGrant') {
-          // Assume grant linked to access needs are for applications
-          // TODO find a better way to identify application grants
-          if (grant['interop:satisfiesAccessNeed']) {
+          if (grant['interop:granteeType'] === 'interop:Application') {
             await ctx.call('app-registrations.addGrant', { grant });
           } else {
             await ctx.call('social-agent-registrations.addGrant', { grant });
@@ -99,21 +96,25 @@ const AccessGrantsMixin = {
           throw new Error(`Unknown scope ${scope} for access grant ${getId(grant)}`);
         }
 
-        const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
-          actorUri: grant['interop:dataOwner'],
-          predicate: 'outbox'
-        });
+        // Only send notifications for grants generated for social agents
+        // For delegated grants, the granter will take care of notifying the grantee
+        if (getType(grant) === 'interop:AccessGrant' && grant['interop:granteeType'] === 'interop:SocialAgent') {
+          const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
+            actorUri: grant['interop:dataOwner'],
+            predicate: 'outbox'
+          });
 
-        await ctx.call(
-          'activitypub.outbox.post',
-          {
-            collectionUri: outboxUri,
-            type: ACTIVITY_TYPES.CREATE,
-            object: getId(grant),
-            to: grant['interop:grantee']
-          },
-          { meta: { webId: grant['interop:dataOwner'] } }
-        );
+          await ctx.call(
+            'activitypub.outbox.post',
+            {
+              collectionUri: outboxUri,
+              type: ACTIVITY_TYPES.CREATE,
+              object: getId(grant),
+              to: grant['interop:grantee']
+            },
+            { meta: { webId: grant['interop:dataOwner'] } }
+          );
+        }
 
         return res;
       },
@@ -166,18 +167,20 @@ const AccessGrantsMixin = {
 
         // Detach grant from agent registrations, unless it is a delegated grant (will be done by the issuer)
         if (getType(grant) === 'interop:AccessGrant') {
-          // Assume grant linked to access needs are for applications
-          // TODO find a better way to identify application grants
-          if (grant['interop:satisfiesAccessNeed']) {
+          if (grant['interop:granteeType'] === 'interop:Application') {
             await ctx.call('app-registrations.removeGrant', { grant });
           } else {
             await ctx.call('social-agent-registrations.removeGrant', { grant });
           }
         }
 
-        // Only send activity for access grants
-        // TODO: Warn grantees when delegated grants are deleted by the granter (except for app grants)
-        if (getType(grant) === 'interop:AccessGrant' && !ctx.params.doNotSendActivity) {
+        // Only send activity for access grants, and when the grantee is a social agent
+        // TODO: Warn grantees when delegated grants are deleted by the granter
+        if (
+          getType(grant) === 'interop:AccessGrant' &&
+          !ctx.params.doNotSendActivity &&
+          grant['interop:granteeType'] === 'interop:SocialAgent'
+        ) {
           const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
             actorUri: grant['interop:dataOwner'],
             predicate: 'outbox'

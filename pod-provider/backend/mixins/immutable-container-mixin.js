@@ -24,11 +24,8 @@ const ImmutableContainerMixin = {
       );
 
       // Delete old resource (after creating the new resource, in case we want to compare them)
-      // The skipObjectsWatcher meta is used by the AccessGrantsMixin to avoid sending a Delete activity
-      await this.actions.delete(
-        { resourceUri: oldResourceUri, webId, doNotSendActivity: true },
-        { meta: { skipObjectsWatcher: true }, parentCtx: ctx }
-      );
+      // The doNotSendActivity param is used by the AccessGrantsMixin to avoid sending a Delete activity
+      await this.actions.delete({ resourceUri: oldResourceUri, webId, doNotSendActivity: true }, { parentCtx: ctx });
 
       return { resourceUri: newResourceUri, oldData, newData: { id: newResourceUri, ...resource }, webId };
     },

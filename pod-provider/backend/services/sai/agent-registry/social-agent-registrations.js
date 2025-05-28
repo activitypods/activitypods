@@ -165,7 +165,8 @@ module.exports = {
             collectionUri: outboxUri,
             type: activityType,
             object: agentRegistrationUri,
-            to: agentUri
+            to: agentUri,
+            transient: true
           },
           { meta: { webId: podOwner } }
         );
@@ -205,7 +206,7 @@ module.exports = {
 
       for (const grant of grants) {
         // Generate delegated grants for all authorizations with `interop:All` scope
-        const grantees = await ctx.call('delegated-access-grants.generateFromAllScopeAllAuthorizations', {
+        await ctx.call('delegated-access-grants.generateFromAllScopeAllAuthorizations', {
           grant,
           podOwner
         });

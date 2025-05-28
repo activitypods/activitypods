@@ -110,7 +110,8 @@ const AccessGrantsMixin = {
               collectionUri: outboxUri,
               type: ACTIVITY_TYPES.CREATE,
               object: getId(grant),
-              to: grant['interop:grantee']
+              to: grant['interop:grantee'],
+              transient: true
             },
             { meta: { webId: grant['interop:dataOwner'] } }
           );
@@ -192,7 +193,8 @@ const AccessGrantsMixin = {
               collectionUri: outboxUri,
               type: ACTIVITY_TYPES.DELETE,
               object: getId(grant),
-              to: grant['interop:grantee']
+              to: grant['interop:grantee'],
+              transient: true
             },
             { meta: { webId: grant['interop:dataOwner'] } }
           );

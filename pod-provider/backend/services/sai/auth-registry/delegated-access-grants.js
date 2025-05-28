@@ -250,7 +250,8 @@ module.exports = {
         collectionUri: outboxUri,
         type: ACTIVITY_TYPES.CREATE,
         object: delegateGrantUri,
-        to: authorization['interop:grantee']
+        to: authorization['interop:grantee'],
+        transient: true
       });
 
       return delegateGrantUri;

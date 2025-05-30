@@ -1,9 +1,9 @@
+var $fvx3m$reactjsxruntime = require("react/jsx-runtime");
 var $fvx3m$react = require("react");
 var $fvx3m$reactadmin = require("react-admin");
-var $fvx3m$semappsactivitypubcomponents = require("@semapps/activitypub-components");
-var $fvx3m$reactjsxruntime = require("react/jsx-runtime");
 var $fvx3m$muimaterial = require("@mui/material");
 var $fvx3m$muiiconsmaterialError = require("@mui/icons-material/Error");
+var $fvx3m$semappsactivitypubcomponents = require("@semapps/activitypub-components");
 var $fvx3m$urljoin = require("url-join");
 var $fvx3m$httplinkheader = require("http-link-header");
 var $fvx3m$jwtdecode = require("jwt-decode");
@@ -216,7 +216,11 @@ var $9a8d0fd57dda054c$export$2e2bcd8739ae039 = $9a8d0fd57dda054c$var$useRegister
         checkAppStatus
     ]);
     (0, $fvx3m$react.useEffect)(()=>{
-        if (localStorage.getItem("redirect")) redirect(localStorage.getItem("redirect"));
+        const redirectUrl = localStorage.getItem("redirect");
+        if (redirectUrl) {
+            localStorage.removeItem("redirect");
+            redirect(redirectUrl);
+        }
     }, [
         redirect
     ]);
@@ -981,39 +985,21 @@ const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resource
     ]);
     const sendInvitations = (0, $fvx3m$react.useCallback)(async ()=>{
         setSendingInvitation(true);
-        const actorsWithNewViewRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canView && !savedInvitations[actorUri]?.canView);
-        if (actorsWithNewViewRight.length > 0) {
-            if (isCreator) outbox.post({
-                type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
-                actor: outbox.owner,
-                object: resourceUri,
-                target: actorsWithNewViewRight,
-                to: actorsWithNewViewRight
-            });
-            else // Offer the organizer to invite these people
-            outbox.post({
-                type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).OFFER,
-                actor: outbox.owner,
-                object: {
-                    type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
-                    actor: outbox.owner,
-                    object: resourceUri,
-                    target: actorsWithNewViewRight
-                },
-                target: record["dc:creator"],
-                to: record["dc:creator"]
-            });
-        }
+        const actorsWithNewViewRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canView && !newInvitations[actorUri].canShare);
+        if (actorsWithNewViewRight.length > 0) outbox.post({
+            type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
+            actor: outbox.owner,
+            object: resourceUri,
+            to: actorsWithNewViewRight
+        });
         const actorsWithNewShareRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canShare);
         if (actorsWithNewShareRight.length > 0) outbox.post({
-            type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).OFFER,
+            type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
             actor: outbox.owner,
-            object: {
-                type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
-                object: resourceUri
-            },
-            target: actorsWithNewShareRight,
-            to: actorsWithNewShareRight
+            object: resourceUri,
+            to: actorsWithNewShareRight,
+            "interop:delegationAllowed": true,
+            "interop:delegationLimit": 1
         });
         notify("apods.notification.invitation_sent", {
             type: "success",

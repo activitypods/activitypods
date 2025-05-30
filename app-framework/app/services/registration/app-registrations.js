@@ -83,21 +83,7 @@ module.exports = {
       async delete(ctx, res) {
         const appRegistration = res.oldData;
 
-        // DELETE ALL RELATED GRANTS
-
         for (const accessGrantUri of arrayOf(appRegistration['interop:hasAccessGrant'])) {
-          const accessGrant = await ctx.call('access-grants.get', {
-            resourceUri: accessGrantUri,
-            webId: 'system'
-          });
-
-          for (const grantUri of arrayOf(accessGrant['interop:hasDataGrant'])) {
-            await ctx.call('data-grants.delete', {
-              resourceUri: grantUri,
-              webId: 'system'
-            });
-          }
-
           await ctx.call('access-grants.delete', {
             resourceUri: accessGrantUri,
             webId: 'system'

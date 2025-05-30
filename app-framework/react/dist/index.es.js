@@ -1,9 +1,9 @@
+import {jsx as $iLwJW$jsx, jsxs as $iLwJW$jsxs, Fragment as $iLwJW$Fragment1} from "react/jsx-runtime";
 import {useState as $iLwJW$useState, useCallback as $iLwJW$useCallback, useEffect as $iLwJW$useEffect, useLayoutEffect as $iLwJW$useLayoutEffect, Fragment as $iLwJW$Fragment, useMemo as $iLwJW$useMemo} from "react";
 import {useGetIdentity as $iLwJW$useGetIdentity, useDataProvider as $iLwJW$useDataProvider, useTranslate as $iLwJW$useTranslate, useLogout as $iLwJW$useLogout, useRedirect as $iLwJW$useRedirect, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useRecordContext as $iLwJW$useRecordContext, Button as $iLwJW$Button1, useGetList as $iLwJW$useGetList, UserMenu as $iLwJW$UserMenu, Logout as $iLwJW$Logout, MenuItemLink as $iLwJW$MenuItemLink} from "react-admin";
-import {useNodeinfo as $iLwJW$useNodeinfo, useCollection as $iLwJW$useCollection, useOutbox as $iLwJW$useOutbox, ACTIVITY_TYPES as $iLwJW$ACTIVITY_TYPES} from "@semapps/activitypub-components";
-import {jsx as $iLwJW$jsx, jsxs as $iLwJW$jsxs, Fragment as $iLwJW$Fragment1} from "react/jsx-runtime";
 import {Box as $iLwJW$Box, Typography as $iLwJW$Typography, Button as $iLwJW$Button, CircularProgress as $iLwJW$CircularProgress, Card as $iLwJW$Card, Avatar as $iLwJW$Avatar, List as $iLwJW$List, Divider as $iLwJW$Divider, ListItem as $iLwJW$ListItem, ListItemButton as $iLwJW$ListItemButton, ListItemAvatar as $iLwJW$ListItemAvatar, ListItemText as $iLwJW$ListItemText, useMediaQuery as $iLwJW$useMediaQuery, Dialog as $iLwJW$Dialog, DialogTitle as $iLwJW$DialogTitle, DialogContent as $iLwJW$DialogContent, DialogActions as $iLwJW$DialogActions, TextField as $iLwJW$TextField, Switch as $iLwJW$Switch, MenuItem as $iLwJW$MenuItem, ListItemIcon as $iLwJW$ListItemIcon} from "@mui/material";
 import $iLwJW$muiiconsmaterialError from "@mui/icons-material/Error";
+import {useNodeinfo as $iLwJW$useNodeinfo, useCollection as $iLwJW$useCollection, useOutbox as $iLwJW$useOutbox, ACTIVITY_TYPES as $iLwJW$ACTIVITY_TYPES} from "@semapps/activitypub-components";
 import $iLwJW$urljoin from "url-join";
 import $iLwJW$httplinkheader from "http-link-header";
 import $iLwJW$jwtdecode from "jwt-decode";
@@ -198,7 +198,11 @@ var $27e56b6748904a8d$export$2e2bcd8739ae039 = $27e56b6748904a8d$var$useRegister
         checkAppStatus
     ]);
     (0, $iLwJW$useEffect)(()=>{
-        if (localStorage.getItem("redirect")) redirect(localStorage.getItem("redirect"));
+        const redirectUrl = localStorage.getItem("redirect");
+        if (redirectUrl) {
+            localStorage.removeItem("redirect");
+            redirect(redirectUrl);
+        }
     }, [
         redirect
     ]);
@@ -963,39 +967,21 @@ const $79f089d541db8101$var$ShareDialog = ({ close: close, resourceUri: resource
     ]);
     const sendInvitations = (0, $iLwJW$useCallback)(async ()=>{
         setSendingInvitation(true);
-        const actorsWithNewViewRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canView && !savedInvitations[actorUri]?.canView);
-        if (actorsWithNewViewRight.length > 0) {
-            if (isCreator) outbox.post({
-                type: (0, $iLwJW$ACTIVITY_TYPES).ANNOUNCE,
-                actor: outbox.owner,
-                object: resourceUri,
-                target: actorsWithNewViewRight,
-                to: actorsWithNewViewRight
-            });
-            else // Offer the organizer to invite these people
-            outbox.post({
-                type: (0, $iLwJW$ACTIVITY_TYPES).OFFER,
-                actor: outbox.owner,
-                object: {
-                    type: (0, $iLwJW$ACTIVITY_TYPES).ANNOUNCE,
-                    actor: outbox.owner,
-                    object: resourceUri,
-                    target: actorsWithNewViewRight
-                },
-                target: record["dc:creator"],
-                to: record["dc:creator"]
-            });
-        }
+        const actorsWithNewViewRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canView && !newInvitations[actorUri].canShare);
+        if (actorsWithNewViewRight.length > 0) outbox.post({
+            type: (0, $iLwJW$ACTIVITY_TYPES).ANNOUNCE,
+            actor: outbox.owner,
+            object: resourceUri,
+            to: actorsWithNewViewRight
+        });
         const actorsWithNewShareRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canShare);
         if (actorsWithNewShareRight.length > 0) outbox.post({
-            type: (0, $iLwJW$ACTIVITY_TYPES).OFFER,
+            type: (0, $iLwJW$ACTIVITY_TYPES).ANNOUNCE,
             actor: outbox.owner,
-            object: {
-                type: (0, $iLwJW$ACTIVITY_TYPES).ANNOUNCE,
-                object: resourceUri
-            },
-            target: actorsWithNewShareRight,
-            to: actorsWithNewShareRight
+            object: resourceUri,
+            to: actorsWithNewShareRight,
+            "interop:delegationAllowed": true,
+            "interop:delegationLimit": 1
         });
         notify("apods.notification.invitation_sent", {
             type: "success",

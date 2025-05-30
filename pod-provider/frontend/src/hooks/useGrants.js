@@ -17,6 +17,7 @@ const useGrants = appUri => {
       if (accessGrant['apods:hasSpecialRights']) {
         g = [...g, ...arrayOf(accessGrant['apods:hasSpecialRights'])];
       }
+      // TODO Refactor
       if (accessGrant['interop:hasDataGrant']) {
         const { data: dataGrants } = await dataProvider.getMany('DataGrant', {
           ids: arrayOf(accessGrant['interop:hasDataGrant'])

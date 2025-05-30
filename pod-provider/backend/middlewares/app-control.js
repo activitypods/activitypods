@@ -16,18 +16,20 @@ const DEFAULT_ALLOWED_TYPES = [
   'acl:Authorization',
   'notify:WebSocketChannel2023',
   'notify:WebhookChannel2023',
-  'interop:DataRegistration'
+  'interop:DataRegistration',
+  'interop:AccessGrant',
+  'interop:DelegatedAccessGrant'
 ];
 
 // TODO use cache to improve performances
 const getAllowedTypes = async (ctx, appUri, podOwner, accessMode) => {
-  const dataAuthorizations = await ctx.call('data-authorizations.listByGrantee', { grantee: appUri, webId: podOwner });
+  const authorizations = await ctx.call('access-authorizations.listByGrantee', { grantee: appUri, webId: podOwner });
 
   let types = [...DEFAULT_ALLOWED_TYPES];
-  for (const dataAuthorization of dataAuthorizations) {
-    if (arrayOf(dataAuthorization['interop:accessMode']).includes(accessMode)) {
+  for (const authorization of authorizations) {
+    if (arrayOf(authorization['interop:accessMode']).includes(accessMode)) {
       const shapeUri = await ctx.call('shape-trees.getShapeUri', {
-        resourceUri: dataAuthorization['interop:registeredShapeTree']
+        resourceUri: authorization['interop:registeredShapeTree']
       });
       // Binary resources don't have a shape
       if (shapeUri) {
@@ -158,14 +160,13 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         }
 
         const appUri = ctx.meta.webId;
+        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner });
 
         // Ensure the webId is a registered application
-        if (!(await ctx.call('app-registrations.isRegistered', { agentUri: appUri, podOwner }))) {
+        if (!appRegistration)
           throw new E.ForbiddenError(`Only registered applications may post to the user outbox. WebID: ${appUri}`);
-        }
 
-        const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
-        if (!specialRights.includes('apods:PostOutbox')) {
+        if (!arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:PostOutbox')) {
           throw new E.ForbiddenError(`The application has no permission to post to the outbox (apods:PostOutbox)`);
         }
 
@@ -218,14 +219,14 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         }
 
         const appUri = ctx.meta.webId;
+        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner });
 
         // Ensure the webId is a registered application
-        if (!(await ctx.call('app-registrations.isRegistered', { agentUri: appUri, podOwner }))) {
+        if (!appRegistration) {
           throw new E.ForbiddenError(`Only registered applications may handle ACL groups`);
         }
 
-        const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
-        if (!specialRights.includes('apods:CreateWacGroup')) {
+        if (!arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:CreateWacGroup')) {
           throw new E.ForbiddenError(`The application has no permission to handle ACL groups (apods:CreateWacGroup)`);
         }
 
@@ -241,15 +242,15 @@ const AppControlMiddleware = ({ baseUrl }) => ({
           return next(ctx);
         }
 
-        // If the webId is a registered application, use the system webId to bypass WAC checks
-        if (await ctx.call('app-registrations.isRegistered', { agentUri: ctx.meta.webId, podOwner })) {
-          const appUri = ctx.meta.webId;
+        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: ctx.meta.webId, podOwner });
 
-          const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
-          if (!specialRights.includes('apods:CreateWacGroup')) {
+        // If the webId is a registered application, use the system webId to bypass WAC checks
+        if (appRegistration) {
+          if (!arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:CreateWacGroup')) {
             throw new E.ForbiddenError(`The application has no permission to handle ACL groups (apods:CreateWacGroup)`);
           }
 
+          const appUri = ctx.meta.webId;
           ctx.meta.webId = 'system';
 
           const result = await next(ctx);
@@ -271,16 +272,11 @@ const AppControlMiddleware = ({ baseUrl }) => ({
           return next(ctx);
         }
 
-        // If the webId is a registered application, check it has the special right
-        if (
-          ctx.meta.webId !== 'anon' &&
-          ctx.meta.webId !== 'system' &&
-          (await ctx.call('app-registrations.isRegistered', { agentUri: ctx.meta.webId, podOwner }))
-        ) {
-          const appUri = ctx.meta.webId;
+        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: ctx.meta.webId, podOwner });
 
-          const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
-          if (!specialRights.includes('apods:QuerySparqlEndpoint')) {
+        // If the webId is a registered application, check it has the special right
+        if (ctx.meta.webId !== 'anon' && ctx.meta.webId !== 'system' && appRegistration) {
+          if (!arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:QuerySparqlEndpoint')) {
             throw new E.ForbiddenError(
               `The application has no permission to query the SPARQL endpoint (apods:QuerySparqlEndpoint)`
             );
@@ -303,19 +299,17 @@ const AppControlMiddleware = ({ baseUrl }) => ({
           return next(ctx);
         }
 
-        // If the webId is a registered application
-        if (await ctx.call('app-registrations.isRegistered', { agentUri: ctx.meta.webId, podOwner })) {
-          const appUri = ctx.meta.webId;
+        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: ctx.meta.webId, podOwner });
 
+        // If the webId is a registered application
+        if (appRegistration) {
           // If the app is trying to get the outbox or inbox, use webId system to improve performances
           if (collectionUri === urlJoin(podOwner, 'outbox')) {
-            const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
-            if (specialRights.includes('apods:ReadOutbox')) {
+            if (arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:ReadOutbox')) {
               ctx.params.webId = 'system';
             }
           } else if (collectionUri === urlJoin(podOwner, 'inbox')) {
-            const specialRights = await ctx.call('access-authorizations.getSpecialRights', { appUri, podOwner });
-            if (specialRights.includes('apods:ReadInbox')) {
+            if (arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:ReadInbox')) {
               ctx.params.webId = 'system';
             }
           }

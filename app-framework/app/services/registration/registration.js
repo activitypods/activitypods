@@ -53,7 +53,7 @@ module.exports = {
 
         // REGISTER LISTENERS
 
-        await ctx.call('pod-activities-watcher.registerListenersBasedOnAccessGrants', { accessGrants });
+        await ctx.call('pod-activities-watcher.registerListenersFromAppRegistration', { appRegistration });
       }
     },
     updateAppRegistration: {
@@ -117,7 +117,7 @@ module.exports = {
       async onReceive(ctx, activity) {
         const appRegistration = await ctx.call('app-registrations.getForActor', { actorUri: activity.actor });
 
-        // This will also delete the associated access grants and data grants
+        // This will also delete the associated access grants
         await ctx.call('app-registrations.delete', {
           resourceUri: appRegistration.id || appRegistration['@id'],
           webId: 'system'

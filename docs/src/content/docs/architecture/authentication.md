@@ -21,7 +21,7 @@ There is now a [proposal](https://solid.github.io/httpsig/) to integrate HTTP si
 
 The ActivityPub specification [mentions](https://www.w3.org/TR/activitypub/#actor-objects) a `as:proxyUrl` predicate (included in the `as:endpoint` predicate of the actor) with the following description:
 
-> Endpoint URI so this actor's clients may access remote ActivityStreams objects which require authentication to access. To use this endpoint, the client posts an `x-www-form-urlencoded`` id parameter with the value being the `id` of the requested ActivityStreams object.
+> Endpoint URI so this actor's clients may access remote ActivityStreams objects which require authentication to access. To use this endpoint, the client posts an `x-www-form-urlencoded` id parameter with the value being the `id` of the requested ActivityStreams object.
 
 We have implemented this endpoint, and we have extended it for non-GET methods using the `multipart/form-data` Content-Type.
 

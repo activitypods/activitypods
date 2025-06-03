@@ -82,6 +82,17 @@ module.exports = {
 
         return res;
       },
+      async patch(ctx, res) {
+        const { resourceUri } = res;
+
+        // Update the Application resource kept in cache
+        const appRegistration = await this.actions.get({ resourceUri }, { parentCtx: ctx });
+        const appUri = appRegistration['interop:registeredAgent'];
+        const webId = appRegistration['interop:registeredBy'];
+        await ctx.call('ldp.remote.store', { resourceUri: appUri, webId });
+
+        return res;
+      },
       async delete(ctx, res) {
         // Delete Application resource kept in cache
         const appUri = res.oldData['interop:registeredAgent'];

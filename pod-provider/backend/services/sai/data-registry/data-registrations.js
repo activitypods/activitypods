@@ -1,10 +1,15 @@
 const urlJoin = require('url-join');
+const LinkHeader = require('http-link-header');
 const { MoleculerError } = require('moleculer').Errors;
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { getDatasetFromUri, hasType, isURL } = require('@semapps/ldp');
 
 module.exports = {
   name: 'data-registrations',
+  dependencies: ['ldp.link-header'],
+  async started() {
+    await this.broker.call('ldp.link-header.register', { actionName: 'data-registrations.getLink' });
+  },
   actions: {
     async get(ctx) {
       const { dataRegistrationUri } = ctx.params;
@@ -162,10 +167,11 @@ module.exports = {
       return results[0]?.dataRegistrationUri?.value;
     },
     /**
-     * Get the data registration of a resource
+     * Get the data registration URI of a resource
      */
-    async getByResourceUri(ctx) {
-      const { resourceUri, webId } = ctx.params;
+    async getUriByResourceUri(ctx) {
+      const { resourceUri } = ctx.params;
+      const webId = ctx.params.webId || ctx.meta.webId;
 
       const baseUrl = await ctx.call('ldp.getBaseUrl');
 
@@ -185,17 +191,37 @@ module.exports = {
           dataset: getDatasetFromUri(resourceUri)
         });
 
-        const dataRegistrationUri = results[0]?.dataRegistrationUri?.value;
-
-        if (dataRegistrationUri) {
-          return await this.actions.get({ dataRegistrationUri }, { parentCtx: ctx });
-        } else {
-          throw new MoleculerError(`Data registration not found`, 404, 'NOT_FOUND');
-        }
+        return results[0]?.dataRegistrationUri?.value;
       } else {
-        // TODO Fetch header of resource to find its data registration
-        // See https://github.com/solid/data-interoperability-panel/issues/326
-        throw new Error('Not implemented yet');
+        if (!webId)
+          throw new Error(`A webId is required to find the data registration of remote resource ${resourceUri}`);
+
+        const response = await ctx.call('signature.proxy.query', {
+          url: resourceUri,
+          method: 'HEAD',
+          actorUri: webId
+        });
+
+        const linkHeader = LinkHeader.parse(response.headers.link);
+        const dataRegistrationLinkHeader = linkHeader.rel('http://www.w3.org/ns/solid/interop#hasDataRegistration');
+
+        if (dataRegistrationLinkHeader.length > 0) {
+          return dataRegistrationLinkHeader[0].uri;
+        }
+      }
+    },
+    /**
+     * Get the data registration of a resource
+     */
+    async getByResourceUri(ctx) {
+      const { resourceUri } = ctx.params;
+
+      const dataRegistrationUri = await this.actions.getUriByResourceUri({ resourceUri }, { parentCtx: ctx });
+
+      if (dataRegistrationUri) {
+        return await this.actions.get({ dataRegistrationUri }, { parentCtx: ctx });
+      } else {
+        throw new MoleculerError(`Data registration not found`, 404, 'NOT_FOUND');
       }
     },
     async registerOntologyFromClass(ctx) {
@@ -231,6 +257,18 @@ module.exports = {
       if (!ontology) throw new Error(`Could not register ontology for resource type ${registeredClass}`);
 
       return ontology;
+    },
+    async getLink(ctx) {
+      const { uri } = ctx.params;
+
+      const dataRegistrationUri = await this.actions.getUriByResourceUri({ resourceUri: uri }, { parentCtx: ctx });
+
+      if (dataRegistrationUri) {
+        return {
+          uri: dataRegistrationUri,
+          rel: 'http://www.w3.org/ns/solid/interop#hasDataRegistration'
+        };
+      }
     }
   },
   events: {

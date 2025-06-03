@@ -1,5 +1,5 @@
 const { arrayOf, getId } = require('@semapps/ldp');
-const { triple, namedNode } = require('@rdfjs/data-model');
+const { triple, namedNode, literal } = require('@rdfjs/data-model');
 
 /**
  * Mixin used by the AppRegistrationsService and SocialAgentRegistrationsService
@@ -68,7 +68,6 @@ const AgentRegistrationsMixin = {
             { parentCtx: ctx }
           );
 
-      // TODO Change updated date
       await this.actions.patch(
         {
           resourceUri: agentRegistrationUri,
@@ -77,6 +76,18 @@ const AgentRegistrationsMixin = {
               namedNode(agentRegistrationUri),
               namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
               namedNode(getId(grant))
+            ),
+            triple(
+              namedNode(agentRegistrationUri),
+              namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
+              literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
+            )
+          ],
+          triplesToRemove: [
+            triple(
+              namedNode(agentRegistrationUri),
+              namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
+              literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
             )
           ],
           webId: 'system'
@@ -96,25 +107,31 @@ const AgentRegistrationsMixin = {
       );
 
       if (agentRegistration) {
-        // TODO Change updated date
         await this.actions.patch(
           {
             resourceUri: getId(agentRegistration),
+            triplesToAdd: [
+              triple(
+                namedNode(getId(agentRegistration)),
+                namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
+                literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
+              )
+            ],
             triplesToRemove: [
               triple(
                 namedNode(getId(agentRegistration)),
                 namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
                 namedNode(getId(grant))
+              ),
+              triple(
+                namedNode(getId(agentRegistration)),
+                namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
+                literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
               )
             ],
             webId: 'system'
           },
           { parentCtx: ctx }
-        );
-      } else {
-        // This happens on app removal, because the app registration is deleted before the authorizations/grants
-        this.logger.warn(
-          `No agent registration found for ${grant['interop:grantee']} (WebID ${grant['interop:grantedBy']})`
         );
       }
     }

@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { useGetIdentity, useGetList, useGetOne, useNotify } from 'react-admin';
+import { useGetIdentity, useGetOne, useNotify } from 'react-admin';
 import { useSearchParams } from 'react-router-dom';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import useTrustedApps from '../../hooks/useTrustedApps';
@@ -23,7 +23,6 @@ const AuthorizePage = () => {
   const isTrustedApp = trustedApps?.some(trustedApp => trustedApp.id === appUri) || false;
 
   const { data: application } = useGetOne('App', { id: appUri });
-  const { data: appRegistrations, isLoading } = useGetList('AppRegistration', { page: 1, perPage: Infinity });
 
   const accessApp = useCallback(async () => {
     const redirectUrl = application['interop:hasAuthorizationCallbackEndpoint'];
@@ -43,7 +42,7 @@ const AuthorizePage = () => {
   }, [application, notify]);
 
   useEffect(() => {
-    if (!isLoading && application?.id && identity?.id) {
+    if (application?.id && identity?.id) {
       getAppStatus(application.id, identity).then(appStatus => {
         if (!appStatus.installed) {
           setScreen('register');
@@ -56,7 +55,7 @@ const AuthorizePage = () => {
         }
       });
     }
-  }, [resourceUri, appRegistrations, isLoading, application, accessApp, getAppStatus, setScreen, identity]);
+  }, [resourceUri, application, accessApp, getAppStatus, setScreen, identity]);
 
   switch (screen) {
     case 'register':

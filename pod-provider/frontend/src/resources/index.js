@@ -1,7 +1,6 @@
 export { default as AccessGrant } from './AccessGrant';
 export { default as Actor } from './Actor';
 export { default as App } from './App';
-export { default as AppRegistration } from './AppRegistration';
 export { default as ClassDescription } from './ClassDescription';
 export { default as VerifiableCredential } from './VerifiableCredential';
 export { default as DataGrant } from './DataGrant';

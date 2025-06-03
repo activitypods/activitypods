@@ -6,10 +6,11 @@ import AccessNeedsList from '../../common/list/AccessNeedsList';
 import CloseIcon from '@mui/icons-material/Close';
 import BlockIcon from '@mui/icons-material/Block';
 import LoopIcon from '@mui/icons-material/Loop';
-import useGrants from '../../hooks/useGrants';
+import useAccessGrants from '../../hooks/useAccessGrants';
+import useAgentRegistration from '../../hooks/useAgentRegistration';
 import useUpgradeApp from '../../hooks/useUpgradeApp';
 import useRemoveApp from '../../hooks/useRemoveApp';
-import { arraysEqual } from '../../utils';
+import { arraysEqual, arrayOf } from '../../utils';
 
 const AppSettingsDialog = ({ application, open, onClose }) => {
   const [oldAccessNeedsUris, setOldAccessNeedsUris] = useState();
@@ -25,15 +26,20 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
     loaded: accessNeedsLoaded,
     error: accessNeedsError
   } = useAccessNeeds(application);
-  const { grants, loaded: grantsLoaded } = useGrants(application.id);
+  const { accessGrants, loaded: accessGrantsLoaded } = useAccessGrants(application.id);
+  const { agentRegistration, loaded: agentRegistrationLoaded } = useAgentRegistration(application.id);
   const removeApp = useRemoveApp();
   const upgradeApp = useUpgradeApp();
 
   useEffect(() => {
-    if (grantsLoaded && accessNeedsLoaded) {
+    if (accessGrantsLoaded && agentRegistrationLoaded && accessNeedsLoaded) {
       const requiredAccessNeedsUris = requiredAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id));
       const optionalAccessNeedsUris = optionalAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id));
-      const grantedAccessNeedsUris = grants.map(a => (typeof a === 'string' ? a : a?.['interop:satisfiesAccessNeed']));
+
+      const grantedAccessNeedsUris = [
+        ...accessGrants.map(a => a?.['interop:satisfiesAccessNeed']),
+        ...arrayOf(agentRegistration?.['apods:hasSpecialRights'])
+      ];
 
       // Filter out from the list of granted access needs the ones that are not existing anymore
       const grantedExistingAccessNeedsUris = grantedAccessNeedsUris.filter(
@@ -46,9 +52,11 @@ const AppSettingsDialog = ({ application, open, onClose }) => {
       setNewAccessNeedsUris([...new Set([...grantedExistingAccessNeedsUris, ...requiredAccessNeedsUris])]);
     }
   }, [
-    grantsLoaded,
+    accessGrantsLoaded,
     accessNeedsLoaded,
-    grants,
+    accessGrants,
+    agentRegistration,
+    agentRegistrationLoaded,
     setOldAccessNeedsUris,
     requiredAccessNeeds,
     optionalAccessNeeds,

@@ -1,9 +1,11 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import urlJoin from 'url-join';
-import { useTranslate, useGetList, useDataProvider } from 'react-admin';
+import LinkHeader from 'http-link-header';
+import { useTranslate, useGetList, useDataProvider, useGetIdentity } from 'react-admin';
 import { Box, Button, List, ListItem, ListItemAvatar, ListItemText, Switch, Avatar } from '@mui/material';
-import SimpleBox from '../../layout/SimpleBox';
+import { useContainerByUri, useCompactPredicate } from '@semapps/semantic-data-provider';
 import ShareIcon from '@mui/icons-material/Share';
+import SimpleBox from '../../layout/SimpleBox';
 import useResource from '../../hooks/useResource';
 import { arrayOf } from '../../utils';
 
@@ -25,14 +27,16 @@ const SocialAgent = ({ socialAgentRegistration, onSelect, selected }) => {
 const ShareScreen = ({ resourceUri, application, accessApp }) => {
   const translate = useTranslate();
   const dataProvider = useDataProvider();
+  const { data: identity } = useGetIdentity();
   const [selected, setSelected] = useState([]);
+  const [dataRegistrationUri, setDataRegistrationUri] = useState();
   const [authorizations, setAuthorizations] = useState();
   const [authorizationsLoading, setAuthorizationsLoading] = useState(false);
   const { data: socialAgentRegistrations } = useGetList('SocialAgentRegistration', {
     page: 1,
     perPage: Infinity
   });
-  const { data: resource } = useResource(resourceUri);
+  const { data: resource, headers } = useResource(resourceUri);
 
   const toggle = useCallback(
     agentUri => {
@@ -46,6 +50,21 @@ const ShareScreen = ({ resourceUri, application, accessApp }) => {
     },
     [setSelected]
   );
+
+  // Find data registration (container) URI based on the resource header
+  useEffect(() => {
+    if (headers) {
+      const linkHeader = LinkHeader.parse(headers.get('Link'));
+      const dataRegistrationLinkHeader = linkHeader.rel('http://www.w3.org/ns/solid/interop#hasDataRegistration');
+      if (dataRegistrationLinkHeader.length > 0) {
+        const dataRegistrationUri = dataRegistrationLinkHeader[0].uri;
+        setDataRegistrationUri(dataRegistrationUri);
+      }
+    }
+  }, [headers, setDataRegistrationUri]);
+
+  const container = useContainerByUri(dataRegistrationUri);
+  const labelPredicate = useCompactPredicate(container?.labelPredicate, resource?.['@context']);
 
   useEffect(() => {
     if (!authorizations && !authorizationsLoading) {
@@ -102,17 +121,19 @@ const ShareScreen = ({ resourceUri, application, accessApp }) => {
     <SimpleBox
       title={translate('app.page.share')}
       icon={<ShareIcon />}
-      text={translate('app.helper.share', { resourceName: resource?.name })}
+      text={translate('app.helper.share', { resourceName: resource?.[labelPredicate] })}
     >
       <List sx={{ width: '100%' }}>
-        {socialAgentRegistrations?.map(socialAgentRegistration => (
-          <SocialAgent
-            key={socialAgentRegistration.id}
-            socialAgentRegistration={socialAgentRegistration}
-            onSelect={() => toggle(socialAgentRegistration['interop:registeredAgent'])}
-            selected={selected.includes(socialAgentRegistration['interop:registeredAgent'])}
-          />
-        ))}
+        {socialAgentRegistrations
+          ?.filter(reg => reg['interop:registeredAgent'] !== identity?.id)
+          .map(socialAgentRegistration => (
+            <SocialAgent
+              key={socialAgentRegistration.id}
+              socialAgentRegistration={socialAgentRegistration}
+              onSelect={() => toggle(socialAgentRegistration['interop:registeredAgent'])}
+              selected={selected.includes(socialAgentRegistration['interop:registeredAgent'])}
+            />
+          ))}
       </List>
       <Box display="flex" justifyContent="end">
         <Button color="secondary" onClick={accessApp} sx={{ ml: 1 }}>

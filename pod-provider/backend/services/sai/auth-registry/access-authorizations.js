@@ -58,6 +58,8 @@ module.exports = {
         }
       }
 
+      await this.actions.deleteOrphans({ appUri: grantee, podOwner }, { parentCtx: ctx });
+
       return authorizationsUris;
     },
     // Add an authorization for a single resource

@@ -3,6 +3,7 @@ const urlJoin = require('url-join');
 const { arrayOf } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
 const { MIME_TYPES } = require('@semapps/mime-types');
+const matchActivity = require('@semapps/activitypub/utils/matchActivity');
 
 const getAnnouncesGroupUri = eventUri => {
   const uri = new URL(eventUri);
@@ -125,9 +126,20 @@ module.exports = {
   },
   activities: {
     announce: {
-      match: {
-        type: ACTIVITY_TYPES.ANNOUNCE
+      async match(activity, fetcher) {
+        const { match, dereferencedActivity } = await matchActivity(
+          {
+            type: ACTIVITY_TYPES.ANNOUNCE
+          },
+          activity,
+          fetcher
+        );
+        return {
+          match: match && !(await this.broker.call('activitypub.activity.isPublic', { activity })),
+          dereferencedActivity
+        };
       },
+      /** Add read rights to announced (reposted) object, if announcer is owner. */
       async onEmit(ctx, activity, emitterUri) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
@@ -164,6 +176,10 @@ module.exports = {
           });
         }
       },
+      /**
+       * On receipt of an announce activity (repost), cache it in the remote store,
+       *  and attach it to type-index registered containers..
+       */
       async onReceive(ctx, activity, recipientUri) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
@@ -230,11 +246,21 @@ module.exports = {
       }
     },
     offerAnnounce: {
-      match: {
-        type: ACTIVITY_TYPES.OFFER,
-        object: {
-          type: ACTIVITY_TYPES.ANNOUNCE
-        }
+      async match(activity, fetcher) {
+        const { match, dereferencedActivity } = await matchActivity(
+          {
+            type: ACTIVITY_TYPES.OFFER,
+            object: {
+              type: ACTIVITY_TYPES.ANNOUNCE
+            }
+          },
+          activity,
+          fetcher
+        );
+        return {
+          match: match && !(await this.broker.call('activitypub.activity.isPublic', { activity })),
+          dereferencedActivity
+        };
       },
       async onEmit(ctx, activity) {
         const object = await ctx.call('ldp.resource.get', {

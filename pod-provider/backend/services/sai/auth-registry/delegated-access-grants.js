@@ -1,6 +1,5 @@
 const { ControlledContainerMixin, arrayOf, getId, getDatasetFromUri } = require('@semapps/ldp');
 const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { MIME_TYPES } = require('@semapps/mime-types');
 const ImmutableContainerMixin = require('../../../mixins/immutable-container-mixin');
 const AccessGrantsMixin = require('../../../mixins/access-grants');
 
@@ -94,11 +93,15 @@ module.exports = {
         const oldDataset = ctx.meta.dataset;
         ctx.meta.dataset = getDatasetFromUri(dataOwnerUri);
 
-        await ctx.call(
-          'ldp.resource.delete',
-          { resourceUri: delegatedGrantUri, webId: dataOwnerUri },
-          { parentCtx: ctx }
-        );
+        try {
+          await ctx.call(
+            'ldp.resource.delete',
+            { resourceUri: delegatedGrantUri, webId: dataOwnerUri },
+            { parentCtx: ctx }
+          );
+        } catch (e) {
+          this.logger.warn(`Could not delete delegated grant ${delegatedGrantUri}. Deleting local cache anyway.`);
+        }
 
         ctx.meta.dataset = oldDataset;
       } else {
@@ -109,7 +112,7 @@ module.exports = {
         });
 
         if (response.status !== 204) {
-          throw new Error(`Could not delete delegated grant ${delegatedGrantUri}. Response code: ${response.status}`);
+          this.logger.warn(`Could not delete delegated grant ${delegatedGrantUri}. Deleting local cache anyway.`);
         }
       }
 

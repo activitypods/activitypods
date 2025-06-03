@@ -22,7 +22,8 @@ module.exports = {
         aliases: {
           'POST /register': 'registration-endpoint.register',
           'POST /upgrade': 'registration-endpoint.upgrade',
-          'POST /remove': 'registration-endpoint.remove'
+          'POST /remove': 'registration-endpoint.remove',
+          'GET /': 'registration-endpoint.getForAgent'
         }
       }
     });
@@ -211,6 +212,11 @@ module.exports = {
           await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: webId });
         }
       }
+    },
+    async getForAgent(ctx) {
+      const { agent } = ctx.params;
+      const webId = ctx.meta.webId;
+      return await ctx.call('app-registrations.getForAgent', { agentUri: agent, podOwner: webId });
     }
   }
 };

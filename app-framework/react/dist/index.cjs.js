@@ -30,6 +30,7 @@ function $parcel$interopDefault(a) {
 $parcel$export(module.exports, "BackgroundChecks", () => $88874b19fd1a9965$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "LoginPage", () => $8c4e86009f42299d$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "RedirectPage", () => $691cae6a20c06149$export$2e2bcd8739ae039);
+$parcel$export(module.exports, "RemoteShareButton", () => $4903061d2059908d$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "ShareButton", () => $c30b6e8e8f4f1d51$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "ShareDialog", () => $8ffb7dd40d703ae5$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "SyncUserLocale", () => $418040ff16c1a946$export$2e2bcd8739ae039);
@@ -508,6 +509,61 @@ var $8c4e86009f42299d$export$2e2bcd8739ae039 = $8c4e86009f42299d$var$LoginPage;
     return null;
 };
 var $691cae6a20c06149$export$2e2bcd8739ae039 = $691cae6a20c06149$var$RedirectPage;
+
+
+
+
+
+
+// Share by redirecting to the user's Authorization Agent
+// To open a modal inside the app, use the ShareButton instead
+const $4903061d2059908d$var$RemoteShareButton = ({ clientId: clientId, ...rest })=>{
+    const dataProvider = (0, $fvx3m$reactadmin.useDataProvider)();
+    const record = (0, $fvx3m$reactadmin.useRecordContext)();
+    const { data: identity, isLoading: isLoading } = (0, $fvx3m$reactadmin.useGetIdentity)();
+    const [authAgent, setAuthAgent] = (0, $fvx3m$react.useState)();
+    const [isAuthAgentLoading, setIsAuthAgentLoading] = (0, $fvx3m$react.useState)(false);
+    (0, $fvx3m$react.useEffect)(()=>{
+        if (!isAuthAgentLoading && !authAgent && record?.["dc:creator"] === identity?.id) {
+            const authAgentUri = identity?.webIdData?.["interop:hasAuthorizationAgent"];
+            if (authAgentUri) {
+                setIsAuthAgentLoading(true);
+                dataProvider.fetch(authAgentUri).then(({ json: json })=>{
+                    setAuthAgent(json);
+                    setIsAuthAgentLoading(false);
+                });
+            }
+        }
+    }, [
+        identity,
+        record,
+        dataProvider,
+        authAgent,
+        setAuthAgent,
+        isAuthAgentLoading,
+        setIsAuthAgentLoading
+    ]);
+    const onClick = (0, $fvx3m$react.useCallback)(()=>{
+        // Save current path, so that the BackgroundChecks component may redirect there after registration
+        localStorage.setItem("redirect", window.location.pathname);
+        const redirectUrl = new URL(authAgent?.["interop:hasAuthorizationRedirectEndpoint"]);
+        redirectUrl.searchParams.append("client_id", clientId);
+        redirectUrl.searchParams.append("resource", record?.id);
+        window.location.href = redirectUrl.toString();
+    }, [
+        authAgent,
+        clientId,
+        record
+    ]);
+    if (isLoading || isAuthAgentLoading || !authAgent || !record || record?.["dc:creator"] !== identity?.id) return null;
+    return /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$reactadmin.Button), {
+        onClick: onClick,
+        startIcon: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, ($parcel$interopDefault($fvx3m$muiiconsmaterialShare))), {}),
+        label: "apods.action.share",
+        ...rest
+    });
+};
+var $4903061d2059908d$export$2e2bcd8739ae039 = $4903061d2059908d$var$RemoteShareButton;
 
 
 

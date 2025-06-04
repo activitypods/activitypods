@@ -496,6 +496,61 @@ var $1a88c39afebe872d$export$2e2bcd8739ae039 = $1a88c39afebe872d$var$RedirectPag
 
 
 
+// Share by redirecting to the user's Authorization Agent
+// To open a modal inside the app, use the ShareButton instead
+const $1dcbce4d0a659643$var$RemoteShareButton = ({ clientId: clientId, ...rest })=>{
+    const dataProvider = (0, $iLwJW$useDataProvider)();
+    const record = (0, $iLwJW$useRecordContext)();
+    const { data: identity, isLoading: isLoading } = (0, $iLwJW$useGetIdentity)();
+    const [authAgent, setAuthAgent] = (0, $iLwJW$useState)();
+    const [isAuthAgentLoading, setIsAuthAgentLoading] = (0, $iLwJW$useState)(false);
+    (0, $iLwJW$useEffect)(()=>{
+        if (!isAuthAgentLoading && !authAgent && record?.["dc:creator"] === identity?.id) {
+            const authAgentUri = identity?.webIdData?.["interop:hasAuthorizationAgent"];
+            if (authAgentUri) {
+                setIsAuthAgentLoading(true);
+                dataProvider.fetch(authAgentUri).then(({ json: json })=>{
+                    setAuthAgent(json);
+                    setIsAuthAgentLoading(false);
+                });
+            }
+        }
+    }, [
+        identity,
+        record,
+        dataProvider,
+        authAgent,
+        setAuthAgent,
+        isAuthAgentLoading,
+        setIsAuthAgentLoading
+    ]);
+    const onClick = (0, $iLwJW$useCallback)(()=>{
+        // Save current path, so that the BackgroundChecks component may redirect there after registration
+        localStorage.setItem("redirect", window.location.pathname);
+        const redirectUrl = new URL(authAgent?.["interop:hasAuthorizationRedirectEndpoint"]);
+        redirectUrl.searchParams.append("client_id", clientId);
+        redirectUrl.searchParams.append("resource", record?.id);
+        window.location.href = redirectUrl.toString();
+    }, [
+        authAgent,
+        clientId,
+        record
+    ]);
+    if (isLoading || isAuthAgentLoading || !authAgent || !record || record?.["dc:creator"] !== identity?.id) return null;
+    return /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Button1), {
+        onClick: onClick,
+        startIcon: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$muiiconsmaterialShare), {}),
+        label: "apods.action.share",
+        ...rest
+    });
+};
+var $1dcbce4d0a659643$export$2e2bcd8739ae039 = $1dcbce4d0a659643$var$RemoteShareButton;
+
+
+
+
+
+
 
 
 
@@ -1245,5 +1300,5 @@ var $5de716308b366acb$export$2e2bcd8739ae039 = {
 
 
 
-export {$2957839fe06af793$export$2e2bcd8739ae039 as BackgroundChecks, $4a72285bffb5f50f$export$2e2bcd8739ae039 as LoginPage, $1a88c39afebe872d$export$2e2bcd8739ae039 as RedirectPage, $47fb439769024aa7$export$2e2bcd8739ae039 as ShareButton, $79f089d541db8101$export$2e2bcd8739ae039 as ShareDialog, $e3472ca7f9a4764c$export$2e2bcd8739ae039 as SyncUserLocale, $f86de5ead054b96d$export$2e2bcd8739ae039 as UserMenu, $4b2a6afceae7f301$export$2e2bcd8739ae039 as englishMessages, $5de716308b366acb$export$2e2bcd8739ae039 as frenchMessages};
+export {$2957839fe06af793$export$2e2bcd8739ae039 as BackgroundChecks, $4a72285bffb5f50f$export$2e2bcd8739ae039 as LoginPage, $1a88c39afebe872d$export$2e2bcd8739ae039 as RedirectPage, $1dcbce4d0a659643$export$2e2bcd8739ae039 as RemoteShareButton, $47fb439769024aa7$export$2e2bcd8739ae039 as ShareButton, $79f089d541db8101$export$2e2bcd8739ae039 as ShareDialog, $e3472ca7f9a4764c$export$2e2bcd8739ae039 as SyncUserLocale, $f86de5ead054b96d$export$2e2bcd8739ae039 as UserMenu, $4b2a6afceae7f301$export$2e2bcd8739ae039 as englishMessages, $5de716308b366acb$export$2e2bcd8739ae039 as frenchMessages};
 //# sourceMappingURL=index.es.js.map

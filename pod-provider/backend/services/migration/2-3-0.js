@@ -43,8 +43,6 @@ module.exports = {
             // Create missing containers (delegated access grants, social agent registration...)
             await ctx.call('repair.createMissingContainers', { username });
 
-            await this.actions.registerAgainAllApps({ webId }, { parentCtx: ctx });
-
             await ctx.call('auth.account.update', {
               id: rest['@id'],
               webId,
@@ -117,32 +115,6 @@ module.exports = {
             accessModes: ['acl:Read'],
             delegationAllowed: isAnnouncer,
             delegationLimit: isAnnouncer ? 1 : undefined
-          });
-        }
-      }
-    },
-    // Remove and register again all apps, so that data grants/authorizations are replaced with access grants/authorizations
-    // And delegated access grants are created for all the resources shared with the user
-    async registerAgainAllApps(ctx) {
-      const { username } = ctx.params;
-      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
-
-      for (const { webId, username: dataset } of accounts) {
-        ctx.meta.dataset = dataset;
-        ctx.meta.webId = webId;
-
-        const container = await ctx.call('applications.list', { webId });
-
-        for (let application of arrayOf(container['ldp:contains'])) {
-          this.logger.info(`Upgrading app ${application.id} for ${webId}...`);
-
-          await ctx.call('registration-endpoint.remove', {
-            appUri: application.id
-          });
-
-          await ctx.call('registration-endpoint.register', {
-            appUri: application.id,
-            acceptAllRequirements: true
           });
         }
       }

@@ -44,13 +44,14 @@ module.exports = {
         ctx.meta.dataset = dataset;
         ctx.meta.webId = webId;
 
-        this.logger.info(`Deleting app registrations of ${webId}...`);
+        this.logger.info(`Removing apps of ${webId}...`);
 
         const container = await ctx.call('app-registrations.list', { webId });
 
         for (let appRegistration of arrayOf(container['ldp:contains'])) {
-          this.logger.info(`Deleting app ${appRegistration['interop:registeredAgent']}...`);
-          await ctx.call('app-registrations.delete', { resourceUri: appRegistration.id, webId });
+          this.logger.info(`Removing app ${appRegistration['interop:registeredAgent']}...`);
+
+          await ctx.call('registration-endpoint.remove', { appUri: appRegistration['interop:registeredAgent'] });
         }
       }
     },

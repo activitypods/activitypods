@@ -359,18 +359,28 @@ module.exports = {
       },
       async delete(ctx, res) {
         const authorization = res.oldData;
+        const dataOwner = authorization['interop:dataOwner'];
         const scope = authorization['interop:scopeOfAuthorization'];
         const webId = ctx.params.webId || ctx.meta.webId;
 
         // Find grant that match the authorization
-        const grant = await ctx.call('access-grants.getByAuthorization', { authorization });
+        const grant =
+          dataOwner === webId
+            ? await ctx.call('access-grants.getByAuthorization', { authorization })
+            : await ctx.call('delegated-access-grants.getByAuthorization', { authorization });
 
         if (grant) {
-          await ctx.call('access-grants.delete', {
-            resourceUri: getId(grant),
-            webId: 'system',
-            doNotSendActivity: ctx.params.doNotSendActivity // Forward the param
-          });
+          if (dataOwner === webId) {
+            await ctx.call('access-grants.delete', {
+              resourceUri: getId(grant),
+              webId: 'system',
+              doNotSendActivity: ctx.params.doNotSendActivity // Forward the param
+            });
+          } else {
+            await ctx.call('delegated-access-grants.remoteDelete', {
+              delegatedGrant: grant
+            });
+          }
         }
 
         if (scope === 'interop:All') {

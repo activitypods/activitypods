@@ -308,9 +308,10 @@ module.exports = {
           filters: {
             'http://www.w3.org/ns/solid/interop#dataOwner': authorization['interop:dataOwner'],
             'http://www.w3.org/ns/solid/interop#grantee': authorization['interop:grantee'],
+            'http://www.w3.org/ns/solid/interop#grantedBy': authorization['interop:grantedBy'],
             'http://www.w3.org/ns/solid/interop#hasDataRegistration': authorization['interop:hasDataRegistration']
           },
-          webId: authorization['dc:creator'] // Until we have a interop:authorizedBy predicate ?
+          webId: authorization['interop:grantedBy']
         },
         { parentCtx: ctx }
       );
@@ -332,7 +333,8 @@ module.exports = {
           filters: {
             'http://www.w3.org/ns/solid/interop#registeredShapeTree': authorization['interop:registeredShapeTree'],
             'http://www.w3.org/ns/solid/interop#satisfiesAccessNeed': authorization['interop:satisfiesAccessNeed'],
-            'http://www.w3.org/ns/solid/interop#grantee': authorization['interop:grantee']
+            'http://www.w3.org/ns/solid/interop#grantee': authorization['interop:grantee'],
+            'http://www.w3.org/ns/solid/interop#grantedBy': authorization['interop:grantedBy']
           },
           webId: authorization['interop:dataOwner']
         },

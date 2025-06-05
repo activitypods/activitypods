@@ -62,7 +62,7 @@ module.exports = {
                   'interop:registeredShapeTree': accessNeed.shapeTreeUri,
                   'interop:accessMode': accessNeed.accessMode,
                   'interop:accessNecessity': necessityMapping[necessity],
-                  'interop:preferredScope': accessNeed.preferredScope || 'interop:All',
+                  'interop:preferredScope': accessNeed.preferredScope || 'interop:All'
                 },
                 contentType: MIME_TYPES.JSON,
                 webId: 'system'

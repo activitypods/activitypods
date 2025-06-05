@@ -46,7 +46,7 @@ module.exports = {
                 'interop:registeredShapeTree': accessNeed['interop:registeredShapeTree'],
                 'interop:hasDataRegistration': dataRegistrationUri,
                 'interop:accessMode': accessNeed['interop:accessMode'],
-                'interop:scopeOfAuthorization': 'interop:All',
+                'interop:scopeOfAuthorization': accessNeed['interop:preferredScope'] || 'interop:All',
                 'interop:satisfiesAccessNeed': accessNeedUri
               },
               contentType: MIME_TYPES.JSON

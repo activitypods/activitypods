@@ -123,12 +123,15 @@ export const isLocalURL = (url: string) => {
 };
 
 // Return true if the resource can be displayed in the data browser
+// In dev mode, we can display resources of other storages (if we have permission)
 export const isStorageUri = (url: string, webId: string) =>
   url &&
-  (url === webId || url.startsWith(webId + '/')) &&
-  url !== webId + '/sparql' &&
-  url !== webId + '/proxy' &&
-  url !== webId + '/openApp';
+  (process.env.NODE_ENV === 'development'
+    ? url.startsWith(CONFIG.BACKEND_URL)
+    : url === webId || url.startsWith(webId + '/')) &&
+  !url.endsWith('/sparql') &&
+  !url.endsWith('/proxy') &&
+  !url.endsWith('/openApp');
 
 export const isUri = (uri: string) => {
   try {

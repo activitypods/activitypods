@@ -49,7 +49,7 @@ const AgentRegistrationsMixin = {
     async addGrant(ctx) {
       const { grant } = ctx.params;
 
-      const agentRegistration = await this.actions.getForAgent(
+      let agentRegistration = await this.actions.getForAgent(
         {
           agentUri: grant['interop:grantee'],
           podOwner: grant['interop:grantedBy']
@@ -57,35 +57,44 @@ const AgentRegistrationsMixin = {
         { parentCtx: ctx }
       );
 
-      // Create agent registration if it doesn't exist
-      const agentRegistrationUri = agentRegistration
-        ? getId(agentRegistration)
-        : await this.actions.createOrUpdate(
-            {
-              agentUri: grant['interop:grantee'],
-              podOwner: grant['interop:grantedBy']
-            },
-            { parentCtx: ctx }
-          );
+      if (!agentRegistration) {
+        // Create agent registration if it doesn't exist
+        await this.actions.createOrUpdate(
+          {
+            agentUri: grant['interop:grantee'],
+            podOwner: grant['interop:grantedBy']
+          },
+          { parentCtx: ctx }
+        );
+
+        // Get the newly created registration
+        agentRegistration = await this.actions.getForAgent(
+          {
+            agentUri: grant['interop:grantee'],
+            podOwner: grant['interop:grantedBy']
+          },
+          { parentCtx: ctx }
+        );
+      }
 
       await this.actions.patch(
         {
-          resourceUri: agentRegistrationUri,
+          resourceUri: getId(agentRegistration),
           triplesToAdd: [
             triple(
-              namedNode(agentRegistrationUri),
+              namedNode(getId(agentRegistration)),
               namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
               namedNode(getId(grant))
             ),
             triple(
-              namedNode(agentRegistrationUri),
+              namedNode(getId(agentRegistration)),
               namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
               literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
             )
           ],
-          triplesToRemove: [
+          triplesToRemove: agentRegistration['interop:updatedAt'] && [
             triple(
-              namedNode(agentRegistrationUri),
+              namedNode(getId(agentRegistration)),
               namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
               literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
             )
@@ -107,6 +116,24 @@ const AgentRegistrationsMixin = {
       );
 
       if (agentRegistration) {
+        const triplesToRemove = [
+          triple(
+            namedNode(getId(agentRegistration)),
+            namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
+            namedNode(getId(grant))
+          )
+        ];
+
+        if (agentRegistration['interop:updatedAt']) {
+          triplesToRemove.push(
+            triple(
+              namedNode(getId(agentRegistration)),
+              namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
+              literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
+            )
+          );
+        }
+
         await this.actions.patch(
           {
             resourceUri: getId(agentRegistration),
@@ -117,18 +144,7 @@ const AgentRegistrationsMixin = {
                 literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
               )
             ],
-            triplesToRemove: [
-              triple(
-                namedNode(getId(agentRegistration)),
-                namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
-                namedNode(getId(grant))
-              ),
-              triple(
-                namedNode(getId(agentRegistration)),
-                namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-                literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
-              )
-            ],
+            triplesToRemove,
             webId: 'system'
           },
           { parentCtx: ctx }

@@ -25,7 +25,10 @@ module.exports = {
           filters: {
             'http://www.w3.org/ns/solid/interop#registeredShapeTree': shapeTreeUri,
             'http://www.w3.org/ns/solid/interop#accessNecessity': necessityMapping[necessity],
-            'http://www.w3.org/ns/solid/interop#preferredScope': preferredScope
+            'http://www.w3.org/ns/solid/interop#preferredScope': preferredScope.replace(
+              'interop:',
+              'http://www.w3.org/ns/solid/interop#'
+            )
           },
           webId: 'system'
         },

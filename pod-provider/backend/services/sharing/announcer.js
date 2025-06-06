@@ -300,6 +300,15 @@ module.exports = {
     }
   },
   events: {
+    async 'ldp.resource.deleted'(ctx) {
+      const { oldData, webId } = ctx.params;
+
+      if (oldData['apods:announces'])
+        await ctx.call('activitypub.collection.delete', { resourceUri: oldData['apods:announces'], webId });
+
+      if (oldData['apods:announcers'])
+        await ctx.call('activitypub.collection.delete', { resourceUri: oldData['apods:announcers'], webId });
+    },
     // When a delegated grant is issued, add the grantee to the announces collection
     // This hack will be gone when we can do without announces/announcers collections
     async 'delegated-access-grants.issued'(ctx) {

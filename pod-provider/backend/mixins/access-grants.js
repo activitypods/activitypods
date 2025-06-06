@@ -10,9 +10,6 @@ const AccessGrantsMixin = {
     after: {
       async create(ctx, res) {
         const grant = res.newData;
-        const grantee = grant['interop:grantee'];
-        const accessMode = arrayOf(grant['interop:accessMode']);
-        const scope = grant['interop:scopeOfGrant'];
 
         // The grantee must be able to read the grant
         await ctx.call('webacl.resource.addRights', {
@@ -50,51 +47,18 @@ const AccessGrantsMixin = {
           }
         }
 
-        // For mapping details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
-        if (scope === 'interop:AllFromRegistry') {
-          // Give read-write permission to the whole container
-          await ctx.call('webacl.resource.addRights', {
-            resourceUri: grant['interop:hasDataRegistration'],
-            additionalRights: {
-              // Container rights
-              user: {
-                uri: grantee,
-                read: accessMode.includes('acl:Read'),
-                write: accessMode.includes('acl:Write')
-              },
-              // Resources default rights
-              default: {
-                user: {
-                  uri: grantee,
-                  read: accessMode.includes('acl:Read'),
-                  append: accessMode.includes('acl:Append'),
-                  write: accessMode.includes('acl:Write'),
-                  control: accessMode.includes('acl:Control')
-                }
-              }
-            },
-            webId: 'system'
+        // If the grant is replacing another one, first delete the permissions of the old grant
+        if (grant['interop:replaces']) {
+          // We can still get the old grant, because it is deleted after the new one is created
+          const replacedGrant = await ctx.call('access-grants.get', {
+            resourceUri: grant['interop:replaces'],
+            webId: grant['interop:dataOwner']
           });
-        } else if (scope === 'interop:SelectedFromRegistry') {
-          for (const resourceUri of arrayOf(grant['interop:hasDataInstance'])) {
-            // Give read-write permission to the resources
-            await ctx.call('webacl.resource.addRights', {
-              resourceUri,
-              additionalRights: {
-                user: {
-                  uri: grantee,
-                  read: accessMode.includes('acl:Read'),
-                  append: accessMode.includes('acl:Append'),
-                  write: accessMode.includes('acl:Write'),
-                  control: accessMode.includes('acl:Control')
-                }
-              },
-              webId: 'system'
-            });
-          }
-        } else {
-          throw new Error(`Unknown scope ${scope} for access grant ${getId(grant)}`);
+
+          await ctx.call('permissions-mapper.removePermissionsFromGrant', { grant: replacedGrant });
         }
+
+        await ctx.call('permissions-mapper.addPermissionsFromGrant', { grant });
 
         // Only send notifications for grants generated for social agents
         // For delegated grants, the granter will take care of notifying the grantee
@@ -121,49 +85,10 @@ const AccessGrantsMixin = {
       },
       async delete(ctx, res) {
         const grant = res.oldData;
-        const appUri = grant['interop:grantee'];
-        const accessMode = arrayOf(grant['interop:accessMode']);
-        const scope = grant['interop:scopeOfGrant'];
 
-        if (scope === 'interop:AllFromRegistry') {
-          await ctx.call('webacl.resource.removeRights', {
-            resourceUri: grant['interop:hasDataRegistration'],
-            rights: {
-              user: {
-                uri: appUri,
-                read: accessMode.includes('acl:Read'),
-                write: accessMode.includes('acl:Write')
-              },
-              default: {
-                user: {
-                  uri: appUri,
-                  read: accessMode.includes('acl:Read'),
-                  append: accessMode.includes('acl:Append'),
-                  write: accessMode.includes('acl:Write'),
-                  control: accessMode.includes('acl:Control')
-                }
-              }
-            },
-            webId: 'system'
-          });
-        } else if (scope === 'interop:SelectedFromRegistry') {
-          for (const resourceUri of arrayOf(grant['interop:hasDataInstance'])) {
-            await ctx.call('webacl.resource.removeRights', {
-              resourceUri,
-              rights: {
-                user: {
-                  uri: appUri,
-                  read: accessMode.includes('acl:Read'),
-                  append: accessMode.includes('acl:Append'),
-                  write: accessMode.includes('acl:Write'),
-                  control: accessMode.includes('acl:Control')
-                }
-              },
-              webId: 'system'
-            });
-          }
-        } else {
-          throw new Error(`Unknown scope ${scope} for access grant ${getId(grant)}`);
+        // Don't remove permissions when we are replacing
+        if (!ctx.params.isReplacing) {
+          await ctx.call('permissions-mapper.removePermissionsFromGrant', { grant });
         }
 
         // Detach grant from agent registrations, unless it is a delegated grant (will be done by the issuer)
@@ -175,12 +100,12 @@ const AccessGrantsMixin = {
           }
         }
 
-        // Only send activity for access grants, and when the grantee is a social agent
+        // Only send Delete activity for access grants, when the grantee is a social agent and when this is not a replacement
         // TODO: Warn grantees when delegated grants are deleted by the granter
         if (
           getType(grant) === 'interop:AccessGrant' &&
-          !ctx.params.doNotSendActivity &&
-          grant['interop:granteeType'] === 'interop:SocialAgent'
+          grant['interop:granteeType'] === 'interop:SocialAgent' &&
+          !ctx.params.isReplacing
         ) {
           const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
             actorUri: grant['interop:dataOwner'],

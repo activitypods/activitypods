@@ -1,6 +1,109 @@
+const { getId, arrayOf } = require('@semapps/ldp');
+
+// Service that maps access grants and special rights to WAC permissions
+// For mapping details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
 module.exports = {
-  name: 'special-rights',
+  name: 'permissions-mapper',
   actions: {
+    async addPermissionsFromGrant(ctx) {
+      const { grant } = ctx.params;
+
+      const grantee = grant['interop:grantee'];
+      const accessMode = arrayOf(grant['interop:accessMode']);
+      const scope = grant['interop:scopeOfGrant'];
+
+      if (scope === 'interop:AllFromRegistry') {
+        // Give read-write permission to the whole container
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri: grant['interop:hasDataRegistration'],
+          additionalRights: {
+            // Container rights
+            user: {
+              uri: grantee,
+              read: accessMode.includes('acl:Read'),
+              write: accessMode.includes('acl:Write')
+            },
+            // Resources default rights
+            default: {
+              user: {
+                uri: grantee,
+                read: accessMode.includes('acl:Read'),
+                append: accessMode.includes('acl:Append'),
+                write: accessMode.includes('acl:Write'),
+                control: accessMode.includes('acl:Control')
+              }
+            }
+          },
+          webId: 'system'
+        });
+      } else if (scope === 'interop:SelectedFromRegistry') {
+        for (const resourceUri of arrayOf(grant['interop:hasDataInstance'])) {
+          // Give read-write permission to the resources
+          await ctx.call('webacl.resource.addRights', {
+            resourceUri,
+            additionalRights: {
+              user: {
+                uri: grantee,
+                read: accessMode.includes('acl:Read'),
+                append: accessMode.includes('acl:Append'),
+                write: accessMode.includes('acl:Write'),
+                control: accessMode.includes('acl:Control')
+              }
+            },
+            webId: 'system'
+          });
+        }
+      } else {
+        throw new Error(`Unknown scope ${scope} for access grant ${getId(grant)}`);
+      }
+    },
+    async removePermissionsFromGrant(ctx) {
+      const { grant } = ctx.params;
+      const grantee = grant['interop:grantee'];
+      const accessMode = arrayOf(grant['interop:accessMode']);
+      const scope = grant['interop:scopeOfGrant'];
+
+      if (scope === 'interop:AllFromRegistry') {
+        await ctx.call('webacl.resource.removeRights', {
+          resourceUri: grant['interop:hasDataRegistration'],
+          rights: {
+            user: {
+              uri: grantee,
+              read: accessMode.includes('acl:Read'),
+              write: accessMode.includes('acl:Write')
+            },
+            default: {
+              user: {
+                uri: grantee,
+                read: accessMode.includes('acl:Read'),
+                append: accessMode.includes('acl:Append'),
+                write: accessMode.includes('acl:Write'),
+                control: accessMode.includes('acl:Control')
+              }
+            }
+          },
+          webId: 'system'
+        });
+      } else if (scope === 'interop:SelectedFromRegistry') {
+        for (const resourceUri of arrayOf(grant['interop:hasDataInstance'])) {
+          await ctx.call('webacl.resource.removeRights', {
+            resourceUri,
+            rights: {
+              user: {
+                uri: grantee,
+                read: accessMode.includes('acl:Read'),
+                append: accessMode.includes('acl:Append'),
+                write: accessMode.includes('acl:Write'),
+                control: accessMode.includes('acl:Control')
+              }
+            },
+            webId: 'system'
+          });
+        }
+      } else {
+        throw new Error(`Unknown scope ${scope} for access grant ${getId(grant)}`);
+      }
+    },
     async addPermissionsFromSpecialRights(ctx) {
       const { podOwner, appUri, specialRightsUris } = ctx.params;
 

@@ -74,7 +74,7 @@ module.exports = {
         grantee: appUri
       });
 
-      await ctx.call('special-rights.addPermissionsFromSpecialRights', {
+      await ctx.call('permissions-mapper.addPermissionsFromSpecialRights', {
         podOwner: webId,
         appUri,
         specialRightsUris: acceptedSpecialRights
@@ -144,13 +144,13 @@ module.exports = {
 
       // If the special rights changed, first remove the old rights, before adding the new ones
       if (!arraysEqual(oldAppRegistration['apods:hasSpecialRights'], acceptedSpecialRights)) {
-        await ctx.call('special-rights.removePermissionsFromSpecialRights', {
+        await ctx.call('permissions-mapper.removePermissionsFromSpecialRights', {
           podOwner: webId,
           appUri,
           specialRightsUris: oldAppRegistration['apods:hasSpecialRights']
         });
 
-        await ctx.call('special-rights.addPermissionsFromSpecialRights', {
+        await ctx.call('permissions-mapper.addPermissionsFromSpecialRights', {
           podOwner: webId,
           appUri,
           specialRightsUris: acceptedSpecialRights
@@ -191,7 +191,7 @@ module.exports = {
         // This will also delete the authorizations and grants linked to the agent
         await ctx.call('app-registrations.delete', { resourceUri: getId(appRegistration), webId });
 
-        await ctx.call('special-rights.removePermissionsFromSpecialRights', {
+        await ctx.call('permissions-mapper.removePermissionsFromSpecialRights', {
           podOwner: webId,
           appUri,
           specialRightsUris: appRegistration['apods:hasSpecialRights']

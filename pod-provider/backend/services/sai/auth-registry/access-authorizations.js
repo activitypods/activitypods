@@ -1,5 +1,5 @@
 const { MoleculerError } = require('moleculer').Errors;
-const { ControlledContainerMixin, arrayOf, getId } = require('@semapps/ldp');
+const { ControlledContainerMixin, arrayOf, getId, getWebIdFromUri } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { arraysEqual } = require('../../../utils');
 const ImmutableContainerMixin = require('../../../mixins/immutable-container-mixin');
@@ -173,53 +173,44 @@ module.exports = {
       }
     },
     // Remove an authorization for a single resource
+    // The grantee param is optional. If provided, it will only delete authorizations for the grantee
     async removeForSingleResource(ctx) {
       const { resourceUri, grantee } = ctx.params;
       const webId = ctx.params.webId || ctx.meta.webId;
 
-      const dataRegistration = await ctx.call('data-registrations.getByResourceUri', { resourceUri, webId });
-      const dataOwner = dataRegistration['interop:registeredBy'];
+      const filters = {
+        'http://www.w3.org/ns/solid/interop#hasDataInstance': resourceUri,
+        'http://www.w3.org/ns/solid/interop#scopeOfAuthorization':
+          'http://www.w3.org/ns/solid/interop#SelectedFromRegistry'
+      };
+      if (grantee) filters['http://www.w3.org/ns/solid/interop#grantee'] = grantee;
 
-      const filteredContainer = await this.actions.list(
-        {
-          filters: {
-            'http://www.w3.org/ns/solid/interop#dataOwner': dataOwner,
-            'http://www.w3.org/ns/solid/interop#grantee': grantee,
-            'http://www.w3.org/ns/solid/interop#hasDataRegistration': getId(dataRegistration),
-            'http://www.w3.org/ns/solid/interop#scopeOfAuthorization':
-              'http://www.w3.org/ns/solid/interop#SelectedFromRegistry'
-          },
-          webId
-        },
-        { parentCtx: ctx }
-      );
+      const filteredContainer = await this.actions.list({ filters, webId }, { parentCtx: ctx });
 
       for (const dataAuthorization of arrayOf(filteredContainer['ldp:contains'])) {
         const resourcesUris = arrayOf(dataAuthorization['interop:hasDataInstance']);
-        if (resourcesUris.includes(resourceUri)) {
-          if (resourcesUris.length === 1) {
-            // If the resource is the only one in the authorization, delete it
-            await this.actions.delete(
-              {
-                resourceUri: getId(dataAuthorization),
-                webId
+        if (resourcesUris.length === 1) {
+          // If the resource is the only one in the authorization, delete it
+          await this.actions.delete(
+            {
+              resourceUri: getId(dataAuthorization),
+              webId
+            },
+            { parentCtx: ctx }
+          );
+        } else {
+          // If other resources are in the authorization, remove it
+          await this.actions.put(
+            {
+              resource: {
+                ...dataAuthorization,
+                'interop:hasDataInstance': resourcesUris.filter(uri => uri !== resourceUri)
               },
-              { parentCtx: ctx }
-            );
-          } else {
-            // If other resources are in the authorization, remove it
-            await this.actions.put(
-              {
-                resource: {
-                  ...dataAuthorization,
-                  'interop:hasDataInstance': resourcesUris.filter(uri => uri !== resourceUri)
-                },
-                contentType: MIME_TYPES.JSON,
-                webId
-              },
-              { parentCtx: ctx }
-            );
-          }
+              contentType: MIME_TYPES.JSON,
+              webId
+            },
+            { parentCtx: ctx }
+          );
         }
       }
     },
@@ -374,7 +365,7 @@ module.exports = {
             await ctx.call('access-grants.delete', {
               resourceUri: getId(grant),
               webId: 'system',
-              doNotSendActivity: ctx.params.doNotSendActivity // Forward the param
+              isReplacing: ctx.params.isReplacing // Forward the param
             });
           } else {
             await ctx.call('delegated-access-grants.remoteDelete', {
@@ -401,6 +392,15 @@ module.exports = {
 
         return res;
       }
+    }
+  },
+  events: {
+    async 'ldp.resource.deleted'(ctx) {
+      const { resourceUri, dataset } = ctx.params;
+      const webId = getWebIdFromUri(resourceUri);
+
+      // Delete all authorizations associated with this resource
+      await this.actions.removeForSingleResource({ resourceUri, webId }, { meta: { dataset }, parentCtx: ctx });
     }
   }
 };

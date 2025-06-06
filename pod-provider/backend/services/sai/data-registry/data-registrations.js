@@ -215,13 +215,18 @@ module.exports = {
      */
     async getByResourceUri(ctx) {
       const { resourceUri } = ctx.params;
+      const webId = ctx.params.webId || ctx.meta.webId;
 
-      const dataRegistrationUri = await this.actions.getUriByResourceUri({ resourceUri }, { parentCtx: ctx });
+      const dataRegistrationUri = await this.actions.getUriByResourceUri({ resourceUri, webId }, { parentCtx: ctx });
 
       if (dataRegistrationUri) {
         return await this.actions.get({ dataRegistrationUri }, { parentCtx: ctx });
       } else {
-        throw new MoleculerError(`Data registration not found`, 404, 'NOT_FOUND');
+        throw new MoleculerError(
+          `Data registration not found for resource ${resourceUri} (webId ${webId}, dataset ${ctx.meta.dataset})`,
+          404,
+          'NOT_FOUND'
+        );
       }
     },
     async registerOntologyFromClass(ctx) {

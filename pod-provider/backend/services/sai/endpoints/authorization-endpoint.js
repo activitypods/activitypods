@@ -1,4 +1,5 @@
 const path = require('path');
+const { MoleculerError } = require('moleculer').Errors;
 const { arrayOf } = require('@semapps/ldp');
 
 module.exports = {
@@ -30,10 +31,10 @@ module.exports = {
       const account = await ctx.call('auth.account.findByWebId', { webId });
       ctx.meta.dataset = account.username;
 
-      const authorizations = await ctx.call('access-authorizations.listForSingleResource', {
-        resourceUri,
-        webId
-      });
+      if (!resourceUri.startsWith(`${webId}/`))
+        throw new MoleculerError('Only the owner of a resource can fetch its authorizations', 403, 'FORBIDDEN');
+
+      const authorizations = await ctx.call('access-authorizations.listForSingleResource', { resourceUri });
 
       return {
         resourceUri,
@@ -52,6 +53,9 @@ module.exports = {
       const podOwner = ctx.meta.webId;
       const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
       ctx.meta.dataset = account.username;
+
+      if (!resourceUri.startsWith(`${podOwner}/`))
+        throw new MoleculerError('Only the owner of a resource can update its authorizations', 403, 'FORBIDDEN');
 
       for ({ grantee, accessModes } of authorizations) {
         if (accessModes.length > 0) {

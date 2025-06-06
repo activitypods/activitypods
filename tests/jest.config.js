@@ -2,7 +2,7 @@
 const config = {
   testEnvironment: 'node',
   transform: {
-    '\\.[jt]sx?$': ['babel-jest']
+    '\\.[jt]sx?$': ['esbuild-jest']
   },
   transformIgnorePatterns: []
 };

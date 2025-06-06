@@ -4,7 +4,8 @@ import { Box, Button, Dialog, DialogTitle, DialogContent, DialogContentText, Dia
 import WarningIcon from '@mui/icons-material/Warning';
 import SimpleBox from '../../layout/SimpleBox';
 import useAccessNeeds from '../../hooks/useAccessNeeds';
-import useGrants from '../../hooks/useGrants';
+import useAccessGrants from '../../hooks/useAccessGrants';
+import useAgentRegistration from '../../hooks/useAgentRegistration';
 import AccessNeedsList from '../../common/list/AccessNeedsList';
 import ProgressMessage from '../../common/ProgressMessage';
 import AppHeader from './AppHeader';
@@ -24,8 +25,8 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
   const upgradeApp = useUpgradeApp();
 
   const { requiredAccessNeeds, optionalAccessNeeds, loaded: accessNeedsLoaded } = useAccessNeeds(application);
-
-  const { grants, loaded: grantsLoaded } = useGrants(application.id);
+  const { accessGrants, loaded: accessGrantsLoaded } = useAccessGrants(application.id);
+  const { agentRegistration, loaded: agentRegistrationLoaded } = useAgentRegistration(application.id);
 
   useEffect(() => {
     (async () => {
@@ -48,7 +49,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
   }, [application, upgradeApp, allowedAccessNeeds, grantedAccessNeeds, accessApp, step, setStep]);
 
   useEffect(() => {
-    if (accessNeedsLoaded && grantsLoaded && !step) {
+    if (accessNeedsLoaded && accessGrantsLoaded && agentRegistrationLoaded && !step) {
       setStep('preparation');
 
       const grantedAccessNeeds = [];
@@ -61,8 +62,8 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
         for (const accessNeed of accessNeeds) {
           const matchingGrant =
             typeof accessNeed === 'string'
-              ? grants.find(g => typeof g === 'string' && g === accessNeed)
-              : grants.find(
+              ? arrayOf(agentRegistration['apods:hasSpecialRights']).find(specialRight => specialRight === accessNeed)
+              : accessGrants.find(
                   g =>
                     typeof g !== 'string' &&
                     g['apods:registeredClass'] === accessNeed['apods:registeredClass'] &&
@@ -99,8 +100,10 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }) => {
     accessNeedsLoaded,
     requiredAccessNeeds,
     optionalAccessNeeds,
-    grantsLoaded,
-    grants,
+    accessGrantsLoaded,
+    accessGrants,
+    agentRegistration,
+    agentRegistrationLoaded,
     setAllowedAccessNeeds,
     setGrantedAccessNeeds,
     setMissingAccessNeeds,

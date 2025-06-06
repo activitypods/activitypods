@@ -5,7 +5,6 @@ const AccessNeedsGroupsService = require('./services/registration/access-needs-g
 const ActorsService = require('./services/registration/actors');
 const AppRegistrationsService = require('./services/registration/app-registrations');
 const AccessGrantsService = require('./services/registration/access-grants');
-const DataGrantsService = require('./services/registration/data-grants');
 const RegistrationService = require('./services/registration/registration');
 const PodActivitiesWatcherService = require('./services/pod-handling/pod-activities-watcher');
 const PodCollectionsService = require('./services/pod-handling/pod-collections');
@@ -69,7 +68,6 @@ module.exports = {
     this.broker.createService({ mixins: [AccessNeedsGroupsService] });
 
     this.broker.createService({ mixins: [AppRegistrationsService] });
-    this.broker.createService({ mixins: [DataGrantsService] });
     this.broker.createService({ mixins: [AccessGrantsService] });
 
     // Pod handling

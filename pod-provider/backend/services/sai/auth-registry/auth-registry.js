@@ -11,7 +11,7 @@ module.exports = {
   dependencies: ['registry-set'],
   actions: {
     async add(ctx) {
-      const { podOwner, accessAuthorizationUri } = ctx.params;
+      const { podOwner, authorizationUri } = ctx.params;
 
       const authRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
 
@@ -22,7 +22,7 @@ module.exports = {
             triple(
               namedNode(authRegistryUri),
               namedNode('http://www.w3.org/ns/solid/interop#hasAccessAuthorization'),
-              namedNode(accessAuthorizationUri)
+              namedNode(authorizationUri)
             )
           ],
           webId: 'system'
@@ -31,7 +31,7 @@ module.exports = {
       );
     },
     async remove(ctx) {
-      const { podOwner, accessAuthorizationUri } = ctx.params;
+      const { podOwner, authorizationUri } = ctx.params;
 
       const authRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
 
@@ -42,7 +42,7 @@ module.exports = {
             triple(
               namedNode(authRegistryUri),
               namedNode('http://www.w3.org/ns/solid/interop#hasAccessAuthorization'),
-              namedNode(accessAuthorizationUri)
+              namedNode(authorizationUri)
             )
           ],
           webId: 'system'

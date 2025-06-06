@@ -174,7 +174,7 @@ module.exports = {
       for (let podOwner of await ctx.call('app-registrations.getRegisteredPods')) {
         this.logger.info(`Going through resources of ${podOwner}...`);
         // Find the container for this shape tree
-        const containerUri = await ctx.call('data-grants.getContainerByShapeTree', { shapeTreeUri, podOwner });
+        const containerUri = await ctx.call('access-grants.getContainerByShapeTree', { shapeTreeUri, podOwner });
         if (!containerUri) throw new Error(`No container found with shape tree ${shapeTreeUri} on pod ${podOwner}`);
 
         const container = await ctx.call('pod-resources.list', { containerUri, actorUri: podOwner });

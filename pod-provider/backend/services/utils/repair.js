@@ -20,20 +20,16 @@ module.exports = {
         ctx.meta.dataset = dataset;
         ctx.meta.webId = webId;
 
-        const isRegistered = await ctx.call('app-registrations.isRegistered', { appUri, podOwner: webId });
+        const isRegistered = await ctx.call('app-registrations.isRegistered', { agentUri: appUri, podOwner: webId });
         if (isRegistered) {
           this.logger.info(`App ${appUri} is already installed for ${webId}, skipping...`);
         } else {
           this.logger.info(`Installing app ${appUri} on ${webId}...`);
 
-          await ctx.call(
-            'auth-agent.registerApp',
-            {
-              appUri,
-              acceptAllRequirements: true
-            },
-            { meta: { webId } }
-          );
+          await ctx.call('registration-endpoint.register', {
+            appUri,
+            acceptAllRequirements: true
+          });
         }
       }
     },
@@ -48,13 +44,14 @@ module.exports = {
         ctx.meta.dataset = dataset;
         ctx.meta.webId = webId;
 
-        this.logger.info(`Deleting app registrations of ${webId}...`);
+        this.logger.info(`Removing apps of ${webId}...`);
 
         const container = await ctx.call('app-registrations.list', { webId });
 
         for (let appRegistration of arrayOf(container['ldp:contains'])) {
-          this.logger.info(`Deleting app ${appRegistration['interop:registeredAgent']}...`);
-          await ctx.call('app-registrations.delete', { resourceUri: appRegistration.id, webId });
+          this.logger.info(`Removing app ${appRegistration['interop:registeredAgent']}...`);
+
+          await ctx.call('registration-endpoint.remove', { appUri: appRegistration['interop:registeredAgent'] });
         }
       }
     },
@@ -66,20 +63,19 @@ module.exports = {
       const { username } = ctx.params;
       const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
-      for (const { webId } of accounts) {
+      for (const { webId, username: dataset } of accounts) {
+        ctx.meta.dataset = dataset;
+        ctx.meta.webId = webId;
+
         const container = await ctx.call('applications.list', { webId });
 
         for (let application of arrayOf(container['ldp:contains'])) {
           this.logger.info(`Upgrading app ${application.id} for ${webId}...`);
 
-          await ctx.call(
-            'auth-agent.upgradeApp',
-            {
-              appUri: application.id,
-              acceptAllRequirements: true
-            },
-            { meta: { webId } }
-          );
+          await ctx.call('registration-endpoint.upgrade', {
+            appUri: application.id,
+            acceptAllRequirements: true
+          });
         }
       }
     },

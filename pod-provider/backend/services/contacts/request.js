@@ -78,7 +78,6 @@ module.exports = {
   activities: {
     contactRequest: {
       match: CONTACT_REQUEST,
-
       async onEmit(ctx, activity, emitterUri) {
         // Add the user to the contacts WebACL group so he can see my profile
         for (let targetUri of arrayOf(activity.target)) {
@@ -86,6 +85,18 @@ module.exports = {
             groupSlug: `${new URL(emitterUri).pathname}/contacts`,
             memberUri: targetUri,
             webId: emitterUri
+          });
+
+          // Create the SocialAgentRegistration
+          await ctx.call('social-agent-registrations.createOrUpdate', { agentUri: targetUri, podOwner: emitterUri });
+
+          // Share profile
+          // TODO setup a contacts group in SAI
+          const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+          await ctx.call('access-authorizations.addForSingleResource', {
+            resourceUri: emitter.url,
+            grantee: targetUri,
+            accessModes: ['acl:Read']
           });
         }
       },
@@ -152,7 +163,6 @@ module.exports = {
       match: CONTACT_REQUEST,
       async capabilityGrantMatchFnGenerator({ recipientUri, activity }) {
         // Generate a function that is called on each ActivityGrant of the activity's capability.
-
         return async grant => {
           // Verify that the recipient issued the grant with the following structure.
           const { match } = await matchActivity(
@@ -173,7 +183,6 @@ module.exports = {
           return match;
         };
       },
-
       async onReceive(ctx, activity, recipientUri) {
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
@@ -229,32 +238,43 @@ module.exports = {
       async onEmit(ctx, activity, emitterUri) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
-        // 1. Add the other actor to the contacts WebACL group so he can see my profile
+        // Add the other actor to the contacts WebACL group so he can see my profile
         await ctx.call('webacl.group.addMember', {
           groupSlug: `${new URL(emitterUri).pathname}/contacts`,
           memberUri: activity.to,
           webId: emitterUri
         });
 
-        // 2. Cache the other actor's profile
+        // Create a Social Agent Registration
+        await ctx.call('social-agent-registrations.createOrUpdate', { agentUri: activity.to, podOwner: emitterUri });
+
+        // Share profile
+        // TODO setup a contacts group in SAI
+        await ctx.call('access-authorizations.addForSingleResource', {
+          resourceUri: emitter.url,
+          grantee: activity.to,
+          accessModes: ['acl:Read']
+        });
+
+        // Cache the other actor's profile
         await ctx.call('ldp.remote.store', {
           resource: activity.object.object.object,
           webId: emitterUri
         });
 
-        // 3. Attach the other actor's profile to my profiles container
+        // Attach the other actor's profile to my profiles container
         await ctx.call('profiles.profile.attach', {
           resourceUri: activity.object.object.object.id,
           webId: emitterUri
         });
 
-        // 4. Add the other actor to my contacts list
+        // Add the other actor to my contacts list
         await ctx.call('activitypub.collection.add', {
           collectionUri: emitter['apods:contacts'],
           item: activity.object.actor
         });
 
-        // 5. Remove the activity from my contact requests
+        // Remove the activity from my contact requests
         await ctx.call('activitypub.collection.remove', {
           collectionUri: emitter['apods:contactRequests'],
           item: activity.object.id
@@ -338,6 +358,20 @@ module.exports = {
           memberUri: activity.actor,
           webId: recipientUri
         });
+
+        // Delete the Social Agent Registration
+        // This will also delete all authorizations and grants associated with the user
+        const agentRegistration = await ctx.call('social-agent-registrations.getForAgent', {
+          agentUri: activity.actor,
+          podOwner: recipientUri
+        });
+
+        if (agentRegistration) {
+          await ctx.call('social-agent-registrations.delete', {
+            resourceUri: agentRegistration.id || agentRegistration['@id'],
+            webId: recipientUri
+          });
+        }
       }
     }
   }

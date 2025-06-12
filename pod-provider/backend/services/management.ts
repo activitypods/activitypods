@@ -1,15 +1,15 @@
-const path = require('node:path');
-const fs = require('fs');
-const { namedNode, quad } = require('@rdfjs/data-model');
-const archiver = require('archiver');
-const urlJoin = require('url-join');
-const QueueService = require('moleculer-bull');
-const { throw403, throw404, throw500 } = require('@semapps/middlewares');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { ACTIVITY_TYPES, PUBLIC_URI } = require('@semapps/activitypub');
-const { sanitizeSparqlQuery } = require('@semapps/triplestore');
-const { arrayOf } = require('@semapps/ldp');
-const CONFIG = require('../config/config');
+import path from 'node:path';
+import fs from 'fs';
+import { namedNode, quad } from '@rdfjs/data-model';
+import archiver from 'archiver';
+import urlJoin from 'url-join';
+import QueueService from 'moleculer-bull';
+import { throw403, throw404, throw500 } from '@semapps/middlewares';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { ACTIVITY_TYPES, PUBLIC_URI } from '@semapps/activitypub';
+import { sanitizeSparqlQuery } from '@semapps/triplestore';
+import { arrayOf } from '@semapps/ldp';
+import CONFIG from '../config/config';
 
 let Readable, NTriplesSerializer;
 const importAsync = async () => {

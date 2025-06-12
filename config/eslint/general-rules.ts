@@ -58,7 +58,7 @@ module.exports = tsEslint.config(
       'no-unsafe-optional-chaining': 'warn',
       'no-unused-expressions': 'warn',
       'no-unused-vars': 'warn',
-      'no-use-before-define': 'warn',
+      'no-use-before-define': 'off',
       'no-useless-return': 'warn',
       'no-var': 'warn',
       'object-shorthand': 'off',

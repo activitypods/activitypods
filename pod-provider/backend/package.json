@@ -10,9 +10,9 @@
     "directory": "pod-provider/backend"
   },
   "scripts": {
-    "dev": "moleculer-runner --repl --hot services/*.js services/**/*.js",
-    "start": "moleculer-runner services/*.js services/**/*.js",
-    "test": "NODE_ENV=test moleculer-runner --repl --hot services/*.js services/**/*.js",
+    "dev": "moleculer-runner --repl --hot services/*.ts services/**/*.ts",
+    "start": "moleculer-runner services/*.ts services/**/*.ts",
+    "test": "NODE_ENV=test moleculer-runner --repl --hot services/*.ts services/**/*.ts",
     "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
     "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid"
   },

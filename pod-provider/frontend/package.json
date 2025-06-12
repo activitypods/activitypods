@@ -8,9 +8,9 @@
     "unlink-semapps-packages": "yalc remove --all && rm -rf node_modules/@semapps && yarn install --force"
   },
   "dependencies": {
-    "@mui/icons-material": "^5.14.13",
-    "@mui/material": "^5.14.13",
-    "@mui/styles": "^5.14.13",
+    "@mui/icons-material": "^7.1.0",
+    "@mui/material": "^7.1.0",
+    "@mui/styles": "^6.4.8",
     "@rdfjs/data-model": "^1.3.4",
     "@semapps/activitypub-components": "1",
     "@semapps/auth-provider": "1.1.2",
@@ -29,21 +29,23 @@
     "leaflet-defaulticon-compatibility": "^0.1.1",
     "leaflet.markercluster": "^1.5.3",
     "oauth4webapi": "^2.3.0",
-    "ra-i18n-polyglot": "^4.11.0",
-    "ra-language-english": "^4.11.0",
-    "ra-language-french": "^4.11.0",
-    "ra-ui-materialui": "^4.11.0",
+    "ra-i18n-polyglot": "^5.8.3",
+    "ra-language-english": "^5.8.3",
+    "ra-language-french": "^5.8.3",
+    "ra-ui-materialui": "^5.8.3",
     "react": "^18.2.0",
-    "react-admin": "^4.11.0",
+    "react-admin": "^5.5.3",
     "react-copy-to-clipboard": "^5.0.4",
     "react-dom": "^18.2.0",
     "react-helmet": "^6.1.0",
     "react-hook-form": "^7.47.0",
-    "react-query": "^3.39.3",
     "react-router-dom": "^6.17.0",
     "react-sticky-box": "^2.0.4",
     "speakingurl": "^14.0.1",
     "url-join": "^4.0.1"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.79.0"
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",

@@ -1,7 +1,7 @@
-const { NodeinfoService } = require('@semapps/nodeinfo');
-const urlJoin = require('url-join');
-const CONFIG = require('../config/config');
-const packageDesc = require('../package.json');
+import { NodeinfoService } from '@semapps/nodeinfo';
+import urlJoin from 'url-join';
+import CONFIG from '../config/config';
+import packageDesc from '../package.json';
 
 module.exports = {
   mixins: [NodeinfoService],

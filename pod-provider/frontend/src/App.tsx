@@ -43,7 +43,7 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       // staleTime: 5 * 60 * 1000, // Considering data fresh for 5 minutes, might cause caching-related hard to find bugs..
-      cacheTime: 30 * 60 * 1000, // Cache unused data for 30 minutes.
+      gcTime: 30 * 60 * 1000, // Cache unused data for 30 minutes.
       retry: 3
     }
   }

@@ -43,7 +43,9 @@ const useContactLink = () => {
             setContactLink(inviteLinkFromCapUri(vcLink));
             setStatus('loaded');
             // Invalidate cache
-            queryClient.refetchQueries('VerifiableCredential');
+            queryClient.refetchQueries({
+              queryKey: ['VerifiableCredential']
+            });
           })
           .catch(error => {
             setStatus('error');

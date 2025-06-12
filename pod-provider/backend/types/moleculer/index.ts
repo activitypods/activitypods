@@ -53,7 +53,7 @@ declare global {
       trace(...args: any[]): void;
     }
 
-    type ActionHandler<Params extends unknown = unknown, ReturnType = unknown> = ((
+    type ActionHandler<Params extends unknown = Record<string, any>, ReturnType = unknown> = ((
       ctx: Context<Params>
     ) => Promise<ReturnType> | ReturnType) &
       ThisType<Service>;
@@ -680,13 +680,13 @@ declare global {
     type names = keyof AllActions;
     // ALSO TODO: Why is `this` not bound when schema is defined in `defineSchema` without `satisfies`?
 
-    type ActionSchema<Schema extends ValidatorSchema = ValidatorSchema> = {
+    type ActionSchema<ParamSchema extends ValidatorSchema = ValidatorSchema> = {
       name?: string;
       visibility?: ActionVisibility;
-      params?: Schema;
+      params?: ParamSchema;
       service?: Service;
-      cache?: boolean | ActionCacheOptions;
-      handler?: ActionHandler<TypeFromSchema<Schema>>;
+      cache?: boolean | ActionCacheOptions; //<TypeFromSchema<ParamSchema>>;
+      handler?: ActionHandler<TypeFromSchema<ParamSchema>>;
       tracing?: boolean | TracingActionOptions;
       bulkhead?: BulkheadOptions;
       circuitBreaker?: BrokerCircuitBreakerOptions;
@@ -831,7 +831,7 @@ declare global {
 
     type ServiceEventHandler<Params = unknown> = ((ctx: Context<Params>) => void | Promise<void>) & ThisType<Service>;
 
-    interface ServiceEvent<Schema extends FastestValidationSchema = {}> {
+    interface ServiceEvent<Schema extends ValidatorSchema = {}> {
       name?: string;
       group?: string;
       params?: Schema;

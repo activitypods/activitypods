@@ -41,7 +41,7 @@ const DataListPage = () => {
   const [locale] = useLocaleState();
   const getPrefixFromUri = useGetPrefixFromUri();
   const developerMode = !!localStorage.getItem('developer_mode');
-  const containers = useContainers(undefined, 'user');
+  const containers = useContainers(undefined, '@default');
 
   return (
     <>
@@ -52,7 +52,7 @@ const DataListPage = () => {
         <List>
           {containers
             ?.filter(container => !container.private || developerMode)
-            .map(container => (
+            ?.map(container => (
               <ListItem className={classes.listItem} key={container.uri}>
                 <ListItemButton onClick={() => navigate(`/data/${encodeURIComponent(container.uri)}`)}>
                   <ListItemAvatar>

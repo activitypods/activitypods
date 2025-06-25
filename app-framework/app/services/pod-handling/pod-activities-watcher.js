@@ -21,11 +21,11 @@ module.exports = {
   async started() {
     const nodes = await this.broker.call('triplestore.query', {
       query: `
-        SELECT DISTINCT ?specialRights ?grantedBy
+        SELECT DISTINCT ?specialRights ?actorUri
         WHERE { 
-          ?accessGrant a <http://www.w3.org/ns/solid/interop#AccessGrant> .
-          ?accessGrant <http://activitypods.org/ns/core#hasSpecialRights> ?specialRights .
-          ?accessGrant <http://www.w3.org/ns/solid/interop#grantedBy> ?grantedBy
+          ?appRegistration a <http://www.w3.org/ns/solid/interop#ApplicationRegistration> .
+          ?appRegistration <http://activitypods.org/ns/core#hasSpecialRights> ?specialRights .
+          ?appRegistration <http://www.w3.org/ns/solid/interop#registeredBy> ?actorUri
         }
       `,
       accept: MIME_TYPES.JSON,
@@ -37,14 +37,14 @@ module.exports = {
     this.getQueue('registerListener').clean(0, 'failed');
     this.getQueue('registerListener').empty();
 
-    for (const { grantedBy, specialRights } of nodes) {
+    for (const { actorUri, specialRights } of nodes) {
       try {
         switch (specialRights.value) {
           case 'http://activitypods.org/ns/core#ReadInbox':
             this.createJob(
               'registerListener',
-              grantedBy.value + ' inbox',
-              { actorUri: grantedBy.value, collectionPredicate: 'inbox' },
+              actorUri.value + ' inbox',
+              { actorUri: actorUri.value, collectionPredicate: 'inbox' },
               queueOptions
             );
             break;
@@ -52,14 +52,14 @@ module.exports = {
           case 'http://activitypods.org/ns/core#ReadOutbox':
             this.createJob(
               'registerListener',
-              grantedBy.value + ' outbox',
-              { actorUri: grantedBy.value, collectionPredicate: 'outbox' },
+              actorUri.value + ' outbox',
+              { actorUri: actorUri.value, collectionPredicate: 'outbox' },
               queueOptions
             );
             break;
         }
       } catch (e) {
-        this.logger.warn(`Could not listen to actor ${grantedBy.value}. Error message: ${e.message}`);
+        this.logger.warn(`Could not listen to actor ${actorUri.value}. Error message: ${e.message}`);
       }
     }
 
@@ -153,29 +153,27 @@ module.exports = {
         }
       }
     },
-    async registerListenersBasedOnAccessGrants(ctx) {
-      const { accessGrants } = ctx.params;
+    async registerListenersFromAppRegistration(ctx) {
+      const { appRegistration } = ctx.params;
 
-      for (const accessGrant of accessGrants) {
-        // If we were given the permission to read the inbox, add listener
-        if (arrayOf(accessGrant['apods:hasSpecialRights']).includes('apods:ReadInbox')) {
-          this.createJob(
-            'registerListener',
-            accessGrant['interop:grantedBy'] + ' inbox',
-            { actorUri: accessGrant['interop:grantedBy'], collectionPredicate: 'inbox' },
-            queueOptions
-          );
-        }
+      // If we were given the permission to read the inbox, add listener
+      if (arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:ReadInbox')) {
+        this.createJob(
+          'registerListener',
+          appRegistration['interop:registeredBy'] + ' inbox',
+          { actorUri: appRegistration['interop:registeredBy'], collectionPredicate: 'inbox' },
+          queueOptions
+        );
+      }
 
-        // If we were given the permission to read the inbox, add listener
-        if (arrayOf(accessGrant['apods:hasSpecialRights']).includes('apods:ReadOutbox')) {
-          this.createJob(
-            'registerListener',
-            accessGrant['interop:grantedBy'] + ' outbox',
-            { actorUri: accessGrant['interop:grantedBy'], collectionPredicate: 'outbox' },
-            queueOptions
-          );
-        }
+      // If we were given the permission to read the inbox, add listener
+      if (arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:ReadOutbox')) {
+        this.createJob(
+          'registerListener',
+          appRegistration['interop:registeredBy'] + ' outbox',
+          { actorUri: appRegistration['interop:registeredBy'], collectionPredicate: 'outbox' },
+          appRegistration
+        );
       }
     },
     getHandlers() {

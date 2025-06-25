@@ -1,9 +1,9 @@
+var $fvx3m$reactjsxruntime = require("react/jsx-runtime");
 var $fvx3m$react = require("react");
 var $fvx3m$reactadmin = require("react-admin");
-var $fvx3m$semappsactivitypubcomponents = require("@semapps/activitypub-components");
-var $fvx3m$reactjsxruntime = require("react/jsx-runtime");
 var $fvx3m$muimaterial = require("@mui/material");
 var $fvx3m$muiiconsmaterialError = require("@mui/icons-material/Error");
+var $fvx3m$semappsactivitypubcomponents = require("@semapps/activitypub-components");
 var $fvx3m$urljoin = require("url-join");
 var $fvx3m$httplinkheader = require("http-link-header");
 var $fvx3m$jwtdecode = require("jwt-decode");
@@ -30,6 +30,7 @@ function $parcel$interopDefault(a) {
 $parcel$export(module.exports, "BackgroundChecks", () => $88874b19fd1a9965$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "LoginPage", () => $8c4e86009f42299d$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "RedirectPage", () => $691cae6a20c06149$export$2e2bcd8739ae039);
+$parcel$export(module.exports, "RemoteShareButton", () => $4903061d2059908d$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "ShareButton", () => $c30b6e8e8f4f1d51$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "ShareDialog", () => $8ffb7dd40d703ae5$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "SyncUserLocale", () => $418040ff16c1a946$export$2e2bcd8739ae039);
@@ -216,7 +217,11 @@ var $9a8d0fd57dda054c$export$2e2bcd8739ae039 = $9a8d0fd57dda054c$var$useRegister
         checkAppStatus
     ]);
     (0, $fvx3m$react.useEffect)(()=>{
-        if (localStorage.getItem("redirect")) redirect(localStorage.getItem("redirect"));
+        const redirectUrl = localStorage.getItem("redirect");
+        if (redirectUrl) {
+            localStorage.removeItem("redirect");
+            redirect(redirectUrl);
+        }
     }, [
         redirect
     ]);
@@ -504,6 +509,61 @@ var $8c4e86009f42299d$export$2e2bcd8739ae039 = $8c4e86009f42299d$var$LoginPage;
     return null;
 };
 var $691cae6a20c06149$export$2e2bcd8739ae039 = $691cae6a20c06149$var$RedirectPage;
+
+
+
+
+
+
+// Share by redirecting to the user's Authorization Agent
+// To open a modal inside the app, use the ShareButton instead
+const $4903061d2059908d$var$RemoteShareButton = ({ clientId: clientId, ...rest })=>{
+    const dataProvider = (0, $fvx3m$reactadmin.useDataProvider)();
+    const record = (0, $fvx3m$reactadmin.useRecordContext)();
+    const { data: identity, isLoading: isLoading } = (0, $fvx3m$reactadmin.useGetIdentity)();
+    const [authAgent, setAuthAgent] = (0, $fvx3m$react.useState)();
+    const [isAuthAgentLoading, setIsAuthAgentLoading] = (0, $fvx3m$react.useState)(false);
+    (0, $fvx3m$react.useEffect)(()=>{
+        if (!isAuthAgentLoading && !authAgent && record?.["dc:creator"] === identity?.id) {
+            const authAgentUri = identity?.webIdData?.["interop:hasAuthorizationAgent"];
+            if (authAgentUri) {
+                setIsAuthAgentLoading(true);
+                dataProvider.fetch(authAgentUri).then(({ json: json })=>{
+                    setAuthAgent(json);
+                    setIsAuthAgentLoading(false);
+                });
+            }
+        }
+    }, [
+        identity,
+        record,
+        dataProvider,
+        authAgent,
+        setAuthAgent,
+        isAuthAgentLoading,
+        setIsAuthAgentLoading
+    ]);
+    const onClick = (0, $fvx3m$react.useCallback)(()=>{
+        // Save current path, so that the BackgroundChecks component may redirect there after registration
+        localStorage.setItem("redirect", window.location.pathname);
+        const redirectUrl = new URL(authAgent?.["interop:hasAuthorizationRedirectEndpoint"]);
+        redirectUrl.searchParams.append("client_id", clientId);
+        redirectUrl.searchParams.append("resource", record?.id);
+        window.location.href = redirectUrl.toString();
+    }, [
+        authAgent,
+        clientId,
+        record
+    ]);
+    if (isLoading || isAuthAgentLoading || !authAgent || !record || record?.["dc:creator"] !== identity?.id) return null;
+    return /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$reactadmin.Button), {
+        onClick: onClick,
+        startIcon: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, ($parcel$interopDefault($fvx3m$muiiconsmaterialShare))), {}),
+        label: "apods.action.share",
+        ...rest
+    });
+};
+var $4903061d2059908d$export$2e2bcd8739ae039 = $4903061d2059908d$var$RemoteShareButton;
 
 
 
@@ -981,39 +1041,21 @@ const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resource
     ]);
     const sendInvitations = (0, $fvx3m$react.useCallback)(async ()=>{
         setSendingInvitation(true);
-        const actorsWithNewViewRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canView && !savedInvitations[actorUri]?.canView);
-        if (actorsWithNewViewRight.length > 0) {
-            if (isCreator) outbox.post({
-                type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
-                actor: outbox.owner,
-                object: resourceUri,
-                target: actorsWithNewViewRight,
-                to: actorsWithNewViewRight
-            });
-            else // Offer the organizer to invite these people
-            outbox.post({
-                type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).OFFER,
-                actor: outbox.owner,
-                object: {
-                    type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
-                    actor: outbox.owner,
-                    object: resourceUri,
-                    target: actorsWithNewViewRight
-                },
-                target: record["dc:creator"],
-                to: record["dc:creator"]
-            });
-        }
+        const actorsWithNewViewRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canView && !newInvitations[actorUri].canShare);
+        if (actorsWithNewViewRight.length > 0) outbox.post({
+            type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
+            actor: outbox.owner,
+            object: resourceUri,
+            to: actorsWithNewViewRight
+        });
         const actorsWithNewShareRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canShare);
         if (actorsWithNewShareRight.length > 0) outbox.post({
-            type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).OFFER,
+            type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
             actor: outbox.owner,
-            object: {
-                type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
-                object: resourceUri
-            },
-            target: actorsWithNewShareRight,
-            to: actorsWithNewShareRight
+            object: resourceUri,
+            to: actorsWithNewShareRight,
+            "interop:delegationAllowed": true,
+            "interop:delegationLimit": 1
         });
         notify("apods.notification.invitation_sent", {
             type: "success",

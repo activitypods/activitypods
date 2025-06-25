@@ -11,7 +11,28 @@ module.exports = {
     newResourcesPermissions: {}
   },
   actions: {
-    // Delete cached AccessGrants which are not linked anymore to an AccessNeedGroup (may happen on app upgrade)
+    async getContainerByShapeTree(ctx) {
+      const { shapeTreeUri, podOwner } = ctx.params;
+
+      const app = await ctx.call('app.get');
+      const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
+
+      const filteredContainer = await this.actions.list(
+        {
+          containerUri,
+          filters: {
+            'http://www.w3.org/ns/solid/interop#registeredShapeTree': shapeTreeUri,
+            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
+            'http://www.w3.org/ns/solid/interop#grantee': app.id
+          },
+          webId: 'system'
+        },
+        { parentCtx: ctx }
+      );
+
+      return filteredContainer['ldp:contains']?.[0]?.['interop:hasDataRegistration'];
+    },
+    // Delete cached grants which are not linked anymore to an access need (may happen on app upgrade)
     async deleteOrphans(ctx) {
       const { podOwner } = ctx.params;
 
@@ -20,21 +41,21 @@ module.exports = {
       const container = await this.actions.list(
         {
           filters: {
-            'http://www.w3.org/ns/solid/interop#grantedBy': podOwner,
+            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
             'http://www.w3.org/ns/solid/interop#grantee': app.id
           }
         },
         { parentCtx: ctx }
       );
 
-      for (const accessGrant of arrayOf(container?.['ldp:contains'])) {
-        const accessNeedGroupExist = await ctx.call('access-needs-groups.exist', {
-          resourceUri: accessGrant['interop:hasAccessNeedGroup'],
+      for (const accessGrant of arrayOf(container['ldp:contains'])) {
+        const accessNeedExist = await ctx.call('access-needs.exist', {
+          resourceUri: accessGrant['interop:satisfiesAccessNeed'],
           webId: podOwner
         });
-        if (!accessNeedGroupExist) {
+        if (!accessNeedExist) {
           this.logger.info(
-            `Deleting cached access grant ${accessGrant.id} as it is not linked anymore with an existing access need group...`
+            `Deleting cached access grant ${accessGrant.id} as it is not linked anymore with an existing access need...`
           );
           await this.actions.delete({ resourceUri: accessGrant.id, webId: podOwner });
         }

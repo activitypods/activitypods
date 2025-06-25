@@ -112,8 +112,10 @@ const BackgroundChecks: FunctionComponent<Props> = ({ clientId, listeningTo = []
   }, [identity, nodeinfo, checkAppStatus]);
 
   useEffect(() => {
-    if (localStorage.getItem('redirect')) {
-      redirect(localStorage.getItem('redirect')!);
+    const redirectUrl = localStorage.getItem('redirect');
+    if (redirectUrl) {
+      localStorage.removeItem('redirect');
+      redirect(redirectUrl);
     }
   }, [redirect]);
 

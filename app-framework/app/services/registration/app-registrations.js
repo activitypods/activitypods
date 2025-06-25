@@ -26,28 +26,9 @@ module.exports = {
       });
 
       const accessGrants = await Promise.all(
-        arrayOf(appRegistration['interop:hasAccessGrant']).map(accessGrantUri =>
+        arrayOf(appRegistration['interop:hasAccessGrant']).map(grantUri =>
           ctx.call('ldp.remote.get', {
-            resourceUri: accessGrantUri,
-            jsonContext,
-            accept: MIME_TYPES.JSON
-          })
-        )
-      );
-
-      const dataGrantsUris = accessGrants.reduce(
-        (acc, cur) => (cur['interop:hasDataGrant'] ? [...acc, ...arrayOf(cur['interop:hasDataGrant'])] : acc),
-        []
-      );
-      const specialRightsUris = accessGrants.reduce(
-        (acc, cur) => (cur['apods:hasSpecialRights'] ? [...acc, ...arrayOf(cur['apods:hasSpecialRights'])] : acc),
-        []
-      );
-
-      const dataGrants = await Promise.all(
-        dataGrantsUris.map(dataGrantUri =>
-          ctx.call('ldp.remote.get', {
-            resourceUri: dataGrantUri,
+            resourceUri: grantUri,
             jsonContext,
             accept: MIME_TYPES.JSON
           })
@@ -67,14 +48,14 @@ module.exports = {
       const accessNeedsSatisfied = requiredAccessNeedGroups.every(
         group =>
           arrayOf(group['interop:hasAccessNeed']).every(accessNeedUri =>
-            dataGrants.some(dataGrant => dataGrant['interop:satisfiesAccessNeed'] === accessNeedUri)
+            accessGrants.some(grant => grant['interop:satisfiesAccessNeed'] === accessNeedUri)
           ) &&
           arrayOf(group['interop:hasSpecialRights']).every(specialRightUri =>
-            specialRightsUris.some(sr => sr === specialRightUri)
+            appRegistration['apods:hasSpecialRights'].some(sr => sr === specialRightUri)
           )
       );
 
-      return { accessNeedsSatisfied, appRegistration, accessGrants, dataGrants };
+      return { accessNeedsSatisfied, appRegistration, accessGrants };
     },
     async getForActor(ctx) {
       const { actorUri } = ctx.params;
@@ -102,21 +83,7 @@ module.exports = {
       async delete(ctx, res) {
         const appRegistration = res.oldData;
 
-        // DELETE ALL RELATED GRANTS
-
         for (const accessGrantUri of arrayOf(appRegistration['interop:hasAccessGrant'])) {
-          const accessGrant = await ctx.call('access-grants.get', {
-            resourceUri: accessGrantUri,
-            webId: 'system'
-          });
-
-          for (const dataGrantUri of arrayOf(accessGrant['interop:hasDataGrant'])) {
-            await ctx.call('data-grants.delete', {
-              resourceUri: dataGrantUri,
-              webId: 'system'
-            });
-          }
-
           await ctx.call('access-grants.delete', {
             resourceUri: accessGrantUri,
             webId: 'system'

@@ -6,7 +6,7 @@ module.exports = {
   settings: {
     baseUrl: CONFIG.BASE_URL,
     podProvider: true,
-    resourcesWithContainerPath: false,
+    resourcesWithContainerPath: process.env.NODE_ENV === 'test', // In tests, keep the path to make it easier to know what URIs are referring to
     defaultContainerOptions: {
       permissions: {},
       newResourcesPermissions: {}

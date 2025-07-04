@@ -47,7 +47,8 @@ module.exports = {
             const existingAccessNeed = await ctx.call('access-needs.find', {
               shapeTreeUri: accessNeed.shapeTreeUri,
               accessMode: accessNeed.accessMode,
-              necessity
+              necessity,
+              preferredScope: accessNeed.preferredScope || 'interop:All'
             });
 
             if (existingAccessNeed) {
@@ -60,7 +61,8 @@ module.exports = {
                   '@type': 'interop:AccessNeed',
                   'interop:registeredShapeTree': accessNeed.shapeTreeUri,
                   'interop:accessMode': accessNeed.accessMode,
-                  'interop:accessNecessity': necessityMapping[necessity]
+                  'interop:accessNecessity': necessityMapping[necessity],
+                  'interop:preferredScope': accessNeed.preferredScope || 'interop:All'
                 },
                 contentType: MIME_TYPES.JSON,
                 webId: 'system'

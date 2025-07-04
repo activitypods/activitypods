@@ -1,10 +1,34 @@
 const urlJoin = require('url-join');
+const LinkHeader = require('http-link-header');
+const { MoleculerError } = require('moleculer').Errors;
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { getDatasetFromUri, hasType, isURL } = require('@semapps/ldp');
 
 module.exports = {
   name: 'data-registrations',
+  dependencies: ['ldp.link-header'],
+  async started() {
+    await this.broker.call('ldp.link-header.register', { actionName: 'data-registrations.getLink' });
+  },
   actions: {
+    async get(ctx) {
+      const { dataRegistrationUri } = ctx.params;
+
+      return await ctx.call(
+        'ldp.container.get',
+        {
+          containerUri: dataRegistrationUri,
+          accept: MIME_TYPES.JSON,
+          webId: 'system',
+          doNotIncludeResources: true
+        },
+        {
+          meta: {
+            dataset: getDatasetFromUri(dataRegistrationUri)
+          }
+        }
+      );
+    },
     /**
      * Create a DataRegistration AND a LDP container in a given storage
      */
@@ -32,12 +56,15 @@ module.exports = {
       await ctx.call('ldp.container.createAndAttach', { containerUri, webId: podOwner });
 
       // Register the class on the type index
-      await ctx.call('type-registrations.register', {
-        types: [registeredClass],
-        containerUri,
-        webId: podOwner,
-        private: false
-      });
+      const services = await this.broker.call('$node.services');
+      if (services.some(s => s.name === 'type-registrations')) {
+        await ctx.call('type-registrations.register', {
+          types: [registeredClass],
+          containerUri,
+          webId: podOwner,
+          private: false
+        });
+      }
 
       await this.actions.attachToContainer({ shapeTreeUri, containerUri, podOwner }, { parentCtx: ctx });
 
@@ -117,7 +144,7 @@ module.exports = {
       }
     },
     /**
-     * Get the DataRegistration linked with a shape tree
+     * Get the DataRegistration URI linked with a shape tree
      */
     async getByShapeTree(ctx) {
       const { shapeTreeUri, podOwner } = ctx.params;
@@ -138,6 +165,69 @@ module.exports = {
       });
 
       return results[0]?.dataRegistrationUri?.value;
+    },
+    /**
+     * Get the data registration URI of a resource
+     */
+    async getUriByResourceUri(ctx) {
+      const { resourceUri } = ctx.params;
+      const webId = ctx.params.webId || ctx.meta.webId;
+
+      const baseUrl = await ctx.call('ldp.getBaseUrl');
+
+      if (resourceUri.startsWith(baseUrl)) {
+        const results = await ctx.call('triplestore.query', {
+          query: `
+            PREFIX ldp: <http://www.w3.org/ns/ldp#>
+            PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+            SELECT ?dataRegistrationUri
+            WHERE {
+              ?dataRegistrationUri ldp:contains <${resourceUri}> .
+              ?dataRegistrationUri a interop:DataRegistration .
+            }
+          `,
+          accept: MIME_TYPES.JSON,
+          webId: 'system',
+          dataset: getDatasetFromUri(resourceUri)
+        });
+
+        return results[0]?.dataRegistrationUri?.value;
+      } else {
+        if (!webId)
+          throw new Error(`A webId is required to find the data registration of remote resource ${resourceUri}`);
+
+        const response = await ctx.call('signature.proxy.query', {
+          url: resourceUri,
+          method: 'HEAD',
+          actorUri: webId
+        });
+
+        const linkHeader = LinkHeader.parse(response.headers.link);
+        const dataRegistrationLinkHeader = linkHeader.rel('http://www.w3.org/ns/solid/interop#hasDataRegistration');
+
+        if (dataRegistrationLinkHeader.length > 0) {
+          return dataRegistrationLinkHeader[0].uri;
+        }
+      }
+    },
+    /**
+     * Get the data registration of a resource
+     */
+    async getByResourceUri(ctx) {
+      const { resourceUri } = ctx.params;
+      const webId = ctx.params.webId || ctx.meta.webId;
+
+      const dataRegistrationUri = await this.actions.getUriByResourceUri({ resourceUri, webId }, { parentCtx: ctx });
+
+      if (dataRegistrationUri) {
+        return await this.actions.get({ dataRegistrationUri }, { parentCtx: ctx });
+      } else {
+        throw new MoleculerError(
+          `Data registration not found for resource ${resourceUri} (webId ${webId}, dataset ${ctx.meta.dataset})`,
+          404,
+          'NOT_FOUND'
+        );
+      }
     },
     async registerOntologyFromClass(ctx) {
       const { registeredClass } = ctx.params;
@@ -172,6 +262,18 @@ module.exports = {
       if (!ontology) throw new Error(`Could not register ontology for resource type ${registeredClass}`);
 
       return ontology;
+    },
+    async getLink(ctx) {
+      const { uri } = ctx.params;
+
+      const dataRegistrationUri = await this.actions.getUriByResourceUri({ resourceUri: uri }, { parentCtx: ctx });
+
+      if (dataRegistrationUri) {
+        return {
+          uri: dataRegistrationUri,
+          rel: 'http://www.w3.org/ns/solid/interop#hasDataRegistration'
+        };
+      }
     }
   },
   events: {

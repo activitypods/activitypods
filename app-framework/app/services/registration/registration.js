@@ -14,7 +14,10 @@ module.exports = {
         }
       },
       async onReceive(ctx, activity) {
-        // ENSURE THE APP IS NOT ALREADY REGISTERED
+        if (activity.object['interop:registeredBy'] !== activity.actor)
+          throw new Error(`The emitter is not the owner of the application registration`);
+
+        // DELETE ANY EXISTING REGISTRATION (so that we don't get blocked)
 
         const filteredContainer = await ctx.call('app-registrations.list', {
           filters: {
@@ -24,19 +27,19 @@ module.exports = {
         });
 
         if (filteredContainer['ldp:contains'].length > 0) {
-          throw new MoleculerError(
-            `User already has an application registration. Update or delete it.`,
-            400,
-            'BAD REQUEST'
-          );
+          for (const appRegistration of filteredContainer['ldp:contains']) {
+            await ctx.call('app-registrations.delete', {
+              resourceUri: appRegistration.id || appRegistration['@id'],
+              webId: 'system'
+            });
+          }
         }
 
         // CHECK ACCESS NEEDS ARE SATISFIED
 
-        const { accessNeedsSatisfied, appRegistration, accessGrants, dataGrants } = await ctx.call(
-          'app-registrations.verify',
-          { appRegistrationUri: activity.object.id }
-        );
+        const { accessNeedsSatisfied, appRegistration, accessGrants } = await ctx.call('app-registrations.verify', {
+          appRegistrationUri: activity.object.id
+        });
 
         if (!accessNeedsSatisfied) {
           throw new MoleculerError('One or more required access needs have not been granted', 400, 'BAD REQUEST');
@@ -52,14 +55,9 @@ module.exports = {
           await ctx.call('access-grants.attach', { resourceUri: accessGrant.id || accessGrant['@id'] });
         }
 
-        for (const dataGrant of dataGrants) {
-          await ctx.call('ldp.remote.store', { resource: dataGrant });
-          await ctx.call('data-grants.attach', { resourceUri: dataGrant.id || dataGrant['@id'] });
-        }
-
         // REGISTER LISTENERS
 
-        await ctx.call('pod-activities-watcher.registerListenersBasedOnAccessGrants', { accessGrants });
+        await ctx.call('pod-activities-watcher.registerListenersFromAppRegistration', { appRegistration });
       }
     },
     updateAppRegistration: {
@@ -89,10 +87,9 @@ module.exports = {
 
         // CHECK ACCESS NEEDS ARE STILL SATISFIED
 
-        const { accessNeedsSatisfied, appRegistration, accessGrants, dataGrants } = await ctx.call(
-          'app-registrations.verify',
-          { appRegistrationUri: activity.object.id }
-        );
+        const { accessNeedsSatisfied, appRegistration, accessGrants } = await ctx.call('app-registrations.verify', {
+          appRegistrationUri: activity.object.id
+        });
 
         if (!accessNeedsSatisfied) {
           throw new MoleculerError('One or more required access needs have not been granted', 400, 'BAD REQUEST');
@@ -108,30 +105,23 @@ module.exports = {
           await ctx.call('access-grants.attach', { resourceUri: accessGrant.id || accessGrant['@id'] });
         }
 
-        for (const dataGrant of dataGrants) {
-          // If the data grant is already cached, this will update the cache
-          await ctx.call('ldp.remote.store', { resource: dataGrant });
-          await ctx.call('data-grants.attach', { resourceUri: dataGrant.id || dataGrant['@id'] });
-        }
-
         // Remove any grant that is not linked anymore to an access need
         await ctx.call('access-grants.deleteOrphans', { podOwner: activity.actor });
-        await ctx.call('data-grants.deleteOrphans', { podOwner: activity.actor });
 
-        await ctx.emit('app.upgraded', { appRegistration, accessGrants, dataGrants });
+        await ctx.emit('app.upgraded', { appRegistration, accessGrants });
       }
     },
     deleteAppRegistration: {
       match: {
         type: ACTIVITY_TYPES.DELETE,
         object: {
-          type: 'interop:ApplicationRegistration'
+          type: 'interop:ApplicationRegistration' // The matcher will fetch the local cache
         }
       },
       async onReceive(ctx, activity) {
-        const appRegistration = await ctx.call('app-registrations.getForActor', { actorUri: activity.actor });
+        const appRegistration = activity.object;
 
-        // This will also delete the associated access grants and data grants
+        // This will also delete the associated access grants
         await ctx.call('app-registrations.delete', {
           resourceUri: appRegistration.id || appRegistration['@id'],
           webId: 'system'

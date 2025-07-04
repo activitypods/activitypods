@@ -8,7 +8,6 @@ import { isLocalURL } from '../../utils';
 
 const ApplicationsPage = () => {
   const { identity } = useCheckAuthenticated();
-  const translate = useTranslate();
   const { data: registeredApps, isLoading: isRegisteredAppsLoading } = useGetList('App', {
     page: 1,
     perPage: Infinity

@@ -80,7 +80,7 @@ module.exports = {
       },
       async onReceive(ctx, activity, recipientUri) {
         // TODO Allow to user to disable notifications from given applications
-        // if (!(await ctx.call('app-registrations.isRegistered', { appUri: activity.actor, podOwner: recipientUri }))) {
+        // if (!(await ctx.call('app-registrations.isRegistered', { agentUri: activity.actor, podOwner: recipientUri }))) {
         //   this.logger.warn(`Application ${activity.actor} is not registered by ${recipientUri}`);
         //   return;
         // }

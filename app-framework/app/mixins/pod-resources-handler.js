@@ -41,7 +41,7 @@ module.exports = {
       return await ctx.call('pod-resources.delete', ctx.params);
     },
     async getContainerUri(ctx) {
-      return await ctx.call('data-grants.getContainerByShapeTree', {
+      return await ctx.call('access-grants.getContainerByShapeTree', {
         shapeTreeUri: this.settings.shapeTreeUri,
         podOwner: ctx.params.actorUri
       });

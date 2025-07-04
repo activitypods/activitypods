@@ -1,7 +1,7 @@
 const urlJoin = require('url-join');
 const waitForExpect = require('wait-for-expect');
 const { MIME_TYPES } = require('@semapps/mime-types');
-const { connectPodProvider, clearAllData, installApp, initializeAppServer } = require('./initialize');
+const { connectPodProvider, clearAllData, installApp, createActor, initializeAppServer } = require('./initialize');
 const ExampleAppService = require('./apps/example.app');
 const ExampleAppV2Service = require('./apps/example-v2.app');
 const CONFIG = require('./config');
@@ -11,31 +11,17 @@ jest.setTimeout(80000);
 const APP_URI = 'http://localhost:3001/app';
 
 describe('Test app upgrade', () => {
-  let podProvider, alice, appServer, oldApp, app, requiredAccessNeedGroup;
+  let podProvider, alice, appServer, oldApp, app, requiredAccessNeedGroup, optionalAccessNeedGroup;
 
   beforeAll(async () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
 
-    const actorData = require(`./data/actor1.json`);
-    const { webId } = await podProvider.call('auth.signup', actorData);
-    alice = await podProvider.call(
-      'activitypub.actor.awaitCreateComplete',
-      {
-        actorUri: webId,
-        additionalKeys: ['url']
-      },
-      { meta: { dataset: actorData.username } }
-    );
-    alice.call = (actionName, params, options = {}) =>
-      podProvider.call(actionName, params, {
-        ...options,
-        meta: { ...options.meta, webId, dataset: alice.preferredUsername }
-      });
-
     appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
     await appServer.start();
+
+    alice = await createActor(podProvider, 'alice');
 
     await installApp(alice, APP_URI);
   }, 80000);
@@ -72,9 +58,8 @@ describe('Test app upgrade', () => {
     // The access need groups URIs have changed after upgrade (for the required access needs)
     expect(app['interop:hasAccessNeedGroup']).not.toEqual(oldApp['interop:hasAccessNeedGroup']);
 
-    let accessNeedGroup;
     for (const accessNeedUri of app['interop:hasAccessNeedGroup']) {
-      accessNeedGroup = await appServer.call('ldp.resource.get', {
+      const accessNeedGroup = await appServer.call('ldp.resource.get', {
         resourceUri: accessNeedUri,
         accept: MIME_TYPES.JSON
       });
@@ -112,7 +97,7 @@ describe('Test app upgrade', () => {
 
   test('User upgrade and accept all required access needs', async () => {
     await expect(
-      alice.call('auth-agent.upgradeApp', {
+      alice.call('registration-endpoint.upgrade', {
         appUri: APP_URI,
         acceptedAccessNeeds: requiredAccessNeedGroup['interop:hasAccessNeed'],
         acceptedSpecialRights: requiredAccessNeedGroup['apods:hasSpecialRights']

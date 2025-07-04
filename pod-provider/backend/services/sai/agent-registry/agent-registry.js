@@ -1,6 +1,8 @@
 const { triple, namedNode } = require('@rdfjs/data-model');
 const { SingleResourceContainerMixin } = require('@semapps/ldp');
 
+const ALLOWED_TYPES = ['interop:ApplicationRegistration', 'interop:SocialAgentRegistration'];
+
 module.exports = {
   name: 'agent-registry',
   mixins: [SingleResourceContainerMixin],
@@ -11,10 +13,11 @@ module.exports = {
   dependencies: ['registry-set'],
   actions: {
     async add(ctx) {
-      const { podOwner, appRegistrationUri, socialAgentRegistrationUri } = ctx.params;
+      const { podOwner, agentRegistrationUri, agentRegistrationType } = ctx.params;
 
-      if (!appRegistrationUri && !socialAgentRegistrationUri)
-        throw new Error(`The params appRegistrationUri or socialAgentRegistrationUri are required`);
+      if (!ALLOWED_TYPES.includes(agentRegistrationType)) {
+        throw new Error(`The agentRegistrationType param must be ${ALLOWED_TYPES.join(' or ')}`);
+      }
 
       const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
 
@@ -25,11 +28,11 @@ module.exports = {
             triple(
               namedNode(agentRegistryUri),
               namedNode(
-                appRegistrationUri
+                agentRegistrationType === 'interop:ApplicationRegistration'
                   ? 'http://www.w3.org/ns/solid/interop#hasApplicationRegistration'
                   : 'http://www.w3.org/ns/solid/interop#hasSocialAgentRegistration'
               ),
-              namedNode(appRegistrationUri || socialAgentRegistrationUri)
+              namedNode(agentRegistrationUri)
             )
           ],
           webId: 'system'
@@ -38,11 +41,11 @@ module.exports = {
       );
     },
     async remove(ctx) {
-      const { podOwner, appRegistrationUri, socialAgentRegistrationUri } = ctx.params;
+      const { podOwner, agentRegistrationUri, agentRegistrationType } = ctx.params;
 
-      if (!appRegistrationUri && !socialAgentRegistrationUri)
-        throw new Error(`The params appRegistrationUri or socialAgentRegistrationUri are required`);
-
+      if (!ALLOWED_TYPES.includes(agentRegistrationType)) {
+        throw new Error(`The agentRegistrationType param must be ${ALLOWED_TYPES.join(' or ')}`);
+      }
       const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
 
       await this.actions.patch(
@@ -52,11 +55,11 @@ module.exports = {
             triple(
               namedNode(agentRegistryUri),
               namedNode(
-                appRegistrationUri
+                agentRegistrationType === 'interop:ApplicationRegistration'
                   ? 'http://www.w3.org/ns/solid/interop#hasApplicationRegistration'
                   : 'http://www.w3.org/ns/solid/interop#hasSocialAgentRegistration'
               ),
-              namedNode(appRegistrationUri || socialAgentRegistrationUri)
+              namedNode(agentRegistrationUri)
             )
           ],
           webId: 'system'

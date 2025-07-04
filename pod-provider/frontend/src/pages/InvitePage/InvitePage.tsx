@@ -1,13 +1,15 @@
-import React, { useGetIdentity, useGetOne, useNotify, useTranslate } from 'react-admin';
+import React, { useDataProvider, useGetIdentity, useNotify, useTranslate } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ACTIVITY_TYPES, useOutbox } from '@semapps/activitypub-components';
+import { ACTIVITY_TYPES, OBJECT_TYPES, useOutbox } from '@semapps/activitypub-components';
 import { Box, CircularProgress } from '@mui/material';
 import InvitePageViewLoggedOut from './InvitePageViewLoggedOut';
 import InvitePageViewLoggedIn from './InvitePageViewLoggedIn';
 import InvitePageSuccess from './InvitePageSuccess';
 import InvitePageProviderSelect from './InvitePageProviderSelect';
 import SimpleBox from '../../layout/SimpleBox';
+import { arrayOf, createPresentation, fetchCapabilityResources } from '../../utils';
+import { SemanticDataProvider } from '@semapps/semantic-data-provider';
 
 /** The URI is expected to be encoded in the URI fragment in the SearchParams format. */
 const getCapabilityUri = (location: Location) => {
@@ -26,44 +28,52 @@ const InvitePage = () => {
   const navigate = useNavigate();
   const translate = useTranslate();
   const capabilityUri = getCapabilityUri(window.location)!;
+  const { fetch: fetchFn, getConfig } = useDataProvider<SemanticDataProvider>();
+
   const [showSuccess, setShowSuccess] = useState(false);
   const [showProviderSelect, setShowProviderSelect] = useState(false as false | 'login' | 'signup');
   const [inviterProfile, setInviterProfile] = useState(null as null | Record<string, unknown>);
   const notify = useNotify();
   const { data: identity } = useGetIdentity();
   const ownProfile = identity?.profileData;
-  const { data: capability, error: capabilityFetchError } = useGetOne('Capability', { id: capabilityUri });
 
   const outbox = useOutbox();
 
-  if (!capabilityUri) {
-    notify('app.notification.invite_cap_invalid', { type: 'error' });
-    navigate('/');
-  }
-  if (capabilityFetchError) {
-    notify('app.notification.invite_cap_fetch_error', {
-      type: 'error',
-      messageArgs: { error: JSON.stringify(capabilityFetchError) }
-    });
-    navigate('/');
-  }
-
-  // Fetch the inviter profile, once the capability document (with the inviter's profile URI) is available.
+  // Fetch the inviter profile and photo..
   useEffect(() => {
-    if (capability) {
-      fetch(capability['acl:accessTo'] as string, {
-        headers: { Accept: 'application/ld+json', Authorization: `Capability ${capabilityUri}` }
-      })
-        .then(async response => response.json())
-        .then(profile => {
-          setInviterProfile(profile);
-        })
-        .catch((err: Error) => {
-          notify('app.notification.invite_cap_profile_fetch_error', { error: err.message });
-          navigate('/');
-        });
+    if (!capabilityUri) {
+      notify('app.notification.invite_cap_invalid', {
+        type: 'error',
+        multiLine: true,
+        messageArgs: { error: 'No capability available' }
+      });
+      navigate('/');
+      return;
     }
-  }, [capability]);
+
+    fetchCapabilityResources(capabilityUri)
+      .then(resources => {
+        const imageBlob: Blob = resources.find(resource => resource.type?.includes('image/'));
+        const profileDoc = resources.find(resource => arrayOf(resource.type).includes('Profile'));
+
+        if (imageBlob && profileDoc) {
+          // Set the profile image as blob URI manually, sorry a bit hacky.
+          // We have to do this because setting the regular image URI would fail
+          // since the image needs to be fetched with the capability authorization.
+          profileDoc['vcard:photo'] = URL.createObjectURL(imageBlob);
+        }
+
+        setInviterProfile(profileDoc);
+      })
+      .catch((err: Error) => {
+        notify('app.notification.invite_cap_invalid', {
+          type: 'error',
+          messageArgs: { error: err.message },
+          multiLine: true
+        });
+        navigate('/');
+      });
+  }, []);
 
   // There are multiple page options depending on the current state:
   // 1. Logged out => show invite page
@@ -88,19 +98,25 @@ const InvitePage = () => {
 
   // Logged in and inviter profile fetched.
   if (identity?.id && inviterProfile && ownProfile) {
-    const onConnectClick = () => {
+    const onConnectClick = async () => {
+      const capability = await createPresentation({
+        fetchFn,
+        holder: identity.id as string,
+        verifier: inviterProfile.describes as string,
+        verifiableCredential: capabilityUri
+      });
       outbox
         .post({
-          '@context': 'https://activitypods.org/context.json',
+          '@context': (await getConfig()).jsonContext,
           type: ACTIVITY_TYPES.OFFER,
           actor: identity.id,
-          to: inviterProfile.describes,
           target: inviterProfile.describes,
+          to: inviterProfile.describes,
           object: {
             type: ACTIVITY_TYPES.ADD,
             object: ownProfile.id
           },
-          'sec:capability': capabilityUri
+          capability: capability
         })
         .then(() => {
           notify('app.notification.connection_accepted');

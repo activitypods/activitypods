@@ -61,15 +61,15 @@ yarn install
 yarn start
 ```
 
-It is now available on http://localhost:8000. You can see an example shape on http://localhost:8000/shapetrees/as/Event
+It is now available on http://localhost:30916. You can see an example shape on http://localhost:30916/shapetrees/as/Event
 
 ### Using the local shape repository
 
 By default, the Pod provider and application use the public shape repository located at https://shapes.activitypods.org. To use your new local shape repository, you need to change some environment variables. Attention: to make sure you stay alert, they are all named differently ;)
 
-- Create an `.env.local` in the root directory and add this variable: `SHAPE_REPOSITORY_URL=http://localhost:8000`
-- Create an `.env.local` file in the `/backend` directory and add this variable: `SEMAPPS_SHAPE_REPOSITORY_URL=http://localhost:8000`
-- Create an `.env.local` file in the `/frontend` directory and add this variable: `VITE_SHAPE_REPOSITORY_URL=http://localhost:8000`
+- Create an `.env.local` in the root directory and add this variable: `SHAPE_REPOSITORY_URL=http://localhost:30916`
+- Create an `.env.local` file in the `/backend` directory and add this variable: `SEMAPPS_SHAPE_REPOSITORY_URL=http://localhost:30916`
+- Create an `.env.local` file in the `/frontend` directory and add this variable: `VITE_SHAPE_REPOSITORY_URL=http://localhost:30916`
 
 You will then need to restart the pod provider and your application for the new environment variables to take effect. If you have already created a user, we recommend starting over with a new user and storage to use your local repo.
 

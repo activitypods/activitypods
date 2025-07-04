@@ -9,6 +9,7 @@ module.exports = {
       add_contact: 'Add contact',
       add_location: 'Add an address',
       copy: 'Copy to clipboard',
+      create_invite_link: 'Create Invite Link',
       edit_profile: 'Edit my profile',
       edit_public_profile: 'Edit public profile',
       edit_private_profile: 'Edit private profile',
@@ -130,7 +131,7 @@ module.exports = {
     card: {
       add_contact: 'Add a contact',
       contact_requests: 'Contact requests',
-      share_contact: 'My contact link'
+      share_contact: 'Create contact link'
     },
     block: {
       contact_requests: 'New contact requests'
@@ -157,7 +158,7 @@ module.exports = {
       message_profile_show_right:
         'Sending a message to %{username} will give him/her the right to see your profile, in order to be able to respond.',
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',
-      share_contact: 'To connect with someone you know, you can send them the link below.',
+      share_contact: 'To connect with someone you know, you can create a link below.',
       location_comment: 'Additional information to help find this place',
       login: 'Sign in to your personal space',
       signup: 'Create your personal space',
@@ -188,6 +189,8 @@ module.exports = {
     },
     message: {
       copied_to_clipboard: 'Copied !',
+      loading_invite_link: 'Loading...',
+      loading_invite_link_failed: 'Loading failed',
       no_condition: 'None',
       you_participated_to_same_event: 'You participated to the same event',
       verified_app: 'Verified application',
@@ -236,12 +239,14 @@ module.exports = {
       home_address_deleted: 'Home address deleted',
       send_request_error: 'Error while sending the request: %{error}',
       connection_accepted: 'You accepted the connection request.',
-      invite_cap_invalid: 'The invite link is not valid',
-      invite_cap_fetch_error: 'Error ocurred while fetching the invitation. It might not be valid. Error: %{error}',
+      invite_cap_invalid: 'The invite link is not valid. Error:\n%{error}',
+      invite_cap_fetch_error: 'Error occurred while fetching the invitation. It might not be valid. Error: %{error}',
       invite_cap_missing: 'Unable to generate an invite link (missing capability)',
       invite_cap_profile_fetch_error: 'Error while fetching the profile associated with the invite link.',
       pod_provider_fetch_error: 'Error while looking for other pod providers: %{error}',
+      contact_link_creation_failed: 'Creating the contact link failed: %{error}',
       contact_link_copied: 'Contact link copied successfully',
+      contact_link_copying_failed: 'Copying contact link failed. Please manually copy it: \n%{link}',
       already_connected: 'You are already connected with the person who invited you.',
       export_failed: 'The export failed: %{error}'
     },

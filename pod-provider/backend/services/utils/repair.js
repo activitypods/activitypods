@@ -93,7 +93,7 @@ module.exports = {
         const registeredContainers = await ctx.call('ldp.registry.list');
         for (const container of Object.values(registeredContainers)) {
           const containerUri = urlJoin(storageUrl, container.path);
-          const containerExist = await ctx.call('ldp.container.exist', { containerUri, webId });
+          const containerExist = await ctx.call('ldp.container.exist', { containerUri });
           if (!containerExist) {
             this.logger.info(`Container ${containerUri} doesn't exist yet. Creating it...`);
             await ctx.call('ldp.container.createAndAttach', {

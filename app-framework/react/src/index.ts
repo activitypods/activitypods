@@ -2,6 +2,7 @@
 export { default as BackgroundChecks } from './components/BackgroundChecks';
 export { default as LoginPage } from './components/LoginPage';
 export { default as RedirectPage } from './components/RedirectPage';
+export { default as RemoteShareButton } from './components/RemoteShareButton';
 export { default as ShareButton } from './components/ShareButton/ShareButton';
 export { default as ShareDialog } from './components/ShareButton/ShareDialog';
 export { default as SyncUserLocale } from './components/SyncUserLocale';

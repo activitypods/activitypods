@@ -1,7 +1,8 @@
 const { getDatasetFromUri } = require('@semapps/ldp');
 
+// A acl:Write permission implicitly gives acl:Read and acl:Append permissions
 const modeMapping = {
-  'acl:Read': ['acl:Read'],
+  'acl:Read': ['acl:Read', 'acl:Write'],
   'acl:Append': ['acl:Append', 'acl:Write'],
   'acl:Write': ['acl:Write'],
   'acl:Control': ['acl:Control']

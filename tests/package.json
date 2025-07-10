@@ -26,7 +26,8 @@
     "moleculer": "^0.14.19",
     "node-fetch": "^2.6.6",
     "url-join": "^4.0.1",
-    "wait-for-expect": "^3.0.2"
+    "wait-for-expect": "^3.0.2",
+    "ws": "^8.17.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

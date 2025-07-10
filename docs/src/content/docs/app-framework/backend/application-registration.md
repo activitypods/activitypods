@@ -57,7 +57,9 @@ The `app` part of the setting allow you to describe your application. These info
 - `thumbnail`: square logo of your application (ideally 192x192 pixels)
 - `frontUrl`: front URL of your application
 
-### OIDC
+### OpenID Connect (OIDC)
+
+OpenID Connect (OIDC) is an authentication layer on top of the OAuth 2.0 authorization framework. It allows computing clients to verify the identity of an end user based on the authentication performed by an authorization server, as well as to obtain the basic profile information about the end user in an interoperable and REST-like manner. In technical terms, OpenID Connect specifies a RESTful HTTP API, using JSON as a data format. [Wikipedia]
 
 ActivityPods integrate a full OIDC provider. To register your application with this provider, it needs a few informations:
 

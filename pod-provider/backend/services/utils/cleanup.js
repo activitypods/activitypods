@@ -29,6 +29,69 @@ module.exports = {
           });
         }
       }
+    },
+    // Remove WAC permissions which have been generated from SAI grants
+    // Since the new SAI authorizer can manage them directly
+    async removePermissionsFromAllGrants(ctx) {
+      const { username } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      for (const { username: dataset, webId } of accounts) {
+        ctx.meta.dataset = dataset;
+        ctx.meta.webId = webId;
+
+        this.logger.info(`Looking for access grants in the storage of ${webId}...`);
+
+        const grants = await ctx.call('access-grants.list');
+        const delegatedGrants = await ctx.call('delegated-access-grants.list');
+
+        for (const grant of [...arrayOf(grants['ldp:contains']), ...arrayOf(delegatedGrants['ldp:contains'])]) {
+          this.logger.info(`Removing permissions for grant ${getId(grant)}...`);
+
+          const grantee = grant['interop:grantee'];
+          const accessMode = arrayOf(grant['interop:accessMode']);
+          const scope = grant['interop:scopeOfGrant'];
+
+          if (scope === 'interop:AllFromRegistry') {
+            await ctx.call('webacl.resource.removeRights', {
+              resourceUri: grant['interop:hasDataRegistration'],
+              rights: {
+                user: {
+                  uri: grantee,
+                  read: accessMode.includes('acl:Read'),
+                  write: accessMode.includes('acl:Write')
+                },
+                default: {
+                  user: {
+                    uri: grantee,
+                    read: accessMode.includes('acl:Read'),
+                    append: accessMode.includes('acl:Append'),
+                    write: accessMode.includes('acl:Write'),
+                    control: accessMode.includes('acl:Control')
+                  }
+                }
+              },
+              webId: 'system'
+            });
+          } else if (scope === 'interop:SelectedFromRegistry') {
+            for (const resourceUri of arrayOf(grant['interop:hasDataInstance'])) {
+              await ctx.call('webacl.resource.removeRights', {
+                resourceUri,
+                rights: {
+                  user: {
+                    uri: grantee,
+                    read: accessMode.includes('acl:Read'),
+                    append: accessMode.includes('acl:Append'),
+                    write: accessMode.includes('acl:Write'),
+                    control: accessMode.includes('acl:Control')
+                  }
+                },
+                webId: 'system'
+              });
+            }
+          }
+        }
+      }
     }
   }
 };

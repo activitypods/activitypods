@@ -234,42 +234,8 @@ const createActor = async (podProvider, username = 'alice') => {
   return actor;
 };
 
-const getAppAccessNeeds = async (actor, appUri) => {
-  const app = await actor.call('ldp.resource.get', {
-    resourceUri: appUri,
-    accept: MIME_TYPES.JSON
-  });
-
-  let requiredAccessNeedGroup;
-  let optionalAccessNeedGroup;
-  for (const accessNeedUri of app['interop:hasAccessNeedGroup']) {
-    const accessNeedGroup = await actor.call('ldp.resource.get', {
-      resourceUri: accessNeedUri,
-      accept: MIME_TYPES.JSON
-    });
-    if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
-      requiredAccessNeedGroup = accessNeedGroup;
-    } else {
-      optionalAccessNeedGroup = accessNeedGroup;
-    }
-  }
-
-  return [requiredAccessNeedGroup, optionalAccessNeedGroup];
-};
-
-const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRights) => {
-  // If the accepted needs are not specified, use the app required access needs
-  if (!acceptedAccessNeeds && !acceptedSpecialRights) {
-    const [requiredAccessNeedGroup] = await getAppAccessNeeds(actor, appUri);
-    acceptedAccessNeeds = requiredAccessNeedGroup['interop:hasAccessNeed'];
-    acceptedSpecialRights = requiredAccessNeedGroup['apods:hasSpecialRights'];
-  }
-
-  return await actor.call('registration-endpoint.register', {
-    appUri,
-    acceptedAccessNeeds,
-    acceptedSpecialRights
-  });
+const installApp = async (actor, appUri) => {
+  return await actor.call('registration-endpoint.register', { appUri, acceptAllRequirements: true });
 };
 
 module.exports = {
@@ -280,6 +246,5 @@ module.exports = {
   connectPodProvider,
   initializeAppServer,
   createActor,
-  getAppAccessNeeds,
   installApp
 };

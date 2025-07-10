@@ -1,4 +1,4 @@
-const { arrayOf, getId, getType } = require('@semapps/ldp');
+const { getId, getType } = require('@semapps/ldp');
 const { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } = require('@semapps/activitypub');
 
 /**
@@ -47,19 +47,6 @@ const AccessGrantsMixin = {
           }
         }
 
-        // If the grant is replacing another one, first delete the permissions of the old grant
-        if (grant['interop:replaces']) {
-          // We can still get the old grant, because it is deleted after the new one is created
-          const replacedGrant = await ctx.call('access-grants.get', {
-            resourceUri: grant['interop:replaces'],
-            webId: grant['interop:dataOwner']
-          });
-
-          await ctx.call('permissions-mapper.removePermissionsFromGrant', { grant: replacedGrant });
-        }
-
-        await ctx.call('permissions-mapper.addPermissionsFromGrant', { grant });
-
         // Only send notifications for grants generated for social agents
         // For delegated grants, the granter will take care of notifying the grantee
         if (getType(grant) === 'interop:AccessGrant' && grant['interop:granteeType'] === 'interop:SocialAgent') {
@@ -85,11 +72,6 @@ const AccessGrantsMixin = {
       },
       async delete(ctx, res) {
         const grant = res.oldData;
-
-        // Don't remove permissions when we are replacing
-        if (!ctx.params.isReplacing) {
-          await ctx.call('permissions-mapper.removePermissionsFromGrant', { grant });
-        }
 
         // Detach grant from agent registrations, unless it is a delegated grant (will be done by the issuer)
         if (getType(grant) === 'interop:AccessGrant') {

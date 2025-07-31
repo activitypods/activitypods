@@ -1,11 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const ApiGatewayService = require('moleculer-web');
-const { Errors: E } = require('moleculer-web');
-const WebSocketMixin = require('../mixins/websocket');
-const CONFIG = require('../config/config');
+import fs from 'fs';
+import path from 'path';
+import ApiGatewayService from 'moleculer-web';
+import { Errors as E } from 'moleculer';
+import WebSocketMixin from '../mixins/websocket.ts';
+import CONFIG from '../config/config.ts';
 
-module.exports = {
+export default {
   mixins: [ApiGatewayService, WebSocketMixin],
   settings: {
     httpServerTimeout: 300000,
@@ -34,17 +34,17 @@ module.exports = {
     ]
   },
   actions: {
-    favicon(ctx) {
+    favicon(ctx: any) {
       ctx.meta.$responseType = 'image/x-icon';
       return fs.readFileSync(path.resolve(__dirname, '../static/favicon.ico'));
     },
-    redirectToFront(ctx) {
+    redirectToFront(ctx: any) {
       ctx.meta.$statusCode = 302;
       ctx.meta.$location = CONFIG.FRONTEND_URL;
     }
   },
   methods: {
-    async authenticate(ctx, route, req, res) {
+    async authenticate(ctx: any, route: any, req: any, res: any) {
       if (req.headers.signature) {
         return ctx.call('signature.authenticate', { route, req, res });
       }
@@ -62,7 +62,7 @@ module.exports = {
       ctx.meta.webId = 'anon';
       return null;
     },
-    async authorize(ctx, route, req, res) {
+    async authorize(ctx: any, route: any, req: any, res: any) {
       if (req.headers.signature) {
         return ctx.call('signature.authorize', { route, req, res });
       }
@@ -82,8 +82,10 @@ module.exports = {
     // Overwrite optimization method to put catchAll routes at the end
     // See https://github.com/moleculerjs/moleculer-web/issues/335
     optimizeRouteOrder() {
-      this.routes.sort(a => (a.opts.catchAll ? 1 : -1));
-      this.aliases.sort(a => (a.route.opts.catchAll ? 1 : -1));
+      // @ts-expect-error TS(2339): Property 'routes' does not exist on type '{ authen... Remove this comment to see the full error message
+      this.routes.sort((a: any) => (a.opts.catchAll ? 1 : -1));
+      // @ts-expect-error TS(2339): Property 'aliases' does not exist on type '{ authe... Remove this comment to see the full error message
+      this.aliases.sort((a: any) => (a.route.opts.catchAll ? 1 : -1));
     }
   }
 };

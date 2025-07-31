@@ -1,24 +1,30 @@
-const { triple, namedNode } = require('@rdfjs/data-model');
-const { MigrationService } = require('@semapps/migration');
-const { arrayOf } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const CONFIG = require('../../config/config');
+import { triple, namedNode } from '@rdfjs/data-model';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { MigrationService } from '@semapps/migration';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { arrayOf } from '@semapps/ldp';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { MIME_TYPES } from '@semapps/mime-types';
+// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+export default {
   name: 'migration-2-0-5',
   mixins: [MigrationService],
   settings: {
     baseUrl: CONFIG.BASE_URL
   },
   actions: {
-    async migrate(ctx) {
+    async migrate(ctx: any) {
       const { username, version } = ctx.params;
       const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
       for (const account of accounts) {
         if (account.version === version) {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
           this.logger.info(`Pod of ${account.webId} is already on v${version}, skipping...`);
         } else {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
           this.logger.info(`Migrating Pod of ${account.webId} to v${version}...`);
 
           ctx.meta.dataset = account.username;
@@ -27,8 +33,11 @@ module.exports = {
 
           if (version === '2.0.5') {
             await ctx.call('repair.createMissingContainers', { username: account.username });
+            // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ migra... Remove this comment to see the full error message
             await this.actions.addAuthorizationAgent({ username: account.username }, { parentCtx: ctx });
+            // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ migra... Remove this comment to see the full error message
             await this.actions.generateRegistries({ username: account.username }, { parentCtx: ctx });
+            // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ migra... Remove this comment to see the full error message
             await this.actions.generateAuthorizations({ username: account.username }, { parentCtx: ctx });
           } else {
             throw new Error(`No migration exist for version ${version}`);
@@ -42,15 +51,17 @@ module.exports = {
         }
       }
     },
-    async addAuthorizationAgent(ctx) {
+    async addAuthorizationAgent(ctx: any) {
       const { username } = ctx.params;
       const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
       for (const { webId } of accounts) {
         const authAgentExist = await ctx.call('auth-agent.exist', { webId });
         if (authAgentExist) {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
           this.logger.warn(`AuthorizationAgent already exist for ${webId}, skipping...`);
         } else {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
           this.logger.info(`Creating AuthorizationAgent for ${webId}`);
           await ctx.call('auth-agent.initializeResource', { webId });
         }
@@ -61,6 +72,7 @@ module.exports = {
         const appRegistrations = arrayOf(appRegistrationsContainer['ldp:contains']);
 
         for (const appRegistration of appRegistrations) {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
           this.logger.info(
             `Adding interop:registeredWith to app registration of ${appRegistration['interop:registeredAgent']} (webId ${webId})`
           );
@@ -79,31 +91,37 @@ module.exports = {
         }
       }
     },
-    async generateRegistries(ctx) {
+    async generateRegistries(ctx: any) {
       const { username } = ctx.params;
       const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
       for (const { webId } of accounts) {
         const registrySetExist = await ctx.call('registry-set.exist', { webId });
         if (registrySetExist) {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
           this.logger.warn(`RegistrySet already exist for ${webId}, skipping...`);
         } else {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
           this.logger.info(`Creating RegistrySet for ${webId}`);
           await ctx.call('registry-set.initializeResource', { webId });
         }
 
         const authRegistryExist = await ctx.call('auth-registry.exist', { webId });
         if (authRegistryExist) {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
           this.logger.warn(`AuthorizationRegistry already exist for ${webId}, skipping...`);
         } else {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
           this.logger.info(`Creating AuthorizationRegistry for ${webId}`);
           await ctx.call('auth-registry.initializeResource', { webId });
         }
 
         const agentRegistryExist = await ctx.call('agent-registry.exist', { webId });
         if (agentRegistryExist) {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
           this.logger.warn(`AgentRegistry already exist for ${webId}, skipping...`);
         } else {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
           this.logger.info(`Creating AgentRegistry for ${webId}`);
           await ctx.call('agent-registry.initializeResource', { webId });
 
@@ -111,6 +129,7 @@ module.exports = {
           const appRegistrations = arrayOf(appRegistrationsContainer['ldp:contains']);
 
           for (const appRegistration of appRegistrations) {
+            // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
             this.logger.info(
               `Adding ApplicationRegistration of ${appRegistration['interop:registeredAgent']} to AgentRegistry`
             );
@@ -122,11 +141,12 @@ module.exports = {
         }
       }
     },
-    async generateAuthorizations(ctx) {
+    async generateAuthorizations(ctx: any) {
       const { username } = ctx.params;
       const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
       for (const { webId } of accounts) {
+        // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
         this.logger.info(`Generating authorizations for ${webId}...`);
 
         const authAgentUri = await ctx.call('auth-agent.getResourceUri', { webId });
@@ -146,9 +166,11 @@ module.exports = {
             });
 
             if (dataAuthorization) {
+              // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
               this.logger.warn(`DataAuthorization for DataGrant ${dataGrant.id} already exist, skipping...`);
               dataAuthorizationsUris.push(dataAuthorization.id);
             } else {
+              // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
               this.logger.info(`Generating DataAuthorization from DataGrant ${dataGrant.id}`);
               dataAuthorizationsUris.push(
                 await ctx.call(
@@ -176,8 +198,10 @@ module.exports = {
           });
 
           if (accessAuthorization) {
+            // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
             this.logger.warn(`AccessAuthorization for AccessGrant ${accessGrant.id} already exist, skipping...`);
           } else {
+            // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ migrat... Remove this comment to see the full error message
             this.logger.info(`Generating AccessAuthorization from AccessGrant ${accessGrant.id}`);
 
             await ctx.call(

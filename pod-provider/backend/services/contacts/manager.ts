@@ -1,11 +1,17 @@
-const urlJoin = require('url-join');
-const { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
-const { sanitizeSparqlQuery } = require('@semapps/triplestore');
-const { arrayOf } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } = require('../../config/patterns');
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } from '@semapps/activitypub';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { sanitizeSparqlQuery } from '@semapps/triplestore';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { arrayOf } from '@semapps/ldp';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { MIME_TYPES } from '@semapps/mime-types';
+// @ts-expect-error TS(2459): Module '"../../config/patterns"' declares 'ADD_CON... Remove this comment to see the full error message
+import { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } from '../../config/patterns.ts';
 
-module.exports = {
+export default {
   name: 'contacts.manager',
   mixins: [ActivitiesHandlerMixin],
   settings: {
@@ -23,9 +29,10 @@ module.exports = {
     await this.broker.call('activitypub.collections-registry.register', this.settings.ignoredContactsCollectionOptions);
   },
   actions: {
-    async updateCollectionsOptions(ctx) {
+    async updateCollectionsOptions(ctx: any) {
       const { dataset } = ctx.params;
       await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
         collection: this.settings.ignoredContactsCollectionOptions,
         dataset
       });
@@ -34,7 +41,7 @@ module.exports = {
   activities: {
     addContact: {
       match: ADD_CONTACT,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         if (!activity.origin) throw new Error('The origin property is missing from the Add activity');
 
         if (!activity.origin.startsWith(emitterUri))
@@ -59,7 +66,7 @@ module.exports = {
     },
     removeContact: {
       match: REMOVE_CONTACT,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         if (!activity.origin) throw new Error('The origin property is missing from the Remove activity');
 
         if (!activity.origin.startsWith(emitterUri))
@@ -80,7 +87,7 @@ module.exports = {
     },
     ignoreContact: {
       match: IGNORE_CONTACT,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Add the actor to the emitter's ignore contacts list.
@@ -92,7 +99,7 @@ module.exports = {
     },
     undoIgnoreContact: {
       match: UNDO_IGNORE_CONTACT,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Remove the actor from the emitter's ignore contacts list.
@@ -103,7 +110,7 @@ module.exports = {
       }
     },
     deleteActor: {
-      async match(activity, fetcher) {
+      async match(activity: any, fetcher: any) {
         if (activity.type === ACTIVITY_TYPES.DELETE) {
           const dereferencedObject = await fetcher(activity.object);
           if (Object.values(ACTOR_TYPES).some(t => arrayOf(dereferencedObject.type).includes(t))) {
@@ -112,7 +119,7 @@ module.exports = {
         }
         return { match: false, dereferencedActivity: activity };
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // See also https://swicg.github.io/activitypub-http-signature/#handling-deletes-of-actors for more sophisticated approaches.
         if (!(activity.actor === activity.object.id))
           throw new Error(`The actor ${activity.actor} cannot ask to remove actor ${activity.object.id}`);
@@ -166,7 +173,7 @@ module.exports = {
           dataset
         });
 
-        for (let cachedResourceUri of result.map(node => node.resourceUri.value)) {
+        for (let cachedResourceUri of result.map((node: any) => node.resourceUri.value)) {
           await ctx.call('ldp.remote.delete', {
             resourceUri: cachedResourceUri,
             webId: recipientUri

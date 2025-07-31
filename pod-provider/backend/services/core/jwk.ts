@@ -1,9 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-const { generateKeyPair, exportJWK, importJWK, jwtVerify } = require('jose');
+import fs from 'fs';
+import path from 'path';
+import { generateKeyPair, exportJWK, importJWK, jwtVerify } from 'jose';
 
-// See https://github.com/CommunitySolidServer/CommunitySolidServer/blob/15a929a87e4ce00c0ed266e296405c8e4a22d4a7/src/identity/configuration/CachedJwkGenerator.ts
-module.exports = {
+export default {
   name: 'jwk',
   settings: {
     jwtPath: path.resolve(__dirname, '../../jwt'),
@@ -20,34 +19,48 @@ module.exports = {
       }
       await this.actions.generateKeyPair({ privateKeyPath, publicKeyPath });
     } else {
+      // @ts-expect-error TS(2345): Argument of type 'Buffer' is not assignable to par... Remove this comment to see the full error message
       this.privateJwk = JSON.parse(fs.readFileSync(privateKeyPath));
+      // @ts-expect-error TS(2345): Argument of type 'Buffer' is not assignable to par... Remove this comment to see the full error message
       this.publicJwk = JSON.parse(fs.readFileSync(publicKeyPath));
     }
   },
   actions: {
-    async generateKeyPair(ctx) {
+    async generateKeyPair(ctx: any) {
       const { privateKeyPath, publicKeyPath } = ctx.params;
 
+      // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ gene... Remove this comment to see the full error message
       const { privateKey, publicKey } = await generateKeyPair(this.settings.alg);
 
+      // @ts-expect-error TS(2339): Property 'privateJwk' does not exist on type '{ ge... Remove this comment to see the full error message
       this.privateJwk = await exportJWK(privateKey);
+      // @ts-expect-error TS(2339): Property 'publicJwk' does not exist on type '{ gen... Remove this comment to see the full error message
       this.publicJwk = await exportJWK(publicKey);
 
+      // @ts-expect-error TS(2339): Property 'privateJwk' does not exist on type '{ ge... Remove this comment to see the full error message
       this.privateJwk.alg = this.settings.alg;
+      // @ts-expect-error TS(2339): Property 'publicJwk' does not exist on type '{ gen... Remove this comment to see the full error message
       this.publicJwk.alg = this.settings.alg;
 
+      // @ts-expect-error TS(2339): Property 'privateJwk' does not exist on type '{ ge... Remove this comment to see the full error message
       fs.writeFileSync(privateKeyPath, JSON.stringify(this.privateJwk));
+      // @ts-expect-error TS(2339): Property 'publicJwk' does not exist on type '{ gen... Remove this comment to see the full error message
       fs.writeFileSync(publicKeyPath, JSON.stringify(this.publicJwk));
     },
+    // @ts-expect-error TS(7023): 'get' implicitly has return type 'any' because it ... Remove this comment to see the full error message
     async get() {
+      // @ts-expect-error TS(2339): Property 'privateJwk' does not exist on type '{ ge... Remove this comment to see the full error message
       return { privateJwk: this.privateJwk, publicJwk: this.publicJwk };
     },
-    async verifyToken(ctx) {
+    // @ts-expect-error TS(7023): 'verifyToken' implicitly has return type 'any' bec... Remove this comment to see the full error message
+    async verifyToken(ctx: any) {
       const { token } = ctx.params;
 
+      // @ts-expect-error TS(7022): 'publicKey' implicitly has type 'any' because it d... Remove this comment to see the full error message
       const publicKey = await importJWK(this.publicJwk, this.settings.alg);
 
       try {
+        // @ts-expect-error TS(7022): 'payload' implicitly has type 'any' because it doe... Remove this comment to see the full error message
         const { payload } = await jwtVerify(token, publicKey);
         return payload;
       } catch (e) {

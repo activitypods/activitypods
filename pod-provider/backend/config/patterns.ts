@@ -1,5 +1,7 @@
-const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
-const { ACTOR_TYPES } = require('@semapps/activitypub/constants');
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { ACTIVITY_TYPES, OBJECT_TYPES } from '@semapps/activitypub';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { ACTOR_TYPES } from '@semapps/activitypub/constants';
 
 const CONTACT_REQUEST = {
   type: ACTIVITY_TYPES.OFFER,
@@ -76,7 +78,7 @@ const UNDO_IGNORE_CONTACT = {
   object: IGNORE_CONTACT
 };
 
-module.exports = {
+export default {
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
   IGNORE_CONTACT_REQUEST,

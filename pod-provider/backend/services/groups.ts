@@ -1,16 +1,22 @@
-const path = require('node:path');
-const urlJoin = require('url-join');
-const { Errors: E } = require('moleculer-web');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { arrayOf } = require('@semapps/ldp');
-const { throw403, throw404 } = require('@semapps/middlewares');
-const CONFIG = require('../config/config');
+import path from 'node:path';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
+import { Errors as E } from 'moleculer';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { MIME_TYPES } from '@semapps/mime-types';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { arrayOf } from '@semapps/ldp';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { throw403, throw404 } from '@semapps/middlewares';
+import CONFIG from '../config/config.ts';
 
 const GroupsService = {
   name: 'groups',
   dependencies: ['api', 'ldp'],
   async started() {
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ name: ... Remove this comment to see the full error message
     const basePath = await this.broker.call('ldp.getBasePath');
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ name: ... Remove this comment to see the full error message
     this.broker.call('api.addRoute', {
       route: {
         name: 'groups',
@@ -30,7 +36,7 @@ const GroupsService = {
      * @param id Unique identifier for the group
      * @param type
      */
-    async create(ctx) {
+    async create(ctx: any) {
       const { id, type } = ctx.params;
       const ownerWebId = ctx.meta.webId;
       const groupWebId = urlJoin(CONFIG.BASE_URL, id);
@@ -55,6 +61,7 @@ const GroupsService = {
 
       // Create containers
       const registeredContainers = await ctx.call('ldp.registry.list');
+      // @ts-expect-error TS(2339): Property 'path' does not exist on type 'unknown'.
       for (const { path, permissions } of Object.values(registeredContainers)) {
         await ctx.call('ldp.container.createAndAttach', {
           containerUri: urlJoin(storageUrl, path),
@@ -119,12 +126,12 @@ const GroupsService = {
       ctx.meta.$location = groupWebId;
       ctx.meta.$statusCode = 201;
     },
-    async list(ctx) {
+    async list(ctx: any) {
       const ownerWebId = ctx.meta.webId;
       const ownerAccount = await ctx.call('auth.account.findByWebId', { webId: ownerWebId });
       return arrayOf(ownerAccount.owns);
     },
-    async claim(ctx) {
+    async claim(ctx: any) {
       const { username, groupWebId } = ctx.params;
       const webId = ctx.meta.webId;
 
@@ -141,7 +148,7 @@ const GroupsService = {
         owns: account.owns ? [...arrayOf(account.owns), groupWebId] : groupWebId
       });
     },
-    async undoClaim(ctx) {
+    async undoClaim(ctx: any) {
       const { username, groupWebId } = ctx.params;
       const webId = ctx.meta.webId;
 
@@ -155,10 +162,10 @@ const GroupsService = {
       // Detach group from account
       await ctx.call('auth.account.update', {
         id: account['@id'],
-        owns: arrayOf(account.owns).filter(uri => uri !== groupWebId)
+        owns: arrayOf(account.owns).filter((uri: any) => uri !== groupWebId)
       });
     }
   }
 };
 
-module.exports = GroupsService;
+export default GroupsService;

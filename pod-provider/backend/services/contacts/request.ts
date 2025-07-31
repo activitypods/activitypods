@@ -1,26 +1,31 @@
-const {
-  ACTIVITY_TYPES,
-  ACTOR_TYPES,
-  ActivitiesHandlerMixin,
-  OBJECT_TYPES,
-  matchActivity
-} = require('@semapps/activitypub');
-const { arrayOf } = require('@semapps/ldp');
-const {
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin, OBJECT_TYPES, matchActivity } from '@semapps/activitypub';
+
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { arrayOf } from '@semapps/ldp';
+
+import {
+  // @ts-expect-error TS(2459): Module '"../../config/patterns"' declares 'CONTACT... Remove this comment to see the full error message
   CONTACT_REQUEST,
+  // @ts-expect-error TS(2459): Module '"../../config/patterns"' declares 'ACCEPT_... Remove this comment to see the full error message
   ACCEPT_CONTACT_REQUEST,
+  // @ts-expect-error TS(2459): Module '"../../config/patterns"' declares 'REJECT_... Remove this comment to see the full error message
   REJECT_CONTACT_REQUEST,
+  // @ts-expect-error TS(2459): Module '"../../config/patterns"' declares 'IGNORE_... Remove this comment to see the full error message
   IGNORE_CONTACT_REQUEST
-} = require('../../config/patterns');
-const {
+} from '../../config/patterns.ts';
+
+import {
   CONTACT_REQUEST_MAPPING,
   ACCEPT_CONTACT_REQUEST_MAPPING,
   AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
-} = require('../../config/mappings');
-const { MIME_TYPES } = require('@semapps/mime-types');
+  // @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
+} from '../../config/mappings.ts';
 
-/** @type {import('moleculer').ServiceSchema} */
-module.exports = {
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { MIME_TYPES } from '@semapps/mime-types';
+
+export default {
   name: 'contacts.request',
   mixins: [ActivitiesHandlerMixin],
   settings: {
@@ -59,17 +64,20 @@ module.exports = {
     );
   },
   actions: {
-    async updateCollectionsOptions(ctx) {
+    async updateCollectionsOptions(ctx: any) {
       const { dataset } = ctx.params;
       await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
         collection: this.settings.contactsCollectionOptions,
         dataset
       });
       await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
         collection: this.settings.contactRequestsCollectionOptions,
         dataset
       });
       await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
         collection: this.settings.rejectedContactsCollectionOptions,
         dataset
       });
@@ -79,7 +87,7 @@ module.exports = {
     contactRequest: {
       match: CONTACT_REQUEST,
 
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         // Add the user to the contacts WebACL group so he can see my profile
         for (let targetUri of arrayOf(activity.target)) {
           await ctx.call('webacl.group.addMember', {
@@ -89,7 +97,7 @@ module.exports = {
           });
         }
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // Contact requests with capabilities are assumed to be coming from invite links. Those are handled separately below.
         if (activity.capability) return;
 
@@ -130,7 +138,7 @@ module.exports = {
         if (
           collection &&
           arrayOf(collection.items).length > 0 &&
-          arrayOf(collection.items).find(a => a.actor === activity.actor)
+          arrayOf(collection.items).find((a: any) => a.actor === activity.actor)
         ) {
           return;
         }
@@ -150,10 +158,10 @@ module.exports = {
     },
     inviteLinkContactRequest: {
       match: CONTACT_REQUEST,
-      async capabilityGrantMatchFnGenerator({ recipientUri, activity }) {
+      async capabilityGrantMatchFnGenerator({ recipientUri, activity }: any) {
         // Generate a function that is called on each ActivityGrant of the activity's capability.
 
-        return async grant => {
+        return async (grant: any) => {
           // Verify that the recipient issued the grant with the following structure.
           const { match } = await matchActivity(
             {
@@ -168,13 +176,15 @@ module.exports = {
               }
             },
             grant,
-            uri => ({ id: uri }) // The URIs here are not resolved further.
+            (uri: any) => ({
+              id: uri
+            }) // The URIs here are not resolved further.
           );
           return match;
         };
       },
 
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
         // If the actor is already in my contacts, ignore this request (may happen for automatic post-event requests)
@@ -226,7 +236,7 @@ module.exports = {
     },
     acceptContactRequest: {
       match: ACCEPT_CONTACT_REQUEST,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // 1. Add the other actor to the contacts WebACL group so he can see my profile
@@ -260,7 +270,7 @@ module.exports = {
           item: activity.object.id
         });
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
@@ -296,7 +306,7 @@ module.exports = {
     },
     ignoreContactRequest: {
       match: IGNORE_CONTACT_REQUEST,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Remove the activity from my contact requests
@@ -305,7 +315,7 @@ module.exports = {
           item: activity.object.id
         });
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // Remove the user from the contacts WebACL group so he can't see my profile anymore
         await ctx.call('webacl.group.removeMember', {
           groupSlug: `${new URL(recipientUri).pathname}/contacts`,
@@ -316,7 +326,7 @@ module.exports = {
     },
     rejectContactRequest: {
       match: REJECT_CONTACT_REQUEST,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Add the actor to my rejected contacts list
@@ -331,7 +341,7 @@ module.exports = {
           item: activity.object.id
         });
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // Remove the emitter from the contacts WebACL group so he can't see the recipient's profile anymore
         await ctx.call('webacl.group.removeMember', {
           groupSlug: `${new URL(recipientUri).pathname}/contacts`,

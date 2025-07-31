@@ -1,7 +1,8 @@
-const { triple, namedNode } = require('@rdfjs/data-model');
-const { SingleResourceContainerMixin } = require('@semapps/ldp');
+import { triple, namedNode } from '@rdfjs/data-model';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { SingleResourceContainerMixin } from '@semapps/ldp';
 
-module.exports = {
+export default {
   name: 'agent-registry',
   mixins: [SingleResourceContainerMixin],
   settings: {
@@ -10,14 +11,16 @@ module.exports = {
   },
   dependencies: ['registry-set'],
   actions: {
-    async add(ctx) {
+    async add(ctx: any) {
       const { podOwner, appRegistrationUri, socialAgentRegistrationUri } = ctx.params;
 
       if (!appRegistrationUri && !socialAgentRegistrationUri)
         throw new Error(`The params appRegistrationUri or socialAgentRegistrationUri are required`);
 
+      // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ add(c... Remove this comment to see the full error message
       const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
 
+      // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ add(c... Remove this comment to see the full error message
       await this.actions.patch(
         {
           resourceUri: agentRegistryUri,
@@ -37,14 +40,16 @@ module.exports = {
         { parentCtx: ctx }
       );
     },
-    async remove(ctx) {
+    async remove(ctx: any) {
       const { podOwner, appRegistrationUri, socialAgentRegistrationUri } = ctx.params;
 
       if (!appRegistrationUri && !socialAgentRegistrationUri)
         throw new Error(`The params appRegistrationUri or socialAgentRegistrationUri are required`);
 
+      // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ add(c... Remove this comment to see the full error message
       const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
 
+      // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ add(c... Remove this comment to see the full error message
       await this.actions.patch(
         {
           resourceUri: agentRegistryUri,
@@ -67,7 +72,7 @@ module.exports = {
   },
   hooks: {
     after: {
-      async post(ctx, res) {
+      async post(ctx: any, res: any) {
         // Attach the registry to the registry set
         const registrySetUri = await ctx.call('registry-set.getResourceUri', { webId: ctx.params.webId });
         await ctx.call('registry-set.patch', {

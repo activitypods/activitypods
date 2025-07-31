@@ -1,6 +1,8 @@
-const { WebSocketServer } = require('ws');
-const http = require('http');
-const urlJoin = require('url-join');
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'ws'.... Remove this comment to see the full error message
+import { WebSocketServer } from 'ws';
+import http from 'http';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
 /**
  * This mixin adds the ability to create WebSocket routes to the moleculer-web API Gateway.
  * The mixin adds a new action `addWebSocketRoute` to the service.
@@ -17,7 +19,7 @@ const urlJoin = require('url-join');
  * - onError: (event, connection)
  * @type {import('moleculer').ServiceSchema}
  */
-module.exports = {
+export default {
   name: 'websocket',
   settings: {
     baseUrl: null
@@ -52,10 +54,11 @@ module.exports = {
           onError: { type: 'function', default: () => {} }
         }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { name, route, authorization, authentication, use, handlers } = ctx.params;
 
         // Use the service's regular route handler but add some mixins.
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ param... Remove this comment to see the full error message
         this.actions.addRoute({
           route: {
             name,
@@ -69,19 +72,22 @@ module.exports = {
                 // Add provided mixins.
                 ...use,
                 // Handle the upgrade and register the callbacks (or error on non-ws requests).
-                (request, response, next) => this.handleWsRequest(request, response, next, handlers),
+                // @ts-expect-error TS(2339): Property 'handleWsRequest' does not exist on type ... Remove this comment to see the full error message
+                (request: any, response: any, next: any) => this.handleWsRequest(request, response, next, handlers),
                 // The alias route array needs to have an action after the middleware functions.
+                // @ts-expect-error TS(2339): Property 'name' does not exist on type '{ params: ... Remove this comment to see the full error message
                 `${this.name}.onWsConnection`
               ]
             },
             // Prevent ws connections from being closed by the lifecycle methods.
-            onAfterCall: (ctx, bla, incomingRequest, serverResponse) =>
+            onAfterCall: (ctx: any, bla: any, incomingRequest: any, serverResponse: any) =>
+              // @ts-expect-error TS(2339): Property 'delayConnectionClosing' does not exist o... Remove this comment to see the full error message
               this.delayConnectionClosing(incomingRequest, serverResponse)
           }
         });
       }
     },
-    onWsConnection(ctx) {
+    onWsConnection(ctx: any) {
       // Just a dummy function to satisfy the alias middleware handler above.
       // You can access the connection object with `ctx.meta.connection`.
       // Warning: This action is also called, if the connection fails.
@@ -96,7 +102,7 @@ module.exports = {
      * @param {() => void} next The next callback.
      * @param {import("./websocket").WebSocketHandlers} handlers The handlers to register.
      */
-    async handleWsRequest(request, response, next, handlers) {
+    async handleWsRequest(request: any, response: any, next: any, handlers: any) {
       if (!request.webSocketRequestHandler) {
         response.statusCode = 426;
         response.statusMessage = 'Upgrade Required: Not a WebSocket request';
@@ -112,6 +118,7 @@ module.exports = {
       const webSocket = await request.webSocketRequestHandler();
 
       // Create a new connection object (passed to all event handlers).
+      // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ hand... Remove this comment to see the full error message
       const wsBase = this.settings.baseUrl.replace(/^http/, 'ws');
       /** @type {import("./websocket").Connection} */
       const connection = {
@@ -131,16 +138,18 @@ module.exports = {
       };
 
       // Add event listeners registered by the caller.
-      webSocket.addEventListener('close', e => handlers.onClose(e, connection));
-      webSocket.addEventListener('message', e => handlers.onMessage(e.data, connection));
-      webSocket.addEventListener('error', e => handlers.onError(e, connection));
+      webSocket.addEventListener('close', (e: any) => handlers.onClose(e, connection));
+      webSocket.addEventListener('message', (e: any) => handlers.onMessage(e.data, connection));
+      webSocket.addEventListener('error', (e: any) => handlers.onError(e, connection));
 
       // Remove connections, when they close.
       webSocket.addEventListener('close', () => {
-        this.connections = this.connections.filter(c => c !== connection);
+        // @ts-expect-error TS(2339): Property 'connections' does not exist on type '{ h... Remove this comment to see the full error message
+        this.connections = this.connections.filter((c: any) => c !== connection);
       });
 
       // Add connection to the list of connections.
+      // @ts-expect-error TS(2339): Property 'connections' does not exist on type '{ h... Remove this comment to see the full error message
       this.connections.push(connection);
 
       // Trigger connected event.
@@ -152,6 +161,7 @@ module.exports = {
       // Handle next middleware.
       next();
 
+      // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ handle... Remove this comment to see the full error message
       this.logger.info('New WebSocket registered with URI: ', connection.requestUrl);
     },
 
@@ -162,7 +172,8 @@ module.exports = {
      * @param {Buffer} head The first packet of the request
      * @returns  {object} `this.httpHandler(request, response)`
      */
-    upgradeHandler(request, socket, head) {
+    // @ts-expect-error TS(7023): 'upgradeHandler' implicitly has return type 'any' ... Remove this comment to see the full error message
+    upgradeHandler(request: any, socket: any, head: any) {
       const response = new http.ServerResponse(request);
       response.assignSocket(socket);
 
@@ -181,12 +192,15 @@ module.exports = {
       // Calling the handler will perform the ws upgrade handshake and return the webSocket.
       request.webSocketRequestHandler = () =>
         new Promise(resolve => {
-          this.wss?.handleUpgrade(request, request.socket, copyOfHead, ws => {
+          // @ts-expect-error TS(2339): Property 'wss' does not exist on type '{ handleWsR... Remove this comment to see the full error message
+          this.wss?.handleUpgrade(request, request.socket, copyOfHead, (ws: any) => {
+            // @ts-expect-error TS(2339): Property 'wss' does not exist on type '{ handleWsR... Remove this comment to see the full error message
             this.wss?.emit('connection', ws, request);
             resolve(ws);
           });
         });
 
+      // @ts-expect-error TS(2339): Property 'httpHandler' does not exist on type '{ h... Remove this comment to see the full error message
       return this.httpHandler(request, response);
     },
 
@@ -195,7 +209,7 @@ module.exports = {
      * @param {import('moleculer-web').IncomingMessage} incomingRequest The incoming moleculer-web request.
      * @param {import('http').ServerResponse} serverResponse The node http server response.
      */
-    async delayConnectionClosing(incomingRequest, serverResponse) {
+    async delayConnectionClosing(incomingRequest: any, serverResponse: any) {
       // Don't return, if this is an open websocket, otherwise the connection will be closed.
       if (incomingRequest.webSocketRequestHandler) {
         // Only resolve, once the socket closes.
@@ -205,6 +219,7 @@ module.exports = {
 
           // If already closed, return immediately.
           if (serverResponse.socket.closed) {
+            // @ts-expect-error TS(2794): Expected 1 arguments, but got 0. Did you forget to... Remove this comment to see the full error message
             resolve();
           }
         });

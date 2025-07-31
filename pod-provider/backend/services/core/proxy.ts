@@ -1,6 +1,7 @@
-const { ProxyService } = require('@semapps/crypto');
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { ProxyService } from '@semapps/crypto';
 
-module.exports = {
+export default {
   mixins: [ProxyService],
   settings: {
     podProvider: true

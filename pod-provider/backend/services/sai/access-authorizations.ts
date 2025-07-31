@@ -1,12 +1,14 @@
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { MIME_TYPES } from '@semapps/mime-types';
 
 // Return true if all elements of a1 can be found on a2. Order does not matter.
-const arraysEqual = (a1, a2) =>
-  arrayOf(a1).length === arrayOf(a2).length && arrayOf(a1).every(i => arrayOf(a2).includes(i));
+const arraysEqual = (a1: any, a2: any) =>
+  arrayOf(a1).length === arrayOf(a2).length && arrayOf(a1).every((i: any) => arrayOf(a2).includes(i));
 
 // See https://solid.github.io/data-interoperability-panel/specification/#access-authorization
-module.exports = {
+export default {
   name: 'access-authorizations',
   mixins: [ControlledContainerMixin],
   settings: {
@@ -25,7 +27,7 @@ module.exports = {
     /**
      * Generate AccessAuthorizations based on a provided list of AccessNeedGroups
      */
-    async generateFromAccessNeedGroups(ctx) {
+    async generateFromAccessNeedGroups(ctx: any) {
       const { accessNeedGroups, acceptedAccessNeeds, acceptedSpecialRights, podOwner, appUri } = ctx.params;
       const accessAuthorizationsUris = [];
 
@@ -53,6 +55,7 @@ module.exports = {
         }
 
         // Check if an access grant already exist for this AccessNeedGroup
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ put()... Remove this comment to see the full error message
         const accessAuthorization = await this.actions.getByAccessNeedGroup(
           { accessNeedGroupUri, podOwner },
           { parentCtx: ctx }
@@ -65,18 +68,22 @@ module.exports = {
             arraysEqual(accessAuthorization['interop:hasDataAuthorization'], dataAuthorizationsUris) &&
             arraysEqual(accessAuthorization['apods:hasSpecialRights'], specialRightsUris)
           ) {
+            // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ put():... Remove this comment to see the full error message
             this.logger.info(
               `Found access authorization ${accessAuthorization.id} linked with access need group ${accessNeedGroupUri}`
             );
             accessAuthorizationsUris.push(accessAuthorization.id);
           } else {
             if (accessAuthorization) {
+              // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ put():... Remove this comment to see the full error message
               this.logger.info(
                 `Deleting access authorization ${accessAuthorization.id} before recreating one as it does not grant the same rights`
               );
+              // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ put()... Remove this comment to see the full error message
               await this.actions.delete({ resourceUri: accessAuthorization.id, webId: podOwner });
             }
             accessAuthorizationsUris.push(
+              // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ put()... Remove this comment to see the full error message
               await this.actions.post(
                 {
                   resource: {
@@ -96,19 +103,24 @@ module.exports = {
             );
           }
         } else if (accessAuthorization) {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ put():... Remove this comment to see the full error message
           this.logger.info(
             `Deleting access authorization ${accessAuthorization.id} as no related access needs were granted`
           );
+          // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ put()... Remove this comment to see the full error message
           await this.actions.delete({ resourceUri: accessAuthorization.id, webId: podOwner });
         }
       }
     },
     // Get all the AccessAuthorizations granted to an application
-    async getForApp(ctx) {
+    // @ts-expect-error TS(7023): 'getForApp' implicitly has return type 'any' becau... Remove this comment to see the full error message
+    async getForApp(ctx: any) {
       const { appUri, podOwner } = ctx.params;
 
+      // @ts-expect-error TS(7022): 'containerUri' implicitly has type 'any' because i... Remove this comment to see the full error message
       const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
 
+      // @ts-expect-error TS(7022): 'filteredContainer' implicitly has type 'any' beca... Remove this comment to see the full error message
       const filteredContainer = await this.actions.list(
         {
           containerUri,
@@ -124,9 +136,11 @@ module.exports = {
       return arrayOf(filteredContainer['ldp:contains']);
     },
     // Get the AccessAuthorization linked with an AccessNeedGroup
-    async getByAccessNeedGroup(ctx) {
+    // @ts-expect-error TS(7023): 'getByAccessNeedGroup' implicitly has return type ... Remove this comment to see the full error message
+    async getByAccessNeedGroup(ctx: any) {
       const { accessNeedGroupUri, podOwner } = ctx.params;
 
+      // @ts-expect-error TS(7022): 'filteredContainer' implicitly has type 'any' beca... Remove this comment to see the full error message
       const filteredContainer = await this.actions.list(
         {
           filters: {
@@ -141,17 +155,19 @@ module.exports = {
       return filteredContainer['ldp:contains']?.[0];
     },
     // Get all the special rights granted to an application
-    async getSpecialRights(ctx) {
+    // @ts-expect-error TS(7023): 'getSpecialRights' implicitly has return type 'any... Remove this comment to see the full error message
+    async getSpecialRights(ctx: any) {
       const { appUri, podOwner } = ctx.params;
 
+      // @ts-expect-error TS(7022): 'accessAuthorizations' implicitly has type 'any' b... Remove this comment to see the full error message
       const accessAuthorizations = await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx });
 
-      return accessAuthorizations.reduce((acc, cur) => {
+      return accessAuthorizations.reduce((acc: any, cur: any) => {
         if (cur['apods:hasSpecialRights']) acc.push(...arrayOf(cur['apods:hasSpecialRights']));
         return acc;
       }, []);
     },
-    async addPermissionsFromSpecialRights(ctx) {
+    async addPermissionsFromSpecialRights(ctx: any) {
       const { podOwner, appUri, specialRightsUris } = ctx.params;
 
       // Give read permissions on all activities, if requested
@@ -225,7 +241,7 @@ module.exports = {
         webId: 'system'
       });
     },
-    async removePermissionsFromSpecialRights(ctx) {
+    async removePermissionsFromSpecialRights(ctx: any) {
       const { podOwner, appUri, specialRightsUris } = ctx.params;
 
       // Remove read permissions on all activities, if requested
@@ -296,17 +312,21 @@ module.exports = {
       });
     },
     // Delete AccessAuthorizations which are not linked to an AccessNeedGroup (may happen on app upgrade)
-    async deleteOrphans(ctx) {
+    async deleteOrphans(ctx: any) {
       const { appUri, podOwner } = ctx.params;
+      // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ put()... Remove this comment to see the full error message
       const accessAuthorizations = await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx });
       for (const accessAuthorization of accessAuthorizations) {
         try {
           await ctx.call('ldp.remote.get', { resourceUri: accessAuthorization['interop:hasAccessNeedGroup'] });
         } catch (e) {
+          // @ts-expect-error TS(2571): Object is of type 'unknown'.
           if (e.code === 404) {
+            // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ put():... Remove this comment to see the full error message
             this.logger.info(
               `Deleting access authorization ${accessAuthorization.id} as it is not linked anymore with an existing access need group...`
             );
+            // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ put()... Remove this comment to see the full error message
             await this.actions.delete({ resourceUri: accessAuthorization.id, webId: podOwner });
           } else {
             throw e;
@@ -317,7 +337,7 @@ module.exports = {
   },
   hooks: {
     after: {
-      async post(ctx, res) {
+      async post(ctx: any, res: any) {
         const podOwner = ctx.params.resource['interop:grantedBy'];
 
         // Attach the AccessAuthorization to the AuthorizationRegistry
@@ -330,6 +350,7 @@ module.exports = {
         if (ctx.meta.isMigration === true) return;
 
         // Add permissions based on the special rights
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ post(... Remove this comment to see the full error message
         await this.actions.addPermissionsFromSpecialRights(
           {
             podOwner,
@@ -360,7 +381,8 @@ module.exports = {
         return res;
       },
       // Mirror of the above hook
-      async delete(ctx, res) {
+      async delete(ctx: any, res: any) {
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ post(... Remove this comment to see the full error message
         await this.actions.removePermissionsFromSpecialRights(
           {
             podOwner: res.oldData['interop:grantedBy'],

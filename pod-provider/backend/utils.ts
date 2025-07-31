@@ -1,6 +1,7 @@
-const { arrayOf } = require('@semapps/ldp');
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { arrayOf } from '@semapps/ldp';
 
-const matchTemplateObj = (obj, template) => {
+const matchTemplateObj = (obj: any, template: any) => {
   if (typeof template !== 'object' && !Array.isArray(template)) {
     return obj === template;
   }
@@ -28,7 +29,7 @@ const matchTemplateObj = (obj, template) => {
  *
  * Matching means that the object needs to have all fields the template has as well, i.e. is a superset.
  */
-const hasActivityGrant = (capabilityPresentation, templateActivity) => {
+const hasActivityGrant = (capabilityPresentation: any, templateActivity: any) => {
   const vcs = arrayOf(capabilityPresentation?.verifiableCredential);
   if (vcs.length === 0) return false;
 
@@ -37,7 +38,7 @@ const hasActivityGrant = (capabilityPresentation, templateActivity) => {
 
   // Check if one of the grants matches template activity and the provided activity.
   const grants = arrayOf(lastCredentialSubject.hasActivityGrant);
-  return grants.some(grant => {
+  return grants.some((grant: any) => {
     if (!arrayOf(grant.type).includes('ActivityGrant')) return false;
 
     // Check if all fields in the templateActivity are included in the grant too.
@@ -45,9 +46,10 @@ const hasActivityGrant = (capabilityPresentation, templateActivity) => {
     if (!grantMatchesTemplate) return false;
 
     // Check if all fields in the grant are included in the activity too.
+    // @ts-expect-error TS(2304): Cannot find name 'activity'.
     const activityMatchesGrant = matchTemplateObj(activity, grant.activity);
     return activityMatchesGrant;
   });
 };
 
-module.exports = { hasActivityGrant };
+export default { hasActivityGrant };

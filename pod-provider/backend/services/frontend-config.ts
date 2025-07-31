@@ -1,6 +1,7 @@
-const CONFIG = require('../config/config');
+// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
+import CONFIG from '../config/config.ts';
 
-module.exports = {
+export default {
   name: 'frontend-config',
   dependencies: ['api'],
   async started() {
@@ -15,7 +16,7 @@ module.exports = {
     });
   },
   actions: {
-    async get(ctx) {
+    async get(ctx: any) {
       ctx.meta.$responseType = 'text/javascript';
       return `
         window.CONFIG = {
@@ -25,7 +26,7 @@ module.exports = {
             .join(', ')}},
           INSTANCE_OWNER: "${CONFIG.INSTANCE_OWNER}",
           INSTANCE_AREA: "${CONFIG.INSTANCE_AREA}",
-          AVAILABLE_LOCALES: [${CONFIG.AVAILABLE_LOCALES.map(l => `"${l}"`).join(', ')}],
+          AVAILABLE_LOCALES: [${CONFIG.AVAILABLE_LOCALES.map((l: any) => `"${l}"`).join(', ')}],
           DEFAULT_LOCALE: "${CONFIG.DEFAULT_LOCALE}",
           ENABLE_GROUPS: ${CONFIG.ENABLE_GROUPS},
           BACKEND_URL: "${CONFIG.BASE_URL}",

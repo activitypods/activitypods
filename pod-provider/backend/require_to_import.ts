@@ -1,3 +1,4 @@
+// @ts-expect-error TS(2307): Cannot find module 'jscodeshift' or its correspond... Remove this comment to see the full error message
 import type { FileInfo, API, Options } from 'jscodeshift';
 
 export default function transform(file: FileInfo, api: API, options: Options): string | undefined {
@@ -9,7 +10,7 @@ export default function transform(file: FileInfo, api: API, options: Options): s
     .find(j.CallExpression, {
       callee: { type: 'Identifier', name: 'require' }
     })
-    .forEach(path => {
+    .forEach((path: any) => {
       // Ensure the parent node is a VariableDeclarator
       if (path.parent.node.type === 'VariableDeclarator') {
         // Get the module name
@@ -24,7 +25,7 @@ export default function transform(file: FileInfo, api: API, options: Options): s
         } else if (path.parent.node.id.type === 'ObjectPattern') {
           // Destructuring: const { foo, bar } = require('baz')
           const importSpecifiers = path.parent.node.id.properties
-            .map(prop => {
+            .map((prop: any) => {
               if (prop.type === 'Property' && prop.key.type === 'Identifier') {
                 if (prop.computed === false && prop.key.name === prop.value.name) {
                   // { foo } shorthand

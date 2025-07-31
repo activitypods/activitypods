@@ -1,8 +1,9 @@
 // Read all .env* files in the root folder and add them to process.env
 // See https://github.com/kerimdzhanov/dotenv-flow for more details
-require('dotenv-flow').config();
+import { config } from 'dotenv-flow';
+config();
 
-module.exports = {
+export default {
   INSTANCE_NAME: process.env.SEMAPPS_INSTANCE_NAME,
   INSTANCE_DESCRIPTION: {
     en: process.env.SEMAPPS_INSTANCE_DESCRIPTION_EN || process.env.SEMAPPS_INSTANCE_DESCRIPTION,
@@ -16,6 +17,7 @@ module.exports = {
   SHAPE_REPOSITORY_URL: process.env.SEMAPPS_SHAPE_REPOSITORY_URL,
   COLOR_PRIMARY: process.env.SEMAPPS_COLOR_PRIMARY,
   COLOR_SECONDARY: process.env.SEMAPPS_COLOR_SECONDARY,
+  // @ts-expect-error TS(2532): Object is possibly 'undefined'.
   AVAILABLE_LOCALES: process.env.SEMAPPS_AVAILABLE_LOCALES.split(','),
   DEFAULT_LOCALE: process.env.SEMAPPS_DEFAULT_LOCALE,
   ENABLE_GROUPS: process.env.SEMAPPS_ENABLE_GROUPS === 'true',
@@ -36,11 +38,13 @@ module.exports = {
   FROM_EMAIL: process.env.SEMAPPS_FROM_EMAIL,
   FROM_NAME: process.env.SEMAPPS_FROM_NAME,
   SMTP_HOST: process.env.SEMAPPS_SMTP_HOST,
+  // @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message
   SMTP_PORT: parseInt(process.env.SEMAPPS_SMTP_PORT, 10),
   SMTP_SECURE: process.env.SEMAPPS_SMTP_SECURE === 'true',
   SMTP_USER: process.env.SEMAPPS_SMTP_USER,
   SMTP_PASS: process.env.SEMAPPS_SMTP_PASS,
   // Auth
+  // @ts-expect-error TS(2532): Object is possibly 'undefined'.
   AUTH_RESERVED_USER_NAMES: process.env.SEMAPPS_AUTH_RESERVED_USER_NAMES.split(','),
   AUTH_ACCOUNTS_DATASET: process.env.SEMAPPS_AUTH_ACCOUNTS_DATASET,
   // Backup

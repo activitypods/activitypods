@@ -1,8 +1,7 @@
-const CONFIG = require('./config');
+// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
+import CONFIG from './config.ts';
 
-// See https://nodemailer.com/transports/ for other kind of Nodemailer transports
-
-module.exports = {
+export default {
   host: CONFIG.SMTP_HOST,
   port: CONFIG.SMTP_PORT,
   secure: CONFIG.SMTP_SECURE,

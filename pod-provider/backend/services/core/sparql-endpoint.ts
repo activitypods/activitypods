@@ -1,6 +1,7 @@
-const { SparqlEndpointService } = require('@semapps/sparql-endpoint');
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { SparqlEndpointService } from '@semapps/sparql-endpoint';
 
-module.exports = {
+export default {
   mixins: [SparqlEndpointService],
   settings: {
     podProvider: true,

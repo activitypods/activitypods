@@ -1,9 +1,13 @@
-const urlJoin = require('url-join');
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const CONFIG = require('../../config/config');
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
+// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+export default {
   name: 'contacts.message',
   mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
   settings: {
@@ -21,7 +25,7 @@ module.exports = {
           type: OBJECT_TYPES.NOTE
         }
       },
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         // Ensure the recipients are in the contacts WebACL group of the emitter so they can see his profile (and respond him)
         for (let targetUri of arrayOf(activity.to)) {
           await ctx.call('webacl.group.addMember', {
@@ -31,7 +35,7 @@ module.exports = {
           });
         }
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // For now, only send notification for direct messages (not sent through followers list, nor CCed)
         // Otherwise we may get dozens of messages from Mastodon actors, which should be read on Mastopod feed
         if (arrayOf(activity.to).includes(recipientUri)) {

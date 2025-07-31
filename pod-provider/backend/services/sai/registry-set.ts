@@ -1,7 +1,8 @@
-const { triple, namedNode } = require('@rdfjs/data-model');
-const { SingleResourceContainerMixin } = require('@semapps/ldp');
+import { triple, namedNode } from '@rdfjs/data-model';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { SingleResourceContainerMixin } from '@semapps/ldp';
 
-module.exports = {
+export default {
   name: 'registry-set',
   mixins: [SingleResourceContainerMixin],
   settings: {
@@ -10,7 +11,7 @@ module.exports = {
   },
   hooks: {
     after: {
-      async post(ctx, res) {
+      async post(ctx: any, res: any) {
         await ctx.call('ldp.resource.patch', {
           resourceUri: ctx.params.webId,
           triplesToAdd: [

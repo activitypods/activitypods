@@ -1,9 +1,15 @@
-const { WebAclMiddleware, CacherMiddleware } = require('@semapps/webacl');
-const { ObjectsWatcherMiddleware } = require('@semapps/sync');
-const AppControlMiddleware = require('./middlewares/app-control');
-const CONFIG = require('./config/config');
-const errorHandler = require('./config/errorHandler');
-const RdfJSONSerializer = require('./RdfJSONSerializer');
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { WebAclMiddleware, CacherMiddleware } from '@semapps/webacl';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { ObjectsWatcherMiddleware } from '@semapps/sync';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import AppControlMiddleware from './middlewares/app-control.ts';
+// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
+import CONFIG from './config/config.ts';
+// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
+import errorHandler from './config/errorHandler.ts';
+// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
+import RdfJSONSerializer from './RdfJSONSerializer.ts';
 
 Error.stackTraceLimit = Infinity;
 
@@ -19,8 +25,7 @@ const cacherConfig = CONFIG.REDIS_CACHE_URL
     }
   : undefined;
 
-/** @type {import('moleculer').BrokerOptions} */
-module.exports = {
+export default {
   nodeID: 'pod-provider',
   // You can set all ServiceBroker configurations here
   // See https://moleculer.services/docs/0.14/configuration.html

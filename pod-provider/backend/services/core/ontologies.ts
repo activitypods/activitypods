@@ -1,9 +1,9 @@
-const {
+import {
   OntologiesService,
   dc,
   did,
   pair,
-  void: voidOntology,
+  void as voidOntology,
   interop,
   notify,
   oidc,
@@ -11,10 +11,13 @@ const {
   apods,
   pim,
   vcard
-} = require('@semapps/ontologies');
-const CONFIG = require('../../config/config');
+  // @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+} from '@semapps/ontologies';
 
-module.exports = {
+// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
+import CONFIG from '../../config/config.ts';
+
+export default {
   mixins: [OntologiesService],
   settings: {
     // TODO remove pair from core ontologies

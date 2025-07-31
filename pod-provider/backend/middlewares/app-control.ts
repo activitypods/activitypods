@@ -1,8 +1,12 @@
-const urlJoin = require('url-join');
-const { Errors: E } = require('moleculer-web');
-const { arrayOf, hasType, getWebIdFromUri, getParentContainerUri } = require('@semapps/ldp');
-const { FULL_ACTIVITY_TYPES, FULL_ACTOR_TYPES } = require('@semapps/activitypub');
-const { MIME_TYPES } = require('@semapps/mime-types');
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
+import { Errors as E } from 'moleculer';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { arrayOf, hasType, getWebIdFromUri, getParentContainerUri } from '@semapps/ldp';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { FULL_ACTIVITY_TYPES, FULL_ACTOR_TYPES } from '@semapps/activitypub';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { MIME_TYPES } from '@semapps/mime-types';
 
 const DEFAULT_ALLOWED_TYPES = [
   ...Object.values(FULL_ACTOR_TYPES),
@@ -19,7 +23,7 @@ const DEFAULT_ALLOWED_TYPES = [
 ];
 
 // TODO use cache to improve performances
-const getAllowedTypes = async (ctx, appUri, podOwner, accessMode) => {
+const getAllowedTypes = async (ctx: any, appUri: any, podOwner: any, accessMode: any) => {
   const dataAuthorizations = await ctx.call('data-authorizations.getForApp', { appUri, podOwner });
 
   let types = [...DEFAULT_ALLOWED_TYPES];
@@ -38,14 +42,14 @@ const getAllowedTypes = async (ctx, appUri, podOwner, accessMode) => {
   return await ctx.call('jsonld.parser.expandTypes', { types });
 };
 
-const AppControlMiddleware = ({ baseUrl }) => ({
+const AppControlMiddleware = ({ baseUrl }: any) => ({
   name: 'AppControlMiddleware',
   async started() {
     if (!baseUrl) throw new Error('The baseUrl config is missing for the AppControlMiddleware');
   },
-  localAction: (next, action) => {
+  localAction: (next: any, action: any) => {
     if (action.name === 'signature.proxy.api_query') {
-      return async ctx => {
+      return async (ctx: any) => {
         const podOwner = urlJoin(baseUrl, ctx.params.username);
         const url = ctx.params.id;
 
@@ -91,7 +95,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
 
           const allowedTypes = await getAllowedTypes(ctx, appUri, podOwner, 'acl:Write');
 
-          if (!resourceTypes.some(t => allowedTypes.includes(t))) {
+          if (!resourceTypes.some((t: any) => allowedTypes.includes(t))) {
             throw new E.ForbiddenError(
               `The type of the resource being modified (${resourceTypes.join(', ')}) doesn't match any authorized types`
             );
@@ -109,7 +113,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
 
           const allowedTypes = await getAllowedTypes(ctx, appUri, podOwner, 'acl:Write');
 
-          if (!resourceTypes.some(t => allowedTypes.includes(t))) {
+          if (!resourceTypes.some((t: any) => allowedTypes.includes(t))) {
             throw new E.ForbiddenError(
               `Some of the resources' types being posted (${resourceTypes.join(', ')}) are not authorized`
             );
@@ -129,7 +133,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
 
           // TODO If the resource is a LDP container, ensure that all contained resources types are allowed
           let resourceTypes = result['@graph']
-            ? [].concat(result['@graph'].map(r => r.type || r['@type']))
+            ? [].concat(result['@graph'].map((r: any) => r.type || r['@type']))
             : result.type || result['@type'];
 
           resourceTypes = await ctx.call('jsonld.parser.expandTypes', {
@@ -137,7 +141,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
             context: result['@context']
           });
 
-          if (resourceTypes.length > 0 && !resourceTypes.some(t => allowedTypes.includes(t))) {
+          if (resourceTypes.length > 0 && !resourceTypes.some((t: any) => allowedTypes.includes(t))) {
             throw new E.ForbiddenError(
               `Some of the resources' types being fetched (${resourceTypes.join(', ')}) are not authorized`
             );
@@ -147,7 +151,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         return result;
       };
     } else if (action.name === 'activitypub.outbox.post') {
-      return async ctx => {
+      return async (ctx: any) => {
         const { collectionUri, ...activity } = ctx.params;
         const podOwner = getParentContainerUri(collectionUri);
 
@@ -194,7 +198,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
             }
           }
 
-          if (!resourceTypes.some(t => allowedTypes.includes(t))) {
+          if (!resourceTypes.some((t: any) => allowedTypes.includes(t))) {
             throw new E.ForbiddenError(`The type of the resource doesn't match any authorized types`);
           }
         }
@@ -207,7 +211,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         return await next(ctx);
       };
     } else if (action.name === 'webacl.group.api_create') {
-      return async ctx => {
+      return async (ctx: any) => {
         const { username } = ctx.params;
         const podOwner = urlJoin(baseUrl, username);
 
@@ -231,7 +235,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         return await next(ctx);
       };
     } else if (action.name === 'webacl.group.api_addMember') {
-      return async ctx => {
+      return async (ctx: any) => {
         const { username } = ctx.params;
         const podOwner = urlJoin(baseUrl, username);
 
@@ -261,7 +265,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         }
       };
     } else if (action.name === 'sparqlEndpoint.query') {
-      return async ctx => {
+      return async (ctx: any) => {
         const { username } = ctx.params;
         const podOwner = urlJoin(baseUrl, username);
 
@@ -293,7 +297,7 @@ const AppControlMiddleware = ({ baseUrl }) => ({
         return next(ctx);
       };
     } else if (action.name === 'activitypub.collection.get') {
-      return async ctx => {
+      return async (ctx: any) => {
         const { resourceUri: collectionUri } = ctx.params;
         const podOwner = getWebIdFromUri(collectionUri);
 
@@ -329,4 +333,4 @@ const AppControlMiddleware = ({ baseUrl }) => ({
   }
 });
 
-module.exports = AppControlMiddleware;
+export default AppControlMiddleware;

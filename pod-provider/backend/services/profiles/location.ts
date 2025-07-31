@@ -1,9 +1,13 @@
-const urlJoin = require('url-join');
-const { ControlledContainerMixin } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const CONFIG = require('../../config/config');
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { ControlledContainerMixin } from '@semapps/ldp';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { MIME_TYPES } from '@semapps/mime-types';
+// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+export default {
   name: 'profiles.location',
   mixins: [ControlledContainerMixin],
   settings: {
@@ -15,7 +19,7 @@ module.exports = {
     typeIndex: 'public'
   },
   actions: {
-    async getHomeLocation(ctx) {
+    async getHomeLocation(ctx: any) {
       const { webId } = ctx.params;
 
       const results = await ctx.call('triplestore.query', {
@@ -34,7 +38,7 @@ module.exports = {
 
       return results.length > 0 ? results[0].homeLocation.value : null;
     },
-    async clearHomeLocation(ctx) {
+    async clearHomeLocation(ctx: any) {
       const { webId } = ctx.params;
       await ctx.call('triplestore.update', {
         query: `
@@ -60,10 +64,12 @@ module.exports = {
   },
   hooks: {
     after: {
-      async delete(ctx, res) {
+      async delete(ctx: any, res: any) {
         // If the deleted location is the home location of the current user, clear it from profile
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ delet... Remove this comment to see the full error message
         const homeLocation = await this.actions.getHomeLocation({ webId: res.webId }, { parentCtx: ctx });
         if (homeLocation === res.resourceUri) {
+          // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ delet... Remove this comment to see the full error message
           await this.actions.clearHomeLocation({ webId: res.webId }, { parentCtx: ctx });
         }
         return res;

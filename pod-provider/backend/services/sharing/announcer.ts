@@ -1,23 +1,28 @@
-const path = require('path');
-const urlJoin = require('url-join');
-const { arrayOf } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const matchActivity = require('@semapps/activitypub/utils/matchActivity');
+import path from 'path';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { arrayOf } from '@semapps/ldp';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { MIME_TYPES } from '@semapps/mime-types';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import matchActivity from '@semapps/activitypub/utils/matchActivity';
 
-const getAnnouncesGroupUri = eventUri => {
+const getAnnouncesGroupUri = (eventUri: any) => {
   const uri = new URL(eventUri);
   uri.pathname = path.join('/_groups', uri.pathname, '/announces');
   return uri.toString();
 };
 
-const getAnnouncersGroupUri = eventUri => {
+const getAnnouncersGroupUri = (eventUri: any) => {
   const uri = new URL(eventUri);
   uri.pathname = path.join('/_groups', uri.pathname, '/announcers');
   return uri.toString();
 };
 
-module.exports = {
+export default {
   name: 'announcer',
   mixins: [ActivitiesHandlerMixin],
   settings: {
@@ -38,7 +43,7 @@ module.exports = {
   },
   dependencies: ['activitypub.collections-registry'],
   actions: {
-    async giveRightsAfterAnnouncesCollectionCreate(ctx) {
+    async giveRightsAfterAnnouncesCollectionCreate(ctx: any) {
       const { objectUri } = ctx.params;
 
       const object = await ctx.call('ldp.resource.awaitCreateComplete', {
@@ -80,7 +85,7 @@ module.exports = {
         });
       }
     },
-    async giveRightsAfterAnnouncersCollectionCreate(ctx) {
+    async giveRightsAfterAnnouncersCollectionCreate(ctx: any) {
       const { objectUri } = ctx.params;
 
       const object = await ctx.call('ldp.resource.awaitCreateComplete', {
@@ -112,13 +117,15 @@ module.exports = {
         webId: object['dc:creator']
       });
     },
-    async updateCollectionsOptions(ctx) {
+    async updateCollectionsOptions(ctx: any) {
       const { dataset } = ctx.params;
       await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ give... Remove this comment to see the full error message
         collection: this.settings.announcesCollectionOptions,
         dataset
       });
       await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+        // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ give... Remove this comment to see the full error message
         collection: this.settings.announcersCollectionOptions,
         dataset
       });
@@ -126,7 +133,8 @@ module.exports = {
   },
   activities: {
     announce: {
-      async match(activity, fetcher) {
+      // @ts-expect-error TS(7023): 'match' implicitly has return type 'any' because i... Remove this comment to see the full error message
+      async match(activity: any, fetcher: any) {
         const { match, dereferencedActivity } = await matchActivity(
           {
             type: ACTIVITY_TYPES.ANNOUNCE
@@ -135,12 +143,13 @@ module.exports = {
           fetcher
         );
         return {
+          // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
           match: match && !(await this.broker.call('activitypub.activity.isPublic', { activity })),
           dereferencedActivity
         };
       },
       /** Add read rights to announced (reposted) object, if announcer is owner. */
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
         const resource = await ctx.call('ldp.resource.get', {
@@ -155,9 +164,11 @@ module.exports = {
 
         const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
           objectUri: resourceUri,
+          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ matc... Remove this comment to see the full error message
           collection: this.settings.announcesCollectionOptions
         });
 
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ match... Remove this comment to see the full error message
         await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
 
         // Add all targeted actors to the collection and WebACL group
@@ -180,7 +191,7 @@ module.exports = {
        * On receipt of an announce activity (repost), cache it in the remote store,
        *  and attach it to type-index registered containers..
        */
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
         // Sometimes, when reposting, a recipient may be the original announcer
@@ -199,7 +210,9 @@ module.exports = {
               webId: recipientUri
             });
           } catch (e) {
+            // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
             this.logger.warn(
+              // @ts-expect-error TS(2571): Object is of type 'unknown'.
               `Unable to cache remote object ${resourceUri} for actor ${recipientUri}. Message: ${e.message}`
             );
           }
@@ -219,6 +232,7 @@ module.exports = {
             if (containersUris.length === 0) {
               // Generate a path for the new container
               const containerPath = await ctx.call('ldp.container.getPath', { resourceType: expandedType });
+              // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
               this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${expandedType}`);
 
               // Create the container and attach it to its parent(s)
@@ -227,6 +241,7 @@ module.exports = {
               await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId: recipientUri });
 
               // If the resource type is invalid, an error will be thrown here
+              // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
               await this.broker.call('type-registrations.register', {
                 types: [expandedType],
                 containerUri: containersUris[0],
@@ -246,7 +261,8 @@ module.exports = {
       }
     },
     offerAnnounce: {
-      async match(activity, fetcher) {
+      // @ts-expect-error TS(7023): 'match' implicitly has return type 'any' because i... Remove this comment to see the full error message
+      async match(activity: any, fetcher: any) {
         const { match, dereferencedActivity } = await matchActivity(
           {
             type: ACTIVITY_TYPES.OFFER,
@@ -258,11 +274,12 @@ module.exports = {
           fetcher
         );
         return {
+          // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
           match: match && !(await this.broker.call('activitypub.activity.isPublic', { activity })),
           dereferencedActivity
         };
       },
-      async onEmit(ctx, activity) {
+      async onEmit(ctx: any, activity: any) {
         const object = await ctx.call('ldp.resource.get', {
           resourceUri: typeof activity.object.object === 'string' ? activity.object.object : activity.object.object.id,
           accept: MIME_TYPES.JSON
@@ -272,9 +289,11 @@ module.exports = {
         if (activity.actor === object['dc:creator']) {
           const announcersCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
             objectUri: object.id,
+            // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ matc... Remove this comment to see the full error message
             collection: this.settings.announcersCollectionOptions
           });
 
+          // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ match... Remove this comment to see the full error message
           await this.actions.giveRightsAfterAnnouncersCollectionCreate({ objectUri: object.id }, { parentCtx: ctx });
 
           // Add all announcers to the collection and WebACL group
@@ -292,7 +311,7 @@ module.exports = {
           }
         }
       },
-      async onReceive(ctx, activity) {
+      async onReceive(ctx: any, activity: any) {
         const object = await ctx.call('ldp.resource.get', {
           resourceUri: typeof activity.object.object === 'string' ? activity.object.object : activity.object.object.id,
           accept: MIME_TYPES.JSON
@@ -301,6 +320,7 @@ module.exports = {
         // If the offer is targeted to the organizer, it means we are an announcer and want him to announce the object to one of our contacts
         if (activity.target === object['dc:creator']) {
           if (!object['apods:announcers']) {
+            // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
             this.logger.warn(`No announcers collection attached to object ${object.id}, skipping...`);
             return;
           }

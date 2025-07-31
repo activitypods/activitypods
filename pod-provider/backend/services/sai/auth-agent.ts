@@ -1,12 +1,16 @@
-const path = require('path');
-const urlJoin = require('url-join');
-const { triple, namedNode } = require('@rdfjs/data-model');
+import path from 'path';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
+import { triple, namedNode } from '@rdfjs/data-model';
 const { MoleculerError } = require('moleculer').Errors;
-const { SingleResourceContainerMixin } = require('@semapps/ldp');
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const CONFIG = require('../../config/config');
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { SingleResourceContainerMixin } from '@semapps/ldp';
+// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
+import { ACTIVITY_TYPES } from '@semapps/activitypub';
+// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+export default {
   name: 'auth-agent',
   mixins: [SingleResourceContainerMixin],
   settings: {
@@ -43,7 +47,7 @@ module.exports = {
   },
   actions: {
     // Action from the ControlledContainerMixin, called when we do GET or HEAD requests on resources
-    async getHeaderLinks(ctx) {
+    async getHeaderLinks(ctx: any) {
       // Only return header if the fetch is made by a registered app
       if (ctx.meta.impersonatedUser) {
         const appUri = ctx.meta.webId;
@@ -62,7 +66,7 @@ module.exports = {
         }
       }
     },
-    async registerApp(ctx) {
+    async registerApp(ctx: any) {
       let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
 
       const webId = ctx.meta.webId;
@@ -101,6 +105,7 @@ module.exports = {
         acceptedSpecialRights
       });
 
+      // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ getHea... Remove this comment to see the full error message
       if (this.broker.cacher) {
         // Invalidate all rights of the application on the Pod as they may now be completely different
         await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: webId });
@@ -118,7 +123,7 @@ module.exports = {
 
       return appRegistrationUri;
     },
-    async upgradeApp(ctx) {
+    async upgradeApp(ctx: any) {
       let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
 
       const webId = ctx.meta.webId;
@@ -147,6 +152,7 @@ module.exports = {
         acceptedSpecialRights
       });
 
+      // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ getHea... Remove this comment to see the full error message
       if (this.broker.cacher) {
         // Invalidate all rights of the application on the Pod as they may now be completely different
         await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: webId });
@@ -164,7 +170,7 @@ module.exports = {
 
       return appRegistrationUri;
     },
-    async removeApp(ctx) {
+    async removeApp(ctx: any) {
       const { appUri } = ctx.params;
 
       const webId = ctx.meta.webId;
@@ -193,6 +199,7 @@ module.exports = {
           });
         }
 
+        // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ getHea... Remove this comment to see the full error message
         if (this.broker.cacher) {
           // Invalidate all rights of the application on the Pod as they may now be completely different
           await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: webId });
@@ -202,7 +209,7 @@ module.exports = {
   },
   hooks: {
     after: {
-      async post(ctx, res) {
+      async post(ctx: any, res: any) {
         await ctx.call('ldp.resource.patch', {
           resourceUri: ctx.params.webId,
           triplesToAdd: [

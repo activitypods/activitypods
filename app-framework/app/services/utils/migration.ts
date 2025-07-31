@@ -1,7 +1,7 @@
-const urlJoin = require('url-join');
-const { triple, namedNode } = require('@rdfjs/data-model');
+import urlJoin from 'url-join';
+import { triple, namedNode } from '@rdfjs/data-model';
 
-module.exports = {
+const MigrationSchema = {
   name: 'migration',
   settings: {
     baseUrl: null
@@ -60,3 +60,5 @@ module.exports = {
     }
   }
 };
+
+export default MigrationSchema;

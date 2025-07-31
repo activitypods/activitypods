@@ -1,6 +1,6 @@
-const { MIME_TYPES } = require('@semapps/mime-types');
+import { MIME_TYPES } from '@semapps/mime-types';
 
-module.exports = {
+const ShapeTreesSchema = {
   name: 'shape-trees',
   actions: {
     async get(ctx) {
@@ -20,3 +20,5 @@ module.exports = {
     }
   }
 };
+
+export default ShapeTreesSchema;

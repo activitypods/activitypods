@@ -1,9 +1,9 @@
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
 
 /**
  * Mirror container for data grants which have been granted to the app
  */
-module.exports = {
+const DataGrantsSchema = {
   name: 'data-grants',
   mixins: [ControlledContainerMixin],
   settings: {
@@ -63,3 +63,5 @@ module.exports = {
     }
   }
 };
+
+export default DataGrantsSchema;

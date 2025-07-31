@@ -1,7 +1,7 @@
-const createSlug = require('speakingurl');
-const FetchPodOrProxyMixin = require('../../mixins/fetch-pod-or-proxy');
+import createSlug from 'speakingurl';
+import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 
-module.exports = {
+const PodWacGroupsSchema = {
   name: 'pod-wac-groups',
   mixins: [FetchPodOrProxyMixin],
   actions: {
@@ -111,3 +111,5 @@ module.exports = {
     }
   }
 };
+
+export default PodWacGroupsSchema;

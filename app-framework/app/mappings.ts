@@ -3,6 +3,4 @@ const necessityMapping = {
   optional: 'http://www.w3.org/ns/solid/interop#AccessOptional'
 };
 
-module.exports = {
-  necessityMapping
-};
+export { necessityMapping };

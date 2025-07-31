@@ -1,8 +1,8 @@
-const { ControlledContainerMixin } = require('@semapps/ldp');
-const { necessityMapping } = require('../../mappings');
-const { arraysEqual } = require('../../utils');
+import { ControlledContainerMixin } from '@semapps/ldp';
+import { necessityMapping } from '../../mappings.ts';
+import { arraysEqual } from '../../utils.ts';
 
-module.exports = {
+const AccessNeedsSchema = {
   name: 'access-needs',
   mixins: [ControlledContainerMixin],
   settings: {
@@ -35,3 +35,5 @@ module.exports = {
     }
   }
 };
+
+export default AccessNeedsSchema;

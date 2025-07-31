@@ -1,7 +1,7 @@
-const Handlebars = require('handlebars');
-const { isObject } = require('@semapps/ldp');
+import Handlebars from 'handlebars';
+import { isObject } from '@semapps/ldp';
 
-module.exports = {
+const TranslatorSchema = {
   name: 'translator',
   settings: {
     frontUrl: null,
@@ -54,3 +54,5 @@ module.exports = {
     }
   }
 };
+
+export default TranslatorSchema;

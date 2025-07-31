@@ -1,4 +1,4 @@
-module.exports = {
+const TimerSchema = {
   name: 'timer',
   actions: {
     async get(ctx) {
@@ -82,3 +82,5 @@ module.exports = {
     }
   }
 };
+
+export default TimerSchema;

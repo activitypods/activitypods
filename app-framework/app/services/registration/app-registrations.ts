@@ -1,10 +1,10 @@
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
+import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
 
 /**
  * Mirror container for application registrations
  */
-module.exports = {
+const AppRegistrationsSchema = {
   name: 'app-registrations',
   mixins: [ControlledContainerMixin],
   settings: {
@@ -128,3 +128,5 @@ module.exports = {
     }
   }
 };
+
+export default AppRegistrationsSchema;

@@ -1,9 +1,9 @@
-const { Readable } = require('stream');
-const { FormData } = require('formdata-node');
-const { FormDataEncoder } = require('form-data-encoder');
-const { stream2buffer } = require('../utils');
+import { Readable } from 'stream';
+import { FormData } from 'formdata-node';
+import { FormDataEncoder } from 'form-data-encoder';
+import { stream2buffer } from '../utils.ts';
 
-module.exports = {
+const Schema = {
   actions: {
     async fetch(ctx) {
       let { url, method = 'GET', headers = {}, body, actorUri } = ctx.params;
@@ -82,3 +82,5 @@ module.exports = {
     }
   }
 };
+
+export default Schema;

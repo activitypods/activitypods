@@ -1,7 +1,7 @@
-const { getContainerFromUri, arrayOf, isObject, isURL } = require('@semapps/ldp');
-const { matchActivity } = require('@semapps/activitypub');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { objectDepth } = require('../../utils');
+import { getContainerFromUri, arrayOf, isObject, isURL } from '@semapps/ldp';
+import { matchActivity } from '@semapps/activitypub';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { objectDepth } from '../../utils.ts';
 
 const queueOptions =
   process.env.NODE_ENV === 'test'
@@ -15,7 +15,7 @@ const queueOptions =
         backoff: { type: 'exponential', delay: '180000' }
       };
 
-module.exports = {
+const PodActivitiesWatcherSchema = {
   name: 'pod-activities-watcher',
   dependencies: ['triplestore', 'ldp', 'activitypub.actor', 'solid-notifications.listener'],
   async started() {
@@ -222,3 +222,5 @@ module.exports = {
     }
   }
 };
+
+export default PodActivitiesWatcherSchema;

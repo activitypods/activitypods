@@ -83,7 +83,9 @@ const PodCollectionsSchema = {
         });
 
         if (ok) {
-          const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
+          const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', {
+            predicate: attachPredicate
+          });
 
           const collectionUri = await this.actions.getCollectionUriFromResource({
             resource,

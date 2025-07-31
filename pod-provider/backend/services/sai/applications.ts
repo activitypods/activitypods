@@ -1,6 +1,4 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -49,13 +47,11 @@ const ApplicationsServiceSchema = {
     }),
 
     getClassDescription: defineAction({
-      // @ts-expect-error TS(7023): 'getClassDescription' implicitly has return type '... Remove this comment to see the full error message
       async handler(ctx: any) {
         const { type, appUri, podOwner } = ctx.params;
 
         const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
 
-        // @ts-expect-error TS(7022): 'app' implicitly has type 'any' because it does no... Remove this comment to see the full error message
         const app = await this.actions.get({ appUri }, { parentCtx: ctx });
 
         if (app['interop:hasAccessDescriptionSet']) {
@@ -69,9 +65,7 @@ const ApplicationsServiceSchema = {
 
           let classDescriptionsUris, defaultClassDescriptionsUris;
 
-          // @ts-expect-error TS(7022): 'setUri' implicitly has type 'any' because it does... Remove this comment to see the full error message
           for (const setUri of arrayOf(app['interop:hasAccessDescriptionSet'])) {
-            // @ts-expect-error TS(7022): 'set' implicitly has type 'any' because it does no... Remove this comment to see the full error message
             const set = await ctx.call('ldp.remote.get', { resourceUri: setUri, webId: podOwner });
             if (set['interop:usesLanguage'] === userLocale) {
               classDescriptionsUris = arrayOf(set['apods:hasClassDescription']);
@@ -82,9 +76,7 @@ const ApplicationsServiceSchema = {
 
           if (!classDescriptionsUris) classDescriptionsUris = defaultClassDescriptionsUris;
 
-          // @ts-expect-error TS(7022): 'classDescriptionUri' implicitly has type 'any' be... Remove this comment to see the full error message
           for (const classDescriptionUri of classDescriptionsUris) {
-            // @ts-expect-error TS(7022): 'classDescription' implicitly has type 'any' becau... Remove this comment to see the full error message
             const classDescription = await ctx.call('ldp.remote.get', {
               resourceUri: classDescriptionUri,
               webId: podOwner

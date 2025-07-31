@@ -1,8 +1,5 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { MIME_TYPES } from '@semapps/mime-types';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { getDatasetFromUri, hasType, isURL } from '@semapps/ldp';
 import { ServiceSchema, defineAction, defineServiceEvent } from 'moleculer';
 
@@ -14,11 +11,9 @@ const DataRegistrationsServiceSchema = {
       /**
        * Create a DataRegistration AND a LDP container in a given storage
        */
-      // @ts-expect-error TS(7023): 'generateFromShapeTree' implicitly has return type... Remove this comment to see the full error message
       async handler(ctx: any) {
         const { shapeTreeUri, podOwner } = ctx.params;
 
-        // @ts-expect-error TS(7022): 'existingDataRegistration' implicitly has type 'an... Remove this comment to see the full error message
         const existingDataRegistration = await this.actions.getByShapeTree({ shapeTreeUri, podOwner });
         if (existingDataRegistration) return existingDataRegistration;
 
@@ -29,7 +24,6 @@ const DataRegistrationsServiceSchema = {
         if (!registeredClass) throw new Error(`Could not find class required by shape ${shapeUri}`);
 
         // Register ontology, otherwise the ldp.container.getPath action will fail
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ gener... Remove this comment to see the full error message
         await this.actions.registerOntologyFromClass({ registeredClass }, { parentCtx: ctx });
 
         // Generate a path for the new container
@@ -48,7 +42,6 @@ const DataRegistrationsServiceSchema = {
           private: false
         });
 
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ gener... Remove this comment to see the full error message
         await this.actions.attachToContainer({ shapeTreeUri, containerUri, podOwner }, { parentCtx: ctx });
 
         return containerUri;
@@ -124,7 +117,6 @@ const DataRegistrationsServiceSchema = {
           dataRegistrationUri: containerUri
         });
 
-        // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ genera... Remove this comment to see the full error message
         if (this.broker.cacher) {
           // We don't want to invalidate the cache of all resources within the container, so consider the container like a resource
           await ctx.call('ldp.cache.invalidateResource', { resourceUri: containerUri });
@@ -171,7 +163,6 @@ const DataRegistrationsServiceSchema = {
           ontology = await ctx.call('ontologies.get', { uri: registeredClass });
         } else if (registeredClass.match(regex)) {
           const matchResults = regex.exec(registeredClass);
-          // @ts-expect-error TS(2531): Object is possibly 'null'.
           ontology = await ctx.call('ontologies.get', { prefix: matchResults[1] });
         } else {
           throw new Error(`Registered class must be an URI or prefixed. Received ${registeredClass}`);
@@ -204,7 +195,6 @@ const DataRegistrationsServiceSchema = {
 
         // If a shape tree is in the container option of the newly-created container, attach
         if (options?.shapeTreeUri) {
-          // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ 'ldp.... Remove this comment to see the full error message
           await this.actions.attachToContainer(
             {
               shapeTreeUri: options.shapeTreeUri,

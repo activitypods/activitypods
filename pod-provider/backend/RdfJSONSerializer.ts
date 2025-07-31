@@ -1,4 +1,3 @@
-// @ts-expect-error TS(1208): 'RdfJSONSerializer.ts' cannot be compiled under '-... Remove this comment to see the full error message
 const BaseSerializer = require('moleculer').Serializers.Base;
 
 /**

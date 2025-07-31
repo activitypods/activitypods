@@ -1,6 +1,4 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -32,16 +30,13 @@ const DataAuthorizationsServiceSchema = {
       /**
        * Generate a DataAuthorization based on a AccessNeed, unless it already exists
        */
-      // @ts-expect-error TS(7023): 'generateFromAccessNeed' implicitly has return typ... Remove this comment to see the full error message
       async handler(ctx: any) {
         const { accessNeedUri, podOwner, appUri } = ctx.params;
 
         // Check if a data authorization already exist for this access need
-        // @ts-expect-error TS(7022): 'dataAuthorization' implicitly has type 'any' beca... Remove this comment to see the full error message
         const dataAuthorization = await this.actions.getByAccessNeed({ accessNeedUri, podOwner }, { parentCtx: ctx });
 
         if (dataAuthorization) {
-          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ put():... Remove this comment to see the full error message
           this.logger.info(`Found data authorization ${dataAuthorization.id} linked with access need ${accessNeedUri}`);
           return dataAuthorization.id;
         } else {
@@ -73,11 +68,9 @@ const DataAuthorizationsServiceSchema = {
 
     getByAccessNeed: defineAction({
       // Get the DataAuthorization linked with an AccessNeed
-      // @ts-expect-error TS(7023): 'getByAccessNeed' implicitly has return type 'any'... Remove this comment to see the full error message
       async handler(ctx: any) {
         const { accessNeedUri, podOwner } = ctx.params;
 
-        // @ts-expect-error TS(7022): 'filteredContainer' implicitly has type 'any' beca... Remove this comment to see the full error message
         const filteredContainer = await this.actions.list(
           {
             filters: {
@@ -95,14 +88,11 @@ const DataAuthorizationsServiceSchema = {
 
     getForApp: defineAction({
       // Get all the DataAuthorizations granted to an application
-      // @ts-expect-error TS(7023): 'getForApp' implicitly has return type 'any' becau... Remove this comment to see the full error message
       async handler(ctx: any) {
         const { appUri, podOwner } = ctx.params;
 
-        // @ts-expect-error TS(7022): 'containerUri' implicitly has type 'any' because i... Remove this comment to see the full error message
         const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
 
-        // @ts-expect-error TS(7022): 'filteredContainer' implicitly has type 'any' beca... Remove this comment to see the full error message
         const filteredContainer = await this.actions.list(
           {
             containerUri,
@@ -123,19 +113,15 @@ const DataAuthorizationsServiceSchema = {
       // Delete DataAuthorizations which are not linked anymore to an AccessNeed (may happen on app upgrade)
       async handler(ctx: any) {
         const { appUri, podOwner } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ put()... Remove this comment to see the full error message
         const dataAuthorizations = await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx });
         for (const dataAuthorization of dataAuthorizations) {
           try {
             await ctx.call('ldp.remote.get', { resourceUri: dataAuthorization['interop:satisfiesAccessNeed'] });
           } catch (e) {
-            // @ts-expect-error TS(2571): Object is of type 'unknown'.
             if (e.code === 404) {
-              // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ put():... Remove this comment to see the full error message
               this.logger.info(
                 `Deleting data authorization ${dataAuthorization.id} as it is not linked anymore with an existing access need...`
               );
-              // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ put()... Remove this comment to see the full error message
               await this.actions.delete({ resourceUri: dataAuthorization.id, webId: podOwner });
             } else {
               throw e;

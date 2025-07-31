@@ -1,4 +1,3 @@
-// @ts-expect-error TS(2307): Cannot find module 'jscodeshift' or its correspond... Remove this comment to see the full error message
 import type { FileInfo, API, Options } from 'jscodeshift';
 
 export default function transform(file: FileInfo, api: API, options: Options): string | undefined {

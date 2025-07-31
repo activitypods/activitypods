@@ -1,5 +1,4 @@
 import { triple, namedNode } from '@rdfjs/data-model';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { SingleResourceContainerMixin } from '@semapps/ldp';
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -22,10 +21,8 @@ const AgentRegistryServiceSchema = {
         if (!appRegistrationUri && !socialAgentRegistrationUri)
           throw new Error(`The params appRegistrationUri or socialAgentRegistrationUri are required`);
 
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ add(c... Remove this comment to see the full error message
         const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
 
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ add(c... Remove this comment to see the full error message
         await this.actions.patch(
           {
             resourceUri: agentRegistryUri,
@@ -54,10 +51,8 @@ const AgentRegistryServiceSchema = {
         if (!appRegistrationUri && !socialAgentRegistrationUri)
           throw new Error(`The params appRegistrationUri or socialAgentRegistrationUri are required`);
 
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ add(c... Remove this comment to see the full error message
         const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
 
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ add(c... Remove this comment to see the full error message
         await this.actions.patch(
           {
             resourceUri: agentRegistryUri,

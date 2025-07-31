@@ -1,4 +1,3 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { arrayOf } from '@semapps/ldp';
 
 const matchTemplateObj = (obj: any, template: any) => {
@@ -46,7 +45,6 @@ const hasActivityGrant = (capabilityPresentation: any, templateActivity: any) =>
     if (!grantMatchesTemplate) return false;
 
     // Check if all fields in the grant are included in the activity too.
-    // @ts-expect-error TS(2304): Cannot find name 'activity'.
     const activityMatchesGrant = matchTemplateObj(activity, grant.activity);
     return activityMatchesGrant;
   });

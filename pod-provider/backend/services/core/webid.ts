@@ -38,14 +38,12 @@ const WebIdService = {
         return ctx.call(
           'ldp.resource.get',
           {
-            // @ts-expect-error TS(2533): Object is possibly 'null' or 'undefined'.
             accept: this.settings.accept,
             ...ctx.params,
             webId: 'system'
           },
           {
             meta: {
-              // @ts-expect-error TS(2533): Object is possibly 'null' or 'undefined'.
               dataset: this.settings.podProvider ? getDatasetFromUri(ctx.params.resourceUri) : undefined
             }
           }
@@ -61,7 +59,6 @@ const WebIdService = {
         let { email, nick, name, familyName, homepage, ...rest } = ctx.params;
 
         if (!nick && email) {
-          // @ts-expect-error TS(2322): Type 'any' is not assignable to type 'never'.
           nick = email.split('@')[0].toLowerCase();
         }
 
@@ -77,12 +74,9 @@ const WebIdService = {
           ...rest
         };
 
-        // @ts-expect-error TS(2533): Object is possibly 'null' or 'undefined'.
         if (this.settings.podProvider) {
           // In Pod provider config, there is no LDP container for the webId, so we must create it directly
-          // @ts-expect-error TS(2533): Object is possibly 'null' or 'undefined'.
           webId = urlJoin(this.settings.baseUrl, nick);
-          // @ts-expect-error TS(2533): Object is possibly 'null' or 'undefined'.
           await this.actions.create(
             {
               resource: {
@@ -95,9 +89,7 @@ const WebIdService = {
             { parentCtx: ctx }
           );
         } else {
-          // @ts-expect-error TS(2533): Object is possibly 'null' or 'undefined'.
           if (!this.settings.path) throw new Error('The path setting is required');
-          // @ts-expect-error TS(2533): Object is possibly 'null' or 'undefined'.
           webId = await this.actions.post(
             {
               resource,
@@ -109,7 +101,6 @@ const WebIdService = {
           );
         }
 
-        // @ts-expect-error TS(2533): Object is possibly 'null' or 'undefined'.
         const webIdData = await this.actions.get(
           {
             resourceUri: webId,

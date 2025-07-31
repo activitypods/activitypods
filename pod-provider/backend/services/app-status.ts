@@ -1,8 +1,6 @@
 const { MoleculerError } = require('moleculer').Errors;
 
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { getDatasetFromUri } from '@semapps/ldp';
-// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import CONFIG from '../config/config.ts';
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -10,7 +8,6 @@ const AppStatusService = {
   name: 'app-status' as const,
   dependencies: ['api'],
   started() {
-    // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ name: ... Remove this comment to see the full error message
     this.broker.call('api.addRoute', {
       route: {
         name: 'app-status',

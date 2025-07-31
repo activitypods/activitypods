@@ -134,7 +134,10 @@ const AccessNeedsGroupsSchema = {
               this.logger.info(
                 `Deleting access need group ${existingAccessNeedGroup.id} as there are no more ${necessity} access needs`
               );
-              await this.actions.delete({ resourceUri: existingAccessNeedGroup.id, webId: 'system' }, { parentCtx: ctx });
+              await this.actions.delete(
+                { resourceUri: existingAccessNeedGroup.id, webId: 'system' },
+                { parentCtx: ctx }
+              );
               for (const accessNeedUri of arrayOf(existingAccessNeedGroup['interop:hasAccessNeed'])) {
                 this.logger.info(`Deleting related access need ${accessNeedUri}`);
                 await ctx.call('access-needs.delete', { resourceUri: accessNeedUri, webId: 'system' });

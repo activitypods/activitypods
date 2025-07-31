@@ -1,14 +1,8 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } from '@semapps/activitypub';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { sanitizeSparqlQuery } from '@semapps/triplestore';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { arrayOf } from '@semapps/ldp';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { MIME_TYPES } from '@semapps/mime-types';
-// @ts-expect-error TS(2459): Module '"../../config/patterns"' declares 'ADD_CON... Remove this comment to see the full error message
 import { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } from '../../config/patterns.ts';
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -38,7 +32,6 @@ const ContactsManagerServiceSchema = {
       async handler(ctx: any) {
         const { dataset } = ctx.params;
         await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
           collection: this.settings.ignoredContactsCollectionOptions,
           dataset
         });

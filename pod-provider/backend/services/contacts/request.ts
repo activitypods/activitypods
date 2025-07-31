@@ -1,15 +1,9 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin, OBJECT_TYPES, matchActivity } from '@semapps/activitypub';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { arrayOf } from '@semapps/ldp';
 import {
-  // @ts-expect-error TS(2459): Module '"../../config/patterns"' declares 'CONTACT... Remove this comment to see the full error message
   CONTACT_REQUEST,
-  // @ts-expect-error TS(2459): Module '"../../config/patterns"' declares 'ACCEPT_... Remove this comment to see the full error message
   ACCEPT_CONTACT_REQUEST,
-  // @ts-expect-error TS(2459): Module '"../../config/patterns"' declares 'REJECT_... Remove this comment to see the full error message
   REJECT_CONTACT_REQUEST,
-  // @ts-expect-error TS(2459): Module '"../../config/patterns"' declares 'IGNORE_... Remove this comment to see the full error message
   IGNORE_CONTACT_REQUEST
 } from '../../config/patterns.ts';
 
@@ -17,10 +11,8 @@ import {
   CONTACT_REQUEST_MAPPING,
   ACCEPT_CONTACT_REQUEST_MAPPING,
   AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
-  // @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 } from '../../config/mappings.ts';
 
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -71,17 +63,14 @@ const ContactsRequestServiceSchema = {
       async handler(ctx: any) {
         const { dataset } = ctx.params;
         await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
           collection: this.settings.contactsCollectionOptions,
           dataset
         });
         await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
           collection: this.settings.contactRequestsCollectionOptions,
           dataset
         });
         await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
           collection: this.settings.rejectedContactsCollectionOptions,
           dataset
         });

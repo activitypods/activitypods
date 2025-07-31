@@ -1,12 +1,9 @@
 import path from 'path';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'iore... Remove this comment to see the full error message
 import Redis from 'ioredis';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { delay } from '@semapps/ldp';
 import { Errors as E, ServiceSchema, defineAction } from 'moleculer';
 import RedisAdapter from '../../config/oidc-adapter.ts';
 import baseConfig from '../../config/oidc.ts';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'node... Remove this comment to see the full error message
 import fetch from 'node-fetch';
 import CONFIG from '../../config/config.ts';
 
@@ -24,7 +21,6 @@ const SolidOidcServiceSchema = {
 
   async started() {
     // Dynamically import Provider since it's an ESM module
-    // @ts-expect-error TS(7016): Could not find a declaration file for module 'oidc... Remove this comment to see the full error message
     const { default: Provider } = await import('oidc-provider');
 
     const { privateJwk } = await this.broker.call('jwk.get');
@@ -132,9 +128,7 @@ const SolidOidcServiceSchema = {
     }),
 
     proxyConfig: defineAction({
-      // @ts-expect-error TS(7023): 'proxyConfig' implicitly has return type 'any' bec... Remove this comment to see the full error message
       async handler() {
-        // @ts-expect-error TS(7022): 'res' implicitly has type 'any' because it does no... Remove this comment to see the full error message
         const res = await fetch(`${this.settings.baseUrl}.oidc/auth/.well-known/openid-configuration`);
         if (res.ok) {
           return await res.json();
@@ -150,7 +144,6 @@ const SolidOidcServiceSchema = {
         const { interactionId } = ctx.params;
         const webId = ctx.meta.webId;
 
-        // @ts-expect-error TS(2339): Property 'interactionFinished' does not exist on t... Remove this comment to see the full error message
         await this.interactionFinished(interactionId, {
           login: { accountId: webId, amr: ['pwd'], remember: true }
         });
@@ -160,7 +153,6 @@ const SolidOidcServiceSchema = {
 
   methods: {
     async interactionFinished(interactionId: any, result: any) {
-      // @ts-expect-error TS(2339): Property 'oidc' does not exist on type '{ interact... Remove this comment to see the full error message
       const interaction = await this.oidc.Interaction.find(interactionId);
       if (interaction) {
         interaction.result = result;

@@ -877,7 +877,7 @@
     "@types/node" "*"
     "@types/responselike" "^1.0.0"
 
-"@types/dotenv-flow@3.3.3":
+"@types/dotenv-flow@^3.3.3":
   version "3.3.3"
   resolved "https://registry.yarnpkg.com/@types/dotenv-flow/-/dotenv-flow-3.3.3.tgz#d8bdbb08f35c0a62869b8ce72796055569a44258"
   integrity sha512-aJjBsKw4bfGjvaRwrxBtEOfYZxCAq+LiFTpZ4DGTEK2b9eLVt/IAClapSxMfgV4Mi/2bIBKKjoTCO0lOh4ACLg==

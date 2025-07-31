@@ -1,5 +1,4 @@
 import { triple, namedNode } from '@rdfjs/data-model';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { SingleResourceContainerMixin } from '@semapps/ldp';
 import { ServiceSchema } from 'moleculer';
 

@@ -1,14 +1,10 @@
 import path from 'path';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { triple, namedNode } from '@rdfjs/data-model';
 const { MoleculerError } = require('moleculer').Errors;
 
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { SingleResourceContainerMixin } from '@semapps/ldp';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
-// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import CONFIG from '../../config/config.ts';
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -115,7 +111,6 @@ const AuthAgentServiceSchema = {
           acceptedSpecialRights
         });
 
-        // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ getHea... Remove this comment to see the full error message
         if (this.broker.cacher) {
           // Invalidate all rights of the application on the Pod as they may now be completely different
           await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: webId });
@@ -165,7 +160,6 @@ const AuthAgentServiceSchema = {
           acceptedSpecialRights
         });
 
-        // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ getHea... Remove this comment to see the full error message
         if (this.broker.cacher) {
           // Invalidate all rights of the application on the Pod as they may now be completely different
           await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: webId });
@@ -215,7 +209,6 @@ const AuthAgentServiceSchema = {
             });
           }
 
-          // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ getHea... Remove this comment to see the full error message
           if (this.broker.cacher) {
             // Invalidate all rights of the application on the Pod as they may now be completely different
             await ctx.call('webacl.cache.invalidateAllUserRightsOnPod', { webId: appUri, podOwner: webId });

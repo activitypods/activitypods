@@ -1,12 +1,8 @@
 import path from 'node:path';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { Errors as E, ServiceSchema, defineAction } from 'moleculer';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { MIME_TYPES } from '@semapps/mime-types';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { arrayOf } from '@semapps/ldp';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { throw403, throw404 } from '@semapps/middlewares';
 import CONFIG from '../config/config.ts';
 
@@ -14,9 +10,7 @@ const GroupsService = {
   name: 'groups' as const,
   dependencies: ['api', 'ldp'],
   async started() {
-    // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ name: ... Remove this comment to see the full error message
     const basePath = await this.broker.call('ldp.getBasePath');
-    // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ name: ... Remove this comment to see the full error message
     this.broker.call('api.addRoute', {
       route: {
         name: 'groups',
@@ -62,7 +56,6 @@ const GroupsService = {
 
         // Create containers
         const registeredContainers = await ctx.call('ldp.registry.list');
-        // @ts-expect-error TS(2339): Property 'path' does not exist on type 'unknown'.
         for (const { path, permissions } of Object.values(registeredContainers)) {
           await ctx.call('ldp.container.createAndAttach', {
             containerUri: urlJoin(storageUrl, path),

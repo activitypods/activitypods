@@ -1,6 +1,4 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -22,7 +20,6 @@ const AppRegistrationsServiceSchema = {
 
   actions: {
     createOrUpdate: defineAction({
-      // @ts-expect-error TS(7023): 'createOrUpdate' implicitly has return type 'any' ... Remove this comment to see the full error message
       async handler(ctx: any) {
         const { appUri, podOwner, acceptedAccessNeeds, acceptedSpecialRights } = ctx.params;
 
@@ -45,11 +42,9 @@ const AppRegistrationsServiceSchema = {
         // Retrieve the AccessGrants (which may, or may not, have changed)
         const accessGrants = await ctx.call('access-grants.getForApp', { appUri, podOwner });
 
-        // @ts-expect-error TS(7022): 'appRegistration' implicitly has type 'any' becaus... Remove this comment to see the full error message
         const appRegistration = await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx });
 
         if (appRegistration) {
-          // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ creat... Remove this comment to see the full error message
           await this.actions.put(
             {
               resource: {
@@ -64,7 +59,6 @@ const AppRegistrationsServiceSchema = {
 
           return appRegistration.id;
         } else {
-          // @ts-expect-error TS(7022): 'appRegistrationUri' implicitly has type 'any' bec... Remove this comment to see the full error message
           const appRegistrationUri = await this.actions.post(
             {
               resource: {
@@ -87,14 +81,11 @@ const AppRegistrationsServiceSchema = {
     }),
 
     getForApp: defineAction({
-      // @ts-expect-error TS(7023): 'getForApp' implicitly has return type 'any' becau... Remove this comment to see the full error message
       async handler(ctx: any) {
         const { appUri, podOwner } = ctx.params;
 
-        // @ts-expect-error TS(7022): 'containerUri' implicitly has type 'any' because i... Remove this comment to see the full error message
         const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
 
-        // @ts-expect-error TS(7022): 'filteredContainer' implicitly has type 'any' beca... Remove this comment to see the full error message
         const filteredContainer = await this.actions.list(
           {
             containerUri,
@@ -112,10 +103,8 @@ const AppRegistrationsServiceSchema = {
     }),
 
     isRegistered: defineAction({
-      // @ts-expect-error TS(7023): 'isRegistered' implicitly has return type 'any' be... Remove this comment to see the full error message
       async handler(ctx: any) {
         const { appUri, podOwner } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ creat... Remove this comment to see the full error message
         return !!(await this.actions.getForApp({ appUri, podOwner }, { parentCtx: ctx }));
       }
     })

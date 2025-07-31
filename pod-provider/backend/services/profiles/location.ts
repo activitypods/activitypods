@@ -1,10 +1,6 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { ControlledContainerMixin } from '@semapps/ldp';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { MIME_TYPES } from '@semapps/mime-types';
-// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import CONFIG from '../../config/config.ts';
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -75,10 +71,8 @@ const ProfilesLocationServiceSchema = {
     after: {
       async delete(ctx: any, res: any) {
         // If the deleted location is the home location of the current user, clear it from profile
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ delet... Remove this comment to see the full error message
         const homeLocation = await this.actions.getHomeLocation({ webId: res.webId }, { parentCtx: ctx });
         if (homeLocation === res.resourceUri) {
-          // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ delet... Remove this comment to see the full error message
           await this.actions.clearHomeLocation({ webId: res.webId }, { parentCtx: ctx });
         }
         return res;

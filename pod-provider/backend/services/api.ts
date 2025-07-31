@@ -90,9 +90,7 @@ const ServiceSchema = {
     // Overwrite optimization method to put catchAll routes at the end
     // See https://github.com/moleculerjs/moleculer-web/issues/335
     optimizeRouteOrder() {
-      // @ts-expect-error TS(2339): Property 'routes' does not exist on type '{ authen... Remove this comment to see the full error message
       this.routes.sort((a: any) => (a.opts.catchAll ? 1 : -1));
-      // @ts-expect-error TS(2339): Property 'aliases' does not exist on type '{ authe... Remove this comment to see the full error message
       this.aliases.sort((a: any) => (a.route.opts.catchAll ? 1 : -1));
     }
   }

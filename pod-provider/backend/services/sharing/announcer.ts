@@ -1,13 +1,8 @@
 import path from 'path';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { arrayOf } from '@semapps/ldp';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { MIME_TYPES } from '@semapps/mime-types';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import matchActivity from '@semapps/activitypub/utils/matchActivity';
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -131,12 +126,10 @@ const AnnouncerServiceSchema = {
       async handler(ctx: any) {
         const { dataset } = ctx.params;
         await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ give... Remove this comment to see the full error message
           collection: this.settings.announcesCollectionOptions,
           dataset
         });
         await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ give... Remove this comment to see the full error message
           collection: this.settings.announcersCollectionOptions,
           dataset
         });
@@ -146,7 +139,6 @@ const AnnouncerServiceSchema = {
 
   activities: {
     announce: {
-      // @ts-expect-error TS(7023): 'match' implicitly has return type 'any' because i... Remove this comment to see the full error message
       async match(activity: any, fetcher: any) {
         const { match, dereferencedActivity } = await matchActivity(
           {
@@ -156,7 +148,6 @@ const AnnouncerServiceSchema = {
           fetcher
         );
         return {
-          // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
           match: match && !(await this.broker.call('activitypub.activity.isPublic', { activity })),
           dereferencedActivity
         };
@@ -177,11 +168,9 @@ const AnnouncerServiceSchema = {
 
         const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
           objectUri: resourceUri,
-          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ matc... Remove this comment to see the full error message
           collection: this.settings.announcesCollectionOptions
         });
 
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ match... Remove this comment to see the full error message
         await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
 
         // Add all targeted actors to the collection and WebACL group
@@ -223,9 +212,7 @@ const AnnouncerServiceSchema = {
               webId: recipientUri
             });
           } catch (e) {
-            // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
             this.logger.warn(
-              // @ts-expect-error TS(2571): Object is of type 'unknown'.
               `Unable to cache remote object ${resourceUri} for actor ${recipientUri}. Message: ${e.message}`
             );
           }
@@ -245,7 +232,6 @@ const AnnouncerServiceSchema = {
             if (containersUris.length === 0) {
               // Generate a path for the new container
               const containerPath = await ctx.call('ldp.container.getPath', { resourceType: expandedType });
-              // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
               this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${expandedType}`);
 
               // Create the container and attach it to its parent(s)
@@ -254,7 +240,6 @@ const AnnouncerServiceSchema = {
               await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId: recipientUri });
 
               // If the resource type is invalid, an error will be thrown here
-              // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
               await this.broker.call('type-registrations.register', {
                 types: [expandedType],
                 containerUri: containersUris[0],
@@ -274,7 +259,6 @@ const AnnouncerServiceSchema = {
       }
     },
     offerAnnounce: {
-      // @ts-expect-error TS(7023): 'match' implicitly has return type 'any' because i... Remove this comment to see the full error message
       async match(activity: any, fetcher: any) {
         const { match, dereferencedActivity } = await matchActivity(
           {
@@ -287,7 +271,6 @@ const AnnouncerServiceSchema = {
           fetcher
         );
         return {
-          // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
           match: match && !(await this.broker.call('activitypub.activity.isPublic', { activity })),
           dereferencedActivity
         };
@@ -302,11 +285,9 @@ const AnnouncerServiceSchema = {
         if (activity.actor === object['dc:creator']) {
           const announcersCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
             objectUri: object.id,
-            // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ matc... Remove this comment to see the full error message
             collection: this.settings.announcersCollectionOptions
           });
 
-          // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ match... Remove this comment to see the full error message
           await this.actions.giveRightsAfterAnnouncersCollectionCreate({ objectUri: object.id }, { parentCtx: ctx });
 
           // Add all announcers to the collection and WebACL group
@@ -333,7 +314,6 @@ const AnnouncerServiceSchema = {
         // If the offer is targeted to the organizer, it means we are an announcer and want him to announce the object to one of our contacts
         if (activity.target === object['dc:creator']) {
           if (!object['apods:announcers']) {
-            // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
             this.logger.warn(`No announcers collection attached to object ${object.id}, skipping...`);
             return;
           }

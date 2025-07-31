@@ -188,12 +188,12 @@
 
 "@digitalbazaar/credentials-context@^3.2.0":
   version "3.2.0"
-  resolved "https://registry.npmjs.org/@digitalbazaar/credentials-context/-/credentials-context-3.2.0.tgz"
+  resolved "https://registry.yarnpkg.com/@digitalbazaar/credentials-context/-/credentials-context-3.2.0.tgz#c5efa74744c25be8d3a7d26b1d4d2fd349b19ae8"
   integrity sha512-WruXZAF182pCYq/z2JPJ4N4mVDu6pd/hr7widdCqbKekA53BXHoX7XhL9tmRmQ8kfmkaStBfla67QHhkchWYBQ==
 
 "@digitalbazaar/data-integrity@^2.5.0":
   version "2.5.0"
-  resolved "https://registry.npmjs.org/@digitalbazaar/data-integrity/-/data-integrity-2.5.0.tgz"
+  resolved "https://registry.yarnpkg.com/@digitalbazaar/data-integrity/-/data-integrity-2.5.0.tgz#3fe9eee7bbe750da8977866c8f8ded16bf7d4ce2"
   integrity sha512-ohIieLfgtPQU9BYfj0eKNiz55/ZDOk5YSE9FN/Hn0eXzI8WQzLkzRvC8pvBnzuzXDgCsjPdSqYvzok5PoClMBQ==
   dependencies:
     base58-universal "^2.0.0"
@@ -211,7 +211,7 @@
 
 "@digitalbazaar/ed25519-multikey@^1.3.0":
   version "1.3.1"
-  resolved "https://registry.npmjs.org/@digitalbazaar/ed25519-multikey/-/ed25519-multikey-1.3.1.tgz"
+  resolved "https://registry.yarnpkg.com/@digitalbazaar/ed25519-multikey/-/ed25519-multikey-1.3.1.tgz#905620b8809d39cbab8af880c05059dbcbb05509"
   integrity sha512-55qIbOaAyswVCFfZ70ap7SN2bDSwYmcVbUtGCrpVF/CjuJ8IPqf6z8fDPJzB+CE7Q896SaZlcDukz4LOwIRCPA==
   dependencies:
     "@noble/ed25519" "^1.6.0"
@@ -241,7 +241,7 @@
 
 "@digitalbazaar/ed25519-verification-key-2020@^4.2.0":
   version "4.2.0"
-  resolved "https://registry.npmjs.org/@digitalbazaar/ed25519-verification-key-2020/-/ed25519-verification-key-2020-4.2.0.tgz"
+  resolved "https://registry.yarnpkg.com/@digitalbazaar/ed25519-verification-key-2020/-/ed25519-verification-key-2020-4.2.0.tgz#4a394c7c137ead8edf415c83bbd3c40b73c95b49"
   integrity sha512-urEVTYkt+uYD8GjdoS6gkm2sKBich1hqx42b6vvUOmNgF0agZ95JlUjiJXEx+VOwu7WSjJSnEBph2Qatkrk1CA==
   dependencies:
     "@noble/ed25519" "^1.6.0"
@@ -251,7 +251,7 @@
 
 "@digitalbazaar/eddsa-rdfc-2022-cryptosuite@^1.2.0":
   version "1.2.0"
-  resolved "https://registry.npmjs.org/@digitalbazaar/eddsa-rdfc-2022-cryptosuite/-/eddsa-rdfc-2022-cryptosuite-1.2.0.tgz"
+  resolved "https://registry.yarnpkg.com/@digitalbazaar/eddsa-rdfc-2022-cryptosuite/-/eddsa-rdfc-2022-cryptosuite-1.2.0.tgz#9c282d5f558ecce4d336e9947b06d45c58615cc9"
   integrity sha512-a3PyICe1SI55SgHXgtPRYpzmZ2FMtloQDkVcbhUZ9dpoLcZg5TqsS4U7ap2ggCD4MUXz7uz6ErikJf76Iwyd0g==
   dependencies:
     "@digitalbazaar/ed25519-multikey" "^1.0.0"
@@ -274,7 +274,7 @@
 
 "@digitalbazaar/vc@^7.1.0":
   version "7.1.2"
-  resolved "https://registry.npmjs.org/@digitalbazaar/vc/-/vc-7.1.2.tgz"
+  resolved "https://registry.yarnpkg.com/@digitalbazaar/vc/-/vc-7.1.2.tgz#6c97ba99eb555b310564d3784ceeb73497c384b7"
   integrity sha512-1Kf9ErBoC5yhvkpSSOLGIZI/zZCfT45kuuRiytpgIj1OBepVmCfjZmoEbOLAzGLCS82wFjYKEDxG34H1Fmy3CA==
   dependencies:
     "@digitalbazaar/credentials-context" "^3.2.0"
@@ -2334,7 +2334,7 @@ ecdsa-sig-formatter@1.0.11:
 
 ed25519-signature-2018-context@^1.1.0:
   version "1.1.0"
-  resolved "https://registry.npmjs.org/ed25519-signature-2018-context/-/ed25519-signature-2018-context-1.1.0.tgz"
+  resolved "https://registry.yarnpkg.com/ed25519-signature-2018-context/-/ed25519-signature-2018-context-1.1.0.tgz#68002ea7497c32e8170667cfd67468dedf7d220e"
   integrity sha512-ppDWYMNwwp9bploq0fS4l048vHIq41nWsAbPq6H4mNVx9G/GxW3fwg4Ln0mqctP13MoEpREK7Biz8TbVVdYXqA==
 
 ed25519-signature-2020-context@^1.1.0:
@@ -3623,7 +3623,7 @@ jsonld-signatures@^11.3.0:
 
 jsonld-signatures@^11.3.2, jsonld-signatures@^11.5.0:
   version "11.5.0"
-  resolved "https://registry.npmjs.org/jsonld-signatures/-/jsonld-signatures-11.5.0.tgz"
+  resolved "https://registry.yarnpkg.com/jsonld-signatures/-/jsonld-signatures-11.5.0.tgz#020ad488bd1977c5169de3d2a4cc28a76dec2663"
   integrity sha512-Kdto+e8uvY/5u3HYkmAbpy52bplWX9uqS8fmqdCv6oxnCFwCTM0hMt6r4rWqlhw5/aHoCHJIRxwYb4QKGC69Jw==
   dependencies:
     "@digitalbazaar/security-context" "^1.0.0"
@@ -3717,7 +3717,7 @@ jsonld@^8.0.0, jsonld@^8.1.0:
 
 jsonld@^8.3.3:
   version "8.3.3"
-  resolved "https://registry.npmjs.org/jsonld/-/jsonld-8.3.3.tgz"
+  resolved "https://registry.yarnpkg.com/jsonld/-/jsonld-8.3.3.tgz#08cc927833c8684e42319d4697cc8199c0908ffc"
   integrity sha512-9YcilrF+dLfg9NTEof/mJLMtbdX1RJ8dbWtJgE00cMOIohb1lIyJl710vFiTaiHTl6ZYODJuBd32xFvUhmv3kg==
   dependencies:
     "@digitalbazaar/http-client" "^3.4.1"

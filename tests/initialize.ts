@@ -133,6 +133,9 @@ const initializeAppServer = async (port, mainDataset, settingsDataset, queueServ
         fusekiBase: CONFIG.FUSEKI_BASE,
         mainDataset
       },
+      keys: {
+        actorsKeyPairsDir: null
+      },
       ontologies: [interop, oidc, apods, notify],
       activitypub: {
         queueServiceUrl
@@ -182,6 +185,8 @@ const getAppAccessNeeds = async (actor, appUri) => {
   });
 
   let accessNeedGroup;
+  let requiredAccessNeedGroup;
+  let optionalAccessNeedGroup;
   for (const accessNeedUri of app['interop:hasAccessNeedGroup']) {
     accessNeedGroup = await actor.call('ldp.resource.get', {
       resourceUri: accessNeedUri,

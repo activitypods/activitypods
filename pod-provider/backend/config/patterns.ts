@@ -78,7 +78,7 @@ const UNDO_IGNORE_CONTACT = {
   object: IGNORE_CONTACT
 };
 
-export default {
+export {
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
   IGNORE_CONTACT_REQUEST,

@@ -39,7 +39,7 @@ const useContactLink = () => {
       } else {
         setCreatingLink(true);
         createContactCapability(fetchFn, webIdDoc, profileData)
-          .then(vcLink => {
+          .then((vcLink: any) => {
             setContactLink(inviteLinkFromCapUri(vcLink));
             setStatus('loaded');
             // Invalidate cache
@@ -47,7 +47,7 @@ const useContactLink = () => {
               queryKey: ['VerifiableCredential']
             });
           })
-          .catch(error => {
+          .catch((error: any) => {
             setStatus('error');
             setContactLink(undefined);
             setError(error);

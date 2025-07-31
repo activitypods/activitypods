@@ -70,7 +70,7 @@ const ShareContactCard = () => {
               disabled={status !== 'loaded'}
             >
               {translate(
-                // @ts-expect-error TS(2345): Argument of type 'string | boolean' is not assigna... Remove this comment to see the full error message
+                // @ts-expect-error
                 (copied && 'app.message.copied_to_clipboard') ||
                   (status === 'loaded' && 'app.action.copy') ||
                   (status === 'loading' && 'app.message.loading_invite_link') ||

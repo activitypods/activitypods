@@ -19,8 +19,8 @@ const PodResourcesSchema = {
         actorUri: { type: 'string', optional: false }
       },
       async handler(ctx) {
-        const { containerUri, resource, actorUri } = ctx.params;
-
+        const { containerUri, actorUri } = ctx.params;
+        let { resource } = ctx.params;
         // Adds the default context, if it is missing
         if (!resource['@context']) {
           resource = {

@@ -153,7 +153,8 @@ const ContactsRequestServiceSchema = {
     },
     inviteLinkContactRequest: {
       match: CONTACT_REQUEST,
-      async capabilityGrantMatchFnGenerator({ recipientUri, activity }: any) {
+      // @ts-expect-error
+      async capabilityGrantMatchFnGenerator({ recipientUri, activity }) {
         // Generate a function that is called on each ActivityGrant of the activity's capability.
 
         return async (grant: any) => {
@@ -171,9 +172,7 @@ const ContactsRequestServiceSchema = {
               }
             },
             grant,
-            (uri: any) => ({
-              id: uri
-            }) // The URIs here are not resolved further.
+            (uri: string) => ({ id: uri }) // The URIs here are not resolved further.
           );
           return match;
         };

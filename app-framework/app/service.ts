@@ -20,9 +20,10 @@ import ShapeTreesService from './services/utils/shape-trees.ts';
 import TimerService from './services/utils/timer.ts';
 import TranslatorService from './services/utils/translator.ts';
 import MigrationService from './services/utils/migration.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const AppSchema = {
-  name: 'app',
+  name: 'app' as const,
   settings: {
     baseUrl: null,
     app: {
@@ -118,10 +119,20 @@ const AppSchema = {
     });
   },
   actions: {
-    get() {
-      return this.appActor;
-    }
+    get: defineAction({
+      handler() {
+        return this.appActor;
+      }
+    })
   }
-};
+} satisfies ServiceSchema;
 
 export default AppSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [AppSchema.name]: typeof AppSchema;
+    }
+  }
+}

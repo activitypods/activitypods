@@ -1,6 +1,7 @@
 import { ACTIVITY_TYPES, OBJECT_TYPES, matchActivity } from '@semapps/activitypub';
 import PodActivitiesHandlerMixin from './pod-activities-handler.ts';
 import ShapeTreeFetcherMixin from './shape-tree-fetcher.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const Schema = {
   mixins: [PodActivitiesHandlerMixin, ShapeTreeFetcherMixin],
@@ -10,42 +11,62 @@ const Schema = {
   },
   dependencies: ['pod-resources'],
   actions: {
-    async post(ctx) {
-      if (!ctx.params.containerUri) {
-        ctx.params.containerUri = await this.actions.getContainerUri(
-          { actorUri: ctx.params.actorUri },
-          { parentCtx: ctx }
-        );
+    post: defineAction({
+      async handler(ctx) {
+        if (!ctx.params.containerUri) {
+          ctx.params.containerUri = await this.actions.getContainerUri(
+            { actorUri: ctx.params.actorUri },
+            { parentCtx: ctx }
+          );
+        }
+        return await ctx.call('pod-resources.post', ctx.params);
       }
-      return await ctx.call('pod-resources.post', ctx.params);
-    },
-    async list(ctx) {
-      if (!ctx.params.containerUri) {
-        ctx.params.containerUri = await this.actions.getContainerUri(
-          { actorUri: ctx.params.actorUri },
-          { parentCtx: ctx }
-        );
+    }),
+
+    list: defineAction({
+      async handler(ctx) {
+        if (!ctx.params.containerUri) {
+          ctx.params.containerUri = await this.actions.getContainerUri(
+            { actorUri: ctx.params.actorUri },
+            { parentCtx: ctx }
+          );
+        }
+        return await ctx.call('pod-resources.list', ctx.params);
       }
-      return await ctx.call('pod-resources.list', ctx.params);
-    },
-    async get(ctx) {
-      return await ctx.call('pod-resources.get', ctx.params);
-    },
-    async patch(ctx) {
-      return await ctx.call('pod-resources.patch', ctx.params);
-    },
-    async put(ctx) {
-      return await ctx.call('pod-resources.put', ctx.params);
-    },
-    async delete(ctx) {
-      return await ctx.call('pod-resources.delete', ctx.params);
-    },
-    async getContainerUri(ctx) {
-      return await ctx.call('data-grants.getContainerByShapeTree', {
-        shapeTreeUri: this.settings.shapeTreeUri,
-        podOwner: ctx.params.actorUri
-      });
-    }
+    }),
+
+    get: defineAction({
+      async handler(ctx) {
+        return await ctx.call('pod-resources.get', ctx.params);
+      }
+    }),
+
+    patch: defineAction({
+      async handler(ctx) {
+        return await ctx.call('pod-resources.patch', ctx.params);
+      }
+    }),
+
+    put: defineAction({
+      async handler(ctx) {
+        return await ctx.call('pod-resources.put', ctx.params);
+      }
+    }),
+
+    delete: defineAction({
+      async handler(ctx) {
+        return await ctx.call('pod-resources.delete', ctx.params);
+      }
+    }),
+
+    getContainerUri: defineAction({
+      async handler(ctx) {
+        return await ctx.call('data-grants.getContainerByShapeTree', {
+          shapeTreeUri: this.settings.shapeTreeUri,
+          podOwner: ctx.params.actorUri
+        });
+      }
+    })
   },
   activities: {
     create: {
@@ -104,6 +125,6 @@ const Schema = {
       }
     }
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

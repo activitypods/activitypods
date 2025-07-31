@@ -1,10 +1,14 @@
 // @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { SparqlEndpointService } from '@semapps/sparql-endpoint';
+import { ServiceSchema } from 'moleculer';
 
-export default {
+const ServiceSchema = {
   mixins: [SparqlEndpointService],
+
   settings: {
     podProvider: true,
     defaultAccept: 'application/ld+json'
   }
-};
+} satisfies ServiceSchema;
+
+export default ServiceSchema;

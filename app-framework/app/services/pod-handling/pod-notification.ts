@@ -1,59 +1,70 @@
 import urlJoin from 'url-join';
 import { OBJECT_TYPES } from '@semapps/activitypub';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const PodNotificationsSchema = {
-  name: 'pod-notifications',
+  name: 'pod-notifications' as const,
   settings: {
     frontUrl: null
   },
   actions: {
-    async send(ctx) {
-      const { template, recipientUri, activity, context, ...rest } = ctx.params;
+    send: defineAction({
+      async handler(ctx) {
+        const { template, recipientUri, activity, context, ...rest } = ctx.params;
 
-      const app = await ctx.call('app.get');
+        const app = await ctx.call('app.get');
 
-      let templateParams = {};
+        let templateParams = {};
 
-      if (activity) {
-        const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
-        let emitterProfile = {};
-        if (emitter.url) {
-          try {
-            ({ body: emitterProfile } = await ctx.call('pod-resources.get', {
-              resourceUri: emitter.url,
-              actorUri: activity.actor
-            }));
-          } catch (e) {
-            this.logger.warn(`Could not get profile of actor ${activity.actor}`);
+        if (activity) {
+          const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
+          let emitterProfile = {};
+          if (emitter.url) {
+            try {
+              ({ body: emitterProfile } = await ctx.call('pod-resources.get', {
+                resourceUri: emitter.url,
+                actorUri: activity.actor
+              }));
+            } catch (e) {
+              this.logger.warn(`Could not get profile of actor ${activity.actor}`);
+            }
           }
+          templateParams = { activity, emitter, emitterProfile, ...rest };
+        } else {
+          templateParams = { ...rest };
         }
-        templateParams = { activity, emitter, emitterProfile, ...rest };
-      } else {
-        templateParams = { ...rest };
+
+        const { title, content, actions } = await ctx.call('translator.translate', {
+          template,
+          templateParams,
+          actorUri: recipientUri
+        });
+
+        await ctx.call('activitypub.outbox.post', {
+          collectionUri: app.outbox,
+          type: [OBJECT_TYPES.NOTE, 'apods:Notification'],
+          actor: app.id,
+          name: title,
+          content: content,
+          url: actions?.map(action => ({
+            type: 'Link',
+            name: action.caption,
+            href: action.link.startsWith('http') ? action.link : urlJoin(this.settings.frontUrl, action.link)
+          })),
+          to: recipientUri,
+          context
+        });
       }
-
-      const { title, content, actions } = await ctx.call('translator.translate', {
-        template,
-        templateParams,
-        actorUri: recipientUri
-      });
-
-      await ctx.call('activitypub.outbox.post', {
-        collectionUri: app.outbox,
-        type: [OBJECT_TYPES.NOTE, 'apods:Notification'],
-        actor: app.id,
-        name: title,
-        content: content,
-        url: actions?.map(action => ({
-          type: 'Link',
-          name: action.caption,
-          href: action.link.startsWith('http') ? action.link : urlJoin(this.settings.frontUrl, action.link)
-        })),
-        to: recipientUri,
-        context
-      });
-    }
+    })
   }
-};
+} satisfies ServiceSchema;
 
 export default PodNotificationsSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [PodNotificationsSchema.name]: typeof PodNotificationsSchema;
+    }
+  }
+}

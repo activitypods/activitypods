@@ -3,9 +3,10 @@ const SparqlGenerator = sparqljsModule.Generator;
 import { triple, namedNode } from '@rdfjs/data-model';
 import { arrayOf, isURL } from '@semapps/ldp';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const PodContainersSchema = {
-  name: 'pod-containers',
+  name: 'pod-containers' as const,
   mixins: [FetchPodOrProxyMixin],
   started() {
     this.sparqlGenerator = new SparqlGenerator({
@@ -17,7 +18,7 @@ const PodContainersSchema = {
      * Fetch the TypeIndex and return the first containerUri that holds resources of the given type
      * TODO Use some cache mechanism, or fetch all type registration at the app start
      */
-    getByType: {
+    getByType: defineAction({
       params: {
         type: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
@@ -69,8 +70,9 @@ const PodContainersSchema = {
           throw new Error(`No container found for type ${expandedType} in the TypeIndex of ${actorUri}`);
         }
       }
-    },
-    attach: {
+    }),
+
+    attach: defineAction({
       params: {
         containerUri: { type: 'string', optional: false },
         resourceUri: { type: 'string', optional: false },
@@ -110,8 +112,9 @@ const PodContainersSchema = {
           actorUri
         });
       }
-    },
-    detach: {
+    }),
+
+    detach: defineAction({
       params: {
         containerUri: { type: 'string', optional: false },
         resourceUri: { type: 'string', optional: false },
@@ -151,8 +154,16 @@ const PodContainersSchema = {
           actorUri
         });
       }
-    }
+    })
   }
-};
+} satisfies ServiceSchema;
 
 export default PodContainersSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [PodContainersSchema.name]: typeof PodContainersSchema;
+    }
+  }
+}

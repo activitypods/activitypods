@@ -9,10 +9,12 @@ import { OBJECT_TYPES, AS_PREFIX } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 // @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema, defineServiceEvent } from 'moleculer';
 
-export default {
-  name: 'profiles.profile',
+const ProfilesProfileServiceSchema = {
+  name: 'profiles.profile' as const,
   mixins: [ControlledContainerMixin],
+
   settings: {
     // ControlledContainerMixin settings
     path: '/vcard/individual',
@@ -22,66 +24,71 @@ export default {
     newResourcesPermissions: {},
     typeIndex: 'public'
   },
+
   dependencies: ['activitypub', 'webacl'],
+
   events: {
-    async 'auth.registered'(ctx: any) {
-      const { webId, profileData } = ctx.params;
-      // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ 'auth... Remove this comment to see the full error message
-      const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
+    'auth.registered': defineServiceEvent({
+      async handler(ctx: any) {
+        const { webId, profileData } = ctx.params;
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ 'auth... Remove this comment to see the full error message
+        const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
-      // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ 'auth... Remove this comment to see the full error message
-      await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ 'auth... Remove this comment to see the full error message
+        await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
-      // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ 'auth... Remove this comment to see the full error message
-      const profileUri = await this.actions.post(
-        {
-          containerUri,
-          resource: {
-            '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
-            'vcard:fn': profileData.familyName
-              ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
-              : profileData.name,
-            'vcard:given-name': profileData.name,
-            'vcard:family-name': profileData.familyName,
-            describes: webId
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ 'auth... Remove this comment to see the full error message
+        const profileUri = await this.actions.post(
+          {
+            containerUri,
+            resource: {
+              '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
+              'vcard:fn': profileData.familyName
+                ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
+                : profileData.name,
+              'vcard:given-name': profileData.name,
+              'vcard:family-name': profileData.familyName,
+              describes: webId
+            },
+            contentType: MIME_TYPES.JSON,
+            webId
           },
-          contentType: MIME_TYPES.JSON,
-          webId
-        },
-        {
-          meta: {
-            skipObjectsWatcher: true // We don't want to trigger a Create action
-          },
-          parentCtx: ctx
-        }
-      );
-
-      await ctx.call('ldp.resource.patch', {
-        resourceUri: webId,
-        triplesToAdd: [triple(namedNode(webId), namedNode(AS_PREFIX + 'url'), namedNode(profileUri))],
-        webId
-      });
-
-      // TODO put this on the contacts app
-      // Create a WebACL group for the user's contact
-      const { groupUri: contactsGroupUri } = await ctx.call('webacl.group.create', {
-        groupSlug: new URL(webId).pathname + '/contacts',
-        webId
-      });
-
-      // Authorize this group to view the user's profile
-      await ctx.call('webacl.resource.addRights', {
-        resourceUri: profileUri,
-        additionalRights: {
-          group: {
-            uri: contactsGroupUri,
-            read: true
+          {
+            meta: {
+              skipObjectsWatcher: true // We don't want to trigger a Create action
+            },
+            parentCtx: ctx
           }
-        },
-        webId
-      });
-    }
+        );
+
+        await ctx.call('ldp.resource.patch', {
+          resourceUri: webId,
+          triplesToAdd: [triple(namedNode(webId), namedNode(AS_PREFIX + 'url'), namedNode(profileUri))],
+          webId
+        });
+
+        // TODO put this on the contacts app
+        // Create a WebACL group for the user's contact
+        const { groupUri: contactsGroupUri } = await ctx.call('webacl.group.create', {
+          groupSlug: new URL(webId).pathname + '/contacts',
+          webId
+        });
+
+        // Authorize this group to view the user's profile
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri: profileUri,
+          additionalRights: {
+            group: {
+              uri: contactsGroupUri,
+              read: true
+            }
+          },
+          webId
+        });
+      }
+    })
   },
+
   hooks: {
     before: {
       async put(ctx: any) {
@@ -142,4 +149,14 @@ export default {
     //     }
     //   }
   }
-};
+} satisfies ServiceSchema;
+
+export default ProfilesProfileServiceSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ProfilesProfileServiceSchema.name]: typeof ProfilesProfileServiceSchema;
+    }
+  }
+}

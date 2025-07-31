@@ -1,3 +1,5 @@
+import { ServiceSchema } from 'moleculer';
+
 /**
  * Load the types associated with the shape tree
  */
@@ -25,6 +27,6 @@ const Schema = {
       this.settings.type = compactJson.type;
     }
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

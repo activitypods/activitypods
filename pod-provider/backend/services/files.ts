@@ -4,10 +4,12 @@ import urlJoin from 'url-join';
 import { ControlledContainerMixin, MimeTypesMixin } from '@semapps/ldp';
 // @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import CONFIG from '../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
-export default {
-  name: 'files',
+const FilesServiceSchema = {
+  name: 'files' as const,
   mixins: [ControlledContainerMixin, MimeTypesMixin],
+
   settings: {
     acceptedTypes: ['semapps:File'],
     shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/File'),
@@ -21,4 +23,14 @@ export default {
       accepted: ['image/*']
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default FilesServiceSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [FilesServiceSchema.name]: typeof FilesServiceSchema;
+    }
+  }
+}

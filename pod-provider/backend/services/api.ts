@@ -1,12 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import ApiGatewayService from 'moleculer-web';
-import { Errors as E } from 'moleculer';
+import { Errors as E, ServiceSchema, defineAction } from 'moleculer';
 import WebSocketMixin from '../mixins/websocket.ts';
 import CONFIG from '../config/config.ts';
 
-export default {
+const ServiceSchema = {
   mixins: [ApiGatewayService, WebSocketMixin],
+
   settings: {
     httpServerTimeout: 300000,
     baseUrl: CONFIG.BASE_URL,
@@ -33,16 +34,23 @@ export default {
       }
     ]
   },
+
   actions: {
-    favicon(ctx: any) {
-      ctx.meta.$responseType = 'image/x-icon';
-      return fs.readFileSync(path.resolve(__dirname, '../static/favicon.ico'));
-    },
-    redirectToFront(ctx: any) {
-      ctx.meta.$statusCode = 302;
-      ctx.meta.$location = CONFIG.FRONTEND_URL;
-    }
+    favicon: defineAction({
+      handler(ctx: any) {
+        ctx.meta.$responseType = 'image/x-icon';
+        return fs.readFileSync(path.resolve(__dirname, '../static/favicon.ico'));
+      }
+    }),
+
+    redirectToFront: defineAction({
+      handler(ctx: any) {
+        ctx.meta.$statusCode = 302;
+        ctx.meta.$location = CONFIG.FRONTEND_URL;
+      }
+    })
   },
+
   methods: {
     async authenticate(ctx: any, route: any, req: any, res: any) {
       if (req.headers.signature) {
@@ -88,4 +96,6 @@ export default {
       this.aliases.sort((a: any) => (a.route.opts.catchAll ? 1 : -1));
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default ServiceSchema;

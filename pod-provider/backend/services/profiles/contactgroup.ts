@@ -4,10 +4,12 @@ import urlJoin from 'url-join';
 import { ControlledContainerMixin } from '@semapps/ldp';
 // @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
-export default {
-  name: 'profiles.contactgroup',
+const ProfilesContactgroupServiceSchema = {
+  name: 'profiles.contactgroup' as const,
   mixins: [ControlledContainerMixin],
+
   settings: {
     // ControlledContainerMixin settings
     acceptedTypes: ['vcard:Group'],
@@ -16,4 +18,14 @@ export default {
     newResourcesPermissions: {},
     typeIndex: 'public'
   }
-};
+} satisfies ServiceSchema;
+
+export default ProfilesContactgroupServiceSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ProfilesContactgroupServiceSchema.name]: typeof ProfilesContactgroupServiceSchema;
+    }
+  }
+}

@@ -5,13 +5,15 @@ import urlJoin from 'url-join';
 // @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import CONFIG from '../config/config.ts';
 import packageDesc from '../package.json';
+import { ServiceSchema, defineAction } from 'moleculer';
 
-export default {
+const ServiceSchema = {
   mixins: [NodeinfoService],
+
   settings: {
     baseUrl: CONFIG.BASE_URL,
     software: {
-      name: 'activitypods',
+      name: 'activitypods' as const,
       // @ts-expect-error TS(2339): Property 'version' does not exist on type '{ name:... Remove this comment to see the full error message
       version: packageDesc.version,
       repository: packageDesc.repository?.url,
@@ -22,15 +24,20 @@ export default {
       frontend_url: CONFIG.FRONTEND_URL
     }
   },
+
   actions: {
-    async getUsersCount(ctx: any) {
-      const accounts = await ctx.call('auth.account.find');
-      const totalPods = accounts.length;
-      return {
-        total: totalPods,
-        activeHalfYear: totalPods,
-        activeMonth: totalPods
-      };
-    }
+    getUsersCount: defineAction({
+      async handler(ctx: any) {
+        const accounts = await ctx.call('auth.account.find');
+        const totalPods = accounts.length;
+        return {
+          total: totalPods,
+          activeHalfYear: totalPods,
+          activeMonth: totalPods
+        };
+      }
+    })
   }
-};
+} satisfies ServiceSchema;
+
+export default ServiceSchema;

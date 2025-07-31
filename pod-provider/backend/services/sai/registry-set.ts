@@ -1,14 +1,17 @@
 import { triple, namedNode } from '@rdfjs/data-model';
 // @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { SingleResourceContainerMixin } from '@semapps/ldp';
+import { ServiceSchema } from 'moleculer';
 
-export default {
-  name: 'registry-set',
+const RegistrySetServiceSchema = {
+  name: 'registry-set' as const,
   mixins: [SingleResourceContainerMixin],
+
   settings: {
     acceptedTypes: ['interop:RegistrySet'],
     podProvider: true
   },
+
   hooks: {
     after: {
       async post(ctx: any, res: any) {
@@ -27,4 +30,14 @@ export default {
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default RegistrySetServiceSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [RegistrySetServiceSchema.name]: typeof RegistrySetServiceSchema;
+    }
+  }
+}

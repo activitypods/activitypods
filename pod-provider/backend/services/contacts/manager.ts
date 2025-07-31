@@ -10,10 +10,12 @@ import { arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 // @ts-expect-error TS(2459): Module '"../../config/patterns"' declares 'ADD_CON... Remove this comment to see the full error message
 import { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } from '../../config/patterns.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
-export default {
-  name: 'contacts.manager',
+const ContactsManagerServiceSchema = {
+  name: 'contacts.manager' as const,
   mixins: [ActivitiesHandlerMixin],
+
   settings: {
     ignoredContactsCollectionOptions: {
       path: '/ignored-contacts',
@@ -24,20 +26,26 @@ export default {
       permissions: {} // This collection is only visible by the Pod owner
     }
   },
+
   dependencies: ['activitypub.collections-registry', 'webacl'],
+
   async started() {
     await this.broker.call('activitypub.collections-registry.register', this.settings.ignoredContactsCollectionOptions);
   },
+
   actions: {
-    async updateCollectionsOptions(ctx: any) {
-      const { dataset } = ctx.params;
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
-        collection: this.settings.ignoredContactsCollectionOptions,
-        dataset
-      });
-    }
+    updateCollectionsOptions: defineAction({
+      async handler(ctx: any) {
+        const { dataset } = ctx.params;
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
+          collection: this.settings.ignoredContactsCollectionOptions,
+          dataset
+        });
+      }
+    })
   },
+
   activities: {
     addContact: {
       match: ADD_CONTACT,
@@ -239,4 +247,14 @@ export default {
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default ContactsManagerServiceSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ContactsManagerServiceSchema.name]: typeof ContactsManagerServiceSchema;
+    }
+  }
+}

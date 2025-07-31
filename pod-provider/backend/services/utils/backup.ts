@@ -3,9 +3,11 @@ import path from 'path';
 import BackupService from '@semapps/backup';
 // @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
-export default {
+const ServiceSchema = {
   mixins: [BackupService],
+
   settings: {
     localServer: {
       fusekiBase: CONFIG.FUSEKI_BASE,
@@ -28,4 +30,6 @@ export default {
       timeZone: 'Europe/Paris'
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default ServiceSchema;

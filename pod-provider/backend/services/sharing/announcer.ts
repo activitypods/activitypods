@@ -9,6 +9,7 @@ import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 // @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import matchActivity from '@semapps/activitypub/utils/matchActivity';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const getAnnouncesGroupUri = (eventUri: any) => {
   const uri = new URL(eventUri);
@@ -22,9 +23,10 @@ const getAnnouncersGroupUri = (eventUri: any) => {
   return uri.toString();
 };
 
-export default {
-  name: 'announcer',
+const AnnouncerServiceSchema = {
+  name: 'announcer' as const,
   mixins: [ActivitiesHandlerMixin],
+
   settings: {
     announcesCollectionOptions: {
       path: '/announces',
@@ -41,40 +43,30 @@ export default {
       permissions: {}
     }
   },
+
   dependencies: ['activitypub.collections-registry'],
+
   actions: {
-    async giveRightsAfterAnnouncesCollectionCreate(ctx: any) {
-      const { objectUri } = ctx.params;
+    giveRightsAfterAnnouncesCollectionCreate: defineAction({
+      async handler(ctx: any) {
+        const { objectUri } = ctx.params;
 
-      const object = await ctx.call('ldp.resource.awaitCreateComplete', {
-        resourceUri: objectUri,
-        predicates: ['apods:announces']
-      });
+        const object = await ctx.call('ldp.resource.awaitCreateComplete', {
+          resourceUri: objectUri,
+          predicates: ['apods:announces']
+        });
 
-      const creator = await ctx.call('activitypub.actor.get', { actorUri: object['dc:creator'] });
+        const creator = await ctx.call('activitypub.actor.get', { actorUri: object['dc:creator'] });
 
-      const announcesGroupUri = getAnnouncesGroupUri(objectUri);
-      const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcesGroupUri, webId: 'system' });
-      if (!groupExist) {
-        await ctx.call('webacl.group.create', { groupUri: announcesGroupUri, webId: creator.id });
-      }
+        const announcesGroupUri = getAnnouncesGroupUri(objectUri);
+        const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcesGroupUri, webId: 'system' });
+        if (!groupExist) {
+          await ctx.call('webacl.group.create', { groupUri: announcesGroupUri, webId: creator.id });
+        }
 
-      // Give read rights for the resource
-      await ctx.call('webacl.resource.addRights', {
-        resourceUri: objectUri,
-        additionalRights: {
-          group: {
-            uri: announcesGroupUri,
-            read: true
-          }
-        },
-        webId: creator.id
-      });
-
-      if (creator.url) {
-        // Give read right for the creator's profile
+        // Give read rights for the resource
         await ctx.call('webacl.resource.addRights', {
-          resourceUri: creator.url,
+          resourceUri: objectUri,
           additionalRights: {
             group: {
               uri: announcesGroupUri,
@@ -83,54 +75,75 @@ export default {
           },
           webId: creator.id
         });
+
+        if (creator.url) {
+          // Give read right for the creator's profile
+          await ctx.call('webacl.resource.addRights', {
+            resourceUri: creator.url,
+            additionalRights: {
+              group: {
+                uri: announcesGroupUri,
+                read: true
+              }
+            },
+            webId: creator.id
+          });
+        }
       }
-    },
-    async giveRightsAfterAnnouncersCollectionCreate(ctx: any) {
-      const { objectUri } = ctx.params;
+    }),
 
-      const object = await ctx.call('ldp.resource.awaitCreateComplete', {
-        resourceUri: objectUri,
-        predicates: ['apods:announcers', 'apods:announces']
-      });
+    giveRightsAfterAnnouncersCollectionCreate: defineAction({
+      async handler(ctx: any) {
+        const { objectUri } = ctx.params;
 
-      // Add the creator to the list of announcers
-      await ctx.call('activitypub.collection.add', {
-        collectionUri: object['apods:announcers'],
-        item: object['dc:creator']
-      });
+        const object = await ctx.call('ldp.resource.awaitCreateComplete', {
+          resourceUri: objectUri,
+          predicates: ['apods:announcers', 'apods:announces']
+        });
 
-      const announcersGroupUri = getAnnouncersGroupUri(objectUri);
-      const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcersGroupUri, webId: 'system' });
-      if (!groupExist) {
-        await ctx.call('webacl.group.create', { groupUri: announcersGroupUri, webId: object['dc:creator'] });
+        // Add the creator to the list of announcers
+        await ctx.call('activitypub.collection.add', {
+          collectionUri: object['apods:announcers'],
+          item: object['dc:creator']
+        });
+
+        const announcersGroupUri = getAnnouncersGroupUri(objectUri);
+        const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcersGroupUri, webId: 'system' });
+        if (!groupExist) {
+          await ctx.call('webacl.group.create', { groupUri: announcersGroupUri, webId: object['dc:creator'] });
+        }
+
+        // Give read rights to announcers for the list of announces
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri: object['apods:announces'],
+          additionalRights: {
+            group: {
+              uri: announcersGroupUri,
+              read: true
+            }
+          },
+          webId: object['dc:creator']
+        });
       }
+    }),
 
-      // Give read rights to announcers for the list of announces
-      await ctx.call('webacl.resource.addRights', {
-        resourceUri: object['apods:announces'],
-        additionalRights: {
-          group: {
-            uri: announcersGroupUri,
-            read: true
-          }
-        },
-        webId: object['dc:creator']
-      });
-    },
-    async updateCollectionsOptions(ctx: any) {
-      const { dataset } = ctx.params;
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ give... Remove this comment to see the full error message
-        collection: this.settings.announcesCollectionOptions,
-        dataset
-      });
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ give... Remove this comment to see the full error message
-        collection: this.settings.announcersCollectionOptions,
-        dataset
-      });
-    }
+    updateCollectionsOptions: defineAction({
+      async handler(ctx: any) {
+        const { dataset } = ctx.params;
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ give... Remove this comment to see the full error message
+          collection: this.settings.announcesCollectionOptions,
+          dataset
+        });
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ give... Remove this comment to see the full error message
+          collection: this.settings.announcersCollectionOptions,
+          dataset
+        });
+      }
+    })
   },
+
   activities: {
     announce: {
       // @ts-expect-error TS(7023): 'match' implicitly has return type 'any' because i... Remove this comment to see the full error message
@@ -348,4 +361,14 @@ export default {
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default AnnouncerServiceSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [AnnouncerServiceSchema.name]: typeof AnnouncerServiceSchema;
+    }
+  }
+}

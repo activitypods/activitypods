@@ -2,9 +2,11 @@
 import { LdpService, DocumentTaggerMixin } from '@semapps/ldp';
 // @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
-export default {
+const ServiceSchema = {
   mixins: [LdpService, DocumentTaggerMixin],
+
   settings: {
     baseUrl: CONFIG.BASE_URL,
     podProvider: true,
@@ -14,4 +16,6 @@ export default {
       newResourcesPermissions: {}
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default ServiceSchema;

@@ -18,18 +18,20 @@ import { sanitizeSparqlQuery } from '@semapps/triplestore';
 import { arrayOf } from '@semapps/ldp';
 // @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import CONFIG from '../config/config.ts';
-
+import { ServiceSchema, defineAction } from 'moleculer';
 // @ts-expect-error TS(7034): Variable 'Readable' implicitly has type 'any' in s... Remove this comment to see the full error message
 let Readable, NTriplesSerializer;
+
 const importAsync = async () => {
   ({ Readable } = await import('readable-stream'));
   ({ NTriplesSerializer } = await import('@rdfjs/formats'));
 };
+
 importAsync();
 
 /** @type {import('moleculer').ServiceSchema} */
 const ManagementService = {
-  name: 'management',
+  name: 'management' as const,
   mixins: [QueueService(CONFIG.QUEUE_SERVICE_URL)],
   dependencies: ['api', 'ldp'],
   settings: {
@@ -63,7 +65,7 @@ const ManagementService = {
     if (!fs.existsSync(this.settings.exportDir)) fs.mkdirSync(this.settings.exportDir);
   },
   actions: {
-    deleteAccount: {
+    deleteAccount: defineAction({
       params: {
         username: { type: 'string' }
       },
@@ -155,7 +157,8 @@ const ManagementService = {
           setTimeout(() => this.deleteDataset(username), 1000 * 60 * 5);
         }
       }
-    },
+    }),
+
     /**
      * Create an export of all actor data (+ backups if requested).
      * Creates a zip archive file with rdf db dump and binaries.
@@ -163,7 +166,7 @@ const ManagementService = {
      * If a backup exists which is younger than five minutes, the existing backup is served.
      * @returns {Promise<object>} The backup file promise as returned by `fs.promises.readFile`
      */
-    exportAccount: {
+    exportAccount: defineAction({
       params: {
         username: { type: 'string' },
         withBackups: { type: 'boolean', default: false, convert: true },
@@ -261,7 +264,7 @@ const ManagementService = {
         ctx.meta.$responseType = 'application/zip';
         return fs.promises.readFile(fileName);
       }
-    }
+    })
   },
   methods: {
     /**
@@ -455,6 +458,14 @@ const ManagementService = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default ManagementService;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ManagementService.name]: typeof ManagementService;
+    }
+  }
+}

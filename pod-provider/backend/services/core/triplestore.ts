@@ -2,13 +2,17 @@
 import { TripleStoreService } from '@semapps/triplestore';
 // @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
-export default {
+const ServiceSchema = {
   mixins: [TripleStoreService],
+
   settings: {
     url: CONFIG.SPARQL_ENDPOINT,
     user: CONFIG.JENA_USER,
     password: CONFIG.JENA_PASSWORD,
     fusekiBase: CONFIG.FUSEKI_BASE
   }
-};
+} satisfies ServiceSchema;
+
+export default ServiceSchema;

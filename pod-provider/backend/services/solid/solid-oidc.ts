@@ -3,22 +3,25 @@ import path from 'path';
 import Redis from 'ioredis';
 // @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { delay } from '@semapps/ldp';
-import { Errors as E } from 'moleculer';
+import { Errors as E, ServiceSchema, defineAction } from 'moleculer';
 import RedisAdapter from '../../config/oidc-adapter.ts';
 import baseConfig from '../../config/oidc.ts';
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'node... Remove this comment to see the full error message
 import fetch from 'node-fetch';
 import CONFIG from '../../config/config.ts';
 
-export default {
-  name: 'solid-oidc',
+const SolidOidcServiceSchema = {
+  name: 'solid-oidc' as const,
+
   settings: {
     baseUrl: CONFIG.BASE_URL,
     frontendUrl: CONFIG.FRONTEND_URL,
     redisUrl: CONFIG.REDIS_OIDC_PROVIDER_URL,
     cookieSecret: CONFIG.COOKIE_SECRET
   },
+
   dependencies: ['jwk', 'api'],
+
   async started() {
     // Dynamically import Provider since it's an ESM module
     // @ts-expect-error TS(7016): Could not find a declaration file for module 'oidc... Remove this comment to see the full error message
@@ -80,68 +83,81 @@ export default {
       }
     });
   },
-  actions: {
-    // See https://moleculer.services/docs/0.13/moleculer-web.html#Authentication
-    async authenticate(ctx: any) {
-      const { route, req, res } = ctx.params;
-      // Extract token from authorization header (do not take the Bearer part)
-      const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
-      if (token) {
-        const payload = await ctx.call('jwk.verifyToken', { token });
-        if (payload) {
-          ctx.meta.tokenPayload = payload;
-          ctx.meta.webId = payload.azp; // Use the WebID of the application requesting access
-          ctx.meta.impersonatedUser = payload.webid; // Used by some services which need to know the real user (Attention: webid with a i)
-          return Promise.resolve(payload);
-        }
-        // Invalid token
-        ctx.meta.webId = 'anon';
-        return Promise.reject(new E.UnAuthorizedError(E.ERR_INVALID_TOKEN));
-      }
-      // No token
-      ctx.meta.webId = 'anon';
-      return Promise.resolve(null);
-    },
-    // See https://moleculer.services/docs/0.13/moleculer-web.html#Authorization
-    async authorize(ctx: any) {
-      const { route, req, res } = ctx.params;
-      // Extract token from authorization header (do not take the Bearer part)
-      const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
-      if (token) {
-        const payload = await ctx.call('jwk.verifyToken', { token });
-        if (payload) {
-          ctx.meta.tokenPayload = payload;
-          ctx.meta.webId = payload.azp; // Use the WebID of the application requesting access
-          ctx.meta.impersonatedUser = payload.webid; // Used by some services which need to know the real user (Attention: webid with a i)
-          return Promise.resolve(payload);
-        }
-        ctx.meta.webId = 'anon';
-        return Promise.reject(new E.UnAuthorizedError(E.ERR_INVALID_TOKEN));
-      }
-      ctx.meta.webId = 'anon';
-      return Promise.reject(new E.UnAuthorizedError(E.ERR_NO_TOKEN));
-    },
-    // @ts-expect-error TS(7023): 'proxyConfig' implicitly has return type 'any' bec... Remove this comment to see the full error message
-    async proxyConfig() {
-      // @ts-expect-error TS(7022): 'res' implicitly has type 'any' because it does no... Remove this comment to see the full error message
-      const res = await fetch(`${this.settings.baseUrl}.oidc/auth/.well-known/openid-configuration`);
-      if (res.ok) {
-        return await res.json();
-      } else {
-        throw new Error('OIDC server not loaded');
-      }
-    },
-    // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
-    async loginCompleted(ctx: any) {
-      const { interactionId } = ctx.params;
-      const webId = ctx.meta.webId;
 
-      // @ts-expect-error TS(2339): Property 'interactionFinished' does not exist on t... Remove this comment to see the full error message
-      await this.interactionFinished(interactionId, {
-        login: { accountId: webId, amr: ['pwd'], remember: true }
-      });
-    }
+  actions: {
+    authenticate: defineAction({
+      // See https://moleculer.services/docs/0.13/moleculer-web.html#Authentication
+      async handler(ctx: any) {
+        const { route, req, res } = ctx.params;
+        // Extract token from authorization header (do not take the Bearer part)
+        const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+        if (token) {
+          const payload = await ctx.call('jwk.verifyToken', { token });
+          if (payload) {
+            ctx.meta.tokenPayload = payload;
+            ctx.meta.webId = payload.azp; // Use the WebID of the application requesting access
+            ctx.meta.impersonatedUser = payload.webid; // Used by some services which need to know the real user (Attention: webid with a i)
+            return Promise.resolve(payload);
+          }
+          // Invalid token
+          ctx.meta.webId = 'anon';
+          return Promise.reject(new E.UnAuthorizedError(E.ERR_INVALID_TOKEN));
+        }
+        // No token
+        ctx.meta.webId = 'anon';
+        return Promise.resolve(null);
+      }
+    }),
+
+    authorize: defineAction({
+      // See https://moleculer.services/docs/0.13/moleculer-web.html#Authorization
+      async handler(ctx: any) {
+        const { route, req, res } = ctx.params;
+        // Extract token from authorization header (do not take the Bearer part)
+        const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+        if (token) {
+          const payload = await ctx.call('jwk.verifyToken', { token });
+          if (payload) {
+            ctx.meta.tokenPayload = payload;
+            ctx.meta.webId = payload.azp; // Use the WebID of the application requesting access
+            ctx.meta.impersonatedUser = payload.webid; // Used by some services which need to know the real user (Attention: webid with a i)
+            return Promise.resolve(payload);
+          }
+          ctx.meta.webId = 'anon';
+          return Promise.reject(new E.UnAuthorizedError(E.ERR_INVALID_TOKEN));
+        }
+        ctx.meta.webId = 'anon';
+        return Promise.reject(new E.UnAuthorizedError(E.ERR_NO_TOKEN));
+      }
+    }),
+
+    proxyConfig: defineAction({
+      // @ts-expect-error TS(7023): 'proxyConfig' implicitly has return type 'any' bec... Remove this comment to see the full error message
+      async handler() {
+        // @ts-expect-error TS(7022): 'res' implicitly has type 'any' because it does no... Remove this comment to see the full error message
+        const res = await fetch(`${this.settings.baseUrl}.oidc/auth/.well-known/openid-configuration`);
+        if (res.ok) {
+          return await res.json();
+        } else {
+          throw new Error('OIDC server not loaded');
+        }
+      }
+    }),
+
+    loginCompleted: defineAction({
+      // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
+      async handler(ctx: any) {
+        const { interactionId } = ctx.params;
+        const webId = ctx.meta.webId;
+
+        // @ts-expect-error TS(2339): Property 'interactionFinished' does not exist on t... Remove this comment to see the full error message
+        await this.interactionFinished(interactionId, {
+          login: { accountId: webId, amr: ['pwd'], remember: true }
+        });
+      }
+    })
   },
+
   methods: {
     async interactionFinished(interactionId: any, result: any) {
       // @ts-expect-error TS(2339): Property 'oidc' does not exist on type '{ interact... Remove this comment to see the full error message
@@ -154,4 +170,14 @@ export default {
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default SolidOidcServiceSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [SolidOidcServiceSchema.name]: typeof SolidOidcServiceSchema;
+    }
+  }
+}

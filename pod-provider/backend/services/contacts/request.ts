@@ -1,9 +1,7 @@
 // @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin, OBJECT_TYPES, matchActivity } from '@semapps/activitypub';
-
 // @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { arrayOf } from '@semapps/ldp';
-
 import {
   // @ts-expect-error TS(2459): Module '"../../config/patterns"' declares 'CONTACT... Remove this comment to see the full error message
   CONTACT_REQUEST,
@@ -24,10 +22,12 @@ import {
 
 // @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
 import { MIME_TYPES } from '@semapps/mime-types';
+import { ServiceSchema, defineAction } from 'moleculer';
 
-export default {
-  name: 'contacts.request',
+const ContactsRequestServiceSchema = {
+  name: 'contacts.request' as const,
   mixins: [ActivitiesHandlerMixin],
+
   settings: {
     contactsCollectionOptions: {
       path: '/contacts',
@@ -54,7 +54,9 @@ export default {
       permissions: {} // This collection is only visible by the Pod owner
     }
   },
+
   dependencies: ['activitypub.collections-registry', 'webacl'],
+
   async started() {
     await this.broker.call('activitypub.collections-registry.register', this.settings.contactsCollectionOptions);
     await this.broker.call('activitypub.collections-registry.register', this.settings.contactRequestsCollectionOptions);
@@ -63,26 +65,30 @@ export default {
       this.settings.rejectedContactsCollectionOptions
     );
   },
+
   actions: {
-    async updateCollectionsOptions(ctx: any) {
-      const { dataset } = ctx.params;
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
-        collection: this.settings.contactsCollectionOptions,
-        dataset
-      });
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
-        collection: this.settings.contactRequestsCollectionOptions,
-        dataset
-      });
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
-        collection: this.settings.rejectedContactsCollectionOptions,
-        dataset
-      });
-    }
+    updateCollectionsOptions: defineAction({
+      async handler(ctx: any) {
+        const { dataset } = ctx.params;
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
+          collection: this.settings.contactsCollectionOptions,
+          dataset
+        });
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
+          collection: this.settings.contactRequestsCollectionOptions,
+          dataset
+        });
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ upda... Remove this comment to see the full error message
+          collection: this.settings.rejectedContactsCollectionOptions,
+          dataset
+        });
+      }
+    })
   },
+
   activities: {
     contactRequest: {
       match: CONTACT_REQUEST,
@@ -351,4 +357,14 @@ export default {
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default ContactsRequestServiceSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ContactsRequestServiceSchema.name]: typeof ContactsRequestServiceSchema;
+    }
+  }
+}

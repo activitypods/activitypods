@@ -6,10 +6,12 @@ import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
 import { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 // @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
-export default {
-  name: 'contacts.message',
+const ContactsMessageServiceSchema = {
+  name: 'contacts.message' as const,
   mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
+
   settings: {
     acceptedTypes: ['as:Note'],
     shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Note'),
@@ -17,6 +19,7 @@ export default {
     newResourcesPermissions: {},
     typeIndex: 'public'
   },
+
   activities: {
     createNote: {
       match: {
@@ -64,4 +67,14 @@ export default {
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default ContactsMessageServiceSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ContactsMessageServiceSchema.name]: typeof ContactsMessageServiceSchema;
+    }
+  }
+}

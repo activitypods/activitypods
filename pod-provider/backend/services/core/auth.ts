@@ -7,9 +7,11 @@ import { AuthLocalService } from '@semapps/auth';
 import CONFIG from '../../config/config.ts';
 // @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import transport from '../../config/transport.ts';
+import { ServiceSchema } from 'moleculer';
 
-export default {
+const ServiceSchema = {
   mixins: [AuthLocalService],
+
   settings: {
     baseUrl: CONFIG.BASE_URL,
     jwtPath: path.resolve(__dirname, '../../jwt'),
@@ -29,6 +31,7 @@ export default {
       }
     }
   },
+
   hooks: {
     after: {
       async signup(ctx: any, res: any) {
@@ -59,4 +62,6 @@ export default {
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default ServiceSchema;

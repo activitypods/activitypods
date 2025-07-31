@@ -16,10 +16,12 @@ import { arrayOf, isObject } from '@semapps/ldp';
 import CONFIG from '../config/config.ts';
 // @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import transport from '../config/transport.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
-export default {
-  name: 'mail-notifications',
+const MailNotificationsServiceSchema = {
+  name: 'mail-notifications' as const,
   mixins: [MailService, ActivitiesHandlerMixin, QueueService(CONFIG.QUEUE_SERVICE_URL)],
+
   settings: {
     frontendUrl: CONFIG.FRONTEND_URL,
     handlebars: {
@@ -36,6 +38,7 @@ export default {
       color: CONFIG.COLOR_PRIMARY
     }
   },
+
   async started() {
     for (const [name, fn] of Object.entries(this.settings.handlebars.helpers)) {
       this.logger.info(`Registering handlebars helper ${name}`);
@@ -43,51 +46,55 @@ export default {
       Handlebars.registerHelper(name, fn);
     }
   },
+
   actions: {
-    // Allow local service to send directly notifications without sending a apods:Notification activity
-    // @ts-expect-error TS(7023): 'notify' implicitly has return type 'any' because ... Remove this comment to see the full error message
-    async notify(ctx: any) {
-      const { template, recipientUri, activity, context, ...rest } = ctx.params;
+    notify: defineAction({
+      // Allow local service to send directly notifications without sending a apods:Notification activity
+      // @ts-expect-error TS(7023): 'notify' implicitly has return type 'any' because ... Remove this comment to see the full error message
+      async handler(ctx: any) {
+        const { template, recipientUri, activity, context, ...rest } = ctx.params;
 
-      const account = await ctx.call('auth.account.findByWebId', { webId: recipientUri });
-      const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
-      const locale = recipient['schema:knowsLanguage'] || 'en';
+        const account = await ctx.call('auth.account.findByWebId', { webId: recipientUri });
+        const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
+        const locale = recipient['schema:knowsLanguage'] || 'en';
 
-      const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor, webId: recipientUri });
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor, webId: recipientUri });
 
-      let emitterProfile = {};
-      try {
-        emitterProfile = emitter.url
-          ? await ctx.call('activitypub.actor.getProfile', { actorUri: activity.actor, webId: recipientUri })
-          : {};
-      } catch (e) {
-        // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ notify... Remove this comment to see the full error message
-        this.logger.warn(`Could not get profile of actor ${activity.actor}`);
-      }
-
-      const templateParams = { activity, emitter, emitterProfile, ...rest };
-
-      // @ts-expect-error TS(7022): 'values' implicitly has type 'any' because it does... Remove this comment to see the full error message
-      const values = this.parseTemplate(template, templateParams, locale);
-
-      // @ts-expect-error TS(2339): Property 'queueMail' does not exist on type '{ not... Remove this comment to see the full error message
-      return await this.queueMail(ctx, values.title, {
-        to: account.email,
-        data: {
-          title: values.title,
-          content: values.content,
-          contentWithBr: values.content ? values.content.replace(/\r\n|\r|\n/g, '<br />') : undefined,
-          actions: arrayOf(values.actions).map((action: any) => ({
-            caption: action.caption,
-            // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ noti... Remove this comment to see the full error message
-            link: action.link.startsWith('http') ? action.link : urlJoin(this.settings.frontendUrl, action.link)
-          })),
-          // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ noti... Remove this comment to see the full error message
-          ...this.settings.data
+        let emitterProfile = {};
+        try {
+          emitterProfile = emitter.url
+            ? await ctx.call('activitypub.actor.getProfile', { actorUri: activity.actor, webId: recipientUri })
+            : {};
+        } catch (e) {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ notify... Remove this comment to see the full error message
+          this.logger.warn(`Could not get profile of actor ${activity.actor}`);
         }
-      });
-    }
+
+        const templateParams = { activity, emitter, emitterProfile, ...rest };
+
+        // @ts-expect-error TS(7022): 'values' implicitly has type 'any' because it does... Remove this comment to see the full error message
+        const values = this.parseTemplate(template, templateParams, locale);
+
+        // @ts-expect-error TS(2339): Property 'queueMail' does not exist on type '{ not... Remove this comment to see the full error message
+        return await this.queueMail(ctx, values.title, {
+          to: account.email,
+          data: {
+            title: values.title,
+            content: values.content,
+            contentWithBr: values.content ? values.content.replace(/\r\n|\r|\n/g, '<br />') : undefined,
+            actions: arrayOf(values.actions).map((action: any) => ({
+              caption: action.caption,
+              // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ noti... Remove this comment to see the full error message
+              link: action.link.startsWith('http') ? action.link : urlJoin(this.settings.frontendUrl, action.link)
+            })),
+            // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ noti... Remove this comment to see the full error message
+            ...this.settings.data
+          }
+        });
+      }
+    })
   },
+
   activities: {
     appNotification: {
       match: {
@@ -120,6 +127,7 @@ export default {
       }
     }
   },
+
   methods: {
     // @ts-expect-error TS(7023): 'queueMail' implicitly has return type 'any' becau... Remove this comment to see the full error message
     async queueMail(ctx: any, title: any, payload: any) {
@@ -160,6 +168,7 @@ export default {
       );
     }
   },
+
   queues: {
     sendMail: {
       name: '*',
@@ -173,4 +182,14 @@ export default {
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default MailNotificationsServiceSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [MailNotificationsServiceSchema.name]: typeof MailNotificationsServiceSchema;
+    }
+  }
+}

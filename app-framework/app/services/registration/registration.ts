@@ -1,9 +1,10 @@
 const { MoleculerError } = require('moleculer').Errors;
 import { ActivitiesHandlerMixin, ACTIVITY_TYPES } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
+import { ServiceSchema } from 'moleculer';
 
 const AppRegistrationSchema = {
-  name: 'app.registration',
+  name: 'app.registration' as const,
   mixins: [ActivitiesHandlerMixin],
   activities: {
     createAppRegistration: {
@@ -139,6 +140,14 @@ const AppRegistrationSchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default AppRegistrationSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [AppRegistrationSchema.name]: typeof AppRegistrationSchema;
+    }
+  }
+}

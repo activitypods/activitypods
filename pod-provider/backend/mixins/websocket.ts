@@ -17,7 +17,6 @@ import { ServiceSchema, defineAction } from 'moleculer';
  * - onClose: (event, connection)
  * - onMessage: (message, connection)
  * - onError: (event, connection)
- * @type {import('moleculer').ServiceSchema}
  */
 const WebsocketServiceSchema = {
   name: 'websocket' as const,

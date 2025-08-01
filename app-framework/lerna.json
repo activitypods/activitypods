@@ -1,8 +1,5 @@
 {
   "version": "2.2.0",
   "npmClient": "yarn",
-  "packages": [
-    "app",
-    "react"
-  ]
+  "packages": ["app", "react"]
 }

@@ -20,7 +20,6 @@ const importAsync = async () => {
 
 importAsync();
 
-/** @type {import('moleculer').ServiceSchema} */
 const ManagementService = {
   name: 'management' as const,
   mixins: [QueueService(CONFIG.QUEUE_SERVICE_URL)],

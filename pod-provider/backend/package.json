@@ -14,7 +14,8 @@
     "start": "NODE_OPTIONS='--experimental-specifier-resolution=node' moleculer-runner services/*.ts services/**/*.ts",
     "test": "NODE_ENV=test NODE_OPTIONS='--experimental-specifier-resolution=node' moleculer-runner --repl --hot services/*.ts services/**/*.ts",
     "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
-    "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid"
+    "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
+    "postinstall": "bash ./types/patch-moleculer-types.sh"
   },
   "dependencies": {
     "@rdfjs/formats": "4.0.1",
@@ -55,6 +56,7 @@
     "url-join": "^4.0.1",
     "ws": "8.18.2"
   },
+  "type": "module",
   "engines": {
     "node": ">=22.12.0"
   },

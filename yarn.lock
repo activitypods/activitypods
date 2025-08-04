@@ -128,6 +128,13 @@
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.15.tgz#596a1747233694d50f6ad8a7869fcb6f56cf5841"
   integrity sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==
 
+"@types/url-join@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@types/url-join/-/url-join-5.0.0.tgz#2fe2eb9721cc2935e8deb1f2d4e9f7376f3a2567"
+  integrity sha512-hvwpcDQdoMBPdra8zIxnmsIWFtkc6fUwY2E90MKNvYfZBgRQDQRgiLmhdNOcWUlfMviq8gOYWRmMKzBBCOe8sg==
+  dependencies:
+    url-join "*"
+
 "@typescript-eslint/eslint-plugin@7.10.0":
   version "7.10.0"
   resolved "https://registry.yarnpkg.com/@typescript-eslint/eslint-plugin/-/eslint-plugin-7.10.0.tgz#07854a236f107bb45cbf4f62b89474cbea617f50"
@@ -2010,6 +2017,11 @@ uri-js@^4.2.2:
   integrity sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==
   dependencies:
     punycode "^2.1.0"
+
+url-join@*:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/url-join/-/url-join-5.0.0.tgz#c2f1e5cbd95fa91082a93b58a1f42fecb4bdbcf1"
+  integrity sha512-n2huDr9h9yzd6exQVnH/jU5mr+Pfx08LRXXZhkLLetAMESRj+anQsTAh940iMrIetKAmry9coFuZQ2jY8/p3WA==
 
 which-boxed-primitive@^1.0.2:
   version "1.0.2"

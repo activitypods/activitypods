@@ -1,18 +1,13 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { triple, namedNode, literal } from '@rdfjs/data-model';
-// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
-// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import ExampleAppService from './apps/example.app.ts';
-// @ts-expect-error TS(2304): Cannot find name 'jest'.
 jest.setTimeout(80000);
 const NUM_PODS = 2;
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
-// @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
 describe('Test Pod resources handling', () => {
   let actors: any = [],
     podProvider: any,
@@ -23,7 +18,6 @@ describe('Test Pod resources handling', () => {
     bobEventUri: any,
     bobNoteUri: any;
 
-  // @ts-expect-error TS(2304): Cannot find name 'beforeAll'.
   beforeAll(async () => {
     await clearAllData();
 
@@ -46,7 +40,6 @@ describe('Test Pod resources handling', () => {
       actors[i].call = (actionName: any, params: any, options = {}) =>
         podProvider.call(actionName, params, {
           ...options,
-          // @ts-expect-error TS(2339): Property 'meta' does not exist on type '{}'.
           meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
         });
     }
@@ -58,13 +51,11 @@ describe('Test Pod resources handling', () => {
     await installApp(bob, APP_URI);
   }, 120000);
 
-  // @ts-expect-error TS(2304): Cannot find name 'afterAll'.
   afterAll(async () => {
     await appServer.stop();
     await podProvider.stop();
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Get local data through app', async () => {
     aliceEventUri = await alice.call('ldp.container.post', {
       containerUri: urlJoin(alice.id, 'data/as/event'),
@@ -75,7 +66,6 @@ describe('Test Pod resources handling', () => {
       contentType: MIME_TYPES.JSON
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-resources.get', {
         resourceUri: aliceEventUri,
@@ -89,7 +79,6 @@ describe('Test Pod resources handling', () => {
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Get remote data through app', async () => {
     bobEventUri = await bob.call('ldp.container.post', {
       containerUri: urlJoin(bob.id, 'data/as/event'),
@@ -101,7 +90,6 @@ describe('Test Pod resources handling', () => {
     });
 
     // Alice hasn't right (yet) to see Bob event
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-resources.get', {
         resourceUri: bobEventUri,
@@ -121,7 +109,6 @@ describe('Test Pod resources handling', () => {
       }
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-resources.get', {
         resourceUri: bobEventUri,
@@ -135,9 +122,7 @@ describe('Test Pod resources handling', () => {
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Cannot post to non-container', async () => {
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-resources.post', {
         resource: {
@@ -149,7 +134,6 @@ describe('Test Pod resources handling', () => {
     ).rejects.toThrow();
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Cannot get data not registered by app', async () => {
     await bob.call('ldp.registry.register', {
       acceptedTypes: 'as:Note'
@@ -176,7 +160,6 @@ describe('Test Pod resources handling', () => {
     });
 
     // Bob's note is shared with Alice, but the app has not registered as:Note
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-resources.get', {
         resourceUri: bobNoteUri,
@@ -187,7 +170,6 @@ describe('Test Pod resources handling', () => {
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('PUT data registered by app', async () => {
     await bob.call('webacl.resource.addRights', {
       resourceUri: bobEventUri,
@@ -200,7 +182,6 @@ describe('Test Pod resources handling', () => {
       contentType: MIME_TYPES.JSON
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-resources.put', {
         resource: {
@@ -212,7 +193,6 @@ describe('Test Pod resources handling', () => {
       })
     ).resolves.not.toThrow();
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-resources.get', {
         resourceUri: bobEventUri,
@@ -226,7 +206,6 @@ describe('Test Pod resources handling', () => {
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Cannot PUT data not registered by app', async () => {
     await bob.call('webacl.resource.addRights', {
       resourceUri: bobNoteUri,
@@ -240,7 +219,6 @@ describe('Test Pod resources handling', () => {
     });
 
     // Bob gave write permission to Alice, but the app has not registered as:Note
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-resources.put', {
         resource: {
@@ -255,9 +233,7 @@ describe('Test Pod resources handling', () => {
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('PATCH data registered by app', async () => {
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-resources.patch', {
         resourceUri: bobEventUri,
@@ -272,7 +248,6 @@ describe('Test Pod resources handling', () => {
       })
     ).resolves.not.toThrow();
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-resources.get', {
         resourceUri: bobEventUri,
@@ -287,10 +262,8 @@ describe('Test Pod resources handling', () => {
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('DELETE data registered by app', async () => {
     // Alice has write permission on Bob's event
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-resources.delete', {
         resourceUri: bobEventUri,
@@ -300,7 +273,6 @@ describe('Test Pod resources handling', () => {
       status: 204
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-resources.get', {
         resourceUri: bobEventUri,

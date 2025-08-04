@@ -1,23 +1,15 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
 import { MIME_TYPES } from '@semapps/mime-types';
-// @ts-expect-error TS(2305): Module '"@semapps/ldp"' has no exported member 'ar... Remove this comment to see the full error message
 import { arrayOf, getId } from '@semapps/ldp';
-// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import { connectPodProvider, clearAllData, initializeAppServer, createActor } from './initialize.ts';
-// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import ExampleAppService from './apps/example.app.ts';
-// @ts-expect-error TS(2305): Module '"@semapps/activitypub"' has no exported me... Remove this comment to see the full error message
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
-// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import CONFIG from './config.ts';
-// @ts-expect-error TS(2304): Cannot find name 'jest'.
 jest.setTimeout(80000);
 const APP_URI = 'http://localhost:3001/app';
 const APP2_URI = 'http://localhost:3002/app';
 
-// @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
 describe('Test app installation', () => {
   let podProvider: any,
     alice: any,
@@ -32,7 +24,6 @@ describe('Test app installation', () => {
     optionalAccessGrant,
     appRegistrationUri: any;
 
-  // @ts-expect-error TS(2304): Cannot find name 'beforeAll'.
   beforeAll(async () => {
     await clearAllData();
 
@@ -47,27 +38,22 @@ describe('Test app installation', () => {
     alice = await createActor(podProvider, 'alice');
   }, 80000);
 
-  // @ts-expect-error TS(2304): Cannot find name 'afterAll'.
   afterAll(async () => {
     await podProvider.stop();
     await appServer.stop();
     await appServer2.stop();
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('App access needs are correctly declared', async () => {
     await waitForExpect(async () => {
       app = await appServer.call('ldp.resource.get', {
         resourceUri: APP_URI,
         accept: MIME_TYPES.JSON
       });
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(app).toMatchObject({
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         type: expect.arrayContaining(['interop:Application']),
         'interop:applicationName': 'Example App',
         'interop:applicationDescription': 'An ActivityPods app for integration tests',
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         'interop:hasAccessNeedGroup': expect.anything()
       });
     });
@@ -87,19 +73,15 @@ describe('Test app installation', () => {
 
     // REQUIRED ACCESS NEEDS
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(requiredAccessNeedGroup).toMatchObject({
       type: 'interop:AccessNeedGroup',
       'interop:accessNecessity': 'interop:AccessRequired',
       'interop:accessScenario': 'interop:PersonalAccess',
       'interop:authenticatedAs': 'interop:SocialAgent',
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       'interop:hasAccessNeed': expect.anything(),
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       'apods:hasSpecialRights': expect.arrayContaining(['apods:ReadInbox', 'apods:PostOutbox', 'apods:CreateWacGroup'])
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('ldp.resource.get', {
         resourceUri: requiredAccessNeedGroup['interop:hasAccessNeed'],
@@ -109,23 +91,19 @@ describe('Test app installation', () => {
       type: 'interop:AccessNeed',
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
       'interop:accessNecessity': 'interop:AccessRequired',
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Write', 'acl:Control'])
     });
 
     // OPTIONAL ACCESS NEEDS
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(optionalAccessNeedGroup).toMatchObject({
       type: 'interop:AccessNeedGroup',
       'interop:accessNecessity': 'interop:AccessOptional',
       'interop:accessScenario': 'interop:PersonalAccess',
       'interop:authenticatedAs': 'interop:SocialAgent',
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       'interop:hasAccessNeed': expect.anything()
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('ldp.resource.get', {
         resourceUri: optionalAccessNeedGroup['interop:hasAccessNeed'],
@@ -135,12 +113,10 @@ describe('Test app installation', () => {
       type: 'interop:AccessNeed',
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location'),
       'interop:accessNecessity': 'interop:AccessOptional',
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append'])
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('User installs app and grants all access needs', async () => {
     appRegistrationUri = await alice.call('registration-endpoint.register', {
       appUri: APP_URI,
@@ -165,17 +141,14 @@ describe('Test app installation', () => {
         afterEq: new URL(outboxMenu?.first).searchParams.get('afterEq')
       });
 
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(outbox?.orderedItems[0]).toMatchObject({
         type: 'Create',
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         object: expect.anything(),
         to: APP_URI
       });
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Application registration is correctly created', async () => {
     let appRegistration;
 
@@ -187,21 +160,17 @@ describe('Test app installation', () => {
         webId: APP_URI
       });
 
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(appRegistration).toMatchObject({
         type: 'interop:ApplicationRegistration',
         'interop:registeredAgent': APP_URI,
         'interop:registeredBy': alice.id,
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         'interop:hasAccessGrant': expect.arrayContaining([])
       });
 
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(appRegistration['interop:hasAccessGrant']).toHaveLength(2);
     });
 
     const grants = await Promise.all(
-      // @ts-expect-error TS(2532): Object is possibly 'undefined'.
       arrayOf(appRegistration['interop:hasAccessGrant']).map((accessGrantUri: any) =>
         appServer.call('ldp.remote.get', {
           resourceUri: accessGrantUri,
@@ -218,7 +187,6 @@ describe('Test app installation', () => {
       (g: any) => g['interop:satisfiesAccessNeed'] === optionalAccessNeedGroup['interop:hasAccessNeed']
     );
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(requiredAccessGrant).toMatchObject({
       type: 'interop:AccessGrant',
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
@@ -227,13 +195,11 @@ describe('Test app installation', () => {
       'interop:grantedBy': alice.id,
       'interop:grantee': APP_URI,
       'interop:granteeType': 'interop:Application',
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Write', 'acl:Control']),
       'interop:satisfiesAccessNeed': requiredAccessNeedGroup['interop:hasAccessNeed'],
       'interop:scopeOfGrant': 'interop:AllFromRegistry'
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(optionalAccessGrant).toMatchObject({
       type: 'interop:AccessGrant',
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location'),
@@ -242,14 +208,12 @@ describe('Test app installation', () => {
       'interop:grantedBy': alice.id,
       'interop:grantee': APP_URI,
       'interop:granteeType': 'interop:Application',
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append']),
       'interop:satisfiesAccessNeed': optionalAccessNeedGroup['interop:hasAccessNeed'],
       'interop:scopeOfGrant': 'interop:AllFromRegistry'
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Authorizations are correctly created', async () => {
     const authRegistry = await alice.call('auth-registry.get');
 
@@ -261,18 +225,13 @@ describe('Test app installation', () => {
       })
     );
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(authorizations).toContainEqual(
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect.objectContaining({
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         'interop:accessMode': expect.arrayContaining(['acl:Write', 'acl:Read', 'acl:Control']),
         'interop:hasDataRegistration': urlJoin(alice.id, 'data/as/event'),
         'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event')
       }),
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect.objectContaining({
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append']),
         'interop:hasDataRegistration': urlJoin(alice.id, 'data/vcard/location'),
         'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location')
@@ -280,9 +239,7 @@ describe('Test app installation', () => {
     );
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Data registrations are created according to access needs', async () => {
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       alice.call('ldp.container.exist', {
         containerUri: urlJoin(alice.id, 'data/as')
@@ -292,26 +249,22 @@ describe('Test app installation', () => {
     eventsContainerUri = urlJoin(alice.id, 'data/as/event');
     locationsContainerUri = urlJoin(alice.id, 'data/vcard/location');
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       alice.call('ldp.container.get', {
         containerUri: eventsContainerUri,
         accept: MIME_TYPES.JSON
       })
     ).resolves.toMatchObject({
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       type: expect.arrayContaining(['ldp:Container', 'ldp:BasicContainer', 'interop:DataRegistration']),
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event')
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       alice.call('ldp.container.get', {
         containerUri: locationsContainerUri,
         accept: MIME_TYPES.JSON
       })
     ).resolves.toMatchObject({
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       type: expect.arrayContaining(['ldp:Container', 'ldp:BasicContainer', 'interop:DataRegistration']),
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location')
     });
@@ -322,17 +275,13 @@ describe('Test app installation', () => {
       webId: APP_URI
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(eventsRights).toMatchObject({
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       '@graph': expect.arrayContaining([
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect.objectContaining({
           'acl:accessTo': eventsContainerUri,
           'acl:agent': APP_URI,
           'acl:mode': 'acl:Read'
         }),
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect.objectContaining({
           'acl:accessTo': eventsContainerUri,
           'acl:agent': APP_URI,
@@ -347,11 +296,8 @@ describe('Test app installation', () => {
       webId: APP_URI
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(locationsRights).toMatchObject({
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       '@graph': expect.arrayContaining([
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect.objectContaining({
           'acl:agent': APP_URI,
           'acl:mode': 'acl:Read',
@@ -360,9 +306,7 @@ describe('Test app installation', () => {
       ])
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(locationsRights['@graph']).not.toContain([
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect.objectContaining({
         'acl:agent': APP_URI,
         'acl:mode': 'acl:Write',
@@ -371,7 +315,6 @@ describe('Test app installation', () => {
     ]);
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Resources created in the containers have the correct permissions', async () => {
     const eventUri = await alice.call('ldp.container.post', {
       containerUri: urlJoin(alice.id, 'data/as/event'),
@@ -388,23 +331,18 @@ describe('Test app installation', () => {
       webId: 'system' // We must fetch as system, because we need control rights on the container to see all permissions
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(eventsRights).toMatchObject({
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       '@graph': expect.arrayContaining([
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect.objectContaining({
           'acl:agent': APP_URI,
           'acl:default': eventsContainerUri,
           'acl:mode': 'acl:Read'
         }),
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect.objectContaining({
           'acl:agent': APP_URI,
           'acl:default': eventsContainerUri,
           'acl:mode': 'acl:Write'
         }),
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect.objectContaining({
           'acl:agent': APP_URI,
           'acl:default': eventsContainerUri,
@@ -428,17 +366,13 @@ describe('Test app installation', () => {
       webId: 'system'
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(locationsRights).toMatchObject({
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       '@graph': expect.arrayContaining([
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect.objectContaining({
           'acl:agent': APP_URI,
           'acl:mode': 'acl:Read',
           'acl:default': locationsContainerUri
         }),
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect.objectContaining({
           'acl:agent': APP_URI,
           'acl:mode': 'acl:Append',
@@ -447,9 +381,7 @@ describe('Test app installation', () => {
       ])
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(locationsRights['@graph']).not.toContain([
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect.objectContaining({
         'acl:agent': APP_URI,
         'acl:mode': 'acl:Write',
@@ -457,9 +389,7 @@ describe('Test app installation', () => {
       })
     ]);
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(locationsRights['@graph']).not.toContain([
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect.objectContaining({
         'acl:agent': APP_URI,
         'acl:mode': 'acl:Control',
@@ -468,21 +398,17 @@ describe('Test app installation', () => {
     ]);
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Types are correctly registered in the TypeIndex', async () => {
     const typeIndex = await alice.call('type-indexes.get', {
       resourceUri: alice['solid:publicTypeIndex'],
       accept: MIME_TYPES.JSON
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(typeIndex['solid:hasTypeRegistration']).toContainEqual(
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect.objectContaining({
         'solid:forClass': 'as:Event',
         'solid:instanceContainer': urlJoin(alice.id, 'data/as/event')
       }),
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect.objectContaining({
         'solid:forClass': 'vcard:Location',
         'solid:instanceContainer': urlJoin(alice.id, 'data/vcard/location')
@@ -490,9 +416,7 @@ describe('Test app installation', () => {
     );
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('User installs same app a second time and get an error', async () => {
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       alice.call('registration-endpoint.register', {
         appUri: APP_URI,
@@ -502,7 +426,6 @@ describe('Test app installation', () => {
     ).rejects.toThrow('User already has an application registration. Upgrade or remove the app first.');
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('User uninstalls app', async () => {
     await alice.call('registration-endpoint.remove', { appUri: APP_URI });
 
@@ -519,10 +442,8 @@ describe('Test app installation', () => {
         afterEq: new URL(outboxMenu?.first).searchParams.get('afterEq')
       });
 
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(outbox?.orderedItems[0]).toMatchObject({
         type: ACTIVITY_TYPES.DELETE,
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         object: expect.anything(),
         to: APP_URI
       });
@@ -532,7 +453,6 @@ describe('Test app installation', () => {
 
     // The ApplicationRegistration should be deleted
     await waitForExpect(async () => {
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         alice.call('ldp.resource.get', {
           resourceUri: appRegistrationUri,
@@ -543,7 +463,6 @@ describe('Test app installation', () => {
 
     // It should be deleted on the app server as well
     await waitForExpect(async () => {
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         appServer.call('ldp.remote.getStored', {
           resourceUri: appRegistrationUri,
@@ -554,7 +473,6 @@ describe('Test app installation', () => {
 
     // An access grant should be deleted
     await waitForExpect(async () => {
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         alice.call('ldp.resource.get', {
           resourceUri: getId(requiredAccessGrant),
@@ -565,7 +483,6 @@ describe('Test app installation', () => {
 
     // It should be deleted on the app server as well
     await waitForExpect(async () => {
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         appServer.call('ldp.remote.getStored', {
           resourceUri: getId(requiredAccessGrant),
@@ -577,7 +494,6 @@ describe('Test app installation', () => {
     // TODO Test that the webhook channels are deleted
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Permissions granted to the app should be removed', async () => {
     const eventsRights = await alice.call('webacl.resource.getRights', {
       resourceUri: urlJoin(alice.id, 'data/as/event'),
@@ -585,9 +501,7 @@ describe('Test app installation', () => {
       webId: APP_URI
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(eventsRights['@graph']).not.toContain([
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect.objectContaining({
         'acl:agent': APP_URI,
         'acl:mode': 'acl:Read',
@@ -595,9 +509,7 @@ describe('Test app installation', () => {
       })
     ]);
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(eventsRights['@graph']).not.toContain([
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect.objectContaining({
         'acl:agent': APP_URI,
         'acl:mode': 'acl:Write',
@@ -606,21 +518,17 @@ describe('Test app installation', () => {
     ]);
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Types are still registered in the TypeIndex', async () => {
     const typeIndex = await alice.call('type-indexes.get', {
       resourceUri: alice['solid:publicTypeIndex'],
       accept: MIME_TYPES.JSON
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(typeIndex['solid:hasTypeRegistration']).toContainEqual(
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect.objectContaining({
         'solid:forClass': 'as:Event',
         'solid:instanceContainer': urlJoin(alice.id, 'data/as/event')
       }),
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect.objectContaining({
         'solid:forClass': 'vcard:Location',
         'solid:instanceContainer': urlJoin(alice.id, 'data/vcard/location')

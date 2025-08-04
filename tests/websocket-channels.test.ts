@@ -1,29 +1,20 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import fetch from 'node-fetch';
-// @ts-expect-error TS(2307): Cannot find module 'ws' or its corresponding type ... Remove this comment to see the full error message
 import WebSocket from 'ws';
-// @ts-expect-error TS(2305): Module '"@semapps/ldp"' has no exported member 'de... Remove this comment to see the full error message
 import { delay } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { triple, namedNode, literal } from '@rdfjs/data-model';
-// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
-// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import ExampleAppService from './apps/example.app.ts';
-// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import { fetchServer, tryUntilTimeout } from './utils.ts';
-// @ts-expect-error TS(2304): Cannot find name 'jest'.
 jest.setTimeout(110_000);
 const POD_SERVER_BASE_URL = 'http://localhost:3000';
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
-// @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
 describe('Websocket channel', () => {
   let podProvider: any, alice: any, appServer: any, webSocketChannelSubscriptionUrl: any;
 
-  // @ts-expect-error TS(2304): Cannot find name 'beforeAll'.
   beforeAll(async () => {
     await clearAllData();
 
@@ -45,26 +36,21 @@ describe('Websocket channel', () => {
     alice.call = (actionName: any, params: any, options = {}) =>
       podProvider.call(actionName, params, {
         ...options,
-        // @ts-expect-error TS(2339): Property 'meta' does not exist on type '{}'.
         meta: { ...options.meta, webId, dataset: alice.preferredUsername }
       });
 
     await installApp(alice, APP_URI);
   }, 110_000);
 
-  // @ts-expect-error TS(2304): Cannot find name 'afterAll'.
   afterAll(async () => {
     podProvider.stop();
     appServer.stop();
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Websocket channel subscription is available', async () => {
     const { json: storage } = await fetchServer(urlJoin(POD_SERVER_BASE_URL, '.well-known/solid'));
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(storage.type).toBe('pim:Storage');
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(storage['notify:subscription']).toHaveLength(2);
 
     webSocketChannelSubscriptionUrl = storage['notify:subscription'].find((uri: any) =>
@@ -73,14 +59,12 @@ describe('Websocket channel', () => {
 
     const { json: webSocketChannelSubscription } = await fetchServer(webSocketChannelSubscriptionUrl);
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(webSocketChannelSubscription).toMatchObject({
       'notify:channelType': 'notify:WebSocketChannel2023',
       'notify:feature': ['notify:endAt', 'notify:rate', 'notify:startAt', 'notify:state']
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Cannot create web socket channel without read rights', async () => {
     // Alice profile is not public
     const { status } = await fetchServer(webSocketChannelSubscriptionUrl, {
@@ -95,11 +79,9 @@ describe('Websocket channel', () => {
       }
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(status).toBe(403);
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Cannot create web socket channel for non-existing resources', async () => {
     const { status } = await fetchServer(webSocketChannelSubscriptionUrl, {
       method: 'POST',
@@ -113,11 +95,9 @@ describe('Websocket channel', () => {
       }
     });
 
-    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     expect(status).toBe(400);
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
   describe('collection and resource subscription', () => {
     let collectionUri: any,
       noteUri: any,
@@ -128,7 +108,6 @@ describe('Websocket channel', () => {
     const collectionActivities: any = [];
     const itemActivities: any = [];
 
-    // @ts-expect-error TS(2304): Cannot find name 'beforeAll'.
     beforeAll(async () => {
       collectionUri = await appServer.call('pod-collections.createAndAttach', {
         resourceUri: alice.id,
@@ -180,7 +159,6 @@ describe('Websocket channel', () => {
       });
     });
 
-    // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
     test('Create web socket channels as registered app', async () => {
       // Create channel for listing to collection changes.
 
@@ -197,7 +175,6 @@ describe('Websocket channel', () => {
         }),
         actorUri: APP_URI
       });
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(collectionChannelBody.id).toBeTruthy();
       webSocketCollectionChannelUri = collectionChannelBody.id;
 
@@ -219,7 +196,6 @@ describe('Websocket channel', () => {
         }),
         actorUri: APP_URI
       });
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(itemChannelBody.id).toBeTruthy();
       webSocketItemChannelUri = itemChannelBody.id;
 
@@ -229,7 +205,6 @@ describe('Websocket channel', () => {
       });
     });
 
-    // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
     test('add', async () => {
       await alice.call('activitypub.collection.add', {
         collectionUri,
@@ -237,7 +212,6 @@ describe('Websocket channel', () => {
       });
 
       await tryUntilTimeout(() => {
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect(collectionActivities[collectionActivities.length - 1]).toMatchObject({
           '@context': ['https://www.w3.org/ns/activitystreams', 'https://www.w3.org/ns/solid/notifications-context/v1'],
           type: 'Add',
@@ -247,7 +221,6 @@ describe('Websocket channel', () => {
       }, 10_000);
     });
 
-    // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
     test('patch', async () => {
       await alice.call('ldp.resource.patch', {
         resourceUri: noteUri,
@@ -257,7 +230,6 @@ describe('Websocket channel', () => {
       });
 
       await tryUntilTimeout(() => {
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect(itemActivities[itemActivities.length - 1]).toMatchObject({
           type: 'Update',
           object: noteUri
@@ -265,7 +237,6 @@ describe('Websocket channel', () => {
       }, 10_000);
     });
 
-    // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
     test('delete', async () => {
       await alice.call('ldp.resource.delete', {
         resourceUri: noteUri,
@@ -273,7 +244,6 @@ describe('Websocket channel', () => {
       });
 
       await tryUntilTimeout(() => {
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect(itemActivities[itemActivities.length - 1]).toMatchObject({
           type: 'Delete',
           object: noteUri
@@ -281,7 +251,6 @@ describe('Websocket channel', () => {
       }, 10_000);
       // Item is replaced by tombstone, and not removed.
       await tryUntilTimeout(() => {
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect(collectionActivities[collectionActivities.length - 1]).not.toMatchObject({
           type: 'Remove',
           object: noteUri,
@@ -292,7 +261,6 @@ describe('Websocket channel', () => {
       await alice.call('activitypub.collection.remove', { collectionUri: collectionUri, itemUri: noteUri });
       // Now the tombstone should be gone.
       await tryUntilTimeout(() => {
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect(collectionActivities[collectionActivities.length - 1]).toMatchObject({
           type: 'Remove',
           object: noteUri,
@@ -301,7 +269,6 @@ describe('Websocket channel', () => {
       }, 10_000);
     });
 
-    // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
     test('Delete web socket channels', async () => {
       const responseDelCollection = await appServer.call('signature.proxy.query', {
         url: webSocketCollectionChannelUri,
@@ -313,24 +280,18 @@ describe('Websocket channel', () => {
         method: 'DELETE',
         actorUri: APP_URI
       });
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(responseDelCollection.status).toBe(204);
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(responseDelItem.status).toBe(204);
       await delay(3_000);
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(collectionWebSocket.readyState).toBe(WebSocket.CLOSED);
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(itemWebSocket.readyState).toBe(WebSocket.CLOSED);
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
   describe('container subscription', () => {
     let containerUri: any, resourceUri: any, containerWebSocket;
     const containerActivities: any = [];
 
-    // @ts-expect-error TS(2304): Cannot find name 'beforeAll'.
     beforeAll(async () => {
       containerUri = urlJoin(alice.id, 'data/as');
       await alice.call('webacl.resource.addRights', {
@@ -348,7 +309,6 @@ describe('Websocket channel', () => {
       });
     });
 
-    // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
     test('Create web socket channel as registered app', async () => {
       const { body } = await appServer.call('signature.proxy.query', {
         url: webSocketChannelSubscriptionUrl,
@@ -363,7 +323,6 @@ describe('Websocket channel', () => {
         }),
         actorUri: APP_URI
       });
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(body.id).toBeTruthy();
 
       containerWebSocket = new WebSocket(body['notify:receiveFrom']);
@@ -372,7 +331,6 @@ describe('Websocket channel', () => {
       });
     });
 
-    // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
     test('add', async () => {
       resourceUri = await alice.call('ldp.container.post', {
         containerUri,
@@ -386,7 +344,6 @@ describe('Websocket channel', () => {
       });
 
       await tryUntilTimeout(() => {
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect(containerActivities[containerActivities.length - 1]).toMatchObject({
           '@context': ['https://www.w3.org/ns/activitystreams', 'https://www.w3.org/ns/solid/notifications-context/v1'],
           type: 'Add',
@@ -396,7 +353,6 @@ describe('Websocket channel', () => {
       }, 10_000);
     });
 
-    // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
     test('delete', async () => {
       await alice.call('ldp.resource.delete', {
         resourceUri: resourceUri,
@@ -404,7 +360,6 @@ describe('Websocket channel', () => {
       });
 
       await tryUntilTimeout(() => {
-        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect(containerActivities[containerActivities.length - 1]).toMatchObject({
           type: 'Remove',
           object: resourceUri,

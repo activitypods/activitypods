@@ -1,21 +1,14 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
-// @ts-expect-error TS(2305): Module '"@semapps/activitypub"' has no exported me... Remove this comment to see the full error message
 import { OBJECT_TYPES, ACTIVITY_TYPES } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
-// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import { connectPodProvider, createActor, clearAllData } from './initialize.ts';
-// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import CONFIG from './config.ts';
-// @ts-expect-error TS(2304): Cannot find name 'jest'.
 jest.setTimeout(120000);
 
-// @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
 describe('Test sharing through announcer', () => {
   let podProvider: any, alice: any, bob: any, craig: any, eventContainerUri, eventUri: any, event: any;
 
-  // @ts-expect-error TS(2304): Cannot find name 'beforeAll'.
   beforeAll(async () => {
     clearAllData();
 
@@ -26,12 +19,10 @@ describe('Test sharing through announcer', () => {
     craig = await createActor(podProvider, 'craig');
   });
 
-  // @ts-expect-error TS(2304): Cannot find name 'afterAll'.
   afterAll(async () => {
     await podProvider.stop();
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Alice creates an event', async () => {
     // Create container manually so that we don't need to install the app
     eventContainerUri = await alice.call('data-registrations.generateFromShapeTree', {
@@ -49,7 +40,6 @@ describe('Test sharing through announcer', () => {
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Alice shares her event with Bob and he is added to the announces collection', async () => {
     await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
@@ -64,13 +54,11 @@ describe('Test sharing through announcer', () => {
         resourceUri: eventUri,
         accept: MIME_TYPES.JSON
       });
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(event['apods:announces']).not.toBeUndefined();
     });
 
     // Bob is added to the announces collection
     await waitForExpect(async () => {
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         alice.call('activitypub.collection.includes', {
           collectionUri: event['apods:announces'],
@@ -80,7 +68,6 @@ describe('Test sharing through announcer', () => {
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Alice gives Bob delegation permission and he is added to the announcers collection', async () => {
     await alice.call('activitypub.outbox.post', {
       collectionUri: alice.outbox,
@@ -97,13 +84,11 @@ describe('Test sharing through announcer', () => {
         resourceUri: eventUri,
         accept: MIME_TYPES.JSON
       });
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(event['apods:announcers']).not.toBeUndefined();
     });
 
     // Bob is added to the announcers collection
     await waitForExpect(async () => {
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         alice.call('activitypub.collection.includes', {
           collectionUri: event['apods:announcers'],
@@ -114,7 +99,6 @@ describe('Test sharing through announcer', () => {
 
     // Bob can fetch Alice event
     await waitForExpect(async () => {
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         bob.call('ldp.resource.get', {
           resourceUri: eventUri,
@@ -125,7 +109,6 @@ describe('Test sharing through announcer', () => {
 
     // Bob can fetch the announces collection
     await waitForExpect(async () => {
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         bob.call('ldp.resource.get', {
           resourceUri: event['apods:announces'],
@@ -136,7 +119,6 @@ describe('Test sharing through announcer', () => {
 
     // Bob cannot fetch the announcers collection
     await waitForExpect(async () => {
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         bob.call('ldp.resource.get', {
           resourceUri: event['apods:announcers'],
@@ -146,7 +128,6 @@ describe('Test sharing through announcer', () => {
     });
   });
 
-  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Bob shares Alice event with Craig and Craig is added to the announces collection', async () => {
     await bob.call('activitypub.outbox.post', {
       collectionUri: bob.outbox,
@@ -157,7 +138,6 @@ describe('Test sharing through announcer', () => {
 
     // Craig is added to the announces collection
     await waitForExpect(async () => {
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         alice.call('activitypub.collection.includes', {
           collectionUri: event['apods:announces'],
@@ -168,7 +148,6 @@ describe('Test sharing through announcer', () => {
 
     // Craig can fetch Alice event
     await waitForExpect(async () => {
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         craig.call('ldp.resource.get', {
           resourceUri: eventUri,
@@ -179,7 +158,6 @@ describe('Test sharing through announcer', () => {
 
     // Craig cannot fetch the announces collection
     await waitForExpect(async () => {
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         craig.call('ldp.resource.get', {
           resourceUri: event['apods:announces'],
@@ -190,7 +168,6 @@ describe('Test sharing through announcer', () => {
 
     // Craig cannot fetch the announcers collection
     await waitForExpect(async () => {
-      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         craig.call('ldp.resource.get', {
           resourceUri: event['apods:announcers'],

@@ -14,7 +14,6 @@ export const REDIS_OIDC_PROVIDER_URL = process.env.SEMAPPS_REDIS_OIDC_PROVIDER_U
 export const FROM_EMAIL = process.env.SEMAPPS_FROM_EMAIL;
 export const FROM_NAME = process.env.SEMAPPS_FROM_NAME;
 export const SMTP_HOST = process.env.SEMAPPS_SMTP_HOST;
-// @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message
 export const SMTP_PORT = parseInt(process.env.SEMAPPS_SMTP_PORT, 10);
 export const SMTP_SECURE = process.env.SEMAPPS_SMTP_SECURE === 'true';
 export const SMTP_USER = process.env.SEMAPPS_SMTP_USER;

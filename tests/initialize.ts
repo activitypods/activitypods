@@ -1,20 +1,19 @@
-const path = require('path');
-const Redis = require('ioredis');
-const fs = require('fs');
-const { ServiceBroker } = require('moleculer');
-const { AuthAccountService } = require('@semapps/auth');
-const { CoreService: SemAppsCoreService } = require('@semapps/core');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { NodeinfoService } = require('@semapps/nodeinfo');
-const { ProxyService } = require('@semapps/crypto');
-const { TripleStoreAdapter } = require('@semapps/triplestore');
-const { WebAclMiddleware } = require('@semapps/webacl');
-const { interop, oidc, notify, apods } = require('@semapps/ontologies');
-const { NotificationsListenerService } = require('@semapps/solid');
-const RdfJSONSerializer = require('../pod-provider/backend/RdfJSONSerializer');
-const { clearMails } = require('./utils');
-const CONFIG = require('./config');
-
+import path from 'path';
+import Redis from 'ioredis';
+import fs from 'fs';
+import { ServiceBroker } from 'moleculer';
+import { AuthAccountService } from '@semapps/auth';
+import { CoreService as SemAppsCoreService } from '@semapps/core';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { NodeinfoService } from '@semapps/nodeinfo';
+import { ProxyService } from '@semapps/crypto';
+import { TripleStoreAdapter } from '@semapps/triplestore';
+import { WebAclMiddleware } from '@semapps/webacl';
+import { interop, oidc, notify, apods } from '@semapps/ontologies';
+import { NotificationsListenerService } from '@semapps/solid';
+import RdfJSONSerializer from '../pod-provider/backend/RdfJSONSerializer.ts';
+import { clearMails } from './utils.ts';
+import CONFIG from './config.ts';
 Error.stackTraceLimit = Infinity;
 
 const logger = {
@@ -272,7 +271,7 @@ const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRig
   });
 };
 
-module.exports = {
+export {
   listDatasets,
   clearDataset,
   clearRedisDb,

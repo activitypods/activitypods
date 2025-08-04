@@ -1,10 +1,9 @@
-const urlJoin = require('url-join');
-const waitForExpect = require('wait-for-expect');
-const { OBJECT_TYPES, ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { connectPodProvider, createActor, clearAllData } = require('./initialize');
-const CONFIG = require('./config');
-
+import urlJoin from 'url-join';
+import waitForExpect from 'wait-for-expect';
+import { OBJECT_TYPES, ACTIVITY_TYPES } from '@semapps/activitypub';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { connectPodProvider, createActor, clearAllData } from './initialize.ts';
+import CONFIG from './config.ts';
 jest.setTimeout(120000);
 
 describe('Test sharing through announcer', () => {

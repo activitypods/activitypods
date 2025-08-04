@@ -1,10 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-const urlJoin = require('url-join');
-const { connectPodProvider, clearAllData } = require('./initialize');
-
+import fs from 'fs';
+import path from 'path';
+import urlJoin from 'url-join';
+import { connectPodProvider, clearAllData } from './initialize.ts';
 jest.setTimeout(80_000);
-
 const NUM_PODS = 2;
 
 describe('Delete an actor', () => {

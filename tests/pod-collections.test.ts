@@ -1,11 +1,8 @@
-const urlJoin = require('url-join');
-const { connectPodProvider, clearAllData, initializeAppServer, installApp } = require('./initialize');
-const ExampleAppService = require('./apps/example.app');
-
+import urlJoin from 'url-join';
+import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
+import ExampleAppService from './apps/example.app.ts';
 jest.setTimeout(100000);
-
 const NUM_PODS = 1;
-
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 

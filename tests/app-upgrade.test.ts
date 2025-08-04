@@ -1,13 +1,13 @@
-const urlJoin = require('url-join');
-const waitForExpect = require('wait-for-expect');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { connectPodProvider, clearAllData, installApp, createActor, initializeAppServer } = require('./initialize');
-const ExampleAppService = require('./apps/example.app');
-const ExampleAppV2Service = require('./apps/example-v2.app');
-const CONFIG = require('./config');
+import urlJoin from 'url-join';
+import waitForExpect from 'wait-for-expect';
+import { MIME_TYPES } from '@semapps/mime-types';
 
+import { connectPodProvider, clearAllData, installApp, createActor, initializeAppServer } from './initialize.ts';
+
+import ExampleAppService from './apps/example.app.ts';
+import ExampleAppV2Service from './apps/example-v2.app.ts';
+import CONFIG from './config.ts';
 jest.setTimeout(80000);
-
 const APP_URI = 'http://localhost:3001/app';
 
 describe('Test app upgrade', () => {

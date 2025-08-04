@@ -6,9 +6,9 @@ jest.setTimeout(50000);
 const BASE_URL = 'http://localhost:3000';
 
 describe('Test pods creation via API', () => {
-  let podProvider, token, alice, projectUri;
+  let podProvider: any, token: any, alice: any, projectUri: any;
 
-  const fetchServer = (path, options = {}) => {
+  const fetchServer = (path: any, options = {}) => {
     if (!path) throw new Error('No path provided to fetchServer');
     if (!options.headers) options.headers = new fetch.Headers();
 

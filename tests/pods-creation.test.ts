@@ -6,10 +6,10 @@ jest.setTimeout(80000);
 const NUM_PODS = 1;
 
 describe('Test pods creation', () => {
-  let actors = [],
-    podProvider,
-    alice,
-    projectUri;
+  let actors: any = [],
+    podProvider: any,
+    alice: any,
+    projectUri: any;
 
   beforeAll(async () => {
     await clearAllData();
@@ -27,7 +27,7 @@ describe('Test pods creation', () => {
         },
         { meta: { dataset: actorData.username } }
       );
-      actors[i].call = (actionName, params, options = {}) =>
+      actors[i].call = (actionName: any, params: any, options = {}) =>
         podProvider.call(actionName, params, {
           ...options,
           meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }

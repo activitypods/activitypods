@@ -6,10 +6,10 @@ jest.setTimeout(80_000);
 const NUM_PODS = 2;
 
 describe('Delete an actor', () => {
-  let actors = [],
-    podProvider,
-    alice,
-    bob;
+  let actors: any = [],
+    podProvider: any,
+    alice: any,
+    bob: any;
 
   beforeAll(async () => {
     await clearAllData();
@@ -28,7 +28,7 @@ describe('Delete an actor', () => {
         { meta: { dataset: actorData.username } }
       );
       actors[i].token = token;
-      actors[i].call = (actionName, params, options = {}) =>
+      actors[i].call = (actionName: any, params: any, options = {}) =>
         podProvider.call(actionName, params, {
           ...options,
           meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
@@ -75,7 +75,7 @@ describe('Delete an actor', () => {
 
     // When querying all accounts, alice is not present.
     const allAccounts = await podProvider.call('auth.account.find');
-    expect(allAccounts.find(acc => acc.username === username)).toBeFalsy();
+    expect(allAccounts.find((acc: any) => acc.username === username)).toBeFalsy();
 
     // Check if uploads are empty.
     expect(fs.existsSync(path.join(__dirname, './uploads/', username))).toBeFalsy();

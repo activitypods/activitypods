@@ -34,12 +34,12 @@ const listDatasets = async () => {
 
   if (response.ok) {
     const json = await response.json();
-    return json.datasets.map(dataset => dataset['ds.name'].substring(1));
+    return json.datasets.map((dataset: any) => dataset['ds.name'].substring(1));
   }
   return [];
 };
 
-const clearDataset = dataset =>
+const clearDataset = (dataset: any) =>
   fetch(`${CONFIG.SPARQL_ENDPOINT + dataset}/update`, {
     method: 'POST',
     body: 'update=CLEAR+ALL', // DROP+ALL is not working with WebACL datasets !
@@ -68,7 +68,7 @@ const clearSettingsDataset = () =>
     }
   });
 
-const clearRedisDb = async redisUrl => {
+const clearRedisDb = async (redisUrl: any) => {
   const redisClient = new Redis(redisUrl);
   await redisClient.flushdb();
   redisClient.disconnect();
@@ -76,7 +76,7 @@ const clearRedisDb = async redisUrl => {
 
 const clearAllData = async () => {
   const datasets = await listDatasets();
-  for (let dataset of datasets.filter(d => d != 'settings')) {
+  for (let dataset of datasets.filter((d: any) => d != 'settings')) {
     await clearDataset(dataset);
   }
 
@@ -109,7 +109,13 @@ const connectPodProvider = async () => {
   return broker;
 };
 
-const initializeAppServer = async (port, mainDataset, settingsDataset, queueServiceDb, appService) => {
+const initializeAppServer = async (
+  port: any,
+  mainDataset: any,
+  settingsDataset: any,
+  queueServiceDb: any,
+  appService: any
+) => {
   const baseUrl = `http://localhost:${port}/`;
   const queueServiceUrl = `redis://localhost:6379/${queueServiceDb}`;
 
@@ -178,7 +184,7 @@ const initializeAppServer = async (port, mainDataset, settingsDataset, queueServ
   return broker;
 };
 
-const createActor = async (podProvider, username = 'alice') => {
+const createActor = async (podProvider: any, username = 'alice') => {
   let defaultData = await fs.promises.readFile('./templates/actor_default.ttl', 'utf8');
   let aclData = await fs.promises.readFile('./templates/actor_acl.ttl', 'utf8');
   let settingsData = await fs.promises.readFile('./templates/actor_settings.ttl', 'utf8');
@@ -224,7 +230,7 @@ const createActor = async (podProvider, username = 'alice') => {
   let actor = await podProvider.call('activitypub.actor.get', { actorUri: webId });
 
   // Shortcut to make it easier to write tests
-  actor.call = (actionName, params, options = {}) =>
+  actor.call = (actionName: any, params: any, options = {}) =>
     podProvider.call(actionName, params, {
       ...options,
       meta: { ...options.meta, webId, dataset: username }
@@ -233,7 +239,7 @@ const createActor = async (podProvider, username = 'alice') => {
   return actor;
 };
 
-const getAppAccessNeeds = async (actor, appUri) => {
+const getAppAccessNeeds = async (actor: any, appUri: any) => {
   const app = await actor.call('ldp.resource.get', {
     resourceUri: appUri,
     accept: MIME_TYPES.JSON
@@ -256,7 +262,7 @@ const getAppAccessNeeds = async (actor, appUri) => {
   return [requiredAccessNeedGroup, optionalAccessNeedGroup];
 };
 
-const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRights) => {
+const installApp = async (actor: any, appUri: any, acceptedAccessNeeds: any, acceptedSpecialRights: any) => {
   // If the accepted needs are not specified, use the app required access needs
   if (!acceptedAccessNeeds && !acceptedSpecialRights) {
     const [requiredAccessNeedGroup] = await getAppAccessNeeds(actor, appUri);

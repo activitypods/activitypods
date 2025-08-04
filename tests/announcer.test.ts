@@ -7,7 +7,7 @@ import CONFIG from './config.ts';
 jest.setTimeout(120000);
 
 describe('Test sharing through announcer', () => {
-  let podProvider, alice, bob, craig, eventContainerUri, eventUri, event;
+  let podProvider: any, alice: any, bob: any, craig: any, eventContainerUri, eventUri: any, event: any;
 
   beforeAll(async () => {
     clearAllData();

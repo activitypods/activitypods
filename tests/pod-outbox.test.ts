@@ -12,12 +12,12 @@ const APP2_SERVER_BASE_URL = 'http://localhost:3002';
 const APP2_URI = urlJoin(APP2_SERVER_BASE_URL, 'app');
 
 describe('Test Pod outbox posting', () => {
-  let actors = [],
-    podProvider,
-    alice,
-    appServer,
-    app2Server,
-    noteUri;
+  let actors: any = [],
+    podProvider: any,
+    alice: any,
+    appServer: any,
+    app2Server: any,
+    noteUri: any;
 
   beforeAll(async () => {
     await clearAllData();
@@ -41,7 +41,7 @@ describe('Test Pod outbox posting', () => {
         },
         { meta: { dataset: actorData.username } }
       );
-      actors[i].call = (actionName, params, options = {}) =>
+      actors[i].call = (actionName: any, params: any, options = {}) =>
         podProvider.call(actionName, params, {
           ...options,
           meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }

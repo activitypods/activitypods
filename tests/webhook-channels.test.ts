@@ -13,7 +13,7 @@ const mockWebhookAction = jest.fn(() => Promise.resolve());
 const mockWebhookAction2 = jest.fn(() => Promise.resolve());
 
 describe('Test app installation', () => {
-  let podProvider, alice, appServer, webhookChannelSubscriptionUrl, webhookChannelUri;
+  let podProvider: any, alice: any, appServer: any, webhookChannelSubscriptionUrl: any, webhookChannelUri: any;
 
   beforeAll(async () => {
     await clearAllData();
@@ -48,7 +48,7 @@ describe('Test app installation', () => {
       },
       { meta: { dataset: actorData.username } }
     );
-    alice.call = (actionName, params, options = {}) =>
+    alice.call = (actionName: any, params: any, options = {}) =>
       podProvider.call(actionName, params, {
         ...options,
         meta: { ...options.meta, webId, dataset: alice.preferredUsername }
@@ -68,7 +68,9 @@ describe('Test app installation', () => {
     expect(storage.type).toBe('pim:Storage');
     expect(storage['notify:subscription']).toHaveLength(2);
 
-    webhookChannelSubscriptionUrl = storage['notify:subscription'].find(uri => uri.includes('/WebhookChannel2023'));
+    webhookChannelSubscriptionUrl = storage['notify:subscription'].find((uri: any) =>
+      uri.includes('/WebhookChannel2023')
+    );
 
     const { json: webhookChannelSubscription } = await fetchServer(webhookChannelSubscriptionUrl);
 

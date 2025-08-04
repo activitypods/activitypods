@@ -13,7 +13,14 @@ const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
 describe('Test delegation features', () => {
-  let podProvider, appServer, alice, bob, craig, eventContainerUri, eventUri, craigAppRegistrationUri;
+  let podProvider: any,
+    appServer: any,
+    alice: any,
+    bob: any,
+    craig: any,
+    eventContainerUri: any,
+    eventUri: any,
+    craigAppRegistrationUri: any;
 
   beforeAll(async () => {
     clearAllData();

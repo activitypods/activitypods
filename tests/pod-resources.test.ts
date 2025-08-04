@@ -9,14 +9,14 @@ const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
 describe('Test Pod resources handling', () => {
-  let actors = [],
-    podProvider,
-    alice,
-    bob,
-    appServer,
+  let actors: any = [],
+    podProvider: any,
+    alice: any,
+    bob: any,
+    appServer: any,
     aliceEventUri,
-    bobEventUri,
-    bobNoteUri;
+    bobEventUri: any,
+    bobNoteUri: any;
 
   beforeAll(async () => {
     await clearAllData();
@@ -37,7 +37,7 @@ describe('Test Pod resources handling', () => {
         },
         { meta: { dataset: actorData.username } }
       );
-      actors[i].call = (actionName, params, options = {}) =>
+      actors[i].call = (actionName: any, params: any, options = {}) =>
         podProvider.call(actionName, params, {
           ...options,
           meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }

@@ -11,18 +11,18 @@ const APP_URI = 'http://localhost:3001/app';
 const APP2_URI = 'http://localhost:3002/app';
 
 describe('Test app installation', () => {
-  let podProvider,
-    alice,
-    appServer,
-    appServer2,
-    app,
-    eventsContainerUri,
-    locationsContainerUri,
-    requiredAccessNeedGroup,
-    optionalAccessNeedGroup,
-    requiredAccessGrant,
+  let podProvider: any,
+    alice: any,
+    appServer: any,
+    appServer2: any,
+    app: any,
+    eventsContainerUri: any,
+    locationsContainerUri: any,
+    requiredAccessNeedGroup: any,
+    optionalAccessNeedGroup: any,
+    requiredAccessGrant: any,
     optionalAccessGrant,
-    appRegistrationUri;
+    appRegistrationUri: any;
 
   beforeAll(async () => {
     await clearAllData();
@@ -171,7 +171,7 @@ describe('Test app installation', () => {
     });
 
     const grants = await Promise.all(
-      arrayOf(appRegistration['interop:hasAccessGrant']).map(accessGrantUri =>
+      arrayOf(appRegistration['interop:hasAccessGrant']).map((accessGrantUri: any) =>
         appServer.call('ldp.remote.get', {
           resourceUri: accessGrantUri,
           accept: MIME_TYPES.JSON,
@@ -181,10 +181,10 @@ describe('Test app installation', () => {
     );
 
     requiredAccessGrant = grants.find(
-      g => g['interop:satisfiesAccessNeed'] === requiredAccessNeedGroup['interop:hasAccessNeed']
+      (g: any) => g['interop:satisfiesAccessNeed'] === requiredAccessNeedGroup['interop:hasAccessNeed']
     );
     optionalAccessGrant = grants.find(
-      g => g['interop:satisfiesAccessNeed'] === optionalAccessNeedGroup['interop:hasAccessNeed']
+      (g: any) => g['interop:satisfiesAccessNeed'] === optionalAccessNeedGroup['interop:hasAccessNeed']
     );
 
     expect(requiredAccessGrant).toMatchObject({
@@ -218,7 +218,7 @@ describe('Test app installation', () => {
     const authRegistry = await alice.call('auth-registry.get');
 
     const authorizations = await Promise.all(
-      arrayOf(authRegistry['interop:hasAccessAuthorization']).map(async authorizationUri => {
+      arrayOf(authRegistry['interop:hasAccessAuthorization']).map(async (authorizationUri: any) => {
         return await alice.call('access-authorizations.get', {
           resourceUri: authorizationUri
         });
@@ -429,7 +429,7 @@ describe('Test app installation', () => {
   test('User uninstalls app', async () => {
     await alice.call('registration-endpoint.remove', { appUri: APP_URI });
 
-    let appRegistrationUri;
+    let appRegistrationUri: any;
 
     // The app backend is informed of the uninstallation
     await waitForExpect(async () => {

@@ -13,7 +13,7 @@ const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
 describe('Websocket channel', () => {
-  let podProvider, alice, appServer, webSocketChannelSubscriptionUrl;
+  let podProvider: any, alice: any, appServer: any, webSocketChannelSubscriptionUrl: any;
 
   beforeAll(async () => {
     await clearAllData();
@@ -33,7 +33,7 @@ describe('Websocket channel', () => {
       },
       { meta: { dataset: actorData.username } }
     );
-    alice.call = (actionName, params, options = {}) =>
+    alice.call = (actionName: any, params: any, options = {}) =>
       podProvider.call(actionName, params, {
         ...options,
         meta: { ...options.meta, webId, dataset: alice.preferredUsername }
@@ -53,7 +53,9 @@ describe('Websocket channel', () => {
     expect(storage.type).toBe('pim:Storage');
     expect(storage['notify:subscription']).toHaveLength(2);
 
-    webSocketChannelSubscriptionUrl = storage['notify:subscription'].find(uri => uri.includes('/WebSocketChannel2023'));
+    webSocketChannelSubscriptionUrl = storage['notify:subscription'].find((uri: any) =>
+      uri.includes('/WebSocketChannel2023')
+    );
 
     const { json: webSocketChannelSubscription } = await fetchServer(webSocketChannelSubscriptionUrl);
 
@@ -97,14 +99,14 @@ describe('Websocket channel', () => {
   });
 
   describe('collection and resource subscription', () => {
-    let collectionUri,
-      noteUri,
-      collectionWebSocket,
-      itemWebSocket,
-      webSocketCollectionChannelUri,
-      webSocketItemChannelUri;
-    const collectionActivities = [];
-    const itemActivities = [];
+    let collectionUri: any,
+      noteUri: any,
+      collectionWebSocket: any,
+      itemWebSocket: any,
+      webSocketCollectionChannelUri: any,
+      webSocketItemChannelUri: any;
+    const collectionActivities: any = [];
+    const itemActivities: any = [];
 
     beforeAll(async () => {
       collectionUri = await appServer.call('pod-collections.createAndAttach', {
@@ -177,7 +179,7 @@ describe('Websocket channel', () => {
       webSocketCollectionChannelUri = collectionChannelBody.id;
 
       collectionWebSocket = new WebSocket(collectionChannelBody['notify:receiveFrom']);
-      collectionWebSocket.addEventListener('message', e => {
+      collectionWebSocket.addEventListener('message', (e: any) => {
         collectionActivities.push(JSON.parse(e.data));
       });
 
@@ -198,7 +200,7 @@ describe('Websocket channel', () => {
       webSocketItemChannelUri = itemChannelBody.id;
 
       itemWebSocket = new WebSocket(itemChannelBody['notify:receiveFrom']);
-      itemWebSocket.addEventListener('message', e => {
+      itemWebSocket.addEventListener('message', (e: any) => {
         itemActivities.push(JSON.parse(e.data));
       });
     });
@@ -287,8 +289,8 @@ describe('Websocket channel', () => {
   });
 
   describe('container subscription', () => {
-    let containerUri, resourceUri, containerWebSocket;
-    const containerActivities = [];
+    let containerUri: any, resourceUri: any, containerWebSocket;
+    const containerActivities: any = [];
 
     beforeAll(async () => {
       containerUri = urlJoin(alice.id, 'data/as');
@@ -324,7 +326,7 @@ describe('Websocket channel', () => {
       expect(body.id).toBeTruthy();
 
       containerWebSocket = new WebSocket(body['notify:receiveFrom']);
-      containerWebSocket.addEventListener('message', e => {
+      containerWebSocket.addEventListener('message', (e: any) => {
         containerActivities.push(JSON.parse(e.data));
       });
     });

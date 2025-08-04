@@ -13,17 +13,17 @@ const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
 describe('Test resource sharing features', () => {
-  let podProvider,
-    appServer,
-    alice,
-    bob,
-    craig,
-    eventContainerUri,
-    eventUri,
-    event2Uri,
+  let podProvider: any,
+    appServer: any,
+    alice: any,
+    bob: any,
+    craig: any,
+    eventContainerUri: any,
+    eventUri: any,
+    event2Uri: any,
     bobAppRegistration,
-    bobAppRegistrationUri,
-    aliceRegistrationForBob;
+    bobAppRegistrationUri: any,
+    aliceRegistrationForBob: any;
 
   beforeAll(async () => {
     clearAllData();

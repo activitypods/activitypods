@@ -11,7 +11,13 @@ jest.setTimeout(80000);
 const APP_URI = 'http://localhost:3001/app';
 
 describe('Test app upgrade', () => {
-  let podProvider, alice, appServer, oldApp, app, requiredAccessNeedGroup, optionalAccessNeedGroup;
+  let podProvider: any,
+    alice: any,
+    appServer: any,
+    oldApp: any,
+    app: any,
+    requiredAccessNeedGroup: any,
+    optionalAccessNeedGroup;
 
   beforeAll(async () => {
     await clearAllData();

@@ -1,4 +1,5 @@
 import PodResourcesHandlerMixin from './pod-resources-handler.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const Schema = {
   mixins: [PodResourcesHandlerMixin],
@@ -17,70 +18,87 @@ const Schema = {
   },
   dependencies: ['pod-collections'],
   actions: {
-    async createAndAttach(ctx) {
-      const { resourceUri, actorUri } = ctx.params;
-      const { attachPredicate, collectionOptions, createWacGroup } = this.settings;
-      const collectionUri = await ctx.call('pod-collections.createAndAttach', {
-        resourceUri,
-        attachPredicate,
-        collectionOptions,
-        actorUri
-      });
-      if (createWacGroup) {
-        await ctx.call('pod-wac-groups.create', {
-          groupSlug: this.getGroupSlugFromCollectionUri(collectionUri),
+    createAndAttach: defineAction({
+      async handler(ctx) {
+        const { resourceUri, actorUri } = ctx.params;
+        const { attachPredicate, collectionOptions, createWacGroup } = this.settings;
+        const collectionUri = await ctx.call('pod-collections.createAndAttach', {
+          resourceUri,
+          attachPredicate,
+          collectionOptions,
+          actorUri
+        });
+        if (createWacGroup) {
+          await ctx.call('pod-wac-groups.create', {
+            groupSlug: this.getGroupSlugFromCollectionUri(collectionUri),
+            actorUri
+          });
+        }
+        return collectionUri;
+      }
+    }),
+
+    deleteAndDetach: defineAction({
+      async handler(ctx) {
+        const { resourceUri, actorUri } = ctx.params;
+        const { attachPredicate } = this.settings;
+        await ctx.call('pod-collections.deleteAndDetach', {
+          resourceUri,
+          attachPredicate,
           actorUri
         });
       }
-      return collectionUri;
-    },
-    async deleteAndDetach(ctx) {
-      const { resourceUri, actorUri } = ctx.params;
-      const { attachPredicate } = this.settings;
-      await ctx.call('pod-collections.deleteAndDetach', {
-        resourceUri,
-        attachPredicate,
-        actorUri
-      });
-    },
-    async add(ctx) {
-      const { collectionUri, itemUri, actorUri } = ctx.params;
-      await ctx.call('pod-collections.add', { collectionUri, itemUri, actorUri });
-      if (this.settings.createWacGroup) {
-        await ctx.call('pod-wac-groups.addMember', {
-          groupSlug: this.getGroupSlugFromCollectionUri(collectionUri),
-          memberUri: itemUri,
-          actorUri
+    }),
+
+    add: defineAction({
+      async handler(ctx) {
+        const { collectionUri, itemUri, actorUri } = ctx.params;
+        await ctx.call('pod-collections.add', { collectionUri, itemUri, actorUri });
+        if (this.settings.createWacGroup) {
+          await ctx.call('pod-wac-groups.addMember', {
+            groupSlug: this.getGroupSlugFromCollectionUri(collectionUri),
+            memberUri: itemUri,
+            actorUri
+          });
+        }
+      }
+    }),
+
+    remove: defineAction({
+      async handler(ctx) {
+        const { collectionUri, itemUri, actorUri } = ctx.params;
+        await ctx.call('pod-collections.remove', { collectionUri, itemUri, actorUri });
+        if (this.settings.createWacGroup) {
+          await ctx.call('pod-wac-groups.removeMember', {
+            groupSlug: this.getGroupSlugFromCollectionUri(collectionUri),
+            memberUri: itemUri,
+            actorUri
+          });
+        }
+      }
+    }),
+
+    createAndAttachMissing: defineAction({
+      async handler(ctx) {
+        const { type, attachPredicate, collectionOptions } = this.settings;
+        await ctx.call('pod-collections.createAndAttachMissing', {
+          type,
+          attachPredicate,
+          collectionOptions
         });
       }
-    },
-    async remove(ctx) {
-      const { collectionUri, itemUri, actorUri } = ctx.params;
-      await ctx.call('pod-collections.remove', { collectionUri, itemUri, actorUri });
-      if (this.settings.createWacGroup) {
-        await ctx.call('pod-wac-groups.removeMember', {
-          groupSlug: this.getGroupSlugFromCollectionUri(collectionUri),
-          memberUri: itemUri,
-          actorUri
+    }),
+
+    getCollectionUriFromResource: defineAction({
+      async handler(ctx) {
+        const { resource } = ctx.params;
+        const { attachPredicate } = this.settings;
+        return await ctx.call('pod-collections.getCollectionUriFromResource', {
+          resource,
+          attachPredicate
         });
       }
-    },
-    async createAndAttachMissing(ctx) {
-      const { type, attachPredicate, collectionOptions } = this.settings;
-      await ctx.call('pod-collections.createAndAttachMissing', {
-        type,
-        attachPredicate,
-        collectionOptions
-      });
-    },
-    async getCollectionUriFromResource(ctx) {
-      const { resource } = ctx.params;
-      const { attachPredicate } = this.settings;
-      return await ctx.call('pod-collections.getCollectionUriFromResource', {
-        resource,
-        attachPredicate
-      });
-    }
+    })
   },
   methods: {
     async onCreate(ctx, resource, actorUri) {
@@ -113,6 +131,6 @@ const Schema = {
       }
     }
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

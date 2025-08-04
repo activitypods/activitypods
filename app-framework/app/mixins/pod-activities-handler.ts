@@ -1,3 +1,5 @@
+import { ServiceSchema, defineAction } from 'moleculer';
+
 const Schema = {
   dependencies: ['pod-activities-watcher'],
   async started() {
@@ -17,28 +19,30 @@ const Schema = {
     }
   },
   actions: {
-    async processActivity(ctx) {
-      const { key, boxType, dereferencedActivity, actorUri } = ctx.params;
+    processActivity: defineAction({
+      async handler(ctx) {
+        const { key, boxType, dereferencedActivity, actorUri } = ctx.params;
 
-      const activityHandler = this.schema.activities[key];
+        const activityHandler = this.schema.activities[key];
 
-      if (!activityHandler) {
-        this.logger.warn(`Cannot process activity because no handler with key ${key} found`);
-        return dereferencedActivity;
+        if (!activityHandler) {
+          this.logger.warn(`Cannot process activity because no handler with key ${key} found`);
+          return dereferencedActivity;
+        }
+
+        if (boxType === 'inbox' && activityHandler.onReceive) {
+          return await activityHandler.onReceive.bind(this)(ctx, dereferencedActivity, actorUri);
+        } else if (boxType === 'outbox' && activityHandler.onEmit) {
+          return await activityHandler.onEmit.bind(this)(ctx, dereferencedActivity, actorUri);
+        } else {
+          this.logger.warn(
+            `Cannot process activity because no onReceive or onEmit methods are associated with with key ${key}`
+          );
+          return dereferencedActivity;
+        }
       }
-
-      if (boxType === 'inbox' && activityHandler.onReceive) {
-        return await activityHandler.onReceive.bind(this)(ctx, dereferencedActivity, actorUri);
-      } else if (boxType === 'outbox' && activityHandler.onEmit) {
-        return await activityHandler.onEmit.bind(this)(ctx, dereferencedActivity, actorUri);
-      } else {
-        this.logger.warn(
-          `Cannot process activity because no onReceive or onEmit methods are associated with with key ${key}`
-        );
-        return dereferencedActivity;
-      }
-    }
+    })
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

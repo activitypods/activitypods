@@ -1,8 +1,9 @@
 import { triple, namedNode } from '@rdfjs/data-model';
 import { SingleResourceContainerMixin } from '@semapps/ldp';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const AuthRegistrySchema = {
-  name: 'auth-registry',
+  name: 'auth-registry' as const,
   mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:AuthorizationRegistry'],
@@ -10,46 +11,51 @@ const AuthRegistrySchema = {
   },
   dependencies: ['registry-set'],
   actions: {
-    async add(ctx) {
-      const { podOwner, authorizationUri } = ctx.params;
+    add: defineAction({
+      async handler(ctx) {
+        const { podOwner, authorizationUri } = ctx.params;
 
-      const authRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+        const authRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
 
-      await this.actions.patch(
-        {
-          resourceUri: authRegistryUri,
-          triplesToAdd: [
-            triple(
-              namedNode(authRegistryUri),
-              namedNode('http://www.w3.org/ns/solid/interop#hasAccessAuthorization'),
-              namedNode(authorizationUri)
-            )
-          ],
-          webId: 'system'
-        },
-        { parentCtx: ctx }
-      );
-    },
-    async remove(ctx) {
-      const { podOwner, authorizationUri } = ctx.params;
+        await this.actions.patch(
+          {
+            resourceUri: authRegistryUri,
+            triplesToAdd: [
+              triple(
+                namedNode(authRegistryUri),
+                namedNode('http://www.w3.org/ns/solid/interop#hasAccessAuthorization'),
+                namedNode(authorizationUri)
+              )
+            ],
+            webId: 'system'
+          },
+          { parentCtx: ctx }
+        );
+      }
+    }),
 
-      const authRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+    remove: defineAction({
+      async handler(ctx) {
+        const { podOwner, authorizationUri } = ctx.params;
 
-      await this.actions.patch(
-        {
-          resourceUri: authRegistryUri,
-          triplesToRemove: [
-            triple(
-              namedNode(authRegistryUri),
-              namedNode('http://www.w3.org/ns/solid/interop#hasAccessAuthorization'),
-              namedNode(authorizationUri)
-            )
-          ],
-          webId: 'system'
-        },
-        { parentCtx: ctx }
-      );
-    }
+        const authRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+
+        await this.actions.patch(
+          {
+            resourceUri: authRegistryUri,
+            triplesToRemove: [
+              triple(
+                namedNode(authRegistryUri),
+                namedNode('http://www.w3.org/ns/solid/interop#hasAccessAuthorization'),
+                namedNode(authorizationUri)
+              )
+            ],
+            webId: 'system'
+          },
+          { parentCtx: ctx }
+        );
+      }
+    })
   },
   hooks: {
     after: {
@@ -71,6 +77,14 @@ const AuthRegistrySchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default AuthRegistrySchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [AuthRegistrySchema.name]: typeof AuthRegistrySchema;
+    }
+  }
+}

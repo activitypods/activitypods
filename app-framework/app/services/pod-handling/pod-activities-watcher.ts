@@ -2,6 +2,7 @@ import { getContainerFromUri, arrayOf, isObject, isURL } from '@semapps/ldp';
 import { matchActivity } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { objectDepth } from '../../utils.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const queueOptions =
   process.env.NODE_ENV === 'test'
@@ -16,7 +17,7 @@ const queueOptions =
       };
 
 const PodActivitiesWatcherSchema = {
-  name: 'pod-activities-watcher',
+  name: 'pod-activities-watcher' as const,
   dependencies: ['triplestore', 'ldp', 'activitypub.actor', 'solid-notifications.listener'],
   async started() {
     const nodes = await this.broker.call('triplestore.query', {
@@ -68,117 +69,128 @@ const PodActivitiesWatcherSchema = {
     this.baseUrl = await this.broker.call('ldp.getBaseUrl');
   },
   actions: {
-    async watch(ctx) {
-      const { matcher, actionName, boxTypes, key } = ctx.params;
+    watch: defineAction({
+      async handler(ctx) {
+        const { matcher, actionName, boxTypes, key } = ctx.params;
 
-      this.handlers.push({ matcher, actionName, boxTypes, key });
+        this.handlers.push({ matcher, actionName, boxTypes, key });
 
-      this.sortHandlers();
-    },
-    async processWebhook(ctx) {
-      const { type, object, target } = ctx.params;
-
-      // Ignore Remove activities
-      if (type !== 'Add') return;
-
-      this.logger.info(`Detected activity ${object} in collection ${target}`);
-
-      // TODO properly find the pod owner URI from the target
-      // Apparently not specified by Solid https://forum.solidproject.org/t/discovering-webid-owner-of-a-particular-resource/2490
-      const actorUri = getContainerFromUri(target);
-
-      const actor = await ctx.call('activitypub.actor.get', { actorUri });
-
-      // Use pod-resources.get instead of ldp.resource.get when getting pod resources
-      const fetcher = async resourceUri => {
-        if (resourceUri.startsWith(this.baseUrl)) {
-          try {
-            // TODO Do not throw errors on ldp.resource.get ! (should be done on the API layer)
-            const resource = await ctx.call('ldp.resource.get', {
-              resourceUri,
-              accept: MIME_TYPES.JSON,
-              webId: actorUri
-            });
-            return resource; // First get the resource, then return it, otherwise the try/catch will not work
-          } catch (e) {
-            if (e.status !== 401 && e.status !== 403 && e.status !== 404) {
-              this.logger.error(`Could not fetch ${resourceUri}. Error ${e.status} ${e.statusText})`);
-            }
-            return false;
-          }
-        } else {
-          const { ok, body } = await ctx.call('pod-resources.get', { resourceUri, actorUri });
-          return ok && body;
-        }
-      };
-
-      // Mastodon sometimes send unfetchable activities (like `Accept` activities)
-      // In this case, the notification includes the whole activity, and we don't need to fetch it
-      // TODO In the case of remote activities, get the cached activity to reduce risks of permission problems
-      const activity = isURL(object) ? await fetcher(object) : object;
-      if (!activity) {
-        this.logger.warn(`Could not fetch activity ${object} received by ${actorUri}`);
-        return false;
+        this.sortHandlers();
       }
+    }),
 
-      if (target === actor.inbox) {
-        for (const handler of this.handlers) {
-          if (handler.boxTypes.includes('inbox')) {
-            const { match, dereferencedActivity } = await matchActivity(handler.matcher, activity, fetcher);
-            if (match) {
-              this.logger.info(`Reception of activity "${handler.key}" by ${actorUri} detected`);
-              await ctx.call(handler.actionName, {
-                key: handler.key,
-                boxType: 'inbox',
-                dereferencedActivity,
-                actorUri
+    processWebhook: defineAction({
+      async handler(ctx) {
+        const { type, object, target } = ctx.params;
+
+        // Ignore Remove activities
+        if (type !== 'Add') return;
+
+        this.logger.info(`Detected activity ${object} in collection ${target}`);
+
+        // TODO properly find the pod owner URI from the target
+        // Apparently not specified by Solid https://forum.solidproject.org/t/discovering-webid-owner-of-a-particular-resource/2490
+        const actorUri = getContainerFromUri(target);
+
+        const actor = await ctx.call('activitypub.actor.get', { actorUri });
+
+        // Use pod-resources.get instead of ldp.resource.get when getting pod resources
+        const fetcher = async resourceUri => {
+          if (resourceUri.startsWith(this.baseUrl)) {
+            try {
+              // TODO Do not throw errors on ldp.resource.get ! (should be done on the API layer)
+              const resource = await ctx.call('ldp.resource.get', {
+                resourceUri,
+                accept: MIME_TYPES.JSON,
+                webId: actorUri
               });
+              return resource; // First get the resource, then return it, otherwise the try/catch will not work
+            } catch (e) {
+              if (e.status !== 401 && e.status !== 403 && e.status !== 404) {
+                this.logger.error(`Could not fetch ${resourceUri}. Error ${e.status} ${e.statusText})`);
+              }
+              return false;
+            }
+          } else {
+            const { ok, body } = await ctx.call('pod-resources.get', { resourceUri, actorUri });
+            return ok && body;
+          }
+        };
+
+        // Mastodon sometimes send unfetchable activities (like `Accept` activities)
+        // In this case, the notification includes the whole activity, and we don't need to fetch it
+        // TODO In the case of remote activities, get the cached activity to reduce risks of permission problems
+        const activity = isURL(object) ? await fetcher(object) : object;
+        if (!activity) {
+          this.logger.warn(`Could not fetch activity ${object} received by ${actorUri}`);
+          return false;
+        }
+
+        if (target === actor.inbox) {
+          for (const handler of this.handlers) {
+            if (handler.boxTypes.includes('inbox')) {
+              const { match, dereferencedActivity } = await matchActivity(handler.matcher, activity, fetcher);
+              if (match) {
+                this.logger.info(`Reception of activity "${handler.key}" by ${actorUri} detected`);
+                await ctx.call(handler.actionName, {
+                  key: handler.key,
+                  boxType: 'inbox',
+                  dereferencedActivity,
+                  actorUri
+                });
+              }
+            }
+          }
+        } else if (target === actor.outbox) {
+          for (const handler of this.handlers) {
+            if (handler.boxTypes.includes('outbox')) {
+              const { match, dereferencedActivity } = await matchActivity(handler.matcher, activity, fetcher);
+              if (match) {
+                this.logger.info(`Emission of activity "${handler.key}" by ${actorUri} detected`);
+                await ctx.call(handler.actionName, {
+                  key: handler.key,
+                  boxType: 'outbox',
+                  dereferencedActivity,
+                  actorUri
+                });
+              }
             }
           }
         }
-      } else if (target === actor.outbox) {
-        for (const handler of this.handlers) {
-          if (handler.boxTypes.includes('outbox')) {
-            const { match, dereferencedActivity } = await matchActivity(handler.matcher, activity, fetcher);
-            if (match) {
-              this.logger.info(`Emission of activity "${handler.key}" by ${actorUri} detected`);
-              await ctx.call(handler.actionName, {
-                key: handler.key,
-                boxType: 'outbox',
-                dereferencedActivity,
-                actorUri
-              });
-            }
-          }
+      }
+    }),
+
+    registerListenersFromAppRegistration: defineAction({
+      async handler(ctx) {
+        const { appRegistration } = ctx.params;
+
+        // If we were given the permission to read the inbox, add listener
+        if (arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:ReadInbox')) {
+          this.createJob(
+            'registerListener',
+            appRegistration['interop:registeredBy'] + ' inbox',
+            { actorUri: appRegistration['interop:registeredBy'], collectionPredicate: 'inbox' },
+            queueOptions
+          );
+        }
+
+        // If we were given the permission to read the inbox, add listener
+        if (arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:ReadOutbox')) {
+          this.createJob(
+            'registerListener',
+            appRegistration['interop:registeredBy'] + ' outbox',
+            { actorUri: appRegistration['interop:registeredBy'], collectionPredicate: 'outbox' },
+            appRegistration
+          );
         }
       }
-    },
-    async registerListenersFromAppRegistration(ctx) {
-      const { appRegistration } = ctx.params;
+    }),
 
-      // If we were given the permission to read the inbox, add listener
-      if (arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:ReadInbox')) {
-        this.createJob(
-          'registerListener',
-          appRegistration['interop:registeredBy'] + ' inbox',
-          { actorUri: appRegistration['interop:registeredBy'], collectionPredicate: 'inbox' },
-          queueOptions
-        );
+    getHandlers: defineAction({
+      handler() {
+        return this.handlers;
       }
-
-      // If we were given the permission to read the inbox, add listener
-      if (arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:ReadOutbox')) {
-        this.createJob(
-          'registerListener',
-          appRegistration['interop:registeredBy'] + ' outbox',
-          { actorUri: appRegistration['interop:registeredBy'], collectionPredicate: 'outbox' },
-          appRegistration
-        );
-      }
-    },
-    getHandlers() {
-      return this.handlers;
-    }
+    })
   },
   methods: {
     sortHandlers() {
@@ -219,6 +231,14 @@ const PodActivitiesWatcherSchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default PodActivitiesWatcherSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [PodActivitiesWatcherSchema.name]: typeof PodActivitiesWatcherSchema;
+    }
+  }
+}

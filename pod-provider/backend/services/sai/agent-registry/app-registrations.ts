@@ -2,9 +2,10 @@ import { ControlledContainerMixin, getId } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import AgentRegistrationsMixin from '../../../mixins/agent-registrations.ts';
 import { arraysEqual } from '../../../utils.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const AppRegistrationsSchema = {
-  name: 'app-registrations',
+  name: 'app-registrations' as const,
   mixins: [ControlledContainerMixin, AgentRegistrationsMixin],
   settings: {
     acceptedTypes: ['interop:ApplicationRegistration'],
@@ -18,47 +19,49 @@ const AppRegistrationsSchema = {
     typeIndex: 'private'
   },
   actions: {
-    async createOrUpdate(ctx) {
-      const { agentUri, podOwner, specialRightsUris } = ctx.params;
+    createOrUpdate: defineAction({
+      async handler(ctx) {
+        const { agentUri, podOwner, specialRightsUris } = ctx.params;
 
-      const appRegistration = await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx });
+        const appRegistration = await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx });
 
-      if (appRegistration) {
-        if (!arraysEqual(appRegistration['apods:hasSpecialRights'], specialRightsUris)) {
-          await this.actions.put(
+        if (appRegistration) {
+          if (!arraysEqual(appRegistration['apods:hasSpecialRights'], specialRightsUris)) {
+            await this.actions.put(
+              {
+                resource: {
+                  ...appRegistration,
+                  'interop:updatedAt': new Date().toISOString(),
+                  'apods:hasSpecialRights': specialRightsUris
+                },
+                contentType: MIME_TYPES.JSON
+              },
+              { parentCtx: ctx }
+            );
+          }
+
+          return getId(appRegistration);
+        } else {
+          const appRegistrationUri = await this.actions.post(
             {
               resource: {
-                ...appRegistration,
+                type: 'interop:ApplicationRegistration',
+                'interop:registeredBy': podOwner,
+                'interop:registeredWith': await ctx.call('auth-agent.getResourceUri', { webId: podOwner }),
+                'interop:registeredAt': new Date().toISOString(),
                 'interop:updatedAt': new Date().toISOString(),
+                'interop:registeredAgent': agentUri,
                 'apods:hasSpecialRights': specialRightsUris
               },
               contentType: MIME_TYPES.JSON
             },
             { parentCtx: ctx }
           );
+
+          return appRegistrationUri;
         }
-
-        return getId(appRegistration);
-      } else {
-        const appRegistrationUri = await this.actions.post(
-          {
-            resource: {
-              type: 'interop:ApplicationRegistration',
-              'interop:registeredBy': podOwner,
-              'interop:registeredWith': await ctx.call('auth-agent.getResourceUri', { webId: podOwner }),
-              'interop:registeredAt': new Date().toISOString(),
-              'interop:updatedAt': new Date().toISOString(),
-              'interop:registeredAgent': agentUri,
-              'apods:hasSpecialRights': specialRightsUris
-            },
-            contentType: MIME_TYPES.JSON
-          },
-          { parentCtx: ctx }
-        );
-
-        return appRegistrationUri;
       }
-    }
+    })
   },
   hooks: {
     after: {
@@ -102,6 +105,14 @@ const AppRegistrationsSchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default AppRegistrationsSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [AppRegistrationsSchema.name]: typeof AppRegistrationsSchema;
+    }
+  }
+}

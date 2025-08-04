@@ -1,5 +1,6 @@
 import { arrayOf, getId } from '@semapps/ldp';
 import { triple, namedNode, literal } from '@rdfjs/data-model';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 /**
  * Mixin used by the AppRegistrationsService and SocialAgentRegistrationsService
@@ -7,59 +8,59 @@ import { triple, namedNode, literal } from '@rdfjs/data-model';
  */
 const AgentRegistrationsMixin = {
   actions: {
-    async getForAgent(ctx) {
-      const { agentUri, podOwner } = ctx.params;
+    getForAgent: defineAction({
+      async handler(ctx) {
+        const { agentUri, podOwner } = ctx.params;
 
-      const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
+        const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
 
-      const filteredContainer = await this.actions.list(
-        {
-          containerUri,
-          filters: {
-            'http://www.w3.org/ns/solid/interop#registeredAgent': agentUri,
-            'http://www.w3.org/ns/solid/interop#registeredBy': podOwner
+        const filteredContainer = await this.actions.list(
+          {
+            containerUri,
+            filters: {
+              'http://www.w3.org/ns/solid/interop#registeredAgent': agentUri,
+              'http://www.w3.org/ns/solid/interop#registeredBy': podOwner
+            },
+            webId: 'system'
           },
-          webId: 'system'
-        },
-        { parentCtx: ctx }
-      );
+          { parentCtx: ctx }
+        );
 
-      return filteredContainer['ldp:contains']?.[0];
-    },
-    async isRegistered(ctx) {
-      const { agentUri, podOwner } = ctx.params;
-      return !!(await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx }));
-    },
-    // Get all grants associated with an agent registration
-    async getGrants(ctx) {
-      const { agentRegistration, podOwner } = ctx.params;
-      let grants = [];
-
-      for (const grantUri of arrayOf(agentRegistration['interop:hasAccessGrant'])) {
-        const grant = await ctx.call('access-grants.get', {
-          resourceUri: grantUri,
-          webId: podOwner
-        });
-        grants.push(grant);
+        return filteredContainer['ldp:contains']?.[0];
       }
+    }),
 
-      return grants;
-    },
-    // Attach a grant to the grantee's agent registration
-    async addGrant(ctx) {
-      const { grant } = ctx.params;
+    isRegistered: defineAction({
+      async handler(ctx) {
+        const { agentUri, podOwner } = ctx.params;
+        return !!(await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx }));
+      }
+    }),
 
-      let agentRegistration = await this.actions.getForAgent(
-        {
-          agentUri: grant['interop:grantee'],
-          podOwner: grant['interop:grantedBy']
-        },
-        { parentCtx: ctx }
-      );
+    getGrants: defineAction({
+      // Get all grants associated with an agent registration
+      async handler(ctx) {
+        const { agentRegistration, podOwner } = ctx.params;
+        let grants = [];
 
-      if (!agentRegistration) {
-        // Create agent registration if it doesn't exist
-        await this.actions.createOrUpdate(
+        for (const grantUri of arrayOf(agentRegistration['interop:hasAccessGrant'])) {
+          const grant = await ctx.call('access-grants.get', {
+            resourceUri: grantUri,
+            webId: podOwner
+          });
+          grants.push(grant);
+        }
+
+        return grants;
+      }
+    }),
+
+    addGrant: defineAction({
+      // Attach a grant to the grantee's agent registration
+      async handler(ctx) {
+        const { grant } = ctx.params;
+
+        let agentRegistration = await this.actions.getForAgent(
           {
             agentUri: grant['interop:grantee'],
             podOwner: grant['interop:grantedBy']
@@ -67,70 +68,23 @@ const AgentRegistrationsMixin = {
           { parentCtx: ctx }
         );
 
-        // Get the newly created registration
-        agentRegistration = await this.actions.getForAgent(
-          {
-            agentUri: grant['interop:grantee'],
-            podOwner: grant['interop:grantedBy']
-          },
-          { parentCtx: ctx }
-        );
-      }
+        if (!agentRegistration) {
+          // Create agent registration if it doesn't exist
+          await this.actions.createOrUpdate(
+            {
+              agentUri: grant['interop:grantee'],
+              podOwner: grant['interop:grantedBy']
+            },
+            { parentCtx: ctx }
+          );
 
-      await this.actions.patch(
-        {
-          resourceUri: getId(agentRegistration),
-          triplesToAdd: [
-            triple(
-              namedNode(getId(agentRegistration)),
-              namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
-              namedNode(getId(grant))
-            ),
-            triple(
-              namedNode(getId(agentRegistration)),
-              namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-              literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
-            )
-          ],
-          triplesToRemove: agentRegistration['interop:updatedAt'] && [
-            triple(
-              namedNode(getId(agentRegistration)),
-              namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-              literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
-            )
-          ],
-          webId: 'system'
-        },
-        { parentCtx: ctx }
-      );
-    },
-    async removeGrant(ctx) {
-      const { grant } = ctx.params;
-
-      const agentRegistration = await this.actions.getForAgent(
-        {
-          agentUri: grant['interop:grantee'],
-          podOwner: grant['interop:grantedBy']
-        },
-        { parentCtx: ctx }
-      );
-
-      if (agentRegistration) {
-        const triplesToRemove = [
-          triple(
-            namedNode(getId(agentRegistration)),
-            namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
-            namedNode(getId(grant))
-          )
-        ];
-
-        if (agentRegistration['interop:updatedAt']) {
-          triplesToRemove.push(
-            triple(
-              namedNode(getId(agentRegistration)),
-              namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-              literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
-            )
+          // Get the newly created registration
+          agentRegistration = await this.actions.getForAgent(
+            {
+              agentUri: grant['interop:grantee'],
+              podOwner: grant['interop:grantedBy']
+            },
+            { parentCtx: ctx }
           );
         }
 
@@ -140,17 +94,78 @@ const AgentRegistrationsMixin = {
             triplesToAdd: [
               triple(
                 namedNode(getId(agentRegistration)),
+                namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
+                namedNode(getId(grant))
+              ),
+              triple(
+                namedNode(getId(agentRegistration)),
                 namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
                 literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
               )
             ],
-            triplesToRemove,
+            triplesToRemove: agentRegistration['interop:updatedAt'] && [
+              triple(
+                namedNode(getId(agentRegistration)),
+                namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
+                literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
+              )
+            ],
             webId: 'system'
           },
           { parentCtx: ctx }
         );
       }
-    }
+    }),
+
+    removeGrant: defineAction({
+      async handler(ctx) {
+        const { grant } = ctx.params;
+
+        const agentRegistration = await this.actions.getForAgent(
+          {
+            agentUri: grant['interop:grantee'],
+            podOwner: grant['interop:grantedBy']
+          },
+          { parentCtx: ctx }
+        );
+
+        if (agentRegistration) {
+          const triplesToRemove = [
+            triple(
+              namedNode(getId(agentRegistration)),
+              namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
+              namedNode(getId(grant))
+            )
+          ];
+
+          if (agentRegistration['interop:updatedAt']) {
+            triplesToRemove.push(
+              triple(
+                namedNode(getId(agentRegistration)),
+                namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
+                literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
+              )
+            );
+          }
+
+          await this.actions.patch(
+            {
+              resourceUri: getId(agentRegistration),
+              triplesToAdd: [
+                triple(
+                  namedNode(getId(agentRegistration)),
+                  namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
+                  literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
+                )
+              ],
+              triplesToRemove,
+              webId: 'system'
+            },
+            { parentCtx: ctx }
+          );
+        }
+      }
+    })
   },
   hooks: {
     after: {
@@ -197,6 +212,6 @@ const AgentRegistrationsMixin = {
       }
     }
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default AgentRegistrationsMixin;

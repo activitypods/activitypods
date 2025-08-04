@@ -4,6 +4,7 @@ import { arrayOf, getDatasetFromUri } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import matchActivity from '@semapps/activitypub/utils/matchActivity';
+import { ServiceSchema, defineAction, defineServiceEvent } from 'moleculer';
 
 const getAnnouncesGroupUri = eventUri => {
   const uri = new URL(eventUri);
@@ -18,7 +19,7 @@ const getAnnouncersGroupUri = eventUri => {
 };
 
 const AnnouncerSchema = {
-  name: 'announcer',
+  name: 'announcer' as const,
   mixins: [ActivitiesHandlerMixin],
   settings: {
     announcesCollectionOptions: {
@@ -38,38 +39,26 @@ const AnnouncerSchema = {
   },
   dependencies: ['activitypub.collections-registry'],
   actions: {
-    async giveRightsAfterAnnouncesCollectionCreate(ctx) {
-      const { objectUri } = ctx.params;
+    giveRightsAfterAnnouncesCollectionCreate: defineAction({
+      async handler(ctx) {
+        const { objectUri } = ctx.params;
 
-      const object = await ctx.call('ldp.resource.awaitCreateComplete', {
-        resourceUri: objectUri,
-        predicates: ['apods:announces']
-      });
+        const object = await ctx.call('ldp.resource.awaitCreateComplete', {
+          resourceUri: objectUri,
+          predicates: ['apods:announces']
+        });
 
-      const creator = await ctx.call('activitypub.actor.get', { actorUri: object['dc:creator'] });
+        const creator = await ctx.call('activitypub.actor.get', { actorUri: object['dc:creator'] });
 
-      const announcesGroupUri = getAnnouncesGroupUri(objectUri);
-      const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcesGroupUri, webId: 'system' });
-      if (!groupExist) {
-        await ctx.call('webacl.group.create', { groupUri: announcesGroupUri, webId: creator.id });
-      }
+        const announcesGroupUri = getAnnouncesGroupUri(objectUri);
+        const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcesGroupUri, webId: 'system' });
+        if (!groupExist) {
+          await ctx.call('webacl.group.create', { groupUri: announcesGroupUri, webId: creator.id });
+        }
 
-      // Give read rights for the resource
-      await ctx.call('webacl.resource.addRights', {
-        resourceUri: objectUri,
-        additionalRights: {
-          group: {
-            uri: announcesGroupUri,
-            read: true
-          }
-        },
-        webId: creator.id
-      });
-
-      if (creator.url) {
-        // Give read right for the creator's profile
+        // Give read rights for the resource
         await ctx.call('webacl.resource.addRights', {
-          resourceUri: creator.url,
+          resourceUri: objectUri,
           additionalRights: {
             group: {
               uri: announcesGroupUri,
@@ -78,51 +67,71 @@ const AnnouncerSchema = {
           },
           webId: creator.id
         });
+
+        if (creator.url) {
+          // Give read right for the creator's profile
+          await ctx.call('webacl.resource.addRights', {
+            resourceUri: creator.url,
+            additionalRights: {
+              group: {
+                uri: announcesGroupUri,
+                read: true
+              }
+            },
+            webId: creator.id
+          });
+        }
       }
-    },
-    async giveRightsAfterAnnouncersCollectionCreate(ctx) {
-      const { objectUri } = ctx.params;
+    }),
 
-      const object = await ctx.call('ldp.resource.awaitCreateComplete', {
-        resourceUri: objectUri,
-        predicates: ['apods:announcers', 'apods:announces']
-      });
+    giveRightsAfterAnnouncersCollectionCreate: defineAction({
+      async handler(ctx) {
+        const { objectUri } = ctx.params;
 
-      // Add the creator to the list of announcers
-      await ctx.call('activitypub.collection.add', {
-        collectionUri: object['apods:announcers'],
-        item: object['dc:creator']
-      });
+        const object = await ctx.call('ldp.resource.awaitCreateComplete', {
+          resourceUri: objectUri,
+          predicates: ['apods:announcers', 'apods:announces']
+        });
 
-      const announcersGroupUri = getAnnouncersGroupUri(objectUri);
-      const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcersGroupUri, webId: 'system' });
-      if (!groupExist) {
-        await ctx.call('webacl.group.create', { groupUri: announcersGroupUri, webId: object['dc:creator'] });
+        // Add the creator to the list of announcers
+        await ctx.call('activitypub.collection.add', {
+          collectionUri: object['apods:announcers'],
+          item: object['dc:creator']
+        });
+
+        const announcersGroupUri = getAnnouncersGroupUri(objectUri);
+        const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcersGroupUri, webId: 'system' });
+        if (!groupExist) {
+          await ctx.call('webacl.group.create', { groupUri: announcersGroupUri, webId: object['dc:creator'] });
+        }
+
+        // Give read rights to announcers for the list of announces
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri: object['apods:announces'],
+          additionalRights: {
+            group: {
+              uri: announcersGroupUri,
+              read: true
+            }
+          },
+          webId: object['dc:creator']
+        });
       }
+    }),
 
-      // Give read rights to announcers for the list of announces
-      await ctx.call('webacl.resource.addRights', {
-        resourceUri: object['apods:announces'],
-        additionalRights: {
-          group: {
-            uri: announcersGroupUri,
-            read: true
-          }
-        },
-        webId: object['dc:creator']
-      });
-    },
-    async updateCollectionsOptions(ctx) {
-      const { dataset } = ctx.params;
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.announcesCollectionOptions,
-        dataset
-      });
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.announcersCollectionOptions,
-        dataset
-      });
-    }
+    updateCollectionsOptions: defineAction({
+      async handler(ctx) {
+        const { dataset } = ctx.params;
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          collection: this.settings.announcesCollectionOptions,
+          dataset
+        });
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          collection: this.settings.announcersCollectionOptions,
+          dataset
+        });
+      }
+    })
   },
   activities: {
     announce: {
@@ -300,48 +309,61 @@ const AnnouncerSchema = {
     }
   },
   events: {
-    async 'ldp.resource.deleted'(ctx) {
-      const { oldData, webId } = ctx.params;
+    'ldp.resource.deleted': defineServiceEvent({
+      async handler(ctx) {
+        const { oldData, webId } = ctx.params;
 
-      if (oldData['apods:announces'])
-        await ctx.call('activitypub.collection.delete', { resourceUri: oldData['apods:announces'], webId });
+        if (oldData['apods:announces'])
+          await ctx.call('activitypub.collection.delete', { resourceUri: oldData['apods:announces'], webId });
 
-      if (oldData['apods:announcers'])
-        await ctx.call('activitypub.collection.delete', { resourceUri: oldData['apods:announcers'], webId });
-    },
-    // When a delegated grant is issued, add the grantee to the announces collection
-    // This hack will be gone when we can do without announces/announcers collections
-    async 'delegated-access-grants.issued'(ctx) {
-      const { delegatedGrant } = ctx.params;
-
-      if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
-        this.logger.warn(`Delegated grant is for application, skip adding to the announces collection...`);
-        return;
+        if (oldData['apods:announcers'])
+          await ctx.call('activitypub.collection.delete', { resourceUri: oldData['apods:announcers'], webId });
       }
+    }),
 
-      ctx.meta.webId = delegatedGrant['interop:dataOwner'];
-      ctx.meta.dataset = getDatasetFromUri(delegatedGrant['interop:dataOwner']);
+    'delegated-access-grants.issued': defineServiceEvent({
+      // When a delegated grant is issued, add the grantee to the announces collection
+      // This hack will be gone when we can do without announces/announcers collections
+      async handler(ctx) {
+        const { delegatedGrant } = ctx.params;
 
-      for (const resourceUri of arrayOf(delegatedGrant['interop:hasDataInstance'])) {
-        const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
-          objectUri: resourceUri,
-          collection: this.settings.announcesCollectionOptions
-        });
+        if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
+          this.logger.warn(`Delegated grant is for application, skip adding to the announces collection...`);
+          return;
+        }
 
-        await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
+        ctx.meta.webId = delegatedGrant['interop:dataOwner'];
+        ctx.meta.dataset = getDatasetFromUri(delegatedGrant['interop:dataOwner']);
 
-        await ctx.call('activitypub.collection.add', {
-          collectionUri: announcesCollectionUri,
-          item: delegatedGrant['interop:grantee']
-        });
+        for (const resourceUri of arrayOf(delegatedGrant['interop:hasDataInstance'])) {
+          const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
+            objectUri: resourceUri,
+            collection: this.settings.announcesCollectionOptions
+          });
 
-        await ctx.call('webacl.group.addMember', {
-          groupUri: getAnnouncesGroupUri(resourceUri),
-          memberUri: delegatedGrant['interop:grantee']
-        });
+          await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
+
+          await ctx.call('activitypub.collection.add', {
+            collectionUri: announcesCollectionUri,
+            item: delegatedGrant['interop:grantee']
+          });
+
+          await ctx.call('webacl.group.addMember', {
+            groupUri: getAnnouncesGroupUri(resourceUri),
+            memberUri: delegatedGrant['interop:grantee']
+          });
+        }
       }
-    }
+    })
   }
-};
+} satisfies ServiceSchema;
 
 export default AnnouncerSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [AnnouncerSchema.name]: typeof AnnouncerSchema;
+    }
+  }
+}

@@ -1,5 +1,4 @@
 import { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin, OBJECT_TYPES, matchActivity } from '@semapps/activitypub';
-
 import { arrayOf } from '@semapps/ldp';
 
 import {
@@ -16,10 +15,11 @@ import {
 } from '../../config/mappings.ts';
 
 import { MIME_TYPES } from '@semapps/mime-types';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 /** @type {import('moleculer').ServiceSchema} */
 const ContactsRequestSchema = {
-  name: 'contacts.request',
+  name: 'contacts.request' as const,
   mixins: [ActivitiesHandlerMixin],
   settings: {
     contactsCollectionOptions: {
@@ -57,21 +57,23 @@ const ContactsRequestSchema = {
     );
   },
   actions: {
-    async updateCollectionsOptions(ctx) {
-      const { dataset } = ctx.params;
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.contactsCollectionOptions,
-        dataset
-      });
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.contactRequestsCollectionOptions,
-        dataset
-      });
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.rejectedContactsCollectionOptions,
-        dataset
-      });
-    }
+    updateCollectionsOptions: defineAction({
+      async handler(ctx) {
+        const { dataset } = ctx.params;
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          collection: this.settings.contactsCollectionOptions,
+          dataset
+        });
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          collection: this.settings.contactRequestsCollectionOptions,
+          dataset
+        });
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          collection: this.settings.rejectedContactsCollectionOptions,
+          dataset
+        });
+      }
+    })
   },
   activities: {
     contactRequest: {
@@ -373,6 +375,14 @@ const ContactsRequestSchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default ContactsRequestSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ContactsRequestSchema.name]: typeof ContactsRequestSchema;
+    }
+  }
+}

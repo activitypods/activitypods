@@ -14,6 +14,7 @@ import {
 } from '@semapps/ontologies';
 
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   mixins: [OntologiesService],
@@ -23,6 +24,6 @@ const Schema = {
     persistRegistry: true,
     settingsDataset: CONFIG.AUTH_ACCOUNTS_DATASET
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

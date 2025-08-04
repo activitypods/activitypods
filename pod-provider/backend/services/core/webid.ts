@@ -1,6 +1,7 @@
 import { WebIdService } from '@semapps/webid';
 import { FULL_ACTOR_TYPES } from '@semapps/activitypub';
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   mixins: [WebIdService],
@@ -25,6 +26,6 @@ const Schema = {
       }
     }
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

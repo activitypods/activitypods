@@ -4,9 +4,10 @@ import { ControlledContainerMixin } from '@semapps/ldp';
 import { OBJECT_TYPES, AS_PREFIX } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema, defineServiceEvent } from 'moleculer';
 
 const ProfilesProfileSchema = {
-  name: 'profiles.profile',
+  name: 'profiles.profile' as const,
   mixins: [ControlledContainerMixin],
   settings: {
     // ControlledContainerMixin settings
@@ -19,60 +20,62 @@ const ProfilesProfileSchema = {
   },
   dependencies: ['activitypub', 'webacl'],
   events: {
-    async 'auth.registered'(ctx) {
-      const { webId, profileData } = ctx.params;
-      const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
+    'auth.registered': defineServiceEvent({
+      async handler(ctx) {
+        const { webId, profileData } = ctx.params;
+        const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
-      await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
+        await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
-      const profileUri = await this.actions.post(
-        {
-          containerUri,
-          resource: {
-            '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
-            'vcard:fn': profileData.familyName
-              ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
-              : profileData.name,
-            'vcard:given-name': profileData.name,
-            'vcard:family-name': profileData.familyName,
-            describes: webId
+        const profileUri = await this.actions.post(
+          {
+            containerUri,
+            resource: {
+              '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
+              'vcard:fn': profileData.familyName
+                ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
+                : profileData.name,
+              'vcard:given-name': profileData.name,
+              'vcard:family-name': profileData.familyName,
+              describes: webId
+            },
+            contentType: MIME_TYPES.JSON,
+            webId
           },
-          contentType: MIME_TYPES.JSON,
-          webId
-        },
-        {
-          meta: {
-            skipObjectsWatcher: true // We don't want to trigger a Create action
-          },
-          parentCtx: ctx
-        }
-      );
-
-      await ctx.call('ldp.resource.patch', {
-        resourceUri: webId,
-        triplesToAdd: [triple(namedNode(webId), namedNode(AS_PREFIX + 'url'), namedNode(profileUri))],
-        webId
-      });
-
-      // TODO put this on the contacts app
-      // Create a WebACL group for the user's contact
-      const { groupUri: contactsGroupUri } = await ctx.call('webacl.group.create', {
-        groupSlug: new URL(webId).pathname + '/contacts',
-        webId
-      });
-
-      // Authorize this group to view the user's profile
-      await ctx.call('webacl.resource.addRights', {
-        resourceUri: profileUri,
-        additionalRights: {
-          group: {
-            uri: contactsGroupUri,
-            read: true
+          {
+            meta: {
+              skipObjectsWatcher: true // We don't want to trigger a Create action
+            },
+            parentCtx: ctx
           }
-        },
-        webId
-      });
-    }
+        );
+
+        await ctx.call('ldp.resource.patch', {
+          resourceUri: webId,
+          triplesToAdd: [triple(namedNode(webId), namedNode(AS_PREFIX + 'url'), namedNode(profileUri))],
+          webId
+        });
+
+        // TODO put this on the contacts app
+        // Create a WebACL group for the user's contact
+        const { groupUri: contactsGroupUri } = await ctx.call('webacl.group.create', {
+          groupSlug: new URL(webId).pathname + '/contacts',
+          webId
+        });
+
+        // Authorize this group to view the user's profile
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri: profileUri,
+          additionalRights: {
+            group: {
+              uri: contactsGroupUri,
+              read: true
+            }
+          },
+          webId
+        });
+      }
+    })
   },
   hooks: {
     before: {
@@ -133,6 +136,14 @@ const ProfilesProfileSchema = {
     //     }
     //   }
   }
-};
+} satisfies ServiceSchema;
 
 export default ProfilesProfileSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ProfilesProfileSchema.name]: typeof ProfilesProfileSchema;
+    }
+  }
+}

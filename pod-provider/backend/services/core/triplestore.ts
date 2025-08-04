@@ -1,5 +1,6 @@
 import { TripleStoreService } from '@semapps/triplestore';
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   mixins: [TripleStoreService],
@@ -9,6 +10,6 @@ const Schema = {
     password: CONFIG.JENA_PASSWORD,
     fusekiBase: CONFIG.FUSEKI_BASE
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

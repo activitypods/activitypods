@@ -4,6 +4,7 @@ import ApiGatewayService from 'moleculer-web';
 import { Errors as E } from 'moleculer-web';
 import WebSocketMixin from '../mixins/websocket.ts';
 import CONFIG from '../config/config.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const Schema = {
   mixins: [ApiGatewayService, WebSocketMixin],
@@ -34,14 +35,19 @@ const Schema = {
     ]
   },
   actions: {
-    favicon(ctx) {
-      ctx.meta.$responseType = 'image/x-icon';
-      return fs.readFileSync(path.resolve(__dirname, '../static/favicon.ico'));
-    },
-    redirectToFront(ctx) {
-      ctx.meta.$statusCode = 302;
-      ctx.meta.$location = CONFIG.FRONTEND_URL;
-    }
+    favicon: defineAction({
+      handler(ctx) {
+        ctx.meta.$responseType = 'image/x-icon';
+        return fs.readFileSync(path.resolve(__dirname, '../static/favicon.ico'));
+      }
+    }),
+
+    redirectToFront: defineAction({
+      handler(ctx) {
+        ctx.meta.$statusCode = 302;
+        ctx.meta.$location = CONFIG.FRONTEND_URL;
+      }
+    })
   },
   methods: {
     async authenticate(ctx, route, req, res) {
@@ -86,6 +92,6 @@ const Schema = {
       this.aliases.sort(a => (a.route.opts.catchAll ? 1 : -1));
     }
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

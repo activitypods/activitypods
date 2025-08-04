@@ -1,5 +1,6 @@
 import { arrayOf, getId, getType } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } from '@semapps/activitypub';
+import { ServiceSchema } from 'moleculer';
 
 /**
  * Mixin used by the AccessGrantsService and DelegatedAccessGrantsService
@@ -191,6 +192,6 @@ const AccessGrantsMixin = {
       }
     }
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default AccessGrantsMixin;

@@ -2,9 +2,10 @@ import urlJoin from 'url-join';
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
 import { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
 const ContactsMessageSchema = {
-  name: 'contacts.message',
+  name: 'contacts.message' as const,
   mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
   settings: {
     acceptedTypes: ['as:Note'],
@@ -60,6 +61,14 @@ const ContactsMessageSchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default ContactsMessageSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ContactsMessageSchema.name]: typeof ContactsMessageSchema;
+    }
+  }
+}

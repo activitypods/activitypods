@@ -1,82 +1,91 @@
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 /**
  * Mirror container for application registrations
  */
 const AppRegistrationsSchema = {
-  name: 'app-registrations',
+  name: 'app-registrations' as const,
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:ApplicationRegistration'],
     newResourcesPermissions: {}
   },
   actions: {
-    // Verify that the grants of an application registration match with the app's access needs
-    async verify(ctx) {
-      const { appRegistrationUri } = ctx.params;
+    verify: defineAction({
+      // Verify that the grants of an application registration match with the app's access needs
+      async handler(ctx) {
+        const { appRegistrationUri } = ctx.params;
 
-      // Use local context to get all data
-      const jsonContext = await ctx.call('jsonld.context.get');
+        // Use local context to get all data
+        const jsonContext = await ctx.call('jsonld.context.get');
 
-      // Get from remote server, not local cache, to get latest version
-      const appRegistration = await ctx.call('ldp.remote.getNetwork', {
-        resourceUri: appRegistrationUri,
-        jsonContext
-      });
+        // Get from remote server, not local cache, to get latest version
+        const appRegistration = await ctx.call('ldp.remote.getNetwork', {
+          resourceUri: appRegistrationUri,
+          jsonContext
+        });
 
-      const accessGrants = await Promise.all(
-        arrayOf(appRegistration['interop:hasAccessGrant']).map(grantUri =>
-          ctx.call('ldp.remote.get', {
-            resourceUri: grantUri,
-            jsonContext,
-            accept: MIME_TYPES.JSON
-          })
-        )
-      );
-
-      // Get required access need group(s)
-      const filteredContainer = await ctx.call('access-needs-groups.list', {
-        filters: {
-          'http://www.w3.org/ns/solid/interop#accessNecessity': 'http://www.w3.org/ns/solid/interop#AccessRequired'
-        },
-        accept: MIME_TYPES.JSON
-      });
-      const requiredAccessNeedGroups = arrayOf(filteredContainer['ldp:contains']);
-
-      // Return true if all access needs and special rights of the required AccessNeedGroup(s) are granted
-      const accessNeedsSatisfied = requiredAccessNeedGroups.every(
-        group =>
-          arrayOf(group['interop:hasAccessNeed']).every(accessNeedUri =>
-            accessGrants.some(grant => grant['interop:satisfiesAccessNeed'] === accessNeedUri)
-          ) &&
-          arrayOf(group['interop:hasSpecialRights']).every(specialRightUri =>
-            appRegistration['apods:hasSpecialRights'].some(sr => sr === specialRightUri)
+        const accessGrants = await Promise.all(
+          arrayOf(appRegistration['interop:hasAccessGrant']).map(grantUri =>
+            ctx.call('ldp.remote.get', {
+              resourceUri: grantUri,
+              jsonContext,
+              accept: MIME_TYPES.JSON
+            })
           )
-      );
+        );
 
-      return { accessNeedsSatisfied, appRegistration, accessGrants };
-    },
-    async getForActor(ctx) {
-      const { actorUri } = ctx.params;
-
-      const filteredContainer = await this.actions.list(
-        {
+        // Get required access need group(s)
+        const filteredContainer = await ctx.call('access-needs-groups.list', {
           filters: {
-            'http://www.w3.org/ns/solid/interop#registeredBy': actorUri
+            'http://www.w3.org/ns/solid/interop#accessNecessity': 'http://www.w3.org/ns/solid/interop#AccessRequired'
           },
-          webId: 'system'
-        },
-        { parentCtx: ctx }
-      );
+          accept: MIME_TYPES.JSON
+        });
+        const requiredAccessNeedGroups = arrayOf(filteredContainer['ldp:contains']);
 
-      return filteredContainer['ldp:contains']?.[0];
-    },
-    async getRegisteredPods(ctx) {
-      const filteredContainer = await this.actions.list({ webId: 'system' }, { parentCtx: ctx });
+        // Return true if all access needs and special rights of the required AccessNeedGroup(s) are granted
+        const accessNeedsSatisfied = requiredAccessNeedGroups.every(
+          group =>
+            arrayOf(group['interop:hasAccessNeed']).every(accessNeedUri =>
+              accessGrants.some(grant => grant['interop:satisfiesAccessNeed'] === accessNeedUri)
+            ) &&
+            arrayOf(group['interop:hasSpecialRights']).every(specialRightUri =>
+              appRegistration['apods:hasSpecialRights'].some(sr => sr === specialRightUri)
+            )
+        );
 
-      return filteredContainer['ldp:contains']?.map(appRegistration => appRegistration['interop:registeredBy']);
-    }
+        return { accessNeedsSatisfied, appRegistration, accessGrants };
+      }
+    }),
+
+    getForActor: defineAction({
+      async handler(ctx) {
+        const { actorUri } = ctx.params;
+
+        const filteredContainer = await this.actions.list(
+          {
+            filters: {
+              'http://www.w3.org/ns/solid/interop#registeredBy': actorUri
+            },
+            webId: 'system'
+          },
+          { parentCtx: ctx }
+        );
+
+        return filteredContainer['ldp:contains']?.[0];
+      }
+    }),
+
+    getRegisteredPods: defineAction({
+      async handler(ctx) {
+        const filteredContainer = await this.actions.list({ webId: 'system' }, { parentCtx: ctx });
+
+        return filteredContainer['ldp:contains']?.map(appRegistration => appRegistration['interop:registeredBy']);
+      }
+    })
   },
   hooks: {
     after: {
@@ -94,6 +103,14 @@ const AppRegistrationsSchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default AppRegistrationsSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [AppRegistrationsSchema.name]: typeof AppRegistrationsSchema;
+    }
+  }
+}

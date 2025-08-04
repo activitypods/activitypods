@@ -1,6 +1,7 @@
 import path from 'path';
 import { JsonLdService } from '@semapps/jsonld';
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   mixins: [JsonLdService],
@@ -13,6 +14,6 @@ const Schema = {
       }
     ]
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

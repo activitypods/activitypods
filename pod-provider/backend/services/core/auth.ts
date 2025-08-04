@@ -3,6 +3,7 @@ import urlJoin from 'url-join';
 import { AuthLocalService } from '@semapps/auth';
 import CONFIG from '../../config/config.ts';
 import transport from '../../config/transport.ts';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   mixins: [AuthLocalService],
@@ -55,6 +56,6 @@ const Schema = {
       }
     }
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

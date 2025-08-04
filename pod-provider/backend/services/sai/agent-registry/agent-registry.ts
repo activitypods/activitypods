@@ -1,9 +1,10 @@
 import { triple, namedNode } from '@rdfjs/data-model';
 import { SingleResourceContainerMixin } from '@semapps/ldp';
+import { ServiceSchema, defineAction } from 'moleculer';
 const ALLOWED_TYPES = ['interop:ApplicationRegistration', 'interop:SocialAgentRegistration'];
 
 const AgentRegistrySchema = {
-  name: 'agent-registry',
+  name: 'agent-registry' as const,
   mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:AgentRegistry'],
@@ -11,61 +12,66 @@ const AgentRegistrySchema = {
   },
   dependencies: ['registry-set'],
   actions: {
-    async add(ctx) {
-      const { podOwner, agentRegistrationUri, agentRegistrationType } = ctx.params;
+    add: defineAction({
+      async handler(ctx) {
+        const { podOwner, agentRegistrationUri, agentRegistrationType } = ctx.params;
 
-      if (!ALLOWED_TYPES.includes(agentRegistrationType)) {
-        throw new Error(`The agentRegistrationType param must be ${ALLOWED_TYPES.join(' or ')}`);
+        if (!ALLOWED_TYPES.includes(agentRegistrationType)) {
+          throw new Error(`The agentRegistrationType param must be ${ALLOWED_TYPES.join(' or ')}`);
+        }
+
+        const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+
+        await this.actions.patch(
+          {
+            resourceUri: agentRegistryUri,
+            triplesToAdd: [
+              triple(
+                namedNode(agentRegistryUri),
+                namedNode(
+                  agentRegistrationType === 'interop:ApplicationRegistration'
+                    ? 'http://www.w3.org/ns/solid/interop#hasApplicationRegistration'
+                    : 'http://www.w3.org/ns/solid/interop#hasSocialAgentRegistration'
+                ),
+                namedNode(agentRegistrationUri)
+              )
+            ],
+            webId: 'system'
+          },
+          { parentCtx: ctx }
+        );
       }
+    }),
 
-      const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+    remove: defineAction({
+      async handler(ctx) {
+        const { podOwner, agentRegistrationUri, agentRegistrationType } = ctx.params;
 
-      await this.actions.patch(
-        {
-          resourceUri: agentRegistryUri,
-          triplesToAdd: [
-            triple(
-              namedNode(agentRegistryUri),
-              namedNode(
-                agentRegistrationType === 'interop:ApplicationRegistration'
-                  ? 'http://www.w3.org/ns/solid/interop#hasApplicationRegistration'
-                  : 'http://www.w3.org/ns/solid/interop#hasSocialAgentRegistration'
-              ),
-              namedNode(agentRegistrationUri)
-            )
-          ],
-          webId: 'system'
-        },
-        { parentCtx: ctx }
-      );
-    },
-    async remove(ctx) {
-      const { podOwner, agentRegistrationUri, agentRegistrationType } = ctx.params;
+        if (!ALLOWED_TYPES.includes(agentRegistrationType)) {
+          throw new Error(`The agentRegistrationType param must be ${ALLOWED_TYPES.join(' or ')}`);
+        }
+        const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
 
-      if (!ALLOWED_TYPES.includes(agentRegistrationType)) {
-        throw new Error(`The agentRegistrationType param must be ${ALLOWED_TYPES.join(' or ')}`);
+        await this.actions.patch(
+          {
+            resourceUri: agentRegistryUri,
+            triplesToRemove: [
+              triple(
+                namedNode(agentRegistryUri),
+                namedNode(
+                  agentRegistrationType === 'interop:ApplicationRegistration'
+                    ? 'http://www.w3.org/ns/solid/interop#hasApplicationRegistration'
+                    : 'http://www.w3.org/ns/solid/interop#hasSocialAgentRegistration'
+                ),
+                namedNode(agentRegistrationUri)
+              )
+            ],
+            webId: 'system'
+          },
+          { parentCtx: ctx }
+        );
       }
-      const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
-
-      await this.actions.patch(
-        {
-          resourceUri: agentRegistryUri,
-          triplesToRemove: [
-            triple(
-              namedNode(agentRegistryUri),
-              namedNode(
-                agentRegistrationType === 'interop:ApplicationRegistration'
-                  ? 'http://www.w3.org/ns/solid/interop#hasApplicationRegistration'
-                  : 'http://www.w3.org/ns/solid/interop#hasSocialAgentRegistration'
-              ),
-              namedNode(agentRegistrationUri)
-            )
-          ],
-          webId: 'system'
-        },
-        { parentCtx: ctx }
-      );
-    }
+    })
   },
   hooks: {
     after: {
@@ -87,6 +93,14 @@ const AgentRegistrySchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default AgentRegistrySchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [AgentRegistrySchema.name]: typeof AgentRegistrySchema;
+    }
+  }
+}

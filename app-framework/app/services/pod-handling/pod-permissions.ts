@@ -3,104 +3,113 @@ import LinkHeader from 'http-link-header';
 import { getAclUriFromResourceUri } from '@semapps/webacl';
 import { arrayOf } from '@semapps/ldp';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const PodPermissionsSchema = {
-  name: 'pod-permissions',
+  name: 'pod-permissions' as const,
   mixins: [FetchPodOrProxyMixin],
   actions: {
-    async get(ctx) {
-      const { uri, actorUri } = ctx.params;
+    get: defineAction({
+      async handler(ctx) {
+        const { uri, actorUri } = ctx.params;
 
-      const { status, body } = await this.actions.fetch({
-        url: await this.getAclUri(uri, actorUri),
-        headers: {
-          Accept: 'application/ld+json'
-        },
-        actorUri
-      });
+        const { status, body } = await this.actions.fetch({
+          url: await this.getAclUri(uri, actorUri),
+          headers: {
+            Accept: 'application/ld+json'
+          },
+          actorUri
+        });
 
-      return status === 200 ? body['@graph'] : false;
-    },
-    async add(ctx) {
-      const { uri, agentUri, agentPredicate, mode, actorUri } = ctx.params;
-
-      if (!['acl:agent', 'acl:agentGroup', 'acl:agentClass'].includes(agentPredicate)) {
-        throw new Error(`The agentPredicate must be 'acl:agent', 'acl:agentGroup' or 'acl:agentClass'`);
+        return status === 200 ? body['@graph'] : false;
       }
+    }),
 
-      if (!['acl:Read', 'acl:Append', 'acl:Write', 'acl:Control'].includes(mode)) {
-        throw new Error(`The mode must be 'acl:Read', 'acl:Append', 'acl:Write' or 'acl:Control'`);
+    add: defineAction({
+      async handler(ctx) {
+        const { uri, agentUri, agentPredicate, mode, actorUri } = ctx.params;
+
+        if (!['acl:agent', 'acl:agentGroup', 'acl:agentClass'].includes(agentPredicate)) {
+          throw new Error(`The agentPredicate must be 'acl:agent', 'acl:agentGroup' or 'acl:agentClass'`);
+        }
+
+        if (!['acl:Read', 'acl:Append', 'acl:Write', 'acl:Control'].includes(mode)) {
+          throw new Error(`The mode must be 'acl:Read', 'acl:Append', 'acl:Write' or 'acl:Control'`);
+        }
+
+        const aclUri = await this.getAclUri(uri, actorUri);
+
+        const { status } = await this.actions.fetch({
+          url: aclUri,
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/ld+json'
+          },
+          body: JSON.stringify({
+            '@context': this.getAclContext(aclUri),
+            '@graph': [
+              {
+                '@id': `#${mode.replace('acl:', '')}`,
+                '@type': 'acl:Authorization',
+                [agentPredicate]: agentUri,
+                'acl:accessTo': uri,
+                'acl:mode': mode
+              }
+            ]
+          }),
+          actorUri
+        });
+
+        return status === 204;
       }
+    }),
 
-      const aclUri = await this.getAclUri(uri, actorUri);
+    remove: defineAction({
+      async handler(ctx) {
+        const { uri, agentUri, agentPredicate, mode, actorUri } = ctx.params;
 
-      const { status } = await this.actions.fetch({
-        url: aclUri,
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/ld+json'
-        },
-        body: JSON.stringify({
-          '@context': this.getAclContext(aclUri),
-          '@graph': [
-            {
-              '@id': `#${mode.replace('acl:', '')}`,
-              '@type': 'acl:Authorization',
-              [agentPredicate]: agentUri,
-              'acl:accessTo': uri,
-              'acl:mode': mode
+        if (!['acl:agent', 'acl:agentGroup', 'acl:agentClass'].includes(agentPredicate)) {
+          throw new Error(`The agentPredicate must be 'acl:agent', 'acl:agentGroup' or 'acl:agentClass'`);
+        }
+
+        if (!['acl:Read', 'acl:Append', 'acl:Write', 'acl:Control'].includes(mode)) {
+          throw new Error(`The mode must be 'acl:Read', 'acl:Append', 'acl:Write' or 'acl:Control'`);
+        }
+
+        // We have no API to remove permissions, so first get the permissions, then use PUT to update them.
+        // There is an issue to improve this: https://github.com/assemblee-virtuelle/semapps/issues/1234
+        const currentPermissions = await this.actions.get({ uri, actorUri }, { parentCtx: ctx });
+
+        const updatedPermissions = currentPermissions
+          .filter(authorization => !authorization['@id'].includes('#Default'))
+          .map(authorization => {
+            const modes = arrayOf(authorization['acl:mode']);
+            let agents = arrayOf(authorization[agentPredicate]);
+            if (modes.includes(mode) && agents.includes(agentUri)) {
+              agents = agents.filter(agent => agent !== agentUri);
             }
-          ]
-        }),
-        actorUri
-      });
+            return { ...authorization, [agentPredicate]: agents };
+          })
+          .filter(authorization => arrayOf(authorization[agentPredicate]).length > 0);
 
-      return status === 204;
-    },
-    async remove(ctx) {
-      const { uri, agentUri, agentPredicate, mode, actorUri } = ctx.params;
+        const aclUri = await this.getAclUri(uri, actorUri);
 
-      if (!['acl:agent', 'acl:agentGroup', 'acl:agentClass'].includes(agentPredicate)) {
-        throw new Error(`The agentPredicate must be 'acl:agent', 'acl:agentGroup' or 'acl:agentClass'`);
+        const { status } = await this.actions.fetch({
+          url: aclUri,
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/ld+json'
+          },
+          body: JSON.stringify({
+            '@context': this.getAclContext(aclUri),
+            '@graph': updatedPermissions
+          }),
+          actorUri
+        });
+
+        return status === 204;
       }
-
-      if (!['acl:Read', 'acl:Append', 'acl:Write', 'acl:Control'].includes(mode)) {
-        throw new Error(`The mode must be 'acl:Read', 'acl:Append', 'acl:Write' or 'acl:Control'`);
-      }
-
-      // We have no API to remove permissions, so first get the permissions, then use PUT to update them.
-      // There is an issue to improve this: https://github.com/assemblee-virtuelle/semapps/issues/1234
-      const currentPermissions = await this.actions.get({ uri, actorUri }, { parentCtx: ctx });
-
-      const updatedPermissions = currentPermissions
-        .filter(authorization => !authorization['@id'].includes('#Default'))
-        .map(authorization => {
-          const modes = arrayOf(authorization['acl:mode']);
-          let agents = arrayOf(authorization[agentPredicate]);
-          if (modes.includes(mode) && agents.includes(agentUri)) {
-            agents = agents.filter(agent => agent !== agentUri);
-          }
-          return { ...authorization, [agentPredicate]: agents };
-        })
-        .filter(authorization => arrayOf(authorization[agentPredicate]).length > 0);
-
-      const aclUri = await this.getAclUri(uri, actorUri);
-
-      const { status } = await this.actions.fetch({
-        url: aclUri,
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/ld+json'
-        },
-        body: JSON.stringify({
-          '@context': this.getAclContext(aclUri),
-          '@graph': updatedPermissions
-        }),
-        actorUri
-      });
-
-      return status === 204;
-    }
+    })
   },
   methods: {
     async getAclUri(uri, podOwner) {
@@ -129,6 +138,14 @@ const PodPermissionsSchema = {
       };
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default PodPermissionsSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [PodPermissionsSchema.name]: typeof PodPermissionsSchema;
+    }
+  }
+}

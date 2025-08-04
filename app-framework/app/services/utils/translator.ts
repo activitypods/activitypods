@@ -1,8 +1,9 @@
 import Handlebars from 'handlebars';
 import { isObject } from '@semapps/ldp';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const TranslatorSchema = {
-  name: 'translator',
+  name: 'translator' as const,
   settings: {
     frontUrl: null,
     handlebars: {
@@ -18,15 +19,17 @@ const TranslatorSchema = {
     }
   },
   actions: {
-    async translate(ctx) {
-      const { template, templateParams, actorUri } = ctx.params;
+    translate: defineAction({
+      async handler(ctx) {
+        const { template, templateParams, actorUri } = ctx.params;
 
-      // Get the locale of the actor
-      const actor = await ctx.call('activitypub.actor.get', { actorUri });
-      const locale = actor['schema:knowsLanguage'] || 'en';
+        // Get the locale of the actor
+        const actor = await ctx.call('activitypub.actor.get', { actorUri });
+        const locale = actor['schema:knowsLanguage'] || 'en';
 
-      return this.parseTemplate(template, templateParams, locale);
-    }
+        return this.parseTemplate(template, templateParams, locale);
+      }
+    })
   },
   methods: {
     parseTemplate(template, params, locale) {
@@ -53,6 +56,14 @@ const TranslatorSchema = {
       );
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default TranslatorSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [TranslatorSchema.name]: typeof TranslatorSchema;
+    }
+  }
+}

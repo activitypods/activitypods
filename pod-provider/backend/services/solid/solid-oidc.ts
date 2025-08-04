@@ -6,9 +6,10 @@ import RedisAdapter from '../../config/oidc-adapter.ts';
 import baseConfig from '../../config/oidc.ts';
 import fetch from 'node-fetch';
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const SolidOidcSchema = {
-  name: 'solid-oidc',
+  name: 'solid-oidc' as const,
   settings: {
     baseUrl: CONFIG.BASE_URL,
     frontendUrl: CONFIG.FRONTEND_URL,
@@ -77,63 +78,74 @@ const SolidOidcSchema = {
     });
   },
   actions: {
-    // See https://moleculer.services/docs/0.13/moleculer-web.html#Authentication
-    async authenticate(ctx) {
-      const { route, req, res } = ctx.params;
-      // Extract token from authorization header (do not take the Bearer part)
-      const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
-      if (token) {
-        const payload = await ctx.call('jwk.verifyToken', { token });
-        if (payload) {
-          ctx.meta.tokenPayload = payload;
-          ctx.meta.webId = payload.azp; // Use the WebID of the application requesting access
-          ctx.meta.impersonatedUser = payload.webid; // Used by some services which need to know the real user (Attention: webid with a i)
-          return Promise.resolve(payload);
+    authenticate: defineAction({
+      // See https://moleculer.services/docs/0.13/moleculer-web.html#Authentication
+      async handler(ctx) {
+        const { route, req, res } = ctx.params;
+        // Extract token from authorization header (do not take the Bearer part)
+        const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+        if (token) {
+          const payload = await ctx.call('jwk.verifyToken', { token });
+          if (payload) {
+            ctx.meta.tokenPayload = payload;
+            ctx.meta.webId = payload.azp; // Use the WebID of the application requesting access
+            ctx.meta.impersonatedUser = payload.webid; // Used by some services which need to know the real user (Attention: webid with a i)
+            return Promise.resolve(payload);
+          }
+          // Invalid token
+          ctx.meta.webId = 'anon';
+          return Promise.reject(new E.UnAuthorizedError(E.ERR_INVALID_TOKEN));
         }
-        // Invalid token
+        // No token
         ctx.meta.webId = 'anon';
-        return Promise.reject(new E.UnAuthorizedError(E.ERR_INVALID_TOKEN));
+        return Promise.resolve(null);
       }
-      // No token
-      ctx.meta.webId = 'anon';
-      return Promise.resolve(null);
-    },
-    // See https://moleculer.services/docs/0.13/moleculer-web.html#Authorization
-    async authorize(ctx) {
-      const { route, req, res } = ctx.params;
-      // Extract token from authorization header (do not take the Bearer part)
-      const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
-      if (token) {
-        const payload = await ctx.call('jwk.verifyToken', { token });
-        if (payload) {
-          ctx.meta.tokenPayload = payload;
-          ctx.meta.webId = payload.azp; // Use the WebID of the application requesting access
-          ctx.meta.impersonatedUser = payload.webid; // Used by some services which need to know the real user (Attention: webid with a i)
-          return Promise.resolve(payload);
-        }
-        ctx.meta.webId = 'anon';
-        return Promise.reject(new E.UnAuthorizedError(E.ERR_INVALID_TOKEN));
-      }
-      ctx.meta.webId = 'anon';
-      return Promise.reject(new E.UnAuthorizedError(E.ERR_NO_TOKEN));
-    },
-    async proxyConfig() {
-      const res = await fetch(`${this.settings.baseUrl}.oidc/auth/.well-known/openid-configuration`);
-      if (res.ok) {
-        return await res.json();
-      } else {
-        throw new Error('OIDC server not loaded');
-      }
-    },
-    // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
-    async loginCompleted(ctx) {
-      const { interactionId } = ctx.params;
-      const webId = ctx.meta.webId;
+    }),
 
-      await this.interactionFinished(interactionId, {
-        login: { accountId: webId, amr: ['pwd'], remember: true }
-      });
-    }
+    authorize: defineAction({
+      // See https://moleculer.services/docs/0.13/moleculer-web.html#Authorization
+      async handler(ctx) {
+        const { route, req, res } = ctx.params;
+        // Extract token from authorization header (do not take the Bearer part)
+        const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+        if (token) {
+          const payload = await ctx.call('jwk.verifyToken', { token });
+          if (payload) {
+            ctx.meta.tokenPayload = payload;
+            ctx.meta.webId = payload.azp; // Use the WebID of the application requesting access
+            ctx.meta.impersonatedUser = payload.webid; // Used by some services which need to know the real user (Attention: webid with a i)
+            return Promise.resolve(payload);
+          }
+          ctx.meta.webId = 'anon';
+          return Promise.reject(new E.UnAuthorizedError(E.ERR_INVALID_TOKEN));
+        }
+        ctx.meta.webId = 'anon';
+        return Promise.reject(new E.UnAuthorizedError(E.ERR_NO_TOKEN));
+      }
+    }),
+
+    proxyConfig: defineAction({
+      async handler() {
+        const res = await fetch(`${this.settings.baseUrl}.oidc/auth/.well-known/openid-configuration`);
+        if (res.ok) {
+          return await res.json();
+        } else {
+          throw new Error('OIDC server not loaded');
+        }
+      }
+    }),
+
+    loginCompleted: defineAction({
+      // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
+      async handler(ctx) {
+        const { interactionId } = ctx.params;
+        const webId = ctx.meta.webId;
+
+        await this.interactionFinished(interactionId, {
+          login: { accountId: webId, amr: ['pwd'], remember: true }
+        });
+      }
+    })
   },
   methods: {
     async interactionFinished(interactionId, result) {
@@ -146,6 +158,14 @@ const SolidOidcSchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default SolidOidcSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [SolidOidcSchema.name]: typeof SolidOidcSchema;
+    }
+  }
+}

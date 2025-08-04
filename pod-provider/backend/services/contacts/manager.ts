@@ -4,9 +4,10 @@ import { sanitizeSparqlQuery } from '@semapps/triplestore';
 import { arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } from '../../config/patterns.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const ContactsManagerSchema = {
-  name: 'contacts.manager',
+  name: 'contacts.manager' as const,
   mixins: [ActivitiesHandlerMixin],
   settings: {
     ignoredContactsCollectionOptions: {
@@ -23,13 +24,15 @@ const ContactsManagerSchema = {
     await this.broker.call('activitypub.collections-registry.register', this.settings.ignoredContactsCollectionOptions);
   },
   actions: {
-    async updateCollectionsOptions(ctx) {
-      const { dataset } = ctx.params;
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.ignoredContactsCollectionOptions,
-        dataset
-      });
-    }
+    updateCollectionsOptions: defineAction({
+      async handler(ctx) {
+        const { dataset } = ctx.params;
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          collection: this.settings.ignoredContactsCollectionOptions,
+          dataset
+        });
+      }
+    })
   },
   activities: {
     addContact: {
@@ -232,6 +235,14 @@ const ContactsManagerSchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default ContactsManagerSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ContactsManagerSchema.name]: typeof ContactsManagerSchema;
+    }
+  }
+}

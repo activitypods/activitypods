@@ -1,4 +1,5 @@
 import { SynchronizerService } from '@semapps/sync';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   mixins: [SynchronizerService],
@@ -8,6 +9,6 @@ const Schema = {
     synchronizeContainers: false,
     attachToLocalContainers: true
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

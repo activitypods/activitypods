@@ -1,9 +1,10 @@
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 import sparqljsModule from 'sparqljs';
+import { ServiceSchema, defineAction } from 'moleculer';
 const SparqlGenerator = sparqljsModule.Generator;
 
 const PodResourcesSchema = {
-  name: 'pod-resources',
+  name: 'pod-resources' as const,
   mixins: [FetchPodOrProxyMixin],
   started() {
     this.sparqlGenerator = new SparqlGenerator({
@@ -11,7 +12,7 @@ const PodResourcesSchema = {
     });
   },
   actions: {
-    post: {
+    post: defineAction({
       params: {
         containerUri: { type: 'string', optional: false },
         resource: { type: 'object', optional: false },
@@ -44,8 +45,9 @@ const PodResourcesSchema = {
           return false;
         }
       }
-    },
-    list: {
+    }),
+
+    list: defineAction({
       params: {
         containerUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
@@ -63,8 +65,9 @@ const PodResourcesSchema = {
           actorUri
         });
       }
-    },
-    get: {
+    }),
+
+    get: defineAction({
       params: {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
@@ -82,8 +85,9 @@ const PodResourcesSchema = {
           actorUri
         });
       }
-    },
-    patch: {
+    }),
+
+    patch: defineAction({
       params: {
         resourceUri: { type: 'string', optional: false },
         triplesToAdd: { type: 'array', optional: true },
@@ -122,8 +126,9 @@ const PodResourcesSchema = {
           actorUri
         });
       }
-    },
-    put: {
+    }),
+
+    put: defineAction({
       params: {
         resource: { type: 'object', optional: false },
         actorUri: { type: 'string', optional: false }
@@ -150,8 +155,9 @@ const PodResourcesSchema = {
           actorUri
         });
       }
-    },
-    delete: {
+    }),
+
+    delete: defineAction({
       params: {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
@@ -165,8 +171,16 @@ const PodResourcesSchema = {
           actorUri
         });
       }
-    }
+    })
   }
-};
+} satisfies ServiceSchema;
 
 export default PodResourcesSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [PodResourcesSchema.name]: typeof PodResourcesSchema;
+    }
+  }
+}

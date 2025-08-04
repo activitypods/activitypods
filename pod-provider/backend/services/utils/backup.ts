@@ -1,6 +1,7 @@
 import path from 'path';
 import BackupService from '@semapps/backup';
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   mixins: [BackupService],
@@ -26,6 +27,6 @@ const Schema = {
       timeZone: 'Europe/Paris'
     }
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

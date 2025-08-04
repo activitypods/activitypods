@@ -1,6 +1,7 @@
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import urlJoin from 'url-join';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 /**
  * This mixin adds the ability to create WebSocket routes to the moleculer-web API Gateway.
@@ -19,7 +20,7 @@ import urlJoin from 'url-join';
  * @type {import('moleculer').ServiceSchema}
  */
 const WebsocketSchema = {
-  name: 'websocket',
+  name: 'websocket' as const,
   settings: {
     baseUrl: null
   },
@@ -38,7 +39,7 @@ const WebsocketSchema = {
   actions: {
     // TODO: support interval-based pings?
     /** See description in service comment. */
-    addWebSocketRoute: {
+    addWebSocketRoute: defineAction({
       params: {
         name: { type: 'string' },
         route: { type: 'string' },
@@ -81,13 +82,16 @@ const WebsocketSchema = {
           }
         });
       }
-    },
-    onWsConnection(ctx) {
-      // Just a dummy function to satisfy the alias middleware handler above.
-      // You can access the connection object with `ctx.meta.connection`.
-      // Warning: This action is also called, if the connection fails.
-      // In this case, `ctx.meta.connection` is unset.
-    }
+    }),
+
+    onWsConnection: defineAction({
+      handler(ctx) {
+        // Just a dummy function to satisfy the alias middleware handler above.
+        // You can access the connection object with `ctx.meta.connection`.
+        // Warning: This action is also called, if the connection fails.
+        // In this case, `ctx.meta.connection` is unset.
+      }
+    })
   },
 
   methods: {
@@ -212,6 +216,14 @@ const WebsocketSchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default WebsocketSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [WebsocketSchema.name]: typeof WebsocketSchema;
+    }
+  }
+}

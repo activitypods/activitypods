@@ -1,8 +1,9 @@
 import { triple, namedNode } from '@rdfjs/data-model';
 import { SingleResourceContainerMixin } from '@semapps/ldp';
+import { ServiceSchema } from 'moleculer';
 
 const RegistrySetSchema = {
-  name: 'registry-set',
+  name: 'registry-set' as const,
   mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:RegistrySet'],
@@ -26,6 +27,14 @@ const RegistrySetSchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default RegistrySetSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [RegistrySetSchema.name]: typeof RegistrySetSchema;
+    }
+  }
+}

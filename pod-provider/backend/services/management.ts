@@ -10,6 +10,7 @@ import { ACTIVITY_TYPES, PUBLIC_URI } from '@semapps/activitypub';
 import { sanitizeSparqlQuery } from '@semapps/triplestore';
 import { arrayOf } from '@semapps/ldp';
 import CONFIG from '../config/config.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 let Readable, NTriplesSerializer;
 
 const importAsync = async () => {
@@ -21,7 +22,7 @@ importAsync();
 
 /** @type {import('moleculer').ServiceSchema} */
 const ManagementService = {
-  name: 'management',
+  name: 'management' as const,
   mixins: [QueueService(CONFIG.QUEUE_SERVICE_URL)],
   dependencies: ['api', 'ldp'],
   settings: {
@@ -51,7 +52,7 @@ const ManagementService = {
     if (!fs.existsSync(this.settings.exportDir)) fs.mkdirSync(this.settings.exportDir);
   },
   actions: {
-    deleteAccount: {
+    deleteAccount: defineAction({
       params: {
         username: { type: 'string' }
       },
@@ -137,7 +138,8 @@ const ManagementService = {
           setTimeout(() => this.deleteDataset(username), 1000 * 60 * 5);
         }
       }
-    },
+    }),
+
     /**
      * Create an export of all actor data (+ backups if requested).
      * Creates a zip archive file with rdf db dump and binaries.
@@ -145,7 +147,7 @@ const ManagementService = {
      * If a backup exists which is younger than five minutes, the existing backup is served.
      * @returns {Promise<object>} The backup file promise as returned by `fs.promises.readFile`
      */
-    exportAccount: {
+    exportAccount: defineAction({
       params: {
         username: { type: 'string' },
         withBackups: { type: 'boolean', default: false, convert: true },
@@ -233,7 +235,7 @@ const ManagementService = {
         ctx.meta.$responseType = 'application/zip';
         return fs.promises.readFile(fileName);
       }
-    }
+    })
   },
   methods: {
     /**
@@ -389,6 +391,14 @@ const ManagementService = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default ManagementService;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ManagementService.name]: typeof ManagementService;
+    }
+  }
+}

@@ -1,7 +1,7 @@
 /* eslint-disable lines-between-class-members */
 /* eslint-disable max-classes-per-file */
 
-import { CallingOptions, ServiceEvent } from 'moleculer';
+import { CallingOptions, ServiceEvent, ServiceSchema, defineAction } from 'moleculer';
 
 // Reproduction
 

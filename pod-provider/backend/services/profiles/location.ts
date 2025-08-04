@@ -2,9 +2,10 @@ import urlJoin from 'url-join';
 import { ControlledContainerMixin } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const ProfilesLocationSchema = {
-  name: 'profiles.location',
+  name: 'profiles.location' as const,
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['vcard:Location'],
@@ -15,48 +16,53 @@ const ProfilesLocationSchema = {
     typeIndex: 'public'
   },
   actions: {
-    async getHomeLocation(ctx) {
-      const { webId } = ctx.params;
+    getHomeLocation: defineAction({
+      async handler(ctx) {
+        const { webId } = ctx.params;
 
-      const results = await ctx.call('triplestore.query', {
-        query: `
-          PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
-          PREFIX as: <https://www.w3.org/ns/activitystreams#>
-          SELECT ?homeLocation
-          WHERE {
-            <${webId}> as:url ?profile .
-            ?profile vcard:hasAddress ?homeLocation .
-          }
-        `,
-        accept: MIME_TYPES.JSON,
-        webId
-      });
+        const results = await ctx.call('triplestore.query', {
+          query: `
+            PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+            PREFIX as: <https://www.w3.org/ns/activitystreams#>
+            SELECT ?homeLocation
+            WHERE {
+              <${webId}> as:url ?profile .
+              ?profile vcard:hasAddress ?homeLocation .
+            }
+          `,
+          accept: MIME_TYPES.JSON,
+          webId
+        });
 
-      return results.length > 0 ? results[0].homeLocation.value : null;
-    },
-    async clearHomeLocation(ctx) {
-      const { webId } = ctx.params;
-      await ctx.call('triplestore.update', {
-        query: `
-          PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
-          PREFIX as: <https://www.w3.org/ns/activitystreams#>
-          DELETE {
-            ?profile vcard:hasAddress ?homeLocation .
-            ?hasGeo vcard:latitude ?latitude .
-            ?hasGeo vcard:longitude ?longitude .
-            ?profile vcard:hasGeo ?hasGeo .
-          }
-          WHERE {
-            <${webId}> as:url ?profile .
-            ?profile vcard:hasAddress ?homeLocation .
-            ?profile vcard:hasGeo ?hasGeo .
-            ?hasGeo vcard:latitude ?latitude .
-            ?hasGeo vcard:longitude ?longitude .
-          }
-        `,
-        webId
-      });
-    }
+        return results.length > 0 ? results[0].homeLocation.value : null;
+      }
+    }),
+
+    clearHomeLocation: defineAction({
+      async handler(ctx) {
+        const { webId } = ctx.params;
+        await ctx.call('triplestore.update', {
+          query: `
+            PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+            PREFIX as: <https://www.w3.org/ns/activitystreams#>
+            DELETE {
+              ?profile vcard:hasAddress ?homeLocation .
+              ?hasGeo vcard:latitude ?latitude .
+              ?hasGeo vcard:longitude ?longitude .
+              ?profile vcard:hasGeo ?hasGeo .
+            }
+            WHERE {
+              <${webId}> as:url ?profile .
+              ?profile vcard:hasAddress ?homeLocation .
+              ?profile vcard:hasGeo ?hasGeo .
+              ?hasGeo vcard:latitude ?latitude .
+              ?hasGeo vcard:longitude ?longitude .
+            }
+          `,
+          webId
+        });
+      }
+    })
   },
   hooks: {
     after: {
@@ -70,6 +76,14 @@ const ProfilesLocationSchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default ProfilesLocationSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ProfilesLocationSchema.name]: typeof ProfilesLocationSchema;
+    }
+  }
+}

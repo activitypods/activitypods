@@ -1,5 +1,6 @@
 import { ActivityPubService } from '@semapps/activitypub';
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   mixins: [ActivityPubService],
@@ -8,6 +9,6 @@ const Schema = {
     podProvider: true,
     queueServiceUrl: CONFIG.QUEUE_SERVICE_URL
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

@@ -1,9 +1,10 @@
 import urlJoin from 'url-join';
 import { ControlledContainerMixin, MimeTypesMixin } from '@semapps/ldp';
 import CONFIG from '../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
 const FilesSchema = {
-  name: 'files',
+  name: 'files' as const,
   mixins: [ControlledContainerMixin, MimeTypesMixin],
   settings: {
     acceptedTypes: ['semapps:File'],
@@ -18,6 +19,14 @@ const FilesSchema = {
       accepted: ['image/*']
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default FilesSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [FilesSchema.name]: typeof FilesSchema;
+    }
+  }
+}

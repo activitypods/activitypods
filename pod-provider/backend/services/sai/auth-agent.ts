@@ -2,9 +2,10 @@ import urlJoin from 'url-join';
 import { triple, namedNode } from '@rdfjs/data-model';
 import { SingleResourceContainerMixin, getWebIdFromUri } from '@semapps/ldp';
 import CONFIG from '../../config/config.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const AuthAgentSchema = {
-  name: 'auth-agent',
+  name: 'auth-agent' as const,
   mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:AuthorizationAgent'],
@@ -20,32 +21,34 @@ const AuthAgentSchema = {
     }
   },
   actions: {
-    // Action from the ControlledContainerMixin, called when we do GET or HEAD requests on resources
-    async getHeaderLinks(ctx) {
-      let agentRegistration;
+    getHeaderLinks: defineAction({
+      // Action from the ControlledContainerMixin, called when we do GET or HEAD requests on resources
+      async handler(ctx) {
+        let agentRegistration;
 
-      if (ctx.meta.impersonatedUser) {
-        // The fetch is made by a registered app
-        const agentUri = ctx.meta.webId;
-        const podOwner = ctx.meta.impersonatedUser;
-        agentRegistration = await ctx.call('app-registrations.getForAgent', { agentUri, podOwner });
-      } else {
-        // The fetch is made by a social agent
-        const agentUri = ctx.meta.webId;
-        const podOwner = getWebIdFromUri(ctx.params.uri);
-        agentRegistration = await ctx.call('social-agent-registrations.getForAgent', { agentUri, podOwner });
-      }
+        if (ctx.meta.impersonatedUser) {
+          // The fetch is made by a registered app
+          const agentUri = ctx.meta.webId;
+          const podOwner = ctx.meta.impersonatedUser;
+          agentRegistration = await ctx.call('app-registrations.getForAgent', { agentUri, podOwner });
+        } else {
+          // The fetch is made by a social agent
+          const agentUri = ctx.meta.webId;
+          const podOwner = getWebIdFromUri(ctx.params.uri);
+          agentRegistration = await ctx.call('social-agent-registrations.getForAgent', { agentUri, podOwner });
+        }
 
-      if (agentRegistration) {
-        return [
-          {
-            uri: agentRegistration['interop:registeredAgent'],
-            anchor: agentRegistration.id || agentRegistration['@id'],
-            rel: 'http://www.w3.org/ns/solid/interop#registeredAgent'
-          }
-        ];
+        if (agentRegistration) {
+          return [
+            {
+              uri: agentRegistration['interop:registeredAgent'],
+              anchor: agentRegistration.id || agentRegistration['@id'],
+              rel: 'http://www.w3.org/ns/solid/interop#registeredAgent'
+            }
+          ];
+        }
       }
-    }
+    })
   },
   hooks: {
     after: {
@@ -65,6 +68,14 @@ const AuthAgentSchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default AuthAgentSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [AuthAgentSchema.name]: typeof AuthAgentSchema;
+    }
+  }
+}

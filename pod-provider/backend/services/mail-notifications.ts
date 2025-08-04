@@ -8,9 +8,10 @@ import { ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { arrayOf, isObject } from '@semapps/ldp';
 import CONFIG from '../config/config.ts';
 import transport from '../config/transport.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const MailNotificationsSchema = {
-  name: 'mail-notifications',
+  name: 'mail-notifications' as const,
   mixins: [MailService, ActivitiesHandlerMixin, QueueService(CONFIG.QUEUE_SERVICE_URL)],
   settings: {
     frontendUrl: CONFIG.FRONTEND_URL,
@@ -35,43 +36,45 @@ const MailNotificationsSchema = {
     }
   },
   actions: {
-    // Allow local service to send directly notifications without sending a apods:Notification activity
-    async notify(ctx) {
-      const { template, recipientUri, activity, context, ...rest } = ctx.params;
+    notify: defineAction({
+      // Allow local service to send directly notifications without sending a apods:Notification activity
+      async handler(ctx) {
+        const { template, recipientUri, activity, context, ...rest } = ctx.params;
 
-      const account = await ctx.call('auth.account.findByWebId', { webId: recipientUri });
-      const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
-      const locale = recipient['schema:knowsLanguage'] || 'en';
+        const account = await ctx.call('auth.account.findByWebId', { webId: recipientUri });
+        const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
+        const locale = recipient['schema:knowsLanguage'] || 'en';
 
-      const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor, webId: recipientUri });
+        const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor, webId: recipientUri });
 
-      let emitterProfile = {};
-      try {
-        emitterProfile = emitter.url
-          ? await ctx.call('activitypub.actor.getProfile', { actorUri: activity.actor, webId: recipientUri })
-          : {};
-      } catch (e) {
-        this.logger.warn(`Could not get profile of actor ${activity.actor}`);
-      }
-
-      const templateParams = { activity, emitter, emitterProfile, ...rest };
-
-      const values = this.parseTemplate(template, templateParams, locale);
-
-      return await this.queueMail(ctx, values.title, {
-        to: account.email,
-        data: {
-          title: values.title,
-          content: values.content,
-          contentWithBr: values.content ? values.content.replace(/\r\n|\r|\n/g, '<br />') : undefined,
-          actions: arrayOf(values.actions).map(action => ({
-            caption: action.caption,
-            link: action.link.startsWith('http') ? action.link : urlJoin(this.settings.frontendUrl, action.link)
-          })),
-          ...this.settings.data
+        let emitterProfile = {};
+        try {
+          emitterProfile = emitter.url
+            ? await ctx.call('activitypub.actor.getProfile', { actorUri: activity.actor, webId: recipientUri })
+            : {};
+        } catch (e) {
+          this.logger.warn(`Could not get profile of actor ${activity.actor}`);
         }
-      });
-    }
+
+        const templateParams = { activity, emitter, emitterProfile, ...rest };
+
+        const values = this.parseTemplate(template, templateParams, locale);
+
+        return await this.queueMail(ctx, values.title, {
+          to: account.email,
+          data: {
+            title: values.title,
+            content: values.content,
+            contentWithBr: values.content ? values.content.replace(/\r\n|\r|\n/g, '<br />') : undefined,
+            actions: arrayOf(values.actions).map(action => ({
+              caption: action.caption,
+              link: action.link.startsWith('http') ? action.link : urlJoin(this.settings.frontendUrl, action.link)
+            })),
+            ...this.settings.data
+          }
+        });
+      }
+    })
   },
   activities: {
     appNotification: {
@@ -143,6 +146,14 @@ const MailNotificationsSchema = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
 
 export default MailNotificationsSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [MailNotificationsSchema.name]: typeof MailNotificationsSchema;
+    }
+  }
+}

@@ -1,9 +1,10 @@
 import path from 'path';
 const { MoleculerError } = require('moleculer').Errors;
 import { arrayOf } from '@semapps/ldp';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 const AuthorizationEndpointSchema = {
-  name: 'authorization-endpoint',
+  name: 'authorization-endpoint' as const,
   dependencies: ['api', 'ldp'],
   async started() {
     const basePath = await this.broker.call('ldp.getBasePath');
@@ -24,57 +25,70 @@ const AuthorizationEndpointSchema = {
     });
   },
   actions: {
-    async getAuthorizations(ctx) {
-      const { resource: resourceUri } = ctx.params;
+    getAuthorizations: defineAction({
+      async handler(ctx) {
+        const { resource: resourceUri } = ctx.params;
 
-      const webId = ctx.meta.webId;
-      const account = await ctx.call('auth.account.findByWebId', { webId });
-      ctx.meta.dataset = account.username;
+        const webId = ctx.meta.webId;
+        const account = await ctx.call('auth.account.findByWebId', { webId });
+        ctx.meta.dataset = account.username;
 
-      if (!resourceUri.startsWith(`${webId}/`))
-        throw new MoleculerError('Only the owner of a resource can fetch its authorizations', 403, 'FORBIDDEN');
+        if (!resourceUri.startsWith(`${webId}/`))
+          throw new MoleculerError('Only the owner of a resource can fetch its authorizations', 403, 'FORBIDDEN');
 
-      const authorizations = await ctx.call('access-authorizations.listForSingleResource', { resourceUri });
+        const authorizations = await ctx.call('access-authorizations.listForSingleResource', { resourceUri });
 
-      return {
-        resourceUri,
-        authorizations: authorizations.map(authorization => ({
-          grantee: authorization['interop:grantee'],
-          accessModes: arrayOf(authorization['interop:accessMode'])
-        }))
-      };
-    },
-    /**
-     * Mass-update access authorizations for a single resource
-     */
-    async updateAuthorizations(ctx) {
-      const { resourceUri, authorizations } = ctx.params;
+        return {
+          resourceUri,
+          authorizations: authorizations.map(authorization => ({
+            grantee: authorization['interop:grantee'],
+            accessModes: arrayOf(authorization['interop:accessMode'])
+          }))
+        };
+      }
+    }),
 
-      const podOwner = ctx.meta.webId;
-      const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
-      ctx.meta.dataset = account.username;
+    updateAuthorizations: defineAction({
+      /**
+       * Mass-update access authorizations for a single resource
+       */
+      async handler(ctx) {
+        const { resourceUri, authorizations } = ctx.params;
 
-      if (!resourceUri.startsWith(`${podOwner}/`))
-        throw new MoleculerError('Only the owner of a resource can update its authorizations', 403, 'FORBIDDEN');
+        const podOwner = ctx.meta.webId;
+        const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
+        ctx.meta.dataset = account.username;
 
-      for ({ grantee, accessModes } of authorizations) {
-        if (accessModes.length > 0) {
-          await ctx.call('access-authorizations.addForSingleResource', {
-            resourceUri,
-            podOwner,
-            grantee,
-            accessModes
-          });
-        } else {
-          await ctx.call('access-authorizations.removeForSingleResource', {
-            resourceUri,
-            podOwner,
-            grantee
-          });
+        if (!resourceUri.startsWith(`${podOwner}/`))
+          throw new MoleculerError('Only the owner of a resource can update its authorizations', 403, 'FORBIDDEN');
+
+        for ({ grantee, accessModes } of authorizations) {
+          if (accessModes.length > 0) {
+            await ctx.call('access-authorizations.addForSingleResource', {
+              resourceUri,
+              podOwner,
+              grantee,
+              accessModes
+            });
+          } else {
+            await ctx.call('access-authorizations.removeForSingleResource', {
+              resourceUri,
+              podOwner,
+              grantee
+            });
+          }
         }
       }
-    }
+    })
   }
-};
+} satisfies ServiceSchema;
 
 export default AuthorizationEndpointSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [AuthorizationEndpointSchema.name]: typeof AuthorizationEndpointSchema;
+    }
+  }
+}

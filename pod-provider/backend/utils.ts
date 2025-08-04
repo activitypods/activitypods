@@ -1,10 +1,10 @@
 import { arrayOf } from '@semapps/ldp';
 
 // Return true if all elements of a1 can be found on a2. Order does not matter.
-const arraysEqual = (a1, a2) =>
+const arraysEqual = (a1: any, a2: any) =>
   arrayOf(a1).length === arrayOf(a2).length && arrayOf(a1).every(i => arrayOf(a2).includes(i));
 
-const matchTemplateObj = (obj, template) => {
+const matchTemplateObj = (obj: any, template: any) => {
   if (typeof template !== 'object' && !Array.isArray(template)) {
     return obj === template;
   }
@@ -32,7 +32,7 @@ const matchTemplateObj = (obj, template) => {
  *
  * Matching means that the object needs to have all fields the template has as well, i.e. is a superset.
  */
-const hasActivityGrant = (capabilityPresentation, templateActivity) => {
+const hasActivityGrant = (capabilityPresentation: any, templateActivity: any) => {
   const vcs = arrayOf(capabilityPresentation?.verifiableCredential);
   if (vcs.length === 0) return false;
 

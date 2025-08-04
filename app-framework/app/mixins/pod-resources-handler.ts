@@ -70,7 +70,7 @@ const Schema = {
   },
   activities: {
     create: {
-      async match(activity, fetcher) {
+      async match(activity: any, fetcher: any) {
         if (!this.onCreate) return { match: false, dereferencedActivity: activity };
         return matchActivity(
           {
@@ -83,12 +83,12 @@ const Schema = {
           fetcher
         );
       },
-      async onEmit(ctx, activity) {
+      async onEmit(ctx: any, activity: any) {
         await this.onCreate(ctx, activity.object, activity.actor);
       }
     },
     update: {
-      async match(activity, fetcher) {
+      async match(activity: any, fetcher: any) {
         if (!this.onUpdate) return { match: false, dereferencedActivity: activity };
         return matchActivity(
           {
@@ -101,12 +101,12 @@ const Schema = {
           fetcher
         );
       },
-      async onEmit(ctx, activity) {
+      async onEmit(ctx: any, activity: any) {
         await this.onUpdate(ctx, activity.object, activity.actor);
       }
     },
     delete: {
-      async match(activity, fetcher) {
+      async match(activity: any, fetcher: any) {
         if (!this.onUpdate) return { match: false, dereferencedActivity: activity };
         return matchActivity(
           {
@@ -120,7 +120,7 @@ const Schema = {
           fetcher
         );
       },
-      async onEmit(ctx, activity) {
+      async onEmit(ctx: any, activity: any) {
         await this.onUpdate(ctx, activity.object, activity.actor);
       }
     }

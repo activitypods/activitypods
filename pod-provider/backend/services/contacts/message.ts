@@ -22,7 +22,7 @@ const ContactsMessageSchema = {
           type: OBJECT_TYPES.NOTE
         }
       },
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         // Ensure the recipients are in the contacts WebACL group of the emitter so they can see his profile (and respond him)
         for (let targetUri of arrayOf(activity.to)) {
           await ctx.call('webacl.group.addMember', {
@@ -32,7 +32,7 @@ const ContactsMessageSchema = {
           });
         }
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // For now, only send notification for direct messages (not sent through followers list, nor CCed)
         // Otherwise we may get dozens of messages from Mastodon actors, which should be read on Mastopod feed
         if (arrayOf(activity.to).includes(recipientUri)) {

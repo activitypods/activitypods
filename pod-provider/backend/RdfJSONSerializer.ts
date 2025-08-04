@@ -9,7 +9,7 @@ const BaseSerializer = require('moleculer').Serializers.Base;
  * https://github.com/mtth/avsc/wiki/Advanced-usage#logical-types
  *  */
 class RdfJSONSerializer extends BaseSerializer {
-  serialize(obj) {
+  serialize(obj: any) {
     return Buffer.from(
       JSON.stringify(obj, (_, value) => {
         if (value && typeof value === 'object') {
@@ -26,7 +26,7 @@ class RdfJSONSerializer extends BaseSerializer {
     );
   }
 
-  deserialize(buf) {
+  deserialize(buf: any) {
     return JSON.parse(buf);
   }
 }

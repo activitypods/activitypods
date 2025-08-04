@@ -28,7 +28,7 @@ const AppRegistrationsSchema = {
         });
 
         const accessGrants = await Promise.all(
-          arrayOf(appRegistration['interop:hasAccessGrant']).map(grantUri =>
+          arrayOf(appRegistration['interop:hasAccessGrant']).map((grantUri: any) =>
             ctx.call('ldp.remote.get', {
               resourceUri: grantUri,
               jsonContext,
@@ -48,12 +48,12 @@ const AppRegistrationsSchema = {
 
         // Return true if all access needs and special rights of the required AccessNeedGroup(s) are granted
         const accessNeedsSatisfied = requiredAccessNeedGroups.every(
-          group =>
-            arrayOf(group['interop:hasAccessNeed']).every(accessNeedUri =>
-              accessGrants.some(grant => grant['interop:satisfiesAccessNeed'] === accessNeedUri)
+          (group: any) =>
+            arrayOf(group['interop:hasAccessNeed']).every((accessNeedUri: any) =>
+              accessGrants.some((grant: any) => grant['interop:satisfiesAccessNeed'] === accessNeedUri)
             ) &&
-            arrayOf(group['interop:hasSpecialRights']).every(specialRightUri =>
-              appRegistration['apods:hasSpecialRights'].some(sr => sr === specialRightUri)
+            arrayOf(group['interop:hasSpecialRights']).every((specialRightUri: any) =>
+              appRegistration['apods:hasSpecialRights'].some((sr: any) => sr === specialRightUri)
             )
         );
 
@@ -83,7 +83,9 @@ const AppRegistrationsSchema = {
       async handler(ctx) {
         const filteredContainer = await this.actions.list({ webId: 'system' }, { parentCtx: ctx });
 
-        return filteredContainer['ldp:contains']?.map(appRegistration => appRegistration['interop:registeredBy']);
+        return filteredContainer['ldp:contains']?.map(
+          (appRegistration: any) => appRegistration['interop:registeredBy']
+        );
       }
     })
   },

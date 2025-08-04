@@ -40,7 +40,7 @@ const AccessNeedsGroupsSchema = {
              * PARSE SPECIAL RIGHTS
              */
             // TODO Ensure the special right is valid
-            const newSpecialRights = accessNeeds.filter(a => typeof a === 'string');
+            const newSpecialRights = accessNeeds.filter((a: any) => typeof a === 'string');
             const haveSpecialRightsChanged = !arraysEqual(
               newSpecialRights,
               existingAccessNeedGroup?.['apods:hasSpecialRights']
@@ -51,7 +51,7 @@ const AccessNeedsGroupsSchema = {
              */
             let haveAccessNeedsChanged = false;
 
-            for (const accessNeed of accessNeeds.filter(a => typeof a !== 'string')) {
+            for (const accessNeed of accessNeeds.filter((a: any) => typeof a !== 'string')) {
               const existingAccessNeed = await ctx.call('access-needs.find', {
                 shapeTreeUri: accessNeed.shapeTreeUri,
                 accessMode: accessNeed.accessMode,
@@ -85,7 +85,7 @@ const AccessNeedsGroupsSchema = {
              */
             if (existingAccessNeedGroup) {
               const accessNeedsToDelete = arrayOf(existingAccessNeedGroup['interop:hasAccessNeed']).filter(
-                uri => !newAccessNeedsUris.includes(uri)
+                (uri: any) => !newAccessNeedsUris.includes(uri)
               );
               if (accessNeedsToDelete.length > 0) {
                 haveAccessNeedsChanged = true;

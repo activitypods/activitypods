@@ -41,7 +41,7 @@ const AgentRegistrationsMixin = {
       // Get all grants associated with an agent registration
       async handler(ctx) {
         const { agentRegistration, podOwner } = ctx.params;
-        let grants = [];
+        let grants: any = [];
 
         for (const grantUri of arrayOf(agentRegistration['interop:hasAccessGrant'])) {
           const grant = await ctx.call('access-grants.get', {

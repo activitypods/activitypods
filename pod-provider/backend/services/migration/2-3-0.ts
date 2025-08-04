@@ -101,7 +101,7 @@ const Migration320Schema = {
           webId: 'system'
         });
 
-        results = results.map(node => ({
+        results = results.map((node: any) => ({
           resourceUri: node.resourceUri.value,
           announcesCollectionUri: node.announcesCollectionUri.value,
           announcersCollectionUri: node.announcersCollectionUri.value

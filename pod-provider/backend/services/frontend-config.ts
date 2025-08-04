@@ -27,7 +27,7 @@ const FrontendConfigSchema = {
               .join(', ')}},
             INSTANCE_OWNER: "${CONFIG.INSTANCE_OWNER}",
             INSTANCE_AREA: "${CONFIG.INSTANCE_AREA}",
-            AVAILABLE_LOCALES: [${CONFIG.AVAILABLE_LOCALES.map(l => `"${l}"`).join(', ')}],
+            AVAILABLE_LOCALES: [${CONFIG.AVAILABLE_LOCALES.map((l: any) => `"${l}"`).join(', ')}],
             DEFAULT_LOCALE: "${CONFIG.DEFAULT_LOCALE}",
             ENABLE_GROUPS: ${CONFIG.ENABLE_GROUPS},
             BACKEND_URL: "${CONFIG.BASE_URL}",

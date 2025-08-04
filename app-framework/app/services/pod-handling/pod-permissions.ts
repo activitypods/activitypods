@@ -81,16 +81,16 @@ const PodPermissionsSchema = {
         const currentPermissions = await this.actions.get({ uri, actorUri }, { parentCtx: ctx });
 
         const updatedPermissions = currentPermissions
-          .filter(authorization => !authorization['@id'].includes('#Default'))
-          .map(authorization => {
+          .filter((authorization: any) => !authorization['@id'].includes('#Default'))
+          .map((authorization: any) => {
             const modes = arrayOf(authorization['acl:mode']);
             let agents = arrayOf(authorization[agentPredicate]);
             if (modes.includes(mode) && agents.includes(agentUri)) {
-              agents = agents.filter(agent => agent !== agentUri);
+              agents = agents.filter((agent: any) => agent !== agentUri);
             }
             return { ...authorization, [agentPredicate]: agents };
           })
-          .filter(authorization => arrayOf(authorization[agentPredicate]).length > 0);
+          .filter((authorization: any) => arrayOf(authorization[agentPredicate]).length > 0);
 
         const aclUri = await this.getAclUri(uri, actorUri);
 

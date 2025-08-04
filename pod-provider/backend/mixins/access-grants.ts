@@ -132,7 +132,7 @@ const AccessGrantsMixin = {
   },
   activities: {
     createGrant: {
-      async match(activity, fetcher) {
+      async match(activity: any, fetcher: any) {
         return matchActivity(
           {
             type: ACTIVITY_TYPES.CREATE,
@@ -144,7 +144,7 @@ const AccessGrantsMixin = {
           fetcher
         );
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         const grant = activity.object;
 
         // Delete from cache the old grant
@@ -170,7 +170,7 @@ const AccessGrantsMixin = {
     },
     deleteDataGrant: {
       priority: 3, // We want this to be executed before the SynchronizerService delete the object
-      async match(activity, fetcher) {
+      async match(activity: any, fetcher: any) {
         return matchActivity(
           {
             type: ACTIVITY_TYPES.DELETE,
@@ -182,7 +182,7 @@ const AccessGrantsMixin = {
           fetcher
         );
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         const grant = activity.object;
 
         if (getType(grant) === 'interop:AccessGrant') {

@@ -37,7 +37,7 @@ const ContactsManagerSchema = {
   activities: {
     addContact: {
       match: ADD_CONTACT,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         if (!activity.origin) throw new Error('The origin property is missing from the Add activity');
 
         if (!activity.origin.startsWith(emitterUri))
@@ -62,7 +62,7 @@ const ContactsManagerSchema = {
     },
     removeContact: {
       match: REMOVE_CONTACT,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         if (!activity.origin) throw new Error('The origin property is missing from the Remove activity');
 
         if (!activity.origin.startsWith(emitterUri))
@@ -83,7 +83,7 @@ const ContactsManagerSchema = {
     },
     ignoreContact: {
       match: IGNORE_CONTACT,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Add the actor to the emitter's ignore contacts list.
@@ -95,7 +95,7 @@ const ContactsManagerSchema = {
     },
     undoIgnoreContact: {
       match: UNDO_IGNORE_CONTACT,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Remove the actor from the emitter's ignore contacts list.
@@ -106,7 +106,7 @@ const ContactsManagerSchema = {
       }
     },
     deleteActor: {
-      async match(activity, fetcher) {
+      async match(activity: any, fetcher: any) {
         if (activity.type === ACTIVITY_TYPES.DELETE) {
           const dereferencedObject = await fetcher(activity.object);
           if (Object.values(ACTOR_TYPES).some(t => arrayOf(dereferencedObject.type).includes(t))) {
@@ -115,7 +115,7 @@ const ContactsManagerSchema = {
         }
         return { match: false, dereferencedActivity: activity };
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // See also https://swicg.github.io/activitypub-http-signature/#handling-deletes-of-actors for more sophisticated approaches.
         if (!(activity.actor === activity.object.id))
           throw new Error(`The actor ${activity.actor} cannot ask to remove actor ${activity.object.id}`);
@@ -169,7 +169,7 @@ const ContactsManagerSchema = {
           dataset
         });
 
-        for (let cachedResourceUri of result.map(node => node.resourceUri.value)) {
+        for (let cachedResourceUri of result.map((node: any) => node.resourceUri.value)) {
           await ctx.call('ldp.remote.delete', {
             resourceUri: cachedResourceUri,
             webId: recipientUri

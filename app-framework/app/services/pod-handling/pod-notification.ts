@@ -46,7 +46,7 @@ const PodNotificationsSchema = {
           actor: app.id,
           name: title,
           content: content,
-          url: actions?.map(action => ({
+          url: actions?.map((action: any) => ({
             type: 'Link',
             name: action.caption,
             href: action.link.startsWith('http') ? action.link : urlJoin(this.settings.frontUrl, action.link)

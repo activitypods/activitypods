@@ -62,7 +62,7 @@ const DataRegistrationsSchema = {
 
         // Register the class on the type index
         const services = await this.broker.call('$node.services');
-        if (services.some(s => s.name === 'type-registrations')) {
+        if (services.some((s: any) => s.name === 'type-registrations')) {
           await ctx.call('type-registrations.register', {
             types: [registeredClass],
             containerUri,

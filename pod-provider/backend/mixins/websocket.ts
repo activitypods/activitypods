@@ -71,13 +71,13 @@ const WebsocketSchema = {
                 // Add provided mixins.
                 ...use,
                 // Handle the upgrade and register the callbacks (or error on non-ws requests).
-                (request, response, next) => this.handleWsRequest(request, response, next, handlers),
+                (request: any, response: any, next: any) => this.handleWsRequest(request, response, next, handlers),
                 // The alias route array needs to have an action after the middleware functions.
                 `${this.name}.onWsConnection`
               ]
             },
             // Prevent ws connections from being closed by the lifecycle methods.
-            onAfterCall: (ctx, bla, incomingRequest, serverResponse) =>
+            onAfterCall: (ctx: any, bla: any, incomingRequest: any, serverResponse: any) =>
               this.delayConnectionClosing(incomingRequest, serverResponse)
           }
         });
@@ -136,13 +136,13 @@ const WebsocketSchema = {
       };
 
       // Add event listeners registered by the caller.
-      webSocket.addEventListener('close', e => handlers.onClose(e, connection));
-      webSocket.addEventListener('message', e => handlers.onMessage(e.data, connection));
-      webSocket.addEventListener('error', e => handlers.onError(e, connection));
+      webSocket.addEventListener('close', (e: any) => handlers.onClose(e, connection));
+      webSocket.addEventListener('message', (e: any) => handlers.onMessage(e.data, connection));
+      webSocket.addEventListener('error', (e: any) => handlers.onError(e, connection));
 
       // Remove connections, when they close.
       webSocket.addEventListener('close', () => {
-        this.connections = this.connections.filter(c => c !== connection);
+        this.connections = this.connections.filter((c: any) => c !== connection);
       });
 
       // Add connection to the list of connections.
@@ -186,7 +186,7 @@ const WebsocketSchema = {
       // Calling the handler will perform the ws upgrade handshake and return the webSocket.
       request.webSocketRequestHandler = () =>
         new Promise(resolve => {
-          this.wss?.handleUpgrade(request, request.socket, copyOfHead, ws => {
+          this.wss?.handleUpgrade(request, request.socket, copyOfHead, (ws: any) => {
             this.wss?.emit('connection', ws, request);
             resolve(ws);
           });

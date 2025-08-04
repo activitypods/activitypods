@@ -177,7 +177,9 @@ const DelegatedAccessGrantsSchema = {
         });
 
         // Find if a delegated grant already exist for this social agent
-        const delegatedGrant = delegatedGrants.find(ddg => ddg['interop:dataOwner'] === grant['interop:dataOwner']);
+        const delegatedGrant = delegatedGrants.find(
+          (ddg: any) => ddg['interop:dataOwner'] === grant['interop:dataOwner']
+        );
 
         if (delegatedGrant) {
           if (delegatedGrant['interop:delegationOfGrant'] === grant.id) {

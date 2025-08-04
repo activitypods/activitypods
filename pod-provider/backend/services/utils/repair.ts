@@ -185,7 +185,10 @@ const RepairSchema = {
               dataset
             });
 
-            for (const [objectUri, collectionUri] of results.map(r => [r.objectUri.value, r.collectionUri.value])) {
+            for (const [objectUri, collectionUri] of results.map((r: any) => [
+              r.objectUri.value,
+              r.collectionUri.value
+            ])) {
               const isEmpty = await ctx.call('activitypub.collection.isEmpty', { collectionUri });
               if (isEmpty) {
                 const exist = await ctx.call('ldp.resource.exist', { resourceUri: collectionUri, webId: 'system' });

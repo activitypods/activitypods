@@ -78,7 +78,7 @@ const ContactsRequestSchema = {
   activities: {
     contactRequest: {
       match: CONTACT_REQUEST,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         // Add the user to the contacts WebACL group so he can see my profile
         for (let targetUri of arrayOf(activity.target)) {
           await ctx.call('webacl.group.addMember', {
@@ -100,7 +100,7 @@ const ContactsRequestSchema = {
           });
         }
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // Contact requests with capabilities are assumed to be coming from invite links. Those are handled separately below.
         if (activity.capability) return;
 
@@ -161,9 +161,9 @@ const ContactsRequestSchema = {
     },
     inviteLinkContactRequest: {
       match: CONTACT_REQUEST,
-      async capabilityGrantMatchFnGenerator({ recipientUri, activity }) {
+      async capabilityGrantMatchFnGenerator({ recipientUri, activity }: any) {
         // Generate a function that is called on each ActivityGrant of the activity's capability.
-        return async grant => {
+        return async (grant: any) => {
           // Verify that the recipient issued the grant with the following structure.
           const { match } = await matchActivity(
             {
@@ -178,12 +178,14 @@ const ContactsRequestSchema = {
               }
             },
             grant,
-            uri => ({ id: uri }) // The URIs here are not resolved further.
+            (uri: any) => ({
+              id: uri
+            }) // The URIs here are not resolved further.
           );
           return match;
         };
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
         // If the actor is already in my contacts, ignore this request (may happen for automatic post-event requests)
@@ -235,7 +237,7 @@ const ContactsRequestSchema = {
     },
     acceptContactRequest: {
       match: ACCEPT_CONTACT_REQUEST,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Add the other actor to the contacts WebACL group so he can see my profile
@@ -280,7 +282,7 @@ const ContactsRequestSchema = {
           item: activity.object.id
         });
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
@@ -316,7 +318,7 @@ const ContactsRequestSchema = {
     },
     ignoreContactRequest: {
       match: IGNORE_CONTACT_REQUEST,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Remove the activity from my contact requests
@@ -325,7 +327,7 @@ const ContactsRequestSchema = {
           item: activity.object.id
         });
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // Remove the user from the contacts WebACL group so he can't see my profile anymore
         await ctx.call('webacl.group.removeMember', {
           groupSlug: `${new URL(recipientUri).pathname}/contacts`,
@@ -336,7 +338,7 @@ const ContactsRequestSchema = {
     },
     rejectContactRequest: {
       match: REJECT_CONTACT_REQUEST,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Add the actor to my rejected contacts list
@@ -351,7 +353,7 @@ const ContactsRequestSchema = {
           item: activity.object.id
         });
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // Remove the emitter from the contacts WebACL group so he can't see the recipient's profile anymore
         await ctx.call('webacl.group.removeMember', {
           groupSlug: `${new URL(recipientUri).pathname}/contacts`,

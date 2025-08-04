@@ -6,13 +6,13 @@ import { MIME_TYPES } from '@semapps/mime-types';
 import matchActivity from '@semapps/activitypub/utils/matchActivity';
 import { ServiceSchema, defineAction, defineServiceEvent } from 'moleculer';
 
-const getAnnouncesGroupUri = eventUri => {
+const getAnnouncesGroupUri = (eventUri: any) => {
   const uri = new URL(eventUri);
   uri.pathname = path.join('/_groups', uri.pathname, '/announces');
   return uri.toString();
 };
 
-const getAnnouncersGroupUri = eventUri => {
+const getAnnouncersGroupUri = (eventUri: any) => {
   const uri = new URL(eventUri);
   uri.pathname = path.join('/_groups', uri.pathname, '/announcers');
   return uri.toString();
@@ -135,7 +135,7 @@ const AnnouncerSchema = {
   },
   activities: {
     announce: {
-      async match(activity, fetcher) {
+      async match(activity: any, fetcher: any) {
         const { match, dereferencedActivity } = await matchActivity(
           {
             type: ACTIVITY_TYPES.ANNOUNCE
@@ -148,7 +148,7 @@ const AnnouncerSchema = {
           dereferencedActivity
         };
       },
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
         const resource = await ctx.call('ldp.resource.get', {
@@ -254,7 +254,7 @@ const AnnouncerSchema = {
       /**
        * On receipt of an announce activity, cache locally the announced object
        */
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
         // Sometimes a recipient may be the original announcer

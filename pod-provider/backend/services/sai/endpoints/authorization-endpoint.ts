@@ -40,7 +40,7 @@ const AuthorizationEndpointSchema = {
 
         return {
           resourceUri,
-          authorizations: authorizations.map(authorization => ({
+          authorizations: authorizations.map((authorization: any) => ({
             grantee: authorization['interop:grantee'],
             accessModes: arrayOf(authorization['interop:accessMode'])
           }))

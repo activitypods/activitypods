@@ -242,7 +242,7 @@ const SocialAgentRegistrationsSchema = {
           type: 'interop:SocialAgentRegistration'
         }
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         const socialAgentRegistration = activity.object;
 
         // Create a Social Agent Registration, if it doesn't exist yet

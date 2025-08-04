@@ -2,7 +2,7 @@ import { getId } from '@semapps/ldp';
 
 const ImmutableContainerMixin = {
   actions: {
-    async put(ctx) {
+    async put(ctx: any) {
       const { resource, contentType } = ctx.params;
       const webId = ctx.params.webId || ctx.meta.webId;
 

@@ -95,7 +95,7 @@ const PodActivitiesWatcherSchema = {
         const actor = await ctx.call('activitypub.actor.get', { actorUri });
 
         // Use pod-resources.get instead of ldp.resource.get when getting pod resources
-        const fetcher = async resourceUri => {
+        const fetcher = async (resourceUri: any) => {
           if (resourceUri.startsWith(this.baseUrl)) {
             try {
               // TODO Do not throw errors on ldp.resource.get ! (should be done on the API layer)
@@ -195,7 +195,7 @@ const PodActivitiesWatcherSchema = {
   methods: {
     sortHandlers() {
       // Sort handlers by the depth of matchers (if matcher is a function, it is put at the end)
-      this.handlers.sort((a, b) => {
+      this.handlers.sort((a: any, b: any) => {
         if (isObject(a.matcher)) {
           if (isObject(b.matcher)) {
             return objectDepth(a.matcher) - objectDepth(b.matcher);
@@ -215,7 +215,7 @@ const PodActivitiesWatcherSchema = {
   queues: {
     registerListener: {
       name: '*',
-      async process(job) {
+      async process(job: any) {
         const { actorUri, collectionPredicate } = job.data;
 
         const actor = await this.broker.call('activitypub.actor.get', { actorUri });

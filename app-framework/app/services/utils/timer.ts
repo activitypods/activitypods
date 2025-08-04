@@ -82,7 +82,7 @@ const TimerSchema = {
   queues: {
     timeout: {
       name: '*',
-      async process(job) {
+      async process(job: any) {
         const { actionName, params } = job.data;
         job.progress(0);
         const result = await this.broker.call(actionName, params);

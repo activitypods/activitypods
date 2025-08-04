@@ -17,8 +17,8 @@ const MailNotificationsSchema = {
     frontendUrl: CONFIG.FRONTEND_URL,
     handlebars: {
       helpers: {
-        encodeUri: uri => encodeURIComponent(uri),
-        removeHtmlTags: text => sanitizeHtml(text, { allowedTags: [] }).trim()
+        encodeUri: (uri: any) => encodeURIComponent(uri),
+        removeHtmlTags: (text: any) => sanitizeHtml(text, { allowedTags: [] }).trim()
       }
     },
     // See moleculer-mail doc https://github.com/moleculerjs/moleculer-addons/tree/master/packages/moleculer-mail
@@ -81,7 +81,7 @@ const MailNotificationsSchema = {
       match: {
         type: 'apods:Notification'
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // TODO Allow to user to disable notifications from given applications
         // if (!(await ctx.call('app-registrations.isRegistered', { agentUri: activity.actor, podOwner: recipientUri }))) {
         //   this.logger.warn(`Application ${activity.actor} is not registered by ${recipientUri}`);
@@ -138,7 +138,7 @@ const MailNotificationsSchema = {
   queues: {
     sendMail: {
       name: '*',
-      async process(job) {
+      async process(job: any) {
         job.progress(0);
         const result = await this.actions.send(job.data);
         job.progress(100);

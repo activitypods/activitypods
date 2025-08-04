@@ -14,7 +14,7 @@ const AppRegistrationSchema = {
           type: 'interop:ApplicationRegistration'
         }
       },
-      async onReceive(ctx, activity) {
+      async onReceive(ctx: any, activity: any) {
         if (activity.object['interop:registeredBy'] !== activity.actor)
           throw new Error(`The emitter is not the owner of the application registration`);
 
@@ -68,7 +68,7 @@ const AppRegistrationSchema = {
           type: 'interop:ApplicationRegistration'
         }
       },
-      async onReceive(ctx, activity) {
+      async onReceive(ctx: any, activity: any) {
         // ENSURE A LOCAL APP REGISTRATION ALREADY EXIST
 
         try {
@@ -119,7 +119,7 @@ const AppRegistrationSchema = {
           type: 'interop:ApplicationRegistration' // The matcher will fetch the local cache
         }
       },
-      async onReceive(ctx, activity) {
+      async onReceive(ctx: any, activity: any) {
         const appRegistration = activity.object;
 
         // This will also delete the associated access grants

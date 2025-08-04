@@ -8,7 +8,7 @@ const TranslatorSchema = {
     frontUrl: null,
     handlebars: {
       helpers: {
-        encodeUri: uri => encodeURIComponent(uri)
+        encodeUri: (uri: any) => encodeURIComponent(uri)
       }
     }
   },

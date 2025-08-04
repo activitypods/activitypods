@@ -26,10 +26,10 @@ const SolidOidcSchema = {
     const config = baseConfig(this.settings, privateJwk);
 
     const redisClient = new Redis(this.settings.redisUrl, { keyPrefix: 'oidc:' });
-    config.adapter = name => new RedisAdapter(name, redisClient);
+    config.adapter = (name: any) => new RedisAdapter(name, redisClient);
 
     // See https://github.com/panva/node-oidc-provider/blob/main/recipes/client_based_origins.md
-    config.clientBasedCORS = (ctx, origin, client) => {
+    config.clientBasedCORS = (ctx: any, origin: any, client: any) => {
       // TODO validate CORS based on client
       return true;
     };

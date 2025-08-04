@@ -16,7 +16,7 @@ const ShaclSchema = {
       async handler(ctx) {
         const { resourceUri } = ctx.params;
         const shape = await this.actions.get({ resourceUri }, { parentCtx: ctx });
-        return shape[0]['http://www.w3.org/ns/shacl#targetClass']?.map(node => node['@id']) || [];
+        return shape[0]['http://www.w3.org/ns/shacl#targetClass']?.map((node: any) => node['@id']) || [];
       }
     })
   }

@@ -43,7 +43,7 @@ const AccessNeedsSchema = {
           { parentCtx: ctx }
         );
 
-        return filteredContainer['ldp:contains']?.find(a => arraysEqual(a['interop:accessMode'], accessMode));
+        return filteredContainer['ldp:contains']?.find((a: any) => arraysEqual(a['interop:accessMode'], accessMode));
       }
     })
   }

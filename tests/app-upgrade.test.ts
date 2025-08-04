@@ -6,7 +6,7 @@ import { connectPodProvider, clearAllData, installApp, createActor, initializeAp
 
 import ExampleAppService from './apps/example.app.ts';
 import ExampleAppV2Service from './apps/example-v2.app.ts';
-import CONFIG from './config.ts';
+import * as CONFIG from './config.ts';
 jest.setTimeout(80000);
 const APP_URI = 'http://localhost:3001/app';
 

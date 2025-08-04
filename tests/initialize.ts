@@ -13,7 +13,7 @@ import { interop, oidc, notify, apods } from '@semapps/ontologies';
 import { NotificationsListenerService } from '@semapps/solid';
 import RdfJSONSerializer from '../pod-provider/backend/RdfJSONSerializer.ts';
 import { clearMails } from './utils.ts';
-import CONFIG from './config.ts';
+import * as CONFIG from './config.ts';
 Error.stackTraceLimit = Infinity;
 
 const logger = {

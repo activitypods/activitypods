@@ -1,6 +1,6 @@
 import urlJoin from 'url-join';
 import { AppService } from '../../app-framework/app/index.ts';
-import CONFIG from '../config.ts';
+import * as CONFIG from '../config.ts';
 
 const Schema = {
   mixins: [AppService],

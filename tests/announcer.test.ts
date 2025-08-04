@@ -3,7 +3,7 @@ import waitForExpect from 'wait-for-expect';
 import { OBJECT_TYPES, ACTIVITY_TYPES } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { connectPodProvider, createActor, clearAllData } from './initialize.ts';
-import CONFIG from './config.ts';
+import * as CONFIG from './config.ts';
 jest.setTimeout(120000);
 
 describe('Test sharing through announcer', () => {

@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { delay } from '@semapps/ldp';
-import CONFIG from './config.ts';
+import * as CONFIG from './config.ts';
 
 const arrayOf = (value: any) => {
   // If the field is null-ish, we suppose there are no values.

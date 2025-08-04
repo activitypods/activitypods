@@ -5,7 +5,7 @@ import { arrayOf, getId } from '@semapps/ldp';
 import { connectPodProvider, clearAllData, initializeAppServer, createActor } from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
-import CONFIG from './config.ts';
+import * as CONFIG from './config.ts';
 jest.setTimeout(80000);
 const APP_URI = 'http://localhost:3001/app';
 const APP2_URI = 'http://localhost:3002/app';

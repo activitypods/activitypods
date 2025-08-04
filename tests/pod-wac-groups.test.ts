@@ -1,7 +1,12 @@
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
+// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
+// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import ExampleAppService from './apps/example.app.ts';
+// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import Example2AppService from './apps/example2.app.ts';
+// @ts-expect-error TS(2304): Cannot find name 'jest'.
 jest.setTimeout(100000);
 const NUM_PODS = 1;
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
@@ -9,6 +14,7 @@ const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 const APP2_SERVER_BASE_URL = 'http://localhost:3002';
 const APP2_URI = urlJoin(APP2_SERVER_BASE_URL, 'app');
 
+// @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
 describe('Test Pod WAC groups handling', () => {
   let actors: any = [],
     podProvider: any,
@@ -16,6 +22,7 @@ describe('Test Pod WAC groups handling', () => {
     appServer: any,
     app2Server: any;
 
+  // @ts-expect-error TS(2304): Cannot find name 'beforeAll'.
   beforeAll(async () => {
     await clearAllData();
 
@@ -41,6 +48,7 @@ describe('Test Pod WAC groups handling', () => {
       actors[i].call = (actionName: any, params: any, options = {}) =>
         podProvider.call(actionName, params, {
           ...options,
+          // @ts-expect-error TS(2339): Property 'meta' does not exist on type '{}'.
           meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
         });
     }
@@ -51,12 +59,15 @@ describe('Test Pod WAC groups handling', () => {
     await installApp(alice, APP2_URI);
   }, 100000);
 
+  // @ts-expect-error TS(2304): Cannot find name 'afterAll'.
   afterAll(async () => {
     await podProvider.stop();
     await appServer.stop();
   });
 
+  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Create WAC group with apods:CreateWacGroup permission', async () => {
+    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-wac-groups.create', {
         groupSlug: 'my-group',
@@ -64,6 +75,7 @@ describe('Test Pod WAC groups handling', () => {
       })
     ).resolves.toBe('http://localhost:3000/_groups/alice/my-group');
 
+    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-wac-groups.get', {
         groupSlug: 'my-group',
@@ -71,6 +83,7 @@ describe('Test Pod WAC groups handling', () => {
       })
     ).resolves.toHaveLength(0);
 
+    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-wac-groups.list', {
         actorUri: alice.id
@@ -78,7 +91,9 @@ describe('Test Pod WAC groups handling', () => {
     ).resolves.toContain('http://localhost:3000/_groups/alice/my-group');
   });
 
+  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Add permission without apods:CreateWacGroup permission', async () => {
+    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       app2Server.call('pod-wac-groups.create', {
         groupSlug: 'my-other-group',
@@ -87,7 +102,9 @@ describe('Test Pod WAC groups handling', () => {
     ).resolves.toBeFalsy();
   });
 
+  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Add members to WAC group', async () => {
+    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-wac-groups.addMember', {
         groupSlug: 'my-group',
@@ -96,6 +113,7 @@ describe('Test Pod WAC groups handling', () => {
       })
     ).resolves.toBeTruthy();
 
+    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-wac-groups.get', {
         groupSlug: 'my-group',
@@ -104,7 +122,9 @@ describe('Test Pod WAC groups handling', () => {
     ).resolves.toContain('http://localhost:3000/bob');
   });
 
+  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Remove members from WAC group', async () => {
+    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-wac-groups.removeMember', {
         groupSlug: 'my-group',
@@ -113,6 +133,7 @@ describe('Test Pod WAC groups handling', () => {
       })
     ).resolves.toBeTruthy();
 
+    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-wac-groups.get', {
         groupSlug: 'my-group',
@@ -121,7 +142,9 @@ describe('Test Pod WAC groups handling', () => {
     ).resolves.toHaveLength(0);
   });
 
+  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Delete WAC group', async () => {
+    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-wac-groups.delete', {
         groupSlug: 'my-group',
@@ -129,6 +152,7 @@ describe('Test Pod WAC groups handling', () => {
       })
     ).resolves.toBeTruthy();
 
+    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       appServer.call('pod-wac-groups.get', {
         groupSlug: 'my-group',

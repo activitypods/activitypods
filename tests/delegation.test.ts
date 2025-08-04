@@ -1,17 +1,25 @@
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
+// @ts-expect-error TS(2305): Module '"@semapps/activitypub"' has no exported me... Remove this comment to see the full error message
 import { OBJECT_TYPES } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
+// @ts-expect-error TS(2305): Module '"@semapps/ldp"' has no exported member 'ar... Remove this comment to see the full error message
 import { arrayOf } from '@semapps/ldp';
 
+// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import { connectPodProvider, clearAllData, createActor, initializeAppServer, installApp } from './initialize.ts';
 
+// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import ExampleAppService from './apps/example3.app.ts';
+// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import CONFIG from './config.ts';
+// @ts-expect-error TS(2304): Cannot find name 'jest'.
 jest.setTimeout(120000);
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
+// @ts-expect-error TS(2582): Cannot find name 'describe'. Do you need to instal... Remove this comment to see the full error message
 describe('Test delegation features', () => {
   let podProvider: any,
     appServer: any,
@@ -22,6 +30,7 @@ describe('Test delegation features', () => {
     eventUri: any,
     craigAppRegistrationUri: any;
 
+  // @ts-expect-error TS(2304): Cannot find name 'beforeAll'.
   beforeAll(async () => {
     clearAllData();
 
@@ -38,11 +47,13 @@ describe('Test delegation features', () => {
     craigAppRegistrationUri = await installApp(craig, APP_URI);
   });
 
+  // @ts-expect-error TS(2304): Cannot find name 'afterAll'.
   afterAll(async () => {
     await podProvider.stop();
     await appServer.stop();
   });
 
+  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Alice creates an event and gives delegation right to Bob', async () => {
     // Create container manually so that we don't need to install the app
     eventContainerUri = await alice.call('data-registrations.generateFromShapeTree', {
@@ -73,8 +84,11 @@ describe('Test delegation features', () => {
         resourceUri: eventUri
       });
 
+      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(authorizations).toEqual(
+        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect.arrayContaining([
+          // @ts-expect-error TS(2304): Cannot find name 'expect'.
           expect.objectContaining({
             type: 'interop:AccessAuthorization',
             'interop:dataOwner': alice.id,
@@ -96,13 +110,16 @@ describe('Test delegation features', () => {
         podOwner: alice.id
       });
 
+      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         alice.call('social-agent-registrations.getGrants', {
           agentRegistration: bobRegistration,
           podOwner: alice.id
         })
       ).resolves.toEqual(
+        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect.arrayContaining([
+          // @ts-expect-error TS(2304): Cannot find name 'expect'.
           expect.objectContaining({
             type: 'interop:AccessGrant',
             'interop:dataOwner': alice.id,
@@ -121,6 +138,7 @@ describe('Test delegation features', () => {
 
     // The grant is stored in Bob storage
     await waitForExpect(async () => {
+      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         bob.call('access-grants.getByResourceUri', {
           resourceUri: eventUri
@@ -140,6 +158,7 @@ describe('Test delegation features', () => {
     });
   });
 
+  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Bob shares Alice event with Craig', async () => {
     await bob.call('access-authorizations.addForSingleResource', {
       resourceUri: eventUri,
@@ -153,8 +172,11 @@ describe('Test delegation features', () => {
         resourceUri: eventUri
       });
 
+      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(authorizations).toEqual(
+        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect.arrayContaining([
+          // @ts-expect-error TS(2304): Cannot find name 'expect'.
           expect.objectContaining({
             type: 'interop:AccessAuthorization',
             'interop:dataOwner': alice.id,
@@ -175,13 +197,16 @@ describe('Test delegation features', () => {
         podOwner: bob.id
       });
 
+      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       await expect(
         bob.call('social-agent-registrations.getGrants', {
           agentRegistration: craigRegistration,
           podOwner: bob.id
         })
       ).resolves.toEqual(
+        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect.arrayContaining([
+          // @ts-expect-error TS(2304): Cannot find name 'expect'.
           expect.objectContaining({
             type: 'interop:DelegatedAccessGrant',
             'interop:dataOwner': alice.id,
@@ -207,8 +232,11 @@ describe('Test delegation features', () => {
         podOwner: craig.id
       });
 
+      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(grants).toEqual(
+        // @ts-expect-error TS(2304): Cannot find name 'expect'.
         expect.arrayContaining([
+          // @ts-expect-error TS(2304): Cannot find name 'expect'.
           expect.objectContaining({
             type: 'interop:DelegatedAccessGrant',
             'interop:accessMode': 'acl:Read',
@@ -226,6 +254,7 @@ describe('Test delegation features', () => {
     });
 
     // Craig can fetch Alice event
+    // @ts-expect-error TS(2304): Cannot find name 'expect'.
     await expect(
       craig.call('ldp.resource.get', {
         resourceUri: eventUri,
@@ -234,6 +263,7 @@ describe('Test delegation features', () => {
     ).resolves.not.toThrow();
   });
 
+  // @ts-expect-error TS(2582): Cannot find name 'test'. Do you need to install ty... Remove this comment to see the full error message
   test('Craig remove the app and the delegated grant is deleted', async () => {
     await craig.call('registration-endpoint.remove', {
       appUri: APP_URI
@@ -242,6 +272,7 @@ describe('Test delegation features', () => {
     // We should only have the delegated grant of Bob to Craig
     await waitForExpect(async () => {
       const delegatedGrants = await craig.call('delegated-access-grants.list');
+      // @ts-expect-error TS(2304): Cannot find name 'expect'.
       expect(arrayOf(delegatedGrants['ldp:contains'])).toHaveLength(1);
     });
   });

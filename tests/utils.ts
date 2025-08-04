@@ -1,5 +1,7 @@
 import fetch from 'node-fetch';
+// @ts-expect-error TS(2305): Module '"@semapps/ldp"' has no exported member 'de... Remove this comment to see the full error message
 import { delay } from '@semapps/ldp';
+// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import CONFIG from './config.ts';
 
 const arrayOf = (value: any) => {
@@ -16,30 +18,40 @@ const arrayOf = (value: any) => {
 };
 
 const fetchServer = (url: any, options = {}) => {
+  // @ts-expect-error TS(2339): Property 'headers' does not exist on type '{}'.
   if (!options.headers) options.headers = new fetch.Headers();
 
+  // @ts-expect-error TS(2339): Property 'method' does not exist on type '{}'.
   switch (options.method) {
     case 'POST':
     case 'PATCH':
     case 'PUT':
+      // @ts-expect-error TS(2339): Property 'headers' does not exist on type '{}'.
       if (!options.headers.has('Accept')) options.headers.set('Accept', 'application/ld+json');
+      // @ts-expect-error TS(2339): Property 'headers' does not exist on type '{}'.
       if (!options.headers.has('Content-Type')) options.headers.set('Content-Type', 'application/ld+json');
       break;
     case 'DELETE':
       break;
     case 'GET':
     default:
+      // @ts-expect-error TS(2339): Property 'headers' does not exist on type '{}'.
       if (!options.headers.has('Accept')) options.headers.set('Accept', 'application/ld+json');
       break;
   }
 
+  // @ts-expect-error TS(2339): Property 'body' does not exist on type '{}'.
   if (options.body && options.headers.get('Content-Type').includes('json')) {
+    // @ts-expect-error TS(2339): Property 'body' does not exist on type '{}'.
     options.body = JSON.stringify(options.body);
   }
 
   return fetch(url, {
+    // @ts-expect-error TS(2339): Property 'method' does not exist on type '{}'.
     method: options.method || 'GET',
+    // @ts-expect-error TS(2339): Property 'body' does not exist on type '{}'.
     body: options.body,
+    // @ts-expect-error TS(2339): Property 'headers' does not exist on type '{}'.
     headers: options.headers
   })
     .then(response =>

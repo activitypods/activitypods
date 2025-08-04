@@ -1,18 +1,30 @@
 import path from 'path';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'iore... Remove this comment to see the full error message
 import Redis from 'ioredis';
 import fs from 'fs';
 import { ServiceBroker } from 'moleculer';
+// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { AuthAccountService } from '@semapps/auth';
+// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { CoreService as SemAppsCoreService } from '@semapps/core';
 import { MIME_TYPES } from '@semapps/mime-types';
+// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { NodeinfoService } from '@semapps/nodeinfo';
+// @ts-expect-error TS(2305): Module '"@semapps/crypto"' has no exported member ... Remove this comment to see the full error message
 import { ProxyService } from '@semapps/crypto';
+// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { TripleStoreAdapter } from '@semapps/triplestore';
+// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { WebAclMiddleware } from '@semapps/webacl';
+// @ts-expect-error TS(2305): Module '"@semapps/ontologies"' has no exported mem... Remove this comment to see the full error message
 import { interop, oidc, notify, apods } from '@semapps/ontologies';
+// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { NotificationsListenerService } from '@semapps/solid';
+// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import RdfJSONSerializer from '../pod-provider/backend/RdfJSONSerializer.ts';
+// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import { clearMails } from './utils.ts';
+// @ts-expect-error TS(2691): An import path cannot end with a '.ts' extension. ... Remove this comment to see the full error message
 import CONFIG from './config.ts';
 Error.stackTraceLimit = Infinity;
 
@@ -127,6 +139,7 @@ const initializeAppServer = async (
     logger
   });
 
+  // @ts-expect-error TS(2345): Argument of type '{ mixins: any[]; settings: { bas... Remove this comment to see the full error message
   broker.createService({
     mixins: [SemAppsCoreService],
     settings: {
@@ -157,11 +170,13 @@ const initializeAppServer = async (
     }
   });
 
+  // @ts-expect-error TS(2345): Argument of type '{ mixins: any[]; adapter: any; }... Remove this comment to see the full error message
   broker.createService({
     mixins: [AuthAccountService],
     adapter: new TripleStoreAdapter({ type: 'AuthAccount', dataset: settingsDataset })
   });
 
+  // @ts-expect-error TS(2345): Argument of type '{ mixins: any[]; settings: { bas... Remove this comment to see the full error message
   broker.createService({
     mixins: [NodeinfoService],
     settings: {
@@ -169,6 +184,7 @@ const initializeAppServer = async (
     }
   });
 
+  // @ts-expect-error TS(2345): Argument of type '{ mixins: any[]; adapter: any; s... Remove this comment to see the full error message
   broker.createService({
     mixins: [NotificationsListenerService],
     adapter: new TripleStoreAdapter({ type: 'WebhookChannelListener', dataset: settingsDataset }),
@@ -177,8 +193,10 @@ const initializeAppServer = async (
     }
   });
 
+  // @ts-expect-error TS(2345): Argument of type '{ mixins: any[]; }' is not assig... Remove this comment to see the full error message
   broker.createService({ mixins: [ProxyService] });
 
+  // @ts-expect-error TS(2345): Argument of type '{ mixins: any[]; settings: { que... Remove this comment to see the full error message
   broker.createService({ mixins: [appService], settings: { queueServiceUrl } });
 
   return broker;
@@ -233,6 +251,7 @@ const createActor = async (podProvider: any, username = 'alice') => {
   actor.call = (actionName: any, params: any, options = {}) =>
     podProvider.call(actionName, params, {
       ...options,
+      // @ts-expect-error TS(2339): Property 'meta' does not exist on type '{}'.
       meta: { ...options.meta, webId, dataset: username }
     });
 

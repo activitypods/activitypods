@@ -2,6 +2,7 @@ import { getId } from '@semapps/ldp';
 
 const ImmutableContainerMixin = {
   actions: {
+    // @ts-expect-error TS(7023): 'put' implicitly has return type 'any' because it ... Remove this comment to see the full error message
     async put(ctx: any) {
       const { resource, contentType } = ctx.params;
       const webId = ctx.params.webId || ctx.meta.webId;
@@ -11,9 +12,11 @@ const ImmutableContainerMixin = {
       delete resource.id;
 
       // Get old resource (will be returned by the action)
+      // @ts-expect-error TS(7022): 'oldData' implicitly has type 'any' because it doe... Remove this comment to see the full error message
       const oldData = await this.actions.get({ resourceUri: oldResourceUri, webId }, { parentCtx: ctx });
 
       // Post new resource
+      // @ts-expect-error TS(7022): 'newResourceUri' implicitly has type 'any' because... Remove this comment to see the full error message
       const newResourceUri = await this.actions.post(
         {
           resource: { ...resource, 'interop:replaces': oldResourceUri },
@@ -25,12 +28,14 @@ const ImmutableContainerMixin = {
 
       // Delete old resource (after creating the new resource, in case we want to compare them)
       // The isReplacing param is used by the AccessGrantsMixin
+      // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ put(c... Remove this comment to see the full error message
       await this.actions.delete({ resourceUri: oldResourceUri, webId, isReplacing: true }, { parentCtx: ctx });
 
       return { resourceUri: newResourceUri, oldData, newData: { id: newResourceUri, ...resource }, webId };
     },
     patch() {
       throw new Error(
+        // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ put(... Remove this comment to see the full error message
         `The resources of type ${this.settings.acceptedTypes.join(', ')} are immutable. PATCH is disabled.`
       );
     }

@@ -176,6 +176,7 @@ const AgentRegistrationsMixin = {
         await ctx.call('agent-registry.add', {
           podOwner: webId,
           agentRegistrationUri: res,
+          // @ts-expect-error TS(2339): Property 'acceptedTypes' does not exist on type 's... Remove this comment to see the full error message
           agentRegistrationType: arrayOf(this.settings.acceptedTypes)[0]
         });
 
@@ -193,6 +194,7 @@ const AgentRegistrationsMixin = {
           webId: podOwner
         });
 
+        // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
         for (const authorization of authorizations) {
           await ctx.call('access-authorizations.delete', {
             resourceUri: getId(authorization),
@@ -205,6 +207,7 @@ const AgentRegistrationsMixin = {
         await ctx.call('agent-registry.remove', {
           podOwner,
           agentRegistrationUri: res.resourceUri,
+          // @ts-expect-error TS(2339): Property 'acceptedTypes' does not exist on type 's... Remove this comment to see the full error message
           agentRegistrationType: arrayOf(this.settings.acceptedTypes)[0]
         });
 

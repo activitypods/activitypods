@@ -1,4 +1,5 @@
 import path from 'path';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { arrayOf, getDatasetFromUri } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
@@ -20,6 +21,7 @@ const getAnnouncersGroupUri = (eventUri: any) => {
 
 const AnnouncerSchema = {
   name: 'announcer' as const,
+  // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Serv... Remove this comment to see the full error message
   mixins: [ActivitiesHandlerMixin],
   settings: {
     announcesCollectionOptions: {
@@ -144,6 +146,7 @@ const AnnouncerSchema = {
           fetcher
         );
         return {
+          // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
           match: match && !(await this.broker.call('activitypub.activity.isPublic', { activity })),
           dereferencedActivity
         };
@@ -163,6 +166,7 @@ const AnnouncerSchema = {
 
         if (emitterUri !== resource['dc:creator']) {
           if (!resource['apods:announcers']) {
+            // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
             this.logger.warn(`No announcers collection attached to object ${resource.id}, skipping...`);
             return;
           }
@@ -200,9 +204,11 @@ const AnnouncerSchema = {
         if (emitterUri === resource['dc:creator']) {
           const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
             objectUri: resourceUri,
+            // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ matc... Remove this comment to see the full error message
             collection: this.settings.announcesCollectionOptions
           });
 
+          // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ match... Remove this comment to see the full error message
           await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
 
           // Add all recipients to the announces collection and WebACL group
@@ -231,9 +237,11 @@ const AnnouncerSchema = {
 
           const announcersCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
             objectUri: resourceUri,
+            // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ matc... Remove this comment to see the full error message
             collection: this.settings.announcersCollectionOptions
           });
 
+          // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ match... Remove this comment to see the full error message
           await this.actions.giveRightsAfterAnnouncersCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
 
           // Add all recipients to the announcers collection and WebACL group
@@ -281,6 +289,7 @@ const AnnouncerSchema = {
             if (containersUris.length === 0) {
               // Generate a path for the new container
               const containerPath = await ctx.call('ldp.container.getPath', { resourceType: expandedType });
+              // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
               this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${expandedType}`);
 
               // Create the container and attach it to its parent(s)
@@ -289,6 +298,7 @@ const AnnouncerSchema = {
               await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId: recipientUri });
 
               // If the resource type is invalid, an error will be thrown here
+              // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
               await this.broker.call('type-registrations.register', {
                 types: [expandedType],
                 containerUri: containersUris[0],
@@ -311,6 +321,7 @@ const AnnouncerSchema = {
   events: {
     'ldp.resource.deleted': defineServiceEvent({
       async handler(ctx) {
+        // @ts-expect-error TS(2339): Property 'oldData' does not exist on type 'Optiona... Remove this comment to see the full error message
         const { oldData, webId } = ctx.params;
 
         if (oldData['apods:announces'])
@@ -325,22 +336,28 @@ const AnnouncerSchema = {
       // When a delegated grant is issued, add the grantee to the announces collection
       // This hack will be gone when we can do without announces/announcers collections
       async handler(ctx) {
+        // @ts-expect-error TS(2339): Property 'delegatedGrant' does not exist on type '... Remove this comment to see the full error message
         const { delegatedGrant } = ctx.params;
 
         if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type 'ServiceE... Remove this comment to see the full error message
           this.logger.warn(`Delegated grant is for application, skip adding to the announces collection...`);
           return;
         }
 
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         ctx.meta.webId = delegatedGrant['interop:dataOwner'];
+        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = getDatasetFromUri(delegatedGrant['interop:dataOwner']);
 
         for (const resourceUri of arrayOf(delegatedGrant['interop:hasDataInstance'])) {
           const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
             objectUri: resourceUri,
+            // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'Servic... Remove this comment to see the full error message
             collection: this.settings.announcesCollectionOptions
           });
 
+          // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
           await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
 
           await ctx.call('activitypub.collection.add', {

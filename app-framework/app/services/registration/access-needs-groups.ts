@@ -2,10 +2,12 @@ import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { arraysEqual } from '../../utils.ts';
 import { necessityMapping } from '../../mappings.ts';
+// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const AccessNeedsGroupsSchema = {
   name: 'access-needs-groups' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
     // ControlledContainerMixin settings
@@ -27,6 +29,7 @@ const AccessNeedsGroupsSchema = {
     }),
 
     createOrUpdate: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { accessNeeds: accessNeedsByNecessity } = ctx.params;
 
@@ -35,11 +38,13 @@ const AccessNeedsGroupsSchema = {
 
           const existingAccessNeedGroup = await this.actions.findByNecessity({ necessity });
 
+          // @ts-expect-error TS(18046): 'accessNeeds' is of type 'unknown'.
           if (accessNeeds.length > 0) {
             /*
              * PARSE SPECIAL RIGHTS
              */
             // TODO Ensure the special right is valid
+            // @ts-expect-error TS(18046): 'accessNeeds' is of type 'unknown'.
             const newSpecialRights = accessNeeds.filter((a: any) => typeof a === 'string');
             const haveSpecialRightsChanged = !arraysEqual(
               newSpecialRights,
@@ -51,6 +56,7 @@ const AccessNeedsGroupsSchema = {
              */
             let haveAccessNeedsChanged = false;
 
+            // @ts-expect-error TS(18046): 'accessNeeds' is of type 'unknown'.
             for (const accessNeed of accessNeeds.filter((a: any) => typeof a !== 'string')) {
               const existingAccessNeed = await ctx.call('access-needs.find', {
                 shapeTreeUri: accessNeed.shapeTreeUri,
@@ -69,6 +75,7 @@ const AccessNeedsGroupsSchema = {
                     '@type': 'interop:AccessNeed',
                     'interop:registeredShapeTree': accessNeed.shapeTreeUri,
                     'interop:accessMode': accessNeed.accessMode,
+                    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
                     'interop:accessNecessity': necessityMapping[necessity],
                     'interop:preferredScope': accessNeed.preferredScope || 'interop:All'
                   },
@@ -114,6 +121,7 @@ const AccessNeedsGroupsSchema = {
                 {
                   resource: {
                     '@type': 'interop:AccessNeedGroup',
+                    // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
                     'interop:accessNecessity': necessityMapping[necessity],
                     'interop:accessScenario': 'interop:PersonalAccess',
                     'interop:authenticatedAs': 'interop:SocialAgent',
@@ -151,12 +159,14 @@ const AccessNeedsGroupsSchema = {
     }),
 
     findByNecessity: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { necessity } = ctx.params;
 
         const filteredContainer = await this.actions.list(
           {
             filters: {
+              // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
               'http://www.w3.org/ns/solid/interop#accessNecessity': necessityMapping[necessity]
             },
             webId: 'system'

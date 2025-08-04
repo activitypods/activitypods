@@ -1,6 +1,8 @@
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 
 // Inspired from https://github.com/CommunitySolidServer/CommunitySolidServer/blob/15a929a87e4ce00c0ed266e296405c8e4a22d4a7/config/identity/handler/base/provider-factory.json#L30
+// @ts-expect-error TS(7006): Parameter 'settings' implicitly has an 'any' type.
 export default (settings, privateJwk) => ({
   claims: {
     openid: ['azp'],
@@ -97,6 +99,7 @@ export default (settings, privateJwk) => ({
 
   // Returns the id_token https://solid.github.io/authentication-panel/solid-oidc/#tokens-id
   // Some fields are still missing, see https://github.com/CommunitySolidServer/CommunitySolidServer/issues/1154#issuecomment-1040233385
+  // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
   findAccount: async (ctx, sub) => ({
     accountId: sub,
 
@@ -115,6 +118,7 @@ export default (settings, privateJwk) => ({
           loginUrl.searchParams.set('interaction_id', interaction.jti);
           loginUrl.searchParams.set('client_id', interaction?.params?.client_id);
           loginUrl.searchParams.set('redirect', interaction.returnTo);
+          // @ts-expect-error TS(2345): Argument of type 'boolean' is not assignable to pa... Remove this comment to see the full error message
           if (interaction?.params?.is_signup === 'true') loginUrl.searchParams.set('signup', true); // Extra param
           return loginUrl.toString();
         }

@@ -1,3 +1,4 @@
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } from '@semapps/activitypub';
 import { sanitizeSparqlQuery } from '@semapps/triplestore';
@@ -8,6 +9,7 @@ import { ServiceSchema, defineAction } from 'moleculer';
 
 const ContactsManagerSchema = {
   name: 'contacts.manager' as const,
+  // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Serv... Remove this comment to see the full error message
   mixins: [ActivitiesHandlerMixin],
   settings: {
     ignoredContactsCollectionOptions: {

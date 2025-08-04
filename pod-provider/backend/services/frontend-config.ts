@@ -1,4 +1,5 @@
-import CONFIG from '../config/config.ts';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from '../config/config.ts';
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const FrontendConfigSchema = {
@@ -18,6 +19,7 @@ const FrontendConfigSchema = {
   actions: {
     get: defineAction({
       async handler(ctx) {
+        // @ts-expect-error TS(2339): Property '$responseType' does not exist on type '{... Remove this comment to see the full error message
         ctx.meta.$responseType = 'text/javascript';
         return `
           window.CONFIG = {

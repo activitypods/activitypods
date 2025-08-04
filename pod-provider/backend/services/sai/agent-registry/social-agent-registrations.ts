@@ -8,6 +8,7 @@ import { ServiceSchema, defineAction } from 'moleculer';
 
 const SocialAgentRegistrationsSchema = {
   name: 'social-agent-registrations' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin, AgentRegistrationsMixin, ActivitiesHandlerMixin],
   settings: {
     acceptedTypes: ['interop:SocialAgentRegistration'],
@@ -136,6 +137,7 @@ const SocialAgentRegistrationsSchema = {
           actorUri: podOwner
         });
 
+        // @ts-expect-error TS(2339): Property 'headers' does not exist on type 'never'.
         const linkHeader = LinkHeader.parse(response.headers.link);
         const registeredAgentLinkHeader = linkHeader.rel('http://www.w3.org/ns/solid/interop#registeredAgent');
 
@@ -157,6 +159,7 @@ const SocialAgentRegistrationsSchema = {
         } catch (e) {
           // Can't get the private profile ? Use the webId
           const agent = await ctx.call('activitypub.actor.get', { actorUri: agentUri });
+          // @ts-expect-error TS(2339): Property 'name' does not exist on type 'never'.
           return agent['foaf:name'] || agent.name || agent['foaf:nick'] || agent.preferredUsername;
         }
       }
@@ -167,6 +170,7 @@ const SocialAgentRegistrationsSchema = {
         const { agentRegistrationUri, agentUri, podOwner, activityType } = ctx.params;
         const agent = await ctx.call('activitypub.actor.get', { actorUri: agentUri });
 
+        // @ts-expect-error TS(2339): Property 'inbox' does not exist on type 'never'.
         if (agent.inbox) {
           const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
             actorUri: podOwner,
@@ -246,6 +250,7 @@ const SocialAgentRegistrationsSchema = {
         const socialAgentRegistration = activity.object;
 
         // Create a Social Agent Registration, if it doesn't exist yet
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ match... Remove this comment to see the full error message
         await this.actions.createOrUpdate(
           {
             agentUri: activity.actor,

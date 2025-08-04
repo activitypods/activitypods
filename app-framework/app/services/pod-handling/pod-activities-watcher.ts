@@ -2,6 +2,7 @@ import { getContainerFromUri, arrayOf, isObject, isURL } from '@semapps/ldp';
 import { matchActivity } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { objectDepth } from '../../utils.ts';
+// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const queueOptions =
@@ -20,6 +21,7 @@ const PodActivitiesWatcherSchema = {
   name: 'pod-activities-watcher' as const,
   dependencies: ['triplestore', 'ldp', 'activitypub.actor', 'solid-notifications.listener'],
   async started() {
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     const nodes = await this.broker.call('triplestore.query', {
       query: `
         SELECT DISTINCT ?specialRights ?actorUri
@@ -34,14 +36,18 @@ const PodActivitiesWatcherSchema = {
     });
 
     // On (re)start, delete existing queue
+    // @ts-expect-error TS(2339): Property 'getQueue' does not exist on type 'void'.
     this.getQueue('registerListener').clean(0);
+    // @ts-expect-error TS(2339): Property 'getQueue' does not exist on type 'void'.
     this.getQueue('registerListener').clean(0, 'failed');
+    // @ts-expect-error TS(2339): Property 'getQueue' does not exist on type 'void'.
     this.getQueue('registerListener').empty();
 
     for (const { actorUri, specialRights } of nodes) {
       try {
         switch (specialRights.value) {
           case 'http://activitypods.org/ns/core#ReadInbox':
+            // @ts-expect-error TS(2339): Property 'createJob' does not exist on type 'void'... Remove this comment to see the full error message
             this.createJob(
               'registerListener',
               actorUri.value + ' inbox',
@@ -51,6 +57,7 @@ const PodActivitiesWatcherSchema = {
             break;
 
           case 'http://activitypods.org/ns/core#ReadOutbox':
+            // @ts-expect-error TS(2339): Property 'createJob' does not exist on type 'void'... Remove this comment to see the full error message
             this.createJob(
               'registerListener',
               actorUri.value + ' outbox',
@@ -60,16 +67,20 @@ const PodActivitiesWatcherSchema = {
             break;
         }
       } catch (e) {
+        // @ts-expect-error TS(2339): Property 'logger' does not exist on type 'void'.
         this.logger.warn(`Could not listen to actor ${actorUri.value}. Error message: ${e.message}`);
       }
     }
 
+    // @ts-expect-error TS(2339): Property 'handlers' does not exist on type 'void'.
     this.handlers = [];
 
+    // @ts-expect-error TS(2339): Property 'baseUrl' does not exist on type 'void'.
     this.baseUrl = await this.broker.call('ldp.getBaseUrl');
   },
   actions: {
     watch: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { matcher, actionName, boxTypes, key } = ctx.params;
 
@@ -80,6 +91,7 @@ const PodActivitiesWatcherSchema = {
     }),
 
     processWebhook: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { type, object, target } = ctx.params;
 
@@ -106,7 +118,9 @@ const PodActivitiesWatcherSchema = {
               });
               return resource; // First get the resource, then return it, otherwise the try/catch will not work
             } catch (e) {
+              // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
               if (e.status !== 401 && e.status !== 403 && e.status !== 404) {
+                // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
                 this.logger.error(`Could not fetch ${resourceUri}. Error ${e.status} ${e.statusText})`);
               }
               return false;
@@ -161,6 +175,7 @@ const PodActivitiesWatcherSchema = {
     }),
 
     registerListenersFromAppRegistration: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { appRegistration } = ctx.params;
 
@@ -215,16 +230,20 @@ const PodActivitiesWatcherSchema = {
   queues: {
     registerListener: {
       name: '*',
+      // @ts-expect-error TS(7023): 'process' implicitly has return type 'any' because... Remove this comment to see the full error message
       async process(job: any) {
         const { actorUri, collectionPredicate } = job.data;
 
+        // @ts-expect-error TS(7022): 'actor' implicitly has type 'any' because it does ... Remove this comment to see the full error message
         const actor = await this.broker.call('activitypub.actor.get', { actorUri });
 
+        // @ts-expect-error TS(7022): 'listener' implicitly has type 'any' because it do... Remove this comment to see the full error message
         const listener = await this.broker.call('solid-notifications.listener.register', {
           resourceUri: actor[collectionPredicate],
           actionName: this.name + '.processWebhook'
         });
 
+        // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ name: ... Remove this comment to see the full error message
         this.logger.info(`Listening to ${actor.id} ${collectionPredicate}...`);
 
         return listener;

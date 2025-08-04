@@ -7,6 +7,7 @@ import { ServiceSchema, defineAction, defineServiceEvent } from 'moleculer';
 
 const AccessAuthorizationsSchema = {
   name: 'access-authorizations' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ImmutableContainerMixin, ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:AccessAuthorization'],
@@ -70,6 +71,7 @@ const AccessAuthorizationsSchema = {
       // Add an authorization for a single resource
       async handler(ctx) {
         const { resourceUri, grantee, accessModes, delegationAllowed, delegationLimit } = ctx.params;
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const dataRegistration = await ctx.call('data-registrations.getByResourceUri', { resourceUri, webId });
@@ -184,6 +186,7 @@ const AccessAuthorizationsSchema = {
       // The grantee param is optional. If provided, it will only delete authorizations for the grantee
       async handler(ctx) {
         const { resourceUri, grantee } = ctx.params;
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const filters = {
@@ -191,6 +194,7 @@ const AccessAuthorizationsSchema = {
           'http://www.w3.org/ns/solid/interop#scopeOfAuthorization':
             'http://www.w3.org/ns/solid/interop#SelectedFromRegistry'
         };
+        // @ts-expect-error TS(2551): Property 'http://www.w3.org/ns/solid/interop#grant... Remove this comment to see the full error message
         if (grantee) filters['http://www.w3.org/ns/solid/interop#grantee'] = grantee;
 
         const filteredContainer = await this.actions.list({ filters, webId }, { parentCtx: ctx });
@@ -228,6 +232,7 @@ const AccessAuthorizationsSchema = {
       // List all authorizations for a single resource
       async handler(ctx) {
         const { resourceUri } = ctx.params;
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const filteredContainer = await this.actions.list(
@@ -318,6 +323,7 @@ const AccessAuthorizationsSchema = {
           try {
             await ctx.call('ldp.remote.get', { resourceUri: dataAuthorization['interop:satisfiesAccessNeed'] });
           } catch (e) {
+            // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
             if (e.code === 404) {
               this.logger.info(
                 `Deleting authorization ${dataAuthorization.id} as it is not linked anymore with an existing access need...`
@@ -360,6 +366,7 @@ const AccessAuthorizationsSchema = {
           const grants = await ctx.call('social-agent-registrations.getSharedGrants', {
             podOwner: dataOwner
           });
+          // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
           for (const grant of grants) {
             if (grant['interop:registeredShapeTree'] === authorization['interop:registeredShapeTree']) {
               await ctx.call('delegated-access-grants.generateFromSingleScopeAllAuthorization', {
@@ -403,6 +410,7 @@ const AccessAuthorizationsSchema = {
           const delegatedGrants = await ctx.call('delegated-access-grants.listByScopeAllAuthorization', {
             authorization
           });
+          // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
           for (const delegatedGrant of delegatedGrants) {
             await ctx.call('delegated-access-grants.remoteDelete', { delegatedGrant, webId });
           }
@@ -421,10 +429,12 @@ const AccessAuthorizationsSchema = {
   events: {
     'ldp.resource.deleted': defineServiceEvent({
       async handler(ctx) {
+        // @ts-expect-error TS(2339): Property 'resourceUri' does not exist on type 'Opt... Remove this comment to see the full error message
         const { resourceUri, dataset } = ctx.params;
         const webId = getWebIdFromUri(resourceUri);
 
         // Delete all authorizations associated with this resource
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
         await this.actions.removeForSingleResource({ resourceUri, webId }, { meta: { dataset }, parentCtx: ctx });
       }
     })

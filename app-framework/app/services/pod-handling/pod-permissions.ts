@@ -1,8 +1,11 @@
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'node... Remove this comment to see the full error message
 import fetch from 'node-fetch';
 import LinkHeader from 'http-link-header';
+// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { getAclUriFromResourceUri } from '@semapps/webacl';
 import { arrayOf } from '@semapps/ldp';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
+// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const PodPermissionsSchema = {
@@ -10,6 +13,7 @@ const PodPermissionsSchema = {
   mixins: [FetchPodOrProxyMixin],
   actions: {
     get: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { uri, actorUri } = ctx.params;
 
@@ -26,6 +30,7 @@ const PodPermissionsSchema = {
     }),
 
     add: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { uri, agentUri, agentPredicate, mode, actorUri } = ctx.params;
 
@@ -65,6 +70,7 @@ const PodPermissionsSchema = {
     }),
 
     remove: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { uri, agentUri, agentPredicate, mode, actorUri } = ctx.params;
 

@@ -1,6 +1,7 @@
 /* eslint-disable lines-between-class-members */
 /* eslint-disable max-classes-per-file */
 
+// @ts-expect-error TS(2440): Import declaration conflicts with local declaratio... Remove this comment to see the full error message
 import { CallingOptions, ServiceEvent, ServiceSchema, defineAction } from 'moleculer';
 
 // Reproduction

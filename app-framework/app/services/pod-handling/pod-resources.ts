@@ -1,5 +1,6 @@
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 import sparqljsModule from 'sparqljs';
+// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema, defineAction } from 'moleculer';
 const SparqlGenerator = sparqljsModule.Generator;
 
@@ -7,6 +8,7 @@ const PodResourcesSchema = {
   name: 'pod-resources' as const,
   mixins: [FetchPodOrProxyMixin],
   started() {
+    // @ts-expect-error TS(2339): Property 'sparqlGenerator' does not exist on type ... Remove this comment to see the full error message
     this.sparqlGenerator = new SparqlGenerator({
       /* prefixes, baseIRI, factory, sparqlStar */
     });
@@ -18,6 +20,7 @@ const PodResourcesSchema = {
         resource: { type: 'object', optional: false },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { containerUri, actorUri } = ctx.params;
         let { resource } = ctx.params;
@@ -52,6 +55,7 @@ const PodResourcesSchema = {
         containerUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { containerUri, actorUri } = ctx.params;
 
@@ -72,6 +76,7 @@ const PodResourcesSchema = {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri, actorUri } = ctx.params;
 
@@ -94,6 +99,7 @@ const PodResourcesSchema = {
         triplesToRemove: { type: 'array', optional: true },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri, triplesToAdd, triplesToRemove, actorUri } = ctx.params;
 
@@ -103,6 +109,7 @@ const PodResourcesSchema = {
         };
 
         if (triplesToAdd) {
+          // @ts-expect-error TS(2345): Argument of type '{ updateType: string; insert: { ... Remove this comment to see the full error message
           sparqlUpdate.updates.push({
             updateType: 'insert',
             insert: [{ type: 'bgp', triples: triplesToAdd }]
@@ -110,6 +117,7 @@ const PodResourcesSchema = {
         }
 
         if (triplesToRemove) {
+          // @ts-expect-error TS(2345): Argument of type '{ updateType: string; delete: { ... Remove this comment to see the full error message
           sparqlUpdate.updates.push({
             updateType: 'delete',
             delete: [{ type: 'bgp', triples: triplesToRemove }]
@@ -133,6 +141,7 @@ const PodResourcesSchema = {
         resource: { type: 'object', optional: false },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         let { resource, actorUri } = ctx.params;
         const resourceUri = resource.id || resource['@id'];
@@ -162,6 +171,7 @@ const PodResourcesSchema = {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri, actorUri } = ctx.params;
 

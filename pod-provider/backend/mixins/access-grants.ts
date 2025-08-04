@@ -6,6 +6,7 @@ import { ServiceSchema } from 'moleculer';
  * Mixin used by the AccessGrantsService and DelegatedAccessGrantsService
  */
 const AccessGrantsMixin = {
+  // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Serv... Remove this comment to see the full error message
   mixins: [ActivitiesHandlerMixin],
   hooks: {
     after: {
@@ -137,6 +138,7 @@ const AccessGrantsMixin = {
           {
             type: ACTIVITY_TYPES.CREATE,
             object: {
+              // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ matc... Remove this comment to see the full error message
               type: this.settings.acceptedTypes[0]
             }
           },
@@ -155,6 +157,7 @@ const AccessGrantsMixin = {
               webId: recipientUri
             });
           } catch (e) {
+            // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
             this.logger.warn(
               `Could not delete grant ${grant['interop:replaces']} on storage of ${recipientUri}. Ignoring...`
             );
@@ -175,6 +178,7 @@ const AccessGrantsMixin = {
           {
             type: ACTIVITY_TYPES.DELETE,
             object: {
+              // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ prio... Remove this comment to see the full error message
               type: this.settings.acceptedTypes[0]
             }
           },

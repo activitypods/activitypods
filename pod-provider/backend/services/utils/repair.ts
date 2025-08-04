@@ -1,3 +1,4 @@
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { arrayOf, getParentContainerUri } from '@semapps/ldp';
 import { triple, namedNode } from '@rdfjs/data-model';
@@ -19,7 +20,9 @@ const RepairSchema = {
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
         for (const { username: dataset, webId } of accounts) {
+          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
+          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           ctx.meta.webId = webId;
 
           const isRegistered = await ctx.call('app-registrations.isRegistered', { agentUri: appUri, podOwner: webId });
@@ -46,7 +49,9 @@ const RepairSchema = {
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
         for (const { webId, username: dataset } of accounts) {
+          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
+          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           ctx.meta.webId = webId;
 
           this.logger.info(`Removing apps of ${webId}...`);
@@ -72,7 +77,9 @@ const RepairSchema = {
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
         for (const { webId, username: dataset } of accounts) {
+          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
+          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           ctx.meta.webId = webId;
 
           const container = await ctx.call('applications.list', { webId });
@@ -98,17 +105,20 @@ const RepairSchema = {
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
         for (const { webId, username: dataset } of accounts) {
+          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
           const storageUrl = await ctx.call('solid-storage.getUrl', { webId });
 
           const registeredContainers = await ctx.call('ldp.registry.list');
           for (const container of Object.values(registeredContainers)) {
+            // @ts-expect-error TS(18046): 'container' is of type 'unknown'.
             const containerUri = urlJoin(storageUrl, container.path);
             const containerExist = await ctx.call('ldp.container.exist', { containerUri });
             if (!containerExist) {
               this.logger.info(`Container ${containerUri} doesn't exist yet. Creating it...`);
               await ctx.call('ldp.container.createAndAttach', {
                 containerUri,
+                // @ts-expect-error TS(18046): 'container' is of type 'unknown'.
                 permissions: container.permissions,
                 webId
               });
@@ -127,7 +137,9 @@ const RepairSchema = {
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
         for (const { webId, username: dataset } of accounts) {
+          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
+          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           ctx.meta.webId = webId;
 
           this.logger.info(`Attaching all containers of ${webId}...`);
@@ -158,7 +170,9 @@ const RepairSchema = {
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
         for (const { webId, username: dataset } of accounts) {
+          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
+          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           ctx.meta.webId = webId;
 
           // Collections which are now created on the fly
@@ -215,7 +229,9 @@ const RepairSchema = {
 
         for (const { webId, username: dataset } of accounts) {
           this.logger.info(`Inspecting Pod of ${webId}...`);
+          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
+          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           ctx.meta.webId = webId;
 
           const container = await ctx.call('profiles.profile.list');

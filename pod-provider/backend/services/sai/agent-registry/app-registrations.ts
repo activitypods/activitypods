@@ -6,6 +6,7 @@ import { ServiceSchema, defineAction } from 'moleculer';
 
 const AppRegistrationsSchema = {
   name: 'app-registrations' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin, AgentRegistrationsMixin],
   settings: {
     acceptedTypes: ['interop:ApplicationRegistration'],
@@ -89,6 +90,7 @@ const AppRegistrationsSchema = {
         const { resourceUri } = res;
 
         // Update the Application resource kept in cache
+        // @ts-expect-error TS(2339): Property 'get' does not exist on type 'string | Ac... Remove this comment to see the full error message
         const appRegistration = await this.actions.get({ resourceUri }, { parentCtx: ctx });
         const appUri = appRegistration['interop:registeredAgent'];
         const webId = appRegistration['interop:registeredBy'];

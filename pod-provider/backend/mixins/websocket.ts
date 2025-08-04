@@ -1,5 +1,7 @@
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'ws'.... Remove this comment to see the full error message
 import { WebSocketServer } from 'ws';
 import http from 'http';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -43,10 +45,14 @@ const WebsocketSchema = {
       params: {
         name: { type: 'string' },
         route: { type: 'string' },
+        // @ts-expect-error TS(2322): Type '{ type: "boolean"; default: false; }' is not... Remove this comment to see the full error message
         authorization: { type: 'boolean', default: false },
+        // @ts-expect-error TS(2322): Type '{ type: "boolean"; default: false; }' is not... Remove this comment to see the full error message
         authentication: { type: 'boolean', default: false },
+        // @ts-expect-error TS(2322): Type '{ type: "array"; items: "function"; default:... Remove this comment to see the full error message
         use: { type: 'array', items: 'function', default: [] },
         handlers: {
+          // @ts-expect-error TS(2561): Object literal may only specify known properties, ... Remove this comment to see the full error message
           $$type: 'object',
           onConnection: { type: 'function', default: () => {} },
           onClose: { type: 'function', default: () => {} },
@@ -210,6 +216,7 @@ const WebsocketSchema = {
 
           // If already closed, return immediately.
           if (serverResponse.socket.closed) {
+            // @ts-expect-error TS(2794): Expected 1 arguments, but got 0. Did you forget to... Remove this comment to see the full error message
             resolve();
           }
         });

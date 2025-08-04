@@ -1,5 +1,6 @@
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
+// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema, defineAction } from 'moleculer';
 
 /**
@@ -7,6 +8,7 @@ import { ServiceSchema, defineAction } from 'moleculer';
  */
 const AppRegistrationsSchema = {
   name: 'app-registrations' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:ApplicationRegistration'],
@@ -15,6 +17,7 @@ const AppRegistrationsSchema = {
   actions: {
     verify: defineAction({
       // Verify that the grants of an application registration match with the app's access needs
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { appRegistrationUri } = ctx.params;
 
@@ -62,6 +65,7 @@ const AppRegistrationsSchema = {
     }),
 
     getForActor: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { actorUri } = ctx.params;
 
@@ -80,6 +84,7 @@ const AppRegistrationsSchema = {
     }),
 
     getRegisteredPods: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const filteredContainer = await this.actions.list({ webId: 'system' }, { parentCtx: ctx });
 

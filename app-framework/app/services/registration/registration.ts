@@ -5,6 +5,7 @@ import { ServiceSchema } from 'moleculer';
 
 const AppRegistrationSchema = {
   name: 'app.registration' as const,
+  // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Serv... Remove this comment to see the full error message
   mixins: [ActivitiesHandlerMixin],
   activities: {
     createAppRegistration: {
@@ -74,6 +75,7 @@ const AppRegistrationSchema = {
         try {
           await ctx.call('ldp.remote.getStored', { resourceUri: activity.object.id });
         } catch (e) {
+          // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
           if (e.code === 404) {
             throw new MoleculerError(
               `No application registration found for this user. Create it first.`,

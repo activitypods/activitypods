@@ -1,11 +1,14 @@
 import path from 'path';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'iore... Remove this comment to see the full error message
 import Redis from 'ioredis';
 import { delay } from '@semapps/ldp';
+// @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
 import RedisAdapter from '../../config/oidc-adapter.ts';
 import baseConfig from '../../config/oidc.ts';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'node... Remove this comment to see the full error message
 import fetch from 'node-fetch';
-import CONFIG from '../../config/config.ts';
+import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const SolidOidcSchema = {
@@ -19,6 +22,7 @@ const SolidOidcSchema = {
   dependencies: ['jwk', 'api'],
   async started() {
     // Dynamically import Provider since it's an ESM module
+    // @ts-expect-error TS(7016): Could not find a declaration file for module 'oidc... Remove this comment to see the full error message
     const { default: Provider } = await import('oidc-provider');
 
     const { privateJwk } = await this.broker.call('jwk.get');
@@ -26,9 +30,11 @@ const SolidOidcSchema = {
     const config = baseConfig(this.settings, privateJwk);
 
     const redisClient = new Redis(this.settings.redisUrl, { keyPrefix: 'oidc:' });
+    // @ts-expect-error TS(2339): Property 'adapter' does not exist on type '{ claim... Remove this comment to see the full error message
     config.adapter = (name: any) => new RedisAdapter(name, redisClient);
 
     // See https://github.com/panva/node-oidc-provider/blob/main/recipes/client_based_origins.md
+    // @ts-expect-error TS(2339): Property 'clientBasedCORS' does not exist on type ... Remove this comment to see the full error message
     config.clientBasedCORS = (ctx: any, origin: any, client: any) => {
       // TODO validate CORS based on client
       return true;
@@ -87,16 +93,21 @@ const SolidOidcSchema = {
         if (token) {
           const payload = await ctx.call('jwk.verifyToken', { token });
           if (payload) {
+            // @ts-expect-error TS(2339): Property 'tokenPayload' does not exist on type '{}... Remove this comment to see the full error message
             ctx.meta.tokenPayload = payload;
+            // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
             ctx.meta.webId = payload.azp; // Use the WebID of the application requesting access
+            // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type... Remove this comment to see the full error message
             ctx.meta.impersonatedUser = payload.webid; // Used by some services which need to know the real user (Attention: webid with a i)
             return Promise.resolve(payload);
           }
           // Invalid token
+          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           ctx.meta.webId = 'anon';
           return Promise.reject(new E.UnAuthorizedError(E.ERR_INVALID_TOKEN));
         }
         // No token
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         ctx.meta.webId = 'anon';
         return Promise.resolve(null);
       }
@@ -111,14 +122,19 @@ const SolidOidcSchema = {
         if (token) {
           const payload = await ctx.call('jwk.verifyToken', { token });
           if (payload) {
+            // @ts-expect-error TS(2339): Property 'tokenPayload' does not exist on type '{}... Remove this comment to see the full error message
             ctx.meta.tokenPayload = payload;
+            // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
             ctx.meta.webId = payload.azp; // Use the WebID of the application requesting access
+            // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type... Remove this comment to see the full error message
             ctx.meta.impersonatedUser = payload.webid; // Used by some services which need to know the real user (Attention: webid with a i)
             return Promise.resolve(payload);
           }
+          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           ctx.meta.webId = 'anon';
           return Promise.reject(new E.UnAuthorizedError(E.ERR_INVALID_TOKEN));
         }
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         ctx.meta.webId = 'anon';
         return Promise.reject(new E.UnAuthorizedError(E.ERR_NO_TOKEN));
       }
@@ -139,6 +155,7 @@ const SolidOidcSchema = {
       // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
       async handler(ctx) {
         const { interactionId } = ctx.params;
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
 
         await this.interactionFinished(interactionId, {

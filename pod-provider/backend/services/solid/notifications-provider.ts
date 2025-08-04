@@ -1,8 +1,10 @@
 import { NotificationsProviderService } from '@semapps/solid';
-import CONFIG from '../../config/config.ts';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
 const Schema = {
+  // @ts-expect-error TS(2322): Type '{ name: "solid-notifications.provider"; sett... Remove this comment to see the full error message
   mixins: [NotificationsProviderService],
   settings: {
     baseUrl: CONFIG.BASE_URL,

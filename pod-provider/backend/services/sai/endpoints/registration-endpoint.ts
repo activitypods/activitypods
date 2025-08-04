@@ -1,4 +1,5 @@
 import path from 'path';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 const { MoleculerError } = require('moleculer').Errors;
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
@@ -34,8 +35,10 @@ const RegistrationEndpointSchema = {
       async handler(ctx) {
         let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
 
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
         const account = await ctx.call('auth.account.findByWebId', { webId });
+        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = account.username;
 
         // Force to get through network
@@ -59,7 +62,9 @@ const RegistrationEndpointSchema = {
           }
 
           const requirements = await ctx.call('applications.getRequirements', { appUri });
+          // @ts-expect-error TS(2339): Property 'accessNeeds' does not exist on type 'nev... Remove this comment to see the full error message
           acceptedAccessNeeds = requirements.accessNeeds;
+          // @ts-expect-error TS(2339): Property 'specialRights' does not exist on type 'n... Remove this comment to see the full error message
           acceptedSpecialRights = requirements.specialRights;
         }
 
@@ -88,6 +93,7 @@ const RegistrationEndpointSchema = {
         }
 
         // If the app is an ActivityPub actor, send notification
+        // @ts-expect-error TS(2339): Property 'inbox' does not exist on type 'never'.
         if (app.inbox) {
           await ctx.call('activitypub.outbox.post', {
             collectionUri: urlJoin(webId, 'outbox'),
@@ -105,8 +111,10 @@ const RegistrationEndpointSchema = {
       async handler(ctx) {
         let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
 
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
         const account = await ctx.call('auth.account.findByWebId', { webId });
+        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = account.username;
 
         const oldAppRegistration = await ctx.call('app-registrations.getForAgent', {
@@ -133,7 +141,9 @@ const RegistrationEndpointSchema = {
           }
 
           const requirements = await ctx.call('applications.getRequirements', { appUri });
+          // @ts-expect-error TS(2339): Property 'accessNeeds' does not exist on type 'nev... Remove this comment to see the full error message
           acceptedAccessNeeds = requirements.accessNeeds;
+          // @ts-expect-error TS(2339): Property 'specialRights' does not exist on type 'n... Remove this comment to see the full error message
           acceptedSpecialRights = requirements.specialRights;
         }
 
@@ -171,6 +181,7 @@ const RegistrationEndpointSchema = {
         }
 
         // If the app is an ActivityPub actor, send notification
+        // @ts-expect-error TS(2339): Property 'inbox' does not exist on type 'never'.
         if (app.inbox) {
           await ctx.call('activitypub.outbox.post', {
             collectionUri: urlJoin(webId, 'outbox'),
@@ -188,8 +199,10 @@ const RegistrationEndpointSchema = {
       async handler(ctx) {
         const { appUri } = ctx.params;
 
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
         const account = await ctx.call('auth.account.findByWebId', { webId });
+        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = account.username;
 
         const app = await ctx.call('applications.get', { appUri, webId });
@@ -209,10 +222,12 @@ const RegistrationEndpointSchema = {
           });
 
           // If the app is an ActivityPub actor, send notification
+          // @ts-expect-error TS(2339): Property 'inbox' does not exist on type 'never'.
           if (app.inbox) {
             await ctx.call('activitypub.outbox.post', {
               collectionUri: urlJoin(webId, 'outbox'),
               type: ACTIVITY_TYPES.DELETE,
+              // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
               object: appRegistration.id || appRegistration['@id'],
               to: appUri
             });
@@ -229,6 +244,7 @@ const RegistrationEndpointSchema = {
     getForAgent: defineAction({
       async handler(ctx) {
         const { agent } = ctx.params;
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
         return await ctx.call('app-registrations.getForAgent', { agentUri: agent, podOwner: webId });
       }

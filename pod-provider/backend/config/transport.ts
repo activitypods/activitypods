@@ -1,4 +1,5 @@
-import CONFIG from './config.ts';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from './config.ts';
 
 // See https://nodemailer.com/transports/ for other kind of Nodemailer transports
 

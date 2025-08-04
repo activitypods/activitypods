@@ -1,4 +1,6 @@
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'mole... Remove this comment to see the full error message
 import QueueMixin from 'moleculer-bull';
+// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { arrayOf } from '@semapps/ldp';
 import AccessNeedsService from './services/registration/access-needs.ts';
 import AccessNeedsGroupsService from './services/registration/access-needs-groups.ts';
@@ -19,6 +21,7 @@ import ShapeTreesService from './services/utils/shape-trees.ts';
 import TimerService from './services/utils/timer.ts';
 import TranslatorService from './services/utils/translator.ts';
 import MigrationService from './services/utils/migration.ts';
+// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const AppSchema = {
@@ -57,57 +60,85 @@ const AppSchema = {
     'access-needs-groups'
   ],
   created() {
+    // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'void'.
     if (!this.settings.queueServiceUrl) {
       throw new Error(`The setting queueServiceUrl is mandatory`);
     }
 
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [ActorsService] });
 
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [RegistrationService] });
 
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [AccessNeedsService] });
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [AccessNeedsGroupsService] });
 
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [AppRegistrationsService] });
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [AccessGrantsService] });
 
     // Pod handling
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({
+      // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'void'.
       mixins: [PodActivitiesWatcherService, QueueMixin(this.settings.queueServiceUrl)]
     });
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({
       mixins: [PodNotificationService],
       settings: {
+        // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'void'.
         frontUrl: this.settings.app.frontUrl
       }
     });
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [PodCollectionsService] });
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [PodContainersService] });
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [PodOutboxService] });
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [PodPermissionsService] });
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [PodResourcesService] });
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [PodWacGroupsService] });
 
     // Utils
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [ShaclService] });
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [ShapeTreesService] });
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({
+      // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'void'.
       mixins: [TimerService, QueueMixin(this.settings.queueServiceUrl)]
     });
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [TranslatorService] });
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({ mixins: [MigrationService], settings: { baseUrl: this.settings.baseUrl } });
   },
   async started() {
+    // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'void'.
     const { app, oidc, accessNeeds } = this.settings;
 
+    // @ts-expect-error TS(2339): Property 'appActor' does not exist on type 'void'.
     this.appActor = await this.broker.call('actors.createOrUpdateApp', { app, oidc });
 
     // TODO Ensure this doesn't add a link on every call
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     await this.broker.call('nodeinfo.addLink', {
       rel: 'https://www.w3.org/ns/activitystreams#Application',
+      // @ts-expect-error TS(2339): Property 'appActor' does not exist on type 'void'.
       href: this.appActor.id
     });
 
+    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     await this.broker.call('access-needs-groups.createOrUpdate', {
       accessNeeds: {
         // Ensure we have one key per necessity, otherwise we may fail to delete unused access needs

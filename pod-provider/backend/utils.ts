@@ -49,6 +49,7 @@ const hasActivityGrant = (capabilityPresentation: any, templateActivity: any) =>
     if (!grantMatchesTemplate) return false;
 
     // Check if all fields in the grant are included in the activity too.
+    // @ts-expect-error TS(2304): Cannot find name 'activity'.
     const activityMatchesGrant = matchTemplateObj(activity, grant.activity);
     return activityMatchesGrant;
   });

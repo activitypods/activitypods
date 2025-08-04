@@ -2,11 +2,13 @@ import { triple, namedNode } from '@rdfjs/data-model';
 import { MigrationService } from '@semapps/migration';
 import { arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
-import CONFIG from '../../config/config.ts';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const Migration205Schema = {
   name: 'migration-2-0-5' as const,
+  // @ts-expect-error TS(2322): Type '{ name: "migration"; settings: { baseUrl: un... Remove this comment to see the full error message
   mixins: [MigrationService],
   settings: {
     baseUrl: CONFIG.BASE_URL
@@ -23,8 +25,11 @@ const Migration205Schema = {
           } else {
             this.logger.info(`Migrating Pod of ${account.webId} to v${version}...`);
 
+            // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
             ctx.meta.dataset = account.username;
+            // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
             ctx.meta.webId = account.webId;
+            // @ts-expect-error TS(2339): Property 'skipObjectsWatcher' does not exist on ty... Remove this comment to see the full error message
             ctx.meta.skipObjectsWatcher = true; // We don't want to trigger an Update
 
             if (version === '2.0.5') {

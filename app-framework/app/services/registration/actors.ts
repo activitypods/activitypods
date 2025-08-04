@@ -2,11 +2,14 @@ import urlJoin from 'url-join';
 import { triple, namedNode } from '@rdfjs/data-model';
 import { ControlledContainerMixin, DereferenceMixin } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
+// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { ACTOR_TYPES } from '@semapps/activitypub';
+// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const ActorsSchema = {
   name: 'actors' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin, DereferenceMixin],
   settings: {
     path: '/as/actor',
@@ -16,6 +19,7 @@ const ActorsSchema = {
   },
   actions: {
     createOrUpdateApp: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { app, oidc } = ctx.params;
 
@@ -136,6 +140,7 @@ const ActorsSchema = {
     }),
 
     attachAccessNeedGroup: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { accessNeedGroupUri } = ctx.params;
         await this.actions.patch(
@@ -156,6 +161,7 @@ const ActorsSchema = {
     }),
 
     detachAccessNeedGroup: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { accessNeedGroupUri } = ctx.params;
         await this.actions.patch(
@@ -176,6 +182,7 @@ const ActorsSchema = {
     }),
 
     attachAccessDescriptionSet: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { accessDescriptionSetUri } = ctx.params;
         await this.actions.patch(
@@ -196,6 +203,7 @@ const ActorsSchema = {
     }),
 
     detachAccessDescriptionSet: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { accessDescriptionSetUri } = ctx.params;
         await this.actions.patch(

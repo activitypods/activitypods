@@ -6,6 +6,7 @@ import { ServiceSchema, defineAction } from 'moleculer';
 
 const AccessGrantsSchema = {
   name: 'access-grants' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ImmutableContainerMixin, ControlledContainerMixin, AccessGrantsMixin],
   settings: {
     acceptedTypes: ['interop:AccessGrant'],
@@ -84,6 +85,7 @@ const AccessGrantsSchema = {
     getByResourceUri: defineAction({
       async handler(ctx) {
         const { resourceUri } = ctx.params;
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId || 'anon';
 
         const filteredContainer = await this.actions.list(

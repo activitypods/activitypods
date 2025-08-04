@@ -1,4 +1,5 @@
 import { arrayOf } from '@semapps/ldp';
+// @ts-expect-error TS(7023): 'objectDepth' implicitly has return type 'any' bec... Remove this comment to see the full error message
 const objectDepth = (o: any) => (Object(o) === o ? 1 + Math.max(-1, ...Object.values(o).map(objectDepth)) : 0);
 
 const stream2buffer = (stream: any) => {

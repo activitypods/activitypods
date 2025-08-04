@@ -1,8 +1,10 @@
 import { LdpService, DocumentTaggerMixin } from '@semapps/ldp';
-import CONFIG from '../../config/config.ts';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
 const Schema = {
+  // @ts-expect-error TS(2322): Type '{ name: "ldp"; settings: { baseUrl: null; co... Remove this comment to see the full error message
   mixins: [LdpService, DocumentTaggerMixin],
   settings: {
     baseUrl: CONFIG.BASE_URL,

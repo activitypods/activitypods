@@ -21,7 +21,9 @@ const JwkSchema = {
       }
       await this.actions.generateKeyPair({ privateKeyPath, publicKeyPath });
     } else {
+      // @ts-expect-error TS(2345): Argument of type 'Buffer' is not assignable to par... Remove this comment to see the full error message
       this.privateJwk = JSON.parse(fs.readFileSync(privateKeyPath));
+      // @ts-expect-error TS(2345): Argument of type 'Buffer' is not assignable to par... Remove this comment to see the full error message
       this.publicJwk = JSON.parse(fs.readFileSync(publicKeyPath));
     }
   },

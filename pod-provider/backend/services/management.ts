@@ -2,15 +2,19 @@ import path from 'node:path';
 import fs from 'fs';
 import { namedNode, quad } from '@rdfjs/data-model';
 import archiver from 'archiver';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'mole... Remove this comment to see the full error message
 import QueueService from 'moleculer-bull';
 import { throw403, throw404, throw500 } from '@semapps/middlewares';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ACTIVITY_TYPES, PUBLIC_URI } from '@semapps/activitypub';
 import { sanitizeSparqlQuery } from '@semapps/triplestore';
 import { arrayOf } from '@semapps/ldp';
-import CONFIG from '../config/config.ts';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from '../config/config.ts';
 import { ServiceSchema, defineAction } from 'moleculer';
+// @ts-expect-error TS(7034): Variable 'Readable' implicitly has type 'any' in s... Remove this comment to see the full error message
 let Readable, NTriplesSerializer;
 
 const importAsync = async () => {
@@ -58,6 +62,7 @@ const ManagementService = {
       },
       async handler(ctx) {
         const { username } = ctx.params;
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
 
         // Validate that the actor exists.
@@ -69,15 +74,18 @@ const ManagementService = {
           if (!webId) {
             throw403('You are not allowed to delete this actor.');
           }
+          // @ts-expect-error TS(2339): Property 'group' does not exist on type 'never'.
           if (account.group && !arrayOf(account.owner).includes(webId)) {
             throw403('You are not allowed to delete this group.');
           }
+          // @ts-expect-error TS(2339): Property 'group' does not exist on type 'never'.
           if (!account.group && webId !== account.webId) {
             throw403('You are not allowed to delete this actor.');
           }
         }
 
         // Delete account information settings data.
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'never'.
         await ctx.call('auth.account.setTombstone', { webId: account.webId });
 
         // Delete uploads.
@@ -85,25 +93,30 @@ const ManagementService = {
         await fs.promises.rm(uploadsPath, { recursive: true, force: true });
 
         // Delete backups.
+        // @ts-expect-error TS(2551): Property 'hasService' does not exist on type 'Serv... Remove this comment to see the full error message
         if (this.broker.registry.hasService('backup')) {
           await ctx.call('backup.deleteDataset', { dataset: username });
         }
 
         // Send `Delete` activity to the outside world (so they delete cached data and contact info, etc.).
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'never'.
         const actor = await ctx.call('ldp.resource.get', { resourceUri: account.webId, accept: MIME_TYPES.JSON });
         let recipients;
 
         // Get recipients
         // TODO In the future, it would be good to send the activity to as many servers as possible
         // This is in order to delete cached versions of the account.
+        // @ts-expect-error TS(2339): Property 'group' does not exist on type 'never'.
         if (account.group) {
           // TODO get the whole list of members and add them as recipients
+          // @ts-expect-error TS(2339): Property 'followers' does not exist on type 'never... Remove this comment to see the full error message
           recipients = [actor.followers, ...arrayOf(account.owner), PUBLIC_URI];
         } else {
           const contactsCollection = await ctx.call('activitypub.collection.get', {
             resourceUri: actor['apods:contacts'],
             webId: 'system'
           });
+          // @ts-expect-error TS(2339): Property 'followers' does not exist on type 'never... Remove this comment to see the full error message
           recipients = [actor.followers, ...arrayOf(contactsCollection.items), PUBLIC_URI];
         }
 
@@ -111,14 +124,18 @@ const ManagementService = {
           'activitypub.outbox.post',
           {
             '@context': 'https://www.w3.org/ns/activitystreams',
+            // @ts-expect-error TS(2339): Property 'outbox' does not exist on type 'never'.
             collectionUri: actor.outbox,
             type: ACTIVITY_TYPES.DELETE,
+            // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
             object: actor.id,
+            // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
             actor: actor.id,
             to: recipients
           },
           {
             meta: {
+              // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
               webId: actor.id,
               doNotProcessObject: true // If we don't set this, we will trigger delete of the actor's webId document locally.
             }
@@ -130,6 +147,7 @@ const ManagementService = {
         if (this.createJob) {
           this.createJob('deleteDataset', username, { dataset: username }, { delay: 24 * 60 * 60 * 1000 });
           // Delete account after one year. Meanwhile, new users won't be able to register an account under this name.
+          // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
           this.createJob('deleteAccountInfo', username, { webId: actor.id }, { delay: 365 * 24 * 60 * 60 * 1000 });
         } else {
           // Moleculer scheduler not available. The timing here is a tradeoff
@@ -155,6 +173,7 @@ const ManagementService = {
       },
       async handler(ctx) {
         const { username, withBackups, withSettings } = ctx.params;
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
 
         // Validate that the actor exists
@@ -166,14 +185,17 @@ const ManagementService = {
           if (!webId) {
             throw403('You are not allowed to delete this actor.');
           }
+          // @ts-expect-error TS(2339): Property 'group' does not exist on type 'never'.
           if (account.group && !arrayOf(account.owner).includes(webId)) {
             throw403('You are not allowed to delete this group.');
           }
+          // @ts-expect-error TS(2339): Property 'group' does not exist on type 'never'.
           if (!account.group && webId !== account.webId) {
             throw403('You are not allowed to delete this actor.');
           }
         }
 
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'never'.
         const storageUrl = await ctx.call('solid-storage.getUrl', { webId: account.webId });
 
         // If there has been an export less than 5 minutes ago, we won't create a new one.
@@ -181,10 +203,12 @@ const ManagementService = {
         const recentExport = await this.findRecentExport(username, this.settings.retainTmpExportsMs);
         if (recentExport) {
           // Return file stream.
+          // @ts-expect-error TS(2339): Property '$responseType' does not exist on type '{... Remove this comment to see the full error message
           ctx.meta.$responseType = 'application/zip';
           return fs.promises.readFile(recentExport);
         }
 
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'never'.
         const serializedQuads = await this.createRdfDump(username, account.webId, withSettings);
 
         const currentDateStr = new Date().toISOString().replace(/:/g, '-');
@@ -193,6 +217,7 @@ const ManagementService = {
         // Create zip archiver.
         const archive = archiver('zip', {});
         archive.on('error', function (err) {
+          // @ts-expect-error TS(2683): 'this' implicitly has type 'any' because it does n... Remove this comment to see the full error message
           this.logger.error('Error while exporting pod data ', err);
           throw500(err?.message);
         });
@@ -204,9 +229,11 @@ const ManagementService = {
         archive.append(serializedQuads, { name: 'rdf.nq' });
 
         // Add backup files, if desired and available.
+        // @ts-expect-error TS(2551): Property 'hasService' does not exist on type 'Serv... Remove this comment to see the full error message
         if (withBackups && this.broker.registry.hasService('backup')) {
           /** @type {string[]} */
           const backupFilenames = await ctx.call('backup.listBackupsForDataset', { dataset: username });
+          // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
           for (const backupFilename of backupFilenames) {
             archive.file(backupFilename, { name: `backups/${path.basename(backupFilename)}` });
           }
@@ -214,6 +241,7 @@ const ManagementService = {
 
         // Add non-rdf files.
         const uploadsPath = path.join('./uploads/', username, 'data');
+        // @ts-expect-error TS(7006): Parameter 'relativeFileName' implicitly has an 'an... Remove this comment to see the full error message
         (await this.getFilesInDir(uploadsPath)).forEach(relativeFileName => {
           // Reconstruct the URI of the file
           const fileUri = urlJoin(storageUrl, relativeFileName);
@@ -232,6 +260,7 @@ const ManagementService = {
         }
 
         // Return file by reading it from fs.
+        // @ts-expect-error TS(2339): Property '$responseType' does not exist on type '{... Remove this comment to see the full error message
         ctx.meta.$responseType = 'application/zip';
         return fs.promises.readFile(fileName);
       }
@@ -244,6 +273,7 @@ const ManagementService = {
      * @param {string} offsetMs Offset in milliseconds
      * @returns {string} The most recent export filename, if within offset.
      */
+    // @ts-expect-error TS(2683): 'this' implicitly has type 'any' because it does n... Remove this comment to see the full error message
     async findRecentExport(dataset, offsetMs = this.settings.retainTmpExportsMs) {
       const files = fs.readdirSync(this.settings.exportDir);
       files.sort();
@@ -253,12 +283,15 @@ const ManagementService = {
         .map(file => [file, regex.exec(file)])
         .filter(([file, matches]) => matches)
         // Reconstruct date objects from file name (hyphens are replaced back to colon in time string)
+        // @ts-expect-error TS(18047): 'matches' is possibly 'null'.
         .map(([file, matches]) => [file, new Date(`${matches[1]}T${matches[2].replace(/-/g, ':')}Z`)])
         // Only look for exports younger than offset
+        // @ts-expect-error TS(2363): The right-hand side of an arithmetic operation mus... Remove this comment to see the full error message
         .filter(([file, created]) => Date.now() - created < offsetMs)
         .map(([file, created]) => file)
         .at(-1);
 
+      // @ts-expect-error TS(2345): Argument of type 'string | RegExpExecArray | Date'... Remove this comment to see the full error message
       return recentExportFilename && path.join(this.settings.exportDir, recentExportFilename);
     },
     /**
@@ -272,8 +305,11 @@ const ManagementService = {
       files
         .map(file => [file, regex.exec(file)])
         .filter(([file, matches]) => matches)
+        // @ts-expect-error TS(18047): 'matches' is possibly 'null'.
         .map(([file, matches]) => [file, new Date(`${matches[1]}T${matches[2].replace(/-/g, ':')}Z`)])
+        // @ts-expect-error TS(2363): The right-hand side of an arithmetic operation mus... Remove this comment to see the full error message
         .filter(([file, created]) => Date.now() - created > offsetMs)
+        // @ts-expect-error TS(2345): Argument of type 'string | RegExpExecArray | Date ... Remove this comment to see the full error message
         .forEach(([file, created]) => fs.rmSync(path.join(this.settings.exportDir, file), { force: true }));
     },
     /**
@@ -310,18 +346,24 @@ const ManagementService = {
      * @returns {string} Serialized n-quads string
      */
     async serializeQuads(quads) {
+      // @ts-expect-error TS(7034): Variable 'quadStrings' implicitly has type 'any[]'... Remove this comment to see the full error message
       const quadStrings = [];
+      // @ts-expect-error TS(7005): Variable 'NTriplesSerializer' implicitly has an 'a... Remove this comment to see the full error message
       const serializer = new NTriplesSerializer();
+      // @ts-expect-error TS(7005): Variable 'Readable' implicitly has an 'any' type.
       const nQuadStream = serializer.import(Readable.from(quads));
+      // @ts-expect-error TS(7006): Parameter 'quadString' implicitly has an 'any' typ... Remove this comment to see the full error message
       nQuadStream.on('data', quadString => {
         quadStrings.push(quadString);
       });
       // Wait until reading stream finished
       await new Promise(resolve => {
         nQuadStream.on('end', () => {
+          // @ts-expect-error TS(2794): Expected 1 arguments, but got 0. Did you forget to... Remove this comment to see the full error message
           resolve();
         });
       });
+      // @ts-expect-error TS(7005): Variable 'quadStrings' implicitly has an 'any[]' t... Remove this comment to see the full error message
       return quadStrings.join('');
     },
     /**
@@ -354,11 +396,14 @@ const ManagementService = {
       // Add settings graph to settings triples
       const settingsGraphNode = namedNode('http://semapps.org/ns/core#settings');
       settingsDump.forEach(record => {
+        // @ts-expect-error TS(2339): Property 'g' does not exist on type 'never'.
         record.g = settingsGraphNode;
       });
       // Add settings triples to export dataset.
+      // @ts-expect-error TS(2339): Property 'push' does not exist on type 'never'.
       datasetDump.push(...settingsDump);
       // Convert to rdf-js quads.
+      // @ts-expect-error TS(2339): Property 'map' does not exist on type 'never'.
       const allQuads = datasetDump.map(q => quad(q.s, q.p, q.o, q.g));
       const serializedRdf = await this.serializeQuads(allQuads);
       return serializedRdf;
@@ -367,26 +412,32 @@ const ManagementService = {
   queues: {
     deleteDataset: {
       name: '*',
+      // @ts-expect-error TS(7006): Parameter 'job' implicitly has an 'any' type.
       async process(job) {
         const { dataset } = job.data;
         job.progress(0);
+        // @ts-expect-error TS(2339): Property 'deleteDataset' does not exist on type '{... Remove this comment to see the full error message
         await this.deleteDataset(dataset);
         job.progress(100);
       }
     },
     deleteAccountInfo: {
       name: '*',
+      // @ts-expect-error TS(7006): Parameter 'job' implicitly has an 'any' type.
       async process(job) {
         const { webId } = job.data;
         job.progress(0);
+        // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ name: ... Remove this comment to see the full error message
         await this.broker.call('auth.account.deleteByWebId', { webId });
         job.progress(100);
       }
     },
     cleanUpExports: {
       name: '*',
+      // @ts-expect-error TS(7006): Parameter 'job' implicitly has an 'any' type.
       async process(job) {
         const { offsetMs } = job.data;
+        // @ts-expect-error TS(2339): Property 'deleteOutdatedExports' does not exist on... Remove this comment to see the full error message
         await this.deleteOutdatedExports(offsetMs ?? this.settings.retainTmpExportsMs);
       }
     }

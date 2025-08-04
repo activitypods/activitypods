@@ -1,13 +1,17 @@
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { triple, namedNode, literal } from '@rdfjs/data-model';
 import { arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
+// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { MigrationService } from '@semapps/migration';
-import CONFIG from '../../config/config.ts';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const Migration200Schema = {
   name: 'migration-2-0-0' as const,
+  // @ts-expect-error TS(2322): Type '{ name: "migration"; settings: { baseUrl: un... Remove this comment to see the full error message
   mixins: [MigrationService],
   settings: {
     baseUrl: CONFIG.BASE_URL
@@ -24,8 +28,11 @@ const Migration200Schema = {
           } else {
             this.logger.info(`Migrating Pod of ${account.webId}...`);
 
+            // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
             ctx.meta.dataset = account.username;
+            // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
             ctx.meta.webId = account.webId;
+            // @ts-expect-error TS(2339): Property 'skipObjectsWatcher' does not exist on ty... Remove this comment to see the full error message
             ctx.meta.skipObjectsWatcher = true; // We don't want to trigger an Update
 
             // WebID
@@ -144,8 +151,10 @@ const Migration200Schema = {
           // Go through each registered container and persist them
           const registeredContainers = await ctx.call('ldp.registry.list');
           for (const container of Object.values(registeredContainers)) {
+            // @ts-expect-error TS(18046): 'container' is of type 'unknown'.
             const containerUri = urlJoin(podUrl, container.path);
             await ctx.call('type-registrations.register', {
+              // @ts-expect-error TS(18046): 'container' is of type 'unknown'.
               types: arrayOf(container.acceptedTypes),
               containerUri,
               webId
@@ -213,11 +222,14 @@ const Migration200Schema = {
         // Go through each registered containers, create and attach it
         const registeredContainers = await ctx.call('ldp.registry.list', { dataset });
         for (const container of Object.values(registeredContainers)) {
+          // @ts-expect-error TS(18046): 'container' is of type 'unknown'.
           if (!container.podsContainer) {
+            // @ts-expect-error TS(18046): 'container' is of type 'unknown'.
             const containerUri = urlJoin(podUrl, container.path);
             this.logger.info(`Creating new container ${containerUri}`);
             await ctx.call('ldp.container.createAndAttach', {
               containerUri,
+              // @ts-expect-error TS(18046): 'container' is of type 'unknown'.
               permissions: container.permissions,
               webId
             });
@@ -273,6 +285,7 @@ const Migration200Schema = {
               });
             } catch (e) {
               this.logger.warn(
+                // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
                 `Could not attach ${resourceUri} to new container ${newContainerUri}. Error: ${e.message}`
               );
             }
@@ -305,6 +318,7 @@ const Migration200Schema = {
         ];
 
         // Prevent tombstones to be created
+        // @ts-expect-error TS(2339): Property 'activateTombstones' does not exist on ty... Remove this comment to see the full error message
         ctx.meta.activateTombstones = false;
 
         for (const unusedContainerPath of unusedContainersPaths) {

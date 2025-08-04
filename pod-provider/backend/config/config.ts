@@ -17,6 +17,7 @@ export const FRONTEND_URL = process.env.SEMAPPS_FRONTEND_URL;
 export const SHAPE_REPOSITORY_URL = process.env.SEMAPPS_SHAPE_REPOSITORY_URL;
 export const COLOR_PRIMARY = process.env.SEMAPPS_COLOR_PRIMARY;
 export const COLOR_SECONDARY = process.env.SEMAPPS_COLOR_SECONDARY;
+// @ts-expect-error TS(18048): 'process.env.SEMAPPS_AVAILABLE_LOCALES' is possibl... Remove this comment to see the full error message
 export const AVAILABLE_LOCALES = process.env.SEMAPPS_AVAILABLE_LOCALES.split(',');
 export const DEFAULT_LOCALE = process.env.SEMAPPS_DEFAULT_LOCALE;
 export const ENABLE_GROUPS = process.env.SEMAPPS_ENABLE_GROUPS === 'true';
@@ -33,10 +34,12 @@ export const COOKIE_SECRET = process.env.SEMAPPS_COOKIE_SECRET;
 export const FROM_EMAIL = process.env.SEMAPPS_FROM_EMAIL;
 export const FROM_NAME = process.env.SEMAPPS_FROM_NAME;
 export const SMTP_HOST = process.env.SEMAPPS_SMTP_HOST;
+// @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message
 export const SMTP_PORT = parseInt(process.env.SEMAPPS_SMTP_PORT, 10);
 export const SMTP_SECURE = process.env.SEMAPPS_SMTP_SECURE === 'true';
 export const SMTP_USER = process.env.SEMAPPS_SMTP_USER;
 export const SMTP_PASS = process.env.SEMAPPS_SMTP_PASS;
+// @ts-expect-error TS(18048): 'process.env.SEMAPPS_AUTH_RESERVED_USER_NAMES' is ... Remove this comment to see the full error message
 export const AUTH_RESERVED_USER_NAMES = process.env.SEMAPPS_AUTH_RESERVED_USER_NAMES.split(',');
 export const AUTH_ACCOUNTS_DATASET = process.env.SEMAPPS_AUTH_ACCOUNTS_DATASET;
 export const BACKUP_COPY_METHOD = process.env.SEMAPPS_BACKUP_COPY_METHOD;

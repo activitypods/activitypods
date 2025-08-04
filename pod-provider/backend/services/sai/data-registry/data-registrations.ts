@@ -1,3 +1,4 @@
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import LinkHeader from 'http-link-header';
 const { MoleculerError } = require('moleculer').Errors;
@@ -46,6 +47,7 @@ const DataRegistrationsSchema = {
         // Get registered class from shapeTree
         const shapeUri = await ctx.call('shape-trees.getShapeUri', { resourceUri: shapeTreeUri });
         if (!shapeUri) throw new Error(`Could not find shape from shape tree ${shapeTreeUri}`);
+        // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
         const [registeredClass] = await ctx.call('shacl.getTypes', { resourceUri: shapeUri });
         if (!registeredClass) throw new Error(`Could not find class required by shape ${shapeUri}`);
 
@@ -62,6 +64,7 @@ const DataRegistrationsSchema = {
 
         // Register the class on the type index
         const services = await this.broker.call('$node.services');
+        // @ts-expect-error TS(2339): Property 'some' does not exist on type 'never'.
         if (services.some((s: any) => s.name === 'type-registrations')) {
           await ctx.call('type-registrations.register', {
             types: [registeredClass],
@@ -175,6 +178,7 @@ const DataRegistrationsSchema = {
           dataset: getDatasetFromUri(podOwner)
         });
 
+        // @ts-expect-error TS(2339): Property 'dataRegistrationUri' does not exist on t... Remove this comment to see the full error message
         return results[0]?.dataRegistrationUri?.value;
       }
     }),
@@ -185,6 +189,7 @@ const DataRegistrationsSchema = {
        */
       async handler(ctx) {
         const { resourceUri } = ctx.params;
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const baseUrl = await ctx.call('ldp.getBaseUrl');
@@ -205,6 +210,7 @@ const DataRegistrationsSchema = {
             dataset: getDatasetFromUri(resourceUri)
           });
 
+          // @ts-expect-error TS(2339): Property 'dataRegistrationUri' does not exist on t... Remove this comment to see the full error message
           return results[0]?.dataRegistrationUri?.value;
         } else {
           if (!webId)
@@ -216,6 +222,7 @@ const DataRegistrationsSchema = {
             actorUri: webId
           });
 
+          // @ts-expect-error TS(2339): Property 'headers' does not exist on type 'never'.
           const linkHeader = LinkHeader.parse(response.headers.link);
           const dataRegistrationLinkHeader = linkHeader.rel('http://www.w3.org/ns/solid/interop#hasDataRegistration');
 
@@ -232,6 +239,7 @@ const DataRegistrationsSchema = {
        */
       async handler(ctx) {
         const { resourceUri } = ctx.params;
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const dataRegistrationUri = await this.actions.getUriByResourceUri({ resourceUri, webId }, { parentCtx: ctx });
@@ -240,6 +248,7 @@ const DataRegistrationsSchema = {
           return await this.actions.get({ dataRegistrationUri }, { parentCtx: ctx });
         } else {
           throw new MoleculerError(
+            // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
             `Data registration not found for resource ${resourceUri} (webId ${webId}, dataset ${ctx.meta.dataset})`,
             404,
             'NOT_FOUND'
@@ -261,6 +270,7 @@ const DataRegistrationsSchema = {
           ontology = await ctx.call('ontologies.get', { uri: registeredClass });
         } else if (registeredClass.match(regex)) {
           const matchResults = regex.exec(registeredClass);
+          // @ts-expect-error TS(18047): 'matchResults' is possibly 'null'.
           ontology = await ctx.call('ontologies.get', { prefix: matchResults[1] });
         } else {
           throw new Error(`Registered class must be an URI or prefixed. Received ${registeredClass}`);
@@ -303,10 +313,12 @@ const DataRegistrationsSchema = {
   events: {
     'ldp.container.created': defineServiceEvent({
       async handler(ctx) {
+        // @ts-expect-error TS(2339): Property 'containerUri' does not exist on type 'Op... Remove this comment to see the full error message
         const { containerUri, options, webId } = ctx.params;
 
         // If a shape tree is in the container option of the newly-created container, attach
         if (options?.shapeTreeUri) {
+          // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
           await this.actions.attachToContainer(
             {
               shapeTreeUri: options.shapeTreeUri,

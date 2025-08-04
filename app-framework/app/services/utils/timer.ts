@@ -1,9 +1,11 @@
+// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const TimerSchema = {
   name: 'timer' as const,
   actions: {
     get: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { key } = ctx.params;
 
@@ -18,6 +20,7 @@ const TimerSchema = {
     }),
 
     set: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { key, time, actionName, params, repeat } = ctx.params;
 
@@ -29,6 +32,7 @@ const TimerSchema = {
           this.serializeKey(key),
           { actionName, params, time },
           {
+            // @ts-expect-error TS(2362): The left-hand side of an arithmetic operation must... Remove this comment to see the full error message
             delay: new Date(time) - Date.now(),
             // Try again after 3 minutes and until 12 hours later
             attempts: 8,
@@ -40,6 +44,7 @@ const TimerSchema = {
     }),
 
     delete: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { key } = ctx.params;
 
@@ -82,9 +87,11 @@ const TimerSchema = {
   queues: {
     timeout: {
       name: '*',
+      // @ts-expect-error TS(7023): 'process' implicitly has return type 'any' because... Remove this comment to see the full error message
       async process(job: any) {
         const { actionName, params } = job.data;
         job.progress(0);
+        // @ts-expect-error TS(7022): 'result' implicitly has type 'any' because it does... Remove this comment to see the full error message
         const result = await this.broker.call(actionName, params);
         job.progress(100);
         return result;

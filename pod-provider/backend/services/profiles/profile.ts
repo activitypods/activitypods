@@ -1,13 +1,16 @@
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { triple, namedNode } from '@rdfjs/data-model';
 import { ControlledContainerMixin } from '@semapps/ldp';
 import { OBJECT_TYPES, AS_PREFIX } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
-import CONFIG from '../../config/config.ts';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema, defineServiceEvent } from 'moleculer';
 
 const ProfilesProfileSchema = {
   name: 'profiles.profile' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
     // ControlledContainerMixin settings
@@ -22,11 +25,15 @@ const ProfilesProfileSchema = {
   events: {
     'auth.registered': defineServiceEvent({
       async handler(ctx) {
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'Optionali... Remove this comment to see the full error message
         const { webId, profileData } = ctx.params;
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
         const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
         await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
         const profileUri = await this.actions.post(
           {
             containerUri,
@@ -89,6 +96,7 @@ const ProfilesProfileSchema = {
           if (location && location['vcard:hasAddress'] && location['vcard:hasAddress']['vcard:hasGeo']) {
             ctx.params.resource['vcard:hasGeo'] = location['vcard:hasAddress']['vcard:hasGeo'];
           } else {
+            // @ts-expect-error TS(2339): Property 'warn' does not exist on type 'string | A... Remove this comment to see the full error message
             this.logger.warn(
               `Could not fetch location ${ctx.params.resource['vcard:hasAddress']} when updating profile`
             );

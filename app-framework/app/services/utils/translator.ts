@@ -1,5 +1,6 @@
 import Handlebars from 'handlebars';
 import { isObject } from '@semapps/ldp';
+// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const TranslatorSchema = {
@@ -13,13 +14,17 @@ const TranslatorSchema = {
     }
   },
   async started() {
+    // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'void'.
     for (const [name, fn] of Object.entries(this.settings.handlebars.helpers)) {
+      // @ts-expect-error TS(2339): Property 'logger' does not exist on type 'void'.
       this.logger.info(`Registering handlebars helper ${name}`);
+      // @ts-expect-error TS(2345): Argument of type 'unknown' is not assignable to pa... Remove this comment to see the full error message
       Handlebars.registerHelper(name, fn);
     }
   },
   actions: {
     translate: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { template, templateParams, actorUri } = ctx.params;
 
@@ -36,13 +41,16 @@ const TranslatorSchema = {
       return (
         template &&
         Object.fromEntries(
+          // @ts-expect-error TS(2769): No overload matches this call.
           Object.entries(template).map(([key, value]) => {
             if (typeof value === 'string') {
               const compiledValue = Handlebars.compile(value);
               return [key, compiledValue(params)];
             } else if (isObject(value)) {
               // If we have an object with locales mapping, look for the right locale
+              // @ts-expect-error TS(18046): 'value' is of type 'unknown'.
               if (value[locale]) {
+                // @ts-expect-error TS(18046): 'value' is of type 'unknown'.
                 const compiledValue = Handlebars.compile(value[locale]);
                 return [key, compiledValue(params)];
               } else {

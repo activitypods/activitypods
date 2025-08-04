@@ -5,6 +5,7 @@ const ALLOWED_TYPES = ['interop:ApplicationRegistration', 'interop:SocialAgentRe
 
 const AgentRegistrySchema = {
   name: 'agent-registry' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:AgentRegistry'],

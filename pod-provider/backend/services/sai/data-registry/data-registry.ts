@@ -4,6 +4,7 @@ import { ServiceSchema, defineAction } from 'moleculer';
 
 const DataRegistrySchema = {
   name: 'data-registry' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:DataRegistry'],
@@ -65,6 +66,7 @@ const DataRegistrySchema = {
         const { webId } = ctx.params;
 
         const containers = await ctx.call('ldp.registry.list');
+        // @ts-expect-error TS(18046): 'container' is of type 'unknown'.
         const numContainersWithShapeTree = Object.values(containers).filter(container => container.shapeTreeUri).length;
 
         let numDataRegistrations;

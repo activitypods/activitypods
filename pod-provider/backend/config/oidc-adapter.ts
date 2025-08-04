@@ -1,4 +1,6 @@
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'node... Remove this comment to see the full error message
 import fetch from 'node-fetch';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'loda... Remove this comment to see the full error message
 import isEmpty from 'lodash/isEmpty.js';
 
 const grantable = new Set([
@@ -25,26 +27,33 @@ function uidKeyFor(uid: any) {
 
 class RedisAdapter {
   constructor(name: any, client: any) {
+    // @ts-expect-error TS(2339): Property 'name' does not exist on type 'RedisAdapt... Remove this comment to see the full error message
     this.name = name;
+    // @ts-expect-error TS(2339): Property 'client' does not exist on type 'RedisAda... Remove this comment to see the full error message
     this.client = client;
   }
 
   async upsert(id: any, payload: any, expiresIn: any) {
     const key = this.key(id);
+    // @ts-expect-error TS(2339): Property 'name' does not exist on type 'RedisAdapt... Remove this comment to see the full error message
     const store = consumable.has(this.name) ? { payload: JSON.stringify(payload) } : JSON.stringify(payload);
 
+    // @ts-expect-error TS(2339): Property 'client' does not exist on type 'RedisAda... Remove this comment to see the full error message
     const multi = this.client.multi();
+    // @ts-expect-error TS(2339): Property 'name' does not exist on type 'RedisAdapt... Remove this comment to see the full error message
     multi[consumable.has(this.name) ? 'hmset' : 'set'](key, store);
 
     if (expiresIn) {
       multi.expire(key, expiresIn);
     }
 
+    // @ts-expect-error TS(2339): Property 'name' does not exist on type 'RedisAdapt... Remove this comment to see the full error message
     if (grantable.has(this.name) && payload.grantId) {
       const grantKey = grantKeyFor(payload.grantId);
       multi.rpush(grantKey, key);
       // if you're seeing grant key lists growing out of acceptable proportions consider using LTRIM
       // here to trim the list to an appropriate length
+      // @ts-expect-error TS(2339): Property 'client' does not exist on type 'RedisAda... Remove this comment to see the full error message
       const ttl = await this.client.ttl(grantKey);
       if (expiresIn > ttl) {
         multi.expire(grantKey, expiresIn);
@@ -67,11 +76,15 @@ class RedisAdapter {
   }
 
   async find(id: any) {
+    // @ts-expect-error TS(2339): Property 'name' does not exist on type 'RedisAdapt... Remove this comment to see the full error message
     const data = consumable.has(this.name)
-      ? await this.client.hgetall(this.key(id))
-      : await this.client.get(this.key(id));
+      ? // @ts-expect-error TS(2339): Property 'client' does not exist on type 'RedisAda... Remove this comment to see the full error message
+        await this.client.hgetall(this.key(id))
+      : // @ts-expect-error TS(2339): Property 'client' does not exist on type 'RedisAda... Remove this comment to see the full error message
+        await this.client.get(this.key(id));
 
     if (isEmpty(data)) {
+      // @ts-expect-error TS(2339): Property 'name' does not exist on type 'RedisAdapt... Remove this comment to see the full error message
       if (this.name === 'Client' && id.startsWith('http')) {
         if (!/^https:|^http:\/\/localhost(?::\d+)?(?:\/|$)/u.test(id)) {
           throw new Error(`SSL is required for client_id authentication unless working locally.`);
@@ -96,6 +109,7 @@ class RedisAdapter {
           }
         } catch (error) {
           json = undefined;
+          // @ts-expect-error TS(18046): 'error' is of type 'unknown'.
           console.error(`Found unexpected client ID for ${id}: ${error.message}`);
         }
 
@@ -134,22 +148,27 @@ class RedisAdapter {
   }
 
   async findByUid(uid: any) {
+    // @ts-expect-error TS(2339): Property 'client' does not exist on type 'RedisAda... Remove this comment to see the full error message
     const id = await this.client.get(uidKeyFor(uid));
     return this.find(id);
   }
 
   async findByUserCode(userCode: any) {
+    // @ts-expect-error TS(2339): Property 'client' does not exist on type 'RedisAda... Remove this comment to see the full error message
     const id = await this.client.get(userCodeKeyFor(userCode));
     return this.find(id);
   }
 
   async destroy(id: any) {
     const key = this.key(id);
+    // @ts-expect-error TS(2339): Property 'client' does not exist on type 'RedisAda... Remove this comment to see the full error message
     await this.client.del(key);
   }
 
   async revokeByGrantId(grantId: any) {
+    // @ts-expect-error TS(2339): Property 'client' does not exist on type 'RedisAda... Remove this comment to see the full error message
     const multi = this.client.multi();
+    // @ts-expect-error TS(2339): Property 'client' does not exist on type 'RedisAda... Remove this comment to see the full error message
     const tokens = await this.client.lrange(grantKeyFor(grantId), 0, -1);
     tokens.forEach((token: any) => multi.del(token));
     multi.del(grantKeyFor(grantId));
@@ -157,10 +176,12 @@ class RedisAdapter {
   }
 
   async consume(id: any) {
+    // @ts-expect-error TS(2339): Property 'client' does not exist on type 'RedisAda... Remove this comment to see the full error message
     await this.client.hset(this.key(id), 'consumed', Math.floor(Date.now() / 1000));
   }
 
   key(id: any) {
+    // @ts-expect-error TS(2339): Property 'name' does not exist on type 'RedisAdapt... Remove this comment to see the full error message
     return `${this.name}:${id}`;
   }
 }

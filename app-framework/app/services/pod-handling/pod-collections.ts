@@ -4,18 +4,21 @@ import sparqljsModule from 'sparqljs';
 const SparqlGenerator = sparqljsModule.Generator;
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 import { arrayOf } from '@semapps/ldp';
+// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const PodCollectionsSchema = {
   name: 'pod-collections' as const,
   mixins: [FetchPodOrProxyMixin],
   started() {
+    // @ts-expect-error TS(2339): Property 'sparqlGenerator' does not exist on type ... Remove this comment to see the full error message
     this.sparqlGenerator = new SparqlGenerator({
       /* prefixes, baseIRI, factory, sparqlStar */
     });
   },
   actions: {
     getItems: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { collectionUri, actorUri } = ctx.params;
 
@@ -26,6 +29,7 @@ const PodCollectionsSchema = {
     }),
 
     createAndAttach: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri, attachPredicate, collectionOptions, actorUri } = ctx.params;
         const { ordered, summary, itemsPerPage, dereferenceItems, sortPredicate, sortOrder } = collectionOptions;
@@ -74,6 +78,7 @@ const PodCollectionsSchema = {
     }),
 
     deleteAndDetach: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri, attachPredicate, actorUri } = ctx.params;
 
@@ -111,6 +116,7 @@ const PodCollectionsSchema = {
     }),
 
     add: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { collectionUri, itemUri, actorUri } = ctx.params;
 
@@ -148,6 +154,7 @@ const PodCollectionsSchema = {
     }),
 
     remove: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { collectionUri, itemUri, actorUri } = ctx.params;
 
@@ -185,6 +192,7 @@ const PodCollectionsSchema = {
     }),
 
     createAndAttachMissing: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { shapeTreeUri, attachPredicate, collectionOptions } = ctx.params;
 
@@ -224,6 +232,7 @@ const PodCollectionsSchema = {
 
     getCollectionUriFromResource: defineAction({
       // Find the collection attached to a given resource (or undefined if no collection is attached)
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resource, attachPredicate } = ctx.params;
         const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });

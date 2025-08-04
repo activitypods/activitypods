@@ -29,8 +29,10 @@ const AuthorizationEndpointSchema = {
       async handler(ctx) {
         const { resource: resourceUri } = ctx.params;
 
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
         const account = await ctx.call('auth.account.findByWebId', { webId });
+        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = account.username;
 
         if (!resourceUri.startsWith(`${webId}/`))
@@ -40,6 +42,7 @@ const AuthorizationEndpointSchema = {
 
         return {
           resourceUri,
+          // @ts-expect-error TS(2339): Property 'map' does not exist on type 'never'.
           authorizations: authorizations.map((authorization: any) => ({
             grantee: authorization['interop:grantee'],
             accessModes: arrayOf(authorization['interop:accessMode'])
@@ -55,25 +58,32 @@ const AuthorizationEndpointSchema = {
       async handler(ctx) {
         const { resourceUri, authorizations } = ctx.params;
 
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const podOwner = ctx.meta.webId;
         const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
+        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = account.username;
 
         if (!resourceUri.startsWith(`${podOwner}/`))
           throw new MoleculerError('Only the owner of a resource can update its authorizations', 403, 'FORBIDDEN');
 
+        // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
         for ({ grantee, accessModes } of authorizations) {
+          // @ts-expect-error TS(2304): Cannot find name 'accessModes'.
           if (accessModes.length > 0) {
             await ctx.call('access-authorizations.addForSingleResource', {
               resourceUri,
               podOwner,
+              // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
               grantee,
+              // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
               accessModes
             });
           } else {
             await ctx.call('access-authorizations.removeForSingleResource', {
               resourceUri,
               podOwner,
+              // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
               grantee
             });
           }

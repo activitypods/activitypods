@@ -20,6 +20,7 @@ import { ServiceSchema, defineAction } from 'moleculer';
 /** @type {import('moleculer').ServiceSchema} */
 const ContactsRequestSchema = {
   name: 'contacts.request' as const,
+  // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Serv... Remove this comment to see the full error message
   mixins: [ActivitiesHandlerMixin],
   settings: {
     contactsCollectionOptions: {

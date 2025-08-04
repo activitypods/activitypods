@@ -1,6 +1,6 @@
-const path = require('path');
-const CONFIG = require('../config/config');
-const { sanitizeSparqlQuery } = require('@semapps/triplestore');
+import path from 'path';
+import CONFIG from '../config/config.ts';
+import { sanitizeSparqlQuery } from '@semapps/triplestore';
 
 const POD_PROVIDER_TYPES = [
   'https://www.w3.org/ns/activitystreams#Person',
@@ -11,7 +11,7 @@ const POD_PROVIDER_TYPES = [
   'http://www.w3.org/ns/solid/interop#ApplicationRegistration'
 ];
 
-module.exports = {
+const AppOpenerSchema = {
   name: 'app-opener',
   dependencies: ['api', 'ldp'],
   async started() {
@@ -95,3 +95,5 @@ module.exports = {
     }
   }
 };
+
+export default AppOpenerSchema;

@@ -1,26 +1,26 @@
-const QueueMixin = require('moleculer-bull');
-const { arrayOf } = require('@semapps/ldp');
-const AccessNeedsService = require('./services/registration/access-needs');
-const AccessNeedsGroupsService = require('./services/registration/access-needs-groups');
-const ActorsService = require('./services/registration/actors');
-const AppRegistrationsService = require('./services/registration/app-registrations');
-const AccessGrantsService = require('./services/registration/access-grants');
-const RegistrationService = require('./services/registration/registration');
-const PodActivitiesWatcherService = require('./services/pod-handling/pod-activities-watcher');
-const PodCollectionsService = require('./services/pod-handling/pod-collections');
-const PodContainersService = require('./services/pod-handling/pod-containers');
-const PodNotificationService = require('./services/pod-handling/pod-notification');
-const PodOutboxService = require('./services/pod-handling/pod-outbox');
-const PodPermissionsService = require('./services/pod-handling/pod-permissions');
-const PodResourcesService = require('./services/pod-handling/pod-resources');
-const PodWacGroupsService = require('./services/pod-handling/pod-wac-groups');
-const ShaclService = require('./services/utils/shacl');
-const ShapeTreesService = require('./services/utils/shape-trees');
-const TimerService = require('./services/utils/timer');
-const TranslatorService = require('./services/utils/translator');
-const MigrationService = require('./services/utils/migration');
+import QueueMixin from 'moleculer-bull';
+import { arrayOf } from '@semapps/ldp';
+import AccessNeedsService from './services/registration/access-needs.ts';
+import AccessNeedsGroupsService from './services/registration/access-needs-groups.ts';
+import ActorsService from './services/registration/actors.ts';
+import AppRegistrationsService from './services/registration/app-registrations.ts';
+import AccessGrantsService from './services/registration/access-grants.ts';
+import RegistrationService from './services/registration/registration.ts';
+import PodActivitiesWatcherService from './services/pod-handling/pod-activities-watcher.ts';
+import PodCollectionsService from './services/pod-handling/pod-collections.ts';
+import PodContainersService from './services/pod-handling/pod-containers.ts';
+import PodNotificationService from './services/pod-handling/pod-notification.ts';
+import PodOutboxService from './services/pod-handling/pod-outbox.ts';
+import PodPermissionsService from './services/pod-handling/pod-permissions.ts';
+import PodResourcesService from './services/pod-handling/pod-resources.ts';
+import PodWacGroupsService from './services/pod-handling/pod-wac-groups.ts';
+import ShaclService from './services/utils/shacl.ts';
+import ShapeTreesService from './services/utils/shape-trees.ts';
+import TimerService from './services/utils/timer.ts';
+import TranslatorService from './services/utils/translator.ts';
+import MigrationService from './services/utils/migration.ts';
 
-module.exports = {
+const AppSchema = {
   name: 'app',
   settings: {
     baseUrl: null,
@@ -121,3 +121,5 @@ module.exports = {
     }
   }
 };
+
+export default AppSchema;

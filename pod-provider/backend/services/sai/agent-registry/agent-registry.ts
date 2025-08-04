@@ -1,9 +1,8 @@
-const { triple, namedNode } = require('@rdfjs/data-model');
-const { SingleResourceContainerMixin } = require('@semapps/ldp');
-
+import { triple, namedNode } from '@rdfjs/data-model';
+import { SingleResourceContainerMixin } from '@semapps/ldp';
 const ALLOWED_TYPES = ['interop:ApplicationRegistration', 'interop:SocialAgentRegistration'];
 
-module.exports = {
+const AgentRegistrySchema = {
   name: 'agent-registry',
   mixins: [SingleResourceContainerMixin],
   settings: {
@@ -89,3 +88,5 @@ module.exports = {
     }
   }
 };
+
+export default AgentRegistrySchema;

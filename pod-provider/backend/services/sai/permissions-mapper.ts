@@ -1,8 +1,8 @@
-const { getId, arrayOf } = require('@semapps/ldp');
+import { getId, arrayOf } from '@semapps/ldp';
 
 // Service that maps access grants and special rights to WAC permissions
 // For mapping details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
-module.exports = {
+const PermissionsMapperSchema = {
   name: 'permissions-mapper',
   actions: {
     async addPermissionsFromGrant(ctx) {
@@ -250,3 +250,5 @@ module.exports = {
     }
   }
 };
+
+export default PermissionsMapperSchema;

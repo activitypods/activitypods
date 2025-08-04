@@ -1,8 +1,10 @@
-const { ProxyService } = require('@semapps/crypto');
+import { ProxyService } from '@semapps/crypto';
 
-module.exports = {
+const Schema = {
   mixins: [ProxyService],
   settings: {
     podProvider: true
   }
 };
+
+export default Schema;

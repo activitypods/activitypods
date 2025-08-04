@@ -1,11 +1,11 @@
-const urlJoin = require('url-join');
-const { triple, namedNode } = require('@rdfjs/data-model');
-const { ControlledContainerMixin } = require('@semapps/ldp');
-const { OBJECT_TYPES, AS_PREFIX } = require('@semapps/activitypub');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const CONFIG = require('../../config/config');
+import urlJoin from 'url-join';
+import { triple, namedNode } from '@rdfjs/data-model';
+import { ControlledContainerMixin } from '@semapps/ldp';
+import { OBJECT_TYPES, AS_PREFIX } from '@semapps/activitypub';
+import { MIME_TYPES } from '@semapps/mime-types';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const ProfilesProfileSchema = {
   name: 'profiles.profile',
   mixins: [ControlledContainerMixin],
   settings: {
@@ -134,3 +134,5 @@ module.exports = {
     //   }
   }
 };
+
+export default ProfilesProfileSchema;

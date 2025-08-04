@@ -1,6 +1,6 @@
-const { SynchronizerService } = require('@semapps/sync');
+import { SynchronizerService } from '@semapps/sync';
 
-module.exports = {
+const Schema = {
   mixins: [SynchronizerService],
   settings: {
     podProvider: true,
@@ -9,3 +9,5 @@ module.exports = {
     attachToLocalContainers: true
   }
 };
+
+export default Schema;

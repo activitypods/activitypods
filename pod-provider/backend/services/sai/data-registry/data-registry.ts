@@ -1,7 +1,7 @@
-const { triple, namedNode } = require('@rdfjs/data-model');
-const { SingleResourceContainerMixin, arrayOf, delay } = require('@semapps/ldp');
+import { triple, namedNode } from '@rdfjs/data-model';
+import { SingleResourceContainerMixin, arrayOf, delay } from '@semapps/ldp';
 
-module.exports = {
+const DataRegistrySchema = {
   name: 'data-registry',
   mixins: [SingleResourceContainerMixin],
   settings: {
@@ -94,3 +94,5 @@ module.exports = {
     }
   }
 };
+
+export default DataRegistrySchema;

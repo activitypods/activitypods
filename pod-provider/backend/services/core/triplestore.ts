@@ -1,7 +1,7 @@
-const { TripleStoreService } = require('@semapps/triplestore');
-const CONFIG = require('../../config/config');
+import { TripleStoreService } from '@semapps/triplestore';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const Schema = {
   mixins: [TripleStoreService],
   settings: {
     url: CONFIG.SPARQL_ENDPOINT,
@@ -10,3 +10,5 @@ module.exports = {
     fusekiBase: CONFIG.FUSEKI_BASE
   }
 };
+
+export default Schema;

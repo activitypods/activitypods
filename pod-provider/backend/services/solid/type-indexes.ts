@@ -1,5 +1,2 @@
-const { TypeIndexesService } = require('@semapps/solid');
-
-module.exports = {
-  mixins: [TypeIndexesService]
-};
+import { TypeIndexesService } from '@semapps/solid';
+export const mixins = [TypeIndexesService];

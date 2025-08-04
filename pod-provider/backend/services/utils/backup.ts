@@ -1,8 +1,8 @@
-const path = require('path');
-const BackupService = require('@semapps/backup');
-const CONFIG = require('../../config/config');
+import path from 'path';
+import BackupService from '@semapps/backup';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const Schema = {
   mixins: [BackupService],
   settings: {
     localServer: {
@@ -27,3 +27,5 @@ module.exports = {
     }
   }
 };
+
+export default Schema;

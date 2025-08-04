@@ -1,7 +1,7 @@
 /**
  * Load the types associated with the shape tree
  */
-module.exports = {
+const Schema = {
   settings: {
     shapeTreeUri: null,
     type: null
@@ -26,3 +26,5 @@ module.exports = {
     }
   }
 };
+
+export default Schema;

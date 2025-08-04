@@ -1,9 +1,9 @@
-const path = require('path');
-const urlJoin = require('url-join');
-const { arrayOf, getDatasetFromUri } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const matchActivity = require('@semapps/activitypub/utils/matchActivity');
+import path from 'path';
+import urlJoin from 'url-join';
+import { arrayOf, getDatasetFromUri } from '@semapps/ldp';
+import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
+import { MIME_TYPES } from '@semapps/mime-types';
+import matchActivity from '@semapps/activitypub/utils/matchActivity';
 
 const getAnnouncesGroupUri = eventUri => {
   const uri = new URL(eventUri);
@@ -17,7 +17,7 @@ const getAnnouncersGroupUri = eventUri => {
   return uri.toString();
 };
 
-module.exports = {
+const AnnouncerSchema = {
   name: 'announcer',
   mixins: [ActivitiesHandlerMixin],
   settings: {
@@ -343,3 +343,5 @@ module.exports = {
     }
   }
 };
+
+export default AnnouncerSchema;

@@ -1,9 +1,9 @@
-const { ControlledContainerMixin, arrayOf, getId, getDatasetFromUri } = require('@semapps/ldp');
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const ImmutableContainerMixin = require('../../../mixins/immutable-container-mixin');
-const AccessGrantsMixin = require('../../../mixins/access-grants');
+import { ControlledContainerMixin, arrayOf, getId, getDatasetFromUri } from '@semapps/ldp';
+import { ACTIVITY_TYPES } from '@semapps/activitypub';
+import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
+import AccessGrantsMixin from '../../../mixins/access-grants.ts';
 
-module.exports = {
+const DelegatedAccessGrantsSchema = {
   name: 'delegated-access-grants',
   mixins: [ImmutableContainerMixin, ControlledContainerMixin, AccessGrantsMixin],
   settings: {
@@ -345,3 +345,5 @@ module.exports = {
     }
   }
 };
+
+export default DelegatedAccessGrantsSchema;

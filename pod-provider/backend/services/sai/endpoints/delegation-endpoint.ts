@@ -1,10 +1,10 @@
-const path = require('path');
+import path from 'path';
 const { MoleculerError } = require('moleculer').Errors;
-const { arrayOf, getDatasetFromUri, getId } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { parseHeader, negotiateContentType, parseJson, parseTurtle } = require('@semapps/middlewares');
+import { arrayOf, getDatasetFromUri, getId } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { parseHeader, negotiateContentType, parseJson, parseTurtle } from '@semapps/middlewares';
 
-module.exports = {
+const DelegationEndpointSchema = {
   name: 'delegation-endpoint',
   dependencies: ['api', 'ldp'],
   async started() {
@@ -95,3 +95,5 @@ module.exports = {
     }
   }
 };
+
+export default DelegationEndpointSchema;

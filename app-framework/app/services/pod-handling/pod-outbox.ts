@@ -1,4 +1,4 @@
-module.exports = {
+const PodOutboxSchema = {
   name: 'pod-outbox',
   actions: {
     async post(ctx) {
@@ -38,3 +38,5 @@ module.exports = {
     }
   }
 };
+
+export default PodOutboxSchema;

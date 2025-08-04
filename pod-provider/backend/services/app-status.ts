@@ -1,7 +1,7 @@
 const { MoleculerError } = require('moleculer').Errors;
-const { getDatasetFromUri } = require('@semapps/ldp');
-const CONFIG = require('../config/config');
-const { arraysEqual } = require('../utils');
+import { getDatasetFromUri } from '@semapps/ldp';
+import CONFIG from '../config/config.ts';
+import { arraysEqual } from '../utils.ts';
 
 const AppStatusService = {
   name: 'app-status',
@@ -63,4 +63,4 @@ const AppStatusService = {
   }
 };
 
-module.exports = AppStatusService;
+export default AppStatusService;

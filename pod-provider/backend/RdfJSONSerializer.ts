@@ -31,4 +31,4 @@ class RdfJSONSerializer extends BaseSerializer {
   }
 }
 
-module.exports = RdfJSONSerializer;
+export default RdfJSONSerializer;

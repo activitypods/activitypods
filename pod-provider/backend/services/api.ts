@@ -1,11 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const ApiGatewayService = require('moleculer-web');
-const { Errors: E } = require('moleculer-web');
-const WebSocketMixin = require('../mixins/websocket');
-const CONFIG = require('../config/config');
+import fs from 'fs';
+import path from 'path';
+import ApiGatewayService from 'moleculer-web';
+import { Errors as E } from 'moleculer-web';
+import WebSocketMixin from '../mixins/websocket.ts';
+import CONFIG from '../config/config.ts';
 
-module.exports = {
+const Schema = {
   mixins: [ApiGatewayService, WebSocketMixin],
   settings: {
     httpServerTimeout: 300000,
@@ -87,3 +87,5 @@ module.exports = {
     }
   }
 };
+
+export default Schema;

@@ -1,4 +1,4 @@
-const { getId } = require('@semapps/ldp');
+import { getId } from '@semapps/ldp';
 
 const ImmutableContainerMixin = {
   actions: {
@@ -103,4 +103,4 @@ const ImmutableContainerMixin = {
   // }
 };
 
-module.exports = ImmutableContainerMixin;
+export default ImmutableContainerMixin;

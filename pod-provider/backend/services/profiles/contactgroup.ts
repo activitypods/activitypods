@@ -1,8 +1,8 @@
-const urlJoin = require('url-join');
-const { ControlledContainerMixin } = require('@semapps/ldp');
-const CONFIG = require('../../config/config');
+import urlJoin from 'url-join';
+import { ControlledContainerMixin } from '@semapps/ldp';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const ProfilesContactgroupSchema = {
   name: 'profiles.contactgroup',
   mixins: [ControlledContainerMixin],
   settings: {
@@ -14,3 +14,5 @@ module.exports = {
     typeIndex: 'public'
   }
 };
+
+export default ProfilesContactgroupSchema;

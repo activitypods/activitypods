@@ -1,10 +1,10 @@
-const urlJoin = require('url-join');
-const { triple, namedNode } = require('@rdfjs/data-model');
-const { ControlledContainerMixin, DereferenceMixin } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { ACTOR_TYPES } = require('@semapps/activitypub');
+import urlJoin from 'url-join';
+import { triple, namedNode } from '@rdfjs/data-model';
+import { ControlledContainerMixin, DereferenceMixin } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { ACTOR_TYPES } from '@semapps/activitypub';
 
-module.exports = {
+const ActorsSchema = {
   name: 'actors',
   mixins: [ControlledContainerMixin, DereferenceMixin],
   settings: {
@@ -201,3 +201,5 @@ module.exports = {
     }
   }
 };
+
+export default ActorsSchema;

@@ -1,15 +1,15 @@
-const path = require('path');
-const urlJoin = require('url-join');
-const Handlebars = require('handlebars');
-const sanitizeHtml = require('sanitize-html');
-const MailService = require('moleculer-mail');
-const QueueService = require('moleculer-bull');
-const { ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const { arrayOf, isObject } = require('@semapps/ldp');
-const CONFIG = require('../config/config');
-const transport = require('../config/transport');
+import path from 'path';
+import urlJoin from 'url-join';
+import Handlebars from 'handlebars';
+import sanitizeHtml from 'sanitize-html';
+import MailService from 'moleculer-mail';
+import QueueService from 'moleculer-bull';
+import { ActivitiesHandlerMixin } from '@semapps/activitypub';
+import { arrayOf, isObject } from '@semapps/ldp';
+import CONFIG from '../config/config.ts';
+import transport from '../config/transport.ts';
 
-module.exports = {
+const MailNotificationsSchema = {
   name: 'mail-notifications',
   mixins: [MailService, ActivitiesHandlerMixin, QueueService(CONFIG.QUEUE_SERVICE_URL)],
   settings: {
@@ -144,3 +144,5 @@ module.exports = {
     }
   }
 };
+
+export default MailNotificationsSchema;

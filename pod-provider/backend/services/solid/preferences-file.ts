@@ -1,3 +1,2 @@
-const { PreferencesFileService } = require('@semapps/solid');
-
-module.exports = PreferencesFileService;
+import { PreferencesFileService } from '@semapps/solid';
+export default PreferencesFileService;

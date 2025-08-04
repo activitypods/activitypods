@@ -1,6 +1,7 @@
-const { WebSocketServer } = require('ws');
-const http = require('http');
-const urlJoin = require('url-join');
+import { WebSocketServer } from 'ws';
+import http from 'http';
+import urlJoin from 'url-join';
+
 /**
  * This mixin adds the ability to create WebSocket routes to the moleculer-web API Gateway.
  * The mixin adds a new action `addWebSocketRoute` to the service.
@@ -17,7 +18,7 @@ const urlJoin = require('url-join');
  * - onError: (event, connection)
  * @type {import('moleculer').ServiceSchema}
  */
-module.exports = {
+const WebsocketSchema = {
   name: 'websocket',
   settings: {
     baseUrl: null
@@ -212,3 +213,5 @@ module.exports = {
     }
   }
 };
+
+export default WebsocketSchema;

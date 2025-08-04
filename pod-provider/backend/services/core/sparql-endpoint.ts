@@ -1,9 +1,11 @@
-const { SparqlEndpointService } = require('@semapps/sparql-endpoint');
+import { SparqlEndpointService } from '@semapps/sparql-endpoint';
 
-module.exports = {
+const Schema = {
   mixins: [SparqlEndpointService],
   settings: {
     podProvider: true,
     defaultAccept: 'application/ld+json'
   }
 };
+
+export default Schema;

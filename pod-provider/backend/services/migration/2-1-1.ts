@@ -1,10 +1,9 @@
-const urlJoin = require('url-join');
-const { MigrationService } = require('@semapps/migration');
-const CONFIG = require('../../config/config');
-
+import urlJoin from 'url-join';
+import { MigrationService } from '@semapps/migration';
+import CONFIG from '../../config/config.ts';
 const MIGRATION_VERSION = '2.1.1';
 
-module.exports = {
+const Migration211Schema = {
   name: 'migration-2-1-1',
   mixins: [MigrationService],
   settings: {
@@ -64,3 +63,5 @@ module.exports = {
     }
   }
 };
+
+export default Migration211Schema;

@@ -1,6 +1,6 @@
-const CONFIG = require('../config/config');
+import CONFIG from '../config/config.ts';
 
-module.exports = {
+const FrontendConfigSchema = {
   name: 'frontend-config',
   dependencies: ['api'],
   async started() {
@@ -37,3 +37,5 @@ module.exports = {
     }
   }
 };
+
+export default FrontendConfigSchema;

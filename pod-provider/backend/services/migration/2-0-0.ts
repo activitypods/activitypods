@@ -1,11 +1,11 @@
-const urlJoin = require('url-join');
-const { triple, namedNode, literal } = require('@rdfjs/data-model');
-const { arrayOf } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { MigrationService } = require('@semapps/migration');
-const CONFIG = require('../../config/config');
+import urlJoin from 'url-join';
+import { triple, namedNode, literal } from '@rdfjs/data-model';
+import { arrayOf } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { MigrationService } from '@semapps/migration';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const Migration200Schema = {
   name: 'migration-2-0-0',
   mixins: [MigrationService],
   settings: {
@@ -472,3 +472,5 @@ module.exports = {
     }
   }
 };
+
+export default Migration200Schema;

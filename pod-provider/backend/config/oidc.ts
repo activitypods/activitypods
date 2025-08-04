@@ -1,7 +1,7 @@
-const urlJoin = require('url-join');
+import urlJoin from 'url-join';
 
 // Inspired from https://github.com/CommunitySolidServer/CommunitySolidServer/blob/15a929a87e4ce00c0ed266e296405c8e4a22d4a7/config/identity/handler/base/provider-factory.json#L30
-module.exports = (settings, privateJwk) => ({
+export default (settings, privateJwk) => ({
   claims: {
     openid: ['azp'],
     webid: ['webid']

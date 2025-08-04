@@ -1,9 +1,9 @@
-const { ControlledContainerMixin, getId } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const ImmutableContainerMixin = require('../../../mixins/immutable-container-mixin');
-const AccessGrantsMixin = require('../../../mixins/access-grants');
+import { ControlledContainerMixin, getId } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
+import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
+import AccessGrantsMixin from '../../../mixins/access-grants.ts';
 
-module.exports = {
+const AccessGrantsSchema = {
   name: 'access-grants',
   mixins: [ImmutableContainerMixin, ControlledContainerMixin, AccessGrantsMixin],
   settings: {
@@ -92,3 +92,5 @@ module.exports = {
     }
   }
 };
+
+export default AccessGrantsSchema;

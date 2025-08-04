@@ -1,10 +1,10 @@
-const urlJoin = require('url-join');
-const LinkHeader = require('http-link-header');
+import urlJoin from 'url-join';
+import LinkHeader from 'http-link-header';
 const { MoleculerError } = require('moleculer').Errors;
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { getDatasetFromUri, hasType, isURL } = require('@semapps/ldp');
+import { MIME_TYPES } from '@semapps/mime-types';
+import { getDatasetFromUri, hasType, isURL } from '@semapps/ldp';
 
-module.exports = {
+const DataRegistrationsSchema = {
   name: 'data-registrations',
   dependencies: ['ldp.link-header'],
   async started() {
@@ -294,3 +294,5 @@ module.exports = {
     }
   }
 };
+
+export default DataRegistrationsSchema;

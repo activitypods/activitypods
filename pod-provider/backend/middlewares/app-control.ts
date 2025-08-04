@@ -1,8 +1,8 @@
-const urlJoin = require('url-join');
-const { Errors: E } = require('moleculer-web');
-const { arrayOf, hasType, getWebIdFromUri, getParentContainerUri } = require('@semapps/ldp');
-const { FULL_ACTIVITY_TYPES, FULL_ACTOR_TYPES } = require('@semapps/activitypub');
-const { MIME_TYPES } = require('@semapps/mime-types');
+import urlJoin from 'url-join';
+import { Errors as E } from 'moleculer-web';
+import { arrayOf, hasType, getWebIdFromUri, getParentContainerUri } from '@semapps/ldp';
+import { FULL_ACTIVITY_TYPES, FULL_ACTOR_TYPES } from '@semapps/activitypub';
+import { MIME_TYPES } from '@semapps/mime-types';
 
 const DEFAULT_ALLOWED_TYPES = [
   ...Object.values(FULL_ACTOR_TYPES),
@@ -324,4 +324,4 @@ const AppControlMiddleware = ({ baseUrl }) => ({
   }
 });
 
-module.exports = AppControlMiddleware;
+export default AppControlMiddleware;

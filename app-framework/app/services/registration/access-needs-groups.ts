@@ -1,9 +1,9 @@
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { arraysEqual } = require('../../utils');
-const { necessityMapping } = require('../../mappings');
+import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { arraysEqual } from '../../utils.ts';
+import { necessityMapping } from '../../mappings.ts';
 
-module.exports = {
+const AccessNeedsGroupsSchema = {
   name: 'access-needs-groups',
   mixins: [ControlledContainerMixin],
   settings: {
@@ -166,3 +166,5 @@ module.exports = {
     }
   }
 };
+
+export default AccessNeedsGroupsSchema;

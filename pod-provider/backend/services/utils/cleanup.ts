@@ -1,9 +1,9 @@
-const { arrayOf, getId } = require('@semapps/ldp');
+import { arrayOf, getId } from '@semapps/ldp';
 
 /**
  * Service to clean up Pods data
  */
-module.exports = {
+const CleanupSchema = {
   name: 'cleanup',
   actions: {
     async deleteUpdateActivities(ctx) {
@@ -32,3 +32,5 @@ module.exports = {
     }
   }
 };
+
+export default CleanupSchema;

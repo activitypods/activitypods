@@ -1,9 +1,9 @@
-const { ControlledContainerMixin, getId } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const AgentRegistrationsMixin = require('../../../mixins/agent-registrations');
-const { arraysEqual } = require('../../../utils');
+import { ControlledContainerMixin, getId } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
+import AgentRegistrationsMixin from '../../../mixins/agent-registrations.ts';
+import { arraysEqual } from '../../../utils.ts';
 
-module.exports = {
+const AppRegistrationsSchema = {
   name: 'app-registrations',
   mixins: [ControlledContainerMixin, AgentRegistrationsMixin],
   settings: {
@@ -103,3 +103,5 @@ module.exports = {
     }
   }
 };
+
+export default AppRegistrationsSchema;

@@ -1,9 +1,11 @@
-const { StorageService } = require('@semapps/solid');
-const CONFIG = require('../../config/config');
+import { StorageService } from '@semapps/solid';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const Schema = {
   mixins: [StorageService],
   settings: {
     baseUrl: CONFIG.BASE_URL
   }
 };
+
+export default Schema;

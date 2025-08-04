@@ -1,5 +1,5 @@
-const fetch = require('node-fetch');
-const isEmpty = require('lodash/isEmpty.js');
+import fetch from 'node-fetch';
+import isEmpty from 'lodash/isEmpty.js';
 
 const grantable = new Set([
   'AccessToken',
@@ -165,4 +165,4 @@ class RedisAdapter {
   }
 }
 
-module.exports = RedisAdapter;
+export default RedisAdapter;

@@ -1,10 +1,10 @@
 const { MoleculerError } = require('moleculer').Errors;
-const { ControlledContainerMixin, arrayOf, getId, getWebIdFromUri } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { arraysEqual } = require('../../../utils');
-const ImmutableContainerMixin = require('../../../mixins/immutable-container-mixin');
+import { ControlledContainerMixin, arrayOf, getId, getWebIdFromUri } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { arraysEqual } from '../../../utils.ts';
+import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
 
-module.exports = {
+const AccessAuthorizationsSchema = {
   name: 'access-authorizations',
   mixins: [ImmutableContainerMixin, ControlledContainerMixin],
   settings: {
@@ -404,3 +404,5 @@ module.exports = {
     }
   }
 };
+
+export default AccessAuthorizationsSchema;

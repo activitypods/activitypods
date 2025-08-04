@@ -1,7 +1,7 @@
-const { ActivityPubService } = require('@semapps/activitypub');
-const CONFIG = require('../../config/config');
+import { ActivityPubService } from '@semapps/activitypub';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const Schema = {
   mixins: [ActivityPubService],
   settings: {
     baseUri: CONFIG.BASE_URL,
@@ -9,3 +9,5 @@ module.exports = {
     queueServiceUrl: CONFIG.QUEUE_SERVICE_URL
   }
 };
+
+export default Schema;

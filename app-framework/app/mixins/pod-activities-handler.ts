@@ -1,4 +1,4 @@
-module.exports = {
+const Schema = {
   dependencies: ['pod-activities-watcher'],
   async started() {
     if (!this.schema.activities) throw new Error(`No activities defined for service ${this.name}`);
@@ -40,3 +40,5 @@ module.exports = {
     }
   }
 };
+
+export default Schema;

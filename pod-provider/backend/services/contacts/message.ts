@@ -1,9 +1,9 @@
-const urlJoin = require('url-join');
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const CONFIG = require('../../config/config');
+import urlJoin from 'url-join';
+import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
+import { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const ContactsMessageSchema = {
   name: 'contacts.message',
   mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
   settings: {
@@ -61,3 +61,5 @@ module.exports = {
     }
   }
 };
+
+export default ContactsMessageSchema;

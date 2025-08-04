@@ -1,5 +1,5 @@
-const { arrayOf, getId } = require('@semapps/ldp');
-const { triple, namedNode, literal } = require('@rdfjs/data-model');
+import { arrayOf, getId } from '@semapps/ldp';
+import { triple, namedNode, literal } from '@rdfjs/data-model';
 
 /**
  * Mixin used by the AppRegistrationsService and SocialAgentRegistrationsService
@@ -199,4 +199,4 @@ const AgentRegistrationsMixin = {
   }
 };
 
-module.exports = AgentRegistrationsMixin;
+export default AgentRegistrationsMixin;

@@ -1,10 +1,10 @@
-const { triple, namedNode } = require('@rdfjs/data-model');
-const { MigrationService } = require('@semapps/migration');
-const { arrayOf } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const CONFIG = require('../../config/config');
+import { triple, namedNode } from '@rdfjs/data-model';
+import { MigrationService } from '@semapps/migration';
+import { arrayOf } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const Migration205Schema = {
   name: 'migration-2-0-5',
   mixins: [MigrationService],
   settings: {
@@ -202,3 +202,5 @@ module.exports = {
     }
   }
 };
+
+export default Migration205Schema;

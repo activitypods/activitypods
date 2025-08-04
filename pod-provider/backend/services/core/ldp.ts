@@ -1,7 +1,7 @@
-const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
-const CONFIG = require('../../config/config');
+import { LdpService, DocumentTaggerMixin } from '@semapps/ldp';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const Schema = {
   mixins: [LdpService, DocumentTaggerMixin],
   settings: {
     baseUrl: CONFIG.BASE_URL,
@@ -13,3 +13,5 @@ module.exports = {
     }
   }
 };
+
+export default Schema;

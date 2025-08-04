@@ -1,10 +1,10 @@
-const path = require('path');
-const urlJoin = require('url-join');
-const { AuthLocalService } = require('@semapps/auth');
-const CONFIG = require('../../config/config');
-const transport = require('../../config/transport');
+import path from 'path';
+import urlJoin from 'url-join';
+import { AuthLocalService } from '@semapps/auth';
+import CONFIG from '../../config/config.ts';
+import transport from '../../config/transport.ts';
 
-module.exports = {
+const Schema = {
   mixins: [AuthLocalService],
   settings: {
     baseUrl: CONFIG.BASE_URL,
@@ -56,3 +56,5 @@ module.exports = {
     }
   }
 };
+
+export default Schema;

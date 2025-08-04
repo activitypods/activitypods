@@ -1,7 +1,8 @@
-const FetchPodOrProxyMixin = require('../../mixins/fetch-pod-or-proxy');
-const SparqlGenerator = require('sparqljs').Generator;
+import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
+import sparqljsModule from 'sparqljs';
+const SparqlGenerator = sparqljsModule.Generator;
 
-module.exports = {
+const PodResourcesSchema = {
   name: 'pod-resources',
   mixins: [FetchPodOrProxyMixin],
   started() {
@@ -167,3 +168,5 @@ module.exports = {
     }
   }
 };
+
+export default PodResourcesSchema;

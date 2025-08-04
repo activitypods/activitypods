@@ -1,8 +1,8 @@
-const { ACTIVITY_TYPES, OBJECT_TYPES, matchActivity } = require('@semapps/activitypub');
-const PodActivitiesHandlerMixin = require('./pod-activities-handler');
-const ShapeTreeFetcherMixin = require('./shape-tree-fetcher');
+import { ACTIVITY_TYPES, OBJECT_TYPES, matchActivity } from '@semapps/activitypub';
+import PodActivitiesHandlerMixin from './pod-activities-handler.ts';
+import ShapeTreeFetcherMixin from './shape-tree-fetcher.ts';
 
-module.exports = {
+const Schema = {
   mixins: [PodActivitiesHandlerMixin, ShapeTreeFetcherMixin],
   settings: {
     shapeTreeUri: null,
@@ -105,3 +105,5 @@ module.exports = {
     }
   }
 };
+
+export default Schema;

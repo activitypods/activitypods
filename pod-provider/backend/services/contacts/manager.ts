@@ -1,11 +1,11 @@
-const urlJoin = require('url-join');
-const { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
-const { sanitizeSparqlQuery } = require('@semapps/triplestore');
-const { arrayOf } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } = require('../../config/patterns');
+import urlJoin from 'url-join';
+import { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } from '@semapps/activitypub';
+import { sanitizeSparqlQuery } from '@semapps/triplestore';
+import { arrayOf } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } from '../../config/patterns.ts';
 
-module.exports = {
+const ContactsManagerSchema = {
   name: 'contacts.manager',
   mixins: [ActivitiesHandlerMixin],
   settings: {
@@ -233,3 +233,5 @@ module.exports = {
     }
   }
 };
+
+export default ContactsManagerSchema;

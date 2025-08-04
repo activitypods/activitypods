@@ -1,6 +1,6 @@
-const PodResourcesHandlerMixin = require('./pod-resources-handler');
+import PodResourcesHandlerMixin from './pod-resources-handler.ts';
 
-module.exports = {
+const Schema = {
   mixins: [PodResourcesHandlerMixin],
   settings: {
     shapeTreeUri: null,
@@ -114,3 +114,5 @@ module.exports = {
     }
   }
 };
+
+export default Schema;

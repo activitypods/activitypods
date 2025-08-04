@@ -1,9 +1,9 @@
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
 
 /**
  * Mirror container for access grants which have been granted to the app
  */
-module.exports = {
+const AccessGrantsSchema = {
   name: 'access-grants',
   mixins: [ControlledContainerMixin],
   settings: {
@@ -63,3 +63,5 @@ module.exports = {
     }
   }
 };
+
+export default AccessGrantsSchema;

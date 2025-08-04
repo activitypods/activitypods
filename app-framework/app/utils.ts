@@ -1,5 +1,4 @@
-const { arrayOf } = require('@semapps/ldp');
-
+import { arrayOf } from '@semapps/ldp';
 const objectDepth = o => (Object(o) === o ? 1 + Math.max(-1, ...Object.values(o).map(objectDepth)) : 0);
 
 const stream2buffer = stream => {
@@ -15,8 +14,4 @@ const stream2buffer = stream => {
 const arraysEqual = (a1, a2) =>
   arrayOf(a1).length === arrayOf(a2).length && arrayOf(a1).every(i => arrayOf(a2).includes(i));
 
-module.exports = {
-  objectDepth,
-  stream2buffer,
-  arraysEqual
-};
+export { objectDepth, stream2buffer, arraysEqual };

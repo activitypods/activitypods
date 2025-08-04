@@ -1,8 +1,8 @@
-const { WebIdService } = require('@semapps/webid');
-const { FULL_ACTOR_TYPES } = require('@semapps/activitypub');
-const CONFIG = require('../../config/config');
+import { WebIdService } from '@semapps/webid';
+import { FULL_ACTOR_TYPES } from '@semapps/activitypub';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const Schema = {
   mixins: [WebIdService],
   settings: {
     path: '/',
@@ -26,3 +26,5 @@ module.exports = {
     }
   }
 };
+
+export default Schema;

@@ -1,9 +1,9 @@
-const fs = require('fs');
-const path = require('path');
-const { generateKeyPair, exportJWK, importJWK, jwtVerify } = require('jose');
+import fs from 'fs';
+import path from 'path';
+import { generateKeyPair, exportJWK, importJWK, jwtVerify } from 'jose';
 
 // See https://github.com/CommunitySolidServer/CommunitySolidServer/blob/15a929a87e4ce00c0ed266e296405c8e4a22d4a7/src/identity/configuration/CachedJwkGenerator.ts
-module.exports = {
+const JwkSchema = {
   name: 'jwk',
   settings: {
     jwtPath: path.resolve(__dirname, '../../jwt'),
@@ -56,3 +56,5 @@ module.exports = {
     }
   }
 };
+
+export default JwkSchema;

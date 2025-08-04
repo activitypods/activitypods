@@ -1,11 +1,11 @@
-const path = require('path');
-const urlJoin = require('url-join');
+import path from 'path';
+import urlJoin from 'url-join';
 const { MoleculerError } = require('moleculer').Errors;
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { getId } = require('@semapps/ldp');
-const { arraysEqual } = require('../../../utils');
+import { ACTIVITY_TYPES } from '@semapps/activitypub';
+import { getId } from '@semapps/ldp';
+import { arraysEqual } from '../../../utils.ts';
 
-module.exports = {
+const RegistrationEndpointSchema = {
   name: 'registration-endpoint',
   dependencies: ['api', 'ldp'],
   async started() {
@@ -220,3 +220,5 @@ module.exports = {
     }
   }
 };
+
+export default RegistrationEndpointSchema;

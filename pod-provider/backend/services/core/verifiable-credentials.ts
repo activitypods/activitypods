@@ -1,8 +1,10 @@
-const { VerifiableCredentialsService } = require('@semapps/crypto');
+import { VerifiableCredentialsService } from '@semapps/crypto';
 
-module.exports = {
+const Schema = {
   mixins: [VerifiableCredentialsService],
   settings: {
     podProvider: true
   }
 };
+
+export default Schema;

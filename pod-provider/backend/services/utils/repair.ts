@@ -1,12 +1,12 @@
-const urlJoin = require('url-join');
-const { arrayOf, getParentContainerUri } = require('@semapps/ldp');
-const { triple, namedNode } = require('@rdfjs/data-model');
-const { MIME_TYPES } = require('@semapps/mime-types');
+import urlJoin from 'url-join';
+import { arrayOf, getParentContainerUri } from '@semapps/ldp';
+import { triple, namedNode } from '@rdfjs/data-model';
+import { MIME_TYPES } from '@semapps/mime-types';
 
 /**
  * Service to repair Pods data
  */
-module.exports = {
+const RepairSchema = {
   name: 'repair',
   actions: {
     /**
@@ -320,3 +320,5 @@ module.exports = {
     }
   }
 };
+
+export default RepairSchema;

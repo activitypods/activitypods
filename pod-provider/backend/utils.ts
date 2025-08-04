@@ -1,4 +1,4 @@
-const { arrayOf } = require('@semapps/ldp');
+import { arrayOf } from '@semapps/ldp';
 
 // Return true if all elements of a1 can be found on a2. Order does not matter.
 const arraysEqual = (a1, a2) =>
@@ -54,7 +54,4 @@ const hasActivityGrant = (capabilityPresentation, templateActivity) => {
   });
 };
 
-module.exports = {
-  arraysEqual,
-  hasActivityGrant
-};
+export { arraysEqual, hasActivityGrant };

@@ -1,13 +1,13 @@
-const path = require('path');
-const Redis = require('ioredis');
-const { delay } = require('@semapps/ldp');
-const { Errors: E } = require('moleculer-web');
-const RedisAdapter = require('../../config/oidc-adapter');
-const baseConfig = require('../../config/oidc');
-const fetch = require('node-fetch');
-const CONFIG = require('../../config/config');
+import path from 'path';
+import Redis from 'ioredis';
+import { delay } from '@semapps/ldp';
+import { Errors as E } from 'moleculer-web';
+import RedisAdapter from '../../config/oidc-adapter.ts';
+import baseConfig from '../../config/oidc.ts';
+import fetch from 'node-fetch';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const SolidOidcSchema = {
   name: 'solid-oidc',
   settings: {
     baseUrl: CONFIG.BASE_URL,
@@ -147,3 +147,5 @@ module.exports = {
     }
   }
 };
+
+export default SolidOidcSchema;

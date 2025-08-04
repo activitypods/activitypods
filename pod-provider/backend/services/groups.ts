@@ -1,10 +1,10 @@
-const path = require('node:path');
-const urlJoin = require('url-join');
-const { Errors: E } = require('moleculer-web');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { arrayOf } = require('@semapps/ldp');
-const { throw403, throw404 } = require('@semapps/middlewares');
-const CONFIG = require('../config/config');
+import path from 'node:path';
+import urlJoin from 'url-join';
+import { Errors as E } from 'moleculer-web';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { arrayOf } from '@semapps/ldp';
+import { throw403, throw404 } from '@semapps/middlewares';
+import CONFIG from '../config/config.ts';
 
 const GroupsService = {
   name: 'groups',
@@ -161,4 +161,4 @@ const GroupsService = {
   }
 };
 
-module.exports = GroupsService;
+export default GroupsService;

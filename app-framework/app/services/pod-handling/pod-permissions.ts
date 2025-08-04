@@ -1,10 +1,10 @@
-const fetch = require('node-fetch');
-const LinkHeader = require('http-link-header');
-const { getAclUriFromResourceUri } = require('@semapps/webacl');
-const { arrayOf } = require('@semapps/ldp');
-const FetchPodOrProxyMixin = require('../../mixins/fetch-pod-or-proxy');
+import fetch from 'node-fetch';
+import LinkHeader from 'http-link-header';
+import { getAclUriFromResourceUri } from '@semapps/webacl';
+import { arrayOf } from '@semapps/ldp';
+import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 
-module.exports = {
+const PodPermissionsSchema = {
   name: 'pod-permissions',
   mixins: [FetchPodOrProxyMixin],
   actions: {
@@ -130,3 +130,5 @@ module.exports = {
     }
   }
 };
+
+export default PodPermissionsSchema;

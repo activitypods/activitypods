@@ -1,11 +1,11 @@
-const LinkHeader = require('http-link-header');
-const { ControlledContainerMixin, arrayOf, getId } = require('@semapps/ldp');
-const { ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const AgentRegistrationsMixin = require('../../../mixins/agent-registrations');
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
+import LinkHeader from 'http-link-header';
+import { ControlledContainerMixin, arrayOf, getId } from '@semapps/ldp';
+import { ActivitiesHandlerMixin } from '@semapps/activitypub';
+import { MIME_TYPES } from '@semapps/mime-types';
+import AgentRegistrationsMixin from '../../../mixins/agent-registrations.ts';
+import { ACTIVITY_TYPES } from '@semapps/activitypub';
 
-module.exports = {
+const SocialAgentRegistrationsSchema = {
   name: 'social-agent-registrations',
   mixins: [ControlledContainerMixin, AgentRegistrationsMixin, ActivitiesHandlerMixin],
   settings: {
@@ -237,3 +237,5 @@ module.exports = {
     }
   }
 };
+
+export default SocialAgentRegistrationsSchema;

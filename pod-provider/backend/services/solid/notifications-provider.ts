@@ -1,7 +1,7 @@
-const { NotificationsProviderService } = require('@semapps/solid');
-const CONFIG = require('../../config/config');
+import { NotificationsProviderService } from '@semapps/solid';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const Schema = {
   mixins: [NotificationsProviderService],
   settings: {
     baseUrl: CONFIG.BASE_URL,
@@ -9,3 +9,5 @@ module.exports = {
     queueServiceUrl: CONFIG.QUEUE_SERVICE_URL
   }
 };
+
+export default Schema;

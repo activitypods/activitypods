@@ -1,8 +1,8 @@
-const urlJoin = require('url-join');
-const { ControlledContainerMixin, MimeTypesMixin } = require('@semapps/ldp');
-const CONFIG = require('../config/config');
+import urlJoin from 'url-join';
+import { ControlledContainerMixin, MimeTypesMixin } from '@semapps/ldp';
+import CONFIG from '../config/config.ts';
 
-module.exports = {
+const FilesSchema = {
   name: 'files',
   mixins: [ControlledContainerMixin, MimeTypesMixin],
   settings: {
@@ -19,3 +19,5 @@ module.exports = {
     }
   }
 };
+
+export default FilesSchema;

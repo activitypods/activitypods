@@ -1,8 +1,8 @@
-const path = require('path');
+import path from 'path';
 const { MoleculerError } = require('moleculer').Errors;
-const { arrayOf } = require('@semapps/ldp');
+import { arrayOf } from '@semapps/ldp';
 
-module.exports = {
+const AuthorizationEndpointSchema = {
   name: 'authorization-endpoint',
   dependencies: ['api', 'ldp'],
   async started() {
@@ -76,3 +76,5 @@ module.exports = {
     }
   }
 };
+
+export default AuthorizationEndpointSchema;

@@ -1,26 +1,24 @@
-const {
-  ACTIVITY_TYPES,
-  ACTOR_TYPES,
-  ActivitiesHandlerMixin,
-  OBJECT_TYPES,
-  matchActivity
-} = require('@semapps/activitypub');
-const { arrayOf } = require('@semapps/ldp');
-const {
+import { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin, OBJECT_TYPES, matchActivity } from '@semapps/activitypub';
+
+import { arrayOf } from '@semapps/ldp';
+
+import {
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
   REJECT_CONTACT_REQUEST,
   IGNORE_CONTACT_REQUEST
-} = require('../../config/patterns');
-const {
+} from '../../config/patterns.ts';
+
+import {
   CONTACT_REQUEST_MAPPING,
   ACCEPT_CONTACT_REQUEST_MAPPING,
   AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
-} = require('../../config/mappings');
-const { MIME_TYPES } = require('@semapps/mime-types');
+} from '../../config/mappings.ts';
+
+import { MIME_TYPES } from '@semapps/mime-types';
 
 /** @type {import('moleculer').ServiceSchema} */
-module.exports = {
+const ContactsRequestSchema = {
   name: 'contacts.request',
   mixins: [ActivitiesHandlerMixin],
   settings: {
@@ -376,3 +374,5 @@ module.exports = {
     }
   }
 };
+
+export default ContactsRequestSchema;

@@ -1,9 +1,9 @@
-const urlJoin = require('url-join');
-const { triple, namedNode } = require('@rdfjs/data-model');
-const { SingleResourceContainerMixin, getWebIdFromUri } = require('@semapps/ldp');
-const CONFIG = require('../../config/config');
+import urlJoin from 'url-join';
+import { triple, namedNode } from '@rdfjs/data-model';
+import { SingleResourceContainerMixin, getWebIdFromUri } from '@semapps/ldp';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const AuthAgentSchema = {
   name: 'auth-agent',
   mixins: [SingleResourceContainerMixin],
   settings: {
@@ -66,3 +66,5 @@ module.exports = {
     }
   }
 };
+
+export default AuthAgentSchema;

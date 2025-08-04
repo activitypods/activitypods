@@ -1,5 +1,5 @@
-const { arrayOf, getId, getType } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } = require('@semapps/activitypub');
+import { arrayOf, getId, getType } from '@semapps/ldp';
+import { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } from '@semapps/activitypub';
 
 /**
  * Mixin used by the AccessGrantsService and DelegatedAccessGrantsService
@@ -193,4 +193,4 @@ const AccessGrantsMixin = {
   }
 };
 
-module.exports = AccessGrantsMixin;
+export default AccessGrantsMixin;

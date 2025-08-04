@@ -1,9 +1,11 @@
-const { WebfingerService } = require('@semapps/webfinger');
-const CONFIG = require('../../config/config');
+import { WebfingerService } from '@semapps/webfinger';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const Schema = {
   mixins: [WebfingerService],
   settings: {
     baseUrl: CONFIG.BASE_URL
   }
 };
+
+export default Schema;

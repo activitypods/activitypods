@@ -1,9 +1,9 @@
-const urlJoin = require('url-join');
-const { ControlledContainerMixin } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const CONFIG = require('../../config/config');
+import urlJoin from 'url-join';
+import { ControlledContainerMixin } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const ProfilesLocationSchema = {
   name: 'profiles.location',
   mixins: [ControlledContainerMixin],
   settings: {
@@ -71,3 +71,5 @@ module.exports = {
     }
   }
 };
+
+export default ProfilesLocationSchema;

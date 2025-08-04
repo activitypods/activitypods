@@ -1,9 +1,9 @@
-const {
+import {
   OntologiesService,
   dc,
   did,
   pair,
-  void: voidOntology,
+  void as voidOntology,
   interop,
   notify,
   oidc,
@@ -11,10 +11,11 @@ const {
   apods,
   pim,
   vcard
-} = require('@semapps/ontologies');
-const CONFIG = require('../../config/config');
+} from '@semapps/ontologies';
 
-module.exports = {
+import CONFIG from '../../config/config.ts';
+
+const Schema = {
   mixins: [OntologiesService],
   settings: {
     // TODO remove pair from core ontologies
@@ -23,3 +24,5 @@ module.exports = {
     settingsDataset: CONFIG.AUTH_ACCOUNTS_DATASET
   }
 };
+
+export default Schema;

@@ -1,10 +1,11 @@
-const urlJoin = require('url-join');
-const { triple, namedNode } = require('@rdfjs/data-model');
-const SparqlGenerator = require('sparqljs').Generator;
-const FetchPodOrProxyMixin = require('../../mixins/fetch-pod-or-proxy');
-const { arrayOf } = require('@semapps/ldp');
+import urlJoin from 'url-join';
+import { triple, namedNode } from '@rdfjs/data-model';
+import sparqljsModule from 'sparqljs';
+const SparqlGenerator = sparqljsModule.Generator;
+import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
+import { arrayOf } from '@semapps/ldp';
 
-module.exports = {
+const PodCollectionsSchema = {
   name: 'pod-collections',
   mixins: [FetchPodOrProxyMixin],
   started() {
@@ -209,3 +210,5 @@ module.exports = {
     }
   }
 };
+
+export default PodCollectionsSchema;

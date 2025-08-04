@@ -1,7 +1,7 @@
-const urlJoin = require('url-join');
-const { OBJECT_TYPES } = require('@semapps/activitypub');
+import urlJoin from 'url-join';
+import { OBJECT_TYPES } from '@semapps/activitypub';
 
-module.exports = {
+const PodNotificationsSchema = {
   name: 'pod-notifications',
   settings: {
     frontUrl: null
@@ -55,3 +55,5 @@ module.exports = {
     }
   }
 };
+
+export default PodNotificationsSchema;

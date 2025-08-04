@@ -1,8 +1,8 @@
-const path = require('path');
-const { JsonLdService } = require('@semapps/jsonld');
-const CONFIG = require('../../config/config');
+import path from 'path';
+import { JsonLdService } from '@semapps/jsonld';
+import CONFIG from '../../config/config.ts';
 
-module.exports = {
+const Schema = {
   mixins: [JsonLdService],
   settings: {
     baseUri: CONFIG.BASE_URL,
@@ -14,3 +14,5 @@ module.exports = {
     ]
   }
 };
+
+export default Schema;

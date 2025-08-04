@@ -1,9 +1,11 @@
-const path = require('path');
-const { KeysService } = require('@semapps/crypto');
+import path from 'path';
+import { KeysService } from '@semapps/crypto';
 
-module.exports = {
+const Schema = {
   mixins: [KeysService],
   settings: {
     podProvider: true
   }
 };
+
+export default Schema;

@@ -1,7 +1,4 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
-import { ACTIVITY_TYPES, OBJECT_TYPES } from '@semapps/activitypub';
-// @ts-expect-error TS(7016): Could not find a declaration file for module '@sem... Remove this comment to see the full error message
-import { ACTOR_TYPES } from '@semapps/activitypub/constants';
+import { ACTIVITY_TYPES, OBJECT_TYPES, ACTOR_TYPES } from '@semapps/activitypub';
 
 const CONTACT_REQUEST = {
   type: ACTIVITY_TYPES.OFFER,

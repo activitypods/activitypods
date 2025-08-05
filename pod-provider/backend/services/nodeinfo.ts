@@ -1,7 +1,7 @@
 import { NodeinfoService } from '@semapps/nodeinfo';
 import urlJoin from 'url-join';
 import CONFIG from '../config/config.ts';
-import packageDesc from '../package.json';
+import packageDesc from '../package.json' with { type: 'json' };
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const Schema = {

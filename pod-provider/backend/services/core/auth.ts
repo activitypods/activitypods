@@ -5,7 +5,7 @@ import CONFIG from '../../config/config.ts';
 import transport from '../../config/transport.ts';
 import { ServiceSchema } from 'moleculer';
 
-const ServiceSchema = {
+const Schema = {
   mixins: [AuthLocalService],
 
   settings: {

@@ -2,7 +2,7 @@ import { WebAclService } from '@semapps/webacl';
 import CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
-const ServiceSchema = {
+const Schema = {
   mixins: [WebAclService],
 
   settings: {

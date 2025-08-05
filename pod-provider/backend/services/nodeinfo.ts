@@ -4,7 +4,7 @@ import CONFIG from '../config/config.ts';
 import packageDesc from '../package.json';
 import { ServiceSchema, defineAction } from 'moleculer';
 
-const ServiceSchema = {
+const Schema = {
   mixins: [NodeinfoService],
 
   settings: {

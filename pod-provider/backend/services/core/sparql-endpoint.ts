@@ -1,7 +1,7 @@
 import { SparqlEndpointService } from '@semapps/sparql-endpoint';
 import { ServiceSchema } from 'moleculer';
 
-const ServiceSchema = {
+const Schema = {
   mixins: [SparqlEndpointService],
 
   settings: {

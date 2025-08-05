@@ -5,7 +5,7 @@ import { Errors as E, ServiceSchema, defineAction } from 'moleculer';
 import WebSocketMixin from '../mixins/websocket.ts';
 import CONFIG from '../config/config.ts';
 
-const ServiceSchema = {
+const Schema = {
   mixins: [ApiGatewayService, WebSocketMixin],
 
   settings: {

@@ -2,7 +2,7 @@ import path from 'path';
 import { KeysService } from '@semapps/crypto';
 import { ServiceSchema } from 'moleculer';
 
-const ServiceSchema = {
+const Schema = {
   mixins: [KeysService],
 
   settings: {

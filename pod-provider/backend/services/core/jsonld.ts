@@ -3,7 +3,7 @@ import { JsonLdService } from '@semapps/jsonld';
 import CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
-const ServiceSchema = {
+const Schema = {
   mixins: [JsonLdService],
 
   settings: {

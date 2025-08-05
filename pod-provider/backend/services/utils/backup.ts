@@ -3,7 +3,7 @@ import BackupService from '@semapps/backup';
 import CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
-const ServiceSchema = {
+const Schema = {
   mixins: [BackupService],
 
   settings: {

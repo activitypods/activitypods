@@ -2,7 +2,7 @@ import { LdpService, DocumentTaggerMixin } from '@semapps/ldp';
 import CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
-const ServiceSchema = {
+const Schema = {
   mixins: [LdpService, DocumentTaggerMixin],
 
   settings: {

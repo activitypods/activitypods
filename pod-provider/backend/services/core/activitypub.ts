@@ -2,7 +2,7 @@ import { ActivityPubService } from '@semapps/activitypub';
 import CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
-const ServiceSchema = {
+const Schema = {
   mixins: [ActivityPubService],
 
   settings: {

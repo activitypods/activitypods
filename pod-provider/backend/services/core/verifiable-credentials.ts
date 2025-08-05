@@ -1,7 +1,7 @@
 import { VerifiableCredentialsService } from '@semapps/crypto';
 import { ServiceSchema } from 'moleculer';
 
-const ServiceSchema = {
+const Schema = {
   mixins: [VerifiableCredentialsService],
 
   settings: {

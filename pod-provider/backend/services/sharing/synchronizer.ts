@@ -1,7 +1,7 @@
 import { SynchronizerService } from '@semapps/sync';
 import { ServiceSchema } from 'moleculer';
 
-const ServiceSchema = {
+const Schema = {
   mixins: [SynchronizerService],
 
   settings: {

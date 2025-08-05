@@ -27,4 +27,4 @@ const Schema = {
   }
 } satisfies ServiceSchema;
 
-export default ServiceSchema;
+export default Schema;

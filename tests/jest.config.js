@@ -1,7 +1,7 @@
 const config = {
   extensionsToTreatAsEsm: ['.ts'],
   transformIgnorePatterns: []
-  // transform: {}
+  //transform: {}
 };
 
 export default config;

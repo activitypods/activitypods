@@ -22,7 +22,7 @@
     "formdata-node": "4.4.1",
     "handlebars": "^4.7.7",
     "http-link-header": "^1.1.1",
-    "moleculer": "^0.14.19",
+    "moleculer": "^0.14.35",
     "moleculer-bull": "^0.2.5",
     "sparqljs": "^3.5.2",
     "speakingurl": "^14.0.1",

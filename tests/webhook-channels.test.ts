@@ -1,17 +1,14 @@
-const urlJoin = require('url-join');
-const fetch = require('node-fetch');
-const { connectPodProvider, clearAllData, initializeAppServer, installApp } = require('./initialize');
-const ExampleAppService = require('./apps/example.app');
-const { parseHeader, negotiateContentType, parseJson } = require('@semapps/middlewares');
-const { fetchServer, tryUntilTimeout } = require('./utils');
-const { delay } = require('@semapps/ldp');
-
+import urlJoin from 'url-join';
+import fetch from 'node-fetch';
+import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
+import ExampleAppService from './apps/example.app.ts';
+import { parseHeader, negotiateContentType, parseJson } from '@semapps/middlewares';
+import { fetchServer, tryUntilTimeout } from './utils.ts';
+import { delay } from '@semapps/ldp';
 jest.setTimeout(110_000);
-
 const POD_SERVER_BASE_URL = 'http://localhost:3000';
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
-
 const mockWebhookAction = jest.fn(() => Promise.resolve());
 const mockWebhookAction2 = jest.fn(() => Promise.resolve());
 

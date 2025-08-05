@@ -1,6 +1,6 @@
-const fetch = require('node-fetch');
-const { delay } = require('@semapps/ldp');
-const CONFIG = require('./config');
+import fetch from 'node-fetch';
+import { delay } from '@semapps/ldp';
+import CONFIG from './config.ts';
 
 const arrayOf = value => {
   // If the field is null-ish, we suppose there are no values.
@@ -125,11 +125,5 @@ const tryUntilTimeout = async (fn, maxWait = 5000, waitBetween = 50) => {
     }
   });
 };
-module.exports = {
-  arrayOf,
-  fetchServer,
-  fetchMails,
-  clearMails,
-  waitForResource,
-  tryUntilTimeout
-};
+
+export { arrayOf, fetchServer, fetchMails, clearMails, waitForResource, tryUntilTimeout };

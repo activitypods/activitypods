@@ -1,13 +1,10 @@
-const urlJoin = require('url-join');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { triple, namedNode, literal } = require('@rdfjs/data-model');
-const { connectPodProvider, clearAllData, initializeAppServer, installApp } = require('./initialize');
-const ExampleAppService = require('./apps/example.app');
-
+import urlJoin from 'url-join';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { triple, namedNode, literal } from '@rdfjs/data-model';
+import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
+import ExampleAppService from './apps/example.app.ts';
 jest.setTimeout(80000);
-
 const NUM_PODS = 2;
-
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 

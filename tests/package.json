@@ -1,6 +1,7 @@
 {
   "name": "activitypods-tests",
   "private": true,
+  "type": "module",
   "scripts": {
     "test": "jest --detectOpenHandles --verbose",
     "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
@@ -20,7 +21,7 @@
     "@semapps/webacl": "1.1.1",
     "dotenv-flow": "^3.2.0",
     "ioredis": "^4.27.0",
-    "moleculer": "^0.14.19",
+    "moleculer": "^0.14.35",
     "node-fetch": "^2.6.6",
     "url-join": "^4.0.1",
     "wait-for-expect": "^3.0.2"

@@ -1,12 +1,10 @@
-const urlJoin = require('url-join');
-const waitForExpect = require('wait-for-expect');
-const { ACTIVITY_TYPES } = require('@semapps/activitypub');
-const { arrayOf } = require('@semapps/ldp');
-const { connectPodProvider, clearAllData } = require('./initialize');
-const { fetchMails } = require('./utils');
-
+import urlJoin from 'url-join';
+import waitForExpect from 'wait-for-expect';
+import { ACTIVITY_TYPES } from '@semapps/activitypub';
+import { arrayOf } from '@semapps/ldp';
+import { connectPodProvider, clearAllData } from './initialize.ts';
+import { fetchMails } from './utils.ts';
 jest.setTimeout(80000);
-
 const NUM_PODS = 3;
 
 describe('Test contacts features', () => {

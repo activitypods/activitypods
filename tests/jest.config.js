@@ -4,7 +4,8 @@ const config = {
   transform: {
     '\\.[jt]sx?$': ['esbuild-jest']
   },
+  transform: {},
   transformIgnorePatterns: []
 };
 
-module.exports = config;
+export default config;

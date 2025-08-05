@@ -10,7 +10,7 @@
     "directory": "pod-provider/backend"
   },
   "scripts": {
-    "dev": "NODE_OPTIONS='--experimental-specifier-resolution=node' moleculer-runner --repl --hot services/*.ts services/**/*.ts",
+    "dev": "NODE_OPTIONS='--experimental-specifier-resolution=node' node node_modules/moleculer/bin/moleculer-runner.mjs --repl --hot services/*.ts services/**/*.ts",
     "start": "NODE_OPTIONS='--experimental-specifier-resolution=node' moleculer-runner services/*.ts services/**/*.ts",
     "test": "NODE_ENV=test NODE_OPTIONS='--experimental-specifier-resolution=node' moleculer-runner --repl --hot services/*.ts services/**/*.ts",
     "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
@@ -45,7 +45,7 @@
     "ioredis": "^4.27.0",
     "jose": "^5.1.1",
     "lodash": "4.17.21",
-    "moleculer": "0.14.35",
+    "moleculer": "^0.14.35",
     "moleculer-bull": "0.3.1",
     "moleculer-repl": "0.7.4",
     "moleculer-web": "0.10.8",
@@ -61,6 +61,7 @@
     "node": ">=22.12.0"
   },
   "devDependencies": {
-    "@types/dotenv-flow": "^3.3.3"
+    "@types/dotenv-flow": "^3.3.3",
+    "@types/node-fetch": "^2.6.13"
   }
 }

@@ -1,15 +1,13 @@
-const urlJoin = require('url-join');
-const fetch = require('node-fetch');
-const WebSocket = require('ws');
-const { delay } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { triple, namedNode, literal } = require('@rdfjs/data-model');
-const { connectPodProvider, clearAllData, initializeAppServer, installApp } = require('./initialize');
-const ExampleAppService = require('./apps/example.app');
-const { fetchServer, tryUntilTimeout } = require('./utils');
-
+import urlJoin from 'url-join';
+import fetch from 'node-fetch';
+import WebSocket from 'ws';
+import { delay } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { triple, namedNode, literal } from '@rdfjs/data-model';
+import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
+import ExampleAppService from './apps/example.app.ts';
+import { fetchServer, tryUntilTimeout } from './utils.ts';
 jest.setTimeout(110_000);
-
 const POD_SERVER_BASE_URL = 'http://localhost:3000';
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');

@@ -13,7 +13,7 @@ const ApplicationsServiceSchema = {
 
   actions: {
     get: defineAction({
-      async handler(ctx: any) {
+      async handler(ctx) {
         const { appUri } = ctx.params;
         return await ctx.call('ldp.remote.get', { resourceUri: appUri });
       }
@@ -23,7 +23,7 @@ const ApplicationsServiceSchema = {
       /**
        * Return the required access needs and special rights of the given application
        */
-      async handler(ctx: any) {
+      async handler(ctx) {
         const { appUri } = ctx.params;
 
         // Force to get through network, so that we have the latest Access Need Group
@@ -47,7 +47,7 @@ const ApplicationsServiceSchema = {
     }),
 
     getClassDescription: defineAction({
-      async handler(ctx: any) {
+      async handler(ctx) {
         const { type, appUri, podOwner } = ctx.params;
 
         const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });

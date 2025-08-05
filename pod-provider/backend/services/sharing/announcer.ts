@@ -3,7 +3,7 @@ import urlJoin from 'url-join';
 import { arrayOf } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
-import matchActivity from '@semapps/activitypub/utils/matchActivity';
+import { matchActivity } from '@semapps/activitypub';
 import { ServiceSchema, defineAction } from 'moleculer';
 
 const getAnnouncesGroupUri = (eventUri: any) => {

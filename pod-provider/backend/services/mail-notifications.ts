@@ -10,9 +10,7 @@ import MailService from 'moleculer-mail';
 import QueueService from 'moleculer-bull';
 import { ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { arrayOf, isObject } from '@semapps/ldp';
-// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../config/config.ts';
-// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import transport from '../config/transport.ts';
 import { ServiceSchema, defineAction } from 'moleculer';
 

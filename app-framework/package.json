@@ -20,5 +20,8 @@
     ".yalc/*",
     ".yalc/@*/*"
   ],
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  }
 }

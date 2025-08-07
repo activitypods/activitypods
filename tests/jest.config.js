@@ -1,7 +1,11 @@
+/** @type {import('jest').Config} */
 const config = {
-  extensionsToTreatAsEsm: ['.ts'],
+  testEnvironment: 'node',
+  // transform: {
+  //   '\\.[jt]sx?$': ['esbuild-jest']
+  // },
+  maxWorkers: 1,
   transformIgnorePatterns: []
-  //transform: {}
 };
 
 export default config;

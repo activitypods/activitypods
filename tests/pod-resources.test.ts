@@ -1,6 +1,6 @@
 import urlJoin from 'url-join';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { triple, namedNode, literal } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 jest.setTimeout(80000);
@@ -238,9 +238,9 @@ describe('Test Pod resources handling', () => {
       appServer.call('pod-resources.patch', {
         resourceUri: bobEventUri,
         triplesToAdd: [
-          triple(
-            namedNode(bobEventUri),
-            namedNode('https://www.w3.org/ns/activitystreams#summary'),
+          rdf.triple(
+            rdf.namedNode(bobEventUri),
+            rdf.namedNode('https://www.w3.org/ns/activitystreams#summary'),
             literal('A super-powerful AI-generated summary')
           )
         ],

@@ -1,7 +1,7 @@
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { arrayOf, getParentContainerUri } from '@semapps/ldp';
-import { triple, namedNode } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -212,7 +212,9 @@ const RepairSchema = {
                 }
                 await ctx.call('ldp.resource.patch', {
                   resourceUri: objectUri,
-                  triplesToRemove: [triple(namedNode(objectUri), namedNode(attachPredicate), namedNode(collectionUri))],
+                  triplesToRemove: [
+                    rdf.triple(rdf.namedNode(objectUri), rdf.namedNode(attachPredicate), rdf.namedNode(collectionUri))
+                  ],
                   webId: 'system'
                 });
               }

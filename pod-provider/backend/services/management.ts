@@ -1,8 +1,7 @@
 import path from 'node:path';
 import fs from 'fs';
-import { namedNode, quad } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import archiver from 'archiver';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'mole... Remove this comment to see the full error message
 import QueueService from 'moleculer-bull';
@@ -11,7 +10,6 @@ import { MIME_TYPES } from '@semapps/mime-types';
 import { ACTIVITY_TYPES, PUBLIC_URI } from '@semapps/activitypub';
 import { sanitizeSparqlQuery } from '@semapps/triplestore';
 import { arrayOf } from '@semapps/ldp';
-// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../config/config.ts';
 import { ServiceSchema, defineAction } from 'moleculer';
 // @ts-expect-error TS(7034): Variable 'Readable' implicitly has type 'any' in s... Remove this comment to see the full error message
@@ -74,18 +72,15 @@ const ManagementService = {
           if (!webId) {
             throw403('You are not allowed to delete this actor.');
           }
-          // @ts-expect-error TS(2339): Property 'group' does not exist on type 'never'.
           if (account.group && !arrayOf(account.owner).includes(webId)) {
             throw403('You are not allowed to delete this group.');
           }
-          // @ts-expect-error TS(2339): Property 'group' does not exist on type 'never'.
           if (!account.group && webId !== account.webId) {
             throw403('You are not allowed to delete this actor.');
           }
         }
 
         // Delete account information settings data.
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'never'.
         await ctx.call('auth.account.setTombstone', { webId: account.webId });
 
         // Delete uploads.
@@ -99,24 +94,20 @@ const ManagementService = {
         }
 
         // Send `Delete` activity to the outside world (so they delete cached data and contact info, etc.).
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'never'.
         const actor = await ctx.call('ldp.resource.get', { resourceUri: account.webId, accept: MIME_TYPES.JSON });
         let recipients;
 
         // Get recipients
         // TODO In the future, it would be good to send the activity to as many servers as possible
         // This is in order to delete cached versions of the account.
-        // @ts-expect-error TS(2339): Property 'group' does not exist on type 'never'.
         if (account.group) {
           // TODO get the whole list of members and add them as recipients
-          // @ts-expect-error TS(2339): Property 'followers' does not exist on type 'never... Remove this comment to see the full error message
           recipients = [actor.followers, ...arrayOf(account.owner), PUBLIC_URI];
         } else {
           const contactsCollection = await ctx.call('activitypub.collection.get', {
             resourceUri: actor['apods:contacts'],
             webId: 'system'
           });
-          // @ts-expect-error TS(2339): Property 'followers' does not exist on type 'never... Remove this comment to see the full error message
           recipients = [actor.followers, ...arrayOf(contactsCollection.items), PUBLIC_URI];
         }
 
@@ -124,18 +115,14 @@ const ManagementService = {
           'activitypub.outbox.post',
           {
             '@context': 'https://www.w3.org/ns/activitystreams',
-            // @ts-expect-error TS(2339): Property 'outbox' does not exist on type 'never'.
             collectionUri: actor.outbox,
             type: ACTIVITY_TYPES.DELETE,
-            // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
             object: actor.id,
-            // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
             actor: actor.id,
             to: recipients
           },
           {
             meta: {
-              // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
               webId: actor.id,
               doNotProcessObject: true // If we don't set this, we will trigger delete of the actor's webId document locally.
             }
@@ -147,7 +134,6 @@ const ManagementService = {
         if (this.createJob) {
           this.createJob('deleteDataset', username, { dataset: username }, { delay: 24 * 60 * 60 * 1000 });
           // Delete account after one year. Meanwhile, new users won't be able to register an account under this name.
-          // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
           this.createJob('deleteAccountInfo', username, { webId: actor.id }, { delay: 365 * 24 * 60 * 60 * 1000 });
         } else {
           // Moleculer scheduler not available. The timing here is a tradeoff
@@ -185,7 +171,6 @@ const ManagementService = {
           if (!webId) {
             throw403('You are not allowed to delete this actor.');
           }
-          // @ts-expect-error TS(2339): Property 'group' does not exist on type 'never'.
           if (account.group && !arrayOf(account.owner).includes(webId)) {
             throw403('You are not allowed to delete this group.');
           }
@@ -195,7 +180,6 @@ const ManagementService = {
           }
         }
 
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'never'.
         const storageUrl = await ctx.call('solid-storage.getUrl', { webId: account.webId });
 
         // If there has been an export less than 5 minutes ago, we won't create a new one.
@@ -208,7 +192,6 @@ const ManagementService = {
           return fs.promises.readFile(recentExport);
         }
 
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'never'.
         const serializedQuads = await this.createRdfDump(username, account.webId, withSettings);
 
         const currentDateStr = new Date().toISOString().replace(/:/g, '-');
@@ -233,7 +216,6 @@ const ManagementService = {
         if (withBackups && this.broker.registry.hasService('backup')) {
           /** @type {string[]} */
           const backupFilenames = await ctx.call('backup.listBackupsForDataset', { dataset: username });
-          // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
           for (const backupFilename of backupFilenames) {
             archive.file(backupFilename, { name: `backups/${path.basename(backupFilename)}` });
           }
@@ -394,17 +376,15 @@ const ManagementService = {
             accept: MIME_TYPES.JSON
           });
       // Add settings graph to settings triples
-      const settingsGraphNode = namedNode('http://semapps.org/ns/core#settings');
+      const settingsGraphNode = rdf.namedNode('http://semapps.org/ns/core#settings');
       settingsDump.forEach(record => {
-        // @ts-expect-error TS(2339): Property 'g' does not exist on type 'never'.
         record.g = settingsGraphNode;
       });
       // Add settings triples to export dataset.
       // @ts-expect-error TS(2339): Property 'push' does not exist on type 'never'.
-      datasetDump.push(...settingsDump);
       // Convert to rdf-js quads.
       // @ts-expect-error TS(2339): Property 'map' does not exist on type 'never'.
-      const allQuads = datasetDump.map(q => quad(q.s, q.p, q.o, q.g));
+      const allQuads = datasetDump.map(q => rdf.quad(q.s, q.p, q.o, q.g));
       const serializedRdf = await this.serializeQuads(allQuads);
       return serializedRdf;
     }

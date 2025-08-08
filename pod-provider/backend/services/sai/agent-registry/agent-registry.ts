@@ -1,11 +1,10 @@
-import { triple, namedNode } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import { SingleResourceContainerMixin } from '@semapps/ldp';
 import { ServiceSchema, defineAction } from 'moleculer';
 const ALLOWED_TYPES = ['interop:ApplicationRegistration', 'interop:SocialAgentRegistration'];
 
 const AgentRegistrySchema = {
   name: 'agent-registry' as const,
-  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:AgentRegistry'],
@@ -27,14 +26,14 @@ const AgentRegistrySchema = {
           {
             resourceUri: agentRegistryUri,
             triplesToAdd: [
-              triple(
-                namedNode(agentRegistryUri),
-                namedNode(
+              rdf.triple(
+                rdf.namedNode(agentRegistryUri),
+                rdf.namedNode(
                   agentRegistrationType === 'interop:ApplicationRegistration'
                     ? 'http://www.w3.org/ns/solid/interop#hasApplicationRegistration'
                     : 'http://www.w3.org/ns/solid/interop#hasSocialAgentRegistration'
                 ),
-                namedNode(agentRegistrationUri)
+                rdf.namedNode(agentRegistrationUri)
               )
             ],
             webId: 'system'
@@ -57,14 +56,14 @@ const AgentRegistrySchema = {
           {
             resourceUri: agentRegistryUri,
             triplesToRemove: [
-              triple(
-                namedNode(agentRegistryUri),
-                namedNode(
+              rdf.triple(
+                rdf.namedNode(agentRegistryUri),
+                rdf.namedNode(
                   agentRegistrationType === 'interop:ApplicationRegistration'
                     ? 'http://www.w3.org/ns/solid/interop#hasApplicationRegistration'
                     : 'http://www.w3.org/ns/solid/interop#hasSocialAgentRegistration'
                 ),
-                namedNode(agentRegistrationUri)
+                rdf.namedNode(agentRegistrationUri)
               )
             ],
             webId: 'system'
@@ -82,10 +81,10 @@ const AgentRegistrySchema = {
         await ctx.call('registry-set.patch', {
           resourceUri: registrySetUri,
           triplesToAdd: [
-            triple(
-              namedNode(registrySetUri),
-              namedNode('http://www.w3.org/ns/solid/interop#hasAgentRegistry'),
-              namedNode(res)
+            rdf.triple(
+              rdf.namedNode(registrySetUri),
+              rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAgentRegistry'),
+              rdf.namedNode(res)
             )
           ],
           webId: 'system'

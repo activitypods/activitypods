@@ -1,10 +1,9 @@
-import { triple, namedNode } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import { SingleResourceContainerMixin } from '@semapps/ldp';
 import { ServiceSchema } from 'moleculer';
 
 const RegistrySetSchema = {
   name: 'registry-set' as const,
-  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:RegistrySet'],
@@ -16,10 +15,10 @@ const RegistrySetSchema = {
         await ctx.call('ldp.resource.patch', {
           resourceUri: ctx.params.webId,
           triplesToAdd: [
-            triple(
-              namedNode(ctx.params.webId),
-              namedNode('http://www.w3.org/ns/solid/interop#hasRegistrySet'),
-              namedNode(res)
+            rdf.triple(
+              rdf.namedNode(ctx.params.webId),
+              rdf.namedNode('http://www.w3.org/ns/solid/interop#hasRegistrySet'),
+              rdf.namedNode(res)
             )
           ],
           webId: 'system'

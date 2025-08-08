@@ -1,5 +1,5 @@
 import urlJoin from 'url-join';
-import { triple, namedNode } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -50,10 +50,10 @@ const MigrationSchema = {
           await ctx.call('ldp.resource.patch', {
             resourceUri: app.id,
             triplesToRemove: accessDescriptionSetsUris.map((uri: any) =>
-              triple(
-                namedNode(app.id),
-                namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
-                namedNode(uri)
+              rdf.triple(
+                rdf.namedNode(app.id),
+                rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
+                rdf.namedNode(uri)
               )
             ),
             webId: 'system'

@@ -1,5 +1,5 @@
 import { arrayOf, getId } from '@semapps/ldp';
-import { triple, namedNode, literal } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import { ServiceSchema, defineAction } from 'moleculer';
 
 /**
@@ -92,22 +92,22 @@ const AgentRegistrationsMixin = {
           {
             resourceUri: getId(agentRegistration),
             triplesToAdd: [
-              triple(
-                namedNode(getId(agentRegistration)),
-                namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
-                namedNode(getId(grant))
+              rdf.triple(
+                rdf.namedNode(getId(agentRegistration)),
+                rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
+                rdf.namedNode(getId(grant))
               ),
-              triple(
-                namedNode(getId(agentRegistration)),
-                namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-                literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
+              rdf.triple(
+                rdf.namedNode(getId(agentRegistration)),
+                rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
+                rdf.literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
               )
             ],
             triplesToRemove: agentRegistration['interop:updatedAt'] && [
-              triple(
-                namedNode(getId(agentRegistration)),
-                namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-                literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
+              rdf.triple(
+                rdf.namedNode(getId(agentRegistration)),
+                rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
+                rdf.literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
               )
             ],
             webId: 'system'
@@ -131,19 +131,19 @@ const AgentRegistrationsMixin = {
 
         if (agentRegistration) {
           const triplesToRemove = [
-            triple(
-              namedNode(getId(agentRegistration)),
-              namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
-              namedNode(getId(grant))
+            rdf.triple(
+              rdf.namedNode(getId(agentRegistration)),
+              rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
+              rdf.namedNode(getId(grant))
             )
           ];
 
           if (agentRegistration['interop:updatedAt']) {
             triplesToRemove.push(
-              triple(
-                namedNode(getId(agentRegistration)),
-                namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-                literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
+              rdf.triple(
+                rdf.namedNode(getId(agentRegistration)),
+                rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
+                rdf.literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
               )
             );
           }
@@ -152,10 +152,10 @@ const AgentRegistrationsMixin = {
             {
               resourceUri: getId(agentRegistration),
               triplesToAdd: [
-                triple(
-                  namedNode(getId(agentRegistration)),
-                  namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-                  literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
+                rdf.triple(
+                  rdf.namedNode(getId(agentRegistration)),
+                  rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
+                  rdf.literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
                 )
               ],
               triplesToRemove,
@@ -194,7 +194,6 @@ const AgentRegistrationsMixin = {
           webId: podOwner
         });
 
-        // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
         for (const authorization of authorizations) {
           await ctx.call('access-authorizations.delete', {
             resourceUri: getId(authorization),

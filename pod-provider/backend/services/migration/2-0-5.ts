@@ -1,4 +1,4 @@
-import { triple, namedNode } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import { MigrationService } from '@semapps/migration';
 import { arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
@@ -78,10 +78,10 @@ const Migration205Schema = {
             await ctx.call('app-registrations.patch', {
               resourceUri: appRegistration.id,
               triplesToAdd: [
-                triple(
-                  namedNode(appRegistration.id),
-                  namedNode('http://www.w3.org/ns/solid/interop#registeredWith'),
-                  namedNode(authAgent.id)
+                rdf.triple(
+                  rdf.namedNode(appRegistration.id),
+                  rdf.namedNode('http://www.w3.org/ns/solid/interop#registeredWith'),
+                  rdf.namedNode(authAgent.id)
                 )
               ],
               webId: 'system'

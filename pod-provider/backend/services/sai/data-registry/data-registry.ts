@@ -1,4 +1,4 @@
-import { triple, namedNode } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import { SingleResourceContainerMixin, arrayOf, delay } from '@semapps/ldp';
 import { ServiceSchema, defineAction } from 'moleculer';
 
@@ -22,10 +22,10 @@ const DataRegistrySchema = {
           {
             resourceUri: dataRegistryUri,
             triplesToAdd: [
-              triple(
-                namedNode(dataRegistryUri),
-                namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistration'),
-                namedNode(dataRegistrationUri)
+              rdf.triple(
+                rdf.namedNode(dataRegistryUri),
+                rdf.namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistration'),
+                rdf.namedNode(dataRegistrationUri)
               )
             ],
             webId: podOwner
@@ -45,10 +45,10 @@ const DataRegistrySchema = {
           {
             resourceUri: dataRegistryUri,
             triplesToRemove: [
-              triple(
-                namedNode(dataRegistryUri),
-                namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistration'),
-                namedNode(dataRegistrationUri)
+              rdf.triple(
+                rdf.namedNode(dataRegistryUri),
+                rdf.namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistration'),
+                rdf.namedNode(dataRegistrationUri)
               )
             ],
             webId: podOwner
@@ -92,10 +92,10 @@ const DataRegistrySchema = {
         await ctx.call('registry-set.patch', {
           resourceUri: registrySetUri,
           triplesToAdd: [
-            triple(
-              namedNode(registrySetUri),
-              namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistry'),
-              namedNode(res)
+            rdf.triple(
+              rdf.namedNode(registrySetUri),
+              rdf.namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistry'),
+              rdf.namedNode(res)
             )
           ],
           webId: 'system'

@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import WebSocket from 'ws';
 import { delay } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { triple, namedNode, literal } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 import { fetchServer, tryUntilTimeout } from './utils.ts';
@@ -225,7 +225,11 @@ describe('Websocket channel', () => {
       await alice.call('ldp.resource.patch', {
         resourceUri: noteUri,
         triplesToAdd: [
-          triple(namedNode(noteUri), namedNode('https://www.w3.org/ns/activitystreams#tag'), literal('My tag'))
+          rdf.triple(
+            rdf.namedNode(noteUri),
+            rdf.namedNode('https://www.w3.org/ns/activitystreams#tag'),
+            rdf.literal('My tag')
+          )
         ]
       });
 

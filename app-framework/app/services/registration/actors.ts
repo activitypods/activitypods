@@ -1,5 +1,5 @@
 import urlJoin from 'url-join';
-import { triple, namedNode } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import { ControlledContainerMixin, DereferenceMixin } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 // @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
@@ -147,10 +147,10 @@ const ActorsSchema = {
           {
             resourceUri: this.appActor.id,
             triplesToAdd: [
-              triple(
-                namedNode(this.appActor.id),
-                namedNode('http://www.w3.org/ns/solid/interop#hasAccessNeedGroup'),
-                namedNode(accessNeedGroupUri)
+              rdf.triple(
+                rdf.namedNode(this.appActor.id),
+                rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessNeedGroup'),
+                rdf.namedNode(accessNeedGroupUri)
               )
             ],
             webId: 'system'
@@ -168,10 +168,10 @@ const ActorsSchema = {
           {
             resourceUri: this.appActor.id,
             triplesToRemove: [
-              triple(
-                namedNode(this.appActor.id),
-                namedNode('http://www.w3.org/ns/solid/interop#hasAccessNeedGroup'),
-                namedNode(accessNeedGroupUri)
+              rdf.triple(
+                rdf.namedNode(this.appActor.id),
+                rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessNeedGroup'),
+                rdf.namedNode(accessNeedGroupUri)
               )
             ],
             webId: 'system'
@@ -189,10 +189,10 @@ const ActorsSchema = {
           {
             resourceUri: this.appActor.id,
             triplesToAdd: [
-              triple(
-                namedNode(this.appActor.id),
-                namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
-                namedNode(accessDescriptionSetUri)
+              rdf.triple(
+                rdf.namedNode(this.appActor.id),
+                rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
+                rdf.namedNode(accessDescriptionSetUri)
               )
             ],
             webId: 'system'
@@ -210,10 +210,10 @@ const ActorsSchema = {
           {
             resourceUri: this.appActor.id,
             triplesToRemove: [
-              triple(
-                namedNode(this.appActor.id),
-                namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
-                namedNode(accessDescriptionSetUri)
+              rdf.triple(
+                rdf.namedNode(this.appActor.id),
+                rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
+                rdf.namedNode(accessDescriptionSetUri)
               )
             ],
             webId: 'system'

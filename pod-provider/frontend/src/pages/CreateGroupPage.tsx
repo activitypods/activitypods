@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import urlJoin from 'url-join';
-import { triple, namedNode, literal } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import {
   Form,
   useTranslate,
@@ -77,9 +77,13 @@ const CreateGroupPage = () => {
           await dataProvider.patch('Actor', {
             id: groupWebId,
             triplesToAdd: [
-              triple(namedNode(groupWebId), namedNode('http://xmlns.com/foaf/0.1/name'), literal(name)),
-              triple(namedNode(groupWebId), namedNode('https://www.w3.org/ns/activitystreams#name'), literal(name))
-              // triple(namedNode(groupWebId), namedNode('http://xmlns.com/foaf/0.1/depiction'), namedNode(imageUri))
+              rdf.triple(rdf.namedNode(groupWebId), rdf.namedNode('http://xmlns.com/foaf/0.1/name'), rdf.literal(name)),
+              rdf.triple(
+                rdf.namedNode(groupWebId),
+                rdf.namedNode('https://www.w3.org/ns/activitystreams#name'),
+                rdf.literal(name)
+              )
+              // rdf.triple(rdf.namedNode(groupWebId), rdf.namedNode('http://xmlns.com/foaf/0.1/depiction'), rdf.namedNode(imageUri))
             ]
           });
         }

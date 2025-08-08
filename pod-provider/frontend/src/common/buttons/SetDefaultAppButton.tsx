@@ -4,7 +4,7 @@ import { Menu, MenuItem, ListItemIcon } from '@mui/material';
 import AppsIcon from '@mui/icons-material/Apps';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import { triple, namedNode } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import { arrayOf } from '../../utils';
 
 const AppMenuItem = ({ appUri, isDefault, ...rest }: any) => {
@@ -32,17 +32,17 @@ const SetDefaultAppButton = ({ typeRegistration, refetch, color }: any) => {
       await dataProvider.patch('TypeRegistration', {
         id: typeRegistration.id,
         triplesToAdd: [
-          triple(
-            namedNode(typeRegistration.id),
-            namedNode('http://activitypods.org/ns/core#defaultApp'),
-            namedNode(appUri)
+          rdf.triple(
+            rdf.namedNode(typeRegistration.id),
+            rdf.namedNode('http://activitypods.org/ns/core#defaultApp'),
+            rdf.namedNode(appUri)
           )
         ],
         triplesToRemove: [
-          triple(
-            namedNode(typeRegistration.id),
-            namedNode('http://activitypods.org/ns/core#defaultApp'),
-            namedNode(typeRegistration['apods:defaultApp'])
+          rdf.triple(
+            rdf.namedNode(typeRegistration.id),
+            rdf.namedNode('http://activitypods.org/ns/core#defaultApp'),
+            rdf.namedNode(typeRegistration['apods:defaultApp'])
           )
         ]
       });

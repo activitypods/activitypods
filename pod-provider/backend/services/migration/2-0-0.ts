@@ -1,6 +1,6 @@
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
-import { triple, namedNode, literal } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import { arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 // @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
@@ -71,10 +71,10 @@ const Migration200Schema = {
           await ctx.call('ldp.resource.patch', {
             resourceUri: account.webId,
             triplesToAdd: [
-              triple(
-                namedNode(account.webId),
-                namedNode('http://schema.org/knowsLanguage'),
-                literal(account.preferredLocale)
+              rdf.triple(
+                rdf.namedNode(account.webId),
+                rdf.namedNode('http://schema.org/knowsLanguage'),
+                rdf.literal(account.preferredLocale)
               )
             ],
             webId: 'system'
@@ -101,10 +101,10 @@ const Migration200Schema = {
           await ctx.call('ldp.resource.patch', {
             resourceUri: account.webId,
             triplesToAdd: [
-              triple(
-                namedNode(account.webId),
-                namedNode('http://www.w3.org/ns/pim/space#storage'),
-                namedNode(account.podUri)
+              rdf.triple(
+                rdf.namedNode(account.webId),
+                rdf.namedNode('http://www.w3.org/ns/pim/space#storage'),
+                rdf.namedNode(account.podUri)
               )
             ],
             webId: 'system'
@@ -113,10 +113,10 @@ const Migration200Schema = {
           await ctx.call('ldp.resource.patch', {
             resourceUri: account.webId,
             triplesToAdd: [
-              triple(
-                namedNode(account.webId),
-                namedNode('http://www.w3.org/ns/solid/terms#oidcIssuer'),
-                namedNode(new URL(account.webId).origin)
+              rdf.triple(
+                rdf.namedNode(account.webId),
+                rdf.namedNode('http://www.w3.org/ns/solid/terms#oidcIssuer'),
+                rdf.namedNode(new URL(account.webId).origin)
               )
             ],
             webId: 'system'

@@ -1,6 +1,6 @@
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
-import { triple, namedNode } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import { SingleResourceContainerMixin, getWebIdFromUri } from '@semapps/ldp';
 // @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../../config/config.ts';
@@ -64,10 +64,10 @@ const AuthAgentSchema = {
         await ctx.call('ldp.resource.patch', {
           resourceUri: ctx.params.webId,
           triplesToAdd: [
-            triple(
-              namedNode(ctx.params.webId),
-              namedNode('http://www.w3.org/ns/solid/interop#hasAuthorizationAgent'),
-              namedNode(res)
+            rdf.triple(
+              rdf.namedNode(ctx.params.webId),
+              rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAuthorizationAgent'),
+              rdf.namedNode(res)
             )
           ],
           webId: 'system'

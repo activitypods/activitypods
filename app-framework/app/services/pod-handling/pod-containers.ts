@@ -1,6 +1,6 @@
 import sparqljsModule from 'sparqljs';
 const SparqlGenerator = sparqljsModule.Generator;
-import { triple, namedNode } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import { arrayOf, isURL } from '@semapps/ldp';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
@@ -99,10 +99,10 @@ const PodContainersSchema = {
                 {
                   type: 'bgp',
                   triples: [
-                    triple(
-                      namedNode(containerUri),
-                      namedNode('http://www.w3.org/ns/ldp#contains'),
-                      namedNode(resourceUri)
+                    rdf.triple(
+                      rdf.namedNode(containerUri),
+                      rdf.namedNode('http://www.w3.org/ns/ldp#contains'),
+                      rdf.namedNode(resourceUri)
                     )
                   ]
                 }
@@ -142,10 +142,10 @@ const PodContainersSchema = {
                 {
                   type: 'bgp',
                   triples: [
-                    triple(
-                      namedNode(containerUri),
-                      namedNode('http://www.w3.org/ns/ldp#contains'),
-                      namedNode(resourceUri)
+                    rdf.triple(
+                      rdf.namedNode(containerUri),
+                      rdf.namedNode('http://www.w3.org/ns/ldp#contains'),
+                      rdf.namedNode(resourceUri)
                     )
                   ]
                 }

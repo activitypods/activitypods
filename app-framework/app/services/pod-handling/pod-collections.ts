@@ -1,5 +1,5 @@
 import urlJoin from 'url-join';
-import { triple, namedNode } from '@rdfjs/data-model';
+import rdf from '@rdfjs/data-model';
 import sparqljsModule from 'sparqljs';
 const SparqlGenerator = sparqljsModule.Generator;
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
@@ -66,7 +66,11 @@ const PodCollectionsSchema = {
             await ctx.call('pod-resources.patch', {
               resourceUri,
               triplesToAdd: [
-                triple(namedNode(resourceUri), namedNode(expandedAttachPredicate), namedNode(collectionUri))
+                rdf.triple(
+                  rdf.namedNode(resourceUri),
+                  rdf.namedNode(expandedAttachPredicate),
+                  rdf.namedNode(collectionUri)
+                )
               ],
               actorUri
             });
@@ -107,7 +111,11 @@ const PodCollectionsSchema = {
           await ctx.call('pod-resources.patch', {
             resourceUri,
             triplesToRemove: [
-              triple(namedNode(resourceUri), namedNode(expandedAttachPredicate), namedNode(collectionUri))
+              rdf.triple(
+                rdf.namedNode(resourceUri),
+                rdf.namedNode(expandedAttachPredicate),
+                rdf.namedNode(collectionUri)
+              )
             ],
             actorUri
           });
@@ -129,10 +137,10 @@ const PodCollectionsSchema = {
                 {
                   type: 'bgp',
                   triples: [
-                    triple(
-                      namedNode(collectionUri),
-                      namedNode('https://www.w3.org/ns/activitystreams#items'),
-                      namedNode(itemUri)
+                    rdf.triple(
+                      rdf.namedNode(collectionUri),
+                      rdf.namedNode('https://www.w3.org/ns/activitystreams#items'),
+                      rdf.namedNode(itemUri)
                     )
                   ]
                 }
@@ -167,10 +175,10 @@ const PodCollectionsSchema = {
                 {
                   type: 'bgp',
                   triples: [
-                    triple(
-                      namedNode(collectionUri),
-                      namedNode('https://www.w3.org/ns/activitystreams#items'),
-                      namedNode(itemUri)
+                    rdf.triple(
+                      rdf.namedNode(collectionUri),
+                      rdf.namedNode('https://www.w3.org/ns/activitystreams#items'),
+                      rdf.namedNode(itemUri)
                     )
                   ]
                 }

@@ -1,12 +1,16 @@
-const SparqlGenerator = require('sparqljs').Generator;
-const { triple, namedNode } = require('@rdfjs/data-model');
-const { arrayOf, isURL } = require('@semapps/ldp');
-const FetchPodOrProxyMixin = require('../../mixins/fetch-pod-or-proxy');
+import sparqljsModule from 'sparqljs';
+const SparqlGenerator = sparqljsModule.Generator;
+import { triple, namedNode } from '@rdfjs/data-model';
+import { arrayOf, isURL } from '@semapps/ldp';
+import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
+// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
+import { ServiceSchema, defineAction } from 'moleculer';
 
-module.exports = {
-  name: 'pod-containers',
+const PodContainersSchema = {
+  name: 'pod-containers' as const,
   mixins: [FetchPodOrProxyMixin],
   started() {
+    // @ts-expect-error TS(2339): Property 'sparqlGenerator' does not exist on type ... Remove this comment to see the full error message
     this.sparqlGenerator = new SparqlGenerator({
       /* prefixes, baseIRI, factory, sparqlStar */
     });
@@ -16,21 +20,24 @@ module.exports = {
      * Fetch the TypeIndex and return the first containerUri that holds resources of the given type
      * TODO Use some cache mechanism, or fetch all type registration at the app start
      */
-    getByType: {
+    getByType: defineAction({
       params: {
         type: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { type } = ctx.params;
 
         const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
 
         const { body: actor } = await this.actions.fetch({
+          // @ts-expect-error TS(2304): Cannot find name 'actorUri'.
           url: actorUri,
           headers: {
             'Content-Type': 'application/ld+json'
           },
+          // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
           actorUri
         });
 
@@ -40,6 +47,7 @@ module.exports = {
             headers: {
               'Content-Type': 'application/ld+json'
             },
+            // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
             actorUri
           });
 
@@ -52,6 +60,7 @@ module.exports = {
                 headers: {
                   'Content-Type': 'application/ld+json'
                 },
+                // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
                 actorUri
               }));
             }
@@ -65,16 +74,19 @@ module.exports = {
             }
           }
 
+          // @ts-expect-error TS(2304): Cannot find name 'actorUri'.
           throw new Error(`No container found for type ${expandedType} in the TypeIndex of ${actorUri}`);
         }
       }
-    },
-    attach: {
+    }),
+
+    attach: defineAction({
       params: {
         containerUri: { type: 'string', optional: false },
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { containerUri, resourceUri, actorUri } = ctx.params;
 
@@ -109,13 +121,15 @@ module.exports = {
           actorUri
         });
       }
-    },
-    detach: {
+    }),
+
+    detach: defineAction({
       params: {
         containerUri: { type: 'string', optional: false },
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { containerUri, resourceUri, actorUri } = ctx.params;
 
@@ -150,6 +164,16 @@ module.exports = {
           actorUri
         });
       }
+    })
+  }
+} satisfies ServiceSchema;
+
+export default PodContainersSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [PodContainersSchema.name]: typeof PodContainersSchema;
     }
   }
-};
+}

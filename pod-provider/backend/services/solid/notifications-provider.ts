@@ -1,11 +1,16 @@
-const { NotificationsProviderService } = require('@semapps/solid');
-const CONFIG = require('../../config/config');
+import { NotificationsProviderService } from '@semapps/solid';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
-module.exports = {
+const Schema = {
+  // @ts-expect-error TS(2322): Type '{ name: "solid-notifications.provider"; sett... Remove this comment to see the full error message
   mixins: [NotificationsProviderService],
   settings: {
     baseUrl: CONFIG.BASE_URL,
     settingsDataset: CONFIG.AUTH_ACCOUNTS_DATASET,
     queueServiceUrl: CONFIG.QUEUE_SERVICE_URL
   }
-};
+} satisfies Partial<ServiceSchema>;
+
+export default Schema;

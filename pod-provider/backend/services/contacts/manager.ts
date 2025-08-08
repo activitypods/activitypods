@@ -1,12 +1,15 @@
-const urlJoin = require('url-join');
-const { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } = require('@semapps/activitypub');
-const { sanitizeSparqlQuery } = require('@semapps/triplestore');
-const { arrayOf } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } = require('../../config/patterns');
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
+import { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } from '@semapps/activitypub';
+import { sanitizeSparqlQuery } from '@semapps/triplestore';
+import { arrayOf } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } from '../../config/patterns.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
-module.exports = {
-  name: 'contacts.manager',
+const ContactsManagerSchema = {
+  name: 'contacts.manager' as const,
+  // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Serv... Remove this comment to see the full error message
   mixins: [ActivitiesHandlerMixin],
   settings: {
     ignoredContactsCollectionOptions: {
@@ -23,18 +26,20 @@ module.exports = {
     await this.broker.call('activitypub.collections-registry.register', this.settings.ignoredContactsCollectionOptions);
   },
   actions: {
-    async updateCollectionsOptions(ctx) {
-      const { dataset } = ctx.params;
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.ignoredContactsCollectionOptions,
-        dataset
-      });
-    }
+    updateCollectionsOptions: defineAction({
+      async handler(ctx) {
+        const { dataset } = ctx.params;
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          collection: this.settings.ignoredContactsCollectionOptions,
+          dataset
+        });
+      }
+    })
   },
   activities: {
     addContact: {
       match: ADD_CONTACT,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         if (!activity.origin) throw new Error('The origin property is missing from the Add activity');
 
         if (!activity.origin.startsWith(emitterUri))
@@ -59,7 +64,7 @@ module.exports = {
     },
     removeContact: {
       match: REMOVE_CONTACT,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         if (!activity.origin) throw new Error('The origin property is missing from the Remove activity');
 
         if (!activity.origin.startsWith(emitterUri))
@@ -80,7 +85,7 @@ module.exports = {
     },
     ignoreContact: {
       match: IGNORE_CONTACT,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Add the actor to the emitter's ignore contacts list.
@@ -92,7 +97,7 @@ module.exports = {
     },
     undoIgnoreContact: {
       match: UNDO_IGNORE_CONTACT,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Remove the actor from the emitter's ignore contacts list.
@@ -103,7 +108,7 @@ module.exports = {
       }
     },
     deleteActor: {
-      async match(activity, fetcher) {
+      async match(activity: any, fetcher: any) {
         if (activity.type === ACTIVITY_TYPES.DELETE) {
           const dereferencedObject = await fetcher(activity.object);
           if (Object.values(ACTOR_TYPES).some(t => arrayOf(dereferencedObject.type).includes(t))) {
@@ -112,7 +117,7 @@ module.exports = {
         }
         return { match: false, dereferencedActivity: activity };
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // See also https://swicg.github.io/activitypub-http-signature/#handling-deletes-of-actors for more sophisticated approaches.
         if (!(activity.actor === activity.object.id))
           throw new Error(`The actor ${activity.actor} cannot ask to remove actor ${activity.object.id}`);
@@ -166,7 +171,7 @@ module.exports = {
           dataset
         });
 
-        for (let cachedResourceUri of result.map(node => node.resourceUri.value)) {
+        for (let cachedResourceUri of result.map((node: any) => node.resourceUri.value)) {
           await ctx.call('ldp.remote.delete', {
             resourceUri: cachedResourceUri,
             webId: recipientUri
@@ -232,4 +237,14 @@ module.exports = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default ContactsManagerSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ContactsManagerSchema.name]: typeof ContactsManagerSchema;
+    }
+  }
+}

@@ -1,8 +1,8 @@
-const CONFIG = require('./config');
+import * as CONFIG from './config.ts';
 
 // See https://nodemailer.com/transports/ for other kind of Nodemailer transports
 
-module.exports = {
+export default {
   host: CONFIG.SMTP_HOST,
   port: CONFIG.SMTP_PORT,
   secure: CONFIG.SMTP_SECURE,

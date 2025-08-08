@@ -1,26 +1,22 @@
-const urlJoin = require('url-join');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { connectPodProvider, clearAllData, initializeAppServer, installApp } = require('./initialize');
-const ExampleAppService = require('./apps/example.app');
-const Example2AppService = require('./apps/example2.app');
-
+import urlJoin from 'url-join';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
+import ExampleAppService from './apps/example.app.ts';
+import Example2AppService from './apps/example2.app.ts';
 jest.setTimeout(100000);
-
 const NUM_PODS = 1;
-
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
-
 const APP2_SERVER_BASE_URL = 'http://localhost:3002';
 const APP2_URI = urlJoin(APP2_SERVER_BASE_URL, 'app');
 
 describe('Test Pod resources handling', () => {
-  let actors = [],
-    podProvider,
-    alice,
-    appServer,
-    app2Server,
-    eventUri;
+  let actors: any = [],
+    podProvider: any,
+    alice: any,
+    appServer: any,
+    app2Server: any,
+    eventUri: any;
 
   beforeAll(async () => {
     await clearAllData();
@@ -44,7 +40,7 @@ describe('Test Pod resources handling', () => {
         },
         { meta: { dataset: actorData.username } }
       );
-      actors[i].call = (actionName, params, options = {}) =>
+      actors[i].call = (actionName: any, params: any, options = {}) =>
         podProvider.call(actionName, params, {
           ...options,
           meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }

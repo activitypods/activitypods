@@ -1,8 +1,8 @@
-const urlJoin = require('url-join');
-const { AppService } = require('../../app-framework/app');
-const CONFIG = require('../config');
+import urlJoin from 'url-join';
+import { AppService } from '../../app-framework/app/index.ts';
+import * as CONFIG from '../config.ts';
 
-module.exports = {
+const Schema = {
   mixins: [AppService],
   settings: {
     app: {
@@ -25,3 +25,5 @@ module.exports = {
     }
   }
 };
+
+export default Schema;

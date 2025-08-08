@@ -1,16 +1,14 @@
-const waitForExpect = require('wait-for-expect');
-const urlJoin = require('url-join');
-const fetch = require('node-fetch');
-const { connectPodProvider, clearAllData } = require('./initialize');
-
+import waitForExpect from 'wait-for-expect';
+import urlJoin from 'url-join';
+import fetch from 'node-fetch';
+import { connectPodProvider, clearAllData } from './initialize.ts';
 jest.setTimeout(50000);
-
 const BASE_URL = 'http://localhost:3000';
 
 describe('Test pods creation via API', () => {
-  let podProvider, token, alice, projectUri;
+  let podProvider: any, token: any, alice: any, projectUri: any;
 
-  const fetchServer = (path, options = {}) => {
+  const fetchServer = (path: any, options = {}) => {
     if (!path) throw new Error('No path provided to fetchServer');
     if (!options.headers) options.headers = new fetch.Headers();
 

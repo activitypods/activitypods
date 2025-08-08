@@ -1,24 +1,27 @@
-const path = require('path');
-const urlJoin = require('url-join');
-const { arrayOf } = require('@semapps/ldp');
-const { ACTIVITY_TYPES, ActivitiesHandlerMixin } = require('@semapps/activitypub');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const matchActivity = require('@semapps/activitypub/utils/matchActivity');
+import path from 'path';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
+import { arrayOf, getDatasetFromUri } from '@semapps/ldp';
+import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
+import { MIME_TYPES } from '@semapps/mime-types';
+import matchActivity from '@semapps/activitypub/utils/matchActivity';
+import { ServiceSchema, defineAction, defineServiceEvent } from 'moleculer';
 
-const getAnnouncesGroupUri = eventUri => {
+const getAnnouncesGroupUri = (eventUri: any) => {
   const uri = new URL(eventUri);
   uri.pathname = path.join('/_groups', uri.pathname, '/announces');
   return uri.toString();
 };
 
-const getAnnouncersGroupUri = eventUri => {
+const getAnnouncersGroupUri = (eventUri: any) => {
   const uri = new URL(eventUri);
   uri.pathname = path.join('/_groups', uri.pathname, '/announcers');
   return uri.toString();
 };
 
-module.exports = {
-  name: 'announcer',
+const AnnouncerSchema = {
+  name: 'announcer' as const,
+  // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Serv... Remove this comment to see the full error message
   mixins: [ActivitiesHandlerMixin],
   settings: {
     announcesCollectionOptions: {
@@ -38,38 +41,26 @@ module.exports = {
   },
   dependencies: ['activitypub.collections-registry'],
   actions: {
-    async giveRightsAfterAnnouncesCollectionCreate(ctx) {
-      const { objectUri } = ctx.params;
+    giveRightsAfterAnnouncesCollectionCreate: defineAction({
+      async handler(ctx) {
+        const { objectUri } = ctx.params;
 
-      const object = await ctx.call('ldp.resource.awaitCreateComplete', {
-        resourceUri: objectUri,
-        predicates: ['apods:announces']
-      });
+        const object = await ctx.call('ldp.resource.awaitCreateComplete', {
+          resourceUri: objectUri,
+          predicates: ['apods:announces']
+        });
 
-      const creator = await ctx.call('activitypub.actor.get', { actorUri: object['dc:creator'] });
+        const creator = await ctx.call('activitypub.actor.get', { actorUri: object['dc:creator'] });
 
-      const announcesGroupUri = getAnnouncesGroupUri(objectUri);
-      const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcesGroupUri, webId: 'system' });
-      if (!groupExist) {
-        await ctx.call('webacl.group.create', { groupUri: announcesGroupUri, webId: creator.id });
-      }
+        const announcesGroupUri = getAnnouncesGroupUri(objectUri);
+        const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcesGroupUri, webId: 'system' });
+        if (!groupExist) {
+          await ctx.call('webacl.group.create', { groupUri: announcesGroupUri, webId: creator.id });
+        }
 
-      // Give read rights for the resource
-      await ctx.call('webacl.resource.addRights', {
-        resourceUri: objectUri,
-        additionalRights: {
-          group: {
-            uri: announcesGroupUri,
-            read: true
-          }
-        },
-        webId: creator.id
-      });
-
-      if (creator.url) {
-        // Give read right for the creator's profile
+        // Give read rights for the resource
         await ctx.call('webacl.resource.addRights', {
-          resourceUri: creator.url,
+          resourceUri: objectUri,
           additionalRights: {
             group: {
               uri: announcesGroupUri,
@@ -78,55 +69,75 @@ module.exports = {
           },
           webId: creator.id
         });
+
+        if (creator.url) {
+          // Give read right for the creator's profile
+          await ctx.call('webacl.resource.addRights', {
+            resourceUri: creator.url,
+            additionalRights: {
+              group: {
+                uri: announcesGroupUri,
+                read: true
+              }
+            },
+            webId: creator.id
+          });
+        }
       }
-    },
-    async giveRightsAfterAnnouncersCollectionCreate(ctx) {
-      const { objectUri } = ctx.params;
+    }),
 
-      const object = await ctx.call('ldp.resource.awaitCreateComplete', {
-        resourceUri: objectUri,
-        predicates: ['apods:announcers', 'apods:announces']
-      });
+    giveRightsAfterAnnouncersCollectionCreate: defineAction({
+      async handler(ctx) {
+        const { objectUri } = ctx.params;
 
-      // Add the creator to the list of announcers
-      await ctx.call('activitypub.collection.add', {
-        collectionUri: object['apods:announcers'],
-        item: object['dc:creator']
-      });
+        const object = await ctx.call('ldp.resource.awaitCreateComplete', {
+          resourceUri: objectUri,
+          predicates: ['apods:announcers', 'apods:announces']
+        });
 
-      const announcersGroupUri = getAnnouncersGroupUri(objectUri);
-      const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcersGroupUri, webId: 'system' });
-      if (!groupExist) {
-        await ctx.call('webacl.group.create', { groupUri: announcersGroupUri, webId: object['dc:creator'] });
+        // Add the creator to the list of announcers
+        await ctx.call('activitypub.collection.add', {
+          collectionUri: object['apods:announcers'],
+          item: object['dc:creator']
+        });
+
+        const announcersGroupUri = getAnnouncersGroupUri(objectUri);
+        const groupExist = await ctx.call('webacl.group.exist', { groupUri: announcersGroupUri, webId: 'system' });
+        if (!groupExist) {
+          await ctx.call('webacl.group.create', { groupUri: announcersGroupUri, webId: object['dc:creator'] });
+        }
+
+        // Give read rights to announcers for the list of announces
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri: object['apods:announces'],
+          additionalRights: {
+            group: {
+              uri: announcersGroupUri,
+              read: true
+            }
+          },
+          webId: object['dc:creator']
+        });
       }
+    }),
 
-      // Give read rights to announcers for the list of announces
-      await ctx.call('webacl.resource.addRights', {
-        resourceUri: object['apods:announces'],
-        additionalRights: {
-          group: {
-            uri: announcersGroupUri,
-            read: true
-          }
-        },
-        webId: object['dc:creator']
-      });
-    },
-    async updateCollectionsOptions(ctx) {
-      const { dataset } = ctx.params;
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.announcesCollectionOptions,
-        dataset
-      });
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.announcersCollectionOptions,
-        dataset
-      });
-    }
+    updateCollectionsOptions: defineAction({
+      async handler(ctx) {
+        const { dataset } = ctx.params;
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          collection: this.settings.announcesCollectionOptions,
+          dataset
+        });
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          collection: this.settings.announcersCollectionOptions,
+          dataset
+        });
+      }
+    })
   },
   activities: {
     announce: {
-      async match(activity, fetcher) {
+      async match(activity: any, fetcher: any) {
         const { match, dereferencedActivity } = await matchActivity(
           {
             type: ACTIVITY_TYPES.ANNOUNCE
@@ -135,12 +146,12 @@ module.exports = {
           fetcher
         );
         return {
+          // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
           match: match && !(await this.broker.call('activitypub.activity.isPublic', { activity })),
           dereferencedActivity
         };
       },
-      /** Add read rights to announced (reposted) object, if announcer is owner. */
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
         const resource = await ctx.call('ldp.resource.get', {
@@ -149,60 +160,119 @@ module.exports = {
           webId: emitterUri
         });
 
+        /**
+         * CHECK PERMISSIONS
+         */
+
         if (emitterUri !== resource['dc:creator']) {
-          throw new Error('Only the creator has the right to share the object ' + resourceUri);
+          if (!resource['apods:announcers']) {
+            // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
+            this.logger.warn(`No announcers collection attached to object ${resource.id}, skipping...`);
+            return;
+          }
+
+          // Check if the emitter has a grant which allow delegation
+          const isAnnouncer = await ctx.call('activitypub.collection.includes', {
+            collectionUri: resource['apods:announcers'],
+            itemUri: emitterUri
+          });
+
+          if (!isAnnouncer) {
+            throw new Error(`Actor ${emitterUri} was not given permission to announce the object ${resource.id}`);
+          }
         }
 
-        const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
-          objectUri: resourceUri,
-          collection: this.settings.announcesCollectionOptions
-        });
+        /**
+         * CREATE AUTHORIZATIONS FOR AGENTS
+         */
 
-        await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
+        for (let grantee of arrayOf(activity.to)) {
+          await ctx.call('access-authorizations.addForSingleResource', {
+            resourceUri,
+            grantee,
+            accessModes: ['acl:Read'],
+            delegationAllowed: !!activity['interop:delegationAllowed'],
+            delegationLimit: activity['interop:delegationLimit']
+          });
+        }
 
-        // Add all targeted actors to the collection and WebACL group
-        // TODO check if we could not use activity.to instead of activity.target (and change this everywhere)
-        for (let actorUri of arrayOf(activity.target)) {
-          await ctx.call('activitypub.collection.add', {
-            collectionUri: announcesCollectionUri,
-            item: actorUri
+        /**
+         * CREATE ANNOUNCES COLLECTION AND ADD RECIPIENTS
+         */
+
+        // Skip this part if a delegation, will be done through the delegated-access-grants.issued event
+        if (emitterUri === resource['dc:creator']) {
+          const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
+            objectUri: resourceUri,
+            // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ matc... Remove this comment to see the full error message
+            collection: this.settings.announcesCollectionOptions
           });
 
-          // TODO automatically synchronize the collection with the ACL group
-          await ctx.call('webacl.group.addMember', {
-            groupUri: getAnnouncesGroupUri(resourceUri),
-            memberUri: actorUri,
-            webId: resource['dc:creator']
+          // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ match... Remove this comment to see the full error message
+          await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
+
+          // Add all recipients to the announces collection and WebACL group
+          for (let actorUri of arrayOf(activity.to)) {
+            await ctx.call('activitypub.collection.add', {
+              collectionUri: announcesCollectionUri,
+              item: actorUri
+            });
+
+            await ctx.call('webacl.group.addMember', {
+              groupUri: getAnnouncesGroupUri(resourceUri),
+              memberUri: actorUri,
+              webId: resource['dc:creator']
+            });
+          }
+        }
+
+        /**
+         * CREATE ANNOUNCERS COLLECTION AND ADD RECIPIENTS (IF DELEGATION IS ALLOWED)
+         */
+
+        if (activity['interop:delegationAllowed']) {
+          if (emitterUri !== resource['dc:creator']) {
+            throw new Error(`Only the owner of ${resource.id} can allow delegation`);
+          }
+
+          const announcersCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
+            objectUri: resourceUri,
+            // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ matc... Remove this comment to see the full error message
+            collection: this.settings.announcersCollectionOptions
           });
+
+          // @ts-expect-error TS(2339): Property 'actions' does not exist on type '{ match... Remove this comment to see the full error message
+          await this.actions.giveRightsAfterAnnouncersCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
+
+          // Add all recipients to the announcers collection and WebACL group
+          for (let actorUri of arrayOf(activity.to)) {
+            await ctx.call('activitypub.collection.add', {
+              collectionUri: announcersCollectionUri,
+              item: actorUri
+            });
+
+            await ctx.call('webacl.group.addMember', {
+              groupUri: getAnnouncersGroupUri(resourceUri),
+              memberUri: actorUri,
+              webId: resource['dc:creator']
+            });
+          }
         }
       },
       /**
-       * On receipt of an announce activity (repost), cache it in the remote store,
-       *  and attach it to type-index registered containers..
+       * On receipt of an announce activity, cache locally the announced object
        */
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
-        // Sometimes, when reposting, a recipient may be the original announcer
+        // Sometimes a recipient may be the original announcer
         // So ensure this is a remote resource before storing it locally
         if (!resourceUri.startsWith(urlJoin(recipientUri, '/'))) {
-          const resource = await ctx.call('ldp.resource.get', {
+          // Get the latest version of the resource and store it locally
+          const resource = await ctx.call('ldp.remote.store', {
             resourceUri,
-            accept: MIME_TYPES.JSON,
             webId: recipientUri
           });
-
-          try {
-            // Cache remote object (we want to be able to fetch it with SPARQL)
-            await ctx.call('ldp.remote.store', {
-              resource,
-              webId: recipientUri
-            });
-          } catch (e) {
-            this.logger.warn(
-              `Unable to cache remote object ${resourceUri} for actor ${recipientUri}. Message: ${e.message}`
-            );
-          }
 
           const expandedTypes = await ctx.call('jsonld.parser.expandTypes', {
             types: resource['@type'] || resource.type
@@ -219,6 +289,7 @@ module.exports = {
             if (containersUris.length === 0) {
               // Generate a path for the new container
               const containerPath = await ctx.call('ldp.container.getPath', { resourceType: expandedType });
+              // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
               this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${expandedType}`);
 
               // Create the container and attach it to its parent(s)
@@ -227,6 +298,7 @@ module.exports = {
               await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId: recipientUri });
 
               // If the resource type is invalid, an error will be thrown here
+              // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
               await this.broker.call('type-registrations.register', {
                 types: [expandedType],
                 containerUri: containersUris[0],
@@ -244,88 +316,71 @@ module.exports = {
           }
         }
       }
-    },
-    offerAnnounce: {
-      async match(activity, fetcher) {
-        const { match, dereferencedActivity } = await matchActivity(
-          {
-            type: ACTIVITY_TYPES.OFFER,
-            object: {
-              type: ACTIVITY_TYPES.ANNOUNCE
-            }
-          },
-          activity,
-          fetcher
-        );
-        return {
-          match: match && !(await this.broker.call('activitypub.activity.isPublic', { activity })),
-          dereferencedActivity
-        };
-      },
-      async onEmit(ctx, activity) {
-        const object = await ctx.call('ldp.resource.get', {
-          resourceUri: typeof activity.object.object === 'string' ? activity.object.object : activity.object.object.id,
-          accept: MIME_TYPES.JSON
-        });
+    }
+  },
+  events: {
+    'ldp.resource.deleted': defineServiceEvent({
+      async handler(ctx) {
+        // @ts-expect-error TS(2339): Property 'oldData' does not exist on type 'Optiona... Remove this comment to see the full error message
+        const { oldData, webId } = ctx.params;
 
-        // If the emitter is the organizer, it means we want to give actors the right to announce the given object
-        if (activity.actor === object['dc:creator']) {
-          const announcersCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
-            objectUri: object.id,
-            collection: this.settings.announcersCollectionOptions
-          });
+        if (oldData['apods:announces'])
+          await ctx.call('activitypub.collection.delete', { resourceUri: oldData['apods:announces'], webId });
 
-          await this.actions.giveRightsAfterAnnouncersCollectionCreate({ objectUri: object.id }, { parentCtx: ctx });
+        if (oldData['apods:announcers'])
+          await ctx.call('activitypub.collection.delete', { resourceUri: oldData['apods:announcers'], webId });
+      }
+    }),
 
-          // Add all announcers to the collection and WebACL group
-          for (let actorUri of arrayOf(activity.target)) {
-            await ctx.call('activitypub.collection.add', {
-              collectionUri: announcersCollectionUri,
-              item: actorUri
-            });
+    'delegated-access-grants.issued': defineServiceEvent({
+      // When a delegated grant is issued, add the grantee to the announces collection
+      // This hack will be gone when we can do without announces/announcers collections
+      async handler(ctx) {
+        // @ts-expect-error TS(2339): Property 'delegatedGrant' does not exist on type '... Remove this comment to see the full error message
+        const { delegatedGrant } = ctx.params;
 
-            await ctx.call('webacl.group.addMember', {
-              groupUri: getAnnouncersGroupUri(object.id),
-              memberUri: actorUri,
-              webId: activity.object.object['dc:creator']
-            });
-          }
+        if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
+          // @ts-expect-error TS(2339): Property 'logger' does not exist on type 'ServiceE... Remove this comment to see the full error message
+          this.logger.warn(`Delegated grant is for application, skip adding to the announces collection...`);
+          return;
         }
-      },
-      async onReceive(ctx, activity) {
-        const object = await ctx.call('ldp.resource.get', {
-          resourceUri: typeof activity.object.object === 'string' ? activity.object.object : activity.object.object.id,
-          accept: MIME_TYPES.JSON
-        });
 
-        // If the offer is targeted to the organizer, it means we are an announcer and want him to announce the object to one of our contacts
-        if (activity.target === object['dc:creator']) {
-          if (!object['apods:announcers']) {
-            this.logger.warn(`No announcers collection attached to object ${object.id}, skipping...`);
-            return;
-          }
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
+        ctx.meta.webId = delegatedGrant['interop:dataOwner'];
+        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
+        ctx.meta.dataset = getDatasetFromUri(delegatedGrant['interop:dataOwner']);
 
-          const creator = await ctx.call('activitypub.actor.get', { actorUri: object['dc:creator'] });
-
-          const isAnnouncer = await ctx.call('activitypub.collection.includes', {
-            collectionUri: object['apods:announcers'],
-            itemUri: activity.actor
+        for (const resourceUri of arrayOf(delegatedGrant['interop:hasDataInstance'])) {
+          const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
+            objectUri: resourceUri,
+            // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'Servic... Remove this comment to see the full error message
+            collection: this.settings.announcesCollectionOptions
           });
 
-          if (!isAnnouncer) {
-            throw new Error(`Actor ${activity.actor} was not given permission to announce the object ${object.id}`);
-          }
+          // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
+          await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
 
-          await ctx.call('activitypub.outbox.post', {
-            collectionUri: creator.outbox,
-            type: ACTIVITY_TYPES.ANNOUNCE,
-            actor: creator.id,
-            object: object.id,
-            target: activity.object.target,
-            to: activity.object.target
+          await ctx.call('activitypub.collection.add', {
+            collectionUri: announcesCollectionUri,
+            item: delegatedGrant['interop:grantee']
+          });
+
+          await ctx.call('webacl.group.addMember', {
+            groupUri: getAnnouncesGroupUri(resourceUri),
+            memberUri: delegatedGrant['interop:grantee']
           });
         }
       }
+    })
+  }
+} satisfies ServiceSchema;
+
+export default AnnouncerSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [AnnouncerSchema.name]: typeof AnnouncerSchema;
     }
   }
-};
+}

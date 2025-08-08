@@ -2,11 +2,15 @@
   "name": "activitypods-tests",
   "private": true,
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles --verbose",
+    "test": "jest",
     "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
-    "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid"
+    "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
+    "postinstall": "bash ./types/patch-moleculer-types.sh"
   },
   "dependencies": {
+    "@babel/core": "^7.24.3",
+    "@babel/preset-env": "^7.24.3",
+    "@babel/preset-typescript": "^7.24.1",
     "@semapps/activitypub": "1.1.1",
     "@semapps/auth": "1.1.1",
     "@semapps/core": "1.1.1",
@@ -23,15 +27,25 @@
     "moleculer": "^0.14.19",
     "node-fetch": "^2.6.6",
     "url-join": "^4.0.1",
-    "wait-for-expect": "^3.0.2"
+    "wait-for-expect": "^3.0.2",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.28.0",
+    "@babel/runtime": "^7.28.2",
+    "@types/jest": "^30.0.0",
     "@types/node-fetch": "^2.6.6",
-    "jest": "^27.4.0",
+    "babel-jest": "^30.0.5",
+    "babel-plugin-transform-import-meta": "^2.3.3",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-vite": "^1.1.3",
+    "esbuild": "^0.25.4",
+    "esbuild-jest": "^0.5.0",
+    "jest": "^30.0.5",
     "wait-for-expect": "^3.0.2"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24.0.0"
   },
-  "version": "0.0.0"
+  "type": "module"
 }

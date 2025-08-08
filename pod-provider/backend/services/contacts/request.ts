@@ -1,27 +1,26 @@
-const {
-  ACTIVITY_TYPES,
-  ACTOR_TYPES,
-  ActivitiesHandlerMixin,
-  OBJECT_TYPES,
-  matchActivity
-} = require('@semapps/activitypub');
-const { arrayOf } = require('@semapps/ldp');
-const {
+import { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin, OBJECT_TYPES, matchActivity } from '@semapps/activitypub';
+import { arrayOf } from '@semapps/ldp';
+
+import {
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
   REJECT_CONTACT_REQUEST,
   IGNORE_CONTACT_REQUEST
-} = require('../../config/patterns');
-const {
+} from '../../config/patterns.ts';
+
+import {
   CONTACT_REQUEST_MAPPING,
   ACCEPT_CONTACT_REQUEST_MAPPING,
   AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING
-} = require('../../config/mappings');
-const { MIME_TYPES } = require('@semapps/mime-types');
+} from '../../config/mappings.ts';
+
+import { MIME_TYPES } from '@semapps/mime-types';
+import { ServiceSchema, defineAction } from 'moleculer';
 
 /** @type {import('moleculer').ServiceSchema} */
-module.exports = {
-  name: 'contacts.request',
+const ContactsRequestSchema = {
+  name: 'contacts.request' as const,
+  // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Serv... Remove this comment to see the full error message
   mixins: [ActivitiesHandlerMixin],
   settings: {
     contactsCollectionOptions: {
@@ -59,27 +58,28 @@ module.exports = {
     );
   },
   actions: {
-    async updateCollectionsOptions(ctx) {
-      const { dataset } = ctx.params;
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.contactsCollectionOptions,
-        dataset
-      });
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.contactRequestsCollectionOptions,
-        dataset
-      });
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.rejectedContactsCollectionOptions,
-        dataset
-      });
-    }
+    updateCollectionsOptions: defineAction({
+      async handler(ctx) {
+        const { dataset } = ctx.params;
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          collection: this.settings.contactsCollectionOptions,
+          dataset
+        });
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          collection: this.settings.contactRequestsCollectionOptions,
+          dataset
+        });
+        await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
+          collection: this.settings.rejectedContactsCollectionOptions,
+          dataset
+        });
+      }
+    })
   },
   activities: {
     contactRequest: {
       match: CONTACT_REQUEST,
-
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         // Add the user to the contacts WebACL group so he can see my profile
         for (let targetUri of arrayOf(activity.target)) {
           await ctx.call('webacl.group.addMember', {
@@ -87,9 +87,21 @@ module.exports = {
             memberUri: targetUri,
             webId: emitterUri
           });
+
+          // Create the SocialAgentRegistration
+          await ctx.call('social-agent-registrations.createOrUpdate', { agentUri: targetUri, podOwner: emitterUri });
+
+          // Share profile
+          // TODO setup a contacts group in SAI
+          const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
+          await ctx.call('access-authorizations.addForSingleResource', {
+            resourceUri: emitter.url,
+            grantee: targetUri,
+            accessModes: ['acl:Read']
+          });
         }
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // Contact requests with capabilities are assumed to be coming from invite links. Those are handled separately below.
         if (activity.capability) return;
 
@@ -140,20 +152,22 @@ module.exports = {
           item: activity
         });
 
+        // Notify about auto-accept.
         await ctx.call('mail-notifications.notify', {
-          template: CONTACT_REQUEST_MAPPING,
+          template: AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING,
           recipientUri,
           activity,
           context: activity.id
         });
+
+        return;
       }
     },
     inviteLinkContactRequest: {
       match: CONTACT_REQUEST,
-      async capabilityGrantMatchFnGenerator({ recipientUri, activity }) {
+      async capabilityGrantMatchFnGenerator({ recipientUri, activity }: any) {
         // Generate a function that is called on each ActivityGrant of the activity's capability.
-
-        return async grant => {
+        return async (grant: any) => {
           // Verify that the recipient issued the grant with the following structure.
           const { match } = await matchActivity(
             {
@@ -168,13 +182,14 @@ module.exports = {
               }
             },
             grant,
-            uri => ({ id: uri }) // The URIs here are not resolved further.
+            (uri: any) => ({
+              id: uri
+            }) // The URIs here are not resolved further.
           );
           return match;
         };
       },
-
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
         // If the actor is already in my contacts, ignore this request (may happen for automatic post-event requests)
@@ -226,41 +241,52 @@ module.exports = {
     },
     acceptContactRequest: {
       match: ACCEPT_CONTACT_REQUEST,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
-        // 1. Add the other actor to the contacts WebACL group so he can see my profile
+        // Add the other actor to the contacts WebACL group so he can see my profile
         await ctx.call('webacl.group.addMember', {
           groupSlug: `${new URL(emitterUri).pathname}/contacts`,
           memberUri: activity.to,
           webId: emitterUri
         });
 
-        // 2. Cache the other actor's profile
+        // Create a Social Agent Registration
+        await ctx.call('social-agent-registrations.createOrUpdate', { agentUri: activity.to, podOwner: emitterUri });
+
+        // Share profile
+        // TODO setup a contacts group in SAI
+        await ctx.call('access-authorizations.addForSingleResource', {
+          resourceUri: emitter.url,
+          grantee: activity.to,
+          accessModes: ['acl:Read']
+        });
+
+        // Cache the other actor's profile
         await ctx.call('ldp.remote.store', {
           resource: activity.object.object.object,
           webId: emitterUri
         });
 
-        // 3. Attach the other actor's profile to my profiles container
+        // Attach the other actor's profile to my profiles container
         await ctx.call('profiles.profile.attach', {
           resourceUri: activity.object.object.object.id,
           webId: emitterUri
         });
 
-        // 4. Add the other actor to my contacts list
+        // Add the other actor to my contacts list
         await ctx.call('activitypub.collection.add', {
           collectionUri: emitter['apods:contacts'],
           item: activity.object.actor
         });
 
-        // 5. Remove the activity from my contact requests
+        // Remove the activity from my contact requests
         await ctx.call('activitypub.collection.remove', {
           collectionUri: emitter['apods:contactRequests'],
           item: activity.object.id
         });
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: activity.actor });
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
@@ -296,7 +322,7 @@ module.exports = {
     },
     ignoreContactRequest: {
       match: IGNORE_CONTACT_REQUEST,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Remove the activity from my contact requests
@@ -305,7 +331,7 @@ module.exports = {
           item: activity.object.id
         });
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // Remove the user from the contacts WebACL group so he can't see my profile anymore
         await ctx.call('webacl.group.removeMember', {
           groupSlug: `${new URL(recipientUri).pathname}/contacts`,
@@ -316,7 +342,7 @@ module.exports = {
     },
     rejectContactRequest: {
       match: REJECT_CONTACT_REQUEST,
-      async onEmit(ctx, activity, emitterUri) {
+      async onEmit(ctx: any, activity: any, emitterUri: any) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Add the actor to my rejected contacts list
@@ -331,14 +357,38 @@ module.exports = {
           item: activity.object.id
         });
       },
-      async onReceive(ctx, activity, recipientUri) {
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
         // Remove the emitter from the contacts WebACL group so he can't see the recipient's profile anymore
         await ctx.call('webacl.group.removeMember', {
           groupSlug: `${new URL(recipientUri).pathname}/contacts`,
           memberUri: activity.actor,
           webId: recipientUri
         });
+
+        // Delete the Social Agent Registration
+        // This will also delete all authorizations and grants associated with the user
+        const agentRegistration = await ctx.call('social-agent-registrations.getForAgent', {
+          agentUri: activity.actor,
+          podOwner: recipientUri
+        });
+
+        if (agentRegistration) {
+          await ctx.call('social-agent-registrations.delete', {
+            resourceUri: agentRegistration.id || agentRegistration['@id'],
+            webId: recipientUri
+          });
+        }
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default ContactsRequestSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ContactsRequestSchema.name]: typeof ContactsRequestSchema;
+    }
+  }
+}

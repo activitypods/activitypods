@@ -1,7 +1,6 @@
 export { default as AccessGrant } from './AccessGrant';
 export { default as Actor } from './Actor';
 export { default as App } from './App';
-export { default as AppRegistration } from './AppRegistration';
 export { default as ClassDescription } from './ClassDescription';
 export { default as VerifiableCredential } from './VerifiableCredential';
 export { default as DataGrant } from './DataGrant';
@@ -9,5 +8,5 @@ export { default as Tag } from './Tag';
 export { default as Location } from './Location';
 export { default as PodProvider } from './PodProvider';
 export { default as Profile } from './Profile';
+export { default as SocialAgentRegistration } from './SocialAgentRegistration';
 export { default as TrustedApp } from './TrustedApp';
-export { default as TypeRegistration } from './TypeRegistration';

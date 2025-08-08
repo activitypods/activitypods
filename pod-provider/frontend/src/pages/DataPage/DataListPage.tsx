@@ -42,7 +42,7 @@ const DataListPage = () => {
   const [locale] = useLocaleState();
   const getPrefixFromUri = useGetPrefixFromUri();
   const developerMode = !!localStorage.getItem('developer_mode');
-  const containers = useContainers(undefined, 'user');
+  const containers = useContainers(undefined, '@default');
 
   return (
     <>
@@ -53,7 +53,7 @@ const DataListPage = () => {
         <List>
           {containers
             ?.filter(container => !container.private || developerMode)
-            .map(container => (
+            ?.map(container => (
               <ListItem className={classes.listItem} key={container.uri}>
                 <ListItemButton
                   // @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message

@@ -126,45 +126,26 @@ const ShareDialog = ({ close, resourceUri, profileResource = 'Profile', groupRes
   const sendInvitations = useCallback(async () => {
     setSendingInvitation(true);
     const actorsWithNewViewRight = Object.keys(newInvitations).filter(
-      actorUri => newInvitations[actorUri].canView && !savedInvitations[actorUri]?.canView
+      actorUri => newInvitations[actorUri].canView && !newInvitations[actorUri].canShare
     );
     if (actorsWithNewViewRight.length > 0) {
-      if (isCreator) {
-        outbox.post({
-          type: ACTIVITY_TYPES.ANNOUNCE,
-          actor: outbox.owner,
-          object: resourceUri,
-          target: actorsWithNewViewRight,
-          to: actorsWithNewViewRight
-        });
-      } else {
-        // Offer the organizer to invite these people
-        outbox.post({
-          type: ACTIVITY_TYPES.OFFER,
-          actor: outbox.owner,
-          object: {
-            type: ACTIVITY_TYPES.ANNOUNCE,
-            actor: outbox.owner,
-            object: resourceUri,
-            target: actorsWithNewViewRight
-          },
-          target: record['dc:creator'],
-          to: record['dc:creator']
-        });
-      }
+      outbox.post({
+        type: ACTIVITY_TYPES.ANNOUNCE,
+        actor: outbox.owner,
+        object: resourceUri,
+        to: actorsWithNewViewRight
+      });
     }
 
     const actorsWithNewShareRight = Object.keys(newInvitations).filter(actorUri => newInvitations[actorUri].canShare);
     if (actorsWithNewShareRight.length > 0) {
       outbox.post({
-        type: ACTIVITY_TYPES.OFFER,
+        type: ACTIVITY_TYPES.ANNOUNCE,
         actor: outbox.owner,
-        object: {
-          type: ACTIVITY_TYPES.ANNOUNCE,
-          object: resourceUri
-        },
-        target: actorsWithNewShareRight,
-        to: actorsWithNewShareRight
+        object: resourceUri,
+        to: actorsWithNewShareRight,
+        'interop:delegationAllowed': true,
+        'interop:delegationLimit': 1
       });
     }
 

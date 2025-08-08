@@ -7,8 +7,8 @@ const useRemoveApp = () => {
   const dataProvider = useDataProvider();
 
   const removeApp = useCallback(
-    async ({ application }: any) => {
-      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent', 'remove-app'), {
+    async ({ application }) => {
+      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/app-registrations/remove'), {
         method: 'POST',
         headers: new Headers({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ appUri: application.id })

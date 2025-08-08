@@ -1,9 +1,9 @@
-const {
+import {
   OntologiesService,
   dc,
   did,
   pair,
-  void: voidOntology,
+  void as voidOntology,
   interop,
   notify,
   oidc,
@@ -11,10 +11,14 @@ const {
   apods,
   pim,
   vcard
-} = require('@semapps/ontologies');
-const CONFIG = require('../../config/config');
+} from '@semapps/ontologies';
 
-module.exports = {
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
+
+const Schema = {
+  // @ts-expect-error TS(2322): Type '{ name: "ontologies"; settings: { ontologies... Remove this comment to see the full error message
   mixins: [OntologiesService],
   settings: {
     // TODO remove pair from core ontologies
@@ -22,4 +26,6 @@ module.exports = {
     persistRegistry: true,
     settingsDataset: CONFIG.AUTH_ACCOUNTS_DATASET
   }
-};
+} satisfies Partial<ServiceSchema>;
+
+export default Schema;

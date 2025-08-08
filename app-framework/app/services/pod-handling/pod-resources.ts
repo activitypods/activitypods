@@ -1,24 +1,29 @@
-const FetchPodOrProxyMixin = require('../../mixins/fetch-pod-or-proxy');
-const SparqlGenerator = require('sparqljs').Generator;
+import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
+import sparqljsModule from 'sparqljs';
+// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
+import { ServiceSchema, defineAction } from 'moleculer';
+const SparqlGenerator = sparqljsModule.Generator;
 
-module.exports = {
-  name: 'pod-resources',
+const PodResourcesSchema = {
+  name: 'pod-resources' as const,
   mixins: [FetchPodOrProxyMixin],
   started() {
+    // @ts-expect-error TS(2339): Property 'sparqlGenerator' does not exist on type ... Remove this comment to see the full error message
     this.sparqlGenerator = new SparqlGenerator({
       /* prefixes, baseIRI, factory, sparqlStar */
     });
   },
   actions: {
-    post: {
+    post: defineAction({
       params: {
         containerUri: { type: 'string', optional: false },
         resource: { type: 'object', optional: false },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
-        const { containerUri, resource, actorUri } = ctx.params;
-
+        const { containerUri, actorUri } = ctx.params;
+        let { resource } = ctx.params;
         // Adds the default context, if it is missing
         if (!resource['@context']) {
           resource = {
@@ -43,12 +48,14 @@ module.exports = {
           return false;
         }
       }
-    },
-    list: {
+    }),
+
+    list: defineAction({
       params: {
         containerUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { containerUri, actorUri } = ctx.params;
 
@@ -62,12 +69,14 @@ module.exports = {
           actorUri
         });
       }
-    },
-    get: {
+    }),
+
+    get: defineAction({
       params: {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri, actorUri } = ctx.params;
 
@@ -81,14 +90,16 @@ module.exports = {
           actorUri
         });
       }
-    },
-    patch: {
+    }),
+
+    patch: defineAction({
       params: {
         resourceUri: { type: 'string', optional: false },
         triplesToAdd: { type: 'array', optional: true },
         triplesToRemove: { type: 'array', optional: true },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri, triplesToAdd, triplesToRemove, actorUri } = ctx.params;
 
@@ -98,6 +109,7 @@ module.exports = {
         };
 
         if (triplesToAdd) {
+          // @ts-expect-error TS(2345): Argument of type '{ updateType: string; insert: { ... Remove this comment to see the full error message
           sparqlUpdate.updates.push({
             updateType: 'insert',
             insert: [{ type: 'bgp', triples: triplesToAdd }]
@@ -105,6 +117,7 @@ module.exports = {
         }
 
         if (triplesToRemove) {
+          // @ts-expect-error TS(2345): Argument of type '{ updateType: string; delete: { ... Remove this comment to see the full error message
           sparqlUpdate.updates.push({
             updateType: 'delete',
             delete: [{ type: 'bgp', triples: triplesToRemove }]
@@ -121,12 +134,14 @@ module.exports = {
           actorUri
         });
       }
-    },
-    put: {
+    }),
+
+    put: defineAction({
       params: {
         resource: { type: 'object', optional: false },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         let { resource, actorUri } = ctx.params;
         const resourceUri = resource.id || resource['@id'];
@@ -149,12 +164,14 @@ module.exports = {
           actorUri
         });
       }
-    },
-    delete: {
+    }),
+
+    delete: defineAction({
       params: {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri, actorUri } = ctx.params;
 
@@ -164,6 +181,16 @@ module.exports = {
           actorUri
         });
       }
+    })
+  }
+} satisfies ServiceSchema;
+
+export default PodResourcesSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [PodResourcesSchema.name]: typeof PodResourcesSchema;
     }
   }
-};
+}

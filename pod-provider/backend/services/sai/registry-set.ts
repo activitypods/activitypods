@@ -1,8 +1,10 @@
-const { triple, namedNode } = require('@rdfjs/data-model');
-const { SingleResourceContainerMixin } = require('@semapps/ldp');
+import { triple, namedNode } from '@rdfjs/data-model';
+import { SingleResourceContainerMixin } from '@semapps/ldp';
+import { ServiceSchema } from 'moleculer';
 
-module.exports = {
-  name: 'registry-set',
+const RegistrySetSchema = {
+  name: 'registry-set' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:RegistrySet'],
@@ -26,4 +28,14 @@ module.exports = {
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default RegistrySetSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [RegistrySetSchema.name]: typeof RegistrySetSchema;
+    }
+  }
+}

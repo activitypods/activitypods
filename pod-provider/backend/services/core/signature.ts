@@ -1,5 +1,2 @@
-const { SignatureService } = require('@semapps/crypto');
-
-module.exports = {
-  mixins: [SignatureService]
-};
+import { SignatureService } from '@semapps/crypto';
+export const mixins = [SignatureService];

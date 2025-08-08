@@ -1,8 +1,8 @@
-const fetch = require('node-fetch');
-const { delay } = require('@semapps/ldp');
-const CONFIG = require('./config');
+import fetch from 'node-fetch';
+import { delay } from '@semapps/ldp';
+import * as CONFIG from './config.ts';
 
-const arrayOf = value => {
+const arrayOf = (value: any) => {
   // If the field is null-ish, we suppose there are no values.
   if (value === null || value === undefined) {
     return [];
@@ -15,7 +15,7 @@ const arrayOf = value => {
   return [value];
 };
 
-const fetchServer = (url, options = {}) => {
+const fetchServer = (url: any, options = {}) => {
   if (!options.headers) options.headers = new fetch.Headers();
 
   switch (options.method) {
@@ -86,7 +86,7 @@ const clearMails = async () => {
  * `undefined`.
  * @type {import("./utilTypes").waitForResource}
  */
-const waitForResource = async (delayMs, fieldNames, maxTries, callback) => {
+const waitForResource = async (delayMs: any, fieldNames: any, maxTries: any, callback: any) => {
   for (let i = 0; i < maxTries; i += 1) {
     const result = await callback();
     // If a result (and the expected field, if required) is present, return.
@@ -98,10 +98,10 @@ const waitForResource = async (delayMs, fieldNames, maxTries, callback) => {
   throw new Error(`Waiting for resource failed. No results after ${maxTries} tries`);
 };
 
-const tryUntilTimeout = async (fn, maxWait = 5000, waitBetween = 50) => {
+const tryUntilTimeout = async (fn: any, maxWait = 5000, waitBetween = 50) => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
-    let lastError = undefined;
+    let lastError: any = undefined;
     let shouldContinue = true;
     setTimeout(() => {
       const timeoutError = new Error(
@@ -125,11 +125,5 @@ const tryUntilTimeout = async (fn, maxWait = 5000, waitBetween = 50) => {
     }
   });
 };
-module.exports = {
-  arrayOf,
-  fetchServer,
-  fetchMails,
-  clearMails,
-  waitForResource,
-  tryUntilTimeout
-};
+
+export { arrayOf, fetchServer, fetchMails, clearMails, waitForResource, tryUntilTimeout };

@@ -1,6 +1,10 @@
-const { WebSocketServer } = require('ws');
-const http = require('http');
-const urlJoin = require('url-join');
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'ws'.... Remove this comment to see the full error message
+import { WebSocketServer } from 'ws';
+import http from 'http';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
+import { ServiceSchema, defineAction } from 'moleculer';
+
 /**
  * This mixin adds the ability to create WebSocket routes to the moleculer-web API Gateway.
  * The mixin adds a new action `addWebSocketRoute` to the service.
@@ -17,8 +21,8 @@ const urlJoin = require('url-join');
  * - onError: (event, connection)
  * @type {import('moleculer').ServiceSchema}
  */
-module.exports = {
-  name: 'websocket',
+const WebsocketSchema = {
+  name: 'websocket' as const,
   settings: {
     baseUrl: null
   },
@@ -37,14 +41,18 @@ module.exports = {
   actions: {
     // TODO: support interval-based pings?
     /** See description in service comment. */
-    addWebSocketRoute: {
+    addWebSocketRoute: defineAction({
       params: {
         name: { type: 'string' },
         route: { type: 'string' },
+        // @ts-expect-error TS(2322): Type '{ type: "boolean"; default: false; }' is not... Remove this comment to see the full error message
         authorization: { type: 'boolean', default: false },
+        // @ts-expect-error TS(2322): Type '{ type: "boolean"; default: false; }' is not... Remove this comment to see the full error message
         authentication: { type: 'boolean', default: false },
+        // @ts-expect-error TS(2322): Type '{ type: "array"; items: "function"; default:... Remove this comment to see the full error message
         use: { type: 'array', items: 'function', default: [] },
         handlers: {
+          // @ts-expect-error TS(2561): Object literal may only specify known properties, ... Remove this comment to see the full error message
           $$type: 'object',
           onConnection: { type: 'function', default: () => {} },
           onClose: { type: 'function', default: () => {} },
@@ -69,24 +77,27 @@ module.exports = {
                 // Add provided mixins.
                 ...use,
                 // Handle the upgrade and register the callbacks (or error on non-ws requests).
-                (request, response, next) => this.handleWsRequest(request, response, next, handlers),
+                (request: any, response: any, next: any) => this.handleWsRequest(request, response, next, handlers),
                 // The alias route array needs to have an action after the middleware functions.
                 `${this.name}.onWsConnection`
               ]
             },
             // Prevent ws connections from being closed by the lifecycle methods.
-            onAfterCall: (ctx, bla, incomingRequest, serverResponse) =>
+            onAfterCall: (ctx: any, bla: any, incomingRequest: any, serverResponse: any) =>
               this.delayConnectionClosing(incomingRequest, serverResponse)
           }
         });
       }
-    },
-    onWsConnection(ctx) {
-      // Just a dummy function to satisfy the alias middleware handler above.
-      // You can access the connection object with `ctx.meta.connection`.
-      // Warning: This action is also called, if the connection fails.
-      // In this case, `ctx.meta.connection` is unset.
-    }
+    }),
+
+    onWsConnection: defineAction({
+      handler(ctx) {
+        // Just a dummy function to satisfy the alias middleware handler above.
+        // You can access the connection object with `ctx.meta.connection`.
+        // Warning: This action is also called, if the connection fails.
+        // In this case, `ctx.meta.connection` is unset.
+      }
+    })
   },
 
   methods: {
@@ -131,13 +142,13 @@ module.exports = {
       };
 
       // Add event listeners registered by the caller.
-      webSocket.addEventListener('close', e => handlers.onClose(e, connection));
-      webSocket.addEventListener('message', e => handlers.onMessage(e.data, connection));
-      webSocket.addEventListener('error', e => handlers.onError(e, connection));
+      webSocket.addEventListener('close', (e: any) => handlers.onClose(e, connection));
+      webSocket.addEventListener('message', (e: any) => handlers.onMessage(e.data, connection));
+      webSocket.addEventListener('error', (e: any) => handlers.onError(e, connection));
 
       // Remove connections, when they close.
       webSocket.addEventListener('close', () => {
-        this.connections = this.connections.filter(c => c !== connection);
+        this.connections = this.connections.filter((c: any) => c !== connection);
       });
 
       // Add connection to the list of connections.
@@ -181,7 +192,7 @@ module.exports = {
       // Calling the handler will perform the ws upgrade handshake and return the webSocket.
       request.webSocketRequestHandler = () =>
         new Promise(resolve => {
-          this.wss?.handleUpgrade(request, request.socket, copyOfHead, ws => {
+          this.wss?.handleUpgrade(request, request.socket, copyOfHead, (ws: any) => {
             this.wss?.emit('connection', ws, request);
             resolve(ws);
           });
@@ -205,10 +216,21 @@ module.exports = {
 
           // If already closed, return immediately.
           if (serverResponse.socket.closed) {
+            // @ts-expect-error TS(2794): Expected 1 arguments, but got 0. Did you forget to... Remove this comment to see the full error message
             resolve();
           }
         });
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default WebsocketSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [WebsocketSchema.name]: typeof WebsocketSchema;
+    }
+  }
+}

@@ -1,12 +1,16 @@
-const urlJoin = require('url-join');
-const { triple, namedNode } = require('@rdfjs/data-model');
-const { ControlledContainerMixin } = require('@semapps/ldp');
-const { OBJECT_TYPES, AS_PREFIX } = require('@semapps/activitypub');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const CONFIG = require('../../config/config');
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
+import { triple, namedNode } from '@rdfjs/data-model';
+import { ControlledContainerMixin } from '@semapps/ldp';
+import { OBJECT_TYPES, AS_PREFIX } from '@semapps/activitypub';
+import { MIME_TYPES } from '@semapps/mime-types';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from '../../config/config.ts';
+import { ServiceSchema, defineServiceEvent } from 'moleculer';
 
-module.exports = {
-  name: 'profiles.profile',
+const ProfilesProfileSchema = {
+  name: 'profiles.profile' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
     // ControlledContainerMixin settings
@@ -19,60 +23,66 @@ module.exports = {
   },
   dependencies: ['activitypub', 'webacl'],
   events: {
-    async 'auth.registered'(ctx) {
-      const { webId, profileData } = ctx.params;
-      const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
+    'auth.registered': defineServiceEvent({
+      async handler(ctx) {
+        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'Optionali... Remove this comment to see the full error message
+        const { webId, profileData } = ctx.params;
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
+        const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
-      await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
+        await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
-      const profileUri = await this.actions.post(
-        {
-          containerUri,
-          resource: {
-            '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
-            'vcard:fn': profileData.familyName
-              ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
-              : profileData.name,
-            'vcard:given-name': profileData.name,
-            'vcard:family-name': profileData.familyName,
-            describes: webId
+        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
+        const profileUri = await this.actions.post(
+          {
+            containerUri,
+            resource: {
+              '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
+              'vcard:fn': profileData.familyName
+                ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
+                : profileData.name,
+              'vcard:given-name': profileData.name,
+              'vcard:family-name': profileData.familyName,
+              describes: webId
+            },
+            contentType: MIME_TYPES.JSON,
+            webId
           },
-          contentType: MIME_TYPES.JSON,
-          webId
-        },
-        {
-          meta: {
-            skipObjectsWatcher: true // We don't want to trigger a Create action
-          },
-          parentCtx: ctx
-        }
-      );
-
-      await ctx.call('ldp.resource.patch', {
-        resourceUri: webId,
-        triplesToAdd: [triple(namedNode(webId), namedNode(AS_PREFIX + 'url'), namedNode(profileUri))],
-        webId
-      });
-
-      // TODO put this on the contacts app
-      // Create a WebACL group for the user's contact
-      const { groupUri: contactsGroupUri } = await ctx.call('webacl.group.create', {
-        groupSlug: new URL(webId).pathname + '/contacts',
-        webId
-      });
-
-      // Authorize this group to view the user's profile
-      await ctx.call('webacl.resource.addRights', {
-        resourceUri: profileUri,
-        additionalRights: {
-          group: {
-            uri: contactsGroupUri,
-            read: true
+          {
+            meta: {
+              skipObjectsWatcher: true // We don't want to trigger a Create action
+            },
+            parentCtx: ctx
           }
-        },
-        webId
-      });
-    }
+        );
+
+        await ctx.call('ldp.resource.patch', {
+          resourceUri: webId,
+          triplesToAdd: [triple(namedNode(webId), namedNode(AS_PREFIX + 'url'), namedNode(profileUri))],
+          webId
+        });
+
+        // TODO put this on the contacts app
+        // Create a WebACL group for the user's contact
+        const { groupUri: contactsGroupUri } = await ctx.call('webacl.group.create', {
+          groupSlug: new URL(webId).pathname + '/contacts',
+          webId
+        });
+
+        // Authorize this group to view the user's profile
+        await ctx.call('webacl.resource.addRights', {
+          resourceUri: profileUri,
+          additionalRights: {
+            group: {
+              uri: contactsGroupUri,
+              read: true
+            }
+          },
+          webId
+        });
+      }
+    })
   },
   hooks: {
     before: {
@@ -86,6 +96,7 @@ module.exports = {
           if (location && location['vcard:hasAddress'] && location['vcard:hasAddress']['vcard:hasGeo']) {
             ctx.params.resource['vcard:hasGeo'] = location['vcard:hasAddress']['vcard:hasGeo'];
           } else {
+            // @ts-expect-error TS(2339): Property 'warn' does not exist on type 'string | A... Remove this comment to see the full error message
             this.logger.warn(
               `Could not fetch location ${ctx.params.resource['vcard:hasAddress']} when updating profile`
             );
@@ -133,4 +144,14 @@ module.exports = {
     //     }
     //   }
   }
-};
+} satisfies ServiceSchema;
+
+export default ProfilesProfileSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ProfilesProfileSchema.name]: typeof ProfilesProfileSchema;
+    }
+  }
+}

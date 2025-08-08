@@ -1,4 +1,5 @@
 import React, { FunctionComponent, ReactNode } from "react";
+import { ButtonProps } from "react-admin";
 type PodProvider = {
     id?: string;
     type?: string;
@@ -40,6 +41,10 @@ type _Props1 = {
  * This page is called from the data browser in the Pod provider
  */
 export const RedirectPage: FunctionComponent;
+export const RemoteShareButton: FunctionComponent<_Props2>;
+type _Props2 = Partial<ButtonProps> & {
+    clientId: string;
+};
 export const ShareDialog: ({ close, resourceUri, profileResource, groupResource }: {
     close: any;
     resourceUri: any;

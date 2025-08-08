@@ -1,44 +1,85 @@
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
+// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
+import { ServiceSchema, defineAction } from 'moleculer';
 
 /**
  * Mirror container for access grants which have been granted to the app
  */
-module.exports = {
-  name: 'access-grants',
+const AccessGrantsSchema = {
+  name: 'access-grants' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:AccessGrant'],
     newResourcesPermissions: {}
   },
   actions: {
-    // Delete cached AccessGrants which are not linked anymore to an AccessNeedGroup (may happen on app upgrade)
-    async deleteOrphans(ctx) {
-      const { podOwner } = ctx.params;
+    getContainerByShapeTree: defineAction({
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
+      async handler(ctx) {
+        const { shapeTreeUri, podOwner } = ctx.params;
 
-      const app = await ctx.call('app.get');
+        const app = await ctx.call('app.get');
+        const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
 
-      const container = await this.actions.list(
-        {
-          filters: {
-            'http://www.w3.org/ns/solid/interop#grantedBy': podOwner,
-            'http://www.w3.org/ns/solid/interop#grantee': app.id
+        const filteredContainer = await this.actions.list(
+          {
+            containerUri,
+            filters: {
+              'http://www.w3.org/ns/solid/interop#registeredShapeTree': shapeTreeUri,
+              'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
+              'http://www.w3.org/ns/solid/interop#grantee': app.id
+            },
+            webId: 'system'
+          },
+          { parentCtx: ctx }
+        );
+
+        return filteredContainer['ldp:contains']?.[0]?.['interop:hasDataRegistration'];
+      }
+    }),
+
+    deleteOrphans: defineAction({
+      // Delete cached grants which are not linked anymore to an access need (may happen on app upgrade)
+      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
+      async handler(ctx) {
+        const { podOwner } = ctx.params;
+
+        const app = await ctx.call('app.get');
+
+        const container = await this.actions.list(
+          {
+            filters: {
+              'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
+              'http://www.w3.org/ns/solid/interop#grantee': app.id
+            }
+          },
+          { parentCtx: ctx }
+        );
+
+        for (const accessGrant of arrayOf(container['ldp:contains'])) {
+          const accessNeedExist = await ctx.call('access-needs.exist', {
+            resourceUri: accessGrant['interop:satisfiesAccessNeed'],
+            webId: podOwner
+          });
+          if (!accessNeedExist) {
+            this.logger.info(
+              `Deleting cached access grant ${accessGrant.id} as it is not linked anymore with an existing access need...`
+            );
+            await this.actions.delete({ resourceUri: accessGrant.id, webId: podOwner });
           }
-        },
-        { parentCtx: ctx }
-      );
-
-      for (const accessGrant of arrayOf(container?.['ldp:contains'])) {
-        const accessNeedGroupExist = await ctx.call('access-needs-groups.exist', {
-          resourceUri: accessGrant['interop:hasAccessNeedGroup'],
-          webId: podOwner
-        });
-        if (!accessNeedGroupExist) {
-          this.logger.info(
-            `Deleting cached access grant ${accessGrant.id} as it is not linked anymore with an existing access need group...`
-          );
-          await this.actions.delete({ resourceUri: accessGrant.id, webId: podOwner });
         }
       }
+    })
+  }
+} satisfies ServiceSchema;
+
+export default AccessGrantsSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [AccessGrantsSchema.name]: typeof AccessGrantsSchema;
     }
   }
-};
+}

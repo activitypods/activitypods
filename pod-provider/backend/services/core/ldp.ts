@@ -1,15 +1,20 @@
-const { LdpService, DocumentTaggerMixin } = require('@semapps/ldp');
-const CONFIG = require('../../config/config');
+import { LdpService, DocumentTaggerMixin } from '@semapps/ldp';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from '../../config/config.ts';
+import { ServiceSchema } from 'moleculer';
 
-module.exports = {
+const Schema = {
+  // @ts-expect-error TS(2322): Type '{ name: "ldp"; settings: { baseUrl: null; co... Remove this comment to see the full error message
   mixins: [LdpService, DocumentTaggerMixin],
   settings: {
     baseUrl: CONFIG.BASE_URL,
     podProvider: true,
-    resourcesWithContainerPath: false,
+    resourcesWithContainerPath: process.env.NODE_ENV === 'test', // In tests, keep the path to make it easier to know what URIs are referring to
     defaultContainerOptions: {
       permissions: {},
       newResourcesPermissions: {}
     }
   }
-};
+} satisfies Partial<ServiceSchema>;
+
+export default Schema;

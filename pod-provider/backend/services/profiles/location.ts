@@ -1,10 +1,14 @@
-const urlJoin = require('url-join');
-const { ControlledContainerMixin } = require('@semapps/ldp');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const CONFIG = require('../../config/config');
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
+import { ControlledContainerMixin } from '@semapps/ldp';
+import { MIME_TYPES } from '@semapps/mime-types';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from '../../config/config.ts';
+import { ServiceSchema, defineAction } from 'moleculer';
 
-module.exports = {
-  name: 'profiles.location',
+const ProfilesLocationSchema = {
+  name: 'profiles.location' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['vcard:Location'],
@@ -15,59 +19,77 @@ module.exports = {
     typeIndex: 'public'
   },
   actions: {
-    async getHomeLocation(ctx) {
-      const { webId } = ctx.params;
+    getHomeLocation: defineAction({
+      async handler(ctx) {
+        const { webId } = ctx.params;
 
-      const results = await ctx.call('triplestore.query', {
-        query: `
-          PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
-          PREFIX as: <https://www.w3.org/ns/activitystreams#>
-          SELECT ?homeLocation
-          WHERE {
-            <${webId}> as:url ?profile .
-            ?profile vcard:hasAddress ?homeLocation .
-          }
-        `,
-        accept: MIME_TYPES.JSON,
-        webId
-      });
+        const results = await ctx.call('triplestore.query', {
+          query: `
+            PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+            PREFIX as: <https://www.w3.org/ns/activitystreams#>
+            SELECT ?homeLocation
+            WHERE {
+              <${webId}> as:url ?profile .
+              ?profile vcard:hasAddress ?homeLocation .
+            }
+          `,
+          accept: MIME_TYPES.JSON,
+          webId
+        });
 
-      return results.length > 0 ? results[0].homeLocation.value : null;
-    },
-    async clearHomeLocation(ctx) {
-      const { webId } = ctx.params;
-      await ctx.call('triplestore.update', {
-        query: `
-          PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
-          PREFIX as: <https://www.w3.org/ns/activitystreams#>
-          DELETE {
-            ?profile vcard:hasAddress ?homeLocation .
-            ?hasGeo vcard:latitude ?latitude .
-            ?hasGeo vcard:longitude ?longitude .
-            ?profile vcard:hasGeo ?hasGeo .
-          }
-          WHERE {
-            <${webId}> as:url ?profile .
-            ?profile vcard:hasAddress ?homeLocation .
-            ?profile vcard:hasGeo ?hasGeo .
-            ?hasGeo vcard:latitude ?latitude .
-            ?hasGeo vcard:longitude ?longitude .
-          }
-        `,
-        webId
-      });
-    }
+        // @ts-expect-error TS(2339): Property 'length' does not exist on type 'never'.
+        return results.length > 0 ? results[0].homeLocation.value : null;
+      }
+    }),
+
+    clearHomeLocation: defineAction({
+      async handler(ctx) {
+        const { webId } = ctx.params;
+        await ctx.call('triplestore.update', {
+          query: `
+            PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+            PREFIX as: <https://www.w3.org/ns/activitystreams#>
+            DELETE {
+              ?profile vcard:hasAddress ?homeLocation .
+              ?hasGeo vcard:latitude ?latitude .
+              ?hasGeo vcard:longitude ?longitude .
+              ?profile vcard:hasGeo ?hasGeo .
+            }
+            WHERE {
+              <${webId}> as:url ?profile .
+              ?profile vcard:hasAddress ?homeLocation .
+              ?profile vcard:hasGeo ?hasGeo .
+              ?hasGeo vcard:latitude ?latitude .
+              ?hasGeo vcard:longitude ?longitude .
+            }
+          `,
+          webId
+        });
+      }
+    })
   },
   hooks: {
     after: {
       async delete(ctx, res) {
         // If the deleted location is the home location of the current user, clear it from profile
+        // @ts-expect-error TS(2339): Property 'getHomeLocation' does not exist on type ... Remove this comment to see the full error message
         const homeLocation = await this.actions.getHomeLocation({ webId: res.webId }, { parentCtx: ctx });
         if (homeLocation === res.resourceUri) {
+          // @ts-expect-error TS(2339): Property 'clearHomeLocation' does not exist on typ... Remove this comment to see the full error message
           await this.actions.clearHomeLocation({ webId: res.webId }, { parentCtx: ctx });
         }
         return res;
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default ProfilesLocationSchema;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [ProfilesLocationSchema.name]: typeof ProfilesLocationSchema;
+    }
+  }
+}

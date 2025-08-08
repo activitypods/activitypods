@@ -1,10 +1,16 @@
-const path = require('path');
-const urlJoin = require('url-join');
-const { AuthLocalService } = require('@semapps/auth');
-const CONFIG = require('../../config/config');
-const transport = require('../../config/transport');
+import path from 'path';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
+import urlJoin from 'url-join';
+// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
+import { AuthLocalService } from '@semapps/auth';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import * as CONFIG from '../../config/config.ts';
+// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
+import transport from '../../config/transport.ts';
+import { ServiceSchema } from 'moleculer';
 
-module.exports = {
+const Schema = {
+  // @ts-expect-error TS(2322): Type '{ name: "auth"; mixins: { settings: { baseUr... Remove this comment to see the full error message
   mixins: [AuthLocalService],
   settings: {
     baseUrl: CONFIG.BASE_URL,
@@ -55,4 +61,6 @@ module.exports = {
       }
     }
   }
-};
+} satisfies Partial<ServiceSchema>;
+
+export default Schema;

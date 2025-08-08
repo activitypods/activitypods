@@ -1,19 +1,19 @@
-const path = require('path');
-const Redis = require('ioredis');
-const { ServiceBroker } = require('moleculer');
-const { AuthAccountService } = require('@semapps/auth');
-const { CoreService: SemAppsCoreService } = require('@semapps/core');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { NodeinfoService } = require('@semapps/nodeinfo');
-const { ProxyService } = require('@semapps/crypto');
-const { TripleStoreAdapter } = require('@semapps/triplestore');
-const { WebAclMiddleware } = require('@semapps/webacl');
-const { interop, oidc, notify, apods } = require('@semapps/ontologies');
-const { NotificationsListenerService } = require('@semapps/solid');
-const RdfJSONSerializer = require('../pod-provider/backend/RdfJSONSerializer');
-const { clearMails } = require('./utils');
-const CONFIG = require('./config');
-
+import path from 'path';
+import Redis from 'ioredis';
+import fs from 'fs';
+import { ServiceBroker } from 'moleculer';
+import { AuthAccountService } from '@semapps/auth';
+import { CoreService as SemAppsCoreService } from '@semapps/core';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { NodeinfoService } from '@semapps/nodeinfo';
+import { ProxyService } from '@semapps/crypto';
+import { TripleStoreAdapter } from '@semapps/triplestore';
+import { WebAclMiddleware } from '@semapps/webacl';
+import { interop, oidc, notify, apods } from '@semapps/ontologies';
+import { NotificationsListenerService } from '@semapps/solid';
+import RdfJSONSerializer from '../pod-provider/backend/RdfJSONSerializer.ts';
+import { clearMails } from './utils.ts';
+import * as CONFIG from './config.ts';
 Error.stackTraceLimit = Infinity;
 
 const logger = {
@@ -34,12 +34,12 @@ const listDatasets = async () => {
 
   if (response.ok) {
     const json = await response.json();
-    return json.datasets.map(dataset => dataset['ds.name'].substring(1));
+    return json.datasets.map((dataset: any) => dataset['ds.name'].substring(1));
   }
   return [];
 };
 
-const clearDataset = dataset =>
+const clearDataset = (dataset: any) =>
   fetch(`${CONFIG.SPARQL_ENDPOINT + dataset}/update`, {
     method: 'POST',
     body: 'update=CLEAR+ALL', // DROP+ALL is not working with WebACL datasets !
@@ -68,7 +68,7 @@ const clearSettingsDataset = () =>
     }
   });
 
-const clearRedisDb = async redisUrl => {
+const clearRedisDb = async (redisUrl: any) => {
   const redisClient = new Redis(redisUrl);
   await redisClient.flushdb();
   redisClient.disconnect();
@@ -76,7 +76,7 @@ const clearRedisDb = async redisUrl => {
 
 const clearAllData = async () => {
   const datasets = await listDatasets();
-  for (let dataset of datasets.filter(d => d != 'settings')) {
+  for (let dataset of datasets.filter((d: any) => d != 'settings')) {
     await clearDataset(dataset);
   }
 
@@ -109,7 +109,13 @@ const connectPodProvider = async () => {
   return broker;
 };
 
-const initializeAppServer = async (port, mainDataset, settingsDataset, queueServiceDb, appService) => {
+const initializeAppServer = async (
+  port: any,
+  mainDataset: any,
+  settingsDataset: any,
+  queueServiceDb: any,
+  appService: any
+) => {
   const baseUrl = `http://localhost:${port}/`;
   const queueServiceUrl = `redis://localhost:6379/${queueServiceDb}`;
 
@@ -132,6 +138,9 @@ const initializeAppServer = async (port, mainDataset, settingsDataset, queueServ
         password: CONFIG.JENA_PASSWORD,
         fusekiBase: CONFIG.FUSEKI_BASE,
         mainDataset
+      },
+      keys: {
+        actorsKeyPairsDir: null
       },
       ontologies: [interop, oidc, apods, notify],
       activitypub: {
@@ -175,15 +184,71 @@ const initializeAppServer = async (port, mainDataset, settingsDataset, queueServ
   return broker;
 };
 
-const getAppAccessNeeds = async (actor, appUri) => {
+const createActor = async (podProvider: any, username = 'alice') => {
+  let defaultData = await fs.promises.readFile('./templates/actor_default.ttl', 'utf8');
+  let aclData = await fs.promises.readFile('./templates/actor_acl.ttl', 'utf8');
+  let settingsData = await fs.promises.readFile('./templates/actor_settings.ttl', 'utf8');
+
+  if (username !== 'alice') {
+    defaultData = defaultData.replaceAll('alice', username);
+    aclData = aclData.replaceAll('alice', username);
+    settingsData = settingsData.replaceAll('alice', username);
+  }
+
+  if (!(await podProvider.call('triplestore.dataset.exist', { dataset: 'settings' }))) {
+    await podProvider.call('triplestore.dataset.create', { dataset: 'settings', secure: false });
+  }
+
+  if (!(await podProvider.call('triplestore.dataset.exist', { dataset: username }))) {
+    await podProvider.call('triplestore.dataset.create', { dataset: username, secure: true });
+  }
+
+  await podProvider.call('triplestore.insert', {
+    resource: defaultData,
+    contentType: MIME_TYPES.TURTLE,
+    webId: 'system',
+    dataset: username
+  });
+
+  await podProvider.call('triplestore.insert', {
+    resource: aclData,
+    contentType: MIME_TYPES.TURTLE,
+    webId: 'system',
+    graphName: 'http://semapps.org/webacl',
+    dataset: username
+  });
+
+  await podProvider.call('triplestore.insert', {
+    resource: settingsData,
+    contentType: MIME_TYPES.TURTLE,
+    webId: 'system',
+    dataset: 'settings'
+  });
+
+  const webId = 'http://localhost:3000/' + username;
+
+  let actor = await podProvider.call('activitypub.actor.get', { actorUri: webId });
+
+  // Shortcut to make it easier to write tests
+  actor.call = (actionName: any, params: any, options = {}) =>
+    podProvider.call(actionName, params, {
+      ...options,
+      meta: { ...options.meta, webId, dataset: username }
+    });
+
+  return actor;
+};
+
+const getAppAccessNeeds = async (actor: any, appUri: any) => {
   const app = await actor.call('ldp.resource.get', {
     resourceUri: appUri,
     accept: MIME_TYPES.JSON
   });
 
-  let accessNeedGroup;
+  let requiredAccessNeedGroup;
+  let optionalAccessNeedGroup;
   for (const accessNeedUri of app['interop:hasAccessNeedGroup']) {
-    accessNeedGroup = await actor.call('ldp.resource.get', {
+    const accessNeedGroup = await actor.call('ldp.resource.get', {
       resourceUri: accessNeedUri,
       accept: MIME_TYPES.JSON
     });
@@ -197,7 +262,7 @@ const getAppAccessNeeds = async (actor, appUri) => {
   return [requiredAccessNeedGroup, optionalAccessNeedGroup];
 };
 
-const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRights) => {
+const installApp = async (actor: any, appUri: any, acceptedAccessNeeds: any, acceptedSpecialRights: any) => {
   // If the accepted needs are not specified, use the app required access needs
   if (!acceptedAccessNeeds && !acceptedSpecialRights) {
     const [requiredAccessNeedGroup] = await getAppAccessNeeds(actor, appUri);
@@ -205,20 +270,21 @@ const installApp = async (actor, appUri, acceptedAccessNeeds, acceptedSpecialRig
     acceptedSpecialRights = requiredAccessNeedGroup['apods:hasSpecialRights'];
   }
 
-  await actor.call('auth-agent.registerApp', {
+  return await actor.call('registration-endpoint.register', {
     appUri,
     acceptedAccessNeeds,
     acceptedSpecialRights
   });
 };
 
-module.exports = {
+export {
   listDatasets,
   clearDataset,
   clearRedisDb,
   clearAllData,
   connectPodProvider,
   initializeAppServer,
+  createActor,
   getAppAccessNeeds,
   installApp
 };

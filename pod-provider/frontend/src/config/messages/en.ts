@@ -1,6 +1,6 @@
 // Model https://github.com/marmelab/react-admin/blob/master/packages/ra-language-french/src/index.ts
 
-module.exports = {
+export default {
   app: {
     action: {
       accept: 'Accept',
@@ -43,9 +43,7 @@ module.exports = {
       view_public_profile: 'View your public profile',
       create_group: 'Create group',
       skip_to_main: 'Skip to main content',
-      view_contact_profile: "View %{name}'s profile",
-      // @ts-expect-error TS(1117): An object literal cannot have multiple properties ... Remove this comment to see the full error message
-      edit_profile: 'Edit your profile'
+      view_contact_profile: "View %{name}'s profile"
     },
     tag: {
       members: 'Members',

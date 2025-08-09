@@ -8,7 +8,6 @@ import Header from '../common/Header';
 const useStyles = makeStyles(theme => ({
   '@global': {
     body: {
-      // @ts-expect-error TS(2339): Property 'palette' does not exist on type 'Default... Remove this comment to see the full error message
       backgroundColor: theme.palette.primary.main
     }
   },

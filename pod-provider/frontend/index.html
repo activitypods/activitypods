@@ -2,11 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#FF4F28" />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="apple-touch-icon" href="/logo192.png" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" crossorigin="" />
     <link
       rel="stylesheet"
@@ -14,11 +14,13 @@
     />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-    <link rel="stylesheet" href="%PUBLIC_URL%/fonts/fonts.css" />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
     <!-- Initialize the global CONFIG object to avoid the app to crash if the config script does not load -->
     <!-- <script>window.CONFIG = {};</script> -->
-    <script id="config-script" src="%REACT_APP_CONFIG_URL%"></script>
+    <script id="config-script" src="%VITE_CONFIG_URL%"></script>
+    <script type="module" src="src/index.tsx"></script>
   </head>
+
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>

@@ -77,13 +77,13 @@ const CreateGroupPage = () => {
           await dataProvider.patch('Actor', {
             id: groupWebId,
             triplesToAdd: [
-              rdf.triple(rdf.namedNode(groupWebId), rdf.namedNode('http://xmlns.com/foaf/0.1/name'), rdf.literal(name)),
-              rdf.triple(
+              rdf.quad(rdf.namedNode(groupWebId), rdf.namedNode('http://xmlns.com/foaf/0.1/name'), rdf.literal(name)),
+              rdf.quad(
                 rdf.namedNode(groupWebId),
                 rdf.namedNode('https://www.w3.org/ns/activitystreams#name'),
                 rdf.literal(name)
               )
-              // rdf.triple(rdf.namedNode(groupWebId), rdf.namedNode('http://xmlns.com/foaf/0.1/depiction'), rdf.namedNode(imageUri))
+              // rdf.quad(rdf.namedNode(groupWebId), rdf.namedNode('http://xmlns.com/foaf/0.1/depiction'), rdf.namedNode(imageUri))
             ]
           });
         }

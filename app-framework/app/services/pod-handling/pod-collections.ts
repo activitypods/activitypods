@@ -66,7 +66,7 @@ const PodCollectionsSchema = {
             await ctx.call('pod-resources.patch', {
               resourceUri,
               triplesToAdd: [
-                rdf.triple(
+                rdf.quad(
                   rdf.namedNode(resourceUri),
                   rdf.namedNode(expandedAttachPredicate),
                   rdf.namedNode(collectionUri)
@@ -111,11 +111,7 @@ const PodCollectionsSchema = {
           await ctx.call('pod-resources.patch', {
             resourceUri,
             triplesToRemove: [
-              rdf.triple(
-                rdf.namedNode(resourceUri),
-                rdf.namedNode(expandedAttachPredicate),
-                rdf.namedNode(collectionUri)
-              )
+              rdf.quad(rdf.namedNode(resourceUri), rdf.namedNode(expandedAttachPredicate), rdf.namedNode(collectionUri))
             ],
             actorUri
           });
@@ -137,7 +133,7 @@ const PodCollectionsSchema = {
                 {
                   type: 'bgp',
                   triples: [
-                    rdf.triple(
+                    rdf.quad(
                       rdf.namedNode(collectionUri),
                       rdf.namedNode('https://www.w3.org/ns/activitystreams#items'),
                       rdf.namedNode(itemUri)
@@ -175,7 +171,7 @@ const PodCollectionsSchema = {
                 {
                   type: 'bgp',
                   triples: [
-                    rdf.triple(
+                    rdf.quad(
                       rdf.namedNode(collectionUri),
                       rdf.namedNode('https://www.w3.org/ns/activitystreams#items'),
                       rdf.namedNode(itemUri)

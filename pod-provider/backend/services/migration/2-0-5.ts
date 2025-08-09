@@ -78,7 +78,7 @@ const Migration205Schema = {
             await ctx.call('app-registrations.patch', {
               resourceUri: appRegistration.id,
               triplesToAdd: [
-                rdf.triple(
+                rdf.quad(
                   rdf.namedNode(appRegistration.id),
                   rdf.namedNode('http://www.w3.org/ns/solid/interop#registeredWith'),
                   rdf.namedNode(authAgent.id)

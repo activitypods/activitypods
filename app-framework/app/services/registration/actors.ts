@@ -147,7 +147,7 @@ const ActorsSchema = {
           {
             resourceUri: this.appActor.id,
             triplesToAdd: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(this.appActor.id),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessNeedGroup'),
                 rdf.namedNode(accessNeedGroupUri)
@@ -168,7 +168,7 @@ const ActorsSchema = {
           {
             resourceUri: this.appActor.id,
             triplesToRemove: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(this.appActor.id),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessNeedGroup'),
                 rdf.namedNode(accessNeedGroupUri)
@@ -189,7 +189,7 @@ const ActorsSchema = {
           {
             resourceUri: this.appActor.id,
             triplesToAdd: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(this.appActor.id),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
                 rdf.namedNode(accessDescriptionSetUri)
@@ -210,7 +210,7 @@ const ActorsSchema = {
           {
             resourceUri: this.appActor.id,
             triplesToRemove: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(this.appActor.id),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
                 rdf.namedNode(accessDescriptionSetUri)

@@ -13,8 +13,8 @@
     "dev": "NODE_ENV=dev npx tsx node_modules/moleculer/bin/moleculer-runner.js --repl --hot services/*.ts services/**/*.ts services/**/**/*.ts",
     "start": "npx tsx node_modules/moleculer/bin/moleculer-runner.js moleculer-runner services/*.ts services/**/*.ts services/**/**/*.ts",
     "test": "NODE_ENV=test npx tsx node_modules/moleculer/bin/moleculer-runner.js --repl --hot services/*.ts services/**/*.ts services/**/**/*.ts",
-    "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
-    "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
+    "link-semapps-packages": "npm link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
+    "unlink-semapps-packages": "npm unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
     "postinstall": "bash ./types/patch-moleculer-types.sh"
   },
   "dependencies": {
@@ -62,6 +62,34 @@
     "node": ">=24"
   },
   "devDependencies": {
+    "@types/rdfjs__data-model": "^2.0.9",
     "tsx": "^4.20.3"
+  },
+  "packageManager": "yarn@4.9.2",
+  "resolutions": {
+    "@semapps/activitypub": "portal:../../../semapps/src/middleware/packages/activitypub",
+    "@semapps/auth": "portal:../../../semapps/src/middleware/packages/auth",
+    "@semapps/backup": "portal:../../../semapps/src/middleware/packages/backup",
+    "@semapps/core": "portal:../../../semapps/src/middleware/packages/core",
+    "@semapps/crypto": "portal:../../../semapps/src/middleware/packages/crypto",
+    "@semapps/importer": "portal:../../../semapps/src/middleware/packages/importer",
+    "@semapps/inference": "portal:../../../semapps/src/middleware/packages/inference",
+    "@semapps/jsonld": "portal:../../../semapps/src/middleware/packages/jsonld",
+    "@semapps/ldp": "portal:../../../semapps/src/middleware/packages/ldp",
+    "@semapps/middlewares": "portal:../../../semapps/src/middleware/packages/middlewares",
+    "@semapps/migration": "portal:../../../semapps/src/middleware/packages/migration",
+    "@semapps/mime-types": "portal:../../../semapps/src/middleware/packages/mime-types",
+    "@semapps/nodeinfo": "portal:../../../semapps/src/middleware/packages/nodeinfo",
+    "@semapps/notifications": "portal:../../../semapps/src/middleware/packages/notifications",
+    "@semapps/ontologies": "portal:../../../semapps/src/middleware/packages/ontologies",
+    "@semapps/solid": "portal:../../../semapps/src/middleware/packages/solid",
+    "@semapps/sparql-endpoint": "portal:../../../semapps/src/middleware/packages/sparql-endpoint",
+    "@semapps/sync": "portal:../../../semapps/src/middleware/packages/sync",
+    "@semapps/triplestore": "portal:../../../semapps/src/middleware/packages/triplestore",
+    "@semapps/void": "portal:../../../semapps/src/middleware/packages/void",
+    "@semapps/webacl": "portal:../../../semapps/src/middleware/packages/webacl",
+    "@semapps/webfinger": "portal:../../../semapps/src/middleware/packages/webfinger",
+    "@semapps/webhooks": "portal:../../../semapps/src/middleware/packages/webhooks",
+    "@semapps/webid": "portal:../../../semapps/src/middleware/packages/webid"
   }
 }

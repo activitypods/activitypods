@@ -22,7 +22,7 @@ const DataRegistrySchema = {
           {
             resourceUri: dataRegistryUri,
             triplesToAdd: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(dataRegistryUri),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistration'),
                 rdf.namedNode(dataRegistrationUri)
@@ -45,7 +45,7 @@ const DataRegistrySchema = {
           {
             resourceUri: dataRegistryUri,
             triplesToRemove: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(dataRegistryUri),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistration'),
                 rdf.namedNode(dataRegistrationUri)
@@ -92,7 +92,7 @@ const DataRegistrySchema = {
         await ctx.call('registry-set.patch', {
           resourceUri: registrySetUri,
           triplesToAdd: [
-            rdf.triple(
+            rdf.quad(
               rdf.namedNode(registrySetUri),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistry'),
               rdf.namedNode(res)

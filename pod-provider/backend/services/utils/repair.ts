@@ -213,7 +213,7 @@ const RepairSchema = {
                 await ctx.call('ldp.resource.patch', {
                   resourceUri: objectUri,
                   triplesToRemove: [
-                    rdf.triple(rdf.namedNode(objectUri), rdf.namedNode(attachPredicate), rdf.namedNode(collectionUri))
+                    rdf.quad(rdf.namedNode(objectUri), rdf.namedNode(attachPredicate), rdf.namedNode(collectionUri))
                   ],
                   webId: 'system'
                 });

@@ -59,7 +59,7 @@ const ProfilesProfileSchema = {
 
         await ctx.call('ldp.resource.patch', {
           resourceUri: webId,
-          triplesToAdd: [rdf.triple(rdf.namedNode(webId), rdf.namedNode(AS_PREFIX + 'url'), rdf.namedNode(profileUri))],
+          triplesToAdd: [rdf.quad(rdf.namedNode(webId), rdf.namedNode(AS_PREFIX + 'url'), rdf.namedNode(profileUri))],
           webId
         });
 

@@ -71,7 +71,7 @@ const Migration200Schema = {
           await ctx.call('ldp.resource.patch', {
             resourceUri: account.webId,
             triplesToAdd: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(account.webId),
                 rdf.namedNode('http://schema.org/knowsLanguage'),
                 rdf.literal(account.preferredLocale)
@@ -101,7 +101,7 @@ const Migration200Schema = {
           await ctx.call('ldp.resource.patch', {
             resourceUri: account.webId,
             triplesToAdd: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(account.webId),
                 rdf.namedNode('http://www.w3.org/ns/pim/space#storage'),
                 rdf.namedNode(account.podUri)
@@ -113,7 +113,7 @@ const Migration200Schema = {
           await ctx.call('ldp.resource.patch', {
             resourceUri: account.webId,
             triplesToAdd: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(account.webId),
                 rdf.namedNode('http://www.w3.org/ns/solid/terms#oidcIssuer'),
                 rdf.namedNode(new URL(account.webId).origin)

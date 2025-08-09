@@ -709,18 +709,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rdfjs/data-model@npm:^1.3.4":
-  version: 1.3.4
-  resolution: "@rdfjs/data-model@npm:1.3.4"
-  dependencies:
-    "@rdfjs/types": "npm:>=1.0.1"
-  bin:
-    rdfjs-data-model-test: bin/test.js
-  checksum: 10c0/2f9f04b0f74cbcfd90b521eb51d7ab708164df16cc582ea4322dc364f66ad39ca9f1fc52d0db0b1c93e3043e86a5568ab2ecf66d7633051714e853e02e793ce8
-  languageName: node
-  linkType: hard
-
-"@rdfjs/data-model@npm:^2.0.1, @rdfjs/data-model@npm:^2.0.2":
+"@rdfjs/data-model@npm:^2.0.1, @rdfjs/data-model@npm:^2.0.2, @rdfjs/data-model@npm:^2.1.1":
   version: 2.1.1
   resolution: "@rdfjs/data-model@npm:2.1.1"
   bin:
@@ -890,7 +879,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rdfjs/types@npm:*, @rdfjs/types@npm:>=1.0.0, @rdfjs/types@npm:>=1.0.1, @rdfjs/types@npm:^2.0.0":
+"@rdfjs/types@npm:*, @rdfjs/types@npm:>=1.0.0, @rdfjs/types@npm:^2.0.0, @rdfjs/types@npm:^2.0.1":
   version: 2.0.1
   resolution: "@rdfjs/types@npm:2.0.1"
   dependencies:
@@ -935,11 +924,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@semapps/activitypub@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/activitypub::locator=activitypods-backend%40workspace%3A.":
+"@semapps/activitypub@portal:../../../semapps/src/middleware/packages/activitypub::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/activitypub@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/activitypub::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/activitypub@portal:../../../semapps/src/middleware/packages/activitypub::locator=activitypods-backend%40workspace%3A."
   dependencies:
-    "@rdfjs/data-model": "npm:^1.3.4"
+    "@rdfjs/data-model": "npm:^2.1.1"
     "@semapps/crypto": "npm:1.1.4"
     "@semapps/ldp": "npm:1.1.4"
     "@semapps/middlewares": "npm:1.1.4"
@@ -958,9 +947,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/auth@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/auth::locator=activitypods-backend%40workspace%3A.":
+"@semapps/auth@portal:../../../semapps/src/middleware/packages/auth::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/auth@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/auth::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/auth@portal:../../../semapps/src/middleware/packages/auth::locator=activitypods-backend%40workspace%3A."
   dependencies:
     "@semapps/ldp": "npm:1.1.4"
     "@semapps/middlewares": "npm:1.1.4"
@@ -984,9 +973,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/backup@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/backup::locator=activitypods-backend%40workspace%3A.":
+"@semapps/backup@portal:../../../semapps/src/middleware/packages/backup::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/backup@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/backup::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/backup@portal:../../../semapps/src/middleware/packages/backup::locator=activitypods-backend%40workspace%3A."
   dependencies:
     cron: "npm:^4.3.3"
     fs-extra: "npm:^10.0.0"
@@ -997,9 +986,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/crypto@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/crypto::locator=activitypods-backend%40workspace%3A.":
+"@semapps/crypto@portal:../../../semapps/src/middleware/packages/crypto::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/crypto@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/crypto::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/crypto@portal:../../../semapps/src/middleware/packages/crypto::locator=activitypods-backend%40workspace%3A."
   dependencies:
     "@digitalbazaar/data-integrity": "npm:^2.5.0"
     "@digitalbazaar/ed25519-multikey": "npm:^1.3.0"
@@ -1007,7 +996,7 @@ __metadata:
     "@digitalbazaar/ed25519-verification-key-2020": "npm:^4.2.0"
     "@digitalbazaar/eddsa-rdfc-2022-cryptosuite": "npm:^1.2.0"
     "@digitalbazaar/vc": "npm:^7.1.0"
-    "@rdfjs/data-model": "npm:^1.3.4"
+    "@rdfjs/data-model": "npm:^2.1.1"
     "@semapps/ldp": "npm:1.1.4"
     "@semapps/middlewares": "npm:1.1.4"
     "@semapps/mime-types": "npm:1.1.4"
@@ -1026,9 +1015,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/jsonld@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/jsonld::locator=activitypods-backend%40workspace%3A.":
+"@semapps/jsonld@portal:../../../semapps/src/middleware/packages/jsonld::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/jsonld@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/jsonld::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/jsonld@portal:../../../semapps/src/middleware/packages/jsonld::locator=activitypods-backend%40workspace%3A."
   dependencies:
     jsonld: "npm:^3.3.2"
     jsonld-context-parser: "npm:^2.4.0"
@@ -1041,11 +1030,12 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/ldp@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/ldp::locator=activitypods-backend%40workspace%3A.":
+"@semapps/ldp@portal:../../../semapps/src/middleware/packages/ldp::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/ldp@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/ldp::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/ldp@portal:../../../semapps/src/middleware/packages/ldp::locator=activitypods-backend%40workspace%3A."
   dependencies:
-    "@rdfjs/data-model": "npm:^1.3.4"
+    "@rdfjs/data-model": "npm:^2.1.1"
+    "@rdfjs/types": "npm:^2.0.1"
     "@semapps/middlewares": "npm:1.1.4"
     "@semapps/mime-types": "npm:1.1.4"
     "@semapps/ontologies": "npm:1.1.4"
@@ -1072,9 +1062,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/middlewares@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/middlewares::locator=activitypods-backend%40workspace%3A.":
+"@semapps/middlewares@portal:../../../semapps/src/middleware/packages/middlewares::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/middlewares@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/middlewares::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/middlewares@portal:../../../semapps/src/middleware/packages/middlewares::locator=activitypods-backend%40workspace%3A."
   dependencies:
     "@semapps/mime-types": "npm:1.1.4"
     busboy: "npm:^0.3.1"
@@ -1084,9 +1074,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/migration@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/migration::locator=activitypods-backend%40workspace%3A.":
+"@semapps/migration@portal:../../../semapps/src/middleware/packages/migration::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/migration@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/migration::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/migration@portal:../../../semapps/src/middleware/packages/migration::locator=activitypods-backend%40workspace%3A."
   dependencies:
     "@semapps/ldp": "npm:1.1.4"
     "@semapps/webacl": "npm:1.1.4"
@@ -1095,9 +1085,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/mime-types@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/mime-types::locator=activitypods-backend%40workspace%3A.":
+"@semapps/mime-types@portal:../../../semapps/src/middleware/packages/mime-types::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/mime-types@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/mime-types::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/mime-types@portal:../../../semapps/src/middleware/packages/mime-types::locator=activitypods-backend%40workspace%3A."
   dependencies:
     negotiator: "npm:^0.6.2"
   peerDependencies:
@@ -1105,9 +1095,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/nodeinfo@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/nodeinfo::locator=activitypods-backend%40workspace%3A.":
+"@semapps/nodeinfo@portal:../../../semapps/src/middleware/packages/nodeinfo::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/nodeinfo@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/nodeinfo::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/nodeinfo@portal:../../../semapps/src/middleware/packages/nodeinfo::locator=activitypods-backend%40workspace%3A."
   dependencies:
     url-join: "npm:^4.0.1"
   peerDependencies:
@@ -1115,9 +1105,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/ontologies@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/ontologies::locator=activitypods-backend%40workspace%3A.":
+"@semapps/ontologies@portal:../../../semapps/src/middleware/packages/ontologies::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/ontologies@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/ontologies::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/ontologies@portal:../../../semapps/src/middleware/packages/ontologies::locator=activitypods-backend%40workspace%3A."
   dependencies:
     "@semapps/triplestore": "npm:1.1.4"
     moleculer-db: "npm:^0.8.16"
@@ -1127,11 +1117,11 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/solid@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/solid::locator=activitypods-backend%40workspace%3A.":
+"@semapps/solid@portal:../../../semapps/src/middleware/packages/solid::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/solid@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/solid::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/solid@portal:../../../semapps/src/middleware/packages/solid::locator=activitypods-backend%40workspace%3A."
   dependencies:
-    "@rdfjs/data-model": "npm:^1.3.4"
+    "@rdfjs/data-model": "npm:^2.1.1"
     "@semapps/activitypub": "npm:1.1.4"
     "@semapps/ldp": "npm:1.1.4"
     "@semapps/middlewares": "npm:1.1.4"
@@ -1152,11 +1142,11 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/sparql-endpoint@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/sparql-endpoint::locator=activitypods-backend%40workspace%3A.":
+"@semapps/sparql-endpoint@portal:../../../semapps/src/middleware/packages/sparql-endpoint::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/sparql-endpoint@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/sparql-endpoint::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/sparql-endpoint@portal:../../../semapps/src/middleware/packages/sparql-endpoint::locator=activitypods-backend%40workspace%3A."
   dependencies:
-    "@rdfjs/data-model": "npm:^1.3.4"
+    "@rdfjs/data-model": "npm:^2.1.1"
     "@semapps/middlewares": "npm:1.1.4"
     "@semapps/mime-types": "npm:1.1.4"
     "@semapps/triplestore": "npm:1.1.4"
@@ -1167,9 +1157,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/sync@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/sync::locator=activitypods-backend%40workspace%3A.":
+"@semapps/sync@portal:../../../semapps/src/middleware/packages/sync::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/sync@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/sync::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/sync@portal:../../../semapps/src/middleware/packages/sync::locator=activitypods-backend%40workspace%3A."
   dependencies:
     "@semapps/activitypub": "npm:1.1.4"
     "@semapps/ldp": "npm:1.1.4"
@@ -1181,9 +1171,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/triplestore@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/triplestore::locator=activitypods-backend%40workspace%3A.":
+"@semapps/triplestore@portal:../../../semapps/src/middleware/packages/triplestore::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/triplestore@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/triplestore::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/triplestore@portal:../../../semapps/src/middleware/packages/triplestore::locator=activitypods-backend%40workspace%3A."
   dependencies:
     "@semapps/middlewares": "npm:1.1.4"
     "@semapps/mime-types": "npm:1.1.4"
@@ -1200,9 +1190,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/webacl@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/webacl::locator=activitypods-backend%40workspace%3A.":
+"@semapps/webacl@portal:../../../semapps/src/middleware/packages/webacl::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/webacl@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/webacl::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/webacl@portal:../../../semapps/src/middleware/packages/webacl::locator=activitypods-backend%40workspace%3A."
   dependencies:
     "@semapps/activitypub": "npm:1.1.4"
     "@semapps/ldp": "npm:1.1.4"
@@ -1221,9 +1211,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/webfinger@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/webfinger::locator=activitypods-backend%40workspace%3A.":
+"@semapps/webfinger@portal:../../../semapps/src/middleware/packages/webfinger::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/webfinger@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/webfinger::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/webfinger@portal:../../../semapps/src/middleware/packages/webfinger::locator=activitypods-backend%40workspace%3A."
   dependencies:
     "@semapps/mime-types": "npm:1.1.4"
     node-fetch: "npm:^2.6.6"
@@ -1232,9 +1222,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@semapps/webid@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/webid::locator=activitypods-backend%40workspace%3A.":
+"@semapps/webid@portal:../../../semapps/src/middleware/packages/webid::locator=activitypods-backend%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@semapps/webid@portal:/home/laurin/projects/virtual-assembly/semapps/src/middleware/packages/webid::locator=activitypods-backend%40workspace%3A."
+  resolution: "@semapps/webid@portal:../../../semapps/src/middleware/packages/webid::locator=activitypods-backend%40workspace%3A."
   dependencies:
     "@semapps/activitypub": "npm:1.1.4"
     "@semapps/ldp": "npm:1.1.4"
@@ -1377,6 +1367,15 @@ __metadata:
   version: 1.0.1
   resolution: "@types/parse-link-header@npm:1.0.1"
   checksum: 10c0/88b38f5a51083e512a9b23ba13a37543867508927544dbfd08b20ba81cafdc678a320db83c360fbff79689af0147dcbd8ad27a429a0d0f4c28145f47c708a637
+  languageName: node
+  linkType: hard
+
+"@types/rdfjs__data-model@npm:^2.0.9":
+  version: 2.0.9
+  resolution: "@types/rdfjs__data-model@npm:2.0.9"
+  dependencies:
+    "@rdfjs/types": "npm:*"
+  checksum: 10c0/b8ecdc381f22433e545de0f512df102869ad054c488107a2806378d87fb296afd7fffcae70279c25eb15e2cf371a1486ba0ecaa3a43daeb1e4b46822ceeeb9b5
   languageName: node
   linkType: hard
 
@@ -1599,6 +1598,7 @@ __metadata:
     "@semapps/webfinger": "npm:1.1.2"
     "@semapps/webid": "npm:1.1.2"
     "@types/archiver": "npm:6.0.2"
+    "@types/rdfjs__data-model": "npm:^2.0.9"
     "@types/rdfjs__formats": "npm:^4.0.1"
     archiver: "npm:^7.0.1"
     dotenv-flow: "npm:^3.2.0"

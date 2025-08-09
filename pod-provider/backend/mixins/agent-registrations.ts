@@ -92,19 +92,19 @@ const AgentRegistrationsMixin = {
           {
             resourceUri: getId(agentRegistration),
             triplesToAdd: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(getId(agentRegistration)),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
                 rdf.namedNode(getId(grant))
               ),
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(getId(agentRegistration)),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
                 rdf.literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
               )
             ],
             triplesToRemove: agentRegistration['interop:updatedAt'] && [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(getId(agentRegistration)),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
                 rdf.literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
@@ -131,7 +131,7 @@ const AgentRegistrationsMixin = {
 
         if (agentRegistration) {
           const triplesToRemove = [
-            rdf.triple(
+            rdf.quad(
               rdf.namedNode(getId(agentRegistration)),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
               rdf.namedNode(getId(grant))
@@ -140,7 +140,7 @@ const AgentRegistrationsMixin = {
 
           if (agentRegistration['interop:updatedAt']) {
             triplesToRemove.push(
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(getId(agentRegistration)),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
                 rdf.literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
@@ -152,7 +152,7 @@ const AgentRegistrationsMixin = {
             {
               resourceUri: getId(agentRegistration),
               triplesToAdd: [
-                rdf.triple(
+                rdf.quad(
                   rdf.namedNode(getId(agentRegistration)),
                   rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
                   rdf.literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')

@@ -11,7 +11,8 @@
     "@mui/icons-material": "^5.14.13",
     "@mui/material": "^5.14.13",
     "@mui/styles": "^5.14.13",
-    "@rdfjs/data-model": "^2.0.0",
+    "@rdfjs/data-model": "^2.0.1",
+    "@rdfjs/types": "^2.0.1",
     "@semapps/activitypub-components": "1.1.4",
     "@semapps/auth-provider": "1.1.4",
     "@semapps/date-components": "1.1.4",
@@ -47,7 +48,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@rdfjs/types": "^2.0.1",
+    "@types/rdfjs__data-model": "^2.0.9",
     "@types/url-join": "^4.0.1",
     "react-scripts": "^5.0.1",
     "typescript": "^5.2.2",

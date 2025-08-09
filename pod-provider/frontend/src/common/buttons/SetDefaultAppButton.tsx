@@ -32,14 +32,14 @@ const SetDefaultAppButton = ({ typeRegistration, refetch, color }: any) => {
       await dataProvider.patch('TypeRegistration', {
         id: typeRegistration.id,
         triplesToAdd: [
-          rdf.triple(
+          rdf.quad(
             rdf.namedNode(typeRegistration.id),
             rdf.namedNode('http://activitypods.org/ns/core#defaultApp'),
             rdf.namedNode(appUri)
           )
         ],
         triplesToRemove: [
-          rdf.triple(
+          rdf.quad(
             rdf.namedNode(typeRegistration.id),
             rdf.namedNode('http://activitypods.org/ns/core#defaultApp'),
             rdf.namedNode(typeRegistration['apods:defaultApp'])

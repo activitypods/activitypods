@@ -238,7 +238,7 @@ describe('Test Pod resources handling', () => {
       appServer.call('pod-resources.patch', {
         resourceUri: bobEventUri,
         triplesToAdd: [
-          rdf.triple(
+          rdf.quad(
             rdf.namedNode(bobEventUri),
             rdf.namedNode('https://www.w3.org/ns/activitystreams#summary'),
             literal('A super-powerful AI-generated summary')

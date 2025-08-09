@@ -22,7 +22,7 @@ const AuthRegistrySchema = {
           {
             resourceUri: authRegistryUri,
             triplesToAdd: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(authRegistryUri),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessAuthorization'),
                 rdf.namedNode(authorizationUri)
@@ -45,7 +45,7 @@ const AuthRegistrySchema = {
           {
             resourceUri: authRegistryUri,
             triplesToRemove: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(authRegistryUri),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessAuthorization'),
                 rdf.namedNode(authorizationUri)
@@ -66,7 +66,7 @@ const AuthRegistrySchema = {
         await ctx.call('registry-set.patch', {
           resourceUri: registrySetUri,
           triplesToAdd: [
-            rdf.triple(
+            rdf.quad(
               rdf.namedNode(registrySetUri),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAuthorizationRegistry'),
               rdf.namedNode(res)

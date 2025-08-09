@@ -26,7 +26,7 @@ const AgentRegistrySchema = {
           {
             resourceUri: agentRegistryUri,
             triplesToAdd: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(agentRegistryUri),
                 rdf.namedNode(
                   agentRegistrationType === 'interop:ApplicationRegistration'
@@ -56,7 +56,7 @@ const AgentRegistrySchema = {
           {
             resourceUri: agentRegistryUri,
             triplesToRemove: [
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(agentRegistryUri),
                 rdf.namedNode(
                   agentRegistrationType === 'interop:ApplicationRegistration'
@@ -81,7 +81,7 @@ const AgentRegistrySchema = {
         await ctx.call('registry-set.patch', {
           resourceUri: registrySetUri,
           triplesToAdd: [
-            rdf.triple(
+            rdf.quad(
               rdf.namedNode(registrySetUri),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAgentRegistry'),
               rdf.namedNode(res)

@@ -50,7 +50,7 @@ const MigrationSchema = {
           await ctx.call('ldp.resource.patch', {
             resourceUri: app.id,
             triplesToRemove: accessDescriptionSetsUris.map((uri: any) =>
-              rdf.triple(
+              rdf.quad(
                 rdf.namedNode(app.id),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
                 rdf.namedNode(uri)

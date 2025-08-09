@@ -64,7 +64,7 @@ const AuthAgentSchema = {
         await ctx.call('ldp.resource.patch', {
           resourceUri: ctx.params.webId,
           triplesToAdd: [
-            rdf.triple(
+            rdf.quad(
               rdf.namedNode(ctx.params.webId),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAuthorizationAgent'),
               rdf.namedNode(res)

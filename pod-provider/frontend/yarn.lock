@@ -8409,6 +8409,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/rdfjs__data-model@npm:^2.0.9":
+  version: 2.0.9
+  resolution: "@types/rdfjs__data-model@npm:2.0.9"
+  dependencies:
+    "@rdfjs/types": "npm:*"
+  checksum: 10c0/b8ecdc381f22433e545de0f512df102869ad054c488107a2806378d87fb296afd7fffcae70279c25eb15e2cf371a1486ba0ecaa3a43daeb1e4b46822ceeeb9b5
+  languageName: node
+  linkType: hard
+
 "@types/rdfjs__namespace@npm:^2.0.10":
   version: 2.0.10
   resolution: "@types/rdfjs__namespace@npm:2.0.10"
@@ -9066,7 +9075,7 @@ __metadata:
     "@mui/icons-material": "npm:^5.14.13"
     "@mui/material": "npm:^5.14.13"
     "@mui/styles": "npm:^5.14.13"
-    "@rdfjs/data-model": "npm:^2.0.0"
+    "@rdfjs/data-model": "npm:^2.0.1"
     "@rdfjs/types": "npm:^2.0.1"
     "@semapps/activitypub-components": "npm:1.1.4"
     "@semapps/auth-provider": "npm:1.1.4"
@@ -9077,6 +9086,7 @@ __metadata:
     "@semapps/list-components": "npm:1.1.4"
     "@semapps/semantic-data-provider": "npm:1.1.4"
     "@tanstack/react-query": "npm:^5.84.1"
+    "@types/rdfjs__data-model": "npm:^2.0.9"
     "@types/url-join": "npm:^4.0.1"
     "@uiw/react-json-view": "npm:^2.0.0-alpha.27"
     copy-to-clipboard: "npm:^3.0.0"

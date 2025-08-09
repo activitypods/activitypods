@@ -99,7 +99,7 @@ const PodContainersSchema = {
                 {
                   type: 'bgp',
                   triples: [
-                    rdf.triple(
+                    rdf.quad(
                       rdf.namedNode(containerUri),
                       rdf.namedNode('http://www.w3.org/ns/ldp#contains'),
                       rdf.namedNode(resourceUri)
@@ -142,7 +142,7 @@ const PodContainersSchema = {
                 {
                   type: 'bgp',
                   triples: [
-                    rdf.triple(
+                    rdf.quad(
                       rdf.namedNode(containerUri),
                       rdf.namedNode('http://www.w3.org/ns/ldp#contains'),
                       rdf.namedNode(resourceUri)

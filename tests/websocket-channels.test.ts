@@ -225,7 +225,7 @@ describe('Websocket channel', () => {
       await alice.call('ldp.resource.patch', {
         resourceUri: noteUri,
         triplesToAdd: [
-          rdf.triple(
+          rdf.quad(
             rdf.namedNode(noteUri),
             rdf.namedNode('https://www.w3.org/ns/activitystreams#tag'),
             rdf.literal('My tag')

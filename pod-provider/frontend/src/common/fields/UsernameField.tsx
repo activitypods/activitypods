@@ -1,9 +1,9 @@
 import React from 'react';
 import { useRecordContext } from 'react-admin';
 import CopyButton from '../buttons/CopyButton';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   wrapper: {
     position: 'relative'
   },
@@ -22,7 +22,7 @@ const useStyles = makeStyles(() => ({
 
 const UsernameField = ({ showCopyButton }: any) => {
   const record = useRecordContext();
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   if (!record) return null;
 

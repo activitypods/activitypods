@@ -2,9 +2,9 @@ import React from 'react';
 import { useTranslate, getFieldLabelTranslationArgs, useRecordContext, useResourceContext } from 'react-admin';
 import { Box, Grid, Typography } from '@mui/material';
 
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   line: {
     borderBottom: '1px solid #e0e0e0'
   },
@@ -18,7 +18,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 const DetailsList = ({ children }: any) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const translate = useTranslate();
   const record = useRecordContext();
   const resource = useResourceContext();

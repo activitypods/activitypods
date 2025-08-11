@@ -11,11 +11,11 @@ import {
   Avatar,
   Alert
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import PlaceIcon from '@mui/icons-material/Place';
 import List from '../../layout/List';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   listItem: {
     backgroundColor: 'white',
     marginBottom: 8,
@@ -30,7 +30,7 @@ const ListWithSwitches = () => {
   const createPath = useCreatePath();
   const { data: identity, refetch: refetchIdentity } = useGetIdentity();
   const dataProvider = useDataProvider();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const navigate = useNavigate();
   const notify = useNotify();
 

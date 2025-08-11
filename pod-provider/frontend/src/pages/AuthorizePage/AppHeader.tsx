@@ -1,10 +1,10 @@
 import React from 'react';
 import { useLocaleState } from 'react-admin';
 import { Typography, Box, Chip } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import { getLangString } from '../../utils';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   app: {
     padding: 15,
     paddingLeft: 70,
@@ -37,7 +37,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 const AppHeader = ({ application, isTrustedApp }: any) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const [locale] = useLocaleState();
 
   return (

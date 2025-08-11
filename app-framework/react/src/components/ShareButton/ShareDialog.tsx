@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRecordContext, useNotify, useTranslate, useGetIdentity } from 'react-admin';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, useMediaQuery } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import { useCollection, useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 import ContactsShareList from './ContactsShareList';
 
@@ -13,7 +13,7 @@ import ContactsShareList from './ContactsShareList';
  * @property {boolean} shareReadonly
  */
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   dialogPaper: {
     margin: 16
   },
@@ -54,7 +54,7 @@ const useStyles = makeStyles(theme => ({
 
 // @ts-ignore
 const ShareDialog = ({ close, resourceUri, profileResource = 'Profile', groupResource = 'Group' }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const { data: identity } = useGetIdentity();
   const record = useRecordContext();
   const translate = useTranslate();

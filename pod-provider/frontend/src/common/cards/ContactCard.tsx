@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { useCreatePath, useTranslate } from 'react-admin';
 import { Box, Card, Typography, Avatar, Button } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import { Link } from 'react-router-dom';
 import { useCollection } from '@semapps/activitypub-components';
 import AddContactButton from '../buttons/AddContactButton';
@@ -11,7 +11,7 @@ import RejectContactRequestButton from '../buttons/RejectContactRequestButton';
 import IgnoreContactRequestButton from '../buttons/IgnoreContactRequestButton';
 import IgnoreContactButton from '../buttons/IgnoreContactButton';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   root: {
     marginTop: 5,
     marginBottom: 24
@@ -59,7 +59,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ContactCard = ({ actor, publicProfileOnly }: any) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const createPath = useCreatePath();
   const translate = useTranslate();
   const { items: contacts, refetch: refetchContacts } = useCollection('apods:contacts');

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocaleState, useTranslate, fetchUtils } from 'react-admin';
 import { Card, Typography, Button, Chip, IconButton } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import DoneIcon from '@mui/icons-material/Done';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import LoopIcon from '@mui/icons-material/Loop';
@@ -9,7 +9,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import { arraysEqual, getLangString } from '../../utils';
 import AppSettingsDialog from './AppSettingsDialog';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   card: {
     backgroundColor: 'white',
     padding: 16,
@@ -44,7 +44,6 @@ const useStyles = makeStyles(theme => ({
   appChip: {
     // backgroundColor: '#8bd78b',
     marginTop: 6,
-    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.up('sm')]: {
       marginTop: 0,
       position: 'absolute',
@@ -61,7 +60,7 @@ const ApplicationCard = ({ app, isTrustedApp, isRegistered }: any) => {
   const [openSettings, setOpenSettings] = useState(false);
   const [remoteApp, setRemoteApp] = useState();
   const [isOffline, setIsOffline] = useState(false);
-  const classes = useStyles();
+  const { classes } = useStyles();
   const translate = useTranslate();
   const [locale] = useLocaleState();
   const appDomain = new URL(app.id).host;

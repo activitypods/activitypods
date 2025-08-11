@@ -3,10 +3,10 @@ import { Form, TextInput, useNotify, useRecordContext, useTranslate, useGetIdent
 import { Box, Button, Alert } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { useOutbox, useCollection, OBJECT_TYPES } from '@semapps/activitypub-components';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import useActor from '../../hooks/useActor';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   input: {
     marginTop: 0,
     marginBottom: -20
@@ -14,7 +14,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 const ContactField = ({ source, context }: any) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const record = useRecordContext();
   const notify = useNotify();
   const outbox = useOutbox();

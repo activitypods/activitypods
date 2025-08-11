@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslate } from 'react-admin';
 import { BottomNavigation, BottomNavigationAction, Box, AppBar } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import { Link, useLocation } from 'react-router-dom';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import StorageIcon from '@mui/icons-material/Storage';
 import AppsIcon from '@mui/icons-material/Apps';
 import SettingsIcon from '@mui/icons-material/Settings';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   box: {
     height: 56
   },
@@ -34,7 +34,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const BottomBar = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const [value, setValue] = useState();
   const translate = useTranslate();
   const location = useLocation();

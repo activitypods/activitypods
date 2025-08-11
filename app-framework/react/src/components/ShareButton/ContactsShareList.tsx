@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useGetList, useTranslate, useGetIdentity } from 'react-admin';
 import { List, Box, CircularProgress, TextField, Alert } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import ContactItem from './ContactItem';
 import GroupContactsItem from './GroupContactsItem';
 import { formatUsername } from '../../utils';
@@ -10,7 +10,7 @@ import { formatUsername } from '../../utils';
  * @typedef {import('./ShareDialog').InvitationState} InvitationState
  */
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   list: {
     width: '98%',
     maxWidth: '98%',
@@ -41,7 +41,7 @@ const ContactsShareList = ({
   profileResource: any;
   groupResource: any;
 }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const translate = useTranslate();
   const { data: identity } = useGetIdentity();
   const [searchText, setSearchText] = useState('');

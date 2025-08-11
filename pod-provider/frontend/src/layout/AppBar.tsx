@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Box, Container, Typography, Grid } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import UserMenu from './UserMenu';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   topBar: {
     // @ts-expect-error TS(2339): Property 'palette' does not exist on type 'Default... Remove this comment to see the full error message
     backgroundColor: theme.palette.primary.main
@@ -26,7 +26,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const AppBar = ({ title }: any) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <Box className={classes.topBar}>
       <Container>

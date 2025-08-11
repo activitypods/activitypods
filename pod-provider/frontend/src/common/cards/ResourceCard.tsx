@@ -1,12 +1,12 @@
 import React from 'react';
 import { Card, Avatar, Box, Button, Table, TableBody, TableRow, TableCell, Typography } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import { useTranslate } from 'react-admin';
 import useActor from '../../hooks/useActor';
 import { arrayOf } from '../../utils';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   title: {
     backgroundRepeat: 'no-repeat',
     backgroundSize: 'cover',
@@ -33,7 +33,7 @@ const useStyles = makeStyles(theme => ({
 
 const ResourceCard = ({ resource, labelPredicate }: any) => {
   const translate = useTranslate();
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const actor = useActor(resource['dc:creator']);
 

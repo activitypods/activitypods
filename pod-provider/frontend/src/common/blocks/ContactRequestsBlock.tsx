@@ -1,14 +1,14 @@
 import React, { useCallback } from 'react';
 import { useCreatePath, useTranslate, Link, useRefresh, useGetOne } from 'react-admin';
 import { Card, Avatar, Grid, Typography, Box, useMediaQuery } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import { useCollection } from '@semapps/activitypub-components';
 import { formatUsername } from '../../utils';
 import AcceptContactRequestButton from '../buttons/AcceptContactRequestButton';
 import IgnoreContactRequestButton from '../buttons/IgnoreContactRequestButton';
 import RejectContactRequestButton from '../buttons/RejectContactRequestButton';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   root: {
     marginTop: 5,
     marginBottom: 24,
@@ -52,7 +52,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ContactRequest = ({ activity, refetch }: any) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   // @ts-expect-error TS(2571): Object is of type 'unknown'.
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
   const createPath = useCreatePath();
@@ -123,7 +123,7 @@ const ContactRequest = ({ activity, refetch }: any) => {
 };
 
 const ContactRequestsBlock = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const translate = useTranslate();
   const refresh = useRefresh();
   const { items: contactRequests, refetch } = useCollection('apods:contactRequests');

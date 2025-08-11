@@ -1,10 +1,10 @@
 import React from 'react';
 import { useTranslate, getFieldLabelTranslationArgs, useRecordContext, useResourceContext } from 'react-admin';
 import { Box } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import LargeLabel from './LargeLabel';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   divider: {
     paddingTop: 5,
     paddingBottom: 20,
@@ -17,7 +17,7 @@ const useStyles = makeStyles(() => ({
 
 const MainList = ({ children, divider, Label = LargeLabel }: any) => {
   const translate = useTranslate();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const record = useRecordContext();
   const resource = useResourceContext();
   if (!record) return null;

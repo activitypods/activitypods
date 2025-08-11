@@ -1,11 +1,11 @@
 import React from 'react';
 import { useTranslate } from 'react-admin';
 import { Avatar, Switch, ListItemAvatar, ListItemText, ListItem } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 
 import { formatUsername } from '../../utils';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   listItem: {
     paddingLeft: 0,
     paddingRight: 0
@@ -43,7 +43,7 @@ const ContactItem = ({
   onChange: (invitations: Record<string, any>) => void;
   isCreator: boolean;
 }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const translate = useTranslate();
 
   // The invitation may still be undefined. In that case, create a default one.

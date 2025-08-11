@@ -1,16 +1,11 @@
 import React, { useEffect } from 'react';
-import { Box, Button, Typography, Container, Avatar } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { Box, Button, Typography, Container, Avatar, GlobalStyles } from '@mui/material';
+import { makeStyles } from 'tss-react/mui';
 import { Link, useGetIdentity, useTranslate, useRedirect, LocalesMenuButton, useLocaleState } from 'react-admin';
 import { availableLocales } from '../config/i18nProvider';
 import Header from '../common/Header';
 
-const useStyles = makeStyles(theme => ({
-  '@global': {
-    body: {
-      backgroundColor: theme.palette.primary.main
-    }
-  },
+const useStyles = makeStyles()(theme => ({
   circle: {
     borderRadius: '50%',
     backgroundColor: 'white',
@@ -19,7 +14,6 @@ const useStyles = makeStyles(theme => ({
     width: 460,
     position: 'absolute',
     top: -100,
-    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.down('sm')]: {
       width: '100vw',
       height: '100vw',
@@ -48,7 +42,6 @@ const useStyles = makeStyles(theme => ({
   },
   steps: {
     marginTop: 400,
-    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.down('sm')]: {
       marginTop: 'calc(100vw - 30px)'
     }
@@ -63,7 +56,6 @@ const useStyles = makeStyles(theme => ({
     paddingLeft: 90,
     marginBottom: 25,
     '& h4': {
-      // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
       [theme.breakpoints.down('sm')]: {
         fontWeight: 'bold',
         lineHeight: '1.2em',
@@ -78,7 +70,6 @@ const useStyles = makeStyles(theme => ({
     width: 70,
     height: 70,
     fontWeight: 'bold',
-    // @ts-expect-error TS(2339): Property 'palette' does not exist on type 'Default... Remove this comment to see the full error message
     color: theme.palette.primary.main,
     backgroundColor: 'white',
     fontSize: 50
@@ -86,7 +77,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const HomePage = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const { data: identity, isLoading } = useGetIdentity();
   const redirect = useRedirect();
   const [locale] = useLocaleState();
@@ -102,6 +93,14 @@ const HomePage = () => {
 
   return (
     <>
+      <GlobalStyles
+        styles={theme => ({
+          body: {
+            backgroundColor: theme.palette.primary.main
+          }
+        })}
+      />
+
       <Header title="app.titles.home" />
       {availableLocales.length > 1 && (
         <Box sx={{ position: 'absolute', top: 0, right: 0, p: 1, zIndex: 20 }}>

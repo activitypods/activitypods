@@ -14,12 +14,12 @@ import {
 } from 'react-admin';
 import { useFormContext } from 'react-hook-form';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import IconCancel from '@mui/icons-material/Cancel';
 import AddIcon from '@mui/icons-material/Add';
 import { extractContext, LocationInput } from '@semapps/geo-components';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   button: {
     margin: '12px 0 0 12px',
     // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
@@ -32,7 +32,7 @@ const useStyles = makeStyles(theme => ({
 // https://codesandbox.io/s/react-admin-v3-advanced-recipes-quick-createpreview-voyci
 const AddLocationButton = ({ reference, source, onChange }: any) => {
   const form = useFormContext();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const { data: identity } = useGetIdentity();
   const [showDialog, setShowDialog] = useState(false);
   const [create, { isLoading }] = useCreate();

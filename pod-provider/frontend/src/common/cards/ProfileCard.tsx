@@ -1,12 +1,12 @@
 import React from 'react';
 import { Box, Card, Typography, Avatar } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import { useGetIdentity } from 'react-admin';
 import { formatUsername } from '../../utils';
 import EditProfileButton from '../buttons/EditProfileButton';
 import { useTranslate } from 'react-admin';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   root: {
     marginTop: 5,
     marginBottom: 24,
@@ -72,7 +72,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ProfileCard = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const { data: identity } = useGetIdentity();
   const translate = useTranslate();
   if (!identity) return null;

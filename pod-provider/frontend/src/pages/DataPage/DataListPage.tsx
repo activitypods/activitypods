@@ -12,13 +12,13 @@ import {
   ListItemAvatar,
   ListItemText
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import FolderIcon from '@mui/icons-material/Folder';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import { useContainers, useGetPrefixFromUri } from '@semapps/semantic-data-provider';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   listItem: {
     backgroundColor: 'white',
     padding: 0,
@@ -38,7 +38,7 @@ const DataListPage = () => {
   useCheckAuthenticated();
   const translate = useTranslate();
   const navigate = useNavigate();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const [locale] = useLocaleState();
   const getPrefixFromUri = useGetPrefixFromUri();
   const developerMode = !!localStorage.getItem('developer_mode');

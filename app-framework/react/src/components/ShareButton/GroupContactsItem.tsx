@@ -1,13 +1,13 @@
 import React, { useCallback } from 'react';
 import { useTranslate } from 'react-admin';
 import { Avatar, Switch, ListItemAvatar, ListItemText, ListItem } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import GroupIcon from '@mui/icons-material/Group';
 import { arrayOf } from '../../utils';
 
 /** @typedef {import("./ShareDialog").InvitationState} InvitationState */
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   listItem: {
     paddingLeft: 0,
     paddingRight: 0
@@ -45,7 +45,7 @@ const GroupContactsItem = ({
   onChange: (invitations: Record<string, any>) => void;
   isCreator: boolean;
 }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const translate = useTranslate();
 
   const groupMemberIds = arrayOf(group?.['vcard:hasMember']);

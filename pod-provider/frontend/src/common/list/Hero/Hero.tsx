@@ -1,9 +1,9 @@
 import React from 'react';
 import { Avatar, Grid } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import DetailsList from './DetailsList';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   root: {
     flexGrow: 1,
     // @ts-expect-error TS(2339): Property 'spacing' does not exist on type 'Default... Remove this comment to see the full error message
@@ -31,7 +31,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const Hero = ({ children, image }: any) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <div className={classes.root}>
       <Grid container spacing={2}>

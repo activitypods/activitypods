@@ -12,7 +12,7 @@ import $iLwJW$muiiconsmaterialLock from "@mui/icons-material/Lock";
 import $iLwJW$muiiconsmaterialStorage from "@mui/icons-material/Storage";
 import {useDataProviderConfig as $iLwJW$useDataProviderConfig, getUriFromPrefix as $iLwJW$getUriFromPrefix} from "@semapps/semantic-data-provider";
 import $iLwJW$muiiconsmaterialShare from "@mui/icons-material/Share";
-import $iLwJW$muistylesmakeStyles from "@mui/styles/makeStyles";
+import { makeStyles } from 'tss-react/mui';
 import $iLwJW$muiiconsmaterialGroup from "@mui/icons-material/Group";
 import $iLwJW$muiiconsmaterialPeopleAlt from "@mui/icons-material/PeopleAlt";
 import $iLwJW$muiiconsmaterialApps from "@mui/icons-material/Apps";

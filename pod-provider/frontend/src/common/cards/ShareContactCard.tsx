@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Box, Card, Typography, Button, CircularProgress } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import { useTranslate } from 'react-admin';
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'reac... Remove this comment to see the full error message
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import useContactLink from '../../hooks/useContactLink';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   root: {
     marginTop: 5,
     marginBottom: 24,
@@ -47,7 +47,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ShareContactCard = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const translate = useTranslate();
   const { contactLink, status, error } = useContactLink();
   const [copied, setCopied] = useState(false);

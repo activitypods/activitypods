@@ -1,10 +1,10 @@
 import React from 'react';
 import { useTranslate, Link } from 'react-admin';
 import { Box, Container, Breadcrumbs } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import useRealmContext from '../hooks/useRealmContext';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles()(theme => ({
   menuBar: {
     backgroundColor: 'white',
     // @ts-expect-error TS(2339): Property 'palette' does not exist on type 'Default... Remove this comment to see the full error message
@@ -23,7 +23,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const MenuBar = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const translate = useTranslate();
   // @ts-expect-error TS(2339): Property 'isGroup' does not exist on type 'unknown... Remove this comment to see the full error message
   const { isGroup, data } = useRealmContext();

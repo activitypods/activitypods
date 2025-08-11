@@ -1,15 +1,15 @@
 import React from 'react';
 import ReactStickyBox from 'react-sticky-box';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   root: {
     marginTop: 5
   }
 }));
 
 const StickyBox = ({ children }: any) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <ReactStickyBox offsetTop={20} className={classes.root}>
       {children}

@@ -13,7 +13,7 @@ import {
   Dialog,
   useMediaQuery
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import CachedIcon from '@mui/icons-material/Cached';
 import { useContainerByUri, useCompactPredicate } from '@semapps/semantic-data-provider';
@@ -22,7 +22,7 @@ import ResourceCard from '../../common/cards/ResourceCard';
 import BackButton from '../../common/buttons/BackButton';
 import { arrayOf } from '../../utils';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   listItem: {
     backgroundColor: 'white',
     padding: 0,
@@ -39,7 +39,7 @@ const useStyles = makeStyles(() => ({
 
 const DataContainerScreen = ({ containerData }: any) => {
   const { data: identity } = useGetIdentity();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const navigate = useNavigate();
   const translate = useTranslate();
   const [selected, setSelected] = useState();

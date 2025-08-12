@@ -1,7 +1,7 @@
 import React from 'react';
 import { Admin, Resource, CustomRoutes, localStorageStore } from 'react-admin';
 import { BrowserRouter, Route } from 'react-router-dom';
-import { QueryClient } from 'react-query';
+import { QueryClient } from '@tanstack/react-query';
 import { StyledEngineProvider } from '@mui/material/styles';
 
 import authProvider from './config/authProvider';

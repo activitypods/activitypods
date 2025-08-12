@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDataProvider, useGetIdentity, useGetList } from 'react-admin';
 import { createContactCapability } from '../utils';
 import { SemanticDataProvider } from '@semapps/semantic-data-provider';
-import { useQueryClient } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 
 const inviteLinkFromCapUri = (capUri: string) => {
   return `${new URL(window.location.href).origin}/invite/${encodeURIComponent(capUri)}`;

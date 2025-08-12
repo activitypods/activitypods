@@ -1,3 +1,4 @@
+import rdf from '@rdfjs/data-model';
 const { triple, namedNode } = require('@rdfjs/data-model');
 const { SingleResourceContainerMixin, arrayOf, delay } = require('@semapps/ldp');
 

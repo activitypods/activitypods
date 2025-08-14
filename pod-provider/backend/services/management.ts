@@ -382,6 +382,8 @@ const ManagementService = {
       });
       // Add settings triples to export dataset.
       // @ts-expect-error TS(2339): Property 'push' does not exist on type 'never'.
+      datasetDump.push(...settingsDump);
+
       // Convert to rdf-js quads.
       // @ts-expect-error TS(2339): Property 'map' does not exist on type 'never'.
       const allQuads = datasetDump.map(q => rdf.quad(q.s, q.p, q.o, q.g));

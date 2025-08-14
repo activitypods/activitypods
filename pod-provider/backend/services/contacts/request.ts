@@ -154,13 +154,11 @@ const ContactsRequestSchema = {
 
         // Notify about auto-accept.
         await ctx.call('mail-notifications.notify', {
-          template: AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING,
+          template: CONTACT_REQUEST_MAPPING,
           recipientUri,
           activity,
           context: activity.id
         });
-
-        return;
       }
     },
     inviteLinkContactRequest: {

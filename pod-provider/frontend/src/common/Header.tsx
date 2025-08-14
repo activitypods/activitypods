@@ -12,7 +12,17 @@ import PropTypes from 'prop-types';
  * @param {string} [props.keywords] - Meta keywords for SEO
  * @param {string} [props.description] - Meta description for SEO
  */
-const Header = ({ title, titleVariables, keywords, description }: any) => {
+const Header = ({
+  title,
+  titleVariables,
+  keywords = '',
+  description = ''
+}: {
+  title: string;
+  titleVariables?: Record<string, string>;
+  keywords?: string;
+  description?: string;
+}) => {
   const translate = useTranslate();
 
   const translatedTitle = React.useMemo(() => {
@@ -30,17 +40,6 @@ const Header = ({ title, titleVariables, keywords, description }: any) => {
       {description && <meta name="description" content={description} />}
     </Helmet>
   );
-};
-
-Header.propTypes = {
-  title: PropTypes.string.isRequired,
-  keywords: PropTypes.string,
-  description: PropTypes.string
-};
-
-Header.defaultProps = {
-  keywords: '',
-  description: ''
 };
 
 export default Header;

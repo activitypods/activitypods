@@ -9,12 +9,12 @@ const ShowView = ({ asides, title, actions, children }: any) => {
   return (
     <SplitView asides={asides}>
       <Grid container sx={{ mt: 2 }}>
-        <Grid item xs={8}>
+        <Grid size={8}>
           <Typography variant="h2" component="h1" noWrap>
             {title}
           </Typography>
         </Grid>
-        <Grid item xs={4}>
+        <Grid size={4}>
           <Box display="flex" alignItems="middle" justifyContent="right">
             {actions ? (
               actions.map((action: any, i: any) => React.cloneElement(action, { color: 'black', key: i }))

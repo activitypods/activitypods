@@ -50,7 +50,7 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
-  <StyledEngineProvider injectFirst>
+  <StyledEngineProvider>
     <BrowserRouter>
       <Admin
         title={CONFIG.INSTANCE_NAME}

@@ -23,7 +23,13 @@ const AvailableApps = ({ registeredApps, trustedApps }: any) => {
       <Box mt={1}>
         <Grid container spacing={xs ? 1 : 3}>
           {availableApps.map((app: any) => (
-            <Grid item xs={12} sm={6} key={app.id}>
+            <Grid
+              key={app.id}
+              size={{
+                xs: 12,
+                sm: 6
+              }}
+            >
               <ApplicationCard app={app} isTrustedApp isRegistered={false} />
             </Grid>
           ))}

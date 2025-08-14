@@ -20,19 +20,27 @@ const InvitePageSuccess = ({ inviterProfile, ownProfile }: { inviterProfile: any
   return (
     <SimpleBox title={translate('app.page.invite_success')}>
       {/* Connect Avatars */}
-      <Grid container item flexDirection="column" alignSelf="center" alignItems="center" width="fit-content">
+      <Grid container flexDirection="column" alignSelf="center" alignItems="center" width="fit-content">
         <ConnectAvatars frontProfile={inviterProfile} backProfile={ownProfile} avatarSize="min(45vw, 12rem)" />
       </Grid>
-
       {/* Success Message */}
-      <Grid item display="flex" justifyContent="center">
+      <Grid display="flex" justifyContent="center">
         <Typography variant="body2" component="label" textAlign="center">
           {translate('app.message.connection_successful')}
         </Typography>
       </Grid>
-
       {/* Continue Button */}
-      <Grid container item xs={12} md={8} lg={6} justifyItems="center" alignSelf="center" sx={{ mt: 2, mb: 2 }}>
+      <Grid
+        container
+        justifyItems="center"
+        alignSelf="center"
+        sx={{ mt: 2, mb: 2 }}
+        size={{
+          xs: 12,
+          md: 8,
+          lg: 6
+        }}
+      >
         {!profileLoading && (
           <Button fullWidth onClick={onContinue} variant="contained" color="primary" size="large">
             {translate('app.action.continue')}

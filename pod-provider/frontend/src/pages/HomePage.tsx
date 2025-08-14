@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { Box, Button, Typography, Container, Avatar, GlobalStyles } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
-import { Link, useGetIdentity, useTranslate, useRedirect, LocalesMenuButton, useLocaleState } from 'react-admin';
+import { useGetIdentity, useTranslate, useRedirect, LocalesMenuButton, useLocaleState } from 'react-admin';
 import { availableLocales } from '../config/i18nProvider';
 import Header from '../common/Header';
+import Link from '../common/Link';
 
 const useStyles = makeStyles()(theme => ({
   circle: {
@@ -89,7 +90,7 @@ const HomePage = () => {
     }
   }, [redirect, isLoading, identity]);
 
-  if (isLoading || identity?.id) return null;
+  // if (isLoading || identity?.id) return null;
 
   return (
     <>

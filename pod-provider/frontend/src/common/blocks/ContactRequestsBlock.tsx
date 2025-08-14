@@ -12,7 +12,6 @@ const useStyles = makeStyles()(theme => ({
   root: {
     marginTop: 5,
     marginBottom: 24,
-    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.down('sm')]: {
       marginBottom: 0
     }
@@ -41,7 +40,6 @@ const useStyles = makeStyles()(theme => ({
   },
   button: {
     margin: 6,
-    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.down('sm')]: {
       margin: 0,
       marginRight: 6,
@@ -53,7 +51,6 @@ const useStyles = makeStyles()(theme => ({
 
 const ContactRequest = ({ activity, refetch }: any) => {
   const { classes } = useStyles();
-  // @ts-expect-error TS(2571): Object is of type 'unknown'.
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
   const createPath = useCreatePath();
   const translate = useTranslate();
@@ -70,7 +67,7 @@ const ContactRequest = ({ activity, refetch }: any) => {
         <Avatar src={profile?.['vcard:photo']} className={classes.avatar} />
       </Link>
       <Grid container spacing={xs ? 2 : 2}>
-        <Grid item xs={12} sm={8}>
+        <Grid sx={{ xs: 12, sm: 8 }}>
           <div>
             <Link to={createPath({ resource: 'Profile', id: activity.object.object, type: 'show' })}>
               <Typography variant="body1" className={classes.name} component="span">
@@ -83,7 +80,7 @@ const ContactRequest = ({ activity, refetch }: any) => {
           </div>
           <Typography variant="body2">{message}</Typography>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid sx={{ xs: 12, sm: 4 }}>
           <Box display="flex" alignItems="middle" justifyContent={xs ? 'flex-start' : 'flex-end'}>
             <AcceptContactRequestButton
               activity={activity}

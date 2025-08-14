@@ -29,7 +29,13 @@ const RegisteredApps = ({ registeredApps, trustedApps }: any) => {
           {registeredApps?.map((registeredApp: any) => {
             const isTrustedApp = trustedApps?.some((trustedApp: any) => trustedApp.id === registeredApp.id) || false;
             return (
-              <Grid key={registeredApp.id} item xs={12} sm={6}>
+              <Grid
+                key={registeredApp.id}
+                size={{
+                  xs: 12,
+                  sm: 6
+                }}
+              >
                 <ApplicationCard app={registeredApp} isTrustedApp={isTrustedApp} isRegistered />
               </Grid>
             );

@@ -7,12 +7,12 @@ const CreateView = ({ actions = [<ListButton />], children }: any) => {
   return (
     <>
       <Grid container sx={{ mt: 2 }}>
-        <Grid item xs={8}>
+        <Grid size={8}>
           <Typography variant="h2" component="h1" noWrap>
             {defaultTitle}
           </Typography>
         </Grid>
-        <Grid item xs={4}>
+        <Grid size={4}>
           <Box display="flex" alignItems="middle" justifyContent="right">
             <>{/* @ts-expect-error TS(7006): Parameter 'action' implicitly has an 'any' type. */}</>
             {actions.map((action, i) => React.cloneElement(action, { color: 'black', key: i }))}

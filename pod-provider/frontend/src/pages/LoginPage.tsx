@@ -13,7 +13,7 @@ import React from 'react';
 const LoginPageWrapper = ({ children }: any) => {
   const translate = useTranslate();
   return (
-    <Box sx={{ position: 'relative', width: '100%' }}>
+    <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
       <Box sx={{ position: 'absolute', top: 16, left: 16, zIndex: 1 }}>
         <Link to="/" style={{ textDecoration: 'none' }}>
           <Button

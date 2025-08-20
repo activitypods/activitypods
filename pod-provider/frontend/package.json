@@ -65,7 +65,6 @@
     "not dead",
     "not op_mini all"
   ],
-  "packageManager": "yarn@4.9.2",
   "resolutions": {
     "@mui/icons-material": "7.3.1",
     "@mui/material": "7.3.1",
@@ -108,16 +107,6 @@
     "dompurify": "3.2.6",
     "react-dropzone": "14.3.8",
     "react-error-boundary": "4.1.2",
-    "file-selector": "2.1.2",
-    "@semapps/activitypub-components": "portal:/home/laurin/projects/virtual-assembly/semapps/src/frontend/packages/activitypub-components",
-    "@semapps/auth-provider": "portal:/home/laurin/projects/virtual-assembly/semapps/src/frontend/packages/auth-provider",
-    "@semapps/date-components": "portal:/home/laurin/projects/virtual-assembly/semapps/src/frontend/packages/date-components",
-    "@semapps/field-components": "portal:/home/laurin/projects/virtual-assembly/semapps/src/frontend/packages/field-components",
-    "@semapps/geo-components": "portal:/home/laurin/projects/virtual-assembly/semapps/src/frontend/packages/geo-components",
-    "@semapps/input-components": "portal:/home/laurin/projects/virtual-assembly/semapps/src/frontend/packages/input-components",
-    "@semapps/interop-components": "portal:/home/laurin/projects/virtual-assembly/semapps/src/frontend/packages/interop-components",
-    "@semapps/list-components": "portal:/home/laurin/projects/virtual-assembly/semapps/src/frontend/packages/list-components",
-    "@semapps/markdown-components": "portal:/home/laurin/projects/virtual-assembly/semapps/src/frontend/packages/markdown-components",
-    "@semapps/semantic-data-provider": "portal:/home/laurin/projects/virtual-assembly/semapps/src/frontend/packages/semantic-data-provider"
+    "file-selector": "2.1.2"
   }
 }

@@ -4,7 +4,7 @@ import LinkHeader from 'http-link-header';
 const { MoleculerError } = require('moleculer').Errors;
 import { MIME_TYPES } from '@semapps/mime-types';
 import { getDatasetFromUri, hasType, isURL } from '@semapps/ldp';
-import { ServiceSchema, defineAction, defineServiceEvent } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const DataRegistrationsSchema = {
   name: 'data-registrations' as const,
@@ -13,7 +13,7 @@ const DataRegistrationsSchema = {
     await this.broker.call('ldp.link-header.register', { actionName: 'data-registrations.getLink' });
   },
   actions: {
-    get: defineAction({
+    get: {
       async handler(ctx) {
         const { dataRegistrationUri } = ctx.params;
 
@@ -32,9 +32,9 @@ const DataRegistrationsSchema = {
           }
         );
       }
-    }),
+    },
 
-    generateFromShapeTree: defineAction({
+    generateFromShapeTree: {
       /**
        * Create a DataRegistration AND a LDP container in a given storage
        */
@@ -78,9 +78,9 @@ const DataRegistrationsSchema = {
 
         return containerUri;
       }
-    }),
+    },
 
-    attachToContainer: defineAction({
+    attachToContainer: {
       /**
        * Attach the DataRegistration predicates to an existing LDP container
        */
@@ -154,9 +154,9 @@ const DataRegistrationsSchema = {
           await ctx.call('ldp.cache.invalidateResource', { resourceUri: containerUri });
         }
       }
-    }),
+    },
 
-    getByShapeTree: defineAction({
+    getByShapeTree: {
       /**
        * Get the DataRegistration URI linked with a shape tree
        */
@@ -181,9 +181,9 @@ const DataRegistrationsSchema = {
         // @ts-expect-error TS(2339): Property 'dataRegistrationUri' does not exist on t... Remove this comment to see the full error message
         return results[0]?.dataRegistrationUri?.value;
       }
-    }),
+    },
 
-    getUriByResourceUri: defineAction({
+    getUriByResourceUri: {
       /**
        * Get the data registration URI of a resource
        */
@@ -231,9 +231,9 @@ const DataRegistrationsSchema = {
           }
         }
       }
-    }),
+    },
 
-    getByResourceUri: defineAction({
+    getByResourceUri: {
       /**
        * Get the data registration of a resource
        */
@@ -255,9 +255,9 @@ const DataRegistrationsSchema = {
           );
         }
       }
-    }),
+    },
 
-    registerOntologyFromClass: defineAction({
+    registerOntologyFromClass: {
       async handler(ctx) {
         const { registeredClass } = ctx.params;
 
@@ -293,9 +293,9 @@ const DataRegistrationsSchema = {
 
         return ontology;
       }
-    }),
+    },
 
-    getLink: defineAction({
+    getLink: {
       async handler(ctx) {
         const { uri } = ctx.params;
 
@@ -308,10 +308,10 @@ const DataRegistrationsSchema = {
           };
         }
       }
-    })
+    }
   },
   events: {
-    'ldp.container.created': defineServiceEvent({
+    'ldp.container.created': {
       async handler(ctx) {
         // @ts-expect-error TS(2339): Property 'containerUri' does not exist on type 'Op... Remove this comment to see the full error message
         const { containerUri, options, webId } = ctx.params;
@@ -329,7 +329,7 @@ const DataRegistrationsSchema = {
           );
         }
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

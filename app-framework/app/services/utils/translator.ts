@@ -1,7 +1,7 @@
 import Handlebars from 'handlebars';
 import { isObject } from '@semapps/ldp';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const TranslatorSchema = {
   name: 'translator' as const,
@@ -23,7 +23,7 @@ const TranslatorSchema = {
     }
   },
   actions: {
-    translate: defineAction({
+    translate: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { template, templateParams, actorUri } = ctx.params;
@@ -34,7 +34,7 @@ const TranslatorSchema = {
 
         return this.parseTemplate(template, templateParams, locale);
       }
-    })
+    }
   },
   methods: {
     parseTemplate(template, params, locale) {

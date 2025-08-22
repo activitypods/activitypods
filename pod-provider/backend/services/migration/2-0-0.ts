@@ -7,7 +7,7 @@ import { MIME_TYPES } from '@semapps/mime-types';
 import { MigrationService } from '@semapps/migration';
 // @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../../config/config.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const Migration200Schema = {
   name: 'migration-2-0-0' as const,
@@ -17,7 +17,7 @@ const Migration200Schema = {
     baseUrl: CONFIG.BASE_URL
   },
   actions: {
-    migrate: defineAction({
+    migrate: {
       async handler(ctx) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
@@ -60,9 +60,9 @@ const Migration200Schema = {
           }
         }
       }
-    }),
+    },
 
-    migratePreferredLocale: defineAction({
+    migratePreferredLocale: {
       async handler(ctx) {
         const account = ctx.params;
         this.logger.info(`Migrating preferred locale...`);
@@ -90,9 +90,9 @@ const Migration200Schema = {
           this.logger.warn(`No preferred locale found`);
         }
       }
-    }),
+    },
 
-    addSolidPredicates: defineAction({
+    addSolidPredicates: {
       async handler(ctx) {
         const account = ctx.params;
         this.logger.info(`Migrating solid predicates...`);
@@ -133,9 +133,9 @@ const Migration200Schema = {
           this.logger.warn(`No pod URI found for ${account.webId}`);
         }
       }
-    }),
+    },
 
-    addTypeIndex: defineAction({
+    addTypeIndex: {
       async handler(ctx) {
         const { webId } = ctx.params;
         const webIdData = await ctx.call('ldp.resource.get', { resourceUri: webId, accept: MIME_TYPES.JSON, webId });
@@ -162,9 +162,9 @@ const Migration200Schema = {
           }
         }
       }
-    }),
+    },
 
-    attachCollectionsToContainer: defineAction({
+    attachCollectionsToContainer: {
       async handler(ctx) {
         const { username: dataset } = ctx.params;
 
@@ -187,9 +187,9 @@ const Migration200Schema = {
           dataset
         });
       }
-    }),
+    },
 
-    persistCollectionsOptions: defineAction({
+    persistCollectionsOptions: {
       async handler(ctx) {
         const { username: dataset } = ctx.params;
 
@@ -212,9 +212,9 @@ const Migration200Schema = {
           dataset
         });
       }
-    }),
+    },
 
-    createNewContainers: defineAction({
+    createNewContainers: {
       async handler(ctx) {
         const { webId, username: dataset } = ctx.params;
         const podUrl = await ctx.call('solid-storage.getUrl', { webId });
@@ -244,9 +244,9 @@ const Migration200Schema = {
           await ctx.call('ldp.container.createAndAttach', { containerUri: appContainerUri, webId });
         }
       }
-    }),
+    },
 
-    attachResourcesToNewContainers: defineAction({
+    attachResourcesToNewContainers: {
       async handler(ctx) {
         const { webId } = ctx.params;
 
@@ -301,9 +301,9 @@ const Migration200Schema = {
           }
         }
       }
-    }),
+    },
 
-    deleteUnusedContainers: defineAction({
+    deleteUnusedContainers: {
       async handler(ctx) {
         const { webId } = ctx.params;
 
@@ -333,9 +333,9 @@ const Migration200Schema = {
           }
         }
       }
-    }),
+    },
 
-    useNewMutualAidNamespace: defineAction({
+    useNewMutualAidNamespace: {
       async handler(ctx) {
         const { username: dataset } = ctx.params;
 
@@ -387,9 +387,9 @@ const Migration200Schema = {
           });
         }
       }
-    }),
+    },
 
-    migrateMutualAidData: defineAction({
+    migrateMutualAidData: {
       async handler(ctx) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
@@ -464,9 +464,9 @@ const Migration200Schema = {
           });
         }
       }
-    }),
+    },
 
-    migrateWtmpEventsFormats: defineAction({
+    migrateWtmpEventsFormats: {
       async handler(ctx) {
         // https://data.welcometomyplace.org/formats/music -> https://welcometomyplace.org/api/music
 
@@ -495,9 +495,9 @@ const Migration200Schema = {
           });
         }
       }
-    }),
+    },
 
-    migrateBcmEventsFormats: defineAction({
+    migrateBcmEventsFormats: {
       async handler(ctx) {
         // https://data.bienvenuechezmoi.org/formats/music -> https://bienvenuechezmoi.org/api/music
 
@@ -526,7 +526,7 @@ const Migration200Schema = {
           });
         }
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

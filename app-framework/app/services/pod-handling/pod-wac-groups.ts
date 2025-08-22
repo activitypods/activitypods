@@ -2,13 +2,13 @@
 import createSlug from 'speakingurl';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const PodWacGroupsSchema = {
   name: 'pod-wac-groups' as const,
   mixins: [FetchPodOrProxyMixin],
   actions: {
-    get: defineAction({
+    get: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { groupUri, groupSlug, actorUri } = ctx.params;
@@ -23,9 +23,9 @@ const PodWacGroupsSchema = {
 
         return status === 200 ? body : false;
       }
-    }),
+    },
 
-    list: defineAction({
+    list: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { actorUri } = ctx.params;
@@ -41,9 +41,9 @@ const PodWacGroupsSchema = {
 
         return status === 200 ? body : false;
       }
-    }),
+    },
 
-    create: defineAction({
+    create: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { groupSlug, actorUri } = ctx.params;
@@ -67,9 +67,9 @@ const PodWacGroupsSchema = {
           return false;
         }
       }
-    }),
+    },
 
-    delete: defineAction({
+    delete: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { groupUri, groupSlug, actorUri } = ctx.params;
@@ -82,9 +82,9 @@ const PodWacGroupsSchema = {
 
         return status === 204;
       }
-    }),
+    },
 
-    addMember: defineAction({
+    addMember: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { groupUri, groupSlug, memberUri, actorUri } = ctx.params;
@@ -101,9 +101,9 @@ const PodWacGroupsSchema = {
 
         return status === 204;
       }
-    }),
+    },
 
-    removeMember: defineAction({
+    removeMember: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { groupUri, groupSlug, memberUri, actorUri } = ctx.params;
@@ -120,16 +120,16 @@ const PodWacGroupsSchema = {
 
         return status === 204;
       }
-    }),
+    },
 
-    getUriFromCollectionUri: defineAction({
+    getUriFromCollectionUri: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { collectionUri } = ctx.params;
         const { origin, pathname } = new URL(collectionUri);
         return `${origin}/_groups${pathname}`;
       }
-    })
+    }
   },
   methods: {
     // Return URL like http://localhost:3000/_groups/alice/contacts

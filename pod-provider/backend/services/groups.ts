@@ -8,7 +8,7 @@ import { arrayOf } from '@semapps/ldp';
 import { throw403, throw404 } from '@semapps/middlewares';
 // @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../config/config.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const GroupsService = {
   name: 'groups' as const,
@@ -29,7 +29,7 @@ const GroupsService = {
     });
   },
   actions: {
-    create: defineAction({
+    create: {
       /**
        * Create a new group
        * @param id Unique identifier for the group
@@ -131,9 +131,9 @@ const GroupsService = {
         // @ts-expect-error TS(2339): Property '$statusCode' does not exist on type '{}'... Remove this comment to see the full error message
         ctx.meta.$statusCode = 201;
       }
-    }),
+    },
 
-    list: defineAction({
+    list: {
       async handler(ctx) {
         // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const ownerWebId = ctx.meta.webId;
@@ -141,9 +141,9 @@ const GroupsService = {
         // @ts-expect-error TS(2339): Property 'owns' does not exist on type 'never'.
         return arrayOf(ownerAccount.owns);
       }
-    }),
+    },
 
-    claim: defineAction({
+    claim: {
       async handler(ctx) {
         const { username, groupWebId } = ctx.params;
         // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
@@ -164,9 +164,9 @@ const GroupsService = {
           owns: account.owns ? [...arrayOf(account.owns), groupWebId] : groupWebId
         });
       }
-    }),
+    },
 
-    undoClaim: defineAction({
+    undoClaim: {
       async handler(ctx) {
         const { username, groupWebId } = ctx.params;
         // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
@@ -187,7 +187,7 @@ const GroupsService = {
           owns: arrayOf(account.owns).filter(uri => uri !== groupWebId)
         });
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

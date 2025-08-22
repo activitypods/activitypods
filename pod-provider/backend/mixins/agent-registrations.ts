@@ -1,6 +1,6 @@
 import { arrayOf, getId } from '@semapps/ldp';
 import { triple, namedNode, literal } from '@rdfjs/data-model';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 /**
  * Mixin used by the AppRegistrationsService and SocialAgentRegistrationsService
@@ -8,7 +8,7 @@ import { ServiceSchema, defineAction } from 'moleculer';
  */
 const AgentRegistrationsMixin = {
   actions: {
-    getForAgent: defineAction({
+    getForAgent: {
       async handler(ctx) {
         const { agentUri, podOwner } = ctx.params;
 
@@ -28,16 +28,16 @@ const AgentRegistrationsMixin = {
 
         return filteredContainer['ldp:contains']?.[0];
       }
-    }),
+    },
 
-    isRegistered: defineAction({
+    isRegistered: {
       async handler(ctx) {
         const { agentUri, podOwner } = ctx.params;
         return !!(await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx }));
       }
-    }),
+    },
 
-    getGrants: defineAction({
+    getGrants: {
       // Get all grants associated with an agent registration
       async handler(ctx) {
         const { agentRegistration, podOwner } = ctx.params;
@@ -53,9 +53,9 @@ const AgentRegistrationsMixin = {
 
         return grants;
       }
-    }),
+    },
 
-    addGrant: defineAction({
+    addGrant: {
       // Attach a grant to the grantee's agent registration
       async handler(ctx) {
         const { grant } = ctx.params;
@@ -115,9 +115,9 @@ const AgentRegistrationsMixin = {
           { parentCtx: ctx }
         );
       }
-    }),
+    },
 
-    removeGrant: defineAction({
+    removeGrant: {
       async handler(ctx) {
         const { grant } = ctx.params;
 
@@ -165,7 +165,7 @@ const AgentRegistrationsMixin = {
           );
         }
       }
-    })
+    }
   },
   hooks: {
     after: {

@@ -1,6 +1,6 @@
 import PodResourcesHandlerMixin from './pod-resources-handler.ts';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   mixins: [PodResourcesHandlerMixin],
@@ -19,7 +19,7 @@ const Schema = {
   },
   dependencies: ['pod-collections'],
   actions: {
-    createAndAttach: defineAction({
+    createAndAttach: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri, actorUri } = ctx.params;
@@ -38,9 +38,9 @@ const Schema = {
         }
         return collectionUri;
       }
-    }),
+    },
 
-    deleteAndDetach: defineAction({
+    deleteAndDetach: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri, actorUri } = ctx.params;
@@ -51,9 +51,9 @@ const Schema = {
           actorUri
         });
       }
-    }),
+    },
 
-    add: defineAction({
+    add: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { collectionUri, itemUri, actorUri } = ctx.params;
@@ -66,9 +66,9 @@ const Schema = {
           });
         }
       }
-    }),
+    },
 
-    remove: defineAction({
+    remove: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { collectionUri, itemUri, actorUri } = ctx.params;
@@ -81,9 +81,9 @@ const Schema = {
           });
         }
       }
-    }),
+    },
 
-    createAndAttachMissing: defineAction({
+    createAndAttachMissing: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { type, attachPredicate, collectionOptions } = this.settings;
@@ -93,9 +93,9 @@ const Schema = {
           collectionOptions
         });
       }
-    }),
+    },
 
-    getCollectionUriFromResource: defineAction({
+    getCollectionUriFromResource: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resource } = ctx.params;
@@ -105,7 +105,7 @@ const Schema = {
           attachPredicate
         });
       }
-    })
+    }
   },
   methods: {
     async onCreate(ctx, resource, actorUri) {

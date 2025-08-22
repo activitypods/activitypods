@@ -1,6 +1,6 @@
 import { triple, namedNode } from '@rdfjs/data-model';
 import { SingleResourceContainerMixin } from '@semapps/ldp';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const AuthRegistrySchema = {
   name: 'auth-registry' as const,
@@ -12,7 +12,7 @@ const AuthRegistrySchema = {
   },
   dependencies: ['registry-set'],
   actions: {
-    add: defineAction({
+    add: {
       async handler(ctx) {
         const { podOwner, authorizationUri } = ctx.params;
 
@@ -33,9 +33,9 @@ const AuthRegistrySchema = {
           { parentCtx: ctx }
         );
       }
-    }),
+    },
 
-    remove: defineAction({
+    remove: {
       async handler(ctx) {
         const { podOwner, authorizationUri } = ctx.params;
 
@@ -56,7 +56,7 @@ const AuthRegistrySchema = {
           { parentCtx: ctx }
         );
       }
-    })
+    }
   },
   hooks: {
     after: {

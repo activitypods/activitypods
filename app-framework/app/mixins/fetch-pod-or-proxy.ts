@@ -3,11 +3,11 @@ import { FormData } from 'formdata-node';
 import { FormDataEncoder } from 'form-data-encoder';
 import { stream2buffer } from '../utils.ts';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   actions: {
-    fetch: defineAction({
+    fetch: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         let { url, method = 'GET', headers = {}, body, actorUri } = ctx.params;
@@ -68,7 +68,7 @@ const Schema = {
           return res;
         }
       }
-    })
+    }
   },
   methods: {
     // Return true if the resource is on the Pod of the actor

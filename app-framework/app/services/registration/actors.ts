@@ -5,7 +5,7 @@ import { MIME_TYPES } from '@semapps/mime-types';
 // @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { ACTOR_TYPES } from '@semapps/activitypub';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const ActorsSchema = {
   name: 'actors' as const,
@@ -18,7 +18,7 @@ const ActorsSchema = {
     dereferencePlan: [{ property: 'publicKey' }, { property: 'assertionMethod' }]
   },
   actions: {
-    createOrUpdateApp: defineAction({
+    createOrUpdateApp: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { app, oidc } = ctx.params;
@@ -137,9 +137,9 @@ const ActorsSchema = {
         this.appActor = await ctx.call('activitypub.actor.awaitCreateComplete', { actorUri });
         return this.appActor;
       }
-    }),
+    },
 
-    attachAccessNeedGroup: defineAction({
+    attachAccessNeedGroup: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { accessNeedGroupUri } = ctx.params;
@@ -158,9 +158,9 @@ const ActorsSchema = {
           { parentCtx: ctx }
         );
       }
-    }),
+    },
 
-    detachAccessNeedGroup: defineAction({
+    detachAccessNeedGroup: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { accessNeedGroupUri } = ctx.params;
@@ -179,9 +179,9 @@ const ActorsSchema = {
           { parentCtx: ctx }
         );
       }
-    }),
+    },
 
-    attachAccessDescriptionSet: defineAction({
+    attachAccessDescriptionSet: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { accessDescriptionSetUri } = ctx.params;
@@ -200,9 +200,9 @@ const ActorsSchema = {
           { parentCtx: ctx }
         );
       }
-    }),
+    },
 
-    detachAccessDescriptionSet: defineAction({
+    detachAccessDescriptionSet: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { accessDescriptionSetUri } = ctx.params;
@@ -221,7 +221,7 @@ const ActorsSchema = {
           { parentCtx: ctx }
         );
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

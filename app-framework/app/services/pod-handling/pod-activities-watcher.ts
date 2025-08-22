@@ -3,7 +3,7 @@ import { matchActivity } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { objectDepth } from '../../utils.ts';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const queueOptions =
   process.env.NODE_ENV === 'test'
@@ -79,7 +79,7 @@ const PodActivitiesWatcherSchema = {
     this.baseUrl = await this.broker.call('ldp.getBaseUrl');
   },
   actions: {
-    watch: defineAction({
+    watch: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { matcher, actionName, boxTypes, key } = ctx.params;
@@ -88,9 +88,9 @@ const PodActivitiesWatcherSchema = {
 
         this.sortHandlers();
       }
-    }),
+    },
 
-    processWebhook: defineAction({
+    processWebhook: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { type, object, target } = ctx.params;
@@ -172,9 +172,9 @@ const PodActivitiesWatcherSchema = {
           }
         }
       }
-    }),
+    },
 
-    registerListenersFromAppRegistration: defineAction({
+    registerListenersFromAppRegistration: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { appRegistration } = ctx.params;
@@ -199,13 +199,13 @@ const PodActivitiesWatcherSchema = {
           );
         }
       }
-    }),
+    },
 
-    getHandlers: defineAction({
+    getHandlers: {
       handler() {
         return this.handlers;
       }
-    })
+    }
   },
   methods: {
     sortHandlers() {

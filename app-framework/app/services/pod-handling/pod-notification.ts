@@ -1,7 +1,7 @@
 import urlJoin from 'url-join';
 import { OBJECT_TYPES } from '@semapps/activitypub';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const PodNotificationsSchema = {
   name: 'pod-notifications' as const,
@@ -9,7 +9,7 @@ const PodNotificationsSchema = {
     frontUrl: null
   },
   actions: {
-    send: defineAction({
+    send: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { template, recipientUri, activity, context, ...rest } = ctx.params;
@@ -57,7 +57,7 @@ const PodNotificationsSchema = {
           context
         });
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

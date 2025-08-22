@@ -9,7 +9,7 @@ import baseConfig from '../../config/oidc.ts';
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'node... Remove this comment to see the full error message
 import fetch from 'node-fetch';
 import * as CONFIG from '../../config/config.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const SolidOidcSchema = {
   name: 'solid-oidc' as const,
@@ -84,7 +84,7 @@ const SolidOidcSchema = {
     });
   },
   actions: {
-    authenticate: defineAction({
+    authenticate: {
       // See https://moleculer.services/docs/0.13/moleculer-web.html#Authentication
       async handler(ctx) {
         const { route, req, res } = ctx.params;
@@ -111,9 +111,9 @@ const SolidOidcSchema = {
         ctx.meta.webId = 'anon';
         return Promise.resolve(null);
       }
-    }),
+    },
 
-    authorize: defineAction({
+    authorize: {
       // See https://moleculer.services/docs/0.13/moleculer-web.html#Authorization
       async handler(ctx) {
         const { route, req, res } = ctx.params;
@@ -138,9 +138,9 @@ const SolidOidcSchema = {
         ctx.meta.webId = 'anon';
         return Promise.reject(new E.UnAuthorizedError(E.ERR_NO_TOKEN));
       }
-    }),
+    },
 
-    proxyConfig: defineAction({
+    proxyConfig: {
       async handler() {
         const res = await fetch(`${this.settings.baseUrl}.oidc/auth/.well-known/openid-configuration`);
         if (res.ok) {
@@ -149,9 +149,9 @@ const SolidOidcSchema = {
           throw new Error('OIDC server not loaded');
         }
       }
-    }),
+    },
 
-    loginCompleted: defineAction({
+    loginCompleted: {
       // See https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#user-flows
       async handler(ctx) {
         const { interactionId } = ctx.params;
@@ -162,7 +162,7 @@ const SolidOidcSchema = {
           login: { accountId: webId, amr: ['pwd'], remember: true }
         });
       }
-    })
+    }
   },
   methods: {
     async interactionFinished(interactionId, result) {

@@ -5,7 +5,7 @@ const { MoleculerError } = require('moleculer').Errors;
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
 import { getId } from '@semapps/ldp';
 import { arraysEqual } from '../../../utils.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const RegistrationEndpointSchema = {
   name: 'registration-endpoint' as const,
@@ -31,7 +31,7 @@ const RegistrationEndpointSchema = {
     });
   },
   actions: {
-    register: defineAction({
+    register: {
       async handler(ctx) {
         let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
 
@@ -105,9 +105,9 @@ const RegistrationEndpointSchema = {
 
         return appRegistrationUri;
       }
-    }),
+    },
 
-    upgrade: defineAction({
+    upgrade: {
       async handler(ctx) {
         let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
 
@@ -193,9 +193,9 @@ const RegistrationEndpointSchema = {
 
         return appRegistrationUri;
       }
-    }),
+    },
 
-    remove: defineAction({
+    remove: {
       async handler(ctx) {
         const { appUri } = ctx.params;
 
@@ -239,16 +239,16 @@ const RegistrationEndpointSchema = {
           }
         }
       }
-    }),
+    },
 
-    getForAgent: defineAction({
+    getForAgent: {
       async handler(ctx) {
         const { agent } = ctx.params;
         // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
         return await ctx.call('app-registrations.getForAgent', { agentUri: agent, podOwner: webId });
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

@@ -2,7 +2,7 @@ import path from 'path';
 // @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../config/config.ts';
 import { sanitizeSparqlQuery } from '@semapps/triplestore';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const POD_PROVIDER_TYPES = [
   'https://www.w3.org/ns/activitystreams#Person',
@@ -31,7 +31,7 @@ const AppOpenerSchema = {
     });
   },
   actions: {
-    open: defineAction({
+    open: {
       async handler(ctx) {
         let { type, uri, mode, username } = ctx.params;
 
@@ -100,7 +100,7 @@ const AppOpenerSchema = {
           ctx.meta.$location = `${appBaseUrl}/r/?type=${encodeURIComponent(type)}&mode=${mode || 'list'}`;
         }
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

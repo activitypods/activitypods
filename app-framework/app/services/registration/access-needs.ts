@@ -2,7 +2,7 @@ import { ControlledContainerMixin } from '@semapps/ldp';
 import { necessityMapping } from '../../mappings.ts';
 import { arraysEqual } from '../../utils.ts';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const AccessNeedsSchema = {
   name: 'access-needs' as const,
@@ -14,19 +14,19 @@ const AccessNeedsSchema = {
     activateTombstones: false
   },
   actions: {
-    put: defineAction({
+    put: {
       handler() {
         throw new Error(`The resources of type interop:AccessNeed are immutable`);
       }
-    }),
+    },
 
-    patch: defineAction({
+    patch: {
       handler() {
         throw new Error(`The resources of type interop:AccessNeed are immutable`);
       }
-    }),
+    },
 
-    find: defineAction({
+    find: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { shapeTreeUri, accessMode, necessity, preferredScope } = ctx.params;
@@ -49,7 +49,7 @@ const AccessNeedsSchema = {
 
         return filteredContainer['ldp:contains']?.find((a: any) => arraysEqual(a['interop:accessMode'], accessMode));
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

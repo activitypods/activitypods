@@ -3,7 +3,7 @@ import urlJoin from 'url-join';
 import { arrayOf, getParentContainerUri } from '@semapps/ldp';
 import { triple, namedNode } from '@rdfjs/data-model';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 /**
  * Service to repair Pods data
@@ -11,7 +11,7 @@ import { ServiceSchema, defineAction } from 'moleculer';
 const RepairSchema = {
   name: 'repair' as const,
   actions: {
-    installApp: defineAction({
+    installApp: {
       /**
        * Install application with required access needs for the given users
        */
@@ -38,9 +38,9 @@ const RepairSchema = {
           }
         }
       }
-    }),
+    },
 
-    deleteAppRegistrations: defineAction({
+    deleteAppRegistrations: {
       /**
        * Delete all app registrations for the given user
        */
@@ -65,9 +65,9 @@ const RepairSchema = {
           }
         }
       }
-    }),
+    },
 
-    upgradeAllApps: defineAction({
+    upgradeAllApps: {
       /**
        * Upgrade all existing applications, accepting all required access needs
        * TODO: find existing optional access needs, and grant them also
@@ -94,9 +94,9 @@ const RepairSchema = {
           }
         }
       }
-    }),
+    },
 
-    createMissingContainers: defineAction({
+    createMissingContainers: {
       /**
        * Create missing containers for the given user
        */
@@ -126,9 +126,9 @@ const RepairSchema = {
           }
         }
       }
-    }),
+    },
 
-    attachAllContainersToParent: defineAction({
+    attachAllContainersToParent: {
       /**
        * Ensure there is no orphan container
        */
@@ -162,9 +162,9 @@ const RepairSchema = {
           }
         }
       }
-    }),
+    },
 
-    deleteEmptyCollections: defineAction({
+    deleteEmptyCollections: {
       async handler(ctx) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
@@ -220,9 +220,9 @@ const RepairSchema = {
           }
         }
       }
-    }),
+    },
 
-    deleteDoubleNameFromProfiles: defineAction({
+    deleteDoubleNameFromProfiles: {
       async handler(ctx) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
@@ -261,9 +261,9 @@ const RepairSchema = {
           }
         }
       }
-    }),
+    },
 
-    changeBaseUrl: defineAction({
+    changeBaseUrl: {
       async handler(ctx) {
         const { username, oldBaseUrl, newBaseUrl } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
@@ -360,7 +360,7 @@ const RepairSchema = {
           });
         }
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

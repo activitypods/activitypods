@@ -5,7 +5,7 @@ import { arrayOf, getDatasetFromUri } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import matchActivity from '@semapps/activitypub/utils/matchActivity';
-import { ServiceSchema, defineAction, defineServiceEvent } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const getAnnouncesGroupUri = (eventUri: any) => {
   const uri = new URL(eventUri);
@@ -41,7 +41,7 @@ const AnnouncerSchema = {
   },
   dependencies: ['activitypub.collections-registry'],
   actions: {
-    giveRightsAfterAnnouncesCollectionCreate: defineAction({
+    giveRightsAfterAnnouncesCollectionCreate: {
       async handler(ctx) {
         const { objectUri } = ctx.params;
 
@@ -84,9 +84,9 @@ const AnnouncerSchema = {
           });
         }
       }
-    }),
+    },
 
-    giveRightsAfterAnnouncersCollectionCreate: defineAction({
+    giveRightsAfterAnnouncersCollectionCreate: {
       async handler(ctx) {
         const { objectUri } = ctx.params;
 
@@ -119,9 +119,9 @@ const AnnouncerSchema = {
           webId: object['dc:creator']
         });
       }
-    }),
+    },
 
-    updateCollectionsOptions: defineAction({
+    updateCollectionsOptions: {
       async handler(ctx) {
         const { dataset } = ctx.params;
         await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
@@ -133,7 +133,7 @@ const AnnouncerSchema = {
           dataset
         });
       }
-    })
+    }
   },
   activities: {
     announce: {
@@ -319,7 +319,7 @@ const AnnouncerSchema = {
     }
   },
   events: {
-    'ldp.resource.deleted': defineServiceEvent({
+    'ldp.resource.deleted': {
       async handler(ctx) {
         // @ts-expect-error TS(2339): Property 'oldData' does not exist on type 'Optiona... Remove this comment to see the full error message
         const { oldData, webId } = ctx.params;
@@ -330,9 +330,9 @@ const AnnouncerSchema = {
         if (oldData['apods:announcers'])
           await ctx.call('activitypub.collection.delete', { resourceUri: oldData['apods:announcers'], webId });
       }
-    }),
+    },
 
-    'delegated-access-grants.issued': defineServiceEvent({
+    'delegated-access-grants.issued': {
       // When a delegated grant is issued, add the grantee to the announces collection
       // This hack will be gone when we can do without announces/announcers collections
       async handler(ctx) {
@@ -371,7 +371,7 @@ const AnnouncerSchema = {
           });
         }
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

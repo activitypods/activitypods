@@ -22,7 +22,7 @@ import TimerService from './services/utils/timer.ts';
 import TranslatorService from './services/utils/translator.ts';
 import MigrationService from './services/utils/migration.ts';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const AppSchema = {
   name: 'app' as const,
@@ -148,11 +148,11 @@ const AppSchema = {
     });
   },
   actions: {
-    get: defineAction({
+    get: {
       handler() {
         return this.appActor;
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

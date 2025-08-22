@@ -1,10 +1,10 @@
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const PodOutboxSchema = {
   name: 'pod-outbox' as const,
   actions: {
-    post: defineAction({
+    post: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         let { activity, actorUri } = ctx.params;
@@ -41,7 +41,7 @@ const PodOutboxSchema = {
           return false;
         }
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

@@ -2,7 +2,7 @@ import { ACTIVITY_TYPES, OBJECT_TYPES, matchActivity } from '@semapps/activitypu
 import PodActivitiesHandlerMixin from './pod-activities-handler.ts';
 import ShapeTreeFetcherMixin from './shape-tree-fetcher.ts';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   mixins: [PodActivitiesHandlerMixin, ShapeTreeFetcherMixin],
@@ -12,7 +12,7 @@ const Schema = {
   },
   dependencies: ['pod-resources'],
   actions: {
-    post: defineAction({
+    post: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         if (!ctx.params.containerUri) {
@@ -23,9 +23,9 @@ const Schema = {
         }
         return await ctx.call('pod-resources.post', ctx.params);
       }
-    }),
+    },
 
-    list: defineAction({
+    list: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         if (!ctx.params.containerUri) {
@@ -36,37 +36,37 @@ const Schema = {
         }
         return await ctx.call('pod-resources.list', ctx.params);
       }
-    }),
+    },
 
-    get: defineAction({
+    get: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         return await ctx.call('pod-resources.get', ctx.params);
       }
-    }),
+    },
 
-    patch: defineAction({
+    patch: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         return await ctx.call('pod-resources.patch', ctx.params);
       }
-    }),
+    },
 
-    put: defineAction({
+    put: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         return await ctx.call('pod-resources.put', ctx.params);
       }
-    }),
+    },
 
-    delete: defineAction({
+    delete: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         return await ctx.call('pod-resources.delete', ctx.params);
       }
-    }),
+    },
 
-    getContainerUri: defineAction({
+    getContainerUri: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         return await ctx.call('access-grants.getContainerByShapeTree', {
@@ -74,7 +74,7 @@ const Schema = {
           podOwner: ctx.params.actorUri
         });
       }
-    })
+    }
   },
   activities: {
     create: {

@@ -3,7 +3,7 @@ import { ControlledContainerMixin, arrayOf, getId, getWebIdFromUri } from '@sema
 import { MIME_TYPES } from '@semapps/mime-types';
 import { arraysEqual } from '../../../utils.ts';
 import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
-import { ServiceSchema, defineAction, defineServiceEvent } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const AccessAuthorizationsSchema = {
   name: 'access-authorizations' as const,
@@ -16,7 +16,7 @@ const AccessAuthorizationsSchema = {
     typeIndex: 'private'
   },
   actions: {
-    generateFromAccessNeeds: defineAction({
+    generateFromAccessNeeds: {
       // Generate access authorizations from provided access needs
       async handler(ctx) {
         const { accessNeedsUris, podOwner, grantee } = ctx.params;
@@ -65,9 +65,9 @@ const AccessAuthorizationsSchema = {
 
         return authorizationsUris;
       }
-    }),
+    },
 
-    addForSingleResource: defineAction({
+    addForSingleResource: {
       // Add an authorization for a single resource
       async handler(ctx) {
         const { resourceUri, grantee, accessModes, delegationAllowed, delegationLimit } = ctx.params;
@@ -179,9 +179,9 @@ const AccessAuthorizationsSchema = {
           return newAuthorizationUri;
         }
       }
-    }),
+    },
 
-    removeForSingleResource: defineAction({
+    removeForSingleResource: {
       // Remove an authorization for a single resource
       // The grantee param is optional. If provided, it will only delete authorizations for the grantee
       async handler(ctx) {
@@ -226,9 +226,9 @@ const AccessAuthorizationsSchema = {
           }
         }
       }
-    }),
+    },
 
-    listForSingleResource: defineAction({
+    listForSingleResource: {
       // List all authorizations for a single resource
       async handler(ctx) {
         const { resourceUri } = ctx.params;
@@ -249,9 +249,9 @@ const AccessAuthorizationsSchema = {
 
         return arrayOf(filteredContainer['ldp:contains']);
       }
-    }),
+    },
 
-    getByAccessNeed: defineAction({
+    getByAccessNeed: {
       // Get the access authorization linked with an access need
       async handler(ctx) {
         const { accessNeedUri, podOwner } = ctx.params;
@@ -269,9 +269,9 @@ const AccessAuthorizationsSchema = {
 
         return arrayOf(filteredContainer['ldp:contains'])[0];
       }
-    }),
+    },
 
-    listByGrantee: defineAction({
+    listByGrantee: {
       // Get all the access authorizations granted to an agent
       async handler(ctx) {
         const { grantee, webId } = ctx.params;
@@ -288,9 +288,9 @@ const AccessAuthorizationsSchema = {
 
         return arrayOf(filteredContainer['ldp:contains']);
       }
-    }),
+    },
 
-    listScopeAll: defineAction({
+    listScopeAll: {
       // List all access authorizations with `interop:All` scope
       // An optional shapeTreeUri param can be passed to filter by shape tree
       async handler(ctx) {
@@ -309,9 +309,9 @@ const AccessAuthorizationsSchema = {
 
         return arrayOf(filteredContainer['ldp:contains']);
       }
-    }),
+    },
 
-    deleteOrphans: defineAction({
+    deleteOrphans: {
       // Delete authorizations which are not linked anymore to an access need (may happen on app upgrade)
       async handler(ctx) {
         const { appUri, podOwner } = ctx.params;
@@ -335,7 +335,7 @@ const AccessAuthorizationsSchema = {
           }
         }
       }
-    })
+    }
   },
   hooks: {
     after: {
@@ -427,7 +427,7 @@ const AccessAuthorizationsSchema = {
     }
   },
   events: {
-    'ldp.resource.deleted': defineServiceEvent({
+    'ldp.resource.deleted': {
       async handler(ctx) {
         // @ts-expect-error TS(2339): Property 'resourceUri' does not exist on type 'Opt... Remove this comment to see the full error message
         const { resourceUri, dataset } = ctx.params;
@@ -437,7 +437,7 @@ const AccessAuthorizationsSchema = {
         // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
         await this.actions.removeForSingleResource({ resourceUri, webId }, { meta: { dataset }, parentCtx: ctx });
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

@@ -1,6 +1,6 @@
 import rdf from '@rdfjs/data-model';
 import { SingleResourceContainerMixin } from '@semapps/ldp';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 const ALLOWED_TYPES = ['interop:ApplicationRegistration', 'interop:SocialAgentRegistration'];
 
 const AgentRegistrySchema = {
@@ -12,7 +12,7 @@ const AgentRegistrySchema = {
   },
   dependencies: ['registry-set'],
   actions: {
-    add: defineAction({
+    add: {
       async handler(ctx) {
         const { podOwner, agentRegistrationUri, agentRegistrationType } = ctx.params;
 
@@ -41,9 +41,9 @@ const AgentRegistrySchema = {
           { parentCtx: ctx }
         );
       }
-    }),
+    },
 
-    remove: defineAction({
+    remove: {
       async handler(ctx) {
         const { podOwner, agentRegistrationUri, agentRegistrationType } = ctx.params;
 
@@ -71,7 +71,7 @@ const AgentRegistrySchema = {
           { parentCtx: ctx }
         );
       }
-    })
+    }
   },
   hooks: {
     after: {

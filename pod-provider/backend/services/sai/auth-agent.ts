@@ -4,7 +4,7 @@ import rdf from '@rdfjs/data-model';
 import { SingleResourceContainerMixin, getWebIdFromUri } from '@semapps/ldp';
 // @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../../config/config.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const AuthAgentSchema = {
   name: 'auth-agent' as const,
@@ -24,7 +24,7 @@ const AuthAgentSchema = {
     }
   },
   actions: {
-    getHeaderLinks: defineAction({
+    getHeaderLinks: {
       // Action from the ControlledContainerMixin, called when we do GET or HEAD requests on resources
       async handler(ctx) {
         let agentRegistration;
@@ -56,7 +56,7 @@ const AuthAgentSchema = {
           ];
         }
       }
-    })
+    }
   },
   hooks: {
     after: {

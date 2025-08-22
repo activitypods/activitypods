@@ -1,5 +1,5 @@
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   dependencies: ['pod-activities-watcher'],
@@ -27,7 +27,7 @@ const Schema = {
     }
   },
   actions: {
-    processActivity: defineAction({
+    processActivity: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { key, boxType, dereferencedActivity, actorUri } = ctx.params;
@@ -50,7 +50,7 @@ const Schema = {
           return dereferencedActivity;
         }
       }
-    })
+    }
   }
 } satisfies Partial<ServiceSchema>;
 

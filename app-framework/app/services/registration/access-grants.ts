@@ -1,6 +1,6 @@
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 /**
  * Mirror container for access grants which have been granted to the app
@@ -14,7 +14,7 @@ const AccessGrantsSchema = {
     newResourcesPermissions: {}
   },
   actions: {
-    getContainerByShapeTree: defineAction({
+    getContainerByShapeTree: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { shapeTreeUri, podOwner } = ctx.params;
@@ -37,9 +37,9 @@ const AccessGrantsSchema = {
 
         return filteredContainer['ldp:contains']?.[0]?.['interop:hasDataRegistration'];
       }
-    }),
+    },
 
-    deleteOrphans: defineAction({
+    deleteOrphans: {
       // Delete cached grants which are not linked anymore to an access need (may happen on app upgrade)
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
@@ -70,7 +70,7 @@ const AccessGrantsSchema = {
           }
         }
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

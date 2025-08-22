@@ -1,7 +1,7 @@
 import urlJoin from 'url-join';
 import rdf from '@rdfjs/data-model';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const MigrationSchema = {
   name: 'migration' as const,
@@ -9,7 +9,7 @@ const MigrationSchema = {
     baseUrl: null
   },
   actions: {
-    migrate: defineAction({
+    migrate: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { version } = ctx.params;
@@ -62,7 +62,7 @@ const MigrationSchema = {
           throw new Error(`Unknown version ${version}`);
         }
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

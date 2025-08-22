@@ -1,7 +1,7 @@
 import path from 'path';
 const { MoleculerError } = require('moleculer').Errors;
 import { arrayOf } from '@semapps/ldp';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const AuthorizationEndpointSchema = {
   name: 'authorization-endpoint' as const,
@@ -25,7 +25,7 @@ const AuthorizationEndpointSchema = {
     });
   },
   actions: {
-    getAuthorizations: defineAction({
+    getAuthorizations: {
       async handler(ctx) {
         const { resource: resourceUri } = ctx.params;
 
@@ -49,9 +49,9 @@ const AuthorizationEndpointSchema = {
           }))
         };
       }
-    }),
+    },
 
-    updateAuthorizations: defineAction({
+    updateAuthorizations: {
       /**
        * Mass-update access authorizations for a single resource
        */
@@ -89,7 +89,7 @@ const AuthorizationEndpointSchema = {
           }
         }
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

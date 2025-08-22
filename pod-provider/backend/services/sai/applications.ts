@@ -1,6 +1,6 @@
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const ApplicationsSchema = {
   name: 'applications' as const,
@@ -11,14 +11,14 @@ const ApplicationsSchema = {
     typeIndex: 'private'
   },
   actions: {
-    get: defineAction({
+    get: {
       async handler(ctx) {
         const { appUri } = ctx.params;
         return await ctx.call('ldp.remote.get', { resourceUri: appUri });
       }
-    }),
+    },
 
-    getRequirements: defineAction({
+    getRequirements: {
       /**
        * Return the required access needs and special rights of the given application
        */
@@ -43,9 +43,9 @@ const ApplicationsSchema = {
 
         return { accessNeeds, specialRights };
       }
-    }),
+    },
 
-    getClassDescription: defineAction({
+    getClassDescription: {
       async handler(ctx) {
         const { type, appUri, podOwner } = ctx.params;
 
@@ -95,7 +95,7 @@ const ApplicationsSchema = {
           }
         }
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

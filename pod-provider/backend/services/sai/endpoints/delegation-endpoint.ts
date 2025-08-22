@@ -3,7 +3,7 @@ const { MoleculerError } = require('moleculer').Errors;
 import { arrayOf, getDatasetFromUri, getId } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { parseHeader, negotiateContentType, parseJson, parseTurtle } from '@semapps/middlewares';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const DelegationEndpointSchema = {
   name: 'delegation-endpoint' as const,
@@ -25,7 +25,7 @@ const DelegationEndpointSchema = {
     });
   },
   actions: {
-    issue_api: defineAction({
+    issue_api: {
       async handler(ctx) {
         const delegatedGrant = ctx.params;
 
@@ -42,9 +42,9 @@ const DelegationEndpointSchema = {
         // @ts-expect-error TS(2339): Property '$statusCode' does not exist on type '{}'... Remove this comment to see the full error message
         ctx.meta.$statusCode = 201;
       }
-    }),
+    },
 
-    issue: defineAction({
+    issue: {
       async handler(ctx) {
         const { delegatedGrant } = ctx.params;
         // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
@@ -104,7 +104,7 @@ const DelegationEndpointSchema = {
 
         return delegatedGrantUri;
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

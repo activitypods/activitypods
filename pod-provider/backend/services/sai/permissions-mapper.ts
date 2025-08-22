@@ -1,12 +1,12 @@
 import { getId, arrayOf } from '@semapps/ldp';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 // Service that maps access grants and special rights to WAC permissions
 // For mapping details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
 const PermissionsMapperSchema = {
   name: 'permissions-mapper' as const,
   actions: {
-    addPermissionsFromGrant: defineAction({
+    addPermissionsFromGrant: {
       async handler(ctx) {
         const { grant } = ctx.params;
 
@@ -59,9 +59,9 @@ const PermissionsMapperSchema = {
           throw new Error(`Unknown scope ${scope} for access grant ${getId(grant)}`);
         }
       }
-    }),
+    },
 
-    removePermissionsFromGrant: defineAction({
+    removePermissionsFromGrant: {
       async handler(ctx) {
         const { grant } = ctx.params;
         const grantee = grant['interop:grantee'];
@@ -109,9 +109,9 @@ const PermissionsMapperSchema = {
           throw new Error(`Unknown scope ${scope} for access grant ${getId(grant)}`);
         }
       }
-    }),
+    },
 
-    addPermissionsFromSpecialRights: defineAction({
+    addPermissionsFromSpecialRights: {
       async handler(ctx) {
         const { podOwner, appUri, specialRightsUris } = ctx.params;
 
@@ -186,9 +186,9 @@ const PermissionsMapperSchema = {
           webId: 'system'
         });
       }
-    }),
+    },
 
-    removePermissionsFromSpecialRights: defineAction({
+    removePermissionsFromSpecialRights: {
       async handler(ctx) {
         const { podOwner, appUri, specialRightsUris } = ctx.params;
 
@@ -259,7 +259,7 @@ const PermissionsMapperSchema = {
           webId: 'system'
         });
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

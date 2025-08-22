@@ -4,7 +4,7 @@ import rdf from '@rdfjs/data-model';
 import { arrayOf, isURL } from '@semapps/ldp';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const PodContainersSchema = {
   name: 'pod-containers' as const,
@@ -20,7 +20,7 @@ const PodContainersSchema = {
      * Fetch the TypeIndex and return the first containerUri that holds resources of the given type
      * TODO Use some cache mechanism, or fetch all type registration at the app start
      */
-    getByType: defineAction({
+    getByType: {
       params: {
         type: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
@@ -78,9 +78,9 @@ const PodContainersSchema = {
           throw new Error(`No container found for type ${expandedType} in the TypeIndex of ${actorUri}`);
         }
       }
-    }),
+    },
 
-    attach: defineAction({
+    attach: {
       params: {
         containerUri: { type: 'string', optional: false },
         resourceUri: { type: 'string', optional: false },
@@ -121,9 +121,9 @@ const PodContainersSchema = {
           actorUri
         });
       }
-    }),
+    },
 
-    detach: defineAction({
+    detach: {
       params: {
         containerUri: { type: 'string', optional: false },
         resourceUri: { type: 'string', optional: false },
@@ -164,7 +164,7 @@ const PodContainersSchema = {
           actorUri
         });
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

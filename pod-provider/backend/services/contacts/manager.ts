@@ -5,7 +5,7 @@ import { sanitizeSparqlQuery } from '@semapps/triplestore';
 import { arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } from '../../config/patterns.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const ContactsManagerSchema = {
   name: 'contacts.manager' as const,
@@ -26,7 +26,7 @@ const ContactsManagerSchema = {
     await this.broker.call('activitypub.collections-registry.register', this.settings.ignoredContactsCollectionOptions);
   },
   actions: {
-    updateCollectionsOptions: defineAction({
+    updateCollectionsOptions: {
       async handler(ctx) {
         const { dataset } = ctx.params;
         await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
@@ -34,7 +34,7 @@ const ContactsManagerSchema = {
           dataset
         });
       }
-    })
+    }
   },
   activities: {
     addContact: {

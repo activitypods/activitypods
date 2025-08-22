@@ -11,7 +11,7 @@ import { ACTIVITY_TYPES, PUBLIC_URI } from '@semapps/activitypub';
 import { sanitizeSparqlQuery } from '@semapps/triplestore';
 import { arrayOf } from '@semapps/ldp';
 import * as CONFIG from '../config/config.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 // @ts-expect-error TS(7034): Variable 'Readable' implicitly has type 'any' in s... Remove this comment to see the full error message
 let Readable, NTriplesSerializer;
 
@@ -54,7 +54,7 @@ const ManagementService = {
     if (!fs.existsSync(this.settings.exportDir)) fs.mkdirSync(this.settings.exportDir);
   },
   actions: {
-    deleteAccount: defineAction({
+    deleteAccount: {
       params: {
         username: { type: 'string' }
       },
@@ -142,7 +142,7 @@ const ManagementService = {
           setTimeout(() => this.deleteDataset(username), 1000 * 60 * 5);
         }
       }
-    }),
+    },
 
     /**
      * Create an export of all actor data (+ backups if requested).
@@ -151,7 +151,7 @@ const ManagementService = {
      * If a backup exists which is younger than five minutes, the existing backup is served.
      * @returns {Promise<object>} The backup file promise as returned by `fs.promises.readFile`
      */
-    exportAccount: defineAction({
+    exportAccount: {
       params: {
         username: { type: 'string' },
         withBackups: { type: 'boolean', default: false, convert: true },
@@ -246,7 +246,7 @@ const ManagementService = {
         ctx.meta.$responseType = 'application/zip';
         return fs.promises.readFile(fileName);
       }
-    })
+    }
   },
   methods: {
     /**

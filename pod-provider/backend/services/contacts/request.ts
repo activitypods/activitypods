@@ -15,7 +15,7 @@ import {
 } from '../../config/mappings.ts';
 
 import { MIME_TYPES } from '@semapps/mime-types';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 /** @type {import('moleculer').ServiceSchema} */
 const ContactsRequestSchema = {
@@ -58,7 +58,7 @@ const ContactsRequestSchema = {
     );
   },
   actions: {
-    updateCollectionsOptions: defineAction({
+    updateCollectionsOptions: {
       async handler(ctx) {
         const { dataset } = ctx.params;
         await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
@@ -74,7 +74,7 @@ const ContactsRequestSchema = {
           dataset
         });
       }
-    })
+    }
   },
   activities: {
     contactRequest: {

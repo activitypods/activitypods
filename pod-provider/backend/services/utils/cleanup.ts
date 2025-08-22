@@ -1,5 +1,5 @@
 import { arrayOf, getId } from '@semapps/ldp';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 /**
  * Service to clean up Pods data
@@ -7,7 +7,7 @@ import { ServiceSchema, defineAction } from 'moleculer';
 const CleanupSchema = {
   name: 'cleanup' as const,
   actions: {
-    deleteUpdateActivities: defineAction({
+    deleteUpdateActivities: {
       async handler(ctx) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
@@ -34,7 +34,7 @@ const CleanupSchema = {
           }
         }
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

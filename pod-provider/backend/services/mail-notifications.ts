@@ -12,7 +12,7 @@ import { ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { arrayOf, isObject } from '@semapps/ldp';
 import * as CONFIG from '../config/config.ts';
 import transport from '../config/transport.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const MailNotificationsSchema = {
   name: 'mail-notifications' as const,
@@ -41,7 +41,7 @@ const MailNotificationsSchema = {
     }
   },
   actions: {
-    notify: defineAction({
+    notify: {
       // Allow local service to send directly notifications without sending a apods:Notification activity
       async handler(ctx) {
         const { template, recipientUri, activity, context, ...rest } = ctx.params;
@@ -81,7 +81,7 @@ const MailNotificationsSchema = {
           }
         });
       }
-    })
+    }
   },
   activities: {
     appNotification: {

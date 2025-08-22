@@ -3,7 +3,7 @@ import urlJoin from 'url-join';
 import { MigrationService } from '@semapps/migration';
 // @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../../config/config.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 const MIGRATION_VERSION = '2.3.0';
 
 const Migration320Schema = {
@@ -14,7 +14,7 @@ const Migration320Schema = {
     baseUrl: CONFIG.BASE_URL
   },
   actions: {
-    migrate: defineAction({
+    migrate: {
       async handler(ctx) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
@@ -65,9 +65,9 @@ const Migration320Schema = {
           }
         }
       }
-    }),
+    },
 
-    shareProfileWithContacts: defineAction({
+    shareProfileWithContacts: {
       // Share user profile with all actors in contacts collection
       // This will generate a Social Agent Registration for every contact
       async handler(ctx) {
@@ -87,9 +87,9 @@ const Migration320Schema = {
           });
         }
       }
-    }),
+    },
 
-    generateAuthorizationsFromAnnounces: defineAction({
+    generateAuthorizationsFromAnnounces: {
       // Generate authorizations from announces/announcers collections
       async handler(ctx) {
         const { webId } = ctx.params;
@@ -134,7 +134,7 @@ const Migration320Schema = {
           }
         }
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

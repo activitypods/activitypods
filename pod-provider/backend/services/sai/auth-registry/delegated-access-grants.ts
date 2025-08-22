@@ -2,7 +2,7 @@ import { ControlledContainerMixin, arrayOf, getId, getDatasetFromUri } from '@se
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
 import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
 import AccessGrantsMixin from '../../../mixins/access-grants.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const DelegatedAccessGrantsSchema = {
   name: 'delegated-access-grants' as const,
@@ -15,7 +15,7 @@ const DelegatedAccessGrantsSchema = {
     typeIndex: 'private'
   },
   actions: {
-    remoteIssue: defineAction({
+    remoteIssue: {
       // Issue a delegated grant on the data owner's storage
       // Also store a local copy and add it to the agent registration
       async handler(ctx) {
@@ -87,9 +87,9 @@ const DelegatedAccessGrantsSchema = {
 
         return delegatedGrantUri;
       }
-    }),
+    },
 
-    remoteDelete: defineAction({
+    remoteDelete: {
       // Delete a delegated grant on the data owner's storage
       // Also delete the local copy and remove it from the agent registration
       async handler(ctx) {
@@ -145,9 +145,9 @@ const DelegatedAccessGrantsSchema = {
           await ctx.call('social-agent-registrations.removeGrant', { grant: delegatedGrant });
         }
       }
-    }),
+    },
 
-    generateFromAllScopeAllAuthorizations: defineAction({
+    generateFromAllScopeAllAuthorizations: {
       // Generate the delegated access grants from all access authorizations with `interop:All` scope
       async handler(ctx) {
         const { grant, podOwner } = ctx.params;
@@ -165,9 +165,9 @@ const DelegatedAccessGrantsSchema = {
           });
         }
       }
-    }),
+    },
 
-    generateFromSingleScopeAllAuthorization: defineAction({
+    generateFromSingleScopeAllAuthorization: {
       // Generate a delegated access grant from a single access authorization with `interop:All` scope
       // If a delegated grant already exist but is linked to a different grant, it will be deleted
       async handler(ctx) {
@@ -236,9 +236,9 @@ const DelegatedAccessGrantsSchema = {
           );
         }
       }
-    }),
+    },
 
-    generateFromAuthorization: defineAction({
+    generateFromAuthorization: {
       async handler(ctx) {
         const { authorization } = ctx.params;
         // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
@@ -294,9 +294,9 @@ const DelegatedAccessGrantsSchema = {
 
         return delegateGrantUri;
       }
-    }),
+    },
 
-    deleteByGrant: defineAction({
+    deleteByGrant: {
       // Delete all delegated access grants linked with a access grant
       async handler(ctx) {
         const { grant } = ctx.params;
@@ -321,9 +321,9 @@ const DelegatedAccessGrantsSchema = {
           }
         }
       }
-    }),
+    },
 
-    getByGrant: defineAction({
+    getByGrant: {
       // Get the delegated access grant generated for a grantee from a access grant
       async handler(ctx) {
         const { grantUri, grantee, podOwner } = ctx.params;
@@ -341,9 +341,9 @@ const DelegatedAccessGrantsSchema = {
 
         return arrayOf(filteredContainer['ldp:contains'])[0];
       }
-    }),
+    },
 
-    getByAuthorization: defineAction({
+    getByAuthorization: {
       // Find the delegated access grants, stored in the granter storage
       async handler(ctx) {
         const { authorization } = ctx.params;
@@ -363,9 +363,9 @@ const DelegatedAccessGrantsSchema = {
 
         return filteredContainer['ldp:contains']?.[0];
       }
-    }),
+    },
 
-    listByScopeAllAuthorization: defineAction({
+    listByScopeAllAuthorization: {
       // Get the delegated access grants generated automatically from a `interop:All` access authorization
       async handler(ctx) {
         const { authorization } = ctx.params;
@@ -391,7 +391,7 @@ const DelegatedAccessGrantsSchema = {
 
         return arrayOf(filteredContainer['ldp:contains']);
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

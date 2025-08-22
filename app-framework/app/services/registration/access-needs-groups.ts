@@ -3,7 +3,7 @@ import { MIME_TYPES } from '@semapps/mime-types';
 import { arraysEqual } from '../../utils.ts';
 import { necessityMapping } from '../../mappings.ts';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const AccessNeedsGroupsSchema = {
   name: 'access-needs-groups' as const,
@@ -16,19 +16,19 @@ const AccessNeedsGroupsSchema = {
     activateTombstones: false
   },
   actions: {
-    put: defineAction({
+    put: {
       handler() {
         throw new Error(`The resources of type interop:AccessNeedGroup are immutable`);
       }
-    }),
+    },
 
-    patch: defineAction({
+    patch: {
       handler() {
         throw new Error(`The resources of type interop:AccessNeedGroup are immutable`);
       }
-    }),
+    },
 
-    createOrUpdate: defineAction({
+    createOrUpdate: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { accessNeeds: accessNeedsByNecessity } = ctx.params;
@@ -156,9 +156,9 @@ const AccessNeedsGroupsSchema = {
           }
         }
       }
-    }),
+    },
 
-    findByNecessity: defineAction({
+    findByNecessity: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { necessity } = ctx.params;
@@ -176,7 +176,7 @@ const AccessNeedsGroupsSchema = {
 
         return filteredContainer['ldp:contains']?.[0];
       }
-    })
+    }
   },
   hooks: {
     after: {

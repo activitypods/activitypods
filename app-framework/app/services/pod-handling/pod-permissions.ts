@@ -6,13 +6,13 @@ import { getAclUriFromResourceUri } from '@semapps/webacl';
 import { arrayOf } from '@semapps/ldp';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const PodPermissionsSchema = {
   name: 'pod-permissions' as const,
   mixins: [FetchPodOrProxyMixin],
   actions: {
-    get: defineAction({
+    get: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { uri, actorUri } = ctx.params;
@@ -27,9 +27,9 @@ const PodPermissionsSchema = {
 
         return status === 200 ? body['@graph'] : false;
       }
-    }),
+    },
 
-    add: defineAction({
+    add: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { uri, agentUri, agentPredicate, mode, actorUri } = ctx.params;
@@ -67,9 +67,9 @@ const PodPermissionsSchema = {
 
         return status === 204;
       }
-    }),
+    },
 
-    remove: defineAction({
+    remove: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { uri, agentUri, agentPredicate, mode, actorUri } = ctx.params;
@@ -115,7 +115,7 @@ const PodPermissionsSchema = {
 
         return status === 204;
       }
-    })
+    }
   },
   methods: {
     async getAclUri(uri, podOwner) {

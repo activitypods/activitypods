@@ -6,7 +6,7 @@ import { Errors as E } from 'moleculer-web';
 import WebSocketMixin from '../mixins/websocket.ts';
 // @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../config/config.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   // @ts-expect-error TS(2322): Type 'ServiceSchema<ServiceSettingSchema, Service<... Remove this comment to see the full error message
@@ -38,22 +38,22 @@ const Schema = {
     ]
   },
   actions: {
-    favicon: defineAction({
+    favicon: {
       handler(ctx) {
         // @ts-expect-error TS(2339): Property '$responseType' does not exist on type '{... Remove this comment to see the full error message
         ctx.meta.$responseType = 'image/x-icon';
         return fs.readFileSync(path.resolve(__dirname, '../static/favicon.ico'));
       }
-    }),
+    },
 
-    redirectToFront: defineAction({
+    redirectToFront: {
       handler(ctx) {
         // @ts-expect-error TS(2339): Property '$statusCode' does not exist on type '{}'... Remove this comment to see the full error message
         ctx.meta.$statusCode = 302;
         // @ts-expect-error TS(2339): Property '$location' does not exist on type '{}'.
         ctx.meta.$location = CONFIG.FRONTEND_URL;
       }
-    })
+    }
   },
   methods: {
     async authenticate(ctx, route, req, res) {

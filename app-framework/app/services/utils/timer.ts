@@ -1,10 +1,10 @@
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const TimerSchema = {
   name: 'timer' as const,
   actions: {
-    get: defineAction({
+    get: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { key } = ctx.params;
@@ -17,9 +17,9 @@ const TimerSchema = {
           return false;
         }
       }
-    }),
+    },
 
-    set: defineAction({
+    set: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { key, time, actionName, params, repeat } = ctx.params;
@@ -41,9 +41,9 @@ const TimerSchema = {
           }
         );
       }
-    }),
+    },
 
-    delete: defineAction({
+    delete: {
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { key } = ctx.params;
@@ -59,7 +59,7 @@ const TimerSchema = {
           }
         }
       }
-    })
+    }
   },
   methods: {
     async getJob(key) {

@@ -1,6 +1,6 @@
 import rdf from '@rdfjs/data-model';
 import { SingleResourceContainerMixin, arrayOf, delay } from '@semapps/ldp';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const DataRegistrySchema = {
   name: 'data-registry' as const,
@@ -12,7 +12,7 @@ const DataRegistrySchema = {
   },
   dependencies: ['registry-set'],
   actions: {
-    add: defineAction({
+    add: {
       async handler(ctx) {
         const { podOwner, dataRegistrationUri } = ctx.params;
 
@@ -33,9 +33,9 @@ const DataRegistrySchema = {
           { parentCtx: ctx }
         );
       }
-    }),
+    },
 
-    remove: defineAction({
+    remove: {
       async handler(ctx) {
         const { podOwner, dataRegistrationUri } = ctx.params;
 
@@ -56,9 +56,9 @@ const DataRegistrySchema = {
           { parentCtx: ctx }
         );
       }
-    }),
+    },
 
-    awaitCreateComplete: defineAction({
+    awaitCreateComplete: {
       /**
        * Wait until all data registrations have been created for the newly-created user
        */
@@ -82,7 +82,7 @@ const DataRegistrySchema = {
             );
         } while (numDataRegistrations < numContainersWithShapeTree);
       }
-    })
+    }
   },
   hooks: {
     after: {

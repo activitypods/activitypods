@@ -3,7 +3,7 @@ import { WebSocketServer } from 'ws';
 import http from 'http';
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 /**
  * This mixin adds the ability to create WebSocket routes to the moleculer-web API Gateway.
@@ -41,7 +41,7 @@ const WebsocketSchema = {
   actions: {
     // TODO: support interval-based pings?
     /** See description in service comment. */
-    addWebSocketRoute: defineAction({
+    addWebSocketRoute: {
       params: {
         name: { type: 'string' },
         route: { type: 'string' },
@@ -88,16 +88,16 @@ const WebsocketSchema = {
           }
         });
       }
-    }),
+    },
 
-    onWsConnection: defineAction({
+    onWsConnection: {
       handler(ctx) {
         // Just a dummy function to satisfy the alias middleware handler above.
         // You can access the connection object with `ctx.meta.connection`.
         // Warning: This action is also called, if the connection fails.
         // In this case, `ctx.meta.connection` is unset.
       }
-    })
+    }
   },
 
   methods: {

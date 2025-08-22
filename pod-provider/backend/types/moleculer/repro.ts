@@ -2,7 +2,7 @@
 /* eslint-disable max-classes-per-file */
 
 // @ts-expect-error TS(2440): Import declaration conflicts with local declaratio... Remove this comment to see the full error message
-import { CallingOptions, ServiceEvent, ServiceSchema, defineAction } from 'moleculer';
+import { CallingOptions, ServiceEvent, ServiceSchema, ActionSchema } from 'moleculer';
 
 // Reproduction
 
@@ -20,7 +20,7 @@ interface AllServices {
 const S3 = {
   name: 's3' as const,
   actions: {
-    a3Action: defineAction({
+    a3Action: {
       params: { a3p: { type: 'string' } },
       handler: async ctx => {
         const ps = ctx.params;
@@ -29,7 +29,7 @@ const S3 = {
 
         return ps.a3p;
       }
-    }),
+    },
     // @ts-expect-error TS(2448): Block-scoped variable 'a4Action' used before its d... Remove this comment to see the full error message
     a4Action
   }
@@ -46,14 +46,14 @@ const S3 = {
 //     return ps.a3p;
 //   }
 // });
-const a4Action = defineAction({
+const a4Action = {
   params: { a3p: { type: 'string' } },
   handler: async ctx => {
     const ps = ctx.params;
     const a3Result: string = await ctx.call('s3.a3Action', {});
     return 3;
   }
-} as const);
+} as const satisfies ActionSchema;
 
 //
 //

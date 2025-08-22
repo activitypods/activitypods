@@ -1,7 +1,7 @@
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 import sparqljsModule from 'sparqljs';
 // @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 const SparqlGenerator = sparqljsModule.Generator;
 
 const PodResourcesSchema = {
@@ -14,7 +14,7 @@ const PodResourcesSchema = {
     });
   },
   actions: {
-    post: defineAction({
+    post: {
       params: {
         containerUri: { type: 'string', optional: false },
         resource: { type: 'object', optional: false },
@@ -48,9 +48,9 @@ const PodResourcesSchema = {
           return false;
         }
       }
-    }),
+    },
 
-    list: defineAction({
+    list: {
       params: {
         containerUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
@@ -69,9 +69,9 @@ const PodResourcesSchema = {
           actorUri
         });
       }
-    }),
+    },
 
-    get: defineAction({
+    get: {
       params: {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
@@ -90,9 +90,9 @@ const PodResourcesSchema = {
           actorUri
         });
       }
-    }),
+    },
 
-    patch: defineAction({
+    patch: {
       params: {
         resourceUri: { type: 'string', optional: false },
         triplesToAdd: { type: 'array', optional: true },
@@ -134,9 +134,9 @@ const PodResourcesSchema = {
           actorUri
         });
       }
-    }),
+    },
 
-    put: defineAction({
+    put: {
       params: {
         resource: { type: 'object', optional: false },
         actorUri: { type: 'string', optional: false }
@@ -164,9 +164,9 @@ const PodResourcesSchema = {
           actorUri
         });
       }
-    }),
+    },
 
-    delete: defineAction({
+    delete: {
       params: {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
@@ -181,7 +181,7 @@ const PodResourcesSchema = {
           actorUri
         });
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

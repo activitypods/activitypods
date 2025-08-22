@@ -2,7 +2,7 @@ import { ControlledContainerMixin, getId } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import AgentRegistrationsMixin from '../../../mixins/agent-registrations.ts';
 import { arraysEqual } from '../../../utils.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const AppRegistrationsSchema = {
   name: 'app-registrations' as const,
@@ -20,7 +20,7 @@ const AppRegistrationsSchema = {
     typeIndex: 'private'
   },
   actions: {
-    createOrUpdate: defineAction({
+    createOrUpdate: {
       async handler(ctx) {
         const { agentUri, podOwner, specialRightsUris } = ctx.params;
 
@@ -62,7 +62,7 @@ const AppRegistrationsSchema = {
           return appRegistrationUri;
         }
       }
-    })
+    }
   },
   hooks: {
     after: {

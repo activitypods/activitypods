@@ -4,7 +4,7 @@ import { ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import AgentRegistrationsMixin from '../../../mixins/agent-registrations.ts';
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const SocialAgentRegistrationsSchema = {
   name: 'social-agent-registrations' as const,
@@ -22,7 +22,7 @@ const SocialAgentRegistrationsSchema = {
     typeIndex: 'private'
   },
   actions: {
-    createOrUpdate: defineAction({
+    createOrUpdate: {
       async handler(ctx) {
         let { agentUri, podOwner, reciprocalRegistrationUri, label, note } = ctx.params;
 
@@ -90,9 +90,9 @@ const SocialAgentRegistrationsSchema = {
           return agentRegistrationUri;
         }
       }
-    }),
+    },
 
-    addReciprocalRegistration: defineAction({
+    addReciprocalRegistration: {
       async handler(ctx) {
         const { agentUri, podOwner } = ctx.params;
 
@@ -118,9 +118,9 @@ const SocialAgentRegistrationsSchema = {
           }
         }
       }
-    }),
+    },
 
-    getReciprocalRegistrationUri: defineAction({
+    getReciprocalRegistrationUri: {
       // Find reciprocal registration using Agent Registration Discovery
       // https://solid.github.io/data-interoperability-panel/specification/#agent-registration-discovery
       async handler(ctx) {
@@ -145,9 +145,9 @@ const SocialAgentRegistrationsSchema = {
           return registeredAgentLinkHeader[0].anchor;
         }
       }
-    }),
+    },
 
-    getAgentName: defineAction({
+    getAgentName: {
       async handler(ctx) {
         const { agentUri, podOwner } = ctx.params;
         try {
@@ -163,9 +163,9 @@ const SocialAgentRegistrationsSchema = {
           return agent['foaf:name'] || agent.name || agent['foaf:nick'] || agent.preferredUsername;
         }
       }
-    }),
+    },
 
-    notifyAgent: defineAction({
+    notifyAgent: {
       async handler(ctx) {
         const { agentRegistrationUri, agentUri, podOwner, activityType } = ctx.params;
         const agent = await ctx.call('activitypub.actor.get', { actorUri: agentUri });
@@ -190,9 +190,9 @@ const SocialAgentRegistrationsSchema = {
           );
         }
       }
-    }),
+    },
 
-    getSharedGrants: defineAction({
+    getSharedGrants: {
       // Get all access grants that have been shared with pod owner through reciprocal registration
       async handler(ctx) {
         const { podOwner } = ctx.params;
@@ -213,9 +213,9 @@ const SocialAgentRegistrationsSchema = {
 
         return grants;
       }
-    }),
+    },
 
-    updateAppRegistrations: defineAction({
+    updateAppRegistrations: {
       /**
        * Look at the provided social agent registration and, if needed,
        * generate delegated grants for apps that requested 'interop:All' scope for the same data
@@ -236,7 +236,7 @@ const SocialAgentRegistrationsSchema = {
           });
         }
       }
-    })
+    }
   },
   activities: {
     createAgentRegistration: {

@@ -4,7 +4,7 @@ import { ControlledContainerMixin } from '@semapps/ldp';
 import { OBJECT_TYPES, AS_PREFIX } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import * as CONFIG from '../../config/config.ts';
-import { ServiceSchema, defineServiceEvent } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const ProfilesProfileSchema = {
   name: 'profiles.profile' as const,
@@ -20,7 +20,7 @@ const ProfilesProfileSchema = {
   },
   dependencies: ['activitypub', 'webacl'],
   events: {
-    'auth.registered': defineServiceEvent({
+    'auth.registered': {
       async handler(ctx) {
         // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'Optionali... Remove this comment to see the full error message
         const { webId, profileData } = ctx.params;
@@ -79,7 +79,7 @@ const ProfilesProfileSchema = {
           webId
         });
       }
-    })
+    }
   },
   hooks: {
     before: {

@@ -2,7 +2,7 @@ import { ControlledContainerMixin, getId } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
 import AccessGrantsMixin from '../../../mixins/access-grants.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const AccessGrantsSchema = {
   name: 'access-grants' as const,
@@ -16,7 +16,7 @@ const AccessGrantsSchema = {
   },
   dependencies: ['ldp', 'ldp.registry'],
   actions: {
-    generateFromAuthorization: defineAction({
+    generateFromAuthorization: {
       async handler(ctx) {
         const { authorization } = ctx.params;
         let replacedGrant;
@@ -59,9 +59,9 @@ const AccessGrantsSchema = {
 
         return grantUri;
       }
-    }),
+    },
 
-    getByAuthorization: defineAction({
+    getByAuthorization: {
       async handler(ctx) {
         const { authorization } = ctx.params;
 
@@ -80,9 +80,9 @@ const AccessGrantsSchema = {
 
         return filteredContainer['ldp:contains']?.[0];
       }
-    }),
+    },
 
-    getByResourceUri: defineAction({
+    getByResourceUri: {
       async handler(ctx) {
         const { resourceUri } = ctx.params;
         // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
@@ -100,7 +100,7 @@ const AccessGrantsSchema = {
 
         return filteredContainer['ldp:contains']?.[0];
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

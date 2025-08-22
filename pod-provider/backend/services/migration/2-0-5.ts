@@ -4,7 +4,7 @@ import { arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 // @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../../config/config.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const Migration205Schema = {
   name: 'migration-2-0-5' as const,
@@ -14,7 +14,7 @@ const Migration205Schema = {
     baseUrl: CONFIG.BASE_URL
   },
   actions: {
-    migrate: defineAction({
+    migrate: {
       async handler(ctx) {
         const { username, version } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
@@ -49,9 +49,9 @@ const Migration205Schema = {
           }
         }
       }
-    }),
+    },
 
-    addAuthorizationAgent: defineAction({
+    addAuthorizationAgent: {
       async handler(ctx) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
@@ -89,9 +89,9 @@ const Migration205Schema = {
           }
         }
       }
-    }),
+    },
 
-    generateRegistries: defineAction({
+    generateRegistries: {
       async handler(ctx) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
@@ -135,9 +135,9 @@ const Migration205Schema = {
           }
         }
       }
-    }),
+    },
 
-    generateAuthorizations: defineAction({
+    generateAuthorizations: {
       async handler(ctx) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
@@ -216,7 +216,7 @@ const Migration205Schema = {
           }
         }
       }
-    })
+    }
   }
 } satisfies ServiceSchema;
 

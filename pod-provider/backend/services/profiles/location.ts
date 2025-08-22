@@ -4,7 +4,7 @@ import { ControlledContainerMixin } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 // @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../../config/config.ts';
-import { ServiceSchema, defineAction } from 'moleculer';
+import { ServiceSchema } from 'moleculer';
 
 const ProfilesLocationSchema = {
   name: 'profiles.location' as const,
@@ -19,7 +19,7 @@ const ProfilesLocationSchema = {
     typeIndex: 'public'
   },
   actions: {
-    getHomeLocation: defineAction({
+    getHomeLocation: {
       async handler(ctx) {
         const { webId } = ctx.params;
 
@@ -40,9 +40,9 @@ const ProfilesLocationSchema = {
         // @ts-expect-error TS(2339): Property 'length' does not exist on type 'never'.
         return results.length > 0 ? results[0].homeLocation.value : null;
       }
-    }),
+    },
 
-    clearHomeLocation: defineAction({
+    clearHomeLocation: {
       async handler(ctx) {
         const { webId } = ctx.params;
         await ctx.call('triplestore.update', {
@@ -66,7 +66,7 @@ const ProfilesLocationSchema = {
           webId
         });
       }
-    })
+    }
   },
   hooks: {
     after: {

@@ -253,7 +253,8 @@ export default {
     user: {
       unknown: 'Unknown',
       location: "At %{name}'s",
-      member_since: 'Member since'
+      member_since: 'Member since',
+      profile_picture: 'Profile picture'
     },
     group: {
       id: 'Unique ID',

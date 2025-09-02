@@ -1,10 +1,10 @@
 import React from 'react';
-import { ListButton, EditButton, useShowContext, usePermissions } from 'react-admin';
+import { ListButton, EditButton, useShowContext, usePermissions, useRecordContext } from 'react-admin';
 import { Box, Typography, Grid } from '@mui/material';
 import SplitView from './SplitView';
 
 const ShowView = ({ asides, title, actions, children }: any) => {
-  const { record } = useShowContext();
+  const record = useRecordContext();
   const { permissions } = usePermissions(record?.id);
   return (
     <SplitView asides={asides}>

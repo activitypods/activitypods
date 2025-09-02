@@ -111,7 +111,7 @@ export const PublicProfilePage = () => {
           {!isGroup && (
             <ImageInput
               source="icon"
-              accept="image/*"
+              accept={{ 'image/*': [] }}
               format={v => {
                 if (v?.url) {
                   return { src: v.url };

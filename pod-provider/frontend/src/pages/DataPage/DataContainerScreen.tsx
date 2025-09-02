@@ -45,9 +45,7 @@ const DataContainerScreen = ({ containerData }: any) => {
   const [selected, setSelected] = useState();
   const [locale] = useLocaleState();
   const developerMode = !!localStorage.getItem('developer_mode');
-  // @ts-expect-error TS(2571): Object is of type 'unknown'.
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
-
   const container = useContainerByUri(containerData.id || containerData['@id']);
   // @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message
   const labelPredicate = useCompactPredicate(container?.labelPredicate, containerData['@context']);
@@ -67,10 +65,11 @@ const DataContainerScreen = ({ containerData }: any) => {
 
   if (!container) return null;
 
+  const resourceName = container.label?.[locale] || container.label?.en || containerData.id || containerData['@id'];
+
   return (
     <ListView
-      // @ts-expect-error TS(2532): Object is possibly 'undefined'.
-      title={container.label[locale] || container.label.en || containerData.id || containerData['@id']}
+      title={resourceName}
       actions={[
         <BackButton to="/data" /> /*<SetDefaultAppButton typeRegistration={typeRegistration} refetch={refetch} />*/
       ]}
@@ -78,7 +77,7 @@ const DataContainerScreen = ({ containerData }: any) => {
     >
       <Box>
         <List>
-          {resources.length === 0 && translate('ra.navigation.no_results')}
+          {resources.length === 0 && translate('ra.navigation.no_results', { name: resourceName })}
           {resources.map(resource => {
             const resourceUri = resource.id || resource['@id'];
             const isLocal = resourceUri.startsWith(identity?.id);

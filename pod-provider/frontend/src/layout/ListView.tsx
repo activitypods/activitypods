@@ -4,7 +4,6 @@ import { Box, Typography, Grid } from '@mui/material';
 import SplitView from './SplitView';
 
 const ListView = ({ asides, actions = [<CreateButton />], title, children }: any) => {
-  const { defaultTitle } = useListContext();
   return (
     <SplitView asides={asides}>
       <Grid container sx={{ mt: 2 }}>
@@ -15,7 +14,7 @@ const ListView = ({ asides, actions = [<CreateButton />], title, children }: any
           }}
         >
           <Typography variant="h2" component="h1" noWrap>
-            {title || defaultTitle}
+            {title}
           </Typography>
         </Grid>
         <Grid

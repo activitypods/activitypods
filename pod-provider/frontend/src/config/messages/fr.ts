@@ -261,7 +261,8 @@ export default {
     user: {
       unknown: 'Inconnu',
       location: 'Chez %{name}',
-      member_since: 'Membre depuis'
+      member_since: 'Membre depuis',
+      profile_picture: 'Photo de profil'
     },
     group: {
       id: 'Identifiant unique',

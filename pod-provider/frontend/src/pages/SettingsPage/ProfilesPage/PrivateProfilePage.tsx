@@ -40,7 +40,6 @@ export const PrivateProfilePage = () => {
       messageArgs: { smart_count: 1 },
       undoable: false
     });
-    // @ts-expect-error TS(2722): Cannot invoke an object which is possibly 'undefin... Remove this comment to see the full error message
     refetchIdentity();
   }, [notify, refetchIdentity]);
 
@@ -62,7 +61,7 @@ export const PrivateProfilePage = () => {
           <PrivateProfileWarning />
           <TextInput source="vcard:given-name" fullWidth />
           <TextInput source="vcard:note" fullWidth />
-          <ImageInput source="vcard:photo" accept="image/*">
+          <ImageInput source="vcard:photo" accept={{ 'image/*': [] }}>
             <ImageField source="src" />
           </ImageInput>
           {CONFIG.MAPBOX_ACCESS_TOKEN && (

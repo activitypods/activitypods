@@ -3,7 +3,6 @@ import {
   DateField,
   useTranslate,
   Button,
-  RecordContextProvider,
   ResourceContextProvider,
   EditButton,
   useCreatePath,
@@ -11,8 +10,6 @@ import {
 } from 'react-admin';
 import { useParams, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { useWebfinger } from '@semapps/activitypub-components';
-import { MapField } from '@semapps/geo-components';
-import { ReferenceField } from '@semapps/field-components';
 import { Box, Alert, useMediaQuery } from '@mui/material';
 import ListIcon from '@mui/icons-material/List';
 import EditIcon from '@mui/icons-material/Edit';
@@ -30,7 +27,7 @@ const EditPrivateProfileButton = (props: any) => {
   const record = useRecordContext();
   const createPath = useCreatePath();
   return (
-    <Button label="ra.action.edit" href={createPath({ resource: 'Profile', id: record.url, type: 'edit' })} {...props}>
+    <Button label="ra.action.edit" href={createPath({ resource: 'Profile', id: record?.url, type: 'edit' })} {...props}>
       <EditIcon />
     </Button>
   );
@@ -49,6 +46,8 @@ const ProfileWarning = ({ publicProfileOnly }: any) => {
           to={publicProfileOnly ? location.pathname : `${location.pathname}?public=true`}
           style={{ color: 'inherit' }}
         >
+          {' '}
+          ResourceContextProvider,
           {translate(publicProfileOnly ? 'app.action.view_private_profile' : 'app.action.view_public_profile')}
         </Link>
       </Alert>
@@ -60,7 +59,6 @@ const NetworkActorPage = () => {
   const translate = useTranslate();
   const { webfingerId } = useParams();
   const [searchParams] = useSearchParams();
-  // @ts-expect-error TS(2571): Object is of type 'unknown'.
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
   const publicProfileOnly = searchParams.has('public');
   const webfinger = useWebfinger();
@@ -82,48 +80,47 @@ const NetworkActorPage = () => {
   return (
     <BlockAnonymous>
       <ResourceContextProvider value="Actor">
-        <RecordContextProvider value={actor}>
-          <ShowView
-            title={actor.name}
-            actions={
-              actor.isLoggedUser
-                ? [publicProfileOnly ? <EditButton /> : <EditPrivateProfileButton />]
-                : [
-                    <Button component={Link} to="/network" label="ra.action.list">
-                      <ListIcon />
-                    </Button>
-                  ]
-            }
-            asides={[<ContactCard actor={actor} publicProfileOnly={publicProfileOnly} />]}
-          >
-            {actor.isLoggedUser && <ProfileWarning publicProfileOnly={publicProfileOnly} />}
-            <Hero image={actor.image}>
-              <ValueField value={actor.name} label={translate('resources.Profile.fields.vcard:given-name')} />
-              <ValueField value={actor.webfinger} label={translate('resources.Actor.fields.preferredUsername')} />
-              <ValueField
-                value={actor.summary}
-                label={translate('resources.Profile.fields.vcard:note')}
-                sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', mr: 4 }}
+        <ShowView
+          title={actor.name}
+          actions={
+            actor.isLoggedUser
+              ? [publicProfileOnly ? <EditButton /> : <EditPrivateProfileButton />]
+              : [
+                  <Button component={Link} to="/network" label="ra.action.list">
+                    <ListIcon />
+                  </Button>
+                ]
+          }
+          asides={[<ContactCard actor={actor} publicProfileOnly={publicProfileOnly} />]}
+        >
+          {actor.isLoggedUser && <ProfileWarning publicProfileOnly={publicProfileOnly} />}
+          <Hero image={actor.image}>
+            <ValueField value={actor.name} label={translate('resources.Profile.fields.vcard:given-name')} />
+            <ValueField value={actor.webfinger} label={translate('resources.Actor.fields.preferredUsername')} />
+            <ValueField
+              value={actor.summary}
+              label={translate('resources.Profile.fields.vcard:note')}
+              sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', mr: 4 }}
+            />
+            <DateField
+              source="dc:created"
+              locales={CONFIG.DEFAULT_LOCALE}
+              options={{ month: 'long', day: 'numeric', year: 'numeric' }}
+            />
+            {!actor.isLoggedUser && (
+              <TagsListEdit
+                source="id"
+                addLabel
+                label={translate('app.tag.tag')}
+                relationshipPredicate="vcard:hasMember"
+                namePredicate="vcard:label"
+                avatarPredicate="vcard:photo"
+                tagResource="Tag"
+                recordIdPredicate="id"
               />
-              <DateField
-                source="dc:created"
-                locales={CONFIG.DEFAULT_LOCALE}
-                options={{ month: 'long', day: 'numeric', year: 'numeric' }}
-              />
-              {!actor.isLoggedUser && (
-                <TagsListEdit
-                  source="id"
-                  addLabel
-                  label={translate('app.tag.tag')}
-                  relationshipPredicate="vcard:hasMember"
-                  namePredicate="vcard:label"
-                  avatarPredicate="vcard:photo"
-                  tagResource="Tag"
-                  recordIdPredicate="id"
-                />
-              )}
-            </Hero>
-            {/* <ResourceContextProvider value="Profile">
+            )}
+          </Hero>
+          {/* <ResourceContextProvider value="Profile">
               <RecordContextProvider value={actor.privateProfile}>
                 <MainList>
                   <ReferenceField reference="Location" source="vcard:hasAddress" link={false}>
@@ -150,11 +147,10 @@ const NetworkActorPage = () => {
                 </MainList>
               </RecordContextProvider>
             </ResourceContextProvider> */}
-            <MainList>
-              {!actor.isLoggedUser && <ContactField source="id" label={translate('app.action.send_message')} />}
-            </MainList>
-          </ShowView>
-        </RecordContextProvider>
+          <MainList>
+            {!actor.isLoggedUser && <ContactField source="id" label={translate('app.action.send_message')} />}
+          </MainList>
+        </ShowView>
       </ResourceContextProvider>
     </BlockAnonymous>
   );

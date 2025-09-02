@@ -1,7 +1,7 @@
 import React from 'react';
-import { Button, useTranslate, SimpleList } from 'react-admin';
+import { useTranslate, SimpleList } from 'react-admin';
 import { Link } from 'react-router-dom';
-import { Avatar } from '@mui/material';
+import { Avatar, Button } from '@mui/material';
 import Header from '../../common/Header';
 import AddIcon from '@mui/icons-material/Add';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
@@ -24,7 +24,9 @@ const NetworkPage = () => {
         resource="Profile"
         title={translate('app.page.contacts')}
         actions={[
-          <Button to="/network/request" component={Link} label="app.action.send_request" startIcon={<AddIcon />} />,
+          <Link to="/network/request">
+            <Button startIcon={<AddIcon />}>{translate('app.action.send_request')}</Button>
+          </Link>,
           <TagsButton />
         ]}
         asides={[<ProfileCard />, <ShareContactCard />]}
@@ -39,15 +41,12 @@ const NetworkPage = () => {
             <Avatar
               src={record['vcard:photo']}
               alt={translate('app.accessibility.profile_picture_of', { name: record['vcard:given-name'] })}
+              aria-label={translate('app.action.view_contact_profile', { name: record['vcard:given-name'] })}
             >
               {record['vcard:given-name']?.toUpperCase()?.[0]}
             </Avatar>
           )}
-          linkType={record => `/network/${formatUsername(record.describes)}`}
-          // @ts-expect-error TS(2322): Type '{ primaryText: (record: any) => any; seconda... Remove this comment to see the full error message
-          linkProps={(record: any) => ({
-            'aria-label': translate('app.action.view_contact_profile', { name: record['vcard:given-name'] })
-          })}
+          rowClick={id => `/network/${formatUsername(id as string)}`}
           rowSx={() => ({
             backgroundColor: 'white',
             p: 1,

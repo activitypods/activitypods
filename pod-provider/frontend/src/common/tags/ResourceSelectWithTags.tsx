@@ -49,15 +49,15 @@ const ResourceSelectWithTags = (props: any) => {
     avatarTagPredicate,
     avatarResourcePredicate,
     labelResourcePredicate,
-    ownerIdResourcePredicate,
-    showColors,
+    ownerIdResourcePredicate = 'id',
+    showColors = true,
     tagResource,
     entityResource,
     resourceDefaultIcon,
     tagDefaultIcon,
     resourceName,
     tagName,
-    excludeIds,
+    excludeIds = [],
     onSelectionChange,
     renderTagOption: renderTagOptionProp,
     renderResourceOption: renderResourceOptionProp,
@@ -252,12 +252,6 @@ const ResourceSelectWithTags = (props: any) => {
       {...restProps}
     />
   );
-};
-
-ResourceSelectWithTags.defaultProps = {
-  showColors: true,
-  excludeIds: [],
-  ownerIdResourcePredicate: 'id'
 };
 
 export default ResourceSelectWithTags;

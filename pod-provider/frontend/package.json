@@ -4,13 +4,17 @@
     "dev": "vite",
     "build": "vite build",
     "eject": "vite eject",
-    "link-semapps-packages": "yalc link @semapps/activitypub-components @semapps/auth-provider @semapps/date-components @semapps/field-components @semapps/geo-components @semapps/input-components @semapps/list-components @semapps/markdown-components @semapps/semantic-data-provider",
+    "link-semapps-packages": "yalc link @semapps/activitypub-components @semapps/auth-provider @semapps/date-components @semapps/field-components @semapps/geo-components @semapps/input-components @semapps/list-components @semapps/markdown-components @semapps/semantic-data-provider @activitypods/shape-definitions",
     "unlink-semapps-packages": "yalc remove --all && rm -rf node_modules/@semapps && yarn install --force"
   },
   "dependencies": {
+    "@activitypods/ldo-shapes": "^0.1.1",
+    "@activitypods/shape-definitions": "^0.1.1",
+    "@ldo/connected": "^1.0.0-alpha.32",
+    "@ldo/connected-solid": "^1.0.0-alpha.32",
     "@mui/icons-material": "^7.1.0",
     "@mui/material": "^7.1.0",
-    "@rdfjs/data-model": "^2.0.1",
+    "@rdfjs/data-model": "2.1.1",
     "@rdfjs/types": "^2.0.1",
     "@semapps/activitypub-components": "1.1.4",
     "@semapps/auth-provider": "1.1.4",
@@ -44,6 +48,7 @@
     "react-router": "^7.8.0",
     "react-router-dom": "^7.8.0",
     "react-sticky-box": "^2.0.4",
+    "shacl-engine": "^1.0.2",
     "speakingurl": "^14.0.1",
     "tss-react": "^4.9.19",
     "url-join": "^4.0.1"

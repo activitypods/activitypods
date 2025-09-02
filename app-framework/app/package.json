@@ -11,7 +11,7 @@
     "directory": "app-framework/app"
   },
   "dependencies": {
-    "@rdfjs/data-model": "^2.1.1",
+    "@rdfjs/data-model": "2.1.1",
     "@semapps/activitypub": "1.1.2",
     "@semapps/ldp": "1.1.2",
     "@semapps/mime-types": "1.1.2",

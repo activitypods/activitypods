@@ -54,7 +54,8 @@ export default {
       tag: 'Étiquette',
       profile: 'Profil',
       create: 'Nouvelle étiquette',
-      add_members: 'Ajouter des membres'
+      add_members: 'Ajouter des membres',
+      group: 'Groupe'
     },
     page: {
       contacts: 'Mon réseau',

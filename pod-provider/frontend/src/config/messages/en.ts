@@ -54,7 +54,8 @@ export default {
       tag: 'Tag',
       profile: 'Profile',
       create: 'New tag',
-      add_members: 'Add members'
+      add_members: 'Add members',
+      group: 'Group'
     },
     page: {
       contacts: 'My network',

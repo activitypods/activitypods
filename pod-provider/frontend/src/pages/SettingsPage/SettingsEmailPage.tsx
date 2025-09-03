@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { email, required, useAuthProvider, useNotify, useTranslate, SimpleForm, TextInput } from 'react-admin';
+import { EditToolbarWithPermissions, useCheckAuthenticated } from '@semapps/auth-provider';
+import { email, required, useAuthProvider, useNotify, useTranslate, SimpleForm, TextInput, Form } from 'react-admin';
 import { Box, Card, Typography } from '@mui/material';
+import ToolbarWithoutDelete from '../../common/ToolbarWithoutDelete';
 
 const validateEmail = [required(), email('app.validation.email')];
 
@@ -45,7 +46,7 @@ const SettingsEmailPage = () => {
       </Typography>
       <Box mt={1}>
         <Card>
-          <SimpleForm defaultValues={formDefaultValue} onSubmit={onSubmit}>
+          <SimpleForm defaultValues={formDefaultValue} onSubmit={onSubmit} toolbar={<ToolbarWithoutDelete />}>
             <TextInput
               label={translate('app.input.email')}
               source="email"

@@ -40,14 +40,11 @@ const ProfileWarning = ({ publicProfileOnly }: any) => {
   return (
     <Box mb={2}>
       <Alert severity="warning">
-        {translate(publicProfileOnly ? 'app.helper.public_profile_view' : 'app.helper.private_profile_view')}
-        &nbsp;
+        {translate(publicProfileOnly ? 'app.helper.public_profile_view' : 'app.helper.private_profile_view')}. &nbsp;
         <Link
           to={publicProfileOnly ? location.pathname : `${location.pathname}?public=true`}
           style={{ color: 'inherit' }}
         >
-          {' '}
-          ResourceContextProvider,
           {translate(publicProfileOnly ? 'app.action.view_private_profile' : 'app.action.view_public_profile')}
         </Link>
       </Alert>

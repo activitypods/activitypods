@@ -13,8 +13,7 @@ const PrivateProfileWarning = () => {
   return (
     <Box mb={1} width="100%">
       <Alert severity="warning">
-        {translate('app.helper.private_profile_view')}
-        &nbsp;
+        {translate('app.helper.private_profile_view')}. &nbsp;
         <Link to="../public" style={{ color: 'inherit' }}>
           {translate('app.action.view_public_profile')}
         </Link>

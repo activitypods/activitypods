@@ -116,7 +116,7 @@ const DataContainerScreen = ({ containerData }: any) => {
       {xs && (
         // @ts-expect-error TS(2345): Argument of type 'null' is not assignable to param... Remove this comment to see the full error message
         <Dialog fullWidth open={!!selected} onClose={() => setSelected(null)}>
-          <ResourceCard resource={selected} /*typeRegistration={typeRegistration}*/ />
+          {selected && <ResourceCard resource={selected} /*typeRegistration={typeRegistration}*/ />}
         </Dialog>
       )}
     </ListView>

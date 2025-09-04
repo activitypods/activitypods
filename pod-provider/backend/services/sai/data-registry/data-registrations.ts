@@ -1,4 +1,3 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import LinkHeader from 'http-link-header';
 const { MoleculerError } = require('moleculer').Errors;
@@ -47,7 +46,6 @@ const DataRegistrationsSchema = {
         // Get registered class from shapeTree
         const shapeUri = await ctx.call('shape-trees.getShapeUri', { resourceUri: shapeTreeUri });
         if (!shapeUri) throw new Error(`Could not find shape from shape tree ${shapeTreeUri}`);
-        // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
         const [registeredClass] = await ctx.call('shacl.getTypes', { resourceUri: shapeUri });
         if (!registeredClass) throw new Error(`Could not find class required by shape ${shapeUri}`);
 
@@ -64,7 +62,6 @@ const DataRegistrationsSchema = {
 
         // Register the class on the type index
         const services = await this.broker.call('$node.services');
-        // @ts-expect-error TS(2339): Property 'some' does not exist on type 'never'.
         if (services.some((s: any) => s.name === 'type-registrations')) {
           await ctx.call('type-registrations.register', {
             types: [registeredClass],
@@ -178,7 +175,6 @@ const DataRegistrationsSchema = {
           dataset: getDatasetFromUri(podOwner)
         });
 
-        // @ts-expect-error TS(2339): Property 'dataRegistrationUri' does not exist on t... Remove this comment to see the full error message
         return results[0]?.dataRegistrationUri?.value;
       }
     },
@@ -210,7 +206,6 @@ const DataRegistrationsSchema = {
             dataset: getDatasetFromUri(resourceUri)
           });
 
-          // @ts-expect-error TS(2339): Property 'dataRegistrationUri' does not exist on t... Remove this comment to see the full error message
           return results[0]?.dataRegistrationUri?.value;
         } else {
           if (!webId)
@@ -222,7 +217,6 @@ const DataRegistrationsSchema = {
             actorUri: webId
           });
 
-          // @ts-expect-error TS(2339): Property 'headers' does not exist on type 'never'.
           const linkHeader = LinkHeader.parse(response.headers.link);
           const dataRegistrationLinkHeader = linkHeader.rel('http://www.w3.org/ns/solid/interop#hasDataRegistration');
 

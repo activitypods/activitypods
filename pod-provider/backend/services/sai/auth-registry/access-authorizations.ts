@@ -7,7 +7,6 @@ import { ServiceSchema } from 'moleculer';
 
 const AccessAuthorizationsSchema = {
   name: 'access-authorizations' as const,
-  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ImmutableContainerMixin, ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:AccessAuthorization'],
@@ -366,7 +365,6 @@ const AccessAuthorizationsSchema = {
           const grants = await ctx.call('social-agent-registrations.getSharedGrants', {
             podOwner: dataOwner
           });
-          // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
           for (const grant of grants) {
             if (grant['interop:registeredShapeTree'] === authorization['interop:registeredShapeTree']) {
               await ctx.call('delegated-access-grants.generateFromSingleScopeAllAuthorization', {
@@ -410,7 +408,6 @@ const AccessAuthorizationsSchema = {
           const delegatedGrants = await ctx.call('delegated-access-grants.listByScopeAllAuthorization', {
             authorization
           });
-          // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
           for (const delegatedGrant of delegatedGrants) {
             await ctx.call('delegated-access-grants.remoteDelete', { delegatedGrant, webId });
           }

@@ -11,7 +11,6 @@ const useStyles = makeStyles()(theme => ({
   root: {
     marginTop: 5,
     marginBottom: 24,
-    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.down('sm')]: {
       marginTop: 16,
       marginBottom: 16
@@ -20,12 +19,10 @@ const useStyles = makeStyles()(theme => ({
   title: {
     backgroundRepeat: 'no-repeat',
     backgroundSize: 'cover',
-    // @ts-expect-error TS(2339): Property 'palette' does not exist on type 'Default... Remove this comment to see the full error message
     backgroundImage: `radial-gradient(circle at 50% 8em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
     // @ts-expect-error TS(2339): Property 'palette' does not exist on type 'Default... Remove this comment to see the full error message
     color: theme.palette.black,
     padding: '10px 14px',
-    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.down('sm')]: {
       padding: '8px 16px'
     }

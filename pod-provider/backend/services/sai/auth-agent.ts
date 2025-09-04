@@ -1,14 +1,11 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import rdf from '@rdfjs/data-model';
 import { SingleResourceContainerMixin, getWebIdFromUri } from '@semapps/ldp';
-// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
 const AuthAgentSchema = {
   name: 'auth-agent' as const,
-  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [SingleResourceContainerMixin],
   settings: {
     acceptedTypes: ['interop:AuthorizationAgent'],

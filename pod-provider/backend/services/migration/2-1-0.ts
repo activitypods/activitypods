@@ -1,7 +1,5 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { MigrationService } from '@semapps/migration';
-// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 const MIGRATION_VERSION = '2.1.0';

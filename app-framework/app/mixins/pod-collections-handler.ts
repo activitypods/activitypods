@@ -1,5 +1,4 @@
 import PodResourcesHandlerMixin from './pod-resources-handler.ts';
-// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema } from 'moleculer';
 
 const Schema = {
@@ -20,7 +19,6 @@ const Schema = {
   dependencies: ['pod-collections'],
   actions: {
     createAndAttach: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri, actorUri } = ctx.params;
         const { attachPredicate, collectionOptions, createWacGroup } = this.settings;
@@ -41,7 +39,6 @@ const Schema = {
     },
 
     deleteAndDetach: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri, actorUri } = ctx.params;
         const { attachPredicate } = this.settings;
@@ -54,7 +51,6 @@ const Schema = {
     },
 
     add: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { collectionUri, itemUri, actorUri } = ctx.params;
         await ctx.call('pod-collections.add', { collectionUri, itemUri, actorUri });
@@ -69,7 +65,6 @@ const Schema = {
     },
 
     remove: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { collectionUri, itemUri, actorUri } = ctx.params;
         await ctx.call('pod-collections.remove', { collectionUri, itemUri, actorUri });
@@ -84,7 +79,6 @@ const Schema = {
     },
 
     createAndAttachMissing: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { type, attachPredicate, collectionOptions } = this.settings;
         await ctx.call('pod-collections.createAndAttachMissing', {

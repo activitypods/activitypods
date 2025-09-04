@@ -1,5 +1,4 @@
 import path from 'path';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import Handlebars from 'handlebars';
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'sani... Remove this comment to see the full error message
@@ -54,7 +53,6 @@ const MailNotificationsSchema = {
 
         let emitterProfile = {};
         try {
-          // @ts-expect-error TS(2339): Property 'url' does not exist on type 'never'.
           emitterProfile = emitter.url
             ? await ctx.call('activitypub.actor.getProfile', { actorUri: activity.actor, webId: recipientUri })
             : {};

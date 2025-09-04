@@ -2,7 +2,6 @@ import { Readable } from 'stream';
 import { FormData } from 'formdata-node';
 import { FormDataEncoder } from 'form-data-encoder';
 import { stream2buffer } from '../utils.ts';
-// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema } from 'moleculer';
 
 const Schema = {

@@ -1,4 +1,3 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'ws'.... Remove this comment to see the full error message
 import { WebSocketServer } from 'ws';
 import http from 'http';
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message

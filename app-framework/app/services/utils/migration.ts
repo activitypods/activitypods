@@ -1,6 +1,5 @@
 import urlJoin from 'url-join';
 import rdf from '@rdfjs/data-model';
-// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema } from 'moleculer';
 
 const MigrationSchema = {

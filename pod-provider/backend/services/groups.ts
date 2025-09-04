@@ -1,12 +1,10 @@
 import path from 'node:path';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { arrayOf } from '@semapps/ldp';
 import { throw403, throw404 } from '@semapps/middlewares';
-// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
@@ -46,7 +44,6 @@ const GroupsService = {
 
         // Ensure the owner is a valid WebID
         const owner = await ctx.call('activitypub.actor.get', { actorUri: ownerWebId });
-        // @ts-expect-error TS(2339): Property 'type' does not exist on type 'never'.
         if (!owner || !arrayOf(owner.type || owner['@type']).includes('foaf:Person')) throw new E.ForbiddenError();
 
         // Create account
@@ -138,7 +135,6 @@ const GroupsService = {
         // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const ownerWebId = ctx.meta.webId;
         const ownerAccount = await ctx.call('auth.account.findByWebId', { webId: ownerWebId });
-        // @ts-expect-error TS(2339): Property 'owns' does not exist on type 'never'.
         return arrayOf(ownerAccount.owns);
       }
     },
@@ -152,7 +148,6 @@ const GroupsService = {
         const account = await ctx.call('auth.account.findByUsername', { username });
         if (!account) throw404('Actor not found');
 
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'never'.
         if (!webId || (webId !== 'system' && webId !== account.webId)) {
           throw403('You are not allowed to claim a group with this actor.');
         }
@@ -160,7 +155,6 @@ const GroupsService = {
         // Attach group to account
         await ctx.call('auth.account.update', {
           id: account['@id'],
-          // @ts-expect-error TS(2339): Property 'owns' does not exist on type 'never'.
           owns: account.owns ? [...arrayOf(account.owns), groupWebId] : groupWebId
         });
       }
@@ -175,7 +169,6 @@ const GroupsService = {
         const account = await ctx.call('auth.account.findByUsername', { username });
         if (!account) throw404('Actor not found');
 
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'never'.
         if (!webId || (webId !== 'system' && webId !== account.webId)) {
           throw403('You are not allowed to undo a group claim with this actor.');
         }

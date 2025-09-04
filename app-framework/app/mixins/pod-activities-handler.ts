@@ -1,13 +1,10 @@
-// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   dependencies: ['pod-activities-watcher'],
   async started() {
-    // @ts-expect-error TS(2339): Property 'schema' does not exist on type 'void'.
     if (!this.schema.activities) throw new Error(`No activities defined for service ${this.name}`);
 
-    // @ts-expect-error TS(2339): Property 'schema' does not exist on type 'void'.
     for (const [key, activityHandler] of Object.entries(this.schema.activities)) {
       const boxTypes = [];
       // @ts-expect-error TS(18046): 'activityHandler' is of type 'unknown'.
@@ -15,11 +12,9 @@ const Schema = {
       // @ts-expect-error TS(18046): 'activityHandler' is of type 'unknown'.
       if (activityHandler.onEmit) boxTypes.push('outbox');
 
-      // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
       await this.broker.call('pod-activities-watcher.watch', {
         // @ts-expect-error TS(18046): 'activityHandler' is of type 'unknown'.
         matcher: typeof activityHandler.match === 'function' ? activityHandler.match.bind(this) : activityHandler.match,
-        // @ts-expect-error TS(2339): Property 'name' does not exist on type 'void'.
         actionName: this.name + '.processActivity',
         boxTypes,
         key

@@ -1,5 +1,4 @@
 import path from 'path';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 const { MoleculerError } = require('moleculer').Errors;
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
@@ -62,9 +61,7 @@ const RegistrationEndpointSchema = {
           }
 
           const requirements = await ctx.call('applications.getRequirements', { appUri });
-          // @ts-expect-error TS(2339): Property 'accessNeeds' does not exist on type 'nev... Remove this comment to see the full error message
           acceptedAccessNeeds = requirements.accessNeeds;
-          // @ts-expect-error TS(2339): Property 'specialRights' does not exist on type 'n... Remove this comment to see the full error message
           acceptedSpecialRights = requirements.specialRights;
         }
 
@@ -93,7 +90,6 @@ const RegistrationEndpointSchema = {
         }
 
         // If the app is an ActivityPub actor, send notification
-        // @ts-expect-error TS(2339): Property 'inbox' does not exist on type 'never'.
         if (app.inbox) {
           await ctx.call('activitypub.outbox.post', {
             collectionUri: urlJoin(webId, 'outbox'),
@@ -141,9 +137,7 @@ const RegistrationEndpointSchema = {
           }
 
           const requirements = await ctx.call('applications.getRequirements', { appUri });
-          // @ts-expect-error TS(2339): Property 'accessNeeds' does not exist on type 'nev... Remove this comment to see the full error message
           acceptedAccessNeeds = requirements.accessNeeds;
-          // @ts-expect-error TS(2339): Property 'specialRights' does not exist on type 'n... Remove this comment to see the full error message
           acceptedSpecialRights = requirements.specialRights;
         }
 
@@ -181,7 +175,6 @@ const RegistrationEndpointSchema = {
         }
 
         // If the app is an ActivityPub actor, send notification
-        // @ts-expect-error TS(2339): Property 'inbox' does not exist on type 'never'.
         if (app.inbox) {
           await ctx.call('activitypub.outbox.post', {
             collectionUri: urlJoin(webId, 'outbox'),
@@ -222,7 +215,6 @@ const RegistrationEndpointSchema = {
           });
 
           // If the app is an ActivityPub actor, send notification
-          // @ts-expect-error TS(2339): Property 'inbox' does not exist on type 'never'.
           if (app.inbox) {
             await ctx.call('activitypub.outbox.post', {
               collectionUri: urlJoin(webId, 'outbox'),

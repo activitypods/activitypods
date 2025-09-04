@@ -1,4 +1,3 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } from '@semapps/activitypub';
 import { sanitizeSparqlQuery } from '@semapps/triplestore';

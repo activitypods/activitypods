@@ -1,7 +1,6 @@
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'spea... Remove this comment to see the full error message
 import createSlug from 'speakingurl';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
-// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema } from 'moleculer';
 
 const PodWacGroupsSchema = {
@@ -9,7 +8,6 @@ const PodWacGroupsSchema = {
   mixins: [FetchPodOrProxyMixin],
   actions: {
     get: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { groupUri, groupSlug, actorUri } = ctx.params;
 
@@ -26,7 +24,6 @@ const PodWacGroupsSchema = {
     },
 
     list: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { actorUri } = ctx.params;
         const { origin, pathname } = new URL(actorUri);
@@ -44,7 +41,6 @@ const PodWacGroupsSchema = {
     },
 
     create: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { groupSlug, actorUri } = ctx.params;
         const { origin, pathname } = new URL(actorUri);
@@ -70,7 +66,6 @@ const PodWacGroupsSchema = {
     },
 
     delete: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { groupUri, groupSlug, actorUri } = ctx.params;
 
@@ -85,7 +80,6 @@ const PodWacGroupsSchema = {
     },
 
     addMember: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { groupUri, groupSlug, memberUri, actorUri } = ctx.params;
 
@@ -104,7 +98,6 @@ const PodWacGroupsSchema = {
     },
 
     removeMember: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { groupUri, groupSlug, memberUri, actorUri } = ctx.params;
 

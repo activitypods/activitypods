@@ -24,10 +24,8 @@ const ProfilesProfileSchema = {
       async handler(ctx) {
         // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'Optionali... Remove this comment to see the full error message
         const { webId, profileData } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
         const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
         await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
         // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message

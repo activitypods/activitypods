@@ -1,5 +1,4 @@
 import path from 'path';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { arrayOf, getDatasetFromUri } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
@@ -21,7 +20,6 @@ const getAnnouncersGroupUri = (eventUri: any) => {
 
 const AnnouncerSchema = {
   name: 'announcer' as const,
-  // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Serv... Remove this comment to see the full error message
   mixins: [ActivitiesHandlerMixin],
   settings: {
     announcesCollectionOptions: {
@@ -340,7 +338,6 @@ const AnnouncerSchema = {
         const { delegatedGrant } = ctx.params;
 
         if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
-          // @ts-expect-error TS(2339): Property 'logger' does not exist on type 'ServiceE... Remove this comment to see the full error message
           this.logger.warn(`Delegated grant is for application, skip adding to the announces collection...`);
           return;
         }
@@ -353,7 +350,6 @@ const AnnouncerSchema = {
         for (const resourceUri of arrayOf(delegatedGrant['interop:hasDataInstance'])) {
           const announcesCollectionUri = await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
             objectUri: resourceUri,
-            // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'Servic... Remove this comment to see the full error message
             collection: this.settings.announcesCollectionOptions
           });
 

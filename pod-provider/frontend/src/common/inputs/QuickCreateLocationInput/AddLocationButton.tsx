@@ -22,7 +22,6 @@ import { extractContext, LocationInput } from '@semapps/geo-components';
 const useStyles = makeStyles()(theme => ({
   button: {
     margin: '12px 0 0 12px',
-    // @ts-expect-error TS(2339): Property 'breakpoints' does not exist on type 'Def... Remove this comment to see the full error message
     [theme.breakpoints.down('sm')]: {
       margin: '-12px 0 12px 0'
     }

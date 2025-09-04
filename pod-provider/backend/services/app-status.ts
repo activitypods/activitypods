@@ -1,11 +1,9 @@
 const { MoleculerError } = require('moleculer').Errors;
 import { getDatasetFromUri } from '@semapps/ldp';
-// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../config/config.ts';
 import { arraysEqual } from '../utils.ts';
 import { ServiceSchema } from 'moleculer';
 
-// @ts-expect-error TS(7022): 'AppStatusService' implicitly has type 'any' becau... Remove this comment to see the full error message
 const AppStatusService = {
   name: 'app-status' as const,
   dependencies: ['api'],

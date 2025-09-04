@@ -1,6 +1,5 @@
 import Handlebars from 'handlebars';
 import { isObject } from '@semapps/ldp';
-// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema } from 'moleculer';
 
 const TranslatorSchema = {
@@ -14,9 +13,7 @@ const TranslatorSchema = {
     }
   },
   async started() {
-    // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'void'.
     for (const [name, fn] of Object.entries(this.settings.handlebars.helpers)) {
-      // @ts-expect-error TS(2339): Property 'logger' does not exist on type 'void'.
       this.logger.info(`Registering handlebars helper ${name}`);
       // @ts-expect-error TS(2345): Argument of type 'unknown' is not assignable to pa... Remove this comment to see the full error message
       Handlebars.registerHelper(name, fn);

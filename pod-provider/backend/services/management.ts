@@ -174,7 +174,6 @@ const ManagementService = {
           if (account.group && !arrayOf(account.owner).includes(webId)) {
             throw403('You are not allowed to delete this group.');
           }
-          // @ts-expect-error TS(2339): Property 'group' does not exist on type 'never'.
           if (!account.group && webId !== account.webId) {
             throw403('You are not allowed to delete this actor.');
           }

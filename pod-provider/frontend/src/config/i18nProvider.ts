@@ -3,7 +3,6 @@ import polyglotI18nProvider from 'ra-i18n-polyglot';
 import raEnglishMessages from 'ra-language-english';
 import raFrenchMessages from 'ra-language-french';
 import { frenchMessages as authFrenchMessages, englishMessages as authEnglishMessages } from '@semapps/auth-provider';
-// @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import frAppMessages from './messages/fr';
 // @ts-expect-error TS(2306): File '/home/laurin/projects/virtual-assembly/activ... Remove this comment to see the full error message
 import enAppMessages from './messages/en';

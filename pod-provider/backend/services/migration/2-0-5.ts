@@ -2,7 +2,6 @@ import rdf from '@rdfjs/data-model';
 import { MigrationService } from '@semapps/migration';
 import { arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
-// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 

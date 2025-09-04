@@ -1,4 +1,3 @@
-// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { WebAclMiddleware, CacherMiddleware } from '@semapps/webacl';
 // @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { ObjectsWatcherMiddleware } from '@semapps/sync';

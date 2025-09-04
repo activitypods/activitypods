@@ -1,14 +1,11 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 import { ControlledContainerMixin } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
-// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
 const ProfilesLocationSchema = {
   name: 'profiles.location' as const,
-  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['vcard:Location'],

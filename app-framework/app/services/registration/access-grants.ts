@@ -1,5 +1,4 @@
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
-// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema } from 'moleculer';
 
 /**
@@ -7,7 +6,6 @@ import { ServiceSchema } from 'moleculer';
  */
 const AccessGrantsSchema = {
   name: 'access-grants' as const,
-  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:AccessGrant'],
@@ -15,7 +13,6 @@ const AccessGrantsSchema = {
   },
   actions: {
     getContainerByShapeTree: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { shapeTreeUri, podOwner } = ctx.params;
 

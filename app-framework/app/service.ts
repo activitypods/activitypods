@@ -21,7 +21,6 @@ import ShapeTreesService from './services/utils/shape-trees.ts';
 import TimerService from './services/utils/timer.ts';
 import TranslatorService from './services/utils/translator.ts';
 import MigrationService from './services/utils/migration.ts';
-// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema } from 'moleculer';
 
 const AppSchema = {
@@ -60,7 +59,6 @@ const AppSchema = {
     'access-needs-groups'
   ],
   created() {
-    // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'void'.
     if (!this.settings.queueServiceUrl) {
       throw new Error(`The setting queueServiceUrl is mandatory`);
     }
@@ -84,14 +82,12 @@ const AppSchema = {
     // Pod handling
     // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({
-      // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'void'.
       mixins: [PodActivitiesWatcherService, QueueMixin(this.settings.queueServiceUrl)]
     });
     // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({
       mixins: [PodNotificationService],
       settings: {
-        // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'void'.
         frontUrl: this.settings.app.frontUrl
       }
     });
@@ -115,7 +111,6 @@ const AppSchema = {
     this.broker.createService({ mixins: [ShapeTreesService] });
     // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     this.broker.createService({
-      // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'void'.
       mixins: [TimerService, QueueMixin(this.settings.queueServiceUrl)]
     });
     // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
@@ -124,17 +119,13 @@ const AppSchema = {
     this.broker.createService({ mixins: [MigrationService], settings: { baseUrl: this.settings.baseUrl } });
   },
   async started() {
-    // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'void'.
     const { app, oidc, accessNeeds } = this.settings;
 
-    // @ts-expect-error TS(2339): Property 'appActor' does not exist on type 'void'.
     this.appActor = await this.broker.call('actors.createOrUpdateApp', { app, oidc });
 
     // TODO Ensure this doesn't add a link on every call
-    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     await this.broker.call('nodeinfo.addLink', {
       rel: 'https://www.w3.org/ns/activitystreams#Application',
-      // @ts-expect-error TS(2339): Property 'appActor' does not exist on type 'void'.
       href: this.appActor.id
     });
 

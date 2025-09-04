@@ -1,12 +1,10 @@
 import { MIME_TYPES } from '@semapps/mime-types';
-// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema } from 'moleculer';
 
 const ShaclSchema = {
   name: 'shacl' as const,
   actions: {
     get: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri } = ctx.params;
         return await ctx.call('ldp.remote.get', { resourceUri, accept: MIME_TYPES.JSON });

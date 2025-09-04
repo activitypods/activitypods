@@ -1,12 +1,10 @@
 import { ControlledContainerMixin } from '@semapps/ldp';
 import { necessityMapping } from '../../mappings.ts';
 import { arraysEqual } from '../../utils.ts';
-// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema } from 'moleculer';
 
 const AccessNeedsSchema = {
   name: 'access-needs' as const,
-  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:AccessNeed'],

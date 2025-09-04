@@ -6,7 +6,6 @@ import { ServiceSchema } from 'moleculer';
 
 const DelegatedAccessGrantsSchema = {
   name: 'delegated-access-grants' as const,
-  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ImmutableContainerMixin, ControlledContainerMixin, AccessGrantsMixin],
   settings: {
     acceptedTypes: ['interop:DelegatedAccessGrant'],
@@ -62,13 +61,10 @@ const DelegatedAccessGrantsSchema = {
             actorUri: webId
           });
 
-          // @ts-expect-error TS(2339): Property 'status' does not exist on type 'never'.
           if (response.status === 201) {
-            // @ts-expect-error TS(2339): Property 'headers' does not exist on type 'never'.
             delegatedGrantUri = response.headers.get('Location');
           } else {
             throw new Error(
-              // @ts-expect-error TS(2339): Property 'status' does not exist on type 'never'.
               `Could not fetch ${authorizationAgent['interop:hasDelegationIssuanceEndpoint']}. Response code: ${response.status}`
             );
           }
@@ -128,7 +124,6 @@ const DelegatedAccessGrantsSchema = {
             actorUri: webId
           });
 
-          // @ts-expect-error TS(2339): Property 'status' does not exist on type 'never'.
           if (response.status !== 204) {
             this.logger.warn(`Could not delete delegated grant ${delegatedGrantUri}. Deleting local cache anyway.`);
           }
@@ -157,7 +152,6 @@ const DelegatedAccessGrantsSchema = {
           shapeTreeUri: grant['interop:registeredShapeTree']
         });
 
-        // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
         for (const authorization of authorizations) {
           await ctx.call('delegated-access-grants.generateFromSingleScopeAllAuthorization', {
             authorization,
@@ -191,7 +185,6 @@ const DelegatedAccessGrantsSchema = {
         });
 
         // Find if a delegated grant already exist for this social agent
-        // @ts-expect-error TS(2339): Property 'find' does not exist on type 'never'.
         const delegatedGrant = delegatedGrants.find(
           (ddg: any) => ddg['interop:dataOwner'] === grant['interop:dataOwner']
         );

@@ -3,14 +3,12 @@ const SparqlGenerator = sparqljsModule.Generator;
 import rdf from '@rdfjs/data-model';
 import { arrayOf, isURL } from '@semapps/ldp';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
-// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema } from 'moleculer';
 
 const PodContainersSchema = {
   name: 'pod-containers' as const,
   mixins: [FetchPodOrProxyMixin],
   started() {
-    // @ts-expect-error TS(2339): Property 'sparqlGenerator' does not exist on type ... Remove this comment to see the full error message
     this.sparqlGenerator = new SparqlGenerator({
       /* prefixes, baseIRI, factory, sparqlStar */
     });
@@ -25,7 +23,6 @@ const PodContainersSchema = {
         type: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { type } = ctx.params;
 
@@ -86,7 +83,6 @@ const PodContainersSchema = {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { containerUri, resourceUri, actorUri } = ctx.params;
 

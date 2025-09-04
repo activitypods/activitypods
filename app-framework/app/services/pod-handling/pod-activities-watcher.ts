@@ -2,7 +2,6 @@ import { getContainerFromUri, arrayOf, isObject, isURL } from '@semapps/ldp';
 import { matchActivity } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { objectDepth } from '../../utils.ts';
-// @ts-expect-error TS(2305): Module '"moleculer"' has no exported member 'defin... Remove this comment to see the full error message
 import { ServiceSchema } from 'moleculer';
 
 const queueOptions =
@@ -21,7 +20,6 @@ const PodActivitiesWatcherSchema = {
   name: 'pod-activities-watcher' as const,
   dependencies: ['triplestore', 'ldp', 'activitypub.actor', 'solid-notifications.listener'],
   async started() {
-    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     const nodes = await this.broker.call('triplestore.query', {
       query: `
         SELECT DISTINCT ?specialRights ?actorUri
@@ -36,18 +34,14 @@ const PodActivitiesWatcherSchema = {
     });
 
     // On (re)start, delete existing queue
-    // @ts-expect-error TS(2339): Property 'getQueue' does not exist on type 'void'.
     this.getQueue('registerListener').clean(0);
-    // @ts-expect-error TS(2339): Property 'getQueue' does not exist on type 'void'.
     this.getQueue('registerListener').clean(0, 'failed');
-    // @ts-expect-error TS(2339): Property 'getQueue' does not exist on type 'void'.
     this.getQueue('registerListener').empty();
 
     for (const { actorUri, specialRights } of nodes) {
       try {
         switch (specialRights.value) {
           case 'http://activitypods.org/ns/core#ReadInbox':
-            // @ts-expect-error TS(2339): Property 'createJob' does not exist on type 'void'... Remove this comment to see the full error message
             this.createJob(
               'registerListener',
               actorUri.value + ' inbox',
@@ -57,7 +51,6 @@ const PodActivitiesWatcherSchema = {
             break;
 
           case 'http://activitypods.org/ns/core#ReadOutbox':
-            // @ts-expect-error TS(2339): Property 'createJob' does not exist on type 'void'... Remove this comment to see the full error message
             this.createJob(
               'registerListener',
               actorUri.value + ' outbox',
@@ -72,15 +65,12 @@ const PodActivitiesWatcherSchema = {
       }
     }
 
-    // @ts-expect-error TS(2339): Property 'handlers' does not exist on type 'void'.
     this.handlers = [];
 
-    // @ts-expect-error TS(2339): Property 'baseUrl' does not exist on type 'void'.
     this.baseUrl = await this.broker.call('ldp.getBaseUrl');
   },
   actions: {
     watch: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { matcher, actionName, boxTypes, key } = ctx.params;
 
@@ -91,7 +81,6 @@ const PodActivitiesWatcherSchema = {
     },
 
     processWebhook: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { type, object, target } = ctx.params;
 

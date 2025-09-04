@@ -4,7 +4,6 @@ import { ServiceSchema } from 'moleculer';
 
 const ApplicationsSchema = {
   name: 'applications' as const,
-  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
     acceptedTypes: ['interop:Application'],
@@ -49,7 +48,6 @@ const ApplicationsSchema = {
       async handler(ctx) {
         const { type, appUri, podOwner } = ctx.params;
 
-        // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
         const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
 
         const app = await this.actions.get({ appUri }, { parentCtx: ctx });

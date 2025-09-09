@@ -8,8 +8,8 @@
     "unlink-semapps-packages": "yalc remove --all && rm -rf node_modules/@semapps && yarn install --force"
   },
   "dependencies": {
-    "@activitypods/ldo-shapes": "^0.1.1",
-    "@activitypods/shape-definitions": "^0.1.1",
+    "@activitypods/ldo-shapes": "^0.2.0",
+    "@activitypods/shape-definitions": "^0.2.0",
     "@ldo/connected": "^1.0.0-alpha.32",
     "@ldo/connected-solid": "^1.0.0-alpha.32",
     "@mui/icons-material": "^7.1.0",
@@ -113,5 +113,6 @@
     "react-dropzone": "14.3.8",
     "react-error-boundary": "4.1.2",
     "file-selector": "2.1.2"
-  }
+  },
+  "packageManager": "yarn@4.9.4"
 }

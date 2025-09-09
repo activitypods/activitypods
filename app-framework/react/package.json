@@ -27,7 +27,7 @@
     "@mui/material": "^7.1.0",
     "react": "^18.2.0",
     "react-admin": "^4.11.0",
-    "react-router-dom": "^6.1.0",
+    "react-router-dom": "^7.8.2",
     "tss-react": "^4.9.19"
   },
   "devDependencies": {
@@ -39,7 +39,7 @@
     "@types/url-join": "^4.0.1",
     "react": "^18.2.0",
     "react-admin": "^4.11.0",
-    "react-router-dom": "^6.1.0",
+    "react-router-dom": "^7.8.2",
     "tss-react": "^4.9.19",
     "typescript": ">=3.0.0",
     "yalc": "^1.0.0-pre.53"

@@ -1,12 +1,11 @@
 import urlJoin from 'url-join';
 import { MigrationService } from '@semapps/migration';
-import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
+import * as CONFIG from '../../config/config.ts';
 const MIGRATION_VERSION = '2.3.0';
 
-const Migration320Schema = {
-  name: 'migration-3-2-0' as const,
-  // @ts-expect-error TS(2322): Type '{ name: "migration"; settings: { baseUrl: un... Remove this comment to see the full error message
+const Migration230Schema = {
+  name: 'migration-2-3-0' as const,
   mixins: [MigrationService],
   settings: {
     baseUrl: CONFIG.BASE_URL
@@ -23,11 +22,8 @@ const Migration320Schema = {
           } else {
             this.logger.info(`Migrating Pod of ${webId} to v${MIGRATION_VERSION}...`);
 
-            // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
             ctx.meta.dataset = username;
-            // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
             ctx.meta.webId = webId;
-            // @ts-expect-error TS(2339): Property 'skipObjectsWatcher' does not exist on ty... Remove this comment to see the full error message
             ctx.meta.skipObjectsWatcher = true; // We don't want to trigger an Update activity
 
             try {
@@ -136,12 +132,12 @@ const Migration320Schema = {
   }
 } satisfies ServiceSchema;
 
-export default Migration320Schema;
+export default Migration230Schema;
 
 declare global {
   export namespace Moleculer {
     export interface AllServices {
-      [Migration320Schema.name]: typeof Migration320Schema;
+      [Migration230Schema.name]: typeof Migration230Schema;
     }
   }
 }

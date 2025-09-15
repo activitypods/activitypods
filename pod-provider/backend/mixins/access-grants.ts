@@ -1,4 +1,4 @@
-import { arrayOf, getId, getType } from '@semapps/ldp';
+import { getId, getType } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } from '@semapps/activitypub';
 import { ServiceSchema } from 'moleculer';
 
@@ -6,7 +6,6 @@ import { ServiceSchema } from 'moleculer';
  * Mixin used by the AccessGrantsService and DelegatedAccessGrantsService
  */
 const AccessGrantsMixin = {
-  // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Serv... Remove this comment to see the full error message
   mixins: [ActivitiesHandlerMixin],
   hooks: {
     after: {
@@ -49,19 +48,6 @@ const AccessGrantsMixin = {
           }
         }
 
-        // If the grant is replacing another one, first delete the permissions of the old grant
-        if (grant['interop:replaces']) {
-          // We can still get the old grant, because it is deleted after the new one is created
-          const replacedGrant = await ctx.call('access-grants.get', {
-            resourceUri: grant['interop:replaces'],
-            webId: grant['interop:dataOwner']
-          });
-
-          await ctx.call('permissions-mapper.removePermissionsFromGrant', { grant: replacedGrant });
-        }
-
-        await ctx.call('permissions-mapper.addPermissionsFromGrant', { grant });
-
         // Only send notifications for grants generated for social agents
         // For delegated grants, the granter will take care of notifying the grantee
         if (getType(grant) === 'interop:AccessGrant' && grant['interop:granteeType'] === 'interop:SocialAgent') {
@@ -87,11 +73,6 @@ const AccessGrantsMixin = {
       },
       async delete(ctx, res) {
         const grant = res.oldData;
-
-        // Don't remove permissions when we are replacing
-        if (!ctx.params.isReplacing) {
-          await ctx.call('permissions-mapper.removePermissionsFromGrant', { grant });
-        }
 
         // Detach grant from agent registrations, unless it is a delegated grant (will be done by the issuer)
         if (getType(grant) === 'interop:AccessGrant') {

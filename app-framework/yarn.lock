@@ -9,13 +9,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@activitypods/app@workspace:app"
   dependencies:
-    "@rdfjs/data-model": "npm:^2.1.1"
-    "@semapps/activitypub": "npm:1.1.2"
-    "@semapps/ldp": "npm:1.1.2"
-    "@semapps/mime-types": "npm:1.1.2"
-    "@semapps/nodeinfo": "npm:1.1.2"
-    "@semapps/ontologies": "npm:1.1.2"
-    "@semapps/webacl": "npm:1.1.2"
+    "@rdfjs/data-model": "npm:2.1.1"
+    "@semapps/activitypub": "npm:1.2.0"
+    "@semapps/ldp": "npm:1.2.0"
+    "@semapps/mime-types": "npm:1.2.0"
+    "@semapps/nodeinfo": "npm:1.2.0"
+    "@semapps/ontologies": "npm:1.2.0"
+    "@semapps/webacl": "npm:1.2.0"
     "@types/rdfjs__data-model": "npm:^2.0.9"
     form-data-encoder: "npm:1.9.0"
     formdata-node: "npm:4.4.1"
@@ -36,33 +36,40 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@activitypods/ldo-shapes@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "@activitypods/ldo-shapes@npm:0.2.0"
+  checksum: 10c0/e509e7357251f0407bdc9672a7fb88a56aa68f3b7980557da626d4690ccc9e35fa103c959bb6bfa151524d521e06d056ce4ade42721806819b590a70e0624ec8
+  languageName: node
+  linkType: hard
+
 "@activitypods/react@workspace:react":
   version: 0.0.0-use.local
   resolution: "@activitypods/react@workspace:react"
   dependencies:
-    "@mui/icons-material": "npm:^7.3.1"
-    "@mui/material": "npm:^7.3.1"
+    "@mui/icons-material": "npm:^7.1.0"
+    "@mui/material": "npm:^7.1.0"
     "@parcel/packager-ts": "npm:2.12.0"
     "@parcel/transformer-typescript-types": "npm:2.12.0"
-    "@semapps/activitypub-components": "npm:1.1.2"
-    "@semapps/semantic-data-provider": "npm:1.1.2"
+    "@semapps/activitypub-components": "npm:1.2.0"
+    "@semapps/semantic-data-provider": "npm:1.2.0"
     "@types/rdfjs__data-model": "npm:^2.0.9"
     "@types/url-join": "npm:^4.0.1"
     http-link-header: "npm:^1.1.2"
     jwt-decode: "npm:^3.0.0"
     react: "npm:^18.2.0"
     react-admin: "npm:^4.11.0"
-    react-router-dom: "npm:^6.1.0"
+    react-router-dom: "npm:^7.8.2"
     tss-react: "npm:^4.9.19"
     typescript: "npm:>=3.0.0"
     url-join: "npm:^4.0.1"
     yalc: "npm:^1.0.0-pre.53"
   peerDependencies:
-    "@mui/icons-material": ^7.3.1
-    "@mui/material": ^7.3.1
+    "@mui/icons-material": ^7.1.0
+    "@mui/material": ^7.1.0
     react: ^18.2.0
     react-admin: ^4.11.0
-    react-router-dom: ^6.1.0
+    react-router-dom: ^7.8.2
     tss-react: ^4.9.19
   languageName: unknown
   linkType: soft
@@ -71,6 +78,13 @@ __metadata:
   version: 0.1.1
   resolution: "@activitypods/shape-definitions@npm:0.1.1"
   checksum: 10c0/b623ca3be05e565ec0b9d602d1fcb4737a08ea81c5b47159a44bd2f69181f083d79296441a099dc26495bb01bcc479d438572c19bb6a2a99ae47d7105d0dca8f
+  languageName: node
+  linkType: hard
+
+"@activitypods/shape-definitions@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "@activitypods/shape-definitions@npm:0.2.1"
+  checksum: 10c0/33fd5050ddb921fecfdd7dcd46b0a0ece457f4be1c2c1e2df50fb2d04ba9b33bbd9a070887d87aef531079c1ba772989fd5b1da7f63283a2c5adfd1d36fc04c7
   languageName: node
   linkType: hard
 
@@ -165,6 +179,13 @@ __metadata:
   dependencies:
     regenerator-runtime: "npm:^0.14.0"
   checksum: 10c0/35091ea9de48bd7fd26fb177693d64f4d195eb58ab2b142b893b7f3fa0f1d7c677604d36499ae0621a3703f35ba0c6a8f6c572cc8f7dc0317213841e493cf663
+  languageName: node
+  linkType: hard
+
+"@babel/runtime@npm:^7.28.3":
+  version: 7.28.4
+  resolution: "@babel/runtime@npm:7.28.4"
+  checksum: 10c0/792ce7af9750fb9b93879cc9d1db175701c4689da890e6ced242ea0207c9da411ccf16dc04e689cc01158b28d7898c40d75598f4559109f761c12ce01e959bf7
   languageName: node
   linkType: hard
 
@@ -4030,17 +4051,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitalbazaar/http-client@npm:^1.1.0":
-  version: 1.2.0
-  resolution: "@digitalbazaar/http-client@npm:1.2.0"
-  dependencies:
-    esm: "npm:^3.2.22"
-    ky: "npm:^0.25.1"
-    ky-universal: "npm:^0.8.2"
-  checksum: 10c0/bf4fbba1c336b6f1684a73eae2dea376020d92e3c883cccc170ff73f5690590b28ebc155c2878516aa51f7f3fe24a9d573c7094af442444acf3426ccf772f317
-  languageName: node
-  linkType: hard
-
 "@digitalbazaar/http-client@npm:^3.4.1":
   version: 3.4.1
   resolution: "@digitalbazaar/http-client@npm:3.4.1"
@@ -4822,10 +4832,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/core-downloads-tracker@npm:^7.3.1":
-  version: 7.3.1
-  resolution: "@mui/core-downloads-tracker@npm:7.3.1"
-  checksum: 10c0/4d89ce22ebeba860e76a4fa35aa4946515d921c3c2834551639e99ff622afec2ae6c03fed881c4352283b2cad2f3b731fbde7802740b9b321451bf5e694f733c
+"@mui/core-downloads-tracker@npm:^7.3.2":
+  version: 7.3.2
+  resolution: "@mui/core-downloads-tracker@npm:7.3.2"
+  checksum: 10c0/8549ac661e07926e1c1de2664ad50f68fb4f3f6050f3cfe7bf2e8a7ceaefde99c1615f4ab5185dff22a7d72874d1dcc5fdc3651d08ed4eb1abfb798629f3991f
   languageName: node
   linkType: hard
 
@@ -4845,19 +4855,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/icons-material@npm:^7.3.1":
-  version: 7.3.1
-  resolution: "@mui/icons-material@npm:7.3.1"
+"@mui/icons-material@npm:^7.1.0":
+  version: 7.3.2
+  resolution: "@mui/icons-material@npm:7.3.2"
   dependencies:
-    "@babel/runtime": "npm:^7.28.2"
+    "@babel/runtime": "npm:^7.28.3"
   peerDependencies:
-    "@mui/material": ^7.3.1
+    "@mui/material": ^7.3.2
     "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
     react: ^17.0.0 || ^18.0.0 || ^19.0.0
   peerDependenciesMeta:
     "@types/react":
       optional: true
-  checksum: 10c0/cd35a2417e5c655b3cda5ef9e90cdb9ff7482d36a0d74b05d22ea5fd43b5dd02be004e3ab314e57defcbabc55342e8bbb910660907ab219551fffd7a3bbc85fa
+  checksum: 10c0/25d1f0dcbbb4a35f320aac03317657b15631f9d5b9d48d07e34850d61253a2b4d8dd5e5ca624d76f44b5ceda471ea57d2611f6627fec1eef9fce78855ec01cbf
   languageName: node
   linkType: hard
 
@@ -4894,15 +4904,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/material@npm:^7.3.1":
-  version: 7.3.1
-  resolution: "@mui/material@npm:7.3.1"
+"@mui/material@npm:^7.1.0":
+  version: 7.3.2
+  resolution: "@mui/material@npm:7.3.2"
   dependencies:
-    "@babel/runtime": "npm:^7.28.2"
-    "@mui/core-downloads-tracker": "npm:^7.3.1"
-    "@mui/system": "npm:^7.3.1"
-    "@mui/types": "npm:^7.4.5"
-    "@mui/utils": "npm:^7.3.1"
+    "@babel/runtime": "npm:^7.28.3"
+    "@mui/core-downloads-tracker": "npm:^7.3.2"
+    "@mui/system": "npm:^7.3.2"
+    "@mui/types": "npm:^7.4.6"
+    "@mui/utils": "npm:^7.3.2"
     "@popperjs/core": "npm:^2.11.8"
     "@types/react-transition-group": "npm:^4.4.12"
     clsx: "npm:^2.1.1"
@@ -4913,7 +4923,7 @@ __metadata:
   peerDependencies:
     "@emotion/react": ^11.5.0
     "@emotion/styled": ^11.3.0
-    "@mui/material-pigment-css": ^7.3.1
+    "@mui/material-pigment-css": ^7.3.2
     "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
     react: ^17.0.0 || ^18.0.0 || ^19.0.0
     react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -4926,7 +4936,7 @@ __metadata:
       optional: true
     "@types/react":
       optional: true
-  checksum: 10c0/078fc8ff9aae3ecbc07112a04dc1722afdae2564c51b5201340452f3bbef8deed4565734ca8b3222145431e3171cfeeff093b95920b7afb4f4bea3ea75346368
+  checksum: 10c0/4b82a65af93fe9517991f45c2f9dc127728199921f5c4c5cd7a8cd48e1c89ba17799011440f1b7e32993871c13b3044878a3170ddd9ce0e7cfe5ca0e7e3613f2
   languageName: node
   linkType: hard
 
@@ -4947,12 +4957,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/private-theming@npm:^7.3.1":
-  version: 7.3.1
-  resolution: "@mui/private-theming@npm:7.3.1"
+"@mui/private-theming@npm:^7.3.2":
+  version: 7.3.2
+  resolution: "@mui/private-theming@npm:7.3.2"
   dependencies:
-    "@babel/runtime": "npm:^7.28.2"
-    "@mui/utils": "npm:^7.3.1"
+    "@babel/runtime": "npm:^7.28.3"
+    "@mui/utils": "npm:^7.3.2"
     prop-types: "npm:^15.8.1"
   peerDependencies:
     "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -4960,7 +4970,7 @@ __metadata:
   peerDependenciesMeta:
     "@types/react":
       optional: true
-  checksum: 10c0/f92ffdcdbaed42a6dbf4cc721921a6f64ae546e40e59f5da7ca6d7bb432870ae03d9ff84df26aede970e14f5eebb3743f76a212ac2ae46ff2bd06907ddd08005
+  checksum: 10c0/fb6067e92a1bc02d4b2b49fa58901200ccf4b79760a0227bf2859bd2cb99c46ba0f43ece9494eaa220710703eaf309a7c6e732daf4176520c0a16e1407846399
   languageName: node
   linkType: hard
 
@@ -4985,11 +4995,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/styled-engine@npm:^7.3.1":
-  version: 7.3.1
-  resolution: "@mui/styled-engine@npm:7.3.1"
+"@mui/styled-engine@npm:^7.3.2":
+  version: 7.3.2
+  resolution: "@mui/styled-engine@npm:7.3.2"
   dependencies:
-    "@babel/runtime": "npm:^7.28.2"
+    "@babel/runtime": "npm:^7.28.3"
     "@emotion/cache": "npm:^11.14.0"
     "@emotion/serialize": "npm:^1.3.3"
     "@emotion/sheet": "npm:^1.4.0"
@@ -5004,7 +5014,7 @@ __metadata:
       optional: true
     "@emotion/styled":
       optional: true
-  checksum: 10c0/1b532153e3b7c357d3988e1a9fe569cb8e37aeece70ac17da8e1d1f3fb7dfc7134f6ec997b8cb3dcb70f8a0fea6574dc05bf198e14d971e0133e64c58d0a7755
+  checksum: 10c0/d5644b40269a70a1c86844f7301aa6865289994e7835b471f3503e67795010d5334362cfd21d8804f54e8b71d6c9c932ca78bafc2325767e3abbe037f9e8e10b
   languageName: node
   linkType: hard
 
@@ -5036,15 +5046,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/system@npm:^7.3.1":
-  version: 7.3.1
-  resolution: "@mui/system@npm:7.3.1"
+"@mui/system@npm:^7.3.2":
+  version: 7.3.2
+  resolution: "@mui/system@npm:7.3.2"
   dependencies:
-    "@babel/runtime": "npm:^7.28.2"
-    "@mui/private-theming": "npm:^7.3.1"
-    "@mui/styled-engine": "npm:^7.3.1"
-    "@mui/types": "npm:^7.4.5"
-    "@mui/utils": "npm:^7.3.1"
+    "@babel/runtime": "npm:^7.28.3"
+    "@mui/private-theming": "npm:^7.3.2"
+    "@mui/styled-engine": "npm:^7.3.2"
+    "@mui/types": "npm:^7.4.6"
+    "@mui/utils": "npm:^7.3.2"
     clsx: "npm:^2.1.1"
     csstype: "npm:^3.1.3"
     prop-types: "npm:^15.8.1"
@@ -5060,7 +5070,7 @@ __metadata:
       optional: true
     "@types/react":
       optional: true
-  checksum: 10c0/032759c8f3b7c6575771f3865535ce89f74ee0340c7e90769ebe0f44f7e1cd23a14dc1c98b8d7e61bb20f685d7d9b0a283823084f25deb1b73179224cb86357e
+  checksum: 10c0/ed385c37f29a8d4b57bc1c59f8bc06a3e4cc393d86a6e0059229eacc7c96bcb11ae80369de0e459971bde24bdd33078f5578f152f0ac2e796222b269a80833ed
   languageName: node
   linkType: hard
 
@@ -5090,6 +5100,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mui/types@npm:^7.4.6":
+  version: 7.4.6
+  resolution: "@mui/types@npm:7.4.6"
+  dependencies:
+    "@babel/runtime": "npm:^7.28.3"
+  peerDependencies:
+    "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: 10c0/baa901e410591d0216b3f959cdbf5a1ee2ce560726d2fba1c700b40f64c1be3e63bd799f1b30a7d0bc8cc45a46d782928ea28d9906d64438f21e305884c48a99
+  languageName: node
+  linkType: hard
+
 "@mui/utils@npm:^5.16.6":
   version: 5.16.6
   resolution: "@mui/utils@npm:5.16.6"
@@ -5110,7 +5134,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/utils@npm:^5.16.6 || ^6.0.0 || ^7.0.0, @mui/utils@npm:^7.3.1":
+"@mui/utils@npm:^5.16.6 || ^6.0.0 || ^7.0.0":
   version: 7.3.1
   resolution: "@mui/utils@npm:7.3.1"
   dependencies:
@@ -5130,7 +5154,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/x-date-pickers@npm:^7.3.1":
+"@mui/utils@npm:^7.3.2":
+  version: 7.3.2
+  resolution: "@mui/utils@npm:7.3.2"
+  dependencies:
+    "@babel/runtime": "npm:^7.28.3"
+    "@mui/types": "npm:^7.4.6"
+    "@types/prop-types": "npm:^15.7.15"
+    clsx: "npm:^2.1.1"
+    prop-types: "npm:^15.8.1"
+    react-is: "npm:^19.1.1"
+  peerDependencies:
+    "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
+    react: ^17.0.0 || ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: 10c0/5a88ff08a823b976421f8d61098d56d527d95c222800d5b3f71acff795e7b0db6b02e40228773a6ed7ee22d8eaa607d816215b5a4b6497c21aaa9668c2699b56
+  languageName: node
+  linkType: hard
+
+"@mui/x-date-pickers@npm:^7.1.0":
   version: 7.29.4
   resolution: "@mui/x-date-pickers@npm:7.29.4"
   dependencies:
@@ -6592,7 +6636,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rdfjs/data-model@npm:^1.2.0, @rdfjs/data-model@npm:^1.3.4":
+"@rdfjs/data-model@npm:2.1.1":
+  version: 2.1.1
+  resolution: "@rdfjs/data-model@npm:2.1.1"
+  bin:
+    rdfjs-data-model-test: bin/test.js
+  checksum: 10c0/ed52a9b62892765f2f3b739052d6df57f3ab3057d4e2351b64224a4b741dd378857590500439ef719ad768fc978471d59173cd83be4be99efb5d5b88d39648ff
+  languageName: node
+  linkType: hard
+
+"@rdfjs/data-model@npm:^1.2.0":
   version: 1.3.4
   resolution: "@rdfjs/data-model@npm:1.3.4"
   dependencies:
@@ -6609,15 +6662,6 @@ __metadata:
   bin:
     rdfjs-data-model-test: bin/test.js
   checksum: 10c0/6a0d39988957110177f3a28cc44d2beff8b7de08421b16c741d1155bbd07cdb165b5a6030e47b4e26dc760c10a09ada8c35ec338223116516455ac5b4a996a46
-  languageName: node
-  linkType: hard
-
-"@rdfjs/data-model@npm:^2.0.0, @rdfjs/data-model@npm:^2.1.0, @rdfjs/data-model@npm:^2.1.1":
-  version: 2.1.1
-  resolution: "@rdfjs/data-model@npm:2.1.1"
-  bin:
-    rdfjs-data-model-test: bin/test.js
-  checksum: 10c0/ed52a9b62892765f2f3b739052d6df57f3ab3057d4e2351b64224a4b741dd378857590500439ef719ad768fc978471d59173cd83be4be99efb5d5b88d39648ff
   languageName: node
   linkType: hard
 
@@ -6940,35 +6984,50 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@semapps/activitypub-components@npm:1.1.2":
-  version: 1.1.2
-  resolution: "@semapps/activitypub-components@npm:1.1.2"
+"@semapps/activitypub-components@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@semapps/activitypub-components@npm:1.2.0"
   dependencies:
+    "@activitypods/ldo-shapes": "npm:^0.2.0"
+    "@activitypods/shape-definitions": "npm:^0.2.1"
+    "@ldo/connected": "npm:^1.0.0-alpha.30"
+    "@ldo/connected-solid": "npm:^1.0.0-alpha.30"
+    "@ldo/ldo": "npm:^1.0.0-alpha.30"
+    "@ldo/solid-react": "npm:^1.0.0-alpha.30"
+    "@rdfjs/data-model": "npm:2.1.1"
     "@rdfjs/dataset": "npm:^2.0.2"
     "@rdfjs/parser-jsonld": "npm:^2.1.3"
     "@rdfjs/parser-n3": "npm:^2.1.0"
-    "@semapps/auth-provider": "npm:1.1.2"
-    "@semapps/field-components": "npm:1.1.2"
-    "@semapps/semantic-data-provider": "npm:1.1.2"
+    "@rdfjs/types": "npm:^2.0.1"
+    "@semapps/auth-provider": "npm:1.2.0"
+    "@semapps/field-components": "npm:1.2.0"
+    "@semapps/semantic-data-provider": "npm:1.2.0"
+    "@tanstack/react-query": "npm:^5.79.0"
     "@tiptap/core": "npm:^2.0.0-beta.95"
     "@tiptap/extension-mention": "npm:^2.0.0-beta.95"
     "@tiptap/extension-placeholder": "npm:^2.0.0-beta.95"
     "@tiptap/react": "npm:^2.0.0-beta.95"
     "@tiptap/suggestion": "npm:^2.0.0-beta.95"
+    jsonld: "npm:^8.3.3"
     ra-input-rich-text: "npm:^4.11.0"
+    rdf-dereference-store: "npm:^1.3.2"
     rdf-ext: "npm:^2.5.2"
     rdf-validate-shacl: "npm:^0.5.6"
     rdflib: "npm:^2.2.37"
-    react-admin: "npm:^4.11.0"
+    react-router: "npm:^7.8.0"
+    readable-stream: "npm:^4.7.0"
     readable-web-to-node-stream: "npm:^5.0.0"
+    shacl-engine: "npm:^1.0.2"
     tippy.js: "npm:^6.3.7"
+    tss-react: "npm:^4.9.19"
   peerDependencies:
-    "@mui/icons-material": ^5.13.1
-    "@mui/material": ^5.13.1
-    "@mui/styles": ^5.13.1
+    "@mui/icons-material": ^7.1.0
+    "@mui/material": ^7.1.0
+    "@tanstack/react-query": ^5.79.0
     react: ^18.2.0
-    react-query: ^3.39.3
-  checksum: 10c0/3a4d4e6e078d46e8ec1c267c405b62fd6960e09e5571e76e2b24b23a886f338d1e9a41cfe1f339722d0a42faac3c3aecfb01f81b2312088deefa200eb67c3d2d
+    react-admin: ^5.10.1
+    react-dom: ^18.2.0
+  checksum: 10c0/49ca4a251daceb72857a2761da6165f11cf2c339da58b2ec64968dbbd7f7aec6593ae09e7c01222212f866f7f13a4438a54ca0de0efa9c944ecfffef8fbd6179
   languageName: node
   linkType: hard
 
@@ -6982,7 +7041,7 @@ __metadata:
     "@ldo/connected-solid": "npm:^1.0.0-alpha.30"
     "@ldo/ldo": "npm:^1.0.0-alpha.30"
     "@ldo/solid-react": "npm:^1.0.0-alpha.30"
-    "@rdfjs/data-model": "npm:^2.1.0"
+    "@rdfjs/data-model": "npm:2.1.1"
     "@rdfjs/dataset": "npm:^2.0.2"
     "@rdfjs/parser-jsonld": "npm:^2.1.3"
     "@rdfjs/parser-n3": "npm:^2.1.0"
@@ -7009,58 +7068,36 @@ __metadata:
     tippy.js: "npm:^6.3.7"
     tss-react: "npm:^4.9.19"
   peerDependencies:
-    "@mui/icons-material": ^7.3.1
-    "@mui/material": ^7.3.1
+    "@mui/icons-material": ^7.1.0
+    "@mui/material": ^7.1.0
     "@tanstack/react-query": ^5.79.0
     react: ^18.2.0
-    react-admin: ^5.8.3
+    react-admin: ^5.10.1
+    react-dom: ^18.2.0
   languageName: unknown
   linkType: soft
 
-"@semapps/activitypub@npm:1.1.2":
-  version: 1.1.2
-  resolution: "@semapps/activitypub@npm:1.1.2"
+"@semapps/activitypub@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@semapps/activitypub@npm:1.2.0"
   dependencies:
-    "@rdfjs/data-model": "npm:^1.3.4"
-    "@semapps/crypto": "npm:1.1.2"
-    "@semapps/ldp": "npm:1.1.2"
-    "@semapps/middlewares": "npm:1.1.2"
-    "@semapps/mime-types": "npm:1.1.2"
-    "@semapps/ontologies": "npm:1.1.2"
-    "@semapps/triplestore": "npm:1.1.2"
+    "@rdfjs/data-model": "npm:2.1.1"
+    "@semapps/crypto": "npm:1.2.0"
+    "@semapps/ldp": "npm:1.2.0"
+    "@semapps/middlewares": "npm:1.2.0"
+    "@semapps/mime-types": "npm:1.2.0"
+    "@semapps/ontologies": "npm:1.2.0"
+    "@semapps/triplestore": "npm:1.2.0"
     handlebars: "npm:^4.7.7"
-    moleculer: "npm:^0.14.18"
     moleculer-bull: "npm:^0.2.5"
     moleculer-db: "npm:^0.8.16"
     moleculer-web: "npm:^0.10.0-beta1"
     node-fetch: "npm:^2.6.6"
     sparqljs: "npm:^3.5.2"
     url-join: "npm:^4.0.1"
-  checksum: 10c0/0b50efb0d6492a310c1e19f89a4f68eaeb44356706e752605c5a8d3209be8e3e08ab7a3349e2515f2be830aad8f2e1bc951d14b84b9bddc974059960720057a3
-  languageName: node
-  linkType: hard
-
-"@semapps/auth-provider@npm:1.1.2":
-  version: 1.1.2
-  resolution: "@semapps/auth-provider@npm:1.1.2"
-  dependencies:
-    "@semapps/semantic-data-provider": "npm:1.1.2"
-    classnames: "npm:^2.3.2"
-    jwt-decode: "npm:^3.0.0"
-    lodash: "npm:^4.17.21"
-    oauth4webapi: "npm:^2.3.0"
-    react-hook-form: "npm:^7.43.9"
-    speakingurl: "npm:^14.0.1"
-    url-join: "npm:^4.0.1"
   peerDependencies:
-    "@mui/icons-material": ^5.13.1
-    "@mui/material": ^5.13.1
-    "@mui/styles": ^5.13.1
-    "@mui/system": ^5.13.1
-    react: ^18.2.0
-    react-admin: ^4.11.0
-    react-router-dom: ^6.1.0
-  checksum: 10c0/c6dd71fdfd607fc989a1ff9e5b47a60ff4fa70c30a9f345aa4f2940f2148957f5a14c88fc89887d1a3586ca8d0c356f565954a20e30527a8043bd4a7a3297131
+    moleculer: ^0.14.35
+  checksum: 10c0/5953bdff1c12ea396177c0208d84001d96b39e450315b73ed6c92f22aeecdd5160c0640ddc26580902ea620d9bb163da69f5a1dab1c4573d61ea9b04a8490ce0
   languageName: node
   linkType: hard
 
@@ -7078,18 +7115,42 @@ __metadata:
     tss-react: "npm:^4.9.19"
     url-join: "npm:^4.0.1"
   peerDependencies:
-    "@mui/icons-material": ^7.3.1
-    "@mui/material": ^7.3.1
-    "@mui/system": ^7.3.1
+    "@mui/icons-material": ^7.1.0
+    "@mui/material": ^7.1.0
+    "@mui/system": ^7.1.0
     react: ^18.2.0
-    react-admin: ^5.8.3
+    react-admin: ^5.10.1
     react-router-dom: ^6.1.0
   languageName: unknown
   linkType: soft
 
-"@semapps/crypto@npm:1.1.2":
-  version: 1.1.2
-  resolution: "@semapps/crypto@npm:1.1.2"
+"@semapps/auth-provider@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@semapps/auth-provider@npm:1.2.0"
+  dependencies:
+    "@semapps/semantic-data-provider": "npm:1.2.0"
+    classnames: "npm:^2.3.2"
+    jwt-decode: "npm:^3.0.0"
+    lodash: "npm:^4.17.21"
+    oauth4webapi: "npm:^2.3.0"
+    react-hook-form: "npm:^7.43.9"
+    speakingurl: "npm:^14.0.1"
+    tss-react: "npm:^4.9.19"
+    url-join: "npm:^4.0.1"
+  peerDependencies:
+    "@mui/icons-material": ^7.1.0
+    "@mui/material": ^7.1.0
+    "@mui/system": ^7.1.0
+    react: ^18.2.0
+    react-admin: ^5.10.1
+    react-router-dom: ^7.8.2
+  checksum: 10c0/51d22befba1bbcdc4786ebad3f58052f1569e79e71465c068bbfa51a9910f144c53b0ac670dfb3fc82bfe1f87df3faa2983bf26b6cdf951b5238544788b353de
+  languageName: node
+  linkType: hard
+
+"@semapps/crypto@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@semapps/crypto@npm:1.2.0"
   dependencies:
     "@digitalbazaar/data-integrity": "npm:^2.5.0"
     "@digitalbazaar/ed25519-multikey": "npm:^1.3.0"
@@ -7097,22 +7158,23 @@ __metadata:
     "@digitalbazaar/ed25519-verification-key-2020": "npm:^4.2.0"
     "@digitalbazaar/eddsa-rdfc-2022-cryptosuite": "npm:^1.2.0"
     "@digitalbazaar/vc": "npm:^7.1.0"
-    "@rdfjs/data-model": "npm:^1.3.4"
-    "@semapps/ldp": "npm:1.1.2"
-    "@semapps/middlewares": "npm:1.1.2"
-    "@semapps/mime-types": "npm:1.1.2"
-    "@semapps/ontologies": "npm:1.1.2"
+    "@rdfjs/data-model": "npm:2.1.1"
+    "@semapps/ldp": "npm:1.2.0"
+    "@semapps/middlewares": "npm:1.2.0"
+    "@semapps/mime-types": "npm:1.2.0"
+    "@semapps/ontologies": "npm:1.2.0"
     crypto-ld: "npm:^7.0.0"
     http-signature: "npm:^1.3.4"
     http-signature-header: "npm:^1.3.1"
     jose: "npm:^5.2.0"
     jsonld-signatures: "npm:^11.3.2"
-    moleculer: "npm:^0.14.18"
-    moleculer-web: "npm:^0.10.0-beta1"
     node-fetch: "npm:^2.6.6"
     url-join: "npm:^4.0.1"
     vc-js: "npm:^0.6.4"
-  checksum: 10c0/6814a353ae929a18b2f03eb98eb54694a24760d2ba2b2ba56802ed6a890cbbd4c94853747fecd0caeea904bba9b98a442e5314f18230840dc27006d03c6c13fa
+  peerDependencies:
+    moleculer: ^0.14.35
+    moleculer-web: ^0.10.0-beta1
+  checksum: 10c0/f95a779b78a173645b2437c353354a2d3e7347c0ef15f26c2e6cfcb986454a4a2ac45eabaa78676bac9330177923856d3a5e262586343db82c5d8f6981fae77e
   languageName: node
   linkType: hard
 
@@ -7124,34 +7186,16 @@ __metadata:
     "@fullcalendar/daygrid": "npm:^5.7.2"
     "@fullcalendar/list": "npm:^5.7.2"
     "@fullcalendar/react": "npm:^5.7.0"
-    "@mui/x-date-pickers": "npm:^7.3.1"
+    "@mui/x-date-pickers": "npm:^7.1.0"
     date-fns: "npm:~2.8.1"
     tss-react: "npm:^4.9.19"
   peerDependencies:
-    "@mui/material": ^7.3.1
+    "@mui/material": ^7.1.0
     react: ^18.2.0
-    react-admin: ^5.8.3
-    react-router-dom: ^6.1.0
+    react-admin: ^5.10.1
+    react-router-dom: ^7.8.2
   languageName: unknown
   linkType: soft
-
-"@semapps/field-components@npm:1.1.2":
-  version: 1.1.2
-  resolution: "@semapps/field-components@npm:1.1.2"
-  dependencies:
-    "@semapps/semantic-data-provider": "npm:1.1.2"
-    lodash.debounce: "npm:^4.0.8"
-    react-icons: "npm:^4.4.0"
-  peerDependencies:
-    "@mui/icons-material": ^5.13.1
-    "@mui/material": ^5.13.1
-    "@mui/styles": ^5.13.1
-    react: ^18.2.0
-    react-admin: ^4.11.0
-    react-hook-form: ^7.43.9
-  checksum: 10c0/229fbf2084508a476e7e4b89151a0de062a62c1eb374f53ff6344741407216270cc62aa87b9dd4c79eb864d7405744db52b85fd5d99f087e2a5b899afd1e73e7
-  languageName: node
-  linkType: hard
 
 "@semapps/field-components@npm:1.1.4, @semapps/field-components@workspace:.yalc/@semapps/field-components":
   version: 0.0.0-use.local
@@ -7162,13 +7206,31 @@ __metadata:
     react-icons: "npm:^4.4.0"
     tss-react: "npm:^4.9.19"
   peerDependencies:
-    "@mui/icons-material": ^7.3.1
-    "@mui/material": ^7.3.1
+    "@mui/icons-material": ^7.1.0
+    "@mui/material": ^7.1.0
     react: ^18.2.0
-    react-admin: ^5.8.3
+    react-admin: ^5.10.1
     react-hook-form: ^7.43.9
   languageName: unknown
   linkType: soft
+
+"@semapps/field-components@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@semapps/field-components@npm:1.2.0"
+  dependencies:
+    "@semapps/semantic-data-provider": "npm:1.2.0"
+    lodash.debounce: "npm:^4.0.8"
+    react-icons: "npm:^4.4.0"
+    tss-react: "npm:^4.9.19"
+  peerDependencies:
+    "@mui/icons-material": ^7.1.0
+    "@mui/material": ^7.1.0
+    react: ^18.2.0
+    react-admin: ^5.10.1
+    react-hook-form: ^7.43.9
+  checksum: 10c0/044c0ca159306f474edfb78ac121492f0755280847b0ea33683fa6d1eed4bded66117f6f2f20726179ce44a41f9c150e4e0e6ff69b21c74344b3166cde70accc
+  languageName: node
+  linkType: hard
 
 "@semapps/geo-components@workspace:.yalc/@semapps/geo-components":
   version: 0.0.0-use.local
@@ -7180,14 +7242,14 @@ __metadata:
     react-leaflet: "npm:4.0.2"
     tss-react: "npm:^4.9.19"
   peerDependencies:
-    "@mui/icons-material": ^7.3.1
-    "@mui/material": ^7.3.1
-    "@mui/system": ^7.3.1
+    "@mui/icons-material": ^7.1.0
+    "@mui/material": ^7.1.0
+    "@mui/system": ^7.1.0
     leaflet: ^1.8.0
     leaflet-defaulticon-compatibility: ^0.1.1
     leaflet.markercluster: ^1.5.3
     react: ^18.2.0
-    react-admin: ^5.8.3
+    react-admin: ^5.10.1
     react-router-dom: ^6.1.0
   languageName: unknown
   linkType: soft
@@ -7199,25 +7261,26 @@ __metadata:
     "@semapps/semantic-data-provider": "npm:1.1.4"
   peerDependencies:
     react: ^18.2.0
-    react-admin: ^5.8.3
+    react-admin: ^5.10.1
     react-hook-form: ^7.43.9
   languageName: unknown
   linkType: soft
 
-"@semapps/ldp@npm:1.1.2":
-  version: 1.1.2
-  resolution: "@semapps/ldp@npm:1.1.2"
+"@semapps/ldp@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@semapps/ldp@npm:1.2.0"
   dependencies:
-    "@rdfjs/data-model": "npm:^1.3.4"
-    "@semapps/middlewares": "npm:1.1.2"
-    "@semapps/mime-types": "npm:1.1.2"
-    "@semapps/ontologies": "npm:1.1.2"
-    "@semapps/triplestore": "npm:1.1.2"
+    "@rdfjs/data-model": "npm:2.1.1"
+    "@rdfjs/types": "npm:^2.0.1"
+    "@semapps/middlewares": "npm:1.2.0"
+    "@semapps/mime-types": "npm:1.2.0"
+    "@semapps/ontologies": "npm:1.2.0"
+    "@semapps/triplestore": "npm:1.2.0"
     bytes: "npm:^3.1.2"
+    cron: "npm:^4.1.4"
     dashify: "npm:^2.0.0"
     http-link-header: "npm:^1.1.1"
     mime-types: "npm:^2.1.35"
-    moleculer: "npm:^0.14.17"
     moleculer-db: "npm:^0.8.16"
     moleculer-schedule: "npm:^0.2.3"
     moleculer-web: "npm:^0.10.0-beta1"
@@ -7230,7 +7293,9 @@ __metadata:
     streamify-string: "npm:^1.0.1"
     url-join: "npm:^4.0.1"
     uuid: "npm:^9.0.1"
-  checksum: 10c0/f2c3386341e2b9d91b04f3f3a9b7825749b6641fef6854f0e9dea46c91d264c8803aedc2e829a110ae90ab14ef3399c500ddffb7336cf8c8fd93e3d93a687375
+  peerDependencies:
+    moleculer: ^0.14.35
+  checksum: 10c0/abbfd105c2bdba331d0c51f4aef6c29fc1588f0dc562b7ee768f6333d23c47e6ca3803b122186b5b25a829dd2be981600e992e52ac3cae08658ef2ec6e311538
   languageName: node
   linkType: hard
 
@@ -7242,10 +7307,10 @@ __metadata:
     react-masonry-css: "npm:^1.0.14"
     tss-react: "npm:^4.9.19"
   peerDependencies:
-    "@mui/icons-material": ^7.3.1
-    "@mui/material": ^7.3.1
+    "@mui/icons-material": ^7.1.0
+    "@mui/material": ^7.1.0
     react: ^18.2.0
-    react-admin: ^5.8.3
+    react-admin: ^5.10.1
     react-router: ^6.1.0
   languageName: unknown
   linkType: soft
@@ -7258,72 +7323,57 @@ __metadata:
     markdown-to-jsx: "npm:^7.1.3"
     react-mde: "npm:^11.5.0"
   peerDependencies:
-    "@mui/material": ^7.3.1
+    "@mui/material": ^7.1.0
     react: ^18.2.0
-    react-admin: ^5.8.3
+    react-admin: ^5.10.1
   languageName: unknown
   linkType: soft
 
-"@semapps/middlewares@npm:1.1.2":
-  version: 1.1.2
-  resolution: "@semapps/middlewares@npm:1.1.2"
+"@semapps/middlewares@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@semapps/middlewares@npm:1.2.0"
   dependencies:
-    "@semapps/mime-types": "npm:1.1.2"
+    "@semapps/mime-types": "npm:1.2.0"
     busboy: "npm:^0.3.1"
     memory-streams: "npm:^0.1.3"
-    moleculer: "npm:^0.14.18"
-  checksum: 10c0/e0d59c766174ff58e4211da5377747d87c9fc56d82e8c25e9e8f87a3ef24aece441ee9282db9ef80a097997f27dd162193f34c3b45f8a01a748c55736365d0ff
+  peerDependencies:
+    moleculer: ^0.14.35
+  checksum: 10c0/e9118ff79bb52c0564f0af1eac07a70204fe967732ed7172a6840a21835449bfbb567945d69bd8229675cbbb523ca40e8575ab1c97107d98ef4a37b8d1db5cf4
   languageName: node
   linkType: hard
 
-"@semapps/mime-types@npm:1.1.2":
-  version: 1.1.2
-  resolution: "@semapps/mime-types@npm:1.1.2"
+"@semapps/mime-types@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@semapps/mime-types@npm:1.2.0"
   dependencies:
-    moleculer: "npm:^0.14.18"
     negotiator: "npm:^0.6.2"
-  checksum: 10c0/4988047451f463d1b767be6ef5ce37da835c5d0fa70067c9da9a0af079578cd73b184f8757ae525075d310fbbbe45e631da6601635622eb6ca9ce9a21a6e3cb1
+  peerDependencies:
+    moleculer: ^0.14.35
+  checksum: 10c0/fcba25d9c55aff41e44a6bb4a6a8081734dccf8327bf36cca6170fb7b9f460827f7c25f651d3227742a656add476513994d138f88d498aeb1cccd32b88d1fbbb
   languageName: node
   linkType: hard
 
-"@semapps/nodeinfo@npm:1.1.2":
-  version: 1.1.2
-  resolution: "@semapps/nodeinfo@npm:1.1.2"
+"@semapps/nodeinfo@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@semapps/nodeinfo@npm:1.2.0"
   dependencies:
-    url-join: "npm:^4.0.1"
-  checksum: 10c0/dc4362ebe56e9c78e60f3e8b05542ae41f1fb07f9d2319b23fd8639dc49a3bb57f026eaaaf16cd2b7e402eeb66c77213fdc026341f514af0fd6f86407c15b9c4
-  languageName: node
-  linkType: hard
-
-"@semapps/ontologies@npm:1.1.2":
-  version: 1.1.2
-  resolution: "@semapps/ontologies@npm:1.1.2"
-  dependencies:
-    "@semapps/triplestore": "npm:1.1.2"
-    moleculer-db: "npm:^0.8.16"
-    node-fetch: "npm:^2.6.6"
-  checksum: 10c0/635550786f83bd39b0d6e19b3bc3b5d7aa63da5b8f68d6d5cc7038fdb046d202455d498020a9ad1fa3e8ee8a0a7586f5a74b2791ee8c627bfe2b7d7ac25230f6
-  languageName: node
-  linkType: hard
-
-"@semapps/semantic-data-provider@npm:1.1.2":
-  version: 1.1.2
-  resolution: "@semapps/semantic-data-provider@npm:1.1.2"
-  dependencies:
-    "@rdfjs/data-model": "npm:^1.3.4"
-    change-case: "npm:^5.4.4"
-    crypto-js: "npm:^4.1.1"
-    http-link-header: "npm:1.1.3"
-    jsonld: "npm:^5.2.0"
-    jwt-decode: "npm:^3.0.0"
-    sparqljs: "npm:^3.5.1"
-    speakingurl: "npm:^14.0.1"
     url-join: "npm:^4.0.1"
   peerDependencies:
-    "@mui/styles": ^5.13.1
-    react: ^18.2.0
-    react-admin: ^4.11.0
-  checksum: 10c0/619019b3bdab29f7d6858425acee2a5b8561a5a4eaaa6d4544f317cb06393728c2b1a0d3480a649aede99240f0c6de5eac7e55e7058400dae05261a6a0fd41f5
+    moleculer: ^0.14.35
+  checksum: 10c0/cfd5a90c7c6765cb79a5f803059ac80073e05920c5ac887248fc8fe48e44096f3a4b7c56f839cc83398416702bd8b196326c27a49cabb961a658e65a884c45dd
+  languageName: node
+  linkType: hard
+
+"@semapps/ontologies@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@semapps/ontologies@npm:1.2.0"
+  dependencies:
+    "@semapps/triplestore": "npm:1.2.0"
+    moleculer-db: "npm:^0.8.16"
+    node-fetch: "npm:^2.6.6"
+  peerDependencies:
+    moleculer: ^0.14.35
+  checksum: 10c0/f712a19abc7d6d783739f63b8e91e8cb14aa74ceffde6f1b960c926d3550b16fbd595e30e47fb4b51accfca3b052f0ec07c8a1183a3c4f0124609698fe24b816
   languageName: node
   linkType: hard
 
@@ -7334,7 +7384,7 @@ __metadata:
     "@ldo/connected": "npm:^1.0.0-alpha.30"
     "@ldo/connected-solid": "npm:^1.0.0-alpha.30"
     "@ldo/ldo": "npm:^1.0.0-alpha.30"
-    "@rdfjs/data-model": "npm:^2.0.0"
+    "@rdfjs/data-model": "npm:2.1.1"
     change-case: "npm:^5.4.4"
     crypto-js: "npm:^4.1.1"
     http-link-header: "npm:1.1.3"
@@ -7345,20 +7395,44 @@ __metadata:
     tss-react: "npm:^4.9.19"
     url-join: "npm:^4.0.1"
   peerDependencies:
-    "@mui/material": ^7.3.1
+    "@mui/material": ^7.1.0
     react: ^18.2.0
-    react-admin: ^5.8.3
+    react-admin: ^5.10.1
   languageName: unknown
   linkType: soft
 
-"@semapps/triplestore@npm:1.1.2":
-  version: 1.1.2
-  resolution: "@semapps/triplestore@npm:1.1.2"
+"@semapps/semantic-data-provider@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@semapps/semantic-data-provider@npm:1.2.0"
   dependencies:
-    "@semapps/middlewares": "npm:1.1.2"
-    "@semapps/mime-types": "npm:1.1.2"
+    "@ldo/connected": "npm:^1.0.0-alpha.30"
+    "@ldo/connected-solid": "npm:^1.0.0-alpha.30"
+    "@ldo/ldo": "npm:^1.0.0-alpha.30"
+    "@rdfjs/data-model": "npm:2.1.1"
+    change-case: "npm:^5.4.4"
+    crypto-js: "npm:^4.1.1"
+    http-link-header: "npm:1.1.3"
+    jsonld: "npm:^8.0.0"
+    jwt-decode: "npm:^3.0.0"
+    sparqljs: "npm:^3.5.1"
+    speakingurl: "npm:^14.0.1"
+    tss-react: "npm:^4.9.19"
+    url-join: "npm:^4.0.1"
+  peerDependencies:
+    "@mui/material": ^7.1.0
+    react: ^18.2.0
+    react-admin: ^5.10.1
+  checksum: 10c0/2b5ba3064dd5ead3bcf9ab82c8a6553869f89ab6a0b8987b9fc0e953f971566d8796b9fac93a9ea21d17b097fabe5caf7f0548629b958e5cf9fbdc6726e9cd3a
+  languageName: node
+  linkType: hard
+
+"@semapps/triplestore@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@semapps/triplestore@npm:1.2.0"
+  dependencies:
+    "@semapps/middlewares": "npm:1.2.0"
+    "@semapps/mime-types": "npm:1.2.0"
     jsonld: "npm:^3.3.2"
-    moleculer: "npm:^0.14.29"
     negotiator: "npm:^0.6.2"
     node-fetch: "npm:^2.6.6"
     sparqljs: "npm:^3.5.2"
@@ -7366,28 +7440,31 @@ __metadata:
     string-template: "npm:^1.0.0"
     url-join: "npm:^4.0.1"
     uuid: "npm:^9.0.1"
-  checksum: 10c0/7f3ddcac26ac93d11b58b55bd394d14d62acad7b549039514c6cd7f9cbce5c741d79fae1bbaa99411a6c2b1f1fa5eddfea4443eafdcda04af4a3bd5c35e7ba67
+  peerDependencies:
+    moleculer: ^0.14.35
+  checksum: 10c0/b1f1389bf6deb0756f2fdc265ed839aee0d6e4d32e8836c5aba29bd1d08e052b49c32fd9879d5c81c245befbbf1193857b3184b345012a2aff77496fc5b72017
   languageName: node
   linkType: hard
 
-"@semapps/webacl@npm:1.1.2":
-  version: 1.1.2
-  resolution: "@semapps/webacl@npm:1.1.2"
+"@semapps/webacl@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@semapps/webacl@npm:1.2.0"
   dependencies:
-    "@semapps/activitypub": "npm:1.1.2"
-    "@semapps/ldp": "npm:1.1.2"
-    "@semapps/middlewares": "npm:1.1.2"
-    "@semapps/mime-types": "npm:1.1.2"
-    "@semapps/ontologies": "npm:1.1.2"
-    "@semapps/triplestore": "npm:1.1.2"
+    "@semapps/activitypub": "npm:1.2.0"
+    "@semapps/ldp": "npm:1.2.0"
+    "@semapps/middlewares": "npm:1.2.0"
+    "@semapps/mime-types": "npm:1.2.0"
+    "@semapps/ontologies": "npm:1.2.0"
+    "@semapps/triplestore": "npm:1.2.0"
     jsonld-streaming-serializer: "npm:^1.2.0"
-    moleculer: "npm:^0.14.18"
     n3: "npm:^1.8.0"
     rdf-parse: "npm:^1.7.0"
     speakingurl: "npm:^14.0.1"
     streamify-string: "npm:^1.0.1"
     url-join: "npm:^4.0.1"
-  checksum: 10c0/52cbd88848a3e0138b2712370cb6fd3f640b45651e25af0dcf805ce318799808cf8d1991cfb806ab79968d363a16ca58ab29d822ef72241e9e0efc3bcbb28085
+  peerDependencies:
+    moleculer: ^0.14.35
+  checksum: 10c0/fe8b36cc33d4ac01fd9ca235d67c619beb40ce588ce202eee94d484899628369faa36c60e7fd078385b8b3001cad8768de09696a703abf3c594893b14555f6e7
   languageName: node
   linkType: hard
 
@@ -8081,6 +8158,13 @@ __metadata:
   version: 1.5.15
   resolution: "@types/jsonld@npm:1.5.15"
   checksum: 10c0/d01fbf07c10f4fc53a5b85f28a5691cf7cea4f5f041e0266c5e8d9e4ca94cd410ef427129b2bd930065f675104cbf0a36a7792ba42d3c9b0ec7305c9f01d34c4
+  languageName: node
+  linkType: hard
+
+"@types/luxon@npm:~3.7.0":
+  version: 3.7.1
+  resolution: "@types/luxon@npm:3.7.1"
+  checksum: 10c0/2db30c13b58adcd86daa447faa3ba59515fe907ead8ee3e6bb716d662812af0619d712f6c1eb190cdd7f9d2c00444c3ecd80af0f36e8143eb0c5e7339d6b2aca
   languageName: node
   linkType: hard
 
@@ -9781,6 +9865,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cron@npm:^4.1.4":
+  version: 4.3.3
+  resolution: "cron@npm:4.3.3"
+  dependencies:
+    "@types/luxon": "npm:~3.7.0"
+    luxon: "npm:~3.7.0"
+  checksum: 10c0/f58976120a069406419d3b690f3e30a2d66c19de87712ce988bed47bbabc9e39c317e1793bdff92a466a57b9174aff7c40912c57f08f3198eb59838f10bf1247
+  languageName: node
+  linkType: hard
+
 "cross-fetch@npm:^3.0.5, cross-fetch@npm:^3.0.6":
   version: 3.1.8
   resolution: "cross-fetch@npm:3.1.8"
@@ -9931,13 +10025,6 @@ __metadata:
   version: 2.0.0
   resolution: "dashify@npm:2.0.0"
   checksum: 10c0/b9ab76cbd9739b6dba4359083cc9a670e6a0876f90ab3409b9984cf386b82a28a89009afe15d13ce62f97bc84ce49be2fe85f3a6791481a8d31e962cd0f0e710
-  languageName: node
-  linkType: hard
-
-"data-uri-to-buffer@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "data-uri-to-buffer@npm:3.0.1"
-  checksum: 10c0/01fa28525402582fbb972c91822533f5528156e9e7241512b903467acbe2e0505760504e22c548bb707c7a56b5459194ee4fa6434e5995fa1a658744c2ce0cff
   languageName: node
   linkType: hard
 
@@ -10684,13 +10771,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esm@npm:^3.2.22":
-  version: 3.2.25
-  resolution: "esm@npm:3.2.25"
-  checksum: 10c0/8e60e8075506a7ce28681c30c8f54623fe18a251c364cd481d86719fc77f58aa055b293d80632d9686d5408aaf865ffa434897dc9fd9153c8b3f469fad23f094
-  languageName: node
-  linkType: hard
-
 "esprima@npm:^4.0.0":
   version: 4.0.1
   resolution: "esprima@npm:4.0.1"
@@ -10865,16 +10945,6 @@ __metadata:
   version: 4.2.3
   resolution: "fecha@npm:4.2.3"
   checksum: 10c0/0e895965959cf6a22bb7b00f0bf546f2783836310f510ddf63f463e1518d4c96dec61ab33fdfd8e79a71b4856a7c865478ce2ee8498d560fe125947703c9b1cf
-  languageName: node
-  linkType: hard
-
-"fetch-blob@npm:^2.1.1":
-  version: 2.1.2
-  resolution: "fetch-blob@npm:2.1.2"
-  peerDependenciesMeta:
-    domexception:
-      optional: true
-  checksum: 10c0/9c7b0af2e6f11ac20997bb7dbd555fc89add2cf04379012af9ed119e96c0f608f3dbdf3ca2908583469118485065e35a10da8c740b4afff633180a13957a25da
   languageName: node
   linkType: hard
 
@@ -12856,18 +12926,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonld@npm:^5.2.0":
-  version: 5.2.0
-  resolution: "jsonld@npm:5.2.0"
-  dependencies:
-    "@digitalbazaar/http-client": "npm:^1.1.0"
-    canonicalize: "npm:^1.0.1"
-    lru-cache: "npm:^6.0.0"
-    rdf-canonize: "npm:^3.0.0"
-  checksum: 10c0/ef76e5de4bc70007f08627369701722637e4874f2a8d1003b5c1fc888ceca95f0a9582321a4920b7610c32999d3188116d327cd05374215d69ed6b95d1368fb5
-  languageName: node
-  linkType: hard
-
 "jsonld@npm:^8.0.0, jsonld@npm:^8.1.0, jsonld@npm:^8.3.3":
   version: 8.3.3
   resolution: "jsonld@npm:8.3.3"
@@ -12966,29 +13024,6 @@ __metadata:
     web-streams-polyfill:
       optional: true
   checksum: 10c0/d71a1cae6d79c93808eda3b021eea91df064ac972f0391b45aa0913cdc48bdcad9c33452d68de021bd32c1b5abe15090229ae4a45fa28f7babb8e77e39ae1596
-  languageName: node
-  linkType: hard
-
-"ky-universal@npm:^0.8.2":
-  version: 0.8.2
-  resolution: "ky-universal@npm:0.8.2"
-  dependencies:
-    abort-controller: "npm:^3.0.0"
-    node-fetch: "npm:3.0.0-beta.9"
-  peerDependencies:
-    ky: ">=0.17.0"
-    web-streams-polyfill: ">=2.0.0"
-  peerDependenciesMeta:
-    web-streams-polyfill:
-      optional: true
-  checksum: 10c0/bcdebccde532fcd934fb2dcb2d99c110980c00a2d83a62b37d75b8cbbe75ad498cc001e14c3d5fbc03acd262c80ae8d5bb7fdcdb50b05e421fba914d597a2887
-  languageName: node
-  linkType: hard
-
-"ky@npm:^0.25.1":
-  version: 0.25.1
-  resolution: "ky@npm:0.25.1"
-  checksum: 10c0/df78933d399310b025356be144490bd090a474bb63fd12ac7fae7b640f6357f1a944ad63a5c176282fecc4908362ca8fb5aaeeb9a3405d97e715492c26c46ea9
   languageName: node
   linkType: hard
 
@@ -13479,6 +13514,13 @@ __metadata:
   version: 3.5.0
   resolution: "luxon@npm:3.5.0"
   checksum: 10c0/335789bba95077db831ef99894edadeb23023b3eb2137a1b56acd0d290082b691cf793143d69e30bc069ec95f0b49f36419f48e951c68014f19ffe12045e3494
+  languageName: node
+  linkType: hard
+
+"luxon@npm:~3.7.0":
+  version: 3.7.2
+  resolution: "luxon@npm:3.7.2"
+  checksum: 10c0/ed8f0f637826c08c343a29dd478b00628be93bba6f068417b1d8896b61cb61c6deacbe1df1e057dbd9298334044afa150f9aaabbeb3181418ac8520acfdc2ae2
   languageName: node
   linkType: hard
 
@@ -14041,7 +14083,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"moleculer@npm:^0.14.17, moleculer@npm:^0.14.18, moleculer@npm:^0.14.19, moleculer@npm:^0.14.29":
+"moleculer@npm:^0.14.19":
   version: 0.14.34
   resolution: "moleculer@npm:0.14.34"
   dependencies:
@@ -14374,16 +14416,6 @@ __metadata:
     encoding:
       optional: true
   checksum: 10c0/fcae80f5ac52fbf5012f5e19df2bd3915e67d3b3ad51cb5942943df2238d32ba15890fecabd0e166876a9f98a581ab50f3f10eb942b09405c49ef8da36b826c7
-  languageName: node
-  linkType: hard
-
-"node-fetch@npm:3.0.0-beta.9":
-  version: 3.0.0-beta.9
-  resolution: "node-fetch@npm:3.0.0-beta.9"
-  dependencies:
-    data-uri-to-buffer: "npm:^3.0.1"
-    fetch-blob: "npm:^2.1.1"
-  checksum: 10c0/99e2947718c281ad76fe009f15ff67ac1781b72f7a81bbc2770cc20297b4482589384982bcd47516a21d6e76e1649e64609e18f83b4c71e09cf5964fbb9ef832
   languageName: node
   linkType: hard
 
@@ -16133,7 +16165,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rdf-canonize@npm:^3.0.0, rdf-canonize@npm:^3.4.0":
+"rdf-canonize@npm:^3.4.0":
   version: 3.4.0
   resolution: "rdf-canonize@npm:3.4.0"
   dependencies:
@@ -16735,6 +16767,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-router-dom@npm:^7.8.2":
+  version: 7.9.1
+  resolution: "react-router-dom@npm:7.9.1"
+  dependencies:
+    react-router: "npm:7.9.1"
+  peerDependencies:
+    react: ">=18"
+    react-dom: ">=18"
+  checksum: 10c0/a211b9e6d69e6efc9b55cfc0f1eb8a772832f86b13fd16a6d89befb78ff6bfc06d9cc48abf4b96420edd81a07216f910c15afb0769ae4d4f445b59d4e2ec9376
+  languageName: node
+  linkType: hard
+
 "react-router@npm:6.26.1, react-router@npm:^6.1.0":
   version: 6.26.1
   resolution: "react-router@npm:6.26.1"
@@ -16743,6 +16787,22 @@ __metadata:
   peerDependencies:
     react: ">=16.8"
   checksum: 10c0/463078e740462b42bb5ba8004448f33fc9e63778f432a4ed55c57b93c5b519e25fb17913ee8435b0fda33c6b9f75df8ef6fcb2c3a4f8db84fb546d202e29aa51
+  languageName: node
+  linkType: hard
+
+"react-router@npm:7.9.1":
+  version: 7.9.1
+  resolution: "react-router@npm:7.9.1"
+  dependencies:
+    cookie: "npm:^1.0.1"
+    set-cookie-parser: "npm:^2.6.0"
+  peerDependencies:
+    react: ">=18"
+    react-dom: ">=18"
+  peerDependenciesMeta:
+    react-dom:
+      optional: true
+  checksum: 10c0/27448e4c84199d240f6a15d503cf26509320fd4ea31aec6f12a427ac4a560a320321e9b119981eddad25801c062be0f814d4461174f69efdc9f9e5af14cf6915
   languageName: node
   linkType: hard
 

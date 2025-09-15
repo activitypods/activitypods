@@ -5,7 +5,7 @@ const CONFIG = require('../../config/config');
 const MIGRATION_VERSION = '2.3.0';
 
 module.exports = {
-  name: 'migration-3-2-0',
+  name: 'migration-2-3-0',
   mixins: [MigrationService],
   settings: {
     baseUrl: CONFIG.BASE_URL

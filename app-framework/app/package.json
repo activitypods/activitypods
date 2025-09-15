@@ -11,13 +11,13 @@
     "directory": "app-framework/app"
   },
   "dependencies": {
-    "@rdfjs/data-model": "^1.3.4",
-    "@semapps/activitypub": "1.1.2",
-    "@semapps/ldp": "1.1.2",
-    "@semapps/mime-types": "1.1.2",
-    "@semapps/nodeinfo": "1.1.2",
-    "@semapps/ontologies": "1.1.2",
-    "@semapps/webacl": "1.1.2",
+    "@rdfjs/data-model": "2.1.1",
+    "@semapps/activitypub": "1.2.0",
+    "@semapps/ldp": "1.2.0",
+    "@semapps/mime-types": "1.2.0",
+    "@semapps/nodeinfo": "1.2.0",
+    "@semapps/ontologies": "1.2.0",
+    "@semapps/webacl": "1.2.0",
     "form-data-encoder": "1.9.0",
     "formdata-node": "4.4.1",
     "handlebars": "^4.7.7",
@@ -33,5 +33,8 @@
   },
   "engines": {
     "node": ">=22.12.0"
+  },
+  "devDependencies": {
+    "@types/rdfjs__data-model": "^2.0.9"
   }
 }

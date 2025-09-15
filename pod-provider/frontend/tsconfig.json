@@ -1,4 +1,7 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/global.ts"]
+  "include": ["src/global.ts"],
+  "compilerOptions": {
+    "types": ["vite/client"]
+  }
 }

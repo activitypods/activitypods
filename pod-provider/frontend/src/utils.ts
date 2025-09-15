@@ -126,7 +126,7 @@ export const isLocalURL = (url: string) => {
 // In dev mode, we can display resources of other storages (if we have permission)
 export const isStorageUri = (url: string, webId: string) =>
   url &&
-  (process.env.NODE_ENV === 'development'
+  (import.meta.env.NODE_ENV === 'development'
     ? url.startsWith(CONFIG.BACKEND_URL)
     : url === webId || url.startsWith(webId + '/')) &&
   !url.endsWith('/sparql') &&
@@ -322,6 +322,7 @@ export const fetchResourceWithCapability = async ({
 }) => {
   if (!capability) throw new Error('No capability is provided.');
   // Fetch capability object, if necessary.
+  // @ts-expect-error TS(2304): Cannot find name 'fetchUtils'.
   const capabilityObject = typeof capability === 'object' ? capability : (await fetchUtils.fetchJson(capability)).json;
 
   // Create presentation from capability object.

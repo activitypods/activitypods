@@ -40,16 +40,16 @@ const InvitePageViewLoggedOut = ({
       }
     >
       {/* Avatar */}
-      <Grid container item flexDirection="column" alignItems="center">
-        <Grid item>
+      <Grid container flexDirection="column" alignItems="center">
+        <Grid>
           <Avatar src={avatarSrc} sx={{ width: 'min(50vw, 12rem)', height: 'min(50vw, 12rem)' }}>
             <PersonIcon sx={{ width: 'min(50vw, 12rem)', height: 'min(50vw, 12rem)' }} />
           </Avatar>
         </Grid>
-        <Grid item>
+        <Grid>
           <Typography align="center">{formatUsername(inviterWebId)}</Typography>
         </Grid>
-        <Grid item display="flex" justifyContent="center">
+        <Grid display="flex" justifyContent="center">
           <Typography variant="body2" component="label">
             {translate('app.user.member_since')}
             &nbsp;
@@ -59,15 +59,28 @@ const InvitePageViewLoggedOut = ({
           </Typography>
         </Grid>
       </Grid>
-
       {/* Buttons */}
-      <Grid container item pt={2} spacing={1} sx={{ flexFlow: 'column', alignItems: 'center' }}>
-        <Grid container item xs={12} md={8} lg={6}>
+      <Grid container pt={2} spacing={1} sx={{ flexFlow: 'column', alignItems: 'center' }}>
+        <Grid
+          container
+          size={{
+            xs: 12,
+            md: 8,
+            lg: 6
+          }}
+        >
           <Button fullWidth variant="contained" color="primary" size="large" onClick={onCreateProfileClick}>
             {translate('app.helper.signup')}
           </Button>
         </Grid>
-        <Grid container item xs={12} md={8} lg={6}>
+        <Grid
+          container
+          size={{
+            xs: 12,
+            md: 8,
+            lg: 6
+          }}
+        >
           <Button fullWidth variant="contained" color="primary" size="large" onClick={onLoginClick}>
             {translate('app.helper.login')}
           </Button>

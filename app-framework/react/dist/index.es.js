@@ -1,9 +1,9 @@
-import {jsx as $iLwJW$jsx, jsxs as $iLwJW$jsxs, Fragment as $iLwJW$Fragment1} from "react/jsx-runtime";
 import {useState as $iLwJW$useState, useCallback as $iLwJW$useCallback, useEffect as $iLwJW$useEffect, useLayoutEffect as $iLwJW$useLayoutEffect, Fragment as $iLwJW$Fragment, useMemo as $iLwJW$useMemo} from "react";
 import {useGetIdentity as $iLwJW$useGetIdentity, useDataProvider as $iLwJW$useDataProvider, useTranslate as $iLwJW$useTranslate, useLogout as $iLwJW$useLogout, useRedirect as $iLwJW$useRedirect, useNotify as $iLwJW$useNotify, useLocaleState as $iLwJW$useLocaleState, useLogin as $iLwJW$useLogin, useRecordContext as $iLwJW$useRecordContext, Button as $iLwJW$Button1, useGetList as $iLwJW$useGetList, UserMenu as $iLwJW$UserMenu, Logout as $iLwJW$Logout, MenuItemLink as $iLwJW$MenuItemLink} from "react-admin";
-import {Box as $iLwJW$Box, Typography as $iLwJW$Typography, Button as $iLwJW$Button, CircularProgress as $iLwJW$CircularProgress, Card as $iLwJW$Card, Avatar as $iLwJW$Avatar, List as $iLwJW$List, Divider as $iLwJW$Divider, ListItem as $iLwJW$ListItem, ListItemButton as $iLwJW$ListItemButton, ListItemAvatar as $iLwJW$ListItemAvatar, ListItemText as $iLwJW$ListItemText, useMediaQuery as $iLwJW$useMediaQuery, Dialog as $iLwJW$Dialog, DialogTitle as $iLwJW$DialogTitle, DialogContent as $iLwJW$DialogContent, DialogActions as $iLwJW$DialogActions, TextField as $iLwJW$TextField, Switch as $iLwJW$Switch, MenuItem as $iLwJW$MenuItem, ListItemIcon as $iLwJW$ListItemIcon} from "@mui/material";
-import $iLwJW$muiiconsmaterialError from "@mui/icons-material/Error";
 import {useNodeinfo as $iLwJW$useNodeinfo, useCollection as $iLwJW$useCollection, useOutbox as $iLwJW$useOutbox, ACTIVITY_TYPES as $iLwJW$ACTIVITY_TYPES} from "@semapps/activitypub-components";
+import {jsx as $iLwJW$jsx, jsxs as $iLwJW$jsxs, Fragment as $iLwJW$Fragment1} from "react/jsx-runtime";
+import {Box as $iLwJW$Box, Typography as $iLwJW$Typography, Button as $iLwJW$Button, CircularProgress as $iLwJW$CircularProgress, Card as $iLwJW$Card, Avatar as $iLwJW$Avatar, List as $iLwJW$List, Divider as $iLwJW$Divider, ListItem as $iLwJW$ListItem, ListItemButton as $iLwJW$ListItemButton, ListItemAvatar as $iLwJW$ListItemAvatar, ListItemText as $iLwJW$ListItemText, useMediaQuery as $iLwJW$useMediaQuery, Dialog as $iLwJW$Dialog, DialogTitle as $iLwJW$DialogTitle, DialogContent as $iLwJW$DialogContent, DialogActions as $iLwJW$DialogActions, TextField as $iLwJW$TextField, Alert as $iLwJW$Alert, Switch as $iLwJW$Switch, MenuItem as $iLwJW$MenuItem, ListItemIcon as $iLwJW$ListItemIcon} from "@mui/material";
+import $iLwJW$muiiconsmaterialError from "@mui/icons-material/Error";
 import $iLwJW$urljoin from "url-join";
 import $iLwJW$httplinkheader from "http-link-header";
 import $iLwJW$jwtdecode from "jwt-decode";
@@ -12,7 +12,7 @@ import $iLwJW$muiiconsmaterialLock from "@mui/icons-material/Lock";
 import $iLwJW$muiiconsmaterialStorage from "@mui/icons-material/Storage";
 import {useDataProviderConfig as $iLwJW$useDataProviderConfig, getUriFromPrefix as $iLwJW$getUriFromPrefix} from "@semapps/semantic-data-provider";
 import $iLwJW$muiiconsmaterialShare from "@mui/icons-material/Share";
-import $iLwJW$muistylesmakeStyles from "@mui/styles/makeStyles";
+import { makeStyles } from 'tss-react/mui';
 import $iLwJW$muiiconsmaterialGroup from "@mui/icons-material/Group";
 import $iLwJW$muiiconsmaterialPeopleAlt from "@mui/icons-material/PeopleAlt";
 import $iLwJW$muiiconsmaterialApps from "@mui/icons-material/Apps";
@@ -569,9 +569,7 @@ var $1dcbce4d0a659643$export$2e2bcd8739ae039 = $1dcbce4d0a659643$var$RemoteShare
 
 
 
-/**
- * @typedef {import("./GroupContactsItem").InvitationState} InvitationState
- */ const $3d109438326dd070$var$useStyles = (0, $iLwJW$muistylesmakeStyles)((theme)=>({
+const $90c828b66459d9e4$var$useStyles = (0, $iLwJW$muistylesmakeStyles)((theme)=>({
         listItem: {
             paddingLeft: 0,
             paddingRight: 0
@@ -593,17 +591,12 @@ var $1dcbce4d0a659643$export$2e2bcd8739ae039 = $1dcbce4d0a659643$var$RemoteShare
             minWidth: 50
         },
         avatar: {
+            // @ts-ignore
             backgroundImage: `radial-gradient(circle at 50% 3em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`
         }
     }));
-/**
- * @param {Object} props
- * @param {import("react-admin").Record} props.record
- * @param {InvitationState} [props.invitation]
- * @param {(invitations: Record<string, InvitationState>) => void} props.onChange
- * @param {boolean} props.isCreator
- */ const $3d109438326dd070$var$ContactItem = ({ record: record, invitation: invitation, onChange: onChange, isCreator: isCreator })=>{
-    const classes = $3d109438326dd070$var$useStyles();
+const $90c828b66459d9e4$var$ContactItem = ({ record: record, invitation: invitation, onChange: onChange, isCreator: isCreator })=>{
+    const classes = $90c828b66459d9e4$var$useStyles();
     const translate = (0, $iLwJW$useTranslate)();
     // The invitation may still be undefined. In that case, create a default one.
     // TODO: Maybe, this should be handled in the ShareDialog instead?
@@ -674,7 +667,7 @@ var $1dcbce4d0a659643$export$2e2bcd8739ae039 = $1dcbce4d0a659643$var$RemoteShare
         ]
     });
 };
-var $3d109438326dd070$export$2e2bcd8739ae039 = $3d109438326dd070$var$ContactItem;
+var $90c828b66459d9e4$export$2e2bcd8739ae039 = $90c828b66459d9e4$var$ContactItem;
 
 
 
@@ -684,7 +677,7 @@ var $3d109438326dd070$export$2e2bcd8739ae039 = $3d109438326dd070$var$ContactItem
 
 
 
-/** @typedef {import("./ShareDialog").InvitationState} InvitationState */ const $c78c4dd8a63b7af2$var$useStyles = (0, $iLwJW$muistylesmakeStyles)((theme)=>({
+/** @typedef {import("./ShareDialog").InvitationState} InvitationState */ const $c3999b82ec352567$var$useStyles = (0, $iLwJW$muistylesmakeStyles)((theme)=>({
         listItem: {
             paddingLeft: 0,
             paddingRight: 0
@@ -706,17 +699,12 @@ var $3d109438326dd070$export$2e2bcd8739ae039 = $3d109438326dd070$var$ContactItem
             minWidth: 50
         },
         avatar: {
+            // @ts-ignore
             backgroundImage: `radial-gradient(circle at 50% 3em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`
         }
     }));
-/**
- * @param {Object} props
- * @param {import("react-admin").Record} props.group
- * @param {Record<string, InvitationState} props.invitations
- * @param {(invitations: Record<string, InvitationState>) => void} props.onChange
- * @param {boolean} props.isCreator
- */ const $c78c4dd8a63b7af2$var$GroupContactsItem = ({ group: group, onChange: onChange, invitations: invitations, isCreator: isCreator })=>{
-    const classes = $c78c4dd8a63b7af2$var$useStyles();
+const $c3999b82ec352567$var$GroupContactsItem = ({ group: group, invitations: invitations, onChange: onChange, isCreator: isCreator })=>{
+    const classes = $c3999b82ec352567$var$useStyles();
     const translate = (0, $iLwJW$useTranslate)();
     const groupMemberIds = (0, $93d7a9f3166de761$export$e57ff0f701c44363)(group?.["vcard:hasMember"]);
     const viewChecked = groupMemberIds.every((memberId)=>invitations[memberId]?.canView || invitations[memberId]?.canShare);
@@ -815,16 +803,17 @@ var $3d109438326dd070$export$2e2bcd8739ae039 = $3d109438326dd070$var$ContactItem
         ]
     });
 };
-var $c78c4dd8a63b7af2$export$2e2bcd8739ae039 = $c78c4dd8a63b7af2$var$GroupContactsItem;
+var $c3999b82ec352567$export$2e2bcd8739ae039 = $c3999b82ec352567$var$GroupContactsItem;
 
 
 
 /**
  * @typedef {import('./ShareDialog').InvitationState} InvitationState
- */ const $353d7b2d3f8a843f$var$useStyles = (0, $iLwJW$muistylesmakeStyles)((theme)=>({
+ */ const $173d972259878226$var$useStyles = (0, $iLwJW$muistylesmakeStyles)((theme)=>({
         list: {
             width: "98%",
             maxWidth: "98%",
+            // @ts-ignore
             backgroundColor: theme.palette.background.paper,
             padding: 0
         }
@@ -834,8 +823,8 @@ var $c78c4dd8a63b7af2$export$2e2bcd8739ae039 = $c78c4dd8a63b7af2$var$GroupContac
  * @param {Record<string, InvitationState} props.invitations
  * @param {(invitations: Record<string, InvitationState) => void} props.onChange
  * @param {boolean} props.isCreator
- */ const $353d7b2d3f8a843f$var$ContactsShareList = ({ invitations: invitations, onChange: onChange, organizerUri: organizerUri, isCreator: isCreator, profileResource: profileResource, groupResource: groupResource })=>{
-    const classes = $353d7b2d3f8a843f$var$useStyles();
+ */ const $173d972259878226$var$ContactsShareList = ({ invitations: invitations, onChange: onChange, organizerUri: organizerUri, isCreator: isCreator, profileResource: profileResource, groupResource: groupResource })=>{
+    const classes = $173d972259878226$var$useStyles();
     const translate = (0, $iLwJW$useTranslate)();
     const { data: identity } = (0, $iLwJW$useGetIdentity)();
     const [searchText, setSearchText] = (0, $iLwJW$useState)("");
@@ -885,13 +874,13 @@ var $c78c4dd8a63b7af2$export$2e2bcd8739ae039 = $c78c4dd8a63b7af2$var$GroupContac
                 size: "small",
                 margin: "dense"
             }),
-            groupsFiltered?.map((group)=>/*#__PURE__*/ (0, $iLwJW$jsx)((0, $c78c4dd8a63b7af2$export$2e2bcd8739ae039), {
+            groupsFiltered?.map((group)=>/*#__PURE__*/ (0, $iLwJW$jsx)((0, $c3999b82ec352567$export$2e2bcd8739ae039), {
                     group: group,
                     invitations: invitations,
                     onChange: onChange,
                     isCreator: isCreator
                 }, group.id)),
-            profilesFiltered?.map((profile)=>/*#__PURE__*/ (0, $iLwJW$jsx)((0, $3d109438326dd070$export$2e2bcd8739ae039), {
+            profilesFiltered?.map((profile)=>/*#__PURE__*/ (0, $iLwJW$jsx)((0, $90c828b66459d9e4$export$2e2bcd8739ae039), {
                     record: profile,
                     invitation: invitations[profile.describes],
                     onChange: onChange,
@@ -907,11 +896,14 @@ var $c78c4dd8a63b7af2$export$2e2bcd8739ae039 = $c78c4dd8a63b7af2$var$GroupContac
                     thickness: 6
                 })
             }),
-            !loadingProfiles && (profilesFiltered?.length, false)
+            !loadingProfiles && profilesFiltered?.length !== 0 && /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$Alert), {
+                severity: "warning",
+                children: translate("apods.helper.no_contact")
+            })
         ]
     });
 };
-var $353d7b2d3f8a843f$export$2e2bcd8739ae039 = $353d7b2d3f8a843f$var$ContactsShareList;
+var $173d972259878226$export$2e2bcd8739ae039 = $173d972259878226$var$ContactsShareList;
 
 
 /**
@@ -920,13 +912,14 @@ var $353d7b2d3f8a843f$export$2e2bcd8739ae039 = $353d7b2d3f8a843f$var$ContactsSha
  * @property {boolean} canShare
  * @property {boolean} viewReadonly
  * @property {boolean} shareReadonly
- */ const $79f089d541db8101$var$useStyles = (0, $iLwJW$muistylesmakeStyles)((theme)=>({
+ */ const $9b31f5571216e090$var$useStyles = (0, $iLwJW$muistylesmakeStyles)((theme)=>({
         dialogPaper: {
             margin: 16
         },
         title: {
             padding: 24,
             paddingBottom: 8,
+            // @ts-ignore
             [theme.breakpoints.down("sm")]: {
                 padding: 16,
                 paddingBottom: 4
@@ -939,6 +932,7 @@ var $353d7b2d3f8a843f$export$2e2bcd8739ae039 = $353d7b2d3f8a843f$var$ContactsSha
         list: {
             width: "100%",
             maxWidth: "100%",
+            // @ts-ignore
             backgroundColor: theme.palette.background.paper,
             padding: 0
         },
@@ -948,6 +942,7 @@ var $353d7b2d3f8a843f$export$2e2bcd8739ae039 = $353d7b2d3f8a843f$var$ContactsSha
             paddingRight: 0,
             marginRight: 24,
             height: 400,
+            // @ts-ignore
             [theme.breakpoints.down("sm")]: {
                 padding: "0px 16px",
                 margin: 0,
@@ -955,8 +950,9 @@ var $353d7b2d3f8a843f$export$2e2bcd8739ae039 = $353d7b2d3f8a843f$var$ContactsSha
             }
         }
     }));
-const $79f089d541db8101$var$ShareDialog = ({ close: close, resourceUri: resourceUri, profileResource: profileResource = "Profile", groupResource: groupResource = "Group" })=>{
-    const classes = $79f089d541db8101$var$useStyles();
+// @ts-ignore
+const $9b31f5571216e090$var$ShareDialog = ({ close: close, resourceUri: resourceUri, profileResource: profileResource = "Profile", groupResource: groupResource = "Group" })=>{
+    const classes = $9b31f5571216e090$var$useStyles();
     const { data: identity } = (0, $iLwJW$useGetIdentity)();
     const record = (0, $iLwJW$useRecordContext)();
     const translate = (0, $iLwJW$useTranslate)();
@@ -969,6 +965,7 @@ const $79f089d541db8101$var$ShareDialog = ({ close: close, resourceUri: resource
     /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */ const [newInvitations, setNewInvitations] = (0, $iLwJW$useState)({});
     /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */ const [savedInvitations, setSavedInvitations] = (0, $iLwJW$useState)({});
     const [sendingInvitation, setSendingInvitation] = (0, $iLwJW$useState)(false);
+    // @ts-ignore
     const xs = (0, $iLwJW$useMediaQuery)((theme)=>theme.breakpoints.down("xs"), {
         noSsr: true
     });
@@ -1001,7 +998,7 @@ const $79f089d541db8101$var$ShareDialog = ({ close: close, resourceUri: resource
         setInvitations,
         setSavedInvitations
     ]);
-    /** @param {Record<string, InvitationState} changedRights */ const onChange = (0, $iLwJW$useCallback)((changedRights)=>{
+    const onChange = (0, $iLwJW$useCallback)((changedRights)=>{
         // Compare changedRights to invitations, to know where we need to update the collection.
         const newInvitationsUnfiltered = {
             ...newInvitations,
@@ -1071,7 +1068,7 @@ const $79f089d541db8101$var$ShareDialog = ({ close: close, resourceUri: resource
             }),
             /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$DialogContent), {
                 className: classes.listForm,
-                children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $353d7b2d3f8a843f$export$2e2bcd8739ae039), {
+                children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $173d972259878226$export$2e2bcd8739ae039), {
                     invitations: invitations,
                     onChange: onChange,
                     organizerUri: creatorUri,
@@ -1104,13 +1101,13 @@ const $79f089d541db8101$var$ShareDialog = ({ close: close, resourceUri: resource
         ]
     });
 };
-var $79f089d541db8101$export$2e2bcd8739ae039 = $79f089d541db8101$var$ShareDialog;
+var $9b31f5571216e090$export$2e2bcd8739ae039 = $9b31f5571216e090$var$ShareDialog;
 
 
 /**
  * Allow to share the record in the current RecordContext
  * Use the `Announce` and `Offer > Announce` activities handled by ActivityPods
- */ const $47fb439769024aa7$var$ShareButton = ({ profileResource: profileResource = "Profile", groupResource: groupResource = "Group" })=>{
+ */ const $d666f0124425734b$var$ShareButton = ({ profileResource: profileResource = "Profile", groupResource: groupResource = "Group" })=>{
     const [shareOpen, setShareOpen] = (0, $iLwJW$useState)(false);
     const record = (0, $iLwJW$useRecordContext)();
     const { error: error, isLoading: isLoading } = (0, $iLwJW$useCollection)(record?.["apods:announces"]);
@@ -1123,7 +1120,7 @@ var $79f089d541db8101$export$2e2bcd8739ae039 = $79f089d541db8101$var$ShareDialog
                 onClick: ()=>setShareOpen(true),
                 children: /*#__PURE__*/ (0, $iLwJW$jsx)((0, $iLwJW$muiiconsmaterialShare), {})
             }),
-            shareOpen && /*#__PURE__*/ (0, $iLwJW$jsx)((0, $79f089d541db8101$export$2e2bcd8739ae039), {
+            shareOpen && /*#__PURE__*/ (0, $iLwJW$jsx)((0, $9b31f5571216e090$export$2e2bcd8739ae039), {
                 resourceUri: record.id,
                 close: ()=>setShareOpen(false),
                 profileResource: profileResource,
@@ -1133,7 +1130,7 @@ var $79f089d541db8101$export$2e2bcd8739ae039 = $79f089d541db8101$var$ShareDialog
     });
     else return null;
 };
-var $47fb439769024aa7$export$2e2bcd8739ae039 = $47fb439769024aa7$var$ShareButton;
+var $d666f0124425734b$export$2e2bcd8739ae039 = $d666f0124425734b$var$ShareButton;
 
 
 
@@ -1300,5 +1297,5 @@ var $5de716308b366acb$export$2e2bcd8739ae039 = {
 
 
 
-export {$2957839fe06af793$export$2e2bcd8739ae039 as BackgroundChecks, $4a72285bffb5f50f$export$2e2bcd8739ae039 as LoginPage, $1a88c39afebe872d$export$2e2bcd8739ae039 as RedirectPage, $1dcbce4d0a659643$export$2e2bcd8739ae039 as RemoteShareButton, $47fb439769024aa7$export$2e2bcd8739ae039 as ShareButton, $79f089d541db8101$export$2e2bcd8739ae039 as ShareDialog, $e3472ca7f9a4764c$export$2e2bcd8739ae039 as SyncUserLocale, $f86de5ead054b96d$export$2e2bcd8739ae039 as UserMenu, $4b2a6afceae7f301$export$2e2bcd8739ae039 as englishMessages, $5de716308b366acb$export$2e2bcd8739ae039 as frenchMessages};
+export {$2957839fe06af793$export$2e2bcd8739ae039 as BackgroundChecks, $4a72285bffb5f50f$export$2e2bcd8739ae039 as LoginPage, $1a88c39afebe872d$export$2e2bcd8739ae039 as RedirectPage, $1dcbce4d0a659643$export$2e2bcd8739ae039 as RemoteShareButton, $d666f0124425734b$export$2e2bcd8739ae039 as ShareButton, $9b31f5571216e090$export$2e2bcd8739ae039 as ShareDialog, $e3472ca7f9a4764c$export$2e2bcd8739ae039 as SyncUserLocale, $f86de5ead054b96d$export$2e2bcd8739ae039 as UserMenu, $4b2a6afceae7f301$export$2e2bcd8739ae039 as englishMessages, $5de716308b366acb$export$2e2bcd8739ae039 as frenchMessages};
 //# sourceMappingURL=index.es.js.map

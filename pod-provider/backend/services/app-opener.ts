@@ -41,7 +41,9 @@ const AppOpenerSchema = {
             query: sanitizeSparqlQuery`
               SELECT ?type
               WHERE {
-                <${uri}> a ?type .
+                GRAPH <${uri}> {
+                  <${uri}> a ?type .
+                }
               }
             `,
             dataset: username,
@@ -70,9 +72,11 @@ const AppOpenerSchema = {
               PREFIX apods: <http://activitypods.org/ns/core#>
               SELECT ?appUri
               WHERE {
-                ?registration a interop:DataGrant .
-                ?registration apods:registeredClass <${type}> .
-                ?registration interop:grantee ?appUri .
+                GRAPH ?registration {
+                  ?registration a interop:DataGrant .
+                  ?registration apods:registeredClass <${type}> .
+                  ?registration interop:grantee ?appUri .
+                }
               }
             `,
             dataset: username,

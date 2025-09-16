@@ -354,7 +354,8 @@ export const fetchCapabilityResources = async (capabilityUri: string) => {
     const capability = await capRes.json();
     // The capability has a credentialSubject with `hasAuthorization`
     const availableResources = arrayOf(capability?.credentialSubject?.['apods:hasAuthorization'])
-      .map(auth => auth['acl:accessTo']?.id || auth['acl:accessTo'])
+      .map(auth => auth['acl:accessTo'])
+      .flat()
       .flatMap(res => res?.id || res);
 
     if (availableResources.length === 0) {

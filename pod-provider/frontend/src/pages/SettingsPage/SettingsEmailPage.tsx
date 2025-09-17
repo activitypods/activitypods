@@ -19,7 +19,7 @@ const SettingsEmailPage = () => {
   });
 
   useEffect(() => {
-    authProvider.getAccountSettings().then((res: any) => {
+    authProvider!.getAccountSettings().then((res: any) => {
       setFormDefaultValue({ ...formDefaultValue, email: res.email });
     });
   }, [setFormDefaultValue, authProvider]);
@@ -27,7 +27,7 @@ const SettingsEmailPage = () => {
   const onSubmit = useCallback(
     async (params: any) => {
       try {
-        await authProvider.updateAccountSettings({ ...params });
+        await authProvider!.updateAccountSettings({ ...params });
         notify('auth.message.account_settings_updated', { type: 'success' });
       } catch (error) {
         // @ts-expect-error TS(2571): Object is of type 'unknown'.

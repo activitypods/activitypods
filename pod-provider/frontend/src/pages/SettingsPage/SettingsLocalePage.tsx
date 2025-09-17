@@ -10,6 +10,7 @@ import {
 } from 'react-admin';
 import { Box, Card, Typography } from '@mui/material';
 import { availableLocales } from '../../config/i18nProvider';
+import ToolbarWithoutDelete from '../../common/ToolbarWithoutDelete';
 
 const SettingsLocalePage = () => {
   const translate = useTranslate();
@@ -22,18 +23,14 @@ const SettingsLocalePage = () => {
     async (params: any) => {
       try {
         await dataProvider.update('Actor', {
-          // @ts-expect-error TS(2532): Object is possibly 'undefined'.
-          id: identity.id,
+          id: identity!.id,
           data: {
-            // @ts-expect-error TS(2532): Object is possibly 'undefined'.
-            ...identity.webIdData,
+            ...identity!.webIdData,
             'schema:knowsLanguage': params.locale
           },
-          // @ts-expect-error TS(2532): Object is possibly 'undefined'.
-          previousData: identity.webIdData
+          previousData: identity!.webIdData
         });
         // Refetch the webId, so that frontend locale is automatically updated (through UpdateLocale component)
-        // @ts-expect-error TS(2722): Cannot invoke an object which is possibly 'undefin... Remove this comment to see the full error message
         await refetch();
         notify('app.notification.locale_changed', { type: 'success' });
       } catch (error) {
@@ -53,7 +50,7 @@ const SettingsLocalePage = () => {
       </Typography>
       <Box mt={1}>
         <Card>
-          <SimpleForm defaultValues={{ locale }} onSubmit={onSubmit}>
+          <SimpleForm defaultValues={{ locale }} onSubmit={onSubmit} toolbar={<ToolbarWithoutDelete />}>
             <RadioButtonGroupInput
               label={false}
               helperText={false}

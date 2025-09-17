@@ -46,7 +46,6 @@ const ShowPublicProfileButton = (props: any) => {
 export const PublicProfilePage = () => {
   const notify = useNotify();
   const translate = useTranslate();
-  // @ts-expect-error TS(2339): Property 'isGroup' does not exist on type 'unknown... Remove this comment to see the full error message
   const { isGroup, data, isLoading, refetch } = useRealmContext();
 
   const dataProvider = useDataProvider();

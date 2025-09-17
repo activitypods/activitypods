@@ -14,7 +14,6 @@ const UserMenu = () => {
   const { data: identity } = useGetIdentity();
   const logout = useLogout();
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
-  // @ts-expect-error TS(2339): Property 'isLoading' does not exist on type 'unkno... Remove this comment to see the full error message
   const { isLoading, isGroup, data } = useRealmContext();
   const groups = useOwnedGroups();
 

@@ -9,25 +9,18 @@ import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import DeleteIcon from '@mui/icons-material/Delete';
 import GroupIcon from '@mui/icons-material/PeopleAlt';
 import SettingsItem from './SettingsItem';
-import useGroupContext from '../../hooks/useRealmContext';
+import useRealmContext from '../../hooks/useRealmContext';
 
 const GroupSettingsPage = () => {
   const translate = useTranslate();
   const navigate = useNavigate();
-  // @ts-expect-error TS(2339): Property 'isLoading' does not exist on type 'unkno... Remove this comment to see the full error message
-  const { isLoading, data } = useGroupContext();
+  const { isLoading, data } = useRealmContext();
 
   if (isLoading) return null;
 
   return (
     <>
-      <Header
-        title="app.titles.group_settings"
-        // @ts-expect-error TS(2322): Type '{ title: string; titleVariables: { groupName... Remove this comment to see the full error message
-        titleVariables={{
-          groupName: data.fullName
-        }}
-      />
+      <Header title="app.titles.group_settings" titleVariables={{ groupName: data.fullName }} />
       <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>
         {translate('app.page.settings')}
       </Typography>

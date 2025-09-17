@@ -67,7 +67,7 @@ const ContactRequest = ({ activity, refetch }: any) => {
         <Avatar src={profile?.['vcard:photo']} className={classes.avatar} />
       </Link>
       <Grid container spacing={xs ? 2 : 2}>
-        <Grid sx={{ xs: 12, sm: 8 }}>
+        <Grid size={{ xs: 12, sm: 8 }}>
           <div>
             <Link to={createPath({ resource: 'Profile', id: activity.object.object, type: 'show' })}>
               <Typography variant="body1" className={classes.name} component="span">
@@ -80,7 +80,7 @@ const ContactRequest = ({ activity, refetch }: any) => {
           </div>
           <Typography variant="body2">{message}</Typography>
         </Grid>
-        <Grid sx={{ xs: 12, sm: 4 }}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <Box display="flex" alignItems="middle" justifyContent={xs ? 'flex-start' : 'flex-end'}>
             <AcceptContactRequestButton
               activity={activity}

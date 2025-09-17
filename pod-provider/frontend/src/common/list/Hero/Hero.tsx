@@ -30,10 +30,10 @@ const Hero = ({ children, image }: any) => {
   return (
     <div className={classes.root}>
       <Grid container spacing={2}>
-        <Grid sx={{ xs: 12, sm: 3 }}>
+        <Grid size={{ xs: 12, sm: 3 }}>
           <Avatar src={image} className={classes.avatar} />
         </Grid>
-        <Grid sx={{ xs: 12, sm: 9 }}>
+        <Grid size={{ xs: 12, sm: 9 }}>
           <DetailsList>{children}</DetailsList>
         </Grid>
       </Grid>

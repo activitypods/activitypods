@@ -2,7 +2,7 @@ import path from 'path';
 const { MoleculerError } = require('moleculer').Errors;
 import { arrayOf, getDatasetFromUri, getId } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { parseHeader, negotiateContentType, parseJson, parseTurtle } from '@semapps/middlewares';
+import { parseHeader, negotiateContentType, parseRawBody, parseJson } from '@semapps/middlewares';
 import { ServiceSchema } from 'moleculer';
 
 const DelegationEndpointSchema = {
@@ -10,7 +10,7 @@ const DelegationEndpointSchema = {
   dependencies: ['api', 'ldp'],
   async started() {
     const basePath = await this.broker.call('ldp.getBasePath');
-    const middlewares = [parseHeader, negotiateContentType, parseJson, parseTurtle];
+    const middlewares = [parseHeader, negotiateContentType, parseRawBody, parseJson];
     await this.broker.call('api.addRoute', {
       route: {
         name: 'sai-delegation-endpoint',

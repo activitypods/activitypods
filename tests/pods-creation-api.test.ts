@@ -1,6 +1,6 @@
 import waitForExpect from 'wait-for-expect';
 import urlJoin from 'url-join';
-import fetch from 'node-fetch';
+import fetch, { RequestInit } from 'node-fetch';
 import { connectPodProvider, clearAllData } from './initialize.ts';
 jest.setTimeout(50000);
 const BASE_URL = 'http://localhost:3000';
@@ -8,7 +8,7 @@ const BASE_URL = 'http://localhost:3000';
 describe('Test pods creation via API', () => {
   let podProvider: any, token: any, alice: any, projectUri: any;
 
-  const fetchServer = (path: any, options = {}) => {
+  const fetchServer = (path: any, options: RequestInit = {}) => {
     if (!path) throw new Error('No path provided to fetchServer');
     if (!options.headers) options.headers = new fetch.Headers();
 
@@ -165,7 +165,7 @@ describe('Test pods creation via API', () => {
 
     await expect(fetchServer(alice['pim:storage'])).resolves.toMatchObject({
       json: {
-        type: ['ldp:Container', 'ldp:BasicContainer'],
+        type: expect.arrayContaining(['ldp:Container', 'ldp:BasicContainer']),
         'ldp:contains': expect.arrayContaining([
           expect.objectContaining({
             id: projectUri,
@@ -182,7 +182,9 @@ describe('Test pods creation via API', () => {
       body: `
         SELECT ?type
         WHERE {
-          <${projectUri}> a ?type
+          GRAPH <${projectUri}> {
+            <${projectUri}> a ?type
+          }
         }
       `,
       headers: new fetch.Headers({

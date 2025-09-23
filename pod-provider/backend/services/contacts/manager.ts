@@ -161,7 +161,7 @@ const ContactsManagerSchema = {
           query: `
             SELECT DISTINCT ?resourceUri 
             WHERE {
-              ?resourceUri ?p ?o .
+              GRAPH ?resourceUri {}
               FILTER( STRSTARTS( STR(?resourceUri), "${urlJoin(storageUrl, '/')}" ) ) .
             }
           `,

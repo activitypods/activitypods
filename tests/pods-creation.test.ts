@@ -151,7 +151,9 @@ describe('Test pods creation', () => {
       query: `
         SELECT ?type
         WHERE {
-          <${projectUri}> a ?type
+          GRAPH <${projectUri}> {
+            <${projectUri}> a ?type
+          }
         }
       `,
       username: 'alice',

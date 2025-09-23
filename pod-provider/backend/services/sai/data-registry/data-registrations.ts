@@ -101,16 +101,22 @@ const DataRegistrationsSchema = {
                 PREFIX interop: <http://www.w3.org/ns/solid/interop#>
                 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                 DELETE {
-                  <${containerUri}> interop:updatedAt ?updatedAt .
-                  <${containerUri}> interop:registeredShapeTree ?shapeTree .
+                  GRAPH <${containerUri}> {
+                    <${containerUri}> interop:updatedAt ?updatedAt .
+                    <${containerUri}> interop:registeredShapeTree ?shapeTree .
+                  }
                 } 
                 INSERT {
-                  <${containerUri}> interop:updatedAt "${currentData}"^^xsd:dateTime .
-                  <${containerUri}> interop:registeredShapeTree <${shapeTreeUri}> .
+                  GRAPH <${containerUri}> {
+                    <${containerUri}> interop:updatedAt "${currentData}"^^xsd:dateTime .
+                    <${containerUri}> interop:registeredShapeTree <${shapeTreeUri}> .
+                  }
                 }
                 WHERE {
-                  <${containerUri}> interop:updatedAt ?updatedAt .
-                  <${containerUri}> interop:registeredShapeTree ?shapeTree .
+                  GRAPH <${containerUri}> {
+                    <${containerUri}> interop:updatedAt ?updatedAt .
+                    <${containerUri}> interop:registeredShapeTree ?shapeTree .
+                  }
                 }
               `,
               accept: MIME_TYPES.JSON,
@@ -126,12 +132,14 @@ const DataRegistrationsSchema = {
               PREFIX interop: <http://www.w3.org/ns/solid/interop#>
               PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
               INSERT DATA {
-                <${containerUri}> a interop:DataRegistration .
-                <${containerUri}> interop:registeredBy <${podOwner}> . 
-                <${containerUri}> interop:registeredWith <${authAgentUri}> .
-                <${containerUri}> interop:registeredAt "${currentData}"^^xsd:dateTime .
-                <${containerUri}> interop:updatedAt "${currentData}"^^xsd:dateTime .
-                <${containerUri}> interop:registeredShapeTree <${shapeTreeUri}> .
+                GRAPH <${containerUri}> {
+                  <${containerUri}> a interop:DataRegistration .
+                  <${containerUri}> interop:registeredBy <${podOwner}> . 
+                  <${containerUri}> interop:registeredWith <${authAgentUri}> .
+                  <${containerUri}> interop:registeredAt "${currentData}"^^xsd:dateTime .
+                  <${containerUri}> interop:updatedAt "${currentData}"^^xsd:dateTime .
+                  <${containerUri}> interop:registeredShapeTree <${shapeTreeUri}> .
+                }
               }
             `,
             accept: MIME_TYPES.JSON,
@@ -165,9 +173,11 @@ const DataRegistrationsSchema = {
             PREFIX interop: <http://www.w3.org/ns/solid/interop#>
             SELECT ?dataRegistrationUri
             WHERE {
-              ?dataRegistrationUri interop:registeredShapeTree <${shapeTreeUri}> .
-              ?dataRegistrationUri interop:registeredBy <${podOwner}> .
-              ?dataRegistrationUri a interop:DataRegistration .
+              GRAPH ?dataRegistrationUri {
+                ?dataRegistrationUri interop:registeredShapeTree <${shapeTreeUri}> .
+                ?dataRegistrationUri interop:registeredBy <${podOwner}> .
+                ?dataRegistrationUri a interop:DataRegistration .
+              }
             }
           `,
           accept: MIME_TYPES.JSON,
@@ -197,8 +207,10 @@ const DataRegistrationsSchema = {
               PREFIX interop: <http://www.w3.org/ns/solid/interop#>
               SELECT ?dataRegistrationUri
               WHERE {
-                ?dataRegistrationUri ldp:contains <${resourceUri}> .
-                ?dataRegistrationUri a interop:DataRegistration .
+                GRAPH ?dataRegistrationUri {
+                  ?dataRegistrationUri ldp:contains <${resourceUri}> .
+                  ?dataRegistrationUri a interop:DataRegistration .
+                }
               }
             `,
             accept: MIME_TYPES.JSON,

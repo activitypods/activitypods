@@ -40,20 +40,25 @@ const SaiAuthorizerSchema = {
                 VALUES ?type { interop:AccessGrant interop:DelegatedAccessGrant }
                 VALUES ?mode { ${modeMapping[mode].join(' ')} }
                 {
-                  ?grantUri interop:hasDataRegistration <${dataRegistrationUri}> .
-                  ?grantUri interop:grantee <${webId}> . 
-                  ?grantUri interop:accessMode ?mode .
-                  ?grantUri interop:scopeOfGrant interop:AllFromRegistry .
+                  GRAPH ?grantUri {
+                    ?grantUri interop:hasDataRegistration <${dataRegistrationUri}> .
+                    ?grantUri interop:grantee <${webId}> . 
+                    ?grantUri interop:accessMode ?mode .
+                    ?grantUri interop:scopeOfGrant interop:AllFromRegistry .
+                    ?grantUri a ?type .
+                  }
                 } 
                 UNION 
                 {
-                  ?grantUri interop:hasDataInstance <${uri}> .
-                  ?grantUri interop:hasDataRegistration <${dataRegistrationUri}> .
-                  ?grantUri interop:grantee <${webId}> . 
-                  ?grantUri interop:accessMode ?mode .
-                  ?grantUri interop:scopeOfGrant interop:SelectedFromRegistry .
+                  GRAPH ?grantUri {
+                    ?grantUri interop:hasDataInstance <${uri}> .
+                    ?grantUri interop:hasDataRegistration <${dataRegistrationUri}> .
+                    ?grantUri interop:grantee <${webId}> . 
+                    ?grantUri interop:accessMode ?mode .
+                    ?grantUri interop:scopeOfGrant interop:SelectedFromRegistry .
+                    ?grantUri a ?type .
+                  }
                 }
-                ?grantUri a ?type .
               }
             `,
             webId: 'system',
@@ -70,11 +75,13 @@ const SaiAuthorizerSchema = {
             WHERE {
               VALUES ?type { interop:AccessGrant interop:DelegatedAccessGrant }
               VALUES ?mode { ${modeMapping[mode].join(' ')} }
-              ?grantUri interop:hasDataRegistration <${uri}> .
-              ?grantUri interop:accessMode ?mode .
-              ?grantUri interop:grantee <${webId}> .
-              ?grantUri interop:scopeOfGrant interop:AllFromRegistry .
-              ?grantUri a ?type .
+              GRAPH ?grantUri {
+                ?grantUri interop:hasDataRegistration <${uri}> .
+                ?grantUri interop:accessMode ?mode .
+                ?grantUri interop:grantee <${webId}> .
+                ?grantUri interop:scopeOfGrant interop:AllFromRegistry .
+                ?grantUri a ?type .
+              }
             }
           `,
           webId: 'system',

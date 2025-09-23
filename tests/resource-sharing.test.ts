@@ -3,11 +3,10 @@ import waitForExpect from 'wait-for-expect';
 import { OBJECT_TYPES } from '@semapps/activitypub';
 import { arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
-
 import { connectPodProvider, clearAllData, createActor, initializeAppServer, installApp } from './initialize.ts';
-
 import ExampleAppService from './apps/example3.app.ts';
 import * as CONFIG from './config.ts';
+
 jest.setTimeout(120000);
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');

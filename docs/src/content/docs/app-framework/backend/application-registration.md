@@ -57,7 +57,9 @@ The `app` part of the setting allow you to describe your application. These info
 - `thumbnail`: square logo of your application (ideally 192x192 pixels)
 - `frontUrl`: front URL of your application
 
-### OIDC
+### Solid OpenID Connect (Solid OIDC)
+
+The Solid OpenID Connect (Solid OIDC) specification defines how resource servers verify the identity of relying parties and end users based on the authentication performed by an OpenID provider ([Solid OIDC](https://solidproject.org/TR/oidc))
 
 ActivityPods integrate a full OIDC provider. To register your application with this provider, it needs a few informations:
 

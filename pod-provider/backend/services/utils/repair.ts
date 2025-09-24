@@ -170,9 +170,7 @@ const RepairSchema = {
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
         for (const { webId, username: dataset } of accounts) {
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
-          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           ctx.meta.webId = webId;
 
           // Collections which are now created on the fly
@@ -187,13 +185,15 @@ const RepairSchema = {
 
             const results = await ctx.call('triplestore.query', {
               query: `
-              SELECT ?objectUri ?collectionUri
-              WHERE {
-                ?objectUri <${attachPredicate}> ?collectionUri .
-                FILTER (isuri(?objectUri))
-                FILTER (strstarts(str(?collectionUri), "${webId}"))
-              }
-            `,
+                SELECT ?objectUri ?collectionUri
+                WHERE {
+                  GRAPH ?objectUri {
+                    ?objectUri <${attachPredicate}> ?collectionUri .
+                    FILTER(ISURI(?objectUri))
+                    FILTER(STRSTARTS(STR(?collectionUri), "${webId}"))
+                  }            
+                }
+              `,
               accept: MIME_TYPES.JSON,
               webId: 'system',
               dataset
@@ -247,13 +247,19 @@ const RepairSchema = {
               await ctx.call('triplestore.update', {
                 query: `
                   DELETE {
-                    <${profile.id}> <http://www.w3.org/2006/vcard/ns#given-name> ?s
+                    GRAPH <${profile.id}> {
+                      <${profile.id}> <http://www.w3.org/2006/vcard/ns#given-name> ?s
+                    }
                   }
                   INSERT {
-                    <${profile.id}> <http://www.w3.org/2006/vcard/ns#given-name> "${firstName}"
+                    GRAPH <${profile.id}> {
+                      <${profile.id}> <http://www.w3.org/2006/vcard/ns#given-name> "${firstName}"
+                    }
                   }
                   WHERE {
-                    <${profile.id}> <http://www.w3.org/2006/vcard/ns#given-name> ?s
+                    GRAPH <${profile.id}> {
+                      <${profile.id}> <http://www.w3.org/2006/vcard/ns#given-name> ?s
+                    }
                   }
                 `,
                 webId: 'system',
@@ -276,16 +282,21 @@ const RepairSchema = {
           await ctx.call('triplestore.update', {
             query: `
               DELETE {
-                ?s ?p ?oldO .
+                GRAPH ?s {
+                  ?s ?p ?oldO .
+                }
               }
               INSERT {
-                ?s ?p ?newO .
+                GRAPH ?s {
+                  ?s ?p ?newO .
+                }
               }
-              WHERE 
-              { 
-                ?s ?p ?oldO .
-                FILTER(REGEX(STR(?oldO), "${oldBaseUrl}", "i"))
-                BIND(URI(REPLACE(STR(?oldO), "${oldBaseUrl}", "${newBaseUrl}", "i")) AS ?newO)
+              WHERE { 
+                GRAPH ?s {
+                  ?s ?p ?oldO .
+                  FILTER(REGEX(STR(?oldO), "${oldBaseUrl}", "i"))
+                  BIND(URI(REPLACE(STR(?oldO), "${oldBaseUrl}", "${newBaseUrl}", "i")) AS ?newO)
+                }
               }
             `,
             dataset,

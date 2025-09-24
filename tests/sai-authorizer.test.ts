@@ -1,10 +1,10 @@
-const urlJoin = require('url-join');
-const waitForExpect = require('wait-for-expect');
-const { OBJECT_TYPES } = require('@semapps/activitypub');
-const { MIME_TYPES } = require('@semapps/mime-types');
-const { connectPodProvider, clearAllData, createActor, initializeAppServer, installApp } = require('./initialize');
-const ExampleAppService = require('./apps/example3.app');
-const CONFIG = require('./config');
+import urlJoin from 'url-join';
+import waitForExpect from 'wait-for-expect';
+import { OBJECT_TYPES } from '@semapps/activitypub';
+import { MIME_TYPES } from '@semapps/mime-types';
+import { connectPodProvider, clearAllData, createActor, initializeAppServer, installApp } from './initialize.ts';
+import ExampleAppService from './apps/example3.app.ts';
+import * as CONFIG from './config.ts';
 
 jest.setTimeout(120000);
 

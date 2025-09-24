@@ -26,8 +26,12 @@ const ProfilesLocationSchema = {
             PREFIX as: <https://www.w3.org/ns/activitystreams#>
             SELECT ?homeLocation
             WHERE {
-              <${webId}> as:url ?profile .
-              ?profile vcard:hasAddress ?homeLocation .
+              GRAPH <${webId}> {
+                <${webId}> as:url ?profile .
+              }
+              GRAPH ?profile {
+                ?profile vcard:hasAddress ?homeLocation .
+              }
             }
           `,
           accept: MIME_TYPES.JSON,
@@ -47,17 +51,23 @@ const ProfilesLocationSchema = {
             PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
             PREFIX as: <https://www.w3.org/ns/activitystreams#>
             DELETE {
-              ?profile vcard:hasAddress ?homeLocation .
-              ?hasGeo vcard:latitude ?latitude .
-              ?hasGeo vcard:longitude ?longitude .
-              ?profile vcard:hasGeo ?hasGeo .
+              GRAPH ?profile {
+                ?profile vcard:hasAddress ?homeLocation .
+                ?hasGeo vcard:latitude ?latitude .
+                ?hasGeo vcard:longitude ?longitude .
+                ?profile vcard:hasGeo ?hasGeo .
+              }
             }
             WHERE {
-              <${webId}> as:url ?profile .
-              ?profile vcard:hasAddress ?homeLocation .
-              ?profile vcard:hasGeo ?hasGeo .
-              ?hasGeo vcard:latitude ?latitude .
-              ?hasGeo vcard:longitude ?longitude .
+              GRAPH <${webId}> {
+                <${webId}> as:url ?profile .
+              }
+              GRAPH ?profile {
+                ?profile vcard:hasAddress ?homeLocation .
+                ?profile vcard:hasGeo ?hasGeo .
+                ?hasGeo vcard:latitude ?latitude .
+                ?hasGeo vcard:longitude ?longitude .
+              }
             }
           `,
           webId

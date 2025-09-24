@@ -1,12 +1,19 @@
+import { ServiceSchema } from 'moleculer';
 import { getId, getType } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } from '@semapps/activitypub';
-import { ServiceSchema } from 'moleculer';
+import ConvertBooleanMixin from './convert-booleans.ts';
+import ConvertIntegerMixin from './convert-integers.ts';
 
 /**
  * Mixin used by the AccessGrantsService and DelegatedAccessGrantsService
  */
 const AccessGrantsMixin = {
-  mixins: [ActivitiesHandlerMixin],
+  mixins: [ActivitiesHandlerMixin, ConvertBooleanMixin, ConvertIntegerMixin],
+  settings: {
+    // Fuseki 5 returns booleans and integer as strings so we must convert them manually
+    booleanPredicates: ['interop:delegationAllowed'],
+    integerPredicates: ['interop:delegationLimit']
+  },
   hooks: {
     after: {
       async create(ctx, res) {

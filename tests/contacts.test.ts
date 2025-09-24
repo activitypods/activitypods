@@ -152,34 +152,13 @@ describe('Test contacts features', () => {
       ).resolves.toBeTruthy();
     });
 
-    // Bob profile is cached in Alice dataset
-    await waitForExpect(async () => {
-      await expect(
-        alice.call('triplestore.countTriplesOfSubject', {
-          uri: alice.url,
-          dataset: bob.preferredUsername,
-          webId: 'system'
-        })
-      ).resolves.toBeTruthy();
-    });
-
-    // Bob profile is attached to Alice /profiles container
-    await waitForExpect(async () => {
-      await expect(
-        alice.call('ldp.container.includes', {
-          containerUri: urlJoin(alice.id, 'data', 'vcard', 'individual'),
-          resourceUri: bob.url,
-          webId: alice.id
-        })
-      ).resolves.toBeTruthy();
-    });
-
     // Alice profile is cached in Bob dataset
     await waitForExpect(async () => {
       await expect(
         bob.call('triplestore.countTriplesOfSubject', {
-          uri: bob.url,
-          dataset: alice.preferredUsername,
+          uri: alice.url,
+          graphName: alice.url,
+          dataset: bob.preferredUsername,
           webId: 'system'
         })
       ).resolves.toBeTruthy();
@@ -192,6 +171,29 @@ describe('Test contacts features', () => {
           containerUri: urlJoin(bob.id, 'data', 'vcard', 'individual'),
           resourceUri: alice.url,
           webId: bob.id
+        })
+      ).resolves.toBeTruthy();
+    });
+
+    // Bob profile is cached in Alice dataset
+    await waitForExpect(async () => {
+      await expect(
+        alice.call('triplestore.countTriplesOfSubject', {
+          uri: bob.url,
+          graphName: bob.url,
+          dataset: alice.preferredUsername,
+          webId: 'system'
+        })
+      ).resolves.toBeTruthy();
+    });
+
+    // Bob profile is attached to Alice /profiles container
+    await waitForExpect(async () => {
+      await expect(
+        alice.call('ldp.container.includes', {
+          containerUri: urlJoin(alice.id, 'data', 'vcard', 'individual'),
+          resourceUri: bob.url,
+          webId: alice.id
         })
       ).resolves.toBeTruthy();
     });

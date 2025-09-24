@@ -2,7 +2,7 @@ import urlJoin from 'url-join';
 import fetch from 'node-fetch';
 import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
-import { parseHeader, negotiateContentType, parseJson } from '@semapps/middlewares';
+import { parseHeader, negotiateContentType, parseRawBody, parseJson } from '@semapps/middlewares';
 import { fetchServer, tryUntilTimeout } from './utils.ts';
 import { delay } from '@semapps/ldp';
 jest.setTimeout(110_000);
@@ -32,7 +32,7 @@ describe('Test app installation', () => {
         authorization: false,
         authentication: false,
         aliases: {
-          'POST /': [parseHeader, negotiateContentType, parseJson, 'fake-service.webhook']
+          'POST /': [parseHeader, negotiateContentType, parseRawBody, parseJson, 'fake-service.webhook']
         },
         bodyParsers: false
       }

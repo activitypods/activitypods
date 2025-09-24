@@ -22,7 +22,6 @@ const importAsync = async () => {
 
 importAsync();
 
-/** @type {import('moleculer').ServiceSchema} */
 const ManagementService = {
   name: 'management' as const,
   mixins: [QueueService(CONFIG.QUEUE_SERVICE_URL)],
@@ -357,7 +356,7 @@ const ManagementService = {
     async createRdfDump(dataset, webId, withSettings = false) {
       /** @type {object[]} */
       const datasetDump = await this.broker.call('triplestore.query', {
-        query: `SELECT * { { ?s ?p ?o } UNION { GRAPH ?g { ?s ?p ?o } } }`,
+        query: `SELECT * { GRAPH ?g { ?s ?p ?o } }`,
         webId: 'system',
         dataset,
         accept: MIME_TYPES.JSON
@@ -368,8 +367,10 @@ const ManagementService = {
             dataset: this.settings.settingsDataset,
             query: sanitizeSparqlQuery`
               SELECT * WHERE {
-                ?s ?p ?o .
-                FILTER EXISTS { ?s <http://semapps.org/ns/core#webId> "${webId}" }
+                GRAPH ?g {
+                  ?s ?p ?o .
+                  FILTER EXISTS { ?s <http://semapps.org/ns/core#webId> "${webId}" }
+                }
               }
             `,
             accept: MIME_TYPES.JSON

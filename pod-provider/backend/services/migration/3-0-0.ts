@@ -30,6 +30,7 @@ const Migration300Schema = {
             // Migration utils from SemApps V20MigrationService
             await this.actions.moveAllToNamedGraph({ dataset: username }, { parentCtx: ctx });
             await this.actions.migrateCurrentPredicate({ dataset: username }, { parentCtx: ctx });
+            await this.actions.migratePseudoIds({ dataset: username }, { parentCtx: ctx });
 
             await ctx.call('auth.account.update', {
               id: rest['@id'],

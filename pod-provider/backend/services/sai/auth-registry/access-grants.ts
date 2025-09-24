@@ -1,8 +1,9 @@
+import { ServiceSchema } from 'moleculer';
 import { ControlledContainerMixin, getId } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
 import AccessGrantsMixin from '../../../mixins/access-grants.ts';
-import { ServiceSchema } from 'moleculer';
+import { arraysEqual } from '../../../utils.ts';
 
 const AccessGrantsSchema = {
   name: 'access-grants' as const,
@@ -77,7 +78,18 @@ const AccessGrantsSchema = {
           { parentCtx: ctx }
         );
 
-        return filteredContainer['ldp:contains']?.[0];
+        if (
+          filteredContainer['ldp:contains'].length > 1 &&
+          authorization['interop:scopeOfAuthorization'] === 'interop:SelectedFromRegistry'
+        ) {
+          // If the authorization is for selected data instances, find the grant that match the same data instances
+          // We cannot use the `filters` parameter above because it does not work with arrays
+          return filteredContainer['ldp:contains'].find((grant: any) =>
+            arraysEqual(authorization['interop:hasDataInstance'], grant['interop:hasDataInstance'])
+          );
+        } else {
+          return filteredContainer['ldp:contains']?.[0];
+        }
       }
     },
 

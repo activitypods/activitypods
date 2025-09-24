@@ -234,7 +234,7 @@ describe('Test resource sharing features', () => {
     // Alice authorization is regenerated
     await waitForExpect(async () => {
       const authorizations = await alice.call('access-authorizations.listForSingleResource', {
-        resourceUri: eventUri
+        resourceUri: event2Uri
       });
 
       expect(authorizations).toEqual(

@@ -149,7 +149,9 @@ const ContactsManagerSchema = {
           query: sanitizeSparqlQuery`
             PREFIX as: <https://www.w3.org/ns/activitystreams#>
             DELETE WHERE {
-              ?collection as:items <${actorToDelete}> .
+              GRAPH ?collection {
+                ?collection as:items <${actorToDelete}> .
+              }
             }
           `,
           webId: 'system',
@@ -183,12 +185,18 @@ const ContactsManagerSchema = {
             PREFIX as: <https://www.w3.org/ns/activitystreams#>
             PREFIX ldp: <http://www.w3.org/ns/ldp#>
             DELETE {
-              ?recipientInbox as:items ?activityUrl .
+              GRAPH ?recipientInbox {
+                ?recipientInbox as:items ?activityUrl .
+              }
             } 
             WHERE {
-              <${recipientUri}> ldp:inbox ?recipientInbox .
-              ?recipientInbox as:items ?activityUrl .
-              FILTER( STRSTARTS( STR(?activityUrl), "${urlJoin(storageUrl, '/')}" ) ) .
+              GRAPH <${recipientUri}> {
+                <${recipientUri}> ldp:inbox ?recipientInbox .
+              }
+              GRAPH ?recipientInbox {
+                ?recipientInbox as:items ?activityUrl .
+                FILTER( STRSTARTS( STR(?activityUrl), "${urlJoin(storageUrl, '/')}" ) ) .
+              }
             }
           `,
           webId: 'system',

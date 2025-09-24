@@ -241,7 +241,7 @@ describe('Test Pod resources handling', () => {
           rdf.quad(
             rdf.namedNode(bobEventUri),
             rdf.namedNode('https://www.w3.org/ns/activitystreams#summary'),
-            literal('A super-powerful AI-generated summary')
+            rdf.literal('A super-powerful AI-generated summary')
           )
         ],
         actorUri: alice.id

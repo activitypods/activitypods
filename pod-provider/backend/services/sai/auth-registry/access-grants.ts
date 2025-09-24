@@ -1,12 +1,12 @@
+import { ServiceSchema } from 'moleculer';
 import { ControlledContainerMixin, getId } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
 import AccessGrantsMixin from '../../../mixins/access-grants.ts';
-import { ServiceSchema } from 'moleculer';
+import { arraysEqual } from '../../../utils.ts';
 
 const AccessGrantsSchema = {
   name: 'access-grants' as const,
-  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
   mixins: [ImmutableContainerMixin, ControlledContainerMixin, AccessGrantsMixin],
   settings: {
     acceptedTypes: ['interop:AccessGrant'],
@@ -78,14 +78,24 @@ const AccessGrantsSchema = {
           { parentCtx: ctx }
         );
 
-        return filteredContainer['ldp:contains']?.[0];
+        if (
+          filteredContainer['ldp:contains'].length > 1 &&
+          authorization['interop:scopeOfAuthorization'] === 'interop:SelectedFromRegistry'
+        ) {
+          // If the authorization is for selected data instances, find the grant that match the same data instances
+          // We cannot use the `filters` parameter above because it does not work with arrays
+          return filteredContainer['ldp:contains'].find((grant: any) =>
+            arraysEqual(authorization['interop:hasDataInstance'], grant['interop:hasDataInstance'])
+          );
+        } else {
+          return filteredContainer['ldp:contains']?.[0];
+        }
       }
     },
 
     getByResourceUri: {
       async handler(ctx) {
         const { resourceUri } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId || 'anon';
 
         const filteredContainer = await this.actions.list(

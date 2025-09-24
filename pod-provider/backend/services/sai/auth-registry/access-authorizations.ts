@@ -1,18 +1,23 @@
 const { MoleculerError } = require('moleculer').Errors;
+import { ServiceSchema } from 'moleculer';
 import { ControlledContainerMixin, arrayOf, getId, getWebIdFromUri } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { arraysEqual } from '../../../utils.ts';
 import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
-import { ServiceSchema } from 'moleculer';
+import ConvertBooleanMixin from '../../../mixins/convert-booleans.ts';
+import ConvertIntegerMixin from '../../../mixins/convert-integers.ts';
 
 const AccessAuthorizationsSchema = {
   name: 'access-authorizations' as const,
-  mixins: [ImmutableContainerMixin, ControlledContainerMixin],
+  mixins: [ImmutableContainerMixin, ControlledContainerMixin, ConvertBooleanMixin, ConvertIntegerMixin],
   settings: {
     acceptedTypes: ['interop:AccessAuthorization'],
     excludeFromMirror: true,
     activateTombstones: false,
-    typeIndex: 'private'
+    typeIndex: 'private',
+    // Fuseki 5 returns booleans and integer as strings so we must convert them manually
+    booleanPredicates: ['interop:delegationAllowed'],
+    integerPredicates: ['interop:delegationLimit']
   },
   actions: {
     generateFromAccessNeeds: {

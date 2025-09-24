@@ -39,10 +39,10 @@ const listDatasets = async () => {
   return [];
 };
 
-const clearDataset = (dataset: any) =>
+const dropDataset = (dataset: any) =>
   fetch(`${CONFIG.SPARQL_ENDPOINT + dataset}/update`, {
     method: 'POST',
-    body: 'update=CLEAR+ALL', // DROP+ALL is not working with WebACL datasets !
+    body: 'update=DROP+ALL',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       Authorization: `Basic ${Buffer.from(`${CONFIG.JENA_USER}:${CONFIG.JENA_PASSWORD}`).toString('base64')}`
@@ -77,7 +77,7 @@ const clearRedisDb = async (redisUrl: any) => {
 const clearAllData = async () => {
   const datasets = await listDatasets();
   for (let dataset of datasets.filter((d: any) => d != 'settings')) {
-    await clearDataset(dataset);
+    await dropDataset(dataset);
   }
 
   await clearSettingsDataset();
@@ -137,7 +137,8 @@ const initializeAppServer = async (
         user: CONFIG.JENA_USER,
         password: CONFIG.JENA_PASSWORD,
         fusekiBase: CONFIG.FUSEKI_BASE,
-        mainDataset
+        mainDataset,
+        secure: false // TODO Remove when triplestore service is refactored
       },
       keys: {
         actorsKeyPairsDir: null
@@ -185,49 +186,64 @@ const initializeAppServer = async (
 };
 
 const createActor = async (podProvider: any, username = 'alice') => {
-  let defaultData = await fs.promises.readFile('./templates/actor_default.ttl', 'utf8');
-  let aclData = await fs.promises.readFile('./templates/actor_acl.ttl', 'utf8');
-  let settingsData = await fs.promises.readFile('./templates/actor_settings.ttl', 'utf8');
+  // let defaultData = await fs.promises.readFile('./templates/actor_default.ttl', 'utf8');
+  // let aclData = await fs.promises.readFile('./templates/actor_acl.ttl', 'utf8');
+  // let settingsData = await fs.promises.readFile('./templates/actor_settings.ttl', 'utf8');
 
-  if (username !== 'alice') {
-    defaultData = defaultData.replaceAll('alice', username);
-    aclData = aclData.replaceAll('alice', username);
-    settingsData = settingsData.replaceAll('alice', username);
-  }
+  // if (username !== 'alice') {
+  //   defaultData = defaultData.replaceAll('alice', username);
+  //   aclData = aclData.replaceAll('alice', username);
+  //   settingsData = settingsData.replaceAll('alice', username);
+  // }
 
-  if (!(await podProvider.call('triplestore.dataset.exist', { dataset: 'settings' }))) {
-    await podProvider.call('triplestore.dataset.create', { dataset: 'settings', secure: false });
-  }
+  // if (!(await podProvider.call('triplestore.dataset.exist', { dataset: 'settings' }))) {
+  //   await podProvider.call('triplestore.dataset.create', { dataset: 'settings', secure: false });
+  // }
 
-  if (!(await podProvider.call('triplestore.dataset.exist', { dataset: username }))) {
-    await podProvider.call('triplestore.dataset.create', { dataset: username, secure: true });
-  }
+  // if (!(await podProvider.call('triplestore.dataset.exist', { dataset: username }))) {
+  //   await podProvider.call('triplestore.dataset.create', { dataset: username, secure: false });
+  // }
 
-  await podProvider.call('triplestore.insert', {
-    resource: defaultData,
-    contentType: MIME_TYPES.TURTLE,
-    webId: 'system',
-    dataset: username
+  // await podProvider.call('triplestore.insert', {
+  //   resource: defaultData,
+  //   contentType: MIME_TYPES.TURTLE,
+  //   webId: 'system',
+  //   dataset: username
+  // });
+
+  // await podProvider.call('triplestore.insert', {
+  //   resource: aclData,
+  //   contentType: MIME_TYPES.TURTLE,
+  //   webId: 'system',
+  //   graphName: 'http://semapps.org/webacl',
+  //   dataset: username
+  // });
+
+  // await podProvider.call('triplestore.insert', {
+  //   resource: settingsData,
+  //   contentType: MIME_TYPES.TURTLE,
+  //   webId: 'system',
+  //   dataset: 'settings'
+  // });
+
+  // const webId = 'http://localhost:3000/' + username;
+
+  const { webId } = await podProvider.call('auth.signup', {
+    username,
+    email: `${username}@test.com`,
+    password: 'Test1test',
+    name: username.charAt(0).toUpperCase() + username.slice(1),
+    'schema:knowsLanguage': 'en'
   });
 
-  await podProvider.call('triplestore.insert', {
-    resource: aclData,
-    contentType: MIME_TYPES.TURTLE,
-    webId: 'system',
-    graphName: 'http://semapps.org/webacl',
-    dataset: username
-  });
-
-  await podProvider.call('triplestore.insert', {
-    resource: settingsData,
-    contentType: MIME_TYPES.TURTLE,
-    webId: 'system',
-    dataset: 'settings'
-  });
-
-  const webId = 'http://localhost:3000/' + username;
-
-  let actor = await podProvider.call('activitypub.actor.get', { actorUri: webId });
+  let actor = await podProvider.call(
+    'activitypub.actor.awaitCreateComplete',
+    {
+      actorUri: webId,
+      additionalKeys: ['url']
+    },
+    { meta: { dataset: username } }
+  );
 
   // Shortcut to make it easier to write tests
   actor.call = (actionName: any, params: any, options = {}) =>
@@ -239,52 +255,17 @@ const createActor = async (podProvider: any, username = 'alice') => {
   return actor;
 };
 
-const getAppAccessNeeds = async (actor: any, appUri: any) => {
-  const app = await actor.call('ldp.resource.get', {
-    resourceUri: appUri,
-    accept: MIME_TYPES.JSON
-  });
-
-  let requiredAccessNeedGroup;
-  let optionalAccessNeedGroup;
-  for (const accessNeedUri of app['interop:hasAccessNeedGroup']) {
-    const accessNeedGroup = await actor.call('ldp.resource.get', {
-      resourceUri: accessNeedUri,
-      accept: MIME_TYPES.JSON
-    });
-    if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
-      requiredAccessNeedGroup = accessNeedGroup;
-    } else {
-      optionalAccessNeedGroup = accessNeedGroup;
-    }
-  }
-
-  return [requiredAccessNeedGroup, optionalAccessNeedGroup];
-};
-
-const installApp = async (actor: any, appUri: any, acceptedAccessNeeds: any, acceptedSpecialRights: any) => {
-  // If the accepted needs are not specified, use the app required access needs
-  if (!acceptedAccessNeeds && !acceptedSpecialRights) {
-    const [requiredAccessNeedGroup] = await getAppAccessNeeds(actor, appUri);
-    acceptedAccessNeeds = requiredAccessNeedGroup['interop:hasAccessNeed'];
-    acceptedSpecialRights = requiredAccessNeedGroup['apods:hasSpecialRights'];
-  }
-
-  return await actor.call('registration-endpoint.register', {
-    appUri,
-    acceptedAccessNeeds,
-    acceptedSpecialRights
-  });
+const installApp = async (actor: any, appUri: string) => {
+  return await actor.call('registration-endpoint.register', { appUri, acceptAllRequirements: true });
 };
 
 export {
   listDatasets,
-  clearDataset,
+  dropDataset,
   clearRedisDb,
   clearAllData,
   connectPodProvider,
   initializeAppServer,
   createActor,
-  getAppAccessNeeds,
   installApp
 };

@@ -59,7 +59,7 @@
   },
   "type": "module",
   "engines": {
-    "node": ">=24"
+    "node": ">=22"
   },
   "devDependencies": {
     "@types/rdfjs__data-model": "^2.0.9",

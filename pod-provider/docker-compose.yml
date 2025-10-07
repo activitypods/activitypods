@@ -1,6 +1,6 @@
 services:
   fuseki:
-    image: stain/jena-fuseki:5.1.0
+    image: secoresearch/fuseki:5.5.0
     container_name: fuseki
     volumes:
       - ./data/fuseki:/fuseki:z
@@ -28,7 +28,7 @@ services:
       - '6379:6379'
     volumes:
       - ./data/redis:/data:z
-    command: [ 'redis-server', '--appendonly', 'yes' ]
+    command: ['redis-server', '--appendonly', 'yes']
 
   arena:
     image: activitypods/arena

@@ -1,6 +1,6 @@
 services:
   fuseki_test:
-    image: stain/jena-fuseki:5.1.0
+    image: secoresearch/fuseki:5.5.0
     volumes:
       - ./data/fuseki_test:/fuseki:z
     ports:

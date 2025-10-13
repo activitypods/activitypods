@@ -362,6 +362,47 @@ const RepairSchema = {
           });
         }
       }
+    },
+    async removeDeletedResourcesFromCache(ctx) {
+      const { username, containerPath } = ctx.params;
+      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+      let deletedResources = [];
+
+      for (const { webId, username: dataset } of accounts) {
+        this.logger.info(`Inspecting Pod of ${webId}...`);
+        ctx.meta.dataset = dataset;
+        ctx.meta.webId = webId;
+
+        const containerUri = urlJoin(webId, 'data', containerPath);
+        const resourcesUris = await ctx.call('ldp.container.getUris', { containerUri });
+
+        for (const resourceUri of resourcesUris) {
+          // If this is a cached resource...
+          if (!resourceUri.startsWith(urlJoin(webId, 'data'))) {
+            try {
+              const remoteResource = await ctx.call('ldp.remote.getNetwork', { resourceUri });
+              if (remoteResource.type === 'Tombstone') {
+                this.logger.info(`Resource ${resourceUri} has been deleted, removing from cache...`);
+                await ctx.call('ldp.remote.delete', { resourceUri });
+                deletedResources.push(resourceUri);
+              }
+            } catch (e) {
+              if (e?.code === 404) {
+                this.logger.info(`Resource ${resourceUri} has been deleted, removing from cache...`);
+                try {
+                  await ctx.call('ldp.remote.delete', { resourceUri });
+                  deletedResources.push(resourceUri);
+                } catch (e) {
+                  console.error(e);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return deletedResources;
     }
   }
 } satisfies ServiceSchema;

@@ -404,7 +404,7 @@ export const createContactCapability = async (fetchFn: FetchFn, webIdDoc: any, p
           'apods:hasAuthorization': {
             type: 'acl:Authorization',
             'acl:mode': 'acl:Read',
-            'acl:accessTo': [].concat(profileDoc.id, profileDoc['vcard:photo'] || []).map(uri => ({ '@id': uri }))
+            'acl:accessTo': { '@id': profileDoc.id }
           }
         }
       }

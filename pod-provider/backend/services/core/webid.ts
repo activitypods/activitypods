@@ -4,10 +4,8 @@ import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
 const Schema = {
-  // @ts-expect-error TS(2322): Type '{ name: "webid"; mixins: ({ settings: { path... Remove this comment to see the full error message
   mixins: [WebIdService],
   settings: {
-    path: '/',
     baseUrl: CONFIG.BASE_URL,
     acceptedTypes: Object.values(FULL_ACTOR_TYPES),
     podProvider: true,
@@ -22,8 +20,9 @@ const Schema = {
     before: {
       async createWebId(ctx) {
         const { nick } = ctx.params;
-        await ctx.call('solid-storage.create', { username: nick });
-        ctx.params['solid:oidcIssuer'] = CONFIG.BASE_URL.replace(/\/$/, ''); // Remove trailing slash if it exists
+        const storageUrl = await ctx.call('solid-storage.create', { username: nick });
+        ctx.params['pim:storage'] = storageUrl;
+        ctx.params['solid:oidcIssuer'] = this.settings.baseUrl.replace(/\/$/, ''); // Remove trailing slash if it exists
       }
     }
   }

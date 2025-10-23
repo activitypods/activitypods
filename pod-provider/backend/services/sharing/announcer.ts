@@ -278,7 +278,7 @@ const AnnouncerSchema = {
 
           // Go through all the resource's types and attach it to the corresponding container
           for (const expandedType of expandedTypes) {
-            let containersUris = await ctx.call('type-registrations.findContainersUris', {
+            let containersUris = await ctx.call('type-index.getContainersUris', {
               type: expandedType,
               webId: recipientUri
             });
@@ -297,7 +297,7 @@ const AnnouncerSchema = {
 
               // If the resource type is invalid, an error will be thrown here
               // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
-              await this.broker.call('type-registrations.register', {
+              await this.broker.call('type-index.register', {
                 types: [expandedType],
                 containerUri: containersUris[0],
                 webId: recipientUri

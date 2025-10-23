@@ -62,12 +62,11 @@ const DataRegistrationsSchema = {
 
         // Register the class on the type index
         const services = await this.broker.call('$node.services');
-        if (services.some((s: any) => s.name === 'type-registrations')) {
-          await ctx.call('type-registrations.register', {
+        if (services.some((s: any) => s.name === 'public-type-index')) {
+          await ctx.call('public-type-index.register', {
             types: [registeredClass],
             containerUri,
-            webId: podOwner,
-            private: false
+            webId: podOwner
           });
         }
 

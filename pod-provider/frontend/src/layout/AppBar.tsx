@@ -1,0 +1,48 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Box, Container, Typography, Grid } from '@mui/material';
+import { makeStyles } from 'tss-react/mui';
+import UserMenu from './UserMenu';
+
+const useStyles = makeStyles()(theme => ({
+  topBar: {
+    backgroundColor: theme.palette.primary.main
+  },
+  title: {
+    fontWeight: '800',
+    lineHeight: 0.8,
+    paddingTop: '2rem',
+
+    [theme.breakpoints.down('sm')]: {
+      paddingTop: '1.3rem',
+      lineHeight: 0.8
+    },
+    '& a': {
+      textDecoration: 'none !important'
+    }
+  }
+}));
+
+const AppBar = ({ title }: any) => {
+  const { classes } = useStyles();
+  return (
+    <Box className={classes.topBar}>
+      <Container>
+        <Grid container>
+          <Grid sx={{ xs: 6 }}>
+            <Typography variant="h1" className={classes.title}>
+              <Link to="/network">{title}</Link>
+            </Typography>
+          </Grid>
+          <Grid sx={{ xs: 6 }}>
+            <Box display="flex" alignItems="start" justifyContent="right" pt={{ xs: 1, sm: 2 }}>
+              <UserMenu />
+            </Box>
+          </Grid>
+        </Grid>
+      </Container>
+    </Box>
+  );
+};
+
+export default AppBar;

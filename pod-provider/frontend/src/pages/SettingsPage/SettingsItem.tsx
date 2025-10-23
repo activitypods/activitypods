@@ -10,10 +10,10 @@ import {
   IconButton,
   Switch
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { makeStyles } from 'tss-react/mui';
 import EditIcon from '@mui/icons-material/Edit';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   listItem: {
     backgroundColor: 'white',
     padding: 0,
@@ -30,7 +30,7 @@ const useStyles = makeStyles(() => ({
 
 const SettingsItem: FunctionComponent<Props> = ({ onClick, icon, actionIcon, label, value }) => {
   const translate = useTranslate();
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <ListItem className={classes.listItem}>
       {value === true || value === false ? (

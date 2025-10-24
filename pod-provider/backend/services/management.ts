@@ -178,7 +178,7 @@ const ManagementService = {
           }
         }
 
-        const storageUrl = await ctx.call('solid-storage.getUrl', { webId: account.webId });
+        const storageUrl = await ctx.call('solid-storage.getBaseUrl', { webId: account.webId });
 
         // If there has been an export less than 5 minutes ago, we won't create a new one.
         // The last one might have stopped during download.

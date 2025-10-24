@@ -105,7 +105,7 @@ const Migration210Schema = {
         const { webId } = ctx.params;
 
         const registeredContainers = await ctx.call('ldp.registry.list');
-        const podUrl = await ctx.call('solid-storage.getUrl', { webId });
+        const podUrl = await ctx.call('solid-storage.getBaseUrl', { webId });
 
         for (const options of Object.values(registeredContainers)) {
           // @ts-expect-error TS(18046): 'options' is of type 'unknown'.

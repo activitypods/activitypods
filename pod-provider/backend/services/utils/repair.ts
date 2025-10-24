@@ -107,7 +107,7 @@ const RepairSchema = {
         for (const { webId, username: dataset } of accounts) {
           // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
-          const storageUrl = await ctx.call('solid-storage.getUrl', { webId });
+          const storageUrl = await ctx.call('solid-storage.getBaseUrl', { webId });
 
           const registeredContainers = await ctx.call('ldp.registry.list');
           for (const container of Object.values(registeredContainers)) {

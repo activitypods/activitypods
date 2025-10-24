@@ -56,7 +56,7 @@ const DataRegistrationsSchema = {
         const containerPath = await ctx.call('ldp.container.getPath', { resourceType: registeredClass });
 
         // Create the container and attach it to its parent(s)
-        const podUrl = await ctx.call('solid-storage.getUrl', { webId: podOwner });
+        const podUrl = await ctx.call('solid-storage.getBaseUrl', { webId: podOwner });
         const containerUri = urlJoin(podUrl, containerPath);
         await ctx.call('ldp.container.createAndAttach', { containerUri, webId: podOwner });
 

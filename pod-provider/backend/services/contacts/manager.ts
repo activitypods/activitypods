@@ -128,7 +128,7 @@ const ContactsManagerSchema = {
         }
 
         const actorToDelete = activity.object.id;
-        const storageUrl = await ctx.call('solid-storage.getUrl', { webId: actorToDelete });
+        const storageUrl = await ctx.call('solid-storage.getBaseUrl', { webId: actorToDelete });
 
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 

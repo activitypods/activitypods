@@ -3,7 +3,7 @@ import urlJoin from 'url-join';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { arrayOf } from '@semapps/ldp';
+import { arrayOf, Registration } from '@semapps/ldp';
 import { throw403, throw404 } from '@semapps/middlewares';
 import * as CONFIG from '../config/config.ts';
 import { ServiceSchema } from 'moleculer';
@@ -58,14 +58,14 @@ const GroupsService = {
         const storageUrl = await ctx.call('solid-storage.create', { username: id });
 
         // Create containers
-        const registeredContainers = await ctx.call('ldp.registry.list');
-        // @ts-expect-error TS(2339): Property 'path' does not exist on type 'unknown'.
-        for (const { path, permissions } of Object.values(registeredContainers)) {
-          await ctx.call('ldp.container.createAndAttach', {
-            containerUri: urlJoin(storageUrl, path),
-            permissions, // Used by the WebAclMiddleware
-            webId: ownerWebId
-          });
+        const registrations = (await ctx.call('ldp.registry.list')) as { [name: string]: Registration };
+        for (const registration of Object.values(registrations)) {
+          if (registration.isContainer) {
+            await ctx.call('ldp.container.create', {
+              registration,
+              webId: ownerWebId
+            });
+          }
         }
 
         // Create WebID

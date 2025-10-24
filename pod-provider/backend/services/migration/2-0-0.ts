@@ -142,7 +142,7 @@ const Migration200Schema = {
         } else {
           this.logger.info(`Adding TypeIndex to ${webId}...`);
 
-          const podUrl = await ctx.call('solid-storage.getUrl', { webId });
+          const podUrl = await ctx.call('solid-storage.getBaseUrl', { webId });
           await ctx.call('type-indexes.createPublicIndex', { webId });
 
           // Go through each registered container and persist them
@@ -214,7 +214,7 @@ const Migration200Schema = {
     createNewContainers: {
       async handler(ctx) {
         const { webId, username: dataset } = ctx.params;
-        const podUrl = await ctx.call('solid-storage.getUrl', { webId });
+        const podUrl = await ctx.call('solid-storage.getBaseUrl', { webId });
 
         // Go through each registered containers, create and attach it
         const registeredContainers = await ctx.call('ldp.registry.list', { dataset });

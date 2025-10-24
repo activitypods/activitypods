@@ -278,7 +278,7 @@ const AnnouncerSchema = {
 
           // Go through all the resource's types and attach it to the corresponding container
           for (const expandedType of expandedTypes) {
-            let containersUris = await ctx.call('type-registrations.findContainersUris', {
+            let containersUris = await ctx.call('type-index.getContainersUris', {
               type: expandedType,
               webId: recipientUri
             });
@@ -291,13 +291,13 @@ const AnnouncerSchema = {
               this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${expandedType}`);
 
               // Create the container and attach it to its parent(s)
-              const podUrl = await ctx.call('solid-storage.getUrl', { webId: recipientUri });
+              const podUrl = await ctx.call('solid-storage.getBaseUrl', { webId: recipientUri });
               containersUris[0] = urlJoin(podUrl, containerPath);
               await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId: recipientUri });
 
               // If the resource type is invalid, an error will be thrown here
               // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
-              await this.broker.call('type-registrations.register', {
+              await this.broker.call('type-index.register', {
                 types: [expandedType],
                 containerUri: containersUris[0],
                 webId: recipientUri

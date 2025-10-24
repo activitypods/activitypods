@@ -56,18 +56,17 @@ const DataRegistrationsSchema = {
         const containerPath = await ctx.call('ldp.container.getPath', { resourceType: registeredClass });
 
         // Create the container and attach it to its parent(s)
-        const podUrl = await ctx.call('solid-storage.getUrl', { webId: podOwner });
+        const podUrl = await ctx.call('solid-storage.getBaseUrl', { webId: podOwner });
         const containerUri = urlJoin(podUrl, containerPath);
         await ctx.call('ldp.container.createAndAttach', { containerUri, webId: podOwner });
 
         // Register the class on the type index
         const services = await this.broker.call('$node.services');
-        if (services.some((s: any) => s.name === 'type-registrations')) {
-          await ctx.call('type-registrations.register', {
+        if (services.some((s: any) => s.name === 'public-type-index')) {
+          await ctx.call('public-type-index.register', {
             types: [registeredClass],
             containerUri,
-            webId: podOwner,
-            private: false
+            webId: podOwner
           });
         }
 

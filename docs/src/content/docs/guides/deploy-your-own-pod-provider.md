@@ -34,7 +34,7 @@ cd activitypods
 
 ### Install Docker
 
-We have prepared a script for this:
+We have prepared a script to do this easily on Ubuntu-like server:
 
 ```bash
 ./install-docker.sh

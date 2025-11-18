@@ -11,8 +11,7 @@ const ActorsSchema = {
   mixins: [ControlledContainerMixin, DereferenceMixin],
   settings: {
     path: '/as/actor',
-    acceptedTypes: [ACTOR_TYPES.APPLICATION, 'interop:Application'],
-    readOnly: true,
+    types: [ACTOR_TYPES.APPLICATION, 'interop:Application'],
     dereferencePlan: [{ property: 'publicKey' }, { property: 'assertionMethod' }]
   },
   actions: {

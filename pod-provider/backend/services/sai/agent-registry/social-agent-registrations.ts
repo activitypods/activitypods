@@ -10,7 +10,7 @@ const SocialAgentRegistrationsSchema = {
   name: 'social-agent-registrations' as const,
   mixins: [ControlledContainerMixin, AgentRegistrationsMixin, ActivitiesHandlerMixin],
   settings: {
-    acceptedTypes: ['interop:SocialAgentRegistration'],
+    types: ['interop:SocialAgentRegistration'],
     newResourcesPermissions: {
       anon: {
         read: true

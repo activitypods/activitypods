@@ -9,7 +9,7 @@ const DelegatedAccessGrantsSchema = {
   name: 'delegated-access-grants' as const,
   mixins: [ImmutableContainerMixin, ControlledContainerMixin, AccessGrantsMixin],
   settings: {
-    acceptedTypes: ['interop:DelegatedAccessGrant'],
+    types: ['interop:DelegatedAccessGrant'],
     excludeFromMirror: true,
     activateTombstones: false,
     typeIndex: 'private'

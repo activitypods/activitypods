@@ -6,10 +6,10 @@ import { ServiceSchema } from 'moleculer';
 
 const AppRegistrationsSchema = {
   name: 'app-registrations' as const,
-  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; types: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin, AgentRegistrationsMixin],
   settings: {
-    acceptedTypes: ['interop:ApplicationRegistration'],
+    types: ['interop:ApplicationRegistration'],
     newResourcesPermissions: {
       anon: {
         read: true

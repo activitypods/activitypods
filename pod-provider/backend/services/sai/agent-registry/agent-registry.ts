@@ -1,14 +1,13 @@
 import rdf from '@rdfjs/data-model';
-import { SingleResourceContainerMixin } from '@semapps/ldp';
+import { ControlledResourceMixin } from '@semapps/ldp';
 import { ServiceSchema } from 'moleculer';
 const ALLOWED_TYPES = ['interop:ApplicationRegistration', 'interop:SocialAgentRegistration'];
 
-const AgentRegistrySchema = {
+const AgentRegistryService = {
   name: 'agent-registry' as const,
-  mixins: [SingleResourceContainerMixin],
+  mixins: [ControlledResourceMixin],
   settings: {
-    acceptedTypes: ['interop:AgentRegistry'],
-    podProvider: true
+    types: ['interop:AgentRegistry']
   },
   dependencies: ['registry-set'],
   actions: {
@@ -95,12 +94,12 @@ const AgentRegistrySchema = {
   }
 } satisfies ServiceSchema;
 
-export default AgentRegistrySchema;
+export default AgentRegistryService;
 
 declare global {
   export namespace Moleculer {
     export interface AllServices {
-      [AgentRegistrySchema.name]: typeof AgentRegistrySchema;
+      [AgentRegistryService.name]: typeof AgentRegistryService;
     }
   }
 }

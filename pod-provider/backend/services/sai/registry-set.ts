@@ -1,13 +1,12 @@
 import rdf from '@rdfjs/data-model';
-import { SingleResourceContainerMixin } from '@semapps/ldp';
+import { ControlledResourceMixin } from '@semapps/ldp';
 import { ServiceSchema } from 'moleculer';
 
-const RegistrySetSchema = {
+const RegistrySetService = {
   name: 'registry-set' as const,
-  mixins: [SingleResourceContainerMixin],
+  mixins: [ControlledResourceMixin],
   settings: {
-    acceptedTypes: ['interop:RegistrySet'],
-    podProvider: true
+    types: ['interop:RegistrySet']
   },
   hooks: {
     after: {
@@ -29,12 +28,12 @@ const RegistrySetSchema = {
   }
 } satisfies ServiceSchema;
 
-export default RegistrySetSchema;
+export default RegistrySetService;
 
 declare global {
   export namespace Moleculer {
     export interface AllServices {
-      [RegistrySetSchema.name]: typeof RegistrySetSchema;
+      [RegistrySetService.name]: typeof RegistrySetService;
     }
   }
 }

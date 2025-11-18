@@ -152,7 +152,7 @@ const Migration200Schema = {
             const containerUri = urlJoin(podUrl, container.path);
             await ctx.call('type-registrations.register', {
               // @ts-expect-error TS(18046): 'container' is of type 'unknown'.
-              types: arrayOf(container.acceptedTypes),
+              types: arrayOf(container.types),
               containerUri,
               webId
             });

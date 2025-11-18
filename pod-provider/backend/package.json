@@ -39,6 +39,7 @@
     "@semapps/webid": "1.2.0",
     "@types/archiver": "6.0.2",
     "@types/rdfjs__formats": "^4.0.1",
+    "@types/url-join": "^4.0.1",
     "archiver": "^7.0.1",
     "dotenv-flow": "^3.2.0",
     "handlebars": "^4.7.7",

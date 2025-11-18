@@ -9,7 +9,7 @@ const AccessGrantsSchema = {
   name: 'access-grants' as const,
   mixins: [ImmutableContainerMixin, ControlledContainerMixin, AccessGrantsMixin],
   settings: {
-    acceptedTypes: ['interop:AccessGrant'],
+    types: ['interop:AccessGrant'],
     excludeFromMirror: true,
     activateTombstones: false,
     typeIndex: 'private'

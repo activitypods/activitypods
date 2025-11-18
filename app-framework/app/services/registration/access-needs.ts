@@ -7,8 +7,7 @@ const AccessNeedsSchema = {
   name: 'access-needs' as const,
   mixins: [ControlledContainerMixin],
   settings: {
-    acceptedTypes: ['interop:AccessNeed'],
-    readOnly: true,
+    types: ['interop:AccessNeed'],
     activateTombstones: false
   },
   actions: {
@@ -25,7 +24,6 @@ const AccessNeedsSchema = {
     },
 
     find: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { shapeTreeUri, accessMode, necessity, preferredScope } = ctx.params;
 

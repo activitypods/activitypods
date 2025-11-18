@@ -4,7 +4,7 @@ module.exports = {
   name: 'data-grants',
   mixins: [ControlledContainerMixin],
   settings: {
-    acceptedTypes: ['interop:DataGrant'],
+    types: ['interop:DataGrant'],
     newResourcesPermissions: {
       anon: {
         read: true

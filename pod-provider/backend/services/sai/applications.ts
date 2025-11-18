@@ -6,7 +6,7 @@ const ApplicationsSchema = {
   name: 'applications' as const,
   mixins: [ControlledContainerMixin],
   settings: {
-    acceptedTypes: ['interop:Application'],
+    types: ['interop:Application'],
     typeIndex: 'private'
   },
   actions: {

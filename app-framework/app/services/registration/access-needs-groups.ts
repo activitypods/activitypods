@@ -9,8 +9,7 @@ const AccessNeedsGroupsSchema = {
   mixins: [ControlledContainerMixin],
   settings: {
     // ControlledContainerMixin settings
-    acceptedTypes: ['interop:AccessNeedGroup'],
-    readOnly: true,
+    types: ['interop:AccessNeedGroup'],
     activateTombstones: false
   },
   actions: {

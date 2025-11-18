@@ -1,14 +1,13 @@
 import rdf from '@rdfjs/data-model';
-import { SingleResourceContainerMixin } from '@semapps/ldp';
+import { ControlledResourceMixin } from '@semapps/ldp';
 import { ServiceSchema } from 'moleculer';
 
-const AuthRegistrySchema = {
+const AuthRegistryService = {
   name: 'auth-registry' as const,
   // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
-  mixins: [SingleResourceContainerMixin],
+  mixins: [ControlledResourceMixin],
   settings: {
-    acceptedTypes: ['interop:AuthorizationRegistry'],
-    podProvider: true
+    types: ['interop:AuthorizationRegistry']
   },
   dependencies: ['registry-set'],
   actions: {
@@ -80,12 +79,12 @@ const AuthRegistrySchema = {
   }
 } satisfies ServiceSchema;
 
-export default AuthRegistrySchema;
+export default AuthRegistryService;
 
 declare global {
   export namespace Moleculer {
     export interface AllServices {
-      [AuthRegistrySchema.name]: typeof AuthRegistrySchema;
+      [AuthRegistryService.name]: typeof AuthRegistryService;
     }
   }
 }

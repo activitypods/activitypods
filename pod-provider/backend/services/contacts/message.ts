@@ -6,10 +6,10 @@ import { ServiceSchema } from 'moleculer';
 
 const ContactsMessageSchema = {
   name: 'contacts.message' as const,
-  // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; types: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin, ActivitiesHandlerMixin],
   settings: {
-    acceptedTypes: ['as:Note'],
+    types: ['as:Note'],
     shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Note'),
     permissions: {},
     newResourcesPermissions: {},

@@ -12,8 +12,8 @@ const ProfilesProfileSchema = {
   settings: {
     // ControlledContainerMixin settings
     path: '/vcard/individual',
-    acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
-    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Profile'),
+    types: ['vcard:Individual', OBJECT_TYPES.PROFILE],
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL!, 'shapetrees/as/Profile'),
     permissions: {},
     newResourcesPermissions: {},
     typeIndex: 'public'
@@ -22,13 +22,11 @@ const ProfilesProfileSchema = {
   events: {
     'auth.registered': {
       async handler(ctx) {
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'Optionali... Remove this comment to see the full error message
         const { webId, profileData } = ctx.params;
         const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
         await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
         const profileUri = await this.actions.post(
           {
             containerUri,

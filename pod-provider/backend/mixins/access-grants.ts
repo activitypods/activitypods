@@ -127,7 +127,7 @@ const AccessGrantsMixin = {
             type: ACTIVITY_TYPES.CREATE,
             object: {
               // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ matc... Remove this comment to see the full error message
-              type: this.settings.acceptedTypes[0]
+              type: this.settings.types[0]
             }
           },
           activity,
@@ -167,7 +167,7 @@ const AccessGrantsMixin = {
             type: ACTIVITY_TYPES.DELETE,
             object: {
               // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ prio... Remove this comment to see the full error message
-              type: this.settings.acceptedTypes[0]
+              type: this.settings.types[0]
             }
           },
           activity,

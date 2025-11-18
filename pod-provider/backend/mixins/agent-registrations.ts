@@ -182,8 +182,8 @@ const AgentRegistrationsMixin = {
         await ctx.call('agent-registry.add', {
           podOwner: webId,
           agentRegistrationUri: res,
-          // @ts-expect-error TS(2339): Property 'acceptedTypes' does not exist on type 's... Remove this comment to see the full error message
-          agentRegistrationType: arrayOf(this.settings.acceptedTypes)[0]
+          // @ts-expect-error TS(2339): Property 'types' does not exist on type 's... Remove this comment to see the full error message
+          agentRegistrationType: arrayOf(this.settings.types)[0]
         });
 
         return res;
@@ -195,7 +195,7 @@ const AgentRegistrationsMixin = {
         // DELETE ALL RELATED AUTHORIZATIONS
         // The related grants will also be deleted as a side effect
 
-        const authorizations = await ctx.call('access-authorizations.listByGrantee', {
+        const authorizations: any = await ctx.call('access-authorizations.listByGrantee', {
           grantee: agentUri,
           webId: podOwner
         });
@@ -212,8 +212,8 @@ const AgentRegistrationsMixin = {
         await ctx.call('agent-registry.remove', {
           podOwner,
           agentRegistrationUri: res.resourceUri,
-          // @ts-expect-error TS(2339): Property 'acceptedTypes' does not exist on type 's... Remove this comment to see the full error message
-          agentRegistrationType: arrayOf(this.settings.acceptedTypes)[0]
+          // @ts-expect-error TS(2339): Property 'types' does not exist on type 's... Remove this comment to see the full error message
+          agentRegistrationType: arrayOf(this.settings.types)[0]
         });
 
         return res;

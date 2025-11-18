@@ -1,20 +1,15 @@
 import urlJoin from 'url-join';
 import rdf from '@rdfjs/data-model';
-import { SingleResourceContainerMixin, getWebIdFromUri } from '@semapps/ldp';
+import { ControlledResourceMixin, getWebIdFromUri } from '@semapps/ldp';
 import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
 const AuthAgentSchema = {
   name: 'auth-agent' as const,
-  mixins: [SingleResourceContainerMixin],
+  mixins: [ControlledResourceMixin],
   settings: {
-    acceptedTypes: ['interop:AuthorizationAgent'],
-    initialValue: {
-      'interop:hasAuthorizationRedirectEndpoint': urlJoin(CONFIG.FRONTEND_URL, 'authorize'),
-      'interop:hasDelegationIssuanceEndpoint': urlJoin(CONFIG.BASE_URL, '.auth-agent/delegation/issue')
-    },
-    podProvider: true,
-    newResourcesPermissions: {
+    types: ['interop:AuthorizationAgent'],
+    permissions: {
       anon: {
         read: true
       }
@@ -56,6 +51,15 @@ const AuthAgentSchema = {
     }
   },
   hooks: {
+    before: {
+      async create(ctx) {
+        ctx.params.resource['interop:hasAuthorizationRedirectEndpoint'] = urlJoin(CONFIG.FRONTEND_URL, 'authorize');
+        ctx.params.resource['interop:hasDelegationIssuanceEndpoint'] = urlJoin(
+          CONFIG.BASE_URL,
+          '.auth-agent/delegation/issue'
+        );
+      }
+    },
     after: {
       async post(ctx, res) {
         await ctx.call('ldp.resource.patch', {

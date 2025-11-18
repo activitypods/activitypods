@@ -8,7 +8,7 @@ const AccessGrantsSchema = {
   name: 'access-grants' as const,
   mixins: [ControlledContainerMixin],
   settings: {
-    acceptedTypes: ['interop:AccessGrant'],
+    types: ['interop:AccessGrant'],
     newResourcesPermissions: {}
   },
   actions: {

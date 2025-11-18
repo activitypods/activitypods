@@ -6,7 +6,7 @@ import transport from '../../config/transport.ts';
 import { ServiceSchema } from 'moleculer';
 
 const Schema = {
-  // @ts-expect-error TS(2322): Type '{ name: "auth"; mixins: { settings: { baseUr... Remove this comment to see the full error message
+  // @ts-expect-error TS(2322): Type '{ name: "auth.local"; settings: { baseUrl: nu... Remove this comment to see the full error message
   mixins: [AuthLocalService],
   settings: {
     baseUrl: CONFIG.BASE_URL,
@@ -15,9 +15,8 @@ const Schema = {
     reservedUsernames: CONFIG.AUTH_RESERVED_USER_NAMES,
     minPasswordLength: 8, // Same as frontend requirement
     minUsernameLength: 2,
-    webIdSelection: ['nick', 'schema:knowsLanguage'],
+    // webIdSelection: ['nick', 'schema:knowsLanguage'],
     formUrl: CONFIG.FRONTEND_URL ? urlJoin(CONFIG.FRONTEND_URL, 'login') : undefined,
-    podProvider: true,
     mail: {
       from: `${CONFIG.FROM_NAME} <${CONFIG.FROM_EMAIL}>`,
       transport,

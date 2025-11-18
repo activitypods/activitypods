@@ -8,8 +8,8 @@ const ProfilesLocationSchema = {
   name: 'profiles.location' as const,
   mixins: [ControlledContainerMixin],
   settings: {
-    acceptedTypes: ['vcard:Location'],
-    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location'),
+    types: ['vcard:Location'],
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL!, 'shapetrees/vcard/Location'),
     excludeFromMirror: true,
     permissions: {},
     newResourcesPermissions: {},

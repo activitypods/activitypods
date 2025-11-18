@@ -1,5 +1,4 @@
 import { WebAclMiddleware, CacherMiddleware } from '@semapps/webacl';
-// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { ObjectsWatcherMiddleware } from '@semapps/sync';
 import AppControlMiddleware from './middlewares/app-control.ts';
 import * as CONFIG from './config/config.ts';

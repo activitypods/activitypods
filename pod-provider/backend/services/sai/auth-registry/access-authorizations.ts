@@ -11,7 +11,7 @@ const AccessAuthorizationsSchema = {
   name: 'access-authorizations' as const,
   mixins: [ImmutableContainerMixin, ControlledContainerMixin, ConvertBooleanMixin, ConvertIntegerMixin],
   settings: {
-    acceptedTypes: ['interop:AccessAuthorization'],
+    types: ['interop:AccessAuthorization'],
     excludeFromMirror: true,
     activateTombstones: false,
     typeIndex: 'private',

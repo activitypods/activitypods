@@ -18,7 +18,7 @@ const PodResourcesSchema = {
         resource: { type: 'object', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { containerUri, actorUri } = ctx.params;
         let { resource } = ctx.params;
         // Adds the default context, if it is missing
@@ -52,7 +52,7 @@ const PodResourcesSchema = {
         containerUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { containerUri, actorUri } = ctx.params;
 
         return await this.actions.fetch({
@@ -72,7 +72,7 @@ const PodResourcesSchema = {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, actorUri } = ctx.params;
 
         return await this.actions.fetch({
@@ -94,7 +94,7 @@ const PodResourcesSchema = {
         triplesToRemove: { type: 'array', optional: true },
         actorUri: { type: 'string', optional: false }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, triplesToAdd, triplesToRemove, actorUri } = ctx.params;
 
         let sparqlUpdate = {
@@ -135,7 +135,7 @@ const PodResourcesSchema = {
         resource: { type: 'object', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         let { resource, actorUri } = ctx.params;
         const resourceUri = resource.id || resource['@id'];
 
@@ -164,8 +164,7 @@ const PodResourcesSchema = {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, actorUri } = ctx.params;
 
         return await this.actions.fetch({

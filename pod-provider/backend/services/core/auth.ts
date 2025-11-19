@@ -31,10 +31,10 @@ const Schema = {
       async signup(ctx, res) {
         const { webId } = res;
 
-        await ctx.call('auth-agent.waitForResourceCreation', { webId });
-        await ctx.call('agent-registry.waitForResourceCreation', { webId });
-        await ctx.call('auth-registry.waitForResourceCreation', { webId });
-        await ctx.call('data-registry.waitForResourceCreation', { webId });
+        await ctx.call('auth-agent.waitForCreation', { webId });
+        await ctx.call('agent-registry.waitForCreation', { webId });
+        await ctx.call('auth-registry.waitForCreation', { webId });
+        await ctx.call('data-registry.waitForCreation', { webId });
 
         await ctx.call('activitypub.actor.awaitCreateComplete', {
           actorUri: webId,
@@ -50,7 +50,7 @@ const Schema = {
         // Wait until all data and type registrations are created
         // This is necessary for the data provider to be able to load all containers
         await ctx.call('data-registry.awaitCreateComplete', { webId });
-        await ctx.call('type-indexes.awaitCreateComplete', { webId });
+        // await ctx.call('type-indexes.awaitCreateComplete', { webId });
 
         return res;
       }

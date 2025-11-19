@@ -4,8 +4,7 @@ const PodOutboxSchema = {
   name: 'pod-outbox' as const,
   actions: {
     post: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         let { activity, actorUri } = ctx.params;
 
         // Adds the default context, if it is missing

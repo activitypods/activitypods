@@ -17,7 +17,7 @@ const ProfilesLocationSchema = {
   },
   actions: {
     getHomeLocation: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
 
         const results = await ctx.call('triplestore.query', {
@@ -38,13 +38,12 @@ const ProfilesLocationSchema = {
           webId
         });
 
-        // @ts-expect-error TS(2339): Property 'length' does not exist on type 'never'.
         return results.length > 0 ? results[0].homeLocation.value : null;
       }
     },
 
     clearHomeLocation: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
         await ctx.call('triplestore.update', {
           query: `

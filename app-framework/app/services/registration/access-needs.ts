@@ -24,7 +24,7 @@ const AccessNeedsSchema = {
     },
 
     find: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { shapeTreeUri, accessMode, necessity, preferredScope } = ctx.params;
 
         const filteredContainer = await this.actions.list(

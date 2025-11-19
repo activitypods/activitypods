@@ -23,7 +23,7 @@ const PodContainersSchema = {
         type: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { type } = ctx.params;
 
         const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
@@ -83,7 +83,7 @@ const PodContainersSchema = {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { containerUri, resourceUri, actorUri } = ctx.params;
 
         const sparqlUpdate = {
@@ -125,8 +125,7 @@ const PodContainersSchema = {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { containerUri, resourceUri, actorUri } = ctx.params;
 
         const sparqlUpdate = {

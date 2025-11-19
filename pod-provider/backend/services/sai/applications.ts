@@ -11,7 +11,7 @@ const ApplicationsSchema = {
   },
   actions: {
     get: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { appUri } = ctx.params;
         return await ctx.call('ldp.remote.get', { resourceUri: appUri });
       }
@@ -21,7 +21,7 @@ const ApplicationsSchema = {
       /**
        * Return the required access needs and special rights of the given application
        */
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { appUri } = ctx.params;
 
         // Force to get through network, so that we have the latest Access Need Group
@@ -45,7 +45,7 @@ const ApplicationsSchema = {
     },
 
     getClassDescription: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { type, appUri, podOwner } = ctx.params;
 
         const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
@@ -81,7 +81,6 @@ const ApplicationsSchema = {
               webId: podOwner
             });
 
-            // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
             const [appExpandedType] = await ctx.call('jsonld.parser.expandTypes', {
               types: [classDescription['apods:describedClass']],
               context: classDescription['@context']

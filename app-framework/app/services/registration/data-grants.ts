@@ -1,9 +1,11 @@
+import { ServiceSchema } from 'moleculer';
+
 const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
 
 /**
  * Mirror container for data grants which have been granted to the app
  */
-module.exports = {
+const Schema = {
   name: 'data-grants',
   mixins: [ControlledContainerMixin],
   settings: {
@@ -11,55 +13,62 @@ module.exports = {
     newResourcesPermissions: {}
   },
   actions: {
-    async getContainerByShapeTree(ctx) {
-      const { shapeTreeUri, podOwner } = ctx.params;
+    getContainerByShapeTree: {
+      async handler(ctx: any) {
+        const { shapeTreeUri } = ctx.params;
 
-      const app = await ctx.call('app.get');
-      const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
+        const app = await ctx.call('app.get');
+        const containerUri = await this.actions.getContainerUri({}, { parentCtx: ctx });
+        const dataOwner = await ctx.call('webid.getUri');
 
-      const filteredContainer = await this.actions.list(
-        {
-          containerUri,
-          filters: {
-            'http://www.w3.org/ns/solid/interop#registeredShapeTree': shapeTreeUri,
-            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
-            'http://www.w3.org/ns/solid/interop#grantee': app.id
+        const filteredContainer = await this.actions.list(
+          {
+            containerUri,
+            filters: {
+              'http://www.w3.org/ns/solid/interop#registeredShapeTree': shapeTreeUri,
+              'http://www.w3.org/ns/solid/interop#dataOwner': dataOwner,
+              'http://www.w3.org/ns/solid/interop#grantee': app.id
+            },
+            webId: 'system'
           },
-          webId: 'system'
-        },
-        { parentCtx: ctx }
-      );
+          { parentCtx: ctx }
+        );
 
-      return filteredContainer['ldp:contains']?.[0]?.['interop:hasDataRegistration'];
+        return filteredContainer['ldp:contains']?.[0]?.['interop:hasDataRegistration'];
+      }
     },
     // Delete cached DataGrants which are not linked anymore to an AccessNeed (may happen on app upgrade)
-    async deleteOrphans(ctx) {
-      const { podOwner } = ctx.params;
+    deleteOrphans: {
+      async handler(ctx) {
+        const { podOwner } = ctx.params;
 
-      const app = await ctx.call('app.get');
+        const app = await ctx.call('app.get');
 
-      const container = await this.actions.list(
-        {
-          filters: {
-            'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
-            'http://www.w3.org/ns/solid/interop#grantee': app.id
+        const container = await this.actions.list(
+          {
+            filters: {
+              'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
+              'http://www.w3.org/ns/solid/interop#grantee': app.id
+            }
+          },
+          { parentCtx: ctx }
+        );
+
+        for (const dataGrant of arrayOf(container?.['ldp:contains'])) {
+          const accessNeedExist = await ctx.call('access-needs.exist', {
+            resourceUri: dataGrant['interop:satisfiesAccessNeed'],
+            webId: podOwner
+          });
+          if (!accessNeedExist) {
+            this.logger.info(
+              `Deleting cached data grant ${dataGrant.id} as it is not linked anymore with an existing access need...`
+            );
+            await this.actions.delete({ resourceUri: dataGrant.id, webId: podOwner });
           }
-        },
-        { parentCtx: ctx }
-      );
-
-      for (const dataGrant of arrayOf(container?.['ldp:contains'])) {
-        const accessNeedExist = await ctx.call('access-needs.exist', {
-          resourceUri: dataGrant['interop:satisfiesAccessNeed'],
-          webId: podOwner
-        });
-        if (!accessNeedExist) {
-          this.logger.info(
-            `Deleting cached data grant ${dataGrant.id} as it is not linked anymore with an existing access need...`
-          );
-          await this.actions.delete({ resourceUri: dataGrant.id, webId: podOwner });
         }
       }
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default Schema;

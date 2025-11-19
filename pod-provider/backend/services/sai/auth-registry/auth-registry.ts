@@ -7,15 +7,16 @@ const AuthRegistryService = {
   // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledResourceMixin],
   settings: {
+    path: '/auth-registry',
     types: ['interop:AuthorizationRegistry']
   },
   dependencies: ['registry-set'],
   actions: {
     add: {
-      async handler(ctx) {
-        const { podOwner, authorizationUri } = ctx.params;
+      async handler(ctx: any) {
+        const { authorizationUri } = ctx.params;
 
-        const authRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+        const authRegistryUri = await this.actions.getUri({}, { parentCtx: ctx });
 
         await this.actions.patch(
           {
@@ -35,10 +36,10 @@ const AuthRegistryService = {
     },
 
     remove: {
-      async handler(ctx) {
-        const { podOwner, authorizationUri } = ctx.params;
+      async handler(ctx: any) {
+        const { authorizationUri } = ctx.params;
 
-        const authRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+        const authRegistryUri = await this.actions.getUri({}, { parentCtx: ctx });
 
         await this.actions.patch(
           {
@@ -59,16 +60,16 @@ const AuthRegistryService = {
   },
   hooks: {
     after: {
-      async post(ctx, res) {
+      async create(ctx, res) {
         // Attach the registry to the registry set
-        const registrySetUri = await ctx.call('registry-set.getResourceUri', { webId: ctx.params.webId });
+        const registrySetUri = await ctx.call('registry-set.getUri');
         await ctx.call('registry-set.patch', {
           resourceUri: registrySetUri,
           triplesToAdd: [
             rdf.quad(
               rdf.namedNode(registrySetUri),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAuthorizationRegistry'),
-              rdf.namedNode(res)
+              rdf.namedNode(res.resourceUri)
             )
           ],
           webId: 'system'

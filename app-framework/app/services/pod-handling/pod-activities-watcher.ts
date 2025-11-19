@@ -71,7 +71,7 @@ const PodActivitiesWatcherSchema = {
   },
   actions: {
     watch: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { matcher, actionName, boxTypes, key } = ctx.params;
 
         this.handlers.push({ matcher, actionName, boxTypes, key });
@@ -81,7 +81,7 @@ const PodActivitiesWatcherSchema = {
     },
 
     processWebhook: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { type, object, target } = ctx.params;
 
         // Ignore Remove activities
@@ -164,8 +164,7 @@ const PodActivitiesWatcherSchema = {
     },
 
     registerListenersFromAppRegistration: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { appRegistration } = ctx.params;
 
         // If we were given the permission to read the inbox, add listener

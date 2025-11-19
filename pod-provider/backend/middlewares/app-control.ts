@@ -1,8 +1,7 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
-import { arrayOf, hasType, getWebIdFromUri, getParentContainerUri } from '@semapps/ldp';
+import { arrayOf, hasType } from '@semapps/ldp';
 import { FULL_ACTIVITY_TYPES, FULL_ACTOR_TYPES } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 
@@ -154,7 +153,8 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
     } else if (action.name === 'activitypub.outbox.post') {
       return async (ctx: any) => {
         const { collectionUri, ...activity } = ctx.params;
-        const podOwner = getParentContainerUri(collectionUri);
+
+        const podOwner = await ctx.call('activitypub.collection.getOwner', { collectionUri, collectionKey: 'outbox' });
 
         // Bypass checks if user is posting to their outbox
         if (ctx.meta.webId === podOwner) {
@@ -294,7 +294,7 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
     } else if (action.name === 'activitypub.collection.get') {
       return async (ctx: any) => {
         const { resourceUri: collectionUri } = ctx.params;
-        const podOwner = getWebIdFromUri(collectionUri);
+        const podOwner = await ctx.call('webid.getUri');
 
         // Bypass checks if user is acting on their own
         if (ctx.meta.webId === podOwner) {

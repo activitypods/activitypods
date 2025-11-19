@@ -3,12 +3,14 @@ import urlJoin from 'url-join';
 import fetch, { RequestInit } from 'node-fetch';
 import { connectPodProvider, clearAllData } from './initialize.ts';
 jest.setTimeout(50000);
+
 const BASE_URL = 'http://localhost:3000';
+const ALICE_BASE_URL = BASE_URL + '/alice';
 
 describe('Test pods creation via API', () => {
   let podProvider: any, token: any, alice: any, projectUri: any;
 
-  const fetchServer = (path: any, options: RequestInit = {}) => {
+  const fetchServer = async (path: any, options: RequestInit = {}) => {
     if (!path) throw new Error('No path provided to fetchServer');
     if (!options.headers) options.headers = new fetch.Headers();
 
@@ -78,35 +80,36 @@ describe('Test pods creation via API', () => {
       })
     });
 
-    expect(json.webId).toBe(BASE_URL + '/alice');
+    expect(json.webId).toBe(ALICE_BASE_URL + '/webid');
     expect(json.newUser).toBe(true);
 
-    // Keep in memory token so that future fetch are authentified
+    // Keep in memory token so that future fetch are authenticated
     token = json.token;
   });
 
   test('Alice actor can be fetched', async () => {
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      ({ json: alice } = await fetchServer(BASE_URL + '/alice', { method: 'GET' }));
+      ({ json: alice } = await fetchServer('/alice', { method: 'GET' }));
 
       expect(alice).toMatchObject({
         type: expect.arrayContaining(['foaf:Person', 'Person']),
         'foaf:nick': 'alice',
         preferredUsername: 'alice',
-        inbox: BASE_URL + '/alice/inbox',
-        outbox: BASE_URL + '/alice/outbox',
-        following: BASE_URL + '/alice/following',
-        followers: BASE_URL + '/alice/followers',
-        liked: BASE_URL + '/alice/liked',
+        inbox: ALICE_BASE_URL + '/inbox',
+        outbox: ALICE_BASE_URL + '/outbox',
+        following: ALICE_BASE_URL + '/following',
+        followers: ALICE_BASE_URL + '/followers',
+        liked: ALICE_BASE_URL + '/liked',
         publicKey: {
-          owner: BASE_URL + '/alice',
+          owner: alice.id,
           publicKeyPem: expect.stringContaining('-----BEGIN PUBLIC KEY-----')
         },
         endpoints: {
-          proxyUrl: BASE_URL + '/alice/proxy',
-          'void:sparqlEndpoint': BASE_URL + '/alice/sparql'
+          proxyUrl: ALICE_BASE_URL + '/proxy',
+          'void:sparqlEndpoint': ALICE_BASE_URL + '/sparql'
         },
-        'pim:storage': BASE_URL + '/alice/data',
+        'pim:storage': ALICE_BASE_URL + '/data',
         'solid:oidcIssuer': BASE_URL,
         'interop:hasAuthorizationAgent': expect.anything(),
         'interop:hasRegistrySet': expect.anything(),
@@ -177,7 +180,7 @@ describe('Test pods creation via API', () => {
   });
 
   test('Alice can query through the SPARQL endpoint of her pod', async () => {
-    const { json } = await fetchServer(urlJoin(alice.id, 'sparql'), {
+    const { json } = await fetchServer('/alice/sparql', {
       method: 'POST',
       body: `
         SELECT ?type

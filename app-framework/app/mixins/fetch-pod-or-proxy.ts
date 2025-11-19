@@ -7,8 +7,7 @@ import { ServiceSchema } from 'moleculer';
 const Schema = {
   actions: {
     fetch: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         let { url, method = 'GET', headers = {}, body, actorUri } = ctx.params;
 
         const app = await ctx.call('app.get');

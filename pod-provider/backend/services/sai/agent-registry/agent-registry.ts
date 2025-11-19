@@ -7,19 +7,20 @@ const AgentRegistryService = {
   name: 'agent-registry' as const,
   mixins: [ControlledResourceMixin],
   settings: {
+    path: '/agent-registry',
     types: ['interop:AgentRegistry']
   },
   dependencies: ['registry-set'],
   actions: {
     add: {
-      async handler(ctx) {
-        const { podOwner, agentRegistrationUri, agentRegistrationType } = ctx.params;
+      async handler(ctx: any) {
+        const { agentRegistrationUri, agentRegistrationType } = ctx.params;
 
         if (!ALLOWED_TYPES.includes(agentRegistrationType)) {
           throw new Error(`The agentRegistrationType param must be ${ALLOWED_TYPES.join(' or ')}`);
         }
 
-        const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+        const agentRegistryUri = await this.actions.getUri({}, { parentCtx: ctx });
 
         await this.actions.patch(
           {
@@ -43,13 +44,13 @@ const AgentRegistryService = {
     },
 
     remove: {
-      async handler(ctx) {
-        const { podOwner, agentRegistrationUri, agentRegistrationType } = ctx.params;
+      async handler(ctx: any) {
+        const { agentRegistrationUri, agentRegistrationType } = ctx.params;
 
         if (!ALLOWED_TYPES.includes(agentRegistrationType)) {
           throw new Error(`The agentRegistrationType param must be ${ALLOWED_TYPES.join(' or ')}`);
         }
-        const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+        const agentRegistryUri = await this.actions.getUri({}, { parentCtx: ctx });
 
         await this.actions.patch(
           {
@@ -74,16 +75,16 @@ const AgentRegistryService = {
   },
   hooks: {
     after: {
-      async post(ctx, res) {
+      async create(ctx, res) {
         // Attach the registry to the registry set
-        const registrySetUri = await ctx.call('registry-set.getResourceUri', { webId: ctx.params.webId });
+        const registrySetUri = await ctx.call('registry-set.getUri');
         await ctx.call('registry-set.patch', {
           resourceUri: registrySetUri,
           triplesToAdd: [
             rdf.quad(
               rdf.namedNode(registrySetUri),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAgentRegistry'),
-              rdf.namedNode(res)
+              rdf.namedNode(res.resourceUri)
             )
           ],
           webId: 'system'

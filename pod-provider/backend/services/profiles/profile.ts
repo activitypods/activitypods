@@ -20,23 +20,22 @@ const ProfilesProfileSchema = {
   },
   dependencies: ['activitypub', 'webacl'],
   events: {
-    'auth.registered': {
-      async handler(ctx) {
-        const { webId, profileData } = ctx.params;
-        const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
+    'auth.account.created': {
+      async handler(ctx: any) {
+        const { webId } = ctx.params;
 
-        await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
+        const containerUri = await this.actions.waitForContainerCreation({}, { parentCtx: ctx });
 
         const profileUri = await this.actions.post(
           {
             containerUri,
             resource: {
               '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
-              'vcard:fn': profileData.familyName
-                ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
-                : profileData.name,
-              'vcard:given-name': profileData.name,
-              'vcard:family-name': profileData.familyName,
+              // 'vcard:fn': profileData.familyName
+              //   ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
+              //   : profileData.name,
+              // 'vcard:given-name': profileData.name,
+              // 'vcard:family-name': profileData.familyName,
               describes: webId
             },
             contentType: MIME_TYPES.JSON,

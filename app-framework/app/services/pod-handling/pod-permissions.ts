@@ -12,7 +12,7 @@ const PodPermissionsSchema = {
   mixins: [FetchPodOrProxyMixin],
   actions: {
     get: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { uri, actorUri } = ctx.params;
 
         const { status, body } = await this.actions.fetch({
@@ -28,7 +28,7 @@ const PodPermissionsSchema = {
     },
 
     add: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { uri, agentUri, agentPredicate, mode, actorUri } = ctx.params;
 
         if (!['acl:agent', 'acl:agentGroup', 'acl:agentClass'].includes(agentPredicate)) {
@@ -67,8 +67,7 @@ const PodPermissionsSchema = {
     },
 
     remove: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { uri, agentUri, agentPredicate, mode, actorUri } = ctx.params;
 
         if (!['acl:agent', 'acl:agentGroup', 'acl:agentClass'].includes(agentPredicate)) {

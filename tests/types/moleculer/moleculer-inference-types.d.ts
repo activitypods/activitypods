@@ -171,7 +171,7 @@ declare global {
      *  actions: {
      *    action1: defineAction({
      *      params: { stringParam: { type: 'string' } },
-     *      async handler(ctx) {...}
+     *      async handler(ctx: any) {...}
      *    })
      *  }
      * };

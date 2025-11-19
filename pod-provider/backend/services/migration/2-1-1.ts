@@ -13,7 +13,7 @@ const Migration211Schema = {
   },
   actions: {
     migrate: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
@@ -52,7 +52,7 @@ const Migration211Schema = {
     },
 
     deleteContactsCollectionsPermissions: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
 
         const webIdData = await ctx.call('webid.get', { resourceUri: webId });

@@ -59,7 +59,7 @@ const ContactsRequestSchema = {
   },
   actions: {
     updateCollectionsOptions: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { dataset } = ctx.params;
         await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
           collection: this.settings.contactsCollectionOptions,

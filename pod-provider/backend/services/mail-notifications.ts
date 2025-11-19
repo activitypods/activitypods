@@ -12,6 +12,7 @@ import { arrayOf, isObject } from '@semapps/ldp';
 import * as CONFIG from '../config/config.ts';
 import transport from '../config/transport.ts';
 import { ServiceSchema } from 'moleculer';
+import { Account } from '@semapps/auth';
 
 const MailNotificationsSchema = {
   name: 'mail-notifications' as const,
@@ -42,10 +43,10 @@ const MailNotificationsSchema = {
   actions: {
     notify: {
       // Allow local service to send directly notifications without sending a apods:Notification activity
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { template, recipientUri, activity, context, ...rest } = ctx.params;
 
-        const account = await ctx.call('auth.account.findByWebId', { webId: recipientUri });
+        const account: Account = await ctx.call('auth.account.findByWebId', { webId: recipientUri });
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
         const locale = recipient['schema:knowsLanguage'] || 'en';
 
@@ -65,7 +66,6 @@ const MailNotificationsSchema = {
         const values = this.parseTemplate(template, templateParams, locale);
 
         return await this.queueMail(ctx, values.title, {
-          // @ts-expect-error TS(2339): Property 'email' does not exist on type 'never'.
           to: account.email,
           data: {
             title: values.title,

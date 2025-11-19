@@ -8,7 +8,7 @@ const PodWacGroupsSchema = {
   mixins: [FetchPodOrProxyMixin],
   actions: {
     get: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { groupUri, groupSlug, actorUri } = ctx.params;
 
         const { body, status } = await this.actions.fetch({
@@ -24,7 +24,7 @@ const PodWacGroupsSchema = {
     },
 
     list: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { actorUri } = ctx.params;
         const { origin, pathname } = new URL(actorUri);
 
@@ -41,7 +41,7 @@ const PodWacGroupsSchema = {
     },
 
     create: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { groupSlug, actorUri } = ctx.params;
         const { origin, pathname } = new URL(actorUri);
 
@@ -66,7 +66,7 @@ const PodWacGroupsSchema = {
     },
 
     delete: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { groupUri, groupSlug, actorUri } = ctx.params;
 
         const { status } = await this.actions.fetch({
@@ -80,7 +80,7 @@ const PodWacGroupsSchema = {
     },
 
     addMember: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { groupUri, groupSlug, memberUri, actorUri } = ctx.params;
 
         const { status } = await this.actions.fetch({
@@ -98,7 +98,7 @@ const PodWacGroupsSchema = {
     },
 
     removeMember: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { groupUri, groupSlug, memberUri, actorUri } = ctx.params;
 
         const { status } = await this.actions.fetch({
@@ -116,8 +116,7 @@ const PodWacGroupsSchema = {
     },
 
     getUriFromCollectionUri: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { collectionUri } = ctx.params;
         const { origin, pathname } = new URL(collectionUri);
         return `${origin}/_groups${pathname}`;

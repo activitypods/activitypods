@@ -19,7 +19,7 @@ const Schema = {
   dependencies: ['pod-collections'],
   actions: {
     createAndAttach: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, actorUri } = ctx.params;
         const { attachPredicate, collectionOptions, createWacGroup } = this.settings;
         const collectionUri = await ctx.call('pod-collections.createAndAttach', {
@@ -39,7 +39,7 @@ const Schema = {
     },
 
     deleteAndDetach: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, actorUri } = ctx.params;
         const { attachPredicate } = this.settings;
         await ctx.call('pod-collections.deleteAndDetach', {
@@ -51,7 +51,7 @@ const Schema = {
     },
 
     add: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { collectionUri, itemUri, actorUri } = ctx.params;
         await ctx.call('pod-collections.add', { collectionUri, itemUri, actorUri });
         if (this.settings.createWacGroup) {
@@ -65,7 +65,7 @@ const Schema = {
     },
 
     remove: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { collectionUri, itemUri, actorUri } = ctx.params;
         await ctx.call('pod-collections.remove', { collectionUri, itemUri, actorUri });
         if (this.settings.createWacGroup) {
@@ -79,7 +79,7 @@ const Schema = {
     },
 
     createAndAttachMissing: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { type, attachPredicate, collectionOptions } = this.settings;
         await ctx.call('pod-collections.createAndAttachMissing', {
           type,
@@ -90,8 +90,7 @@ const Schema = {
     },
 
     getCollectionUriFromResource: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resource } = ctx.params;
         const { attachPredicate } = this.settings;
         return await ctx.call('pod-collections.getCollectionUriFromResource', {

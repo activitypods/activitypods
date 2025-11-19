@@ -15,7 +15,7 @@ const AppRegistrationsSchema = {
   actions: {
     verify: {
       // Verify that the grants of an application registration match with the app's access needs
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { appRegistrationUri } = ctx.params;
 
         // Use local context to get all data
@@ -62,7 +62,7 @@ const AppRegistrationsSchema = {
     },
 
     getForActor: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { actorUri } = ctx.params;
 
         const filteredContainer = await this.actions.list(
@@ -80,8 +80,7 @@ const AppRegistrationsSchema = {
     },
 
     getRegisteredPods: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const filteredContainer = await this.actions.list({ webId: 'system' }, { parentCtx: ctx });
 
         return filteredContainer['ldp:contains']?.map(

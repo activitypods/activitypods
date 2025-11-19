@@ -12,7 +12,7 @@ const Migration230Schema = {
   },
   actions: {
     migrate: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
@@ -64,7 +64,7 @@ const Migration230Schema = {
     shareProfileWithContacts: {
       // Share user profile with all actors in contacts collection
       // This will generate a Social Agent Registration for every contact
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
 
         const webIdData = await ctx.call('webid.get', { resourceUri: webId });
@@ -85,7 +85,7 @@ const Migration230Schema = {
 
     generateAuthorizationsFromAnnounces: {
       // Generate authorizations from announces/announcers collections
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
 
         let results = await ctx.call('triplestore.query', {

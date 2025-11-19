@@ -13,18 +13,19 @@ const AccessGrantsSchema = {
   },
   actions: {
     getContainerByShapeTree: {
-      async handler(ctx) {
-        const { shapeTreeUri, podOwner } = ctx.params;
+      async handler(ctx: any) {
+        const { shapeTreeUri } = ctx.params;
 
         const app = await ctx.call('app.get');
-        const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
+        const containerUri = await this.actions.getContainerUri({}, { parentCtx: ctx });
+        const dataOwner = await ctx.call('webid.getUri');
 
         const filteredContainer = await this.actions.list(
           {
             containerUri,
             filters: {
               'http://www.w3.org/ns/solid/interop#registeredShapeTree': shapeTreeUri,
-              'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
+              'http://www.w3.org/ns/solid/interop#dataOwner': dataOwner,
               'http://www.w3.org/ns/solid/interop#grantee': app.id
             },
             webId: 'system'
@@ -38,8 +39,7 @@ const AccessGrantsSchema = {
 
     deleteOrphans: {
       // Delete cached grants which are not linked anymore to an access need (may happen on app upgrade)
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { podOwner } = ctx.params;
 
         const app = await ctx.call('app.get');

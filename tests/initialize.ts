@@ -103,8 +103,8 @@ const connectPodProvider = async () => {
   await broker.waitForServices(['ldp']);
 
   // Reset internal cache (the channels have been deleted, but they are still in a this.channels array)
-  await broker.waitForServices(['solid-notifications.provider.webhook']);
-  await broker.call('solid-notifications.provider.webhook.resetCache');
+  // await broker.waitForServices(['solid-notifications.provider.webhook']);
+  // await broker.call('solid-notifications.provider.webhook.resetCache');
 
   return broker;
 };

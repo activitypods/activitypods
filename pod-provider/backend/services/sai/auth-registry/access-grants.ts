@@ -17,7 +17,7 @@ const AccessGrantsSchema = {
   dependencies: ['ldp', 'ldp.registry'],
   actions: {
     generateFromAuthorization: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { authorization } = ctx.params;
         let replacedGrant;
 
@@ -62,7 +62,7 @@ const AccessGrantsSchema = {
     },
 
     getByAuthorization: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { authorization } = ctx.params;
 
         const filteredContainer = await this.actions.list(
@@ -94,7 +94,7 @@ const AccessGrantsSchema = {
     },
 
     getByResourceUri: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri } = ctx.params;
         const webId = ctx.params.webId || ctx.meta.webId || 'anon';
 

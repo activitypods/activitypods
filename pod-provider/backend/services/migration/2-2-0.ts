@@ -13,7 +13,7 @@ const Migration220Schema = {
   },
   actions: {
     migrate: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 

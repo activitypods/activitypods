@@ -1,6 +1,6 @@
 import urlJoin from 'url-join';
 import rdf from '@rdfjs/data-model';
-import { ControlledResourceMixin, getWebIdFromUri } from '@semapps/ldp';
+import { ControlledResourceMixin } from '@semapps/ldp';
 import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
@@ -8,6 +8,7 @@ const AuthAgentSchema = {
   name: 'auth-agent' as const,
   mixins: [ControlledResourceMixin],
   settings: {
+    path: '/auth-agent',
     types: ['interop:AuthorizationAgent'],
     permissions: {
       anon: {
@@ -18,30 +19,21 @@ const AuthAgentSchema = {
   actions: {
     getHeaderLinks: {
       // Action from the ControlledContainerMixin, called when we do GET or HEAD requests on resources
-      async handler(ctx) {
+      async handler(ctx: any) {
         let agentRegistration;
 
-        // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type... Remove this comment to see the full error message
         if (ctx.meta.impersonatedUser) {
           // The fetch is made by a registered app
-          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
-          const agentUri = ctx.meta.webId;
-          // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type... Remove this comment to see the full error message
-          const podOwner = ctx.meta.impersonatedUser;
-          agentRegistration = await ctx.call('app-registrations.getForAgent', { agentUri, podOwner });
+          agentRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: ctx.meta.webId });
         } else {
           // The fetch is made by a social agent
-          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
-          const agentUri = ctx.meta.webId;
-          const podOwner = getWebIdFromUri(ctx.params.uri);
-          agentRegistration = await ctx.call('social-agent-registrations.getForAgent', { agentUri, podOwner });
+          agentRegistration = await ctx.call('social-agent-registrations.getForAgent', { agentUri: ctx.meta.webId });
         }
 
         if (agentRegistration) {
           return [
             {
               uri: agentRegistration['interop:registeredAgent'],
-              // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
               anchor: agentRegistration.id || agentRegistration['@id'],
               rel: 'http://www.w3.org/ns/solid/interop#registeredAgent'
             }
@@ -53,22 +45,23 @@ const AuthAgentSchema = {
   hooks: {
     before: {
       async create(ctx) {
-        ctx.params.resource['interop:hasAuthorizationRedirectEndpoint'] = urlJoin(CONFIG.FRONTEND_URL, 'authorize');
+        ctx.params.resource['interop:hasAuthorizationRedirectEndpoint'] = urlJoin(CONFIG.FRONTEND_URL!, 'authorize');
         ctx.params.resource['interop:hasDelegationIssuanceEndpoint'] = urlJoin(
-          CONFIG.BASE_URL,
+          CONFIG.BASE_URL!,
           '.auth-agent/delegation/issue'
         );
       }
     },
     after: {
-      async post(ctx, res) {
+      async create(ctx, res) {
+        const webId = await ctx.call('webid.getUri');
         await ctx.call('ldp.resource.patch', {
-          resourceUri: ctx.params.webId,
+          resourceUri: webId,
           triplesToAdd: [
             rdf.quad(
-              rdf.namedNode(ctx.params.webId),
+              rdf.namedNode(webId),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAuthorizationAgent'),
-              rdf.namedNode(res)
+              rdf.namedNode(res.resourceUri)
             )
           ],
           webId: 'system'

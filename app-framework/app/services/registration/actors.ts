@@ -16,7 +16,7 @@ const ActorsSchema = {
   },
   actions: {
     createOrUpdateApp: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { app, oidc } = ctx.params;
 
         const actorAccount = await ctx.call('auth.account.findByUsername', { username: 'app' });
@@ -136,7 +136,7 @@ const ActorsSchema = {
     },
 
     attachAccessNeedGroup: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { accessNeedGroupUri } = ctx.params;
         await this.actions.patch(
           {
@@ -156,7 +156,7 @@ const ActorsSchema = {
     },
 
     detachAccessNeedGroup: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { accessNeedGroupUri } = ctx.params;
         await this.actions.patch(
           {
@@ -176,7 +176,7 @@ const ActorsSchema = {
     },
 
     attachAccessDescriptionSet: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { accessDescriptionSetUri } = ctx.params;
         await this.actions.patch(
           {
@@ -196,8 +196,7 @@ const ActorsSchema = {
     },
 
     detachAccessDescriptionSet: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { accessDescriptionSetUri } = ctx.params;
         await this.actions.patch(
           {

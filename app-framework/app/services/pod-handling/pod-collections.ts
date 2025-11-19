@@ -16,7 +16,7 @@ const PodCollectionsSchema = {
   },
   actions: {
     getItems: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { collectionUri, actorUri } = ctx.params;
 
         const { body: collection } = await ctx.call('pod-resources.get', { resourceUri: collectionUri, actorUri });
@@ -26,7 +26,7 @@ const PodCollectionsSchema = {
     },
 
     createAndAttach: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, attachPredicate, collectionOptions, actorUri } = ctx.params;
         const { ordered, summary, itemsPerPage, dereferenceItems, sortPredicate, sortOrder } = collectionOptions;
 
@@ -78,7 +78,7 @@ const PodCollectionsSchema = {
     },
 
     deleteAndDetach: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, attachPredicate, actorUri } = ctx.params;
 
         const { ok, body: resource } = await ctx.call('pod-resources.get', {
@@ -115,7 +115,7 @@ const PodCollectionsSchema = {
     },
 
     add: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { collectionUri, itemUri, actorUri } = ctx.params;
 
         const sparqlUpdate = {
@@ -152,7 +152,7 @@ const PodCollectionsSchema = {
     },
 
     remove: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { collectionUri, itemUri, actorUri } = ctx.params;
 
         const sparqlUpdate = {
@@ -189,7 +189,7 @@ const PodCollectionsSchema = {
     },
 
     createAndAttachMissing: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { shapeTreeUri, attachPredicate, collectionOptions } = ctx.params;
 
         const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
@@ -229,7 +229,7 @@ const PodCollectionsSchema = {
     getCollectionUriFromResource: {
       // Find the collection attached to a given resource (or undefined if no collection is attached)
       // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resource, attachPredicate } = ctx.params;
         const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
         const [expandedResource] = await ctx.call('jsonld.parser.expand', { input: resource });

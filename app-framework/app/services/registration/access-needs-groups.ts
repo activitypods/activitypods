@@ -26,7 +26,7 @@ const AccessNeedsGroupsSchema = {
     },
 
     createOrUpdate: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { accessNeeds: accessNeedsByNecessity } = ctx.params;
 
         for (const [necessity, accessNeeds] of Object.entries(accessNeedsByNecessity)) {
@@ -155,8 +155,7 @@ const AccessNeedsGroupsSchema = {
     },
 
     findByNecessity: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { necessity } = ctx.params;
 
         const filteredContainer = await this.actions.list(

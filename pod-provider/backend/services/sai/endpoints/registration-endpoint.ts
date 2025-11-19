@@ -31,13 +31,11 @@ const RegistrationEndpointSchema = {
   },
   actions: {
     register: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
 
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
         const account = await ctx.call('auth.account.findByWebId', { webId });
-        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = account.username;
 
         // Force to get through network
@@ -104,13 +102,11 @@ const RegistrationEndpointSchema = {
     },
 
     upgrade: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
 
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
         const account = await ctx.call('auth.account.findByWebId', { webId });
-        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = account.username;
 
         const oldAppRegistration = await ctx.call('app-registrations.getForAgent', {
@@ -189,13 +185,11 @@ const RegistrationEndpointSchema = {
     },
 
     remove: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { appUri } = ctx.params;
 
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
         const account = await ctx.call('auth.account.findByWebId', { webId });
-        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = account.username;
 
         const app = await ctx.call('applications.get', { appUri, webId });
@@ -219,7 +213,6 @@ const RegistrationEndpointSchema = {
             await ctx.call('activitypub.outbox.post', {
               collectionUri: urlJoin(webId, 'outbox'),
               type: ACTIVITY_TYPES.DELETE,
-              // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
               object: appRegistration.id || appRegistration['@id'],
               to: appUri
             });
@@ -234,9 +227,8 @@ const RegistrationEndpointSchema = {
     },
 
     getForAgent: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { agent } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
         return await ctx.call('app-registrations.getForAgent', { agentUri: agent, podOwner: webId });
       }

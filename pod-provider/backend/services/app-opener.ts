@@ -31,7 +31,7 @@ const AppOpenerSchema = {
   },
   actions: {
     open: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         let { type, uri, mode, username } = ctx.params;
 
         // If resource type is not provided, guess it from the resource
@@ -90,16 +90,12 @@ const AppOpenerSchema = {
         const appBaseUrl = new URL(appUri).origin;
 
         if (uri) {
-          // @ts-expect-error TS(2339): Property '$statusCode' does not exist on type '{}'... Remove this comment to see the full error message
           ctx.meta.$statusCode = 302;
-          // @ts-expect-error TS(2339): Property '$location' does not exist on type '{}'.
           ctx.meta.$location = `${appBaseUrl}/r/?type=${encodeURIComponent(type)}&uri=${encodeURIComponent(uri)}&mode=${
             mode || 'show'
           }`;
         } else {
-          // @ts-expect-error TS(2339): Property '$statusCode' does not exist on type '{}'... Remove this comment to see the full error message
           ctx.meta.$statusCode = 302;
-          // @ts-expect-error TS(2339): Property '$location' does not exist on type '{}'.
           ctx.meta.$location = `${appBaseUrl}/r/?type=${encodeURIComponent(type)}&mode=${mode || 'list'}`;
         }
       }

@@ -5,7 +5,7 @@ const PermissionsMapperSchema = {
   name: 'permissions-mapper' as const,
   actions: {
     addPermissionsFromSpecialRights: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { podOwner, appUri, specialRightsUris } = ctx.params;
 
         // Give read permissions on all activities, if requested
@@ -82,7 +82,7 @@ const PermissionsMapperSchema = {
     },
 
     removePermissionsFromSpecialRights: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { podOwner, appUri, specialRightsUris } = ctx.params;
 
         // Remove read permissions on all activities, if requested

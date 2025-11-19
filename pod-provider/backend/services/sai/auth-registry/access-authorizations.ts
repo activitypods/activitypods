@@ -1,6 +1,6 @@
 const { MoleculerError } = require('moleculer').Errors;
 import { ServiceSchema } from 'moleculer';
-import { ControlledContainerMixin, arrayOf, getId, getWebIdFromUri } from '@semapps/ldp';
+import { ControlledContainerMixin, arrayOf, getId } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { arraysEqual } from '../../../utils.ts';
 import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
@@ -22,7 +22,7 @@ const AccessAuthorizationsSchema = {
   actions: {
     generateFromAccessNeeds: {
       // Generate access authorizations from provided access needs
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { accessNeedsUris, podOwner, grantee } = ctx.params;
         let authorizationsUris = [];
 
@@ -73,9 +73,8 @@ const AccessAuthorizationsSchema = {
 
     addForSingleResource: {
       // Add an authorization for a single resource
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, grantee, accessModes, delegationAllowed, delegationLimit } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const dataRegistration = await ctx.call('data-registrations.getByResourceUri', { resourceUri, webId });
@@ -130,7 +129,7 @@ const AccessAuthorizationsSchema = {
             // If the properties have changed, delete the authorization for this single resource
             // If other resources are shared with the same access authorization, they will be kept
             // Otherwise, a Delete activity will be sent and then (below) a Create activity with the new grant
-            await this.actions.removeForSingleResource({ resourceUri, grantee, webId });
+            await this.actions.removeForSingleResource({ resourceUri, grantee, webId }, { parentCtx: ctx });
           }
         }
 
@@ -188,9 +187,8 @@ const AccessAuthorizationsSchema = {
     removeForSingleResource: {
       // Remove an authorization for a single resource
       // The grantee param is optional. If provided, it will only delete authorizations for the grantee
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, grantee } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const filters = {
@@ -234,9 +232,8 @@ const AccessAuthorizationsSchema = {
 
     listForSingleResource: {
       // List all authorizations for a single resource
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const filteredContainer = await this.actions.list(
@@ -257,7 +254,7 @@ const AccessAuthorizationsSchema = {
 
     getByAccessNeed: {
       // Get the access authorization linked with an access need
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { accessNeedUri, podOwner } = ctx.params;
 
         const filteredContainer = await this.actions.list(
@@ -277,7 +274,7 @@ const AccessAuthorizationsSchema = {
 
     listByGrantee: {
       // Get all the access authorizations granted to an agent
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { grantee, webId } = ctx.params;
 
         const filteredContainer = await this.actions.list(
@@ -297,7 +294,7 @@ const AccessAuthorizationsSchema = {
     listScopeAll: {
       // List all access authorizations with `interop:All` scope
       // An optional shapeTreeUri param can be passed to filter by shape tree
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { podOwner, shapeTreeUri } = ctx.params;
 
         const filteredContainer = await this.actions.list(
@@ -317,7 +314,7 @@ const AccessAuthorizationsSchema = {
 
     deleteOrphans: {
       // Delete authorizations which are not linked anymore to an access need (may happen on app upgrade)
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { appUri, podOwner } = ctx.params;
         const dataAuthorizations = await this.actions.listByGrantee(
           { grantee: appUri, webId: podOwner },
@@ -332,7 +329,7 @@ const AccessAuthorizationsSchema = {
               this.logger.info(
                 `Deleting authorization ${dataAuthorization.id} as it is not linked anymore with an existing access need...`
               );
-              await this.actions.delete({ resourceUri: dataAuthorization.id, webId: podOwner });
+              await this.actions.delete({ resourceUri: dataAuthorization.id, webId: podOwner }, { parentCtx: ctx });
             } else {
               throw e;
             }
@@ -353,10 +350,7 @@ const AccessAuthorizationsSchema = {
         const webId = ctx.params.webId || ctx.meta.webId;
 
         // Attach the to the authorization registry
-        await ctx.call('auth-registry.add', {
-          podOwner: webId,
-          authorizationUri: getId(authorization)
-        });
+        await ctx.call('auth-registry.add', { authorizationUri: getId(authorization) });
 
         // Check if we need to generate a grant or a delegated grant
         if (dataOwner === webId) {
@@ -418,11 +412,8 @@ const AccessAuthorizationsSchema = {
           }
         }
 
-        // Attach the to the authorization registry
-        await ctx.call('auth-registry.remove', {
-          podOwner: webId,
-          authorizationUri: getId(authorization)
-        });
+        // Detach from the authorization registry
+        await ctx.call('auth-registry.remove', { authorizationUri: getId(authorization) });
 
         return res;
       }
@@ -430,14 +421,11 @@ const AccessAuthorizationsSchema = {
   },
   events: {
     'ldp.resource.deleted': {
-      async handler(ctx) {
-        // @ts-expect-error TS(2339): Property 'resourceUri' does not exist on type 'Opt... Remove this comment to see the full error message
+      async handler(ctx: any) {
         const { resourceUri, dataset } = ctx.params;
-        const webId = getWebIdFromUri(resourceUri);
 
         // Delete all authorizations associated with this resource
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
-        await this.actions.removeForSingleResource({ resourceUri, webId }, { meta: { dataset }, parentCtx: ctx });
+        await this.actions.removeForSingleResource({ resourceUri }, { meta: { dataset }, parentCtx: ctx });
       }
     }
   }

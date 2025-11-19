@@ -7,15 +7,16 @@ const DataRegistrySchema = {
   // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledResourceMixin],
   settings: {
+    path: '/data-registry',
     types: ['interop:DataRegistry']
   },
   dependencies: ['registry-set'],
   actions: {
     add: {
-      async handler(ctx) {
-        const { podOwner, dataRegistrationUri } = ctx.params;
+      async handler(ctx: any) {
+        const { dataRegistrationUri } = ctx.params;
 
-        const dataRegistryUri = await this.actions.waitForResourceCreation({ webId: podOwner }, { parentCtx: ctx });
+        const dataRegistryUri = await this.actions.waitForCreation({}, { parentCtx: ctx });
 
         await this.actions.patch(
           {
@@ -27,7 +28,7 @@ const DataRegistrySchema = {
                 rdf.namedNode(dataRegistrationUri)
               )
             ],
-            webId: podOwner
+            webId: 'system'
           },
           { parentCtx: ctx }
         );
@@ -35,10 +36,10 @@ const DataRegistrySchema = {
     },
 
     remove: {
-      async handler(ctx) {
-        const { podOwner, dataRegistrationUri } = ctx.params;
+      async handler(ctx: any) {
+        const { dataRegistrationUri } = ctx.params;
 
-        const dataRegistryUri = await this.actions.waitForResourceCreation({ webId: podOwner }, { parentCtx: ctx });
+        const dataRegistryUri = await this.actions.waitForCreation({}, { parentCtx: ctx });
 
         await this.actions.patch(
           {
@@ -50,7 +51,7 @@ const DataRegistrySchema = {
                 rdf.namedNode(dataRegistrationUri)
               )
             ],
-            webId: podOwner
+            webId: 'system'
           },
           { parentCtx: ctx }
         );
@@ -61,7 +62,7 @@ const DataRegistrySchema = {
       /**
        * Wait until all data registrations have been created for the newly-created user
        */
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
 
         const containers = await ctx.call('ldp.registry.list');
@@ -85,16 +86,16 @@ const DataRegistrySchema = {
   },
   hooks: {
     after: {
-      async post(ctx, res) {
+      async create(ctx, res) {
         // Attach the registry to the registry set
-        const registrySetUri = await ctx.call('registry-set.getResourceUri', { webId: ctx.params.webId });
+        const registrySetUri = await ctx.call('registry-set.getUri');
         await ctx.call('registry-set.patch', {
           resourceUri: registrySetUri,
           triplesToAdd: [
             rdf.quad(
               rdf.namedNode(registrySetUri),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistry'),
-              rdf.namedNode(res)
+              rdf.namedNode(res.resourceUri)
             )
           ],
           webId: 'system'

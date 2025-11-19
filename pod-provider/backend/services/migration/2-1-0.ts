@@ -13,7 +13,7 @@ const Migration210Schema = {
   },
   actions: {
     migrate: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
@@ -57,7 +57,7 @@ const Migration210Schema = {
     },
 
     generateTypeIndexes: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
 
         const publicIndex = await ctx.call('type-indexes.getPublicIndex', { webId });
@@ -87,7 +87,7 @@ const Migration210Schema = {
     },
 
     generateDataRegistry: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
 
         const dataRegistryExist = await ctx.call('data-registry.exist', { webId });
@@ -101,7 +101,7 @@ const Migration210Schema = {
     },
 
     attachDataRegistrationToContainers: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
 
         const registeredContainers = await ctx.call('ldp.registry.list');

@@ -21,7 +21,7 @@ const AppRegistrationsSchema = {
   },
   actions: {
     createOrUpdate: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { agentUri, podOwner, specialRightsUris } = ctx.params;
 
         const appRegistration = await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx });
@@ -48,7 +48,7 @@ const AppRegistrationsSchema = {
               resource: {
                 type: 'interop:ApplicationRegistration',
                 'interop:registeredBy': podOwner,
-                'interop:registeredWith': await ctx.call('auth-agent.getResourceUri', { webId: podOwner }),
+                'interop:registeredWith': await ctx.call('auth-agent.getUri'),
                 'interop:registeredAt': new Date().toISOString(),
                 'interop:updatedAt': new Date().toISOString(),
                 'interop:registeredAgent': agentUri,

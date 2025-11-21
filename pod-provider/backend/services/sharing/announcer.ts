@@ -265,12 +265,9 @@ const AnnouncerSchema = {
 
         // Sometimes a recipient may be the original announcer
         // So ensure this is a remote resource before storing it locally
-        if (!resourceUri.startsWith(urlJoin(recipientUri, '/'))) {
+        if (await ctx.call('ldp.remote.isRemote', { resourceUri })) {
           // Get the latest version of the resource and store it locally
-          const resource = await ctx.call('ldp.remote.store', {
-            resourceUri,
-            webId: recipientUri
-          });
+          const resource = await ctx.call('ldp.remote.store', { resourceUri });
 
           const expandedTypes = await ctx.call('jsonld.parser.expandTypes', {
             types: resource['@type'] || resource.type

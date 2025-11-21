@@ -1,33 +1,33 @@
 import { ServiceSchema } from 'moleculer';
-
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
 
 /**
  * Mirror container for data grants which have been granted to the app
  */
-const Schema = {
-  name: 'data-grants',
+const DataGrantsService = {
+  name: 'data-grants' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
-    acceptedTypes: ['interop:DataGrant'],
+    path: '/data-grants',
+    types: ['interop:DataGrant'],
     newResourcesPermissions: {}
   },
   actions: {
     getContainerByShapeTree: {
       async handler(ctx: any) {
-        const { shapeTreeUri } = ctx.params;
+        const { shapeTreeUri, podOwner } = ctx.params;
 
-        const app = await ctx.call('app.get');
+        const appUri = await ctx.call('app.getUri');
         const containerUri = await this.actions.getContainerUri({}, { parentCtx: ctx });
-        const dataOwner = await ctx.call('webid.getUri');
 
         const filteredContainer = await this.actions.list(
           {
             containerUri,
             filters: {
               'http://www.w3.org/ns/solid/interop#registeredShapeTree': shapeTreeUri,
-              'http://www.w3.org/ns/solid/interop#dataOwner': dataOwner,
-              'http://www.w3.org/ns/solid/interop#grantee': app.id
+              'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
+              'http://www.w3.org/ns/solid/interop#grantee': appUri
             },
             webId: 'system'
           },
@@ -42,13 +42,13 @@ const Schema = {
       async handler(ctx) {
         const { podOwner } = ctx.params;
 
-        const app = await ctx.call('app.get');
+        const appUri = await ctx.call('app.getUri');
 
         const container = await this.actions.list(
           {
             filters: {
               'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
-              'http://www.w3.org/ns/solid/interop#grantee': app.id
+              'http://www.w3.org/ns/solid/interop#grantee': appUri
             }
           },
           { parentCtx: ctx }
@@ -63,7 +63,7 @@ const Schema = {
             this.logger.info(
               `Deleting cached data grant ${dataGrant.id} as it is not linked anymore with an existing access need...`
             );
-            await this.actions.delete({ resourceUri: dataGrant.id, webId: podOwner });
+            await this.actions.delete({ resourceUri: dataGrant.id, webId: podOwner }, { parentCtx: ctx });
           }
         }
       }
@@ -71,4 +71,12 @@ const Schema = {
   }
 } satisfies ServiceSchema;
 
-export default Schema;
+export default DataGrantsService;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [DataGrantsService.name]: typeof DataGrantsService;
+    }
+  }
+}

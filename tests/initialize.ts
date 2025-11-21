@@ -1,19 +1,19 @@
-import path from 'path';
 import Redis from 'ioredis';
-import fs from 'fs';
-import { ServiceBroker } from 'moleculer';
-import { AuthAccountService } from '@semapps/auth';
+import fetch from 'node-fetch';
+import { ServiceBroker, ActionParamSchema, CallingOptions } from 'moleculer';
+import { Account, AuthAccountService } from '@semapps/auth';
 import { CoreService as SemAppsCoreService } from '@semapps/core';
-import { MIME_TYPES } from '@semapps/mime-types';
 import { NodeinfoService } from '@semapps/nodeinfo';
 import { ProxyService } from '@semapps/crypto';
 import { TripleStoreAdapter } from '@semapps/triplestore';
 import { WebAclMiddleware } from '@semapps/webacl';
-import { interop, oidc, notify, apods } from '@semapps/ontologies';
+import { interop, oidc, notify, apods, solid } from '@semapps/ontologies';
 import { NotificationsListenerService } from '@semapps/solid';
 import RdfJSONSerializer from '../pod-provider/backend/RdfJSONSerializer.ts';
-import { clearMails } from './utils.ts';
+import { fetchServer, clearMails } from './utils.ts';
+import { FetchOptions } from './utilTypes.js';
 import * as CONFIG from './config.ts';
+
 Error.stackTraceLimit = Infinity;
 
 const logger = {
@@ -25,7 +25,7 @@ const logger = {
   }
 };
 
-const listDatasets = async () => {
+export const listDatasets = async () => {
   const response = await fetch(`${CONFIG.SPARQL_ENDPOINT}$/datasets`, {
     headers: {
       Authorization: `Basic ${Buffer.from(`${CONFIG.JENA_USER}:${CONFIG.JENA_PASSWORD}`).toString('base64')}`
@@ -39,7 +39,7 @@ const listDatasets = async () => {
   return [];
 };
 
-const dropDataset = (dataset: any) =>
+export const dropDataset = (dataset: any) =>
   fetch(`${CONFIG.SPARQL_ENDPOINT + dataset}/update`, {
     method: 'POST',
     body: 'update=DROP+ALL',
@@ -50,7 +50,7 @@ const dropDataset = (dataset: any) =>
   });
 
 // Delete all data except special endpoints
-const clearSettingsDataset = () =>
+export const clearSettingsDataset = () =>
   fetch(`${CONFIG.SPARQL_ENDPOINT}settings/update`, {
     method: 'POST',
     body: `
@@ -68,15 +68,15 @@ const clearSettingsDataset = () =>
     }
   });
 
-const clearRedisDb = async (redisUrl: any) => {
+export const clearRedisDb = async (redisUrl: string) => {
   const redisClient = new Redis(redisUrl);
   await redisClient.flushdb();
   redisClient.disconnect();
 };
 
-const clearAllData = async () => {
+export const clearAllData = async () => {
   const datasets = await listDatasets();
-  for (let dataset of datasets.filter((d: any) => d != 'settings')) {
+  for (let dataset of datasets.filter((d: string) => d != 'settings')) {
     await dropDataset(dataset);
   }
 
@@ -88,7 +88,7 @@ const clearAllData = async () => {
   await clearMails();
 };
 
-const connectPodProvider = async () => {
+export const connectPodProvider = async () => {
   // Connect to the Pod provider broker with a Redis transporter
   const broker = new ServiceBroker({
     nodeID: `test-node`,
@@ -103,17 +103,17 @@ const connectPodProvider = async () => {
   await broker.waitForServices(['ldp']);
 
   // Reset internal cache (the channels have been deleted, but they are still in a this.channels array)
-  // await broker.waitForServices(['solid-notifications.provider.webhook']);
-  // await broker.call('solid-notifications.provider.webhook.resetCache');
+  await broker.waitForServices(['solid-notifications.provider.webhook']);
+  await broker.call('solid-notifications.provider.webhook.resetCache');
 
   return broker;
 };
 
-const initializeAppServer = async (
-  port: any,
-  mainDataset: any,
-  settingsDataset: any,
-  queueServiceDb: any,
+export const initializeAppServer = async (
+  port: number,
+  appDataset: string,
+  settingsDataset: string,
+  queueServiceDb: number,
   appService: any
 ) => {
   const baseUrl = `http://localhost:${port}/`;
@@ -131,19 +131,14 @@ const initializeAppServer = async (
     mixins: [SemAppsCoreService],
     settings: {
       baseUrl,
-      baseDir: path.resolve(__dirname),
       triplestore: {
         url: CONFIG.SPARQL_ENDPOINT,
         user: CONFIG.JENA_USER,
         password: CONFIG.JENA_PASSWORD,
         fusekiBase: CONFIG.FUSEKI_BASE,
-        mainDataset,
         secure: false // TODO Remove when triplestore service is refactored
       },
-      keys: {
-        actorsKeyPairsDir: null
-      },
-      ontologies: [interop, oidc, apods, notify],
+      ontologies: [interop, oidc, apods, notify, solid],
       activitypub: {
         queueServiceUrl
       },
@@ -153,16 +148,17 @@ const initializeAppServer = async (
       ldp: {
         resourcesWithContainerPath: false
       },
-      void: false,
-      webid: false
+      void: false
     }
   });
 
+  // @ts-expect-error Argument of type { 'mixin': {
   broker.createService({
     mixins: [AuthAccountService],
     adapter: new TripleStoreAdapter({ type: 'AuthAccount', dataset: settingsDataset })
   });
 
+  // @ts-expect-error Argument of type { 'mixin': {
   broker.createService({
     mixins: [NodeinfoService],
     settings: {
@@ -170,6 +166,7 @@ const initializeAppServer = async (
     }
   });
 
+  // @ts-expect-error Argument of type { 'mixin': {
   broker.createService({
     mixins: [NotificationsListenerService],
     adapter: new TripleStoreAdapter({ type: 'WebhookChannelListener', dataset: settingsDataset }),
@@ -178,94 +175,74 @@ const initializeAppServer = async (
     }
   });
 
+  // @ts-expect-error Argument of type { 'mixin': {
   broker.createService({ mixins: [ProxyService] });
 
-  broker.createService({ mixins: [appService], settings: { queueServiceUrl } });
+  // @ts-expect-error Argument of type { 'mixin': {
+  broker.createService({ mixins: [appService], settings: { username: appDataset, queueServiceUrl } });
 
-  return broker;
+  await broker.start();
+
+  const appUri = await broker.call('app.getUri');
+
+  return {
+    id: appUri,
+    webId: appUri,
+    username: appDataset,
+    call: (actionName: string, params: ActionParamSchema = {}, options: CallingOptions = {}) =>
+      broker.call(actionName, params, {
+        ...options,
+        meta: options.meta
+          ? { ...options.meta, webId: appUri, dataset: appDataset }
+          : { webId: appUri, dataset: appDataset }
+      }),
+    stop: () => broker.stop()
+  };
 };
 
-const createActor = async (podProvider: any, username = 'alice') => {
-  // let defaultData = await fs.promises.readFile('./templates/actor_default.ttl', 'utf8');
-  // let aclData = await fs.promises.readFile('./templates/actor_acl.ttl', 'utf8');
-  // let settingsData = await fs.promises.readFile('./templates/actor_settings.ttl', 'utf8');
+export const createAccount = async (broker: ServiceBroker, username: string) => {
+  const { webId }: Account = await broker.call('auth.account.create', { username });
 
-  // if (username !== 'alice') {
-  //   defaultData = defaultData.replaceAll('alice', username);
-  //   aclData = aclData.replaceAll('alice', username);
-  //   settingsData = settingsData.replaceAll('alice', username);
-  // }
+  const callAsUser = (actionName: string, params: ActionParamSchema = {}, options: CallingOptions = {}) =>
+    broker.call(actionName, params, { ...options, meta: { ...options.meta, webId, dataset: username } });
 
-  // if (!(await podProvider.call('triplestore.dataset.exist', { dataset: 'settings' }))) {
-  //   await podProvider.call('triplestore.dataset.create', { dataset: 'settings', secure: false });
-  // }
+  const baseUrl = await broker.call('solid-storage.getBaseUrl', { username });
 
-  // if (!(await podProvider.call('triplestore.dataset.exist', { dataset: username }))) {
-  //   await podProvider.call('triplestore.dataset.create', { dataset: username, secure: false });
-  // }
+  const token = await broker.call('auth.jwt.generateServerSignedToken', { payload: { webId } });
 
-  // await podProvider.call('triplestore.insert', {
-  //   resource: defaultData,
-  //   contentType: MIME_TYPES.TURTLE,
-  //   webId: 'system',
-  //   dataset: username
-  // });
+  const fetchAsUser = async (url: string, options: FetchOptions = {}) => {
+    let headers;
+    if (options.headers) {
+      headers = options.headers;
+      headers.set('Authorization', `Bearer ${token}`);
+    } else {
+      headers = new fetch.Headers({ Authorization: `Bearer ${token}` });
+    }
+    return fetchServer(url, { ...options, headers });
+  };
 
-  // await podProvider.call('triplestore.insert', {
-  //   resource: aclData,
-  //   contentType: MIME_TYPES.TURTLE,
-  //   webId: 'system',
-  //   graphName: 'http://semapps.org/webacl',
-  //   dataset: username
-  // });
-
-  // await podProvider.call('triplestore.insert', {
-  //   resource: settingsData,
-  //   contentType: MIME_TYPES.TURTLE,
-  //   webId: 'system',
-  //   dataset: 'settings'
-  // });
-
-  // const webId = 'http://localhost:3000/' + username;
-
-  const { webId } = await podProvider.call('auth.signup', {
-    username,
-    email: `${username}@test.com`,
-    password: 'Test1test',
-    name: username.charAt(0).toUpperCase() + username.slice(1),
-    'schema:knowsLanguage': 'en'
+  const actor: any = await callAsUser('activitypub.actor.awaitCreateComplete', {
+    actorUri: webId,
+    additionalKeys: [
+      'pim:storage',
+      'solid:oidcIssuer',
+      'solid:publicTypeIndex',
+      'interop:hasAuthorizationAgent',
+      'interop:hasRegistrySet'
+    ]
   });
 
-  let actor = await podProvider.call(
-    'activitypub.actor.awaitCreateComplete',
-    {
-      actorUri: webId,
-      additionalKeys: ['url']
-    },
-    { meta: { dataset: username } }
-  );
-
-  // Shortcut to make it easier to write tests
-  actor.call = (actionName: any, params: any, options = {}) =>
-    podProvider.call(actionName, params, {
-      ...options,
-      meta: { ...options.meta, webId, dataset: username }
-    });
-
-  return actor;
+  return {
+    webId,
+    token,
+    baseUrl,
+    username,
+    call: callAsUser,
+    fetch: fetchAsUser,
+    ...actor
+  };
 };
 
-const installApp = async (actor: any, appUri: string) => {
+export const installApp = async (actor: any, appUri: string) => {
   return await actor.call('registration-endpoint.register', { appUri, acceptAllRequirements: true });
-};
-
-export {
-  listDatasets,
-  dropDataset,
-  clearRedisDb,
-  clearAllData,
-  connectPodProvider,
-  initializeAppServer,
-  createActor,
-  installApp
 };

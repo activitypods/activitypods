@@ -50,10 +50,7 @@ const ContactsManagerSchema = {
         });
 
         if (activity.object.url) {
-          await ctx.call('ldp.remote.store', {
-            resourceUri: activity.object.url,
-            webId: emitterUri
-          });
+          await ctx.call('ldp.remote.store', { resourceUri: activity.object.url });
           await ctx.call('profiles.profile.attach', {
             resourceUri: activity.object.url,
             webId: emitterUri

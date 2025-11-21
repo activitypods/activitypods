@@ -8,7 +8,6 @@ const ProfilesContactgroupSchema = {
   // @ts-expect-error TS(2322): Type '{ settings: { path: null; types: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
-    // ControlledContainerMixin settings
     types: ['vcard:Group'],
     shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Group'),
     permissions: {},

@@ -6,6 +6,7 @@ import { ServiceSchema } from 'moleculer';
 
 const ProfilesLocationSchema = {
   name: 'profiles.location' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
     types: ['vcard:Location'],

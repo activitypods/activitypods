@@ -9,6 +9,7 @@ import ConvertIntegerMixin from '../../../mixins/convert-integers.ts';
 
 const AccessAuthorizationsSchema = {
   name: 'access-authorizations' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; types: nul... Remove this comment to see the full error message
   mixins: [ImmutableContainerMixin, ControlledContainerMixin, ConvertBooleanMixin, ConvertIntegerMixin],
   settings: {
     types: ['interop:AccessAuthorization'],
@@ -199,7 +200,7 @@ const AccessAuthorizationsSchema = {
         // @ts-expect-error TS(2551): Property 'http://www.w3.org/ns/solid/interop#grant... Remove this comment to see the full error message
         if (grantee) filters['http://www.w3.org/ns/solid/interop#grantee'] = grantee;
 
-        const filteredContainer = await this.actions.list({ filters, webId }, { parentCtx: ctx });
+        const filteredContainer = await this.actions.list({ filters, webId: 'system' }, { parentCtx: ctx });
 
         for (const dataAuthorization of arrayOf(filteredContainer['ldp:contains'])) {
           const resourcesUris = arrayOf(dataAuthorization['interop:hasDataInstance']);
@@ -422,10 +423,10 @@ const AccessAuthorizationsSchema = {
   events: {
     'ldp.resource.deleted': {
       async handler(ctx: any) {
-        const { resourceUri, dataset } = ctx.params;
+        const { resourceUri } = ctx.params;
 
         // Delete all authorizations associated with this resource
-        await this.actions.removeForSingleResource({ resourceUri }, { meta: { dataset }, parentCtx: ctx });
+        await this.actions.removeForSingleResource({ resourceUri }, { parentCtx: ctx });
       }
     }
   }

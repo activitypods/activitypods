@@ -52,26 +52,27 @@ const DataRegistrationsService = {
         const [registeredClass] = await ctx.call('shacl.getTypes', { resourceUri: shapeUri });
         if (!registeredClass) throw new Error(`Could not find class required by shape ${shapeUri}`);
 
-        // Register ontology, otherwise the ldp.container.getPath action will fail
         await this.actions.registerOntologyFromClass({ registeredClass }, { parentCtx: ctx });
 
-        // Generate a path for the new container
-        const containerPath = await ctx.call('ldp.container.getPath', { resourceType: registeredClass });
+        // Create the container
+        const containerUri = await ctx.call('ldp.container.create', { webId: podOwner });
 
-        // Create the container and attach it to its parent(s)
-        const podUrl = await ctx.call('solid-storage.getBaseUrl', { webId: podOwner });
-        const containerUri = urlJoin(podUrl, containerPath);
-        await ctx.call('ldp.container.createAndAttach', { containerUri, webId: podOwner });
+        // Attach it to the root container
+        const rootContainerUri = await ctx.call('solid-storage.getRootContainerUri');
+        await ctx.call('ldp.container.attach', {
+          containerUri: rootContainerUri,
+          resourceUri: containerUri,
+          webId: 'system'
+        });
 
         // Register the class on the type index
-        const services = await ctx.call('$node.services');
-        if (services.some((s: any) => s.name === 'public-type-index')) {
-          await ctx.call('public-type-index.register', {
-            types: [registeredClass],
-            containerUri,
-            webId: podOwner
-          });
-        }
+        await ctx.call('type-index.register', {
+          types: [registeredClass],
+          uri: containerUri,
+          webId: podOwner,
+          isContainer: true,
+          isPrivate: false
+        });
 
         await this.actions.attachToContainer({ shapeTreeUri, containerUri, podOwner }, { parentCtx: ctx });
 

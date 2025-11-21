@@ -9,22 +9,22 @@ const RegistrySetService = {
     path: '/registry-set',
     types: ['interop:RegistrySet']
   },
-  hooks: {
-    after: {
-      async create(ctx, res) {
-        const webId = await ctx.call('webid.getUri');
+  events: {
+    'webid.created': {
+      async handler(ctx: any) {
+        const { resourceUri: webId } = ctx.params;
+        const registrySetUri = await this.actions.waitForCreation({}, { parentCtx: ctx });
         await ctx.call('ldp.resource.patch', {
           resourceUri: webId,
           triplesToAdd: [
             rdf.quad(
               rdf.namedNode(webId),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasRegistrySet'),
-              rdf.namedNode(res.resourceUri)
+              rdf.namedNode(registrySetUri)
             )
           ],
           webId: 'system'
         });
-        return res;
       }
     }
   }

@@ -6,6 +6,7 @@ import { ServiceSchema } from 'moleculer';
 
 const AuthAgentSchema = {
   name: 'auth-agent' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledResourceMixin],
   settings: {
     path: '/auth-agent',
@@ -51,22 +52,24 @@ const AuthAgentSchema = {
           '.auth-agent/delegation/issue'
         );
       }
-    },
-    after: {
-      async create(ctx, res) {
-        const webId = await ctx.call('webid.getUri');
+    }
+  },
+  events: {
+    'webid.created': {
+      async handler(ctx: any) {
+        const { resourceUri: webId } = ctx.params;
+        const authAgentUri = await this.actions.waitForCreation({}, { parentCtx: ctx });
         await ctx.call('ldp.resource.patch', {
           resourceUri: webId,
           triplesToAdd: [
             rdf.quad(
               rdf.namedNode(webId),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAuthorizationAgent'),
-              rdf.namedNode(res.resourceUri)
+              rdf.namedNode(authAgentUri)
             )
           ],
           webId: 'system'
         });
-        return res;
       }
     }
   }

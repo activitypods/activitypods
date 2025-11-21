@@ -1,7 +1,6 @@
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'node... Remove this comment to see the full error message
 import fetch from 'node-fetch';
 import LinkHeader from 'http-link-header';
-// @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { getAclUriFromResourceUri } from '@semapps/webacl';
 import { arrayOf } from '@semapps/ldp';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
@@ -15,19 +14,25 @@ const PodPermissionsSchema = {
       async handler(ctx: any) {
         const { uri, actorUri } = ctx.params;
 
-        const { status, body } = await this.actions.fetch({
-          url: await this.getAclUri(uri, actorUri),
-          headers: {
-            Accept: 'application/ld+json'
+        const { status, body } = await this.actions.fetch(
+          {
+            url: await this.getAclUri(uri, actorUri),
+            headers: {
+              Accept: 'application/ld+json'
+            },
+            actorUri
           },
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
 
         return status === 200 ? body['@graph'] : false;
       }
     },
 
     add: {
+      params: {
+        uri: { type: 'string' }
+      },
       async handler(ctx: any) {
         const { uri, agentUri, agentPredicate, mode, actorUri } = ctx.params;
 
@@ -41,26 +46,29 @@ const PodPermissionsSchema = {
 
         const aclUri = await this.getAclUri(uri, actorUri);
 
-        const { status } = await this.actions.fetch({
-          url: aclUri,
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/ld+json'
+        const { status } = await this.actions.fetch(
+          {
+            url: aclUri,
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/ld+json'
+            },
+            body: JSON.stringify({
+              '@context': this.getAclContext(aclUri),
+              '@graph': [
+                {
+                  '@id': `#${mode.replace('acl:', '')}`,
+                  '@type': 'acl:Authorization',
+                  [agentPredicate]: agentUri,
+                  'acl:accessTo': uri,
+                  'acl:mode': mode
+                }
+              ]
+            }),
+            actorUri
           },
-          body: JSON.stringify({
-            '@context': this.getAclContext(aclUri),
-            '@graph': [
-              {
-                '@id': `#${mode.replace('acl:', '')}`,
-                '@type': 'acl:Authorization',
-                [agentPredicate]: agentUri,
-                'acl:accessTo': uri,
-                'acl:mode': mode
-              }
-            ]
-          }),
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
 
         return status === 204;
       }
@@ -96,18 +104,21 @@ const PodPermissionsSchema = {
 
         const aclUri = await this.getAclUri(uri, actorUri);
 
-        const { status } = await this.actions.fetch({
-          url: aclUri,
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/ld+json'
+        const { status } = await this.actions.fetch(
+          {
+            url: aclUri,
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/ld+json'
+            },
+            body: JSON.stringify({
+              '@context': this.getAclContext(aclUri),
+              '@graph': updatedPermissions
+            }),
+            actorUri
           },
-          body: JSON.stringify({
-            '@context': this.getAclContext(aclUri),
-            '@graph': updatedPermissions
-          }),
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
 
         return status === 204;
       }

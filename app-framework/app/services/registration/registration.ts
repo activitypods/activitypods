@@ -1,6 +1,5 @@
 const { MoleculerError } = require('moleculer').Errors;
 import { ActivitiesHandlerMixin, ACTIVITY_TYPES } from '@semapps/activitypub';
-import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema } from 'moleculer';
 
 const AppRegistrationSchema = {
@@ -24,8 +23,7 @@ const AppRegistrationSchema = {
         const filteredContainer = await ctx.call('app-registrations.list', {
           filters: {
             'http://www.w3.org/ns/solid/interop#registeredBy': activity.actor
-          },
-          accept: MIME_TYPES.JSON
+          }
         });
 
         if (filteredContainer['ldp:contains'].length > 0) {

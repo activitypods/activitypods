@@ -25,8 +25,8 @@ export const nodeID = 'pod-provider';
 
 export const middlewares = [
   CacherMiddleware(cacherConfig), // Set the cacher before the WebAcl middleware
-  WebAclMiddleware({ baseUrl: CONFIG.BASE_URL, podProvider: true }),
-  ObjectsWatcherMiddleware({ baseUrl: CONFIG.BASE_URL, podProvider: true, postWithoutRecipients: true }),
+  WebAclMiddleware({ baseUrl: CONFIG.BASE_URL! }),
+  ObjectsWatcherMiddleware({ baseUrl: CONFIG.BASE_URL, postWithoutRecipients: true }),
   AppControlMiddleware({ baseUrl: CONFIG.BASE_URL })
 ];
 

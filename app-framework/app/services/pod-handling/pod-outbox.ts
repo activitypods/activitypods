@@ -15,8 +15,7 @@ const PodOutboxSchema = {
           };
         }
 
-        const app = await ctx.call('app.get');
-        const appUri = app.id || app['@id'];
+        const appUri = await ctx.call('app.getUri');
 
         const actor = await ctx.call('activitypub.actor.get', { actorUri, webId: appUri });
 

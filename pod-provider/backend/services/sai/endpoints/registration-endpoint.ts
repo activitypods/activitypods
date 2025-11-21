@@ -1,5 +1,4 @@
 import path from 'path';
-import urlJoin from 'url-join';
 const { MoleculerError } = require('moleculer').Errors;
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
 import { getId } from '@semapps/ldp';
@@ -89,8 +88,13 @@ const RegistrationEndpointSchema = {
 
         // If the app is an ActivityPub actor, send notification
         if (app.inbox) {
+          const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
+            actorUri: webId,
+            predicate: 'outbox'
+          });
+
           await ctx.call('activitypub.outbox.post', {
-            collectionUri: urlJoin(webId, 'outbox'),
+            collectionUri: outboxUri,
             '@type': ACTIVITY_TYPES.CREATE,
             object: appRegistrationUri,
             to: appUri
@@ -172,8 +176,13 @@ const RegistrationEndpointSchema = {
 
         // If the app is an ActivityPub actor, send notification
         if (app.inbox) {
+          const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
+            actorUri: webId,
+            predicate: 'outbox'
+          });
+
           await ctx.call('activitypub.outbox.post', {
-            collectionUri: urlJoin(webId, 'outbox'),
+            collectionUri: outboxUri,
             '@type': ACTIVITY_TYPES.UPDATE,
             object: appRegistrationUri,
             to: appUri
@@ -210,8 +219,13 @@ const RegistrationEndpointSchema = {
 
           // If the app is an ActivityPub actor, send notification
           if (app.inbox) {
+            const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
+              actorUri: webId,
+              predicate: 'outbox'
+            });
+
             await ctx.call('activitypub.outbox.post', {
-              collectionUri: urlJoin(webId, 'outbox'),
+              collectionUri: outboxUri,
               type: ACTIVITY_TYPES.DELETE,
               object: appRegistration.id || appRegistration['@id'],
               to: appUri

@@ -38,23 +38,26 @@ const PodCollectionsSchema = {
         // Ensure no similar collection is already attached to the resource
         // (May happen if another app is already attaching the same kind of collections)
         if (!expandedResource[expandedAttachPredicate]) {
-          const { status, headers } = await this.actions.fetch({
-            method: 'POST',
-            url: urlJoin(actorUri, '/data/as/collection'), // TODO use TypeIndex to find container URL
-            headers: {
-              'Content-Type': 'application/ld+json'
+          const { status, headers } = await this.actions.fetch(
+            {
+              method: 'POST',
+              url: urlJoin(actorUri, '/data/as/collection'), // TODO use TypeIndex to find container URL
+              headers: {
+                'Content-Type': 'application/ld+json'
+              },
+              body: JSON.stringify({
+                '@context': await ctx.call('jsonld.context.get'),
+                type: ordered ? 'OrderedCollection' : 'Collection',
+                summary,
+                'semapps:itemsPerPage': itemsPerPage,
+                'semapps:dereferenceItems': dereferenceItems,
+                'semapps:sortPredicate': ordered ? sortPredicate : undefined,
+                'semapps:sortOrder': ordered ? sortOrder : undefined
+              }),
+              actorUri
             },
-            body: JSON.stringify({
-              '@context': await ctx.call('jsonld.context.get'),
-              type: ordered ? 'OrderedCollection' : 'Collection',
-              summary,
-              'semapps:itemsPerPage': itemsPerPage,
-              'semapps:dereferenceItems': dereferenceItems,
-              'semapps:sortPredicate': ordered ? sortPredicate : undefined,
-              'semapps:sortOrder': ordered ? sortOrder : undefined
-            }),
-            actorUri
-          });
+            { parentCtx: ctx }
+          );
 
           if (status === 201) {
             const collectionUri = headers.location;
@@ -91,10 +94,13 @@ const PodCollectionsSchema = {
             predicate: attachPredicate
           });
 
-          const collectionUri = await this.actions.getCollectionUriFromResource({
-            resource,
-            attachPredicate: expandedAttachPredicate
-          });
+          const collectionUri = await this.actions.getCollectionUriFromResource(
+            {
+              resource,
+              attachPredicate: expandedAttachPredicate
+            },
+            { parentCtx: ctx }
+          );
           if (!collectionUri)
             throw new Error(`No collection with predicate ${attachPredicate} attached to ${resourceUri}`);
 
@@ -139,15 +145,18 @@ const PodCollectionsSchema = {
           ]
         };
 
-        await this.actions.fetch({
-          url: collectionUri,
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/sparql-update'
+        await this.actions.fetch(
+          {
+            url: collectionUri,
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/sparql-update'
+            },
+            body: this.sparqlGenerator.stringify(sparqlUpdate),
+            actorUri
           },
-          body: this.sparqlGenerator.stringify(sparqlUpdate),
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
       }
     },
 
@@ -176,15 +185,18 @@ const PodCollectionsSchema = {
           ]
         };
 
-        await this.actions.fetch({
-          url: collectionUri,
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/sparql-update'
+        await this.actions.fetch(
+          {
+            url: collectionUri,
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/sparql-update'
+            },
+            body: this.sparqlGenerator.stringify(sparqlUpdate),
+            actorUri
           },
-          body: this.sparqlGenerator.stringify(sparqlUpdate),
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
       }
     },
 
@@ -228,7 +240,6 @@ const PodCollectionsSchema = {
 
     getCollectionUriFromResource: {
       // Find the collection attached to a given resource (or undefined if no collection is attached)
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx: any) {
         const { resource, attachPredicate } = ctx.params;
         const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });

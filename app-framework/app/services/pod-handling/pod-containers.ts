@@ -28,38 +28,47 @@ const PodContainersSchema = {
 
         const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
 
-        const { body: actor } = await this.actions.fetch({
-          // @ts-expect-error TS(2304): Cannot find name 'actorUri'.
-          url: actorUri,
-          headers: {
-            'Content-Type': 'application/ld+json'
-          },
-          // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
-          actorUri
-        });
-
-        if (actor['solid:publicTypeIndex']) {
-          const { body: typeIndex } = await this.actions.fetch({
-            url: actor['solid:publicTypeIndex'],
+        const { body: actor } = await this.actions.fetch(
+          {
+            // @ts-expect-error TS(2304): Cannot find name 'actorUri'.
+            url: actorUri,
             headers: {
               'Content-Type': 'application/ld+json'
             },
             // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
             actorUri
-          });
+          },
+          { parentCtx: ctx }
+        );
+
+        if (actor['solid:publicTypeIndex']) {
+          const { body: typeIndex } = await this.actions.fetch(
+            {
+              url: actor['solid:publicTypeIndex'],
+              headers: {
+                'Content-Type': 'application/ld+json'
+              },
+              // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
+              actorUri
+            },
+            { parentCtx: ctx }
+          );
 
           // Go through all TypeRegistration
           for (let registration of arrayOf(typeIndex['solid:hasTypeRegistration'])) {
             // If the TypeRegistration has not been dereferenced, do it
             if (isURL(registration)) {
-              ({ body: registration } = await this.actions.fetch({
-                url: registration,
-                headers: {
-                  'Content-Type': 'application/ld+json'
+              ({ body: registration } = await this.actions.fetch(
+                {
+                  url: registration,
+                  headers: {
+                    'Content-Type': 'application/ld+json'
+                  },
+                  // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
+                  actorUri
                 },
-                // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
-                actorUri
-              }));
+                { parentCtx: ctx }
+              ));
             }
 
             const expandedRegisteredTypes = await ctx.call('jsonld.parser.expandTypes', {
@@ -107,15 +116,18 @@ const PodContainersSchema = {
           ]
         };
 
-        await this.actions.fetch({
-          url: containerUri,
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/sparql-update'
+        await this.actions.fetch(
+          {
+            url: containerUri,
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/sparql-update'
+            },
+            body: this.sparqlGenerator.stringify(sparqlUpdate),
+            actorUri
           },
-          body: this.sparqlGenerator.stringify(sparqlUpdate),
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
       }
     },
 
@@ -149,15 +161,18 @@ const PodContainersSchema = {
           ]
         };
 
-        await this.actions.fetch({
-          url: containerUri,
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/sparql-update'
+        await this.actions.fetch(
+          {
+            url: containerUri,
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/sparql-update'
+            },
+            body: this.sparqlGenerator.stringify(sparqlUpdate),
+            actorUri
           },
-          body: this.sparqlGenerator.stringify(sparqlUpdate),
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
       }
     }
   }

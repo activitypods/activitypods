@@ -5,6 +5,7 @@ const ALLOWED_TYPES = ['interop:ApplicationRegistration', 'interop:SocialAgentRe
 
 const AgentRegistryService = {
   name: 'agent-registry' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledResourceMixin],
   settings: {
     path: '/agent-registry',
@@ -73,23 +74,22 @@ const AgentRegistryService = {
       }
     }
   },
-  hooks: {
-    after: {
-      async create(ctx, res) {
-        // Attach the registry to the registry set
-        const registrySetUri = await ctx.call('registry-set.getUri');
-        await ctx.call('registry-set.patch', {
+  events: {
+    'registry-set.created': {
+      async handler(ctx: any) {
+        const { resourceUri: registrySetUri } = ctx.params;
+        const agentRegistryUri = await this.actions.waitForCreation({}, { parentCtx: ctx });
+        await ctx.call('ldp.resource.patch', {
           resourceUri: registrySetUri,
           triplesToAdd: [
             rdf.quad(
               rdf.namedNode(registrySetUri),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAgentRegistry'),
-              rdf.namedNode(res.resourceUri)
+              rdf.namedNode(agentRegistryUri)
             )
           ],
           webId: 'system'
         });
-        return res;
       }
     }
   }

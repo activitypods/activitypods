@@ -1,7 +1,7 @@
-import urlJoin from 'url-join';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
-import { arrayOf, hasType } from '@semapps/ldp';
+import { Middleware } from 'moleculer';
+import { arrayOf, getId, getType, hasType } from '@semapps/ldp';
 import { FULL_ACTIVITY_TYPES, FULL_ACTOR_TYPES } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 
@@ -42,7 +42,7 @@ const getAllowedTypes = async (ctx: any, appUri: any, podOwner: any, accessMode:
   return await ctx.call('jsonld.parser.expandTypes', { types });
 };
 
-const AppControlMiddleware = ({ baseUrl }: any) => ({
+const AppControlMiddleware = ({ baseUrl }: { baseUrl: string }): Middleware => ({
   name: 'AppControlMiddleware',
   async started() {
     if (!baseUrl) throw new Error('The baseUrl config is missing for the AppControlMiddleware');
@@ -50,8 +50,8 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
   localAction: (next: any, action: any) => {
     if (action.name === 'signature.proxy.api_query') {
       return async (ctx: any) => {
-        const podOwner = urlJoin(baseUrl, ctx.params.username);
         const url = ctx.params.id;
+        const podOwner = await ctx.call('webid.getUri');
 
         // Bypass checks if user is querying his own pod
         if (ctx.meta.webId === podOwner) {
@@ -153,8 +153,7 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
     } else if (action.name === 'activitypub.outbox.post') {
       return async (ctx: any) => {
         const { collectionUri, ...activity } = ctx.params;
-
-        const podOwner = await ctx.call('activitypub.collection.getOwner', { collectionUri, collectionKey: 'outbox' });
+        const podOwner = await ctx.call('webid.getUri');
 
         // Bypass checks if user is posting to their outbox
         if (ctx.meta.webId === podOwner) {
@@ -178,27 +177,27 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
 
           if (hasType(activity, 'Create')) {
             resourceTypes = await ctx.call('jsonld.parser.expandTypes', {
-              types: activity.object.type || activity.object['@type'],
+              types: getType(activity.object),
               context: activity['@context']
             });
           } else {
             try {
               const resource = await ctx.call('ldp.resource.get', {
-                resourceUri: activity.object.id || activity.object['@id'],
+                resourceUri: getId(activity.object),
                 accept: MIME_TYPES.JSON,
                 webId: 'system'
               });
 
               resourceTypes = await ctx.call('jsonld.parser.expandTypes', {
-                types: resource.type || resource['@type'],
+                types: getType(resource),
                 context: activity['@context']
               });
             } catch (e) {
-              throw new E.ForbiddenError(`The resource ${activity.object.id || activity.object['@id']} doesn't exist`);
+              throw new E.ForbiddenError(`The resource ${getId(activity.object)} doesn't exist`);
             }
           }
 
-          if (!resourceTypes.some((t: any) => allowedTypes.includes(t))) {
+          if (!resourceTypes.some((t: string) => allowedTypes.includes(t))) {
             throw new E.ForbiddenError(`The type of the resource doesn't match any authorized types`);
           }
         }
@@ -212,8 +211,7 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
       };
     } else if (action.name === 'webacl.group.api_create') {
       return async (ctx: any) => {
-        const { username } = ctx.params;
-        const podOwner = urlJoin(baseUrl, username);
+        const podOwner = await ctx.call('webid.getUri');
 
         // Bypass checks if user is acting on their own pod
         if (ctx.meta.webId === podOwner) {
@@ -236,8 +234,7 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
       };
     } else if (action.name === 'webacl.group.api_addMember') {
       return async (ctx: any) => {
-        const { username } = ctx.params;
-        const podOwner = urlJoin(baseUrl, username);
+        const podOwner = await ctx.call('webid.getUri');
 
         // Bypass checks if user is acting on their own Pod
         if (ctx.meta.webId === podOwner) {
@@ -266,8 +263,7 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
       };
     } else if (action.name === 'sparqlEndpoint.query') {
       return async (ctx: any) => {
-        const { username } = ctx.params;
-        const podOwner = urlJoin(baseUrl, username);
+        const podOwner = await ctx.call('webid.getUri');
 
         // Bypass checks if user is acting on their own
         if (ctx.meta.webId === podOwner) {
@@ -305,12 +301,22 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
 
         // If the webId is a registered application
         if (appRegistration) {
+          const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
+            actorUri: podOwner,
+            predicate: 'outbox'
+          });
+
+          const inboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
+            actorUri: podOwner,
+            predicate: 'inbox'
+          });
+
           // If the app is trying to get the outbox or inbox, use webId system to improve performances
-          if (collectionUri === urlJoin(podOwner, 'outbox')) {
+          if (collectionUri === outboxUri) {
             if (arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:ReadOutbox')) {
               ctx.params.webId = 'system';
             }
-          } else if (collectionUri === urlJoin(podOwner, 'inbox')) {
+          } else if (collectionUri === inboxUri) {
             if (arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:ReadInbox')) {
               ctx.params.webId = 'system';
             }

@@ -28,13 +28,16 @@ const PodWacGroupsSchema = {
         const { actorUri } = ctx.params;
         const { origin, pathname } = new URL(actorUri);
 
-        const { body, status } = await this.actions.fetch({
-          url: `${origin}/_groups${pathname}`,
-          headers: {
-            Accept: 'application/ld+json'
+        const { body, status } = await this.actions.fetch(
+          {
+            url: `${origin}/_groups${pathname}`,
+            headers: {
+              Accept: 'application/ld+json'
+            },
+            actorUri
           },
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
 
         return status === 200 ? body : false;
       }
@@ -45,14 +48,17 @@ const PodWacGroupsSchema = {
         const { groupSlug, actorUri } = ctx.params;
         const { origin, pathname } = new URL(actorUri);
 
-        const { status, statusText, headers } = await this.actions.fetch({
-          url: `${origin}/_groups${pathname}`,
-          method: 'POST',
-          headers: {
-            Slug: groupSlug
+        const { status, statusText, headers } = await this.actions.fetch(
+          {
+            url: `${origin}/_groups${pathname}`,
+            method: 'POST',
+            headers: {
+              Slug: groupSlug
+            },
+            actorUri
           },
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
 
         if (status === 201) {
           return headers?.location;
@@ -69,11 +75,14 @@ const PodWacGroupsSchema = {
       async handler(ctx: any) {
         const { groupUri, groupSlug, actorUri } = ctx.params;
 
-        const { status } = await this.actions.fetch({
-          url: groupUri || this.getGroupUri(groupSlug, actorUri),
-          method: 'DELETE',
-          actorUri
-        });
+        const { status } = await this.actions.fetch(
+          {
+            url: groupUri || this.getGroupUri(groupSlug, actorUri),
+            method: 'DELETE',
+            actorUri
+          },
+          { parentCtx: ctx }
+        );
 
         return status === 204;
       }
@@ -83,15 +92,18 @@ const PodWacGroupsSchema = {
       async handler(ctx: any) {
         const { groupUri, groupSlug, memberUri, actorUri } = ctx.params;
 
-        const { status } = await this.actions.fetch({
-          url: groupUri || this.getGroupUri(groupSlug, actorUri),
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json'
+        const { status } = await this.actions.fetch(
+          {
+            url: groupUri || this.getGroupUri(groupSlug, actorUri),
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ memberUri }),
+            actorUri
           },
-          body: JSON.stringify({ memberUri }),
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
 
         return status === 204;
       }
@@ -101,15 +113,18 @@ const PodWacGroupsSchema = {
       async handler(ctx: any) {
         const { groupUri, groupSlug, memberUri, actorUri } = ctx.params;
 
-        const { status } = await this.actions.fetch({
-          url: groupUri || this.getGroupUri(groupSlug, actorUri),
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
+        const { status } = await this.actions.fetch(
+          {
+            url: groupUri || this.getGroupUri(groupSlug, actorUri),
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ deleteUserUri: memberUri }),
+            actorUri
           },
-          body: JSON.stringify({ deleteUserUri: memberUri }),
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
 
         return status === 204;
       }

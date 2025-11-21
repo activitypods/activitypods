@@ -1,4 +1,4 @@
-const { getDatasetFromUri } = require('@semapps/ldp');
+import { getDatasetFromUri } from '@semapps/ldp';
 import { ServiceSchema } from 'moleculer';
 
 // A acl:Write permission implicitly gives acl:Read and acl:Append permissions

@@ -6,27 +6,28 @@ import { ServiceSchema } from 'moleculer';
  */
 const AccessGrantsSchema = {
   name: 'access-grants' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
+    path: '/access-grants',
     types: ['interop:AccessGrant'],
     newResourcesPermissions: {}
   },
   actions: {
     getContainerByShapeTree: {
       async handler(ctx: any) {
-        const { shapeTreeUri } = ctx.params;
+        const { shapeTreeUri, podOwner } = ctx.params;
 
-        const app = await ctx.call('app.get');
+        const appUri = await ctx.call('app.getUri');
         const containerUri = await this.actions.getContainerUri({}, { parentCtx: ctx });
-        const dataOwner = await ctx.call('webid.getUri');
 
         const filteredContainer = await this.actions.list(
           {
             containerUri,
             filters: {
               'http://www.w3.org/ns/solid/interop#registeredShapeTree': shapeTreeUri,
-              'http://www.w3.org/ns/solid/interop#dataOwner': dataOwner,
-              'http://www.w3.org/ns/solid/interop#grantee': app.id
+              'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
+              'http://www.w3.org/ns/solid/interop#grantee': appUri
             },
             webId: 'system'
           },
@@ -42,13 +43,13 @@ const AccessGrantsSchema = {
       async handler(ctx: any) {
         const { podOwner } = ctx.params;
 
-        const app = await ctx.call('app.get');
+        const appUri = await ctx.call('app.getUri');
 
         const container = await this.actions.list(
           {
             filters: {
               'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
-              'http://www.w3.org/ns/solid/interop#grantee': app.id
+              'http://www.w3.org/ns/solid/interop#grantee': appUri
             }
           },
           { parentCtx: ctx }
@@ -63,7 +64,7 @@ const AccessGrantsSchema = {
             this.logger.info(
               `Deleting cached access grant ${accessGrant.id} as it is not linked anymore with an existing access need...`
             );
-            await this.actions.delete({ resourceUri: accessGrant.id, webId: podOwner });
+            await this.actions.delete({ resourceUri: accessGrant.id, webId: podOwner }, { parentCtx: ctx });
           }
         }
       }

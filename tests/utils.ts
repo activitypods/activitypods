@@ -1,12 +1,7 @@
 import fetch from 'node-fetch';
-import { ServiceBroker, ActionParamSchema, CallingOptions } from 'moleculer';
 import { delay } from '@semapps/ldp';
-import { Account } from '@semapps/auth';
 import * as CONFIG from './config.ts';
-
-type FetchOptions = Omit<fetch.RequestInit, 'body'> & {
-  body?: ArrayBuffer | ArrayBufferView | ReadableStream | string | URLSearchParams | FormData | object;
-};
+import { FetchOptions } from './utilTypes.js';
 
 const arrayOf = (value: any) => {
   // If the field is null-ish, we suppose there are no values.
@@ -130,49 +125,6 @@ const tryUntilTimeout = async (fn: any, maxWait = 5000, waitBetween = 50) => {
       }
     }
   });
-};
-
-export const createAccount = async (broker: ServiceBroker, username: string) => {
-  const { webId }: Account = await broker.call('auth.account.create', { username });
-
-  const callAsUser = (actionName: string, params: ActionParamSchema = {}, options: CallingOptions = {}) =>
-    broker.call(actionName, params, { ...options, meta: { ...options.meta, webId, dataset: username } });
-
-  const baseUrl = await broker.call('solid-storage.getBaseUrl', { username });
-
-  const token = await broker.call('auth.jwt.generateServerSignedToken', { payload: { webId } });
-
-  const fetchAsUser = async (url: string, options: FetchOptions = {}) => {
-    let headers;
-    if (options.headers) {
-      headers = options.headers;
-      headers.set('Authorization', `Bearer ${token}`);
-    } else {
-      headers = new fetch.Headers({ Authorization: `Bearer ${token}` });
-    }
-    return fetchServer(url, { ...options, headers });
-  };
-
-  const actor: any = await callAsUser('activitypub.actor.awaitCreateComplete', {
-    actorUri: webId,
-    additionalKeys: [
-      'pim:storage',
-      'solid:oidcIssuer',
-      'solid:publicTypeIndex',
-      'interop:hasAuthorizationAgent',
-      'interop:hasRegistrySet'
-    ]
-  });
-
-  return {
-    webId,
-    token,
-    baseUrl,
-    username,
-    call: callAsUser,
-    fetch: fetchAsUser,
-    ...actor
-  };
 };
 
 export { arrayOf, fetchServer, fetchMails, clearMails, waitForResource, tryUntilTimeout };

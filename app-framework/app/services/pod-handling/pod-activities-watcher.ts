@@ -18,55 +18,9 @@ const queueOptions =
 
 const PodActivitiesWatcherSchema = {
   name: 'pod-activities-watcher' as const,
-  dependencies: ['triplestore', 'ldp', 'activitypub.actor', 'solid-notifications.listener'],
+  dependencies: ['ldp'],
   async started() {
-    const nodes = await this.broker.call('triplestore.query', {
-      query: `
-        SELECT DISTINCT ?specialRights ?actorUri
-        WHERE { 
-          ?appRegistration a <http://www.w3.org/ns/solid/interop#ApplicationRegistration> .
-          ?appRegistration <http://activitypods.org/ns/core#hasSpecialRights> ?specialRights .
-          ?appRegistration <http://www.w3.org/ns/solid/interop#registeredBy> ?actorUri
-        }
-      `,
-      accept: MIME_TYPES.JSON,
-      webId: 'system'
-    });
-
-    // On (re)start, delete existing queue
-    this.getQueue('registerListener').clean(0);
-    this.getQueue('registerListener').clean(0, 'failed');
-    this.getQueue('registerListener').empty();
-
-    for (const { actorUri, specialRights } of nodes) {
-      try {
-        switch (specialRights.value) {
-          case 'http://activitypods.org/ns/core#ReadInbox':
-            this.createJob(
-              'registerListener',
-              actorUri.value + ' inbox',
-              { actorUri: actorUri.value, collectionPredicate: 'inbox' },
-              queueOptions
-            );
-            break;
-
-          case 'http://activitypods.org/ns/core#ReadOutbox':
-            this.createJob(
-              'registerListener',
-              actorUri.value + ' outbox',
-              { actorUri: actorUri.value, collectionPredicate: 'outbox' },
-              queueOptions
-            );
-            break;
-        }
-      } catch (e) {
-        // @ts-expect-error TS(2339): Property 'logger' does not exist on type 'void'.
-        this.logger.warn(`Could not listen to actor ${actorUri.value}. Error message: ${e.message}`);
-      }
-    }
-
     this.handlers = [];
-
     this.baseUrl = await this.broker.call('ldp.getBaseUrl');
   },
   actions: {
@@ -100,11 +54,7 @@ const PodActivitiesWatcherSchema = {
           if (resourceUri.startsWith(this.baseUrl)) {
             try {
               // TODO Do not throw errors on ldp.resource.get ! (should be done on the API layer)
-              const resource = await ctx.call('ldp.resource.get', {
-                resourceUri,
-                accept: MIME_TYPES.JSON,
-                webId: actorUri
-              });
+              const resource = await ctx.call('ldp.resource.get', { resourceUri, webId: actorUri });
               return resource; // First get the resource, then return it, otherwise the try/catch will not work
             } catch (e) {
               // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
@@ -158,6 +108,55 @@ const PodActivitiesWatcherSchema = {
                 });
               }
             }
+          }
+        }
+      }
+    },
+
+    registerAllListeners: {
+      async handler(ctx: any) {
+        const nodes = await ctx.call('triplestore.query', {
+          query: `
+            SELECT DISTINCT ?specialRights ?actorUri
+            WHERE { 
+              ?appRegistration a <http://www.w3.org/ns/solid/interop#ApplicationRegistration> .
+              ?appRegistration <http://activitypods.org/ns/core#hasSpecialRights> ?specialRights .
+              ?appRegistration <http://www.w3.org/ns/solid/interop#registeredBy> ?actorUri
+            }
+          `,
+          accept: MIME_TYPES.JSON,
+          webId: 'system'
+        });
+
+        // On (re)start, delete existing queue
+        this.getQueue('registerListener').clean(0);
+        this.getQueue('registerListener').clean(0, 'failed');
+        this.getQueue('registerListener').empty();
+
+        for (const { actorUri, specialRights } of nodes) {
+          try {
+            switch (specialRights.value) {
+              case 'http://activitypods.org/ns/core#ReadInbox':
+                this.createJob(
+                  'registerListener',
+                  actorUri.value + ' inbox',
+                  { actorUri: actorUri.value, collectionPredicate: 'inbox' },
+                  queueOptions
+                );
+                break;
+
+              case 'http://activitypods.org/ns/core#ReadOutbox':
+                this.createJob(
+                  'registerListener',
+                  actorUri.value + ' outbox',
+                  { actorUri: actorUri.value, collectionPredicate: 'outbox' },
+                  queueOptions
+                );
+                break;
+            }
+          } catch (e) {
+            // @ts-expect-error TS(2339): Property 'logger' does not exist on type 'void'.
+            this.logger.warn(`Could not listen to actor ${actorUri.value}. Error message: ${e.message}`);
           }
         }
       }

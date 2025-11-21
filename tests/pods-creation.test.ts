@@ -2,8 +2,7 @@ import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
 import { ServiceBroker } from 'moleculer';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { connectPodProvider, clearAllData } from './initialize.ts';
-import { createAccount } from './utils.ts';
+import { connectPodProvider, clearAllData, createAccount } from './initialize.ts';
 
 jest.setTimeout(50000);
 
@@ -98,8 +97,7 @@ describe('Test pods creation', () => {
         '@context': 'https://activitypods.org/context.json',
         type: 'pair:Project',
         'pair:label': 'ActivityPods'
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
     await expect(alice.call('ldp.resource.get', { resourceUri: projectUri })).resolves.toMatchObject({

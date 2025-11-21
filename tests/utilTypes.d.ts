@@ -4,3 +4,7 @@ export declare async function waitForResource<T>(
   maxTries: number,
   callback: () => T
 ): T;
+
+export type FetchOptions = Omit<fetch.RequestInit, 'body'> & {
+  body?: ArrayBuffer | ArrayBufferView | ReadableStream | string | URLSearchParams | FormData | object;
+};

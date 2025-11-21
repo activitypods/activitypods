@@ -1,9 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import urlJoin from 'url-join';
-import { connectPodProvider, clearAllData } from './initialize.ts';
+import { connectPodProvider, clearAllData, createAccount } from './initialize.ts';
 jest.setTimeout(80_000);
-const NUM_PODS = 2;
 
 describe('Delete an actor', () => {
   let actors: any = [],
@@ -16,39 +14,11 @@ describe('Delete an actor', () => {
 
     podProvider = await connectPodProvider();
 
-    for (let i = 1; i <= NUM_PODS; i++) {
-      const actorData = require(`./data/actor${i}.json`);
-      const { webId, token } = await podProvider.call('auth.signup', actorData);
-      actors[i] = await podProvider.call(
-        'activitypub.actor.awaitCreateComplete',
-        {
-          actorUri: webId,
-          additionalKeys: ['url']
-        },
-        { meta: { dataset: actorData.username } }
-      );
-      actors[i].token = token;
-      actors[i].call = (actionName: any, params: any, options = {}) =>
-        podProvider.call(actionName, params, {
-          ...options,
-          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
-        });
-
-      await fetch(urlJoin(webId, 'data'), {
-        headers: {
-          'content-type': 'text/plain',
-          authorization: `Bearer ${token}`
-        },
-        method: 'POST',
-        body: 'This is just a plain non-rdf file.'
-      });
-    }
-
     // Create backups.
     // await broker.call('backup.backupDatasets');
 
-    alice = actors[1];
-    bob = actors[2];
+    alice = await createAccount(podProvider, 'alice');
+    bob = await createAccount(podProvider, 'bob');
   }, 80_000);
 
   afterAll(async () => {

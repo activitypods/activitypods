@@ -1,8 +1,9 @@
 import { Readable } from 'stream';
 import { FormData } from 'formdata-node';
+import { getDatasetFromUri } from '@semapps/ldp';
+import { ServiceSchema } from 'moleculer';
 import { FormDataEncoder } from 'form-data-encoder';
 import { stream2buffer } from '../utils.ts';
-import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   actions: {
@@ -10,7 +11,7 @@ const Schema = {
       async handler(ctx: any) {
         let { url, method = 'GET', headers = {}, body, actorUri } = ctx.params;
 
-        const app = await ctx.call('app.get');
+        const appUri = await ctx.call('app.getUri');
 
         if (this.isLocal(url, actorUri)) {
           const res = await ctx.call('signature.proxy.query', {
@@ -18,7 +19,7 @@ const Schema = {
             method,
             headers,
             body,
-            actorUri: app.id || app['@id']
+            actorUri: appUri
           });
           if (res.status >= 400) {
             this.logger.warn(
@@ -56,7 +57,7 @@ const Schema = {
             method: 'POST',
             headers: encoder.headers,
             body: await stream2buffer(Readable.from(encoder)),
-            actorUri: app.id || app['@id']
+            actorUri: appUri
           });
           if (res.status >= 400) {
             this.logger.warn(
@@ -71,12 +72,14 @@ const Schema = {
   methods: {
     // Return true if the resource is on the Pod of the actor
     isLocal(url, podOwner) {
-      const { origin, pathname } = new URL(podOwner);
-      const aclBase = `${origin}/_acl${pathname}`; // URL of type http://localhost:3000/_acl/alice
-      const aclGroupBase = `${origin}/_groups${pathname}`; // URL of type http://localhost:3000/_groups/alice
+      const { origin } = new URL(podOwner);
+      const dataset = getDatasetFromUri(podOwner);
+      const baseUrl = `${origin}/${dataset}`; // URL of type http://localhost:3000/alice
+      const aclBase = `${origin}/_acl/${dataset}`; // URL of type http://localhost:3000/_acl/alice
+      const aclGroupBase = `${origin}/_groups/${dataset}`; // URL of type http://localhost:3000/_groups/alice
       return (
-        url === podOwner ||
-        url.startsWith(podOwner + '/') ||
+        url === baseUrl ||
+        url.startsWith(baseUrl + '/') ||
         url === aclBase ||
         url.startsWith(aclBase + '/') ||
         url === aclGroupBase ||

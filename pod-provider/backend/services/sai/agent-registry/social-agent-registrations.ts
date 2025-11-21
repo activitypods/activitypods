@@ -8,6 +8,7 @@ import { ServiceSchema } from 'moleculer';
 
 const SocialAgentRegistrationsSchema = {
   name: 'social-agent-registrations' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; types: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin, AgentRegistrationsMixin, ActivitiesHandlerMixin],
   settings: {
     types: ['interop:SocialAgentRegistration'],

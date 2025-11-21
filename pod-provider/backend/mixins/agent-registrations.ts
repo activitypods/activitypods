@@ -10,9 +10,9 @@ const AgentRegistrationsMixin = {
   actions: {
     getForAgent: {
       async handler(ctx: any) {
-        const { agentUri } = ctx.params;
+        const { agentUri, podOwner } = ctx.params;
 
-        const podOwner = await ctx.call('webid.getUri');
+        // const podOwner = await ctx.call('webid.getUri');
 
         const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
 
@@ -178,8 +178,6 @@ const AgentRegistrationsMixin = {
   hooks: {
     after: {
       async post(ctx, res) {
-        const webId = ctx.params.resource['interop:registeredBy'];
-
         // Add the agent registration to the agent registry
         await ctx.call('agent-registry.add', {
           agentRegistrationUri: res,

@@ -14,7 +14,10 @@ const Schema = {
     post: {
       async handler(ctx: any) {
         if (!ctx.params.containerUri) {
-          ctx.params.containerUri = await this.actions.getContainerUri({}, { parentCtx: ctx });
+          ctx.params.containerUri = await this.actions.getContainerUri(
+            { actorUri: ctx.params.actorUri },
+            { parentCtx: ctx }
+          );
         }
         return await ctx.call('pod-resources.post', ctx.params);
       }
@@ -23,7 +26,10 @@ const Schema = {
     list: {
       async handler(ctx: any) {
         if (!ctx.params.containerUri) {
-          ctx.params.containerUri = await this.actions.getContainerUri({}, { parentCtx: ctx });
+          ctx.params.containerUri = await this.actions.getContainerUri(
+            { actorUri: ctx.params.actorUri },
+            { parentCtx: ctx }
+          );
         }
         return await ctx.call('pod-resources.list', ctx.params);
       }
@@ -55,7 +61,10 @@ const Schema = {
 
     getContainerUri: {
       async handler(ctx: any) {
-        return await ctx.call('access-grants.getContainerByShapeTree', { shapeTreeUri: this.settings.shapeTreeUri });
+        return await ctx.call('access-grants.getContainerByShapeTree', {
+          shapeTreeUri: this.settings.shapeTreeUri,
+          podOwner: ctx.params.actorUri
+        });
       }
     }
   },

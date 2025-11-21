@@ -18,6 +18,7 @@
     "@semapps/nodeinfo": "1.2.0",
     "@semapps/ontologies": "1.2.0",
     "@semapps/webacl": "1.2.0",
+    "@semapps/webid": "1.2.0",
     "form-data-encoder": "1.9.0",
     "formdata-node": "4.4.1",
     "handlebars": "^4.7.7",

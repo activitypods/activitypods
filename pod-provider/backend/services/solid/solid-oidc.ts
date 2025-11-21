@@ -1,5 +1,4 @@
 import path from 'path';
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'iore... Remove this comment to see the full error message
 import Redis from 'ioredis';
 import { delay } from '@semapps/ldp';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
@@ -21,6 +20,9 @@ const SolidOidcSchema = {
   },
   dependencies: ['jwk', 'api'],
   async started() {
+    // Do not launch the OIDC Provider in test, as it is not needed and take a long time to start
+    if (process.env.NODE_ENV === 'test') return;
+
     // Dynamically import Provider since it's an ESM module
     // @ts-expect-error TS(7016): Could not find a declaration file for module 'oidc... Remove this comment to see the full error message
     const { default: Provider } = await import('oidc-provider');

@@ -1,6 +1,7 @@
 import urlJoin from 'url-join';
 import { AppService } from '../../app-framework/app/index.ts';
 import * as CONFIG from '../config.ts';
+import { ServiceSchema } from 'moleculer';
 
 const Schema = {
   mixins: [AppService],
@@ -32,6 +33,6 @@ const Schema = {
       ]
     }
   }
-};
+} satisfies Partial<ServiceSchema>;
 
 export default Schema;

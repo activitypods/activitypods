@@ -3,7 +3,7 @@ import { ServiceSchema } from 'moleculer';
 /**
  * Load the types associated with the shape tree
  */
-const Schema = {
+const ShapeTreeFetcherMixin = {
   settings: {
     shapeTreeUri: null,
     type: null
@@ -24,10 +24,9 @@ const Schema = {
         context: localContext
       });
 
-      // @ts-expect-error TS(2339): Property 'settings' does not exist on type 'void'.
       this.settings.type = compactJson.type;
     }
   }
 } satisfies Partial<ServiceSchema>;
 
-export default Schema;
+export default ShapeTreeFetcherMixin;

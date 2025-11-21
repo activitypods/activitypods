@@ -7,6 +7,7 @@ import { arraysEqual } from '../../../utils.ts';
 
 const DelegatedAccessGrantsSchema = {
   name: 'delegated-access-grants' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; types: nul... Remove this comment to see the full error message
   mixins: [ImmutableContainerMixin, ControlledContainerMixin, AccessGrantsMixin],
   settings: {
     types: ['interop:DelegatedAccessGrant'],
@@ -68,7 +69,7 @@ const DelegatedAccessGrantsSchema = {
         }
 
         // Now the delegated grant has been created and validated, store it locally
-        delegatedGrant = await ctx.call('ldp.remote.store', { resourceUri: delegatedGrantUri, webId });
+        delegatedGrant = await ctx.call('ldp.remote.store', { resourceUri: delegatedGrantUri });
         await this.actions.attach({ resourceUri: delegatedGrantUri, webId }, { parentCtx: ctx });
 
         // Attach it to the agent registration

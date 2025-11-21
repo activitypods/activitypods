@@ -84,23 +84,22 @@ const DataRegistrySchema = {
       }
     }
   },
-  hooks: {
-    after: {
-      async create(ctx, res) {
-        // Attach the registry to the registry set
-        const registrySetUri = await ctx.call('registry-set.getUri');
-        await ctx.call('registry-set.patch', {
+  events: {
+    'registry-set.created': {
+      async handler(ctx: any) {
+        const { resourceUri: registrySetUri } = ctx.params;
+        const dataRegistryUri = await this.actions.waitForCreation({}, { parentCtx: ctx });
+        await ctx.call('ldp.resource.patch', {
           resourceUri: registrySetUri,
           triplesToAdd: [
             rdf.quad(
               rdf.namedNode(registrySetUri),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasDataRegistry'),
-              rdf.namedNode(res.resourceUri)
+              rdf.namedNode(dataRegistryUri)
             )
           ],
           webId: 'system'
         });
-        return res;
       }
     }
   }

@@ -58,23 +58,22 @@ const AuthRegistryService = {
       }
     }
   },
-  hooks: {
-    after: {
-      async create(ctx, res) {
-        // Attach the registry to the registry set
-        const registrySetUri = await ctx.call('registry-set.getUri');
-        await ctx.call('registry-set.patch', {
+  events: {
+    'registry-set.created': {
+      async handler(ctx: any) {
+        const { resourceUri: registrySetUri } = ctx.params;
+        const authRegistryUri = await this.actions.waitForCreation({}, { parentCtx: ctx });
+        await ctx.call('ldp.resource.patch', {
           resourceUri: registrySetUri,
           triplesToAdd: [
             rdf.quad(
               rdf.namedNode(registrySetUri),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAuthorizationRegistry'),
-              rdf.namedNode(res.resourceUri)
+              rdf.namedNode(authRegistryUri)
             )
           ],
           webId: 'system'
         });
-        return res;
       }
     }
   }

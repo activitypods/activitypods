@@ -6,9 +6,10 @@ import { ServiceSchema } from 'moleculer';
 
 const AccessNeedsGroupsSchema = {
   name: 'access-needs-groups' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
-    // ControlledContainerMixin settings
+    path: '/access-needs-groups',
     types: ['interop:AccessNeedGroup'],
     activateTombstones: false
   },
@@ -32,7 +33,7 @@ const AccessNeedsGroupsSchema = {
         for (const [necessity, accessNeeds] of Object.entries(accessNeedsByNecessity)) {
           let newAccessNeedsUris = [];
 
-          const existingAccessNeedGroup = await this.actions.findByNecessity({ necessity });
+          const existingAccessNeedGroup = await this.actions.findByNecessity({ necessity }, { parentCtx: ctx });
 
           // @ts-expect-error TS(18046): 'accessNeeds' is of type 'unknown'.
           if (accessNeeds.length > 0) {
@@ -176,11 +177,11 @@ const AccessNeedsGroupsSchema = {
   hooks: {
     after: {
       async post(ctx, res) {
-        await ctx.call('actors.attachAccessNeedGroup', { accessNeedGroupUri: res });
+        await ctx.call('app.attachAccessNeedGroup', { accessNeedGroupUri: res });
         return res;
       },
       async delete(ctx, res) {
-        await ctx.call('actors.detachAccessNeedGroup', { accessNeedGroupUri: ctx.params.resourceUri });
+        await ctx.call('app.detachAccessNeedGroup', { accessNeedGroupUri: ctx.params.resourceUri });
         return res;
       }
     }

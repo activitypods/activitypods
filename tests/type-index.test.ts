@@ -19,8 +19,7 @@ describe('Test type indexes creation', () => {
   });
 
   test('Public TypeIndex has been created', async () => {
-    const aliceData = await alice.call('ldp.resource.get', { resourceUri: alice.id });
-    expect(aliceData['solid:publicTypeIndex']).not.toBeNull();
+    expect(alice['solid:publicTypeIndex']).not.toBeNull();
 
     // TypeRegistrations take time to be populated
     // @ts-expect-error This expression is not callable

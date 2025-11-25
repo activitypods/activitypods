@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import { ActionParamSchema, CallingOptions } from 'moleculer';
 
 export declare function waitForResource<T>(
   ms: number,

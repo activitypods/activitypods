@@ -1,4 +1,3 @@
-import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
 import { ServiceBroker } from 'moleculer';
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
@@ -53,7 +52,7 @@ describe('Test contacts features', () => {
           subject: 'Alice would like to connect with you'
         })
       );
-    }, 80_000);
+    }, 50_000);
 
     // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
@@ -318,7 +317,7 @@ describe('Test contacts features', () => {
         afterEq: new URL(outboxMenu?.first).searchParams.get('afterEq')
       });
 
-      await expect(arrayOf(outbox.orderedItems)[0]).toMatchObject({
+      expect(arrayOf(outbox.orderedItems)[0]).toMatchObject({
         type: ACTIVITY_TYPES.ACCEPT,
         object: activity.id,
         actor: alice.id,

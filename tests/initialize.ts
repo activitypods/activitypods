@@ -1,6 +1,8 @@
 import Redis from 'ioredis';
 import fetch from 'node-fetch';
+import rdf from '@rdfjs/data-model';
 import { ServiceBroker, ActionParamSchema, CallingOptions } from 'moleculer';
+import { delay } from '@semapps/ldp';
 import { Account, AuthAccountService } from '@semapps/auth';
 import { CoreService as SemAppsCoreService } from '@semapps/core';
 import { NodeinfoService } from '@semapps/nodeinfo';
@@ -13,9 +15,10 @@ import RdfJSONSerializer from '../pod-provider/backend/RdfJSONSerializer.ts';
 import { fetchServer, clearMails } from './utils.ts';
 import { FetchOptions, TestActor, TestApp } from './utilTypes.js';
 import * as CONFIG from './config.ts';
-import { delay } from '@semapps/ldp';
 
 Error.stackTraceLimit = Infinity;
+
+const capitalize = ([first, ...rest]: string) => first.toUpperCase() + rest.join('').toLowerCase();
 
 const logger = {
   type: 'Console',
@@ -212,7 +215,7 @@ export const getTestApp = async (broker: ServiceBroker): Promise<TestApp> => {
 };
 
 export const createTestActor = async (broker: ServiceBroker, username: string): Promise<TestActor> => {
-  const { webId }: Account = await broker.call('auth.account.create', { username });
+  const { webId }: Account = await broker.call('auth.account.create', { username, email: `${username}@test.com` });
 
   const callAsUser = (actionName: string, params: ActionParamSchema = {}, options: CallingOptions = {}) =>
     broker.call(actionName, params, { ...options, meta: { ...options.meta, webId, dataset: username } });
@@ -244,11 +247,29 @@ export const createTestActor = async (broker: ServiceBroker, username: string): 
   const actor: any = await callAsUser('activitypub.actor.awaitCreateComplete', {
     actorUri: webId,
     additionalKeys: [
+      'url',
       'pim:storage',
       'solid:oidcIssuer',
       'solid:publicTypeIndex',
       'interop:hasAuthorizationAgent',
       'interop:hasRegistrySet'
+    ]
+  });
+
+  // Add a name to the profile
+  await callAsUser('ldp.resource.patch', {
+    resourceUri: actor.url,
+    triplesToAdd: [
+      rdf.quad(
+        rdf.namedNode(actor.url),
+        rdf.namedNode('http://www.w3.org/2006/vcard/ns#fn'),
+        rdf.literal(capitalize(username))
+      ),
+      rdf.quad(
+        rdf.namedNode(actor.url),
+        rdf.namedNode('http://www.w3.org/2006/vcard/ns#given-name'),
+        rdf.literal(capitalize(username))
+      )
     ]
   });
 

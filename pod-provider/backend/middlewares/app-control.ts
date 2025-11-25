@@ -3,7 +3,6 @@ import { Errors as E } from 'moleculer-web';
 import { Middleware } from 'moleculer';
 import { arrayOf, getId, getType, hasType } from '@semapps/ldp';
 import { FULL_ACTIVITY_TYPES, FULL_ACTOR_TYPES } from '@semapps/activitypub';
-import { MIME_TYPES } from '@semapps/mime-types';
 
 const DEFAULT_ALLOWED_TYPES = [
   ...Object.values(FULL_ACTOR_TYPES),
@@ -69,7 +68,7 @@ const AppControlMiddleware = ({ baseUrl }: { baseUrl: string }): Middleware => (
         }
 
         // Ensure we are fetching remote data (otherwise this could be a security issue)
-        if (url.startsWith(podOwner)) {
+        if (!(await ctx.call('ldp.remote.isRemote', { resourceUri: url }))) {
           throw new E.ForbiddenError(`The proxy cannot be used to fetch local data`);
         }
 
@@ -184,7 +183,6 @@ const AppControlMiddleware = ({ baseUrl }: { baseUrl: string }): Middleware => (
             try {
               const resource = await ctx.call('ldp.resource.get', {
                 resourceUri: getId(activity.object),
-                accept: MIME_TYPES.JSON,
                 webId: 'system'
               });
 

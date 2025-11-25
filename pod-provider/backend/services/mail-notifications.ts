@@ -86,7 +86,7 @@ const MailNotificationsSchema = {
       match: {
         type: 'apods:Notification'
       },
-      async onReceive(ctx: any, activity: any, recipientUri: any) {
+      async onReceive(ctx: any, activity: any, recipientUri: string) {
         // TODO Allow to user to disable notifications from given applications
         // if (!(await ctx.call('app-registrations.isRegistered', { agentUri: activity.actor, podOwner: recipientUri }))) {
         //   this.logger.warn(`Application ${activity.actor} is not registered by ${recipientUri}`);

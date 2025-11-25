@@ -1,10 +1,9 @@
 import path from 'path';
-import urlJoin from 'url-join';
-import { arrayOf, getDatasetFromUri } from '@semapps/ldp';
-import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
+import { arrayOf, getDatasetFromUri, getType } from '@semapps/ldp';
+import { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
-import matchActivity from '@semapps/activitypub/utils/matchActivity';
 import { ServiceSchema } from 'moleculer';
+import { TypeRegistration } from '@semapps/solid';
 
 const getAnnouncesGroupUri = (eventUri: any) => {
   const uri = new URL(eventUri);
@@ -20,6 +19,7 @@ const getAnnouncersGroupUri = (eventUri: any) => {
 
 const AnnouncerSchema = {
   name: 'announcer' as const,
+  // @ts-expect-error
   mixins: [ActivitiesHandlerMixin],
   settings: {
     announcesCollectionOptions: {
@@ -260,7 +260,7 @@ const AnnouncerSchema = {
       /**
        * On receipt of an announce activity, cache locally the announced object
        */
-      async onReceive(ctx: any, activity: any, recipientUri: string) {
+      async onReceive(ctx: any, activity: any) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
         // Sometimes a recipient may be the original announcer
@@ -269,45 +269,33 @@ const AnnouncerSchema = {
           // Get the latest version of the resource and store it locally
           const resource = await ctx.call('ldp.remote.store', { resourceUri });
 
-          const expandedTypes = await ctx.call('jsonld.parser.expandTypes', {
-            types: resource['@type'] || resource.type
+          const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: getType(resource) });
+
+          const typeRegistration: TypeRegistration = await ctx.call('type-index.getByType', {
+            type: expandedType,
+            isContainer: true
           });
 
-          // Go through all the resource's types and attach it to the corresponding container
-          for (const expandedType of expandedTypes) {
-            let containersUris = await ctx.call('type-index.getContainersUris', {
-              type: expandedType,
-              webId: recipientUri
+          let containerUri = typeRegistration?.uri;
+
+          // If no container exist yet for this type, create it and register it in the TypeIndex
+          if (!containerUri) {
+            // Create the container and attach it to the storage's root container
+            containerUri = await ctx.call('ldp.container.create');
+            const rootContainerUri = await ctx.call('solid-storage.getRootContainerUri');
+            await ctx.call('ldp.container.attach', { containerUri: rootContainerUri, resourceUri: containerUri });
+
+            // If the resource type is invalid, an error will be thrown here
+            await ctx.call('type-index.register', {
+              types: [expandedType],
+              uri: containerUri,
+              isContainer: true,
+              isPrivate: false
             });
-
-            // If no container exist yet for this type, create it and register it in the TypeIndex
-            if (containersUris.length === 0) {
-              // Generate a path for the new container
-              const containerPath = await ctx.call('ldp.container.getPath', { resourceType: expandedType });
-              // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
-              this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${expandedType}`);
-
-              // Create the container and attach it to its parent(s)
-              const podUrl = await ctx.call('solid-storage.getBaseUrl', { webId: recipientUri });
-              containersUris[0] = urlJoin(podUrl, containerPath);
-              await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId: recipientUri });
-
-              // If the resource type is invalid, an error will be thrown here
-              await ctx.call('type-index.register', {
-                types: [expandedType],
-                containerUri: containersUris[0],
-                webId: recipientUri
-              });
-            }
-
-            for (const containerUri of containersUris) {
-              await ctx.call('ldp.container.attach', {
-                containerUri,
-                resourceUri,
-                webId: recipientUri
-              });
-            }
           }
+
+          // Attach the resource to the container
+          await ctx.call('ldp.container.attach', { containerUri, resourceUri });
         }
       }
     }

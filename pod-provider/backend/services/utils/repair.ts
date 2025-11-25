@@ -108,7 +108,7 @@ const RepairSchema = {
 
         for (const { webId, username: dataset } of accounts) {
           ctx.meta.dataset = dataset;
-          const storageUrl = await ctx.call('solid-storage.getBaseUrl', { webId });
+          const storageUrl = await ctx.call('solid-storage.getBaseUrl');
 
           const registeredContainers = await ctx.call('ldp.registry.list');
           for (const container of Object.values(registeredContainers)) {

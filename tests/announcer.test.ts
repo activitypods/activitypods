@@ -5,6 +5,8 @@ import { OBJECT_TYPES, ACTIVITY_TYPES } from '@semapps/activitypub';
 import { connectPodProvider, createTestActor, clearAllData } from './initialize.ts';
 import * as CONFIG from './config.ts';
 import { TestActor } from './utilTypes.js';
+import { TypeRegistration } from '@semapps/solid';
+import { arrayOf } from '@semapps/ldp';
 
 jest.setTimeout(120000);
 
@@ -72,6 +74,31 @@ describe('Test sharing through announcer', () => {
         })
       ).resolves.toBeTruthy();
     });
+  });
+
+  test('Alice event is stored on a newly-created container in Bob storage', async () => {
+    let typeRegistration: TypeRegistration;
+
+    // @ts-expect-error This expression is not callable
+    await waitForExpect(async () => {
+      typeRegistration = await bob.call('type-index.getByType', {
+        type: OBJECT_TYPES.EVENT,
+        isContainer: true
+      });
+      expect(typeRegistration).toBeDefined();
+    });
+
+    const eventsContainer = await bob.call('ldp.container.get', { containerUri: typeRegistration!.uri });
+
+    expect(arrayOf(eventsContainer['ldp:contains'])).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: eventUri,
+          type: OBJECT_TYPES.EVENT,
+          name: 'Birthday party !!'
+        })
+      ])
+    );
   });
 
   test('Alice gives Bob delegation permission and he is added to the announcers collection', async () => {

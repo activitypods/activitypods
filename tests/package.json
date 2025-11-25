@@ -36,6 +36,7 @@
     "@babel/runtime": "^7.28.2",
     "@types/jest": "^30.0.0",
     "@types/node-fetch": "^2.6.6",
+    "@types/rdfjs__data-model": "^2.0.9",
     "babel-jest": "^30.0.5",
     "babel-plugin-transform-import-meta": "^2.3.3",
     "babel-preset-env": "^1.7.0",

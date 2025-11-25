@@ -1,7 +1,7 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'spea... Remove this comment to see the full error message
 import createSlug from 'speakingurl';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 import { ServiceSchema } from 'moleculer';
+import { getDatasetFromUri } from '@semapps/ldp';
 
 const PodWacGroupsSchema = {
   name: 'pod-wac-groups' as const,
@@ -11,13 +11,16 @@ const PodWacGroupsSchema = {
       async handler(ctx: any) {
         const { groupUri, groupSlug, actorUri } = ctx.params;
 
-        const { body, status } = await this.actions.fetch({
-          url: groupUri || this.getGroupUri(groupSlug, actorUri),
-          headers: {
-            Accept: 'application/ld+json'
+        const { body, status } = await this.actions.fetch(
+          {
+            url: groupUri || this.getGroupUri(groupSlug, actorUri),
+            headers: {
+              Accept: 'application/ld+json'
+            },
+            actorUri
           },
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
 
         return status === 200 ? body : false;
       }
@@ -26,11 +29,12 @@ const PodWacGroupsSchema = {
     list: {
       async handler(ctx: any) {
         const { actorUri } = ctx.params;
-        const { origin, pathname } = new URL(actorUri);
+        const { origin } = new URL(actorUri);
+        const dataset = getDatasetFromUri(actorUri);
 
         const { body, status } = await this.actions.fetch(
           {
-            url: `${origin}/_groups${pathname}`,
+            url: `${origin}/_groups/${dataset}`,
             headers: {
               Accept: 'application/ld+json'
             },
@@ -46,11 +50,12 @@ const PodWacGroupsSchema = {
     create: {
       async handler(ctx: any) {
         const { groupSlug, actorUri } = ctx.params;
-        const { origin, pathname } = new URL(actorUri);
+        const { origin } = new URL(actorUri);
+        const dataset = getDatasetFromUri(actorUri);
 
         const { status, statusText, headers } = await this.actions.fetch(
           {
-            url: `${origin}/_groups${pathname}`,
+            url: `${origin}/_groups/${dataset}`,
             method: 'POST',
             headers: {
               Slug: groupSlug
@@ -141,10 +146,11 @@ const PodWacGroupsSchema = {
   methods: {
     // Return URL like http://localhost:3000/_groups/alice/contacts
     getGroupUri(groupSlug, podOwner) {
-      const { origin, pathname } = new URL(podOwner);
+      const { origin } = new URL(podOwner);
+      const dataset = getDatasetFromUri(podOwner);
       // Slugify with the same parameters as the webacl.group.create action
       groupSlug = createSlug(groupSlug, { lang: 'fr', custom: { '.': '.', '/': '/' } });
-      return `${origin}/_groups${pathname}/${groupSlug}`;
+      return `${origin}/_groups/${dataset}/${groupSlug}`;
     }
   }
 } satisfies ServiceSchema;

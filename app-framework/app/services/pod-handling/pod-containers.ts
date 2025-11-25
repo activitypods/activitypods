@@ -1,11 +1,11 @@
 import sparqljsModule from 'sparqljs';
 const SparqlGenerator = sparqljsModule.Generator;
-import rdf from '@rdfjs/data-model';
-import { arrayOf, isURL } from '@semapps/ldp';
-import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 import { ServiceSchema } from 'moleculer';
+import rdf from '@rdfjs/data-model';
+import { arrayOf, hasType } from '@semapps/ldp';
+import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 
-const PodContainersSchema = {
+const PodContainersService = {
   name: 'pod-containers' as const,
   mixins: [FetchPodOrProxyMixin],
   started() {
@@ -24,18 +24,16 @@ const PodContainersSchema = {
         actorUri: { type: 'string', optional: false }
       },
       async handler(ctx: any) {
-        const { type } = ctx.params;
+        const { type, actorUri } = ctx.params;
 
         const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: [type] });
 
         const { body: actor } = await this.actions.fetch(
           {
-            // @ts-expect-error TS(2304): Cannot find name 'actorUri'.
             url: actorUri,
             headers: {
               'Content-Type': 'application/ld+json'
             },
-            // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
             actorUri
           },
           { parentCtx: ctx }
@@ -48,31 +46,16 @@ const PodContainersSchema = {
               headers: {
                 'Content-Type': 'application/ld+json'
               },
-              // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
               actorUri
             },
             { parentCtx: ctx }
           );
 
           // Go through all TypeRegistration
-          for (let registration of arrayOf(typeIndex['solid:hasTypeRegistration'])) {
-            // If the TypeRegistration has not been dereferenced, do it
-            if (isURL(registration)) {
-              ({ body: registration } = await this.actions.fetch(
-                {
-                  url: registration,
-                  headers: {
-                    'Content-Type': 'application/ld+json'
-                  },
-                  // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
-                  actorUri
-                },
-                { parentCtx: ctx }
-              ));
-            }
-
+          for (let registration of arrayOf(typeIndex['@graph']).filter(n => hasType(n, 'solid:TypeRegistration'))) {
             const expandedRegisteredTypes = await ctx.call('jsonld.parser.expandTypes', {
-              types: registration['solid:forClass']
+              types: registration['solid:forClass'],
+              context: typeIndex['@context']
             });
 
             if (expandedRegisteredTypes.includes(expandedType)) {
@@ -80,7 +63,6 @@ const PodContainersSchema = {
             }
           }
 
-          // @ts-expect-error TS(2304): Cannot find name 'actorUri'.
           throw new Error(`No container found for type ${expandedType} in the TypeIndex of ${actorUri}`);
         }
       }
@@ -178,12 +160,12 @@ const PodContainersSchema = {
   }
 } satisfies ServiceSchema;
 
-export default PodContainersSchema;
+export default PodContainersService;
 
 declare global {
   export namespace Moleculer {
     export interface AllServices {
-      [PodContainersSchema.name]: typeof PodContainersSchema;
+      [PodContainersService.name]: typeof PodContainersService;
     }
   }
 }

@@ -1,30 +1,43 @@
 import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
+import { ServiceBroker } from 'moleculer';
 import { OBJECT_TYPES } from '@semapps/activitypub';
-import { MIME_TYPES } from '@semapps/mime-types';
-import { connectPodProvider, clearAllData, createActor, initializeAppServer, installApp } from './initialize.ts';
+import {
+  connectPodProvider,
+  clearAllData,
+  createTestActor,
+  initializeAppServer,
+  installApp,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example3.app.ts';
 import * as CONFIG from './config.ts';
+import { TestActor, TestApp } from './utilTypes.js';
 
 jest.setTimeout(120000);
 
-const APP_SERVER_BASE_URL = 'http://localhost:3001';
-const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
-
 describe('Test SAI authorizer', () => {
-  let podProvider: any, appServer: any, alice: any, bob: any, craig: any, eventContainerUri: any, eventUri: any;
+  let podProvider: ServiceBroker,
+    appServer: ServiceBroker,
+    app: TestApp,
+    alice: TestActor,
+    bob: TestActor,
+    craig: TestActor,
+    eventContainerUri: string,
+    eventUri: string;
 
   beforeAll(async () => {
     clearAllData();
 
     podProvider = await connectPodProvider();
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
     await appServer.start();
+    app = await getTestApp(appServer);
 
-    alice = await createActor(podProvider, 'alice');
-    bob = await createActor(podProvider, 'bob');
-    craig = await createActor(podProvider, 'craig');
+    alice = await createTestActor(podProvider, 'alice');
+    bob = await createTestActor(podProvider, 'bob');
+    craig = await createTestActor(podProvider, 'craig');
   });
 
   afterAll(async () => {
@@ -44,8 +57,7 @@ describe('Test SAI authorizer', () => {
       resource: {
         type: OBJECT_TYPES.EVENT,
         name: 'Birthday party !!'
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
     await expect(
@@ -53,7 +65,7 @@ describe('Test SAI authorizer', () => {
         uri: eventContainerUri,
         type: 'container',
         mode: 'acl:Read',
-        webId: APP_URI
+        webId: app.id
       })
     ).resolves.toBeUndefined();
 
@@ -62,21 +74,22 @@ describe('Test SAI authorizer', () => {
         uri: eventUri,
         type: 'resource',
         mode: 'acl:Write',
-        webId: APP_URI
+        webId: app.id
       })
     ).resolves.toBeUndefined();
   });
 
   test('Registered app has access on all Alice events', async () => {
-    await installApp(alice, APP_URI);
+    await installApp(alice, app.id);
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         alice.call('sai.authorizer.hasPermission', {
           uri: eventContainerUri,
           type: 'container',
           mode: 'acl:Read',
-          webId: APP_URI
+          webId: app.id
         })
       ).resolves.toBeTruthy();
     });
@@ -87,7 +100,7 @@ describe('Test SAI authorizer', () => {
         uri: eventContainerUri,
         type: 'container',
         mode: 'acl:Append',
-        webId: APP_URI
+        webId: app.id
       })
     ).resolves.toBeTruthy();
 
@@ -96,7 +109,7 @@ describe('Test SAI authorizer', () => {
         uri: eventUri,
         type: 'resource',
         mode: 'acl:Read',
-        webId: APP_URI
+        webId: app.id
       })
     ).resolves.toBeTruthy();
 
@@ -105,7 +118,7 @@ describe('Test SAI authorizer', () => {
         uri: eventUri,
         type: 'resource',
         mode: 'acl:Write',
-        webId: APP_URI
+        webId: app.id
       })
     ).resolves.toBeTruthy();
   });
@@ -152,6 +165,7 @@ describe('Test SAI authorizer', () => {
   // Check the authorizer also handle correctly delegated grants
   test('Bob gives read access to Craig', async () => {
     // It takes a little longer for the new access grant to be attached to the container
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         bob.call('access-authorizations.addForSingleResource', {

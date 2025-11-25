@@ -134,6 +134,11 @@ const AppService = {
         return this.appUri;
       }
     },
+    getDataset: {
+      handler() {
+        return this.settings.username;
+      }
+    },
     createOrUpdate: {
       async handler(ctx: any) {
         const { username, accessNeeds } = this.settings;

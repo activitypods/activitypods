@@ -1,5 +1,4 @@
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
-import { MIME_TYPES } from '@semapps/mime-types';
 import { arraysEqual } from '../../utils.ts';
 import { necessityMapping } from '../../mappings.ts';
 import { ServiceSchema } from 'moleculer';
@@ -76,7 +75,6 @@ const AccessNeedsGroupsSchema = {
                     'interop:accessNecessity': necessityMapping[necessity],
                     'interop:preferredScope': accessNeed.preferredScope || 'interop:All'
                   },
-                  contentType: MIME_TYPES.JSON,
                   webId: 'system'
                 });
                 this.logger.info(`Created new access need ${newAccessNeedUri}`);
@@ -125,7 +123,6 @@ const AccessNeedsGroupsSchema = {
                     'interop:hasAccessNeed': newAccessNeedsUris,
                     'apods:hasSpecialRights': newSpecialRights
                   },
-                  contentType: MIME_TYPES.JSON,
                   webId: 'system'
                 },
                 {

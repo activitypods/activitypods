@@ -1,27 +1,34 @@
 import urlJoin from 'url-join';
+import { ServiceBroker } from 'moleculer';
 import waitForExpect from 'wait-for-expect';
 import { OBJECT_TYPES } from '@semapps/activitypub';
 import { arrayOf } from '@semapps/ldp';
-import { MIME_TYPES } from '@semapps/mime-types';
-import { connectPodProvider, clearAllData, createActor, initializeAppServer, installApp } from './initialize.ts';
+import {
+  connectPodProvider,
+  clearAllData,
+  initializeAppServer,
+  installApp,
+  createTestActor,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example3.app.ts';
 import * as CONFIG from './config.ts';
+import { TestActor, TestApp } from './utilTypes.js';
 
 jest.setTimeout(120000);
-const APP_SERVER_BASE_URL = 'http://localhost:3001';
-const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
 describe('Test resource sharing features', () => {
-  let podProvider: any,
-    appServer: any,
-    alice: any,
-    bob: any,
-    craig: any,
-    eventContainerUri: any,
-    eventUri: any,
-    event2Uri: any,
+  let podProvider: ServiceBroker,
+    appServer: ServiceBroker,
+    app: TestApp,
+    alice: TestActor,
+    bob: TestActor,
+    craig: TestActor,
+    eventContainerUri: string,
+    eventUri: string,
+    event2Uri: string,
     bobAppRegistration,
-    bobAppRegistrationUri: any,
+    bobAppRegistrationUri: string,
     aliceRegistrationForBob: any;
 
   beforeAll(async () => {
@@ -29,14 +36,15 @@ describe('Test resource sharing features', () => {
 
     podProvider = await connectPodProvider();
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
     await appServer.start();
+    app = await getTestApp(appServer);
 
-    alice = await createActor(podProvider, 'alice');
-    bob = await createActor(podProvider, 'bob');
-    craig = await createActor(podProvider, 'craig');
+    alice = await createTestActor(podProvider, 'alice');
+    bob = await createTestActor(podProvider, 'bob');
+    craig = await createTestActor(podProvider, 'craig');
 
-    bobAppRegistrationUri = await installApp(bob, APP_URI);
+    bobAppRegistrationUri = await installApp(bob, app.id);
   });
 
   afterAll(async () => {
@@ -56,8 +64,7 @@ describe('Test resource sharing features', () => {
       resource: {
         type: OBJECT_TYPES.EVENT,
         name: 'Birthday party !!'
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
   });
 
@@ -69,6 +76,7 @@ describe('Test resource sharing features', () => {
     });
 
     // Alice created a social agent registration for Bob
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       aliceRegistrationForBob = await alice.call('social-agent-registrations.getForAgent', {
         agentUri: bob.id,
@@ -81,6 +89,7 @@ describe('Test resource sharing features', () => {
     });
 
     // Bob created a reciprocal registration for Alice
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const bobRegistrationForAlice = await bob.call('social-agent-registrations.getForAgent', {
         agentUri: alice.id,
@@ -94,6 +103,7 @@ describe('Test resource sharing features', () => {
   });
 
   test('An authorization is created in Alice storage', async () => {
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const authorizations = await alice.call('access-authorizations.listForSingleResource', {
         resourceUri: eventUri
@@ -131,15 +141,11 @@ describe('Test resource sharing features', () => {
     });
 
     // Bob can fetch Alice event
-    await expect(
-      bob.call('ldp.resource.get', {
-        resourceUri: eventUri,
-        accept: MIME_TYPES.JSON
-      })
-    ).resolves.not.toThrow();
+    await expect(bob.call('ldp.resource.get', { resourceUri: eventUri })).resolves.not.toThrow();
   });
 
   test('A delegated grant is created by Bob AA for the application', async () => {
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       bobAppRegistration = await bob.call('app-registrations.get', {
         resourceUri: bobAppRegistrationUri
@@ -156,7 +162,7 @@ describe('Test resource sharing features', () => {
             type: 'interop:DelegatedAccessGrant',
             'interop:accessMode': 'acl:Read',
             'interop:dataOwner': alice.id,
-            'interop:grantee': APP_URI,
+            'interop:grantee': app.id,
             'interop:granteeType': 'interop:Application',
             'interop:grantedBy': bob.id,
             'interop:hasDataInstance': eventUri,
@@ -176,8 +182,9 @@ describe('Test resource sharing features', () => {
       accessModes: ['acl:Read']
     });
 
-    const craigAppRegistrationUri = await installApp(craig, APP_URI);
+    const craigAppRegistrationUri = await installApp(craig, app.id);
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const craigAppRegistration = await craig.call('app-registrations.get', {
         resourceUri: craigAppRegistrationUri
@@ -194,7 +201,7 @@ describe('Test resource sharing features', () => {
             type: 'interop:DelegatedAccessGrant',
             'interop:accessMode': 'acl:Read',
             'interop:dataOwner': alice.id,
-            'interop:grantee': APP_URI,
+            'interop:grantee': app.id,
             'interop:granteeType': 'interop:Application',
             'interop:grantedBy': craig.id,
             'interop:hasDataInstance': eventUri,
@@ -207,12 +214,7 @@ describe('Test resource sharing features', () => {
     });
 
     // Craig can fetch Alice event
-    await expect(
-      craig.call('ldp.resource.get', {
-        resourceUri: eventUri,
-        accept: MIME_TYPES.JSON
-      })
-    ).resolves.not.toThrow();
+    await expect(craig.call('ldp.resource.get', { resourceUri: eventUri })).resolves.not.toThrow();
   });
 
   test('Alice shares another event with Bob', async () => {
@@ -221,8 +223,7 @@ describe('Test resource sharing features', () => {
       resource: {
         type: OBJECT_TYPES.EVENT,
         name: 'Barbecue in my garden'
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
     await alice.call('access-authorizations.addForSingleResource', {
@@ -232,6 +233,7 @@ describe('Test resource sharing features', () => {
     });
 
     // Alice authorization is regenerated
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const authorizations = await alice.call('access-authorizations.listForSingleResource', {
         resourceUri: event2Uri
@@ -254,6 +256,7 @@ describe('Test resource sharing features', () => {
     });
 
     // Alice registration for Bob is updated
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const updatedRegistration = await alice.call('social-agent-registrations.getForAgent', {
         agentUri: bob.id,
@@ -282,9 +285,10 @@ describe('Test resource sharing features', () => {
     });
 
     // Bob registration for Example App is updated
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const updatedRegistration = await bob.call('app-registrations.getForAgent', {
-        agentUri: APP_URI,
+        agentUri: app.id,
         podOwner: bob.id
       });
 
@@ -299,7 +303,7 @@ describe('Test resource sharing features', () => {
             type: 'interop:DelegatedAccessGrant',
             'interop:accessMode': 'acl:Read',
             'interop:dataOwner': alice.id,
-            'interop:grantee': APP_URI,
+            'interop:grantee': app.id,
             'interop:granteeType': 'interop:Application',
             'interop:grantedBy': bob.id,
             'interop:hasDataInstance': expect.arrayContaining([eventUri, event2Uri]),
@@ -312,12 +316,7 @@ describe('Test resource sharing features', () => {
     });
 
     // Bob can fetch Alice new event
-    await expect(
-      bob.call('ldp.resource.get', {
-        resourceUri: event2Uri,
-        accept: MIME_TYPES.JSON
-      })
-    ).resolves.not.toThrow();
+    await expect(bob.call('ldp.resource.get', { resourceUri: event2Uri })).resolves.not.toThrow();
   });
 
   test('Alice un-share her event with Craig', async () => {
@@ -327,6 +326,7 @@ describe('Test resource sharing features', () => {
     });
 
     // Alice registration for Craig doesn't contain any access grant
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const craigRegistration = await alice.call('social-agent-registrations.getForAgent', {
         agentUri: craig.id,
@@ -336,9 +336,10 @@ describe('Test resource sharing features', () => {
     });
 
     // Delegated grants has been removed from app registration
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const updatedRegistration = await craig.call('app-registrations.getForAgent', {
-        agentUri: APP_URI,
+        agentUri: app.id,
         podOwner: craig.id
       });
 
@@ -346,28 +347,26 @@ describe('Test resource sharing features', () => {
     });
 
     // Craig cannot fetch Alice event anymore
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      await expect(
-        craig.call('ldp.resource.get', {
-          resourceUri: eventUri,
-          accept: MIME_TYPES.JSON
-        })
-      ).rejects.toThrow();
+      await expect(craig.call('ldp.resource.get', { resourceUri: eventUri })).rejects.toThrow();
     });
   });
 
   test('Bob remove the app and all delegated grants are deleted', async () => {
     await bob.call('registration-endpoint.remove', {
-      appUri: APP_URI
+      appUri: app.id
     });
 
     // All delegated grants have been removed from Alice's storage
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const delegatedGrants = await alice.call('delegated-access-grants.list');
       expect(arrayOf(delegatedGrants['ldp:contains'])).toHaveLength(0);
     });
 
     // All delegated grants have been removed from Bob's storage
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const delegatedGrants = await bob.call('delegated-access-grants.list');
       expect(arrayOf(delegatedGrants['ldp:contains'])).toHaveLength(0);

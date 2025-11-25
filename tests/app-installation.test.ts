@@ -3,18 +3,19 @@ import waitForExpect from 'wait-for-expect';
 import { ServiceBroker } from 'moleculer';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { arrayOf, getId } from '@semapps/ldp';
-import { connectPodProvider, clearAllData, initializeAppServer, createAccount } from './initialize.ts';
+import { connectPodProvider, clearAllData, initializeAppServer, createTestActor, getTestApp } from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
 import * as CONFIG from './config.ts';
+import { TestActor, TestApp } from './utilTypes.js';
 
 jest.setTimeout(80000);
 
 describe('Test app installation', () => {
   let podProvider: ServiceBroker,
-    alice: any,
-    app: any,
-    appData: any,
+    appServer: ServiceBroker,
+    alice: TestActor,
+    app: TestApp,
     eventsContainerUri: string,
     locationsContainerUri: string,
     requiredAccessNeedGroup: any,
@@ -27,30 +28,29 @@ describe('Test app installation', () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
-    alice = await createAccount(podProvider, 'alice');
+    alice = await createTestActor(podProvider, 'alice');
 
-    app = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
+    await appServer.start();
+    app = await getTestApp(appServer);
   }, 80000);
 
   afterAll(async () => {
     await podProvider.stop();
-    await app.stop();
+    await appServer.stop();
   });
 
   test('App access needs are correctly declared', async () => {
-    // @ts-expect-error This expression is not callable
-    await waitForExpect(async () => {
-      appData = await app.call('app.get');
-      expect(appData).toMatchObject({
-        type: expect.arrayContaining(['interop:Application']),
-        'interop:applicationName': 'Example App',
-        'interop:applicationDescription': 'An ActivityPods app for integration tests',
-        'interop:hasAccessNeedGroup': expect.anything()
-      });
-      expect(arrayOf(appData['interop:hasAccessNeedGroup'])).toHaveLength(2);
+    expect(app).toMatchObject({
+      type: expect.arrayContaining(['interop:Application']),
+      'interop:applicationName': 'Example App',
+      'interop:applicationDescription': 'An ActivityPods app for integration tests',
+      'interop:hasAccessNeedGroup': expect.anything()
     });
 
-    for (const accessNeedUri of arrayOf(appData['interop:hasAccessNeedGroup'])) {
+    expect(arrayOf(app['interop:hasAccessNeedGroup'])).toHaveLength(2);
+
+    for (const accessNeedUri of arrayOf(app['interop:hasAccessNeedGroup'])) {
       const accessNeedGroup = await app.call('ldp.resource.get', { resourceUri: accessNeedUri });
       if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
         requiredAccessNeedGroup = accessNeedGroup;

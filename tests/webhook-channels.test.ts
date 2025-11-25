@@ -1,26 +1,41 @@
 import urlJoin from 'url-join';
 import fetch from 'node-fetch';
-import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
+import { ServiceBroker } from 'moleculer';
+import {
+  connectPodProvider,
+  clearAllData,
+  initializeAppServer,
+  installApp,
+  createTestActor,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 import { parseHeader, negotiateContentType, parseRawBody, parseJson } from '@semapps/middlewares';
 import { fetchServer, tryUntilTimeout } from './utils.ts';
 import { delay } from '@semapps/ldp';
+import { TestActor, TestApp } from './utilTypes.js';
+
 jest.setTimeout(110_000);
+
 const POD_SERVER_BASE_URL = 'http://localhost:3000';
 const APP_SERVER_BASE_URL = 'http://localhost:3001';
-const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 const mockWebhookAction = jest.fn(() => Promise.resolve());
 const mockWebhookAction2 = jest.fn(() => Promise.resolve());
 
 describe('Test app installation', () => {
-  let podProvider: any, alice: any, appServer: any, webhookChannelSubscriptionUrl: any, webhookChannelUri: any;
+  let podProvider: ServiceBroker,
+    appServer: ServiceBroker,
+    alice: TestActor,
+    app: TestApp,
+    webhookChannelSubscriptionUrl: string,
+    webhookChannelUri: string;
 
   beforeAll(async () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
     appServer.createService({
       name: 'fake-service',
       actions: { webhook: mockWebhookAction, webhook2: mockWebhookAction2 }
@@ -37,24 +52,11 @@ describe('Test app installation', () => {
         bodyParsers: false
       }
     });
+    app = await getTestApp(appServer);
 
-    const actorData = require(`./data/actor1.json`);
-    const { webId } = await podProvider.call('auth.signup', actorData);
-    alice = await podProvider.call(
-      'activitypub.actor.awaitCreateComplete',
-      {
-        actorUri: webId,
-        additionalKeys: ['url']
-      },
-      { meta: { dataset: actorData.username } }
-    );
-    alice.call = (actionName: any, params: any, options = {}) =>
-      podProvider.call(actionName, params, {
-        ...options,
-        meta: { ...options.meta, webId, dataset: alice.preferredUsername }
-      });
+    alice = await createTestActor(podProvider, 'alice');
 
-    await installApp(alice, APP_URI);
+    await installApp(alice, app.id);
   }, 110_000);
 
   afterAll(async () => {
@@ -116,7 +118,7 @@ describe('Test app installation', () => {
   });
 
   test('Create webhook channel as registered app', async () => {
-    const { body } = await appServer.call('signature.proxy.query', {
+    const { body } = await app.call('signature.proxy.query', {
       url: webhookChannelSubscriptionUrl,
       method: 'POST',
       headers: new fetch.Headers({ 'Content-Type': 'application/ld+json' }),
@@ -128,7 +130,7 @@ describe('Test app installation', () => {
         'notify:topic': alice.outbox,
         'notify:sendTo': urlJoin(APP_SERVER_BASE_URL, 'fake-webhook')
       }),
-      actorUri: APP_URI
+      actorUri: app.id
     });
 
     webhookChannelUri = body.id;
@@ -170,10 +172,10 @@ describe('Test app installation', () => {
   });
 
   test('Delete webhook channel', async () => {
-    const response = await appServer.call('signature.proxy.query', {
+    const response = await app.call('signature.proxy.query', {
       url: webhookChannelUri,
       method: 'DELETE',
-      actorUri: APP_URI
+      actorUri: app.id
     });
 
     expect(response.status).toBe(204);
@@ -190,7 +192,7 @@ describe('Test app installation', () => {
   });
 
   test('Listen to Alice outbox through listener', async () => {
-    await appServer.call('solid-notifications.listener.register', {
+    await app.call('solid-notifications.listener.register', {
       resourceUri: alice.outbox,
       actionName: 'fake-service.webhook2'
     });

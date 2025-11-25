@@ -1,16 +1,24 @@
-import waitForExpect from 'wait-for-expect';
 import rdf from '@rdfjs/data-model';
 import { ServiceBroker } from 'moleculer';
-import { connectPodProvider, clearAllData, initializeAppServer, installApp, createAccount } from './initialize.ts';
+import {
+  connectPodProvider,
+  clearAllData,
+  initializeAppServer,
+  installApp,
+  createTestActor,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
+import { TestActor, TestApp } from './utilTypes.js';
 
 jest.setTimeout(80000);
 
 describe('Test Pod resources handling', () => {
   let podProvider: ServiceBroker,
-    alice: any,
-    bob: any,
-    app: any,
+    appServer: ServiceBroker,
+    alice: TestActor,
+    bob: TestActor,
+    app: TestApp,
     aliceEventsContainerUri: string,
     bobEventsContainerUri: string,
     bobNotesContainerUri: string,
@@ -22,26 +30,24 @@ describe('Test Pod resources handling', () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
-    alice = await createAccount(podProvider, 'alice');
-    bob = await createAccount(podProvider, 'bob');
+    alice = await createTestActor(podProvider, 'alice');
+    bob = await createTestActor(podProvider, 'bob');
 
-    app = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
+    await appServer.start();
+    app = await getTestApp(appServer);
 
     await installApp(alice, app.id);
     await installApp(bob, app.id);
   }, 120000);
 
   afterAll(async () => {
-    await app.stop();
+    await appServer.stop();
     await podProvider.stop();
   });
 
   test('Get local data through app', async () => {
-    // @ts-expect-error This expression is not callable
-    await waitForExpect(async () => {
-      aliceEventsContainerUri = await alice.call('ldp.registry.getUri', { type: 'as:Event', isContainer: true });
-      expect(aliceEventsContainerUri).not.toBeUndefined();
-    });
+    aliceEventsContainerUri = await alice.getContainerUri('as:Event');
 
     aliceEventUri = await alice.call('ldp.container.post', {
       containerUri: aliceEventsContainerUri,
@@ -65,11 +71,7 @@ describe('Test Pod resources handling', () => {
   });
 
   test('Get remote data through app', async () => {
-    // @ts-expect-error This expression is not callable
-    await waitForExpect(async () => {
-      bobEventsContainerUri = await bob.call('ldp.registry.getUri', { type: 'as:Event', isContainer: true });
-      expect(bobEventsContainerUri).not.toBeUndefined();
-    });
+    bobEventsContainerUri = await bob.getContainerUri('as:Event');
 
     bobEventUri = await bob.call('ldp.container.post', {
       containerUri: bobEventsContainerUri,
@@ -129,11 +131,7 @@ describe('Test Pod resources handling', () => {
       types: 'as:Note'
     });
 
-    // @ts-expect-error This expression is not callable
-    await waitForExpect(async () => {
-      bobNotesContainerUri = await bob.call('ldp.registry.getUri', { type: 'as:Event', isContainer: true });
-      expect(bobNotesContainerUri).not.toBeUndefined();
-    });
+    bobNotesContainerUri = await bob.getContainerUri('as:Note');
 
     bobNoteUri = await bob.call('ldp.container.post', {
       containerUri: bobNotesContainerUri,

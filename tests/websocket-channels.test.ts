@@ -1,34 +1,48 @@
 import urlJoin from 'url-join';
 import fetch from 'node-fetch';
 import WebSocket from 'ws';
+import { ServiceBroker } from 'moleculer';
 import rdf from '@rdfjs/data-model';
 import { delay } from '@semapps/ldp';
-import { MIME_TYPES } from '@semapps/mime-types';
-import { connectPodProvider, clearAllData, initializeAppServer, installApp, createAccount } from './initialize.ts';
+import {
+  connectPodProvider,
+  clearAllData,
+  initializeAppServer,
+  installApp,
+  createTestActor,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 import { fetchServer, tryUntilTimeout } from './utils.ts';
+import { TestActor, TestApp } from './utilTypes.js';
 
 jest.setTimeout(110_000);
 
 const POD_SERVER_BASE_URL = 'http://localhost:3000';
 
 describe('Websocket channel', () => {
-  let podProvider: any, alice: any, app: any, webSocketChannelSubscriptionUrl: any;
+  let podProvider: ServiceBroker,
+    appServer: ServiceBroker,
+    alice: TestActor,
+    app: TestApp,
+    webSocketChannelSubscriptionUrl: string;
 
   beforeAll(async () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
 
-    app = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
+    await appServer.start();
+    app = await getTestApp(appServer);
 
-    const alice = await createAccount(podProvider, 'alice');
+    alice = await createTestActor(podProvider, 'alice');
     await installApp(alice, app.id);
   }, 110_000);
 
   afterAll(async () => {
     podProvider.stop();
-    app.stop();
+    appServer.stop();
   });
 
   test('Websocket channel subscription is available', async () => {
@@ -83,12 +97,13 @@ describe('Websocket channel', () => {
   });
 
   describe('collection and resource subscription', () => {
-    let collectionUri: any,
-      noteUri: any,
+    let containerUri: string,
+      collectionUri: string,
+      noteUri: string,
       collectionWebSocket: any,
       itemWebSocket: any,
-      webSocketCollectionChannelUri: any,
-      webSocketItemChannelUri: any;
+      webSocketCollectionChannelUri: string,
+      webSocketItemChannelUri: string;
     const collectionActivities: any = [];
     const itemActivities: any = [];
 
@@ -104,9 +119,11 @@ describe('Websocket channel', () => {
         actorUri: alice.id
       });
 
+      containerUri = await alice.getContainerUri('as:Note');
+
       await alice.call('webacl.resource.addRights', {
         webId: 'system',
-        resourceUri: urlJoin(alice.id, 'data/as'),
+        resourceUri: containerUri,
         additionalRights: {
           anon: {
             uri: app.id,
@@ -119,15 +136,15 @@ describe('Websocket channel', () => {
       });
 
       noteUri = await alice.call('ldp.container.post', {
-        containerUri: urlJoin(alice.id, 'data/as'),
+        containerUri,
         resource: {
           '@context': 'https://www.w3.org/ns/activitystreams',
           '@type': 'Note',
           name: `A new collection note`,
           content: `The note content.`
-        },
-        contentType: MIME_TYPES.JSON
+        }
       });
+
       await alice.call('webacl.resource.addRights', {
         webId: 'system',
         resourceUri: noteUri,
@@ -281,7 +298,8 @@ describe('Websocket channel', () => {
     const containerActivities: any = [];
 
     beforeAll(async () => {
-      containerUri = urlJoin(alice.id, 'data/as');
+      containerUri = await alice.getContainerUri('as:Note');
+
       await alice.call('webacl.resource.addRights', {
         webId: 'system',
         resourceUri: containerUri,
@@ -327,8 +345,7 @@ describe('Websocket channel', () => {
           '@type': 'Object',
           name: `Some object resource`,
           content: `I'm a resource with type as:Object.`
-        },
-        contentType: MIME_TYPES.JSON
+        }
       });
 
       await tryUntilTimeout(() => {

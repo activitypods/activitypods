@@ -1,13 +1,12 @@
 import fs from 'fs';
 import path from 'path';
-import { connectPodProvider, clearAllData, createAccount } from './initialize.ts';
+import { ServiceBroker } from 'moleculer';
+import { connectPodProvider, clearAllData, createTestActor } from './initialize.ts';
+import { TestActor } from './utilTypes.js';
 jest.setTimeout(80_000);
 
 describe('Delete an actor', () => {
-  let actors: any = [],
-    podProvider: any,
-    alice: any,
-    bob: any;
+  let podProvider: ServiceBroker, alice: TestActor, bob: TestActor;
 
   beforeAll(async () => {
     await clearAllData();
@@ -17,8 +16,8 @@ describe('Delete an actor', () => {
     // Create backups.
     // await broker.call('backup.backupDatasets');
 
-    alice = await createAccount(podProvider, 'alice');
-    bob = await createAccount(podProvider, 'bob');
+    alice = await createTestActor(podProvider, 'alice');
+    bob = await createTestActor(podProvider, 'bob');
   }, 80_000);
 
   afterAll(async () => {
@@ -38,7 +37,7 @@ describe('Delete an actor', () => {
     // Check, that account information is limited to deletedAt, username, webId.
     const tombStoneAccount = await podProvider.call('auth.account.findByUsername', { username });
     expect(tombStoneAccount).toHaveProperty('deletedAt');
-    expect(tombStoneAccount.webId).toBe(alice.id || alice['@id']);
+    expect(tombStoneAccount.webId).toBe(alice.id);
     expect(tombStoneAccount.username).toBe(username);
     expect(tombStoneAccount).not.toHaveProperty('email');
     expect(tombStoneAccount).not.toHaveProperty('hashedPassword');
@@ -55,8 +54,15 @@ describe('Delete an actor', () => {
   }, 80_000);
 
   test('New user Alice is not able to be created due to the tombstone.', async () => {
-    const actorData = require(`./data/actor1.json`);
-    await expect(podProvider.call('auth.signup', actorData)).rejects.toThrow('');
+    await expect(
+      podProvider.call('auth.signup', {
+        username: 'alice',
+        email: 'alice@test.com',
+        password: 'Test1test',
+        name: 'Alice',
+        'schema:knowsLanguage': 'en'
+      })
+    ).rejects.toThrow('');
   }, 80_000);
 
   // We need to skip this test, because dataset deletion is only completed after a fuseki restart.
@@ -68,14 +74,19 @@ describe('Delete an actor', () => {
     await podProvider.call('triplestore.dataset.delete', { dataset: username, iKnowWhatImDoing: true });
 
     // Delete tombstone information manually here, since it is usually scheduled to be deleted after a year.
-    await podProvider.call('auth.account.deleteByWebId', { webId: alice.id || alice['@id'] });
+    await podProvider.call('auth.account.deleteByWebId', { webId: alice.id });
 
     // Check, if dataset still exists.
     await expect(podProvider.call('triplestore.dataset.exist', { dataset: username })).resolves.toBeFalsy();
 
     // Create alice again.
-    const actorData = require(`./data/actor1.json`);
-    const { webId } = await podProvider.call('auth.signup', actorData);
+    const { webId } = await podProvider.call('auth.signup', {
+      username: 'alice',
+      email: 'alice@test.com',
+      password: 'Test1test',
+      name: 'Alice',
+      'schema:knowsLanguage': 'en'
+    });
 
     await expect(
       await podProvider.call(
@@ -84,7 +95,7 @@ describe('Delete an actor', () => {
           actorUri: webId,
           additionalKeys: ['url']
         },
-        { meta: { dataset: actorData.username } }
+        { meta: { dataset: 'alice' } }
       )
     ).not.toThrow();
   }, 10_000);

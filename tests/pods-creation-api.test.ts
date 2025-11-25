@@ -1,16 +1,18 @@
 import waitForExpect from 'wait-for-expect';
+import { ServiceBroker } from 'moleculer';
 import urlJoin from 'url-join';
-import fetch, { RequestInit } from 'node-fetch';
+import fetch from 'node-fetch';
 import { connectPodProvider, clearAllData } from './initialize.ts';
+import { FetchOptions } from './utilTypes.js';
 jest.setTimeout(50000);
 
 const BASE_URL = 'http://localhost:3000';
 const ALICE_BASE_URL = BASE_URL + '/alice';
 
 describe('Test pods creation via API', () => {
-  let podProvider: any, token: any, alice: any, projectUri: any;
+  let podProvider: ServiceBroker, token: string, alice: any, webId: string, projectUri: string;
 
-  const fetchServer = async (path: any, options: RequestInit = {}) => {
+  const fetchServer = async (path: any, options: FetchOptions = {}) => {
     if (!path) throw new Error('No path provided to fetchServer');
     if (!options.headers) options.headers = new fetch.Headers();
 
@@ -37,7 +39,7 @@ describe('Test pods creation via API', () => {
 
     return fetch(path.startsWith('http') ? path : urlJoin(BASE_URL, path), {
       method: options.method || 'GET',
-      body: options.body,
+      body: options.body as fetch.BodyInit,
       headers: options.headers
     })
       .then(response =>
@@ -70,37 +72,42 @@ describe('Test pods creation via API', () => {
   });
 
   test('Alice signup for a pod', async () => {
-    const aliceData = require(`./data/actor1.json`);
-
     const { json } = await fetchServer('/auth/signup', {
       method: 'POST',
-      body: aliceData,
+      body: {
+        username: 'alice',
+        email: 'alice@test.com',
+        password: 'Test1test',
+        name: 'Alice',
+        'schema:knowsLanguage': 'en'
+      },
       headers: new fetch.Headers({
         'Content-Type': 'application/json' // We must not use JSON-LD here
       })
     });
 
-    expect(json.webId).toBe(ALICE_BASE_URL + '/webid');
+    expect(json.webId).toBeDefined();
     expect(json.newUser).toBe(true);
 
     // Keep in memory token so that future fetch are authenticated
     token = json.token;
+    webId = json.webId;
   });
 
   test('Alice actor can be fetched', async () => {
     // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      ({ json: alice } = await fetchServer('/alice', { method: 'GET' }));
+      ({ json: alice } = await fetchServer(webId));
 
       expect(alice).toMatchObject({
         type: expect.arrayContaining(['foaf:Person', 'Person']),
         'foaf:nick': 'alice',
         preferredUsername: 'alice',
-        inbox: ALICE_BASE_URL + '/inbox',
-        outbox: ALICE_BASE_URL + '/outbox',
-        following: ALICE_BASE_URL + '/following',
-        followers: ALICE_BASE_URL + '/followers',
-        liked: ALICE_BASE_URL + '/liked',
+        inbox: expect.anything(),
+        outbox: expect.anything(),
+        following: expect.anything(),
+        followers: expect.anything(),
+        liked: expect.anything(),
         publicKey: {
           owner: alice.id,
           publicKeyPem: expect.stringContaining('-----BEGIN PUBLIC KEY-----')
@@ -109,7 +116,7 @@ describe('Test pods creation via API', () => {
           proxyUrl: ALICE_BASE_URL + '/proxy',
           'void:sparqlEndpoint': ALICE_BASE_URL + '/sparql'
         },
-        'pim:storage': ALICE_BASE_URL + '/data',
+        'pim:storage': expect.anything(),
         'solid:oidcIssuer': BASE_URL,
         'interop:hasAuthorizationAgent': expect.anything(),
         'interop:hasRegistrySet': expect.anything(),
@@ -163,7 +170,7 @@ describe('Test pods creation via API', () => {
 
     expect(status).toBe(201);
 
-    projectUri = headers.get('Location');
+    projectUri = headers.get('Location')!;
     expect(projectUri).not.toBeUndefined();
 
     await expect(fetchServer(alice['pim:storage'])).resolves.toMatchObject({

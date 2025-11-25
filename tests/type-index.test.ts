@@ -1,14 +1,17 @@
 import waitForExpect from 'wait-for-expect';
-import { connectPodProvider, clearAllData, createAccount } from './initialize.ts';
+import { ServiceBroker } from 'moleculer';
+import { connectPodProvider, clearAllData, createTestActor } from './initialize.ts';
+import { TestActor } from './utilTypes.js';
+
 jest.setTimeout(80000);
 
 describe('Test type indexes creation', () => {
-  let podProvider: any, alice: any;
+  let podProvider: ServiceBroker, alice: TestActor;
 
   beforeAll(async () => {
     await clearAllData();
     podProvider = await connectPodProvider();
-    alice = await createAccount(podProvider, 'alice');
+    alice = await createTestActor(podProvider, 'alice');
   }, 80000);
 
   afterAll(async () => {

@@ -1,27 +1,37 @@
 import { ServiceBroker } from 'moleculer';
-import { connectPodProvider, clearAllData, initializeAppServer, installApp, createAccount } from './initialize.ts';
+import {
+  connectPodProvider,
+  clearAllData,
+  initializeAppServer,
+  installApp,
+  createTestActor,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
+import { TestActor, TestApp } from './utilTypes.js';
 
 jest.setTimeout(100000);
 
 describe('Test AS collections handling', () => {
-  let podProvider: ServiceBroker, alice: any, app: any, collectionUri: any;
+  let podProvider: ServiceBroker, appServer: ServiceBroker, alice: TestActor, app: TestApp, collectionUri: string;
 
   beforeAll(async () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
 
-    app = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
+    await appServer.start();
+    app = await getTestApp(appServer);
 
-    alice = await createAccount(podProvider, 'alice');
+    alice = await createTestActor(podProvider, 'alice');
 
     await installApp(alice, app.id);
   }, 100000);
 
   afterAll(async () => {
     await podProvider.stop();
-    await app.stop();
+    await appServer.stop();
   });
 
   test('Attach a collection to Alice actor', async () => {

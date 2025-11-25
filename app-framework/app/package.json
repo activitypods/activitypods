@@ -36,6 +36,7 @@
     "node": ">=22.12.0"
   },
   "devDependencies": {
-    "@types/rdfjs__data-model": "^2.0.9"
+    "@types/rdfjs__data-model": "^2.0.9",
+    "@types/speakingurl": "^13.0.6"
   }
 }

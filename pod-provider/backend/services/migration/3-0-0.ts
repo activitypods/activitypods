@@ -1,20 +1,25 @@
+import urlJoin from 'url-join';
 import { V20MigrationService } from '@semapps/migration';
 import { ServiceSchema } from 'moleculer';
 import * as CONFIG from '../../config/config.ts';
+import { Account } from '@semapps/auth';
 
 const MIGRATION_VERSION = '3.0.0';
 
 const Migration300Schema = {
   name: 'migration-3-0-0' as const,
+  // @ts-expect-error
   mixins: [V20MigrationService],
   settings: {
     baseUrl: CONFIG.BASE_URL,
     podProvider: true
   },
   actions: {
-    async migrate(ctx) {
+    async migrate(ctx: any) {
       const { username } = ctx.params;
-      const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+      const accounts: Account[] = await ctx.call('auth.account.find', {
+        query: username === '*' ? undefined : { username }
+      });
 
       for (const { webId, username, version, ...rest } of accounts) {
         if (version === MIGRATION_VERSION) {
@@ -31,6 +36,25 @@ const Migration300Schema = {
             await this.actions.moveAllToNamedGraph({ dataset: username }, { parentCtx: ctx });
             await this.actions.migrateCurrentPredicate({ dataset: username }, { parentCtx: ctx });
             await this.actions.migratePseudoIds({ dataset: username }, { parentCtx: ctx });
+
+            const singleResourcesContainersUris = {
+              'interop/authorization-agent': 'interop:AuthorizationAgent',
+              'interop/registry-set': 'interop:RegistrySet',
+              'interop/agent-registry': 'interop:AgentRegistry',
+              'interop/authorization-registry': 'interop:AuthorizationRegistry',
+              'interop/data-registry': 'interop:DataRegistry'
+            };
+
+            for (const [path, type] of Object.entries(singleResourcesContainersUris)) {
+              await this.actions.migrateSingleResourcesContainer(
+                {
+                  containerUri: urlJoin(webId, 'data', path),
+                  types: [type],
+                  isPrivate: false
+                },
+                { parentCtx: ctx }
+              );
+            }
 
             await ctx.call('auth.account.update', {
               id: rest['@id'],

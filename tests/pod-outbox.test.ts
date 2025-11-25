@@ -1,23 +1,42 @@
-import waitForExpect from 'wait-for-expect';
 import { ServiceBroker } from 'moleculer';
-import { connectPodProvider, clearAllData, installApp, initializeAppServer, createAccount } from './initialize.ts';
+import {
+  connectPodProvider,
+  clearAllData,
+  installApp,
+  initializeAppServer,
+  createTestActor,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 import Example2AppService from './apps/example2.app.ts';
 import { OBJECT_TYPES, ACTIVITY_TYPES } from '@semapps/activitypub';
+import { TestActor, TestApp } from './utilTypes.js';
 
 jest.setTimeout(120000);
 
 describe('Test Pod outbox posting', () => {
-  let podProvider: ServiceBroker, alice: any, app: any, app2: any, notesContainerUri: string, noteUri: string;
+  let podProvider: ServiceBroker,
+    appServer: ServiceBroker,
+    app2Server: ServiceBroker,
+    alice: TestActor,
+    app: TestApp,
+    app2: TestApp,
+    notesContainerUri: string,
+    noteUri: string;
 
   beforeAll(async () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
-    alice = await createAccount(podProvider, 'alice');
+    alice = await createTestActor(podProvider, 'alice');
 
-    app = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
-    app2 = await initializeAppServer(3002, 'app2', 'app2_settings', 2, Example2AppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
+    await appServer.start();
+    app = await getTestApp(appServer);
+
+    app2Server = await initializeAppServer(3002, 'app2', 'app2_settings', 2, Example2AppService);
+    await app2Server.start();
+    app2 = await getTestApp(app2Server);
 
     await installApp(alice, app.id);
     await installApp(alice, app2.id);
@@ -25,8 +44,8 @@ describe('Test Pod outbox posting', () => {
 
   afterAll(async () => {
     await podProvider.stop();
-    await app.stop();
-    await app2.stop();
+    await appServer.stop();
+    await app2Server.stop();
   });
 
   test('Post activity as user', async () => {
@@ -133,11 +152,7 @@ describe('Test Pod outbox posting', () => {
       types: 'as:Note'
     });
 
-    // @ts-expect-error This expression is not callable
-    await waitForExpect(async () => {
-      notesContainerUri = await alice.call('ldp.registry.getUri', { type: 'as:Note', isContainer: true });
-      expect(notesContainerUri).not.toBeUndefined();
-    });
+    notesContainerUri = await alice.getContainerUri('as:Note');
 
     noteUri = await alice.call('ldp.container.post', {
       containerUri: notesContainerUri,

@@ -1,22 +1,42 @@
 import waitForExpect from 'wait-for-expect';
 import { ServiceBroker } from 'moleculer';
-import { connectPodProvider, clearAllData, initializeAppServer, installApp, createAccount } from './initialize.ts';
+import {
+  connectPodProvider,
+  clearAllData,
+  initializeAppServer,
+  installApp,
+  createTestActor,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 import Example2AppService from './apps/example2.app.ts';
+import { TestActor, TestApp } from './utilTypes.js';
 
 jest.setTimeout(100000);
 
 describe('Test Pod resources handling', () => {
-  let podProvider: ServiceBroker, alice: any, app: any, app2: any, eventUri: string, aliceEventsContainerUri: string;
+  let podProvider: ServiceBroker,
+    appServer: ServiceBroker,
+    app2Server: ServiceBroker,
+    alice: TestActor,
+    app: TestApp,
+    app2: TestApp,
+    eventUri: string,
+    aliceEventsContainerUri: string;
 
   beforeAll(async () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
-    alice = await createAccount(podProvider, 'alice');
+    alice = await createTestActor(podProvider, 'alice');
 
-    app = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
-    app2 = await initializeAppServer(3002, 'app2', 'app2_settings', 2, Example2AppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
+    await appServer.start();
+    app = await getTestApp(appServer);
+
+    app2Server = await initializeAppServer(3002, 'app2', 'app2_settings', 2, Example2AppService);
+    await app2Server.start();
+    app2 = await getTestApp(app2Server);
 
     await installApp(alice, app.id);
     await installApp(alice, app2.id);
@@ -24,16 +44,12 @@ describe('Test Pod resources handling', () => {
 
   afterAll(async () => {
     await podProvider.stop();
-    await app.stop();
-    await app2.stop();
+    await appServer.stop();
+    await app2Server.stop();
   });
 
   test('Add permission with acl:Control permission', async () => {
-    // @ts-expect-error This expression is not callable
-    await waitForExpect(async () => {
-      aliceEventsContainerUri = await alice.call('ldp.registry.getUri', { type: 'as:Event', isContainer: true });
-      expect(aliceEventsContainerUri).not.toBeUndefined();
-    });
+    aliceEventsContainerUri = await alice.getContainerUri('as:Event');
 
     eventUri = await alice.call('ldp.container.post', {
       containerUri: aliceEventsContainerUri,

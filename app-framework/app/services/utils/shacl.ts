@@ -1,4 +1,3 @@
-import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema } from 'moleculer';
 
 const ShaclSchema = {
@@ -7,7 +6,7 @@ const ShaclSchema = {
     get: {
       async handler(ctx: any) {
         const { resourceUri } = ctx.params;
-        return await ctx.call('ldp.remote.get', { resourceUri, accept: MIME_TYPES.JSON });
+        return await ctx.call('ldp.remote.get', { resourceUri });
       }
     },
 

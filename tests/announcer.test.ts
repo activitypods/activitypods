@@ -1,22 +1,30 @@
 import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
+import { ServiceBroker } from 'moleculer';
 import { OBJECT_TYPES, ACTIVITY_TYPES } from '@semapps/activitypub';
-import { MIME_TYPES } from '@semapps/mime-types';
-import { connectPodProvider, createActor, clearAllData } from './initialize.ts';
+import { connectPodProvider, createTestActor, clearAllData } from './initialize.ts';
 import * as CONFIG from './config.ts';
+import { TestActor } from './utilTypes.js';
+
 jest.setTimeout(120000);
 
 describe('Test sharing through announcer', () => {
-  let podProvider: any, alice: any, bob: any, craig: any, eventContainerUri, eventUri: any, event: any;
+  let podProvider: ServiceBroker,
+    alice: TestActor,
+    bob: TestActor,
+    craig: TestActor,
+    eventContainerUri: string,
+    eventUri: string,
+    event: any;
 
   beforeAll(async () => {
     clearAllData();
 
     podProvider = await connectPodProvider();
 
-    alice = await createActor(podProvider, 'alice');
-    bob = await createActor(podProvider, 'bob');
-    craig = await createActor(podProvider, 'craig');
+    alice = await createTestActor(podProvider, 'alice');
+    bob = await createTestActor(podProvider, 'bob');
+    craig = await createTestActor(podProvider, 'craig');
   });
 
   afterAll(async () => {
@@ -35,8 +43,7 @@ describe('Test sharing through announcer', () => {
       resource: {
         type: OBJECT_TYPES.EVENT,
         name: 'Birthday party !!'
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
   });
 
@@ -49,15 +56,14 @@ describe('Test sharing through announcer', () => {
     });
 
     // The announces collection is attached to Alice event
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      event = await alice.call('ldp.resource.get', {
-        resourceUri: eventUri,
-        accept: MIME_TYPES.JSON
-      });
+      event = await alice.call('ldp.resource.get', { resourceUri: eventUri });
       expect(event['apods:announces']).not.toBeUndefined();
     });
 
     // Bob is added to the announces collection
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         alice.call('activitypub.collection.includes', {
@@ -79,15 +85,14 @@ describe('Test sharing through announcer', () => {
     });
 
     // The announcers collection is attached to Alice event
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      event = await alice.call('ldp.resource.get', {
-        resourceUri: eventUri,
-        accept: MIME_TYPES.JSON
-      });
+      event = await alice.call('ldp.resource.get', { resourceUri: eventUri });
       expect(event['apods:announcers']).not.toBeUndefined();
     });
 
     // Bob is added to the announcers collection
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         alice.call('activitypub.collection.includes', {
@@ -98,33 +103,21 @@ describe('Test sharing through announcer', () => {
     });
 
     // Bob can fetch Alice event
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      await expect(
-        bob.call('ldp.resource.get', {
-          resourceUri: eventUri,
-          accept: MIME_TYPES.JSON
-        })
-      ).resolves.not.toThrow();
+      await expect(bob.call('ldp.resource.get', { resourceUri: eventUri })).resolves.not.toThrow();
     });
 
     // Bob can fetch the announces collection
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      await expect(
-        bob.call('ldp.resource.get', {
-          resourceUri: event['apods:announces'],
-          accept: MIME_TYPES.JSON
-        })
-      ).resolves.not.toThrow();
+      await expect(bob.call('ldp.resource.get', { resourceUri: event['apods:announces'] })).resolves.not.toThrow();
     });
 
     // Bob cannot fetch the announcers collection
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      await expect(
-        bob.call('ldp.resource.get', {
-          resourceUri: event['apods:announcers'],
-          accept: MIME_TYPES.JSON
-        })
-      ).rejects.toThrow();
+      await expect(bob.call('ldp.resource.get', { resourceUri: event['apods:announcers'] })).rejects.toThrow();
     });
   });
 
@@ -137,6 +130,7 @@ describe('Test sharing through announcer', () => {
     });
 
     // Craig is added to the announces collection
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         alice.call('activitypub.collection.includes', {
@@ -147,33 +141,21 @@ describe('Test sharing through announcer', () => {
     });
 
     // Craig can fetch Alice event
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      await expect(
-        craig.call('ldp.resource.get', {
-          resourceUri: eventUri,
-          accept: MIME_TYPES.JSON
-        })
-      ).resolves.not.toThrow();
+      await expect(craig.call('ldp.resource.get', { resourceUri: eventUri })).resolves.not.toThrow();
     });
 
     // Craig cannot fetch the announces collection
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      await expect(
-        craig.call('ldp.resource.get', {
-          resourceUri: event['apods:announces'],
-          accept: MIME_TYPES.JSON
-        })
-      ).rejects.toThrow();
+      await expect(craig.call('ldp.resource.get', { resourceUri: event['apods:announces'] })).rejects.toThrow();
     });
 
     // Craig cannot fetch the announcers collection
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      await expect(
-        craig.call('ldp.resource.get', {
-          resourceUri: event['apods:announcers'],
-          accept: MIME_TYPES.JSON
-        })
-      ).rejects.toThrow();
+      await expect(craig.call('ldp.resource.get', { resourceUri: event['apods:announcers'] })).rejects.toThrow();
     });
   });
 });

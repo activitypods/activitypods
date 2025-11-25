@@ -2,13 +2,14 @@ import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
 import { ServiceBroker } from 'moleculer';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { connectPodProvider, clearAllData, createAccount } from './initialize.ts';
+import { connectPodProvider, clearAllData, createTestActor } from './initialize.ts';
+import { TestActor } from './utilTypes.js';
 
 jest.setTimeout(50000);
 
 describe('Test pods creation', () => {
   let podProvider: ServiceBroker;
-  let alice: any;
+  let alice: TestActor;
   let projectUri: string;
 
   beforeAll(async () => {
@@ -16,7 +17,7 @@ describe('Test pods creation', () => {
 
     podProvider = await connectPodProvider();
 
-    alice = await createAccount(podProvider, 'alice');
+    alice = await createTestActor(podProvider, 'alice');
   }, 80000);
 
   afterAll(async () => {
@@ -84,7 +85,7 @@ describe('Test pods creation', () => {
       expect(publicTypeIndex['@graph']).toContainEqual(
         expect.objectContaining({
           'solid:forClass': expect.arrayContaining(['vcard:Individual', 'as:Profile']),
-          'solid:instanceContainer': urlJoin(alice.baseUrl, '/vcard/individual')
+          'solid:instanceContainer': expect.anything()
         })
       );
     });

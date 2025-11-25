@@ -1,22 +1,40 @@
 import { ServiceBroker } from 'moleculer';
-import { connectPodProvider, clearAllData, initializeAppServer, installApp, createAccount } from './initialize.ts';
+import {
+  connectPodProvider,
+  clearAllData,
+  initializeAppServer,
+  installApp,
+  createTestActor,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 import Example2AppService from './apps/example2.app.ts';
+import { TestActor, TestApp } from './utilTypes.js';
 
 jest.setTimeout(100000);
 
 describe('Test Pod WAC groups handling', () => {
-  let podProvider: ServiceBroker, alice: any, app: any, app2: any;
+  let podProvider: ServiceBroker,
+    appServer: ServiceBroker,
+    app2Server: ServiceBroker,
+    alice: TestActor,
+    app: TestApp,
+    app2: TestApp;
 
   beforeAll(async () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
 
-    app = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
-    app2 = await initializeAppServer(3002, 'app2', 'app2_settings', 2, Example2AppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
+    await appServer.start();
+    app = await getTestApp(appServer);
 
-    alice = await createAccount(podProvider, 'alice');
+    app2Server = await initializeAppServer(3002, 'app2', 'app2_settings', 2, Example2AppService);
+    await app2Server.start();
+    app2 = await getTestApp(app2Server);
+
+    alice = await createTestActor(podProvider, 'alice');
 
     await installApp(alice, app.id);
     await installApp(alice, app2.id);
@@ -24,7 +42,8 @@ describe('Test Pod WAC groups handling', () => {
 
   afterAll(async () => {
     await podProvider.stop();
-    await app.stop();
+    await appServer.stop();
+    await app2Server.stop();
   });
 
   test('Create WAC group with apods:CreateWacGroup permission', async () => {

@@ -38,10 +38,13 @@ const PodCollectionsSchema = {
         // Ensure no similar collection is already attached to the resource
         // (May happen if another app is already attaching the same kind of collections)
         if (!expandedResource[expandedAttachPredicate]) {
-          const { status, headers } = await this.actions.fetch(
+          // TODO Use shapetree to find the collection URI shared with the application ?
+          const containerUri = await ctx.call('pod-containers.getByType', { type: 'as:Collection', actorUri });
+
+          const { status, statusText, headers } = await this.actions.fetch(
             {
               method: 'POST',
-              url: urlJoin(actorUri, '/data/as/collection'), // TODO use TypeIndex to find container URL
+              url: containerUri,
               headers: {
                 'Content-Type': 'application/ld+json'
               },
@@ -75,6 +78,10 @@ const PodCollectionsSchema = {
             });
 
             return collectionUri;
+          } else {
+            this.logger.warn(
+              `Could not create collection with predicate ${attachPredicate} for user ${actorUri}. Error ${status}: ${statusText}`
+            );
           }
         }
       }

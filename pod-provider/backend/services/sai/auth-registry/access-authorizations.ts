@@ -56,8 +56,7 @@ const AccessAuthorizationsSchema = {
                   'interop:accessMode': accessNeed['interop:accessMode'],
                   'interop:scopeOfAuthorization': accessNeed['interop:preferredScope'] || 'interop:All',
                   'interop:satisfiesAccessNeed': accessNeedUri
-                },
-                contentType: MIME_TYPES.JSON
+                }
               },
               { parentCtx: ctx }
             );

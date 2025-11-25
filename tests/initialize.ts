@@ -11,8 +11,9 @@ import { interop, oidc, notify, apods, solid } from '@semapps/ontologies';
 import { NotificationsListenerService } from '@semapps/solid';
 import RdfJSONSerializer from '../pod-provider/backend/RdfJSONSerializer.ts';
 import { fetchServer, clearMails } from './utils.ts';
-import { FetchOptions } from './utilTypes.js';
+import { FetchOptions, TestActor, TestApp } from './utilTypes.js';
 import * as CONFIG from './config.ts';
+import { delay } from '@semapps/ldp';
 
 Error.stackTraceLimit = Infinity;
 
@@ -181,26 +182,36 @@ export const initializeAppServer = async (
   // @ts-expect-error Argument of type { 'mixin': {
   broker.createService({ mixins: [appService], settings: { username: appDataset, queueServiceUrl } });
 
-  await broker.start();
+  return broker;
+};
 
+export const getTestApp = async (broker: ServiceBroker): Promise<TestApp> => {
   const appUri = await broker.call('app.getUri');
+  const appDataset = await broker.call('app.getDataset');
+
+  const callAsApp = (actionName: string, params: ActionParamSchema = {}, options: CallingOptions = {}) =>
+    broker.call(actionName, params, {
+      ...options,
+      meta: options.meta
+        ? { ...options.meta, webId: appUri, dataset: appDataset }
+        : { webId: appUri, dataset: appDataset }
+    });
+
+  const app: any = await callAsApp('activitypub.actor.awaitCreateComplete', {
+    actorUri: appUri,
+    additionalKeys: ['interop:applicationName', 'interop:hasAccessNeedGroup']
+  });
 
   return {
     id: appUri,
     webId: appUri,
     username: appDataset,
-    call: (actionName: string, params: ActionParamSchema = {}, options: CallingOptions = {}) =>
-      broker.call(actionName, params, {
-        ...options,
-        meta: options.meta
-          ? { ...options.meta, webId: appUri, dataset: appDataset }
-          : { webId: appUri, dataset: appDataset }
-      }),
-    stop: () => broker.stop()
+    call: callAsApp,
+    ...app
   };
 };
 
-export const createAccount = async (broker: ServiceBroker, username: string) => {
+export const createTestActor = async (broker: ServiceBroker, username: string): Promise<TestActor> => {
   const { webId }: Account = await broker.call('auth.account.create', { username });
 
   const callAsUser = (actionName: string, params: ActionParamSchema = {}, options: CallingOptions = {}) =>
@@ -221,6 +232,15 @@ export const createAccount = async (broker: ServiceBroker, username: string) => 
     return fetchServer(url, { ...options, headers });
   };
 
+  const getContainerUri = async (type: string) => {
+    let containerUri: string;
+    do {
+      containerUri = await callAsUser('ldp.registry.getUri', { type, isContainer: true });
+      if (!containerUri) await delay(500);
+    } while (!containerUri);
+    return containerUri;
+  };
+
   const actor: any = await callAsUser('activitypub.actor.awaitCreateComplete', {
     actorUri: webId,
     additionalKeys: [
@@ -239,10 +259,11 @@ export const createAccount = async (broker: ServiceBroker, username: string) => 
     username,
     call: callAsUser,
     fetch: fetchAsUser,
+    getContainerUri,
     ...actor
   };
 };
 
-export const installApp = async (actor: any, appUri: string) => {
+export const installApp = async (actor: TestActor, appUri: string) => {
   return await actor.call('registration-endpoint.register', { appUri, acceptAllRequirements: true });
 };

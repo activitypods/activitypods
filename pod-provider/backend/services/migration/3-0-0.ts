@@ -21,23 +21,28 @@ const Migration300Schema = {
         query: username === '*' ? undefined : { username }
       });
 
-      for (const { webId, username, version, ...rest } of accounts) {
+      for (const { webId, username: dataset, version, ...rest } of accounts) {
         if (version === MIGRATION_VERSION) {
-          this.logger.info(`Pod of ${webId} is already on v${MIGRATION_VERSION}, skipping...`);
+          this.logger.info(`Account ${dataset} is already on v${MIGRATION_VERSION}, skipping...`);
         } else {
-          this.logger.info(`Migrating Pod of ${webId} to v${MIGRATION_VERSION}...`);
+          this.logger.info(`Migrating account ${dataset} to v${MIGRATION_VERSION}...`);
 
-          ctx.meta.dataset = username;
-          ctx.meta.webId = webId;
+          ctx.meta.dataset = dataset;
+          ctx.meta.isMigrating = true;
           ctx.meta.skipObjectsWatcher = true; // We don't want to trigger an Update activity
 
           try {
             // Migration utils from SemApps V20MigrationService
-            await this.actions.moveAllToNamedGraph({ dataset: username }, { parentCtx: ctx });
-            await this.actions.migrateCurrentPredicate({ dataset: username }, { parentCtx: ctx });
-            await this.actions.migratePseudoIds({ dataset: username }, { parentCtx: ctx });
+            await this.actions.migrateAllContainers({ dataset }, { parentCtx: ctx });
+            await this.actions.migrateTypeIndex({ dataset }, { parentCtx: ctx });
+            ctx.meta.webId = await this.actions.migrateWebId({ dataset }, { parentCtx: ctx });
+            await this.actions.deleteIntermediaryContainers({ dataset }, { parentCtx: ctx });
+            await this.actions.migrateCurrentPredicate({ dataset }, { parentCtx: ctx });
+            await this.actions.migratePseudoIds({ dataset }, { parentCtx: ctx });
+            await this.actions.attachAllContainersToRootContainer({ dataset }, { parentCtx: ctx });
 
-            const singleResourcesContainersUris = {
+            const singleResourceContainersUris = {
+              'pim/configuration-file': 'pim:ConfigurationFile',
               'interop/authorization-agent': 'interop:AuthorizationAgent',
               'interop/registry-set': 'interop:RegistrySet',
               'interop/agent-registry': 'interop:AgentRegistry',
@@ -45,12 +50,12 @@ const Migration300Schema = {
               'interop/data-registry': 'interop:DataRegistry'
             };
 
-            for (const [path, type] of Object.entries(singleResourcesContainersUris)) {
+            for (const [path, type] of Object.entries(singleResourceContainersUris)) {
               await this.actions.migrateSingleResourcesContainer(
                 {
-                  containerUri: urlJoin(webId, 'data', path),
+                  oldContainerUri: urlJoin(this.settings.baseUrl, dataset, 'data', path),
                   types: [type],
-                  isPrivate: false
+                  isPrivate: true // All the above containers are private
                 },
                 { parentCtx: ctx }
               );
@@ -58,13 +63,13 @@ const Migration300Schema = {
 
             await ctx.call('auth.account.update', {
               id: rest['@id'],
-              webId,
-              username,
+              webId: ctx.meta.webId, // WebID has changed !
+              username: dataset,
               version: MIGRATION_VERSION,
               ...rest
             });
           } catch (e) {
-            this.logger.error(`Unable to migrate Pod of ${webId} to ${MIGRATION_VERSION}. Error: ${e.message}`);
+            this.logger.error(`Unable to migrate storage ${dataset} to ${MIGRATION_VERSION}. Error: ${e.message}`);
             console.error(e);
           }
         }

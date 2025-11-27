@@ -9,7 +9,8 @@ const AgentRegistryService = {
   mixins: [ControlledResourceMixin],
   settings: {
     path: '/agent-registry',
-    types: ['interop:AgentRegistry']
+    types: ['interop:AgentRegistry'],
+    typeIndex: 'private'
   },
   dependencies: ['registry-set'],
   actions: {

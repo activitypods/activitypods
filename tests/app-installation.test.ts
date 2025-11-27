@@ -32,7 +32,6 @@ describe('Test app installation', () => {
 
     appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
     await appServer.start();
-    app = await getTestApp(appServer);
   }, 80000);
 
   afterAll(async () => {
@@ -41,14 +40,19 @@ describe('Test app installation', () => {
   });
 
   test('App access needs are correctly declared', async () => {
-    expect(app).toMatchObject({
-      type: expect.arrayContaining(['interop:Application']),
-      'interop:applicationName': 'Example App',
-      'interop:applicationDescription': 'An ActivityPods app for integration tests',
-      'interop:hasAccessNeedGroup': expect.anything()
-    });
+    // @ts-expect-error This expression is not callable
+    await waitForExpect(async () => {
+      app = await getTestApp(appServer);
 
-    expect(arrayOf(app['interop:hasAccessNeedGroup'])).toHaveLength(2);
+      expect(app).toMatchObject({
+        type: expect.arrayContaining(['interop:Application']),
+        'interop:applicationName': 'Example App',
+        'interop:applicationDescription': 'An ActivityPods app for integration tests',
+        'interop:hasAccessNeedGroup': expect.anything()
+      });
+
+      expect(arrayOf(app['interop:hasAccessNeedGroup'])).toHaveLength(2);
+    });
 
     for (const accessNeedUri of arrayOf(app['interop:hasAccessNeedGroup'])) {
       const accessNeedGroup = await app.call('ldp.resource.get', { resourceUri: accessNeedUri });

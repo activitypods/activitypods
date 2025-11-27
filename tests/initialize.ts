@@ -132,6 +132,7 @@ export const initializeAppServer = async (
   });
 
   broker.createService({
+    // @ts-expect-error Argument of type { 'mixin': {
     mixins: [SemAppsCoreService],
     settings: {
       baseUrl,
@@ -150,7 +151,7 @@ export const initializeAppServer = async (
         port
       },
       ldp: {
-        resourcesWithContainerPath: false
+        allowSlugs: true // Make it easier to read the test results
       },
       void: false
     }

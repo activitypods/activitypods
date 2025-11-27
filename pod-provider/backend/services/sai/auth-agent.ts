@@ -15,7 +15,8 @@ const AuthAgentSchema = {
       anon: {
         read: true
       }
-    }
+    },
+    typeIndex: 'private'
   },
   actions: {
     getHeaderLinks: {

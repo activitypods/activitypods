@@ -8,7 +8,8 @@ const DataRegistrySchema = {
   mixins: [ControlledResourceMixin],
   settings: {
     path: '/data-registry',
-    types: ['interop:DataRegistry']
+    types: ['interop:DataRegistry'],
+    typeIndex: 'private'
   },
   dependencies: ['registry-set'],
   actions: {

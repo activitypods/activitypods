@@ -8,7 +8,8 @@ const AuthRegistryService = {
   mixins: [ControlledResourceMixin],
   settings: {
     path: '/auth-registry',
-    types: ['interop:AuthorizationRegistry']
+    types: ['interop:AuthorizationRegistry'],
+    typeIndex: 'private'
   },
   dependencies: ['registry-set'],
   actions: {

@@ -8,7 +8,8 @@ const RegistrySetService = {
   mixins: [ControlledResourceMixin],
   settings: {
     path: '/registry-set',
-    types: ['interop:RegistrySet']
+    types: ['interop:RegistrySet'],
+    typeIndex: 'private'
   },
   events: {
     'webid.created': {

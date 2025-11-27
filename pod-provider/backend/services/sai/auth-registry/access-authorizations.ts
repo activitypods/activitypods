@@ -424,8 +424,10 @@ const AccessAuthorizationsSchema = {
       async handler(ctx: any) {
         const { resourceUri } = ctx.params;
 
-        // Delete all authorizations associated with this resource
-        await this.actions.removeForSingleResource({ resourceUri }, { parentCtx: ctx });
+        if (!ctx.meta.isMigrating) {
+          // Delete all authorizations associated with this resource
+          await this.actions.removeForSingleResource({ resourceUri }, { parentCtx: ctx });
+        }
       }
     }
   }

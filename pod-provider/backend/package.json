@@ -64,6 +64,7 @@
   },
   "devDependencies": {
     "@types/rdfjs__data-model": "^2.0.9",
+    "@types/ioredis": "^4.27.0",
     "tsx": "^4.20.3"
   }
 }

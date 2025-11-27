@@ -14,7 +14,7 @@ const Migration205Schema = {
   },
   actions: {
     migrate: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username, version } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
@@ -51,7 +51,7 @@ const Migration205Schema = {
     },
 
     addAuthorizationAgent: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
@@ -91,7 +91,7 @@ const Migration205Schema = {
     },
 
     generateRegistries: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
@@ -127,7 +127,6 @@ const Migration205Schema = {
                 `Adding ApplicationRegistration of ${appRegistration['interop:registeredAgent']} to AgentRegistry`
               );
               await ctx.call('agent-registry.add', {
-                podOwner: webId,
                 appRegistrationUri: appRegistration.id
               });
             }
@@ -137,14 +136,14 @@ const Migration205Schema = {
     },
 
     generateAuthorizations: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
         for (const { webId } of accounts) {
           this.logger.info(`Generating authorizations for ${webId}...`);
 
-          const authAgentUri = await ctx.call('auth-agent.getResourceUri', { webId });
+          const authAgentUri = await ctx.call('auth-agent.getUri');
 
           const accessGrantsContainer = await ctx.call('access-grants.list', { webId });
           const accessGrants = arrayOf(accessGrantsContainer['ldp:contains']);

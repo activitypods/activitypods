@@ -9,8 +9,7 @@ const PodNotificationsSchema = {
   },
   actions: {
     send: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { template, recipientUri, activity, context, ...rest } = ctx.params;
 
         const app = await ctx.call('app.get');

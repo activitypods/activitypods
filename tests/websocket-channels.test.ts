@@ -1,45 +1,43 @@
 import urlJoin from 'url-join';
 import fetch from 'node-fetch';
 import WebSocket from 'ws';
-import { delay } from '@semapps/ldp';
-import { MIME_TYPES } from '@semapps/mime-types';
+import { ServiceBroker } from 'moleculer';
 import rdf from '@rdfjs/data-model';
-import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
+import { delay } from '@semapps/ldp';
+import {
+  connectPodProvider,
+  clearAllData,
+  initializeAppServer,
+  installApp,
+  createTestActor,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 import { fetchServer, tryUntilTimeout } from './utils.ts';
+import { TestActor, TestApp } from './utilTypes.js';
+
 jest.setTimeout(110_000);
+
 const POD_SERVER_BASE_URL = 'http://localhost:3000';
-const APP_SERVER_BASE_URL = 'http://localhost:3001';
-const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
 describe('Websocket channel', () => {
-  let podProvider: any, alice: any, appServer: any, webSocketChannelSubscriptionUrl: any;
+  let podProvider: ServiceBroker,
+    appServer: ServiceBroker,
+    alice: TestActor,
+    app: TestApp,
+    webSocketChannelSubscriptionUrl: string;
 
   beforeAll(async () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
     await appServer.start();
+    app = await getTestApp(appServer);
 
-    const actorData = require(`./data/actor1.json`);
-    const { webId } = await podProvider.call('auth.signup', actorData);
-    alice = await podProvider.call(
-      'activitypub.actor.awaitCreateComplete',
-      {
-        actorUri: webId,
-        additionalKeys: ['url']
-      },
-      { meta: { dataset: actorData.username } }
-    );
-    alice.call = (actionName: any, params: any, options = {}) =>
-      podProvider.call(actionName, params, {
-        ...options,
-        meta: { ...options.meta, webId, dataset: alice.preferredUsername }
-      });
-
-    await installApp(alice, APP_URI);
+    alice = await createTestActor(podProvider, 'alice');
+    await installApp(alice, app.id);
   }, 110_000);
 
   afterAll(async () => {
@@ -99,17 +97,18 @@ describe('Websocket channel', () => {
   });
 
   describe('collection and resource subscription', () => {
-    let collectionUri: any,
-      noteUri: any,
+    let containerUri: string,
+      collectionUri: string,
+      noteUri: string,
       collectionWebSocket: any,
       itemWebSocket: any,
-      webSocketCollectionChannelUri: any,
-      webSocketItemChannelUri: any;
+      webSocketCollectionChannelUri: string,
+      webSocketItemChannelUri: string;
     const collectionActivities: any = [];
     const itemActivities: any = [];
 
     beforeAll(async () => {
-      collectionUri = await appServer.call('pod-collections.createAndAttach', {
+      collectionUri = await app.call('pod-collections.createAndAttach', {
         resourceUri: alice.id,
         attachPredicate: 'http://activitypods.org/ns/core#my-notes',
         collectionOptions: {
@@ -120,12 +119,14 @@ describe('Websocket channel', () => {
         actorUri: alice.id
       });
 
+      containerUri = await alice.getContainerUri('as:Note');
+
       await alice.call('webacl.resource.addRights', {
         webId: 'system',
-        resourceUri: urlJoin(alice.id, 'data/as'),
+        resourceUri: containerUri,
         additionalRights: {
           anon: {
-            uri: APP_URI,
+            uri: app.id,
             read: true,
             write: true,
             append: true,
@@ -135,21 +136,21 @@ describe('Websocket channel', () => {
       });
 
       noteUri = await alice.call('ldp.container.post', {
-        containerUri: urlJoin(alice.id, 'data/as'),
+        containerUri,
         resource: {
           '@context': 'https://www.w3.org/ns/activitystreams',
           '@type': 'Note',
           name: `A new collection note`,
           content: `The note content.`
-        },
-        contentType: MIME_TYPES.JSON
+        }
       });
+
       await alice.call('webacl.resource.addRights', {
         webId: 'system',
         resourceUri: noteUri,
         additionalRights: {
           anon: {
-            uri: APP_URI,
+            uri: app.id,
             read: true,
             write: true,
             append: true,
@@ -162,7 +163,7 @@ describe('Websocket channel', () => {
     test('Create web socket channels as registered app', async () => {
       // Create channel for listing to collection changes.
 
-      const { body: collectionChannelBody } = await appServer.call('signature.proxy.query', {
+      const { body: collectionChannelBody } = await app.call('signature.proxy.query', {
         url: webSocketChannelSubscriptionUrl,
         method: 'POST',
         headers: new fetch.Headers({ 'Content-Type': 'application/ld+json' }),
@@ -173,7 +174,7 @@ describe('Websocket channel', () => {
           '@type': 'notify:WebSocketChannel2023',
           'notify:topic': collectionUri
         }),
-        actorUri: APP_URI
+        actorUri: app.id
       });
       expect(collectionChannelBody.id).toBeTruthy();
       webSocketCollectionChannelUri = collectionChannelBody.id;
@@ -183,7 +184,7 @@ describe('Websocket channel', () => {
         collectionActivities.push(JSON.parse(e.data));
       });
 
-      const { body: itemChannelBody } = await appServer.call('signature.proxy.query', {
+      const { body: itemChannelBody } = await app.call('signature.proxy.query', {
         url: webSocketChannelSubscriptionUrl,
         method: 'POST',
         headers: new fetch.Headers({ 'Content-Type': 'application/ld+json' }),
@@ -194,7 +195,7 @@ describe('Websocket channel', () => {
           '@type': 'notify:WebSocketChannel2023',
           'notify:topic': noteUri
         }),
-        actorUri: APP_URI
+        actorUri: app.id
       });
       expect(itemChannelBody.id).toBeTruthy();
       webSocketItemChannelUri = itemChannelBody.id;
@@ -274,15 +275,15 @@ describe('Websocket channel', () => {
     });
 
     test('Delete web socket channels', async () => {
-      const responseDelCollection = await appServer.call('signature.proxy.query', {
+      const responseDelCollection = await app.call('signature.proxy.query', {
         url: webSocketCollectionChannelUri,
         method: 'DELETE',
-        actorUri: APP_URI
+        actorUri: app.id
       });
-      const responseDelItem = await appServer.call('signature.proxy.query', {
+      const responseDelItem = await app.call('signature.proxy.query', {
         url: webSocketItemChannelUri,
         method: 'DELETE',
-        actorUri: APP_URI
+        actorUri: app.id
       });
       expect(responseDelCollection.status).toBe(204);
       expect(responseDelItem.status).toBe(204);
@@ -297,13 +298,14 @@ describe('Websocket channel', () => {
     const containerActivities: any = [];
 
     beforeAll(async () => {
-      containerUri = urlJoin(alice.id, 'data/as');
+      containerUri = await alice.getContainerUri('as:Note');
+
       await alice.call('webacl.resource.addRights', {
         webId: 'system',
         resourceUri: containerUri,
         additionalRights: {
           anon: {
-            uri: APP_URI,
+            uri: app.id,
             read: true,
             write: true,
             append: true,
@@ -314,7 +316,7 @@ describe('Websocket channel', () => {
     });
 
     test('Create web socket channel as registered app', async () => {
-      const { body } = await appServer.call('signature.proxy.query', {
+      const { body } = await app.call('signature.proxy.query', {
         url: webSocketChannelSubscriptionUrl,
         method: 'POST',
         headers: new fetch.Headers({ 'Content-Type': 'application/ld+json' }),
@@ -325,7 +327,7 @@ describe('Websocket channel', () => {
           '@type': 'notify:WebSocketChannel2023',
           'notify:topic': containerUri
         }),
-        actorUri: APP_URI
+        actorUri: app.id
       });
       expect(body.id).toBeTruthy();
 
@@ -343,8 +345,7 @@ describe('Websocket channel', () => {
           '@type': 'Object',
           name: `Some object resource`,
           content: `I'm a resource with type as:Object.`
-        },
-        contentType: MIME_TYPES.JSON
+        }
       });
 
       await tryUntilTimeout(() => {

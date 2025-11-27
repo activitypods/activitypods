@@ -4,8 +4,7 @@ const PodOutboxSchema = {
   name: 'pod-outbox' as const,
   actions: {
     post: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         let { activity, actorUri } = ctx.params;
 
         // Adds the default context, if it is missing
@@ -16,8 +15,7 @@ const PodOutboxSchema = {
           };
         }
 
-        const app = await ctx.call('app.get');
-        const appUri = app.id || app['@id'];
+        const appUri = await ctx.call('app.getUri');
 
         const actor = await ctx.call('activitypub.actor.get', { actorUri, webId: appUri });
 

@@ -31,9 +31,7 @@ const ImmutableContainerMixin = {
       return { resourceUri: newResourceUri, oldData, newData: { id: newResourceUri, ...resource }, webId };
     },
     patch() {
-      throw new Error(
-        `The resources of type ${this.settings.acceptedTypes.join(', ')} are immutable. PATCH is disabled.`
-      );
+      throw new Error(`The resources of type ${this.settings.types.join(', ')} are immutable. PATCH is disabled.`);
     }
   }
   // ALTERNATIVE METHOD THAT ONLY CHANGE THE URL WITHOUT CALLING POST/DELETE

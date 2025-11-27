@@ -1,3 +1,3 @@
-import { TypeIndexesService } from '@semapps/solid';
+import { TypeIndexService } from '@semapps/solid';
 
-export default TypeIndexesService;
+export default TypeIndexService;

@@ -5,10 +5,11 @@ import { ServiceSchema } from 'moleculer';
 
 const AccessNeedsSchema = {
   name: 'access-needs' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
-    acceptedTypes: ['interop:AccessNeed'],
-    readOnly: true,
+    path: '/access-needs',
+    types: ['interop:AccessNeed'],
     activateTombstones: false
   },
   actions: {
@@ -25,8 +26,7 @@ const AccessNeedsSchema = {
     },
 
     find: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { shapeTreeUri, accessMode, necessity, preferredScope } = ctx.params;
 
         const filteredContainer = await this.actions.list(

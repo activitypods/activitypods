@@ -12,7 +12,7 @@ const Schema = {
   dependencies: ['pod-resources'],
   actions: {
     post: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         if (!ctx.params.containerUri) {
           ctx.params.containerUri = await this.actions.getContainerUri(
             { actorUri: ctx.params.actorUri },
@@ -24,7 +24,7 @@ const Schema = {
     },
 
     list: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         if (!ctx.params.containerUri) {
           ctx.params.containerUri = await this.actions.getContainerUri(
             { actorUri: ctx.params.actorUri },
@@ -36,32 +36,31 @@ const Schema = {
     },
 
     get: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         return await ctx.call('pod-resources.get', ctx.params);
       }
     },
 
     patch: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         return await ctx.call('pod-resources.patch', ctx.params);
       }
     },
 
     put: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         return await ctx.call('pod-resources.put', ctx.params);
       }
     },
 
     delete: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         return await ctx.call('pod-resources.delete', ctx.params);
       }
     },
 
     getContainerUri: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         return await ctx.call('access-grants.getContainerByShapeTree', {
           shapeTreeUri: this.settings.shapeTreeUri,
           podOwner: ctx.params.actorUri

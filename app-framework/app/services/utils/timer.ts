@@ -4,7 +4,7 @@ const TimerSchema = {
   name: 'timer' as const,
   actions: {
     get: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { key } = ctx.params;
 
         const job = await this.getJob(key);
@@ -18,7 +18,7 @@ const TimerSchema = {
     },
 
     set: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { key, time, actionName, params, repeat } = ctx.params;
 
         // Delete any existing timer with the same key
@@ -41,8 +41,7 @@ const TimerSchema = {
     },
 
     delete: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { key } = ctx.params;
 
         const job = await this.getJob(key);

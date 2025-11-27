@@ -29,7 +29,7 @@ const JwkSchema = {
   },
   actions: {
     generateKeyPair: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { privateKeyPath, publicKeyPath } = ctx.params;
 
         const { privateKey, publicKey } = await generateKeyPair(this.settings.alg);
@@ -52,7 +52,7 @@ const JwkSchema = {
     },
 
     verifyToken: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { token } = ctx.params;
 
         const publicKey = await importJWK(this.publicJwk, this.settings.alg);

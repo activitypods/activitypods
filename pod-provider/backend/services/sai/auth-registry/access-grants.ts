@@ -7,9 +7,10 @@ import { arraysEqual } from '../../../utils.ts';
 
 const AccessGrantsSchema = {
   name: 'access-grants' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; types: nul... Remove this comment to see the full error message
   mixins: [ImmutableContainerMixin, ControlledContainerMixin, AccessGrantsMixin],
   settings: {
-    acceptedTypes: ['interop:AccessGrant'],
+    types: ['interop:AccessGrant'],
     excludeFromMirror: true,
     activateTombstones: false,
     typeIndex: 'private'
@@ -17,7 +18,7 @@ const AccessGrantsSchema = {
   dependencies: ['ldp', 'ldp.registry'],
   actions: {
     generateFromAuthorization: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { authorization } = ctx.params;
         let replacedGrant;
 
@@ -62,7 +63,7 @@ const AccessGrantsSchema = {
     },
 
     getByAuthorization: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { authorization } = ctx.params;
 
         const filteredContainer = await this.actions.list(
@@ -94,7 +95,7 @@ const AccessGrantsSchema = {
     },
 
     getByResourceUri: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri } = ctx.params;
         const webId = ctx.params.webId || ctx.meta.webId || 'anon';
 

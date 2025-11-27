@@ -9,8 +9,10 @@ import { ServiceSchema } from 'moleculer';
 const AgentRegistrationsMixin = {
   actions: {
     getForAgent: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { agentUri, podOwner } = ctx.params;
+
+        // const podOwner = await ctx.call('webid.getUri');
 
         const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
 
@@ -31,7 +33,7 @@ const AgentRegistrationsMixin = {
     },
 
     isRegistered: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { agentUri, podOwner } = ctx.params;
         return !!(await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx }));
       }
@@ -39,7 +41,7 @@ const AgentRegistrationsMixin = {
 
     getGrants: {
       // Get all grants associated with an agent registration
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { agentRegistration, podOwner } = ctx.params;
         let grants: any = [];
 
@@ -57,7 +59,7 @@ const AgentRegistrationsMixin = {
 
     addGrant: {
       // Attach a grant to the grantee's agent registration
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { grant } = ctx.params;
 
         let agentRegistration = await this.actions.getForAgent(
@@ -121,7 +123,7 @@ const AgentRegistrationsMixin = {
     },
 
     removeGrant: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { grant } = ctx.params;
 
         const agentRegistration = await this.actions.getForAgent(
@@ -176,14 +178,11 @@ const AgentRegistrationsMixin = {
   hooks: {
     after: {
       async post(ctx, res) {
-        const webId = ctx.params.resource['interop:registeredBy'];
-
         // Add the agent registration to the agent registry
         await ctx.call('agent-registry.add', {
-          podOwner: webId,
           agentRegistrationUri: res,
-          // @ts-expect-error TS(2339): Property 'acceptedTypes' does not exist on type 's... Remove this comment to see the full error message
-          agentRegistrationType: arrayOf(this.settings.acceptedTypes)[0]
+          // @ts-expect-error TS(2339): Property 'types' does not exist on type 's... Remove this comment to see the full error message
+          agentRegistrationType: arrayOf(this.settings.types)[0]
         });
 
         return res;
@@ -195,7 +194,7 @@ const AgentRegistrationsMixin = {
         // DELETE ALL RELATED AUTHORIZATIONS
         // The related grants will also be deleted as a side effect
 
-        const authorizations = await ctx.call('access-authorizations.listByGrantee', {
+        const authorizations: any = await ctx.call('access-authorizations.listByGrantee', {
           grantee: agentUri,
           webId: podOwner
         });
@@ -210,10 +209,9 @@ const AgentRegistrationsMixin = {
         // REMOVE AGENT REGISTRATION FROM AGENT REGISTRY
 
         await ctx.call('agent-registry.remove', {
-          podOwner,
           agentRegistrationUri: res.resourceUri,
-          // @ts-expect-error TS(2339): Property 'acceptedTypes' does not exist on type 's... Remove this comment to see the full error message
-          agentRegistrationType: arrayOf(this.settings.acceptedTypes)[0]
+          // @ts-expect-error TS(2339): Property 'types' does not exist on type 's... Remove this comment to see the full error message
+          agentRegistrationType: arrayOf(this.settings.types)[0]
         });
 
         return res;

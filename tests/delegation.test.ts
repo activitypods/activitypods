@@ -1,41 +1,48 @@
 import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
+import { ServiceBroker } from 'moleculer';
 import { OBJECT_TYPES } from '@semapps/activitypub';
-import { MIME_TYPES } from '@semapps/mime-types';
 import { arrayOf } from '@semapps/ldp';
-
-import { connectPodProvider, clearAllData, createActor, initializeAppServer, installApp } from './initialize.ts';
-
+import {
+  connectPodProvider,
+  clearAllData,
+  createTestActor,
+  initializeAppServer,
+  installApp,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example3.app.ts';
 import * as CONFIG from './config.ts';
+import { TestActor, TestApp } from './utilTypes.js';
+
 jest.setTimeout(120000);
-const APP_SERVER_BASE_URL = 'http://localhost:3001';
-const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
 describe('Test delegation features', () => {
-  let podProvider: any,
-    appServer: any,
-    alice: any,
-    bob: any,
-    craig: any,
-    eventContainerUri: any,
-    eventUri: any,
-    craigAppRegistrationUri: any;
+  let podProvider: ServiceBroker,
+    appServer: ServiceBroker,
+    app: TestApp,
+    alice: TestActor,
+    bob: TestActor,
+    craig: TestActor,
+    eventContainerUri: string,
+    eventUri: string,
+    craigAppRegistrationUri: string;
 
   beforeAll(async () => {
     clearAllData();
 
     podProvider = await connectPodProvider();
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
     await appServer.start();
+    app = await getTestApp(appServer);
 
-    alice = await createActor(podProvider, 'alice');
-    bob = await createActor(podProvider, 'bob');
-    craig = await createActor(podProvider, 'craig');
+    alice = await createTestActor(podProvider, 'alice');
+    bob = await createTestActor(podProvider, 'bob');
+    craig = await createTestActor(podProvider, 'craig');
 
     // We only need to install the app for Craig
-    craigAppRegistrationUri = await installApp(craig, APP_URI);
+    craigAppRegistrationUri = await installApp(craig, app.id);
   });
 
   afterAll(async () => {
@@ -55,8 +62,7 @@ describe('Test delegation features', () => {
       resource: {
         type: OBJECT_TYPES.EVENT,
         name: 'Birthday party !!'
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
     await alice.call('access-authorizations.addForSingleResource', {
@@ -68,6 +74,7 @@ describe('Test delegation features', () => {
     });
 
     // An authorization is created with the delegation information
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const authorizations = await alice.call('access-authorizations.listForSingleResource', {
         resourceUri: eventUri
@@ -90,6 +97,7 @@ describe('Test delegation features', () => {
     });
 
     // A grant is created with the delegation information
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const bobRegistration = await alice.call('social-agent-registrations.getForAgent', {
         agentUri: bob.id,
@@ -120,6 +128,7 @@ describe('Test delegation features', () => {
     });
 
     // The grant is stored in Bob storage
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         bob.call('access-grants.getByResourceUri', {
@@ -148,6 +157,7 @@ describe('Test delegation features', () => {
     });
 
     // An authorization is created with the delegation information
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const authorizations = await bob.call('access-authorizations.listForSingleResource', {
         resourceUri: eventUri
@@ -169,6 +179,7 @@ describe('Test delegation features', () => {
     });
 
     // A delegated grant is created by Alice and shared with Craig
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const craigRegistration = await bob.call('social-agent-registrations.getForAgent', {
         agentUri: craig.id,
@@ -197,6 +208,7 @@ describe('Test delegation features', () => {
     });
 
     // A delegated grant is created by Craig for the application
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const craigAppRegistration = await craig.call('app-registrations.get', {
         resourceUri: craigAppRegistrationUri
@@ -213,7 +225,7 @@ describe('Test delegation features', () => {
             type: 'interop:DelegatedAccessGrant',
             'interop:accessMode': 'acl:Read',
             'interop:dataOwner': alice.id,
-            'interop:grantee': APP_URI,
+            'interop:grantee': app.id,
             'interop:granteeType': 'interop:Application',
             'interop:grantedBy': craig.id,
             'interop:hasDataInstance': eventUri,
@@ -226,20 +238,16 @@ describe('Test delegation features', () => {
     });
 
     // Craig can fetch Alice event
-    await expect(
-      craig.call('ldp.resource.get', {
-        resourceUri: eventUri,
-        accept: MIME_TYPES.JSON
-      })
-    ).resolves.not.toThrow();
+    await expect(craig.call('ldp.resource.get', { resourceUri: eventUri })).resolves.not.toThrow();
   });
 
   test('Craig remove the app and the delegated grant is deleted', async () => {
     await craig.call('registration-endpoint.remove', {
-      appUri: APP_URI
+      appUri: app.id
     });
 
     // We should only have the delegated grant of Bob to Craig
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const delegatedGrants = await craig.call('delegated-access-grants.list');
       expect(arrayOf(delegatedGrants['ldp:contains'])).toHaveLength(1);

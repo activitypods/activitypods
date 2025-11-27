@@ -54,7 +54,7 @@ const WebsocketSchema = {
           onError: { type: 'function', default: () => {} }
         }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { name, route, authorization, authentication, use, handlers } = ctx.params;
 
         // Use the service's regular route handler but add some mixins.

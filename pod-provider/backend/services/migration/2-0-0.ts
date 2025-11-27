@@ -15,7 +15,7 @@ const Migration200Schema = {
   },
   actions: {
     migrate: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
@@ -60,7 +60,7 @@ const Migration200Schema = {
     },
 
     migratePreferredLocale: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const account = ctx.params;
         this.logger.info(`Migrating preferred locale...`);
 
@@ -90,7 +90,7 @@ const Migration200Schema = {
     },
 
     addSolidPredicates: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const account = ctx.params;
         this.logger.info(`Migrating solid predicates...`);
 
@@ -133,7 +133,7 @@ const Migration200Schema = {
     },
 
     addTypeIndex: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
         const webIdData = await ctx.call('ldp.resource.get', { resourceUri: webId, accept: MIME_TYPES.JSON, webId });
 
@@ -142,7 +142,7 @@ const Migration200Schema = {
         } else {
           this.logger.info(`Adding TypeIndex to ${webId}...`);
 
-          const podUrl = await ctx.call('solid-storage.getUrl', { webId });
+          const podUrl = await ctx.call('solid-storage.getBaseUrl', { webId });
           await ctx.call('type-indexes.createPublicIndex', { webId });
 
           // Go through each registered container and persist them
@@ -152,7 +152,7 @@ const Migration200Schema = {
             const containerUri = urlJoin(podUrl, container.path);
             await ctx.call('type-registrations.register', {
               // @ts-expect-error TS(18046): 'container' is of type 'unknown'.
-              types: arrayOf(container.acceptedTypes),
+              types: arrayOf(container.types),
               containerUri,
               webId
             });
@@ -162,7 +162,7 @@ const Migration200Schema = {
     },
 
     attachCollectionsToContainer: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username: dataset } = ctx.params;
 
         const collectionsContainerUri = urlJoin(CONFIG.BASE_URL, dataset, '/data/as/collection');
@@ -187,7 +187,7 @@ const Migration200Schema = {
     },
 
     persistCollectionsOptions: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username: dataset } = ctx.params;
 
         await ctx.call('activitypub.follow.updateCollectionsOptions', { dataset });
@@ -212,9 +212,9 @@ const Migration200Schema = {
     },
 
     createNewContainers: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId, username: dataset } = ctx.params;
-        const podUrl = await ctx.call('solid-storage.getUrl', { webId });
+        const podUrl = await ctx.call('solid-storage.getBaseUrl', { webId });
 
         // Go through each registered containers, create and attach it
         const registeredContainers = await ctx.call('ldp.registry.list', { dataset });
@@ -244,7 +244,7 @@ const Migration200Schema = {
     },
 
     attachResourcesToNewContainers: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
 
         const containersMapping = {
@@ -301,7 +301,7 @@ const Migration200Schema = {
     },
 
     deleteUnusedContainers: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
 
         // Containers which are not used anymore in v2
@@ -333,7 +333,7 @@ const Migration200Schema = {
     },
 
     useNewMutualAidNamespace: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username: dataset } = ctx.params;
 
         const types = [
@@ -387,7 +387,7 @@ const Migration200Schema = {
     },
 
     migrateMutualAidData: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
@@ -464,7 +464,7 @@ const Migration200Schema = {
     },
 
     migrateWtmpEventsFormats: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         // https://data.welcometomyplace.org/formats/music -> https://welcometomyplace.org/api/music
 
         const { username } = ctx.params;
@@ -495,7 +495,7 @@ const Migration200Schema = {
     },
 
     migrateBcmEventsFormats: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         // https://data.bienvenuechezmoi.org/formats/music -> https://bienvenuechezmoi.org/api/music
 
         const { username } = ctx.params;

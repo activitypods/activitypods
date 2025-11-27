@@ -1,9 +1,9 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'url-... Remove this comment to see the full error message
 import urlJoin from 'url-join';
-import { arrayOf, getParentContainerUri } from '@semapps/ldp';
+import { ServiceSchema } from 'moleculer';
+import { arrayOf } from '@semapps/ldp';
 import rdf from '@rdfjs/data-model';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { ServiceSchema } from 'moleculer';
+import { Account } from '@semapps/auth';
 
 /**
  * Service to repair Pods data
@@ -15,14 +15,14 @@ const RepairSchema = {
       /**
        * Install application with required access needs for the given users
        */
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username, appUri } = ctx.params;
-        const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+        const accounts: Account[] = await ctx.call('auth.account.find', {
+          query: username === '*' ? undefined : { username }
+        });
 
         for (const { username: dataset, webId } of accounts) {
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
-          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           ctx.meta.webId = webId;
 
           const isRegistered = await ctx.call('app-registrations.isRegistered', { agentUri: appUri, podOwner: webId });
@@ -44,14 +44,14 @@ const RepairSchema = {
       /**
        * Delete all app registrations for the given user
        */
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
-        const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+        const accounts: Account[] = await ctx.call('auth.account.find', {
+          query: username === '*' ? undefined : { username }
+        });
 
         for (const { webId, username: dataset } of accounts) {
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
-          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           ctx.meta.webId = webId;
 
           this.logger.info(`Removing apps of ${webId}...`);
@@ -72,14 +72,14 @@ const RepairSchema = {
        * Upgrade all existing applications, accepting all required access needs
        * TODO: find existing optional access needs, and grant them also
        */
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
-        const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+        const accounts: Account[] = await ctx.call('auth.account.find', {
+          query: username === '*' ? undefined : { username }
+        });
 
         for (const { webId, username: dataset } of accounts) {
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
-          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           ctx.meta.webId = webId;
 
           const container = await ctx.call('applications.list', { webId });
@@ -100,14 +100,15 @@ const RepairSchema = {
       /**
        * Create missing containers for the given user
        */
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
-        const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+        const accounts: Account[] = await ctx.call('auth.account.find', {
+          query: username === '*' ? undefined : { username }
+        });
 
         for (const { webId, username: dataset } of accounts) {
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
-          const storageUrl = await ctx.call('solid-storage.getUrl', { webId });
+          const storageUrl = await ctx.call('solid-storage.getBaseUrl');
 
           const registeredContainers = await ctx.call('ldp.registry.list');
           for (const container of Object.values(registeredContainers)) {
@@ -128,46 +129,12 @@ const RepairSchema = {
       }
     },
 
-    attachAllContainersToParent: {
-      /**
-       * Ensure there is no orphan container
-       */
-      async handler(ctx) {
-        const { username } = ctx.params;
-        const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
-
-        for (const { webId, username: dataset } of accounts) {
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
-          ctx.meta.dataset = dataset;
-          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
-          ctx.meta.webId = webId;
-
-          this.logger.info(`Attaching all containers of ${webId}...`);
-
-          const containersUris = await ctx.call('ldp.container.getAll', { dataset });
-
-          for (const containerUri of containersUris) {
-            // Ignore root container
-            if (containerUri !== urlJoin(webId, 'data')) {
-              const parentContainerUri = getParentContainerUri(containerUri);
-
-              this.logger.info(`Attaching ${containerUri} to ${parentContainerUri}...`);
-
-              await ctx.call('ldp.container.attach', {
-                containerUri: parentContainerUri,
-                resourceUri: containerUri,
-                webId: 'system'
-              });
-            }
-          }
-        }
-      }
-    },
-
     deleteEmptyCollections: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
-        const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+        const accounts: Account[] = await ctx.call('auth.account.find', {
+          query: username === '*' ? undefined : { username }
+        });
 
         for (const { webId, username: dataset } of accounts) {
           ctx.meta.dataset = dataset;
@@ -225,18 +192,18 @@ const RepairSchema = {
     },
 
     deleteDoubleNameFromProfiles: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
-        const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+        const accounts: Account[] = await ctx.call('auth.account.find', {
+          query: username === '*' ? undefined : { username }
+        });
 
         for (const { webId, username: dataset } of accounts) {
           this.logger.info(`Inspecting Pod of ${webId}...`);
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
-          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           ctx.meta.webId = webId;
 
-          const container = await ctx.call('profiles.profile.list');
+          const container: any = await ctx.call('profiles.profile.list');
 
           for (const profile of container['ldp:contains']) {
             if (profile['vcard:given-name'] && Array.isArray(profile['vcard:given-name'])) {
@@ -272,9 +239,11 @@ const RepairSchema = {
     },
 
     changeBaseUrl: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username, oldBaseUrl, newBaseUrl } = ctx.params;
-        const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+        const accounts: Account[] = await ctx.call('auth.account.find', {
+          query: username === '*' ? undefined : { username }
+        });
 
         for (const { username: dataset } of accounts) {
           this.logger.info(`Changing base URL for dataset ${dataset}...`);

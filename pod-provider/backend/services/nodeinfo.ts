@@ -1,8 +1,8 @@
 import { NodeinfoService } from '@semapps/nodeinfo';
-import urlJoin from 'url-join';
 import * as CONFIG from '../config/config.ts';
 import packageDesc from '../package.json' with { type: 'json' };
 import { ServiceSchema } from 'moleculer';
+import { Account } from '@semapps/auth';
 
 const Schema = {
   mixins: [NodeinfoService],
@@ -22,9 +22,8 @@ const Schema = {
   },
   actions: {
     getUsersCount: {
-      async handler(ctx) {
-        const accounts = await ctx.call('auth.account.find');
-        // @ts-expect-error TS(2339): Property 'length' does not exist on type 'never'.
+      async handler(ctx: any) {
+        const accounts: Account[] = await ctx.call('auth.account.find');
         const totalPods = accounts.length;
         return {
           total: totalPods,

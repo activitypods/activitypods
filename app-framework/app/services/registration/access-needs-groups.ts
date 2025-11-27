@@ -1,16 +1,15 @@
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
-import { MIME_TYPES } from '@semapps/mime-types';
 import { arraysEqual } from '../../utils.ts';
 import { necessityMapping } from '../../mappings.ts';
 import { ServiceSchema } from 'moleculer';
 
 const AccessNeedsGroupsSchema = {
   name: 'access-needs-groups' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
-    // ControlledContainerMixin settings
-    acceptedTypes: ['interop:AccessNeedGroup'],
-    readOnly: true,
+    path: '/access-needs-groups',
+    types: ['interop:AccessNeedGroup'],
     activateTombstones: false
   },
   actions: {
@@ -27,13 +26,13 @@ const AccessNeedsGroupsSchema = {
     },
 
     createOrUpdate: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { accessNeeds: accessNeedsByNecessity } = ctx.params;
 
         for (const [necessity, accessNeeds] of Object.entries(accessNeedsByNecessity)) {
           let newAccessNeedsUris = [];
 
-          const existingAccessNeedGroup = await this.actions.findByNecessity({ necessity });
+          const existingAccessNeedGroup = await this.actions.findByNecessity({ necessity }, { parentCtx: ctx });
 
           // @ts-expect-error TS(18046): 'accessNeeds' is of type 'unknown'.
           if (accessNeeds.length > 0) {
@@ -76,7 +75,6 @@ const AccessNeedsGroupsSchema = {
                     'interop:accessNecessity': necessityMapping[necessity],
                     'interop:preferredScope': accessNeed.preferredScope || 'interop:All'
                   },
-                  contentType: MIME_TYPES.JSON,
                   webId: 'system'
                 });
                 this.logger.info(`Created new access need ${newAccessNeedUri}`);
@@ -125,7 +123,6 @@ const AccessNeedsGroupsSchema = {
                     'interop:hasAccessNeed': newAccessNeedsUris,
                     'apods:hasSpecialRights': newSpecialRights
                   },
-                  contentType: MIME_TYPES.JSON,
                   webId: 'system'
                 },
                 {
@@ -156,8 +153,7 @@ const AccessNeedsGroupsSchema = {
     },
 
     findByNecessity: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { necessity } = ctx.params;
 
         const filteredContainer = await this.actions.list(
@@ -178,11 +174,11 @@ const AccessNeedsGroupsSchema = {
   hooks: {
     after: {
       async post(ctx, res) {
-        await ctx.call('actors.attachAccessNeedGroup', { accessNeedGroupUri: res });
+        await ctx.call('app.attachAccessNeedGroup', { accessNeedGroupUri: res });
         return res;
       },
       async delete(ctx, res) {
-        await ctx.call('actors.detachAccessNeedGroup', { accessNeedGroupUri: ctx.params.resourceUri });
+        await ctx.call('app.detachAccessNeedGroup', { accessNeedGroupUri: ctx.params.resourceUri });
         return res;
       }
     }

@@ -6,10 +6,11 @@ import { ServiceSchema } from 'moleculer';
 
 const ProfilesLocationSchema = {
   name: 'profiles.location' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
-    acceptedTypes: ['vcard:Location'],
-    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location'),
+    types: ['vcard:Location'],
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL!, 'shapetrees/vcard/Location'),
     excludeFromMirror: true,
     permissions: {},
     newResourcesPermissions: {},
@@ -17,7 +18,7 @@ const ProfilesLocationSchema = {
   },
   actions: {
     getHomeLocation: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
 
         const results = await ctx.call('triplestore.query', {
@@ -38,13 +39,12 @@ const ProfilesLocationSchema = {
           webId
         });
 
-        // @ts-expect-error TS(2339): Property 'length' does not exist on type 'never'.
         return results.length > 0 ? results[0].homeLocation.value : null;
       }
     },
 
     clearHomeLocation: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
         await ctx.call('triplestore.update', {
           query: `

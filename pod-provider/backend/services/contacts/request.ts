@@ -59,7 +59,7 @@ const ContactsRequestSchema = {
   },
   actions: {
     updateCollectionsOptions: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { dataset } = ctx.params;
         await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
           collection: this.settings.contactsCollectionOptions,
@@ -261,10 +261,7 @@ const ContactsRequestSchema = {
         });
 
         // Cache the other actor's profile
-        await ctx.call('ldp.remote.store', {
-          resource: activity.object.object.object,
-          webId: emitterUri
-        });
+        await ctx.call('ldp.remote.store', { resource: activity.object.object.object });
 
         // Attach the other actor's profile to my profiles container
         await ctx.call('profiles.profile.attach', {
@@ -289,10 +286,7 @@ const ContactsRequestSchema = {
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
         // Cache the other actor's profile (it should be visible now)
-        await ctx.call('ldp.remote.store', {
-          resourceUri: emitter.url,
-          webId: recipientUri
-        });
+        await ctx.call('ldp.remote.store', { resourceUri: emitter.url });
 
         // Attach the other actor's profile to my profiles container
         await ctx.call('profiles.profile.attach', {

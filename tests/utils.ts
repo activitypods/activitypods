@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import { delay } from '@semapps/ldp';
 import * as CONFIG from './config.ts';
+import { FetchOptions } from './utilTypes.js';
 
 const arrayOf = (value: any) => {
   // If the field is null-ish, we suppose there are no values.
@@ -15,7 +16,7 @@ const arrayOf = (value: any) => {
   return [value];
 };
 
-const fetchServer = (url: any, options = {}) => {
+const fetchServer = async (url: string, options: FetchOptions = {}) => {
   if (!options.headers) options.headers = new fetch.Headers();
 
   switch (options.method) {
@@ -39,7 +40,7 @@ const fetchServer = (url: any, options = {}) => {
 
   return fetch(url, {
     method: options.method || 'GET',
-    body: options.body,
+    body: options.body as fetch.BodyInit,
     headers: options.headers
   })
     .then(response =>

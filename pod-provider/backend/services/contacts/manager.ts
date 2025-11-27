@@ -1,7 +1,7 @@
 import urlJoin from 'url-join';
 import { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } from '@semapps/activitypub';
 import { sanitizeSparqlQuery } from '@semapps/triplestore';
-import { arrayOf } from '@semapps/ldp';
+import { arrayOf, getBaseUrlFromUri, getDatasetFromUri } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } from '../../config/patterns.ts';
 import { ServiceSchema } from 'moleculer';
@@ -26,7 +26,7 @@ const ContactsManagerSchema = {
   },
   actions: {
     updateCollectionsOptions: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { dataset } = ctx.params;
         await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
           collection: this.settings.ignoredContactsCollectionOptions,
@@ -41,7 +41,8 @@ const ContactsManagerSchema = {
       async onEmit(ctx: any, activity: any, emitterUri: any) {
         if (!activity.origin) throw new Error('The origin property is missing from the Add activity');
 
-        if (!activity.origin.startsWith(emitterUri))
+        const collectionDataset = getDatasetFromUri(activity.origin);
+        if (collectionDataset !== ctx.meta.dataset)
           throw new Error(`Cannot add to collection ${activity.origin} as it is not owned by the emitter`);
 
         await ctx.call('activitypub.collection.add', {
@@ -50,10 +51,7 @@ const ContactsManagerSchema = {
         });
 
         if (activity.object.url) {
-          await ctx.call('ldp.remote.store', {
-            resourceUri: activity.object.url,
-            webId: emitterUri
-          });
+          await ctx.call('ldp.remote.store', { resourceUri: activity.object.url });
           await ctx.call('profiles.profile.attach', {
             resourceUri: activity.object.url,
             webId: emitterUri
@@ -63,10 +61,11 @@ const ContactsManagerSchema = {
     },
     removeContact: {
       match: REMOVE_CONTACT,
-      async onEmit(ctx: any, activity: any, emitterUri: any) {
+      async onEmit(ctx: any, activity: any, emitterUri: string) {
         if (!activity.origin) throw new Error('The origin property is missing from the Remove activity');
 
-        if (!activity.origin.startsWith(emitterUri))
+        const collectionDataset = getDatasetFromUri(activity.origin);
+        if (collectionDataset !== ctx.meta.dataset)
           throw new Error(`Cannot remove from collection ${activity.origin} as it is not owned by the emitter`);
 
         await ctx.call('activitypub.collection.remove', {
@@ -84,7 +83,7 @@ const ContactsManagerSchema = {
     },
     ignoreContact: {
       match: IGNORE_CONTACT,
-      async onEmit(ctx: any, activity: any, emitterUri: any) {
+      async onEmit(ctx: any, activity: any, emitterUri: string) {
         const emitter = await ctx.call('activitypub.actor.get', { actorUri: emitterUri });
 
         // Add the actor to the emitter's ignore contacts list.
@@ -116,7 +115,7 @@ const ContactsManagerSchema = {
         }
         return { match: false, dereferencedActivity: activity };
       },
-      async onReceive(ctx: any, activity: any, recipientUri: any) {
+      async onReceive(ctx: any, activity: any, recipientUri: string) {
         // See also https://swicg.github.io/activitypub-http-signature/#handling-deletes-of-actors for more sophisticated approaches.
         if (!(activity.actor === activity.object.id))
           throw new Error(`The actor ${activity.actor} cannot ask to remove actor ${activity.object.id}`);
@@ -127,19 +126,17 @@ const ContactsManagerSchema = {
           return;
         }
 
-        const actorToDelete = activity.object.id;
-        const storageUrl = await ctx.call('solid-storage.getUrl', { webId: actorToDelete });
+        const actorToDelete = activity.object?.id || activity.object;
+        const storageUrl = getBaseUrlFromUri(actorToDelete);
 
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
-
         const account = await ctx.call('auth.account.findByWebId', { webId: recipientUri });
-        const dataset = account.username;
 
         // If the recipient owns the group, remove it
         if (arrayOf(account.owns).includes(actorToDelete)) {
           await ctx.call(
             'groups.undoClaim',
-            { username: dataset, groupWebId: actorToDelete },
+            { username: account.username, groupWebId: actorToDelete },
             { meta: { webId: recipientUri } }
           );
         }
@@ -154,8 +151,7 @@ const ContactsManagerSchema = {
               }
             }
           `,
-          webId: 'system',
-          dataset
+          webId: 'system'
         });
 
         // Get all cached resources from this Pod
@@ -168,8 +164,7 @@ const ContactsManagerSchema = {
             }
           `,
           accept: MIME_TYPES.JSON,
-          webId: 'system',
-          dataset
+          webId: 'system'
         });
 
         for (let cachedResourceUri of result.map((node: any) => node.resourceUri.value)) {
@@ -199,8 +194,7 @@ const ContactsManagerSchema = {
               }
             }
           `,
-          webId: 'system',
-          dataset
+          webId: 'system'
         });
 
         // Remove actor from all ACL groups
@@ -213,8 +207,7 @@ const ContactsManagerSchema = {
               }
             }
           `,
-          webId: 'system',
-          dataset
+          webId: 'system'
         });
 
         // Remove all rights of actor
@@ -227,8 +220,7 @@ const ContactsManagerSchema = {
               }
             }
           `,
-          webId: 'system',
-          dataset
+          webId: 'system'
         });
 
         // Ensure the actor requesting deletion still exists before sending back an Accept activity

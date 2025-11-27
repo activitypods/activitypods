@@ -1,26 +1,28 @@
 import rdf from '@rdfjs/data-model';
-import { SingleResourceContainerMixin } from '@semapps/ldp';
+import { ControlledResourceMixin } from '@semapps/ldp';
 import { ServiceSchema } from 'moleculer';
 const ALLOWED_TYPES = ['interop:ApplicationRegistration', 'interop:SocialAgentRegistration'];
 
-const AgentRegistrySchema = {
+const AgentRegistryService = {
   name: 'agent-registry' as const,
-  mixins: [SingleResourceContainerMixin],
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
+  mixins: [ControlledResourceMixin],
   settings: {
-    acceptedTypes: ['interop:AgentRegistry'],
-    podProvider: true
+    path: '/agent-registry',
+    types: ['interop:AgentRegistry'],
+    typeIndex: 'private'
   },
   dependencies: ['registry-set'],
   actions: {
     add: {
-      async handler(ctx) {
-        const { podOwner, agentRegistrationUri, agentRegistrationType } = ctx.params;
+      async handler(ctx: any) {
+        const { agentRegistrationUri, agentRegistrationType } = ctx.params;
 
         if (!ALLOWED_TYPES.includes(agentRegistrationType)) {
           throw new Error(`The agentRegistrationType param must be ${ALLOWED_TYPES.join(' or ')}`);
         }
 
-        const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+        const agentRegistryUri = await this.actions.getUri({}, { parentCtx: ctx });
 
         await this.actions.patch(
           {
@@ -44,13 +46,13 @@ const AgentRegistrySchema = {
     },
 
     remove: {
-      async handler(ctx) {
-        const { podOwner, agentRegistrationUri, agentRegistrationType } = ctx.params;
+      async handler(ctx: any) {
+        const { agentRegistrationUri, agentRegistrationType } = ctx.params;
 
         if (!ALLOWED_TYPES.includes(agentRegistrationType)) {
           throw new Error(`The agentRegistrationType param must be ${ALLOWED_TYPES.join(' or ')}`);
         }
-        const agentRegistryUri = await this.actions.getResourceUri({ webId: podOwner }, { parentCtx: ctx });
+        const agentRegistryUri = await this.actions.getUri({}, { parentCtx: ctx });
 
         await this.actions.patch(
           {
@@ -73,34 +75,33 @@ const AgentRegistrySchema = {
       }
     }
   },
-  hooks: {
-    after: {
-      async post(ctx, res) {
-        // Attach the registry to the registry set
-        const registrySetUri = await ctx.call('registry-set.getResourceUri', { webId: ctx.params.webId });
-        await ctx.call('registry-set.patch', {
+  events: {
+    'registry-set.created': {
+      async handler(ctx: any) {
+        const { resourceUri: registrySetUri } = ctx.params;
+        const agentRegistryUri = await this.actions.waitForCreation({}, { parentCtx: ctx });
+        await ctx.call('ldp.resource.patch', {
           resourceUri: registrySetUri,
           triplesToAdd: [
             rdf.quad(
               rdf.namedNode(registrySetUri),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAgentRegistry'),
-              rdf.namedNode(res)
+              rdf.namedNode(agentRegistryUri)
             )
           ],
           webId: 'system'
         });
-        return res;
       }
     }
   }
 } satisfies ServiceSchema;
 
-export default AgentRegistrySchema;
+export default AgentRegistryService;
 
 declare global {
   export namespace Moleculer {
     export interface AllServices {
-      [AgentRegistrySchema.name]: typeof AgentRegistrySchema;
+      [AgentRegistryService.name]: typeof AgentRegistryService;
     }
   }
 }

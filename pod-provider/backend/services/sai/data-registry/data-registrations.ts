@@ -5,7 +5,7 @@ import { MIME_TYPES } from '@semapps/mime-types';
 import { getDatasetFromUri, hasType, isURL } from '@semapps/ldp';
 import { ServiceSchema } from 'moleculer';
 
-const DataRegistrationsSchema = {
+const DataRegistrationsService = {
   name: 'data-registrations' as const,
   dependencies: ['ldp.link-header'],
   async started() {
@@ -13,7 +13,7 @@ const DataRegistrationsSchema = {
   },
   actions: {
     get: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { dataRegistrationUri } = ctx.params;
 
         return await ctx.call(
@@ -37,10 +37,13 @@ const DataRegistrationsSchema = {
       /**
        * Create a DataRegistration AND a LDP container in a given storage
        */
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { shapeTreeUri, podOwner } = ctx.params;
 
-        const existingDataRegistration = await this.actions.getByShapeTree({ shapeTreeUri, podOwner });
+        const existingDataRegistration = await this.actions.getByShapeTree(
+          { shapeTreeUri, podOwner },
+          { parentCtx: ctx }
+        );
         if (existingDataRegistration) return existingDataRegistration;
 
         // Get registered class from shapeTree
@@ -49,27 +52,27 @@ const DataRegistrationsSchema = {
         const [registeredClass] = await ctx.call('shacl.getTypes', { resourceUri: shapeUri });
         if (!registeredClass) throw new Error(`Could not find class required by shape ${shapeUri}`);
 
-        // Register ontology, otherwise the ldp.container.getPath action will fail
         await this.actions.registerOntologyFromClass({ registeredClass }, { parentCtx: ctx });
 
-        // Generate a path for the new container
-        const containerPath = await ctx.call('ldp.container.getPath', { resourceType: registeredClass });
+        // Create the container
+        const containerUri = await ctx.call('ldp.container.create', { webId: podOwner });
 
-        // Create the container and attach it to its parent(s)
-        const podUrl = await ctx.call('solid-storage.getUrl', { webId: podOwner });
-        const containerUri = urlJoin(podUrl, containerPath);
-        await ctx.call('ldp.container.createAndAttach', { containerUri, webId: podOwner });
+        // Attach it to the root container
+        const rootContainerUri = await ctx.call('solid-storage.getRootContainerUri');
+        await ctx.call('ldp.container.attach', {
+          containerUri: rootContainerUri,
+          resourceUri: containerUri,
+          webId: 'system'
+        });
 
         // Register the class on the type index
-        const services = await this.broker.call('$node.services');
-        if (services.some((s: any) => s.name === 'type-registrations')) {
-          await ctx.call('type-registrations.register', {
-            types: [registeredClass],
-            containerUri,
-            webId: podOwner,
-            private: false
-          });
-        }
+        await ctx.call('type-index.register', {
+          types: [registeredClass],
+          uri: containerUri,
+          webId: podOwner,
+          isContainer: true,
+          isPrivate: false
+        });
 
         await this.actions.attachToContainer({ shapeTreeUri, containerUri, podOwner }, { parentCtx: ctx });
 
@@ -81,12 +84,13 @@ const DataRegistrationsSchema = {
       /**
        * Attach the DataRegistration predicates to an existing LDP container
        */
-      async handler(ctx) {
-        const { shapeTreeUri, containerUri, podOwner } = ctx.params;
+      async handler(ctx: any) {
+        const { shapeTreeUri, containerUri } = ctx.params;
+
+        const podOwner = await ctx.call('webid.getUri');
 
         const container = await ctx.call('ldp.container.get', {
           containerUri,
-          accept: MIME_TYPES.JSON,
           webId: 'system',
           doNotIncludeResources: true
         });
@@ -119,13 +123,11 @@ const DataRegistrationsSchema = {
                   }
                 }
               `,
-              accept: MIME_TYPES.JSON,
-              webId: 'system',
-              dataset: getDatasetFromUri(podOwner)
+              webId: 'system'
             });
           }
         } else {
-          const authAgentUri = await ctx.call('auth-agent.waitForResourceCreation', { webId: podOwner });
+          const authAgentUri = await ctx.call('auth-agent.waitForCreation');
 
           await ctx.call('triplestore.update', {
             query: `
@@ -143,8 +145,7 @@ const DataRegistrationsSchema = {
               }
             `,
             accept: MIME_TYPES.JSON,
-            webId: 'system',
-            dataset: getDatasetFromUri(podOwner)
+            webId: 'system'
           });
         }
 
@@ -165,7 +166,7 @@ const DataRegistrationsSchema = {
       /**
        * Get the DataRegistration URI linked with a shape tree
        */
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { shapeTreeUri, podOwner } = ctx.params;
 
         const results = await ctx.call('triplestore.query', {
@@ -193,9 +194,8 @@ const DataRegistrationsSchema = {
       /**
        * Get the data registration URI of a resource
        */
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const baseUrl = await ctx.call('ldp.getBaseUrl');
@@ -243,7 +243,7 @@ const DataRegistrationsSchema = {
       /**
        * Get the data registration of a resource
        */
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri } = ctx.params;
         // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
@@ -264,7 +264,7 @@ const DataRegistrationsSchema = {
     },
 
     registerOntologyFromClass: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { registeredClass } = ctx.params;
 
         // Match a string of type ldp:Container
@@ -302,7 +302,7 @@ const DataRegistrationsSchema = {
     },
 
     getLink: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { uri } = ctx.params;
 
         const dataRegistrationUri = await this.actions.getUriByResourceUri({ resourceUri: uri }, { parentCtx: ctx });
@@ -318,18 +318,15 @@ const DataRegistrationsSchema = {
   },
   events: {
     'ldp.container.created': {
-      async handler(ctx) {
-        // @ts-expect-error TS(2339): Property 'containerUri' does not exist on type 'Op... Remove this comment to see the full error message
-        const { containerUri, options, webId } = ctx.params;
+      async handler(ctx: any) {
+        const { containerUri, registration } = ctx.params;
 
         // If a shape tree is in the container option of the newly-created container, attach
-        if (options?.shapeTreeUri) {
-          // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
+        if (registration?.shapeTreeUri) {
           await this.actions.attachToContainer(
             {
-              shapeTreeUri: options.shapeTreeUri,
-              containerUri,
-              podOwner: webId
+              shapeTreeUri: registration.shapeTreeUri,
+              containerUri
             },
             { parentCtx: ctx }
           );
@@ -339,12 +336,12 @@ const DataRegistrationsSchema = {
   }
 } satisfies ServiceSchema;
 
-export default DataRegistrationsSchema;
+export default DataRegistrationsService;
 
 declare global {
   export namespace Moleculer {
     export interface AllServices {
-      [DataRegistrationsSchema.name]: typeof DataRegistrationsSchema;
+      [DataRegistrationsService.name]: typeof DataRegistrationsService;
     }
   }
 }

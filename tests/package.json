@@ -28,8 +28,7 @@
     "moleculer": "^0.14.19",
     "node-fetch": "^2.6.6",
     "url-join": "^4.0.1",
-    "wait-for-expect": "^3.0.2",
-    "ws": "^8.18.3"
+    "wait-for-expect": "^3.0.2"
   },
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.28.0",

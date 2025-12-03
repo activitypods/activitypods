@@ -1,4 +1,5 @@
 import urlJoin from 'url-join';
+import path from 'path';
 import { V20MigrationService } from '@semapps/migration';
 import { ServiceSchema } from 'moleculer';
 import * as CONFIG from '../../config/config.ts';
@@ -12,7 +13,7 @@ const Migration300Schema = {
   mixins: [V20MigrationService],
   settings: {
     baseUrl: CONFIG.BASE_URL,
-    podProvider: true
+    baseDir: path.resolve(__dirname, '../..')
   },
   actions: {
     async migrate(ctx: any) {
@@ -40,6 +41,7 @@ const Migration300Schema = {
             await this.actions.migrateCurrentPredicate({ dataset }, { parentCtx: ctx });
             await this.actions.migratePseudoIds({ dataset }, { parentCtx: ctx });
             await this.actions.attachAllContainersToRootContainer({ dataset }, { parentCtx: ctx });
+            await this.actions.migrateBinaries({ dataset }, { parentCtx: ctx });
 
             const singleResourceContainersUris = {
               'pim/configuration-file': 'pim:ConfigurationFile',

@@ -28,28 +28,39 @@ module.exports = {
   hooks: {
     after: {
       async signup(ctx, res) {
+        const allowIncompleteSignupBootstrap =
+          process.env.SEMAPPS_ALLOW_INCOMPLETE_SIGNUP_BOOTSTRAP === 'true' || process.env.NODE_ENV !== 'production';
+
         const { webId } = res;
 
-        await ctx.call('auth-agent.waitForResourceCreation', { webId });
-        await ctx.call('agent-registry.waitForResourceCreation', { webId });
-        await ctx.call('auth-registry.waitForResourceCreation', { webId });
-        await ctx.call('data-registry.waitForResourceCreation', { webId });
+        try {
+          await ctx.call('auth-agent.waitForResourceCreation', { webId });
+          await ctx.call('agent-registry.waitForResourceCreation', { webId });
+          await ctx.call('auth-registry.waitForResourceCreation', { webId });
+          await ctx.call('data-registry.waitForResourceCreation', { webId });
 
-        await ctx.call('activitypub.actor.awaitCreateComplete', {
-          actorUri: webId,
-          additionalKeys: [
-            'pim:storage',
-            'pim:preferencesFile',
-            'interop:hasAuthorizationAgent',
-            'interop:hasRegistrySet',
-            'solid:publicTypeIndex'
-          ]
-        });
+          await ctx.call('activitypub.actor.awaitCreateComplete', {
+            actorUri: webId,
+            additionalKeys: [
+              'pim:storage',
+              'pim:preferencesFile',
+              'interop:hasAuthorizationAgent',
+              'interop:hasRegistrySet',
+              'solid:publicTypeIndex'
+            ]
+          });
 
-        // Wait until all data and type registrations are created
-        // This is necessary for the data provider to be able to load all containers
-        await ctx.call('data-registry.awaitCreateComplete', { webId });
-        await ctx.call('type-indexes.awaitCreateComplete', { webId });
+          // Wait until all data and type registrations are created
+          // This is necessary for the data provider to be able to load all containers
+          await ctx.call('data-registry.awaitCreateComplete', { webId });
+          await ctx.call('type-indexes.awaitCreateComplete', { webId });
+        } catch (e) {
+          if (!allowIncompleteSignupBootstrap) throw e;
+
+          this.logger.warn(
+            `[Auth] Continuing signup with incomplete local bootstrap for ${webId}: ${e.message}`
+          );
+        }
 
         return res;
       }

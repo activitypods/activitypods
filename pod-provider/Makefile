@@ -7,8 +7,17 @@ DOCKER_COMPOSE_PUBLISH=COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compo
 build: 
 	$(DOCKER_COMPOSE_DEV) build
 
-start: 
+start:
 	$(DOCKER_COMPOSE_DEV) up -d
+
+# Fuseki 6: pre-create required datasets before the backend can start.
+# Run once after 'make start' on a fresh volume, or after any 'make stop'
+# that cleared the Fuseki data directory.
+fuseki-bootstrap:
+	./scripts/fuseki-bootstrap.sh
+
+# Convenience: start infrastructure and immediately bootstrap Fuseki.
+start-bootstrap: start fuseki-bootstrap
 
 stop:
 	$(DOCKER_COMPOSE_DEV) down

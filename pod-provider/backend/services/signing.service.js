@@ -214,6 +214,7 @@ module.exports = {
           "GET  /atproto/public-key":  "signing.getAtprotoPublicKey",
         },
       },
+      toBottom: false,
     });
 
     await this.broker.call("api.addRoute", {
@@ -230,6 +231,7 @@ module.exports = {
           "POST /verify": "signing.verifyInternalPassword",
         },
       },
+      toBottom: false,
     });
 
     this.logger.info("[Signing] Internal signing routes registered under /api/internal");

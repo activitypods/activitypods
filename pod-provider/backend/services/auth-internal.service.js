@@ -26,7 +26,8 @@ module.exports = {
         aliases: {
           'POST /verify': 'auth-internal.verify'
         }
-      }
+      },
+      toBottom: false
     });
 
     this.logger.info('[AuthInternal] Internal auth routes registered under /api/internal/auth');

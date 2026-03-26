@@ -30,7 +30,8 @@ module.exports = {
           'GET /by-did': 'internal-identity-projection-api.getByDid',
           'GET /by-handle': 'internal-identity-projection-api.getByHandle'
         }
-      }
+      },
+      toBottom: false
     });
 
     this.logger.info('[IdentityProjectionApi] Internal identity projection routes registered under /api/internal/identity');

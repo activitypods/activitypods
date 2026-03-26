@@ -137,24 +137,11 @@ module.exports = {
         atprotoDid: { type: 'string', min: 1 }
       },
       async handler(ctx) {
-        const { atprotoDid } = ctx.params;
-        const results = await ctx.call('triplestore.query', {
-          query: sanitizeSparqlQuery`
-            SELECT ?resourceUri
-            WHERE {
-              ?resourceUri <${PREDICATES.atprotoDid}> ?did .
-              FILTER(STR(?did) = ${atprotoDid})
-            }
-            LIMIT 1
-          `,
-          webId: 'system'
-        });
-
-        const resourceUri = results?.[0]?.resourceUri?.value;
-        if (!resourceUri) return null;
-
-        const resource = await this.actions.get({ resourceUri, webId: 'system', accept: MIME_TYPES.JSON }, { parentCtx: ctx });
-        return this._toDto(resource);
+        // Try SPARQL-based lookup first for performance
+        const binding = await this._findByDidWithSparql(ctx, ctx.params.atprotoDid);
+        if (binding) return binding;
+        // Fall back to iterat linear scan if SPARQL lookup fails
+        return this._findByBindingField(ctx, 'atprotoDid', ctx.params.atprotoDid);
       }
     },
 
@@ -163,24 +150,12 @@ module.exports = {
         atprotoHandle: { type: 'string', min: 1 }
       },
       async handler(ctx) {
-        const { atprotoHandle } = ctx.params;
-        const results = await ctx.call('triplestore.query', {
-          query: sanitizeSparqlQuery`
-            SELECT ?resourceUri
-            WHERE {
-              ?resourceUri <${PREDICATES.atprotoHandle}> ?handle .
-              FILTER(STR(?handle) = ${atprotoHandle})
-            }
-            LIMIT 1
-          `,
-          webId: 'system'
-        });
-
-        const resourceUri = results?.[0]?.resourceUri?.value;
-        if (!resourceUri) return null;
-
-        const resource = await this.actions.get({ resourceUri, webId: 'system', accept: MIME_TYPES.JSON }, { parentCtx: ctx });
-        return this._toDto(resource);
+        // Try SPARQL-based lookup first for performance
+        const handle = String(ctx.params.atprotoHandle).toLowerCase();
+        const binding = await this._findByHandleWithSparql(ctx, handle);
+        if (binding) return binding;
+        // Fall back to linear scan if SPARQL lookup fails
+        return this._findByBindingField(ctx, 'atprotoHandle', handle);
       }
     }
   },
@@ -219,6 +194,115 @@ module.exports = {
 
     _readField(resource, key) {
       return resource[key] ?? resource[`apods:${key}`] ?? resource[PREDICATES[key]];
+    },
+
+    async _findByDidWithSparql(ctx, atprotoDid) {
+      try {
+        // Query for all identity bindings with this DID
+        const results = await ctx.call('triplestore.query', {
+          query: `
+            PREFIX apods: <http://activitypods.org/ns/core#>
+            SELECT ?bindingUri ?canonicalAccountId WHERE {
+              ?bindingUri a apods:AtprotoIdentityBinding ;
+                         apods:atprotoDid ?did ;
+                         apods:canonicalAccountId ?canonicalAccountId .
+              FILTER (?did = "${sanitizeSparqlQuery(atprotoDid)}")
+            }
+            LIMIT 1
+          `
+        });
+
+        if (results?.length > 0) {
+          const canonicalAccountId = this._readQueryBinding(results[0], 'canonicalAccountId');
+          if (canonicalAccountId) {
+            return this._findByCanonicalAccountIdDirect(ctx, canonicalAccountId);
+          }
+        }
+      } catch (err) {
+        // SPARQL query failed; fall back to linear scan
+        this.logger.debug('SPARQL DID lookup failed, falling back to linear scan', { atprotoDid, error: err.message });
+      }
+      return null;
+    },
+
+    async _findByHandleWithSparql(ctx, atprotoHandle) {
+      try {
+        //Query for all identity bindings with this handle
+        const results = await ctx.call('triplestore.query', {
+          query: `
+            PREFIX apods: <http://activitypods.org/ns/core#>
+            SELECT ?bindingUri ?canonicalAccountId WHERE {
+              ?bindingUri a apods:AtprotoIdentityBinding ;
+                         apods:atprotoHandle ?handle ;
+                         apods:canonicalAccountId ?canonicalAccountId .
+              FILTER (lcase(str(?handle)) = "${sanitizeSparqlQuery(atprotoHandle.toLowerCase())}")
+            }
+            LIMIT 1
+          `
+        });
+
+        if (results?.length > 0) {
+          const canonicalAccountId = this._readQueryBinding(results[0], 'canonicalAccountId');
+          if (canonicalAccountId) {
+            return this._findByCanonicalAccountIdDirect(ctx, canonicalAccountId);
+          }
+        }
+      } catch (err) {
+        // SPARQL query failed; fall back to linear scan
+        this.logger.debug('SPARQL handle lookup failed, falling back to linear scan', { atprotoHandle, error: err.message });
+      }
+      return null;
+    },
+
+    async _findByCanonicalAccountIdDirect(ctx, canonicalAccountId) {
+      // Direct RDF lookup by canonical account ID
+      return ctx.call('identitybindings.getByCanonicalAccountId', { canonicalAccountId }, { parentCtx: ctx });
+    },
+
+    async _findByBindingField(ctx, field, expectedValue) {
+      const accounts = await ctx.call('auth.account.find', { query: {} });
+      for (const account of accounts || []) {
+        const webId = typeof account?.webId === 'string' ? account.webId : null;
+        if (!webId) continue;
+
+        const canonicalCandidates = this._canonicalCandidatesFromWebId(webId);
+        for (const canonicalAccountId of canonicalCandidates) {
+          const binding = await ctx.call(
+            'identitybindings.getByCanonicalAccountId',
+            { canonicalAccountId },
+            { parentCtx: ctx }
+          );
+
+          if (!binding?.[field]) continue;
+
+          const actualValue = field === 'atprotoHandle'
+            ? String(binding[field]).toLowerCase()
+            : String(binding[field]);
+
+          if (actualValue === expectedValue) {
+            return binding;
+          }
+        }
+      }
+
+      return null;
+    },
+
+    _canonicalCandidatesFromWebId(webId) {
+      const candidates = new Set([webId]);
+      candidates.add(webId.replace(/\/profile\/card#me$/, ''));
+      candidates.add(webId.replace(/#me$/, ''));
+      candidates.add(webId.replace(/\/?profile\/card#me$/, ''));
+      return Array.from(candidates).filter(Boolean);
+    },
+
+    _readQueryBinding(row, key) {
+      const value = row?.[key];
+      if (typeof value === 'string') return value;
+      if (value && typeof value === 'object' && typeof value.value === 'string') {
+        return value.value;
+      }
+      return null;
     },
 
     _compactNulls(objectValue) {

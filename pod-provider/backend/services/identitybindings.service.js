@@ -198,58 +198,85 @@ module.exports = {
 
     async _findByDidWithSparql(ctx, atprotoDid) {
       try {
-        // Query for all identity bindings with this DID
-        const results = await ctx.call('triplestore.query', {
-          query: `
-            PREFIX apods: <http://activitypods.org/ns/core#>
-            SELECT ?bindingUri ?canonicalAccountId WHERE {
-              ?bindingUri a apods:AtprotoIdentityBinding ;
-                         apods:atprotoDid ?did ;
-                         apods:canonicalAccountId ?canonicalAccountId .
-              FILTER (?did = "${sanitizeSparqlQuery(atprotoDid)}")
-            }
-            LIMIT 1
-          `
+        // Get the root container where all bindings are stored
+        const containerUri = await ctx.call('ldp.container.getResourceUri', {
+          containerUri: this.getRouteUri()
         });
 
-        if (results?.length > 0) {
-          const canonicalAccountId = this._readQueryBinding(results[0], 'canonicalAccountId');
-          if (canonicalAccountId) {
-            return this._findByCanonicalAccountIdDirect(ctx, canonicalAccountId);
+        // List all resources in the binding container
+        const resources = await ctx.call('ldp.container.list', {
+          containerUri,
+          webId: 'system',
+          returnContainers: false
+        });
+
+        // Search for the resource with the matching DID
+        if (resources && Array.isArray(resources)) {
+          for (const resourceUri of resources) {
+            try {
+              const resource = await ctx.call('ldp.resource.get', {
+                resourceUri,
+                webId: 'system',
+                accept: 'application/json'
+              });
+
+              const did = this._readField(resource, 'atprotoDid');
+              if (did === atprotoDid) {
+                const canonicalAccountId = this._readField(resource, 'canonicalAccountId');
+                if (canonicalAccountId) {
+                  return this._toDto(resource);
+                }
+              }
+            } catch (err) {
+              // Skip resources that can't be read
+              continue;
+            }
           }
         }
       } catch (err) {
-        // SPARQL query failed; fall back to linear scan
-        this.logger.debug('SPARQL DID lookup failed, falling back to linear scan', { atprotoDid, error: err.message });
+        // Container listing failed; fall back to linear scan
+        this.logger.debug('Container-based DID lookup failed, falling back to linear scan', { atprotoDid, error: err.message });
       }
       return null;
     },
 
     async _findByHandleWithSparql(ctx, atprotoHandle) {
       try {
-        //Query for all identity bindings with this handle
-        const results = await ctx.call('triplestore.query', {
-          query: `
-            PREFIX apods: <http://activitypods.org/ns/core#>
-            SELECT ?bindingUri ?canonicalAccountId WHERE {
-              ?bindingUri a apods:AtprotoIdentityBinding ;
-                         apods:atprotoHandle ?handle ;
-                         apods:canonicalAccountId ?canonicalAccountId .
-              FILTER (lcase(str(?handle)) = "${sanitizeSparqlQuery(atprotoHandle.toLowerCase())}")
-            }
-            LIMIT 1
-          `
+        // Get the root container where all bindings are stored
+        const containerUri = await ctx.call('ldp.container.getResourceUri', {
+          containerUri: this.getRouteUri()
         });
 
-        if (results?.length > 0) {
-          const canonicalAccountId = this._readQueryBinding(results[0], 'canonicalAccountId');
-          if (canonicalAccountId) {
-            return this._findByCanonicalAccountIdDirect(ctx, canonicalAccountId);
+        // List all resources in the binding container
+        const resources = await ctx.call('ldp.container.list', {
+          containerUri,
+          webId: 'system',
+          returnContainers: false
+        });
+
+        // Search for the resource with the matching handle
+        if (resources && Array.isArray(resources)) {
+          for (const resourceUri of resources) {
+            try {
+              const resource = await ctx.call('ldp.resource.get', {
+                resourceUri,
+                webId: 'system',
+                accept: 'application/json'
+              });
+
+              const handle = this._readField(resource, 'atprotoHandle');
+              if (handle && String(handle).toLowerCase() === atprotoHandle.toLowerCase()) {
+                return this._toDto(resource);
+              }
+            } catch (err) {
+              // Skip resources that can't be read
+              continue;
+            }
           }
         }
       } catch (err) {
-        // SPARQL query failed; fall back to linear scan
-        this.logger.debug('SPARQL handle lookup failed, falling back to linear scan', { atprotoHandle, error: err.message });
+        // Container listing failed; fall back to linear scan
+        this.logger.debug('Container-based handle lookup failed, falling back to linear scan', { atprotoHandle, error: err.message });
       }
       return null;
     },

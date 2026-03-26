@@ -197,88 +197,61 @@ module.exports = {
     },
 
     async _findByDidWithSparql(ctx, atprotoDid) {
+      // Try to find by scanning all identity bindings
+      // This is a fallback optimization - if we have all canonical IDs, we can iterate them directly
       try {
-        // Get the root container where all bindings are stored
-        const containerUri = await ctx.call('ldp.container.getResourceUri', {
-          containerUri: this.getRouteUri()
-        });
-
-        // List all resources in the binding container
-        const resources = await ctx.call('ldp.container.list', {
-          containerUri,
-          webId: 'system',
-          returnContainers: false
-        });
-
-        // Search for the resource with the matching DID
-        if (resources && Array.isArray(resources)) {
-          for (const resourceUri of resources) {
-            try {
-              const resource = await ctx.call('ldp.resource.get', {
-                resourceUri,
-                webId: 'system',
-                accept: 'application/json'
-              });
-
-              const did = this._readField(resource, 'atprotoDid');
-              if (did === atprotoDid) {
-                const canonicalAccountId = this._readField(resource, 'canonicalAccountId');
-                if (canonicalAccountId) {
-                  return this._toDto(resource);
-                }
-              }
-            } catch (err) {
-              // Skip resources that can't be read
-              continue;
-            }
+        const allBindings = await this._scanAllBindingsOptimized(ctx);
+        for (const binding of allBindings) {
+          if (binding.atprotoDid === atprotoDid) {
+            return binding;
           }
         }
       } catch (err) {
-        // Container listing failed; fall back to linear scan
-        this.logger.debug('Container-based DID lookup failed, falling back to linear scan', { atprotoDid, error: err.message });
+        this.logger.debug('Optimized DID lookup failed', { atprotoDid, error: err.message });
       }
       return null;
     },
 
     async _findByHandleWithSparql(ctx, atprotoHandle) {
+      // Try to find by scanning all identity bindings
+      // This is a fallback optimization - if we have all canonical IDs, we can iterate them directly
       try {
-        // Get the root container where all bindings are stored
-        const containerUri = await ctx.call('ldp.container.getResourceUri', {
-          containerUri: this.getRouteUri()
-        });
-
-        // List all resources in the binding container
-        const resources = await ctx.call('ldp.container.list', {
-          containerUri,
-          webId: 'system',
-          returnContainers: false
-        });
-
-        // Search for the resource with the matching handle
-        if (resources && Array.isArray(resources)) {
-          for (const resourceUri of resources) {
-            try {
-              const resource = await ctx.call('ldp.resource.get', {
-                resourceUri,
-                webId: 'system',
-                accept: 'application/json'
-              });
-
-              const handle = this._readField(resource, 'atprotoHandle');
-              if (handle && String(handle).toLowerCase() === atprotoHandle.toLowerCase()) {
-                return this._toDto(resource);
-              }
-            } catch (err) {
-              // Skip resources that can't be read
-              continue;
-            }
+        const allBindings = await this._scanAllBindingsOptimized(ctx);
+        const handleLower = atprotoHandle.toLowerCase();
+        for (const binding of allBindings) {
+          if (binding.atprotoHandle && String(binding.atprotoHandle).toLowerCase() === handleLower) {
+            return binding;
           }
         }
       } catch (err) {
-        // Container listing failed; fall back to linear scan
-        this.logger.debug('Container-based handle lookup failed, falling back to linear scan', { atprotoHandle, error: err.message });
+        this.logger.debug('Optimized handle lookup failed', { atprotoHandle, error: err.message });
       }
       return null;
+    },
+
+    async _scanAllBindingsOptimized(ctx) {
+      // Get all accounts and their bindings more efficiently
+      const accounts = await ctx.call('auth.account.find', { query: {} });
+      const bindings = [];
+
+      if (accounts) {
+        for (const account of accounts) {
+          const webId = account?.webId;
+          if (!webId) continue;
+
+          try {
+            const binding = await ctx.call('identitybindings.getByCanonicalAccountId', { canonicalAccountId: webId }, { parentCtx: ctx });
+            if (binding) {
+              bindings.push(binding);
+            }
+          } catch (err) {
+            // Skip if binding lookup fails for this account
+            continue;
+          }
+        }
+      }
+
+      return bindings;
     },
 
     async _findByCanonicalAccountIdDirect(ctx, canonicalAccountId) {

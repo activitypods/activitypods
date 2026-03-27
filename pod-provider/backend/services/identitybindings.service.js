@@ -197,15 +197,30 @@ module.exports = {
     },
 
     async _findByDidWithSparql(ctx, atprotoDid) {
-      // Try to find by scanning all identity bindings
-      // This is a fallback optimization - if we have all canonical IDs, we can iterate them directly
       try {
-        const allBindings = await this._scanAllBindingsOptimized(ctx);
-        for (const binding of allBindings) {
-          if (binding.atprotoDid === atprotoDid) {
-            return binding;
-          }
-        }
+        const results = await ctx.call('triplestore.query', {
+          query: sanitizeSparqlQuery`
+            PREFIX apods: <${APODS}>
+            SELECT ?canonicalAccountId
+            WHERE {
+              ?binding a apods:AtprotoIdentityBinding .
+              ?binding apods:canonicalAccountId ?canonicalAccountId .
+              ?binding apods:atprotoDid ?did .
+              FILTER(STR(?did) = ${String(atprotoDid)})
+            }
+            LIMIT 1
+          `,
+          webId: 'system'
+        });
+
+        const canonicalAccountId = results?.[0]?.canonicalAccountId?.value;
+        if (!canonicalAccountId) return null;
+
+        return ctx.call(
+          'identitybindings.getByCanonicalAccountId',
+          { canonicalAccountId },
+          { parentCtx: ctx }
+        );
       } catch (err) {
         this.logger.debug('Optimized DID lookup failed', { atprotoDid, error: err.message });
       }
@@ -213,16 +228,31 @@ module.exports = {
     },
 
     async _findByHandleWithSparql(ctx, atprotoHandle) {
-      // Try to find by scanning all identity bindings
-      // This is a fallback optimization - if we have all canonical IDs, we can iterate them directly
       try {
-        const allBindings = await this._scanAllBindingsOptimized(ctx);
-        const handleLower = atprotoHandle.toLowerCase();
-        for (const binding of allBindings) {
-          if (binding.atprotoHandle && String(binding.atprotoHandle).toLowerCase() === handleLower) {
-            return binding;
-          }
-        }
+        const handleLower = String(atprotoHandle).toLowerCase();
+        const results = await ctx.call('triplestore.query', {
+          query: sanitizeSparqlQuery`
+            PREFIX apods: <${APODS}>
+            SELECT ?canonicalAccountId
+            WHERE {
+              ?binding a apods:AtprotoIdentityBinding .
+              ?binding apods:canonicalAccountId ?canonicalAccountId .
+              ?binding apods:atprotoHandle ?handle .
+              FILTER(LCASE(STR(?handle)) = ${handleLower})
+            }
+            LIMIT 1
+          `,
+          webId: 'system'
+        });
+
+        const canonicalAccountId = results?.[0]?.canonicalAccountId?.value;
+        if (!canonicalAccountId) return null;
+
+        return ctx.call(
+          'identitybindings.getByCanonicalAccountId',
+          { canonicalAccountId },
+          { parentCtx: ctx }
+        );
       } catch (err) {
         this.logger.debug('Optimized handle lookup failed', { atprotoHandle, error: err.message });
       }
@@ -231,7 +261,12 @@ module.exports = {
 
     async _scanAllBindingsOptimized(ctx) {
       // Get all accounts and their bindings more efficiently
-      const accounts = await ctx.call('auth.account.find', { query: {} });
+      const rawAccounts = await ctx.call('auth.account.find', {
+        query: {},
+        pagination: false,
+        pageSize: 10000
+      });
+      const accounts = this._normalizeAccountResults(rawAccounts);
       const bindings = [];
 
       if (accounts) {
@@ -260,7 +295,12 @@ module.exports = {
     },
 
     async _findByBindingField(ctx, field, expectedValue) {
-      const accounts = await ctx.call('auth.account.find', { query: {} });
+      const rawAccounts = await ctx.call('auth.account.find', {
+        query: {},
+        pagination: false,
+        pageSize: 10000
+      });
+      const accounts = this._normalizeAccountResults(rawAccounts);
       for (const account of accounts || []) {
         const webId = typeof account?.webId === 'string' ? account.webId : null;
         if (!webId) continue;
@@ -286,6 +326,13 @@ module.exports = {
       }
 
       return null;
+    },
+
+    _normalizeAccountResults(rawAccounts) {
+      if (Array.isArray(rawAccounts)) return rawAccounts;
+      if (Array.isArray(rawAccounts?.rows)) return rawAccounts.rows;
+      if (Array.isArray(rawAccounts?.['hydra:member'])) return rawAccounts['hydra:member'];
+      return [];
     },
 
     _canonicalCandidatesFromWebId(webId) {

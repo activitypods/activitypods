@@ -114,7 +114,7 @@ module.exports = {
 
       const token = String(auth).slice(7);
       if (!this.settings.auth.bearerToken || token !== this.settings.auth.bearerToken) {
-        throw new MoleculerError('Invalid bearer token', 403, 'AUTH_FAILED');
+        throw new MoleculerError('Invalid bearer token', 401, 'AUTH_FAILED');
       }
     },
 

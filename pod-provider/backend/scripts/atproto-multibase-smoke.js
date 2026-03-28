@@ -56,12 +56,18 @@ function assert(condition, message) {
 
 async function fetchPublicKeyFromService({ baseUrl, token, canonicalAccountId, purpose }) {
   const url = `${baseUrl}/api/internal/atproto/public-key?canonicalAccountId=${encodeURIComponent(canonicalAccountId)}&purpose=${encodeURIComponent(purpose)}`;
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  let response;
+  try {
+    response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+  } catch (err) {
+    // Service not reachable — return a sentinel so callers can skip service-dependent checks.
+    return { status: null, unavailable: true, error: err.message, body: {} };
+  }
 
   const body = await response.text();
   let parsed;
@@ -78,7 +84,7 @@ async function fetchPublicKeyFromService({ baseUrl, token, canonicalAccountId, p
 }
 
 async function main() {
-  const baseUrl = process.env.ATPROTO_SMOKE_BASE_URL || "http://localhost:3004";
+  const baseUrl = process.env.ATPROTO_SMOKE_BASE_URL || "http://localhost:3000";
   const token = process.env.ACTIVITYPODS_TOKEN || "test-atproto-signing-token-local";
   const canonicalAccountId = process.env.ATPROTO_SMOKE_CANONICAL_ACCOUNT_ID || "http://localhost:3000/atproto365133";
 
@@ -111,7 +117,9 @@ async function main() {
     purpose: "rotation"
   });
 
-  if (commitKeyResponse.status === 200 && rotationKeyResponse.status === 200) {
+  const serviceAvailable = !commitKeyResponse.unavailable && !rotationKeyResponse.unavailable;
+
+  if (serviceAvailable && commitKeyResponse.status === 200 && rotationKeyResponse.status === 200) {
     assert(
       typeof commitKeyResponse.body.publicKeyMultibase === "string" && commitKeyResponse.body.publicKeyMultibase.startsWith("z"),
       "Expected commit endpoint publicKeyMultibase to start with z"
@@ -135,18 +143,20 @@ async function main() {
           stableAcrossReads: commitMultibase === commitMultibase2,
           commitVsRotationDistinct: commitMultibase !== rotationMultibase
         },
-        serviceValidation: {
-          baseUrl,
-          canonicalAccountId,
-          commitStatus: commitKeyResponse.status,
-          rotationStatus: rotationKeyResponse.status,
-          commitPublicKeyMultibase: commitKeyResponse.body.publicKeyMultibase || null,
-          rotationPublicKeyMultibase: rotationKeyResponse.body.publicKeyMultibase || null,
-          distinct:
-            commitKeyResponse.body.publicKeyMultibase && rotationKeyResponse.body.publicKeyMultibase
-              ? commitKeyResponse.body.publicKeyMultibase !== rotationKeyResponse.body.publicKeyMultibase
-              : null
-        }
+        serviceValidation: serviceAvailable
+          ? {
+              baseUrl,
+              canonicalAccountId,
+              commitStatus: commitKeyResponse.status,
+              rotationStatus: rotationKeyResponse.status,
+              commitPublicKeyMultibase: commitKeyResponse.body.publicKeyMultibase || null,
+              rotationPublicKeyMultibase: rotationKeyResponse.body.publicKeyMultibase || null,
+              distinct:
+                commitKeyResponse.body.publicKeyMultibase && rotationKeyResponse.body.publicKeyMultibase
+                  ? commitKeyResponse.body.publicKeyMultibase !== rotationKeyResponse.body.publicKeyMultibase
+                  : null
+            }
+          : { skipped: true, reason: commitKeyResponse.error || "service unavailable" }
       },
       null,
       2

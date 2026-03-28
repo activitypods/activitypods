@@ -1,4 +1,7 @@
-const { triple, namedNode } = require('@rdfjs/data-model');
+const dataModel = require('@rdfjs/data-model').default || require('@rdfjs/data-model');
+const namedNode = value => dataModel.namedNode(value);
+const triple = (subject, predicate, object) =>
+  dataModel.triple ? dataModel.triple(subject, predicate, object) : dataModel.quad(subject, predicate, object);
 const { SingleResourceContainerMixin, arrayOf, delay } = require('@semapps/ldp');
 
 module.exports = {

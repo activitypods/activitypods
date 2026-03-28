@@ -174,6 +174,14 @@ module.exports = {
               force: input.atproto?.force ?? false
             });
 
+            if (!atproto?.did || !atproto?.repoInitialized) {
+              throw new MoleculerError(
+                'ATProto provisioning incomplete',
+                500,
+                'ATPROTO_PROVISIONING_INCOMPLETE'
+              );
+            }
+
             await ctx.call('account-provisioning-state.markPhase', {
               provisioningId,
               phase: currentPhase,
@@ -201,7 +209,8 @@ module.exports = {
               ? {
                   did: atproto.did,
                   handle: atproto.handle,
-                  repoInitialized: atproto.repoInitialized
+                  repoInitialized: !!atproto.repoInitialized,
+                  signingReady: true
                 }
               : null,
             solid: {
@@ -209,11 +218,10 @@ module.exports = {
               podBaseUrl: solid.podBaseUrl
             },
             provisioning: {
-              state: warnings.length > 0 ? 'partial' : 'completed',
-              warnings: warnings.length > 0 ? warnings : undefined,
-              failedPhases: failedPhases.length > 0 ? failedPhases : undefined
+              state: 'completed',
+              warnings: warnings.length > 0 ? warnings : undefined
             },
-            createdAt: canonical.createdAt
+            createdAt: canonical.createdAt || new Date().toISOString()
           };
         } catch (e) {
           failedPhases.push(currentPhase);

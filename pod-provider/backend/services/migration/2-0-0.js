@@ -1,5 +1,9 @@
 const urlJoin = require('url-join');
-const { triple, namedNode, literal } = require('@rdfjs/data-model');
+const dataModel = require('@rdfjs/data-model').default || require('@rdfjs/data-model');
+const namedNode = value => dataModel.namedNode(value);
+const literal = value => dataModel.literal(value);
+const triple = (subject, predicate, object) =>
+  dataModel.triple ? dataModel.triple(subject, predicate, object) : dataModel.quad(subject, predicate, object);
 const { arrayOf } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { MigrationService } = require('@semapps/migration');

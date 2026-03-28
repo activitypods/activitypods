@@ -27,7 +27,7 @@
  *   ATPROTO_SMOKE_CANONICAL_ACCOUNT_ID  default: http://localhost:3000/atproto365133
  */
 
-const BASE_URL = process.env.ATPROTO_SMOKE_BASE_URL || "http://localhost:3004";
+const BASE_URL = process.env.ATPROTO_SMOKE_BASE_URL || "http://localhost:3000";
 const TOKEN = process.env.ACTIVITYPODS_TOKEN || "test-atproto-signing-token-local";
 const CANONICAL_ACCOUNT_ID =
   process.env.ATPROTO_SMOKE_CANONICAL_ACCOUNT_ID || "http://localhost:3000/atproto365133";

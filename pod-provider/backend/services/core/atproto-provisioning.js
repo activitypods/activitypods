@@ -7,7 +7,11 @@ module.exports = {
   dependencies: ['keys', 'identitybindings', 'signing'],
 
   settings: {
-    internalBearerToken: process.env.ACTIVITYPODS_TOKEN || ''
+    internalBearerToken: process.env.ACTIVITYPODS_TOKEN || '',
+    repoBootstrapRootCid:
+      process.env.ATPROTO_REPO_BOOTSTRAP_ROOT_CID || 'bafyreigenesisplaceholder',
+    repoBootstrapRev:
+      process.env.ATPROTO_REPO_BOOTSTRAP_REV || '0'
   },
 
   actions: {
@@ -43,19 +47,31 @@ module.exports = {
         });
 
         if (existing && !force) {
+          if (!existing.repoInitialized || !existing.repoRootCid || !existing.repoRev) {
+            await this.initializeRepoState(ctx, {
+              canonicalAccountId,
+              did: existing.atprotoDid,
+              handle: existing.atprotoHandle
+            });
+          }
+
+          const refreshed = await ctx.call('identitybindings.getByCanonicalAccountId', {
+            canonicalAccountId
+          });
+
           await this.verifyProvisionedState(ctx, {
             canonicalAccountId,
-            binding: existing,
+            binding: refreshed || existing,
             didMethod
           });
 
           return {
-            did: existing.atprotoDid,
-            handle: existing.atprotoHandle,
-            atSigningKeyRef: existing.atSigningKeyRef,
-            atRotationKeyRef: existing.atRotationKeyRef,
-            repoInitialized: true,
-            createdAt: existing.createdAt || new Date().toISOString()
+            did: (refreshed || existing).atprotoDid,
+            handle: (refreshed || existing).atprotoHandle,
+            atSigningKeyRef: (refreshed || existing).atSigningKeyRef,
+            atRotationKeyRef: (refreshed || existing).atRotationKeyRef,
+            repoInitialized: Boolean((refreshed || existing).repoInitialized),
+            createdAt: (refreshed || existing).createdAt || new Date().toISOString()
           };
         }
 
@@ -110,11 +126,13 @@ module.exports = {
                 handle: atprotoHandle
               });
 
-        const binding = await ctx.call('identitybindings.upsert', {
+        await ctx.call('identitybindings.upsert', {
           canonicalAccountId,
           webId,
           atprotoDid,
           atprotoHandle,
+          atprotoSource: 'local',
+          atprotoManaged: true,
           atSigningKeyRef: commitKey.keyRef,
           atRotationKeyRef: rotationKey.keyRef,
           status: 'active'
@@ -122,8 +140,12 @@ module.exports = {
 
         await this.initializeRepoState(ctx, {
           canonicalAccountId,
-          did: binding.atprotoDid,
-          handle: binding.atprotoHandle
+          did: atprotoDid,
+          handle: atprotoHandle
+        });
+
+        const binding = await ctx.call('identitybindings.getByCanonicalAccountId', {
+          canonicalAccountId
         });
 
         await this.verifyProvisionedState(ctx, {
@@ -137,7 +159,7 @@ module.exports = {
           handle: binding.atprotoHandle,
           atSigningKeyRef: binding.atSigningKeyRef,
           atRotationKeyRef: binding.atRotationKeyRef,
-          repoInitialized: true,
+          repoInitialized: Boolean(binding.repoInitialized),
           createdAt: binding.createdAt || new Date().toISOString()
         };
       }
@@ -196,11 +218,22 @@ module.exports = {
     },
 
     async initializeRepoState(_ctx, { canonicalAccountId, did, handle }) {
+      await _ctx.call('identitybindings.upsertRepoBootstrap', {
+        canonicalAccountId,
+        did,
+        handle,
+        repoInitialized: true,
+        rootCid: this.settings.repoBootstrapRootCid,
+        rev: this.settings.repoBootstrapRev
+      });
+
       return {
         ok: true,
         canonicalAccountId,
         did,
-        handle
+        handle,
+        rootCid: this.settings.repoBootstrapRootCid,
+        rev: this.settings.repoBootstrapRev
       };
     },
 
@@ -211,6 +244,14 @@ module.exports = {
 
       if (!binding?.atprotoDid || !binding?.atprotoHandle) {
         throw new MoleculerError('Identity binding is missing DID or handle', 500, 'ATPROTO_BINDING_INVALID');
+      }
+
+      if (!binding?.repoInitialized || !binding?.repoRootCid || !binding?.repoRev) {
+        throw new MoleculerError(
+          'Identity binding is missing repo bootstrap state',
+          500,
+          'ATPROTO_REPO_BOOTSTRAP_INVALID'
+        );
       }
 
       const signingMeta = this._signingCallMeta();

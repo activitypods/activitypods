@@ -3,6 +3,53 @@ const fetch = require('node-fetch');
 const crypto = require('crypto');
 const { MoleculerError } = require('moleculer').Errors;
 const { randomToken, sanitizeErrorMessage, parseBoolean, assertHttpsUrl } = require('../utils/oauth-security');
+const { generateKeyPair, exportJWK, importJWK, SignJWT, calculateJwkThumbprint } = require('jose');
+
+/**
+ * Generate an ES256 DPoP key pair.
+ * Returns { privateKeyJwk (string), publicKeyJwk (object), thumbprint (string) }.
+ */
+async function generateDpopKeypair() {
+  const { privateKey, publicKey } = await generateKeyPair('ES256', { extractable: true });
+  const privateJwk = await exportJWK(privateKey);
+  const publicJwk  = await exportJWK(publicKey);
+  const thumbprint = await calculateJwkThumbprint(publicJwk);
+  privateJwk.kid = thumbprint;
+  publicJwk.kid  = thumbprint;
+  return {
+    privateKeyJwk: JSON.stringify(privateJwk),
+    publicKeyJwk,
+    thumbprint
+  };
+}
+
+/**
+ * Build a DPoP proof JWT (RFC 9449) for a single request.
+ * @param {string} privateKeyJwkStr - JSON-serialized ES256 private JWK
+ * @param {string} htu - Target URL without query string
+ * @param {string} htm - HTTP method (uppercase)
+ * @param {string} [nonce] - Optional server-issued nonce
+ */
+async function buildDpopProof(privateKeyJwkStr, htu, htm, nonce) {
+  const privateJwk = JSON.parse(privateKeyJwkStr);
+  const privateKey = await importJWK(privateJwk, 'ES256');
+  const { d: _d, ...publicJwk } = privateJwk;
+
+  const payload = {
+    jti: crypto.randomBytes(16).toString('hex'),
+    htm: htm.toUpperCase(),
+    htu,
+    iat: Math.floor(Date.now() / 1000)
+  };
+
+  if (nonce) {
+    payload.nonce = nonce;
+  }
+
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'ES256', typ: 'dpop+jwt', jwk: publicJwk })
+    .sign(privateKey);
+}
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -120,6 +167,12 @@ module.exports = {
         const codeVerifier = randomToken(48);
         const codeChallenge = asBase64UrlSha256(codeVerifier);
 
+        // Generate a fresh DPoP key pair for this session.  The private key is
+        // stored in the OAuth state so the callback can use it for the token
+        // exchange, and then persisted alongside the access/refresh tokens so
+        // the sidecar can make DPoP-bound XRPC calls.
+        const dpopKeypair = await generateDpopKeypair();
+
         const record = {
           state,
           nonce,
@@ -127,6 +180,7 @@ module.exports = {
           createdAt: Date.now(),
           pdsUrl,
           tokenEndpoint: metadata.token_endpoint,
+          dpopPrivateKeyJwk: dpopKeypair.privateKeyJwk,
           activitypods: ctx.params.activitypods,
           atproto: {
             pdsUrl,
@@ -153,6 +207,8 @@ module.exports = {
         authorizeUrl.searchParams.set('code_challenge', codeChallenge);
         authorizeUrl.searchParams.set('code_challenge_method', 'S256');
         authorizeUrl.searchParams.set('nonce', nonce);
+        // dpop_jkt binds the authorization grant to the DPoP key (RFC 9449 §10)
+        authorizeUrl.searchParams.set('dpop_jkt', dpopKeypair.thumbprint);
         if (record.atproto.identifier) {
           authorizeUrl.searchParams.set('login_hint', record.atproto.identifier);
         }
@@ -196,7 +252,8 @@ module.exports = {
         const tokenPayload = await this.exchangeCodeForToken({
           tokenEndpoint: record.tokenEndpoint,
           code,
-          codeVerifier: record.codeVerifier
+          codeVerifier: record.codeVerifier,
+          dpopPrivateKeyJwk: record.dpopPrivateKeyJwk
         });
 
         const accessToken = String(tokenPayload.access_token || '').trim();
@@ -213,7 +270,12 @@ module.exports = {
 
         const linked = await ctx.call('atproto-linking.linkExternalAccount', {
           activitypods: record.activitypods,
-          verifiedAtproto
+          verifiedAtproto: {
+            ...verifiedAtproto,
+            // Pass DPoP context so the sidecar can store it with the session
+            dpopPrivateKeyJwk: record.dpopPrivateKeyJwk || undefined,
+            tokenEndpoint: record.tokenEndpoint || undefined
+          }
         });
 
         if (record.redirectAfterLink) {
@@ -308,15 +370,28 @@ module.exports = {
       };
     },
 
-    async exchangeCodeForToken({ tokenEndpoint, code, codeVerifier }) {
+    async exchangeCodeForToken({ tokenEndpoint, code, codeVerifier, dpopPrivateKeyJwk }) {
+      // Generate a DPoP proof for the token-endpoint call.
+      // Per RFC 9449 §5, no `ath` claim is needed at the token endpoint.
+      let dpopProof;
+      if (dpopPrivateKeyJwk) {
+        const htu = tokenEndpoint.split('?')[0];
+        dpopProof = await buildDpopProof(dpopPrivateKeyJwk, htu, 'POST');
+      }
+
+      const requestHeaders = {
+        accept: 'application/json',
+        'content-type': 'application/x-www-form-urlencoded'
+      };
+      if (dpopProof) {
+        requestHeaders['DPoP'] = dpopProof;
+      }
+
       const body = await this.fetchJsonWithRetry(
         tokenEndpoint,
         {
           method: 'POST',
-          headers: {
-            accept: 'application/json',
-            'content-type': 'application/x-www-form-urlencoded'
-          },
+          headers: requestHeaders,
           body: withFormUrlEncoded({
             grant_type: 'authorization_code',
             code,

@@ -1,6 +1,7 @@
 const { MoleculerError } = require('moleculer').Errors;
 const { sanitizeErrorMessage, parseBoolean } = require('../../utils/oauth-security');
 const CONFIG = require('../../config/config');
+const crypto = require('crypto');
 
 const baseUrl = process.env.SEMAPPS_HOME_URL || CONFIG.BASE_URL || '';
 
@@ -26,6 +27,11 @@ module.exports = {
     },
     issuer: process.env.OAUTH_ISSUER || baseUrl,
     csrfCookieName: process.env.OAUTH_CSRF_COOKIE_NAME || 'oauth_csrf',
+    sessionCookieName: process.env.OAUTH_SESSION_COOKIE_NAME || 'oauth_session',
+    sessionTtlSec: Math.max(300, Math.min(Number(process.env.OAUTH_SESSION_TTL_SECONDS) || 3600, 86400)),
+    sessionSecret: String(
+      process.env.OAUTH_SESSION_SECRET || process.env.ACTIVITYPODS_TOKEN || 'dev-oauth-session-secret'
+    ),
     allowInternalAuthorizeFallback: parseBoolean(
       process.env.OAUTH_ALLOW_INTERNAL_AUTHORIZE_FALLBACK,
       process.env.NODE_ENV !== 'production'
@@ -58,7 +64,10 @@ module.exports = {
         path: '/oauth',
         authorization: false,
         authentication: false,
-        bodyParsers: { json: { strict: false } },
+        bodyParsers: {
+          json: { strict: false },
+          urlencoded: { extended: false }
+        },
         onBeforeCall: (ctx, route, req) => {
           ctx.meta.$headers = req.headers;
           ctx.meta.$query = req.query;
@@ -68,6 +77,8 @@ module.exports = {
           'POST /par': 'oauth-api.createPar',
           'GET /authorize': 'oauth-api.getAuthorize',
           'POST /authorize': 'oauth-api.postAuthorizeUser',
+          'POST /session/login': 'oauth-api.loginSession',
+          'POST /session/logout': 'oauth-api.logoutSession',
           'POST /token': 'oauth-api.exchangeToken',
           'POST /revoke': 'oauth-api.revoke',
           'GET /client-metadata/:id': 'oauth-api.getClientMetadata',
@@ -157,12 +168,24 @@ module.exports = {
       );
 
       this.setCookie(ctx, this.settings.csrfCookieName, csrfToken);
-      return {
+      const payload = {
         ...context,
         consent_required: true,
         consent_challenge: challenge.challengeId,
         authorize_endpoint: '/oauth/authorize'
       };
+
+      if (this.prefersHtml(ctx)) {
+        const existingSession = this.getSession(ctx);
+        this.setHtmlResponse(ctx);
+        return this.renderAuthorizePage(payload, {
+          csrfCookieName: this.settings.csrfCookieName,
+          hasSession: !!existingSession,
+          webId: existingSession?.webId || ''
+        });
+      }
+
+      return payload;
     },
 
     async postAuthorizeUser(ctx) {
@@ -173,11 +196,63 @@ module.exports = {
         throw new MoleculerError('CSRF cookie is required', 403, 'LOGIN_REQUIRED');
       }
 
-      const canonicalAccountId = await this.requireUserBearerWebId(ctx);
+      const canonicalAccountId = await this.requireUserWebId(ctx);
       const result = await this.authorizeDecision(ctx, body, csrfToken, canonicalAccountId);
       ctx.meta.$statusCode = 302;
       ctx.meta.$location = result.redirect_uri;
       return { redirect: result.redirect_uri };
+    },
+
+    async loginSession(ctx) {
+      this.noStore(ctx);
+      const body = this.body(ctx);
+      const username = String(body.username || '').trim();
+      const password = String(body.password || '');
+      if (!username || !password) {
+        throw new MoleculerError('username and password are required', 400, 'INVALID_REQUEST');
+      }
+
+      let account;
+      try {
+        await this.runSafely(() =>
+          ctx.call('auth.account.verify', {
+            username,
+            password
+          })
+        );
+        account = await this.runSafely(() =>
+          ctx.call('auth.account.findByUsername', {
+            username
+          })
+        );
+      } catch {
+        throw new MoleculerError('Invalid credentials', 401, 'LOGIN_REQUIRED');
+      }
+
+      const webId = String(account?.webId || '').trim();
+      if (!webId) {
+        throw new MoleculerError('Unable to resolve account webId', 500, 'OAUTH_REQUEST_FAILED');
+      }
+
+      this.setSessionCookie(ctx, webId);
+      if (this.prefersHtml(ctx)) {
+        const requestUri = encodeURIComponent(String(body.request_uri || ''));
+        ctx.meta.$statusCode = 303;
+        ctx.meta.$location = `/oauth/authorize?request_uri=${requestUri}&format=html`;
+        return { redirect: ctx.meta.$location };
+      }
+
+      return {
+        ok: true,
+        webId,
+        expires_in: this.settings.sessionTtlSec
+      };
+    },
+
+    async logoutSession(ctx) {
+      this.noStore(ctx);
+      this.clearSessionCookie(ctx);
+      return { ok: true };
     },
 
     async postAuthorizeInternal(ctx) {
@@ -354,10 +429,24 @@ module.exports = {
       }
     },
 
-    async requireUserBearerWebId(ctx) {
+    async requireUserWebId(ctx) {
+      const fromBearer = await this.tryUserBearerWebId(ctx);
+      if (fromBearer) {
+        return fromBearer;
+      }
+
+      const session = this.getSession(ctx);
+      if (session?.webId) {
+        return session.webId;
+      }
+
+      throw new MoleculerError('Login is required to approve authorization', 401, 'LOGIN_REQUIRED');
+    },
+
+    async tryUserBearerWebId(ctx) {
       const header = ctx.meta?.$headers?.authorization || ctx.meta?.$headers?.Authorization;
       if (!header || !String(header).startsWith('Bearer ')) {
-        throw new MoleculerError('Login is required to approve authorization', 401, 'LOGIN_REQUIRED');
+        return null;
       }
 
       const token = String(header).slice(7).trim();
@@ -365,15 +454,181 @@ module.exports = {
       try {
         payload = await ctx.call('auth.jwt.decodeToken', { token });
       } catch {
-        throw new MoleculerError('Login is required to approve authorization', 401, 'LOGIN_REQUIRED');
+        return null;
       }
 
       const webId = String(payload?.webId || payload?.webid || payload?.id || '').trim();
       if (!webId || webId === 'anon') {
-        throw new MoleculerError('Login is required to approve authorization', 401, 'LOGIN_REQUIRED');
+        return null;
       }
 
       return webId;
+    },
+
+    prefersHtml(ctx) {
+      const queryFormat = String(ctx.meta?.$query?.format || '').toLowerCase();
+      if (queryFormat === 'html') return true;
+      const accept = String(ctx.meta?.$headers?.accept || ctx.meta?.$headers?.Accept || '').toLowerCase();
+      return accept.includes('text/html');
+    },
+
+    setHtmlResponse(ctx) {
+      ctx.meta.$responseHeaders = {
+        ...(ctx.meta.$responseHeaders || {}),
+        'Content-Type': 'text/html; charset=utf-8'
+      };
+    },
+
+    renderAuthorizePage(context, state) {
+      const requestUri = this.escapeHtml(String(context.request_uri || ''));
+      const challenge = this.escapeHtml(String(context.consent_challenge || ''));
+      const clientId = this.escapeHtml(String(context.client_id || ''));
+      const scope = this.escapeHtml(String(context.scope || ''));
+      const loginHint = this.escapeHtml(String(context.login_hint || ''));
+      const webId = this.escapeHtml(String(state.webId || ''));
+
+      return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Authorize Client</title>
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; background: #f6f8fb; color: #1a1f36; }
+    .wrap { max-width: 720px; margin: 40px auto; padding: 0 16px; }
+    .card { background: #fff; border: 1px solid #dbe2ef; border-radius: 14px; padding: 20px; box-shadow: 0 6px 24px rgba(27, 39, 51, 0.08); }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    p { margin: 8px 0; line-height: 1.5; }
+    code { background: #f1f5ff; padding: 2px 6px; border-radius: 6px; }
+    input[type='text'], input[type='password'] { width: 100%; padding: 10px; border: 1px solid #c9d3e7; border-radius: 8px; margin-top: 6px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+    button { border: 0; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
+    .ok { background: #0f766e; color: #fff; }
+    .deny { background: #b91c1c; color: #fff; }
+    .alt { background: #1d4ed8; color: #fff; }
+    .muted { color: #445; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Authorize Application</h1>
+      <p>Client: <code>${clientId}</code></p>
+      <p>Requested scope: <code>${scope || 'atproto'}</code></p>
+      <p class="muted">Login hint: ${loginHint || 'none'}</p>
+      ${state.hasSession ? `<p class="muted">Signed in as <code>${webId}</code></p>` : `
+      <form method="post" action="/oauth/session/login">
+        <input type="hidden" name="request_uri" value="${requestUri}" />
+        <input type="hidden" name="consent_challenge" value="${challenge}" />
+        <label>Username<input type="text" name="username" required /></label>
+        <label>Password<input type="password" name="password" required /></label>
+        <div class="row"><button class="alt" type="submit">Sign In</button></div>
+      </form>`}
+      <hr style="border:0;border-top:1px solid #e5ebf5;margin:16px 0;" />
+      <form method="post" action="/oauth/authorize">
+        <input type="hidden" name="request_uri" value="${requestUri}" />
+        <input type="hidden" name="consent_challenge" value="${challenge}" />
+        <div class="row">
+          <button class="ok" type="submit" name="decision" value="approve">Approve</button>
+          <button class="deny" type="submit" name="decision" value="deny">Deny</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>`;
+    },
+
+    escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    },
+
+    signSessionPayload(payload) {
+      return crypto
+        .createHmac('sha256', this.settings.sessionSecret)
+        .update(payload, 'utf8')
+        .digest('base64url');
+    },
+
+    buildSessionToken(webId) {
+      const exp = Math.floor(Date.now() / 1000) + this.settings.sessionTtlSec;
+      const payload = Buffer.from(JSON.stringify({ webId, exp }), 'utf8').toString('base64url');
+      const sig = this.signSessionPayload(payload);
+      return `${payload}.${sig}`;
+    },
+
+    getSession(ctx) {
+      const raw = this.getCookie(ctx, this.settings.sessionCookieName);
+      if (!raw) return null;
+      const [payload, sig] = String(raw).split('.');
+      if (!payload || !sig) return null;
+      const expected = this.signSessionPayload(payload);
+      if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+        return null;
+      }
+      let decoded;
+      try {
+        decoded = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+      } catch {
+        return null;
+      }
+      const exp = Number(decoded?.exp || 0);
+      const webId = String(decoded?.webId || '').trim();
+      if (!webId || !Number.isFinite(exp) || exp < Math.floor(Date.now() / 1000)) {
+        return null;
+      }
+      return { webId, exp };
+    },
+
+    setSessionCookie(ctx, webId) {
+      const token = this.buildSessionToken(webId);
+      const secure = this.settings.issuer.startsWith('https://');
+      const parts = [
+        `${this.settings.sessionCookieName}=${encodeURIComponent(token)}`,
+        'Path=/oauth',
+        'HttpOnly',
+        'SameSite=Lax',
+        `Max-Age=${this.settings.sessionTtlSec}`
+      ];
+      if (secure) parts.push('Secure');
+      this.appendSetCookie(ctx, parts.join('; '));
+    },
+
+    clearSessionCookie(ctx) {
+      const secure = this.settings.issuer.startsWith('https://');
+      const parts = [
+        `${this.settings.sessionCookieName}=`,
+        'Path=/oauth',
+        'HttpOnly',
+        'SameSite=Lax',
+        'Max-Age=0'
+      ];
+      if (secure) parts.push('Secure');
+      this.appendSetCookie(ctx, parts.join('; '));
+    },
+
+    appendSetCookie(ctx, cookie) {
+      const existing = ctx.meta?.$responseHeaders?.['Set-Cookie'];
+      if (!existing) {
+        ctx.meta.$responseHeaders = {
+          ...(ctx.meta.$responseHeaders || {}),
+          'Set-Cookie': cookie
+        };
+        return;
+      }
+
+      const values = Array.isArray(existing) ? existing.slice() : [existing];
+      values.push(cookie);
+      ctx.meta.$responseHeaders = {
+        ...(ctx.meta.$responseHeaders || {}),
+        'Set-Cookie': values
+      };
     },
 
     parseCanonicalAccountId(value) {
@@ -441,20 +696,17 @@ module.exports = {
       if (secure) {
         parts.push('Secure');
       }
-      ctx.meta.$responseHeaders = {
-        ...(ctx.meta.$responseHeaders || {}),
-        'Set-Cookie': parts.join('; ')
-      };
+      this.appendSetCookie(ctx, parts.join('; '));
     },
 
     requestFingerprint(ctx) {
       const ip = String(ctx.meta?.$remoteIp || '').split(',')[0].trim();
       const userAgent = String(ctx.meta?.$headers?.['user-agent'] || ctx.meta?.$headers?.['User-Agent'] || '');
-      return require('crypto').createHash('sha256').update(`${ip}|${userAgent}`, 'utf8').digest('hex');
+      return crypto.createHash('sha256').update(`${ip}|${userAgent}`, 'utf8').digest('hex');
     },
 
     randomToken() {
-      return require('crypto').randomBytes(24).toString('base64url');
+      return crypto.randomBytes(24).toString('base64url');
     }
   }
 };

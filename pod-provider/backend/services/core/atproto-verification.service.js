@@ -109,6 +109,33 @@ module.exports = {
           }
         };
       }
+    },
+
+    verifyDelegatedIdentity: {
+      params: {
+        pdsUrl: 'string|min:1',
+        accessToken: 'string|min:20',
+        did: { type: 'string', optional: true },
+        handle: { type: 'string', optional: true }
+      },
+      async handler(ctx) {
+        const claimedDid = ctx.params.did ? this.normalizeDid(ctx.params.did) : null;
+        const claimedHandle = ctx.params.handle ? this.normalizeHandle(ctx.params.handle) : null;
+        const pdsUrl = this.normalizePdsUrl(ctx.params.pdsUrl);
+        const accessToken = String(ctx.params.accessToken || '').trim();
+
+        const session = await this.getSessionFromAccessToken({
+          pdsUrl,
+          accessToken
+        });
+
+        return this.buildVerifiedIdentityFromSession({
+          session,
+          pdsUrl,
+          claimedDid,
+          claimedHandle
+        });
+      }
     }
   },
 
@@ -223,6 +250,111 @@ module.exports = {
       return {
         did,
         handle: typeof handle === 'string' ? handle : null
+      };
+    },
+
+    async getSessionFromAccessToken({ pdsUrl, accessToken }) {
+      const response = await this.fetchJsonWithRetry(
+        new URL('/xrpc/com.atproto.server.getSession', pdsUrl).toString(),
+        {
+          method: 'GET',
+          headers: {
+            accept: 'application/json',
+            authorization: `Bearer ${accessToken}`
+          }
+        },
+        {
+          responseLabel: 'getSession',
+          allowStatuses: [400, 401, 403]
+        }
+      );
+
+      if (response.status === 400 || response.status === 401 || response.status === 403) {
+        throw new MoleculerError(
+          'External ATProto delegated token is invalid',
+          401,
+          'ATPROTO_EXTERNAL_AUTH_FAILED'
+        );
+      }
+
+      const did = response.body?.did;
+      const handle = response.body?.handle;
+
+      if (typeof did !== 'string' || did.length === 0) {
+        throw new MoleculerError(
+          'External ATProto delegated session response is missing DID',
+          502,
+          'ATPROTO_SESSION_RESPONSE_INVALID'
+        );
+      }
+
+      if (handle !== undefined && (typeof handle !== 'string' || handle.length === 0)) {
+        throw new MoleculerError(
+          'External ATProto delegated session response is missing handle',
+          502,
+          'ATPROTO_SESSION_RESPONSE_INVALID'
+        );
+      }
+
+      return {
+        did,
+        handle: typeof handle === 'string' ? handle : null
+      };
+    },
+
+    async buildVerifiedIdentityFromSession({ session, pdsUrl, claimedDid, claimedHandle }) {
+      const did = this.normalizeDid(session.did);
+      const handle = claimedHandle || this.normalizeHandle(session.handle);
+
+      if (claimedDid && claimedDid !== did) {
+        throw new MoleculerError(
+          'ATProto session DID mismatch',
+          400,
+          'ATPROTO_SESSION_DID_MISMATCH'
+        );
+      }
+
+      if (session.handle && claimedHandle && this.normalizeHandle(session.handle) !== claimedHandle) {
+        throw new MoleculerError(
+          'ATProto session handle mismatch',
+          400,
+          'ATPROTO_SESSION_HANDLE_MISMATCH'
+        );
+      }
+
+      const resolvedHandleDid = await this.resolveHandleToDid(handle);
+      if (resolvedHandleDid !== did) {
+        throw new MoleculerError(
+          'ATProto handle does not resolve to DID',
+          400,
+          'ATPROTO_HANDLE_DID_MISMATCH'
+        );
+      }
+
+      const didDocument = await this.resolveDidDocument(did);
+      this.assertDidDocumentClaimsHandle({ didDocument, did, handle });
+      const signingKey = this.extractAtprotoSigningKey({ didDocument, did });
+      const didDocumentPdsUrl = this.extractPdsEndpoint({ didDocument, did });
+
+      if (didDocumentPdsUrl !== pdsUrl) {
+        throw new MoleculerError(
+          'PDS URL does not match DID document service endpoint',
+          400,
+          'ATPROTO_PDS_ENDPOINT_MISMATCH'
+        );
+      }
+
+      return {
+        did,
+        handle,
+        pdsUrl: didDocumentPdsUrl,
+        resolvedHandleDid,
+        didDocument,
+        signingKey,
+        session: {
+          did,
+          handle: session.handle ? this.normalizeHandle(session.handle) : handle
+        }
       };
     },
 

@@ -1,0 +1,186 @@
+name: OAuth Smoke (Dispatch)
+
+on:
+  workflow_dispatch:
+    inputs:
+      backend_base_url:
+        description: Backend base URL (e.g. https://backend.example.com)
+        required: true
+        type: string
+      sidecar_base_url:
+        description: Sidecar base URL (e.g. https://sidecar.example.com)
+        required: true
+        type: string
+      canonical_account_id:
+        description: Canonical account WebID used for proof authorization
+        required: true
+        type: string
+      client_id:
+        description: OAuth client metadata URL
+        required: true
+        type: string
+      redirect_uri:
+        description: Redirect URI registered by the client metadata
+        required: true
+        type: string
+      scope:
+        description: OAuth scope string
+        required: false
+        default: atproto
+        type: string
+      max_attempts:
+        description: Smoke retry attempts
+        required: false
+        default: "3"
+        type: string
+      enforce_user_bound_authorize:
+        description: Require user-bound OAuth approval (disables internal authorize fallback)
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oauth-smoke-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  oauth-smoke:
+    name: Managed OAuth Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OAUTH_PROOF_BASE_URL: ${{ inputs.backend_base_url }}
+      OAUTH_PROOF_SIDECAR_BASE_URL: ${{ inputs.sidecar_base_url }}
+      OAUTH_PROOF_CANONICAL_ACCOUNT_ID: ${{ inputs.canonical_account_id }}
+      OAUTH_PROOF_CLIENT_ID: ${{ inputs.client_id }}
+      OAUTH_PROOF_REDIRECT_URI: ${{ inputs.redirect_uri }}
+      OAUTH_PROOF_SCOPE: ${{ inputs.scope }}
+      OAUTH_PROOF_INTERNAL_BEARER: ${{ secrets.OAUTH_PROOF_INTERNAL_BEARER }}
+      OAUTH_PROOF_USER_TOKEN: ${{ secrets.OAUTH_PROOF_USER_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pod-provider/backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: pod-provider/backend
+
+      - name: Validate smoke prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${OAUTH_PROOF_BASE_URL:-}" || -z "${OAUTH_PROOF_SIDECAR_BASE_URL:-}" ]]; then
+            echo "Missing backend or sidecar base URL"
+            exit 2
+          fi
+
+          if [[ -z "${OAUTH_PROOF_CANONICAL_ACCOUNT_ID:-}" || -z "${OAUTH_PROOF_CLIENT_ID:-}" || -z "${OAUTH_PROOF_REDIRECT_URI:-}" ]]; then
+            echo "Missing required OAuth proof inputs"
+            exit 2
+          fi
+
+          if [[ -z "${OAUTH_PROOF_USER_TOKEN:-}" && -z "${OAUTH_PROOF_INTERNAL_BEARER:-}" ]]; then
+            echo "Provide either secret OAUTH_PROOF_USER_TOKEN or OAUTH_PROOF_INTERNAL_BEARER"
+            exit 2
+          fi
+
+      - name: Enforce user-bound authorize mode
+        if: ${{ inputs.enforce_user_bound_authorize }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${OAUTH_PROOF_USER_TOKEN:-}" ]]; then
+            echo "enforce_user_bound_authorize=true requires secret OAUTH_PROOF_USER_TOKEN"
+            exit 2
+          fi
+
+          if [[ -n "${OAUTH_PROOF_INTERNAL_BEARER:-}" ]]; then
+            echo "enforce_user_bound_authorize=true forbids OAUTH_PROOF_INTERNAL_BEARER; remove fallback secret from this run"
+            exit 2
+          fi
+
+          # Basic JWT shape check to catch misconfigured secrets early.
+          if [[ "${OAUTH_PROOF_USER_TOKEN}" != *.*.* ]]; then
+            echo "OAUTH_PROOF_USER_TOKEN does not look like a JWT"
+            exit 2
+          fi
+
+      - name: Probe backend and sidecar with backoff
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          max_attempts=6
+
+          probe() {
+            local name="$1"
+            local url="$2"
+            local attempt=1
+
+            while (( attempt <= max_attempts )); do
+              code=$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)
+              if [[ "$code" =~ ^2 ]]; then
+                echo "$name ready: $url ($code)"
+                return 0
+              fi
+
+              if (( attempt == max_attempts )); then
+                echo "$name probe failed after $attempt attempts: $url ($code)"
+                return 1
+              fi
+
+              base_delay=$(( 2 ** (attempt - 1) ))
+              jitter_ms=$(( RANDOM % 1000 ))
+              sleep_time=$(awk "BEGIN { printf \"%.3f\", $base_delay + ($jitter_ms / 1000) }")
+              echo "$name not ready ($code), retrying in ${sleep_time}s..."
+              sleep "$sleep_time"
+              attempt=$((attempt + 1))
+            done
+          }
+
+          probe backend "${OAUTH_PROOF_BASE_URL%/}/.well-known/oauth-authorization-server"
+          probe sidecar "${OAUTH_PROOF_SIDECAR_BASE_URL%/}/xrpc/com.atproto.server.describeServer"
+
+      - name: Run OAuth smoke proofs with retry
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          max_attempts="${{ inputs.max_attempts }}"
+          if ! [[ "$max_attempts" =~ ^[0-9]+$ ]] || [[ "$max_attempts" -lt 1 ]]; then
+            echo "max_attempts must be a positive integer"
+            exit 2
+          fi
+
+          attempt=1
+          while (( attempt <= max_attempts )); do
+            if npm run proof:oauth:smoke --prefix pod-provider/backend; then
+              echo "OAuth smoke passed on attempt $attempt"
+              exit 0
+            fi
+
+            if (( attempt == max_attempts )); then
+              echo "OAuth smoke failed after $attempt attempts"
+              exit 1
+            fi
+
+            base_delay=$(( 2 ** (attempt - 1) ))
+            jitter_ms=$(( RANDOM % 1000 ))
+            sleep_time=$(awk "BEGIN { printf \"%.3f\", $base_delay + ($jitter_ms / 1000) }")
+            echo "OAuth smoke attempt $attempt failed, retrying in ${sleep_time}s..."
+            sleep "$sleep_time"
+            attempt=$((attempt + 1))
+          done

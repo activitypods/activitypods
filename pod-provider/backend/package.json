@@ -22,6 +22,11 @@
     "proof:secure-dataset": "node scripts/proof-secure-dataset-provisioning.js",
     "proof:identity-projection": "node scripts/proof-internal-identity-projection.js",
     "proof:identity-changes": "node scripts/proof-internal-identity-changes.js",
+    "proof:oauth:metadata": "node scripts/proof-oauth-metadata.js",
+    "proof:oauth:par": "node scripts/proof-oauth-par.js",
+    "proof:oauth:managed-login": "node scripts/proof-oauth-managed-login.js",
+    "proof:oauth:backend-sidecar-bridge": "node scripts/proof-oauth-backend-sidecar-bridge.js",
+    "proof:oauth:smoke": "bash scripts/proof-oauth-smoke.sh",
     "link-semapps-packages": "yarn link @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
     "unlink-semapps-packages": "yarn unlink @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/solid @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid"
   },

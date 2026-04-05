@@ -60,5 +60,7 @@ export const dashboardApi = {
     req('settings/app-consents', {
       method: 'POST',
       body: JSON.stringify({ data })
-    })
+    }),
+
+  previewSource: (url: string) => req(`settings/preview?url=${encodeURIComponent(url)}`)
 };

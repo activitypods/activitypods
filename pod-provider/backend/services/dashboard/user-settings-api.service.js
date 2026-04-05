@@ -1,3 +1,4 @@
+const fetch = require('node-fetch');
 const { MoleculerError } = require('moleculer').Errors;
 const { getDatasetFromUri } = require('@semapps/ldp');
 const { sanitizeSparqlQuery } = require('@semapps/triplestore');
@@ -73,6 +74,7 @@ module.exports = {
         authorization: true,
         authentication: true,
         aliases: {
+          'GET /settings/preview': 'user-settings-api.preview',
           'GET /settings/:container': 'user-settings-api.list',
           'POST /settings/:container': 'user-settings-api.create',
           'PUT /settings': 'user-settings-api.update',
@@ -186,6 +188,50 @@ module.exports = {
       await ctx.call('ldp.resource.delete', { resourceUri, webId }, { meta: { dataset } });
 
       return { deleted: true };
+    },
+
+    async preview(ctx) {
+      this.requireWebId(ctx);
+      const url = ctx.params.url || ctx.meta.$query?.url;
+      if (!url || typeof url !== 'string') throw new MoleculerError('url is required', 400);
+
+      let parsed;
+      try {
+        parsed = new URL(url);
+      } catch {
+        throw new MoleculerError('Invalid URL', 400);
+      }
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        throw new MoleculerError('Only http/https URLs are supported', 400);
+      }
+
+      let body;
+      try {
+        const response = await fetch(url, {
+          headers: { Accept: 'application/activity+json, application/ld+json;q=0.9, application/json;q=0.8' },
+          redirect: 'follow',
+          timeout: 5000
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        body = await response.json();
+      } catch (err) {
+        throw new MoleculerError(`Preview fetch failed: ${err.message}`, 502);
+      }
+
+      const get = (...keys) => {
+        for (const k of keys) {
+          const v = body[k];
+          if (v && typeof v === 'string') return v;
+          if (v?.url && typeof v.url === 'string') return v.url;
+        }
+        return undefined;
+      };
+
+      return {
+        name: get('name', 'preferredUsername'),
+        description: get('summary', 'description', 'content'),
+        icon: get('icon')
+      };
     },
 
     async listAppConsents(ctx) {

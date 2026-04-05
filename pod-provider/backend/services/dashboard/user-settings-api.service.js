@@ -5,7 +5,13 @@ const { prepareForContainer, prepareAppConsent } = require('./user-settings-vali
 
 const JSON_LD = 'application/ld+json';
 
-const ALLOWED = new Set(['filters', 'blocks', 'mutes', 'preferences', 'app-consents']);
+const ALLOWED = new Set(['filters', 'blocks', 'mutes', 'preferences', 'app-consents', 'trust-sources']);
+
+const IMMUTABLE_FIELDS = ['@context', '@id', 'id', 'type', '@type', 'createdAt', 'schemaVersion'];
+
+const IMMUTABLE_FIELDS_BY_CONTAINER = {
+  'app-consents': ['clientId']
+};
 
 const CONTEXT = {
   apods: 'https://activitypods.org/ns/core#',
@@ -18,6 +24,15 @@ const CONTEXT = {
   subjectProtocol: 'apods:subjectProtocol',
   clientId: 'apods:clientId',
   permissions: 'apods:permissions',
+  source: 'apods:source',
+  sourceType: 'apods:sourceType',
+  enabled: 'apods:enabled',
+  weight: 'apods:weight',
+  scopes: 'apods:scopes',
+  priority: 'apods:priority',
+  name: 'apods:name',
+  description: 'apods:description',
+  icon: 'apods:icon',
   category: 'apods:category',
   value: 'apods:value',
   schemaVersion: 'apods:schemaVersion',
@@ -30,7 +45,8 @@ const RESOURCE_TYPE_BY_CONTAINER = {
   blocks: 'apods:Block',
   mutes: 'apods:Mute',
   preferences: 'apods:Preference',
-  'app-consents': 'apods:AppConsent'
+  'app-consents': 'apods:AppConsent',
+  'trust-sources': 'apods:TrustSource'
 };
 
 const RESOURCE_CLASS_URI_BY_CONTAINER = {
@@ -38,7 +54,8 @@ const RESOURCE_CLASS_URI_BY_CONTAINER = {
   blocks: 'https://activitypods.org/ns/core#Block',
   mutes: 'https://activitypods.org/ns/core#Mute',
   preferences: 'https://activitypods.org/ns/core#Preference',
-  'app-consents': 'https://activitypods.org/ns/core#AppConsent'
+  'app-consents': 'https://activitypods.org/ns/core#AppConsent',
+  'trust-sources': 'https://activitypods.org/ns/core#TrustSource'
 };
 
 module.exports = {
@@ -59,6 +76,7 @@ module.exports = {
           'GET /settings/:container': 'user-settings-api.list',
           'POST /settings/:container': 'user-settings-api.create',
           'PUT /settings': 'user-settings-api.update',
+          'PATCH /settings': 'user-settings-api.update',
           'DELETE /settings': 'user-settings-api.remove',
           'GET /app-consents': 'user-settings-api.listAppConsents',
           'POST /app-consents': 'user-settings-api.createAppConsent'
@@ -130,6 +148,8 @@ module.exports = {
       if (!container) {
         throw new MoleculerError('Unknown resource type', 400, 'VALIDATION_ERROR');
       }
+
+       this.assertImmutableFields(existing, data || {}, container);
 
       const candidate = {
         ...existing,
@@ -244,6 +264,21 @@ module.exports = {
           RESOURCE_CLASS_URI_BY_CONTAINER[container] === resourceType
         );
       });
+    },
+
+    assertImmutableFields(existing, patch, container) {
+      const immutableFields = [...IMMUTABLE_FIELDS, ...(IMMUTABLE_FIELDS_BY_CONTAINER[container] || [])];
+
+      for (const field of immutableFields) {
+        if (Object.prototype.hasOwnProperty.call(patch, field)) {
+          const before = JSON.stringify(existing[field]);
+          const after = JSON.stringify(patch[field]);
+
+          if (before !== after) {
+            throw new MoleculerError(`${field} is immutable`, 400, 'VALIDATION_ERROR');
+          }
+        }
+      }
     },
 
     normalizeType(value) {

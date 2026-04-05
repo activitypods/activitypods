@@ -5,12 +5,15 @@ const {
   validateMuteOrBlock,
   validatePreference,
   validateAppConsent,
+  validateTrustSource,
   validateForContainer,
   prepareAppConsent,
   prepareForContainer,
   KNOWN_CONSENT_SCOPES,
   FILTER_ACTIONS,
-  CURRENT_SCHEMA_VERSION
+  CURRENT_SCHEMA_VERSION,
+  TRUST_SOURCE_TYPES,
+  TRUST_SOURCE_SCOPES
 } = require('../services/dashboard/user-settings-validators');
 
 // ---------------------------------------------------------------------------
@@ -187,6 +190,92 @@ describe('validateAppConsent', () => {
 });
 
 // ---------------------------------------------------------------------------
+// validateTrustSource
+// ---------------------------------------------------------------------------
+describe('validateTrustSource', () => {
+  test('accepts valid trust source', () => {
+    expect(
+      validateTrustSource({
+        source: 'https://example.org/moderation/list',
+        sourceType: 'list',
+        enabled: true,
+        weight: 0.8,
+        scopes: ['filter:content', 'label:content']
+      })
+    ).toBeNull();
+  });
+
+  test('rejects invalid source URI', () => {
+    expect(
+      validateTrustSource({
+        source: 'not-a-uri',
+        sourceType: 'list',
+        enabled: true,
+        weight: 0.8,
+        scopes: ['filter:content']
+      })
+    ).toMatch(/valid URI/);
+  });
+
+  test('rejects invalid sourceType', () => {
+    expect(
+      validateTrustSource({
+        source: 'https://example.org/moderation/list',
+        sourceType: 'magic',
+        enabled: true,
+        weight: 0.8,
+        scopes: ['filter:content']
+      })
+    ).toMatch(/sourceType/);
+  });
+
+  test('rejects out-of-range weight', () => {
+    expect(
+      validateTrustSource({
+        source: 'https://example.org/moderation/list',
+        sourceType: 'list',
+        enabled: true,
+        weight: 1.5,
+        scopes: ['filter:content']
+      })
+    ).toMatch(/between 0 and 1/);
+  });
+
+  test('rejects invalid trust source scope', () => {
+    expect(
+      validateTrustSource({
+        source: 'https://example.org/moderation/list',
+        sourceType: 'list',
+        enabled: true,
+        weight: 0.8,
+        scopes: ['hack:all']
+      })
+    ).toMatch(/invalid trust source scope/);
+  });
+
+  test('prepareForContainer normalizes trust source defaults', () => {
+    const { data, error } = prepareForContainer('trust-sources', {
+      source: 'https://example.org/moderation/list',
+      sourceType: 'list',
+      scopes: ['filter:content', 'filter:content', 'label:content']
+    });
+
+    expect(error).toBeNull();
+    expect(data.enabled).toBe(true);
+    expect(data.weight).toBe(1);
+    expect(data.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(data.scopes).toEqual(['filter:content', 'label:content']);
+  });
+
+  test('trust source enums stay stable', () => {
+    expect([...TRUST_SOURCE_TYPES].sort()).toEqual(['algorithmic', 'curator', 'list', 'relay']);
+    expect([...TRUST_SOURCE_SCOPES].sort()).toEqual(
+      ['filter:actor', 'filter:content', 'label:actor', 'label:content', 'rank:down', 'rank:up'].sort()
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
 // validateForContainer dispatch
 // ---------------------------------------------------------------------------
 describe('validateForContainer', () => {
@@ -213,6 +302,19 @@ describe('validateForContainer', () => {
   test('dispatches to validateAppConsent for app-consents container', () => {
     expect(validateForContainer('app-consents', { clientId: 'x', permissions: ['read:moderation'] })).toBeNull();
     expect(validateForContainer('app-consents', {})).toMatch(/clientId/);
+  });
+
+  test('dispatches to validateTrustSource for trust-sources container', () => {
+    expect(
+      validateForContainer('trust-sources', {
+        source: 'https://example.org/moderation/list',
+        sourceType: 'list',
+        enabled: true,
+        weight: 0.7,
+        scopes: ['filter:content']
+      })
+    ).toBeNull();
+    expect(validateForContainer('trust-sources', {})).toMatch(/source/);
   });
 
   test('returns null for unknown container (blocked upstream)', () => {
@@ -258,6 +360,19 @@ describe('user-settings-api.create validation wiring', () => {
       name: 'ldp.resource',
       actions: {
         get: async ctx => {
+          if (ctx.params.resourceUri === 'http://localhost/alice/data/trust1') {
+            return {
+              '@id': 'http://localhost/alice/data/trust1',
+              type: 'apods:TrustSource',
+              source: 'https://example.org/moderation/list',
+              sourceType: 'list',
+              enabled: true,
+              weight: 0.5,
+              scopes: ['filter:content'],
+              schemaVersion: CURRENT_SCHEMA_VERSION
+            };
+          }
+
           if (ctx.params.resourceUri === 'http://localhost/alice/data/consent1') {
             return {
               '@id': 'http://localhost/alice/data/consent1',
@@ -341,6 +456,44 @@ describe('user-settings-api.create validation wiring', () => {
     ).rejects.toMatchObject({ code: 400 });
   });
 
+  test('trust-source create rejects invalid sourceType', async () => {
+    await expect(
+      broker.call(
+        'user-settings-api.create',
+        {
+          container: 'trust-sources',
+          data: {
+            source: 'https://example.org/moderation/list',
+            sourceType: 'magic',
+            enabled: true,
+            weight: 0.8,
+            scopes: ['filter:content']
+          }
+        },
+        { meta: callerMeta }
+      )
+    ).rejects.toMatchObject({ code: 400 });
+  });
+
+  test('trust-source create rejects invalid scope', async () => {
+    await expect(
+      broker.call(
+        'user-settings-api.create',
+        {
+          container: 'trust-sources',
+          data: {
+            source: 'https://example.org/moderation/list',
+            sourceType: 'list',
+            enabled: true,
+            weight: 0.8,
+            scopes: ['hack:all']
+          }
+        },
+        { meta: callerMeta }
+      )
+    ).rejects.toMatchObject({ code: 400 });
+  });
+
   test('createAppConsent rejects unknown scope', async () => {
     await expect(
       broker.call(
@@ -388,7 +541,11 @@ describe('user-settings-api.create validation wiring', () => {
   });
 
   test('create writes schemaVersion=1 when omitted', async () => {
-    await broker.call('user-settings-api.create', { container: 'filters', data: { pattern: 'spam' } }, { meta: callerMeta });
+    await broker.call(
+      'user-settings-api.create',
+      { container: 'filters', data: { pattern: 'spam' } },
+      { meta: callerMeta }
+    );
 
     expect(lastPostedResource.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(lastPostedResource.pattern).toBe('spam');
@@ -408,6 +565,26 @@ describe('user-settings-api.create validation wiring', () => {
 
     expect(lastPostedResource.clientId).toBe('my-app');
     expect(lastPostedResource.permissions).toEqual(['read:moderation', 'app:overrides']);
+    expect(lastPostedResource.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+  });
+
+  test('create trust-source writes normalized defaults', async () => {
+    await broker.call(
+      'user-settings-api.create',
+      {
+        container: 'trust-sources',
+        data: {
+          source: 'https://example.org/moderation/list',
+          sourceType: 'list',
+          scopes: ['filter:content', 'filter:content', 'label:content']
+        }
+      },
+      { meta: callerMeta }
+    );
+
+    expect(lastPostedResource.enabled).toBe(true);
+    expect(lastPostedResource.weight).toBe(1);
+    expect(lastPostedResource.scopes).toEqual(['filter:content', 'label:content']);
     expect(lastPostedResource.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
   });
 
@@ -435,6 +612,47 @@ describe('user-settings-api.create validation wiring', () => {
         { meta: callerMeta }
       )
     ).rejects.toMatchObject({ code: 400 });
+  });
+
+  test('update rejects immutable app consent clientId changes', async () => {
+    await expect(
+      broker.call(
+        'user-settings-api.update',
+        {
+          resourceUri: 'http://localhost/alice/data/consent1',
+          data: { clientId: 'other-app' }
+        },
+        { meta: callerMeta }
+      )
+    ).rejects.toMatchObject({ code: 400 });
+  });
+
+  test('update validates trust-source partial updates', async () => {
+    await expect(
+      broker.call(
+        'user-settings-api.update',
+        {
+          resourceUri: 'http://localhost/alice/data/trust1',
+          data: { weight: 3 }
+        },
+        { meta: callerMeta }
+      )
+    ).rejects.toMatchObject({ code: 400 });
+  });
+
+  test('update writes valid trust-source partial updates', async () => {
+    await broker.call(
+      'user-settings-api.update',
+      {
+        resourceUri: 'http://localhost/alice/data/trust1',
+        data: { weight: 0.9, scopes: ['filter:content', 'rank:down'] }
+      },
+      { meta: callerMeta }
+    );
+
+    expect(lastPutResource.weight).toBe(0.9);
+    expect(lastPutResource.scopes).toEqual(['filter:content', 'rank:down']);
+    expect(lastPutResource.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
   });
 
   test('update keeps normalized schemaVersion on valid writes', async () => {

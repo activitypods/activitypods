@@ -3,6 +3,15 @@
 const CURRENT_SCHEMA_VERSION = 1;
 
 const KNOWN_CONSENT_SCOPES = new Set(['read:moderation', 'write:moderation', 'app:overrides', 'read:trust']);
+const TRUST_SOURCE_TYPES = new Set(['relay', 'curator', 'list', 'algorithmic']);
+const TRUST_SOURCE_SCOPES = new Set([
+  'filter:content',
+  'filter:actor',
+  'label:content',
+  'label:actor',
+  'rank:down',
+  'rank:up'
+]);
 
 const FILTER_ACTIONS = new Set(['hide', 'warn', 'filter']);
 
@@ -25,6 +34,11 @@ function normalizeString(value) {
 function normalizePermissions(permissions) {
   const scopeList = Array.isArray(permissions) ? permissions : permissions ? [permissions] : [];
   return [...new Set(scopeList.map(scope => normalizeString(scope)).filter(Boolean))];
+}
+
+function normalizeStringArray(values) {
+  const list = Array.isArray(values) ? values : values ? [values] : [];
+  return [...new Set(list.map(value => normalizeString(value)).filter(Boolean))];
 }
 
 function validateSchemaVersion(data) {
@@ -74,6 +88,26 @@ function prepareAppConsent(data) {
   });
 
   return { data: prepared, error: validateAppConsent(prepared) };
+}
+
+function prepareTrustSource(data) {
+  const prepared = withSchemaVersion({
+    ...(data || {}),
+    source: normalizeString(data?.source),
+    sourceType: normalizeString(data?.sourceType),
+    enabled: data?.enabled ?? true,
+    weight: data?.weight ?? 1,
+    scopes: normalizeStringArray(data?.scopes),
+    name: normalizeString(data?.name),
+    description: normalizeString(data?.description),
+    icon: normalizeString(data?.icon)
+  });
+
+  if (data?.priority !== undefined) {
+    prepared.priority = Number(data.priority);
+  }
+
+  return { data: prepared, error: validateTrustSource(prepared) };
 }
 
 function validateFilter(data) {
@@ -150,12 +184,67 @@ function validateAppConsent(data) {
   return null;
 }
 
+function validateTrustSource(data) {
+  if (!data) {
+    return 'trust source requires a source';
+  }
+  const schemaError = validateSchemaVersion(withSchemaVersion(data));
+  if (schemaError) {
+    return schemaError;
+  }
+  if (typeof data.source !== 'string' || data.source.trim().length === 0) {
+    return 'trust source requires a non-empty source';
+  }
+  try {
+    const url = new URL(data.source);
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      return 'trust source source must be an http(s) URI';
+    }
+  } catch {
+    return 'trust source source must be a valid URI';
+  }
+  if (!TRUST_SOURCE_TYPES.has(data.sourceType)) {
+    return `trust source sourceType must be one of: ${[...TRUST_SOURCE_TYPES].join(', ')}`;
+  }
+  if (typeof data.enabled !== 'boolean') {
+    return 'trust source enabled must be boolean';
+  }
+  if (typeof data.weight !== 'number' || Number.isNaN(data.weight)) {
+    return 'trust source weight must be a number';
+  }
+  if (data.weight < 0 || data.weight > 1) {
+    return 'trust source weight must be between 0 and 1';
+  }
+  if (!Array.isArray(data.scopes) || data.scopes.length === 0) {
+    return 'trust source requires at least one scope';
+  }
+  const invalidScopes = data.scopes.filter(scope => !TRUST_SOURCE_SCOPES.has(scope));
+  if (invalidScopes.length > 0) {
+    return `invalid trust source scope(s): ${invalidScopes.join(', ')}`;
+  }
+  if (data.priority !== undefined && (!Number.isInteger(data.priority) || data.priority < 0)) {
+    return 'trust source priority must be a non-negative integer';
+  }
+  if (data.icon !== undefined) {
+    try {
+      const url = new URL(data.icon);
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        return 'trust source icon must be an http(s) URI';
+      }
+    } catch {
+      return 'trust source icon must be a valid URI';
+    }
+  }
+  return null;
+}
+
 const PREPARERS_BY_CONTAINER = {
   filters: prepareFilter,
   mutes: prepareMuteOrBlock,
   blocks: prepareMuteOrBlock,
   preferences: preparePreference,
-  'app-consents': prepareAppConsent
+  'app-consents': prepareAppConsent,
+  'trust-sources': prepareTrustSource
 };
 
 /**
@@ -178,10 +267,13 @@ module.exports = {
   validateMuteOrBlock,
   validatePreference,
   validateAppConsent,
+  validateTrustSource,
   validateForContainer,
   prepareAppConsent,
   prepareForContainer,
   KNOWN_CONSENT_SCOPES,
   FILTER_ACTIONS,
-  CURRENT_SCHEMA_VERSION
+  CURRENT_SCHEMA_VERSION,
+  TRUST_SOURCE_TYPES,
+  TRUST_SOURCE_SCOPES
 };

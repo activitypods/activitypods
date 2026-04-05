@@ -18,15 +18,32 @@ import {
   Select,
   Stack,
   TextField,
-  Typography,
+  Typography
 } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
 import { dashboardApi } from './dashboardApi';
 
-type AnyItem = Record<string, any>;
+type LdpResource = { '@id': string };
 
-function useSection(container: string) {
-  const [items, setItems] = useState<AnyItem[]>([]);
+type FilterAction = 'hide' | 'warn' | 'filter';
+
+type KeywordFilter = LdpResource & {
+  pattern: string;
+  action: FilterAction;
+};
+
+type MutedAccount = LdpResource & {
+  subjectCanonicalId: string;
+  subjectProtocol: string;
+};
+
+type BlockedAccount = LdpResource & {
+  subjectCanonicalId: string;
+  subjectProtocol: string;
+};
+
+function useSection<T extends LdpResource>(container: string) {
+  const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +65,7 @@ function useSection(container: string) {
     load();
   }, [load]);
 
-  const add = async (data: object) => {
+  const add = async (data: Omit<T, '@id'>) => {
     setSaving(true);
     try {
       await dashboardApi.create(container, data);
@@ -72,14 +89,14 @@ function useSection(container: string) {
   return { items, loading, saving, error, add, remove };
 }
 
-const itemUri = (item: AnyItem) => item['@id'] || item.id || '';
+const itemUri = (item: LdpResource) => item['@id'];
 
 const SectionShell = ({
   title,
   count,
   loading,
   error,
-  children,
+  children
 }: {
   title: string;
   count: number;
@@ -111,12 +128,12 @@ const SectionShell = ({
 );
 
 const ModerationPage = () => {
-  const filters = useSection('filters');
-  const mutes = useSection('mutes');
-  const blocks = useSection('blocks');
+  const filters = useSection<KeywordFilter>('filters');
+  const mutes = useSection<MutedAccount>('mutes');
+  const blocks = useSection<BlockedAccount>('blocks');
 
   const [filterPattern, setFilterPattern] = useState('');
-  const [filterAction, setFilterAction] = useState('hide');
+  const [filterAction, setFilterAction] = useState<FilterAction>('hide');
   const [muteSubject, setMuteSubject] = useState('');
   const [blockSubject, setBlockSubject] = useState('');
 
@@ -160,7 +177,7 @@ const ModerationPage = () => {
           </Typography>
         )}
         <List dense disablePadding>
-          {filters.items.map((item) => (
+          {filters.items.map(item => (
             <ListItem key={itemUri(item)} divider>
               <ListItemText
                 primary={item.pattern}
@@ -185,14 +202,14 @@ const ModerationPage = () => {
             size="small"
             label="Keyword or pattern"
             value={filterPattern}
-            onChange={(e) => setFilterPattern(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddFilter()}
+            onChange={e => setFilterPattern(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAddFilter()}
             sx={{ flex: 1 }}
           />
           <Select
             size="small"
             value={filterAction}
-            onChange={(e) => setFilterAction(e.target.value)}
+            onChange={e => setFilterAction(e.target.value as FilterAction)}
             sx={{ minWidth: 100 }}
           >
             <MenuItem value="hide">Hide</MenuItem>
@@ -210,28 +227,18 @@ const ModerationPage = () => {
         </Stack>
       </SectionShell>
 
-      <SectionShell
-        title="Muted Accounts"
-        count={mutes.items.length}
-        loading={mutes.loading}
-        error={mutes.error}
-      >
+      <SectionShell title="Muted Accounts" count={mutes.items.length} loading={mutes.loading} error={mutes.error}>
         {mutes.loading === false && mutes.items.length === 0 && (
           <Typography variant="body2" color="text.secondary" mb={1}>
             No muted accounts yet.
           </Typography>
         )}
         <List dense disablePadding>
-          {mutes.items.map((item) => (
+          {mutes.items.map(item => (
             <ListItem key={itemUri(item)} divider>
               <ListItemText primary={item.subjectCanonicalId} secondary={item.subjectProtocol || 'ap'} />
               <ListItemSecondaryAction>
-                <IconButton
-                  edge="end"
-                  size="small"
-                  onClick={() => mutes.remove(itemUri(item))}
-                  aria-label="unmute"
-                >
+                <IconButton edge="end" size="small" onClick={() => mutes.remove(itemUri(item))} aria-label="unmute">
                   <DeleteIcon fontSize="small" />
                 </IconButton>
               </ListItemSecondaryAction>
@@ -243,8 +250,8 @@ const ModerationPage = () => {
             size="small"
             label="Actor ID (e.g. @user@instance.social)"
             value={muteSubject}
-            onChange={(e) => setMuteSubject(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddMute()}
+            onChange={e => setMuteSubject(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAddMute()}
             sx={{ flex: 1 }}
           />
           <Button
@@ -258,28 +265,18 @@ const ModerationPage = () => {
         </Stack>
       </SectionShell>
 
-      <SectionShell
-        title="Blocked Accounts"
-        count={blocks.items.length}
-        loading={blocks.loading}
-        error={blocks.error}
-      >
+      <SectionShell title="Blocked Accounts" count={blocks.items.length} loading={blocks.loading} error={blocks.error}>
         {blocks.loading === false && blocks.items.length === 0 && (
           <Typography variant="body2" color="text.secondary" mb={1}>
             No blocked accounts yet.
           </Typography>
         )}
         <List dense disablePadding>
-          {blocks.items.map((item) => (
+          {blocks.items.map(item => (
             <ListItem key={itemUri(item)} divider>
               <ListItemText primary={item.subjectCanonicalId} secondary={item.subjectProtocol || 'ap'} />
               <ListItemSecondaryAction>
-                <IconButton
-                  edge="end"
-                  size="small"
-                  onClick={() => blocks.remove(itemUri(item))}
-                  aria-label="unblock"
-                >
+                <IconButton edge="end" size="small" onClick={() => blocks.remove(itemUri(item))} aria-label="unblock">
                   <DeleteIcon fontSize="small" />
                 </IconButton>
               </ListItemSecondaryAction>
@@ -291,8 +288,8 @@ const ModerationPage = () => {
             size="small"
             label="Actor ID (e.g. @user@instance.social)"
             value={blockSubject}
-            onChange={(e) => setBlockSubject(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddBlock()}
+            onChange={e => setBlockSubject(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAddBlock()}
             sx={{ flex: 1 }}
           />
           <Button

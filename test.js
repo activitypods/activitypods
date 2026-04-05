@@ -1,0 +1,1 @@
+const a = 'http://x';

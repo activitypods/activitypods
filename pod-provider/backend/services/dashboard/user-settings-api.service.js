@@ -1,16 +1,11 @@
 const { MoleculerError } = require('moleculer').Errors;
 const { getDatasetFromUri } = require('@semapps/ldp');
 const { sanitizeSparqlQuery } = require('@semapps/triplestore');
+const { validateForContainer, validateAppConsent } = require('./user-settings-validators');
 
 const JSON_LD = 'application/ld+json';
 
-const ALLOWED = new Set([
-  'filters',
-  'blocks',
-  'mutes',
-  'preferences',
-  'app-consents'
-]);
+const ALLOWED = new Set(['filters', 'blocks', 'mutes', 'preferences', 'app-consents']);
 
 const CONTEXT = {
   apods: 'https://activitypods.org/ns/core#',
@@ -81,6 +76,11 @@ module.exports = {
     async create(ctx) {
       const webId = this.requireWebId(ctx);
       const c = this.requireContainer(ctx.params.container);
+      const data = ctx.params.data || {};
+
+      const validationError = validateForContainer(c, data);
+      if (validationError) throw new MoleculerError(validationError, 400, 'VALIDATION_ERROR');
+
       const uri = this.dataContainer(webId);
 
       const now = new Date().toISOString();
@@ -91,7 +91,7 @@ module.exports = {
         type,
         createdAt: now,
         updatedAt: now,
-        ...(ctx.params.data || {})
+        ...data
       };
 
       const resourceUri = await ctx.call('ldp.container.post', {
@@ -162,6 +162,11 @@ module.exports = {
 
     async createAppConsent(ctx) {
       const webId = this.requireWebId(ctx);
+      const consentData = ctx.params.data || {};
+
+      const validationError = validateAppConsent(consentData);
+      if (validationError) throw new MoleculerError(validationError, 400, 'VALIDATION_ERROR');
+
       const uri = this.dataContainer(webId);
       const now = new Date().toISOString();
 
@@ -170,7 +175,7 @@ module.exports = {
         type: this.resourceTypeForContainer('app-consents'),
         createdAt: now,
         updatedAt: now,
-        ...(ctx.params.data || {})
+        ...consentData
       };
 
       const resourceUri = await ctx.call('ldp.container.post', {
@@ -243,9 +248,7 @@ module.exports = {
         webId: 'system'
       });
 
-      const uris = rows
-        .map(row => row?.resource?.value)
-        .filter(Boolean);
+      const uris = rows.map(row => row?.resource?.value).filter(Boolean);
 
       const resources = await Promise.all(
         uris.map(async resourceUri => {

@@ -101,6 +101,7 @@ const normalizeTrustSource = (item: any): TrustSource => ({
   '@id': item['@id'] || item.id,
   enabled: normalizeBoolean(item.enabled),
   weight: normalizeNumber(item.weight, 1),
+  priority: item.priority !== undefined ? normalizeNumber(item.priority as JsonLdScalar, 0) : undefined,
   schemaVersion: normalizeNumber(item.schemaVersion, 1)
 });
 
@@ -332,8 +333,7 @@ const TrustSourcesPage = () => {
                         />
                         <Box minWidth={180}>
                           <Typography variant="caption" color="text.secondary">
-                            Weight: {currentWeight.toFixed(2)}
-                          </Typography>
+                            Weight: {currentWeight.toFixed(2)}                          {item.priority !== undefined ? ` · Priority: ${item.priority}` : ''}                          </Typography>
                           <Slider
                             size="small"
                             min={0}
@@ -506,6 +506,16 @@ const TrustSourcesPage = () => {
               <Typography variant="body2" color="text.secondary" mb={1}>
                 Scopes
               </Typography>
+              {editScopes.has('filter:content') && !editScopes.has('label:content') && (
+                <Alert severity="warning" sx={{ mb: 1 }}>
+                  filter:content requires label:content — please enable it too.
+                </Alert>
+              )}
+              {editScopes.has('filter:actor') && !editScopes.has('label:actor') && (
+                <Alert severity="warning" sx={{ mb: 1 }}>
+                  filter:actor requires label:actor — please enable it too.
+                </Alert>
+              )}
               <FormGroup>
                 {TRUST_SCOPES.map(scope => (
                   <FormControlLabel

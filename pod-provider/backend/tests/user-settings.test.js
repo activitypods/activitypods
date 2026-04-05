@@ -241,6 +241,30 @@ describe('validateTrustSource', () => {
     ).toMatch(/between 0 and 1/);
   });
 
+  test('rejects filter:content without label:content', () => {
+    expect(
+      validateTrustSource({
+        source: 'https://example.org/moderation/list',
+        sourceType: 'list',
+        enabled: true,
+        weight: 0.8,
+        scopes: ['filter:content']
+      })
+    ).toMatch(/filter:content requires label:content/);
+  });
+
+  test('rejects filter:actor without label:actor', () => {
+    expect(
+      validateTrustSource({
+        source: 'https://example.org/moderation/list',
+        sourceType: 'list',
+        enabled: true,
+        weight: 0.8,
+        scopes: ['filter:actor']
+      })
+    ).toMatch(/filter:actor requires label:actor/);
+  });
+
   test('rejects invalid trust source scope', () => {
     expect(
       validateTrustSource({
@@ -311,7 +335,7 @@ describe('validateForContainer', () => {
         sourceType: 'list',
         enabled: true,
         weight: 0.7,
-        scopes: ['filter:content']
+        scopes: ['filter:content', 'label:content']
       })
     ).toBeNull();
     expect(validateForContainer('trust-sources', {})).toMatch(/source/);
@@ -368,7 +392,7 @@ describe('user-settings-api.create validation wiring', () => {
               sourceType: 'list',
               enabled: true,
               weight: 0.5,
-              scopes: ['filter:content'],
+              scopes: ['filter:content', 'label:content'],
               schemaVersion: CURRENT_SCHEMA_VERSION
             };
           }
@@ -645,13 +669,13 @@ describe('user-settings-api.create validation wiring', () => {
       'user-settings-api.update',
       {
         resourceUri: 'http://localhost/alice/data/trust1',
-        data: { weight: 0.9, scopes: ['filter:content', 'rank:down'] }
+        data: { weight: 0.9, scopes: ['filter:content', 'label:content', 'rank:down'] }
       },
       { meta: callerMeta }
     );
 
     expect(lastPutResource.weight).toBe(0.9);
-    expect(lastPutResource.scopes).toEqual(['filter:content', 'rank:down']);
+    expect(lastPutResource.scopes).toEqual(['filter:content', 'label:content', 'rank:down']);
     expect(lastPutResource.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
   });
 

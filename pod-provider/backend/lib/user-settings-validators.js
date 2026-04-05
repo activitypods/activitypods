@@ -222,6 +222,12 @@ function validateTrustSource(data) {
   if (invalidScopes.length > 0) {
     return `invalid trust source scope(s): ${invalidScopes.join(', ')}`;
   }
+  if (data.scopes.includes('filter:content') && !data.scopes.includes('label:content')) {
+    return 'filter:content requires label:content';
+  }
+  if (data.scopes.includes('filter:actor') && !data.scopes.includes('label:actor')) {
+    return 'filter:actor requires label:actor';
+  }
   if (data.priority !== undefined && (!Number.isInteger(data.priority) || data.priority < 0)) {
     return 'trust source priority must be a non-negative integer';
   }

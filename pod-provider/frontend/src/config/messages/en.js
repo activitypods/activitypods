@@ -18,6 +18,9 @@ module.exports = {
       ignore_contact_request: 'Ignore contact request',
       login: 'Login with an account',
       open_app: 'Open application',
+      link_atproto_account: 'Link your ATProto account',
+      continue_to_bluesky: 'Continue to Bluesky',
+      atproto_link_starting: 'Starting link flow...',
       delete_app: 'Delete application',
       open: 'Open',
       reject: 'Reject',
@@ -42,6 +45,8 @@ module.exports = {
       view_private_profile: 'View your private profile',
       view_public_profile: 'View your public profile',
       create_group: 'Create group',
+      add_profile_field: 'Add profile field',
+      verify_profile_links: 'Verify links',
       skip_to_main: 'Skip to main content',
       view_contact_profile: "View %{name}'s profile",
       edit_profile: 'Edit your profile'
@@ -73,6 +78,7 @@ module.exports = {
       settings_email: 'Update email address',
       settings_password: 'Update password',
       settings_locale: 'Change language',
+      settings_atproto_link: 'Link ATProto account',
       add_contact: 'Send a connection request',
       create_profile: 'Create your profile',
       authorize: 'Authorization required',
@@ -103,14 +109,20 @@ module.exports = {
       private_profile_desc: 'Visible only by my contact',
       public_profile: 'Public profile',
       public_profile_desc: 'Visible by everyone, without restriction',
+      profile_metadata: 'Profile fields',
+      profile_metadata_field: 'Field',
       email: 'Email address',
       password: 'Password',
       addresses: 'My addresses',
       address: '%{smart_count} address |||| %{smart_count} addresses',
       locale: 'Language',
+      atproto_link: 'ATProto account',
+      atproto_link_description: 'Link an existing external ATProto account',
       export: 'Export all my data',
       delete: 'Delete my Pod',
-      developer_mode: 'Developer mode'
+      developer_mode: 'Developer mode',
+      moderation: 'Moderation',
+      app_permissions: 'App Permissions'
     },
     authorization: {
       required: 'Required access',
@@ -139,9 +151,14 @@ module.exports = {
     input: {
       about_you: 'A few words about you',
       message: 'Message',
+      atproto_pds_url: 'ATProto PDS URL',
+      atproto_identifier_optional: 'ATProto identifier (optional)',
+      atproto_did_optional: 'ATProto DID (optional)',
+      atproto_handle_optional: 'ATProto handle (optional)',
       user_id: 'User ID',
       email: 'Email',
       current_password: 'Current password',
+      atproto_link_activitypods_password: 'Your MyPod.local password',
       new_password: 'New password',
       confirm_new_password: 'Confirm new password',
       provider_url: 'Provider URL',
@@ -149,7 +166,13 @@ module.exports = {
       created: 'Created',
       modified: 'Modified',
       confirm_delete: 'Confirm deletion',
-      with_backups: 'Include database backups (if available)'
+      with_backups: 'Include database backups (if available)',
+      profile_field_label: 'Label',
+      profile_field_type: 'Type',
+      profile_field_type_text: 'Text',
+      profile_field_type_link: 'Link',
+      profile_field_value: 'Value',
+      profile_field_rel_me: 'Use rel=me'
     },
     helper: {
       add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',
@@ -159,6 +182,15 @@ module.exports = {
         'Sending a message to %{username} will give him/her the right to see your profile, in order to be able to respond.',
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',
       share_contact: 'To connect with someone you know, you can create a link below.',
+      atproto_link:
+        'Use this page to link an external ATProto account. Enter your current ActivityPods password, then continue in the ATProto provider OAuth screen.',
+      atproto_link_passwords:
+        'Step 1: enter your ActivityPods password here. Step 2: on the Bluesky page, sign in with your Bluesky handle/email and Bluesky password.',
+      atproto_link_activitypods_password:
+        'This is your local MyPod.local password, not your Bluesky password.',
+      atproto_link_identifier_hint:
+        'If provided, this identifier is sent to Bluesky as a login hint. Use the exact account you intend to sign into.',
+      atproto_link_send_login_hint: 'Send identifier to Bluesky as login hint',
       location_comment: 'Additional information to help find this place',
       login: 'Sign in to your personal space',
       signup: 'Create your personal space',
@@ -180,6 +212,8 @@ module.exports = {
       choose_pod_provider:
         'The pod provider is the place where your data space is located. Like with an email provider, it will store your data.',
       username_cannot_be_modified: 'The user ID cannot be modified',
+      profile_metadata:
+        'Add profile fields like pronouns, website or portfolio links. Link fields may include rel=me for verification.',
       public_profile_view: 'You are viewing your public profile, visible by everyone',
       private_profile_view: 'You are viewing your private profile, visible only by your contacts',
       create_group: 'Please select on the list below the provider that you wish to use to create your group',
@@ -223,12 +257,15 @@ module.exports = {
       user_not_found: "User %{username} doesn't exist",
       reset_password_submitted: 'An email has been send with reset password instructions',
       reset_password_error: 'An error occurred',
+      signup_network_error: 'Network error. Please try again.',
       password_changed: 'Password changed successfully',
       new_password_error: 'An error occurred',
       invalid_password: 'Invalid password',
       locale_changed: 'Language changed successfully',
       get_settings_error: 'An error occurred',
       update_settings_error: 'An error occurred',
+      profile_metadata_verified: 'Profile links verified',
+      profile_metadata_verify_failed: 'Unable to verify profile links: %{error}',
       verified_applications_load_failed: 'Unable to load the list of verified applications',
       app_registration_progress: 'App registration in progress...',
       app_upgrade_progress: 'App upgrade in progress...',
@@ -248,7 +285,12 @@ module.exports = {
       contact_link_copied: 'Contact link copied successfully',
       contact_link_copying_failed: 'Copying contact link failed. Please manually copy it: \n%{link}',
       already_connected: 'You are already connected with the person who invited you.',
-      export_failed: 'The export failed: %{error}'
+      export_failed: 'The export failed: %{error}',
+      profile_metadata_verification_summary: '%{verified} of %{total} links verified',
+      atproto_link_success: 'ATProto account linked successfully',
+      atproto_link_password_required: 'Please enter your MyPod.local password to continue',
+      atproto_link_start_failed: 'Unable to start ATProto link flow: %{error}',
+      atproto_link_start_failed_generic: 'Unable to start ATProto link flow'
     },
     user: {
       unknown: 'Unknown',

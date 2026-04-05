@@ -16,6 +16,7 @@ import HomePage from './pages/HomePage';
 import DataPage from './pages/DataPage/DataListPage';
 import DataResourcePage from './pages/DataPage/DataShowPage';
 import SettingsPage from './pages/SettingsPage/SettingsPage';
+import SettingsAtprotoLinkPage from './pages/SettingsPage/SettingsAtprotoLinkPage';
 import AdvancedSettingsPage from './pages/SettingsPage/AdvancedSettingsPage';
 import SettingsPasswordPage from './pages/SettingsPage/SettingsPasswordPage';
 import SettingsEmailPage from './pages/SettingsPage/SettingsEmailPage';
@@ -37,6 +38,8 @@ import CreateGroupPage from './pages/CreateGroupPage';
 import GroupSettingsPage from './pages/SettingsPage/GroupSettingsPage';
 import PublicProfilePage from './pages/SettingsPage/ProfilesPage/PublicProfilePage';
 import PrivateProfilePage from './pages/SettingsPage/ProfilesPage/PrivateProfilePage';
+import ModerationPage from './pages/SettingsPage/ModerationPage';
+import AppPermissionsPage from './pages/SettingsPage/AppPermissionsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -98,10 +101,13 @@ const App = () => (
             </Route>
             <Route path="email" element={<SettingsEmailPage />} />
             <Route path="password" element={<SettingsPasswordPage />} />
+            <Route path="atproto-link" element={<SettingsAtprotoLinkPage />} />
             <Route path="locale" element={<SettingsLocalePage />} />
             <Route path="advanced" element={<AdvancedSettingsPage />} />
             <Route path="export" element={<SettingsExportPage />} />
             <Route path="delete" element={<SettingsDeletePage />} />
+            <Route path="moderation" element={<ModerationPage />} />
+            <Route path="apps" element={<AppPermissionsPage />} />
           </Route>
           <Route path="/group/:groupId">
             <Route path="settings">

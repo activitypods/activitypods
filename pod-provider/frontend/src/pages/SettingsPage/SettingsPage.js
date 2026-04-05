@@ -8,10 +8,13 @@ import EmailIcon from '@mui/icons-material/Email';
 import PersonIcon from '@mui/icons-material/Person';
 import PlaceIcon from '@mui/icons-material/Place';
 import LockIcon from '@mui/icons-material/Lock';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import LinkIcon from '@mui/icons-material/Link';
 import TuneIcon from '@mui/icons-material/Tune';
 import TranslateIcon from '@mui/icons-material/Translate';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import GavelIcon from '@mui/icons-material/Gavel';
+import AppsIcon from '@mui/icons-material/Apps';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import Header from '../../common/Header';
 import useContactLink from '../../hooks/useContactLink';
@@ -68,6 +71,13 @@ const SettingsPage = () => {
             value="***************"
           />
           <SettingsItem
+            onClick={() => navigate('/settings/atproto-link')}
+            icon={<AccountTreeIcon />}
+            label="app.setting.atproto_link"
+            value={translate('app.setting.atproto_link_description')}
+            actionIcon={<ArrowForwardIosIcon />}
+          />
+          <SettingsItem
             onClick={() => navigate('/settings/locale')}
             icon={<TranslateIcon />}
             label="app.setting.locale"
@@ -94,6 +104,18 @@ const SettingsPage = () => {
             onClick={() => navigate('/settings/advanced')}
             icon={<TuneIcon />}
             label="app.page.settings_advanced"
+            actionIcon={<ArrowForwardIosIcon />}
+          />
+          <SettingsItem
+            onClick={() => navigate('/settings/moderation')}
+            icon={<GavelIcon />}
+            label="app.setting.moderation"
+            actionIcon={<ArrowForwardIosIcon />}
+          />
+          <SettingsItem
+            onClick={() => navigate('/settings/apps')}
+            icon={<AppsIcon />}
+            label="app.setting.app_permissions"
             actionIcon={<ArrowForwardIosIcon />}
           />
         </List>

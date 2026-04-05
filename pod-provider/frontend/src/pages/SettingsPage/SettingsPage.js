@@ -16,6 +16,7 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import GavelIcon from '@mui/icons-material/Gavel';
 import AppsIcon from '@mui/icons-material/Apps';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
+import PublicIcon from '@mui/icons-material/Public';
 import Header from '../../common/Header';
 import useContactLink from '../../hooks/useContactLink';
 import SettingsItem from './SettingsItem';
@@ -116,6 +117,12 @@ const SettingsPage = () => {
             onClick={() => navigate('/settings/apps')}
             icon={<AppsIcon />}
             label="app.setting.app_permissions"
+            actionIcon={<ArrowForwardIosIcon />}
+          />
+          <SettingsItem
+            onClick={() => navigate('/settings/trust-sources')}
+            icon={<PublicIcon />}
+            label="app.setting.trust_sources"
             actionIcon={<ArrowForwardIosIcon />}
           />
         </List>

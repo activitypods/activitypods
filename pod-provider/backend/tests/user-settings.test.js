@@ -14,7 +14,7 @@ const {
   CURRENT_SCHEMA_VERSION,
   TRUST_SOURCE_TYPES,
   TRUST_SOURCE_SCOPES
-} = require('../services/dashboard/user-settings-validators');
+} = require('../lib/user-settings-validators');
 
 // ---------------------------------------------------------------------------
 // validateFilter

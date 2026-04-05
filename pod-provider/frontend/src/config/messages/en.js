@@ -122,7 +122,8 @@ module.exports = {
       delete: 'Delete my Pod',
       developer_mode: 'Developer mode',
       moderation: 'Moderation',
-      app_permissions: 'App Permissions'
+      app_permissions: 'App Permissions',
+      trust_sources: 'Trust Sources'
     },
     authorization: {
       required: 'Required access',
@@ -186,8 +187,7 @@ module.exports = {
         'Use this page to link an external ATProto account. Enter your current ActivityPods password, then continue in the ATProto provider OAuth screen.',
       atproto_link_passwords:
         'Step 1: enter your ActivityPods password here. Step 2: on the Bluesky page, sign in with your Bluesky handle/email and Bluesky password.',
-      atproto_link_activitypods_password:
-        'This is your local MyPod.local password, not your Bluesky password.',
+      atproto_link_activitypods_password: 'This is your local MyPod.local password, not your Bluesky password.',
       atproto_link_identifier_hint:
         'If provided, this identifier is sent to Bluesky as a login hint. Use the exact account you intend to sign into.',
       atproto_link_send_login_hint: 'Send identifier to Bluesky as login hint',

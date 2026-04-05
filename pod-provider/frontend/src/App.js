@@ -40,6 +40,7 @@ import PublicProfilePage from './pages/SettingsPage/ProfilesPage/PublicProfilePa
 import PrivateProfilePage from './pages/SettingsPage/ProfilesPage/PrivateProfilePage';
 import ModerationPage from './pages/SettingsPage/ModerationPage';
 import AppPermissionsPage from './pages/SettingsPage/AppPermissionsPage';
+import TrustSourcesPage from './pages/SettingsPage/TrustSourcesPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -108,6 +109,7 @@ const App = () => (
             <Route path="delete" element={<SettingsDeletePage />} />
             <Route path="moderation" element={<ModerationPage />} />
             <Route path="apps" element={<AppPermissionsPage />} />
+            <Route path="trust-sources" element={<TrustSourcesPage />} />
           </Route>
           <Route path="/group/:groupId">
             <Route path="settings">

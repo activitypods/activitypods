@@ -121,7 +121,8 @@ module.exports = {
       delete: 'Effacer le compte',
       developer_mode: 'Mode développeur',
       moderation: 'Modération',
-      app_permissions: 'Permissions des applications'
+      app_permissions: 'Permissions des applications',
+      trust_sources: 'Sources de confiance'
     },
     authorization: {
       required: 'Accès requis',
@@ -183,14 +184,14 @@ module.exports = {
       profile_visibility: "Votre profil n'est visible que des personnes que vous avez accepté dans votre réseau",
       share_contact: 'Pour vous connecter à une personne que vous connaissez, vous pouvez créer un lien ci-dessous.',
       atproto_link:
-        'Utilisez cette page pour lier un compte ATProto externe. Entrez votre mot de passe ActivityPods actuel, puis continuez dans l\'écran OAuth du fournisseur ATProto.',
+        "Utilisez cette page pour lier un compte ATProto externe. Entrez votre mot de passe ActivityPods actuel, puis continuez dans l'écran OAuth du fournisseur ATProto.",
       atproto_link_passwords:
         'Étape 1 : entrez ici votre mot de passe ActivityPods. Étape 2 : sur la page Bluesky, connectez-vous avec votre identifiant/e-mail Bluesky et votre mot de passe Bluesky.',
       atproto_link_activitypods_password:
-        'Il s\'agit de votre mot de passe local MyPod.local, pas de votre mot de passe Bluesky.',
+        "Il s'agit de votre mot de passe local MyPod.local, pas de votre mot de passe Bluesky.",
       atproto_link_identifier_hint:
         'Si renseigné, cet identifiant est envoyé à Bluesky comme indication de connexion. Utilisez exactement le compte que vous voulez ouvrir.',
-      atproto_link_send_login_hint: 'Envoyer l\'identifiant à Bluesky comme indication de connexion',
+      atproto_link_send_login_hint: "Envoyer l'identifiant à Bluesky comme indication de connexion",
       location_comment: 'Indications supplémentaires pour aider à trouver ce lieu',
       login: 'Je me connecte à mon espace personnel',
       signup: 'Je crée mon espace personnel',

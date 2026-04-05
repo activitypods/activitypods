@@ -1,7 +1,7 @@
 const { MoleculerError } = require('moleculer').Errors;
 const { getDatasetFromUri } = require('@semapps/ldp');
 const { sanitizeSparqlQuery } = require('@semapps/triplestore');
-const { prepareForContainer, prepareAppConsent } = require('./user-settings-validators');
+const { prepareForContainer, prepareAppConsent } = require('../../lib/user-settings-validators');
 
 const JSON_LD = 'application/ld+json';
 
@@ -78,6 +78,7 @@ module.exports = {
           'PUT /settings': 'user-settings-api.update',
           'PATCH /settings': 'user-settings-api.update',
           'DELETE /settings': 'user-settings-api.remove',
+          'POST /settings/delete': 'user-settings-api.remove',
           'GET /app-consents': 'user-settings-api.listAppConsents',
           'POST /app-consents': 'user-settings-api.createAppConsent'
         }
@@ -149,7 +150,7 @@ module.exports = {
         throw new MoleculerError('Unknown resource type', 400, 'VALIDATION_ERROR');
       }
 
-       this.assertImmutableFields(existing, data || {}, container);
+      this.assertImmutableFields(existing, data || {}, container);
 
       const candidate = {
         ...existing,

@@ -6,8 +6,11 @@ const {
   validatePreference,
   validateAppConsent,
   validateForContainer,
+  prepareAppConsent,
+  prepareForContainer,
   KNOWN_CONSENT_SCOPES,
-  FILTER_ACTIONS
+  FILTER_ACTIONS,
+  CURRENT_SCHEMA_VERSION
 } = require('../services/dashboard/user-settings-validators');
 
 // ---------------------------------------------------------------------------
@@ -24,10 +27,18 @@ describe('validateFilter', () => {
     expect(validateFilter({ pattern: 'spam' })).toBeNull();
   });
 
+  test('accepts current schemaVersion explicitly', () => {
+    expect(validateFilter({ pattern: 'spam', schemaVersion: CURRENT_SCHEMA_VERSION })).toBeNull();
+  });
+
   test('rejects missing pattern', () => {
     expect(validateFilter({ action: 'hide' })).toMatch(/pattern/);
     expect(validateFilter({})).toMatch(/pattern/);
     expect(validateFilter(null)).toMatch(/pattern/);
+  });
+
+  test('rejects unsupported schemaVersion', () => {
+    expect(validateFilter({ pattern: 'spam', schemaVersion: 2 })).toMatch(/unsupported schemaVersion/);
   });
 
   test('rejects empty pattern string', () => {
@@ -105,9 +116,7 @@ describe('validateAppConsent', () => {
   });
 
   test('accepts valid consent with multiple known scopes', () => {
-    expect(
-      validateAppConsent({ clientId: 'my-app', permissions: ['read:moderation', 'app:overrides'] })
-    ).toBeNull();
+    expect(validateAppConsent({ clientId: 'my-app', permissions: ['read:moderation', 'app:overrides'] })).toBeNull();
   });
 
   test('accepts all four known scopes', () => {
@@ -134,6 +143,12 @@ describe('validateAppConsent', () => {
     expect(validateAppConsent({ clientId: 'my-app', permissions: [] })).toMatch(/scope/);
   });
 
+  test('rejects write:moderation without read:moderation', () => {
+    expect(validateAppConsent({ clientId: 'my-app', permissions: ['write:moderation'] })).toMatch(
+      /requires read:moderation/
+    );
+  });
+
   test('rejects missing permissions', () => {
     expect(validateAppConsent({ clientId: 'my-app' })).toMatch(/scope/);
   });
@@ -156,6 +171,18 @@ describe('validateAppConsent', () => {
     expect([...KNOWN_CONSENT_SCOPES].sort()).toEqual(
       ['app:overrides', 'read:moderation', 'read:trust', 'write:moderation'].sort()
     );
+  });
+
+  test('prepareAppConsent normalizes permissions and injects schemaVersion', () => {
+    const { data, error } = prepareAppConsent({
+      clientId: '  my-app  ',
+      permissions: ['read:moderation', 'read:moderation', 'app:overrides']
+    });
+
+    expect(error).toBeNull();
+    expect(data.clientId).toBe('my-app');
+    expect(data.permissions).toEqual(['read:moderation', 'app:overrides']);
+    expect(data.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
   });
 });
 
@@ -191,6 +218,15 @@ describe('validateForContainer', () => {
   test('returns null for unknown container (blocked upstream)', () => {
     expect(validateForContainer('unknown-container', {})).toBeNull();
   });
+
+  test('prepareForContainer injects schemaVersion for filter records', () => {
+    const { data, error } = prepareForContainer('filters', { pattern: 'spam', action: 'hide' });
+
+    expect(error).toBeNull();
+    expect(data.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(data.pattern).toBe('spam');
+    expect(data.action).toBe('hide');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -201,6 +237,8 @@ const UserSettingsApiService = require('../services/dashboard/user-settings-api.
 
 describe('user-settings-api.create validation wiring', () => {
   let broker;
+  let lastPostedResource;
+  let lastPutResource;
 
   beforeAll(async () => {
     broker = new ServiceBroker({ logger: false });
@@ -209,12 +247,39 @@ describe('user-settings-api.create validation wiring', () => {
     // Stub the LDP services so we never hit real infrastructure
     broker.createService({
       name: 'ldp.container',
-      actions: { post: async () => 'http://localhost/alice/data/res1' }
+      actions: {
+        post: async ctx => {
+          lastPostedResource = ctx.params.resource;
+          return 'http://localhost/alice/data/res1';
+        }
+      }
     });
     broker.createService({
       name: 'ldp.resource',
       actions: {
-        get: async () => ({ '@id': 'http://localhost/alice/data/res1', type: 'apods:Filter', pattern: 'spam' }),
+        get: async ctx => {
+          if (ctx.params.resourceUri === 'http://localhost/alice/data/consent1') {
+            return {
+              '@id': 'http://localhost/alice/data/consent1',
+              type: 'apods:AppConsent',
+              clientId: 'my-app',
+              permissions: ['read:moderation'],
+              schemaVersion: CURRENT_SCHEMA_VERSION
+            };
+          }
+
+          return {
+            '@id': 'http://localhost/alice/data/res1',
+            type: 'apods:Filter',
+            pattern: 'spam',
+            action: 'hide',
+            schemaVersion: CURRENT_SCHEMA_VERSION
+          };
+        },
+        put: async ctx => {
+          lastPutResource = ctx.params.resource;
+          return true;
+        },
         delete: async () => true
       }
     });
@@ -228,7 +293,7 @@ describe('user-settings-api.create validation wiring', () => {
 
   afterAll(() => broker.stop());
 
-  const callerMeta = { webId: 'http://localhost/alice/profile/card#me' };
+  const callerMeta = { webId: 'http://localhost/alice#me' };
 
   test('filter create rejects missing pattern', async () => {
     await expect(
@@ -248,7 +313,11 @@ describe('user-settings-api.create validation wiring', () => {
 
   test('mute create rejects missing subjectCanonicalId', async () => {
     await expect(
-      broker.call('user-settings-api.create', { container: 'mutes', data: { subjectProtocol: 'ap' } }, { meta: callerMeta })
+      broker.call(
+        'user-settings-api.create',
+        { container: 'mutes', data: { subjectProtocol: 'ap' } },
+        { meta: callerMeta }
+      )
     ).rejects.toMatchObject({ code: 400 });
   });
 
@@ -264,7 +333,11 @@ describe('user-settings-api.create validation wiring', () => {
 
   test('preference create rejects missing category', async () => {
     await expect(
-      broker.call('user-settings-api.create', { container: 'preferences', data: { value: 'dark' } }, { meta: callerMeta })
+      broker.call(
+        'user-settings-api.create',
+        { container: 'preferences', data: { value: 'dark' } },
+        { meta: callerMeta }
+      )
     ).rejects.toMatchObject({ code: 400 });
   });
 
@@ -314,13 +387,73 @@ describe('user-settings-api.create validation wiring', () => {
     ).rejects.toMatchObject({ code: 401 });
   });
 
-  test('remove rejects cross-user URI', async () => {
+  test('create writes schemaVersion=1 when omitted', async () => {
+    await broker.call('user-settings-api.create', { container: 'filters', data: { pattern: 'spam' } }, { meta: callerMeta });
+
+    expect(lastPostedResource.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(lastPostedResource.pattern).toBe('spam');
+  });
+
+  test('createAppConsent writes normalized permissions and schemaVersion', async () => {
+    await broker.call(
+      'user-settings-api.createAppConsent',
+      {
+        data: {
+          clientId: '  my-app  ',
+          permissions: ['read:moderation', 'read:moderation', 'app:overrides']
+        }
+      },
+      { meta: callerMeta }
+    );
+
+    expect(lastPostedResource.clientId).toBe('my-app');
+    expect(lastPostedResource.permissions).toEqual(['read:moderation', 'app:overrides']);
+    expect(lastPostedResource.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+  });
+
+  test('update rejects invalid schemaVersion', async () => {
     await expect(
       broker.call(
-        'user-settings-api.remove',
-        { resourceUri: 'http://localhost/bob/data/res1' },
+        'user-settings-api.update',
+        {
+          resourceUri: 'http://localhost/alice/data/res1',
+          data: { schemaVersion: 2 }
+        },
         { meta: callerMeta }
       )
+    ).rejects.toMatchObject({ code: 400 });
+  });
+
+  test('update validates app consent scope relationships', async () => {
+    await expect(
+      broker.call(
+        'user-settings-api.update',
+        {
+          resourceUri: 'http://localhost/alice/data/consent1',
+          data: { permissions: ['write:moderation'] }
+        },
+        { meta: callerMeta }
+      )
+    ).rejects.toMatchObject({ code: 400 });
+  });
+
+  test('update keeps normalized schemaVersion on valid writes', async () => {
+    await broker.call(
+      'user-settings-api.update',
+      {
+        resourceUri: 'http://localhost/alice/data/res1',
+        data: { pattern: '  ham  ' }
+      },
+      { meta: callerMeta }
+    );
+
+    expect(lastPutResource.pattern).toBe('ham');
+    expect(lastPutResource.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+  });
+
+  test('remove rejects cross-user URI', async () => {
+    await expect(
+      broker.call('user-settings-api.remove', { resourceUri: 'http://localhost/bob/data/res1' }, { meta: callerMeta })
     ).rejects.toMatchObject({ code: 403 });
   });
 });

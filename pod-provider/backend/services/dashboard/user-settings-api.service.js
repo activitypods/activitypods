@@ -1,7 +1,7 @@
 const { MoleculerError } = require('moleculer').Errors;
 const { getDatasetFromUri } = require('@semapps/ldp');
 const { sanitizeSparqlQuery } = require('@semapps/triplestore');
-const { validateForContainer, validateAppConsent } = require('./user-settings-validators');
+const { prepareForContainer, prepareAppConsent } = require('./user-settings-validators');
 
 const JSON_LD = 'application/ld+json';
 
@@ -20,6 +20,7 @@ const CONTEXT = {
   permissions: 'apods:permissions',
   category: 'apods:category',
   value: 'apods:value',
+  schemaVersion: 'apods:schemaVersion',
   updatedAt: 'dc:modified',
   createdAt: 'dc:created'
 };
@@ -76,9 +77,8 @@ module.exports = {
     async create(ctx) {
       const webId = this.requireWebId(ctx);
       const c = this.requireContainer(ctx.params.container);
-      const data = ctx.params.data || {};
+      const { data, error: validationError } = prepareForContainer(c, ctx.params.data || {});
 
-      const validationError = validateForContainer(c, data);
       if (validationError) throw new MoleculerError(validationError, 400, 'VALIDATION_ERROR');
 
       const uri = this.dataContainer(webId);
@@ -115,6 +115,10 @@ module.exports = {
       const webId = this.requireWebId(ctx);
       const { resourceUri, data } = ctx.params;
 
+      if (!resourceUri?.startsWith(this.dataContainer(webId))) {
+        throw new MoleculerError('Forbidden', 403);
+      }
+
       const existing = await ctx.call('ldp.resource.get', {
         resourceUri,
         webId,
@@ -122,11 +126,19 @@ module.exports = {
         jsonContext: CONTEXT
       });
 
-      const next = {
+      const container = this.containerForResource(existing);
+      if (!container) {
+        throw new MoleculerError('Unknown resource type', 400, 'VALIDATION_ERROR');
+      }
+
+      const candidate = {
         ...existing,
         ...data,
         updatedAt: new Date().toISOString()
       };
+
+      const { data: next, error: validationError } = prepareForContainer(container, candidate);
+      if (validationError) throw new MoleculerError(validationError, 400, 'VALIDATION_ERROR');
 
       await ctx.call('ldp.resource.put', {
         resourceUri,
@@ -162,9 +174,8 @@ module.exports = {
 
     async createAppConsent(ctx) {
       const webId = this.requireWebId(ctx);
-      const consentData = ctx.params.data || {};
+      const { data: consentData, error: validationError } = prepareAppConsent(ctx.params.data || {});
 
-      const validationError = validateAppConsent(consentData);
       if (validationError) throw new MoleculerError(validationError, 400, 'VALIDATION_ERROR');
 
       const uri = this.dataContainer(webId);
@@ -222,6 +233,17 @@ module.exports = {
 
     resourceTypeForContainer(container) {
       return RESOURCE_TYPE_BY_CONTAINER[container];
+    },
+
+    containerForResource(resource) {
+      const resourceType = this.normalizeType(resource.type || resource['@type']);
+
+      return Object.keys(RESOURCE_TYPE_BY_CONTAINER).find(container => {
+        return (
+          RESOURCE_TYPE_BY_CONTAINER[container] === resourceType ||
+          RESOURCE_CLASS_URI_BY_CONTAINER[container] === resourceType
+        );
+      });
     },
 
     normalizeType(value) {

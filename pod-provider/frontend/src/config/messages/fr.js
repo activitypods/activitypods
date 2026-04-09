@@ -122,7 +122,26 @@ module.exports = {
       developer_mode: 'Mode développeur',
       moderation: 'Modération',
       app_permissions: 'Permissions des applications',
-      trust_sources: 'Sources de confiance'
+      trust_sources: 'Sources de confiance',
+      mrf_control: 'Filtres de posts',
+      mrf_traces: "Journal d'activité des filtres",
+      provider_announcements: 'Annonces',
+      provider_announcements_description: 'Publier des avis à tous les utilisateurs de pod',
+      provider_invitations: "Jetons d'invitation",
+      provider_invitations_description: "Contrôler l'inscription avec des codes d'invitation",
+      provider_pods: 'Répertoire des pods',
+      provider_pods_description: 'Parcourir tous les pods hébergés sur cette instance',
+      provider_audit_log: "Journal d'audit",
+      provider_audit_log_description: 'Historique de toutes les actions de gestion du fournisseur',
+      provider_moderation: 'Modération',
+      provider_moderation_description:
+        'Appliquer des décisions de modération sur ActivityPub et ATProto (compatible Bluesky)',
+      owner_dashboard: 'Tableau de bord proprietaire de pod',
+      owner_dashboard_description: 'Compte, profil, permissions des applis et parametres personnels',
+      provider_dashboard: 'Tableau de bord fournisseur de pod',
+      provider_dashboard_description: 'Modération, politiques de confiance, plan de controle MRF et traces',
+      loading_dashboard: 'Chargement de votre tableau de bord...',
+      role_fallback: 'Impossible de déterminer votre rôle automatiquement. Choisissez un tableau de bord manuellement.'
     },
     authorization: {
       required: 'Accès requis',

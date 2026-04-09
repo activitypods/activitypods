@@ -17,17 +17,36 @@ async function req(path: string, options: RequestInit = {}) {
     headers: headers()
   });
 
+  let json: any = {};
   const text = await res.text();
-  const json = text ? JSON.parse(text) : {};
+  
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch (parseError) {
+    // If JSON parsing fails, json remains an empty object
+    console.error(`Failed to parse JSON response from ${path}:`, parseError);
+  }
 
   if (!res.ok) {
-    throw new Error(json?.message || `Request failed (${res.status})`);
+    const errorMessage = json?.error?.message || json?.message || `Request failed (${res.status})`;
+    const error: Error & { code?: string; status?: number; details?: unknown; requestId?: string } = new Error(
+      errorMessage
+    );
+    error.code = json?.error?.code || undefined;
+    error.status = res.status;
+    error.details = json?.error?.details || undefined;
+    error.requestId = json?.error?.requestId || undefined;
+    throw error;
   }
 
   return json;
 }
 
 export const dashboardApi = {
+  whoami: () => req('whoami'),
+
+  getDashboardRole: () => req('settings/dashboard-role'),
+
   list: (container: string) => req(`settings/${encodeURIComponent(container)}`),
 
   create: (container: string, data: unknown) =>
@@ -62,5 +81,177 @@ export const dashboardApi = {
       body: JSON.stringify({ data })
     }),
 
-  previewSource: (url: string) => req(`settings/preview?url=${encodeURIComponent(url)}`)
+  previewSource: (url: string) => req(`settings/preview?url=${encodeURIComponent(url)}`),
+
+  listMrfRegistry: () => req('mrf/registry'),
+
+  getMrfRegistryItem: (moduleId: string) => req(`mrf/registry/${encodeURIComponent(moduleId)}`),
+
+  listMrfModules: () => req('mrf/modules'),
+
+  getMrfModule: (moduleId: string) => req(`mrf/modules/${encodeURIComponent(moduleId)}`),
+
+  patchMrfModule: (moduleId: string, data: unknown) =>
+    req(`mrf/modules/${encodeURIComponent(moduleId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ data })
+    }),
+
+  getMrfChain: () => req('mrf/chain'),
+
+  patchMrfChain: (data: unknown) =>
+    req('mrf/chain', {
+      method: 'PATCH',
+      body: JSON.stringify({ data })
+    }),
+
+  listMrfTraces: (query?: Record<string, string | number | boolean>) => {
+    const params = query ? new URLSearchParams(Object.entries(query).map(([k, v]) => [k, String(v)])) : null;
+    return req(params ? `mrf/traces?${params.toString()}` : 'mrf/traces');
+  },
+
+  getMrfTrace: (traceId: string, includePrivate = false) =>
+    req(
+      includePrivate
+        ? `mrf/traces/${encodeURIComponent(traceId)}?includePrivate=true`
+        : `mrf/traces/${encodeURIComponent(traceId)}`
+    ),
+
+  getMrfTraceChain: (traceId: string, includePrivate = false) =>
+    req(
+      includePrivate
+        ? `mrf/traces/${encodeURIComponent(traceId)}/chain?includePrivate=true`
+        : `mrf/traces/${encodeURIComponent(traceId)}/chain`
+    ),
+
+  getMrfTraceSuggestions: (traceId: string) => req(`mrf/traces/${encodeURIComponent(traceId)}/suggestions`),
+
+  getMrfMetrics: (query?: Record<string, string | number | boolean>) => {
+    const params = query ? new URLSearchParams(Object.entries(query).map(([k, v]) => [k, String(v)])) : null;
+    return req(params ? `mrf/metrics?${params.toString()}` : 'mrf/metrics');
+  },
+
+  createMrfSimulation: (data: unknown) =>
+    req('mrf/simulations', {
+      method: 'POST',
+      body: JSON.stringify({ data })
+    }),
+
+  getMrfSimulation: (jobId: string) => req(`mrf/simulations/${encodeURIComponent(jobId)}`),
+
+  // ─── Provider platform management ────────────────────────────────────────
+  getProviderStats: () => req('provider/stats'),
+
+  listProviderPods: () => req('provider/pods'),
+
+  listAnnouncements: () => req('provider/announcements'),
+
+  createAnnouncement: (data: { content: string; startsAt?: string; endsAt?: string; allDay?: boolean }) =>
+    req('provider/announcements', { method: 'POST', body: JSON.stringify({ data }) }),
+
+  deleteAnnouncement: (id: string) =>
+    req(`provider/announcements/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  listInvitations: () => req('provider/invitations'),
+
+  createInvitation: (data: { maxUses?: number; expiresAt?: string; note?: string }) =>
+    req('provider/invitations', { method: 'POST', body: JSON.stringify({ data }) }),
+
+  revokeInvitation: (id: string) =>
+    req(`provider/invitations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  listAuditLog: (limit?: number) =>
+    req(limit ? `provider/audit-log?limit=${limit}` : 'provider/audit-log'),
+
+  applyModerationDecision: (data: {
+    targetWebId?: string;
+    targetAtDid?: string;
+    targetHandle?: string;
+    action: 'label' | 'warn' | 'filter' | 'block' | 'suspend';
+    labels?: string[];
+    reason?: string;
+  }) =>
+    req('provider/moderation/decisions', {
+      method: 'POST',
+      body: JSON.stringify({ data })
+    }),
+
+  listModerationDecisions: (query?: Record<string, string | number | boolean>) => {
+    const params = query ? new URLSearchParams(Object.entries(query).map(([k, v]) => [k, String(v)])) : null;
+    return req(params ? `provider/moderation/decisions?${params.toString()}` : 'provider/moderation/decisions');
+  },
+
+  revokeModerationDecision: (id: string) =>
+    req(`provider/moderation/decisions/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  listAtLabels: (query?: Record<string, string | number | boolean>) => {
+    const params = query ? new URLSearchParams(Object.entries(query).map(([k, v]) => [k, String(v)])) : null;
+    return req(params ? `provider/moderation/labels?${params.toString()}` : 'provider/moderation/labels');
+  },
+
+  listKnownAtLabels: () => req('provider/moderation/labels/known'),
+
+  getProviderDefaultModerationSourceStatus: () => req('provider/moderation/default-source'),
+
+  fetchAtprotoModerationLists: (data: {
+    identifier: string;
+    password?: string;
+    pdsUrl?: string;
+    limit?: number;
+    maxPages?: number;
+  }) =>
+    req('moderation/atproto/lists/fetch', {
+      method: 'POST',
+      body: JSON.stringify({ data })
+    }),
+
+  syncAtprotoModerationLists: (data: {
+    identifier: string;
+    password?: string;
+    pdsUrl?: string;
+    limit?: number;
+    maxPages?: number;
+    replace?: boolean;
+  }) =>
+    req('moderation/atproto/lists/sync', {
+      method: 'POST',
+      body: JSON.stringify({ data })
+    }),
+
+  listAtprotoLabelerCatalog: () => req('moderation/atproto/labelers/catalog'),
+
+  getAtprotoModerationSyncConfig: () => req('moderation/atproto/sync/config'),
+
+  setAtprotoModerationSyncConfig: (data: {
+    enabled?: boolean;
+    replace?: boolean;
+    intervalHours?: number;
+    pdsUrl?: string;
+    identifier?: string;
+    password?: string | null;
+  }) =>
+    req('moderation/atproto/sync/config', {
+      method: 'POST',
+      body: JSON.stringify({ data })
+    }),
+
+  runAtprotoModerationSyncNow: (reason = 'manual') =>
+    req('moderation/atproto/sync/run', {
+      method: 'POST',
+      body: JSON.stringify({ data: { reason } })
+    }),
+
+  resolveAtprotoHandle: (handle: string, pdsUrl?: string) => {
+    const params = new URLSearchParams({ handle });
+    if (pdsUrl) params.set('pdsUrl', pdsUrl);
+    return req(`moderation/atproto/resolve-handle?${params.toString()}`);
+  },
+
+  getMonthlyModerationSummary: () => req('moderation/summary/monthly'),
+
+  sendMonthlyModerationSummary: (force = false) =>
+    req('moderation/summary/monthly/send', {
+      method: 'POST',
+      body: JSON.stringify({ force })
+    })
 };

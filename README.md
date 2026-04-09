@@ -17,6 +17,40 @@ This repository includes:
 
 Click on the above links for more information.
 
+## Local Full-Stack Bootstrap
+
+From this repository root, run:
+
+```bash
+npm run dev:bootstrap-all
+```
+
+This command:
+
+- ensures Colima is running with enough resources for OpenSearch
+- starts ActivityPods compose dependencies
+- starts federation dependencies (including OpenSearch/RedPanda)
+- bootstraps required RedPanda topics
+- starts backend, frontend, and sidecar dev servers if not already running
+
+Logs are written to `.logs/` in this repository.
+
+To stop everything started by the bootstrap flow:
+
+```bash
+npm run dev:shutdown-all
+```
+
+This stops local dev servers on ports 3000, 5002, and 8080, and tears down both compose stacks.
+
+To inspect the full local stack status at any time:
+
+```bash
+npm run dev:status-all
+```
+
+This reports Colima resources, both compose stacks, key listening ports, and HTTP endpoint reachability.
+
 ## Funding
 
 This project has received funding through [NGI0 Entrust Fund](https://nlnet.nl/entrust) (between 2023 and 2025) and [NGI0 Commons Fund](https://nlnet.nl/commonsfund) (since 2025), both funds established by [NLnet](https://nlnet.nl) with financial support from the European Commission's [Next Generation Internet](https://ngi.eu) program. Learn more at the [NLnet project page](https://nlnet.nl/project/ActivityPods-3.0).

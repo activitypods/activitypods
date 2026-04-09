@@ -13,7 +13,7 @@
     "dev": "moleculer-runner --repl --hot services/*.js services/**/*.js",
     "start": "moleculer-runner services/*.js services/**/*.js",
     "test": "NODE_ENV=test moleculer-runner --repl --hot services/*.js services/**/*.js",
-      "test:unit": "cd ../.. && node tests/node_modules/.bin/jest --testEnvironment=node --roots=pod-provider/backend/tests",
+    "test:unit": "cd ../.. && node tests/node_modules/.bin/jest --testEnvironment=node --roots=pod-provider/backend/tests",
     "test:atproto:multibase": "node scripts/atproto-multibase-smoke.js",
     "test:atproto:signing": "node scripts/atproto-signing-smoke.js",
     "proof:unified-account": "node scripts/unified-account-live-proof.js",

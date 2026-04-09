@@ -129,6 +129,9 @@ module.exports = {
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
         const account = await ctx.call('auth.account.findByWebId', { webId: recipientUri });
+        if (!account) {
+          return;
+        }
         const dataset = account.username;
 
         // If the recipient owns the group, remove it

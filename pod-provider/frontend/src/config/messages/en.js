@@ -123,7 +123,26 @@ module.exports = {
       developer_mode: 'Developer mode',
       moderation: 'Moderation',
       app_permissions: 'App Permissions',
-      trust_sources: 'Trust Sources'
+      trust_sources: 'Trust Sources',
+      mrf_control: 'Post filters',
+      mrf_traces: 'Filter activity log',
+      provider_announcements: 'Announcements',
+      provider_announcements_description: 'Post notices to all pod users',
+      provider_invitations: 'Invite Tokens',
+      provider_invitations_description: 'Control pod registration with invite codes',
+      provider_pods: 'Pod Directory',
+      provider_pods_description: 'Browse all pods hosted on this instance',
+      provider_audit_log: 'Audit Log',
+      provider_audit_log_description: 'Record of all provider management actions',
+      provider_moderation: 'Moderation',
+      provider_moderation_description:
+        'Apply moderation decisions across ActivityPub and ATProto (Bluesky-compatible)',
+      owner_dashboard: 'Pod owner dashboard',
+      owner_dashboard_description: 'Account, profile, app permissions, and personal settings',
+      provider_dashboard: 'Pod provider dashboard',
+      provider_dashboard_description: 'Moderation controls, trust policies, MRF control plane, and traces',
+      loading_dashboard: 'Loading your dashboard...',
+      role_fallback: 'We could not determine your role automatically. Choose a dashboard manually.'
     },
     authorization: {
       required: 'Required access',
@@ -318,22 +337,26 @@ module.exports = {
       }
     },
     steps: {
-      title: 'How does it work?',
+      title: 'Usage',
       1: {
-        title: 'I create my personal online datastore (Pod)',
-        text: "One place for all my data, it's about time!"
+        title: 'I create a personal space (POD)',
+        text: "One place for all of my data, it's about time!"
       },
       2: {
         title: 'I connect to compatible applications',
-        text: 'Meetings, classified ads... and many more to come!'
+        text: 'Meetings, classified ads, and much more to come!'
       },
       3: {
-        title: 'My data is securely stored on my Pod',
-        text: "Applications' administrators do not have access to it."
+        title: 'Securely stored data on the personal POD',
+        text: 'Application administrators have no access.'
       },
       4: {
         title: 'I choose who I share my data with',
-        text: 'At any time, I know who sees my data. I can revoke the rights.'
+        text: 'At any time, I know who sees my data. I can always revoke any rights if needed.'
+      },
+      5: {
+        title: 'Get to know more about this Pod Provider',
+        text: 'Get help by contacting @damon.outlaw on Discord!'
       }
     },
     titles: {

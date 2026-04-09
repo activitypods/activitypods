@@ -13,9 +13,10 @@ import { useParams, useSearchParams, useLocation, Link } from 'react-router-dom'
 import { useWebfinger } from '@semapps/activitypub-components';
 import { MapField } from '@semapps/geo-components';
 import { ReferenceField } from '@semapps/field-components';
-import { Box, Alert, useMediaQuery } from '@mui/material';
+import { Box, Alert, Typography, Link as MuiLink, useMediaQuery } from '@mui/material';
 import ListIcon from '@mui/icons-material/List';
 import EditIcon from '@mui/icons-material/Edit';
+import VerifiedIcon from '@mui/icons-material/Verified';
 import Hero from '../../common/list/Hero/Hero';
 import ContactCard from '../../common/cards/ContactCard';
 import ContactField from '../../common/fields/ContactField';
@@ -149,6 +150,59 @@ const NetworkActorPage = () => {
               </RecordContextProvider>
             </ResourceContextProvider> */}
             <MainList>
+              {Array.isArray(actor.metadataFields) && actor.metadataFields.length > 0 && (
+                <Box sx={{ width: '100%', mb: 2 }}>
+                  <Typography variant="h6" sx={{ mb: 1 }}>
+                    {translate('app.setting.profile_metadata')}
+                  </Typography>
+                  <Box sx={{ display: 'grid', gap: 1.25 }}>
+                    {actor.metadataFields.map(field => (
+                      <Box
+                        key={`${field.kind}-${field.name}-${field.value}`}
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: { xs: '1fr', sm: 'minmax(140px, 180px) 1fr' },
+                          gap: 1,
+                          py: 1,
+                          borderBottom: theme => `1px solid ${theme.palette.divider}`
+                        }}
+                      >
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                          {field.name}
+                        </Typography>
+                        {field.kind === 'link' ? (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                            <MuiLink href={field.value} target="_blank" rel="noopener noreferrer me">
+                              {field.value}
+                            </MuiLink>
+                            {field.verified && (
+                              <Box
+                                sx={theme => ({
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 0.5,
+                                  px: 1,
+                                  py: 0.25,
+                                  borderRadius: 999,
+                                  bgcolor: theme.palette.success.light,
+                                  color: theme.palette.success.contrastText
+                                })}
+                              >
+                                <VerifiedIcon sx={{ fontSize: 14 }} />
+                                <Typography variant="caption" sx={{ fontWeight: 700, color: 'inherit' }}>
+                                  {translate('app.message.verified')}
+                                </Typography>
+                              </Box>
+                            )}
+                          </Box>
+                        ) : (
+                          <Typography variant="body2">{field.value}</Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
               {!actor.isLoggedUser && <ContactField source="id" label={translate('app.action.send_message')} />}
             </MainList>
           </ShowView>

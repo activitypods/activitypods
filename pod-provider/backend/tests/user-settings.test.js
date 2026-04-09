@@ -11,6 +11,8 @@ const {
   prepareForContainer,
   KNOWN_CONSENT_SCOPES,
   FILTER_ACTIONS,
+  FILTER_MATCH_TYPES,
+  FILTER_DURATIONS,
   CURRENT_SCHEMA_VERSION,
   TRUST_SOURCE_TYPES,
   TRUST_SOURCE_SCOPES
@@ -30,6 +32,17 @@ describe('validateFilter', () => {
     expect(validateFilter({ pattern: 'spam' })).toBeNull();
   });
 
+  test('accepts semantic filter terms and phrase mode', () => {
+    expect(
+      validateFilter({
+        terms: ['whole phrase', '#wholephrase'],
+        matchType: 'phrase',
+        includeHashtagVariants: true,
+        duration: '1w'
+      })
+    ).toBeNull();
+  });
+
   test('accepts current schemaVersion explicitly', () => {
     expect(validateFilter({ pattern: 'spam', schemaVersion: CURRENT_SCHEMA_VERSION })).toBeNull();
   });
@@ -38,6 +51,13 @@ describe('validateFilter', () => {
     expect(validateFilter({ action: 'hide' })).toMatch(/pattern/);
     expect(validateFilter({})).toMatch(/pattern/);
     expect(validateFilter(null)).toMatch(/pattern/);
+  });
+
+  test('rejects invalid semantic filter fields', () => {
+    expect(validateFilter({ pattern: 'spam', matchType: 'regex' })).toMatch(/matchType/);
+    expect(validateFilter({ pattern: 'spam', includeHashtagVariants: 'yes' })).toMatch(/includeHashtagVariants/);
+    expect(validateFilter({ pattern: 'spam', duration: '2h' })).toMatch(/duration/);
+    expect(validateFilter({ pattern: 'spam', expiresAt: 'tomorrow' })).toMatch(/expiresAt/);
   });
 
   test('rejects unsupported schemaVersion', () => {
@@ -56,6 +76,11 @@ describe('validateFilter', () => {
 
   test('FILTER_ACTIONS covers hide, warn, filter', () => {
     expect([...FILTER_ACTIONS].sort()).toEqual(['filter', 'hide', 'warn']);
+  });
+
+  test('FILTER_MATCH_TYPES and FILTER_DURATIONS stay stable', () => {
+    expect([...FILTER_MATCH_TYPES].sort()).toEqual(['phrase', 'word']);
+    expect([...FILTER_DURATIONS].sort()).toEqual(['12h', '1d', '1m', '1w', 'indefinite'].sort());
   });
 });
 
@@ -217,6 +242,54 @@ describe('validateTrustSource', () => {
     ).toMatch(/valid URI/);
   });
 
+  test('accepts ATProto labeler DID', () => {
+    expect(
+      validateTrustSource({
+        source: 'did:web:mod.example.com',
+        sourceType: 'atproto-labeler',
+        enabled: true,
+        weight: 0.8,
+        scopes: ['label:content', 'filter:content', 'label:actor']
+      })
+    ).toBeNull();
+  });
+
+  test('rejects malformed ATProto labeler source', () => {
+    expect(
+      validateTrustSource({
+        source: 'mod.example.com',
+        sourceType: 'atproto-labeler',
+        enabled: true,
+        weight: 0.8,
+        scopes: ['label:content']
+      })
+    ).toMatch(/DID or an http/);
+  });
+
+  test('accepts wildcard domain blocklist source', () => {
+    expect(
+      validateTrustSource({
+        source: '*.spam.example',
+        sourceType: 'domain-blocklist',
+        enabled: true,
+        weight: 1,
+        scopes: ['label:actor', 'filter:actor']
+      })
+    ).toBeNull();
+  });
+
+  test('rejects malformed domain blocklist source', () => {
+    expect(
+      validateTrustSource({
+        source: 'not a domain',
+        sourceType: 'domain-blocklist',
+        enabled: true,
+        weight: 1,
+        scopes: ['label:actor']
+      })
+    ).toMatch(/domain, wildcard domain, or http/);
+  });
+
   test('rejects invalid sourceType', () => {
     expect(
       validateTrustSource({
@@ -292,7 +365,14 @@ describe('validateTrustSource', () => {
   });
 
   test('trust source enums stay stable', () => {
-    expect([...TRUST_SOURCE_TYPES].sort()).toEqual(['algorithmic', 'curator', 'list', 'relay']);
+    expect([...TRUST_SOURCE_TYPES].sort()).toEqual([
+      'algorithmic',
+      'atproto-labeler',
+      'curator',
+      'domain-blocklist',
+      'list',
+      'relay'
+    ]);
     expect([...TRUST_SOURCE_SCOPES].sort()).toEqual(
       ['filter:actor', 'filter:content', 'label:actor', 'label:content', 'rank:down', 'rank:up'].sort()
     );
@@ -352,6 +432,24 @@ describe('validateForContainer', () => {
     expect(data.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(data.pattern).toBe('spam');
     expect(data.action).toBe('hide');
+    expect(data.matchType).toBe('word');
+    expect(data.includeHashtagVariants).toBe(true);
+    expect(data.duration).toBe('indefinite');
+    expect(data.terms).toEqual(['spam']);
+  });
+
+  test('prepareForContainer keeps semantic terms and derives pattern', () => {
+    const { data, error } = prepareForContainer('filters', {
+      terms: ['hello world', '#helloworld'],
+      matchType: 'phrase',
+      duration: '1d'
+    });
+
+    expect(error).toBeNull();
+    expect(data.pattern).toBe('hello world');
+    expect(data.terms).toEqual(['hello world', '#helloworld']);
+    expect(data.matchType).toBe('phrase');
+    expect(data.duration).toBe('1d');
   });
 });
 
@@ -612,6 +710,24 @@ describe('user-settings-api.create validation wiring', () => {
     expect(lastPostedResource.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
   });
 
+  test('create trust-source accepts ATProto labeler DID', async () => {
+    await broker.call(
+      'user-settings-api.create',
+      {
+        container: 'trust-sources',
+        data: {
+          source: 'did:web:mod.example.com',
+          sourceType: 'atproto-labeler',
+          scopes: ['label:content', 'filter:content', 'label:actor']
+        }
+      },
+      { meta: callerMeta }
+    );
+
+    expect(lastPostedResource.source).toBe('did:web:mod.example.com');
+    expect(lastPostedResource.sourceType).toBe('atproto-labeler');
+  });
+
   test('update rejects invalid schemaVersion', async () => {
     await expect(
       broker.call(
@@ -658,6 +774,19 @@ describe('user-settings-api.create validation wiring', () => {
         {
           resourceUri: 'http://localhost/alice/data/trust1',
           data: { weight: 3 }
+        },
+        { meta: callerMeta }
+      )
+    ).rejects.toMatchObject({ code: 400 });
+  });
+
+  test('update validates trust-source scope dependency on partial updates', async () => {
+    await expect(
+      broker.call(
+        'user-settings-api.update',
+        {
+          resourceUri: 'http://localhost/alice/data/trust1',
+          data: { scopes: ['filter:content'] }
         },
         { meta: callerMeta }
       )

@@ -107,12 +107,12 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 50,
           height: 36,
           minWidth: 100
         },
         contained: {
-          color: '#000', // To keep great contrast with the primary color (WCAG 2.1 standards)
+          color: '#fff',
           '&:hover': {
             color: '#FFFFFF'
           }

@@ -1,7 +1,12 @@
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 const fetch = require('node-fetch');
 const { MoleculerError } = require('moleculer').Errors;
 const { getDatasetFromUri } = require('@semapps/ldp');
 const { sanitizeSparqlQuery } = require('@semapps/triplestore');
+const { ulid } = require('ulid');
+const { retryWithBackoff, CircuitBreaker, CircuitOpenError } = require('../../utils/backoff');
 const { prepareForContainer, prepareAppConsent } = require('../../lib/user-settings-validators');
 
 const JSON_LD = 'application/ld+json';
@@ -20,7 +25,12 @@ const CONTEXT = {
   type: '@type',
   id: '@id',
   pattern: 'apods:pattern',
+  terms: 'apods:terms',
   action: 'apods:action',
+  matchType: 'apods:matchType',
+  includeHashtagVariants: 'apods:includeHashtagVariants',
+  duration: 'apods:duration',
+  expiresAt: 'apods:expiresAt',
   subjectCanonicalId: 'apods:subjectCanonicalId',
   subjectProtocol: 'apods:subjectProtocol',
   clientId: 'apods:clientId',
@@ -59,22 +69,174 @@ const RESOURCE_CLASS_URI_BY_CONTAINER = {
   'trust-sources': 'https://activitypods.org/ns/core#TrustSource'
 };
 
+const MRF_TRACE_QUERY_KEYS = new Set([
+  'cursor',
+  'limit',
+  'moduleId',
+  'action',
+  'originHost',
+  'activityId',
+  'dateFrom',
+  'dateTo',
+  'includePrivate'
+]);
+
+const MRF_METRICS_QUERY_KEYS = new Set([
+  'from',
+  'to',
+  'moduleId',
+  'action',
+  'originHost',
+  'maxItems'
+]);
+
+const MODERATION_QUERY_KEYS = new Set([
+  'cursor',
+  'limit',
+  'action',
+  'targetAtDid',
+  'targetWebId',
+  'includeRevoked',
+  'subject',
+  'uriPatterns',
+  'sources'
+]);
+
+const DEFAULT_AT_LABELS = [
+  'porn',
+  'sexual',
+  'nudity',
+  'graphic-media',
+  'self-harm',
+  'intolerance',
+  'misinformation',
+  'spam'
+];
+
+const ATPROTO_SYNC_PREF_CATEGORY = 'atproto-moderation-sync';
+const ATPROTO_MIRROR_TRUST_SOURCE_MARKER = 'atproto-preferences-sync';
+const DEFAULT_SYNC_INTERVAL_HOURS = 6;
+const MIN_SYNC_INTERVAL_HOURS = 1;
+const MAX_SYNC_INTERVAL_HOURS = 24;
+const ATPROTO_LABELER_DIRECTORY_URL = 'https://www.bluesky-labelers.io/';
+const ATPROTO_LABELER_DIRECTORY_CACHE_TTL_MS = 15 * 60 * 1000;
+
 module.exports = {
   name: 'user-settings-api',
   dependencies: ['api', 'ldp.container', 'ldp.resource'],
 
   settings: {
-    routePath: '/api/dashboard'
+    routePath: '/api/dashboard',
+    mrfAdminBaseUrl: (process.env.MRF_ADMIN_BASE_URL || process.env.SIDECAR_WEBHOOK_URL || 'http://fedify-sidecar:8080').replace(
+      /\/$/,
+      ''
+    ),
+    mrfAdminToken: process.env.MRF_ADMIN_TOKEN || '',
+    mrfTimeoutMs: Number(process.env.MRF_TIMEOUT_MS) || 5000,
+    mrfRetries: Number(process.env.MRF_RETRIES) || 3,
+    mrfRetryBaseDelayMs: Number(process.env.MRF_RETRY_BASE_DELAY_MS) || 150,
+    mrfRetryMaxDelayMs: Number(process.env.MRF_RETRY_MAX_DELAY_MS) || 2500,
+    mrfCircuitFailureThreshold: Number(process.env.MRF_CIRCUIT_FAILURE_THRESHOLD) || 5,
+    mrfCircuitResetTimeoutMs: Number(process.env.MRF_CIRCUIT_RESET_TIMEOUT_MS) || 30000,
+    providerActorsRaw: process.env.PROVIDER_ACTORS || '',
+    providerDataDir: process.env.PROVIDER_DATA_DIR || path.resolve('./data/provider'),
+    auditLogMaxEntries: Number(process.env.AUDIT_LOG_MAX_ENTRIES) || 500,
+    atprotoAutoSyncSweepMinutes: Math.max(5, Number(process.env.ATPROTO_AUTO_SYNC_SWEEP_MINUTES) || 15),
+    atprotoMirrorMinIntervalSeconds: Math.max(30, Number(process.env.ATPROTO_MIRROR_MIN_INTERVAL_SECONDS) || 300),
+    atprotoAutoSyncSecret: process.env.ATPROTO_SYNC_SECRET_KEY || process.env.ACTIVITYPODS_TOKEN || 'activitypods-dev-sync-key',
+    blueskyDefaultLabelerDid: (process.env.BLUESKY_DEFAULT_LABELER_DID || 'did:plc:ar7c4by46qjdydhdevvrndac').trim(),
+    blueskyDefaultLabelerHandle: (process.env.BLUESKY_DEFAULT_LABELER_HANDLE || 'moderation.bsky.app').trim(),
+    blueskyDefaultLabelerName: (process.env.BLUESKY_DEFAULT_LABELER_NAME || 'Bluesky Moderation Service').trim(),
+    blueskyDefaultLabelerEnabled: process.env.BLUESKY_DEFAULT_LABELER_ENABLED !== 'false'
+  },
+
+  created() {
+    this.providerActors = this.parseProviderActors(this.settings.providerActorsRaw);
+
+    this.mrfCircuit = new CircuitBreaker({
+      name: 'mrf-admin-gateway',
+      failureThreshold: Math.max(1, this.settings.mrfCircuitFailureThreshold),
+      resetTimeoutMs: Math.max(1000, this.settings.mrfCircuitResetTimeoutMs)
+    });
+
+    // In-memory stores for provider-level data (file-backed on mutations)
+    this._announcements = [];
+    this._invitations = [];
+    this._auditLog = [];
+    this._moderationDecisions = [];
+    this._atprotoAutoSyncTimer = null;
+    this._atprotoAutoSyncInFlight = false;
+    this._atprotoMirrorInFlightByWebId = new Set();
+    this._atprotoMirrorLastRunByWebId = new Map();
+    this._atprotoLabelerDirectoryCache = {
+      expiresAt: 0,
+      entries: []
+    };
+    this._atprotoSyncEncryptionKey = crypto
+      .createHash('sha256')
+      .update(String(this.settings.atprotoAutoSyncSecret || ''), 'utf8')
+      .digest();
   },
 
   async started() {
+    if (!this.settings.mrfAdminToken) {
+      this.logger.warn('[Dashboard/MRF] MRF_ADMIN_TOKEN is not set - MRF control endpoints will return 503');
+    }
+
+    // Load persisted provider data from disk
+    this._announcements = await this.loadProviderData('announcements');
+    this._invitations = await this.loadProviderData('invitations');
+    this._auditLog = await this.loadProviderData('audit-log');
+    this._moderationDecisions = await this.loadProviderData('moderation-decisions');
+
     await this.broker.call('api.addRoute', {
       route: {
         path: this.settings.routePath,
         authorization: true,
         authentication: true,
         aliases: {
+          'GET /whoami': 'user-settings-api.whoami',
+          'GET /mrf/registry': 'user-settings-api.mrfRegistryList',
+          'GET /mrf/registry/:moduleId': 'user-settings-api.mrfRegistryItem',
+          'GET /mrf/modules': 'user-settings-api.mrfModulesList',
+          'GET /mrf/modules/:moduleId': 'user-settings-api.mrfModulesItem',
+          'PATCH /mrf/modules/:moduleId': 'user-settings-api.mrfModulesPatch',
+          'GET /mrf/chain': 'user-settings-api.mrfChainGet',
+          'PATCH /mrf/chain': 'user-settings-api.mrfChainPatch',
+          'GET /mrf/traces': 'user-settings-api.mrfTracesList',
+          'GET /mrf/traces/:traceId': 'user-settings-api.mrfTraceItem',
+          'GET /mrf/traces/:traceId/chain': 'user-settings-api.mrfTraceChain',
+          'GET /mrf/traces/:traceId/suggestions': 'user-settings-api.mrfTraceSuggestions',
+          'POST /mrf/simulations': 'user-settings-api.mrfSimulationCreate',
+          'GET /mrf/simulations/:jobId': 'user-settings-api.mrfSimulationItem',
+          'GET /mrf/metrics': 'user-settings-api.mrfMetrics',
+          // Provider-only platform management routes
+          'GET /provider/stats': 'user-settings-api.providerStats',
+          'GET /provider/pods': 'user-settings-api.providerListPods',
+          'GET /provider/announcements': 'user-settings-api.listAnnouncements',
+          'POST /provider/announcements': 'user-settings-api.createAnnouncement',
+          'DELETE /provider/announcements/:id': 'user-settings-api.deleteAnnouncement',
+          'GET /provider/invitations': 'user-settings-api.listInvitations',
+          'POST /provider/invitations': 'user-settings-api.createInvitation',
+          'DELETE /provider/invitations/:id': 'user-settings-api.revokeInvitation',
+          'GET /provider/audit-log': 'user-settings-api.listAuditLog',
+          'POST /provider/moderation/decisions': 'user-settings-api.applyModerationDecision',
+          'GET /provider/moderation/decisions': 'user-settings-api.listModerationDecisions',
+          'DELETE /provider/moderation/decisions/:id': 'user-settings-api.revokeModerationDecision',
+          'GET /provider/moderation/labels': 'user-settings-api.listAtLabels',
+          'GET /provider/moderation/labels/known': 'user-settings-api.listKnownAtLabels',
+          'GET /provider/moderation/default-source': 'user-settings-api.providerDefaultModerationSourceStatus',
+          'POST /moderation/atproto/lists/fetch': 'user-settings-api.fetchAtprotoUserLists',
+          'POST /moderation/atproto/lists/sync': 'user-settings-api.syncAtprotoUserLists',
+          'GET /moderation/atproto/labelers/catalog': 'user-settings-api.listAtprotoLabelerCatalog',
+          'GET /moderation/atproto/sync/config': 'user-settings-api.getAtprotoSyncConfig',
+          'POST /moderation/atproto/sync/config': 'user-settings-api.setAtprotoSyncConfig',
+          'POST /moderation/atproto/sync/run': 'user-settings-api.runAtprotoSyncNow',
+          'GET /moderation/atproto/resolve-handle': 'user-settings-api.resolveAtprotoHandle',
+          'GET /moderation/summary/monthly': 'user-settings-api.monthlyModerationSummary',
+          'POST /moderation/summary/monthly/send': 'user-settings-api.sendMonthlyModerationSummary',
           'GET /settings/preview': 'user-settings-api.preview',
+          'GET /settings/dashboard-role': 'user-settings-api.dashboardRole',
           'GET /settings/:container': 'user-settings-api.list',
           'POST /settings/:container': 'user-settings-api.create',
           'PUT /settings': 'user-settings-api.update',
@@ -86,9 +248,799 @@ module.exports = {
         }
       }
     });
+
+    this._atprotoAutoSyncTimer = setInterval(() => {
+      this.runAtprotoAutoSyncSweep().catch(err => {
+        this.logger.warn('[ATProtoSync] Auto-sync sweep failed: %s', err.message);
+      });
+    }, this.settings.atprotoAutoSyncSweepMinutes * 60 * 1000);
+  },
+
+  stopped() {
+    if (this._atprotoAutoSyncTimer) {
+      clearInterval(this._atprotoAutoSyncTimer);
+      this._atprotoAutoSyncTimer = null;
+    }
   },
 
   actions: {
+    async whoami(ctx) {
+      const webId = this.requireWebId(ctx);
+      const isProvider = this.isProviderActor(webId);
+
+      return {
+        webId,
+        isProvider,
+        dashboards: {
+          owner: true,
+          provider: isProvider
+        }
+      };
+    },
+
+    async dashboardRole(ctx) {
+      return this.actions.whoami(ctx);
+    },
+
+    async mrfRegistryList(ctx) {
+      return this.mrfProxy(ctx, {
+        method: 'GET',
+        path: '/internal/admin/mrf/registry',
+        permission: 'provider:read'
+      });
+    },
+
+    async mrfRegistryItem(ctx) {
+      const moduleId = this.sanitizePathSegment(ctx.params.moduleId, 'moduleId');
+      return this.mrfProxy(ctx, {
+        method: 'GET',
+        path: `/internal/admin/mrf/registry/${encodeURIComponent(moduleId)}`,
+        permission: 'provider:read'
+      });
+    },
+
+    async mrfModulesList(ctx) {
+      return this.mrfProxy(ctx, {
+        method: 'GET',
+        path: '/internal/admin/mrf/modules',
+        permission: 'provider:read'
+      });
+    },
+
+    async mrfModulesItem(ctx) {
+      const moduleId = this.sanitizePathSegment(ctx.params.moduleId, 'moduleId');
+      return this.mrfProxy(ctx, {
+        method: 'GET',
+        path: `/internal/admin/mrf/modules/${encodeURIComponent(moduleId)}`,
+        permission: 'provider:read'
+      });
+    },
+
+    async mrfModulesPatch(ctx) {
+      const moduleId = this.sanitizePathSegment(ctx.params.moduleId, 'moduleId');
+      const body = this.requirePlainObject(ctx.params.data, 'data');
+      return this.mrfProxy(ctx, {
+        method: 'PATCH',
+        path: `/internal/admin/mrf/modules/${encodeURIComponent(moduleId)}`,
+        permission: 'provider:write',
+        body
+      });
+    },
+
+    async mrfChainGet(ctx) {
+      return this.mrfProxy(ctx, {
+        method: 'GET',
+        path: '/internal/admin/mrf/chain',
+        permission: 'provider:read'
+      });
+    },
+
+    async mrfChainPatch(ctx) {
+      const body = this.requirePlainObject(ctx.params.data, 'data');
+      return this.mrfProxy(ctx, {
+        method: 'PATCH',
+        path: '/internal/admin/mrf/chain',
+        permission: 'provider:write',
+        body
+      });
+    },
+
+    async mrfTracesList(ctx) {
+      const query = this.pickAllowedTraceQuery(ctx.meta.$query || {});
+      const queryString = new URLSearchParams(query).toString();
+      const path = queryString
+        ? `/internal/admin/mrf/traces?${queryString}`
+        : '/internal/admin/mrf/traces';
+
+      return this.mrfProxy(ctx, {
+        method: 'GET',
+        path,
+        permission: 'provider:read'
+      });
+    },
+
+    async mrfTraceItem(ctx) {
+      const traceId = this.sanitizePathSegment(ctx.params.traceId, 'traceId');
+      const includePrivate = String(ctx.meta.$query?.includePrivate || '').toLowerCase() === 'true';
+      const path = includePrivate
+        ? `/internal/admin/mrf/traces/${encodeURIComponent(traceId)}?includePrivate=true`
+        : `/internal/admin/mrf/traces/${encodeURIComponent(traceId)}`;
+
+      return this.mrfProxy(ctx, {
+        method: 'GET',
+        path,
+        permission: 'provider:read'
+      });
+    },
+
+    async mrfTraceChain(ctx) {
+      const traceId = this.sanitizePathSegment(ctx.params.traceId, 'traceId');
+      const includePrivate = String(ctx.meta.$query?.includePrivate || '').toLowerCase() === 'true';
+      const path = includePrivate
+        ? `/internal/admin/mrf/traces/${encodeURIComponent(traceId)}/chain?includePrivate=true`
+        : `/internal/admin/mrf/traces/${encodeURIComponent(traceId)}/chain`;
+
+      return this.mrfProxy(ctx, {
+        method: 'GET',
+        path,
+        permission: 'provider:read'
+      });
+    },
+
+    async mrfTraceSuggestions(ctx) {
+      const traceId = this.sanitizePathSegment(ctx.params.traceId, 'traceId');
+      return this.mrfProxy(ctx, {
+        method: 'GET',
+        path: `/internal/admin/mrf/traces/${encodeURIComponent(traceId)}/suggestions`,
+        permission: 'provider:read'
+      });
+    },
+
+    async mrfSimulationCreate(ctx) {
+      const body = this.requirePlainObject(ctx.params.data, 'data');
+      return this.mrfProxy(ctx, {
+        method: 'POST',
+        path: '/internal/admin/mrf/simulations',
+        permission: 'provider:simulate',
+        body
+      });
+    },
+
+    async mrfSimulationItem(ctx) {
+      const jobId = this.sanitizePathSegment(ctx.params.jobId, 'jobId');
+      return this.mrfProxy(ctx, {
+        method: 'GET',
+        path: `/internal/admin/mrf/simulations/${encodeURIComponent(jobId)}`,
+        permission: 'provider:simulate'
+      });
+    },
+
+    async mrfMetrics(ctx) {
+      const query = this.pickAllowedMetricsQuery(ctx.meta.$query || {});
+      const queryString = new URLSearchParams(query).toString();
+      const path = queryString
+        ? `/internal/admin/mrf/metrics?${queryString}`
+        : '/internal/admin/mrf/metrics';
+
+      return this.mrfProxy(ctx, {
+        method: 'GET',
+        path,
+        permission: 'provider:read'
+      });
+    },
+
+    // ─── Provider platform management actions (Mastodon/Akkoma-inspired) ───
+
+    async providerStats(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const now = new Date();
+      const oneWeekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const oneMonthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      let totalPods = 0;
+      let newThisWeek = 0;
+      let newThisMonth = 0;
+
+      try {
+        const accounts = await ctx.call('auth.account.find');
+        totalPods = accounts.length;
+
+        for (const account of accounts) {
+          const created = account.createdAt || account['dc:created'] || account.created_at;
+          if (created) {
+            if (created >= oneWeekAgo) newThisWeek++;
+            if (created >= oneMonthAgo) newThisMonth++;
+          }
+        }
+      } catch (err) {
+        this.logger.warn('[Dashboard/Stats] Could not fetch account list:', err.message);
+      }
+
+      let mrfSummary = null;
+      try {
+        const metricsResult = await this.mrfProxyRaw({
+          method: 'GET',
+          path: '/internal/admin/mrf/metrics',
+          permission: 'provider:read'
+        });
+        mrfSummary = metricsResult?.totals ?? null;
+      } catch {
+        // MRF metrics unavailable — not critical
+      }
+
+      return {
+        pods: { total: totalPods, newThisWeek, newThisMonth },
+        announcements: this._announcements.length,
+        activeInvitations: this._invitations.filter(i => !i.revoked && (!i.expiresAt || i.expiresAt > now.toISOString())).length,
+        mrf: mrfSummary
+      };
+    },
+
+    async providerListPods(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      let accounts = [];
+      try {
+        accounts = await ctx.call('auth.account.find');
+      } catch (err) {
+        throw new MoleculerError(`Could not fetch pod list: ${err.message}`, 502, 'UPSTREAM_ERROR');
+      }
+
+      const pods = accounts
+        .filter(a => !a.tombstone)
+        .map(a => ({
+          webId: a.webId || a['@id'],
+          username: a.username || a.preferredUsername,
+          email: a.email,
+          createdAt: a.createdAt || a['dc:created'] || a.created_at,
+          suspended: a.suspended === true || a.deactivated === true
+        }))
+        .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+      return { data: pods, total: pods.length };
+    },
+
+    async listAnnouncements(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+      return { data: [...this._announcements].reverse() };
+    },
+
+    async createAnnouncement(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const { content, startsAt, endsAt, allDay } = ctx.params.data || ctx.params;
+      if (!content || typeof content !== 'string' || content.trim().length === 0) {
+        throw new MoleculerError('content is required', 400, 'VALIDATION_ERROR');
+      }
+      if (content.length > 5000) {
+        throw new MoleculerError('content must be 5000 characters or fewer', 400, 'VALIDATION_ERROR');
+      }
+
+      const now = new Date().toISOString();
+      const announcement = {
+        id: ulid(),
+        content: content.trim(),
+        startsAt: startsAt || null,
+        endsAt: endsAt || null,
+        allDay: allDay === true,
+        publishedAt: now,
+        createdAt: now,
+        createdBy: webId
+      };
+
+      this._announcements.push(announcement);
+      await this.saveProviderData('announcements', this._announcements);
+      this.recordAuditEvent(webId, 'create_announcement', { id: announcement.id });
+
+      return { data: announcement };
+    },
+
+    async deleteAnnouncement(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const id = this.sanitizePathSegment(ctx.params.id, 'id');
+      const before = this._announcements.length;
+      this._announcements = this._announcements.filter(a => a.id !== id);
+
+      if (this._announcements.length === before) {
+        throw new MoleculerError('Announcement not found', 404, 'NOT_FOUND');
+      }
+
+      await this.saveProviderData('announcements', this._announcements);
+      this.recordAuditEvent(webId, 'delete_announcement', { id });
+
+      return { deleted: true };
+    },
+
+    async listInvitations(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+      return { data: [...this._invitations].reverse() };
+    },
+
+    async createInvitation(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const { maxUses, expiresAt, note } = ctx.params.data || ctx.params;
+
+      if (maxUses !== undefined && maxUses !== null) {
+        const n = Number(maxUses);
+        if (!Number.isInteger(n) || n < 1 || n > 1000) {
+          throw new MoleculerError('maxUses must be an integer between 1 and 1000', 400, 'VALIDATION_ERROR');
+        }
+      }
+
+      if (expiresAt !== undefined && expiresAt !== null) {
+        if (typeof expiresAt !== 'string' || isNaN(new Date(expiresAt).getTime())) {
+          throw new MoleculerError('expiresAt must be a valid ISO 8601 datetime string', 400, 'VALIDATION_ERROR');
+        }
+        if (new Date(expiresAt) <= new Date()) {
+          throw new MoleculerError('expiresAt must be in the future', 400, 'VALIDATION_ERROR');
+        }
+      }
+
+      const token = crypto.randomBytes(20).toString('hex');
+      const now = new Date().toISOString();
+      const invitation = {
+        id: ulid(),
+        token,
+        maxUses: maxUses ? Number(maxUses) : null,
+        uses: 0,
+        expiresAt: expiresAt || null,
+        note: note ? String(note).slice(0, 500) : null,
+        revoked: false,
+        createdAt: now,
+        createdBy: webId
+      };
+
+      this._invitations.push(invitation);
+      await this.saveProviderData('invitations', this._invitations);
+      this.recordAuditEvent(webId, 'create_invitation', { id: invitation.id, maxUses: invitation.maxUses });
+
+      return { data: invitation };
+    },
+
+    async revokeInvitation(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const id = this.sanitizePathSegment(ctx.params.id, 'id');
+      const inv = this._invitations.find(i => i.id === id);
+
+      if (!inv) {
+        throw new MoleculerError('Invitation not found', 404, 'NOT_FOUND');
+      }
+
+      inv.revoked = true;
+      inv.revokedAt = new Date().toISOString();
+      inv.revokedBy = webId;
+
+      await this.saveProviderData('invitations', this._invitations);
+      this.recordAuditEvent(webId, 'revoke_invitation', { id });
+
+      return { data: inv };
+    },
+
+    async listAuditLog(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const limit = Math.min(Number(ctx.meta.$query?.limit) || 100, 500);
+      const entries = [...this._auditLog].reverse().slice(0, limit);
+
+      return { data: entries, total: this._auditLog.length };
+    },
+
+    async applyModerationDecision(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const input = ctx.params.data || ctx.params || {};
+      const allowedActions = new Set(['label', 'warn', 'filter', 'block', 'suspend']);
+
+      const action = typeof input.action === 'string' ? input.action.trim() : '';
+      if (!allowedActions.has(action)) {
+        throw new MoleculerError('Invalid moderation action', 400, 'VALIDATION_ERROR');
+      }
+
+      const targetWebId = typeof input.targetWebId === 'string' ? input.targetWebId.trim() : undefined;
+      const targetAtDid = typeof input.targetAtDid === 'string' ? input.targetAtDid.trim() : undefined;
+      const targetHandle = typeof input.targetHandle === 'string' ? input.targetHandle.trim() : undefined;
+
+      if (!targetWebId && !targetAtDid && !targetHandle) {
+        throw new MoleculerError(
+          'targetWebId, targetAtDid, or targetHandle is required',
+          400,
+          'VALIDATION_ERROR'
+        );
+      }
+
+      const labels = Array.isArray(input.labels)
+        ? [...new Set(input.labels.filter(v => typeof v === 'string').map(v => v.trim()).filter(Boolean))].slice(0, 20)
+        : [];
+      const reason = typeof input.reason === 'string' ? input.reason.trim().slice(0, 500) : undefined;
+
+      const payload = {
+        targetWebId,
+        targetAtDid,
+        targetHandle,
+        action,
+        labels,
+        reason
+      };
+
+      const upstream = await this.mrfProxy(ctx, {
+        method: 'POST',
+        path: '/internal/admin/moderation/decisions',
+        permission: 'provider:write',
+        body: payload
+      });
+
+      const decision = upstream?.decision || null;
+      if (decision) {
+        this._moderationDecisions.push(decision);
+        const max = this.settings.auditLogMaxEntries;
+        if (this._moderationDecisions.length > max) {
+          this._moderationDecisions = this._moderationDecisions.slice(-max);
+        }
+        await this.saveProviderData('moderation-decisions', this._moderationDecisions);
+      }
+
+      this.recordAuditEvent(webId, 'moderation_apply', {
+        action,
+        targetWebId: targetWebId || null,
+        targetAtDid: targetAtDid || null,
+        targetHandle: targetHandle || null,
+        labels
+      });
+
+      return upstream;
+    },
+
+    async listModerationDecisions(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      try {
+        const query = this.pickModerationQuery(ctx.meta.$query || {});
+        const qs = new URLSearchParams(query).toString();
+        const path = qs
+          ? `/internal/admin/moderation/decisions?${qs}`
+          : '/internal/admin/moderation/decisions';
+
+        const upstream = await this.mrfProxy(ctx, {
+          method: 'GET',
+          path,
+          permission: 'provider:read'
+        });
+
+        return {
+          data: upstream?.decisions || [],
+          cursor: upstream?.cursor || null
+        };
+      } catch (err) {
+        this.logger.warn('[ModerationBridge] Falling back to local decision cache: %s', err.message);
+        const limit = Math.min(Number(ctx.meta.$query?.limit) || 100, 500);
+        const entries = [...this._moderationDecisions].reverse().slice(0, limit);
+        return { data: entries, total: this._moderationDecisions.length, source: 'cache' };
+      }
+    },
+
+    async revokeModerationDecision(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const id = this.sanitizePathSegment(ctx.params.id, 'id').toUpperCase();
+      const upstream = await this.mrfProxy(ctx, {
+        method: 'DELETE',
+        path: `/internal/admin/moderation/decisions/${encodeURIComponent(id)}`,
+        permission: 'provider:write'
+      });
+
+      const decision = upstream?.decision;
+      if (decision?.id) {
+        this._moderationDecisions = this._moderationDecisions.map(existing =>
+          existing.id === decision.id ? decision : existing
+        );
+        await this.saveProviderData('moderation-decisions', this._moderationDecisions);
+      }
+
+      this.recordAuditEvent(webId, 'moderation_revoke', { id });
+      return upstream;
+    },
+
+    async listAtLabels(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const query = this.pickModerationQuery(ctx.meta.$query || {});
+      const qs = new URLSearchParams(query).toString();
+      const path = qs
+        ? `/internal/admin/moderation/labels?${qs}`
+        : '/internal/admin/moderation/labels';
+
+      return this.mrfProxy(ctx, {
+        method: 'GET',
+        path,
+        permission: 'provider:read'
+      });
+    },
+
+    async listKnownAtLabels(ctx) {
+      this.requireWebId(ctx);
+
+      try {
+        return await this.mrfProxy(ctx, {
+          method: 'GET',
+          path: '/internal/admin/moderation/at-labels/known',
+          permission: 'provider:read'
+        });
+      } catch {
+        return {
+          data: DEFAULT_AT_LABELS.map(name => ({ name, source: 'builtin' })),
+          source: 'builtin'
+        };
+      }
+    },
+
+    async providerDefaultModerationSourceStatus(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      await this.ensureDefaultBlueskyTrustSource(ctx, webId);
+      const trustSources = await this.listByContainer(ctx, webId, 'trust-sources', { seedProviderDefaults: false });
+      const entry = trustSources.find(item => this.isDefaultBlueskyTrustSource(item));
+
+      return {
+        data: {
+          exists: Boolean(entry),
+          immutable: true,
+          source: entry?.source || this.settings.blueskyDefaultLabelerDid,
+          sourceType: entry?.sourceType || 'atproto-labeler',
+          enabled: entry?.enabled !== false,
+          name: entry?.name || this.settings.blueskyDefaultLabelerName,
+          handle: this.settings.blueskyDefaultLabelerHandle,
+          did: this.settings.blueskyDefaultLabelerDid,
+          scopes: Array.isArray(entry?.scopes) ? entry.scopes : ['label:content', 'label:actor', 'filter:content', 'filter:actor']
+        }
+      };
+    },
+
+    async resolveAtprotoHandle(ctx) {
+      this.requireWebId(ctx);
+
+      const handle = this.normalizeAtprotoHandle(ctx.params?.handle || ctx.meta?.$query?.handle || '');
+      const pdsUrl = this.normalizeHttpUrlOrDefault(ctx.params?.pdsUrl || ctx.meta?.$query?.pdsUrl, 'https://bsky.social');
+      const endpoint = new URL('/xrpc/com.atproto.identity.resolveHandle', pdsUrl);
+      endpoint.searchParams.set('handle', handle);
+
+      const response = await fetch(endpoint.toString(), {
+        method: 'GET',
+        headers: {
+          accept: 'application/json'
+        },
+        signal: AbortSignal.timeout(8000)
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new MoleculerError(
+          payload?.message || `Failed to resolve ATProto handle (${response.status})`,
+          response.status,
+          'ATPROTO_HANDLE_RESOLVE_FAILED'
+        );
+      }
+
+      const did = typeof payload?.did === 'string' ? payload.did.trim() : '';
+      if (!did) {
+        throw new MoleculerError('Resolved DID is missing', 502, 'ATPROTO_HANDLE_RESOLVE_FAILED');
+      }
+
+      return {
+        data: {
+          handle,
+          did
+        }
+      };
+    },
+
+    async fetchAtprotoUserLists(ctx) {
+      const webId = this.requireWebId(ctx);
+      const input = ctx.params?.data || ctx.params || {};
+      const binding = await this.getAtprotoBindingForWebId(ctx, webId);
+      const credentials = await this.resolveAtprotoSyncCredentials(ctx, webId, input, binding);
+      const pdsUrl = credentials.pdsUrl;
+      const limit = this.clampInt(input.limit, 50, 1, 100);
+      const maxPages = this.clampInt(input.maxPages, 5, 1, 20);
+
+      const session = credentials.mode === 'managed-internal'
+        ? await this.createManagedAtprotoSession(pdsUrl, webId)
+        : await this.createAtprotoSession(pdsUrl, credentials.identifier, credentials.password);
+      const mutes = await this.fetchAtprotoPagedList({
+        pdsUrl,
+        accessJwt: session.accessJwt,
+        path: '/xrpc/app.bsky.graph.getMutes',
+        listField: 'mutes',
+        limit,
+        maxPages
+      });
+      const blocks = await this.fetchAtprotoPagedList({
+        pdsUrl,
+        accessJwt: session.accessJwt,
+        path: '/xrpc/app.bsky.graph.getBlocks',
+        listField: 'blocks',
+        limit,
+        maxPages
+      });
+
+      return {
+        data: {
+          pdsUrl,
+          did: binding.atprotoDid,
+          handle: binding.atprotoHandle,
+          mutes,
+          blocks,
+          fetchedAt: new Date().toISOString()
+        }
+      };
+    },
+
+    async syncAtprotoUserLists(ctx) {
+      const webId = this.requireWebId(ctx);
+      const input = ctx.params?.data || ctx.params || {};
+      const replace = Boolean(input.replace);
+
+      const fetched = await this.actions.fetchAtprotoUserLists({
+        data: {
+          identifier: input.identifier,
+          password: input.password,
+          pdsUrl: input.pdsUrl,
+          limit: input.limit,
+          maxPages: input.maxPages
+        }
+      }, {
+        parentCtx: ctx,
+        meta: ctx.meta
+      });
+
+      const muteIds = fetched.data.mutes
+        .map(item => this.extractAtprotoSubjectId(item))
+        .filter(Boolean);
+      const blockIds = fetched.data.blocks
+        .map(item => this.extractAtprotoSubjectId(item))
+        .filter(Boolean);
+
+      const mutesResult = await this.syncAtprotoSubjectsIntoContainer(ctx, webId, 'mutes', muteIds, replace);
+      const blocksResult = await this.syncAtprotoSubjectsIntoContainer(ctx, webId, 'blocks', blockIds, replace);
+
+      return {
+        data: {
+          fetchedAt: fetched.data.fetchedAt,
+          pdsUrl: fetched.data.pdsUrl,
+          mutes: {
+            remoteCount: fetched.data.mutes.length,
+            ...mutesResult
+          },
+          blocks: {
+            remoteCount: fetched.data.blocks.length,
+            ...blocksResult
+          }
+        }
+      };
+    },
+
+    async getAtprotoSyncConfig(ctx) {
+      const webId = this.requireWebId(ctx);
+      const config = await this.getAtprotoSyncConfigValue(ctx, webId);
+      return {
+        data: this.publicAtprotoSyncConfig(config)
+      };
+    },
+
+    async listAtprotoLabelerCatalog(ctx) {
+      const webId = this.requireWebId(ctx);
+      return {
+        data: await this.buildAtprotoLabelerCatalog(ctx, webId)
+      };
+    },
+
+    async setAtprotoSyncConfig(ctx) {
+      const webId = this.requireWebId(ctx);
+      const input = ctx.params?.data || ctx.params || {};
+      const existing = await this.getAtprotoSyncConfigValue(ctx, webId);
+
+      const enabled = input.enabled === undefined ? existing.enabled : Boolean(input.enabled);
+      const replaceMode = input.replace === undefined ? existing.replace : Boolean(input.replace);
+      const intervalHours = this.clampInt(
+        input.intervalHours === undefined ? existing.intervalHours : input.intervalHours,
+        DEFAULT_SYNC_INTERVAL_HOURS,
+        MIN_SYNC_INTERVAL_HOURS,
+        MAX_SYNC_INTERVAL_HOURS
+      );
+
+      const binding = await this.getAtprotoBindingForWebId(ctx, webId);
+      const pdsUrl = this.normalizeHttpUrlOrDefault(input.pdsUrl || existing.pdsUrl || binding.atprotoPdsUrl, binding.atprotoPdsUrl);
+      const identifier = input.identifier
+        ? this.requireAtprotoIdentifier(input.identifier)
+        : (existing.identifier || binding.atprotoHandle || binding.atprotoDid || '');
+
+      const next = {
+        enabled,
+        replace: replaceMode,
+        intervalHours,
+        pdsUrl,
+        identifier,
+        encryptedSecret: existing.encryptedSecret || null,
+        updatedAt: new Date().toISOString(),
+        lastSyncAt: existing.lastSyncAt || null,
+        lastSyncError: existing.lastSyncError || null
+      };
+
+      if (Object.prototype.hasOwnProperty.call(input, 'password')) {
+        if (typeof input.password === 'string' && input.password.trim().length > 0) {
+          next.encryptedSecret = this.encryptAtprotoSecret(input.password.trim());
+        } else if (input.password === null || input.password === '') {
+          next.encryptedSecret = null;
+        }
+      }
+
+      await this.upsertAtprotoSyncConfig(ctx, webId, next);
+
+      return {
+        data: this.publicAtprotoSyncConfig(next)
+      };
+    },
+
+    async runAtprotoSyncNow(ctx) {
+      const webId = this.requireWebId(ctx);
+      const input = ctx.params?.data || ctx.params || {};
+
+      const result = await this.performConfiguredAtprotoSync(ctx, webId, {
+        reason: input.reason || 'manual',
+        force: true
+      });
+
+      return {
+        data: result
+      };
+    },
+
+    async monthlyModerationSummary(ctx) {
+      const webId = this.requireWebId(ctx);
+      const summary = await this.buildMonthlyModerationSummary(ctx, webId);
+      return {
+        data: {
+          ...summary,
+          deliveryEnabled: await this.isMonthlySummaryEnabled(ctx, webId)
+        }
+      };
+    },
+
+    async sendMonthlyModerationSummary(ctx) {
+      const webId = this.requireWebId(ctx);
+      const force = Boolean(ctx.params?.force);
+      const result = await this.dispatchMonthlyModerationSummaryInternal(ctx, webId, { force, reason: 'manual' });
+
+      return {
+        data: result
+      };
+    },
+
+    async dispatchMonthlyModerationSummary(ctx) {
+      const webId = this.requireWebIdParam(ctx.params?.webId);
+      const force = Boolean(ctx.params?.force);
+      const reason = this.normalizeStringOrDefault(ctx.params?.reason, 'scheduled');
+
+      return this.dispatchMonthlyModerationSummaryInternal(ctx, webId, { force, reason });
+    },
+
     async list(ctx) {
       const webId = this.requireWebId(ctx);
       const c = this.requireContainer(ctx.params.container);
@@ -152,6 +1104,14 @@ module.exports = {
         throw new MoleculerError('Unknown resource type', 400, 'VALIDATION_ERROR');
       }
 
+      if (container === 'trust-sources' && this.isProviderActor(webId) && this.isDefaultBlueskyTrustSource(existing)) {
+        throw new MoleculerError(
+          'The default Bluesky moderation trust source is immutable and cannot be modified',
+          403,
+          'TRUST_SOURCE_IMMUTABLE'
+        );
+      }
+
       this.assertImmutableFields(existing, data || {}, container);
 
       const candidate = {
@@ -182,6 +1142,21 @@ module.exports = {
       // Ownership guard: resource must live inside the caller's data container
       if (!resourceUri.startsWith(this.dataContainer(webId))) {
         throw new MoleculerError('Forbidden', 403);
+      }
+
+      const existing = await ctx.call('ldp.resource.get', {
+        resourceUri,
+        webId,
+        accept: JSON_LD,
+        jsonContext: CONTEXT
+      });
+      const container = this.containerForResource(existing);
+      if (container === 'trust-sources' && this.isProviderActor(webId) && this.isDefaultBlueskyTrustSource(existing)) {
+        throw new MoleculerError(
+          'The default Bluesky moderation trust source is immutable and cannot be removed',
+          403,
+          'TRUST_SOURCE_IMMUTABLE'
+        );
       }
 
       const dataset = getDatasetFromUri(webId);
@@ -275,6 +1250,185 @@ module.exports = {
   },
 
   methods: {
+    parseProviderActors(raw) {
+      const values = String(raw || '')
+        .split(',')
+        .map(value => value.trim())
+        .filter(Boolean)
+        .map(value => value.toLowerCase());
+
+      return new Set(values);
+    },
+
+    actorKeyCandidates(webId) {
+      const keys = new Set();
+      const normalized = String(webId || '').trim();
+      if (!normalized) return keys;
+
+      keys.add(normalized.toLowerCase());
+
+      try {
+        const url = new URL(normalized);
+        const hostPath = `${url.host}${url.pathname}`.replace(/\/+$/, '').toLowerCase();
+        if (hostPath) keys.add(hostPath);
+
+        const segments = url.pathname.split('/').filter(Boolean);
+        const username = segments[0]?.toLowerCase();
+        if (username) keys.add(username);
+      } catch {
+        // If webId is malformed, keep only the normalized raw form.
+      }
+
+      return keys;
+    },
+
+    isProviderActor(webId) {
+      if (this.providerActors.has('*')) return true;
+      if (this.providerActors.size === 0) return false;
+
+      const candidates = this.actorKeyCandidates(webId);
+      for (const candidate of candidates) {
+        if (this.providerActors.has(candidate)) return true;
+      }
+
+      return false;
+    },
+
+    sanitizePathSegment(value, name) {
+      if (!value || typeof value !== 'string') {
+        throw new MoleculerError(`${name} is required`, 400, 'VALIDATION_ERROR');
+      }
+
+      const trimmed = value.trim();
+      if (!/^[A-Za-z0-9._:-]+$/.test(trimmed)) {
+        throw new MoleculerError(`${name} contains invalid characters`, 400, 'VALIDATION_ERROR');
+      }
+
+      return trimmed;
+    },
+
+    requirePlainObject(value, name) {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        throw new MoleculerError(`${name} must be an object`, 400, 'VALIDATION_ERROR');
+      }
+      return value;
+    },
+
+    pickAllowedTraceQuery(query) {
+      const out = {};
+      for (const [key, value] of Object.entries(query)) {
+        if (!MRF_TRACE_QUERY_KEYS.has(key)) continue;
+        if (value === undefined || value === null || value === '') continue;
+        out[key] = String(value).slice(0, 512);
+      }
+      return out;
+    },
+
+    pickAllowedMetricsQuery(query) {
+      const out = {};
+      for (const [key, value] of Object.entries(query)) {
+        if (!MRF_METRICS_QUERY_KEYS.has(key)) continue;
+        if (value === undefined || value === null || value === '') continue;
+        out[key] = String(value).slice(0, 512);
+      }
+      return out;
+    },
+
+    pickModerationQuery(query = {}) {
+      const out = {};
+      for (const [key, value] of Object.entries(query)) {
+        if (!MODERATION_QUERY_KEYS.has(key)) continue;
+        if (value === undefined || value === null || value === '') continue;
+        out[key] = String(value).slice(0, 512);
+      }
+      return out;
+    },
+
+    async mrfProxy(ctx, { method, path, permission, body }) {
+      const webId = this.requireWebId(ctx);
+
+      if (!this.isProviderActor(webId)) {
+        throw new MoleculerError('Provider access is required', 403, 'PROVIDER_ACCESS_REQUIRED');
+      }
+
+      if (!this.settings.mrfAdminToken) {
+        throw new MoleculerError('MRF control plane is not configured', 503, 'MRF_NOT_CONFIGURED');
+      }
+
+      const requestId =
+        ctx.meta.requestID ||
+        ctx.meta.requestId ||
+        ctx.meta.$requestID ||
+        ctx.id ||
+        ulid();
+
+      const execute = async () => {
+        const url = `${this.settings.mrfAdminBaseUrl}${path}`;
+        const response = await fetch(url, {
+          method,
+          headers: {
+            Authorization: `Bearer ${this.settings.mrfAdminToken}`,
+            'Content-Type': 'application/json',
+            'X-Request-Id': String(requestId),
+            'X-Provider-Actor': webId,
+            'X-Provider-Permissions': permission
+          },
+          body: body ? JSON.stringify(body) : undefined,
+          signal: AbortSignal.timeout(this.settings.mrfTimeoutMs)
+        });
+
+        const text = await response.text();
+        const payload = text ? this.tryParseJson(text) : {};
+
+        if (!response.ok) {
+          const code = payload?.error?.code || 'MRF_PROXY_ERROR';
+          const message = payload?.error?.message || `MRF request failed (${response.status})`;
+
+          if (response.status === 401 || response.status === 403) {
+            throw new MoleculerError('MRF backend authorization failed', 502, 'MRF_BACKEND_AUTH', {
+              requestId,
+              upstreamCode: code
+            });
+          }
+
+          const error = new MoleculerError(message, response.status, code, {
+            requestId,
+            upstreamCode: code,
+            details: payload?.error?.details
+          });
+
+          error.retryable = response.status === 429 || response.status >= 500;
+          throw error;
+        }
+
+        return payload;
+      };
+
+      try {
+        return await this.mrfCircuit.execute(() =>
+          retryWithBackoff(execute, {
+            maxRetries: Math.max(0, this.settings.mrfRetries - 1),
+            baseDelayMs: Math.max(25, this.settings.mrfRetryBaseDelayMs),
+            maxDelayMs: Math.max(this.settings.mrfRetryBaseDelayMs, this.settings.mrfRetryMaxDelayMs),
+            retryIf: err => err?.retryable !== false
+          })
+        );
+      } catch (err) {
+        if (err instanceof CircuitOpenError) {
+          throw new MoleculerError('MRF control plane is temporarily unavailable', 503, 'MRF_CIRCUIT_OPEN');
+        }
+        throw err;
+      }
+    },
+
+    tryParseJson(text) {
+      try {
+        return JSON.parse(text);
+      } catch {
+        return {};
+      }
+    },
+
     requireWebId(ctx) {
       const webId = ctx.meta.webId;
       if (!webId || webId === 'anon') throw new MoleculerError('Unauthorized', 401);
@@ -334,7 +1488,562 @@ module.exports = {
       return String(value);
     },
 
-    async listByContainer(ctx, webId, container) {
+    normalizeStringOrDefault(value, fallback) {
+      if (typeof value !== 'string') return fallback;
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : fallback;
+    },
+
+    normalizeHttpUrlOrDefault(value, fallback) {
+      const candidate = typeof value === 'string' && value.trim().length > 0 ? value.trim() : String(fallback || '').trim();
+      try {
+        const parsed = new URL(candidate);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+          throw new Error('invalid_protocol');
+        }
+        parsed.search = '';
+        parsed.hash = '';
+        return parsed.origin;
+      } catch {
+        throw new MoleculerError('Invalid ATProto PDS URL', 400, 'ATPROTO_PDS_URL_INVALID');
+      }
+    },
+
+    normalizeAtprotoHandle(value) {
+      const handle = String(value || '').trim().toLowerCase();
+      if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(handle)) {
+        throw new MoleculerError('Invalid ATProto handle', 400, 'ATPROTO_HANDLE_INVALID');
+      }
+      return handle;
+    },
+
+    requireAtprotoIdentifier(value) {
+      const identifier = String(value || '').trim();
+      if (!identifier) {
+        throw new MoleculerError('ATProto identifier is required', 400, 'ATPROTO_IDENTIFIER_REQUIRED');
+      }
+      return identifier;
+    },
+
+    requireAtprotoPassword(value) {
+      const password = String(value || '').trim();
+      if (!password) {
+        throw new MoleculerError('ATProto app password is required', 400, 'ATPROTO_PASSWORD_REQUIRED');
+      }
+      return password;
+    },
+
+    clampInt(value, fallback, min, max) {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return fallback;
+      return Math.min(max, Math.max(min, Math.trunc(numeric)));
+    },
+
+    async getAtprotoBindingForWebId(ctx, webId) {
+      const binding = await ctx.call('identitybindings.getByCanonicalAccountId', {
+        canonicalAccountId: webId
+      });
+
+      if (!binding?.atprotoDid || !binding?.atprotoPdsUrl) {
+        throw new MoleculerError(
+          'No linked ATProto account found for this user',
+          404,
+          'ATPROTO_NOT_LINKED'
+        );
+      }
+
+      return binding;
+    },
+
+    async createAtprotoSession(pdsUrl, identifier, password) {
+      const endpoint = new URL('/xrpc/com.atproto.server.createSession', pdsUrl).toString();
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          identifier,
+          password
+        }),
+        signal: AbortSignal.timeout(10000)
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const code = response.status === 401 || response.status === 403 ? 'ATPROTO_EXTERNAL_AUTH_FAILED' : 'ATPROTO_SESSION_FAILED';
+        throw new MoleculerError(
+          payload?.message || `ATProto authentication failed (${response.status})`,
+          response.status,
+          code
+        );
+      }
+
+      const accessJwt = typeof payload?.accessJwt === 'string' ? payload.accessJwt.trim() : '';
+      if (!accessJwt) {
+        throw new MoleculerError('ATProto session response missing accessJwt', 502, 'ATPROTO_SESSION_INVALID');
+      }
+
+      return {
+        accessJwt
+      };
+    },
+
+    async createManagedAtprotoSession(pdsUrl, canonicalAccountId) {
+      const internalToken = String(process.env.ACTIVITYPODS_TOKEN || '').trim();
+      if (!internalToken) {
+        throw new MoleculerError(
+          'Managed ATProto session mint is unavailable: missing ACTIVITYPODS_TOKEN',
+          500,
+          'ATPROTO_MANAGED_SESSION_UNAVAILABLE'
+        );
+      }
+
+      const endpoint = new URL('/api/internal/atproto/session', pdsUrl).toString();
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          authorization: `Bearer ${internalToken}`
+        },
+        body: JSON.stringify({ canonicalAccountId }),
+        signal: AbortSignal.timeout(10000)
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new MoleculerError(
+          payload?.message || payload?.error || `Managed ATProto session mint failed (${response.status})`,
+          response.status,
+          'ATPROTO_MANAGED_SESSION_FAILED'
+        );
+      }
+
+      const accessJwt = typeof payload?.accessJwt === 'string' ? payload.accessJwt.trim() : '';
+      if (!accessJwt) {
+        throw new MoleculerError('Managed ATProto session response missing accessJwt', 502, 'ATPROTO_SESSION_INVALID');
+      }
+
+      return { accessJwt };
+    },
+
+    async fetchAtprotoPreferences(pdsUrl, accessJwt) {
+      const endpoint = new URL('/xrpc/app.bsky.actor.getPreferences', pdsUrl).toString();
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+          authorization: `Bearer ${accessJwt}`
+        },
+        signal: AbortSignal.timeout(10000)
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new MoleculerError(
+          payload?.message || `ATProto preferences fetch failed (${response.status})`,
+          response.status,
+          'ATPROTO_PREFERENCES_FETCH_FAILED'
+        );
+      }
+
+      return Array.isArray(payload?.preferences) ? payload.preferences : [];
+    },
+
+    extractAtprotoLabelerDids(preferences) {
+      const dids = new Set();
+
+      const visit = value => {
+        if (!value || typeof value !== 'object') return;
+
+        if (Array.isArray(value)) {
+          for (const item of value) visit(item);
+          return;
+        }
+
+        if (Array.isArray(value.labelers)) {
+          for (const labeler of value.labelers) {
+            if (typeof labeler?.did === 'string' && labeler.did.trim().startsWith('did:')) {
+              dids.add(labeler.did.trim().toLowerCase());
+            }
+          }
+        }
+
+        for (const nested of Object.values(value)) {
+          if (nested && typeof nested === 'object') visit(nested);
+        }
+      };
+
+      visit(preferences);
+      return [...dids];
+    },
+
+    async fetchAtprotoModerationState(ctx, webId, binding) {
+      const credentials = await this.resolveAtprotoSyncCredentials(ctx, webId, {}, binding);
+      const pdsUrl = credentials.pdsUrl;
+
+      const session = credentials.mode === 'managed-internal'
+        ? await this.createManagedAtprotoSession(pdsUrl, webId)
+        : await this.createAtprotoSession(pdsUrl, credentials.identifier, credentials.password);
+
+      const mutes = await this.fetchAtprotoPagedList({
+        pdsUrl,
+        accessJwt: session.accessJwt,
+        path: '/xrpc/app.bsky.graph.getMutes',
+        listField: 'mutes',
+        limit: 100,
+        maxPages: 10
+      });
+
+      const blocks = await this.fetchAtprotoPagedList({
+        pdsUrl,
+        accessJwt: session.accessJwt,
+        path: '/xrpc/app.bsky.graph.getBlocks',
+        listField: 'blocks',
+        limit: 100,
+        maxPages: 10
+      });
+
+      const preferences = await this.fetchAtprotoPreferences(pdsUrl, session.accessJwt).catch(() => []);
+      const labelerDids = this.extractAtprotoLabelerDids(preferences);
+
+      return { mutes, blocks, labelerDids };
+    },
+
+    async fetchAtprotoPagedList({ pdsUrl, accessJwt, path, listField, limit, maxPages }) {
+      let cursor = null;
+      let page = 0;
+      const items = [];
+
+      while (page < maxPages) {
+        const endpoint = new URL(path, pdsUrl);
+        endpoint.searchParams.set('limit', String(limit));
+        if (cursor) endpoint.searchParams.set('cursor', cursor);
+
+        const response = await fetch(endpoint.toString(), {
+          method: 'GET',
+          headers: {
+            accept: 'application/json',
+            authorization: `Bearer ${accessJwt}`
+          },
+          signal: AbortSignal.timeout(10000)
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new MoleculerError(
+            payload?.message || `ATProto list fetch failed (${response.status})`,
+            response.status,
+            'ATPROTO_LIST_FETCH_FAILED'
+          );
+        }
+
+        const pageItems = Array.isArray(payload?.[listField]) ? payload[listField] : [];
+        items.push(...pageItems);
+
+        cursor = typeof payload?.cursor === 'string' && payload.cursor.trim().length > 0
+          ? payload.cursor.trim()
+          : null;
+        page += 1;
+        if (!cursor) break;
+      }
+
+      return items;
+    },
+
+    extractAtprotoSubjectId(item) {
+      if (!item || typeof item !== 'object') return null;
+
+      const did = typeof item.did === 'string' ? item.did.trim() : '';
+      if (did) return did;
+
+      const handle = typeof item.handle === 'string' ? item.handle.trim().toLowerCase() : '';
+      if (handle) return handle;
+
+      const actorDid = typeof item?.actor?.did === 'string' ? item.actor.did.trim() : '';
+      if (actorDid) return actorDid;
+
+      const actorHandle = typeof item?.actor?.handle === 'string' ? item.actor.handle.trim().toLowerCase() : '';
+      if (actorHandle) return actorHandle;
+
+      return null;
+    },
+
+    async createSettingsResource(ctx, webId, container, data) {
+      const now = new Date().toISOString();
+      const resource = {
+        '@context': CONTEXT,
+        type: this.resourceTypeForContainer(container),
+        createdAt: now,
+        updatedAt: now,
+        ...data
+      };
+
+      return ctx.call('ldp.container.post', {
+        containerUri: this.dataContainer(webId),
+        resource,
+        contentType: JSON_LD,
+        webId
+      });
+    },
+
+    async syncAtprotoSubjectsIntoContainer(ctx, webId, container, subjectIds, replace) {
+      const canonicalIds = [...new Set(subjectIds.map(value => String(value || '').trim()).filter(Boolean))];
+      const remoteSet = new Set(canonicalIds.map(value => value.toLowerCase()));
+      const existing = await this.listByContainer(ctx, webId, container, { skipAtprotoMirror: true });
+
+      const existingById = new Map();
+      for (const item of existing) {
+        if (String(item?.subjectProtocol || '').toLowerCase() !== 'atproto') continue;
+        const key = String(item?.subjectCanonicalId || '').trim().toLowerCase();
+        if (!key) continue;
+        existingById.set(key, item);
+      }
+
+      let created = 0;
+      let deleted = 0;
+
+      for (const subjectCanonicalId of canonicalIds) {
+        const key = subjectCanonicalId.toLowerCase();
+        if (existingById.has(key)) continue;
+
+        await this.createSettingsResource(ctx, webId, container, {
+          subjectCanonicalId,
+          subjectProtocol: 'atproto'
+        });
+        created += 1;
+      }
+
+      if (replace) {
+        const dataset = getDatasetFromUri(webId);
+        for (const [key, item] of existingById.entries()) {
+          if (remoteSet.has(key)) continue;
+          const resourceUri = item?.['@id'];
+          if (!resourceUri) continue;
+          await ctx.call('ldp.resource.delete', { resourceUri, webId }, { meta: { dataset } });
+          deleted += 1;
+        }
+      }
+
+      return {
+        created,
+        deleted,
+        totalAfterSync: existingById.size + created - deleted
+      };
+    },
+
+    async syncAtprotoLabelersIntoTrustSources(ctx, webId, labelerDids) {
+      const remoteDids = [...new Set((labelerDids || []).map(value => String(value || '').trim().toLowerCase()).filter(Boolean))];
+      const remoteDidSet = new Set(remoteDids);
+
+      const existing = await this.listByContainer(ctx, webId, 'trust-sources', {
+        seedProviderDefaults: false,
+        skipAtprotoMirror: true
+      });
+
+      const existingBySource = new Map();
+      const syncedEntries = [];
+      for (const item of existing) {
+        const sourceType = String(item?.sourceType || '').toLowerCase();
+        const source = String(item?.source || '').trim().toLowerCase();
+        if (sourceType !== 'atproto-labeler' || !source) continue;
+
+        existingBySource.set(source, item);
+        if (String(item?.syncOrigin || '').toLowerCase() === ATPROTO_MIRROR_TRUST_SOURCE_MARKER) {
+          syncedEntries.push(item);
+        }
+      }
+
+      for (const did of remoteDids) {
+        if (existingBySource.has(did)) continue;
+
+        await this.createSettingsResource(ctx, webId, 'trust-sources', {
+          source: did,
+          sourceType: 'atproto-labeler',
+          enabled: true,
+          weight: 1,
+          priority: 100,
+          scopes: ['label:content', 'label:actor', 'filter:content', 'filter:actor'],
+          name: `ATProto labeler ${did}`,
+          description: 'Synced from ATProto account moderation preferences.',
+          syncOrigin: ATPROTO_MIRROR_TRUST_SOURCE_MARKER
+        });
+      }
+
+      const dataset = getDatasetFromUri(webId);
+      for (const item of syncedEntries) {
+        const source = String(item?.source || '').trim().toLowerCase();
+        if (remoteDidSet.has(source)) continue;
+        if (this.isDefaultBlueskyTrustSource(item)) continue;
+
+        const resourceUri = item?.['@id'];
+        if (!resourceUri) continue;
+        await ctx.call('ldp.resource.delete', { resourceUri, webId }, { meta: { dataset } });
+      }
+    },
+
+    requireWebIdParam(value) {
+      if (typeof value !== 'string' || value.trim().length === 0) {
+        throw new MoleculerError('webId is required', 400, 'VALIDATION_ERROR');
+      }
+
+      const webId = value.trim();
+      try {
+        const parsed = new URL(webId);
+        if (!['http:', 'https:'].includes(parsed.protocol)) {
+          throw new Error('invalid protocol');
+        }
+      } catch {
+        throw new MoleculerError('webId must be a valid http(s) URI', 400, 'VALIDATION_ERROR');
+      }
+
+      return webId;
+    },
+
+    async buildMonthlyModerationSummary(ctx, webId) {
+      const [filters, mutes, blocks, preferences] = await Promise.all([
+        this.listByContainer(ctx, webId, 'filters'),
+        this.listByContainer(ctx, webId, 'mutes'),
+        this.listByContainer(ctx, webId, 'blocks'),
+        this.listByContainer(ctx, webId, 'preferences')
+      ]);
+
+      const now = Date.now();
+      const activeFilters = filters.filter(filter => {
+        const expiresAt = Date.parse(filter?.expiresAt || '');
+        if (Number.isNaN(expiresAt)) return true;
+        return expiresAt > now;
+      });
+
+      const actionTotals = filters.reduce(
+        (totals, filter) => {
+          const action = String(filter?.action || 'hide');
+          if (action === 'hide' || action === 'warn' || action === 'filter') {
+            totals[action] += 1;
+          }
+          return totals;
+        },
+        { hide: 0, warn: 0, filter: 0 }
+      );
+
+      const sensitiveMediaModePreference = preferences.find(item => item?.category === 'sensitive-media-display');
+      const sensitiveMediaMode =
+        typeof sensitiveMediaModePreference?.value === 'string' ? sensitiveMediaModePreference.value : 'warn';
+
+      return {
+        generatedAt: new Date().toISOString(),
+        period: this.currentSummaryPeriod(),
+        filters: {
+          total: filters.length,
+          active: activeFilters.length,
+          actions: actionTotals
+        },
+        mutes: {
+          total: mutes.length
+        },
+        blocks: {
+          total: blocks.length
+        },
+        sensitiveContent: {
+          mediaDisplayMode: sensitiveMediaMode
+        }
+      };
+    },
+
+    currentSummaryPeriod() {
+      const now = new Date();
+      const year = now.getUTCFullYear();
+      const month = now.getUTCMonth();
+      const start = new Date(Date.UTC(year, month, 1, 0, 0, 0)).toISOString();
+      const end = new Date(Date.UTC(year, month + 1, 1, 0, 0, 0)).toISOString();
+      return { start, end };
+    },
+
+    async isMonthlySummaryEnabled(ctx, webId) {
+      const preferences = await this.listByContainer(ctx, webId, 'preferences');
+      const preference = preferences.find(item => item?.category === 'moderation-monthly-summary');
+      if (!preference) return true;
+      return Boolean(preference.value);
+    },
+
+    async dispatchMonthlyModerationSummaryInternal(ctx, webId, { force, reason }) {
+      const enabled = await this.isMonthlySummaryEnabled(ctx, webId);
+      if (!enabled && !force) {
+        return {
+          delivered: false,
+          skipped: true,
+          reason: 'disabled'
+        };
+      }
+
+      const summary = await this.buildMonthlyModerationSummary(ctx, webId);
+
+      const title = 'Your monthly moderation summary';
+      const contentLines = [
+        `Period start: ${summary.period.start}`,
+        `Period end: ${summary.period.end}`,
+        '',
+        `Keyword filters: ${summary.filters.active} active (${summary.filters.total} total)`,
+        `Filter actions: hide=${summary.filters.actions.hide}, warn=${summary.filters.actions.warn}, filter=${summary.filters.actions.filter}`,
+        `Muted accounts: ${summary.mutes.total}`,
+        `Blocked accounts: ${summary.blocks.total}`,
+        `Sensitive media mode: ${summary.sensitiveContent.mediaDisplayMode}`
+      ];
+
+      try {
+        await ctx.call('mail-notifications.notify', {
+          template: {
+            title,
+            content: contentLines.join('\n')
+          },
+          recipientUri: webId,
+          activity: {
+            actor: webId,
+            type: 'apods:ModerationSummary',
+            id: `urn:activitypods:moderation-summary:${ulid()}`
+          },
+          reason
+        });
+
+        return {
+          delivered: true,
+          skipped: false,
+          reason,
+          summary
+        };
+      } catch (error) {
+        this.logger.warn('[ModerationSummary] Failed to deliver monthly moderation summary', {
+          webId,
+          reason,
+          error: error?.message
+        });
+
+        return {
+          delivered: false,
+          skipped: false,
+          reason,
+          error: error?.message || 'delivery_failed',
+          summary
+        };
+      }
+    },
+
+    async listByContainer(ctx, webId, container, options = {}) {
+      if (options.skipAtprotoMirror !== true) {
+        await this.maybeSyncAtprotoModerationMirror(ctx, webId, container);
+      }
+
+      if (
+        container === 'trust-sources' &&
+        options.seedProviderDefaults !== false &&
+        this.isProviderActor(webId) &&
+        this.settings.blueskyDefaultLabelerEnabled
+      ) {
+        await this.ensureDefaultBlueskyTrustSource(ctx, webId);
+      }
+
       const resourceClassUri = RESOURCE_CLASS_URI_BY_CONTAINER[container];
       const dataset = getDatasetFromUri(webId);
       const dataBase = this.dataContainer(webId);
@@ -372,6 +2081,34 @@ module.exports = {
       return resources.filter(Boolean);
     },
 
+    async maybeSyncAtprotoModerationMirror(ctx, webId, container) {
+      if (!['mutes', 'blocks', 'trust-sources'].includes(container)) return;
+      if (this._atprotoMirrorInFlightByWebId.has(webId)) return;
+
+      const lastRunAtMs = this._atprotoMirrorLastRunByWebId.get(webId) || 0;
+      const minIntervalMs = Math.max(30, Number(this.settings.atprotoMirrorMinIntervalSeconds) || 300) * 1000;
+      if (Date.now() - lastRunAtMs < minIntervalMs) return;
+
+      this._atprotoMirrorInFlightByWebId.add(webId);
+      try {
+        const binding = await this.getAtprotoBindingForWebId(ctx, webId).catch(() => null);
+        if (!binding) return;
+
+        const mirror = await this.fetchAtprotoModerationState(ctx, webId, binding).catch(() => null);
+        if (!mirror) return;
+
+        const muteIds = mirror.mutes.map(item => this.extractAtprotoSubjectId(item)).filter(Boolean);
+        const blockIds = mirror.blocks.map(item => this.extractAtprotoSubjectId(item)).filter(Boolean);
+
+        await this.syncAtprotoSubjectsIntoContainer(ctx, webId, 'mutes', muteIds, true);
+        await this.syncAtprotoSubjectsIntoContainer(ctx, webId, 'blocks', blockIds, true);
+        await this.syncAtprotoLabelersIntoTrustSources(ctx, webId, mirror.labelerDids);
+      } finally {
+        this._atprotoMirrorLastRunByWebId.set(webId, Date.now());
+        this._atprotoMirrorInFlightByWebId.delete(webId);
+      }
+    },
+
     async ensure(ctx, webId, c) {
       const root = `${this.base(webId)}settings/`;
       await this.ensureOne(ctx, root, webId, 'Settings');
@@ -390,6 +2127,557 @@ module.exports = {
           throw error;
         }
       }
+    },
+
+    requireProvider(webId) {
+      if (!this.isProviderActor(webId)) {
+        throw new MoleculerError('Provider access is required', 403, 'PROVIDER_ACCESS_REQUIRED');
+      }
+    },
+
+    async loadProviderData(key) {
+      const filePath = path.join(this.settings.providerDataDir, `${key}.json`);
+      try {
+        const content = await fs.promises.readFile(filePath, 'utf8');
+        const parsed = JSON.parse(content);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    },
+
+    async saveProviderData(key, data) {
+      const dir = this.settings.providerDataDir;
+      await fs.promises.mkdir(dir, { recursive: true });
+      const filePath = path.join(dir, `${key}.json`);
+      await fs.promises.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
+    },
+
+    recordAuditEvent(actor, action, detail = {}) {
+      const max = this.settings.auditLogMaxEntries;
+      const entry = {
+        id: ulid(),
+        timestamp: new Date().toISOString(),
+        actor,
+        action,
+        ...detail
+      };
+      this._auditLog.push(entry);
+      if (this._auditLog.length > max) {
+        this._auditLog = this._auditLog.slice(-max);
+      }
+      this.saveProviderData('audit-log', this._auditLog).catch(err => {
+        this.logger.warn('[AuditLog] Failed to persist audit log:', err.message);
+      });
+    },
+
+    async mrfProxyRaw({ method, path: reqPath, permission }) {
+      if (!this.settings.mrfAdminToken) return null;
+
+      const url = `${this.settings.mrfAdminBaseUrl}${reqPath}`;
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${this.settings.mrfAdminToken}`,
+          'Content-Type': 'application/json',
+          'X-Provider-Permissions': permission
+        },
+        signal: AbortSignal.timeout(this.settings.mrfTimeoutMs)
+      });
+
+      if (!response.ok) return null;
+      const text = await response.text();
+      return text ? this.tryParseJson(text) : null;
+    },
+
+    encryptAtprotoSecret(secret) {
+      const iv = crypto.randomBytes(12);
+      const cipher = crypto.createCipheriv('aes-256-gcm', this._atprotoSyncEncryptionKey, iv);
+      const ciphertext = Buffer.concat([cipher.update(String(secret), 'utf8'), cipher.final()]);
+      const tag = cipher.getAuthTag();
+      return Buffer.concat([iv, tag, ciphertext]).toString('base64url');
+    },
+
+    decryptAtprotoSecret(encoded) {
+      const raw = Buffer.from(String(encoded || ''), 'base64url');
+      if (raw.length <= 28) throw new Error('invalid_encrypted_secret');
+      const iv = raw.subarray(0, 12);
+      const tag = raw.subarray(12, 28);
+      const ciphertext = raw.subarray(28);
+      const decipher = crypto.createDecipheriv('aes-256-gcm', this._atprotoSyncEncryptionKey, iv);
+      decipher.setAuthTag(tag);
+      return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
+    },
+
+    publicAtprotoSyncConfig(config) {
+      return {
+        enabled: Boolean(config?.enabled),
+        replace: Boolean(config?.replace),
+        intervalHours: this.clampInt(config?.intervalHours, DEFAULT_SYNC_INTERVAL_HOURS, MIN_SYNC_INTERVAL_HOURS, MAX_SYNC_INTERVAL_HOURS),
+        pdsUrl: config?.pdsUrl || null,
+        identifier: config?.identifier || null,
+        hasStoredSecret: Boolean(config?.encryptedSecret),
+        lastSyncAt: config?.lastSyncAt || null,
+        lastSyncError: config?.lastSyncError || null,
+        updatedAt: config?.updatedAt || null
+      };
+    },
+
+    async getAtprotoSyncConfigValue(ctx, webId) {
+      const preferences = await this.listByContainer(ctx, webId, 'preferences');
+      const pref = preferences.find(item => item?.category === ATPROTO_SYNC_PREF_CATEGORY);
+      const raw = pref && typeof pref?.value === 'object' && pref.value ? pref.value : {};
+
+      return {
+        resourceUri: pref?.['@id'] || null,
+        enabled: Boolean(raw.enabled),
+        replace: raw.replace === undefined ? false : Boolean(raw.replace),
+        intervalHours: this.clampInt(raw.intervalHours, DEFAULT_SYNC_INTERVAL_HOURS, MIN_SYNC_INTERVAL_HOURS, MAX_SYNC_INTERVAL_HOURS),
+        pdsUrl: typeof raw.pdsUrl === 'string' ? raw.pdsUrl : null,
+        identifier: typeof raw.identifier === 'string' ? raw.identifier : null,
+        encryptedSecret: typeof raw.encryptedSecret === 'string' ? raw.encryptedSecret : null,
+        lastSyncAt: typeof raw.lastSyncAt === 'string' ? raw.lastSyncAt : null,
+        lastSyncError: typeof raw.lastSyncError === 'string' ? raw.lastSyncError : null,
+        updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : null
+      };
+    },
+
+    async upsertAtprotoSyncConfig(ctx, webId, config) {
+      const existing = await this.getAtprotoSyncConfigValue(ctx, webId);
+      const value = {
+        enabled: Boolean(config.enabled),
+        replace: Boolean(config.replace),
+        intervalHours: this.clampInt(config.intervalHours, DEFAULT_SYNC_INTERVAL_HOURS, MIN_SYNC_INTERVAL_HOURS, MAX_SYNC_INTERVAL_HOURS),
+        pdsUrl: config.pdsUrl || null,
+        identifier: config.identifier || null,
+        encryptedSecret: config.encryptedSecret || null,
+        lastSyncAt: config.lastSyncAt || null,
+        lastSyncError: config.lastSyncError || null,
+        updatedAt: config.updatedAt || new Date().toISOString()
+      };
+
+      if (existing.resourceUri) {
+        await ctx.call('ldp.resource.put', {
+          resourceUri: existing.resourceUri,
+          resource: {
+            '@context': CONTEXT,
+            type: this.resourceTypeForContainer('preferences'),
+            category: ATPROTO_SYNC_PREF_CATEGORY,
+            value,
+            updatedAt: value.updatedAt,
+            createdAt: existing.updatedAt || value.updatedAt
+          },
+          contentType: JSON_LD,
+          webId
+        });
+        return existing.resourceUri;
+      }
+
+      return this.createSettingsResource(ctx, webId, 'preferences', {
+        category: ATPROTO_SYNC_PREF_CATEGORY,
+        value
+      });
+    },
+
+    async resolveAtprotoSyncCredentials(ctx, webId, input, binding) {
+      const isExternal = binding?.atprotoManaged === false || binding?.atprotoSource === 'external';
+      const explicitIdentifier = typeof input?.identifier === 'string' ? input.identifier.trim() : '';
+      const explicitPassword = typeof input?.password === 'string' ? input.password.trim() : '';
+      const explicitPdsUrl = typeof input?.pdsUrl === 'string' ? input.pdsUrl.trim() : '';
+
+      if (explicitIdentifier && explicitPassword) {
+        return {
+          mode: 'external-credentials',
+          identifier: explicitIdentifier,
+          password: explicitPassword,
+          pdsUrl: this.normalizeHttpUrlOrDefault(explicitPdsUrl || binding.atprotoPdsUrl, binding.atprotoPdsUrl)
+        };
+      }
+
+      if (!isExternal) {
+        return {
+          mode: 'managed-internal',
+          pdsUrl: this.normalizeHttpUrlOrDefault(explicitPdsUrl || binding.atprotoPdsUrl, binding.atprotoPdsUrl)
+        };
+      }
+
+      const config = await this.getAtprotoSyncConfigValue(ctx, webId);
+      if (!config.enabled || !config.identifier || !config.encryptedSecret) {
+        throw new MoleculerError(
+          'ATProto credentials are required. Provide identifier/password or configure stored sync credentials first.',
+          400,
+          'ATPROTO_SYNC_CREDENTIALS_REQUIRED'
+        );
+      }
+
+      return {
+        mode: 'external-credentials',
+        identifier: config.identifier,
+        password: this.decryptAtprotoSecret(config.encryptedSecret),
+        pdsUrl: this.normalizeHttpUrlOrDefault(explicitPdsUrl || config.pdsUrl || binding.atprotoPdsUrl, binding.atprotoPdsUrl)
+      };
+    },
+
+    async performConfiguredAtprotoSync(ctx, webId, { reason, force }) {
+      const config = await this.getAtprotoSyncConfigValue(ctx, webId);
+      const binding = await this.getAtprotoBindingForWebId(ctx, webId);
+      const isExternal = binding?.atprotoManaged === false || binding?.atprotoSource === 'external';
+      if (isExternal && !config.enabled && !force) {
+        return { skipped: true, reason: 'disabled' };
+      }
+
+      if (isExternal && (!config.identifier || !config.encryptedSecret)) {
+        return { skipped: true, reason: 'missing_credentials' };
+      }
+
+      const now = Date.now();
+      const intervalMs = this.clampInt(config.intervalHours, DEFAULT_SYNC_INTERVAL_HOURS, MIN_SYNC_INTERVAL_HOURS, MAX_SYNC_INTERVAL_HOURS) * 60 * 60 * 1000;
+      const lastSyncAtMs = config.lastSyncAt ? Date.parse(config.lastSyncAt) : 0;
+      if (!force && lastSyncAtMs > 0 && now - lastSyncAtMs < intervalMs) {
+        return {
+          skipped: true,
+          reason: 'not_due',
+          nextDueAt: new Date(lastSyncAtMs + intervalMs).toISOString()
+        };
+      }
+
+      try {
+        const syncInput = {
+          pdsUrl: config.pdsUrl || undefined,
+          replace: config.replace,
+          limit: 100,
+          maxPages: 10
+        };
+
+        if (isExternal) {
+          syncInput.identifier = config.identifier;
+          syncInput.password = this.decryptAtprotoSecret(config.encryptedSecret);
+        }
+
+        const result = await this.actions.syncAtprotoUserLists({
+          data: syncInput
+        }, {
+          parentCtx: ctx,
+          meta: { ...ctx.meta, webId }
+        });
+
+        if (!isExternal) {
+          const mirror = await this.fetchAtprotoModerationState(ctx, webId, binding).catch(() => null);
+          if (mirror) {
+            await this.syncAtprotoLabelersIntoTrustSources(ctx, webId, mirror.labelerDids);
+          }
+        }
+
+        await this.upsertAtprotoSyncConfig(ctx, webId, {
+          ...config,
+          lastSyncAt: new Date().toISOString(),
+          lastSyncError: null,
+          updatedAt: new Date().toISOString()
+        });
+
+        return {
+          skipped: false,
+          reason,
+          result: result?.data || null
+        };
+      } catch (error) {
+        await this.upsertAtprotoSyncConfig(ctx, webId, {
+          ...config,
+          lastSyncError: String(error?.message || 'sync_failed').slice(0, 500),
+          updatedAt: new Date().toISOString()
+        });
+
+        return {
+          skipped: false,
+          reason,
+          error: String(error?.message || 'sync_failed')
+        };
+      }
+    },
+
+    async runAtprotoAutoSyncSweep() {
+      if (this._atprotoAutoSyncInFlight) return;
+      this._atprotoAutoSyncInFlight = true;
+
+      try {
+        const accounts = await this.broker.call('auth.account.find').catch(() => []);
+        for (const account of accounts) {
+          const webId = account?.webId || account?.['@id'];
+          if (!webId) continue;
+          const fakeCtx = { meta: { webId }, call: (...args) => this.broker.call(...args) };
+          await this.performConfiguredAtprotoSync(fakeCtx, webId, { reason: 'scheduled', force: false }).catch(() => null);
+        }
+      } finally {
+        this._atprotoAutoSyncInFlight = false;
+      }
+    },
+
+    async ensureDefaultBlueskyTrustSource(ctx, webId) {
+      const existing = await this.listByContainer(ctx, webId, 'trust-sources', { seedProviderDefaults: false });
+      const alreadyPresent = existing.some(item => {
+        const sourceType = String(item?.sourceType || '').toLowerCase();
+        const source = String(item?.source || '').toLowerCase();
+        return sourceType === 'atproto-labeler' && (
+          source === this.settings.blueskyDefaultLabelerDid.toLowerCase() ||
+          source === this.settings.blueskyDefaultLabelerHandle.toLowerCase()
+        );
+      });
+
+      if (alreadyPresent) return;
+
+      let source = this.settings.blueskyDefaultLabelerDid;
+      try {
+        const resolved = await this.actions.resolveAtprotoHandle({ handle: this.settings.blueskyDefaultLabelerHandle }, { parentCtx: ctx, meta: ctx.meta });
+        if (resolved?.data?.did) source = resolved.data.did;
+      } catch {
+        // Fallback to configured DID when handle resolution is unavailable.
+      }
+
+      await this.createSettingsResource(ctx, webId, 'trust-sources', {
+        source,
+        sourceType: 'atproto-labeler',
+        enabled: true,
+        weight: 1,
+        scopes: ['label:content', 'label:actor', 'filter:content', 'filter:actor'],
+        name: this.settings.blueskyDefaultLabelerName,
+        description: 'Default Bluesky-managed moderation labeler for baseline safety and legal risk reduction.',
+        priority: 100,
+        schemaVersion: 1
+      });
+    },
+
+    decodeHtmlEntities(value) {
+      return String(value || '')
+        .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+        .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&nbsp;/g, ' ');
+    },
+
+    normalizeHtmlSnippet(value) {
+      return this.decodeHtmlEntities(
+        String(value || '')
+          .replace(/<!--(?:.|\n|\r)*?-->/g, '')
+          .replace(/<br\s*\/?>/gi, '\n')
+          .replace(/<\/p>/gi, '\n')
+          .replace(/<[^>]+>/g, ' ')
+      )
+        .replace(/\s+/g, ' ')
+        .trim();
+    },
+
+    catalogKeysForAtprotoLabeler(entry) {
+      const keys = new Set();
+      for (const candidate of [entry?.source, entry?.did, entry?.handle]) {
+        if (typeof candidate !== 'string') continue;
+        const normalized = candidate.trim().toLowerCase();
+        if (normalized) keys.add(normalized);
+      }
+      return [...keys];
+    },
+
+    parsePublicAtprotoLabelerDirectory(html) {
+      const defaultScopes = ['label:content', 'label:actor', 'filter:content', 'filter:actor'];
+      const pattern = /<div class="text-sm font-bold[^>]*">([\s\S]*?)<\/div><div class="bg-mauve-4[\s\S]*?<div class="text-xs text-gray-500">@(?:<!-- -->)?([\s\S]*?)<\/div>[\s\S]*?<a href="https:\/\/bsky\.app\/profile\/(did:[^"]+)" aria-label="View labeler"[\s\S]*?<\/a><\/div><\/div><p class="whitespace-pre-line break-words text-sm text-gray-500">([\s\S]*?)<\/p>/gi;
+
+      const seen = new Set();
+      const entries = [];
+      let match;
+
+      while ((match = pattern.exec(html)) !== null) {
+        const name = this.normalizeHtmlSnippet(match[1]);
+        const handle = this.normalizeHtmlSnippet(match[2]).replace(/^@+/, '');
+        const did = String(match[3] || '').trim();
+        const description = this.normalizeHtmlSnippet(match[4]);
+        const dedupeKey = `${did.toLowerCase()}|${handle.toLowerCase()}`;
+
+        if (!did || seen.has(dedupeKey)) continue;
+        seen.add(dedupeKey);
+
+        const isDefault =
+          did.toLowerCase() === this.settings.blueskyDefaultLabelerDid.toLowerCase() ||
+          handle.toLowerCase() === this.settings.blueskyDefaultLabelerHandle.toLowerCase();
+
+        entries.push({
+          resourceUri: null,
+          source: did,
+          sourceType: 'atproto-labeler',
+          name: name || handle || did,
+          description: description || null,
+          scopes: defaultScopes,
+          enabled: true,
+          installed: false,
+          recommended: isDefault,
+          immutable: false,
+          handle: handle || null,
+          did,
+          syncOrigin: null,
+          priority: isDefault ? 100 : 50,
+          weight: 1,
+          directorySource: 'bluesky-labelers.io',
+          directoryRank: entries.length + 1
+        });
+      }
+
+      return entries;
+    },
+
+    async fetchPublicAtprotoLabelerDirectory() {
+      const now = Date.now();
+      if (this._atprotoLabelerDirectoryCache.expiresAt > now) {
+        return this._atprotoLabelerDirectoryCache.entries;
+      }
+
+      try {
+        const response = await fetch(ATPROTO_LABELER_DIRECTORY_URL, {
+          headers: {
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+          },
+          signal: AbortSignal.timeout(7000)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Directory request failed (${response.status})`);
+        }
+
+        const html = await response.text();
+        const entries = this.parsePublicAtprotoLabelerDirectory(html);
+
+        this._atprotoLabelerDirectoryCache = {
+          expiresAt: now + ATPROTO_LABELER_DIRECTORY_CACHE_TTL_MS,
+          entries
+        };
+
+        return entries;
+      } catch (error) {
+        this.logger.warn(`[ATProto labelers] Failed to fetch public labeler directory: ${error.message}`);
+        return this._atprotoLabelerDirectoryCache.entries || [];
+      }
+    },
+
+    mergeAtprotoLabelerCatalogEntry(existing, incoming) {
+      return {
+        ...incoming,
+        ...existing,
+        name: existing?.name || incoming?.name || existing?.handle || incoming?.handle || existing?.did || incoming?.did,
+        description: existing?.description || incoming?.description || null,
+        scopes: Array.isArray(existing?.scopes) && existing.scopes.length > 0 ? existing.scopes : incoming?.scopes,
+        recommended: Boolean(existing?.recommended || incoming?.recommended),
+        immutable: Boolean(existing?.immutable || incoming?.immutable),
+        installed: Boolean(existing?.installed || incoming?.installed),
+        enabled: existing?.enabled !== undefined ? existing.enabled : incoming?.enabled !== false,
+        handle: existing?.handle || incoming?.handle || null,
+        did: existing?.did || incoming?.did || null,
+        resourceUri: existing?.resourceUri || incoming?.resourceUri || null,
+        syncOrigin: existing?.syncOrigin || incoming?.syncOrigin || null,
+        priority: existing?.priority ?? incoming?.priority,
+        weight: existing?.weight ?? incoming?.weight,
+        directorySource: existing?.directorySource || incoming?.directorySource || null,
+        directoryRank: existing?.directoryRank ?? incoming?.directoryRank
+      };
+    },
+
+    async buildAtprotoLabelerCatalog(ctx, webId) {
+      const trustSources = await this.listByContainer(ctx, webId, 'trust-sources', { seedProviderDefaults: false });
+      const defaultScopes = ['label:content', 'label:actor', 'filter:content', 'filter:actor'];
+
+      const entries = trustSources
+        .filter(item => String(item?.sourceType || '').toLowerCase() === 'atproto-labeler')
+        .map(item => {
+          const isDefault = this.isDefaultBlueskyTrustSource(item);
+          const source = String(item?.source || '').trim();
+
+          return {
+            resourceUri: item?.['@id'] || null,
+            source,
+            sourceType: 'atproto-labeler',
+            name: item?.name || source,
+            description: item?.description || null,
+            scopes: Array.isArray(item?.scopes) && item.scopes.length > 0 ? item.scopes : defaultScopes,
+            enabled: item?.enabled !== false,
+            installed: true,
+            recommended: isDefault,
+            immutable: Boolean(this.isProviderActor(webId) && isDefault),
+            handle: isDefault ? this.settings.blueskyDefaultLabelerHandle : null,
+            did: source.startsWith('did:') ? source : isDefault ? this.settings.blueskyDefaultLabelerDid : null,
+            syncOrigin: item?.syncOrigin || null,
+            priority: item?.priority,
+            weight: item?.weight
+          };
+        });
+
+      const byKey = new Map();
+      const indexEntry = entry => {
+        for (const key of this.catalogKeysForAtprotoLabeler(entry)) {
+          byKey.set(key, entry);
+        }
+      };
+
+      entries.forEach(indexEntry);
+
+      const hasDefault = entries.some(item => this.isDefaultBlueskyTrustSource(item));
+
+      if (!hasDefault && this.settings.blueskyDefaultLabelerEnabled) {
+        const defaultEntry = {
+          resourceUri: null,
+          source: this.settings.blueskyDefaultLabelerDid,
+          sourceType: 'atproto-labeler',
+          name: this.settings.blueskyDefaultLabelerName,
+          description: 'Default Bluesky-managed moderation labeler for baseline safety and legal risk reduction.',
+          scopes: defaultScopes,
+          enabled: true,
+          installed: false,
+          recommended: true,
+          immutable: false,
+          handle: this.settings.blueskyDefaultLabelerHandle,
+          did: this.settings.blueskyDefaultLabelerDid,
+          syncOrigin: null,
+          priority: 100,
+          weight: 1
+        };
+
+        entries.unshift(defaultEntry);
+        indexEntry(defaultEntry);
+      }
+
+      const publicEntries = await this.fetchPublicAtprotoLabelerDirectory();
+      for (const publicEntry of publicEntries) {
+        const existing = this.catalogKeysForAtprotoLabeler(publicEntry)
+          .map(key => byKey.get(key))
+          .find(Boolean);
+
+        if (existing) {
+          const merged = this.mergeAtprotoLabelerCatalogEntry(existing, publicEntry);
+          Object.assign(existing, merged);
+          indexEntry(existing);
+          continue;
+        }
+
+        entries.push(publicEntry);
+        indexEntry(publicEntry);
+      }
+
+      return entries.sort((left, right) => {
+        if (left.recommended !== right.recommended) return left.recommended ? -1 : 1;
+        if (left.installed !== right.installed) return left.installed ? -1 : 1;
+        if ((left.directoryRank ?? Number.MAX_SAFE_INTEGER) !== (right.directoryRank ?? Number.MAX_SAFE_INTEGER)) {
+          return (left.directoryRank ?? Number.MAX_SAFE_INTEGER) - (right.directoryRank ?? Number.MAX_SAFE_INTEGER);
+        }
+        return String(left.name || left.source).localeCompare(String(right.name || right.source));
+      });
+    },
+
+    isDefaultBlueskyTrustSource(resource) {
+      if (!resource || typeof resource !== 'object') return false;
+      const sourceType = String(resource?.sourceType || '').toLowerCase();
+      if (sourceType !== 'atproto-labeler') return false;
+      const source = String(resource?.source || '').toLowerCase();
+      return source === this.settings.blueskyDefaultLabelerDid.toLowerCase() ||
+        source === this.settings.blueskyDefaultLabelerHandle.toLowerCase();
     }
   }
 };

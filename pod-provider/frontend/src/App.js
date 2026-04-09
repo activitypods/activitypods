@@ -1,6 +1,6 @@
 import React from 'react';
 import { Admin, Resource, CustomRoutes, localStorageStore } from 'react-admin';
-import { BrowserRouter, Route } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route } from 'react-router-dom';
 import { QueryClient } from 'react-query';
 import { StyledEngineProvider } from '@mui/material/styles';
 
@@ -16,6 +16,8 @@ import HomePage from './pages/HomePage';
 import DataPage from './pages/DataPage/DataListPage';
 import DataResourcePage from './pages/DataPage/DataShowPage';
 import SettingsPage from './pages/SettingsPage/SettingsPage';
+import SettingsOwnerDashboardPage from './pages/SettingsPage/SettingsOwnerDashboardPage';
+import SettingsProviderDashboardPage from './pages/SettingsPage/SettingsProviderDashboardPage';
 import SettingsAtprotoLinkPage from './pages/SettingsPage/SettingsAtprotoLinkPage';
 import AdvancedSettingsPage from './pages/SettingsPage/AdvancedSettingsPage';
 import SettingsPasswordPage from './pages/SettingsPage/SettingsPasswordPage';
@@ -41,6 +43,12 @@ import PrivateProfilePage from './pages/SettingsPage/ProfilesPage/PrivateProfile
 import ModerationPage from './pages/SettingsPage/ModerationPage';
 import AppPermissionsPage from './pages/SettingsPage/AppPermissionsPage';
 import TrustSourcesPage from './pages/SettingsPage/TrustSourcesPage';
+import MrfControlPage from './pages/SettingsPage/MrfControlPage';
+import MrfTraceViewerPage from './pages/SettingsPage/MrfTraceViewerPage';
+import ProviderAnnouncementsPage from './pages/SettingsPage/ProviderAnnouncementsPage';
+import ProviderInvitationsPage from './pages/SettingsPage/ProviderInvitationsPage';
+import ProviderPodsPage from './pages/SettingsPage/ProviderPodsPage';
+import ProviderAuditLogPage from './pages/SettingsPage/ProviderAuditLogPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,6 +91,8 @@ const App = () => (
           </Route>
         </CustomRoutes>
         <CustomRoutes>
+          <Route path="/Profile" element={<Navigate to="/settings/profiles" replace />} />
+          <Route path="/profile" element={<Navigate to="/settings/profiles" replace />} />
           <Route path="/network">
             <Route index element={<NetworkPage />} />
             <Route path="request" element={<NetworkRequestPage />} />
@@ -95,6 +105,8 @@ const App = () => (
           </Route>
           <Route path="/settings">
             <Route index element={<SettingsPage />} />
+            <Route path="owner" element={<SettingsOwnerDashboardPage />} />
+            <Route path="provider" element={<SettingsProviderDashboardPage />} />
             <Route path="profiles">
               <Route index element={<SettingsProfilesPage />} />
               <Route path="public" element={<PublicProfilePage />} />
@@ -110,6 +122,15 @@ const App = () => (
             <Route path="moderation" element={<ModerationPage />} />
             <Route path="apps" element={<AppPermissionsPage />} />
             <Route path="trust-sources" element={<TrustSourcesPage />} />
+            <Route path="mrf" element={<MrfControlPage />} />
+            <Route path="mrf/:moduleId" element={<MrfControlPage />} />
+            <Route path="mrf/traces" element={<MrfTraceViewerPage />} />
+            <Route path="mrf/traces/:traceId" element={<MrfTraceViewerPage />} />
+            <Route path="provider/announcements" element={<ProviderAnnouncementsPage />} />
+            <Route path="provider/invitations" element={<ProviderInvitationsPage />} />
+            <Route path="provider/pods" element={<ProviderPodsPage />} />
+            <Route path="provider/audit-log" element={<ProviderAuditLogPage />} />
+            <Route path="provider/moderation" element={<MrfControlPage />} />
           </Route>
           <Route path="/group/:groupId">
             <Route path="settings">
@@ -119,6 +140,7 @@ const App = () => (
               <Route path="delete" element={<SettingsDeletePage />} />
             </Route>
           </Route>
+          <Route path="*" element={<Navigate to="/network" replace />} />
         </CustomRoutes>
       </Admin>
     </BrowserRouter>

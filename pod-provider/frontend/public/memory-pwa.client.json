@@ -1,0 +1,12 @@
+{
+  "client_id": "http://localhost:3901/memory-pwa.client.json",
+  "client_name": "ActivityPods Local Bluesky Link",
+  "client_uri": "http://localhost:3901",
+  "application_type": "web",
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "scope": "atproto",
+  "token_endpoint_auth_method": "none",
+  "dpop_bound_access_tokens": true,
+  "redirect_uris": ["http://localhost:3000/api/accounts/link-atproto/oauth/callback"]
+}

@@ -114,7 +114,8 @@ module.exports = {
     verifyDelegatedIdentity: {
       params: {
         pdsUrl: 'string|min:1',
-        accessToken: 'string|min:20',
+        accessToken: { type: 'string', min: 20, optional: true },
+        subjectDid: { type: 'string', optional: true },
         did: { type: 'string', optional: true },
         handle: { type: 'string', optional: true }
       },
@@ -122,12 +123,17 @@ module.exports = {
         const claimedDid = ctx.params.did ? this.normalizeDid(ctx.params.did) : null;
         const claimedHandle = ctx.params.handle ? this.normalizeHandle(ctx.params.handle) : null;
         const pdsUrl = this.normalizePdsUrl(ctx.params.pdsUrl);
-        const accessToken = String(ctx.params.accessToken || '').trim();
+        const subjectDid = ctx.params.subjectDid ? this.normalizeDid(ctx.params.subjectDid) : null;
 
-        const session = await this.getSessionFromAccessToken({
-          pdsUrl,
-          accessToken
-        });
+        const session = subjectDid
+          ? {
+              did: subjectDid,
+              handle: claimedHandle || null
+            }
+          : await this.getSessionFromAccessToken({
+              pdsUrl,
+              accessToken: String(ctx.params.accessToken || '').trim()
+            });
 
         return this.buildVerifiedIdentityFromSession({
           session,
@@ -304,7 +310,15 @@ module.exports = {
 
     async buildVerifiedIdentityFromSession({ session, pdsUrl, claimedDid, claimedHandle }) {
       const did = this.normalizeDid(session.did);
-      const handle = claimedHandle || this.normalizeHandle(session.handle);
+      let didDocument;
+      let resolvedHandle = claimedHandle || (session.handle ? this.normalizeHandle(session.handle) : null);
+
+      if (!resolvedHandle) {
+        didDocument = await this.resolveDidDocument(did);
+        resolvedHandle = this.extractHandleFromDidDocument({ didDocument, did });
+      }
+
+      const handle = resolvedHandle;
 
       if (claimedDid && claimedDid !== did) {
         throw new MoleculerError(
@@ -331,7 +345,7 @@ module.exports = {
         );
       }
 
-      const didDocument = await this.resolveDidDocument(did);
+      didDocument = didDocument || (await this.resolveDidDocument(did));
       this.assertDidDocumentClaimsHandle({ didDocument, did, handle });
       const signingKey = this.extractAtprotoSigningKey({ didDocument, did });
       const didDocumentPdsUrl = this.extractPdsEndpoint({ didDocument, did });
@@ -356,6 +370,21 @@ module.exports = {
           handle: session.handle ? this.normalizeHandle(session.handle) : handle
         }
       };
+    },
+
+    extractHandleFromDidDocument({ didDocument, did }) {
+      const alsoKnownAs = Array.isArray(didDocument?.alsoKnownAs) ? didDocument.alsoKnownAs : [];
+      const handleUri = alsoKnownAs.find(value => typeof value === 'string' && value.startsWith('at://'));
+
+      if (!handleUri) {
+        throw new MoleculerError(
+          `Resolved DID document for ${did} does not advertise an ATProto handle`,
+          400,
+          'ATPROTO_HANDLE_NOT_CLAIMED'
+        );
+      }
+
+      return this.normalizeHandle(handleUri.slice('at://'.length));
     },
 
     async resolveHandleToDid(handle) {

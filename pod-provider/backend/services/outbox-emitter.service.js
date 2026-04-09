@@ -12,6 +12,17 @@
 "use strict";
 
 const { ulid } = require("ulid");
+const { retryWithBackoff } = require("../utils/backoff");
+
+const {
+  getSearchableBy,
+  isSearchableBy,
+  AS_PUBLIC,
+} = require('../utils/search-consent');
+
+const {
+  extractHashtagsFromText,
+} = require('../utils/hashtags');
 
 module.exports = {
   name: "outbox-emitter",
@@ -74,6 +85,8 @@ module.exports = {
             isPublicIndexable: this.isPublicIndexable(activity),
             isDeleteOrTombstone: this.isDeleteOrTombstone(activity),
             visibility: this.determineVisibility(activity),
+            searchConsent: this.buildSearchConsent(activity),
+            hashtags: this.extractMetadataHashtags(activity),
           },
         };
 
@@ -113,6 +126,8 @@ module.exports = {
             isPublicIndexable: this.isPublicIndexable(activity),
             isDeleteOrTombstone: this.isDeleteOrTombstone(activity),
             visibility: this.determineVisibility(activity),
+            searchConsent: this.buildSearchConsent(activity),
+            hashtags: this.extractMetadataHashtags(activity),
           },
         };
 
@@ -136,29 +151,31 @@ module.exports = {
         // Get recipients from to/cc/bto/bcc
         const recipients = this.extractRecipients(activity);
         
-        // Resolve each recipient to inbox URLs
-        const targets = [];
-        
-        for (const recipientUri of recipients) {
+        // Resolve recipients to inbox URLs in parallel for performance
+        const targetResults = await Promise.all(recipients.map(async (recipientUri) => {
           try {
             // Skip local actors (handled by internal federation)
             const isLocal = await ctx.call("activitypub.actor.isLocal", { actorUri: recipientUri });
-            if (isLocal) continue;
+            if (isLocal) return null;
             
             // Resolve remote actor's inbox
             const actorDoc = await ctx.call("activitypub.actor.get", { actorUri: recipientUri });
             if (actorDoc) {
               const host = new URL(recipientUri).hostname;
-              targets.push({
+              return {
                 targetDomain: host,
                 inboxUrl: actorDoc.inbox,
                 sharedInboxUrl: actorDoc.endpoints?.sharedInbox || actorDoc.inbox,
-              });
+              };
             }
           } catch (err) {
             this.logger.warn("Failed to resolve recipient", { recipientUri, error: err.message });
           }
-        }
+          return null;
+        }));
+        
+        // Filter out nulls (local or failed resolutions)
+        const targets = targetResults.filter(t => t !== null);
         
         // Deduplicate by sharedInbox
         const deduped = this.deduplicateBySharedInbox(targets);
@@ -182,10 +199,11 @@ module.exports = {
         activityId: event.activityId,
         activity: event.activity,
         remoteTargets: event.deliveryTargets,  // sidecar validates body.remoteTargets
+        meta: event.meta,
       };
 
-      for (let attempt = 1; attempt <= this.settings.webhookRetries; attempt++) {
-        try {
+      try {
+        await retryWithBackoff(async () => {
           const response = await fetch(url, {
             method: "POST",
             headers: {
@@ -198,37 +216,29 @@ module.exports = {
             signal: AbortSignal.timeout(this.settings.webhookTimeoutMs),
           });
 
-          if (response.ok) {
-            this.logger.debug("Delivered event to sidecar", {
-              eventId: event.eventId,
-              activityId: event.activityId,
-            });
-            return;
+          if (!response.ok) {
+            const error = new Error(`Sidecar webhook returned ${response.status}`);
+            error.retryable = response.status === 429 || response.status >= 500;
+            throw error;
           }
 
-          this.logger.warn("Sidecar webhook returned error", {
+          this.logger.debug("Delivered event to sidecar", {
             eventId: event.eventId,
-            status: response.status,
-            attempt,
+            activityId: event.activityId,
           });
-        } catch (err) {
-          this.logger.warn("Sidecar webhook delivery failed", {
-            eventId: event.eventId,
-            error: err.message,
-            attempt,
-          });
-        }
-
-        // Backoff before retry
-        if (attempt < this.settings.webhookRetries) {
-          await this.sleep(1000 * attempt);
-        }
+        }, {
+          maxRetries: Math.max(0, this.settings.webhookRetries - 1),
+          baseDelayMs: 250,
+          maxDelayMs: 5000,
+          retryIf: (err) => err.retryable !== false
+        });
+      } catch (err) {
+        this.logger.error("Failed to deliver event to sidecar after retries", {
+          eventId: event.eventId,
+          activityId: event.activityId,
+          error: err.message,
+        });
       }
-
-      this.logger.error("Failed to deliver event to sidecar after retries", {
-        eventId: event.eventId,
-        activityId: event.activityId,
-      });
     },
 
     /**
@@ -245,17 +255,13 @@ module.exports = {
      * Check if activity is publicly indexable.
      */
     isPublicIndexable(activity) {
-      const publicAddress = "https://www.w3.org/ns/activitystreams#Public";
-      const recipients = [
-        ...(Array.isArray(activity.to) ? activity.to : [activity.to]),
-        ...(Array.isArray(activity.cc) ? activity.cc : [activity.cc]),
-      ].filter(Boolean);
-
-      return recipients.some(r => 
-        r === publicAddress || 
-        r === "as:Public" || 
-        r === "Public"
-      );
+      // Use FEP-268d search consent to determine public indexability.
+      // Falls back to audience-based check when no searchableBy is present.
+      const obj =
+        activity.object && typeof activity.object === 'object'
+          ? activity.object
+          : activity;
+      return isSearchableBy(obj, AS_PUBLIC);
     },
 
     /**
@@ -285,6 +291,40 @@ module.exports = {
         return "followers";
       }
       return "direct";
+    },
+
+    /**
+     * Build a search consent descriptor for the activity's inner object.
+     * Included in the event meta so the sidecar can skip indexing without
+     * re-parsing the object.
+     *
+     * Shape: { raw: string[], isPublic: boolean, explicitlySet: boolean }
+     */
+    buildSearchConsent(activity) {
+      const obj =
+        activity.object && typeof activity.object === 'object'
+          ? activity.object
+          : activity;
+      const raw = getSearchableBy(obj);
+      return {
+        raw,
+        isPublic: isSearchableBy(obj, AS_PUBLIC),
+        explicitlySet: raw.length > 0,
+      };
+    },
+
+    /**
+     * Extract hashtags for dual-protocol metadata (Facets).
+     * This allows the Firehose to serve hashtags as structured data
+     * without requiring consumers to parse the HTML content.
+     */
+    extractMetadataHashtags(activity) {
+      const obj =
+        activity.object && typeof activity.object === 'object'
+          ? activity.object
+          : activity;
+      
+      return extractHashtagsFromText(obj.content || "");
     },
 
     /**
@@ -325,10 +365,6 @@ module.exports = {
       }
 
       return [...seen.values()];
-    },
-
-    sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
     },
   },
 };

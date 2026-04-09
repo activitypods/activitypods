@@ -4,15 +4,13 @@ import makeStyles from '@mui/styles/makeStyles';
 import { Theme } from '@mui/material/styles';
 
 const useStyles = makeStyles((theme: Theme) => ({
-  '@global': {
-    body: {
-      backgroundColor: theme.palette.primary.main
-    }
-  },
   card: {
     minWidth: 300,
     maxWidth: 500,
-    margin: '1em'
+    margin: '1em',
+    borderRadius: 20,
+    border: '1px solid rgba(0,0,0,0.08)',
+    boxShadow: '0 12px 34px rgba(12, 20, 33, 0.14)'
   },
   icon: {
     marginTop: 5,
@@ -49,9 +47,16 @@ const SimpleBox = ({
       alignItems="center"
       justifyContent="center"
       minHeight="100vh"
-      sx={{ pb: { xs: 0, sm: 10 } }}
+      sx={{
+        pb: { xs: 0, sm: 10 },
+        background:
+          'radial-gradient(circle at 14% 10%, rgba(91,87,229,0.12), transparent 45%), linear-gradient(180deg, #f5f7fb 0%, #eef2f9 100%)'
+      }}
     >
-      <Card className={classes.card} sx={{ padding: 2, display: 'flex', flexDirection: 'column', rowGap: 1 }}>
+      <Card
+        className={classes.card}
+        sx={{ padding: 2, display: 'flex', flexDirection: 'column', rowGap: 1, backgroundColor: '#fff' }}
+      >
         <Box pb={text ? 2 : 0} display="flex" justifyContent="start">
           {icon && React.cloneElement(icon, { fontSize: 'large', className: classes.icon })}
           <Typography variant="h4" className={classes.title}>

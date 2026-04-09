@@ -206,7 +206,15 @@ async function evaluateActivity(ctx, blockThreshold) {
     m => normalizeNumber(m.weight) >= blockThreshold && m.matchedScopes.some(s => FILTER_SCOPES.has(s))
   );
 
-  return { activityId, actorUri, activityType, recipientWebId: webId, matches, enabledCount: enabledSources.length, shouldBlock };
+  return {
+    activityId,
+    actorUri,
+    activityType,
+    recipientWebId: webId,
+    matches,
+    enabledCount: enabledSources.length,
+    shouldBlock
+  };
 }
 
 // --- Middleware --------------------------------------------------------
@@ -279,4 +287,3 @@ const TrustEvaluatorMiddleware = ({
 });
 
 module.exports = TrustEvaluatorMiddleware;
-

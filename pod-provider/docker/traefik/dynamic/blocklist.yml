@@ -1,0 +1,15 @@
+http:
+  middlewares:
+    federation-blocklist:
+      forwardAuth:
+        address: "http://domain-guard:3000/"
+        trustForwardHeader: true
+        # Pass Signature and other AP-relevant headers to the guard service
+        authRequestHeaders:
+          - "Signature"
+          - "Authorization"
+          - "Origin"
+          - "Referer"
+          - "X-Forwarded-For"
+          - "X-Forwarded-Method"
+          - "X-Forwarded-Uri"

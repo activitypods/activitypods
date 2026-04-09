@@ -232,11 +232,7 @@ const AppPermissionsPage = () => {
                   <FormControlLabel
                     key={scope}
                     control={
-                      <Checkbox
-                        size="small"
-                        checked={selectedScopes.has(scope)}
-                        onChange={() => toggleScope(scope)}
-                      />
+                      <Checkbox size="small" checked={selectedScopes.has(scope)} onChange={() => toggleScope(scope)} />
                     }
                     label={
                       <Box>

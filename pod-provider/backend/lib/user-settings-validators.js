@@ -3,7 +3,7 @@
 const CURRENT_SCHEMA_VERSION = 1;
 
 const KNOWN_CONSENT_SCOPES = new Set(['read:moderation', 'write:moderation', 'app:overrides', 'read:trust']);
-const TRUST_SOURCE_TYPES = new Set(['relay', 'curator', 'list', 'algorithmic']);
+const TRUST_SOURCE_TYPES = new Set(['relay', 'curator', 'list', 'algorithmic', 'atproto-labeler', 'domain-blocklist']);
 const TRUST_SOURCE_SCOPES = new Set([
   'filter:content',
   'filter:actor',
@@ -14,6 +14,8 @@ const TRUST_SOURCE_SCOPES = new Set([
 ]);
 
 const FILTER_ACTIONS = new Set(['hide', 'warn', 'filter']);
+const FILTER_MATCH_TYPES = new Set(['word', 'phrase']);
+const FILTER_DURATIONS = new Set(['indefinite', '12h', '1d', '1w', '1m']);
 
 /**
  * Returns an error message string if validation fails, or null if valid.
@@ -41,6 +43,26 @@ function normalizeStringArray(values) {
   return [...new Set(list.map(value => normalizeString(value)).filter(Boolean))];
 }
 
+function isHttpUrl(value) {
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol);
+  } catch {
+    return false;
+  }
+}
+
+function isAtprotoDid(value) {
+  return typeof value === 'string' && /^did:[a-z0-9]+:[A-Za-z0-9._:%-]+$/i.test(value.trim());
+}
+
+function isDomainPattern(value) {
+  return (
+    typeof value === 'string' &&
+    /^(\*\.)?(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(value.trim())
+  );
+}
+
 function validateSchemaVersion(data) {
   if (!Number.isInteger(data.schemaVersion)) {
     return 'schemaVersion must be an integer';
@@ -55,8 +77,33 @@ function prepareFilter(data) {
   const prepared = withSchemaVersion({
     ...(data || {}),
     pattern: normalizeString(data?.pattern),
-    action: normalizeString(data?.action)
+    action: normalizeString(data?.action),
+    matchType: normalizeString(data?.matchType),
+    includeHashtagVariants: data?.includeHashtagVariants,
+    duration: normalizeString(data?.duration),
+    expiresAt: normalizeString(data?.expiresAt),
+    terms: normalizeStringArray(data?.terms)
   });
+
+  if (!prepared.pattern && prepared.terms.length > 0) {
+    prepared.pattern = prepared.terms[0];
+  }
+
+  if (prepared.terms.length === 0 && prepared.pattern) {
+    prepared.terms = [prepared.pattern];
+  }
+
+  if (prepared.includeHashtagVariants === undefined) {
+    prepared.includeHashtagVariants = true;
+  }
+
+  if (!prepared.matchType) {
+    prepared.matchType = 'word';
+  }
+
+  if (!prepared.duration) {
+    prepared.duration = 'indefinite';
+  }
 
   return { data: prepared, error: validateFilter(prepared) };
 }
@@ -112,17 +159,35 @@ function prepareTrustSource(data) {
 
 function validateFilter(data) {
   if (!data) {
-    return 'filter requires a non-empty pattern';
+    return 'filter requires a non-empty pattern or terms';
   }
   const schemaError = validateSchemaVersion(withSchemaVersion(data));
   if (schemaError) {
     return schemaError;
   }
-  if (typeof data.pattern !== 'string' || data.pattern.trim().length === 0) {
-    return 'filter requires a non-empty pattern';
+  const hasPattern = typeof data.pattern === 'string' && data.pattern.trim().length > 0;
+  const hasTerms = Array.isArray(data.terms) && data.terms.length > 0;
+
+  if (!hasPattern && !hasTerms) {
+    return 'filter requires a non-empty pattern or terms';
   }
   if (data.action !== undefined && !FILTER_ACTIONS.has(data.action)) {
     return `filter action must be one of: ${[...FILTER_ACTIONS].join(', ')}`;
+  }
+  if (data.matchType !== undefined && !FILTER_MATCH_TYPES.has(data.matchType)) {
+    return `filter matchType must be one of: ${[...FILTER_MATCH_TYPES].join(', ')}`;
+  }
+  if (data.includeHashtagVariants !== undefined && typeof data.includeHashtagVariants !== 'boolean') {
+    return 'filter includeHashtagVariants must be boolean';
+  }
+  if (data.duration !== undefined && !FILTER_DURATIONS.has(data.duration)) {
+    return `filter duration must be one of: ${[...FILTER_DURATIONS].join(', ')}`;
+  }
+  if (data.expiresAt !== undefined) {
+    const expiresAt = Date.parse(data.expiresAt);
+    if (Number.isNaN(expiresAt)) {
+      return 'filter expiresAt must be an ISO date string';
+    }
   }
   return null;
 }
@@ -195,16 +260,19 @@ function validateTrustSource(data) {
   if (typeof data.source !== 'string' || data.source.trim().length === 0) {
     return 'trust source requires a non-empty source';
   }
-  try {
-    const url = new URL(data.source);
-    if (!['http:', 'https:'].includes(url.protocol)) {
-      return 'trust source source must be an http(s) URI';
-    }
-  } catch {
-    return 'trust source source must be a valid URI';
-  }
   if (!TRUST_SOURCE_TYPES.has(data.sourceType)) {
     return `trust source sourceType must be one of: ${[...TRUST_SOURCE_TYPES].join(', ')}`;
+  }
+  if (data.sourceType === 'atproto-labeler') {
+    if (!isAtprotoDid(data.source) && !isHttpUrl(data.source)) {
+      return 'ATProto labeler sources must be a DID or an http(s) declaration URL';
+    }
+  } else if (data.sourceType === 'domain-blocklist') {
+    if (!isDomainPattern(data.source) && !isHttpUrl(data.source)) {
+      return 'domain blocklist sources must be a domain, wildcard domain, or http(s) URL';
+    }
+  } else if (!isHttpUrl(data.source)) {
+    return 'trust source source must be an http(s) URI';
   }
   if (typeof data.enabled !== 'boolean') {
     return 'trust source enabled must be boolean';
@@ -279,6 +347,8 @@ module.exports = {
   prepareForContainer,
   KNOWN_CONSENT_SCOPES,
   FILTER_ACTIONS,
+  FILTER_MATCH_TYPES,
+  FILTER_DURATIONS,
   CURRENT_SCHEMA_VERSION,
   TRUST_SOURCE_TYPES,
   TRUST_SOURCE_SCOPES

@@ -18,16 +18,24 @@
 
 const { checkUsername } = require('./username-checker');
 
-const MAX_BASE_LEN    = 16; // keep base short so suffixes fit within 30 chars
+const MAX_BASE_LEN = 16; // keep base short so suffixes fit within 30 chars
 const MAX_SUGGESTIONS = 5;
-const CANDIDATE_POOL  = 40; // how many candidates to try before giving up
+const CANDIDATE_POOL = 40; // how many candidates to try before giving up
 
 const NEUTRAL_SUFFIXES = ['hub', 'hq', 'pod', 'net', 'io', 'spot', 'node', 'desk'];
 
 // Generic fallback bases — single-word English nouns unlikely to be blocked
 const FALLBACK_BASES = [
-  'explorer', 'navigator', 'pioneer', 'voyager', 'builder',
-  'creator', 'maker', 'weaver', 'anchor', 'harbor'
+  'explorer',
+  'navigator',
+  'pioneer',
+  'voyager',
+  'builder',
+  'creator',
+  'maker',
+  'weaver',
+  'anchor',
+  'harbor'
 ];
 
 /**

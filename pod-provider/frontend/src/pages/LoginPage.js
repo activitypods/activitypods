@@ -2,7 +2,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import urlJoin from 'url-join';
 import { useDataProvider, useLocaleState, useTranslate, useLogin, useNotify } from 'react-admin';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { Box, Button, Chip, TextField, Typography, Paper, CircularProgress, InputAdornment, IconButton } from '@mui/material';
+import {
+  Box,
+  Button,
+  Chip,
+  TextField,
+  Typography,
+  Paper,
+  CircularProgress,
+  InputAdornment,
+  IconButton
+} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
@@ -11,7 +21,9 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Header from '../common/Header';
 
-const BlueskyGlyph = () => <Box component="img" src="/bluesky-logo.svg" alt="" aria-hidden sx={{ width: 16, height: 16 }} />;
+const BlueskyGlyph = () => (
+  <Box component="img" src="/bluesky-logo.svg" alt="" aria-hidden sx={{ width: 16, height: 16 }} />
+);
 
 // ─── Shared layout wrapper ────────────────────────────────────────────────────
 
@@ -161,7 +173,11 @@ const SignUpForm = ({ onSignup, interactionId }) => {
     if (!u) {
       setUsernameStatus('idle');
       setSuggestions([]);
-      setErrors(prev => { const e = { ...prev }; delete e.username; return e; });
+      setErrors(prev => {
+        const e = { ...prev };
+        delete e.username;
+        return e;
+      });
       return;
     }
 
@@ -174,7 +190,11 @@ const SignUpForm = ({ onSignup, interactionId }) => {
     }
 
     // Shape passes — clear local error and start debounced network check
-    setErrors(prev => { const e = { ...prev }; delete e.username; return e; });
+    setErrors(prev => {
+      const e = { ...prev };
+      delete e.username;
+      return e;
+    });
     setUsernameStatus('checking');
     setSuggestions([]);
 
@@ -230,7 +250,10 @@ const SignUpForm = ({ onSignup, interactionId }) => {
   const handleSubmit = async e => {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
 
     setLoading(true);
     setErrors({});
@@ -289,12 +312,8 @@ const SignUpForm = ({ onSignup, interactionId }) => {
           boxShadow: '0 4px 32px rgba(0,0,0,0.08)'
         }}
       >
-        <Typography sx={{ fontWeight: 700, fontSize: 26, color: '#1a1a1a', mb: 0.5 }}>
-          Sign-Up
-        </Typography>
-        <Typography sx={{ fontSize: 13, color: '#888', mb: 3 }}>
-          Create your personal space.
-        </Typography>
+        <Typography sx={{ fontWeight: 700, fontSize: 26, color: '#1a1a1a', mb: 0.5 }}>Sign-Up</Typography>
+        <Typography sx={{ fontSize: 13, color: '#888', mb: 3 }}>Create your personal space.</Typography>
 
         <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#333', mb: 0.75 }}>Username</Typography>
         <TextField
@@ -313,18 +332,10 @@ const SignUpForm = ({ onSignup, interactionId }) => {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end" sx={{ mr: 0.25 }}>
-                {usernameStatus === 'checking' && (
-                  <CircularProgress size={14} sx={{ color: '#aaa' }} />
-                )}
-                {usernameStatus === 'available' && (
-                  <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#4CAF50' }} />
-                )}
-                {usernameStatus === 'taken' && (
-                  <CancelOutlinedIcon sx={{ fontSize: 18, color: '#f44336' }} />
-                )}
-                {usernameStatus === 'blocked' && (
-                  <BlockOutlinedIcon sx={{ fontSize: 18, color: '#FF9800' }} />
-                )}
+                {usernameStatus === 'checking' && <CircularProgress size={14} sx={{ color: '#aaa' }} />}
+                {usernameStatus === 'available' && <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#4CAF50' }} />}
+                {usernameStatus === 'taken' && <CancelOutlinedIcon sx={{ fontSize: 18, color: '#f44336' }} />}
+                {usernameStatus === 'blocked' && <BlockOutlinedIcon sx={{ fontSize: 18, color: '#FF9800' }} />}
               </InputAdornment>
             )
           }}
@@ -332,9 +343,7 @@ const SignUpForm = ({ onSignup, interactionId }) => {
 
         {suggestions.length > 0 && (
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 11, color: '#888', mb: 0.75 }}>
-              Try one of these:
-            </Typography>
+            <Typography sx={{ fontSize: 11, color: '#888', mb: 0.75 }}>Try one of these:</Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
               {suggestions.map(s => (
                 <Chip
@@ -468,7 +477,10 @@ const LogInForm = ({ onLogin, interactionId, redirectTarget }) => {
 
   const handleSubmit = async (e, options = {}) => {
     e.preventDefault();
-    if (!identifier || !password) { setPasswordError('Please fill in all fields'); return; }
+    if (!identifier || !password) {
+      setPasswordError('Please fill in all fields');
+      return;
+    }
 
     setLoading(true);
     setPasswordError('');
@@ -506,12 +518,8 @@ const LogInForm = ({ onLogin, interactionId, redirectTarget }) => {
           boxShadow: '0 4px 32px rgba(0,0,0,0.08)'
         }}
       >
-        <Typography sx={{ fontWeight: 700, fontSize: 26, color: '#1a1a1a', mb: 0.5 }}>
-          Log-In
-        </Typography>
-        <Typography sx={{ fontSize: 13, color: '#888', mb: 3 }}>
-          Create your personal space.
-        </Typography>
+        <Typography sx={{ fontWeight: 700, fontSize: 26, color: '#1a1a1a', mb: 0.5 }}>Log-In</Typography>
+        <Typography sx={{ fontSize: 13, color: '#888', mb: 3 }}>Create your personal space.</Typography>
 
         <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#333', mb: 0.75 }}>
           Username or E-Mail Address
@@ -622,7 +630,8 @@ const LogInForm = ({ onLogin, interactionId, redirectTarget }) => {
         </Button>
 
         <Typography sx={{ fontSize: 12, color: '#6b7280', textAlign: 'center', mb: 2, px: 2 }}>
-          Use your MyPod.local username and password on this page. You will enter your Bluesky credentials on the next screen.
+          Use your MyPod.local username and password on this page. You will enter your Bluesky credentials on the next
+          screen.
         </Typography>
 
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
@@ -647,9 +656,11 @@ const LoginPage = () => {
   const isSignup = searchParams.get('signup') !== null;
   const redirectTarget = searchParams.get('redirect') || '/network';
 
-  return isSignup
-    ? <SignUpForm interactionId={interactionId} />
-    : <LogInForm interactionId={interactionId} redirectTarget={redirectTarget} />;
+  return isSignup ? (
+    <SignUpForm interactionId={interactionId} />
+  ) : (
+    <LogInForm interactionId={interactionId} redirectTarget={redirectTarget} />
+  );
 };
 
 export default LoginPage;

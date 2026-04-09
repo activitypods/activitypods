@@ -2,7 +2,7 @@
 
 **Status**: ✅ Implementation Complete  
 **Version**: 1.0  
-**Last Updated**: 2025  
+**Last Updated**: 2025
 
 ## Quick Start
 
@@ -19,25 +19,27 @@ FEP-4adb support has been fully implemented in ActivityPods. This enables the fe
 ## Implementation Files
 
 ### Service Files (4 total)
+
 Located in `/pod-provider/backend/services/core/`:
 
-| File | Responsibility | Lines |
-|------|-----------------|-------|
-| `fep-4adb-dereferencer.js` | Core identifier resolution logic | 406 |
-| `fep-4adb-webfinger.js` | Webfinger integration | 134 |
-| `fep-4adb-processor.js` | Incoming object processing | 360 |
-| `fep-4adb-outbound.js` | Outbound activity support | 340 |
+| File                       | Responsibility                   | Lines |
+| -------------------------- | -------------------------------- | ----- |
+| `fep-4adb-dereferencer.js` | Core identifier resolution logic | 406   |
+| `fep-4adb-webfinger.js`    | Webfinger integration            | 134   |
+| `fep-4adb-processor.js`    | Incoming object processing       | 360   |
+| `fep-4adb-outbound.js`     | Outbound activity support        | 340   |
 
 All files validated for correct JavaScript syntax.
 
 ### Documentation Files
+
 Located in `/`:
 
-| File | Purpose |
-|------|---------|
-| `FEP-4ADB-IMPLEMENTATION.md` | Complete technical guide (350+ lines) |
-| `FEP-4ADB-INTEGRATION-CHECKLIST.md` | Step-by-step integration guide |
-| `FEP-4ADB.md` | This file |
+| File                                | Purpose                               |
+| ----------------------------------- | ------------------------------------- |
+| `FEP-4ADB-IMPLEMENTATION.md`        | Complete technical guide (350+ lines) |
+| `FEP-4ADB-INTEGRATION-CHECKLIST.md` | Step-by-step integration guide        |
+| `FEP-4ADB.md`                       | This file                             |
 
 ## Architecture
 
@@ -76,17 +78,18 @@ Located in `/`:
 
 ## Supported Identifier Schemes
 
-| Scheme | Example | Resolution | Use Case |
-|--------|---------|-----------|----------|
-| `acct:` | `acct:alice@example.org` | Webfinger lookup | Mastodon compatibility |
-| `did:` | `did:web:alice.example.com` | DID resolution | Decentralized identity |
-| `mailto:` | `mailto:alice@example.org` | Email-based identity | Contact verification |
-| `http://` | `http://example.org/alice` | Direct URL | Explicit HTTP |
-| `https://` | `https://example.org/alice` | Direct URL (secure) | HTTP(S) actor URL |
+| Scheme     | Example                     | Resolution           | Use Case               |
+| ---------- | --------------------------- | -------------------- | ---------------------- |
+| `acct:`    | `acct:alice@example.org`    | Webfinger lookup     | Mastodon compatibility |
+| `did:`     | `did:web:alice.example.com` | DID resolution       | Decentralized identity |
+| `mailto:`  | `mailto:alice@example.org`  | Email-based identity | Contact verification   |
+| `http://`  | `http://example.org/alice`  | Direct URL           | Explicit HTTP          |
+| `https://` | `https://example.org/alice` | Direct URL (secure)  | HTTP(S) actor URL      |
 
 ## Key Features
 
 ### ✅ Automatic Dereferencing
+
 Incoming activities and objects automatically resolve alternative identifiers to actual actor URLs:
 
 ```javascript
@@ -98,6 +101,7 @@ Incoming activities and objects automatically resolve alternative identifiers to
 ```
 
 ### ✅ Alias Management
+
 Add and manage alternative identifiers for an actor:
 
 ```javascript
@@ -111,6 +115,7 @@ await ctx.call('fep-4adb-dereferencer.addAlias', {
 ```
 
 ### ✅ Outbound Support
+
 All outgoing activities include aliases and support alternative recipient formats:
 
 ```javascript
@@ -129,6 +134,7 @@ to: ['acct:followers@mastodon.social', 'did:web:instance.com']
 ```
 
 ### ✅ Webfinger Integration
+
 Alternative identifiers are automatically served via webfinger:
 
 ```bash
@@ -147,20 +153,19 @@ curl https://our-pod.com/.well-known/webfinger?resource=acct:alice@our-pod.com
 ```
 
 ### ✅ Identity Verification
+
 Validates identifier claims using FEP-c390 patterns:
 
 ```javascript
 // Verify an identifier belongs to an actor
-const isValid = await ctx.call(
-  'fep-4adb-processor.validateIdentifierOwnership',
-  {
-    identifier: 'acct:alice@example.org',
-    expectedActorId: 'https://example.org/users/alice'
-  }
-);
+const isValid = await ctx.call('fep-4adb-processor.validateIdentifierOwnership', {
+  identifier: 'acct:alice@example.org',
+  expectedActorId: 'https://example.org/users/alice'
+});
 ```
 
 ### ✅ Graceful Degradation
+
 If dereferencing fails, original identifiers are preserved:
 
 ```javascript
@@ -172,6 +177,7 @@ If dereferencing fails, original identifiers are preserved:
 ## Integration Status
 
 ### Current State
+
 - ✅ All 4 service files implemented with full functionality
 - ✅ Comprehensive documentation provided
 - ✅ Syntax validation passed (all files)
@@ -180,6 +186,7 @@ If dereferencing fails, original identifiers are preserved:
 - ⏳ **NOT YET INTEGRATED** - Services await broker configuration
 
 ### Next Steps
+
 1. Import services in broker configuration (`index.js`)
 2. Add hooks to ActivityPub services (actor, inbox, outbox)
 3. Test with real federation data
@@ -190,6 +197,7 @@ If dereferencing fails, original identifiers are preserved:
 ## Usage Examples
 
 ### Example 1: Processing Incoming Activity from Alternative Identifier
+
 ```javascript
 const incomingCreate = {
   type: 'Create',
@@ -206,6 +214,7 @@ const processed = await ctx.call('fep-4adb-processor.processObject', {
 ```
 
 ### Example 2: Creating Multi-Identity Actor
+
 ```javascript
 // Alice registers alternative identifiers
 await ctx.call('fep-4adb-dereferencer.addAlias', {
@@ -222,6 +231,7 @@ await ctx.call('fep-4adb-dereferencer.addAlias', {
 ```
 
 ### Example 3: Sending Activity with Alternative Recipients
+
 ```javascript
 const recipients = [
   'acct:followers@mastodon.social',
@@ -239,14 +249,12 @@ const result = await ctx.call('fep-4adb-outbound.sendActivityToRecipients', {
 ```
 
 ### Example 4: Verify Identity Claim
+
 ```javascript
-const verified = await ctx.call(
-  'fep-4adb-processor.validateIdentifierOwnership',
-  {
-    identifier: 'acct:alice@example.org',
-    expectedActorId: 'https://example.org/users/alice'
-  }
-);
+const verified = await ctx.call('fep-4adb-processor.validateIdentifierOwnership', {
+  identifier: 'acct:alice@example.org',
+  expectedActorId: 'https://example.org/users/alice'
+});
 
 if (verified) {
   // Safe to trust this activity came from Alice
@@ -257,6 +265,7 @@ if (verified) {
 ## Configuration
 
 ### Dereferencer Settings
+
 ```javascript
 {
   webfingerTimeout: 5000,      // Webfinger lookup timeout
@@ -267,16 +276,26 @@ if (verified) {
 ```
 
 ### Processor Settings
+
 ```javascript
 {
   identifierProperties: [
-    'actor', 'attributedTo', 'to', 'cc', 'bcc', 
-    'attachment', 'inReplyTo', 'object', 'origin', 'target'
-  ]
+    'actor',
+    'attributedTo',
+    'to',
+    'cc',
+    'bcc',
+    'attachment',
+    'inReplyTo',
+    'object',
+    'origin',
+    'target'
+  ];
 }
 ```
 
 ### Outbound Settings
+
 ```javascript
 {
   includeAliasesInActivities: true,      // Add alsoKnownAs to activities
@@ -301,19 +320,20 @@ if (verified) {
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Identifiers not resolving | Check domain resolution, enable debug logging |
-| Aliases not appearing in webfinger | Verify webfinger service is loaded |
-| Outbound activities missing aliases | Ensure outbox hook is registered |
-| Slow activity processing | Enable caching, check webfinger performance |
-| Verification fails | Verify domain context and actor ID format |
+| Issue                               | Solution                                      |
+| ----------------------------------- | --------------------------------------------- |
+| Identifiers not resolving           | Check domain resolution, enable debug logging |
+| Aliases not appearing in webfinger  | Verify webfinger service is loaded            |
+| Outbound activities missing aliases | Ensure outbox hook is registered              |
+| Slow activity processing            | Enable caching, check webfinger performance   |
+| Verification fails                  | Verify domain context and actor ID format     |
 
 **See**: [FEP-4ADB-IMPLEMENTATION.md](FEP-4ADB-IMPLEMENTATION.md) for complete troubleshooting guide.
 
 ## Testing
 
 Comprehensive test examples provided in:
+
 - Unit tests pattern: See [FEP-4ADB-IMPLEMENTATION.md](FEP-4ADB-IMPLEMENTATION.md#testing)
 - Integration test script: See [FEP-4ADB-INTEGRATION-CHECKLIST.md](FEP-4ADB-INTEGRATION-CHECKLIST.md#step-7-testing)
 
@@ -321,11 +341,11 @@ Comprehensive test examples provided in:
 
 Three levels of documentation provided:
 
-| Document | Audience | Content |
-|----------|----------|---------|
-| **FEP-4ADB.md** (this file) | Everyone | Overview, features, quick examples |
-| **[FEP-4ADB-IMPLEMENTATION.md](FEP-4ADB-IMPLEMENTATION.md)** | Developers | Complete technical guide, workflows, architecture |
-| **[FEP-4ADB-INTEGRATION-CHECKLIST.md](FEP-4ADB-INTEGRATION-CHECKLIST.md)** | Integrators | Step-by-step integration, testing, deployment |
+| Document                                                                   | Audience    | Content                                           |
+| -------------------------------------------------------------------------- | ----------- | ------------------------------------------------- |
+| **FEP-4ADB.md** (this file)                                                | Everyone    | Overview, features, quick examples                |
+| **[FEP-4ADB-IMPLEMENTATION.md](FEP-4ADB-IMPLEMENTATION.md)**               | Developers  | Complete technical guide, workflows, architecture |
+| **[FEP-4ADB-INTEGRATION-CHECKLIST.md](FEP-4ADB-INTEGRATION-CHECKLIST.md)** | Integrators | Step-by-step integration, testing, deployment     |
 
 ## Specification References
 
@@ -359,7 +379,7 @@ For issues or questions about FEP-4adb implementation:
 ```
 Services Implemented:     4/4 ✅
 - fep-4adb-dereferencer.js
-- fep-4adb-webfinger.js  
+- fep-4adb-webfinger.js
 - fep-4adb-processor.js
 - fep-4adb-outbound.js
 

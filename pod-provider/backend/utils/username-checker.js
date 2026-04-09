@@ -40,9 +40,19 @@ const EMAIL_LIKE = /^[^@]+@[^@]+$/;
 
 // Leet-speak map for canonicalization
 const LEET_MAP = {
-  '0': 'o', '1': 'i', '3': 'e', '4': 'a',
-  '5': 's', '6': 'g', '7': 't', '8': 'b', '9': 'g',
-  '@': 'a', '$': 's', '!': 'i', '+': 't'
+  0: 'o',
+  1: 'i',
+  3: 'e',
+  4: 'a',
+  5: 's',
+  6: 'g',
+  7: 't',
+  8: 'b',
+  9: 'g',
+  '@': 'a',
+  $: 's',
+  '!': 'i',
+  '+': 't'
 };
 
 // ─── Profanity filter setup ───────────────────────────────────────────────────
@@ -67,8 +77,8 @@ const reservedList = reservedConfig.reserved.map(s => s.toLowerCase());
 // ─── Fuzzy thresholds ─────────────────────────────────────────────────────────
 // We use Levenshtein distance (lower = more similar).
 // For a string of length N, allow at most floor(N * tolerance) edits.
-const HARD_BLOCK_TOLERANCE = 0.1;  // >= 90% similar → block
-const REVIEW_TOLERANCE     = 0.15; // >= 85% similar → review
+const HARD_BLOCK_TOLERANCE = 0.1; // >= 90% similar → block
+const REVIEW_TOLERANCE = 0.15; // >= 85% similar → review
 
 function similarityScore(a, b) {
   // Normalized similarity: 0..100 (100 = identical)
@@ -93,7 +103,11 @@ function validateShape(username) {
     return { ok: false, reason: 'invalid_length', message: `Username must be at most ${MAX_LEN} characters` };
   }
   if (!ALLOWED_CHARSET.test(lower)) {
-    return { ok: false, reason: 'invalid_charset', message: 'Username may only contain letters, digits, dots, underscores, and hyphens' };
+    return {
+      ok: false,
+      reason: 'invalid_charset',
+      message: 'Username may only contain letters, digits, dots, underscores, and hyphens'
+    };
   }
   if (NO_LEADING_PUNCT.test(lower)) {
     return { ok: false, reason: 'invalid_format', message: 'Username must not start with punctuation' };
@@ -102,7 +116,11 @@ function validateShape(username) {
     return { ok: false, reason: 'invalid_format', message: 'Username must not end with punctuation' };
   }
   if (REPEATED_PUNCT.test(lower)) {
-    return { ok: false, reason: 'invalid_format', message: 'Username must not contain consecutive punctuation characters' };
+    return {
+      ok: false,
+      reason: 'invalid_format',
+      message: 'Username must not contain consecutive punctuation characters'
+    };
   }
   if (ALL_NUMERIC.test(lower)) {
     return { ok: false, reason: 'invalid_format', message: 'Username must not be all numbers' };
@@ -123,7 +141,10 @@ function normalizeUnicode(raw) {
   s = s.toLowerCase();
   // Strip Unicode control characters, default-ignorable code points, zero-width chars
   // eslint-disable-next-line no-control-regex
-  s = s.replace(/[\u0000-\u001F\u007F-\u009F\u00AD\u034F\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180D\u200B-\u200F\u202A-\u202E\u2060-\u2064\u206A-\u206F\uFE00-\uFE0F\uFEFF\uFFF0-\uFFFB]/g, '');
+  s = s.replace(
+    /[\u0000-\u001F\u007F-\u009F\u00AD\u034F\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180D\u200B-\u200F\u202A-\u202E\u2060-\u2064\u206A-\u206F\uFE00-\uFE0F\uFEFF\uFFF0-\uFFFB]/g,
+    ''
+  );
   s = s.trim();
   return s;
 }
@@ -243,7 +264,7 @@ function checkFuzzy(canonical) {
   }
 
   const hardBlockThreshold = Math.round((1 - HARD_BLOCK_TOLERANCE) * 100); // 90
-  const reviewThreshold = Math.round((1 - REVIEW_TOLERANCE) * 100);         // 85
+  const reviewThreshold = Math.round((1 - REVIEW_TOLERANCE) * 100); // 85
 
   if (bestScore >= hardBlockThreshold) {
     return { blocked: true, severity: 'block', matchedTerm: bestTerm, score: bestScore };

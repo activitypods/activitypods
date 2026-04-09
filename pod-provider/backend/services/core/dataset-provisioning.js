@@ -40,12 +40,10 @@ module.exports = {
 
           return { dataset, created: true, strategy: 'fuseki_admin_tdb2' };
         } catch (adminErr) {
-          throw new MoleculerError(
-            `Dataset creation failed for "${dataset}"`,
-            500,
-            'DATASET_CREATE_FAILED',
-            { dataset, reason: adminErr.message }
-          );
+          throw new MoleculerError(`Dataset creation failed for "${dataset}"`, 500, 'DATASET_CREATE_FAILED', {
+            dataset,
+            reason: adminErr.message
+          });
         }
       }
     }

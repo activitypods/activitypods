@@ -112,9 +112,9 @@ const ok = async (label, fn) => {
           type: 'Person',
           attachment: [
             { type: 'Link', name: 'Site', href: 'https://site.example', rel: ['me'] },
-            { type: 'Link', name: 'Other', href: 'https://other.example', rel: ['nofollow'] },
-          ],
-        },
+            { type: 'Link', name: 'Other', href: 'https://other.example', rel: ['nofollow'] }
+          ]
+        }
       },
       call: async (action, payload) => {
         if (action !== 'actor-metadata-verification.verifyRelMeLink') throw new Error('unexpected action');
@@ -124,7 +124,7 @@ const ok = async (label, fn) => {
           verified: payload.href === 'https://site.example/',
           reason: payload.href === 'https://site.example/' ? 'verified' : 'no_reciprocal_rel_me_link',
           checkedAt: new Date().toISOString(),
-          cacheHit: false,
+          cacheHit: false
         };
       }
     };

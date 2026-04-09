@@ -19,17 +19,23 @@ function extractDomain(req) {
   const sig = req.headers['signature'] || '';
   const keyIdMatch = sig.match(/keyId="([^"]+)"/);
   if (keyIdMatch) {
-    try { return new URL(keyIdMatch[1]).hostname; } catch {}
+    try {
+      return new URL(keyIdMatch[1]).hostname;
+    } catch {}
   }
 
   const origin = req.headers['origin'];
   if (origin) {
-    try { return new URL(origin).hostname; } catch {}
+    try {
+      return new URL(origin).hostname;
+    } catch {}
   }
 
   const referer = req.headers['referer'];
   if (referer) {
-    try { return new URL(referer).hostname; } catch {}
+    try {
+      return new URL(referer).hostname;
+    } catch {}
   }
 
   return null;
@@ -39,7 +45,9 @@ app.use((req, res) => {
   const domain = extractDomain(req);
 
   if (domain && BLOCKLIST.has(domain)) {
-    console.log(`[blocked] ${domain} — ${req.headers['x-forwarded-method'] || req.method} ${req.headers['x-forwarded-uri'] || req.url}`);
+    console.log(
+      `[blocked] ${domain} — ${req.headers['x-forwarded-method'] || req.method} ${req.headers['x-forwarded-uri'] || req.url}`
+    );
     return res.status(403).json({ error: 'Forbidden', domain });
   }
 

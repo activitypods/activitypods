@@ -84,7 +84,8 @@ const Fep4adbMiddleware = () => ({
       if (isWebfingerGet && isObject(result)) {
         const links = Array.isArray(result.links) ? result.links : [];
         const actorHref =
-          links.find(link => link && link.type === 'application/activity+json' && typeof link.href === 'string')?.href ||
+          links.find(link => link && link.type === 'application/activity+json' && typeof link.href === 'string')
+            ?.href ||
           links.find(link => link && link.rel === 'self' && typeof link.href === 'string')?.href ||
           null;
 

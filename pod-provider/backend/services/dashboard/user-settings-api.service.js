@@ -81,14 +81,7 @@ const MRF_TRACE_QUERY_KEYS = new Set([
   'includePrivate'
 ]);
 
-const MRF_METRICS_QUERY_KEYS = new Set([
-  'from',
-  'to',
-  'moduleId',
-  'action',
-  'originHost',
-  'maxItems'
-]);
+const MRF_METRICS_QUERY_KEYS = new Set(['from', 'to', 'moduleId', 'action', 'originHost', 'maxItems']);
 
 const MODERATION_QUERY_KEYS = new Set([
   'cursor',
@@ -127,10 +120,11 @@ module.exports = {
 
   settings: {
     routePath: '/api/dashboard',
-    mrfAdminBaseUrl: (process.env.MRF_ADMIN_BASE_URL || process.env.SIDECAR_WEBHOOK_URL || 'http://fedify-sidecar:8080').replace(
-      /\/$/,
-      ''
-    ),
+    mrfAdminBaseUrl: (
+      process.env.MRF_ADMIN_BASE_URL ||
+      process.env.SIDECAR_WEBHOOK_URL ||
+      'http://fedify-sidecar:8080'
+    ).replace(/\/$/, ''),
     mrfAdminToken: process.env.MRF_ADMIN_TOKEN || '',
     mrfTimeoutMs: Number(process.env.MRF_TIMEOUT_MS) || 5000,
     mrfRetries: Number(process.env.MRF_RETRIES) || 3,
@@ -143,7 +137,8 @@ module.exports = {
     auditLogMaxEntries: Number(process.env.AUDIT_LOG_MAX_ENTRIES) || 500,
     atprotoAutoSyncSweepMinutes: Math.max(5, Number(process.env.ATPROTO_AUTO_SYNC_SWEEP_MINUTES) || 15),
     atprotoMirrorMinIntervalSeconds: Math.max(30, Number(process.env.ATPROTO_MIRROR_MIN_INTERVAL_SECONDS) || 300),
-    atprotoAutoSyncSecret: process.env.ATPROTO_SYNC_SECRET_KEY || process.env.ACTIVITYPODS_TOKEN || 'activitypods-dev-sync-key',
+    atprotoAutoSyncSecret:
+      process.env.ATPROTO_SYNC_SECRET_KEY || process.env.ACTIVITYPODS_TOKEN || 'activitypods-dev-sync-key',
     blueskyDefaultLabelerDid: (process.env.BLUESKY_DEFAULT_LABELER_DID || 'did:plc:ar7c4by46qjdydhdevvrndac').trim(),
     blueskyDefaultLabelerHandle: (process.env.BLUESKY_DEFAULT_LABELER_HANDLE || 'moderation.bsky.app').trim(),
     blueskyDefaultLabelerName: (process.env.BLUESKY_DEFAULT_LABELER_NAME || 'Bluesky Moderation Service').trim(),
@@ -249,11 +244,14 @@ module.exports = {
       }
     });
 
-    this._atprotoAutoSyncTimer = setInterval(() => {
-      this.runAtprotoAutoSyncSweep().catch(err => {
-        this.logger.warn('[ATProtoSync] Auto-sync sweep failed: %s', err.message);
-      });
-    }, this.settings.atprotoAutoSyncSweepMinutes * 60 * 1000);
+    this._atprotoAutoSyncTimer = setInterval(
+      () => {
+        this.runAtprotoAutoSyncSweep().catch(err => {
+          this.logger.warn('[ATProtoSync] Auto-sync sweep failed: %s', err.message);
+        });
+      },
+      this.settings.atprotoAutoSyncSweepMinutes * 60 * 1000
+    );
   },
 
   stopped() {
@@ -348,9 +346,7 @@ module.exports = {
     async mrfTracesList(ctx) {
       const query = this.pickAllowedTraceQuery(ctx.meta.$query || {});
       const queryString = new URLSearchParams(query).toString();
-      const path = queryString
-        ? `/internal/admin/mrf/traces?${queryString}`
-        : '/internal/admin/mrf/traces';
+      const path = queryString ? `/internal/admin/mrf/traces?${queryString}` : '/internal/admin/mrf/traces';
 
       return this.mrfProxy(ctx, {
         method: 'GET',
@@ -418,9 +414,7 @@ module.exports = {
     async mrfMetrics(ctx) {
       const query = this.pickAllowedMetricsQuery(ctx.meta.$query || {});
       const queryString = new URLSearchParams(query).toString();
-      const path = queryString
-        ? `/internal/admin/mrf/metrics?${queryString}`
-        : '/internal/admin/mrf/metrics';
+      const path = queryString ? `/internal/admin/mrf/metrics?${queryString}` : '/internal/admin/mrf/metrics';
 
       return this.mrfProxy(ctx, {
         method: 'GET',
@@ -473,7 +467,9 @@ module.exports = {
       return {
         pods: { total: totalPods, newThisWeek, newThisMonth },
         announcements: this._announcements.length,
-        activeInvitations: this._invitations.filter(i => !i.revoked && (!i.expiresAt || i.expiresAt > now.toISOString())).length,
+        activeInvitations: this._invitations.filter(
+          i => !i.revoked && (!i.expiresAt || i.expiresAt > now.toISOString())
+        ).length,
         mrf: mrfSummary
       };
     },
@@ -655,15 +651,18 @@ module.exports = {
       const targetHandle = typeof input.targetHandle === 'string' ? input.targetHandle.trim() : undefined;
 
       if (!targetWebId && !targetAtDid && !targetHandle) {
-        throw new MoleculerError(
-          'targetWebId, targetAtDid, or targetHandle is required',
-          400,
-          'VALIDATION_ERROR'
-        );
+        throw new MoleculerError('targetWebId, targetAtDid, or targetHandle is required', 400, 'VALIDATION_ERROR');
       }
 
       const labels = Array.isArray(input.labels)
-        ? [...new Set(input.labels.filter(v => typeof v === 'string').map(v => v.trim()).filter(Boolean))].slice(0, 20)
+        ? [
+            ...new Set(
+              input.labels
+                .filter(v => typeof v === 'string')
+                .map(v => v.trim())
+                .filter(Boolean)
+            )
+          ].slice(0, 20)
         : [];
       const reason = typeof input.reason === 'string' ? input.reason.trim().slice(0, 500) : undefined;
 
@@ -711,9 +710,7 @@ module.exports = {
       try {
         const query = this.pickModerationQuery(ctx.meta.$query || {});
         const qs = new URLSearchParams(query).toString();
-        const path = qs
-          ? `/internal/admin/moderation/decisions?${qs}`
-          : '/internal/admin/moderation/decisions';
+        const path = qs ? `/internal/admin/moderation/decisions?${qs}` : '/internal/admin/moderation/decisions';
 
         const upstream = await this.mrfProxy(ctx, {
           method: 'GET',
@@ -762,9 +759,7 @@ module.exports = {
 
       const query = this.pickModerationQuery(ctx.meta.$query || {});
       const qs = new URLSearchParams(query).toString();
-      const path = qs
-        ? `/internal/admin/moderation/labels?${qs}`
-        : '/internal/admin/moderation/labels';
+      const path = qs ? `/internal/admin/moderation/labels?${qs}` : '/internal/admin/moderation/labels';
 
       return this.mrfProxy(ctx, {
         method: 'GET',
@@ -808,7 +803,9 @@ module.exports = {
           name: entry?.name || this.settings.blueskyDefaultLabelerName,
           handle: this.settings.blueskyDefaultLabelerHandle,
           did: this.settings.blueskyDefaultLabelerDid,
-          scopes: Array.isArray(entry?.scopes) ? entry.scopes : ['label:content', 'label:actor', 'filter:content', 'filter:actor']
+          scopes: Array.isArray(entry?.scopes)
+            ? entry.scopes
+            : ['label:content', 'label:actor', 'filter:content', 'filter:actor']
         }
       };
     },
@@ -817,7 +814,10 @@ module.exports = {
       this.requireWebId(ctx);
 
       const handle = this.normalizeAtprotoHandle(ctx.params?.handle || ctx.meta?.$query?.handle || '');
-      const pdsUrl = this.normalizeHttpUrlOrDefault(ctx.params?.pdsUrl || ctx.meta?.$query?.pdsUrl, 'https://bsky.social');
+      const pdsUrl = this.normalizeHttpUrlOrDefault(
+        ctx.params?.pdsUrl || ctx.meta?.$query?.pdsUrl,
+        'https://bsky.social'
+      );
       const endpoint = new URL('/xrpc/com.atproto.identity.resolveHandle', pdsUrl);
       endpoint.searchParams.set('handle', handle);
 
@@ -860,9 +860,10 @@ module.exports = {
       const limit = this.clampInt(input.limit, 50, 1, 100);
       const maxPages = this.clampInt(input.maxPages, 5, 1, 20);
 
-      const session = credentials.mode === 'managed-internal'
-        ? await this.createManagedAtprotoSession(pdsUrl, webId)
-        : await this.createAtprotoSession(pdsUrl, credentials.identifier, credentials.password);
+      const session =
+        credentials.mode === 'managed-internal'
+          ? await this.createManagedAtprotoSession(pdsUrl, webId)
+          : await this.createAtprotoSession(pdsUrl, credentials.identifier, credentials.password);
       const mutes = await this.fetchAtprotoPagedList({
         pdsUrl,
         accessJwt: session.accessJwt,
@@ -897,25 +898,24 @@ module.exports = {
       const input = ctx.params?.data || ctx.params || {};
       const replace = Boolean(input.replace);
 
-      const fetched = await this.actions.fetchAtprotoUserLists({
-        data: {
-          identifier: input.identifier,
-          password: input.password,
-          pdsUrl: input.pdsUrl,
-          limit: input.limit,
-          maxPages: input.maxPages
+      const fetched = await this.actions.fetchAtprotoUserLists(
+        {
+          data: {
+            identifier: input.identifier,
+            password: input.password,
+            pdsUrl: input.pdsUrl,
+            limit: input.limit,
+            maxPages: input.maxPages
+          }
+        },
+        {
+          parentCtx: ctx,
+          meta: ctx.meta
         }
-      }, {
-        parentCtx: ctx,
-        meta: ctx.meta
-      });
+      );
 
-      const muteIds = fetched.data.mutes
-        .map(item => this.extractAtprotoSubjectId(item))
-        .filter(Boolean);
-      const blockIds = fetched.data.blocks
-        .map(item => this.extractAtprotoSubjectId(item))
-        .filter(Boolean);
+      const muteIds = fetched.data.mutes.map(item => this.extractAtprotoSubjectId(item)).filter(Boolean);
+      const blockIds = fetched.data.blocks.map(item => this.extractAtprotoSubjectId(item)).filter(Boolean);
 
       const mutesResult = await this.syncAtprotoSubjectsIntoContainer(ctx, webId, 'mutes', muteIds, replace);
       const blocksResult = await this.syncAtprotoSubjectsIntoContainer(ctx, webId, 'blocks', blockIds, replace);
@@ -966,10 +966,13 @@ module.exports = {
       );
 
       const binding = await this.getAtprotoBindingForWebId(ctx, webId);
-      const pdsUrl = this.normalizeHttpUrlOrDefault(input.pdsUrl || existing.pdsUrl || binding.atprotoPdsUrl, binding.atprotoPdsUrl);
+      const pdsUrl = this.normalizeHttpUrlOrDefault(
+        input.pdsUrl || existing.pdsUrl || binding.atprotoPdsUrl,
+        binding.atprotoPdsUrl
+      );
       const identifier = input.identifier
         ? this.requireAtprotoIdentifier(input.identifier)
-        : (existing.identifier || binding.atprotoHandle || binding.atprotoDid || '');
+        : existing.identifier || binding.atprotoHandle || binding.atprotoDid || '';
 
       const next = {
         enabled,
@@ -1355,12 +1358,7 @@ module.exports = {
         throw new MoleculerError('MRF control plane is not configured', 503, 'MRF_NOT_CONFIGURED');
       }
 
-      const requestId =
-        ctx.meta.requestID ||
-        ctx.meta.requestId ||
-        ctx.meta.$requestID ||
-        ctx.id ||
-        ulid();
+      const requestId = ctx.meta.requestID || ctx.meta.requestId || ctx.meta.$requestID || ctx.id || ulid();
 
       const execute = async () => {
         const url = `${this.settings.mrfAdminBaseUrl}${path}`;
@@ -1495,7 +1493,8 @@ module.exports = {
     },
 
     normalizeHttpUrlOrDefault(value, fallback) {
-      const candidate = typeof value === 'string' && value.trim().length > 0 ? value.trim() : String(fallback || '').trim();
+      const candidate =
+        typeof value === 'string' && value.trim().length > 0 ? value.trim() : String(fallback || '').trim();
       try {
         const parsed = new URL(candidate);
         if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
@@ -1510,7 +1509,9 @@ module.exports = {
     },
 
     normalizeAtprotoHandle(value) {
-      const handle = String(value || '').trim().toLowerCase();
+      const handle = String(value || '')
+        .trim()
+        .toLowerCase();
       if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(handle)) {
         throw new MoleculerError('Invalid ATProto handle', 400, 'ATPROTO_HANDLE_INVALID');
       }
@@ -1545,11 +1546,7 @@ module.exports = {
       });
 
       if (!binding?.atprotoDid || !binding?.atprotoPdsUrl) {
-        throw new MoleculerError(
-          'No linked ATProto account found for this user',
-          404,
-          'ATPROTO_NOT_LINKED'
-        );
+        throw new MoleculerError('No linked ATProto account found for this user', 404, 'ATPROTO_NOT_LINKED');
       }
 
       return binding;
@@ -1572,7 +1569,10 @@ module.exports = {
 
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const code = response.status === 401 || response.status === 403 ? 'ATPROTO_EXTERNAL_AUTH_FAILED' : 'ATPROTO_SESSION_FAILED';
+        const code =
+          response.status === 401 || response.status === 403
+            ? 'ATPROTO_EXTERNAL_AUTH_FAILED'
+            : 'ATPROTO_SESSION_FAILED';
         throw new MoleculerError(
           payload?.message || `ATProto authentication failed (${response.status})`,
           response.status,
@@ -1684,9 +1684,10 @@ module.exports = {
       const credentials = await this.resolveAtprotoSyncCredentials(ctx, webId, {}, binding);
       const pdsUrl = credentials.pdsUrl;
 
-      const session = credentials.mode === 'managed-internal'
-        ? await this.createManagedAtprotoSession(pdsUrl, webId)
-        : await this.createAtprotoSession(pdsUrl, credentials.identifier, credentials.password);
+      const session =
+        credentials.mode === 'managed-internal'
+          ? await this.createManagedAtprotoSession(pdsUrl, webId)
+          : await this.createAtprotoSession(pdsUrl, credentials.identifier, credentials.password);
 
       const mutes = await this.fetchAtprotoPagedList({
         pdsUrl,
@@ -1743,9 +1744,7 @@ module.exports = {
         const pageItems = Array.isArray(payload?.[listField]) ? payload[listField] : [];
         items.push(...pageItems);
 
-        cursor = typeof payload?.cursor === 'string' && payload.cursor.trim().length > 0
-          ? payload.cursor.trim()
-          : null;
+        cursor = typeof payload?.cursor === 'string' && payload.cursor.trim().length > 0 ? payload.cursor.trim() : null;
         page += 1;
         if (!cursor) break;
       }
@@ -1797,7 +1796,9 @@ module.exports = {
       const existingById = new Map();
       for (const item of existing) {
         if (String(item?.subjectProtocol || '').toLowerCase() !== 'atproto') continue;
-        const key = String(item?.subjectCanonicalId || '').trim().toLowerCase();
+        const key = String(item?.subjectCanonicalId || '')
+          .trim()
+          .toLowerCase();
         if (!key) continue;
         existingById.set(key, item);
       }
@@ -1835,7 +1836,17 @@ module.exports = {
     },
 
     async syncAtprotoLabelersIntoTrustSources(ctx, webId, labelerDids) {
-      const remoteDids = [...new Set((labelerDids || []).map(value => String(value || '').trim().toLowerCase()).filter(Boolean))];
+      const remoteDids = [
+        ...new Set(
+          (labelerDids || [])
+            .map(value =>
+              String(value || '')
+                .trim()
+                .toLowerCase()
+            )
+            .filter(Boolean)
+        )
+      ];
       const remoteDidSet = new Set(remoteDids);
 
       const existing = await this.listByContainer(ctx, webId, 'trust-sources', {
@@ -1847,7 +1858,9 @@ module.exports = {
       const syncedEntries = [];
       for (const item of existing) {
         const sourceType = String(item?.sourceType || '').toLowerCase();
-        const source = String(item?.source || '').trim().toLowerCase();
+        const source = String(item?.source || '')
+          .trim()
+          .toLowerCase();
         if (sourceType !== 'atproto-labeler' || !source) continue;
 
         existingBySource.set(source, item);
@@ -1874,7 +1887,9 @@ module.exports = {
 
       const dataset = getDatasetFromUri(webId);
       for (const item of syncedEntries) {
-        const source = String(item?.source || '').trim().toLowerCase();
+        const source = String(item?.source || '')
+          .trim()
+          .toLowerCase();
         if (remoteDidSet.has(source)) continue;
         if (this.isDefaultBlueskyTrustSource(item)) continue;
 
@@ -2213,7 +2228,12 @@ module.exports = {
       return {
         enabled: Boolean(config?.enabled),
         replace: Boolean(config?.replace),
-        intervalHours: this.clampInt(config?.intervalHours, DEFAULT_SYNC_INTERVAL_HOURS, MIN_SYNC_INTERVAL_HOURS, MAX_SYNC_INTERVAL_HOURS),
+        intervalHours: this.clampInt(
+          config?.intervalHours,
+          DEFAULT_SYNC_INTERVAL_HOURS,
+          MIN_SYNC_INTERVAL_HOURS,
+          MAX_SYNC_INTERVAL_HOURS
+        ),
         pdsUrl: config?.pdsUrl || null,
         identifier: config?.identifier || null,
         hasStoredSecret: Boolean(config?.encryptedSecret),
@@ -2232,7 +2252,12 @@ module.exports = {
         resourceUri: pref?.['@id'] || null,
         enabled: Boolean(raw.enabled),
         replace: raw.replace === undefined ? false : Boolean(raw.replace),
-        intervalHours: this.clampInt(raw.intervalHours, DEFAULT_SYNC_INTERVAL_HOURS, MIN_SYNC_INTERVAL_HOURS, MAX_SYNC_INTERVAL_HOURS),
+        intervalHours: this.clampInt(
+          raw.intervalHours,
+          DEFAULT_SYNC_INTERVAL_HOURS,
+          MIN_SYNC_INTERVAL_HOURS,
+          MAX_SYNC_INTERVAL_HOURS
+        ),
         pdsUrl: typeof raw.pdsUrl === 'string' ? raw.pdsUrl : null,
         identifier: typeof raw.identifier === 'string' ? raw.identifier : null,
         encryptedSecret: typeof raw.encryptedSecret === 'string' ? raw.encryptedSecret : null,
@@ -2247,7 +2272,12 @@ module.exports = {
       const value = {
         enabled: Boolean(config.enabled),
         replace: Boolean(config.replace),
-        intervalHours: this.clampInt(config.intervalHours, DEFAULT_SYNC_INTERVAL_HOURS, MIN_SYNC_INTERVAL_HOURS, MAX_SYNC_INTERVAL_HOURS),
+        intervalHours: this.clampInt(
+          config.intervalHours,
+          DEFAULT_SYNC_INTERVAL_HOURS,
+          MIN_SYNC_INTERVAL_HOURS,
+          MAX_SYNC_INTERVAL_HOURS
+        ),
         pdsUrl: config.pdsUrl || null,
         identifier: config.identifier || null,
         encryptedSecret: config.encryptedSecret || null,
@@ -2314,7 +2344,10 @@ module.exports = {
         mode: 'external-credentials',
         identifier: config.identifier,
         password: this.decryptAtprotoSecret(config.encryptedSecret),
-        pdsUrl: this.normalizeHttpUrlOrDefault(explicitPdsUrl || config.pdsUrl || binding.atprotoPdsUrl, binding.atprotoPdsUrl)
+        pdsUrl: this.normalizeHttpUrlOrDefault(
+          explicitPdsUrl || config.pdsUrl || binding.atprotoPdsUrl,
+          binding.atprotoPdsUrl
+        )
       };
     },
 
@@ -2331,7 +2364,16 @@ module.exports = {
       }
 
       const now = Date.now();
-      const intervalMs = this.clampInt(config.intervalHours, DEFAULT_SYNC_INTERVAL_HOURS, MIN_SYNC_INTERVAL_HOURS, MAX_SYNC_INTERVAL_HOURS) * 60 * 60 * 1000;
+      const intervalMs =
+        this.clampInt(
+          config.intervalHours,
+          DEFAULT_SYNC_INTERVAL_HOURS,
+          MIN_SYNC_INTERVAL_HOURS,
+          MAX_SYNC_INTERVAL_HOURS
+        ) *
+        60 *
+        60 *
+        1000;
       const lastSyncAtMs = config.lastSyncAt ? Date.parse(config.lastSyncAt) : 0;
       if (!force && lastSyncAtMs > 0 && now - lastSyncAtMs < intervalMs) {
         return {
@@ -2354,12 +2396,15 @@ module.exports = {
           syncInput.password = this.decryptAtprotoSecret(config.encryptedSecret);
         }
 
-        const result = await this.actions.syncAtprotoUserLists({
-          data: syncInput
-        }, {
-          parentCtx: ctx,
-          meta: { ...ctx.meta, webId }
-        });
+        const result = await this.actions.syncAtprotoUserLists(
+          {
+            data: syncInput
+          },
+          {
+            parentCtx: ctx,
+            meta: { ...ctx.meta, webId }
+          }
+        );
 
         if (!isExternal) {
           const mirror = await this.fetchAtprotoModerationState(ctx, webId, binding).catch(() => null);
@@ -2405,7 +2450,9 @@ module.exports = {
           const webId = account?.webId || account?.['@id'];
           if (!webId) continue;
           const fakeCtx = { meta: { webId }, call: (...args) => this.broker.call(...args) };
-          await this.performConfiguredAtprotoSync(fakeCtx, webId, { reason: 'scheduled', force: false }).catch(() => null);
+          await this.performConfiguredAtprotoSync(fakeCtx, webId, { reason: 'scheduled', force: false }).catch(
+            () => null
+          );
         }
       } finally {
         this._atprotoAutoSyncInFlight = false;
@@ -2417,9 +2464,10 @@ module.exports = {
       const alreadyPresent = existing.some(item => {
         const sourceType = String(item?.sourceType || '').toLowerCase();
         const source = String(item?.source || '').toLowerCase();
-        return sourceType === 'atproto-labeler' && (
-          source === this.settings.blueskyDefaultLabelerDid.toLowerCase() ||
-          source === this.settings.blueskyDefaultLabelerHandle.toLowerCase()
+        return (
+          sourceType === 'atproto-labeler' &&
+          (source === this.settings.blueskyDefaultLabelerDid.toLowerCase() ||
+            source === this.settings.blueskyDefaultLabelerHandle.toLowerCase())
         );
       });
 
@@ -2427,7 +2475,10 @@ module.exports = {
 
       let source = this.settings.blueskyDefaultLabelerDid;
       try {
-        const resolved = await this.actions.resolveAtprotoHandle({ handle: this.settings.blueskyDefaultLabelerHandle }, { parentCtx: ctx, meta: ctx.meta });
+        const resolved = await this.actions.resolveAtprotoHandle(
+          { handle: this.settings.blueskyDefaultLabelerHandle },
+          { parentCtx: ctx, meta: ctx.meta }
+        );
         if (resolved?.data?.did) source = resolved.data.did;
       } catch {
         // Fallback to configured DID when handle resolution is unavailable.
@@ -2482,7 +2533,8 @@ module.exports = {
 
     parsePublicAtprotoLabelerDirectory(html) {
       const defaultScopes = ['label:content', 'label:actor', 'filter:content', 'filter:actor'];
-      const pattern = /<div class="text-sm font-bold[^>]*">([\s\S]*?)<\/div><div class="bg-mauve-4[\s\S]*?<div class="text-xs text-gray-500">@(?:<!-- -->)?([\s\S]*?)<\/div>[\s\S]*?<a href="https:\/\/bsky\.app\/profile\/(did:[^"]+)" aria-label="View labeler"[\s\S]*?<\/a><\/div><\/div><p class="whitespace-pre-line break-words text-sm text-gray-500">([\s\S]*?)<\/p>/gi;
+      const pattern =
+        /<div class="text-sm font-bold[^>]*">([\s\S]*?)<\/div><div class="bg-mauve-4[\s\S]*?<div class="text-xs text-gray-500">@(?:<!-- -->)?([\s\S]*?)<\/div>[\s\S]*?<a href="https:\/\/bsky\.app\/profile\/(did:[^"]+)" aria-label="View labeler"[\s\S]*?<\/a><\/div><\/div><p class="whitespace-pre-line break-words text-sm text-gray-500">([\s\S]*?)<\/p>/gi;
 
       const seen = new Set();
       const entries = [];
@@ -2563,7 +2615,8 @@ module.exports = {
       return {
         ...incoming,
         ...existing,
-        name: existing?.name || incoming?.name || existing?.handle || incoming?.handle || existing?.did || incoming?.did,
+        name:
+          existing?.name || incoming?.name || existing?.handle || incoming?.handle || existing?.did || incoming?.did,
         description: existing?.description || incoming?.description || null,
         scopes: Array.isArray(existing?.scopes) && existing.scopes.length > 0 ? existing.scopes : incoming?.scopes,
         recommended: Boolean(existing?.recommended || incoming?.recommended),
@@ -2676,8 +2729,10 @@ module.exports = {
       const sourceType = String(resource?.sourceType || '').toLowerCase();
       if (sourceType !== 'atproto-labeler') return false;
       const source = String(resource?.source || '').toLowerCase();
-      return source === this.settings.blueskyDefaultLabelerDid.toLowerCase() ||
-        source === this.settings.blueskyDefaultLabelerHandle.toLowerCase();
+      return (
+        source === this.settings.blueskyDefaultLabelerDid.toLowerCase() ||
+        source === this.settings.blueskyDefaultLabelerHandle.toLowerCase()
+      );
     }
   }
 };

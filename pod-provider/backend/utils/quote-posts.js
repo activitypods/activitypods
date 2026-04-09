@@ -33,8 +33,7 @@ const firstIri = value => {
   return null;
 };
 
-const isAnnounce = activity =>
-  activity && (activity.type === 'Announce' || activity['@type'] === 'Announce');
+const isAnnounce = activity => activity && (activity.type === 'Announce' || activity['@type'] === 'Announce');
 
 /**
  * Returns true when the activity has a non-empty `content` string — the
@@ -61,7 +60,7 @@ const sanitizeContent = raw =>
   sanitizeHtml(raw, {
     allowedTags: ['a', 'br', 'strong', 'em', 'b', 'i', 'code', 'span', 'p'],
     allowedAttributes: { a: ['href', 'rel', 'class'], span: ['class'], '*': [] },
-    allowedSchemes: ['http', 'https'],
+    allowedSchemes: ['http', 'https']
   }).trim();
 
 /**
@@ -211,5 +210,5 @@ module.exports = {
   // exported for testing only
   sanitizeContent,
   normalizeTag,
-  normalizeInReplyTo,
+  normalizeInReplyTo
 };

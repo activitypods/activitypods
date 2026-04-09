@@ -35,7 +35,7 @@ const FEP_B2B8_ALLOWED_TAGS = [
   'source',
   'ruby',
   'rt',
-  'rp',
+  'rp'
 ];
 
 const FEP_B2B8_ALLOWED_ATTRIBUTES = {
@@ -46,7 +46,7 @@ const FEP_B2B8_ALLOWED_ATTRIBUTES = {
   img: ['src', 'alt', 'title', 'width', 'height', 'class'],
   video: ['src', 'controls', 'loop', 'poster', 'width', 'height', 'class'],
   audio: ['src', 'controls', 'loop', 'class'],
-  source: ['src', 'type'],
+  source: ['src', 'type']
 };
 
 const SUMMARY_ALLOWED_TAGS = [
@@ -63,43 +63,34 @@ const SUMMARY_ALLOWED_TAGS = [
   'ol',
   'li',
   'blockquote',
-  'code',
+  'code'
 ];
 
 const SUMMARY_ALLOWED_ATTRIBUTES = {
   span: ['class'],
   a: ['href', 'rel', 'class'],
   ol: ['start', 'reversed'],
-  li: ['value'],
+  li: ['value']
 };
 
 const URL_RE = /^https?:\/\//i;
 const HTTPS_RE = /^https:\/\//i;
 
-const MARKDOWN_MEDIA_TYPES = new Set([
-  'text/markdown',
-  'text/x-markdown',
-  'text/plain+markdown',
-]);
+const MARKDOWN_MEDIA_TYPES = new Set(['text/markdown', 'text/x-markdown', 'text/plain+markdown']);
 
-const MFM_MEDIA_TYPES = new Set([
-  'text/x.misskeymarkdown',
-  'text/x-misskey-markdown',
-  'text/mfm',
-]);
+const MFM_MEDIA_TYPES = new Set(['text/x.misskeymarkdown', 'text/x-misskey-markdown', 'text/mfm']);
 
 const markdownRenderer = new MarkdownIt({
   html: true,
   linkify: true,
-  breaks: true,
+  breaks: true
 });
 
 const toArray = value => (Array.isArray(value) ? value : value ? [value] : []);
 
 const safeType = value => (typeof value === 'string' ? value : '');
 
-const normalizeMediaType = value =>
-  typeof value === 'string' ? value.split(';')[0].trim().toLowerCase() : '';
+const normalizeMediaType = value => (typeof value === 'string' ? value.split(';')[0].trim().toLowerCase() : '');
 
 const detectContentFormat = object => {
   if (!object || typeof object !== 'object') {
@@ -140,7 +131,9 @@ const preprocessMisskeyFlavoredMarkdown = input => {
   // $[x2 text] -> <span class="mfm-x2">text</span>
   // $[center text] -> <span class="mfm-center">text</span>
   return input.replace(/\$\[([A-Za-z0-9_-]+)\s+([^\]]+)]/g, (_all, op, text) => {
-    const opClass = String(op).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    const opClass = String(op)
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '');
     return `<span class="mfm-${opClass}">${text}</span>`;
   });
 };
@@ -176,7 +169,7 @@ const sanitizeSummary = value => {
     allowedTags: SUMMARY_ALLOWED_TAGS,
     allowedAttributes: SUMMARY_ALLOWED_ATTRIBUTES,
     disallowedTagsMode: 'discard',
-    allowedSchemes: ['http', 'https'],
+    allowedSchemes: ['http', 'https']
   });
 };
 
@@ -187,7 +180,7 @@ const sanitizeLongFormContent = value => {
     allowedTags: FEP_B2B8_ALLOWED_TAGS,
     allowedAttributes: FEP_B2B8_ALLOWED_ATTRIBUTES,
     disallowedTagsMode: 'discard',
-    allowedSchemes: ['http', 'https'],
+    allowedSchemes: ['http', 'https']
   });
 };
 
@@ -273,7 +266,7 @@ const extractMediaAttachmentLinks = html => {
     found.set(src, {
       type,
       href: src,
-      mediaType: inferMediaType(src),
+      mediaType: inferMediaType(src)
     });
   }
 
@@ -356,7 +349,7 @@ const buildArticlePreview = article => {
 
   const preview = {
     type: NOTE_TYPE,
-    content: parts.join(''),
+    content: parts.join('')
   };
 
   if (article.attributedTo) preview.attributedTo = article.attributedTo;
@@ -422,7 +415,7 @@ const normalizeLongFormActivity = activity => {
     if (!activity.object || typeof activity.object !== 'object') return activity;
     return {
       ...activity,
-      object: normalizeArticleObject(activity.object),
+      object: normalizeArticleObject(activity.object)
     };
   }
 
@@ -439,5 +432,5 @@ module.exports = {
   sanitizeLongFormContent,
   normalizeArticleUrl,
   buildArticlePreview,
-  extractMediaAttachmentLinks,
+  extractMediaAttachmentLinks
 };

@@ -24,7 +24,7 @@ if (!LOG_HMAC_KEY && process.env.NODE_ENV === 'production') {
   // eslint-disable-next-line no-console
   console.error(
     '[log-privacy] CRITICAL: SEMAPPS_LOG_HMAC_KEY is not set in production. ' +
-    'Log tokens are NOT keyed and may be reversible. Set this env var immediately.'
+      'Log tokens are NOT keyed and may be reversible. Set this env var immediately.'
   );
 }
 
@@ -42,11 +42,7 @@ const EFFECTIVE_KEY = LOG_HMAC_KEY || crypto.randomBytes(32).toString('hex');
  */
 function hashForLog(value) {
   if (!value || typeof value !== 'string') return 'null';
-  return crypto
-    .createHmac('sha256', EFFECTIVE_KEY)
-    .update(value)
-    .digest('hex')
-    .slice(0, 16); // 64-bit prefix — enough for audit correlation, not enough for brute-force
+  return crypto.createHmac('sha256', EFFECTIVE_KEY).update(value).digest('hex').slice(0, 16); // 64-bit prefix — enough for audit correlation, not enough for brute-force
 }
 
 /**

@@ -10,7 +10,7 @@ const {
   getReplyApprovalUri,
   isValidApproveReply,
   normalizeReplyDecisionActivity,
-  normalizeReplyPolicyActivity,
+  normalizeReplyPolicyActivity
 } = require('./utils/reply-policies');
 
 let passed = 0;
@@ -36,7 +36,7 @@ const createHarness = (options = {}) => {
 
   const service = {
     ...replyPolicies.methods,
-    logger: { debug: () => {} },
+    logger: { debug: () => {} }
   };
 
   const ctx = {
@@ -54,11 +54,11 @@ const createHarness = (options = {}) => {
       if (action === 'reply-policies.resolveOutboundReplyPolicy') {
         return replyPolicies.actions.resolveOutboundReplyPolicy.handler.call(service, {
           params,
-          call: ctx.call,
+          call: ctx.call
         });
       }
       throw new Error(`unexpected action ${action}`);
-    },
+    }
   };
 
   return { service, ctx, calls };
@@ -74,7 +74,7 @@ const createHarness = (options = {}) => {
       type: 'Note',
       content: 'hello',
       canReply: ['as:Public'],
-      tag: { type: 'Mention', href: 'https://social.example/users/bob', name: 'bob' },
+      tag: { type: 'Mention', href: 'https://social.example/users/bob', name: 'bob' }
     });
 
     const state = extractCanReplyState(note);
@@ -92,7 +92,7 @@ const createHarness = (options = {}) => {
       type: 'Note',
       content: 'reply',
       inReplyTo: 'https://social.example/notes/1',
-      replyApproval: { id: 'https://social.example/approvals/1' },
+      replyApproval: { id: 'https://social.example/approvals/1' }
     });
     assert.equal(getReplyApprovalUri(note), 'https://social.example/approvals/1');
     assert.ok(Array.isArray(note['@context']));
@@ -103,7 +103,7 @@ const createHarness = (options = {}) => {
       type: 'ApproveReply',
       actor: 'https://pod.example/users/alice',
       object: { id: 'https://remote.example/notes/reply-1' },
-      inReplyTo: { id: 'https://pod.example/notes/1' },
+      inReplyTo: { id: 'https://pod.example/notes/1' }
     });
     assert.equal(activity.object, 'https://remote.example/notes/reply-1');
     assert.equal(activity.inReplyTo, 'https://pod.example/notes/1');
@@ -116,15 +116,15 @@ const createHarness = (options = {}) => {
           type: 'ApproveReply',
           actor: 'https://remote.example/users/alice',
           object: 'https://remote.example/users/bob/replies/1',
-          inReplyTo: 'https://remote.example/notes/parent',
+          inReplyTo: 'https://remote.example/notes/parent'
         },
         {
           authorityUri: 'https://remote.example/users/alice',
           replyObjectUri: 'https://remote.example/users/bob/replies/1',
-          inReplyTo: 'https://remote.example/notes/parent',
-        },
+          inReplyTo: 'https://remote.example/notes/parent'
+        }
       ),
-      true,
+      true
     );
   });
 
@@ -137,10 +137,10 @@ const createHarness = (options = {}) => {
           id: `${localBaseUrl}/notes/1`,
           type: 'Note',
           attributedTo: `${localBaseUrl}/users/alice`,
-          canReply: [`${localBaseUrl}/users/alice/followers`],
-        },
+          canReply: [`${localBaseUrl}/users/alice/followers`]
+        }
       },
-      collectionMemberships: [`${localBaseUrl}/users/alice/followers|https://remote.example/users/bob`],
+      collectionMemberships: [`${localBaseUrl}/users/alice/followers|https://remote.example/users/bob`]
     });
 
     const result = await replyPolicies.actions.precheckInboundReply.handler.call(service, {
@@ -152,11 +152,11 @@ const createHarness = (options = {}) => {
             id: 'https://remote.example/replies/1',
             type: 'Note',
             inReplyTo: `${localBaseUrl}/notes/1`,
-            content: 'hello',
-          },
-        },
+            content: 'hello'
+          }
+        }
       },
-      call: ctx.call,
+      call: ctx.call
     });
 
     assert.equal(result.accepted, true);
@@ -171,9 +171,9 @@ const createHarness = (options = {}) => {
           id: `${localBaseUrl}/notes/2`,
           type: 'Note',
           attributedTo: `${localBaseUrl}/users/alice`,
-          canReply: [],
-        },
-      },
+          canReply: []
+        }
+      }
     });
 
     const result = await replyPolicies.actions.precheckInboundReply.handler.call(service, {
@@ -185,11 +185,11 @@ const createHarness = (options = {}) => {
             id: 'https://remote.example/replies/2',
             type: 'Note',
             inReplyTo: `${localBaseUrl}/notes/2`,
-            content: 'nope',
-          },
-        },
+            content: 'nope'
+          }
+        }
       },
-      call: ctx.call,
+      call: ctx.call
     });
 
     assert.equal(result.accepted, false);
@@ -203,16 +203,16 @@ const createHarness = (options = {}) => {
           id: 'https://remote.example/notes/1',
           type: 'Note',
           attributedTo: 'https://remote.example/users/alice',
-          canReply: ['https://remote.example/users/alice/followers'],
+          canReply: ['https://remote.example/users/alice/followers']
         },
         'https://remote.example/approvals/1': {
           id: 'https://remote.example/approvals/1',
           type: 'ApproveReply',
           actor: 'https://remote.example/users/alice',
           object: 'https://remote.example/users/bob/replies/3',
-          inReplyTo: 'https://remote.example/notes/1',
-        },
-      },
+          inReplyTo: 'https://remote.example/notes/1'
+        }
+      }
     });
 
     const result = await replyPolicies.actions.precheckInboundReply.handler.call(service, {
@@ -225,11 +225,11 @@ const createHarness = (options = {}) => {
             type: 'Note',
             inReplyTo: 'https://remote.example/notes/1',
             replyApproval: 'https://remote.example/approvals/1',
-            content: 'approved',
-          },
-        },
+            content: 'approved'
+          }
+        }
       },
-      call: ctx.call,
+      call: ctx.call
     });
 
     assert.equal(result.accepted, true);
@@ -244,9 +244,9 @@ const createHarness = (options = {}) => {
           id: 'https://remote.example/notes/4',
           type: 'Note',
           attributedTo: 'https://remote.example/users/alice',
-          canReply: ['https://remote.example/users/alice/followers'],
-        },
-      },
+          canReply: ['https://remote.example/users/alice/followers']
+        }
+      }
     });
 
     const result = await replyPolicies.actions.precheckInboundReply.handler.call(service, {
@@ -258,11 +258,11 @@ const createHarness = (options = {}) => {
             id: 'https://remote.example/users/bob/replies/4',
             type: 'Note',
             inReplyTo: 'https://remote.example/notes/4',
-            content: 'missing approval',
-          },
-        },
+            content: 'missing approval'
+          }
+        }
       },
-      call: ctx.call,
+      call: ctx.call
     });
 
     assert.equal(result.accepted, false);
@@ -278,19 +278,19 @@ const createHarness = (options = {}) => {
           id: 'https://remote.example/notes/policy-1',
           type: 'Note',
           attributedTo: 'https://remote.example/users/alice',
-          canReply: ['https://remote.example/users/alice/followers'],
-        },
+          canReply: ['https://remote.example/users/alice/followers']
+        }
       },
-      collectionMemberships: ['https://remote.example/users/alice/followers|https://remote.example/users/bob'],
+      collectionMemberships: ['https://remote.example/users/alice/followers|https://remote.example/users/bob']
     });
 
     const result = await replyPolicies.actions.resolveOutboundReplyPolicy.handler.call(service, {
       params: {
         objectUri: 'https://remote.example/notes/policy-1',
         replierActorUri: 'https://remote.example/users/bob',
-        webId: 'https://remote.example/users/bob',
+        webId: 'https://remote.example/users/bob'
       },
-      call: ctx.call,
+      call: ctx.call
     });
 
     assert.equal(result.mayReply, true);
@@ -305,16 +305,16 @@ const createHarness = (options = {}) => {
           id: 'https://remote.example/notes/policy-2',
           type: 'Note',
           attributedTo: 'https://remote.example/users/alice',
-          canReply: ['https://remote.example/users/alice/followers'],
-        },
+          canReply: ['https://remote.example/users/alice/followers']
+        }
       },
       actors: {
         'https://remote.example/users/bob': {
           id: 'https://remote.example/users/bob',
-          outbox: 'https://remote.example/users/bob/outbox',
-        },
+          outbox: 'https://remote.example/users/bob/outbox'
+        }
       },
-      collectionMemberships: ['https://remote.example/users/alice/followers|https://remote.example/users/bob'],
+      collectionMemberships: ['https://remote.example/users/alice/followers|https://remote.example/users/bob']
     });
 
     const result = await replyPolicies.actions.submitReply.handler.call(service, {
@@ -323,9 +323,9 @@ const createHarness = (options = {}) => {
         content: 'pending reply',
         isPublic: true,
         replierActorUri: 'https://remote.example/users/bob',
-        webId: 'https://remote.example/users/bob',
+        webId: 'https://remote.example/users/bob'
       },
-      call: ctx.call,
+      call: ctx.call
     });
 
     const outboxCall = calls.find(call => call.action === 'activitypub.outbox.post');
@@ -343,15 +343,15 @@ const createHarness = (options = {}) => {
           type: 'Note',
           attributedTo: `${localBaseUrl}/users/alice`,
           to: [`${localBaseUrl}/users/alice/followers`],
-          cc: ['https://www.w3.org/ns/activitystreams#Public'],
-        },
+          cc: ['https://www.w3.org/ns/activitystreams#Public']
+        }
       },
       actors: {
         [`${localBaseUrl}/users/alice`]: {
           id: `${localBaseUrl}/users/alice`,
-          outbox: `${localBaseUrl}/users/alice/outbox`,
-        },
-      },
+          outbox: `${localBaseUrl}/users/alice/outbox`
+        }
+      }
     });
 
     await replyPolicies.actions.approveReply.handler.call(service, {
@@ -362,14 +362,14 @@ const createHarness = (options = {}) => {
           object: {
             id: 'https://remote.example/replies/5',
             type: 'Note',
-            inReplyTo: 'https://pod.example/notes/1',
-          },
+            inReplyTo: 'https://pod.example/notes/1'
+          }
         },
         authorityUri: `${localBaseUrl}/users/alice`,
         parentObjectUri: `${localBaseUrl}/notes/1`,
-        replyActorUri: 'https://remote.example/users/bob',
+        replyActorUri: 'https://remote.example/users/bob'
       },
-      call: ctx.call,
+      call: ctx.call
     });
 
     const outboxCall = calls.find(call => call.action === 'activitypub.outbox.post');
@@ -384,9 +384,9 @@ const createHarness = (options = {}) => {
       actors: {
         [`${localBaseUrl}/users/alice`]: {
           id: `${localBaseUrl}/users/alice`,
-          outbox: `${localBaseUrl}/users/alice/outbox`,
-        },
-      },
+          outbox: `${localBaseUrl}/users/alice/outbox`
+        }
+      }
     });
 
     await replyPolicies.actions.rejectReply.handler.call(service, {
@@ -397,13 +397,13 @@ const createHarness = (options = {}) => {
           object: {
             id: 'https://remote.example/replies/6',
             type: 'Note',
-            inReplyTo: `${localBaseUrl}/notes/6`,
-          },
+            inReplyTo: `${localBaseUrl}/notes/6`
+          }
         },
         authorityUri: `${localBaseUrl}/users/alice`,
-        replyActorUri: 'https://remote.example/users/bob',
+        replyActorUri: 'https://remote.example/users/bob'
       },
-      call: ctx.call,
+      call: ctx.call
     });
 
     const outboxCall = calls.find(call => call.action === 'activitypub.outbox.post');
@@ -417,9 +417,12 @@ const createHarness = (options = {}) => {
   await ok('middleware short-circuits rejected replies and sends RejectReply', async () => {
     const mw = ReplyPoliciesMiddleware();
     const outboundCalls = [];
-    const handler = mw.localAction(async () => {
-      throw new Error('next should not be called');
-    }, { name: 'activitypub.inbox.post' });
+    const handler = mw.localAction(
+      async () => {
+        throw new Error('next should not be called');
+      },
+      { name: 'activitypub.inbox.post' }
+    );
 
     await handler({
       params: {
@@ -428,8 +431,8 @@ const createHarness = (options = {}) => {
         object: {
           id: 'https://remote.example/replies/7',
           type: 'Note',
-          inReplyTo: 'https://pod.example/notes/7',
-        },
+          inReplyTo: 'https://pod.example/notes/7'
+        }
       },
       meta: { webId: 'https://remote.example/users/bob' },
       call: async (action, params) => {
@@ -440,12 +443,12 @@ const createHarness = (options = {}) => {
             authorityLocal: true,
             authorityUri: 'https://pod.example/users/alice',
             parentObjectUri: 'https://pod.example/notes/7',
-            replyActorUri: 'https://remote.example/users/bob',
+            replyActorUri: 'https://remote.example/users/bob'
           };
         }
         if (action === 'reply-policies.rejectReply') return { id: 'reject-1' };
         throw new Error(`unexpected action ${action}`);
-      },
+      }
     });
 
     assert.ok(outboundCalls.find(call => call.action === 'reply-policies.rejectReply'));
@@ -464,8 +467,8 @@ const createHarness = (options = {}) => {
           id: 'https://remote.example/replies/8',
           type: 'Note',
           inReplyTo: 'https://pod.example/notes/8',
-          content: 'approved later',
-        },
+          content: 'approved later'
+        }
       },
       meta: { webId: 'https://remote.example/users/bob' },
       call: async (action, params) => {
@@ -476,12 +479,12 @@ const createHarness = (options = {}) => {
             requiresApproval: true,
             authorityUri: 'https://pod.example/users/alice',
             parentObjectUri: 'https://pod.example/notes/8',
-            replyActorUri: 'https://remote.example/users/bob',
+            replyActorUri: 'https://remote.example/users/bob'
           };
         }
         if (action === 'reply-policies.approveReply') return { id: 'approve-1' };
         throw new Error(`unexpected action ${action}`);
-      },
+      }
     });
 
     assert.equal(result, 'stored');

@@ -6,7 +6,7 @@ const LITEPUB_EMOJI_REACT_IRI = 'http://litepub.social/ns#EmojiReact';
 const ACTIVITYSTREAMS_CONTEXT = 'https://www.w3.org/ns/activitystreams';
 const LITEPUB_CONTEXT = {
   litepub: 'http://litepub.social/ns#',
-  EmojiReact: 'litepub:EmojiReact',
+  EmojiReact: 'litepub:EmojiReact'
 };
 
 const EMOJI_TYPE = 'Emoji';
@@ -83,9 +83,7 @@ const isEmojiReactType = activity => {
   }
 
   const types = toArray(activity.type || activity['@type']);
-  return types.some(
-    type => type === 'EmojiReact' || type === 'litepub:EmojiReact' || type === LITEPUB_EMOJI_REACT_IRI
-  );
+  return types.some(type => type === 'EmojiReact' || type === 'litepub:EmojiReact' || type === LITEPUB_EMOJI_REACT_IRI);
 };
 
 const isLikeType = activity => {
@@ -94,7 +92,9 @@ const isLikeType = activity => {
   }
 
   const types = toArray(activity.type || activity['@type']);
-  return types.some(type => type === 'Like' || type === 'as:Like' || type === 'https://www.w3.org/ns/activitystreams#Like');
+  return types.some(
+    type => type === 'Like' || type === 'as:Like' || type === 'https://www.w3.org/ns/activitystreams#Like'
+  );
 };
 
 const isEmojiReactionActivity = activity => {
@@ -133,7 +133,7 @@ const ensureEmojiReactContext = activity => {
 
   return {
     ...activity,
-    '@context': nextContext,
+    '@context': nextContext
   };
 };
 
@@ -155,7 +155,7 @@ const normalizeCustomEmojiTag = (tag, shortcode) => {
   return {
     ...tag,
     type: EMOJI_TYPE,
-    name: shortcode,
+    name: shortcode
   };
 };
 
@@ -196,7 +196,7 @@ const normalizeEmojiReactionActivity = activity => {
   let nextActivity = {
     ...activity,
     content: normalizedContent,
-    tag: normalizedTags,
+    tag: normalizedTags
   };
 
   nextActivity = ensureEmojiReactContext(nextActivity);
@@ -207,5 +207,5 @@ const normalizeEmojiReactionActivity = activity => {
 module.exports = {
   normalizeEmojiReactionContent,
   isEmojiReactionActivity,
-  normalizeEmojiReactionActivity,
+  normalizeEmojiReactionActivity
 };

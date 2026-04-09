@@ -19,7 +19,7 @@ async function req(path: string, options: RequestInit = {}) {
 
   let json: any = {};
   const text = await res.text();
-  
+
   try {
     json = text ? JSON.parse(text) : {};
   } catch (parseError) {
@@ -149,19 +149,16 @@ export const dashboardApi = {
   createAnnouncement: (data: { content: string; startsAt?: string; endsAt?: string; allDay?: boolean }) =>
     req('provider/announcements', { method: 'POST', body: JSON.stringify({ data }) }),
 
-  deleteAnnouncement: (id: string) =>
-    req(`provider/announcements/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  deleteAnnouncement: (id: string) => req(`provider/announcements/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 
   listInvitations: () => req('provider/invitations'),
 
   createInvitation: (data: { maxUses?: number; expiresAt?: string; note?: string }) =>
     req('provider/invitations', { method: 'POST', body: JSON.stringify({ data }) }),
 
-  revokeInvitation: (id: string) =>
-    req(`provider/invitations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  revokeInvitation: (id: string) => req(`provider/invitations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 
-  listAuditLog: (limit?: number) =>
-    req(limit ? `provider/audit-log?limit=${limit}` : 'provider/audit-log'),
+  listAuditLog: (limit?: number) => req(limit ? `provider/audit-log?limit=${limit}` : 'provider/audit-log'),
 
   applyModerationDecision: (data: {
     targetWebId?: string;

@@ -10,16 +10,20 @@ const CONFIG = require('../config/config');
 // ---------------------------------------------------------------------------
 
 const VALID_KINDS = new Set([
-  'PostCreate', 'PostEdit', 'PostDelete',
-  'ReactionAdd', 'ReactionRemove',
-  'ShareAdd', 'ShareRemove',
-  'FollowAdd', 'FollowRemove',
-  'ProfileUpdate', 'AccountState'
+  'PostCreate',
+  'PostEdit',
+  'PostDelete',
+  'ReactionAdd',
+  'ReactionRemove',
+  'ShareAdd',
+  'ShareRemove',
+  'FollowAdd',
+  'FollowRemove',
+  'ProfileUpdate',
+  'AccountState'
 ]);
 
-const NOTIFICATION_KINDS = new Set([
-  'ReactionAdd', 'ShareAdd', 'FollowAdd', 'PostCreate'
-]);
+const NOTIFICATION_KINDS = new Set(['ReactionAdd', 'ShareAdd', 'FollowAdd', 'PostCreate']);
 
 const VALID_PROTOCOLS = new Set(['activitypub', 'atproto']);
 
@@ -39,11 +43,7 @@ module.exports = {
 
   settings: {
     auth: {
-      bearerToken:
-        process.env.ACTIVITYPODS_TOKEN ||
-        process.env.INTERNAL_API_TOKEN ||
-        process.env.SIDECAR_TOKEN ||
-        ''
+      bearerToken: process.env.ACTIVITYPODS_TOKEN || process.env.INTERNAL_API_TOKEN || process.env.SIDECAR_TOKEN || ''
     },
     routePath: '/api/internal/bridge',
     dedupeMaxEntries: Number(process.env.CANONICAL_NOTIFICATION_DEDUPE_MAX || 10000),
@@ -59,9 +59,7 @@ module.exports = {
     const bearerToken = this.settings.auth.bearerToken;
 
     if (!bearerToken) {
-      this.logger.warn(
-        '[CanonicalNotificationApi] No internal bearer token configured; all requests will be rejected'
-      );
+      this.logger.warn('[CanonicalNotificationApi] No internal bearer token configured; all requests will be rejected');
     }
 
     if (!this.settings.baseUrl) {
@@ -329,12 +327,10 @@ module.exports = {
             // Backwards-compat: accept plain strings sent by older sidecar versions
             candidates.add(subjectRef.trim());
           }
-
         } else if (kind === 'ReactionAdd' || kind === 'ShareAdd') {
           // Notify the post owner. Try to find via the object's AP ID.
           const ownerUri = await this.resolveObjectOwner(ctx, payload.object);
           if (ownerUri && this.isHttpUrl(ownerUri)) candidates.add(ownerUri.trim());
-
         } else if (kind === 'PostCreate') {
           // Notify each mentioned AP actor
           const mentions = payload.mentions;
@@ -388,9 +384,10 @@ module.exports = {
         if (!resource) return null;
 
         // Check common AP / JSON-LD attributedTo forms
-        const attr = resource.attributedTo
-          || resource['as:attributedTo']
-          || resource['https://www.w3.org/ns/activitystreams#attributedTo'];
+        const attr =
+          resource.attributedTo ||
+          resource['as:attributedTo'] ||
+          resource['https://www.w3.org/ns/activitystreams#attributedTo'];
 
         if (typeof attr === 'string' && this.isHttpUrl(attr)) return attr;
         if (attr && typeof attr === 'object') {
@@ -468,9 +465,10 @@ module.exports = {
         }
 
         case 'PostCreate': {
-          const content = (payload.content && typeof payload.content === 'object'
-            ? payload.content.text || payload.content.html || ''
-            : '') || '';
+          const content =
+            (payload.content && typeof payload.content === 'object'
+              ? payload.content.text || payload.content.html || ''
+              : '') || '';
           const noteId = `${baseUrl}/_bridge/canonical/${encodeURIComponent(canonicalIntentId)}#note`;
           const mentions = Array.isArray(payload.mentions)
             ? payload.mentions.filter(m => typeof m === 'string' && this.isHttpUrl(m))
@@ -500,7 +498,7 @@ module.exports = {
     extractObjectId(objectRef) {
       if (!objectRef || typeof objectRef !== 'object') return null;
       const id = objectRef.activityPubObjectId || objectRef.canonicalUrl;
-      return (id && this.isHttpUrl(id)) ? id : null;
+      return id && this.isHttpUrl(id) ? id : null;
     },
 
     // ---------------------------------------------------------------------------

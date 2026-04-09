@@ -63,7 +63,9 @@ const Fep5bf0CollectionViewsMiddleware = baseUrl => ({
           // Add Link header for the view URI
           if (!ctx.meta.$responseHeaders) ctx.meta.$responseHeaders = {};
           ctx.meta.$responseHeaders.Link = await ctx.call('ldp.link-header.get', { uri: resourceUri });
-        } catch { /* non-critical */ }
+        } catch {
+          /* non-critical */
+        }
 
         return ctx.call('fep-5bf0-collection-views.getView', { resourceUri, beforeEq, afterEq, webId });
       };

@@ -191,16 +191,8 @@ async function testResolveOutbound(base, token) {
       'response has actorUri string',
       `body: ${JSON.stringify(r.body)}`
     );
-    assert(
-      Array.isArray(r.body.deliveries),
-      'response has deliveries array',
-      `body: ${JSON.stringify(r.body)}`
-    );
-    assert(
-      typeof r.body.resolvedAt === 'string',
-      'response has resolvedAt string',
-      `body: ${JSON.stringify(r.body)}`
-    );
+    assert(Array.isArray(r.body.deliveries), 'response has deliveries array', `body: ${JSON.stringify(r.body)}`);
+    assert(typeof r.body.resolvedAt === 'string', 'response has resolvedAt string', `body: ${JSON.stringify(r.body)}`);
   }
 
   // 8. Reject non-http recipient URIs (they should be filtered, not cause 400)
@@ -312,11 +304,7 @@ async function testCanonicalNotification(base, token) {
       kind: 'PostDelete',
       object: { canonicalObjectId: 'test-123', atUri: 'at://did:plc:test/app.bsky.feed.post/test-abc' }
     });
-    assert(
-      r.status === 202,
-      'non-notification kind (PostDelete) → 202',
-      `got ${r.status}: ${JSON.stringify(r.body)}`
-    );
+    assert(r.status === 202, 'non-notification kind (PostDelete) → 202', `got ${r.status}: ${JSON.stringify(r.body)}`);
     assert(
       r.body?.reason === 'non-notification kind',
       'PostDelete returns reason=non-notification kind',
@@ -339,11 +327,7 @@ async function testCanonicalNotification(base, token) {
       },
       content: { text: 'Hello @testdev-local!' }
     });
-    assert(
-      r.status === 202,
-      'valid PostCreate with mentions → 202',
-      `got ${r.status}: ${JSON.stringify(r.body)}`
-    );
+    assert(r.status === 202, 'valid PostCreate with mentions → 202', `got ${r.status}: ${JSON.stringify(r.body)}`);
     assert(typeof r.body?.delivered === 'boolean', 'PostCreate response has delivered boolean');
   }
 

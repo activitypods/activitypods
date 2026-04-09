@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const { Errors } = require('moleculer');
 
@@ -78,7 +78,9 @@ module.exports = {
       toBottom: false
     });
 
-    this.logger.info('[ReplyPoliciesApi] Routes POST /api/reply-policies/resolve and /api/reply-policies/reply registered');
+    this.logger.info(
+      '[ReplyPoliciesApi] Routes POST /api/reply-policies/resolve and /api/reply-policies/reply registered'
+    );
   },
 
   actions: {
@@ -96,18 +98,14 @@ module.exports = {
 
         const objectUri = validateObjectUri(ctx.params.objectUri);
         if (!objectUri) {
-          throw new MoleculerError(
-            'objectUri must be an absolute https:// URL',
-            400,
-            'INVALID_OBJECT_URI'
-          );
+          throw new MoleculerError('objectUri must be an absolute https:// URL', 400, 'INVALID_OBJECT_URI');
         }
 
         try {
           return await ctx.call('reply-policies.resolveOutboundReplyPolicy', {
             objectUri,
             replierActorUri,
-            webId: replierActorUri,
+            webId: replierActorUri
           });
         } catch (error) {
           throw this.toApiError(error);
@@ -118,8 +116,8 @@ module.exports = {
     reply: {
       params: {
         objectUri: { type: 'string', trim: true, max: 2048 },
-        content:   { type: 'string', trim: true, min: 1, max: CONTENT_MAX_LENGTH },
-        isPublic:  { type: 'boolean', optional: true },
+        content: { type: 'string', trim: true, min: 1, max: CONTENT_MAX_LENGTH },
+        isPublic: { type: 'boolean', optional: true }
       },
       async handler(ctx) {
         const replierActorUri = ctx.meta.webId;
@@ -129,11 +127,7 @@ module.exports = {
 
         const objectUri = validateObjectUri(ctx.params.objectUri);
         if (!objectUri) {
-          throw new MoleculerError(
-            'objectUri must be an absolute https:// URL',
-            400,
-            'INVALID_OBJECT_URI'
-          );
+          throw new MoleculerError('objectUri must be an absolute https:// URL', 400, 'INVALID_OBJECT_URI');
         }
 
         const content = sanitizeContent(ctx.params.content);
@@ -154,7 +148,7 @@ module.exports = {
             content,
             isPublic: ctx.params.isPublic,
             replierActorUri,
-            webId: replierActorUri,
+            webId: replierActorUri
           });
           ctx.meta.$statusCode = result.pendingApproval ? 202 : 200;
           return result;

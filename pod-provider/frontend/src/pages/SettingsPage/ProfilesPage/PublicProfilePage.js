@@ -158,7 +158,13 @@ export const PublicProfilePage = () => {
             {links.map(link => (
               <Box
                 key={link.href}
-                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 2,
+                  flexWrap: 'wrap'
+                }}
               >
                 <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
                   {link.href}
@@ -186,15 +192,11 @@ export const PublicProfilePage = () => {
   const ProfileActions = () => (
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} mb={2}>
       {!isGroup && <ShowPublicProfileButton />}
-      <Button
-        label="app.action.verify_profile_links"
-        onClick={onVerifyLinks}
-        disabled={isVerifying}
-      >
+      <Button label="app.action.verify_profile_links" onClick={onVerifyLinks} disabled={isVerifying}>
         <VerifiedIcon />
       </Button>
     </Stack>
-  )
+  );
 
   if (isLoading) return null;
 
@@ -205,7 +207,7 @@ export const PublicProfilePage = () => {
       </Typography>
       <Card sx={{ p: 2 }}>
         <ProfileActions />
-        <SimpleForm defaultValues={defaultValues} onSubmit={onSubmit} toolbar={<ProfileToolbar />}> 
+        <SimpleForm defaultValues={defaultValues} onSubmit={onSubmit} toolbar={<ProfileToolbar />}>
           {!isGroup && <PublicProfileWarning />}
           <TextInput
             source="preferredUsername"

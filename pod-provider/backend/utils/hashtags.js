@@ -64,7 +64,12 @@ const escapeHtml = value =>
     .replace(/'/g, '&#39;');
 
 const stripHtml = text =>
-  typeof text === 'string' ? text.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() : '';
+  typeof text === 'string'
+    ? text
+        .replace(/<[^>]*>?/gm, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    : '';
 
 const linkifyHashtagsInHtml = (html, { baseUrl } = {}) => {
   if (typeof html !== 'string' || html.length === 0) {
@@ -79,7 +84,7 @@ const linkifyHashtagsInHtml = (html, { baseUrl } = {}) => {
 
   return segments
     .map(segment => {
-      if (!segment) return "";
+      if (!segment) return '';
       if (segment.startsWith('<')) {
         const tagName = segment.match(/^<\/?([a-z0-9]+)/i)?.[1]?.toLowerCase();
         if (['pre', 'code', 'a'].includes(tagName)) {
@@ -209,12 +214,12 @@ const normalizeActivityPubObjectHashtags = object => {
   const hashtagTags = normalizedHashtags.map(tag => ({
     type: PUBLIC_HASHTAG_TYPE,
     name: `#${escapeHtml(tag)}`,
-    href: buildHashtagHref(baseUrl, tag), // buildHashtagHref already handles URI encoding
+    href: buildHashtagHref(baseUrl, tag) // buildHashtagHref already handles URI encoding
   }));
 
   return {
     ...object,
-    tag: [...nonHashtagTags, ...hashtagTags],
+    tag: [...nonHashtagTags, ...hashtagTags]
   };
 };
 
@@ -225,5 +230,5 @@ module.exports = {
   normalizeActivityPubObjectHashtags,
   deriveHashtagBaseUrl,
   buildHashtagHref,
-  linkifyHashtagsInHtml,
+  linkifyHashtagsInHtml
 };

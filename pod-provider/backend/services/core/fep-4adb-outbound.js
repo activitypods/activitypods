@@ -1,9 +1,9 @@
 /**
  * FEP-4adb Outbound Activity Handler
- * 
+ *
  * This service handles FEP-4adb support for outbound ActivityPub activities.
  * It ensures that:
- * 
+ *
  * 1. Activities created by actors include their aliases
  * 2. Activities can be addressed to alternative identifiers
  * 3. Outbound activities maintain FEP-4adb compatibility
@@ -16,7 +16,7 @@ module.exports = {
   settings: {
     // Whether to automatically include actor aliases in outbound activities
     includeAliasesInActivities: true,
-    
+
     // Whether to sign activities with alternative identity credentials
     supportAlternativeSignatures: false
   },
@@ -24,7 +24,7 @@ module.exports = {
   actions: {
     /**
      * Prepare an activity for sending, ensuring FEP-4adb compatibility
-     * 
+     *
      * @param {object} activity - The ActivityPub activity object
      * @param {string} actorId - The ID of the actor sending the activity
      * @returns {object} The prepared activity with FEP-4adb enhancements
@@ -75,7 +75,7 @@ module.exports = {
 
     /**
      * Create an activity from an actor, with FEP-4adb support
-     * 
+     *
      * @param {object} activity - The activity template
      * @param {string} actorId - The actor creating the activity
      * @returns {object} The created activity
@@ -96,7 +96,7 @@ module.exports = {
 
     /**
      * Send an activity to recipients, supporting alternative identifiers
-     * 
+     *
      * @param {object} activity - The activity to send
      * @param {string[]} recipients - List of recipients (can be alternative identifiers)
      * @returns {object} The send result
@@ -117,13 +117,10 @@ module.exports = {
       for (const recipient of recipients) {
         try {
           // Resolve recipient if it's an alternative identifier
-          const resolvedRecipient = await ctx.call(
-            'fep-4adb-processor.resolveIdentifier',
-            {
-              identifier: recipient,
-              contextDomain: actorDomain
-            }
-          );
+          const resolvedRecipient = await ctx.call('fep-4adb-processor.resolveIdentifier', {
+            identifier: recipient,
+            contextDomain: actorDomain
+          });
 
           if (resolvedRecipient) {
             // In a real implementation, this would call the activitypub.inbox service
@@ -152,7 +149,7 @@ module.exports = {
 
     /**
      * Update an actor's aliases and ensure outbound activities reflect the change
-     * 
+     *
      * @param {string} actorId - The actor ID
      * @param {string[]} aliases - New list of aliases
      * @returns {object} Update result
@@ -167,9 +164,13 @@ module.exports = {
       // Validate each alias is a proper URI
       const validAliases = [];
       for (const alias of aliases) {
-        if (typeof alias === 'string' &&
-            (alias.startsWith('acct:') || alias.startsWith('did:') ||
-             alias.startsWith('mailto:') || alias.startsWith('http'))) {
+        if (
+          typeof alias === 'string' &&
+          (alias.startsWith('acct:') ||
+            alias.startsWith('did:') ||
+            alias.startsWith('mailto:') ||
+            alias.startsWith('http'))
+        ) {
           validAliases.push(alias);
         }
       }
@@ -218,10 +219,10 @@ module.exports = {
 
     /**
      * Announce that an actor is also known by alternative identifiers
-     * 
+     *
      * This creates an Announce activity declaring alternative identities
      * per FEP-c390 pattern
-     * 
+     *
      * @param {string} actorId - The actor making the announcement
      * @param {string[]} identifiers - Identifiers being claimed
      * @returns {object} The created Announce activity
@@ -259,7 +260,7 @@ module.exports = {
   methods: {
     /**
      * Extract domain from a URI
-     * 
+     *
      * @private
      */
     extractDomain(uri) {
@@ -276,7 +277,7 @@ module.exports = {
 
     /**
      * Enrich an actor reference with alias information
-     * 
+     *
      * @private
      */
     enrichActorReference(actorRef, actorData) {
@@ -288,7 +289,7 @@ module.exports = {
       // If it's an object, add alias information
       if (typeof actorRef === 'object') {
         const enriched = JSON.parse(JSON.stringify(actorRef));
-        
+
         if (actorData.alsoKnownAs) {
           enriched.alsoKnownAs = actorData.alsoKnownAs;
         }
@@ -301,7 +302,7 @@ module.exports = {
 
     /**
      * Process recipient list to resolve alternative identifiers
-     * 
+     *
      * @private
      */
     async processRecipients(ctx, recipients) {
@@ -322,9 +323,7 @@ module.exports = {
 
       // Handle array of recipients
       if (Array.isArray(recipients)) {
-        return Promise.all(
-          recipients.map(r => this.processRecipients(ctx, r))
-        );
+        return Promise.all(recipients.map(r => this.processRecipients(ctx, r)));
       }
 
       return recipients;

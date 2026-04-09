@@ -198,10 +198,7 @@ const PROTOCOL_OPTIONS: Array<{ value: SubjectProtocol; label: string }> = [
 ];
 
 function deriveHashtag(term: string) {
-  const cleaned = term
-    .trim()
-    .replace(/^#+/, '')
-    .replace(/\s+/g, '');
+  const cleaned = term.trim().replace(/^#+/, '').replace(/\s+/g, '');
 
   return cleaned.length > 0 ? `#${cleaned}` : '#';
 }
@@ -638,7 +635,7 @@ const ModerationPage = () => {
 
       await Promise.all([mutes.reload(), blocks.reload()]);
       await fetchAtprotoLists();
-  await loadAtprotoLabelers();
+      await loadAtprotoLabelers();
 
       const cfg = await dashboardApi.getAtprotoModerationSyncConfig();
       const cfgData = (cfg?.data || {}) as AtprotoSyncConfig;
@@ -739,7 +736,9 @@ const ModerationPage = () => {
     try {
       await dashboardApi.update(item.resourceUri, { enabled });
       await loadAtprotoLabelers();
-      setAtprotoLabelerNotice(`${item.name || item.handle || item.did || item.source} ${enabled ? 'enabled' : 'disabled'}.`);
+      setAtprotoLabelerNotice(
+        `${item.name || item.handle || item.did || item.source} ${enabled ? 'enabled' : 'disabled'}.`
+      );
     } catch (error: any) {
       setAtprotoLabelersError(error?.message || 'Failed to update ATProto labeler.');
     } finally {
@@ -776,11 +775,18 @@ const ModerationPage = () => {
     try {
       const normalized = rawValue.toLowerCase();
       const existing = atprotoLabelers.find(item =>
-        [item.source, item.did, item.handle].some(candidate => String(candidate || '').trim().toLowerCase() === normalized)
+        [item.source, item.did, item.handle].some(
+          candidate =>
+            String(candidate || '')
+              .trim()
+              .toLowerCase() === normalized
+        )
       );
 
       if (existing?.installed) {
-        setAtprotoLabelerNotice(`${existing.name || existing.handle || existing.did || existing.source} is already installed.`);
+        setAtprotoLabelerNotice(
+          `${existing.name || existing.handle || existing.did || existing.source} is already installed.`
+        );
         return;
       }
 
@@ -842,10 +848,7 @@ const ModerationPage = () => {
   const parsedFediverseMutes = parseFediverseAccountCsv(fediverseMutesInput, true);
   const parsedFediverseBlocks = parseFediverseAccountCsv(fediverseBlocksInput, false);
 
-  const handleFediverseFileInput = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-    target: 'mutes' | 'blocks'
-  ) => {
+  const handleFediverseFileInput = async (event: React.ChangeEvent<HTMLInputElement>, target: 'mutes' | 'blocks') => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -893,7 +896,11 @@ const ModerationPage = () => {
 
       const existingSet = new Set(
         (replace ? [] : existingFediverse)
-          .map(item => String(item.subjectCanonicalId || '').trim().toLowerCase())
+          .map(item =>
+            String(item.subjectCanonicalId || '')
+              .trim()
+              .toLowerCase()
+          )
           .filter(Boolean)
       );
 
@@ -975,8 +982,8 @@ const ModerationPage = () => {
         Moderation
       </Typography>
       <Typography variant="body2" color="text.secondary" mb={2}>
-        These rules are stored in your Pod and shared with apps that request access. Apps can choose where to apply
-        them in their own UI contexts.
+        These rules are stored in your Pod and shared with apps that request access. Apps can choose where to apply them
+        in their own UI contexts.
       </Typography>
 
       <SectionShell
@@ -1054,10 +1061,7 @@ const ModerationPage = () => {
           </Select>
           <FormControlLabel
             control={
-              <Checkbox
-                checked={includeHashtagVariants}
-                onChange={e => setIncludeHashtagVariants(e.target.checked)}
-              />
+              <Checkbox checked={includeHashtagVariants} onChange={e => setIncludeHashtagVariants(e.target.checked)} />
             }
             label="Match hashtag variants"
             sx={{ ml: { xs: 0, md: 1 } }}
@@ -1073,105 +1077,128 @@ const ModerationPage = () => {
         </Stack>
       </SectionShell>
 
-        <SectionShell title="Import From ATProto/Bluesky" count={0} loading={false} error={atprotoError}>
-          <Stack spacing={1.5}>
-            <Typography variant="body2" color="text.secondary">
-              Import your Bluesky mute/block lists into local moderation settings.
-            </Typography>
+      <SectionShell title="Import From ATProto/Bluesky" count={0} loading={false} error={atprotoError}>
+        <Stack spacing={1.5}>
+          <Typography variant="body2" color="text.secondary">
+            Import your Bluesky mute/block lists into local moderation settings.
+          </Typography>
 
-            {atprotoSyncMessage && <Alert severity="success">{atprotoSyncMessage}</Alert>}
+          {atprotoSyncMessage && <Alert severity="success">{atprotoSyncMessage}</Alert>}
 
-            <TextField
-              size="small"
-              label="ATProto identifier"
-              value={atprotoIdentifier}
-              onChange={e => setAtprotoIdentifier(e.target.value)}
-              placeholder="you.bsky.social"
-              fullWidth
-            />
+          <TextField
+            size="small"
+            label="ATProto identifier"
+            value={atprotoIdentifier}
+            onChange={e => setAtprotoIdentifier(e.target.value)}
+            placeholder="you.bsky.social"
+            fullWidth
+          />
 
-            <TextField
-              size="small"
-              label="ATProto app password"
-              type="password"
-              value={atprotoPassword}
-              onChange={e => setAtprotoPassword(e.target.value)}
-              helperText={atprotoHasStoredSecret ? 'Leave blank to keep stored secret unchanged.' : 'Required unless previously stored.'}
-              fullWidth
-            />
+          <TextField
+            size="small"
+            label="ATProto app password"
+            type="password"
+            value={atprotoPassword}
+            onChange={e => setAtprotoPassword(e.target.value)}
+            helperText={
+              atprotoHasStoredSecret
+                ? 'Leave blank to keep stored secret unchanged.'
+                : 'Required unless previously stored.'
+            }
+            fullWidth
+          />
 
-            <TextField
-              size="small"
-              label="PDS URL (optional)"
-              value={atprotoPdsUrl}
-              onChange={e => setAtprotoPdsUrl(e.target.value)}
-              placeholder="https://bsky.social"
-              fullWidth
-            />
+          <TextField
+            size="small"
+            label="PDS URL (optional)"
+            value={atprotoPdsUrl}
+            onChange={e => setAtprotoPdsUrl(e.target.value)}
+            placeholder="https://bsky.social"
+            fullWidth
+          />
 
-            <Stack direction="row" spacing={1}>
-              <Button variant="outlined" onClick={fetchAtprotoLists} disabled={atprotoLoading || atprotoSyncing}>
-                {atprotoLoading ? 'Loading…' : 'Preview Lists'}
-              </Button>
-              <Button variant="contained" onClick={() => syncAtprotoLists(false)} disabled={atprotoLoading || atprotoSyncing}>
-                {atprotoSyncing ? 'Syncing…' : 'Sync (merge)'}
-              </Button>
-              <Button variant="text" color="warning" onClick={() => syncAtprotoLists(true)} disabled={atprotoLoading || atprotoSyncing}>
-                Replace ATProto entries
-              </Button>
-              <Button variant="outlined" onClick={runAtprotoSyncNow} disabled={atprotoLoading || atprotoSyncing}>
-                Run auto-sync now
-              </Button>
-            </Stack>
-
-            <Box sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Automatic Sync (Phase 2)
-              </Typography>
-              <Stack spacing={1.25}>
-                <FormControlLabel
-                  control={<Checkbox checked={atprotoAutoSyncEnabled} onChange={e => setAtprotoAutoSyncEnabled(e.target.checked)} />}
-                  label="Enable periodic auto-sync from Bluesky"
-                />
-                <FormControlLabel
-                  control={<Checkbox checked={atprotoAutoSyncReplace} onChange={e => setAtprotoAutoSyncReplace(e.target.checked)} />}
-                  label="Replace existing ATProto entries during auto-sync"
-                />
-                <TextField
-                  size="small"
-                  type="number"
-                  label="Auto-sync interval (hours)"
-                  value={atprotoAutoSyncIntervalHours}
-                  onChange={e => setAtprotoAutoSyncIntervalHours(Math.max(1, Math.min(24, Number(e.target.value) || 6)))}
-                  inputProps={{ min: 1, max: 24 }}
-                />
-                <Stack direction="row" spacing={1}>
-                  <Button variant="contained" onClick={saveAtprotoSyncConfig} disabled={atprotoSavingConfig}>
-                    {atprotoSavingConfig ? 'Saving…' : 'Save auto-sync settings'}
-                  </Button>
-                </Stack>
-                <Typography variant="caption" color="text.secondary">
-                  Last sync: {atprotoLastSyncAt ? new Date(atprotoLastSyncAt).toLocaleString() : 'Never'}
-                </Typography>
-                {atprotoLastSyncError && (
-                  <Alert severity="warning" sx={{ mt: 0.5 }}>
-                    Last sync error: {atprotoLastSyncError}
-                  </Alert>
-                )}
-              </Stack>
-            </Box>
-
-            {atprotoPreview && (
-              <Box sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Source: {atprotoPreview.handle || atprotoPreview.did || 'linked account'} via {atprotoPreview.pdsUrl}
-                </Typography>
-                <Typography variant="body2">Remote mutes: {atprotoPreview.mutes.length}</Typography>
-                <Typography variant="body2">Remote blocks: {atprotoPreview.blocks.length}</Typography>
-              </Box>
-            )}
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" onClick={fetchAtprotoLists} disabled={atprotoLoading || atprotoSyncing}>
+              {atprotoLoading ? 'Loading…' : 'Preview Lists'}
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => syncAtprotoLists(false)}
+              disabled={atprotoLoading || atprotoSyncing}
+            >
+              {atprotoSyncing ? 'Syncing…' : 'Sync (merge)'}
+            </Button>
+            <Button
+              variant="text"
+              color="warning"
+              onClick={() => syncAtprotoLists(true)}
+              disabled={atprotoLoading || atprotoSyncing}
+            >
+              Replace ATProto entries
+            </Button>
+            <Button variant="outlined" onClick={runAtprotoSyncNow} disabled={atprotoLoading || atprotoSyncing}>
+              Run auto-sync now
+            </Button>
           </Stack>
-        </SectionShell>
+
+          <Box sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Automatic Sync (Phase 2)
+            </Typography>
+            <Stack spacing={1.25}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={atprotoAutoSyncEnabled}
+                    onChange={e => setAtprotoAutoSyncEnabled(e.target.checked)}
+                  />
+                }
+                label="Enable periodic auto-sync from Bluesky"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={atprotoAutoSyncReplace}
+                    onChange={e => setAtprotoAutoSyncReplace(e.target.checked)}
+                  />
+                }
+                label="Replace existing ATProto entries during auto-sync"
+              />
+              <TextField
+                size="small"
+                type="number"
+                label="Auto-sync interval (hours)"
+                value={atprotoAutoSyncIntervalHours}
+                onChange={e => setAtprotoAutoSyncIntervalHours(Math.max(1, Math.min(24, Number(e.target.value) || 6)))}
+                inputProps={{ min: 1, max: 24 }}
+              />
+              <Stack direction="row" spacing={1}>
+                <Button variant="contained" onClick={saveAtprotoSyncConfig} disabled={atprotoSavingConfig}>
+                  {atprotoSavingConfig ? 'Saving…' : 'Save auto-sync settings'}
+                </Button>
+              </Stack>
+              <Typography variant="caption" color="text.secondary">
+                Last sync: {atprotoLastSyncAt ? new Date(atprotoLastSyncAt).toLocaleString() : 'Never'}
+              </Typography>
+              {atprotoLastSyncError && (
+                <Alert severity="warning" sx={{ mt: 0.5 }}>
+                  Last sync error: {atprotoLastSyncError}
+                </Alert>
+              )}
+            </Stack>
+          </Box>
+
+          {atprotoPreview && (
+            <Box sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+              <Typography variant="caption" color="text.secondary" display="block">
+                Source: {atprotoPreview.handle || atprotoPreview.did || 'linked account'} via {atprotoPreview.pdsUrl}
+              </Typography>
+              <Typography variant="body2">Remote mutes: {atprotoPreview.mutes.length}</Typography>
+              <Typography variant="body2">Remote blocks: {atprotoPreview.blocks.length}</Typography>
+            </Box>
+          )}
+        </Stack>
+      </SectionShell>
 
       <SectionShell
         title="Pod User: ATProto Labelers"
@@ -1256,14 +1283,20 @@ const ModerationPage = () => {
                   const secondaryParts = [item.handle, item.did || item.source];
 
                   if (item.recommended) secondaryParts.push('Recommended');
-                  if (item.syncOrigin === 'atproto-preferences-sync') secondaryParts.push('Synced from ATProto preferences');
+                  if (item.syncOrigin === 'atproto-preferences-sync')
+                    secondaryParts.push('Synced from ATProto preferences');
                   secondaryParts.push(item.enabled ? 'Enabled' : 'Disabled');
 
                   return (
-                    <Box key={actionKey} sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 1.25 }}>
+                    <Box
+                      key={actionKey}
+                      sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 1.25 }}
+                    >
                       <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} justifyContent="space-between">
                         <Box>
-                          <Typography variant="subtitle2">{item.name || item.handle || item.did || item.source}</Typography>
+                          <Typography variant="subtitle2">
+                            {item.name || item.handle || item.did || item.source}
+                          </Typography>
                           <Typography variant="body2" color="text.secondary">
                             {secondaryParts.filter(Boolean).join(' | ')}
                           </Typography>
@@ -1316,11 +1349,13 @@ const ModerationPage = () => {
               Browse public labelers
             </Typography>
 
-            {!normalizedAtprotoLabelerQuery && filteredDiscoverableAtprotoLabelers.length > visibleDiscoverableAtprotoLabelers.length && (
-              <Typography variant="body2" color="text.secondary" mb={1}>
-                Showing the first {visibleDiscoverableAtprotoLabelers.length} public labelers. Search to narrow the list.
-              </Typography>
-            )}
+            {!normalizedAtprotoLabelerQuery &&
+              filteredDiscoverableAtprotoLabelers.length > visibleDiscoverableAtprotoLabelers.length && (
+                <Typography variant="body2" color="text.secondary" mb={1}>
+                  Showing the first {visibleDiscoverableAtprotoLabelers.length} public labelers. Search to narrow the
+                  list.
+                </Typography>
+              )}
 
             {filteredDiscoverableAtprotoLabelers.length === 0 ? (
               <Typography variant="body2" color="text.secondary">
@@ -1336,10 +1371,15 @@ const ModerationPage = () => {
                   if (item.directorySource) secondaryParts.push(`Directory: ${item.directorySource}`);
 
                   return (
-                    <Box key={actionKey} sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 1.25 }}>
+                    <Box
+                      key={actionKey}
+                      sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 1.25 }}
+                    >
                       <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} justifyContent="space-between">
                         <Box>
-                          <Typography variant="subtitle2">{item.name || item.handle || item.did || item.source}</Typography>
+                          <Typography variant="subtitle2">
+                            {item.name || item.handle || item.did || item.source}
+                          </Typography>
                           <Typography variant="body2" color="text.secondary">
                             {secondaryParts.filter(Boolean).join(' | ')}
                           </Typography>
@@ -1452,13 +1492,15 @@ const ModerationPage = () => {
               Filters: {monthlySummary.filters.active} active / {monthlySummary.filters.total} total
             </Typography>
             <Typography variant="body2">
-              Action totals: hide {monthlySummary.filters.actions.hide}, warn {monthlySummary.filters.actions.warn}, filter{' '}
-              {monthlySummary.filters.actions.filter}
+              Action totals: hide {monthlySummary.filters.actions.hide}, warn {monthlySummary.filters.actions.warn},
+              filter {monthlySummary.filters.actions.filter}
             </Typography>
             <Typography variant="body2">
               Mutes: {monthlySummary.mutes.total} | Blocks: {monthlySummary.blocks.total}
             </Typography>
-            <Typography variant="body2">Sensitive media mode: {monthlySummary.sensitiveContent.mediaDisplayMode}</Typography>
+            <Typography variant="body2">
+              Sensitive media mode: {monthlySummary.sensitiveContent.mediaDisplayMode}
+            </Typography>
             <Typography variant="caption" color="text.secondary">
               Generated at: {new Date(monthlySummary.generatedAt).toLocaleString()}
             </Typography>
@@ -1470,7 +1512,11 @@ const ModerationPage = () => {
           </Alert>
         )}
         <Stack direction="row" spacing={1} mt={2}>
-          <Button variant="outlined" onClick={loadMonthlySummary} disabled={monthlySummaryLoading || monthlySummarySending}>
+          <Button
+            variant="outlined"
+            onClick={loadMonthlySummary}
+            disabled={monthlySummaryLoading || monthlySummarySending}
+          >
             Refresh summary
           </Button>
           <Button variant="contained" onClick={handleSendMonthlySummaryNow} disabled={monthlySummarySending}>
@@ -1553,7 +1599,12 @@ const ModerationPage = () => {
             </Button>
             <Button component="label" variant="outlined">
               Load CSV file
-              <input hidden type="file" accept=".csv,text/csv,.txt,text/plain" onChange={e => void handleFediverseFileInput(e, 'mutes')} />
+              <input
+                hidden
+                type="file"
+                accept=".csv,text/csv,.txt,text/plain"
+                onChange={e => void handleFediverseFileInput(e, 'mutes')}
+              />
             </Button>
           </Stack>
 
@@ -1563,11 +1614,13 @@ const ModerationPage = () => {
             fullWidth
             value={fediverseMutesInput}
             onChange={e => setFediverseMutesInput(e.target.value)}
-            placeholder={"Account address,Hide notifications\nuser@example.org,true"}
+            placeholder={'Account address,Hide notifications\nuser@example.org,true'}
           />
           <Stack direction="row" spacing={1} mt={1} alignItems="center">
             <FormControlLabel
-              control={<Checkbox checked={fediverseMutesReplace} onChange={e => setFediverseMutesReplace(e.target.checked)} />}
+              control={
+                <Checkbox checked={fediverseMutesReplace} onChange={e => setFediverseMutesReplace(e.target.checked)} />
+              }
               label="Replace existing Fediverse mutes"
             />
             <Button
@@ -1655,7 +1708,12 @@ const ModerationPage = () => {
             </Button>
             <Button component="label" variant="outlined">
               Load CSV file
-              <input hidden type="file" accept=".csv,text/csv,.txt,text/plain" onChange={e => void handleFediverseFileInput(e, 'blocks')} />
+              <input
+                hidden
+                type="file"
+                accept=".csv,text/csv,.txt,text/plain"
+                onChange={e => void handleFediverseFileInput(e, 'blocks')}
+              />
             </Button>
           </Stack>
 
@@ -1665,11 +1723,16 @@ const ModerationPage = () => {
             fullWidth
             value={fediverseBlocksInput}
             onChange={e => setFediverseBlocksInput(e.target.value)}
-            placeholder={"Account address\nblocked-user@example.org"}
+            placeholder={'Account address\nblocked-user@example.org'}
           />
           <Stack direction="row" spacing={1} mt={1} alignItems="center">
             <FormControlLabel
-              control={<Checkbox checked={fediverseBlocksReplace} onChange={e => setFediverseBlocksReplace(e.target.checked)} />}
+              control={
+                <Checkbox
+                  checked={fediverseBlocksReplace}
+                  onChange={e => setFediverseBlocksReplace(e.target.checked)}
+                />
+              }
               label="Replace existing Fediverse blocks"
             />
             <Button
@@ -1682,7 +1745,6 @@ const ModerationPage = () => {
           </Stack>
         </Box>
       </SectionShell>
-
     </Box>
   );
 };

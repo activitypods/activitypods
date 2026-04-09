@@ -27,10 +27,10 @@ const ok = async (label, fn) => {
       {
         id: 'https://social.example/notes/1',
         followers: 'https://social.example/notes/1/followers',
-        inbox: 'https://social.example/notes/1/inbox',
+        inbox: 'https://social.example/notes/1/inbox'
       },
       async () => null,
-      { recursionLimit: 1 },
+      { recursionLimit: 1 }
     );
 
     assert.equal(result.inboxUri, 'https://social.example/notes/1/inbox');
@@ -42,13 +42,13 @@ const ok = async (label, fn) => {
       {
         id: 'https://social.example/objects/1',
         followers: 'https://social.example/objects/1/followers',
-        attributedTo: 'https://social.example/actors/alice',
+        attributedTo: 'https://social.example/actors/alice'
       },
       async uri =>
         uri === 'https://social.example/actors/alice'
           ? { id: uri, inbox: 'https://social.example/actors/alice/inbox' }
           : null,
-      { recursionLimit: 1 },
+      { recursionLimit: 1 }
     );
 
     assert.equal(result.inboxUri, 'https://social.example/actors/alice/inbox');
@@ -61,10 +61,10 @@ const ok = async (label, fn) => {
       await resolveFollowDeliveryTarget(
         {
           id: 'https://social.example/objects/2',
-          inbox: 'https://social.example/actors/alice/inbox',
+          inbox: 'https://social.example/actors/alice/inbox'
         },
         async () => null,
-        { recursionLimit: 1 },
+        { recursionLimit: 1 }
       );
     } catch (error) {
       err = error;
@@ -81,10 +81,10 @@ const ok = async (label, fn) => {
         {
           id: 'https://social.example/objects/3',
           followers: 'https://social.example/objects/3/followers',
-          attributedTo: 'https://social.example/actors/alice',
+          attributedTo: 'https://social.example/actors/alice'
         },
         async uri => ({ id: uri, attributedTo: 'https://social.example/actors/bob' }),
-        { recursionLimit: 1 },
+        { recursionLimit: 1 }
       );
     } catch (error) {
       err = error;
@@ -99,7 +99,7 @@ const ok = async (label, fn) => {
   await ok('builds Follow activity and posts to outbox with resolved recipient', async () => {
     const service = {
       ...followableService.methods,
-      logger: { debug: () => {} },
+      logger: { debug: () => {} }
     };
 
     const calls = [];
@@ -109,9 +109,9 @@ const ok = async (label, fn) => {
         object: {
           id: 'https://social.example/objects/4',
           followers: 'https://social.example/objects/4/followers',
-          attributedTo: 'https://social.example/actors/alice',
+          attributedTo: 'https://social.example/actors/alice'
         },
-        recursionLimit: 1,
+        recursionLimit: 1
       },
       call: async (action, params) => {
         calls.push({ action, params });
@@ -121,7 +121,7 @@ const ok = async (label, fn) => {
           if (params.resourceUri === 'https://social.example/actors/alice') {
             return {
               id: 'https://social.example/actors/alice',
-              inbox: 'https://social.example/actors/alice/inbox',
+              inbox: 'https://social.example/actors/alice/inbox'
             };
           }
           return null;
@@ -130,7 +130,7 @@ const ok = async (label, fn) => {
           if (params.actorUri === 'https://social.example/actors/me') {
             return {
               id: 'https://social.example/actors/me',
-              outbox: 'https://social.example/actors/me/outbox',
+              outbox: 'https://social.example/actors/me/outbox'
             };
           }
           return null;
@@ -139,7 +139,7 @@ const ok = async (label, fn) => {
           return { id: 'https://social.example/activities/follow-1' };
         }
         return null;
-      },
+      }
     };
 
     const result = await followableService.actions.followObject.handler.call(service, ctx);

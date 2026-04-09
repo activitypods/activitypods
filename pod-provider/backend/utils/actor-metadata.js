@@ -15,13 +15,7 @@
 const URL_RE = /^https?:\/\//i;
 const REL_ME_TOKEN = 'me';
 
-const ACTOR_TYPES = new Set([
-  'Application',
-  'Group',
-  'Organization',
-  'Person',
-  'Service'
-]);
+const ACTOR_TYPES = new Set(['Application', 'Group', 'Organization', 'Person', 'Service']);
 
 const LEGACY_PROPERTY_VALUE_TYPES = new Set([
   'PropertyValue',
@@ -250,9 +244,7 @@ const annotateActorMetadataVerification = (actorObject, verification) => {
   if (verificationLinks.length === 0) return actorObject;
 
   const resultsByHref = new Map(
-    verificationLinks
-      .map(item => [normalizeComparableHref(item?.href), item])
-      .filter(([href]) => Boolean(href))
+    verificationLinks.map(item => [normalizeComparableHref(item?.href), item]).filter(([href]) => Boolean(href))
   );
 
   let anyChanged = false;
@@ -302,5 +294,5 @@ module.exports = {
   normalizeLegacyPropertyValue,
   normalizeLinkMetadata,
   normalizeNoteMetadata,
-  hasActorType,
+  hasActorType
 };

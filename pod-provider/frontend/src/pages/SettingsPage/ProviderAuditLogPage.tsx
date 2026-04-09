@@ -71,7 +71,9 @@ export const ProviderAuditLogPage: React.FC = () => {
   return (
     <Box sx={{ p: 3, maxWidth: 1000 }}>
       <Box sx={{ mb: 2 }}>
-        <Typography variant="h6" gutterBottom>Provider Audit Log</Typography>
+        <Typography variant="h6" gutterBottom>
+          Provider Audit Log
+        </Typography>
         <Typography variant="body2" color="text.secondary">
           A record of all management actions taken by provider actors on this instance.
           {!loading && ` ${total} events stored.`}
@@ -80,7 +82,11 @@ export const ProviderAuditLogPage: React.FC = () => {
 
       <Divider sx={{ mb: 3 }} />
 
-      {error && <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
@@ -95,10 +101,18 @@ export const ProviderAuditLogPage: React.FC = () => {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell sx={{ width: 180 }}><strong>Timestamp</strong></TableCell>
-                <TableCell><strong>Actor</strong></TableCell>
-                <TableCell><strong>Action</strong></TableCell>
-                <TableCell><strong>Details</strong></TableCell>
+                <TableCell sx={{ width: 180 }}>
+                  <strong>Timestamp</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Actor</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Action</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Details</strong>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

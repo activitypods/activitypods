@@ -23,7 +23,7 @@ const ok = async (label, fn) => {
 
   await ok('uses authenticated webId as follower actor and returns 202', async () => {
     const service = {
-      ...followableApi.methods,
+      ...followableApi.methods
     };
 
     const calls = [];
@@ -31,10 +31,10 @@ const ok = async (label, fn) => {
       params: {
         objectUri: 'https://social.example/objects/1',
         recursionLimit: 1,
-        requireFollowersCollection: true,
+        requireFollowersCollection: true
       },
       meta: {
-        webId: 'https://social.example/actors/me',
+        webId: 'https://social.example/actors/me'
       },
       call: async (action, params) => {
         calls.push({ action, params });
@@ -42,7 +42,7 @@ const ok = async (label, fn) => {
           return { success: true, resolved: { inboxUri: 'https://social.example/actors/alice/inbox' } };
         }
         throw new Error(`unexpected action ${action}`);
-      },
+      }
     };
 
     const result = await followableApi.actions.follow.handler.call(service, ctx);
@@ -56,7 +56,7 @@ const ok = async (label, fn) => {
 
   await ok('rejects anonymous callers', async () => {
     const service = {
-      ...followableApi.methods,
+      ...followableApi.methods
     };
 
     let err;
@@ -64,7 +64,7 @@ const ok = async (label, fn) => {
       await followableApi.actions.follow.handler.call(service, {
         params: { objectUri: 'https://social.example/objects/1' },
         meta: { webId: 'anon' },
-        call: async () => null,
+        call: async () => null
       });
     } catch (error) {
       err = error;

@@ -7,7 +7,7 @@ This checklist guides integration of the four FEP-4adb services into ActivityPod
 Create/verify these four service files exist in `/pod-provider/backend/services/core/`:
 
 - [ ] `fep-4adb-dereferencer.js` (406 lines)
-- [ ] `fep-4adb-webfinger.js` (134 lines)  
+- [ ] `fep-4adb-webfinger.js` (134 lines)
 - [ ] `fep-4adb-processor.js` (360 lines)
 - [ ] `fep-4adb-outbound.js` (340 lines)
 
@@ -30,6 +30,7 @@ broker.loadService('./services/core/**/*.js');
 ```
 
 **Verification**:
+
 ```bash
 # After broker starts, check logs for:
 # INFO Loaded service: fep-4adb-dereferencer
@@ -49,13 +50,13 @@ broker.loadService('./services/core/**/*.js');
 
 module.exports = {
   name: 'activitypub.actor',
-  
+
   // ... existing settings ...
-  
+
   hooks: {
     after: {
-      'create': 'enrichActorWithFEP4adbContext',
-      'update': 'enrichActorWithFEP4adbContext'
+      create: 'enrichActorWithFEP4adbContext',
+      update: 'enrichActorWithFEP4adbContext'
     }
   },
 
@@ -95,6 +96,7 @@ module.exports = {
 ```
 
 **Verification**:
+
 ```bash
 # Create an actor with aliases and check it has the FEP-4adb context
 curl -H "Accept: application/activity+json" \
@@ -113,7 +115,7 @@ curl -H "Accept: application/activity+json" \
 
 module.exports = {
   name: 'activitypub.inbox',
-  
+
   dependencies: ['fep-4adb-processor', 'fep-4adb-dereferencer'],
 
   actions: {
@@ -161,6 +163,7 @@ module.exports = {
 ```
 
 **Verification**:
+
 ```bash
 # Send an activity with an acct: actor and verify it's dereferenced
 # Check logs for FEP-4adb dereferencer calls
@@ -178,7 +181,7 @@ module.exports = {
 
 module.exports = {
   name: 'activitypub.outbox',
-  
+
   dependencies: ['fep-4adb-outbound', 'fep-4adb-dereferencer'],
 
   actions: {
@@ -215,6 +218,7 @@ module.exports = {
 ```
 
 **Verification**:
+
 ```bash
 # Create an activity with the actor
 # Check that outbound activity includes alsoKnownAs
@@ -229,7 +233,7 @@ Verify that the webfinger service is loaded and the FEP-4adb webfinger service c
 
 ```javascript
 // Check if webfinger service is available
-broker.has('webfinger')  // Should return true
+broker.has('webfinger'); // Should return true
 
 // The fep-4adb-webfinger service will automatically:
 // 1. Register aliases when actors are created
@@ -238,6 +242,7 @@ broker.has('webfinger')  // Should return true
 ```
 
 **Manual Test** (if webfinger service available):
+
 ```bash
 # Webfinger lookup should include aliases
 curl -s "https://your-pod.com/.well-known/webfinger?resource=acct:alice@your-pod.com" | jq '.aliases'
@@ -378,13 +383,13 @@ curl -X POST https://your-pod.com/alice/outbox \
 
 ### Common Issues & Solutions
 
-| Issue | Diagnosis | Solution |
-|-------|-----------|----------|
-| Services not loading | Check logs for service load errors | Verify file paths in broker config |
-| Aliases not showing in webfinger | Webfinger service might not be loaded | Load webfinger before fep-4adb-webfinger |
-| Dereferencing returns original identifier | Webfinger lookup failed | Check domain/DNS resolution, enable debug logging |
-| Outbound activities missing alsoKnownAs | prepareOutboundActivity not called | Verify outbox hook is registered |
-| Actor enrichment not working | enrichActorWithFEP4adbContext not called | Check actor service hooks configuration |
+| Issue                                     | Diagnosis                                | Solution                                          |
+| ----------------------------------------- | ---------------------------------------- | ------------------------------------------------- |
+| Services not loading                      | Check logs for service load errors       | Verify file paths in broker config                |
+| Aliases not showing in webfinger          | Webfinger service might not be loaded    | Load webfinger before fep-4adb-webfinger          |
+| Dereferencing returns original identifier | Webfinger lookup failed                  | Check domain/DNS resolution, enable debug logging |
+| Outbound activities missing alsoKnownAs   | prepareOutboundActivity not called       | Verify outbox hook is registered                  |
+| Actor enrichment not working              | enrichActorWithFEP4adbContext not called | Check actor service hooks configuration           |
 
 ### Health Check Endpoint
 

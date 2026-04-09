@@ -18,9 +18,7 @@ const sanitizeWarningText = value => {
   if (typeof value !== 'string') return undefined;
 
   // CW / spoiler text should be plain text for broad compatibility.
-  const plain = sanitizeHtml(value, { allowedTags: [], allowedAttributes: {} })
-    .replace(/\s+/g, ' ')
-    .trim();
+  const plain = sanitizeHtml(value, { allowedTags: [], allowedAttributes: {} }).replace(/\s+/g, ' ').trim();
 
   if (!plain) return undefined;
   return plain.length > 500 ? `${plain.slice(0, 497)}...` : plain;
@@ -32,7 +30,7 @@ const readExplicitWarningAlias = object => {
     object.spoilerText,
     object.contentWarning,
     object.content_warning,
-    object.cw,
+    object.cw
   ];
 
   for (const value of candidates) {
@@ -134,5 +132,5 @@ module.exports = {
   sanitizeWarningText,
   deriveCanonicalWarningAndSensitive,
   normalizeObjectContentWarning,
-  normalizeActivityContentWarning,
+  normalizeActivityContentWarning
 };

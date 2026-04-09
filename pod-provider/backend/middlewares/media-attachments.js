@@ -48,10 +48,7 @@ const shouldNormalize = activity => {
   }
 
   // Bare object (Article / Note) passed directly — also normalize
-  return !!(
-    (hasType(activity, 'Note') || hasType(activity, 'Article')) &&
-    activity.attachment != null
-  );
+  return !!((hasType(activity, 'Note') || hasType(activity, 'Article')) && activity.attachment != null);
 };
 
 /**
@@ -63,8 +60,7 @@ const shouldNormalize = activity => {
 const normalizeActivityAttachments = activity => {
   if (!shouldNormalize(activity)) return activity;
 
-  const isWrapped =
-    OBJECT_BEARING_TYPES.has(activity.type) || OBJECT_BEARING_TYPES.has(activity['@type']);
+  const isWrapped = OBJECT_BEARING_TYPES.has(activity.type) || OBJECT_BEARING_TYPES.has(activity['@type']);
 
   if (isWrapped) {
     const normalizedObject = normalizeObjectMediaAttachments(activity.object);
@@ -82,10 +78,7 @@ const normalizeActivityAttachments = activity => {
 const MediaAttachmentsMiddleware = () => ({
   name: 'MediaAttachmentsMiddleware',
   localAction: (next, action) => {
-    if (
-      action.name !== 'activitypub.outbox.post' &&
-      action.name !== 'activitypub.inbox.post'
-    ) {
+    if (action.name !== 'activitypub.outbox.post' && action.name !== 'activitypub.inbox.post') {
       return next;
     }
 
@@ -103,7 +96,7 @@ const MediaAttachmentsMiddleware = () => ({
 
       return next(ctx);
     };
-  },
+  }
 });
 
 module.exports = MediaAttachmentsMiddleware;

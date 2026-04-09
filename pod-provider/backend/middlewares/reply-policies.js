@@ -26,7 +26,7 @@ const ReplyPoliciesMiddleware = () => ({
       if (canCallServices && action.name === 'activitypub.inbox.post' && isReplyActivity(normalized)) {
         replyVerdict = await ctx.call('reply-policies.precheckInboundReply', {
           activity: normalized,
-          replyActorUri: typeof ctx.meta?.webId === 'string' ? ctx.meta.webId : undefined,
+          replyActorUri: typeof ctx.meta?.webId === 'string' ? ctx.meta.webId : undefined
         });
 
         if (!replyVerdict.accepted) {
@@ -35,7 +35,7 @@ const ReplyPoliciesMiddleware = () => ({
               activity: normalized,
               authorityUri: replyVerdict.authorityUri,
               parentObjectUri: replyVerdict.parentObjectUri,
-              replyActorUri: replyVerdict.replyActorUri,
+              replyActorUri: replyVerdict.replyActorUri
             });
           }
           return null;
@@ -44,18 +44,23 @@ const ReplyPoliciesMiddleware = () => ({
 
       const result = await next(ctx);
 
-      if (canCallServices && action.name === 'activitypub.inbox.post' && replyVerdict && replyVerdict.requiresApproval) {
+      if (
+        canCallServices &&
+        action.name === 'activitypub.inbox.post' &&
+        replyVerdict &&
+        replyVerdict.requiresApproval
+      ) {
         await ctx.call('reply-policies.approveReply', {
           activity: normalized,
           authorityUri: replyVerdict.authorityUri,
           parentObjectUri: replyVerdict.parentObjectUri,
-          replyActorUri: replyVerdict.replyActorUri,
+          replyActorUri: replyVerdict.replyActorUri
         });
       }
 
       return result;
     };
-  },
+  }
 });
 
 module.exports = ReplyPoliciesMiddleware;

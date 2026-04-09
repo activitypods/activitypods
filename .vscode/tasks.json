@@ -1,80 +1,72 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "Start dev containers",
-			"type": "docker-compose",
-			"dockerCompose": {
-				"up": {
-					"detached": true
-				},
-				"files": [
-					"${workspaceFolder}/pod-provider/docker-compose.yml"
-				]
-			}
-		},
-		{
-			"label": "Stop dev containers",
-			"type": "docker-compose",
-			"dockerCompose": {
-				"down": true,
-				"files": [
-					"${workspaceFolder}/pod-provider/docker-compose.yml"
-				]
-			}
-		},
-		{
-			"label": "Start test containers",
-			"type": "docker-compose",
-			"dockerCompose": {
-				"up": {
-					"detached": true
-				},
-				"files": [
-					"${workspaceFolder}/pod-provider/docker-compose-test.yml"
-				]
-			},
-			"dependsOn": "Stop dev containers"
-		},
-		{
-			"label": "Stop test containers",
-			"type": "docker-compose",
-			"dockerCompose": {
-				"down": true,
-				"files": [
-					"${workspaceFolder}/pod-provider/docker-compose-test.yml"
-				]
-			}
-		},
-		{
-			"label": "Run frontend dev server",
-			"type": "shell",
-			"command": "cd pod-provider/frontend && npm run dev",
-			"isBackground": true
-		},
-		{
-			"label": "Run backend dev server",
-			"type": "shell",
-			"command": "cd pod-provider/backend && npm run dev",
-			"isBackground": true
-		},
-		{
-			"label": "Restart backend dev server",
-			"type": "shell",
-			"command": "cd ${workspaceFolder}/pod-provider/backend && npm run dev",
-			"isBackground": true
-		},
-		{
-			"label": "Restart frontend dev server",
-			"type": "shell",
-			"command": "cd ${workspaceFolder}/pod-provider/frontend && npm start",
-			"isBackground": true
-		},
-		{
-			"label": "Restart frontend dev server",
-			"type": "shell",
-			"command": "cd ${workspaceFolder}/pod-provider/frontend && npm run dev",
-			"isBackground": true
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start dev containers",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "up": {
+          "detached": true
+        },
+        "files": ["${workspaceFolder}/pod-provider/docker-compose.yml"]
+      }
+    },
+    {
+      "label": "Stop dev containers",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "down": true,
+        "files": ["${workspaceFolder}/pod-provider/docker-compose.yml"]
+      }
+    },
+    {
+      "label": "Start test containers",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "up": {
+          "detached": true
+        },
+        "files": ["${workspaceFolder}/pod-provider/docker-compose-test.yml"]
+      },
+      "dependsOn": "Stop dev containers"
+    },
+    {
+      "label": "Stop test containers",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "down": true,
+        "files": ["${workspaceFolder}/pod-provider/docker-compose-test.yml"]
+      }
+    },
+    {
+      "label": "Run frontend dev server",
+      "type": "shell",
+      "command": "cd pod-provider/frontend && npm run dev",
+      "isBackground": true
+    },
+    {
+      "label": "Run backend dev server",
+      "type": "shell",
+      "command": "cd pod-provider/backend && npm run dev",
+      "isBackground": true
+    },
+    {
+      "label": "Restart backend dev server",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/pod-provider/backend && npm run dev",
+      "isBackground": true
+    },
+    {
+      "label": "Restart frontend dev server",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/pod-provider/frontend && npm start",
+      "isBackground": true
+    },
+    {
+      "label": "Restart frontend dev server",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/pod-provider/frontend && npm run dev",
+      "isBackground": true
+    }
+  ]
 }

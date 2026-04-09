@@ -25,21 +25,21 @@ const normalizeParams = params => {
   if (hasType(nextActivity, 'Undo') && nextActivity.object && typeof nextActivity.object === 'object') {
     nextActivity = {
       ...nextActivity,
-      object: normalizeEmojiReactionActivity(nextActivity.object),
+      object: normalizeEmojiReactionActivity(nextActivity.object)
     };
   }
 
   if (!shouldNormalizeActivityObject(nextActivity)) {
     return {
       collectionUri,
-      ...nextActivity,
+      ...nextActivity
     };
   }
 
   if (nextActivity.object && typeof nextActivity.object === 'object') {
     nextActivity = {
       ...nextActivity,
-      object: normalizeActivityPubObjectHashtags(nextActivity.object),
+      object: normalizeActivityPubObjectHashtags(nextActivity.object)
     };
   } else if (hasType(nextActivity, 'Note')) {
     nextActivity = normalizeActivityPubObjectHashtags(nextActivity);
@@ -47,7 +47,7 @@ const normalizeParams = params => {
 
   return {
     collectionUri,
-    ...nextActivity,
+    ...nextActivity
   };
 };
 
@@ -62,7 +62,7 @@ const HashtagNormalizationMiddleware = () => ({
       ctx.params = normalizeParams(ctx.params);
       return next(ctx);
     };
-  },
+  }
 });
 
 module.exports = HashtagNormalizationMiddleware;

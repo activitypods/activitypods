@@ -3,7 +3,7 @@
 const FOLLOWABLE_ERRORS = Object.freeze({
   OBJECT_HAS_UNKNOWN_FOLLOWERS_COLLECTION: 'OBJECT_HAS_UNKNOWN_FOLLOWERS_COLLECTION',
   MAX_RECURSION_LIMIT: 'MAX_RECURSION_LIMIT',
-  TARGET_NOT_RESOLVABLE: 'TARGET_NOT_RESOLVABLE',
+  TARGET_NOT_RESOLVABLE: 'TARGET_NOT_RESOLVABLE'
 });
 
 const isObject = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -78,7 +78,7 @@ const resolveFollowDeliveryTarget = async (objectToFollow, dereferenceByUri, opt
       recipientUri: objectId || directInbox,
       recursionDepthUsed: 0,
       objectId,
-      followersUri,
+      followersUri
     };
   }
 
@@ -113,18 +113,19 @@ const resolveFollowDeliveryTarget = async (objectToFollow, dereferenceByUri, opt
   }
 
   const resolvedInbox = findInboxOnObject(current);
-  const recipientUri = firstIri(current.id) || firstIri(current['@id']) || resolveAttributedToRef(objectToFollow) || resolvedInbox;
+  const recipientUri =
+    firstIri(current.id) || firstIri(current['@id']) || resolveAttributedToRef(objectToFollow) || resolvedInbox;
 
   return {
     inboxUri: resolvedInbox,
     recipientUri,
     recursionDepthUsed: depthUsed,
     objectId,
-    followersUri,
+    followersUri
   };
 };
 
 module.exports = {
   FOLLOWABLE_ERRORS,
-  resolveFollowDeliveryTarget,
+  resolveFollowDeliveryTarget
 };

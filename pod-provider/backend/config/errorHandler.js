@@ -32,14 +32,14 @@ function errorHandler(err, info) {
 
   const logPayload = {
     correlationId,
-    errorName:  err.name    || 'Error',
-    errorCode:  err.code    || null,
-    errorType:  err.type    || null,
-    message:    err.message || 'Unknown error',
-    service:    info?.service?.fullName || null,
-    nodeID:     info?.nodeID            || null,
+    errorName: err.name || 'Error',
+    errorCode: err.code || null,
+    errorType: err.type || null,
+    message: err.message || 'Unknown error',
+    service: info?.service?.fullName || null,
+    nodeID: info?.nodeID || null,
     // Never expose stack traces externally, but always capture server-side
-    stack: isProd ? '[redacted]' : (err.stack || null)
+    stack: isProd ? '[redacted]' : err.stack || null
   };
 
   // eslint-disable-next-line no-console

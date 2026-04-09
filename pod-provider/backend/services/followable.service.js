@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { FOLLOWABLE_ERRORS, resolveFollowDeliveryTarget } = require('../utils/followable');
@@ -19,7 +19,7 @@ module.exports = {
         object: { type: 'object', optional: true },
         recursionLimit: { type: 'number', integer: true, optional: true, convert: true, min: 0 },
         requireFollowersCollection: { type: 'boolean', optional: true },
-        webId: { type: 'string', optional: true },
+        webId: { type: 'string', optional: true }
       },
       async handler(ctx) {
         const { objectUri, object, recursionLimit, requireFollowersCollection, webId } = ctx.params;
@@ -30,15 +30,15 @@ module.exports = {
           async uri => this.loadObject(ctx, uri, webId),
           {
             recursionLimit,
-            requireFollowersCollection,
-          },
+            requireFollowersCollection
+          }
         );
 
         return {
           success: true,
-          ...resolved,
+          ...resolved
         };
-      },
+      }
     },
 
     followObject: {
@@ -48,17 +48,10 @@ module.exports = {
         object: { type: 'object', optional: true },
         recursionLimit: { type: 'number', integer: true, optional: true, convert: true, min: 0 },
         requireFollowersCollection: { type: 'boolean', optional: true },
-        webId: { type: 'string', optional: true },
+        webId: { type: 'string', optional: true }
       },
       async handler(ctx) {
-        const {
-          followerActorUri,
-          objectUri,
-          object,
-          recursionLimit,
-          requireFollowersCollection,
-          webId,
-        } = ctx.params;
+        const { followerActorUri, objectUri, object, recursionLimit, requireFollowersCollection, webId } = ctx.params;
 
         const targetObject = object || (await this.loadObject(ctx, objectUri, webId));
         const resolved = await resolveFollowDeliveryTarget(
@@ -66,8 +59,8 @@ module.exports = {
           async uri => this.loadObject(ctx, uri, webId),
           {
             recursionLimit,
-            requireFollowersCollection,
-          },
+            requireFollowersCollection
+          }
         );
 
         const follower = await ctx.call('activitypub.actor.get', { actorUri: followerActorUri });
@@ -84,16 +77,16 @@ module.exports = {
           type: 'Follow',
           actor: followerActorUri,
           object: objectId,
-          to: resolved.recipientUri,
+          to: resolved.recipientUri
         });
 
         return {
           success: true,
           followActivity: result,
-          resolved,
+          resolved
         };
-      },
-    },
+      }
+    }
   },
 
   methods: {
@@ -105,7 +98,7 @@ module.exports = {
       try {
         await ctx.call('ldp.remote.store', {
           resourceUri: uri,
-          webId: webId || 'system',
+          webId: webId || 'system'
         });
       } catch (error) {
         this.logger.debug('[followable] remote store skipped', { resourceUri: uri, error: error.message });
@@ -115,7 +108,7 @@ module.exports = {
         const resource = await ctx.call('ldp.resource.get', {
           resourceUri: uri,
           accept: MIME_TYPES.JSON,
-          webId: webId || 'system',
+          webId: webId || 'system'
         });
         if (resource && typeof resource === 'object') {
           return resource;
@@ -134,6 +127,6 @@ module.exports = {
       }
 
       return null;
-    },
-  },
+    }
+  }
 };

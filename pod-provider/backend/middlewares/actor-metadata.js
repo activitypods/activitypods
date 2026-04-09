@@ -64,13 +64,10 @@ const ActorMetadataMiddleware = () => ({
   name: 'ActorMetadataMiddleware',
 
   localAction: (next, action) => {
-    const shouldNormalizeParams =
-      action.name === 'activitypub.outbox.post' ||
-      action.name === 'activitypub.inbox.post';
+    const shouldNormalizeParams = action.name === 'activitypub.outbox.post' || action.name === 'activitypub.inbox.post';
 
     const shouldNormalizeResult =
-      action.name === 'activitypub.actor.get' ||
-      action.name === 'activitypub.actor.getProfile';
+      action.name === 'activitypub.actor.get' || action.name === 'activitypub.actor.getProfile';
 
     if (!shouldNormalizeParams && !shouldNormalizeResult) {
       return next;
@@ -94,7 +91,7 @@ const ActorMetadataMiddleware = () => ({
 
       return result;
     };
-  },
+  }
 });
 
 module.exports = ActorMetadataMiddleware;

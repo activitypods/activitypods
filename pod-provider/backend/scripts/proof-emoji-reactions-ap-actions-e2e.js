@@ -5,7 +5,7 @@ const HashtagNormalizationMiddleware = require('../middlewares/hashtag-normaliza
 async function run() {
   const broker = new ServiceBroker({
     logger: false,
-    middlewares: [HashtagNormalizationMiddleware()],
+    middlewares: [HashtagNormalizationMiddleware()]
   });
 
   let outboxCaptured = null;
@@ -26,9 +26,9 @@ async function run() {
             outboxCaptured = ctx.params;
           }
           return ctx.params;
-        },
-      },
-    },
+        }
+      }
+    }
   });
 
   broker.createService({
@@ -38,9 +38,9 @@ async function run() {
         async handler(ctx) {
           inboxCaptured = ctx.params;
           return ctx.params;
-        },
-      },
-    },
+        }
+      }
+    }
   });
 
   await broker.start();
@@ -60,10 +60,10 @@ async function run() {
           icon: {
             type: 'Image',
             mediaType: 'image/png',
-            url: 'https://alice.example/files/blob.png',
-          },
-        },
-      ],
+            url: 'https://alice.example/files/blob.png'
+          }
+        }
+      ]
     });
 
     assert.ok(outboxCaptured, 'outbox action should be called for EmojiReact');
@@ -90,7 +90,7 @@ async function run() {
       type: 'Like',
       actor: 'https://remote.example/users/bob',
       object: 'https://remote.example/objects/2',
-      content: '  🔥  ',
+      content: '  🔥  '
     });
 
     assert.ok(inboxCaptured, 'inbox action should be called for Like+content');
@@ -105,8 +105,8 @@ async function run() {
         type: 'Like',
         object: 'https://remote.example/objects/3',
         content: ' :party_parrot: ',
-        tag: [{ type: 'Emoji', name: ':party_parrot:' }],
-      },
+        tag: [{ type: 'Emoji', name: ':party_parrot:' }]
+      }
     });
 
     assert.ok(undoCaptured, 'Undo activity should be captured');
@@ -121,7 +121,7 @@ async function run() {
       actor: 'http://localhost:3000/alice',
       object: 'https://remote.example/objects/4',
       content: 'party_parrot',
-      tag: [{ type: 'Mention', href: 'https://remote.example/users/bob' }],
+      tag: [{ type: 'Mention', href: 'https://remote.example/users/bob' }]
     });
 
     assert.ok(invalidCaptured, 'invalid shortcode payload should still pass through action');

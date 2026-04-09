@@ -131,7 +131,9 @@ const HomePage = () => {
                 mb: 2
               }}
             >
-              Pod Provider for the<br />Memory Application
+              Pod Provider for the
+              <br />
+              Memory Application
             </Typography>
             <Typography
               sx={{
@@ -142,9 +144,8 @@ const HomePage = () => {
                 lineHeight: 1.6
               }}
             >
-              Your data belongs to you. Memory gives you a personal Pod — a private,
-              portable space where you decide what to store, who to share with, and
-              which apps to trust. Simple, secure, and entirely yours.
+              Your data belongs to you. Memory gives you a personal Pod — a private, portable space where you decide
+              what to store, who to share with, and which apps to trust. Simple, secure, and entirely yours.
             </Typography>
             <Box sx={{ display: 'flex', gap: 1.5 }}>
               <Button
@@ -194,9 +195,7 @@ const HomePage = () => {
               backgroundColor: '#fff'
             }}
           >
-            <Typography sx={{ fontWeight: 700, fontSize: 22, mb: 2.5, color: '#1a1a1a' }}>
-              Usage
-            </Typography>
+            <Typography sx={{ fontWeight: 700, fontSize: 22, mb: 2.5, color: '#1a1a1a' }}>Usage</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {usageItems.map((item, idx) => (
                 <Box key={idx} sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>

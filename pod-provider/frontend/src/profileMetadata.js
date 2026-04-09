@@ -3,66 +3,66 @@ const LEGACY_PROPERTY_VALUE_TYPES = new Set([
   'schema:PropertyValue',
   'http://schema.org#PropertyValue',
   'https://schema.org/PropertyValue'
-])
+]);
 
-const LEGACY_VALUE_KEYS = ['value', 'http://schema.org#value', 'https://schema.org/value']
+const LEGACY_VALUE_KEYS = ['value', 'http://schema.org#value', 'https://schema.org/value'];
 
-const toArray = value => (Array.isArray(value) ? value : value != null ? [value] : [])
+const toArray = value => (Array.isArray(value) ? value : value != null ? [value] : []);
 
 const normalizeString = value => {
-  if (typeof value !== 'string') return ''
-  return value.trim()
-}
+  if (typeof value !== 'string') return '';
+  return value.trim();
+};
 
 const splitRel = rel =>
   toArray(rel)
     .flatMap(value => (typeof value === 'string' ? value.split(/\s+/) : []))
     .map(value => value.trim().toLowerCase())
-    .filter(Boolean)
+    .filter(Boolean);
 
-const hasRelMe = rel => splitRel(rel).includes('me')
+const hasRelMe = rel => splitRel(rel).includes('me');
 
 const normalizeUrl = value => {
-  if (typeof value !== 'string') return null
+  if (typeof value !== 'string') return null;
   try {
-    const parsed = new URL(value.trim())
-    if (!['http:', 'https:'].includes(parsed.protocol)) return null
-    return parsed.href
+    const parsed = new URL(value.trim());
+    if (!['http:', 'https:'].includes(parsed.protocol)) return null;
+    return parsed.href;
   } catch {
-    return null
+    return null;
   }
-}
+};
 
 const extractLegacyValue = item => {
   for (const key of LEGACY_VALUE_KEYS) {
     if (typeof item?.[key] === 'string' && item[key].trim()) {
-      return item[key].trim()
+      return item[key].trim();
     }
   }
-  return ''
-}
+  return '';
+};
 
 const inferFieldFromLegacyValue = (name, value) => {
-  const normalizedHref = normalizeUrl(value)
+  const normalizedHref = normalizeUrl(value);
   if (normalizedHref) {
     return {
       name,
       value: normalizedHref,
       kind: 'link',
       relMe: /\brel\s*=\s*['"][^'"]*\bme\b/i.test(value)
-    }
+    };
   }
 
-  const anchorMatch = value.match(/href\s*=\s*['"]([^'"]+)['"]/i)
+  const anchorMatch = value.match(/href\s*=\s*['"]([^'"]+)['"]/i);
   if (anchorMatch?.[1]) {
-    const href = normalizeUrl(anchorMatch[1])
+    const href = normalizeUrl(anchorMatch[1]);
     if (href) {
       return {
         name,
         value: href,
         kind: 'link',
         relMe: /\brel\s*=\s*['"][^'"]*\bme\b/i.test(value)
-      }
+      };
     }
   }
 
@@ -71,26 +71,26 @@ const inferFieldFromLegacyValue = (name, value) => {
     value,
     kind: 'text',
     relMe: false
-  }
-}
+  };
+};
 
 export const attachmentToProfileField = item => {
-  if (!item || typeof item !== 'object') return null
+  if (!item || typeof item !== 'object') return null;
 
-  const name = normalizeString(item.name)
-  if (!name) return null
+  const name = normalizeString(item.name);
+  if (!name) return null;
 
-  const types = toArray(item.type || item['@type'])
+  const types = toArray(item.type || item['@type']);
 
   if (types.includes('Note')) {
-    const content = normalizeString(item.content)
-    if (!content) return null
-    return { name, value: content, kind: 'text', relMe: false }
+    const content = normalizeString(item.content);
+    if (!content) return null;
+    return { name, value: content, kind: 'text', relMe: false };
   }
 
   if (types.includes('Link')) {
-    const href = normalizeUrl(item.href || item.url)
-    if (!href) return null
+    const href = normalizeUrl(item.href || item.url);
+    if (!href) return null;
     return {
       name,
       value: href,
@@ -99,37 +99,34 @@ export const attachmentToProfileField = item => {
       verified: Boolean(item.verified),
       verificationReason: normalizeString(item.verificationReason) || undefined,
       verifiedAt: normalizeString(item.verifiedAt) || undefined
-    }
+    };
   }
 
   if (types.some(type => LEGACY_PROPERTY_VALUE_TYPES.has(type))) {
-    const value = extractLegacyValue(item)
-    if (!value) return null
-    return inferFieldFromLegacyValue(name, value)
+    const value = extractLegacyValue(item);
+    if (!value) return null;
+    return inferFieldFromLegacyValue(name, value);
   }
 
-  return null
-}
+  return null;
+};
 
-export const extractProfileFields = attachment =>
-  toArray(attachment)
-    .map(attachmentToProfileField)
-    .filter(Boolean)
+export const extractProfileFields = attachment => toArray(attachment).map(attachmentToProfileField).filter(Boolean);
 
 export const createEmptyProfileField = () => ({
   name: '',
   value: '',
   kind: 'text',
   relMe: false
-})
+});
 
 export const buildProfileFormDefaults = actor => ({
   ...actor,
   metadataFields: extractProfileFields(actor?.attachment)
-})
+});
 
 export const mergeProfileFieldsIntoAttachment = (existingAttachment, metadataFields) => {
-  const preserved = toArray(existingAttachment).filter(item => !attachmentToProfileField(item))
+  const preserved = toArray(existingAttachment).filter(item => !attachmentToProfileField(item));
 
   const generated = toArray(metadataFields)
     .map(field => ({
@@ -141,11 +138,11 @@ export const mergeProfileFieldsIntoAttachment = (existingAttachment, metadataFie
     .filter(field => field.name && field.value)
     .map(field => {
       if (field.kind === 'link') {
-        const href = normalizeUrl(field.value)
+        const href = normalizeUrl(field.value);
         if (!href) {
-          const error = new Error(`Invalid URL for metadata field "${field.name}"`)
-          error.code = 'INVALID_PROFILE_METADATA_URL'
-          throw error
+          const error = new Error(`Invalid URL for metadata field "${field.name}"`);
+          error.code = 'INVALID_PROFILE_METADATA_URL';
+          throw error;
         }
 
         return {
@@ -153,15 +150,15 @@ export const mergeProfileFieldsIntoAttachment = (existingAttachment, metadataFie
           name: field.name,
           href,
           ...(field.relMe ? { rel: ['me'] } : {})
-        }
+        };
       }
 
       return {
         type: 'Note',
         name: field.name,
         content: field.value
-      }
-    })
+      };
+    });
 
-  return [...preserved, ...generated]
-}
+  return [...preserved, ...generated];
+};

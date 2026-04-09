@@ -13,7 +13,7 @@ const {
   normalizeQuotePost,
   sanitizeContent,
   normalizeTag,
-  normalizeInReplyTo,
+  normalizeInReplyTo
 } = require('./utils/quote-posts');
 const QuotePostsMiddleware = require('./middlewares/quote-posts');
 
@@ -39,35 +39,47 @@ const ok = async (label, fn) => {
   console.log('\n§ 1  isQuotePost detection');
 
   await ok('plain Announce (no content) is NOT a quote post', () => {
-    assert.equal(isQuotePost({
-      type: 'Announce',
-      actor: 'https://example.com/users/evan',
-      object: 'https://example.com/notes/1234',
-    }), false);
+    assert.equal(
+      isQuotePost({
+        type: 'Announce',
+        actor: 'https://example.com/users/evan',
+        object: 'https://example.com/notes/1234'
+      }),
+      false
+    );
   });
 
   await ok('Announce with whitespace-only content is NOT a quote post', () => {
-    assert.equal(isQuotePost({
-      type: 'Announce',
-      object: 'https://example.com/notes/1234',
-      content: '   ',
-    }), false);
+    assert.equal(
+      isQuotePost({
+        type: 'Announce',
+        object: 'https://example.com/notes/1234',
+        content: '   '
+      }),
+      false
+    );
   });
 
   await ok('Announce with content IS a quote post', () => {
-    assert.equal(isQuotePost({
-      type: 'Announce',
-      object: 'https://example.com/notes/1234',
-      content: 'I think that this is a good point and should be shared.',
-    }), true);
+    assert.equal(
+      isQuotePost({
+        type: 'Announce',
+        object: 'https://example.com/notes/1234',
+        content: 'I think that this is a good point and should be shared.'
+      }),
+      true
+    );
   });
 
   await ok('non-Announce activity is never a quote post', () => {
-    assert.equal(isQuotePost({
-      type: 'Create',
-      object: { type: 'Note', content: 'hello' },
-      content: 'some text',
-    }), false);
+    assert.equal(
+      isQuotePost({
+        type: 'Create',
+        object: { type: 'Note', content: 'hello' },
+        content: 'some text'
+      }),
+      false
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -78,14 +90,18 @@ const ok = async (label, fn) => {
   await ok('extracts plain URI string object', () => {
     assert.equal(
       getQuoteObjectIri({ type: 'Announce', object: 'https://example.com/notes/1234', content: 'c' }),
-      'https://example.com/notes/1234',
+      'https://example.com/notes/1234'
     );
   });
 
   await ok('extracts IRI from inline object with id', () => {
     assert.equal(
-      getQuoteObjectIri({ type: 'Announce', object: { id: 'https://example.com/notes/1234', type: 'Note' }, content: 'c' }),
-      'https://example.com/notes/1234',
+      getQuoteObjectIri({
+        type: 'Announce',
+        object: { id: 'https://example.com/notes/1234', type: 'Note' },
+        content: 'c'
+      }),
+      'https://example.com/notes/1234'
     );
   });
 
@@ -148,16 +164,13 @@ const ok = async (label, fn) => {
   console.log('\n§ 5  normalizeInReplyTo');
 
   await ok('passes plain URI through', () => {
-    assert.equal(
-      normalizeInReplyTo('https://example.com/activities/abc'),
-      'https://example.com/activities/abc',
-    );
+    assert.equal(normalizeInReplyTo('https://example.com/activities/abc'), 'https://example.com/activities/abc');
   });
 
   await ok('extracts URI from object with id', () => {
     assert.equal(
       normalizeInReplyTo({ id: 'https://example.com/activities/abc' }),
-      'https://example.com/activities/abc',
+      'https://example.com/activities/abc'
     );
   });
 
@@ -179,7 +192,7 @@ const ok = async (label, fn) => {
       type: 'Announce',
       actor: 'https://example.com/users/evan',
       object: 'https://example.com/notes/1234',
-      content: 'Safe text with no HTML.',
+      content: 'Safe text with no HTML.'
     };
     assert.strictEqual(normalizeQuotePost(activity), activity);
   });
@@ -188,7 +201,7 @@ const ok = async (label, fn) => {
     const activity = {
       type: 'Announce',
       object: 'https://example.com/notes/1234',
-      content: 'hello <script>evil()</script> world',
+      content: 'hello <script>evil()</script> world'
     };
     const result = normalizeQuotePost(activity);
     assert.notStrictEqual(result, activity);
@@ -203,8 +216,8 @@ const ok = async (label, fn) => {
       content: 'Some commentary',
       tag: [
         { type: 'Hashtag', href: 'https://example.com/tags/foo', name: 'foo' },
-        { type: 'Unknown', href: 'https://example.com/whatever' },
-      ],
+        { type: 'Unknown', href: 'https://example.com/whatever' }
+      ]
     };
     const result = normalizeQuotePost(activity);
     assert.deepStrictEqual(result.tag, { type: 'Hashtag', href: 'https://example.com/tags/foo', name: 'foo' });
@@ -215,7 +228,7 @@ const ok = async (label, fn) => {
       type: 'Announce',
       object: 'https://example.com/notes/1234',
       content: 'Replying with a quote',
-      inReplyTo: { id: 'https://example.com/activities/rrrsssttt' },
+      inReplyTo: { id: 'https://example.com/activities/rrrsssttt' }
     };
     const result = normalizeQuotePost(activity);
     assert.equal(result.inReplyTo, 'https://example.com/activities/rrrsssttt');
@@ -226,7 +239,7 @@ const ok = async (label, fn) => {
       type: 'Announce',
       object: 'https://example.com/notes/1234',
       content: 'Commentary',
-      inReplyTo: 'not-a-url',
+      inReplyTo: 'not-a-url'
     };
     const result = normalizeQuotePost(activity);
     assert.ok(!('inReplyTo' in result));
@@ -244,9 +257,13 @@ const ok = async (label, fn) => {
       type: 'Announce',
       actor: 'https://example.com/users/evan',
       to: ['https://example.com/users/evan/followers', 'https://example.com/users/jeff'],
-      object: { id: 'https://example.com/notes/1234', type: 'Note', attributedTo: 'https://example.com/users/franklin' },
+      object: {
+        id: 'https://example.com/notes/1234',
+        type: 'Note',
+        attributedTo: 'https://example.com/users/franklin'
+      },
       content: "<a href='https://example.com/users/jeff'>@jeff</a> you might like this.",
-      tag: { type: 'Mention', href: 'https://example.com/users/jeff', name: 'jeff' },
+      tag: { type: 'Mention', href: 'https://example.com/users/jeff', name: 'jeff' }
     };
     const result = normalizeQuotePost(activity);
     assert.equal(result.type, 'Announce');
@@ -265,10 +282,17 @@ const ok = async (label, fn) => {
     const mw = QuotePostsMiddleware();
     const fakeAction = { name: 'activitypub.outbox.post' };
     let intercepted = null;
-    const next = async ctx => { intercepted = ctx.params; return 'stored'; };
+    const next = async ctx => {
+      intercepted = ctx.params;
+      return 'stored';
+    };
     const handler = mw.localAction(next, fakeAction);
 
-    const activity = { type: 'Announce', actor: 'https://example.com/users/evan', object: 'https://example.com/notes/1234' };
+    const activity = {
+      type: 'Announce',
+      actor: 'https://example.com/users/evan',
+      object: 'https://example.com/notes/1234'
+    };
     const ctx = { params: activity, call: async () => {} };
     await handler(ctx);
     assert.strictEqual(intercepted, activity, 'unmodified reference passed through');
@@ -278,13 +302,16 @@ const ok = async (label, fn) => {
     const mw = QuotePostsMiddleware();
     const fakeAction = { name: 'activitypub.outbox.post' };
     let stored = null;
-    const next = async ctx => { stored = ctx.params; return 'stored'; };
+    const next = async ctx => {
+      stored = ctx.params;
+      return 'stored';
+    };
     const handler = mw.localAction(next, fakeAction);
 
     const activity = {
       type: 'Announce',
       object: 'https://example.com/notes/1234',
-      content: 'Good post <script>bad()</script>',
+      content: 'Good post <script>bad()</script>'
     };
     const ctx = { params: activity, call: async () => {} };
     await handler(ctx);
@@ -312,9 +339,11 @@ const ok = async (label, fn) => {
         id: 'https://example.com/activities/abc',
         type: 'Announce',
         object: 'https://example.com/notes/1234',
-        content: 'Great post!',
+        content: 'Great post!'
       },
-      call: async (name, params) => { calls.push({ name, params }); },
+      call: async (name, params) => {
+        calls.push({ name, params });
+      }
     };
     await handler(ctx);
     const attachCall = calls.find(c => c.name === 'activitypub.collection.attach');
@@ -334,9 +363,11 @@ const ok = async (label, fn) => {
         id: 'https://example.com/activities/abc',
         type: 'Announce',
         object: 'https://example.com/notes/1234',
-        content: 'Great post!',
+        content: 'Great post!'
       },
-      call: async () => { throw new Error('collection not found'); },
+      call: async () => {
+        throw new Error('collection not found');
+      }
     };
     const result = await handler(ctx);
     assert.equal(result, 'stored');

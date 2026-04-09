@@ -135,8 +135,7 @@ module.exports = {
       provider_audit_log: 'Audit Log',
       provider_audit_log_description: 'Record of all provider management actions',
       provider_moderation: 'Moderation',
-      provider_moderation_description:
-        'Apply moderation decisions across ActivityPub and ATProto (Bluesky-compatible)',
+      provider_moderation_description: 'Apply moderation decisions across ActivityPub and ATProto (Bluesky-compatible)',
       owner_dashboard: 'Pod owner dashboard',
       owner_dashboard_description: 'Account, profile, app permissions, and personal settings',
       provider_dashboard: 'Pod provider dashboard',

@@ -19,9 +19,13 @@ const StatCard = ({ label, value, loading }) => (
     {loading ? (
       <Skeleton variant="text" width={40} sx={{ mx: 'auto' }} />
     ) : (
-      <Typography variant="h5" fontWeight={700}>{value ?? '—'}</Typography>
+      <Typography variant="h5" fontWeight={700}>
+        {value ?? '—'}
+      </Typography>
     )}
-    <Typography variant="caption" color="text.secondary">{label}</Typography>
+    <Typography variant="caption" color="text.secondary">
+      {label}
+    </Typography>
   </Paper>
 );
 
@@ -33,12 +37,14 @@ const SettingsProviderDashboardPage = () => {
   const [defaultModerationSource, setDefaultModerationSource] = useState(null);
 
   useEffect(() => {
-    dashboardApi.getProviderStats()
+    dashboardApi
+      .getProviderStats()
       .then(s => setStats(s))
       .catch(() => setStats(null))
       .finally(() => setStatsLoading(false));
 
-    dashboardApi.getProviderDefaultModerationSourceStatus()
+    dashboardApi
+      .getProviderDefaultModerationSourceStatus()
       .then(result => setDefaultModerationSource(result?.data || null))
       .catch(() => setDefaultModerationSource(null));
   }, []);
@@ -74,9 +80,7 @@ const SettingsProviderDashboardPage = () => {
         <Typography variant="body2">
           Source: {defaultModerationSource?.source || 'did:plc:ar7c4by46qjdydhdevvrndac'}
         </Typography>
-        <Typography variant="body2">
-          Immutable: {defaultModerationSource?.immutable ? 'Yes' : 'No'}
-        </Typography>
+        <Typography variant="body2">Immutable: {defaultModerationSource?.immutable ? 'Yes' : 'No'}</Typography>
       </Paper>
 
       <Box>
@@ -130,4 +134,3 @@ const SettingsProviderDashboardPage = () => {
 };
 
 export default SettingsProviderDashboardPage;
-

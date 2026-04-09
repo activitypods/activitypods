@@ -21,8 +21,16 @@ module.exports = {
   settings: {
     // Properties in objects that might contain identifiers
     identifierProperties: [
-      'actor', 'attributedTo', 'to', 'cc', 'bcc', 'attachment',
-      'inReplyTo', 'object', 'origin', 'target'
+      'actor',
+      'attributedTo',
+      'to',
+      'cc',
+      'bcc',
+      'attachment',
+      'inReplyTo',
+      'object',
+      'origin',
+      'target'
     ]
   },
 
@@ -47,11 +55,7 @@ module.exports = {
       // Process each identifier property
       for (const prop of this.settings.identifierProperties) {
         if (prop in processed) {
-          processed[prop] = await this.dereferencePropertyValue(
-            ctx,
-            processed[prop],
-            docDomain
-          );
+          processed[prop] = await this.dereferencePropertyValue(ctx, processed[prop], docDomain);
         }
       }
 
@@ -78,8 +82,7 @@ module.exports = {
       }
 
       // If it's already an HTTP(S) URI, just return it as-is
-      if (typeof identifier === 'string' &&
-          (identifier.startsWith('http://') || identifier.startsWith('https://'))) {
+      if (typeof identifier === 'string' && (identifier.startsWith('http://') || identifier.startsWith('https://'))) {
         return identifier;
       }
 
@@ -97,8 +100,10 @@ module.exports = {
       }
 
       // For other non-HTTP identifiers, use FEP-4adb dereferencing
-      if (typeof identifier === 'string' &&
-          (identifier.startsWith('acct:') || identifier.startsWith('did:') || identifier.startsWith('mailto:'))) {
+      if (
+        typeof identifier === 'string' &&
+        (identifier.startsWith('acct:') || identifier.startsWith('did:') || identifier.startsWith('mailto:'))
+      ) {
         try {
           const actor = await ctx.call('fep-4adb-dereferencer.dereferenceIdentifier', {
             identifier,
@@ -137,8 +142,7 @@ module.exports = {
       }
 
       // Skip validation for HTTP(S) URIs - they're already specific
-      if (typeof identifier === 'string' &&
-          (identifier.startsWith('http://') || identifier.startsWith('https://'))) {
+      if (typeof identifier === 'string' && (identifier.startsWith('http://') || identifier.startsWith('https://'))) {
         return identifier === expectedActorId || identifier === expectedActorId + '/';
       }
 
@@ -188,9 +192,7 @@ module.exports = {
 
       if (object.attachment) {
         if (Array.isArray(object.attachment)) {
-          verifiableStatement = object.attachment.find(
-            att => att.type === 'VerifiableIdentityStatement'
-          );
+          verifiableStatement = object.attachment.find(att => att.type === 'VerifiableIdentityStatement');
         } else if (object.attachment.type === 'VerifiableIdentityStatement') {
           verifiableStatement = object.attachment;
         }
@@ -247,9 +249,7 @@ module.exports = {
 
       // Handle arrays of identifiers
       if (Array.isArray(value)) {
-        return Promise.all(
-          value.map(v => this.dereferencePropertyValue(ctx, v, contextDomain))
-        );
+        return Promise.all(value.map(v => this.dereferencePropertyValue(ctx, v, contextDomain)));
       }
 
       // Handle objects with id property
@@ -274,9 +274,7 @@ module.exports = {
       // Only attempt resolution for non-HTTP identifiers that look like
       // alternative identifiers or bare domain names.
       const isAlternativeId =
-        identifier.startsWith('acct:') ||
-        identifier.startsWith('did:') ||
-        identifier.startsWith('mailto:');
+        identifier.startsWith('acct:') || identifier.startsWith('did:') || identifier.startsWith('mailto:');
 
       if (!isAlternativeId && !isBaredomain(identifier)) {
         return identifier;

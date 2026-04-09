@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const { AS_PUBLIC } = require('../utils/search-consent');
 const { normalizePollActivity, getActivityObject, isQuestion, isVoteNote } = require('../utils/polls');
@@ -36,15 +36,15 @@ module.exports = {
       async handler(ctx) {
         const { activity } = ctx.params || {};
         await this.registerPollFromActivity(ctx, activity);
-      },
-    },
+      }
+    }
   },
 
   actions: {
     precheckInboundVote: {
       params: {
         activity: { type: 'object' },
-        voterActorUri: { type: 'string', optional: true },
+        voterActorUri: { type: 'string', optional: true }
       },
       async handler(ctx) {
         const normalizedActivity = normalizePollActivity(ctx.params.activity);
@@ -67,15 +67,15 @@ module.exports = {
         return {
           accepted: verdict.accepted,
           reason: verdict.reason,
-          isVote: true,
+          isVote: true
         };
-      },
+      }
     },
 
     commitInboundVote: {
       params: {
         activity: { type: 'object' },
-        voterActorUri: { type: 'string', optional: true },
+        voterActorUri: { type: 'string', optional: true }
       },
       async handler(ctx) {
         const normalizedActivity = normalizePollActivity(ctx.params.activity);
@@ -120,20 +120,20 @@ module.exports = {
           accepted: true,
           reason: null,
           isVote: true,
-          updateActivityId: updateActivity.id || null,
+          updateActivityId: updateActivity.id || null
         };
-      },
+      }
     },
 
     registerOutboundPoll: {
       params: {
-        activity: { type: 'object' },
+        activity: { type: 'object' }
       },
       async handler(ctx) {
         const normalized = normalizePollActivity(ctx.params.activity);
         return this.registerPollFromActivity(ctx, normalized);
-      },
-    },
+      }
+    }
   },
 
   methods: {
@@ -158,7 +158,7 @@ module.exports = {
         .filter(option => option && typeof option === 'object' && typeof option.name === 'string')
         .map(option => ({
           name: option.name.trim(),
-          totalItems: Number(option.replies?.totalItems) >= 0 ? Math.floor(Number(option.replies.totalItems)) : 0,
+          totalItems: Number(option.replies?.totalItems) >= 0 ? Math.floor(Number(option.replies.totalItems)) : 0
         }))
         .filter(option => option.name.length > 0);
 
@@ -169,7 +169,8 @@ module.exports = {
       const previous = this.pollStateById.get(pollId);
       const nextOptionNames = options.map(option => option.name);
       const modeChanged = previous && previous.mode !== mode;
-      const optionNamesChanged = previous && JSON.stringify(previous.options.map(o => o.name)) !== JSON.stringify(nextOptionNames);
+      const optionNamesChanged =
+        previous && JSON.stringify(previous.options.map(o => o.name)) !== JSON.stringify(nextOptionNames);
       const shouldResetVotes = Boolean(modeChanged || optionNamesChanged);
 
       const audience = this.extractAudience(object, normalized);
@@ -188,7 +189,7 @@ module.exports = {
         voteIds: shouldResetVotes || !previous ? new Set() : previous.voteIds,
         voterChoices: shouldResetVotes || !previous ? new Map() : previous.voterChoices,
         voters: shouldResetVotes || !previous ? new Set() : previous.voters,
-        updatedAt: normalizeDate(object.updated) || new Date().toISOString(),
+        updatedAt: normalizeDate(object.updated) || new Date().toISOString()
       };
 
       if (!shouldResetVotes && previous) {
@@ -218,7 +219,7 @@ module.exports = {
         voteId,
         pollId,
         optionName,
-        attributedTo,
+        attributedTo
       };
     },
 
@@ -267,7 +268,7 @@ module.exports = {
         try {
           const isMember = await ctx.call('activitypub.collection.includes', {
             collectionUri: audienceEntry,
-            itemUri: actorUri,
+            itemUri: actorUri
           });
           if (Boolean(isMember)) {
             return true;
@@ -277,7 +278,7 @@ module.exports = {
             pollId: poll.pollId,
             collectionUri: audienceEntry,
             actorUri,
-            error: error.message,
+            error: error.message
           });
         }
       }
@@ -287,12 +288,12 @@ module.exports = {
 
     looksLikeCollectionUri(value) {
       return (
-        typeof value === 'string'
-        && (value.includes('/followers')
-          || value.includes('/following')
-          || value.includes('/contacts')
-          || value.includes('/contactRequests')
-          || value.includes('/collections/'))
+        typeof value === 'string' &&
+        (value.includes('/followers') ||
+          value.includes('/following') ||
+          value.includes('/contacts') ||
+          value.includes('/contactRequests') ||
+          value.includes('/collections/'))
       );
     },
 
@@ -320,9 +321,9 @@ module.exports = {
           name: option.name,
           replies: {
             type: 'Collection',
-            totalItems: option.totalItems,
-          },
-        })),
+            totalItems: option.totalItems
+          }
+        }))
       };
 
       return {
@@ -330,7 +331,7 @@ module.exports = {
         actor: poll.author,
         to: [...new Set([...poll.to, ...poll.voters])],
         cc: [...new Set([...poll.cc, ...poll.voters])],
-        object: questionObject,
+        object: questionObject
       };
     },
 
@@ -340,15 +341,15 @@ module.exports = {
       if (!outbox) {
         this.logger.warn('[polls-manager] Could not resolve author outbox for poll update', {
           pollId: poll.pollId,
-          author: poll.author,
+          author: poll.author
         });
         return;
       }
 
       await ctx.call('activitypub.outbox.post', {
         collectionUri: outbox,
-        ...activity,
+        ...activity
       });
-    },
-  },
+    }
+  }
 };

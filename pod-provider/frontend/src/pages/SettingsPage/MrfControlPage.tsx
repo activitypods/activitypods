@@ -27,15 +27,7 @@ import { dashboardApi } from './dashboardApi';
 
 type MRFMode = 'disabled' | 'dry-run' | 'enforce';
 
-type UIFieldType =
-  | 'string'
-  | 'number'
-  | 'integer'
-  | 'boolean'
-  | 'enum'
-  | 'multiselect'
-  | 'string-array'
-  | 'json';
+type UIFieldType = 'string' | 'number' | 'integer' | 'boolean' | 'enum' | 'multiselect' | 'string-array' | 'json';
 
 type RegistryFieldOption = {
   value: string;
@@ -195,17 +187,16 @@ const MrfControlPage = () => {
   const [tuningContext, setTuningContext] = useState<TuningContext | null>(null);
 
   const loadModuleLists = useCallback(async () => {
-    const [registryRes, modulesRes] = await Promise.all([dashboardApi.listMrfRegistry(), dashboardApi.listMrfModules()]);
+    const [registryRes, modulesRes] = await Promise.all([
+      dashboardApi.listMrfRegistry(),
+      dashboardApi.listMrfModules()
+    ]);
     const registryItems = (registryRes.data || []) as RegistryModuleDescriptor[];
     const moduleItems = (modulesRes.data || []) as ModulesListItem[];
 
     setModules(moduleItems);
 
-    const nextActive =
-      moduleIdFromRoute ||
-      moduleItems[0]?.manifest?.id ||
-      registryItems[0]?.manifest?.id ||
-      '';
+    const nextActive = moduleIdFromRoute || moduleItems[0]?.manifest?.id || registryItems[0]?.manifest?.id || '';
 
     setActiveModuleId(nextActive);
     if (nextActive && !moduleIdFromRoute) {
@@ -329,7 +320,12 @@ const MrfControlPage = () => {
       if (Array.isArray(value) && value.length === 0) return 'Required';
     }
 
-    if ((field.type === 'number' || field.type === 'integer') && value !== undefined && value !== null && value !== '') {
+    if (
+      (field.type === 'number' || field.type === 'integer') &&
+      value !== undefined &&
+      value !== null &&
+      value !== ''
+    ) {
       const n = Number(value);
       if (!Number.isFinite(n)) return 'Must be a number';
       if (field.type === 'integer' && !Number.isInteger(n)) return 'Must be an integer';
@@ -459,7 +455,9 @@ const MrfControlPage = () => {
     } catch (e: any) {
       const err = e as ApiError;
       if (err.code === 'CONFLICT' || err.status === 409) {
-        setError('This filter changed in another session. We reloaded the latest version. Please review and save again.');
+        setError(
+          'This filter changed in another session. We reloaded the latest version. Please review and save again.'
+        );
         await loadModuleEditor(activeModuleId);
       } else if (err.code === 'BAD_REQUEST' && err.details && typeof err.details === 'object') {
         setError(toFriendlyError(err.message, 'Please review the highlighted fields and try again.'));
@@ -558,12 +556,7 @@ const MrfControlPage = () => {
     }
 
     if (field.type === 'json') {
-      const text =
-        typeof value === 'string'
-          ? value
-          : value !== undefined
-            ? JSON.stringify(value, null, 2)
-            : '';
+      const text = typeof value === 'string' ? value : value !== undefined ? JSON.stringify(value, null, 2) : '';
       return (
         <TextField
           fullWidth
@@ -632,7 +625,10 @@ const MrfControlPage = () => {
             <Typography variant="subtitle1" fontWeight={600} mb={1}>
               Post filters
             </Typography>
-            <List dense sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
+            <List
+              dense
+              sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}
+            >
               {modules.map(item => {
                 const active = item.manifest.id === activeModuleId;
                 return (
@@ -640,7 +636,11 @@ const MrfControlPage = () => {
                     <ListItemButton selected={active} onClick={() => handleSelectModule(item.manifest.id)}>
                       <ListItemText
                         primary={item.manifest.name}
-                        secondary={item.config ? `${MODE_LABELS[item.config.mode]} · rev ${item.config.revision}` : 'Not configured'}
+                        secondary={
+                          item.config
+                            ? `${MODE_LABELS[item.config.mode]} · rev ${item.config.revision}`
+                            : 'Not configured'
+                        }
                       />
                     </ListItemButton>
                   </ListItem>
@@ -760,11 +760,7 @@ const MrfControlPage = () => {
                   />
                   <FormControl size="small" sx={{ minWidth: 180 }}>
                     <InputLabel>Mode</InputLabel>
-                    <Select
-                      label="Mode"
-                      value={mode}
-                      onChange={e => setMode(e.target.value as MRFMode)}
-                    >
+                    <Select label="Mode" value={mode} onChange={e => setMode(e.target.value as MRFMode)}>
                       {(Object.keys(MODE_LABELS) as MRFMode[]).map(m => (
                         <MenuItem key={m} value={m} disabled={disallowedModes.has(m)}>
                           {MODE_LABELS[m]}
@@ -796,7 +792,10 @@ const MrfControlPage = () => {
                       </Typography>
                       <FormControlLabel
                         control={
-                          <Checkbox checked={confirmEnforceRisk} onChange={e => setConfirmEnforceRisk(e.target.checked)} />
+                          <Checkbox
+                            checked={confirmEnforceRisk}
+                            onChange={e => setConfirmEnforceRisk(e.target.checked)}
+                          />
                         }
                         label="I confirm enforce-mode risk has been reviewed"
                       />

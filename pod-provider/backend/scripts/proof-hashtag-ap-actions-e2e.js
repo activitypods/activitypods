@@ -5,7 +5,7 @@ const HashtagNormalizationMiddleware = require('../middlewares/hashtag-normaliza
 async function run() {
   const broker = new ServiceBroker({
     logger: false,
-    middlewares: [HashtagNormalizationMiddleware()],
+    middlewares: [HashtagNormalizationMiddleware()]
   });
 
   let outboxCaptured = null;
@@ -18,9 +18,9 @@ async function run() {
         async handler(ctx) {
           outboxCaptured = ctx.params;
           return ctx.params;
-        },
-      },
-    },
+        }
+      }
+    }
   });
 
   broker.createService({
@@ -30,9 +30,9 @@ async function run() {
         async handler(ctx) {
           inboxCaptured = ctx.params;
           return ctx.params;
-        },
-      },
-    },
+        }
+      }
+    }
   });
 
   await broker.start();
@@ -49,9 +49,9 @@ async function run() {
         tag: [
           { type: 'Mention', href: 'https://remote.example/users/bob' },
           { type: 'Hashtag', name: '#MiXeD_Case' },
-          { type: 'Hashtag', name: '#bad-tag' },
-        ],
-      },
+          { type: 'Hashtag', name: '#bad-tag' }
+        ]
+      }
     });
 
     assert.ok(outboxCaptured, 'outbox action should be called');
@@ -59,7 +59,10 @@ async function run() {
     assert.ok(Array.isArray(outboxCaptured.object.tag), 'outbox object.tag should be an array');
 
     const outboxTags = outboxCaptured.object.tag;
-    assert.ok(outboxTags.some(t => t.type === 'Mention'), 'outbox should preserve mention tags');
+    assert.ok(
+      outboxTags.some(t => t.type === 'Mention'),
+      'outbox should preserve mention tags'
+    );
     assert.ok(
       outboxTags.some(t => t.type === 'Hashtag' && t.name === '#world'),
       'outbox should include #world'
@@ -84,8 +87,8 @@ async function run() {
       object: {
         type: 'Note',
         id: 'https://remote.example/notes/abc',
-        content: 'Inbound #Remote_Tag update',
-      },
+        content: 'Inbound #Remote_Tag update'
+      }
     });
 
     assert.ok(inboxCaptured, 'inbox action should be called');

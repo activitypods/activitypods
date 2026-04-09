@@ -52,7 +52,7 @@ const QuotePostsMiddleware = () => ({
           try {
             await ctx.call('activitypub.collection.attach', {
               collectionUri: `${quotedObjectIri}/shares`,
-              item: normalized.id || normalized['@id'],
+              item: normalized.id || normalized['@id']
             });
           } catch {
             // shares collection may not exist on this server; that is fine
@@ -62,7 +62,7 @@ const QuotePostsMiddleware = () => ({
 
       return result;
     };
-  },
+  }
 });
 
 module.exports = QuotePostsMiddleware;

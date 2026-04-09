@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const { Errors } = require('moleculer');
 
@@ -118,7 +118,11 @@ module.exports = {
       const raw = Number(error?.code);
       const statusCode = Number.isFinite(raw) && raw >= 400 && raw < 600 ? raw : 500;
       const type = typeof error?.type === 'string' ? error.type : 'ACTOR_METADATA_API_ERROR';
-      return new MoleculerError(error?.message || 'Unable to process actor metadata verification request', statusCode, type);
+      return new MoleculerError(
+        error?.message || 'Unable to process actor metadata verification request',
+        statusCode,
+        type
+      );
     }
   }
 };

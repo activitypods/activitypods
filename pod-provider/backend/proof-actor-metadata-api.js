@@ -23,7 +23,7 @@ const ok = async (label, fn) => {
 
   const instance = {
     ...service,
-    ...service.methods,
+    ...service.methods
   };
 
   await ok('verifyActorMetadata defaults actorUri to requester', async () => {

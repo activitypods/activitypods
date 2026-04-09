@@ -221,7 +221,10 @@ const TrustSourcesPage = () => {
   const [trustEvalRevision, setTrustEvalRevision] = useState<number | null>(null);
   const [trustEvalLoading, setTrustEvalLoading] = useState(false);
   const [trustEvalSaving, setTrustEvalSaving] = useState(false);
-  const [defaultModerationSource, setDefaultModerationSource] = useState<{ source?: string; immutable?: boolean } | null>(null);
+  const [defaultModerationSource, setDefaultModerationSource] = useState<{
+    source?: string;
+    immutable?: boolean;
+  } | null>(null);
 
   const [blocklistInput, setBlocklistInput] = useState('');
   const [importingBlocklist, setImportingBlocklist] = useState(false);
@@ -324,9 +327,7 @@ const TrustSourcesPage = () => {
     () =>
       [...sources].sort(
         (a, b) =>
-          Number(b.enabled) - Number(a.enabled) ||
-          (b.priority ?? -1) - (a.priority ?? -1) ||
-          b.weight - a.weight
+          Number(b.enabled) - Number(a.enabled) || (b.priority ?? -1) - (a.priority ?? -1) || b.weight - a.weight
       ),
     [sources]
   );
@@ -495,9 +496,7 @@ const TrustSourcesPage = () => {
     setError(null);
     try {
       const existing = new Set(
-        sources
-          .filter(item => item.sourceType === 'domain-blocklist')
-          .map(item => item.source.toLowerCase())
+        sources.filter(item => item.sourceType === 'domain-blocklist').map(item => item.source.toLowerCase())
       );
 
       for (const item of parsedImport) {
@@ -526,9 +525,7 @@ const TrustSourcesPage = () => {
   };
 
   const exportDomainBlocklistTxt = () => {
-    const lines = sortedSources
-      .filter(item => item.sourceType === 'domain-blocklist')
-      .map(item => item.source);
+    const lines = sortedSources.filter(item => item.sourceType === 'domain-blocklist').map(item => item.source);
 
     downloadBlob('domain-blocklist.txt', `${lines.join('\n')}\n`, 'text/plain;charset=utf-8');
   };
@@ -614,8 +611,8 @@ const TrustSourcesPage = () => {
             const currentWeight = draftWeights[uri] ?? item.weight ?? 1;
             const immutableDefault = Boolean(
               defaultModerationSource?.immutable &&
-              defaultModerationSource?.source &&
-              String(item.source || '').toLowerCase() === String(defaultModerationSource.source).toLowerCase()
+                defaultModerationSource?.source &&
+                String(item.source || '').toLowerCase() === String(defaultModerationSource.source).toLowerCase()
             );
 
             return (
@@ -634,7 +631,11 @@ const TrustSourcesPage = () => {
                       {immutableDefault && (
                         <Chip size="small" color="warning" variant="outlined" label="Default (immutable)" />
                       )}
-                      <Chip size="small" color={item.enabled ? 'success' : 'default'} label={item.enabled ? 'Enabled' : 'Disabled'} />
+                      <Chip
+                        size="small"
+                        color={item.enabled ? 'success' : 'default'}
+                        label={item.enabled ? 'Enabled' : 'Disabled'}
+                      />
                       {item.priority !== undefined && (
                         <Chip size="small" variant="outlined" color="primary" label={`Priority ${item.priority}`} />
                       )}
@@ -647,12 +648,23 @@ const TrustSourcesPage = () => {
                       </Typography>
                       <Stack direction="row" flexWrap="wrap" gap={0.5}>
                         {(item.scopes || []).map(scope => (
-                          <Chip key={scope} label={SCOPE_LABELS[scope as TrustScope] || scope} variant="outlined" size="small" />
+                          <Chip
+                            key={scope}
+                            label={SCOPE_LABELS[scope as TrustScope] || scope}
+                            variant="outlined"
+                            size="small"
+                          />
                         ))}
                       </Stack>
                       <Stack direction="row" spacing={2} alignItems="center">
                         <FormControlLabel
-                          control={<Switch checked={item.enabled} onChange={e => handleToggleEnabled(item, e.target.checked)} disabled={immutableDefault} />}
+                          control={
+                            <Switch
+                              checked={item.enabled}
+                              onChange={e => handleToggleEnabled(item, e.target.checked)}
+                              disabled={immutableDefault}
+                            />
+                          }
                           label="Enabled"
                         />
                         <Box minWidth={180}>
@@ -689,7 +701,13 @@ const TrustSourcesPage = () => {
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Remove trust source">
-                    <IconButton edge="end" size="small" sx={{ color: 'error.main' }} onClick={() => handleDelete(uri)} disabled={immutableDefault}>
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      sx={{ color: 'error.main' }}
+                      onClick={() => handleDelete(uri)}
+                      disabled={immutableDefault}
+                    >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
@@ -776,9 +794,16 @@ const TrustSourcesPage = () => {
             )}
 
             {previewMeta && (
-              <Box sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'action.hover' }}>
+              <Box
+                sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'action.hover' }}
+              >
                 {previewMeta.icon && (
-                  <Box component="img" src={previewMeta.icon} alt="" sx={{ width: 32, height: 32, mb: 1, borderRadius: 1 }} />
+                  <Box
+                    component="img"
+                    src={previewMeta.icon}
+                    alt=""
+                    sx={{ width: 32, height: 32, mb: 1, borderRadius: 1 }}
+                  />
                 )}
                 {previewMeta.name && (
                   <Typography variant="body2" fontWeight={500}>
@@ -824,7 +849,9 @@ const TrustSourcesPage = () => {
                 {TRUST_SCOPES.map(scope => (
                   <FormControlLabel
                     key={scope}
-                    control={<Checkbox size="small" checked={selectedScopes.has(scope)} onChange={() => toggleScope(scope)} />}
+                    control={
+                      <Checkbox size="small" checked={selectedScopes.has(scope)} onChange={() => toggleScope(scope)} />
+                    }
                     label={SCOPE_LABELS[scope]}
                   />
                 ))}
@@ -870,7 +897,8 @@ const TrustSourcesPage = () => {
           </Stack>
 
           <Typography variant="body2" color="text.secondary" mb={1}>
-            Paste domains from Mastodon or Akkoma lists. Supported input: plain domains, wildcard domains, CSV rows, or tuple lines.
+            Paste domains from Mastodon or Akkoma lists. Supported input: plain domains, wildcard domains, CSV rows, or
+            tuple lines.
           </Typography>
 
           <TextField

@@ -33,10 +33,10 @@ const { sanitizeIp } = require('../../utils/sanitize');
 // windowSec: rolling window length in seconds
 // max: maximum allowed requests in that window (inclusive)
 const BUCKETS = {
-  signup_ip:     { windowSec: 3_600,  max: 10 },   // 10 signups  / IP    / hour
-  signup_email:  { windowSec: 86_400, max: 3  },   // 3 signups   / email / day
-  check_ip:      { windowSec: 60,     max: 30 },   // 30 checks   / IP    / minute
-  check_session: { windowSec: 60,     max: 20 }    // 20 checks   / session / minute
+  signup_ip: { windowSec: 3_600, max: 10 }, // 10 signups  / IP    / hour
+  signup_email: { windowSec: 86_400, max: 3 }, // 3 signups   / email / day
+  check_ip: { windowSec: 60, max: 30 }, // 30 checks   / IP    / minute
+  check_session: { windowSec: 60, max: 20 } // 20 checks   / session / minute
 };
 
 // Backoff configuration for Redis pipeline retries
@@ -52,7 +52,7 @@ module.exports = {
   name: 'rate-limiter',
 
   settings: {
-    redisUrl:  process.env.SEMAPPS_REDIS_CACHE_URL || 'redis://localhost:6379',
+    redisUrl: process.env.SEMAPPS_REDIS_CACHE_URL || 'redis://localhost:6379',
     keyPrefix: 'ratelimit'
   },
 
@@ -98,7 +98,7 @@ module.exports = {
      */
     check: {
       params: {
-        bucket:     { type: 'string', enum: Object.keys(BUCKETS) },
+        bucket: { type: 'string', enum: Object.keys(BUCKETS) },
         identifier: { type: 'string', min: 1, max: 256 }
       },
       handler(ctx) {
@@ -117,22 +117,23 @@ module.exports = {
           type: 'array',
           min: 1,
           max: 5,
-          items: { type: 'object', props: {
-            bucket:     { type: 'string', enum: Object.keys(BUCKETS) },
-            identifier: { type: 'string', min: 1, max: 256 }
-          }}
+          items: {
+            type: 'object',
+            props: {
+              bucket: { type: 'string', enum: Object.keys(BUCKETS) },
+              identifier: { type: 'string', min: 1, max: 256 }
+            }
+          }
         }
       },
       async handler(ctx) {
         const results = await Promise.all(
-          ctx.params.items.map(({ bucket, identifier }) =>
-            this.slidingWindowCheck(bucket, identifier)
-          )
+          ctx.params.items.map(({ bucket, identifier }) => this.slidingWindowCheck(bucket, identifier))
         );
         // Return the first blocked result; if all allowed, return the tightest remaining count
         const blocked = results.find(r => !r.allowed);
         if (blocked) return blocked;
-        return results.reduce((tightest, r) => r.remaining < tightest.remaining ? r : tightest);
+        return results.reduce((tightest, r) => (r.remaining < tightest.remaining ? r : tightest));
       }
     },
 
@@ -142,7 +143,7 @@ module.exports = {
      */
     reset: {
       params: {
-        bucket:     { type: 'string', enum: Object.keys(BUCKETS) },
+        bucket: { type: 'string', enum: Object.keys(BUCKETS) },
         identifier: { type: 'string', min: 1, max: 256 }
       },
       async handler(ctx) {
@@ -163,12 +164,12 @@ module.exports = {
       const window = BUCKETS[bucket];
       if (!window) throw new Error(`Unknown rate-limit bucket: ${bucket}`);
 
-      const key        = this.redisKey(bucket, identifier);
-      const nowMs      = Date.now();
-      const windowMs   = window.windowSec * 1_000;
-      const cutoffMs   = nowMs - windowMs;
+      const key = this.redisKey(bucket, identifier);
+      const nowMs = Date.now();
+      const windowMs = window.windowSec * 1_000;
+      const cutoffMs = nowMs - windowMs;
       // Unique member: timestamp + random suffix to handle concurrent requests from the same ms
-      const member     = `${nowMs}:${Math.random().toString(36).slice(2, 8)}`;
+      const member = `${nowMs}:${Math.random().toString(36).slice(2, 8)}`;
 
       // Fail open when circuit is OPEN — do not block the user flow
       if (this.breaker.isOpen()) {
@@ -179,10 +180,10 @@ module.exports = {
       try {
         const results = await retryWithBackoff(async () => {
           const pipe = this.redis.multi();
-          pipe.zadd(key, nowMs, member);              // add current request
-          pipe.zremrangebyscore(key, 0, cutoffMs);    // evict expired entries
-          pipe.zcard(key);                            // count active entries
-          pipe.pexpire(key, windowMs);                // auto-expire the key
+          pipe.zadd(key, nowMs, member); // add current request
+          pipe.zremrangebyscore(key, 0, cutoffMs); // evict expired entries
+          pipe.zcard(key); // count active entries
+          pipe.pexpire(key, windowMs); // auto-expire the key
           return pipe.exec();
         }, REDIS_RETRY_OPTS);
 
@@ -192,13 +193,12 @@ module.exports = {
         const pipelineErr = results.find(([err]) => err != null);
         if (pipelineErr) throw pipelineErr[0];
 
-        const count     = results[2][1];             // ZCARD result
-        const allowed   = count <= window.max;
+        const count = results[2][1]; // ZCARD result
+        const allowed = count <= window.max;
         const remaining = Math.max(0, window.max - count);
-        const resetAt   = nowMs + windowMs;
+        const resetAt = nowMs + windowMs;
 
         return { allowed, remaining, resetAt };
-
       } catch (err) {
         if (err instanceof CircuitOpenError) {
           return this.failOpen(nowMs, windowMs);

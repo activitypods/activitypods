@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const { Errors } = require('moleculer');
 const { FOLLOWABLE_ERRORS } = require('../utils/followable');
@@ -33,7 +33,7 @@ module.exports = {
         objectUri: { type: 'string', optional: true },
         object: { type: 'object', optional: true },
         recursionLimit: { type: 'number', integer: true, optional: true, convert: true, min: 0 },
-        requireFollowersCollection: { type: 'boolean', optional: true },
+        requireFollowersCollection: { type: 'boolean', optional: true }
       },
       async handler(ctx) {
         try {
@@ -42,7 +42,7 @@ module.exports = {
             object: ctx.params.object,
             recursionLimit: ctx.params.recursionLimit,
             requireFollowersCollection: ctx.params.requireFollowersCollection,
-            webId: ctx.meta.webId,
+            webId: ctx.meta.webId
           });
         } catch (error) {
           throw this.toApiError(error);
@@ -55,7 +55,7 @@ module.exports = {
         objectUri: { type: 'string', optional: true },
         object: { type: 'object', optional: true },
         recursionLimit: { type: 'number', integer: true, optional: true, convert: true, min: 0 },
-        requireFollowersCollection: { type: 'boolean', optional: true },
+        requireFollowersCollection: { type: 'boolean', optional: true }
       },
       async handler(ctx) {
         const followerActorUri = ctx.meta.webId;
@@ -70,7 +70,7 @@ module.exports = {
             object: ctx.params.object,
             recursionLimit: ctx.params.recursionLimit,
             requireFollowersCollection: ctx.params.requireFollowersCollection,
-            webId: followerActorUri,
+            webId: followerActorUri
           });
 
           ctx.meta.$statusCode = 202;

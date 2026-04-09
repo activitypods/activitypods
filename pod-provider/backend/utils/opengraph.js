@@ -43,8 +43,8 @@ const fetchOpenGraph = async url => {
       timeout: TIMEOUT_MS,
       headers: {
         'User-Agent': USER_AGENT,
-        Accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.5',
-      },
+        Accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.5'
+      }
     });
 
     if (!response.ok) return null;
@@ -74,8 +74,9 @@ const parseOpenGraph = (originalUri, html) => {
   return {
     uri: og['og:url'] ?? originalUri,
     title: title.trim().slice(0, 300),
-    description: (og['og:description'] ?? og['twitter:description'] ?? og['description'])?.trim().slice(0, 1_000) || undefined,
-    thumbUrl: og['og:image'] ?? og['twitter:image'] ?? undefined,
+    description:
+      (og['og:description'] ?? og['twitter:description'] ?? og['description'])?.trim().slice(0, 1_000) || undefined,
+    thumbUrl: og['og:image'] ?? og['twitter:image'] ?? undefined
   };
 };
 

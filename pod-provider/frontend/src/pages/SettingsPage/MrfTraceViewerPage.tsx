@@ -491,7 +491,8 @@ const MrfTraceViewerPage = () => {
                       {trace.moduleId}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" display="block">
-                      {trace.originHost || '-'} · mode: {safeMode(trace.mode)} · confidence: {formatConfidence(trace.confidence)}
+                      {trace.originHost || '-'} · mode: {safeMode(trace.mode)} · confidence:{' '}
+                      {formatConfidence(trace.confidence)}
                     </Typography>
                   </Paper>
                 ))}
@@ -559,20 +560,22 @@ const MrfTraceViewerPage = () => {
                   </Tooltip>
                 </Stack>
 
-                {traceSuggestions && Array.isArray(traceSuggestions.suggestions) && traceSuggestions.suggestions.length > 0 && (
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    <Typography variant="body2" fontWeight={600}>
-                      Suggested changes
-                    </Typography>
-                    <Stack spacing={0.5} mt={0.5}>
-                      {traceSuggestions.suggestions.map(suggestion => (
-                        <Typography key={`${suggestion.field}:${suggestion.type}`} variant="body2">
-                          {suggestion.field} {'->'} {String(suggestion.suggestedValue)} ({suggestion.rationale})
-                        </Typography>
-                      ))}
-                    </Stack>
-                  </Alert>
-                )}
+                {traceSuggestions &&
+                  Array.isArray(traceSuggestions.suggestions) &&
+                  traceSuggestions.suggestions.length > 0 && (
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      <Typography variant="body2" fontWeight={600}>
+                        Suggested changes
+                      </Typography>
+                      <Stack spacing={0.5} mt={0.5}>
+                        {traceSuggestions.suggestions.map(suggestion => (
+                          <Typography key={`${suggestion.field}:${suggestion.type}`} variant="body2">
+                            {suggestion.field} {'->'} {String(suggestion.suggestedValue)} ({suggestion.rationale})
+                          </Typography>
+                        ))}
+                      </Stack>
+                    </Alert>
+                  )}
 
                 <Typography variant="body2" color="text.secondary" mb={1}>
                   Final action: <strong>{traceChain.finalAction || '-'}</strong> · Steps: {traceChain.steps.length}

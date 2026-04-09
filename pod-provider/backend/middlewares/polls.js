@@ -4,7 +4,12 @@ const { normalizePollActivity, getActivityObject, isQuestion, isVoteNote } = req
 
 const isCreateOrUpdate = activity => {
   if (!activity || typeof activity !== 'object') return false;
-  return activity.type === 'Create' || activity.type === 'Update' || activity['@type'] === 'Create' || activity['@type'] === 'Update';
+  return (
+    activity.type === 'Create' ||
+    activity.type === 'Update' ||
+    activity['@type'] === 'Create' ||
+    activity['@type'] === 'Update'
+  );
 };
 
 const PollsMiddleware = () => ({
@@ -34,7 +39,7 @@ const PollsMiddleware = () => ({
       if (canCallServices && action.name === 'activitypub.inbox.post' && isVoteActivity) {
         const precheck = await ctx.call('polls-manager.precheckInboundVote', {
           activity: normalized,
-          voterActorUri: typeof ctx.meta?.webId === 'string' ? ctx.meta.webId : undefined,
+          voterActorUri: typeof ctx.meta?.webId === 'string' ? ctx.meta.webId : undefined
         });
         if (!precheck.accepted) {
           return null;
@@ -45,20 +50,20 @@ const PollsMiddleware = () => ({
 
       if (canCallServices && action.name === 'activitypub.outbox.post' && isQuestionActivity) {
         await ctx.call('polls-manager.registerOutboundPoll', {
-          activity: normalized,
+          activity: normalized
         });
       }
 
       if (canCallServices && action.name === 'activitypub.inbox.post' && isVoteActivity) {
         await ctx.call('polls-manager.commitInboundVote', {
           activity: normalized,
-          voterActorUri: typeof ctx.meta?.webId === 'string' ? ctx.meta.webId : undefined,
+          voterActorUri: typeof ctx.meta?.webId === 'string' ? ctx.meta.webId : undefined
         });
       }
 
       return result;
     };
-  },
+  }
 });
 
 module.exports = PollsMiddleware;

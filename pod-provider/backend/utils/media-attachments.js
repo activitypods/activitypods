@@ -24,7 +24,7 @@ const URL_RE = /^https?:\/\//i;
 const MIME_MAIN_TO_AP_TYPE = Object.freeze({
   image: 'Image',
   video: 'Video',
-  audio: 'Audio',
+  audio: 'Audio'
 });
 
 // AP types that are valid FEP-1311 media attachment types
@@ -117,14 +117,7 @@ const copyOptionalFields = (src, dst) => {
  * @returns {string | null}
  */
 const resolveAttachmentAltText = src => {
-  const candidates = [
-    src?.name,
-    src?.description,
-    src?.alt,
-    src?.altText,
-    src?.alt_text,
-    src?.summary,
-  ];
+  const candidates = [src?.name, src?.description, src?.alt, src?.altText, src?.alt_text, src?.summary];
 
   for (const value of candidates) {
     if (typeof value !== 'string') continue;
@@ -249,7 +242,7 @@ const normalizeObjectMediaAttachments = apObject => {
 
   return {
     ...apObject,
-    attachment: normalized.length === 1 ? normalized[0] : normalized,
+    attachment: normalized.length === 1 ? normalized[0] : normalized
   };
 };
 
@@ -257,5 +250,5 @@ module.exports = {
   inferMimeFromUrl,
   inferApTypeFromMime,
   normalizeMediaAttachment,
-  normalizeObjectMediaAttachments,
+  normalizeObjectMediaAttachments
 };

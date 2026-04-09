@@ -65,9 +65,12 @@ function instantiate(mod, broker) {
 
 // Wrap an action handler so it looks like a ctx.call target
 function makeCtx(broker, params = {}) {
-  const call = broker && typeof broker.call === 'function'
-    ? broker.call.bind(broker)
-    : async () => { throw new Error('No broker provided'); };
+  const call =
+    broker && typeof broker.call === 'function'
+      ? broker.call.bind(broker)
+      : async () => {
+          throw new Error('No broker provided');
+        };
   return { params, call, meta: {} };
 }
 
@@ -102,7 +105,7 @@ function makeCtx(broker, params = {}) {
     assert.strictEqual(isBaredomain(''), false);
   });
 
-// ─── §2  DNS TXT lookup ──────────────────────────────────────────────────────
+  // ─── §2  DNS TXT lookup ──────────────────────────────────────────────────────
 
   console.log('\n§ 2  DNS TXT lookup (lookupDnsTxtRecord)');
 
@@ -164,7 +167,7 @@ function makeCtx(broker, params = {}) {
     }
   });
 
-// ─── §3  resolveByDomain action ─────────────────────────────────────────────
+  // ─── §3  resolveByDomain action ─────────────────────────────────────────────
 
   console.log('\n§ 3  resolveByDomain action');
 
@@ -240,7 +243,7 @@ function makeCtx(broker, params = {}) {
     assert.ok(caught, 'Expected an error for non-domain input');
   });
 
-// ─── §4  addDomainToAlsoKnownAs action ──────────────────────────────────────
+  // ─── §4  addDomainToAlsoKnownAs action ──────────────────────────────────────
 
   console.log('\n§ 4  addDomainToAlsoKnownAs action');
 
@@ -284,9 +287,12 @@ function makeCtx(broker, params = {}) {
     const updates = [];
 
     const broker = {
-      call: async (action) => {
+      call: async action => {
         if (action === 'activitypub.actor.get') return actor;
-        if (action === 'activitypub.actor.update') { updates.push(1); return null; }
+        if (action === 'activitypub.actor.update') {
+          updates.push(1);
+          return null;
+        }
         throw new Error(`unexpected: ${action}`);
       }
     };
@@ -302,7 +308,7 @@ function makeCtx(broker, params = {}) {
     assert.strictEqual(updates.length, 0, 'No update should occur when domain already in alsoKnownAs');
   });
 
-// ─── §5  fep-4adb-dereferencer – bare domain routing ────────────────────────
+  // ─── §5  fep-4adb-dereferencer – bare domain routing ────────────────────────
 
   console.log('\n§ 5  fep-4adb-dereferencer routes bare domains to fep-612d-dns-resolver');
 
@@ -362,7 +368,7 @@ function makeCtx(broker, params = {}) {
     assert.strictEqual(result.id, OBJECT_URI);
   });
 
-// ─── §6  fep-4adb-processor – resolveIdentifier ─────────────────────────────
+  // ─── §6  fep-4adb-processor – resolveIdentifier ─────────────────────────────
 
   console.log('\n§ 6  fep-4adb-processor resolveIdentifier handles bare domains');
 
@@ -399,7 +405,7 @@ function makeCtx(broker, params = {}) {
     assert.strictEqual(result, OBJECT_URI);
   });
 
-// ─── §7  fep-4adb-processor – validateIdentifierOwnership ───────────────────
+  // ─── §7  fep-4adb-processor – validateIdentifierOwnership ───────────────────
 
   console.log('\n§ 7  fep-4adb-processor validateIdentifierOwnership for bare domains');
 
@@ -429,7 +435,7 @@ function makeCtx(broker, params = {}) {
 
   await ok('rejects domain whose DNS record points elsewhere', async () => {
     const broker = {
-      call: async (action) => {
+      call: async action => {
         if (action === 'fep-612d-dns-resolver.resolveByDomain') {
           return { id: 'https://other.example.com/actors/other' };
         }
@@ -451,7 +457,7 @@ function makeCtx(broker, params = {}) {
     assert.strictEqual(valid, false);
   });
 
-// ─── summary ─────────────────────────────────────────────────────────────────
+  // ─── summary ─────────────────────────────────────────────────────────────────
 
   if (failed > 0) {
     console.error(`\nproof_fep_612d_dns_failed (${failed} failed, ${passed} passed)`);

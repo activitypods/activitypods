@@ -3,7 +3,7 @@ api:
 
 entryPoints:
   web:
-    address: ":80"
+    address: ':80'
     http:
       redirections:
         entryPoint:
@@ -11,7 +11,7 @@ entryPoints:
           scheme: https
           permanent: true
   websecure:
-    address: ":443"
+    address: ':443'
 
 providers:
   docker:
@@ -23,7 +23,7 @@ providers:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: "${LETSENCRYPT_EMAIL}"
+      email: '${LETSENCRYPT_EMAIL}'
       storage: /letsencrypt/acme.json
       tlsChallenge: {}
 

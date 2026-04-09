@@ -13,7 +13,7 @@ const {
   inferMimeFromUrl,
   inferApTypeFromMime,
   normalizeMediaAttachment,
-  normalizeObjectMediaAttachments,
+  normalizeObjectMediaAttachments
 } = require('./utils/media-attachments');
 const MediaAttachmentsMiddleware = require('./middlewares/media-attachments');
 
@@ -53,7 +53,9 @@ ok('flac extension', () => assert.equal(inferMimeFromUrl('https://example.com/so
 ok('m4a extension', () => assert.equal(inferMimeFromUrl('https://example.com/song.m4a'), 'audio/mp4'));
 ok('unknown extension → undefined', () => assert.equal(inferMimeFromUrl('https://example.com/file.pdf'), undefined));
 ok('no extension → undefined', () => assert.equal(inferMimeFromUrl('https://example.com/image'), undefined));
-ok('query string stripped before matching', () => assert.equal(inferMimeFromUrl('https://example.com/img.jpg?size=large'), 'image/jpeg'));
+ok('query string stripped before matching', () =>
+  assert.equal(inferMimeFromUrl('https://example.com/img.jpg?size=large'), 'image/jpeg')
+);
 
 // ============================================================================
 // § 2  inferApTypeFromMime
@@ -108,7 +110,7 @@ ok('Document image/jpeg → Image with url', () => {
     url: 'https://example.com/photo.jpg',
     name: 'A beautiful cow',
     width: 800,
-    height: 600,
+    height: 600
   };
   const result = normalizeMediaAttachment(item);
   assert.equal(result.type, 'Image');
@@ -128,7 +130,7 @@ ok('Document video/mp4 → Video with url', () => {
     width: 1920,
     height: 1080,
     duration: 'PT30S',
-    size: 5_000_000,
+    size: 5_000_000
   };
   const result = normalizeMediaAttachment(item);
   assert.equal(result.type, 'Video');
@@ -142,7 +144,7 @@ ok('Document audio/mpeg → Audio with url', () => {
     type: 'Document',
     mediaType: 'audio/mpeg',
     url: 'https://example.com/song.mp3',
-    duration: 'PT3M45S',
+    duration: 'PT3M45S'
   };
   const result = normalizeMediaAttachment(item);
   assert.equal(result.type, 'Audio');
@@ -166,7 +168,7 @@ ok('Document with Mastodon description → mapped to AP name', () => {
     type: 'Document',
     mediaType: 'image/jpeg',
     url: 'https://example.com/photo.jpg',
-    description: 'Mastodon alt text',
+    description: 'Mastodon alt text'
   };
   const result = normalizeMediaAttachment(item);
   assert.equal(result.type, 'Image');
@@ -184,7 +186,7 @@ ok('Link image/jpeg (old-style `href`) → Image with url', () => {
   const item = {
     type: 'Image',
     href: 'https://example.com/photo.jpg',
-    mediaType: 'image/jpeg',
+    mediaType: 'image/jpeg'
   };
   const result = normalizeMediaAttachment(item);
   assert.equal(result.type, 'Image');
@@ -197,7 +199,7 @@ ok('Link type with image MIME → Image', () => {
     type: 'Link',
     mediaType: 'image/png',
     href: 'https://example.com/logo.png',
-    name: 'Logo',
+    name: 'Logo'
   };
   const result = normalizeMediaAttachment(item);
   assert.equal(result.type, 'Image');
@@ -210,7 +212,7 @@ ok('Link type with altText alias → Image name normalized', () => {
     type: 'Link',
     mediaType: 'image/png',
     href: 'https://example.com/logo.png',
-    altText: 'Accessible logo',
+    altText: 'Accessible logo'
   };
   const result = normalizeMediaAttachment(item);
   assert.equal(result.type, 'Image');
@@ -222,7 +224,7 @@ ok('Link type text/html → returned unchanged (OG preview link)', () => {
     type: 'Link',
     mediaType: 'text/html',
     href: 'https://example.com/article',
-    name: 'Article Title',
+    name: 'Article Title'
   };
   assert.strictEqual(normalizeMediaAttachment(item), item);
 });
@@ -265,9 +267,9 @@ ok('Video multi-version url array → same reference (valid FEP-1311)', () => {
     type: 'Video',
     url: [
       { type: 'Link', href: 'https://example.com/low.mp4', mediaType: 'video/mp4', width: 256, height: 144 },
-      { type: 'Link', href: 'https://example.com/hd.mp4', mediaType: 'video/mp4', width: 1920, height: 1080 },
+      { type: 'Link', href: 'https://example.com/hd.mp4', mediaType: 'video/mp4', width: 1920, height: 1080 }
     ],
-    duration: 'PT3S',
+    duration: 'PT3S'
   };
   assert.strictEqual(normalizeMediaAttachment(item), item);
 });
@@ -283,7 +285,7 @@ ok('Image preserves digestMultibase + size + focalPoint + blurHash', () => {
     size: 9045,
     digestMultibase: 'zQmaeDPzhNL32WQZnnzB1H6QJWvvFNEHdViDB71yrxyXU1t',
     focalPoint: [0.0, 0.5],
-    blurHash: 'LGF5?xYk^6#M@-5c,1J5@[or[Q6.',
+    blurHash: 'LGF5?xYk^6#M@-5c,1J5@[or[Q6.'
   };
   const result = normalizeMediaAttachment(item);
   assert.equal(result.url, 'https://example.com/cow.jpg');
@@ -308,8 +310,8 @@ ok('Note with Document attachment → attachment upgraded to Image', () => {
       url: 'https://example.com/cow.jpg',
       name: 'A beautiful cow',
       width: 100,
-      height: 162,
-    },
+      height: 162
+    }
   };
   const result = normalizeObjectMediaAttachments(note);
   assert.notStrictEqual(result, note);
@@ -327,8 +329,8 @@ ok('Note with mixed attachments — media converted, OG Link preserved', () => {
     content: '<p>Hello</p>',
     attachment: [
       { type: 'Document', mediaType: 'image/jpeg', url: 'https://example.com/photo.jpg' },
-      { type: 'Link', mediaType: 'text/html', href: 'https://example.com/article', name: 'Article' },
-    ],
+      { type: 'Link', mediaType: 'text/html', href: 'https://example.com/article', name: 'Article' }
+    ]
   };
   const result = normalizeObjectMediaAttachments(note);
   const [img, link] = result.attachment;
@@ -340,7 +342,7 @@ ok('Note with mixed attachments — media converted, OG Link preserved', () => {
 ok('Note with already-conformant Image → same reference returned', () => {
   const note = {
     type: 'Note',
-    attachment: [{ type: 'Image', url: 'https://example.com/photo.jpg', mediaType: 'image/jpeg' }],
+    attachment: [{ type: 'Image', url: 'https://example.com/photo.jpg', mediaType: 'image/jpeg' }]
   };
   assert.strictEqual(normalizeObjectMediaAttachments(note), note);
 });
@@ -356,8 +358,8 @@ ok('Array of three Document images → all converted to Image', () => {
     attachment: [
       { type: 'Document', mediaType: 'image/jpeg', url: 'https://example.com/a.jpg' },
       { type: 'Document', mediaType: 'image/png', url: 'https://example.com/b.png' },
-      { type: 'Document', mediaType: 'image/gif', url: 'https://example.com/c.gif' },
-    ],
+      { type: 'Document', mediaType: 'image/gif', url: 'https://example.com/c.gif' }
+    ]
   };
   const result = normalizeObjectMediaAttachments(note);
   for (const att of result.attachment) {
@@ -385,7 +387,9 @@ ok('middleware passes through non-matching action names', async () => {
 ok('middleware normalizes Document attachment on outbox Create/Note', async () => {
   const mw = MediaAttachmentsMiddleware();
   let captured = null;
-  const handlerFn = async ctx => { captured = ctx.params; };
+  const handlerFn = async ctx => {
+    captured = ctx.params;
+  };
   const wrapped = mw.localAction(handlerFn, { name: 'activitypub.outbox.post' });
 
   const ctx = {
@@ -396,10 +400,10 @@ ok('middleware normalizes Document attachment on outbox Create/Note', async () =
         type: 'Note',
         content: '<p>Hello</p>',
         attachment: [
-          { type: 'Document', mediaType: 'image/jpeg', url: 'https://example.com/photo.jpg', name: 'Alt text' },
-        ],
-      },
-    },
+          { type: 'Document', mediaType: 'image/jpeg', url: 'https://example.com/photo.jpg', name: 'Alt text' }
+        ]
+      }
+    }
   };
 
   await wrapped(ctx);
@@ -415,7 +419,9 @@ ok('middleware normalizes Document attachment on outbox Create/Note', async () =
 ok('middleware normalizes href→url on Image from extractMediaAttachmentLinks', async () => {
   const mw = MediaAttachmentsMiddleware();
   let captured = null;
-  const handlerFn = async ctx => { captured = ctx.params; };
+  const handlerFn = async ctx => {
+    captured = ctx.params;
+  };
   const wrapped = mw.localAction(handlerFn, { name: 'activitypub.outbox.post' });
 
   const ctx = {
@@ -425,9 +431,9 @@ ok('middleware normalizes href→url on Image from extractMediaAttachmentLinks',
         type: 'Note',
         content: '<p>See image</p>',
         // extractMediaAttachmentLinks produces href-keyed Image objects
-        attachment: { type: 'Image', href: 'https://example.com/photo.jpg', mediaType: 'image/jpeg' },
-      },
-    },
+        attachment: { type: 'Image', href: 'https://example.com/photo.jpg', mediaType: 'image/jpeg' }
+      }
+    }
   };
 
   await wrapped(ctx);
@@ -440,7 +446,9 @@ ok('middleware normalizes href→url on Image from extractMediaAttachmentLinks',
 ok('middleware normalizes on inbox.post (incoming Document image)', async () => {
   const mw = MediaAttachmentsMiddleware();
   let captured = null;
-  const handlerFn = async ctx => { captured = ctx.params; };
+  const handlerFn = async ctx => {
+    captured = ctx.params;
+  };
   const wrapped = mw.localAction(handlerFn, { name: 'activitypub.inbox.post' });
 
   const ctx = {
@@ -448,9 +456,9 @@ ok('middleware normalizes on inbox.post (incoming Document image)', async () => 
       type: 'Create',
       object: {
         type: 'Note',
-        attachment: { type: 'Document', mediaType: 'image/webp', url: 'https://remote.example/img.webp' },
-      },
-    },
+        attachment: { type: 'Document', mediaType: 'image/webp', url: 'https://remote.example/img.webp' }
+      }
+    }
   };
 
   await wrapped(ctx);
@@ -463,7 +471,9 @@ ok('middleware normalizes on inbox.post (incoming Document image)', async () => 
 ok('middleware leaves OG Link attachment from LinkPreviewMiddleware unchanged', async () => {
   const mw = MediaAttachmentsMiddleware();
   let captured = null;
-  const handlerFn = async ctx => { captured = ctx.params; };
+  const handlerFn = async ctx => {
+    captured = ctx.params;
+  };
   const wrapped = mw.localAction(handlerFn, { name: 'activitypub.outbox.post' });
 
   const ogLink = { type: 'Link', mediaType: 'text/html', href: 'https://example.com/page', name: 'Page Title' };
@@ -473,12 +483,9 @@ ok('middleware leaves OG Link attachment from LinkPreviewMiddleware unchanged', 
       object: {
         type: 'Note',
         content: '<p>Check this out</p>',
-        attachment: [
-          { type: 'Image', url: 'https://example.com/photo.jpg', mediaType: 'image/jpeg' },
-          ogLink,
-        ],
-      },
-    },
+        attachment: [{ type: 'Image', url: 'https://example.com/photo.jpg', mediaType: 'image/jpeg' }, ogLink]
+      }
+    }
   };
 
   await wrapped(ctx);
@@ -491,12 +498,14 @@ ok('middleware leaves OG Link attachment from LinkPreviewMiddleware unchanged', 
 ok('middleware leaves activity unchanged when no attachment', async () => {
   const mw = MediaAttachmentsMiddleware();
   let captured = null;
-  const handlerFn = async ctx => { captured = ctx.params; };
+  const handlerFn = async ctx => {
+    captured = ctx.params;
+  };
   const wrapped = mw.localAction(handlerFn, { name: 'activitypub.outbox.post' });
 
   const original = {
     type: 'Create',
-    object: { type: 'Note', content: '<p>No attachments</p>' },
+    object: { type: 'Note', content: '<p>No attachments</p>' }
   };
   const ctx = { params: { ...original } };
 
@@ -519,7 +528,7 @@ ok('FEP-1311 full Image object preserved as-is', () => {
     height: 162,
     mediaType: 'image/jpeg',
     digestMultibase: 'zQmaeDPzhNL32WQZnnzB1H6QJWvvFNEHdViDB71yrxyXU1t',
-    size: 9045,
+    size: 9045
   };
   // Already conformant — should be returned with same reference
   assert.strictEqual(normalizeMediaAttachment(item), item);
@@ -536,7 +545,7 @@ ok('FEP-1311 multi-version Video preserved as-is', () => {
         width: 256,
         height: 144,
         href: 'https://example.com/cow_eating.mp4',
-        mediaType: 'video/mp4',
+        mediaType: 'video/mp4'
       },
       {
         type: 'Link',
@@ -544,10 +553,10 @@ ok('FEP-1311 multi-version Video preserved as-is', () => {
         width: 1920,
         height: 1080,
         href: 'https://example.com/cow_eating_hd.mp4',
-        mediaType: 'video/mp4',
-      },
+        mediaType: 'video/mp4'
+      }
     ],
-    duration: 'PT3S',
+    duration: 'PT3S'
   };
   assert.strictEqual(normalizeMediaAttachment(item), item);
 });

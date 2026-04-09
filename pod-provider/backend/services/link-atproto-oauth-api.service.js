@@ -13,11 +13,10 @@ function normalizeLoopbackRedirectUri(rawUrl) {
   return parsed.toString();
 }
 
-const defaultRedirectUri =
-  normalizeLoopbackRedirectUri(
-    process.env.LINK_ATPROTO_OAUTH_REDIRECT_URI ||
-      `${(process.env.SEMAPPS_HOME_URL || 'http://localhost:3000').replace(/\/$/, '')}/api/accounts/link-atproto/oauth/callback`
-  );
+const defaultRedirectUri = normalizeLoopbackRedirectUri(
+  process.env.LINK_ATPROTO_OAUTH_REDIRECT_URI ||
+    `${(process.env.SEMAPPS_HOME_URL || 'http://localhost:3000').replace(/\/$/, '')}/api/accounts/link-atproto/oauth/callback`
+);
 const defaultScope = process.env.LINK_ATPROTO_OAUTH_SCOPE || 'atproto';
 const defaultClientId =
   process.env.LINK_ATPROTO_OAUTH_CLIENT_ID ||
@@ -30,10 +29,10 @@ const defaultClientId =
 async function generateDpopKeypair() {
   const { privateKey, publicKey } = await generateKeyPair('ES256', { extractable: true });
   const privateJwk = await exportJWK(privateKey);
-  const publicJwk  = await exportJWK(publicKey);
+  const publicJwk = await exportJWK(publicKey);
   const thumbprint = await calculateJwkThumbprint(publicJwk);
   privateJwk.kid = thumbprint;
-  publicJwk.kid  = thumbprint;
+  publicJwk.kid = thumbprint;
   return {
     privateKeyJwk: JSON.stringify(privateJwk),
     publicKeyJwk: publicJwk,
@@ -64,9 +63,7 @@ async function buildDpopProof(privateKeyJwkStr, htu, htm, nonce) {
     payload.nonce = nonce;
   }
 
-  return new SignJWT(payload)
-    .setProtectedHeader({ alg: 'ES256', typ: 'dpop+jwt', jwk: publicJwk })
-    .sign(privateKey);
+  return new SignJWT(payload).setProtectedHeader({ alg: 'ES256', typ: 'dpop+jwt', jwk: publicJwk }).sign(privateKey);
 }
 
 function sleep(ms) {
@@ -86,7 +83,7 @@ function isRetryableStatus(status) {
 }
 
 function randomBackoffMs(attempt) {
-  const cap = Math.min(250 * (2 ** Math.max(0, attempt - 1)), 5000);
+  const cap = Math.min(250 * 2 ** Math.max(0, attempt - 1), 5000);
   return Math.floor(Math.random() * cap);
 }
 
@@ -98,7 +95,10 @@ module.exports = {
     redisUrl: process.env.SEMAPPS_REDIS_CACHE_URL || 'redis://localhost:6379',
     stateKeyPrefix: 'oauth:link-atproto:state',
     stateTtlSec: Math.max(60, Math.min(Number(process.env.LINK_ATPROTO_OAUTH_STATE_TTL_SECONDS) || 600, 1800)),
-    allowHttpLocalhost: parseBoolean(process.env.LINK_ATPROTO_OAUTH_ALLOW_HTTP_LOCALHOST, process.env.NODE_ENV !== 'production'),
+    allowHttpLocalhost: parseBoolean(
+      process.env.LINK_ATPROTO_OAUTH_ALLOW_HTTP_LOCALHOST,
+      process.env.NODE_ENV !== 'production'
+    ),
     clientId: defaultClientId,
     redirectUri: defaultRedirectUri,
     scope: defaultScope,
@@ -130,7 +130,8 @@ module.exports = {
         onBeforeCall: (ctx, route, req) => {
           ctx.meta.$headers = req.headers;
           ctx.meta.$query = req.query;
-          ctx.meta.$remoteIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || req.connection?.remoteAddress || '';
+          ctx.meta.$remoteIp =
+            req.headers['x-forwarded-for'] || req.socket?.remoteAddress || req.connection?.remoteAddress || '';
         },
         aliases: {
           'POST /start': 'link-atproto-oauth-api.start',
@@ -206,12 +207,7 @@ module.exports = {
           redirectAfterLink: ctx.params.redirectAfterLink || undefined
         };
 
-        await this.redis.set(
-          this.stateKey(state),
-          JSON.stringify(record),
-          'EX',
-          this.settings.stateTtlSec
-        );
+        await this.redis.set(this.stateKey(state), JSON.stringify(record), 'EX', this.settings.stateTtlSec);
 
         const pushedAuthorization = await this.createPushedAuthorizationRequest({
           metadata,
@@ -339,9 +335,7 @@ module.exports = {
       }
 
       const isLocalhost =
-        parsed.hostname === 'localhost' ||
-        parsed.hostname === '127.0.0.1' ||
-        parsed.hostname === '::1';
+        parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '::1';
 
       const schemeAllowed =
         parsed.protocol === 'https:' ||
@@ -391,7 +385,9 @@ module.exports = {
       }
 
       const authorizationServers = Array.isArray(protectedResourceBody?.authorization_servers)
-        ? protectedResourceBody.authorization_servers.filter(value => typeof value === 'string' && value.trim().length > 0)
+        ? protectedResourceBody.authorization_servers.filter(
+            value => typeof value === 'string' && value.trim().length > 0
+          )
         : [];
 
       if (authorizationServers.length > 0) {

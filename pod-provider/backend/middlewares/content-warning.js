@@ -23,7 +23,7 @@ const ContentWarningMiddleware = () => ({
 
       return next(ctx);
     };
-  },
+  }
 });
 
 module.exports = ContentWarningMiddleware;

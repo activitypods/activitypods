@@ -102,7 +102,15 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
   const [labels, setLabels] = useState<AtLabel[]>([]);
 
   const parsedLabels = useMemo(
-    () => [...new Set(labelsInput.split(',').map(v => v.trim()).filter(Boolean))].slice(0, 20),
+    () =>
+      [
+        ...new Set(
+          labelsInput
+            .split(',')
+            .map(v => v.trim())
+            .filter(Boolean)
+        )
+      ].slice(0, 20),
     [labelsInput]
   );
 
@@ -192,16 +200,27 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
   return (
     <Box sx={{ p: 3, maxWidth: 1200 }}>
       <Box sx={{ mb: 2 }}>
-        <Typography variant="h6" gutterBottom>Cross-Protocol Moderation</Typography>
+        <Typography variant="h6" gutterBottom>
+          Cross-Protocol Moderation
+        </Typography>
         <Typography variant="body2" color="text.secondary">
-          Apply moderation decisions once and propagate them across ActivityPub (MRF) and ATProto (Bluesky-compatible labels).
+          Apply moderation decisions once and propagate them across ActivityPub (MRF) and ATProto (Bluesky-compatible
+          labels).
         </Typography>
       </Box>
 
       <Divider sx={{ mb: 2 }} />
 
-      {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>{success}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
+          {success}
+        </Alert>
+      )}
 
       <Tabs value={tab} onChange={(_, next) => setTab(next)} sx={{ mb: 2 }}>
         <Tab label="Apply decision" />
@@ -248,7 +267,9 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                   onChange={(e: SelectChangeEvent<ModerationAction>) => setAction(e.target.value as ModerationAction)}
                 >
                   {ACTIONS.map(item => (
-                    <MenuItem key={item.value} value={item.value}>{item.label}</MenuItem>
+                    <MenuItem key={item.value} value={item.value}>
+                      {item.label}
+                    </MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -291,13 +312,15 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                 <Button variant="contained" onClick={submitDecision} disabled={submitting}>
                   {submitting ? 'Applying…' : 'Apply moderation decision'}
                 </Button>
-                <Button variant="text" onClick={resetForm} disabled={submitting}>Reset</Button>
+                <Button variant="text" onClick={resetForm} disabled={submitting}>
+                  Reset
+                </Button>
               </Stack>
             </Stack>
           )}
 
-          {tab === 1 && (
-            decisions.length === 0 ? (
+          {tab === 1 &&
+            (decisions.length === 0 ? (
               <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
                 No moderation decisions recorded yet.
               </Typography>
@@ -306,13 +329,27 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell><strong>When</strong></TableCell>
-                      <TableCell><strong>Target</strong></TableCell>
-                      <TableCell><strong>Action</strong></TableCell>
-                      <TableCell><strong>Labels</strong></TableCell>
-                      <TableCell><strong>Propagation</strong></TableCell>
-                      <TableCell><strong>Status</strong></TableCell>
-                      <TableCell align="right"><strong>Ops</strong></TableCell>
+                      <TableCell>
+                        <strong>When</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Target</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Action</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Labels</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Propagation</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Status</strong>
+                      </TableCell>
+                      <TableCell align="right">
+                        <strong>Ops</strong>
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -325,9 +362,19 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <Stack spacing={0.25}>
-                            {decision.targetHandle && <Typography variant="caption">{decision.targetHandle}</Typography>}
-                            {decision.targetAtDid && <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>{decision.targetAtDid}</Typography>}
-                            {decision.targetWebId && <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>{decision.targetWebId}</Typography>}
+                            {decision.targetHandle && (
+                              <Typography variant="caption">{decision.targetHandle}</Typography>
+                            )}
+                            {decision.targetAtDid && (
+                              <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+                                {decision.targetAtDid}
+                              </Typography>
+                            )}
+                            {decision.targetWebId && (
+                              <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+                                {decision.targetWebId}
+                              </Typography>
+                            )}
                           </Stack>
                         </TableCell>
                         <TableCell>
@@ -370,11 +417,10 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
-            )
-          )}
+            ))}
 
-          {tab === 2 && (
-            labels.length === 0 ? (
+          {tab === 2 &&
+            (labels.length === 0 ? (
               <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
                 No AT labels emitted yet.
               </Typography>
@@ -383,11 +429,21 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell><strong>Timestamp</strong></TableCell>
-                      <TableCell><strong>Subject</strong></TableCell>
-                      <TableCell><strong>Value</strong></TableCell>
-                      <TableCell><strong>Source DID</strong></TableCell>
-                      <TableCell><strong>Mode</strong></TableCell>
+                      <TableCell>
+                        <strong>Timestamp</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Subject</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Value</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Source DID</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Mode</strong>
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -399,13 +455,17 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>{label.uri}</Typography>
+                          <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+                            {label.uri}
+                          </Typography>
                         </TableCell>
                         <TableCell>
                           <Chip size="small" label={label.val} />
                         </TableCell>
                         <TableCell>
-                          <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>{label.src}</Typography>
+                          <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+                            {label.src}
+                          </Typography>
                         </TableCell>
                         <TableCell>
                           <Chip
@@ -420,8 +480,7 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
-            )
-          )}
+            ))}
         </>
       )}
     </Box>

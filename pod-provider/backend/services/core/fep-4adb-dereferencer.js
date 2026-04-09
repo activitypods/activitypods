@@ -128,17 +128,13 @@ module.exports = {
     },
 
     ensureXrdContext(rawContext) {
-      const context = Array.isArray(rawContext)
-        ? [...rawContext]
-        : [rawContext || ACTIVITY_STREAMS_CONTEXT];
+      const context = Array.isArray(rawContext) ? [...rawContext] : [rawContext || ACTIVITY_STREAMS_CONTEXT];
 
       if (!context.includes(ACTIVITY_STREAMS_CONTEXT)) {
         context.unshift(ACTIVITY_STREAMS_CONTEXT);
       }
 
-      const hasXrdContext = context.some(
-        c => typeof c === 'object' && c && c.xrd === XRD_CONTEXT.xrd
-      );
+      const hasXrdContext = context.some(c => typeof c === 'object' && c && c.xrd === XRD_CONTEXT.xrd);
 
       if (!hasXrdContext) {
         context.push(XRD_CONTEXT);

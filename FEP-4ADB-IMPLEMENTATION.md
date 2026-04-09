@@ -62,6 +62,7 @@ const actor = await ctx.call('fep-4adb-processor.processObject', {
 ```
 
 **Key Points:**
+
 - Extracts domain from identifier scheme
 - Performs webfinger lookup
 - Returns the ActivityPub actor object
@@ -137,7 +138,7 @@ The dereferencer should be integrated into the actor creation/update workflow:
 // In activitypub.actor service (mixin or hook)
 {
   name: 'activitypub.actor',
-  
+
   hooks: {
     after: {
       // After actor is created or updated
@@ -259,11 +260,7 @@ const processed = await ctx.call('fep-4adb-processor.processObject', {
 const alice = {
   id: 'https://server1.com/users/alice',
   name: 'Alice',
-  alsoKnownAs: [
-    'acct:alice@server2.com',
-    'did:web:alice.example.com',
-    'mailto:alice@example.org'
-  ]
+  alsoKnownAs: ['acct:alice@server2.com', 'did:web:alice.example.com', 'mailto:alice@example.org']
 };
 
 // Register each alias
@@ -282,9 +279,9 @@ for (const alias of alice.alsoKnownAs) {
 ```javascript
 // Send Create activity addressing alternative identifiers
 const recipients = [
-  'acct:followers@mastodon.social',  // Can use acct:
-  'did:web:some-instance.com',       // DID format
-  'https://instance.com/users/bob'   // Traditional HTTP
+  'acct:followers@mastodon.social', // Can use acct:
+  'did:web:some-instance.com', // DID format
+  'https://instance.com/users/bob' // Traditional HTTP
 ];
 
 const result = await ctx.call('fep-4adb-outbound.sendActivityToRecipients', {
@@ -352,10 +349,7 @@ const processed = await ctx.call('fep-4adb-processor.processObject', {
 ### Recipient Resolution Failure
 
 ```javascript
-const { sent, failed } = await ctx.call(
-  'fep-4adb-outbound.sendActivityToRecipients',
-  { activity, recipients }
-);
+const { sent, failed } = await ctx.call('fep-4adb-outbound.sendActivityToRecipients', { activity, recipients });
 
 // sent = successfully delivered
 // failed = list of failed recipients with error details
@@ -398,13 +392,13 @@ Enable debug logging:
 
 Common issues and solutions:
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Identifier not resolving | Webfinger domain wrong | Check contextDomain parameter |
-| Slow activity processing | Many derefs per activity | Enable caching |
-| Redirect loops | Webfinger redirects | Check domain configuration |
-| Missing aliases | alias addAlias not called | Call addAlias during actor setup |
-| Verification fails | Domain mismatch | Verify expectedActorId matches webfinger lookup |
+| Issue                    | Cause                     | Solution                                        |
+| ------------------------ | ------------------------- | ----------------------------------------------- |
+| Identifier not resolving | Webfinger domain wrong    | Check contextDomain parameter                   |
+| Slow activity processing | Many derefs per activity  | Enable caching                                  |
+| Redirect loops           | Webfinger redirects       | Check domain configuration                      |
+| Missing aliases          | alias addAlias not called | Call addAlias during actor setup                |
+| Verification fails       | Domain mismatch           | Verify expectedActorId matches webfinger lookup |
 
 ## Testing
 
@@ -417,21 +411,18 @@ describe('FEP-4adb Dereferencer', () => {
       identifier: 'acct:alice@example.org',
       contextDomain: 'my-domain.com'
     });
-    
+
     expect(result.id).toBe('https://example.org/users/alice');
     expect(result.alsoKnownAs).toContain('acct:alice@example.org');
   });
 
   it('should validate identifier ownership', async () => {
-    const isValid = await broker.call(
-      'fep-4adb-processor.validateIdentifierOwnership',
-      {
-        identifier: 'acct:alice@example.org',
-        expectedActorId: 'https://example.org/users/alice',
-        contextDomain: 'my-domain.com'
-      }
-    );
-    
+    const isValid = await broker.call('fep-4adb-processor.validateIdentifierOwnership', {
+      identifier: 'acct:alice@example.org',
+      expectedActorId: 'https://example.org/users/alice',
+      contextDomain: 'my-domain.com'
+    });
+
     expect(isValid).toBe(true);
   });
 });

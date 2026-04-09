@@ -21,8 +21,7 @@ const dns = require('dns').promises;
 
 // Regex for a "bare" domain name: no scheme, no path, no @-sign.
 // Matches things like "example.com", "sub.example.co.uk", etc.
-const BARE_DOMAIN_RE =
-  /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+const BARE_DOMAIN_RE = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
 
 /** Return true if the string looks like a bare domain name. */
 function isBaredomain(str) {
@@ -81,14 +80,10 @@ module.exports = {
       const objectUri = await this.lookupTxtRecord(domain);
 
       if (!objectUri) {
-        throw new Error(
-          `No ${this.settings.txtPrefix}.${domain} TXT record found`
-        );
+        throw new Error(`No ${this.settings.txtPrefix}.${domain} TXT record found`);
       }
 
-      this.logger.info(
-        `[FEP-612d] ${this.settings.txtPrefix}.${domain} → ${objectUri}`
-      );
+      this.logger.info(`[FEP-612d] ${this.settings.txtPrefix}.${domain} → ${objectUri}`);
 
       return this.fetchActivityPubObject(objectUri);
     },
@@ -120,9 +115,7 @@ module.exports = {
           });
           alsoKnownAsUpdated = true;
         } catch (err) {
-          this.logger.warn(
-            `[FEP-612d] Could not add domain "${domain}" to alsoKnownAs of ${targetId}: ${err.message}`
-          );
+          this.logger.warn(`[FEP-612d] Could not add domain "${domain}" to alsoKnownAs of ${targetId}: ${err.message}`);
         }
       }
 
@@ -162,9 +155,7 @@ module.exports = {
           data: { ...actor, alsoKnownAs }
         });
 
-        this.logger.info(
-          `[FEP-612d] Added domain "${domain}" to alsoKnownAs of ${actorId}`
-        );
+        this.logger.info(`[FEP-612d] Added domain "${domain}" to alsoKnownAs of ${actorId}`);
       }
 
       return { success: true, alsoKnownAs };
@@ -219,10 +210,7 @@ module.exports = {
         records = await Promise.race([
           dns.resolveTxt(fqdn),
           new Promise((_, reject) =>
-            setTimeout(
-              () => reject(new Error(`DNS timeout for ${fqdn}`)),
-              this.settings.dnsTimeoutMs
-            )
+            setTimeout(() => reject(new Error(`DNS timeout for ${fqdn}`)), this.settings.dnsTimeoutMs)
           )
         ]);
       } catch (err) {
@@ -263,15 +251,12 @@ module.exports = {
 
       const response = await fetch(uri, {
         headers: {
-          Accept:
-            'application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"'
+          Accept: 'application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"'
         }
       });
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch ActivityPub object at ${uri}: HTTP ${response.status}`
-        );
+        throw new Error(`Failed to fetch ActivityPub object at ${uri}: HTTP ${response.status}`);
       }
 
       return response.json();

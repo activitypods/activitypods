@@ -148,16 +148,13 @@ module.exports = {
 
         try {
           const payload = await breaker.execute(() =>
-            retryWithBackoff(
-              () => this.verifyRelMeWithFetch({ actorUri, href }),
-              {
-                maxRetries: 2,
-                baseDelayMs: 120,
-                maxDelayMs: 900,
-                deadlineMs: 3000,
-                retryIf: err => Boolean(err && (err.retryable === true || err.code === 'ECONNRESET'))
-              }
-            )
+            retryWithBackoff(() => this.verifyRelMeWithFetch({ actorUri, href }), {
+              maxRetries: 2,
+              baseDelayMs: 120,
+              maxDelayMs: 900,
+              deadlineMs: 3000,
+              retryIf: err => Boolean(err && (err.retryable === true || err.code === 'ECONNRESET'))
+            })
           );
 
           this._relMeCache.set(cacheKey, {

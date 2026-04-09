@@ -112,7 +112,9 @@ export const ProviderAnnouncementsPage: React.FC = () => {
     <Box sx={{ p: 3, maxWidth: 760 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
         <Box>
-          <Typography variant="h6" gutterBottom>Platform Announcements</Typography>
+          <Typography variant="h6" gutterBottom>
+            Platform Announcements
+          </Typography>
           <Typography variant="body2" color="text.secondary">
             Post notices visible to all pod users — maintenance windows, policy updates, or welcome messages.
           </Typography>
@@ -124,7 +126,11 @@ export const ProviderAnnouncementsPage: React.FC = () => {
 
       <Divider sx={{ mb: 3 }} />
 
-      {error && <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
@@ -151,7 +157,9 @@ export const ProviderAnnouncementsPage: React.FC = () => {
                       {new Date(a.publishedAt).toLocaleString()}
                     </Typography>
                   </Stack>
-                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{a.content}</Typography>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {a.content}
+                  </Typography>
                   {a.startsAt && (
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
                       Starts: {new Date(a.startsAt).toLocaleString()}
@@ -208,12 +216,10 @@ export const ProviderAnnouncementsPage: React.FC = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)} disabled={submitting}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={handleCreate}
-            disabled={submitting || !form.content.trim()}
-          >
+          <Button onClick={() => setDialogOpen(false)} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button variant="contained" onClick={handleCreate} disabled={submitting || !form.content.trim()}>
             {submitting ? <CircularProgress size={18} /> : 'Post'}
           </Button>
         </DialogActions>
@@ -226,7 +232,9 @@ export const ProviderAnnouncementsPage: React.FC = () => {
           <Typography variant="body2">This announcement will be permanently removed.</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</Button>
+          <Button onClick={() => setDeleteTarget(null)} disabled={deleting}>
+            Cancel
+          </Button>
           <Button variant="contained" color="error" onClick={handleDelete} disabled={deleting}>
             {deleting ? <CircularProgress size={18} /> : 'Delete'}
           </Button>

@@ -59,12 +59,12 @@ module.exports = {
           correlationId,
           normalizedHash,
           canonicalHash,
-          skeletonHash:  skeletonHash  || null,
-          ipHash:        ipHash        || null,
-          emailHash:     emailHash     || null,
+          skeletonHash: skeletonHash || null,
+          ipHash: ipHash || null,
+          emailHash: emailHash || null,
           reasons,
-          fuzzyScore:    scores?.fuzzyScore    ?? null,
-          confusable:    scores?.confusableDetected ?? false,
+          fuzzyScore: scores?.fuzzyScore ?? null,
+          confusable: scores?.confusableDetected ?? false,
           flow,
           policyVersion,
           enqueuedAt,
@@ -88,11 +88,11 @@ module.exports = {
      */
     queueForReview: {
       params: {
-        result:        { type: 'object' },
-        flow:          { type: 'string', optional: true, default: 'signup' },
+        result: { type: 'object' },
+        flow: { type: 'string', optional: true, default: 'signup' },
         correlationId: { type: 'string', optional: true },
-        ipHash:        { type: 'string', optional: true },
-        emailHash:     { type: 'string', optional: true }
+        ipHash: { type: 'string', optional: true },
+        emailHash: { type: 'string', optional: true }
       },
       async handler(ctx) {
         const { result, flow, correlationId, ipHash, emailHash } = ctx.params;
@@ -102,7 +102,7 @@ module.exports = {
           this.logger.info('[username-review-worker] queue unavailable, logging inline', {
             correlationId,
             normalizedHash: result.artifacts?.normalized ? hashForLog(result.artifacts.normalized) : null,
-            reasons:        result.reasons,
+            reasons: result.reasons,
             flow
           });
           return { queued: false, reason: 'queue_unavailable' };
@@ -110,27 +110,27 @@ module.exports = {
 
         const jobPayload = {
           normalizedHash: result.artifacts?.normalized ? hashForLog(result.artifacts.normalized) : null,
-          canonicalHash:  result.artifacts?.canonical  ? hashForLog(result.artifacts.canonical)  : null,
-          skeletonHash:   result.artifacts?.skeleton   ? hashForLog(result.artifacts.skeleton)   : null,
-          ipHash:         ipHash    || null,
-          emailHash:      emailHash || null,
-          reasons:        result.reasons,
+          canonicalHash: result.artifacts?.canonical ? hashForLog(result.artifacts.canonical) : null,
+          skeletonHash: result.artifacts?.skeleton ? hashForLog(result.artifacts.skeleton) : null,
+          ipHash: ipHash || null,
+          emailHash: emailHash || null,
+          reasons: result.reasons,
           scores: {
-            fuzzyScore:         result.scores?.fuzzyScore         ?? null,
-            fuzzyMatchedTerm:   result.scores?.fuzzyMatchedTerm   ?? null,  // term, not PII
+            fuzzyScore: result.scores?.fuzzyScore ?? null,
+            fuzzyMatchedTerm: result.scores?.fuzzyMatchedTerm ?? null, // term, not PII
             confusableDetected: result.scores?.confusableDetected ?? false
           },
-          correlationId:  correlationId || null,
+          correlationId: correlationId || null,
           flow,
-          policyVersion:  result.policyVersion,
-          enqueuedAt:     new Date().toISOString()
+          policyVersion: result.policyVersion,
+          enqueuedAt: new Date().toISOString()
         };
 
         await this.createJob(QUEUE_NAME, jobPayload, {
-          attempts:         3,
-          backoff:          { type: 'exponential', delay: 500 },  // 500ms → 1s → 2s
-          removeOnComplete: 100,  // keep last 100 completed for observability
-          removeOnFail:     50    // DLQ — keep last 50 failures for investigation
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 500 }, // 500ms → 1s → 2s
+          removeOnComplete: 100, // keep last 100 completed for observability
+          removeOnFail: 50 // DLQ — keep last 50 failures for investigation
         });
 
         return { queued: true };

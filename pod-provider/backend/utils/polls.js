@@ -44,10 +44,7 @@ const getActivityObject = activity => {
 };
 
 const extractVoteOptionName = object =>
-  normalizeText(object.name)
-  || normalizeText(object.option)
-  || normalizeText(object.choice)
-  || null;
+  normalizeText(object.name) || normalizeText(object.option) || normalizeText(object.choice) || null;
 
 const isVoteNote = object => {
   if (!isObject(object) || !hasType(object, 'Note')) return false;
@@ -65,8 +62,8 @@ const toNormalizedPollOption = option => {
       name,
       replies: {
         type: 'Collection',
-        totalItems: 0,
-      },
+        totalItems: 0
+      }
     };
   }
 
@@ -81,19 +78,15 @@ const toNormalizedPollOption = option => {
     name,
     replies: {
       type: 'Collection',
-      totalItems: normalizeCount(repliesSource.totalItems),
-    },
+      totalItems: normalizeCount(repliesSource.totalItems)
+    }
   };
 
   return normalized;
 };
 
 const normalizePollOptions = object => {
-  const sourceOptions = Array.isArray(object.oneOf)
-    ? object.oneOf
-    : Array.isArray(object.anyOf)
-      ? object.anyOf
-      : [];
+  const sourceOptions = Array.isArray(object.oneOf) ? object.oneOf : Array.isArray(object.anyOf) ? object.anyOf : [];
 
   const uniqueNames = new Set();
   const options = [];
@@ -109,14 +102,14 @@ const normalizePollOptions = object => {
   if (options.length === 0) {
     return {
       options: null,
-      mode: null,
+      mode: null
     };
   }
 
   const mode = Array.isArray(object.anyOf) ? 'anyOf' : 'oneOf';
   return {
     options,
-    mode,
+    mode
   };
 };
 
@@ -162,7 +155,7 @@ const normalizeVoteObject = object => {
     ...object,
     type: 'Note',
     inReplyTo,
-    name,
+    name
   };
 
   delete normalized.content;
@@ -177,7 +170,7 @@ const normalizePollObject = (object, options = {}) => {
 
   const normalizedQuestion = normalizeQuestionObject(object, {
     now: options.now || (() => new Date()),
-    ensureUpdated: options.ensureUpdated === true,
+    ensureUpdated: options.ensureUpdated === true
   });
   const normalizedVote = normalizeVoteObject(normalizedQuestion);
   return normalizedVote;
@@ -191,17 +184,17 @@ const normalizePollActivity = (activity, options = {}) => {
     const ensureUpdated = activity.type === 'Update' || activity['@type'] === 'Update';
     const normalizedObject = normalizePollObject(activity.object, {
       now: options.now,
-      ensureUpdated,
+      ensureUpdated
     });
     if (normalizedObject === activity.object) return activity;
     return {
       ...activity,
-      object: normalizedObject,
+      object: normalizedObject
     };
   }
 
   return normalizePollObject(activity, {
-    now: options.now,
+    now: options.now
   });
 };
 
@@ -210,5 +203,5 @@ module.exports = {
   isQuestion,
   getActivityObject,
   normalizePollObject,
-  normalizePollActivity,
+  normalizePollActivity
 };

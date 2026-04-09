@@ -65,7 +65,9 @@ export const ProviderPodsPage: React.FC = () => {
   return (
     <Box sx={{ p: 3, maxWidth: 900 }}>
       <Box sx={{ mb: 2 }}>
-        <Typography variant="h6" gutterBottom>Pod Directory</Typography>
+        <Typography variant="h6" gutterBottom>
+          Pod Directory
+        </Typography>
         <Typography variant="body2" color="text.secondary">
           All pods hosted on this provider instance.
           {!loading && ` ${total} total.`}
@@ -74,7 +76,11 @@ export const ProviderPodsPage: React.FC = () => {
 
       <Divider sx={{ mb: 3 }} />
 
-      {error && <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       <TextField
         placeholder="Search by WebID, username or email…"
@@ -105,10 +111,18 @@ export const ProviderPodsPage: React.FC = () => {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell><strong>WebID / Username</strong></TableCell>
-                <TableCell><strong>Email</strong></TableCell>
-                <TableCell><strong>Created</strong></TableCell>
-                <TableCell><strong>Status</strong></TableCell>
+                <TableCell>
+                  <strong>WebID / Username</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Email</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Created</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Status</strong>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -122,7 +136,11 @@ export const ProviderPodsPage: React.FC = () => {
                         href={pod.webId}
                         target="_blank"
                         rel="noreferrer noopener"
-                        sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                        sx={{
+                          color: 'primary.main',
+                          textDecoration: 'none',
+                          '&:hover': { textDecoration: 'underline' }
+                        }}
                       >
                         {pod.webId}
                       </Typography>

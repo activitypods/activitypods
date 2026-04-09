@@ -184,9 +184,7 @@ const SettingsAtprotoLinkPage = () => {
         />
 
         <Button variant="contained" onClick={startLinkFlow} disabled={isSubmitting}>
-          {isSubmitting
-            ? translate('app.action.atproto_link_starting')
-            : translate('app.action.continue_to_bluesky')}
+          {isSubmitting ? translate('app.action.atproto_link_starting') : translate('app.action.continue_to_bluesky')}
         </Button>
       </Box>
     </>

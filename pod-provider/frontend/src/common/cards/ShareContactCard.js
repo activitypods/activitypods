@@ -28,9 +28,7 @@ const ShareContactCard = () => {
       }}
     >
       <Box sx={{ px: 2.5, pt: 2, pb: 2 }}>
-        <Typography sx={{ fontWeight: 700, fontSize: 13, color: '#1a1a1a', mb: 1.5 }}>
-          My contact link
-        </Typography>
+        <Typography sx={{ fontWeight: 700, fontSize: 13, color: '#1a1a1a', mb: 1.5 }}>My contact link</Typography>
         <Box
           sx={{
             display: 'flex',

@@ -2,7 +2,7 @@ const assert = require('assert');
 const {
   normalizeArticleObject,
   normalizeLongFormActivity,
-  extractMediaAttachmentLinks,
+  extractMediaAttachmentLinks
 } = require('../utils/long-form-text');
 const { normalizeActivityPubObjectHashtags } = require('../utils/hashtags');
 
@@ -17,7 +17,7 @@ const rawArticle = {
     '<p>Hello <script>alert(1)</script>world</p>' +
     '<img src="https://example.com/media/hero.jpg" alt="hero" />' +
     '<video src="https://example.com/media/clip.mp4"></video>',
-  published: '2026-04-03T00:00:00Z',
+  published: '2026-04-03T00:00:00Z'
 };
 
 const normalized = normalizeArticleObject(rawArticle);
@@ -36,17 +36,17 @@ assert.ok(Array.isArray(extracted) && extracted.length >= 2, 'should extract med
 const attachmentArray = Array.isArray(normalized.attachment) ? normalized.attachment : [normalized.attachment];
 assert.ok(
   attachmentArray.some(att => att.href === 'https://example.com/media/hero.jpg'),
-  'attachment should include image from content',
+  'attachment should include image from content'
 );
 assert.ok(
   attachmentArray.some(att => att.href === 'https://example.com/media/clip.mp4'),
-  'attachment should include video from content',
+  'attachment should include video from content'
 );
 
 const createActivity = {
   type: 'Create',
   actor: 'https://example.com/users/alice',
-  object: rawArticle,
+  object: rawArticle
 };
 
 const normalizedActivity = normalizeLongFormActivity(createActivity);
@@ -59,8 +59,8 @@ const markdownArticle = normalizeArticleObject({
   attributedTo: 'https://example.com/users/alice',
   source: {
     mediaType: 'text/markdown',
-    content: '## Heading\n\nA paragraph with #Fediverse and a [link](https://example.com).',
-  },
+    content: '## Heading\n\nA paragraph with #Fediverse and a [link](https://example.com).'
+  }
 });
 
 assert.ok(markdownArticle.content.includes('<h2>Heading</h2>'), 'markdown should render heading');
@@ -73,8 +73,8 @@ const mfmArticle = normalizeArticleObject({
   attributedTo: 'https://example.com/users/alice',
   source: {
     mediaType: 'text/x.misskeymarkdown',
-    content: '$[x2 Big text] and #MFM',
-  },
+    content: '$[x2 Big text] and #MFM'
+  }
 });
 
 assert.ok(mfmArticle.content.includes('mfm-x2'), 'MFM operator should be preserved as classed span');
@@ -83,17 +83,13 @@ assert.ok(mfmArticle.content.includes('/tags/mfm'), 'MFM hashtags should be link
 const hashtagNormalized = normalizeActivityPubObjectHashtags({
   id: 'https://example.com/articles/tagged',
   type: 'Article',
-  content: 'hello #InterOp',
+  content: 'hello #InterOp'
 });
 const hashtagTag = Array.isArray(hashtagNormalized.tag)
   ? hashtagNormalized.tag.find(tag => tag.type === 'Hashtag' && tag.name === '#interop')
   : null;
 
 assert.ok(hashtagTag, 'hashtag normalization should emit hashtag tag');
-assert.strictEqual(
-  hashtagTag.href,
-  'https://example.com/tags/interop',
-  'hashtag tag should include linkified href',
-);
+assert.strictEqual(hashtagTag.href, 'https://example.com/tags/interop', 'hashtag tag should include linkified href');
 
 console.log('fep_b2b8_long_form_proof_ok');

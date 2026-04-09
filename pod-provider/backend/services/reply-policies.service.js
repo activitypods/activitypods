@@ -15,7 +15,7 @@ const {
   describeReplyPolicy,
   isReplyObject,
   isMentionedActor,
-  isValidApproveReply,
+  isValidApproveReply
 } = require('../utils/reply-policies');
 
 const normalizeIri = value => {
@@ -32,7 +32,7 @@ module.exports = {
     precheckInboundReply: {
       params: {
         activity: { type: 'object' },
-        replyActorUri: { type: 'string', optional: true },
+        replyActorUri: { type: 'string', optional: true }
       },
       async handler(ctx) {
         const activity = ctx.params.activity;
@@ -41,9 +41,10 @@ module.exports = {
           return { accepted: true, isReply: false, requiresApproval: false, reason: 'not_reply' };
         }
 
-        const replyActorUri = normalizeIri(ctx.params.replyActorUri)
-          || normalizeIri(activity.actor)
-          || normalizeIri(replyObject.attributedTo);
+        const replyActorUri =
+          normalizeIri(ctx.params.replyActorUri) ||
+          normalizeIri(activity.actor) ||
+          normalizeIri(replyObject.attributedTo);
         if (!replyActorUri) {
           return { accepted: false, isReply: true, requiresApproval: false, reason: 'missing_reply_actor' };
         }
@@ -61,7 +62,7 @@ module.exports = {
             requiresApproval: false,
             reason: 'parent_not_found',
             replyActorUri,
-            parentObjectUri,
+            parentObjectUri
           };
         }
 
@@ -73,7 +74,7 @@ module.exports = {
             requiresApproval: false,
             reason: 'no_policy',
             replyActorUri,
-            parentObjectUri,
+            parentObjectUri
           };
         }
 
@@ -85,13 +86,13 @@ module.exports = {
               parentObject,
               replyObject,
               replyActorUri,
-              authorityUri,
+              authorityUri
             })
           : await this.validateThirdPartyReply(ctx, {
               parentObject,
               replyObject,
               replyActorUri,
-              authorityUri,
+              authorityUri
             });
 
         return {
@@ -102,19 +103,23 @@ module.exports = {
           authorityUri,
           parentObjectUri,
           replyActorUri,
-          requiresApproval: Boolean(verdict.accepted && authorityLocal),
+          requiresApproval: Boolean(verdict.accepted && authorityLocal)
         };
-      },
+      }
     },
 
     resolveOutboundReplyPolicy: {
       params: {
         objectUri: { type: 'string' },
         replierActorUri: { type: 'string' },
-        webId: { type: 'string', optional: true },
+        webId: { type: 'string', optional: true }
       },
       async handler(ctx) {
-        const parentObject = await this.loadObject(ctx, ctx.params.objectUri, ctx.params.webId || ctx.params.replierActorUri);
+        const parentObject = await this.loadObject(
+          ctx,
+          ctx.params.objectUri,
+          ctx.params.webId || ctx.params.replierActorUri
+        );
         if (!parentObject) {
           const error = new Error('Reply target could not be resolved');
           error.code = 404;
@@ -133,7 +138,7 @@ module.exports = {
             parentObject,
             replyObject: null,
             replyActorUri: ctx.params.replierActorUri,
-            authorityUri,
+            authorityUri
           });
           mayReply = verdict.accepted || reason === 'permission_unknown';
           requiresApproval = verdict.accepted;
@@ -147,9 +152,9 @@ module.exports = {
           canReplyIsSet: base.canReplyIsSet,
           mayReply,
           requiresApproval,
-          reason,
+          reason
         };
-      },
+      }
     },
 
     submitReply: {
@@ -158,14 +163,14 @@ module.exports = {
         content: { type: 'string' },
         isPublic: { type: 'boolean', optional: true },
         replierActorUri: { type: 'string' },
-        webId: { type: 'string', optional: true },
+        webId: { type: 'string', optional: true }
       },
       async handler(ctx) {
         const { objectUri, content, isPublic = true, replierActorUri } = ctx.params;
         const policy = await ctx.call('reply-policies.resolveOutboundReplyPolicy', {
           objectUri,
           replierActorUri,
-          webId: ctx.params.webId || replierActorUri,
+          webId: ctx.params.webId || replierActorUri
         });
 
         if (!policy.mayReply) {
@@ -188,7 +193,7 @@ module.exports = {
           : [
               `${replierActorUri}/followers`,
               ...(isPublic ? [AS_PUBLIC] : []),
-              ...(policy.authorityUri ? [policy.authorityUri] : []),
+              ...(policy.authorityUri ? [policy.authorityUri] : [])
             ];
 
         const replyObject = {
@@ -203,15 +208,15 @@ module.exports = {
                 tag: {
                   type: 'Mention',
                   href: policy.authorityUri,
-                  name: policy.authorityUri.split('/').filter(Boolean).pop(),
-                },
+                  name: policy.authorityUri.split('/').filter(Boolean).pop()
+                }
               }
-            : {}),
+            : {})
         };
 
         const posted = await ctx.call('activitypub.outbox.post', {
           collectionUri: actor.outbox,
-          ...replyObject,
+          ...replyObject
         });
 
         return {
@@ -219,9 +224,9 @@ module.exports = {
           pendingApproval: policy.requiresApproval,
           policyLabel: policy.policyLabel,
           objectUri,
-          posted,
+          posted
         };
-      },
+      }
     },
 
     approveReply: {
@@ -229,11 +234,11 @@ module.exports = {
         activity: { type: 'object' },
         authorityUri: { type: 'string' },
         parentObjectUri: { type: 'string' },
-        replyActorUri: { type: 'string' },
+        replyActorUri: { type: 'string' }
       },
       async handler(ctx) {
         return this.emitApproveReply(ctx, ctx.params);
-      },
+      }
     },
 
     rejectReply: {
@@ -241,12 +246,12 @@ module.exports = {
         activity: { type: 'object' },
         authorityUri: { type: 'string', optional: true },
         parentObjectUri: { type: 'string', optional: true },
-        replyActorUri: { type: 'string', optional: true },
+        replyActorUri: { type: 'string', optional: true }
       },
       async handler(ctx) {
         return this.emitRejectReply(ctx, ctx.params);
-      },
-    },
+      }
+    }
   },
 
   methods: {
@@ -262,7 +267,7 @@ module.exports = {
       try {
         await ctx.call('ldp.remote.store', {
           resourceUri: uri,
-          webId: webId || 'system',
+          webId: webId || 'system'
         });
       } catch (error) {
         this.logger.debug('[reply-policies] remote store skipped', { resourceUri: uri, error: error.message });
@@ -272,7 +277,7 @@ module.exports = {
         const resource = await ctx.call('ldp.resource.get', {
           resourceUri: uri,
           accept: MIME_TYPES.JSON,
-          webId: webId || 'system',
+          webId: webId || 'system'
         });
         if (resource && typeof resource === 'object') return resource;
       } catch (error) {
@@ -312,7 +317,7 @@ module.exports = {
         try {
           const isIncluded = await ctx.call('activitypub.collection.includes', {
             collectionUri,
-            itemUri: replyActorUri,
+            itemUri: replyActorUri
           });
           if (isIncluded) {
             return { accepted: true, reason: 'collection_member' };
@@ -321,7 +326,7 @@ module.exports = {
           this.logger.debug('[reply-policies] collection.includes failed', {
             collectionUri,
             itemUri: replyActorUri,
-            error: error.message,
+            error: error.message
           });
         }
       }
@@ -382,12 +387,12 @@ module.exports = {
         actor: authorityUri,
         object: replyObjectUri,
         inReplyTo: parentObjectUri,
-        ...recipients,
+        ...recipients
       };
 
       return ctx.call('activitypub.outbox.post', {
         collectionUri: authority.outbox,
-        ...activityToSend,
+        ...activityToSend
       });
     },
 
@@ -404,13 +409,13 @@ module.exports = {
         type: 'RejectReply',
         actor: authorityUri,
         object: replyObjectUri,
-        to: replyActorUri,
+        to: replyActorUri
       };
 
       return ctx.call('activitypub.outbox.post', {
         collectionUri: authority.outbox,
-        ...activityToSend,
+        ...activityToSend
       });
-    },
-  },
+    }
+  }
 };

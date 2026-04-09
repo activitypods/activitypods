@@ -24,9 +24,9 @@ const createServiceHarness = (options = {}) => {
   const service = {
     pollStateById: new Map(),
     logger: {
-      warn: () => {},
+      warn: () => {}
     },
-    ...pollService.methods,
+    ...pollService.methods
   };
 
   const ctx = {
@@ -43,7 +43,7 @@ const createServiceHarness = (options = {}) => {
         return { success: true };
       }
       throw new Error(`unexpected action ${action}`);
-    },
+    }
   };
 
   return { service, ctx, calls };
@@ -62,8 +62,8 @@ const createServiceHarness = (options = {}) => {
         type: 'Question',
         attributedTo: 'https://social.example/actors/alice',
         to: ['https://www.w3.org/ns/activitystreams#Public'],
-        oneOf: ['A', 'B'],
-      },
+        oneOf: ['A', 'B']
+      }
     });
 
     const first = await pollService.actions.commitInboundVote.handler.call(service, {
@@ -75,12 +75,12 @@ const createServiceHarness = (options = {}) => {
             type: 'Note',
             attributedTo: 'https://social.example/actors/bob',
             inReplyTo: 'https://social.example/polls/1',
-            name: 'A',
-          },
+            name: 'A'
+          }
         },
-        voterActorUri: 'https://social.example/actors/bob',
+        voterActorUri: 'https://social.example/actors/bob'
       },
-      call: ctx.call,
+      call: ctx.call
     });
 
     const second = await pollService.actions.precheckInboundVote.handler.call(service, {
@@ -92,17 +92,20 @@ const createServiceHarness = (options = {}) => {
             type: 'Note',
             attributedTo: 'https://social.example/actors/bob',
             inReplyTo: 'https://social.example/polls/1',
-            name: 'B',
-          },
+            name: 'B'
+          }
         },
-        voterActorUri: 'https://social.example/actors/bob',
-      },
+        voterActorUri: 'https://social.example/actors/bob'
+      }
     });
 
     assert.equal(first.accepted, true);
     assert.equal(second.accepted, false);
     assert.equal(second.reason, 'single_choice_already_voted');
-    assert.equal(calls.some(entry => entry.action === 'activitypub.outbox.post'), true);
+    assert.equal(
+      calls.some(entry => entry.action === 'activitypub.outbox.post'),
+      true
+    );
   });
 
   console.log('\n§ 2  permission and duplicate checks');
@@ -117,8 +120,8 @@ const createServiceHarness = (options = {}) => {
         type: 'Question',
         attributedTo: 'https://social.example/actors/alice',
         to: ['https://social.example/actors/charlie'],
-        oneOf: ['A', 'B'],
-      },
+        oneOf: ['A', 'B']
+      }
     });
 
     const precheck = await pollService.actions.precheckInboundVote.handler.call(service, {
@@ -130,11 +133,11 @@ const createServiceHarness = (options = {}) => {
             type: 'Note',
             attributedTo: 'https://social.example/actors/bob',
             inReplyTo: 'https://social.example/polls/2',
-            name: 'A',
-          },
+            name: 'A'
+          }
         },
-        voterActorUri: 'https://social.example/actors/bob',
-      },
+        voterActorUri: 'https://social.example/actors/bob'
+      }
     });
 
     assert.equal(precheck.accepted, false);
@@ -143,9 +146,7 @@ const createServiceHarness = (options = {}) => {
 
   await ok('accepts non-public poll vote when actor is in followers collection', async () => {
     const { service, ctx } = createServiceHarness({
-      allowedCollectionMemberships: [
-        'https://social.example/actors/alice/followers|https://social.example/actors/bob',
-      ],
+      allowedCollectionMemberships: ['https://social.example/actors/alice/followers|https://social.example/actors/bob']
     });
 
     await service.registerPollFromActivity(ctx, {
@@ -156,8 +157,8 @@ const createServiceHarness = (options = {}) => {
         type: 'Question',
         attributedTo: 'https://social.example/actors/alice',
         to: ['https://social.example/actors/alice/followers'],
-        oneOf: ['A', 'B'],
-      },
+        oneOf: ['A', 'B']
+      }
     });
 
     const precheck = await pollService.actions.precheckInboundVote.handler.call(service, {
@@ -169,12 +170,12 @@ const createServiceHarness = (options = {}) => {
             type: 'Note',
             attributedTo: 'https://social.example/actors/bob',
             inReplyTo: 'https://social.example/polls/2b',
-            name: 'A',
-          },
+            name: 'A'
+          }
         },
-        voterActorUri: 'https://social.example/actors/bob',
+        voterActorUri: 'https://social.example/actors/bob'
       },
-      call: ctx.call,
+      call: ctx.call
     });
 
     assert.equal(precheck.accepted, true);
@@ -191,8 +192,8 @@ const createServiceHarness = (options = {}) => {
         type: 'Question',
         attributedTo: 'https://social.example/actors/alice',
         to: ['https://www.w3.org/ns/activitystreams#Public'],
-        anyOf: ['A', 'B'],
-      },
+        anyOf: ['A', 'B']
+      }
     });
 
     const voteActivity = {
@@ -202,17 +203,17 @@ const createServiceHarness = (options = {}) => {
         type: 'Note',
         attributedTo: 'https://social.example/actors/bob',
         inReplyTo: 'https://social.example/polls/3',
-        name: 'A',
-      },
+        name: 'A'
+      }
     };
 
     const first = await pollService.actions.commitInboundVote.handler.call(service, {
       params: { activity: voteActivity, voterActorUri: 'https://social.example/actors/bob' },
-      call: ctx.call,
+      call: ctx.call
     });
 
     const second = await pollService.actions.precheckInboundVote.handler.call(service, {
-      params: { activity: voteActivity, voterActorUri: 'https://social.example/actors/bob' },
+      params: { activity: voteActivity, voterActorUri: 'https://social.example/actors/bob' }
     });
 
     assert.equal(first.accepted, true);
@@ -232,8 +233,8 @@ const createServiceHarness = (options = {}) => {
         type: 'Question',
         attributedTo: 'https://social.example/actors/alice',
         to: ['https://www.w3.org/ns/activitystreams#Public'],
-        oneOf: ['A', 'B'],
-      },
+        oneOf: ['A', 'B']
+      }
     });
 
     await pollService.actions.commitInboundVote.handler.call(service, {
@@ -245,12 +246,12 @@ const createServiceHarness = (options = {}) => {
             type: 'Note',
             attributedTo: 'https://social.example/actors/bob',
             inReplyTo: 'https://social.example/polls/4',
-            name: 'A',
-          },
+            name: 'A'
+          }
         },
-        voterActorUri: 'https://social.example/actors/bob',
+        voterActorUri: 'https://social.example/actors/bob'
       },
-      call: ctx.call,
+      call: ctx.call
     });
 
     const before = service.pollStateById.get('https://social.example/polls/4');
@@ -264,8 +265,8 @@ const createServiceHarness = (options = {}) => {
         type: 'Question',
         attributedTo: 'https://social.example/actors/alice',
         to: ['https://www.w3.org/ns/activitystreams#Public'],
-        anyOf: ['A', 'B', 'C'],
-      },
+        anyOf: ['A', 'B', 'C']
+      }
     });
 
     const after = service.pollStateById.get('https://social.example/polls/4');

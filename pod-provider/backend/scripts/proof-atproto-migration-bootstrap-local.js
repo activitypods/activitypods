@@ -27,7 +27,10 @@ function uniqueName(prefix) {
 function candidateUsername(configuredBase, fallbackPrefix) {
   if (configuredBase) {
     const rand = Math.random().toString(36).slice(2, 10);
-    const prefix = String(configuredBase).replace(/[^a-z0-9-]/gi, '').slice(0, 7) || fallbackPrefix;
+    const prefix =
+      String(configuredBase)
+        .replace(/[^a-z0-9-]/gi, '')
+        .slice(0, 7) || fallbackPrefix;
     return `${prefix}${rand}`.slice(0, 15);
   }
   return uniqueName(fallbackPrefix);
@@ -126,7 +129,9 @@ async function createSourceAccount(backendBase, sourcePassword) {
     }
 
     if (!(response.status === 200 || response.status === 201)) {
-      throw new Error(`create source account failed for ${username}: ${response.status} ${JSON.stringify(redact(body))}`);
+      throw new Error(
+        `create source account failed for ${username}: ${response.status} ${JSON.stringify(redact(body))}`
+      );
     }
 
     if (!body?.atproto?.did) {

@@ -96,7 +96,7 @@ const buildLinkPreviewAttachment = ogData => {
     type: 'Link',
     mediaType: 'text/html',
     href: ogData.uri,
-    name: ogData.title,
+    name: ogData.title
   };
   if (ogData.description) {
     attachment.summary = ogData.description;
@@ -104,7 +104,7 @@ const buildLinkPreviewAttachment = ogData => {
   if (ogData.thumbUrl) {
     attachment.icon = {
       type: 'Image',
-      url: ogData.thumbUrl,
+      url: ogData.thumbUrl
     };
   }
   return attachment;
@@ -120,9 +120,7 @@ const buildLinkPreviewAttachment = ogData => {
  */
 const enrichNoteWithLinkPreview = (noteObject, ogData) => {
   const existing = toArray(noteObject.attachment);
-  const alreadyPresent = existing.some(
-    a => a && a.type === 'Link' && a.href === ogData.uri,
-  );
+  const alreadyPresent = existing.some(a => a && a.type === 'Link' && a.href === ogData.uri);
   if (alreadyPresent) return noteObject;
 
   const previewAttachment = buildLinkPreviewAttachment(ogData);
@@ -130,7 +128,7 @@ const enrichNoteWithLinkPreview = (noteObject, ogData) => {
 
   return {
     ...noteObject,
-    attachment: merged.length === 1 ? merged[0] : merged,
+    attachment: merged.length === 1 ? merged[0] : merged
   };
 };
 
@@ -139,9 +137,11 @@ const enrichNoteWithLinkPreview = (noteObject, ogData) => {
 // ---------------------------------------------------------------------------
 
 const shouldEnrich = activity =>
-  activity && typeof activity === 'object' &&
+  activity &&
+  typeof activity === 'object' &&
   (hasType(activity, 'Create') || hasType(activity, 'Update')) &&
-  activity.object && typeof activity.object === 'object' &&
+  activity.object &&
+  typeof activity.object === 'object' &&
   hasType(activity.object, 'Note');
 
 const enrichActivity = async activity => {
@@ -156,7 +156,7 @@ const enrichActivity = async activity => {
 
   return {
     ...activity,
-    object: enrichNoteWithLinkPreview(note, ogData),
+    object: enrichNoteWithLinkPreview(note, ogData)
   };
 };
 
@@ -183,7 +183,7 @@ const LinkPreviewMiddleware = () => ({
       ctx.params = collectionUri ? { collectionUri, ...enriched } : enriched;
       return next(ctx);
     };
-  },
+  }
 });
 
 module.exports = LinkPreviewMiddleware;

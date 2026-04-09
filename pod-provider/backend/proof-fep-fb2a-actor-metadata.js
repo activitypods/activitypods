@@ -13,7 +13,7 @@ const {
   annotateActorMetadataVerification,
   normalizeLegacyPropertyValue,
   normalizeLinkMetadata,
-  normalizeNoteMetadata,
+  normalizeNoteMetadata
 } = require('./utils/actor-metadata');
 const ActorMetadataMiddleware = require('./middlewares/actor-metadata');
 
@@ -64,13 +64,13 @@ const okAsync = async (label, fn) => {
       type: 'Link',
       name: 'My portfolio',
       href: 'https://example.com',
-      rel: ['me', 'nofollow'],
+      rel: ['me', 'nofollow']
     });
     assert.deepStrictEqual(link, {
       type: 'Link',
       name: 'My portfolio',
       href: 'https://example.com/',
-      rel: ['me', 'nofollow'],
+      rel: ['me', 'nofollow']
     });
   });
 
@@ -87,12 +87,12 @@ const okAsync = async (label, fn) => {
     const legacy = normalizeLegacyPropertyValue({
       type: 'PropertyValue',
       name: 'Pronouns',
-      value: 'they/them',
+      value: 'they/them'
     });
     assert.deepStrictEqual(legacy, {
       type: 'Note',
       name: 'Pronouns',
-      content: 'they/them',
+      content: 'they/them'
     });
   });
 
@@ -100,12 +100,12 @@ const okAsync = async (label, fn) => {
     const legacy = normalizeLegacyPropertyValue({
       type: 'http://schema.org#PropertyValue',
       name: 'Website',
-      'http://schema.org#value': 'https://example.com',
+      'http://schema.org#value': 'https://example.com'
     });
     assert.deepStrictEqual(legacy, {
       type: 'Note',
       name: 'Website',
-      content: 'https://example.com',
+      content: 'https://example.com'
     });
   });
 
@@ -120,8 +120,8 @@ const okAsync = async (label, fn) => {
       attachment: [
         { type: 'Note', name: 'Pronouns', content: 'they/them' },
         { type: 'Link', name: 'Portfolio', href: 'https://example.com', rel: 'me' },
-        { type: 'Image', url: 'https://example.com/avatar.jpg' },
-      ],
+        { type: 'Image', url: 'https://example.com/avatar.jpg' }
+      ]
     };
 
     const result = normalizeActorMetadataAttachments(actor);
@@ -131,7 +131,7 @@ const okAsync = async (label, fn) => {
       type: 'Link',
       name: 'Portfolio',
       href: 'https://example.com/',
-      rel: ['me'],
+      rel: ['me']
     });
     assert.deepStrictEqual(result.attachment[2], { type: 'Image', url: 'https://example.com/avatar.jpg' });
   });
@@ -141,8 +141,8 @@ const okAsync = async (label, fn) => {
       type: 'Person',
       attachment: [
         { type: 'Note', name: 'Pronouns', content: 'they/them' },
-        { type: 'PropertyValue', name: 'Pronouns', value: 'she/her' },
-      ],
+        { type: 'PropertyValue', name: 'Pronouns', value: 'she/her' }
+      ]
     };
 
     const result = normalizeActorMetadataAttachments(actor);
@@ -164,8 +164,8 @@ const okAsync = async (label, fn) => {
         type: 'Link',
         name: 'Portfolio',
         href: 'https://example.com',
-        rel: ['me'],
-      },
+        rel: ['me']
+      }
     };
 
     const result = annotateActorMetadataVerification(actor, {
@@ -174,9 +174,9 @@ const okAsync = async (label, fn) => {
           href: 'https://example.com/',
           verified: true,
           reason: 'verified',
-          checkedAt: '2026-04-03T00:00:00.000Z',
-        },
-      ],
+          checkedAt: '2026-04-03T00:00:00.000Z'
+        }
+      ]
     });
 
     assert.equal(result.attachment.verified, true);
@@ -211,10 +211,10 @@ const okAsync = async (label, fn) => {
           attachment: {
             type: 'http://schema.org#PropertyValue',
             name: 'Pronouns',
-            'http://schema.org#value': 'they/them',
-          },
-        },
-      },
+            'http://schema.org#value': 'they/them'
+          }
+        }
+      }
     });
 
     assert.equal(captured.object.attachment.type, 'Note');
@@ -231,8 +231,8 @@ const okAsync = async (label, fn) => {
         attachment: {
           type: 'PropertyValue',
           name: 'Website',
-          value: 'https://example.com',
-        },
+          value: 'https://example.com'
+        }
       }),
       { name: 'activitypub.actor.get' }
     );
@@ -254,8 +254,8 @@ const okAsync = async (label, fn) => {
           type: 'Link',
           name: 'Portfolio',
           href: 'https://example.com',
-          rel: ['me'],
-        },
+          rel: ['me']
+        }
       }),
       { name: 'activitypub.actor.get' }
     );
@@ -273,13 +273,13 @@ const okAsync = async (label, fn) => {
                 href: 'https://example.com/',
                 verified: true,
                 reason: 'verified',
-                checkedAt: '2026-04-03T00:00:00.000Z',
-              },
-            ],
+                checkedAt: '2026-04-03T00:00:00.000Z'
+              }
+            ]
           };
         }
         return null;
-      },
+      }
     });
 
     assert.equal(result.attachment.verified, true);

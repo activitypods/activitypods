@@ -133,11 +133,7 @@ const isActorIncludedIn = (searchableByUris, actorUri, actorFollowersUri) => {
  */
 const getIndexableValue = actor => {
   if (!actor || typeof actor !== 'object') return null;
-  const raw =
-    actor['indexable'] ??
-    actor[TOOT_INDEXABLE_IRI] ??
-    actor[TOOT_INDEXABLE_SHORT] ??
-    null;
+  const raw = actor['indexable'] ?? actor[TOOT_INDEXABLE_IRI] ?? actor[TOOT_INDEXABLE_SHORT] ?? null;
   if (raw === null || raw === undefined) return null;
   if (typeof raw === 'boolean') return raw;
   if (raw === 'true') return true;
@@ -180,8 +176,7 @@ const isSearchableBy = (object, searchingActorUri, opts = {}) => {
     // If searching actor is the attributed author, always allow (SHOULD)
     const attributedTo = object.attributedTo;
     if (attributedTo) {
-      const attributedToId =
-        typeof attributedTo === 'string' ? attributedTo : attributedTo.id || attributedTo['@id'];
+      const attributedToId = typeof attributedTo === 'string' ? attributedTo : attributedTo.id || attributedTo['@id'];
       if (attributedToId && attributedToId === searchingActorUri) {
         return true;
       }
@@ -205,11 +200,10 @@ const isSearchableBy = (object, searchingActorUri, opts = {}) => {
       // indexable:true → as:Public; indexable:false → no one
       return indexable
         ? true
-        : searchingActorUri === (
-            typeof attributedToActor === 'string'
+        : searchingActorUri ===
+            (typeof attributedToActor === 'string'
               ? attributedToActor
-              : attributedToActor.id || attributedToActor['@id']
-          );
+              : attributedToActor.id || attributedToActor['@id']);
     }
   }
 
@@ -217,8 +211,7 @@ const isSearchableBy = (object, searchingActorUri, opts = {}) => {
   // For ActivityPods we follow the open-web default: objects addressed to
   // as:Public are searchable by anyone.
   const isPublicObject =
-    toArray(object.to).some(r => AS_PUBLIC_ALIASES.has(r)) ||
-    toArray(object.cc).some(r => AS_PUBLIC_ALIASES.has(r));
+    toArray(object.to).some(r => AS_PUBLIC_ALIASES.has(r)) || toArray(object.cc).some(r => AS_PUBLIC_ALIASES.has(r));
 
   return isPublicObject;
 };
@@ -234,14 +227,13 @@ const isSearchableBy = (object, searchingActorUri, opts = {}) => {
 const injectSearchableBy = (object, searchableBy) => {
   if (!object || typeof object !== 'object') return object;
 
-  const normalized =
-    Array.isArray(searchableBy)
-      ? searchableBy.length === 1
-        ? searchableBy[0]
-        : searchableBy.length === 0
+  const normalized = Array.isArray(searchableBy)
+    ? searchableBy.length === 1
+      ? searchableBy[0]
+      : searchableBy.length === 0
         ? undefined
         : searchableBy
-      : searchableBy;
+    : searchableBy;
 
   if (normalized === undefined) return object;
 
@@ -306,9 +298,7 @@ const deriveDefaultSearchableBy = object => {
   // Followers-only or direct → searchable only by attributedTo (author)
   const attributedTo = object.attributedTo;
   if (attributedTo) {
-    return typeof attributedTo === 'string'
-      ? attributedTo
-      : attributedTo.id || attributedTo['@id'];
+    return typeof attributedTo === 'string' ? attributedTo : attributedTo.id || attributedTo['@id'];
   }
 
   return undefined;
@@ -331,5 +321,5 @@ module.exports = {
   isSearchableBy,
   injectSearchableBy,
   normalizeSearchableByForOutput,
-  deriveDefaultSearchableBy,
+  deriveDefaultSearchableBy
 };

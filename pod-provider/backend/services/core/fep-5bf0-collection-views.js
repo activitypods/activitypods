@@ -131,7 +131,7 @@ module.exports = {
           throw new MoleculerError('Cannot get a collection with both beforeEq and afterEq', 400, 'BAD_REQUEST');
         }
 
-          const page = this.buildCollectionViewPage({
+        const page = this.buildCollectionViewPage({
           view: targetView,
           beforeEq,
           afterEq
@@ -348,9 +348,10 @@ module.exports = {
 
     async fetchCollectionItemUris(ctx, collectionUri, options) {
       const dataset = extractDatasetFromUri(collectionUri);
-      const orderBy = options.ordered && options.sortPredicate
-        ? `ORDER BY ${options.sortOrder === DESC_ORDER ? 'DESC' : 'ASC'}(?order)`
-        : '';
+      const orderBy =
+        options.ordered && options.sortPredicate
+          ? `ORDER BY ${options.sortOrder === DESC_ORDER ? 'DESC' : 'ASC'}(?order)`
+          : '';
 
       const result = await ctx.call('triplestore.query', {
         query: `

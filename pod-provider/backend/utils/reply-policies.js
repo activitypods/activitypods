@@ -15,7 +15,7 @@ const REPLY_POLICY_CONTEXT = {
   canReply: 'toot:canReply',
   replyApproval: 'toot:replyApproval',
   ApproveReply: 'toot:ApproveReply',
-  RejectReply: 'toot:RejectReply',
+  RejectReply: 'toot:RejectReply'
 };
 
 const toArray = value => (Array.isArray(value) ? value : value != null ? [value] : []);
@@ -68,18 +68,12 @@ const getReplyApprovalUri = object => {
 const extractCanReplyState = object => {
   if (!isObject(object)) return { isSet: false, values: [] };
 
-  const raw = Object.prototype.hasOwnProperty.call(object, 'canReply')
-    ? object.canReply
-    : object[CAN_REPLY_IRI];
+  const raw = Object.prototype.hasOwnProperty.call(object, 'canReply') ? object.canReply : object[CAN_REPLY_IRI];
 
   if (raw === undefined) return { isSet: false, values: [] };
   if (Array.isArray(raw) && raw.length === 0) return { isSet: true, values: [] };
 
-  const values = unique(
-    toArray(raw)
-      .map(normalizeEntityIri)
-      .filter(Boolean)
-  );
+  const values = unique(toArray(raw).map(normalizeEntityIri).filter(Boolean));
 
   return { isSet: true, values };
 };
@@ -144,21 +138,29 @@ const normalizeReplyPolicyObject = object => {
   let changed = false;
 
   if (canReplyState.isSet) {
-    const mergedCanReply = canReplyState.values.length > 0
-      ? unique([...canReplyState.values, ...extractMentionedActors(object)])
-      : [];
+    const mergedCanReply =
+      canReplyState.values.length > 0 ? unique([...canReplyState.values, ...extractMentionedActors(object)]) : [];
     const normalizedOutput = normalizeCanReplyForOutput(mergedCanReply, true);
 
-    if (JSON.stringify(object.canReply) !== JSON.stringify(normalizedOutput) || Object.prototype.hasOwnProperty.call(object, CAN_REPLY_IRI)) {
+    if (
+      JSON.stringify(object.canReply) !== JSON.stringify(normalizedOutput) ||
+      Object.prototype.hasOwnProperty.call(object, CAN_REPLY_IRI)
+    ) {
       result.canReply = normalizedOutput;
       delete result[CAN_REPLY_IRI];
       changed = true;
     }
   }
 
-  if (Object.prototype.hasOwnProperty.call(object, 'replyApproval') || Object.prototype.hasOwnProperty.call(object, REPLY_APPROVAL_IRI)) {
+  if (
+    Object.prototype.hasOwnProperty.call(object, 'replyApproval') ||
+    Object.prototype.hasOwnProperty.call(object, REPLY_APPROVAL_IRI)
+  ) {
     if (replyApprovalUri) {
-      if (result.replyApproval !== replyApprovalUri || Object.prototype.hasOwnProperty.call(result, REPLY_APPROVAL_IRI)) {
+      if (
+        result.replyApproval !== replyApprovalUri ||
+        Object.prototype.hasOwnProperty.call(result, REPLY_APPROVAL_IRI)
+      ) {
         result.replyApproval = replyApprovalUri;
         delete result[REPLY_APPROVAL_IRI];
         changed = true;
@@ -228,7 +230,7 @@ const buildReplyDecisionRecipients = (parentObject, replyActorUri) => {
   const cc = unique(toArray(parentObject && parentObject.cc));
   return {
     to: to.length === 1 ? to[0] : to,
-    cc: cc.length === 0 ? undefined : cc.length === 1 ? cc[0] : cc,
+    cc: cc.length === 0 ? undefined : cc.length === 1 ? cc[0] : cc
   };
 };
 
@@ -243,7 +245,7 @@ const describeReplyPolicy = (object, actorUri = null) => {
       requiresApproval: false,
       mayReply: true,
       reason: 'no_policy',
-      authorityUri,
+      authorityUri
     };
   }
 
@@ -254,7 +256,7 @@ const describeReplyPolicy = (object, actorUri = null) => {
       requiresApproval: false,
       mayReply: false,
       reason: 'replies_disabled',
-      authorityUri,
+      authorityUri
     };
   }
 
@@ -265,7 +267,7 @@ const describeReplyPolicy = (object, actorUri = null) => {
       requiresApproval: false,
       mayReply: true,
       reason: 'mentioned_actor',
-      authorityUri,
+      authorityUri
     };
   }
 
@@ -276,7 +278,7 @@ const describeReplyPolicy = (object, actorUri = null) => {
       requiresApproval: false,
       mayReply: true,
       reason: 'public_replies',
-      authorityUri,
+      authorityUri
     };
   }
 
@@ -287,7 +289,7 @@ const describeReplyPolicy = (object, actorUri = null) => {
       requiresApproval: true,
       mayReply: true,
       reason: 'direct_actor_allowed',
-      authorityUri,
+      authorityUri
     };
   }
 
@@ -305,7 +307,7 @@ const describeReplyPolicy = (object, actorUri = null) => {
     requiresApproval: true,
     mayReply: false,
     reason: 'permission_unknown',
-    authorityUri,
+    authorityUri
   };
 };
 
@@ -350,5 +352,5 @@ module.exports = {
   isApproveReplyActivity,
   isRejectReplyActivity,
   isMentionedActor,
-  isValidApproveReply,
+  isValidApproveReply
 };

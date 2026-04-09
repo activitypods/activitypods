@@ -24,9 +24,9 @@
 
 const { MoleculerClientError } = require('moleculer').Errors;
 const { checkUsername, POLICY_VERSION } = require('../../utils/username-checker');
-const { sanitizeUsername, sanitizeIp }  = require('../../utils/sanitize');
-const { generateSuggestions }           = require('../../utils/username-suggestions');
-const { hashForLog }                    = require('../../utils/log-privacy');
+const { sanitizeUsername, sanitizeIp } = require('../../utils/sanitize');
+const { generateSuggestions } = require('../../utils/username-suggestions');
+const { hashForLog } = require('../../utils/log-privacy');
 
 // Base URI for RFC 9457 type URIs — must match your domain in production
 const PROBLEM_BASE = 'https://activitypods.org/problems';
@@ -35,25 +35,25 @@ const PROBLEM_BASE = 'https://activitypods.org/problems';
 // Maps internal reason codes to generic external codes.
 // Prevents information leakage about which specific term was matched (enumeration resistance).
 const REASON_MAP = {
-  invalid_length:               'invalid_format',
-  invalid_charset:              'invalid_format',
-  invalid_format:               'invalid_format',
-  invalid_empty:                'invalid_format',
-  empty_after_normalization:    'invalid_format',
-  invisible_characters:         'not_available',
-  mixed_script:                 'not_available',
-  profanity:                    'not_available',
-  blocked_term:                 'not_available',
-  blocked_term_contains:        'not_available',
-  fuzzy_blocked_term:           'not_available',
-  confusable_blocked_term:      'not_available',
-  reserved_exact:               'not_available',
-  reserved_canonical:           'not_available',
-  reserved_prefix:              'not_available',
-  review_term:                  'flagged_for_review',
-  review_term_contains:         'flagged_for_review',
-  fuzzy_review_term:            'flagged_for_review',
-  invalid_input:                'invalid_format'
+  invalid_length: 'invalid_format',
+  invalid_charset: 'invalid_format',
+  invalid_format: 'invalid_format',
+  invalid_empty: 'invalid_format',
+  empty_after_normalization: 'invalid_format',
+  invisible_characters: 'not_available',
+  mixed_script: 'not_available',
+  profanity: 'not_available',
+  blocked_term: 'not_available',
+  blocked_term_contains: 'not_available',
+  fuzzy_blocked_term: 'not_available',
+  confusable_blocked_term: 'not_available',
+  reserved_exact: 'not_available',
+  reserved_canonical: 'not_available',
+  reserved_prefix: 'not_available',
+  review_term: 'flagged_for_review',
+  review_term_contains: 'flagged_for_review',
+  fuzzy_review_term: 'flagged_for_review',
+  invalid_input: 'invalid_format'
 };
 
 function obfuscateReasons(reasons) {
@@ -75,11 +75,11 @@ function obfuscateReasons(reasons) {
  */
 function problemDetails(status, type, title, detail, instance) {
   const obj = {
-    type:   `${PROBLEM_BASE}/${type}`,
+    type: `${PROBLEM_BASE}/${type}`,
     title,
     status
   };
-  if (detail)   obj.detail   = detail;
+  if (detail) obj.detail = detail;
   if (instance) obj.instance = instance;
   return obj;
 }
@@ -111,14 +111,14 @@ module.exports = {
 
         // Strict body parser — reject anything over 8 KB, no URL-encoded form data
         bodyParsers: {
-          json:       { limit: '8kb', strict: true },
+          json: { limit: '8kb', strict: true },
           urlencoded: false
         },
 
         // RFC 9457 error formatter for this route
         onError(req, res, err) {
           const status = err.code || err.status || 500;
-          const body   = problemDetails(
+          const body = problemDetails(
             status,
             err.type?.toLowerCase().replace(/_/g, '-') || 'internal-error',
             err.message || 'An unexpected error occurred',
@@ -131,8 +131,8 @@ module.exports = {
         },
 
         aliases: {
-          'POST /check':      'username-moderation.httpCheck',
-          'GET /available':   'username-moderation.httpAvailable'
+          'POST /check': 'username-moderation.httpCheck',
+          'GET /available': 'username-moderation.httpAvailable'
         }
       }
     });
@@ -157,14 +157,14 @@ module.exports = {
     httpCheck: {
       // Relaxed params — sanitize manually to provide precise error messages
       params: {
-        username:    { type: 'string', optional: true },
+        username: { type: 'string', optional: true },
         displayName: { type: 'string', optional: true },
-        localeHint:  { type: 'string', optional: true },
-        flow:        { type: 'string', optional: true, default: 'check' }
+        localeHint: { type: 'string', optional: true },
+        flow: { type: 'string', optional: true, default: 'check' }
       },
       async handler(ctx) {
         const correlationId = ctx.id;
-        const requestPath   = ctx.meta?.$requestUrl || '/v1/usernames/check';
+        const requestPath = ctx.meta?.$requestUrl || '/v1/usernames/check';
 
         // Attach correlation ID to every response
         ctx.meta.$responseHeaders = {
@@ -175,30 +175,42 @@ module.exports = {
         // ── Input sanitization ───────────────────────────────────────────────
         const raw = sanitizeUsername(ctx.params.username);
         if (!raw) {
-          ctx.meta.$statusCode  = 400;
+          ctx.meta.$statusCode = 400;
           ctx.meta.$responseType = 'application/problem+json';
-          return problemDetails(400, 'invalid-request', 'Invalid request',
-            'username is required and must be a non-empty string', requestPath);
+          return problemDetails(
+            400,
+            'invalid-request',
+            'Invalid request',
+            'username is required and must be a non-empty string',
+            requestPath
+          );
         }
 
         // ── Rate limit: IP-based check bucket ───────────────────────────────
         const ip = getClientIp(ctx);
         if (ip) {
-          const rl = await ctx.call('rate-limiter.check', {
-            bucket:     'check_ip',
-            identifier: hashForLog(ip)
-          }).catch(err => {
-            this.logger.warn('[username-moderation] rate-limit check failed, failing open:', err.message);
-            return { allowed: true, failOpen: true };
-          });
+          const rl = await ctx
+            .call('rate-limiter.check', {
+              bucket: 'check_ip',
+              identifier: hashForLog(ip)
+            })
+            .catch(err => {
+              this.logger.warn('[username-moderation] rate-limit check failed, failing open:', err.message);
+              return { allowed: true, failOpen: true };
+            });
 
           if (!rl.allowed) {
             const retryAfterSec = Math.ceil((rl.resetAt - Date.now()) / 1000);
             ctx.meta.$statusCode = 429;
             ctx.meta.$responseType = 'application/problem+json';
             ctx.meta.$responseHeaders['Retry-After'] = String(retryAfterSec);
-            return problemDetails(429, 'rate-limit-exceeded', 'Too many requests',
-              'Please wait before checking another username', requestPath);
+            return problemDetails(
+              429,
+              'rate-limit-exceeded',
+              'Too many requests',
+              'Please wait before checking another username',
+              requestPath
+            );
           }
         }
 
@@ -210,14 +222,16 @@ module.exports = {
 
         // ── Async review queue for borderline cases ──────────────────────────
         if (result.decision === 'review') {
-          ctx.call('username-review-worker.queueForReview', {
-            result,
-            flow:          ctx.params.flow || 'check',
-            correlationId,
-            ipHash:        ip ? hashForLog(ip) : undefined
-          }).catch(err => {
-            this.logger.warn('[username-moderation] failed to queue review:', err.message);
-          });
+          ctx
+            .call('username-review-worker.queueForReview', {
+              result,
+              flow: ctx.params.flow || 'check',
+              correlationId,
+              ipHash: ip ? hashForLog(ip) : undefined
+            })
+            .catch(err => {
+              this.logger.warn('[username-moderation] failed to queue review:', err.message);
+            });
         }
 
         // ── Build response ───────────────────────────────────────────────────
@@ -225,15 +239,15 @@ module.exports = {
 
         ctx.meta.$statusCode = 200;
         return {
-          decision:    result.decision,
-          reasons:     obfuscateReasons(result.reasons),
+          decision: result.decision,
+          reasons: obfuscateReasons(result.reasons),
           scores: {
-            fuzzyScore:         result.scores.fuzzyScore         ?? null,
+            fuzzyScore: result.scores.fuzzyScore ?? null,
             confusableDetected: result.scores.confusableDetected ?? false
           },
           artifacts: {
             normalized: result.artifacts.normalized,
-            canonical:  result.artifacts.canonical
+            canonical: result.artifacts.canonical
           },
           suggestions,
           correlationId,
@@ -273,42 +287,57 @@ module.exports = {
       },
       async handler(ctx) {
         const correlationId = ctx.id;
-        const requestPath   = ctx.meta?.$requestUrl || '/v1/usernames/available';
+        const requestPath = ctx.meta?.$requestUrl || '/v1/usernames/available';
 
         ctx.meta.$responseHeaders = {
           ...(ctx.meta.$responseHeaders || {}),
-          'X-Correlation-ID':  correlationId,
-          'Cache-Control':     'no-store, no-cache, must-revalidate',
-          'Pragma':            'no-cache'
+          'X-Correlation-ID': correlationId,
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          Pragma: 'no-cache'
         };
 
         // ── Input sanitization ───────────────────────────────────────────────
         const raw = sanitizeUsername(ctx.params.username);
         if (!raw) {
-          ctx.meta.$statusCode   = 400;
+          ctx.meta.$statusCode = 400;
           ctx.meta.$responseType = 'application/problem+json';
-          return problemDetails(400, 'invalid-request', 'Invalid request',
-            'username is required and must be a non-empty string', requestPath);
+          return problemDetails(
+            400,
+            'invalid-request',
+            'Invalid request',
+            'username is required and must be a non-empty string',
+            requestPath
+          );
         }
 
         // ── Rate limit: shared check_ip bucket ───────────────────────────────
         const ip = getClientIp(ctx);
         if (ip) {
-          const rl = await ctx.call('rate-limiter.check', {
-            bucket:     'check_ip',
-            identifier: hashForLog(ip)
-          }).catch(err => {
-            this.logger.warn('[username-moderation] availability rate-limit check failed, failing open:', err.message);
-            return { allowed: true, failOpen: true };
-          });
+          const rl = await ctx
+            .call('rate-limiter.check', {
+              bucket: 'check_ip',
+              identifier: hashForLog(ip)
+            })
+            .catch(err => {
+              this.logger.warn(
+                '[username-moderation] availability rate-limit check failed, failing open:',
+                err.message
+              );
+              return { allowed: true, failOpen: true };
+            });
 
           if (!rl.allowed) {
             const retryAfterSec = Math.ceil((rl.resetAt - Date.now()) / 1000);
             ctx.meta.$statusCode = 429;
             ctx.meta.$responseType = 'application/problem+json';
             ctx.meta.$responseHeaders['Retry-After'] = String(retryAfterSec);
-            return problemDetails(429, 'rate-limit-exceeded', 'Too many requests',
-              'Please wait before checking another username', requestPath);
+            return problemDetails(
+              429,
+              'rate-limit-exceeded',
+              'Too many requests',
+              'Please wait before checking another username',
+              requestPath
+            );
           }
         }
 
@@ -323,10 +352,10 @@ module.exports = {
           const suggestions = generateSuggestions(raw);
           ctx.meta.$statusCode = 200;
           return {
-            available:     false,
-            taken:         false,
-            decision:      result.decision,
-            reasons:       obfuscateReasons(result.reasons),
+            available: false,
+            taken: false,
+            decision: result.decision,
+            reasons: obfuscateReasons(result.reasons),
             suggestions,
             correlationId,
             policyVersion: result.policyVersion
@@ -337,11 +366,11 @@ module.exports = {
         if (result.decision === 'review') {
           ctx.meta.$statusCode = 200;
           return {
-            available:     true,
-            taken:         false,
-            decision:      result.decision,
-            reasons:       [],
-            suggestions:   [],
+            available: true,
+            taken: false,
+            decision: result.decision,
+            reasons: [],
+            suggestions: [],
             correlationId,
             policyVersion: result.policyVersion
           };
@@ -360,10 +389,10 @@ module.exports = {
 
         ctx.meta.$statusCode = 200;
         return {
-          available:     !taken,
+          available: !taken,
           taken,
-          decision:      result.decision,
-          reasons:       [],
+          decision: result.decision,
+          reasons: [],
           suggestions,
           correlationId,
           policyVersion: result.policyVersion
@@ -380,9 +409,9 @@ module.exports = {
      */
     assertSafe: {
       params: {
-        username:  { type: 'string', min: 1, max: 200 },
-        flow:      { type: 'string', optional: true, default: 'signup' },
-        email:     { type: 'string', optional: true },
+        username: { type: 'string', min: 1, max: 200 },
+        flow: { type: 'string', optional: true, default: 'signup' },
+        email: { type: 'string', optional: true },
         ipAddress: { type: 'string', optional: true }
       },
       async handler(ctx) {
@@ -392,18 +421,14 @@ module.exports = {
         // ── Input sanitization ───────────────────────────────────────────────
         const raw = sanitizeUsername(ctx.params.username);
         if (!raw) {
-          throw new MoleculerClientError(
-            'Username is required and must be a valid string',
-            400,
-            'USERNAME_INVALID'
-          );
+          throw new MoleculerClientError('Username is required and must be a valid string', 400, 'USERNAME_INVALID');
         }
 
         // ── Rate limiting (signup-specific, tighter limits) ──────────────────
-        const ip        = ctx.params.ipAddress ? sanitizeIp(ctx.params.ipAddress) : getClientIp(ctx);
-        const rlItems   = [];
+        const ip = ctx.params.ipAddress ? sanitizeIp(ctx.params.ipAddress) : getClientIp(ctx);
+        const rlItems = [];
 
-        if (ip)    rlItems.push({ bucket: 'signup_ip',    identifier: hashForLog(ip) });
+        if (ip) rlItems.push({ bucket: 'signup_ip', identifier: hashForLog(ip) });
         if (email) rlItems.push({ bucket: 'signup_email', identifier: hashForLog(email.toLowerCase().trim()) });
 
         if (rlItems.length > 0) {
@@ -427,15 +452,20 @@ module.exports = {
         const result = checkUsername(raw);
 
         // ── Audit log ────────────────────────────────────────────────────────
-        this.writeAuditLog({ correlationId, result, flow, ip,
-          emailHash: email ? hashForLog(email.toLowerCase().trim()) : undefined });
+        this.writeAuditLog({
+          correlationId,
+          result,
+          flow,
+          ip,
+          emailHash: email ? hashForLog(email.toLowerCase().trim()) : undefined
+        });
 
         // ── Decision handling ────────────────────────────────────────────────
         if (result.decision === 'block') {
           this.logger.warn('[username-moderation] signup blocked', {
             correlationId,
             normalizedHash: result.artifacts?.normalized ? hashForLog(result.artifacts.normalized) : null,
-            reasons:        result.reasons,
+            reasons: result.reasons,
             flow
           });
 
@@ -447,7 +477,7 @@ module.exports = {
             422,
             'USERNAME_NOT_ALLOWED',
             {
-              reasons:      obfuscateReasons(result.reasons),
+              reasons: obfuscateReasons(result.reasons),
               suggestions,
               correlationId
             }
@@ -458,20 +488,22 @@ module.exports = {
           this.logger.warn('[username-moderation] signup review-flagged', {
             correlationId,
             normalizedHash: result.artifacts?.normalized ? hashForLog(result.artifacts.normalized) : null,
-            reasons:        result.reasons,
+            reasons: result.reasons,
             flow
           });
 
           // Phase 1: allow through, queue for async moderator review
-          ctx.call('username-review-worker.queueForReview', {
-            result,
-            flow,
-            correlationId,
-            ipHash:    ip    ? hashForLog(ip)    : undefined,
-            emailHash: email ? hashForLog(email.toLowerCase().trim()) : undefined
-          }).catch(err => {
-            this.logger.warn('[username-moderation] failed to queue review job:', err.message);
-          });
+          ctx
+            .call('username-review-worker.queueForReview', {
+              result,
+              flow,
+              correlationId,
+              ipHash: ip ? hashForLog(ip) : undefined,
+              emailHash: email ? hashForLog(email.toLowerCase().trim()) : undefined
+            })
+            .catch(err => {
+              this.logger.warn('[username-moderation] failed to queue review job:', err.message);
+            });
         }
 
         return result;
@@ -482,16 +514,16 @@ module.exports = {
     check: {
       params: {
         username: { type: 'string', min: 1, max: 200 },
-        flow:     { type: 'string', optional: true, default: 'check' }
+        flow: { type: 'string', optional: true, default: 'check' }
       },
       handler(ctx) {
         const raw = sanitizeUsername(ctx.params.username);
         if (!raw) {
           return {
             decision: 'block',
-            reasons:  ['invalid_input'],
-            message:  'Username is invalid',
-            scores:   {},
+            reasons: ['invalid_input'],
+            message: 'Username is invalid',
+            scores: {},
             artifacts: { raw: ctx.params.username, normalized: null, canonical: null, skeleton: null },
             policyVersion: POLICY_VERSION
           };
@@ -515,18 +547,18 @@ module.exports = {
     writeAuditLog({ correlationId, result, flow, ip, emailHash }) {
       this.logger.info('[username-moderation] audit', {
         correlationId,
-        decision:           result.decision,
-        reasons:            result.reasons,           // internal codes — not PII
-        normalizedHash:     result.artifacts?.normalized ? hashForLog(result.artifacts.normalized) : null,
-        canonicalHash:      result.artifacts?.canonical  ? hashForLog(result.artifacts.canonical)  : null,
-        skeletonHash:       result.artifacts?.skeleton   ? hashForLog(result.artifacts.skeleton)   : null,
-        ipHash:             ip        ? hashForLog(ip)        : null,
-        emailHash:          emailHash || null,
+        decision: result.decision,
+        reasons: result.reasons, // internal codes — not PII
+        normalizedHash: result.artifacts?.normalized ? hashForLog(result.artifacts.normalized) : null,
+        canonicalHash: result.artifacts?.canonical ? hashForLog(result.artifacts.canonical) : null,
+        skeletonHash: result.artifacts?.skeleton ? hashForLog(result.artifacts.skeleton) : null,
+        ipHash: ip ? hashForLog(ip) : null,
+        emailHash: emailHash || null,
         flow,
-        policyVersion:      result.policyVersion,
-        fuzzyScore:         result.scores?.fuzzyScore         ?? null,
+        policyVersion: result.policyVersion,
+        fuzzyScore: result.scores?.fuzzyScore ?? null,
         confusableDetected: result.scores?.confusableDetected ?? false,
-        timestamp:          new Date().toISOString()
+        timestamp: new Date().toISOString()
       });
     }
   }

@@ -25,7 +25,7 @@ const {
   deriveDefaultSearchableBy,
   getSearchableBy,
   isSearchableBy,
-  AS_PUBLIC,
+  AS_PUBLIC
 } = require('../utils/search-consent');
 
 // ---------------------------------------------------------------------------
@@ -97,7 +97,7 @@ const attachSearchConsentMeta = (ctx, activity) => {
   ctx.meta.searchConsent = {
     raw: searchableBy,
     isPublic: isSearchableBy(obj, AS_PUBLIC),
-    explicitlySet: searchableBy.length > 0,
+    explicitlySet: searchableBy.length > 0
   };
 };
 
@@ -133,7 +133,7 @@ const SearchConsentMiddleware = () => ({
     }
 
     return next;
-  },
+  }
 });
 
 module.exports = SearchConsentMiddleware;

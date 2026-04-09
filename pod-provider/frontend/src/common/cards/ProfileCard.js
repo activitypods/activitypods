@@ -48,11 +48,7 @@ const ProfileCard = () => {
             >
               {identity.fullName}
             </Typography>
-            {joinedDate && (
-              <Typography sx={{ fontSize: 11, color: '#aaa', mt: 0.2 }}>
-                Joined {joinedDate}
-              </Typography>
-            )}
+            {joinedDate && <Typography sx={{ fontSize: 11, color: '#aaa', mt: 0.2 }}>Joined {joinedDate}</Typography>}
           </Box>
         </Box>
 

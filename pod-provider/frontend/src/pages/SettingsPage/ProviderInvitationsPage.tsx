@@ -120,9 +120,12 @@ export const ProviderInvitationsPage: React.FC = () => {
     <Box sx={{ p: 3, maxWidth: 760 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
         <Box>
-          <Typography variant="h6" gutterBottom>Invite Tokens</Typography>
+          <Typography variant="h6" gutterBottom>
+            Invite Tokens
+          </Typography>
           <Typography variant="body2" color="text.secondary">
-            Control pod registration with single-use or limited-use invite codes — inspired by Akkoma's invitation system.
+            Control pod registration with single-use or limited-use invite codes — inspired by Akkoma's invitation
+            system.
           </Typography>
         </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
@@ -132,7 +135,11 @@ export const ProviderInvitationsPage: React.FC = () => {
 
       <Divider sx={{ mb: 3 }} />
 
-      {error && <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
@@ -185,7 +192,8 @@ export const ProviderInvitationsPage: React.FC = () => {
 
                     <Stack direction="row" spacing={2}>
                       <Typography variant="caption" color="text.secondary">
-                        Uses: {inv.uses}{inv.maxUses !== null ? ` / ${inv.maxUses}` : ' (unlimited)'}
+                        Uses: {inv.uses}
+                        {inv.maxUses !== null ? ` / ${inv.maxUses}` : ' (unlimited)'}
                       </Typography>
                       {inv.expiresAt && (
                         <Typography variant="caption" color="text.secondary">
@@ -246,7 +254,9 @@ export const ProviderInvitationsPage: React.FC = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)} disabled={submitting}>Cancel</Button>
+          <Button onClick={() => setDialogOpen(false)} disabled={submitting}>
+            Cancel
+          </Button>
           <Button variant="contained" onClick={handleCreate} disabled={submitting}>
             {submitting ? <CircularProgress size={18} /> : 'Generate'}
           </Button>
@@ -262,7 +272,9 @@ export const ProviderInvitationsPage: React.FC = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRevokeTarget(null)} disabled={revoking}>Cancel</Button>
+          <Button onClick={() => setRevokeTarget(null)} disabled={revoking}>
+            Cancel
+          </Button>
           <Button variant="contained" color="error" onClick={handleRevoke} disabled={revoking}>
             {revoking ? <CircularProgress size={18} /> : 'Revoke'}
           </Button>

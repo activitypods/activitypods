@@ -34,13 +34,16 @@ module.exports = {
 
     this._state = await this.loadState();
 
-    this._timer = setInterval(() => {
-      this.runScheduledDispatch().catch(error => {
-        this.logger.warn('[ModerationSummaryScheduler] Scheduled dispatch failed', {
-          error: error?.message
+    this._timer = setInterval(
+      () => {
+        this.runScheduledDispatch().catch(error => {
+          this.logger.warn('[ModerationSummaryScheduler] Scheduled dispatch failed', {
+            error: error?.message
+          });
         });
-      });
-    }, Math.max(60 * 1000, this.settings.checkIntervalMs));
+      },
+      Math.max(60 * 1000, this.settings.checkIntervalMs)
+    );
 
     this.runScheduledDispatch().catch(error => {
       this.logger.warn('[ModerationSummaryScheduler] Initial dispatch check failed', {

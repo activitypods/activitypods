@@ -1,9 +1,5 @@
 const assert = require('assert');
-const {
-  normalizeHashtag,
-  extractHashtagsFromText,
-  normalizeActivityPubObjectHashtags,
-} = require('../utils/hashtags');
+const { normalizeHashtag, extractHashtagsFromText, normalizeActivityPubObjectHashtags } = require('../utils/hashtags');
 
 const examples = [
   '#hashtag',
@@ -20,7 +16,7 @@ const examples = [
   ".'#hashtag",
   '[#hashtag',
   '&#hashtag',
-  '^#hashtag',
+  '^#hashtag'
 ];
 
 for (const sample of examples) {
@@ -34,12 +30,18 @@ assert.strictEqual(normalizeHashtag('#hash-tag'), null);
 const normalized = normalizeActivityPubObjectHashtags({
   type: 'Note',
   content: 'Hello #World and #fediverse',
-  tag: [{ type: 'Mention', href: 'https://remote.example/u/alice' }],
+  tag: [{ type: 'Mention', href: 'https://remote.example/u/alice' }]
 });
 
 assert.ok(Array.isArray(normalized.tag), 'normalized.tag should be an array');
-assert.ok(normalized.tag.some(t => t.type === 'Mention'), 'should preserve mention tags');
-assert.ok(normalized.tag.some(t => t.type === 'Hashtag' && t.name === '#world'), 'should include #world hashtag');
+assert.ok(
+  normalized.tag.some(t => t.type === 'Mention'),
+  'should preserve mention tags'
+);
+assert.ok(
+  normalized.tag.some(t => t.type === 'Hashtag' && t.name === '#world'),
+  'should include #world hashtag'
+);
 assert.ok(
   normalized.tag.some(t => t.type === 'Hashtag' && t.name === '#fediverse'),
   'should include #fediverse hashtag'

@@ -25,7 +25,7 @@ const normalizeParams = params => {
   if (!shouldNormalize(activity)) {
     return {
       collectionUri,
-      ...activity,
+      ...activity
     };
   }
 
@@ -33,7 +33,7 @@ const normalizeParams = params => {
 
   return {
     collectionUri,
-    ...normalized,
+    ...normalized
   };
 };
 
@@ -48,7 +48,7 @@ const LongFormTextMiddleware = () => ({
       ctx.params = normalizeParams(ctx.params);
       return next(ctx);
     };
-  },
+  }
 });
 
 module.exports = LongFormTextMiddleware;

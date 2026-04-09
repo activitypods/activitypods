@@ -5,7 +5,7 @@ const {
   sanitizeWarningText,
   deriveCanonicalWarningAndSensitive,
   normalizeObjectContentWarning,
-  normalizeActivityContentWarning,
+  normalizeActivityContentWarning
 } = require('./utils/content-warning');
 
 let passed = 0;
@@ -47,7 +47,7 @@ ok('normalizes Note spoiler_text -> summary + sensitive', () => {
     type: 'Note',
     content: '<p>Hello</p>',
     spoiler_text: 'CW: flashing lights',
-    nsfw: true,
+    nsfw: true
   };
   const out = normalizeObjectContentWarning(input);
   assert.equal(out.type, 'Note');
@@ -61,7 +61,7 @@ ok('preserves explicit sensitive=false', () => {
     type: 'Note',
     content: '<p>Hello</p>',
     spoiler_text: 'CW: loud sound',
-    sensitive: false,
+    sensitive: false
   });
   assert.equal(out.sensitive, false);
   assert.equal(out.summary, 'CW: loud sound');
@@ -72,7 +72,7 @@ ok('normalizes Article contentWarning alias', () => {
   const out = normalizeObjectContentWarning({
     type: 'Article',
     content: '<p>Long text</p>',
-    contentWarning: 'CW: gore',
+    contentWarning: 'CW: gore'
   });
   assert.equal(out.summary, 'CW: gore');
   assert.equal(out.sensitive, true);
@@ -81,7 +81,7 @@ ok('keeps Page summary as summary without inferring sensitive', () => {
   const out = normalizeObjectContentWarning({
     type: 'Page',
     name: 'Post title',
-    summary: 'This is a normal abstract.',
+    summary: 'This is a normal abstract.'
   });
   assert.equal(out.summary, 'This is a normal abstract.');
   assert.equal(out.sensitive, undefined);
@@ -91,7 +91,7 @@ ok('supports incoming Article with nsfw boolean', () => {
     type: 'Article',
     content: '<p>Body</p>',
     summary: 'CW: self-harm',
-    nsfw: true,
+    nsfw: true
   });
   assert.equal(out.summary, 'CW: self-harm');
   assert.equal(out.sensitive, true);
@@ -105,8 +105,8 @@ ok('normalizes Create/Note object', () => {
     object: {
       type: 'Note',
       content: '<p>text</p>',
-      spoilerText: 'CW: spoilers',
-    },
+      spoilerText: 'CW: spoilers'
+    }
   };
   const out = normalizeActivityContentWarning(input);
   assert.equal(out.object.summary, 'CW: spoilers');
@@ -119,8 +119,8 @@ ok('normalizes Update/Article object', () => {
     object: {
       type: 'Article',
       content: '<p>updated body</p>',
-      content_warning: 'CW: political violence',
-    },
+      content_warning: 'CW: political violence'
+    }
   };
   const out = normalizeActivityContentWarning(input);
   assert.equal(out.object.summary, 'CW: political violence');

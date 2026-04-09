@@ -14,8 +14,8 @@
  */
 
 const DEFAULT_BASE_DELAY_MS = 50;
-const DEFAULT_MAX_DELAY_MS  = 2000;
-const DEFAULT_MAX_RETRIES   = 3;
+const DEFAULT_MAX_DELAY_MS = 2000;
+const DEFAULT_MAX_RETRIES = 3;
 
 // ─── Backoff ──────────────────────────────────────────────────────────────────
 
@@ -50,11 +50,11 @@ function jitteredDelay(attempt, base = DEFAULT_BASE_DELAY_MS, cap = DEFAULT_MAX_
  * @returns {Promise<T>}
  */
 async function retryWithBackoff(fn, opts = {}) {
-  const maxRetries  = opts.maxRetries  ?? DEFAULT_MAX_RETRIES;
+  const maxRetries = opts.maxRetries ?? DEFAULT_MAX_RETRIES;
   const baseDelayMs = opts.baseDelayMs ?? DEFAULT_BASE_DELAY_MS;
-  const maxDelayMs  = opts.maxDelayMs  ?? DEFAULT_MAX_DELAY_MS;
-  const retryIf     = opts.retryIf     ?? (() => true);
-  const deadlineMs  = opts.deadlineMs  != null ? Date.now() + opts.deadlineMs : Infinity;
+  const maxDelayMs = opts.maxDelayMs ?? DEFAULT_MAX_DELAY_MS;
+  const retryIf = opts.retryIf ?? (() => true);
+  const deadlineMs = opts.deadlineMs != null ? Date.now() + opts.deadlineMs : Infinity;
 
   let lastErr;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -67,7 +67,7 @@ async function retryWithBackoff(fn, opts = {}) {
       return await fn();
     } catch (err) {
       lastErr = err;
-      const isLast   = attempt === maxRetries;
+      const isLast = attempt === maxRetries;
       const shouldStop = !retryIf(err);
       if (isLast || shouldStop) throw err;
       const delay = jitteredDelay(attempt, baseDelayMs, maxDelayMs);
@@ -90,14 +90,16 @@ class CircuitBreaker {
    */
   constructor(opts = {}) {
     this.failureThreshold = opts.failureThreshold ?? 5;
-    this.resetTimeoutMs   = opts.resetTimeoutMs   ?? 30_000;
-    this.name             = opts.name             ?? 'circuit';
-    this._state           = CB_STATE.CLOSED;
-    this._failures        = 0;
-    this._openedAt        = null;
+    this.resetTimeoutMs = opts.resetTimeoutMs ?? 30_000;
+    this.name = opts.name ?? 'circuit';
+    this._state = CB_STATE.CLOSED;
+    this._failures = 0;
+    this._openedAt = null;
   }
 
-  get state() { return this._state; }
+  get state() {
+    return this._state;
+  }
 
   /** Returns true if the circuit is OPEN and the reset timeout has not elapsed. */
   isOpen() {
@@ -113,13 +115,13 @@ class CircuitBreaker {
 
   _onSuccess() {
     this._failures = 0;
-    this._state    = CB_STATE.CLOSED;
+    this._state = CB_STATE.CLOSED;
   }
 
   _onFailure() {
     this._failures++;
     if (this._state === CB_STATE.HALF_OPEN || this._failures >= this.failureThreshold) {
-      this._state    = CB_STATE.OPEN;
+      this._state = CB_STATE.OPEN;
       this._openedAt = Date.now();
     }
   }

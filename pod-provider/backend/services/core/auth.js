@@ -116,9 +116,7 @@ module.exports = {
         } catch (e) {
           if (!allowIncompleteSignupBootstrap) throw e;
 
-          this.logger.warn(
-            `[Auth] Continuing signup with incomplete local bootstrap for ${webId}: ${e.message}`
-          );
+          this.logger.warn(`[Auth] Continuing signup with incomplete local bootstrap for ${webId}: ${e.message}`);
         }
 
         return res;

@@ -14,11 +14,7 @@ module.exports = {
 
   settings: {
     auth: {
-      bearerToken:
-        process.env.ACTIVITYPODS_TOKEN ||
-        process.env.INTERNAL_API_TOKEN ||
-        process.env.SIDECAR_TOKEN ||
-        ''
+      bearerToken: process.env.ACTIVITYPODS_TOKEN || process.env.INTERNAL_API_TOKEN || process.env.SIDECAR_TOKEN || ''
     },
     routePath: '/api/internal/activitypub-bridge',
     maxRecipientUris: Number(process.env.AP_BRIDGE_MAX_RECIPIENT_URIS || 1000),
@@ -157,39 +153,41 @@ module.exports = {
       for (let i = 0; i < recipientUris.length; i += MAX_CONCURRENT_RESOLUTIONS) {
         const batch = recipientUris.slice(i, i + MAX_CONCURRENT_RESOLUTIONS);
 
-        await Promise.all(batch.map(async recipientUri => {
-          try {
-            const isLocal = await ctx.call('activitypub.actor.isLocal', { actorUri: recipientUri });
-            if (isLocal) return;
+        await Promise.all(
+          batch.map(async recipientUri => {
+            try {
+              const isLocal = await ctx.call('activitypub.actor.isLocal', { actorUri: recipientUri });
+              if (isLocal) return;
 
-            const actorDoc = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
-            if (!actorDoc) return;
+              const actorDoc = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
+              if (!actorDoc) return;
 
-            const rawInbox = actorDoc.endpoints?.sharedInbox || actorDoc.inbox;
-            if (!rawInbox) return;
+              const rawInbox = actorDoc.endpoints?.sharedInbox || actorDoc.inbox;
+              if (!rawInbox) return;
 
-            const inbox = this.normalizeAbsoluteUrl(rawInbox, 'recipient inbox');
-            if (!inbox) return;
+              const inbox = this.normalizeAbsoluteUrl(rawInbox, 'recipient inbox');
+              if (!inbox) return;
 
-            const targetDomain = new URL(inbox).hostname;
-            const sharedInbox = this.normalizeOptionalAbsoluteUrl(actorDoc.endpoints?.sharedInbox);
-            const key = sharedInbox || inbox;
+              const targetDomain = new URL(inbox).hostname;
+              const sharedInbox = this.normalizeOptionalAbsoluteUrl(actorDoc.endpoints?.sharedInbox);
+              const key = sharedInbox || inbox;
 
-            const bucket = grouped.get(key) || {
-              actor: recipientUri,
-              targetDomain,
-              recipients: new Set(),
-              sharedInbox: sharedInbox || undefined
-            };
-            bucket.recipients.add(inbox);
-            grouped.set(key, bucket);
-          } catch (error) {
-            this.logger.warn('[ActivityPubBridgeApi] Failed to resolve recipient', {
-              recipientUri,
-              error: error?.message || String(error)
-            });
-          }
-        }));
+              const bucket = grouped.get(key) || {
+                actor: recipientUri,
+                targetDomain,
+                recipients: new Set(),
+                sharedInbox: sharedInbox || undefined
+              };
+              bucket.recipients.add(inbox);
+              grouped.set(key, bucket);
+            } catch (error) {
+              this.logger.warn('[ActivityPubBridgeApi] Failed to resolve recipient', {
+                recipientUri,
+                error: error?.message || String(error)
+              });
+            }
+          })
+        );
       }
 
       const deliveries = [];

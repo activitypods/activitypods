@@ -7,8 +7,8 @@
  * Hardened against: null bytes, oversized input, type coercion attacks, binary data.
  */
 
-const MAX_USERNAME_BYTES  = 256; // hard truncation before length policy
-const MAX_OPTIONAL_BYTES  = 128;
+const MAX_USERNAME_BYTES = 256; // hard truncation before length policy
+const MAX_OPTIONAL_BYTES = 128;
 const ACCEPTABLE_CONTENT_TYPE = 'application/json';
 
 // Regex to detect non-printable / control characters (C0, C1, DEL, private-use surrogates)
@@ -54,7 +54,7 @@ function sanitizeUsername(raw) {
 
   // Hard truncation (prevents algorithmic complexity attacks in downstream regex)
   const truncated = s.slice(0, MAX_USERNAME_BYTES);
-  const trimmed   = truncated.trim();
+  const trimmed = truncated.trim();
 
   return trimmed.length > 0 ? trimmed : null;
 }

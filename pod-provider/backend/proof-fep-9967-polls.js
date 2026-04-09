@@ -7,11 +7,7 @@
  */
 
 const assert = require('assert');
-const {
-  isVoteNote,
-  normalizePollObject,
-  normalizePollActivity,
-} = require('./utils/polls');
+const { isVoteNote, normalizePollObject, normalizePollActivity } = require('./utils/polls');
 const PollsMiddleware = require('./middlewares/polls');
 
 let passed = 0;
@@ -37,8 +33,8 @@ ok('normalizes oneOf options to Note + replies Collection', () => {
     content: '<p>Question?</p>',
     oneOf: [
       { name: 'Yes', replies: { totalItems: 2 } },
-      { name: 'No', replies: { totalItems: '3' } },
-    ],
+      { name: 'No', replies: { totalItems: '3' } }
+    ]
   };
   const normalized = normalizePollObject(object);
   assert.equal(normalized.type, 'Question');
@@ -47,23 +43,19 @@ ok('normalizes oneOf options to Note + replies Collection', () => {
   assert.deepStrictEqual(normalized.oneOf[0], {
     type: 'Note',
     name: 'Yes',
-    replies: { type: 'Collection', totalItems: 2 },
+    replies: { type: 'Collection', totalItems: 2 }
   });
   assert.deepStrictEqual(normalized.oneOf[1], {
     type: 'Note',
     name: 'No',
-    replies: { type: 'Collection', totalItems: 3 },
+    replies: { type: 'Collection', totalItems: 3 }
   });
 });
 
 ok('deduplicates duplicate option names', () => {
   const object = {
     type: 'Question',
-    oneOf: [
-      { name: 'A' },
-      { name: 'A' },
-      { name: 'B' },
-    ],
+    oneOf: [{ name: 'A' }, { name: 'A' }, { name: 'B' }]
   };
   const normalized = normalizePollObject(object);
   assert.equal(normalized.oneOf.length, 2);
@@ -75,7 +67,7 @@ ok('normalizes anyOf mode and date aliases endTime/closed', () => {
   const object = {
     type: 'Question',
     anyOf: [{ name: 'A' }],
-    closed: '2026-04-03T11:00:00Z',
+    closed: '2026-04-03T11:00:00Z'
   };
   const normalized = normalizePollObject(object);
   assert.equal(Array.isArray(normalized.anyOf), true);
@@ -96,7 +88,7 @@ ok('detects vote Note by name + inReplyTo + no content requirement', () => {
     type: 'Note',
     attributedTo: 'https://social.example/actors/2',
     inReplyTo: 'https://social.example/polls/1',
-    name: 'Answer 1',
+    name: 'Answer 1'
   };
   assert.equal(isVoteNote(vote), true);
 });
@@ -106,7 +98,7 @@ ok('normalizes vote aliases and strips content', () => {
     type: 'Note',
     inReplyTo: ' https://social.example/polls/1 ',
     option: ' Answer 1 ',
-    content: '<p>should not be present</p>',
+    content: '<p>should not be present</p>'
   };
   const normalized = normalizePollObject(vote);
   assert.equal(normalized.name, 'Answer 1');
@@ -122,8 +114,8 @@ ok('normalizes wrapped Create Question object', () => {
     type: 'Create',
     object: {
       type: 'Question',
-      oneOf: ['A', 'B'],
-    },
+      oneOf: ['A', 'B']
+    }
   };
   const normalized = normalizePollActivity(activity);
   assert.equal(normalized.object.oneOf.length, 2);
@@ -135,11 +127,11 @@ ok('ensures updated is present on Update Question object', () => {
     type: 'Update',
     object: {
       type: 'Question',
-      oneOf: ['A', 'B'],
-    },
+      oneOf: ['A', 'B']
+    }
   };
   const normalized = normalizePollActivity(activity, {
-    now: () => new Date('2026-04-03T12:00:00.000Z'),
+    now: () => new Date('2026-04-03T12:00:00.000Z')
   });
   assert.equal(normalized.object.updated, '2026-04-03T12:00:00.000Z');
 });
@@ -166,10 +158,10 @@ ok('middleware normalizes outbox Question payload', async () => {
       type: 'Create',
       object: {
         type: 'Question',
-        oneOf: ['A', 'B'],
-      },
+        oneOf: ['A', 'B']
+      }
     },
-    call: async () => ({ accepted: true }),
+    call: async () => ({ accepted: true })
   });
 
   assert.equal(output.object.oneOf.length, 2);
@@ -189,10 +181,10 @@ ok('middleware normalizes inbox vote payload', async () => {
         type: 'Note',
         inReplyTo: 'https://social.example/polls/1',
         choice: 'Answer 1',
-        content: 'invalid for votes',
-      },
+        content: 'invalid for votes'
+      }
     },
-    call: async () => ({ accepted: true }),
+    call: async () => ({ accepted: true })
   });
 
   assert.equal(output.object.name, 'Answer 1');

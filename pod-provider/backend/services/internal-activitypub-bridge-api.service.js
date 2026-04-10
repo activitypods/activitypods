@@ -19,7 +19,7 @@ const ATTACHMENT_ACCEPT_HEADER = [
   'image/gif',
   'video/*;q=0.9',
   'image/*;q=0.8',
-  '*/*;q=0.1',
+  '*/*;q=0.1'
 ].join(', ');
 
 const PROFILE_ACCEPT_HEADER = [
@@ -29,17 +29,20 @@ const PROFILE_ACCEPT_HEADER = [
   'image/jpeg',
   'image/gif',
   'image/*;q=0.8',
-  '*/*;q=0.1',
+  '*/*;q=0.1'
 ].join(', ');
 
 const ALLOWED_ATTACHMENT_MIME_TYPES = new Set([
-  'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-  'video/mp4', 'video/webm', 'video/quicktime',
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'video/mp4',
+  'video/webm',
+  'video/quicktime'
 ]);
 
-const ALLOWED_PROFILE_MIME_TYPES = new Set([
-  'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-]);
+const ALLOWED_PROFILE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 
 /** Parse a Content-Length header value into a number, or null. */
 function parseContentLengthHeader(value) {
@@ -56,11 +59,7 @@ function normalizeMimeTypeHeader(value) {
 
 /** Choose the canonical MIME type from header + sniffed values. */
 function chooseAttachmentMimeType(headerMime, sniffedMime) {
-  if (
-    sniffedMime && headerMime &&
-    headerMime !== 'application/octet-stream' &&
-    sniffedMime !== headerMime
-  ) {
+  if (sniffedMime && headerMime && headerMime !== 'application/octet-stream' && sniffedMime !== headerMime) {
     return null; // mismatch → reject
   }
   const candidate = sniffedMime || headerMime;
@@ -81,16 +80,26 @@ function sniffMediaMimeType(buf) {
   // JPEG
   if (b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg';
   // PNG
-  if (b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 &&
-      b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a) return 'image/png';
+  if (
+    b.length >= 8 &&
+    b[0] === 0x89 &&
+    b[1] === 0x50 &&
+    b[2] === 0x4e &&
+    b[3] === 0x47 &&
+    b[4] === 0x0d &&
+    b[5] === 0x0a &&
+    b[6] === 0x1a &&
+    b[7] === 0x0a
+  )
+    return 'image/png';
   // GIF
   if (b.length >= 6) {
     const sig = b.subarray(0, 6).toString('ascii');
     if (sig === 'GIF87a' || sig === 'GIF89a') return 'image/gif';
   }
   // WebP
-  if (b.length >= 12 && b.subarray(0, 4).toString('ascii') === 'RIFF' &&
-      b.subarray(8, 12).toString('ascii') === 'WEBP') return 'image/webp';
+  if (b.length >= 12 && b.subarray(0, 4).toString('ascii') === 'RIFF' && b.subarray(8, 12).toString('ascii') === 'WEBP')
+    return 'image/webp';
   // MP4 / QuickTime (ftyp box)
   if (b.length >= 12 && b.subarray(4, 8).toString('ascii') === 'ftyp') {
     const brand = b.subarray(8, 12).toString('ascii');
@@ -104,14 +113,24 @@ function sniffMediaMimeType(buf) {
 function sniffImageMimeType(buf) {
   const b = buf;
   if (b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg';
-  if (b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 &&
-      b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a) return 'image/png';
+  if (
+    b.length >= 8 &&
+    b[0] === 0x89 &&
+    b[1] === 0x50 &&
+    b[2] === 0x4e &&
+    b[3] === 0x47 &&
+    b[4] === 0x0d &&
+    b[5] === 0x0a &&
+    b[6] === 0x1a &&
+    b[7] === 0x0a
+  )
+    return 'image/png';
   if (b.length >= 6) {
     const sig = b.subarray(0, 6).toString('ascii');
     if (sig === 'GIF87a' || sig === 'GIF89a') return 'image/gif';
   }
-  if (b.length >= 12 && b.subarray(0, 4).toString('ascii') === 'RIFF' &&
-      b.subarray(8, 12).toString('ascii') === 'WEBP') return 'image/webp';
+  if (b.length >= 12 && b.subarray(0, 4).toString('ascii') === 'RIFF' && b.subarray(8, 12).toString('ascii') === 'WEBP')
+    return 'image/webp';
   return null;
 }
 
@@ -126,7 +145,7 @@ async function fetchRemoteMedia({ mediaUrl, acceptHeader, maxBytes, sniffFn, cho
       method: 'GET',
       headers: { Accept: acceptHeader },
       redirect: 'follow',
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.timeout(20_000)
     });
   } catch (err) {
     const e = new Error(`Failed to fetch remote ${label}: ${err?.message || String(err)}`);
@@ -190,7 +209,7 @@ async function fetchRemoteMedia({ mediaUrl, acceptHeader, maxBytes, sniffFn, cho
     mediaUrl,
     mimeType,
     bytesBase64: bytes.toString('base64'),
-    size: bytes.byteLength,
+    size: bytes.byteLength
   };
 }
 
@@ -250,7 +269,9 @@ module.exports = {
       toBottom: false
     });
 
-    this.logger.info('[ActivityPubBridgeApi] Internal routes registered under /api/internal/activitypub-bridge: resolve-outbound, resolve-media, resolve-profile-media');
+    this.logger.info(
+      '[ActivityPubBridgeApi] Internal routes registered under /api/internal/activitypub-bridge: resolve-outbound, resolve-media, resolve-profile-media'
+    );
   },
 
   actions: {
@@ -294,7 +315,7 @@ module.exports = {
             maxBytes,
             sniffFn: sniffMediaMimeType,
             chooseMimeFn: chooseAttachmentMimeType,
-            label: 'attachment media',
+            label: 'attachment media'
           });
           ctx.meta.$statusCode = 200;
           return { ...result, resolvedAt: new Date().toISOString() };
@@ -303,11 +324,14 @@ module.exports = {
           const statusCode = err.statusCode || 500;
           if (statusCode < 500) {
             this.logger.warn('[ActivityPubBridgeApi] Attachment media resolution rejected', {
-              mediaUrl, code, error: err.message
+              mediaUrl,
+              code,
+              error: err.message
             });
           } else {
             this.logger.error('[ActivityPubBridgeApi] Unexpected attachment media resolution failure', {
-              mediaUrl, error: err.message
+              mediaUrl,
+              error: err.message
             });
           }
           ctx.meta.$statusCode = statusCode;
@@ -333,7 +357,7 @@ module.exports = {
             maxBytes,
             sniffFn: sniffImageMimeType,
             chooseMimeFn: chooseProfileMimeType,
-            label: 'profile media',
+            label: 'profile media'
           });
           ctx.meta.$statusCode = 200;
           return { ...result, resolvedAt: new Date().toISOString() };
@@ -342,11 +366,14 @@ module.exports = {
           const statusCode = err.statusCode || 500;
           if (statusCode < 500) {
             this.logger.warn('[ActivityPubBridgeApi] Profile media resolution rejected', {
-              mediaUrl, code, error: err.message
+              mediaUrl,
+              code,
+              error: err.message
             });
           } else {
             this.logger.error('[ActivityPubBridgeApi] Unexpected profile media resolution failure', {
-              mediaUrl, error: err.message
+              mediaUrl,
+              error: err.message
             });
           }
           ctx.meta.$statusCode = statusCode;

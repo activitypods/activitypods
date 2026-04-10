@@ -353,6 +353,98 @@ async function testCanonicalNotification(base, token) {
   }
 }
 
+async function testResolveMedia(base, token) {
+  console.log('\n── POST /api/internal/activitypub-bridge/resolve-media ──');
+  const url = `${base}/api/internal/activitypub-bridge/resolve-media`;
+
+  // 1. No auth → 401
+  {
+    const r = await httpPost(url, null, { mediaUrl: 'https://example.com/image.jpg' }, false);
+    assert(r.status === 401, 'no auth → 401', `got ${r.status}: ${JSON.stringify(r.body)}`);
+  }
+
+  // 2. Wrong token → 401
+  {
+    const r = await httpPost(url, 'wrong-token', { mediaUrl: 'https://example.com/image.jpg' }, false);
+    assert(r.status === 401, 'wrong token → 401', `got ${r.status}: ${JSON.stringify(r.body)}`);
+  }
+
+  // 3. Missing mediaUrl → 400
+  {
+    const r = await httpPost(url, token, {});
+    assert(r.status === 400, 'missing mediaUrl → 400', `got ${r.status}: ${JSON.stringify(r.body)}`);
+  }
+
+  // 4. Invalid mediaUrl (not a URL) → 400
+  {
+    const r = await httpPost(url, token, { mediaUrl: 'not-a-url' });
+    assert(r.status === 400, 'non-URL mediaUrl → 400', `got ${r.status}: ${JSON.stringify(r.body)}`);
+  }
+
+  // 5. Non-https/non-localhost http scheme → 400
+  {
+    const r = await httpPost(url, token, { mediaUrl: 'ftp://example.com/image.jpg' });
+    assert(r.status === 400, 'ftp:// mediaUrl → 400', `got ${r.status}: ${JSON.stringify(r.body)}`);
+  }
+
+  // 6. Valid https URL that does not exist → 404 or upstream error (not 401/500)
+  {
+    const r = await httpPost(url, token, { mediaUrl: 'https://example.invalid/nonexistent.jpg' });
+    assert(
+      r.status === 404 || r.status === 503 || r.status === 502,
+      'non-existent https URL → 404|502|503',
+      `got ${r.status}: ${JSON.stringify(r.body)}`
+    );
+    assert(typeof r.body?.error === 'string', 'error field is a string', `body: ${JSON.stringify(r.body)}`);
+  }
+}
+
+async function testResolveProfileMedia(base, token) {
+  console.log('\n── POST /api/internal/activitypub-bridge/resolve-profile-media ──');
+  const url = `${base}/api/internal/activitypub-bridge/resolve-profile-media`;
+
+  // 1. No auth → 401
+  {
+    const r = await httpPost(url, null, { mediaUrl: 'https://example.com/avatar.jpg' }, false);
+    assert(r.status === 401, 'no auth → 401', `got ${r.status}: ${JSON.stringify(r.body)}`);
+  }
+
+  // 2. Wrong token → 401
+  {
+    const r = await httpPost(url, 'wrong-token', { mediaUrl: 'https://example.com/avatar.jpg' }, false);
+    assert(r.status === 401, 'wrong token → 401', `got ${r.status}: ${JSON.stringify(r.body)}`);
+  }
+
+  // 3. Missing mediaUrl → 400
+  {
+    const r = await httpPost(url, token, {});
+    assert(r.status === 400, 'missing mediaUrl → 400', `got ${r.status}: ${JSON.stringify(r.body)}`);
+  }
+
+  // 4. Invalid mediaUrl → 400
+  {
+    const r = await httpPost(url, token, { mediaUrl: 'not-a-url' });
+    assert(r.status === 400, 'non-URL mediaUrl → 400', `got ${r.status}: ${JSON.stringify(r.body)}`);
+  }
+
+  // 5. ftp:// → 400
+  {
+    const r = await httpPost(url, token, { mediaUrl: 'ftp://example.com/avatar.jpg' });
+    assert(r.status === 400, 'ftp:// mediaUrl → 400', `got ${r.status}: ${JSON.stringify(r.body)}`);
+  }
+
+  // 6. Valid https URL that does not exist → upstream error
+  {
+    const r = await httpPost(url, token, { mediaUrl: 'https://example.invalid/nonexistent.jpg' });
+    assert(
+      r.status === 404 || r.status === 503 || r.status === 502,
+      'non-existent https URL → 404|502|503',
+      `got ${r.status}: ${JSON.stringify(r.body)}`
+    );
+    assert(typeof r.body?.error === 'string', 'error field is a string', `body: ${JSON.stringify(r.body)}`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -367,6 +459,8 @@ async function testCanonicalNotification(base, token) {
   try {
     await testResolveOutbound(base, token);
     await testCanonicalNotification(base, token);
+    await testResolveMedia(base, token);
+    await testResolveProfileMedia(base, token);
   } catch (err) {
     console.error('\nFATAL:', err.message);
     process.exit(1);

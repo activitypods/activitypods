@@ -118,6 +118,21 @@ type BlockedAccount = LdpResource & {
   subjectProtocol: string;
 };
 
+type FollowedHashtag = {
+  tag: string;
+  displayTag: string;
+  notify: boolean;
+  includeCrossProtocol: boolean;
+  includeRelated: boolean;
+  createdAt?: string | null;
+};
+
+type FollowedHashtagsPayload = {
+  canonicalAccountId: string;
+  version: string;
+  hashtags: FollowedHashtag[];
+};
+
 type ParsedFediverseRow = {
   account: string;
   hideNotifications?: boolean;
@@ -443,6 +458,35 @@ const ModerationPage = () => {
   const [fediverseBlocksImporting, setFediverseBlocksImporting] = useState(false);
   const [fediverseMutesNotice, setFediverseMutesNotice] = useState<string | null>(null);
   const [fediverseBlocksNotice, setFediverseBlocksNotice] = useState<string | null>(null);
+  const [followedHashtags, setFollowedHashtags] = useState<FollowedHashtag[]>([]);
+  const [followedHashtagsLoading, setFollowedHashtagsLoading] = useState(false);
+  const [followedHashtagsError, setFollowedHashtagsError] = useState<string | null>(null);
+  const [followedHashtagsCanonicalId, setFollowedHashtagsCanonicalId] = useState<string | null>(null);
+  const [followedHashtagInput, setFollowedHashtagInput] = useState('');
+  const [followedHashtagNotify, setFollowedHashtagNotify] = useState(true);
+  const [followedHashtagCrossProtocol, setFollowedHashtagCrossProtocol] = useState(true);
+  const [followedHashtagIncludeRelated, setFollowedHashtagIncludeRelated] = useState(true);
+  const [followedHashtagSaving, setFollowedHashtagSaving] = useState(false);
+  const [followedHashtagImportInput, setFollowedHashtagImportInput] = useState('');
+  const [followedHashtagNotice, setFollowedHashtagNotice] = useState<string | null>(null);
+
+  const loadFollowedHashtags = useCallback(async () => {
+    setFollowedHashtagsLoading(true);
+    setFollowedHashtagsError(null);
+
+    try {
+      const result = await dashboardApi.listFollowedHashtags();
+      const payload = (result?.data || {}) as FollowedHashtagsPayload;
+      setFollowedHashtags(Array.isArray(payload.hashtags) ? payload.hashtags : []);
+      setFollowedHashtagsCanonicalId(payload.canonicalAccountId || null);
+    } catch (error: any) {
+      setFollowedHashtags([]);
+      setFollowedHashtagsCanonicalId(null);
+      setFollowedHashtagsError(error?.message || 'Failed to load followed hashtags.');
+    } finally {
+      setFollowedHashtagsLoading(false);
+    }
+  }, []);
   const loadMonthlySummary = useCallback(async () => {
     setMonthlySummaryLoading(true);
     setMonthlySummaryError(null);
@@ -461,6 +505,10 @@ const ModerationPage = () => {
   useEffect(() => {
     loadMonthlySummary();
   }, [loadMonthlySummary]);
+
+  useEffect(() => {
+    loadFollowedHashtags();
+  }, [loadFollowedHashtags]);
 
   useEffect(() => {
     let active = true;
@@ -590,6 +638,69 @@ const ModerationPage = () => {
     if (blockSubject.trim().length === 0) return;
     await blocks.add({ subjectCanonicalId: blockSubject.trim(), subjectProtocol: blockProtocol });
     setBlockSubject('');
+  };
+
+  const handleFollowHashtag = async () => {
+    if (followedHashtagInput.trim().length === 0) return;
+
+    setFollowedHashtagSaving(true);
+    setFollowedHashtagNotice(null);
+    setFollowedHashtagsError(null);
+
+    try {
+      await dashboardApi.followHashtag({
+        tag: followedHashtagInput.trim(),
+        notify: followedHashtagNotify,
+        includeCrossProtocol: followedHashtagCrossProtocol,
+        includeRelated: followedHashtagIncludeRelated
+      });
+      setFollowedHashtagInput('');
+      await loadFollowedHashtags();
+    } catch (error: any) {
+      setFollowedHashtagsError(error?.message || 'Failed to follow hashtag.');
+    } finally {
+      setFollowedHashtagSaving(false);
+    }
+  };
+
+  const handleUnfollowHashtag = async (tag: string) => {
+    setFollowedHashtagSaving(true);
+    setFollowedHashtagNotice(null);
+    setFollowedHashtagsError(null);
+
+    try {
+      await dashboardApi.unfollowHashtag(tag);
+      await loadFollowedHashtags();
+    } catch (error: any) {
+      setFollowedHashtagsError(error?.message || 'Failed to unfollow hashtag.');
+    } finally {
+      setFollowedHashtagSaving(false);
+    }
+  };
+
+  const parseFollowedHashtagImport = (input: string) =>
+    input
+      .split(/[\n,\t ]+/)
+      .map(item => item.trim())
+      .filter(Boolean);
+
+  const importFollowedHashtags = async (replace: boolean) => {
+    const parsed = parseFollowedHashtagImport(followedHashtagImportInput);
+    if (parsed.length === 0) return;
+
+    setFollowedHashtagSaving(true);
+    setFollowedHashtagNotice(null);
+    setFollowedHashtagsError(null);
+
+    try {
+      await dashboardApi.importFollowedHashtags({ tags: parsed, replace });
+      setFollowedHashtagNotice(`Imported ${parsed.length} hashtag entries.`);
+      await loadFollowedHashtags();
+    } catch (error: any) {
+      setFollowedHashtagsError(error?.message || 'Failed to import hashtags.');
+    } finally {
+      setFollowedHashtagSaving(false);
+    }
   };
 
   const fetchAtprotoLists = async () => {
@@ -1074,6 +1185,135 @@ const ModerationPage = () => {
           >
             Add
           </Button>
+        </Stack>
+      </SectionShell>
+
+      <SectionShell
+        title="Pod User: Followed Hashtags"
+        count={followedHashtags.length}
+        loading={followedHashtagsLoading}
+        error={followedHashtagsError}
+      >
+        <Stack spacing={1.5}>
+          <Typography variant="body2" color="text.secondary">
+            Follow hashtags with cross-protocol and related-tag controls. This extends Mastodon-style following with
+            richer routing behavior for your Pod.
+          </Typography>
+
+          {followedHashtagsCanonicalId && (
+            <Typography variant="caption" color="text.secondary">
+              Canonical account: {followedHashtagsCanonicalId}
+            </Typography>
+          )}
+
+          {followedHashtagNotice && <Alert severity="success">{followedHashtagNotice}</Alert>}
+
+          {followedHashtags.length === 0 && followedHashtagsLoading === false && (
+            <Typography variant="body2" color="text.secondary">
+              No followed hashtags yet.
+            </Typography>
+          )}
+
+          <List dense disablePadding>
+            {followedHashtags.map(item => (
+              <ListItem key={item.tag} divider>
+                <ListItemText
+                  primary={item.displayTag || `#${item.tag}`}
+                  secondary={`notify: ${item.notify ? 'on' : 'off'} | cross-protocol: ${item.includeCrossProtocol ? 'on' : 'off'} | related tags: ${item.includeRelated ? 'on' : 'off'}`}
+                />
+                <ListItemSecondaryAction>
+                  <IconButton
+                    edge="end"
+                    size="small"
+                    onClick={() => handleUnfollowHashtag(item.tag)}
+                    aria-label="unfollow hashtag"
+                    disabled={followedHashtagSaving}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </ListItemSecondaryAction>
+              </ListItem>
+            ))}
+          </List>
+
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ xs: 'stretch', md: 'center' }}>
+            <TextField
+              size="small"
+              label="Hashtag"
+              value={followedHashtagInput}
+              onChange={e => setFollowedHashtagInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && void handleFollowHashtag()}
+              placeholder="#fediverse"
+              sx={{ flex: 1 }}
+            />
+            <Button
+              variant="outlined"
+              startIcon={<AddIcon />}
+              onClick={handleFollowHashtag}
+              disabled={followedHashtagInput.trim().length === 0 || followedHashtagSaving}
+            >
+              Follow
+            </Button>
+          </Stack>
+
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+            <FormControlLabel
+              control={<Checkbox checked={followedHashtagNotify} onChange={e => setFollowedHashtagNotify(e.target.checked)} />}
+              label="Notify on matches"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={followedHashtagCrossProtocol}
+                  onChange={e => setFollowedHashtagCrossProtocol(e.target.checked)}
+                />
+              }
+              label="Cross-protocol routing"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={followedHashtagIncludeRelated}
+                  onChange={e => setFollowedHashtagIncludeRelated(e.target.checked)}
+                />
+              }
+              label="Include related tags"
+            />
+          </Stack>
+
+          <Box sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Hashtag Import
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              Paste hashtags separated by commas, spaces, or new lines.
+            </Typography>
+            <TextField
+              multiline
+              minRows={3}
+              fullWidth
+              value={followedHashtagImportInput}
+              onChange={e => setFollowedHashtagImportInput(e.target.value)}
+              placeholder={'#fediverse\n#activitypub\n#bluesky'}
+            />
+            <Stack direction="row" spacing={1} mt={1}>
+              <Button
+                variant="outlined"
+                onClick={() => importFollowedHashtags(false)}
+                disabled={followedHashtagSaving || parseFollowedHashtagImport(followedHashtagImportInput).length === 0}
+              >
+                Merge import
+              </Button>
+              <Button
+                variant="text"
+                color="warning"
+                onClick={() => importFollowedHashtags(true)}
+                disabled={followedHashtagSaving || parseFollowedHashtagImport(followedHashtagImportInput).length === 0}
+              >
+                Replace all
+              </Button>
+            </Stack>
+          </Box>
         </Stack>
       </SectionShell>
 

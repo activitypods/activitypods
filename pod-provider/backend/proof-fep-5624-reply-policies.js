@@ -48,6 +48,24 @@ const createHarness = (options = {}) => {
       if (action === 'activitypub.collection.includes') {
         return collectionMemberships.has(`${params.collectionUri}|${params.itemUri}`);
       }
+      if (action === 'activitypub.collections-registry.createAndAttachCollection') {
+        const collectionUri = `${params.objectUri.replace(/\/$/, '')}${params.collection.path}`;
+        const object = resources.get(params.objectUri);
+        if (object && !object.replies) {
+          resources.set(params.objectUri, { ...object, replies: collectionUri });
+        }
+        return collectionUri;
+      }
+      if (action === 'activitypub.collection.add') {
+        const itemUri = params.itemUri || params.item;
+        collectionMemberships.add(`${params.collectionUri}|${itemUri}`);
+        return true;
+      }
+      if (action === 'activitypub.collection.remove') {
+        const itemUri = params.itemUri || params.item;
+        collectionMemberships.delete(`${params.collectionUri}|${itemUri}`);
+        return true;
+      }
       if (action === 'activitypub.outbox.post') {
         return { id: `https://pod.example/activities/${calls.length}` };
       }
@@ -335,13 +353,14 @@ const createHarness = (options = {}) => {
     assert.equal(result.pendingApproval, true);
   });
 
-  await ok('emits ApproveReply from authority outbox', async () => {
+  await ok('adds approved reply to replies collection and emits Add from authority outbox', async () => {
     const { service, ctx, calls } = createHarness({
       resources: {
         [`${localBaseUrl}/notes/1`]: {
           id: `${localBaseUrl}/notes/1`,
           type: 'Note',
           attributedTo: `${localBaseUrl}/users/alice`,
+          replies: `${localBaseUrl}/notes/1/replies`,
           to: [`${localBaseUrl}/users/alice/followers`],
           cc: ['https://www.w3.org/ns/activitystreams#Public']
         }
@@ -373,20 +392,33 @@ const createHarness = (options = {}) => {
     });
 
     const outboxCall = calls.find(call => call.action === 'activitypub.outbox.post');
+    const collectionAddCall = calls.find(call => call.action === 'activitypub.collection.add');
+    assert(collectionAddCall);
+    assert.equal(collectionAddCall.params.collectionUri, `${localBaseUrl}/notes/1/replies`);
+    assert.equal(collectionAddCall.params.itemUri, 'https://remote.example/replies/5');
     assert(outboxCall);
-    assert.equal(outboxCall.params.type, 'ApproveReply');
+    assert.equal(outboxCall.params.type, 'Add');
     assert.equal(outboxCall.params.object, 'https://remote.example/replies/5');
-    assert.equal(outboxCall.params.inReplyTo, `${localBaseUrl}/notes/1`);
+    assert.equal(outboxCall.params.target, `${localBaseUrl}/notes/1/replies`);
   });
 
-  await ok('emits RejectReply from authority outbox', async () => {
+  await ok('removes rejected reply from replies collection and emits Remove from authority outbox', async () => {
     const { service, ctx, calls } = createHarness({
+      resources: {
+        [`${localBaseUrl}/notes/6`]: {
+          id: `${localBaseUrl}/notes/6`,
+          type: 'Note',
+          attributedTo: `${localBaseUrl}/users/alice`,
+          replies: `${localBaseUrl}/notes/6/replies`
+        }
+      },
       actors: {
         [`${localBaseUrl}/users/alice`]: {
           id: `${localBaseUrl}/users/alice`,
           outbox: `${localBaseUrl}/users/alice/outbox`
         }
-      }
+      },
+      collectionMemberships: [`${localBaseUrl}/notes/6/replies|https://remote.example/replies/6`]
     });
 
     await replyPolicies.actions.rejectReply.handler.call(service, {
@@ -407,9 +439,14 @@ const createHarness = (options = {}) => {
     });
 
     const outboxCall = calls.find(call => call.action === 'activitypub.outbox.post');
+    const collectionRemoveCall = calls.find(call => call.action === 'activitypub.collection.remove');
+    assert(collectionRemoveCall);
+    assert.equal(collectionRemoveCall.params.collectionUri, `${localBaseUrl}/notes/6/replies`);
+    assert.equal(collectionRemoveCall.params.itemUri, 'https://remote.example/replies/6');
     assert(outboxCall);
-    assert.equal(outboxCall.params.type, 'RejectReply');
+    assert.equal(outboxCall.params.type, 'Remove');
     assert.equal(outboxCall.params.object, 'https://remote.example/replies/6');
+    assert.equal(outboxCall.params.target, `${localBaseUrl}/notes/6/replies`);
   });
 
   console.log('\n§ 4  middleware integration');

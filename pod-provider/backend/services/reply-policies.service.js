@@ -2,6 +2,10 @@
 
 const { MIME_TYPES } = require('@semapps/mime-types');
 const CONFIG = require('../config/config');
+
+const REPLIES_PREDICATE = 'https://www.w3.org/ns/activitystreams#replies';
+const PUBLISHED_PREDICATE = 'https://www.w3.org/ns/activitystreams#published';
+const DESC_ORDER = 'http://semapps.org/ns/core#DescOrder';
 const {
   AS_PUBLIC,
   getActivityObject,
@@ -27,6 +31,19 @@ const normalizeIri = value => {
 /** @type {import('moleculer').ServiceSchema} */
 module.exports = {
   name: 'reply-policies',
+
+  settings: {
+    replyCollectionOptions: {
+      path: '/replies',
+      attachToTypes: ['Note', 'Article', 'Page'],
+      attachPredicate: REPLIES_PREDICATE,
+      ordered: true,
+      dereferenceItems: true,
+      sortPredicate: PUBLISHED_PREDICATE,
+      sortOrder: DESC_ORDER,
+      permissions: {}
+    }
+  },
 
   actions: {
     precheckInboundReply: {
@@ -371,6 +388,30 @@ module.exports = {
       return { accepted: true, reason: 'valid_reply_approval' };
     },
 
+    async ensureRepliesCollection(ctx, parentObject, parentObjectUri) {
+      const existingCollectionUri = this.getRepliesCollectionUri(parentObject);
+      if (existingCollectionUri) {
+        return existingCollectionUri;
+      }
+
+      if (!parentObjectUri || !parentObjectUri.startsWith(CONFIG.BASE_URL)) {
+        return null;
+      }
+
+      try {
+        return await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
+          objectUri: parentObjectUri,
+          collection: this.settings.replyCollectionOptions
+        });
+      } catch (error) {
+        this.logger.debug('[reply-policies] createAndAttachCollection failed', {
+          parentObjectUri,
+          error: error.message
+        });
+        return null;
+      }
+    },
+
     async emitApproveReply(ctx, { activity, authorityUri, parentObjectUri, replyActorUri }) {
       const replyObject = getActivityObject(activity);
       const replyObjectUri = getReplyObjectUri(replyObject);
@@ -380,13 +421,21 @@ module.exports = {
       if (!authority || !normalizeIri(authority.outbox)) return null;
 
       const parentObject = (await this.loadObject(ctx, parentObjectUri, 'system')) || {};
+      const repliesCollectionUri = await this.ensureRepliesCollection(ctx, parentObject, parentObjectUri);
+      if (!repliesCollectionUri) return null;
+
+      await ctx.call('activitypub.collection.add', {
+        collectionUri: repliesCollectionUri,
+        itemUri: replyObjectUri
+      });
+
       const recipients = buildReplyDecisionRecipients(parentObject, replyActorUri);
       const activityToSend = {
         '@context': ensureReplyPolicyContext(parentObject['@context']),
-        type: 'ApproveReply',
+        type: 'Add',
         actor: authorityUri,
         object: replyObjectUri,
-        inReplyTo: parentObjectUri,
+        target: repliesCollectionUri,
         ...recipients
       };
 
@@ -399,23 +448,44 @@ module.exports = {
     async emitRejectReply(ctx, { activity, authorityUri, replyActorUri }) {
       const replyObject = getActivityObject(activity);
       const replyObjectUri = getReplyObjectUri(replyObject);
+      const parentObjectUri = getInReplyToUri(replyObject);
       if (!authorityUri || !replyObjectUri) return null;
 
       const authority = await ctx.call('activitypub.actor.get', { actorUri: authorityUri }).catch(() => null);
       if (!authority || !normalizeIri(authority.outbox)) return null;
 
+      const parentObject = parentObjectUri
+        ? (await this.loadObject(ctx, parentObjectUri, 'system')) || {}
+        : {};
+      const repliesCollectionUri = await this.ensureRepliesCollection(ctx, parentObject, parentObjectUri);
+      if (repliesCollectionUri) {
+        await ctx.call('activitypub.collection.remove', {
+          collectionUri: repliesCollectionUri,
+          itemUri: replyObjectUri
+        }).catch(() => null);
+      }
+
       const activityToSend = {
-        '@context': ensureReplyPolicyContext(undefined),
-        type: 'RejectReply',
+        '@context': ensureReplyPolicyContext(parentObject['@context']),
+        type: 'Remove',
         actor: authorityUri,
         object: replyObjectUri,
-        to: replyActorUri
+        ...(repliesCollectionUri ? { target: repliesCollectionUri } : {}),
+        ...(replyActorUri ? { to: replyActorUri } : {})
       };
 
       return ctx.call('activitypub.outbox.post', {
         collectionUri: authority.outbox,
         ...activityToSend
       });
+    },
+
+    getRepliesCollectionUri(object) {
+      return normalizeIri(
+        object?.replies ||
+        object?.['as:replies'] ||
+        object?.[REPLIES_PREDICATE]
+      );
     }
   }
 };

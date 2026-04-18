@@ -81,6 +81,31 @@ export const dashboardApi = {
       body: JSON.stringify({ data })
     }),
 
+  listFollowedHashtags: () => req('hashtags/follows'),
+
+  followHashtag: (data: {
+    tag: string;
+    notify?: boolean;
+    includeCrossProtocol?: boolean;
+    includeRelated?: boolean;
+  }) =>
+    req('hashtags/follows', {
+      method: 'POST',
+      body: JSON.stringify({ data })
+    }),
+
+  unfollowHashtag: (tag: string) =>
+    req('hashtags/follows', {
+      method: 'DELETE',
+      body: JSON.stringify({ data: { tag } })
+    }),
+
+  importFollowedHashtags: (data: { tags: string[] | string; replace?: boolean }) =>
+    req('hashtags/follows/import', {
+      method: 'POST',
+      body: JSON.stringify({ data })
+    }),
+
   previewSource: (url: string) => req(`settings/preview?url=${encodeURIComponent(url)}`),
 
   listMrfRegistry: () => req('mrf/registry'),

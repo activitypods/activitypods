@@ -8,6 +8,7 @@ const { sanitizeSparqlQuery } = require('@semapps/triplestore');
 const { ulid } = require('ulid');
 const { retryWithBackoff, CircuitBreaker, CircuitOpenError } = require('../../utils/backoff');
 const { prepareForContainer, prepareAppConsent } = require('../../lib/user-settings-validators');
+const { normalizeHashtag } = require('../../utils/hashtags');
 
 const JSON_LD = 'application/ld+json';
 
@@ -108,6 +109,12 @@ const DEFAULT_AT_LABELS = [
 
 const ATPROTO_SYNC_PREF_CATEGORY = 'atproto-moderation-sync';
 const ATPROTO_MIRROR_TRUST_SOURCE_MARKER = 'atproto-preferences-sync';
+const HASHTAG_FOLLOWS_PREF_CATEGORY = 'followed-hashtags-v1';
+const HASHTAG_FOLLOWS_VERSION = 'v1';
+const HASHTAG_FOLLOWS_MAX = 500;
+const HASHTAG_FOLLOWS_IMPORT_MAX_CHARS = 16000;
+const HASHTAG_FOLLOWS_IMPORT_MAX_ITEMS = 2000;
+const HASHTAG_INPUT_MAX_CHARS = 256;
 const DEFAULT_SYNC_INTERVAL_HOURS = 6;
 const MIN_SYNC_INTERVAL_HOURS = 1;
 const MAX_SYNC_INTERVAL_HOURS = 24;
@@ -238,6 +245,10 @@ module.exports = {
           'PATCH /settings': 'user-settings-api.update',
           'DELETE /settings': 'user-settings-api.remove',
           'POST /settings/delete': 'user-settings-api.remove',
+          'GET /hashtags/follows': 'user-settings-api.listFollowedHashtags',
+          'POST /hashtags/follows': 'user-settings-api.followHashtag',
+          'DELETE /hashtags/follows': 'user-settings-api.unfollowHashtag',
+          'POST /hashtags/follows/import': 'user-settings-api.importFollowedHashtags',
           'GET /app-consents': 'user-settings-api.listAppConsents',
           'POST /app-consents': 'user-settings-api.createAppConsent'
         }
@@ -1249,6 +1260,98 @@ module.exports = {
       });
 
       return { data: created };
+    },
+
+    async listFollowedHashtags(ctx) {
+      const webId = this.requireWebId(ctx);
+      const canonicalAccountId = await this.resolveCanonicalAccountId(ctx, webId);
+      const hashtags = await this.getFollowedHashtags(ctx, webId);
+
+      return {
+        data: {
+          canonicalAccountId,
+          version: HASHTAG_FOLLOWS_VERSION,
+          hashtags
+        }
+      };
+    },
+
+    async followHashtag(ctx) {
+      const webId = this.requireWebId(ctx);
+      const canonicalAccountId = await this.resolveCanonicalAccountId(ctx, webId);
+      const input = this.requirePlainObject(ctx.params?.data || ctx.params || {}, 'data');
+      const normalizedTag = this.normalizeFollowedHashtagInput(input.tag || input.hashtag);
+      const options = this.normalizeHashtagFollowOptions(input.options || input);
+
+      const hashtags = await this.upsertFollowedHashtag(ctx, webId, normalizedTag, options);
+
+      return {
+        data: {
+          canonicalAccountId,
+          hashtag: normalizedTag,
+          hashtags
+        }
+      };
+    },
+
+    async unfollowHashtag(ctx) {
+      const webId = this.requireWebId(ctx);
+      const canonicalAccountId = await this.resolveCanonicalAccountId(ctx, webId);
+      const fromData = this.requirePlainObject(ctx.params?.data || {}, 'data');
+      const rawTag = fromData.tag || fromData.hashtag || ctx.meta?.$query?.tag || ctx.meta?.$query?.hashtag;
+      const normalizedTag = this.normalizeFollowedHashtagInput(rawTag);
+
+      const hashtags = await this.removeFollowedHashtag(ctx, webId, normalizedTag);
+
+      return {
+        data: {
+          canonicalAccountId,
+          hashtag: normalizedTag,
+          hashtags
+        }
+      };
+    },
+
+    async importFollowedHashtags(ctx) {
+      const webId = this.requireWebId(ctx);
+      const canonicalAccountId = await this.resolveCanonicalAccountId(ctx, webId);
+      const input = this.requirePlainObject(ctx.params?.data || ctx.params || {}, 'data');
+      const parsed = this.parseHashtagFollowImportInput(input.tags);
+      const replace = Boolean(input.replace);
+
+      let hashtags = replace ? [] : await this.getFollowedHashtags(ctx, webId);
+      const existingByTag = new Map(hashtags.map(item => [String(item.tag || '').toLowerCase(), item]));
+      let added = 0;
+
+      for (const rawTag of parsed) {
+        const normalizedTag = this.normalizeFollowedHashtagInput(rawTag);
+        const key = normalizedTag.toLowerCase();
+        if (existingByTag.has(key)) continue;
+
+        const next = {
+          tag: normalizedTag,
+          displayTag: `#${normalizedTag}`,
+          notify: true,
+          includeCrossProtocol: true,
+          includeRelated: true,
+          createdAt: new Date().toISOString()
+        };
+
+        existingByTag.set(key, next);
+        added += 1;
+      }
+
+      hashtags = this.enforceFollowedHashtagLimit([...existingByTag.values()]);
+      await this.setFollowedHashtags(ctx, webId, hashtags);
+
+      return {
+        data: {
+          canonicalAccountId,
+          added,
+          total: hashtags.length,
+          hashtags
+        }
+      };
     }
   },
 
@@ -1433,6 +1536,22 @@ module.exports = {
       return webId;
     },
 
+    async resolveCanonicalAccountId(ctx, webId) {
+      try {
+        const binding = await ctx.call('identitybindings.getByCanonicalAccountId', {
+          canonicalAccountId: webId
+        });
+
+        if (binding && typeof binding.canonicalAccountId === 'string' && binding.canonicalAccountId.trim().length > 0) {
+          return binding.canonicalAccountId.trim();
+        }
+      } catch {
+        // Fall back to webId when identity binding lookup is unavailable.
+      }
+
+      return webId;
+    },
+
     requireContainer(c) {
       if (!ALLOWED.has(c)) throw new MoleculerError('Invalid container', 400);
       return c;
@@ -1516,6 +1635,198 @@ module.exports = {
         throw new MoleculerError('Invalid ATProto handle', 400, 'ATPROTO_HANDLE_INVALID');
       }
       return handle;
+    },
+
+    normalizeFollowedHashtagInput(value) {
+      if (typeof value !== 'string' || value.trim().length === 0) {
+        throw new MoleculerError('hashtag is required', 400, 'VALIDATION_ERROR');
+      }
+
+      if (value.length > HASHTAG_INPUT_MAX_CHARS) {
+        throw new MoleculerError('Invalid hashtag format', 400, 'VALIDATION_ERROR');
+      }
+
+      const normalized = normalizeHashtag(value, { allowMissingHash: true });
+      if (!normalized) {
+        throw new MoleculerError('Invalid hashtag format', 400, 'VALIDATION_ERROR');
+      }
+
+      return normalized;
+    },
+
+    normalizeHashtagFollowOptions(input = {}) {
+      return {
+        notify: input.notify === undefined ? true : Boolean(input.notify),
+        includeCrossProtocol: input.includeCrossProtocol === undefined ? true : Boolean(input.includeCrossProtocol),
+        includeRelated: input.includeRelated === undefined ? true : Boolean(input.includeRelated)
+      };
+    },
+
+    parseHashtagFollowImportInput(input) {
+      if (Array.isArray(input)) {
+        if (input.length > HASHTAG_FOLLOWS_IMPORT_MAX_ITEMS) {
+          throw new MoleculerError('Too many imported hashtags', 400, 'VALIDATION_ERROR');
+        }
+        return input.map(item => String(item || '').trim()).filter(Boolean);
+      }
+
+      if (typeof input === 'string') {
+        if (input.length > HASHTAG_FOLLOWS_IMPORT_MAX_CHARS) {
+          throw new MoleculerError('Imported hashtag payload is too large', 400, 'VALIDATION_ERROR');
+        }
+
+        const parsed = input
+          .split(/[\n,\t ]+/)
+          .map(item => item.trim())
+          .filter(Boolean);
+
+        if (parsed.length > HASHTAG_FOLLOWS_IMPORT_MAX_ITEMS) {
+          throw new MoleculerError('Too many imported hashtags', 400, 'VALIDATION_ERROR');
+        }
+
+        return parsed;
+      }
+
+      throw new MoleculerError('tags must be an array or string', 400, 'VALIDATION_ERROR');
+    },
+
+    dedupeFollowedHashtags(hashtags) {
+      const byTag = new Map();
+
+      for (const item of hashtags) {
+        if (!item || typeof item !== 'object') {
+          continue;
+        }
+
+        const key = String(item.tag || '').trim().toLowerCase();
+        if (!key) {
+          continue;
+        }
+
+        byTag.set(key, {
+          ...item,
+          tag: key,
+          displayTag: `#${key}`,
+          notify: item.notify === undefined ? true : Boolean(item.notify),
+          includeCrossProtocol: item.includeCrossProtocol === undefined ? true : Boolean(item.includeCrossProtocol),
+          includeRelated: item.includeRelated === undefined ? true : Boolean(item.includeRelated),
+          createdAt: typeof item.createdAt === 'string' ? item.createdAt : null
+        });
+      }
+
+      return Array.from(byTag.values());
+    },
+
+    enforceFollowedHashtagLimit(hashtags) {
+      const deduped = this.dedupeFollowedHashtags(hashtags);
+      if (deduped.length > HASHTAG_FOLLOWS_MAX) {
+        throw new MoleculerError(
+          `Too many followed hashtags (max ${HASHTAG_FOLLOWS_MAX})`,
+          400,
+          'VALIDATION_ERROR'
+        );
+      }
+
+      return deduped;
+    },
+
+    async getFollowedHashtagsPreference(ctx, webId) {
+      const preferences = await this.listByContainer(ctx, webId, 'preferences');
+      const pref = preferences.find(item => item?.category === HASHTAG_FOLLOWS_PREF_CATEGORY);
+      const raw = pref && typeof pref?.value === 'object' && pref.value ? pref.value : {};
+      const hashtags = Array.isArray(raw.hashtags) ? raw.hashtags : [];
+
+      const normalized = [];
+      for (const item of hashtags) {
+        if (!item || typeof item !== 'object') continue;
+        let tag;
+        try {
+          tag = this.normalizeFollowedHashtagInput(String(item.tag || item.displayTag || ''));
+        } catch {
+          continue;
+        }
+        normalized.push({
+          tag,
+          displayTag: `#${tag}`,
+          notify: item.notify === undefined ? true : Boolean(item.notify),
+          includeCrossProtocol: item.includeCrossProtocol === undefined ? true : Boolean(item.includeCrossProtocol),
+          includeRelated: item.includeRelated === undefined ? true : Boolean(item.includeRelated),
+          createdAt: typeof item.createdAt === 'string' ? item.createdAt : null
+        });
+      }
+
+      return {
+        resourceUri: pref?.['@id'] || null,
+        hashtags: this.sortFollowedHashtags(this.enforceFollowedHashtagLimit(normalized))
+      };
+    },
+
+    async getFollowedHashtags(ctx, webId) {
+      const pref = await this.getFollowedHashtagsPreference(ctx, webId);
+      return pref.hashtags;
+    },
+
+    sortFollowedHashtags(hashtags) {
+      return [...hashtags].sort((a, b) => String(a.tag || '').localeCompare(String(b.tag || '')));
+    },
+
+    async setFollowedHashtags(ctx, webId, hashtags) {
+      const nextHashtags = this.sortFollowedHashtags(this.enforceFollowedHashtagLimit(hashtags));
+      const existing = await this.getFollowedHashtagsPreference(ctx, webId);
+      const value = {
+        version: HASHTAG_FOLLOWS_VERSION,
+        hashtags: nextHashtags,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (existing.resourceUri) {
+        await ctx.call('ldp.resource.put', {
+          resourceUri: existing.resourceUri,
+          resource: {
+            '@context': CONTEXT,
+            type: this.resourceTypeForContainer('preferences'),
+            category: HASHTAG_FOLLOWS_PREF_CATEGORY,
+            value,
+            updatedAt: value.updatedAt,
+            createdAt: value.updatedAt
+          },
+          contentType: JSON_LD,
+          webId
+        });
+        return nextHashtags;
+      }
+
+      await this.createSettingsResource(ctx, webId, 'preferences', {
+        category: HASHTAG_FOLLOWS_PREF_CATEGORY,
+        value
+      });
+      return nextHashtags;
+    },
+
+    async upsertFollowedHashtag(ctx, webId, hashtag, options) {
+      const current = await this.getFollowedHashtags(ctx, webId);
+      const byTag = new Map(current.map(item => [String(item.tag || '').toLowerCase(), item]));
+      const key = hashtag.toLowerCase();
+      const existing = byTag.get(key);
+
+      byTag.set(key, {
+        tag: hashtag,
+        displayTag: `#${hashtag}`,
+        notify: options.notify,
+        includeCrossProtocol: options.includeCrossProtocol,
+        includeRelated: options.includeRelated,
+        createdAt: existing?.createdAt || new Date().toISOString()
+      });
+
+      const next = [...byTag.values()];
+      return this.setFollowedHashtags(ctx, webId, next);
+    },
+
+    async removeFollowedHashtag(ctx, webId, hashtag) {
+      const current = await this.getFollowedHashtags(ctx, webId);
+      const key = hashtag.toLowerCase();
+      const next = current.filter(item => String(item.tag || '').toLowerCase() !== key);
+      return this.setFollowedHashtags(ctx, webId, next);
     },
 
     requireAtprotoIdentifier(value) {

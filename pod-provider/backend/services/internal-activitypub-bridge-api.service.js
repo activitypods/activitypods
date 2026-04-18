@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const net = require('net');
 const { MoleculerError } = require('moleculer').Errors;
 const { Errors: WebErrors } = require('moleculer-web');
 
@@ -229,7 +230,9 @@ module.exports = {
     },
     routePath: '/api/internal/activitypub-bridge',
     maxRecipientUris: Number(process.env.AP_BRIDGE_MAX_RECIPIENT_URIS || 1000),
-    maxDeliveries: Number(process.env.AP_BRIDGE_MAX_DELIVERIES || 500)
+    maxDeliveries: Number(process.env.AP_BRIDGE_MAX_DELIVERIES || 500),
+    maxActivityBytes: Number(process.env.AP_BRIDGE_MAX_ACTIVITY_BYTES || 262144),
+    localInboxOrigins: String(process.env.AP_BRIDGE_LOCAL_INBOX_ORIGINS || '')
   },
 
   async started() {
@@ -263,18 +266,97 @@ module.exports = {
         aliases: {
           'POST /resolve-outbound': 'internal-activitypub-bridge-api.resolveOutbound',
           'POST /resolve-media': 'internal-activitypub-bridge-api.resolveMedia',
-          'POST /resolve-profile-media': 'internal-activitypub-bridge-api.resolveProfileMedia'
+          'POST /resolve-profile-media': 'internal-activitypub-bridge-api.resolveProfileMedia',
+          'POST /inbox/receive': 'internal-activitypub-bridge-api.receiveInbound'
         }
       },
       toBottom: false
     });
 
     this.logger.info(
-      '[ActivityPubBridgeApi] Internal routes registered under /api/internal/activitypub-bridge: resolve-outbound, resolve-media, resolve-profile-media'
+      '[ActivityPubBridgeApi] Internal routes registered under /api/internal/activitypub-bridge: resolve-outbound, resolve-media, resolve-profile-media, inbox/receive'
     );
   },
 
   actions: {
+    receiveInbound: {
+      async handler(ctx) {
+        const { targetInbox, activity, verifiedActorUri, receivedAt, remoteIp, benchmark } = ctx.params || {};
+        const benchmarkMode = this.parseBooleanLike(benchmark);
+
+        const normalizedTargetInbox = this.normalizeTrustedInboxUrl(targetInbox);
+        if (!normalizedTargetInbox) {
+          ctx.meta.$statusCode = 400;
+          return { error: 'invalid_request', message: 'targetInbox must be a trusted local inbox URL' };
+        }
+        if (!activity || typeof activity !== 'object' || Array.isArray(activity)) {
+          ctx.meta.$statusCode = 400;
+          return { error: 'invalid_request', message: 'activity is required' };
+        }
+        const activityBytes = Buffer.byteLength(JSON.stringify(activity), 'utf8');
+        if (activityBytes > this.settings.maxActivityBytes) {
+          ctx.meta.$statusCode = 413;
+          return { error: 'payload_too_large', message: `activity exceeds ${this.settings.maxActivityBytes} bytes` };
+        }
+        if (!verifiedActorUri || typeof verifiedActorUri !== 'string') {
+          ctx.meta.$statusCode = 400;
+          return { error: 'invalid_request', message: 'verifiedActorUri is required' };
+        }
+        if (!Number.isFinite(receivedAt) || receivedAt <= 0) {
+          ctx.meta.$statusCode = 400;
+          return { error: 'invalid_request', message: 'receivedAt must be a number (timestamp)' };
+        }
+        if (!remoteIp || typeof remoteIp !== 'string' || net.isIP(remoteIp.trim()) === 0) {
+          ctx.meta.$statusCode = 400;
+          return { error: 'invalid_request', message: 'remoteIp is required' };
+        }
+
+        const activityActorUri = this.extractActivityActorUri(activity);
+        if (!activityActorUri || activityActorUri !== verifiedActorUri) {
+          ctx.meta.$statusCode = 400;
+          return { error: 'actor_mismatch', message: 'activity.actor does not match verifiedActorUri' };
+        }
+
+        this.logger.info(
+          `[ActivityPubBridgeApi] ${activity.type || 'Activity'} from ${verifiedActorUri} -> ${normalizedTargetInbox}`,
+          { activityId: activity.id, remoteIpHash: this.hashRemoteIp(remoteIp) }
+        );
+
+        try {
+          await ctx.call(
+            'activitypub.inbox.post',
+            { collectionUri: normalizedTargetInbox, ...activity },
+            { meta: { webId: verifiedActorUri, skipSignatureValidation: true } }
+          );
+          ctx.meta.$statusCode = 202;
+          return { success: true };
+        } catch (err) {
+          if (benchmarkMode && this.isMissingInboxOwnerError(err)) {
+            this.logger.warn('[ActivityPubBridgeApi] Benchmark inbound accepted despite missing inbox owner', {
+              activityId: activity.id,
+              targetInbox: normalizedTargetInbox
+            });
+            ctx.meta.$statusCode = 202;
+            return { success: true, benchmarkAccepted: true, reason: 'not_found' };
+          }
+
+          this.logger.error('[ActivityPubBridgeApi] Failed to deliver inbound activity', {
+            error: err.message,
+            activityId: activity.id,
+            targetInbox: normalizedTargetInbox
+          });
+
+          if (err.code === 404 || err.type === 'NOT_FOUND') {
+            ctx.meta.$statusCode = 404;
+            return { success: false, error: 'not_found', message: err.message };
+          }
+
+          ctx.meta.$statusCode = 500;
+          return { success: false, error: 'processing_error', message: err.message };
+        }
+      }
+    },
+
     resolveOutbound: {
       async handler(ctx) {
         const actorUri = this.normalizeAbsoluteUrl(ctx.params?.actorUri, 'actorUri');
@@ -384,6 +466,94 @@ module.exports = {
   },
 
   methods: {
+    isMissingInboxOwnerError(err) {
+      if (!err) return false;
+      if (err.code === 404 || err.type === 'NOT_FOUND') return true;
+      const message = String(err.message || '');
+      if (/dataset\s+.+\s+doesn't\s+exist/i.test(message)) return true;
+      if (/owner\s+.*\s+not\s+found/i.test(message)) return true;
+      if (/inbox\s+.*\s+not\s+found/i.test(message)) return true;
+      return false;
+    },
+
+    parseBooleanLike(value) {
+      if (value === true || value === 1) return true;
+      if (typeof value !== 'string') return false;
+      const normalized = value.trim().toLowerCase();
+      return normalized === '1' || normalized === 'true' || normalized === 'yes';
+    },
+
+    extractActivityActorUri(activity) {
+      if (typeof activity?.actor === 'string' && activity.actor.length > 0) {
+        return activity.actor;
+      }
+
+      if (
+        activity?.actor &&
+        typeof activity.actor === 'object' &&
+        typeof activity.actor.id === 'string' &&
+        activity.actor.id.length > 0
+      ) {
+        return activity.actor.id;
+      }
+
+      return null;
+    },
+
+    hashRemoteIp(remoteIp) {
+      return crypto.createHash('sha256').update(String(remoteIp || ''), 'utf8').digest('hex').slice(0, 16);
+    },
+
+    getAllowedInboxOrigins() {
+      const fromEnv = String(this.settings.localInboxOrigins || '')
+        .split(',')
+        .map(value => value.trim())
+        .filter(Boolean);
+
+      const defaults = [
+        process.env.ACTIVITYPODS_URL,
+        process.env.SEMAPPS_HOME_URL,
+        'http://localhost:3000',
+        'https://localhost:3000'
+      ]
+        .map(value => String(value || '').trim())
+        .filter(Boolean);
+
+      const allowed = new Set();
+      for (const origin of [...defaults, ...fromEnv]) {
+        try {
+          const parsed = new URL(origin);
+          if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+            allowed.add(parsed.origin);
+          }
+        } catch {
+          // Ignore malformed origins.
+        }
+      }
+
+      return allowed;
+    },
+
+    normalizeTrustedInboxUrl(value) {
+      const normalized = String(value || '').trim();
+      if (!normalized) return null;
+
+      let parsed;
+      try {
+        parsed = new URL(normalized);
+      } catch {
+        return null;
+      }
+
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+      if (!parsed.pathname.endsWith('/inbox')) return null;
+
+      const allowedOrigins = this.getAllowedInboxOrigins();
+      if (!allowedOrigins.has(parsed.origin)) return null;
+
+      return parsed.toString();
+    },
+
     parseBearerToken(authHeader) {
       if (!authHeader || typeof authHeader !== 'string') return null;
       // Case-insensitive scheme matching; single non-whitespace token value

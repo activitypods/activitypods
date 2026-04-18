@@ -759,17 +759,28 @@ module.exports = {
         return { ok: false, error: "INVALID_INPUT", message: "actorUri not a URL" };
       }
 
-      // Strong enforcement: verify actor is local to this deployment
+      // Strong enforcement: verify actor is local to this deployment.
+      // Prefer activitypub.actor.isLocal when available, and fall back to
+      // ldp.remote.isRemote so local dev stacks can still validate locality.
       try {
         const isLocal = await ctx.call("activitypub.actor.isLocal", { actorUri });
-        if (!isLocal) {
-          return { ok: false, error: "ACTOR_NOT_LOCAL", message: "actorUri not local" };
+        if (isLocal) {
+          return { ok: true };
+        }
+      } catch {
+        // Ignore and continue to fallback check below.
+      }
+
+      try {
+        const isRemote = await ctx.call("ldp.remote.isRemote", { resourceUri: actorUri });
+        if (isRemote === false) {
+          return { ok: true };
         }
       } catch {
         return { ok: false, error: "ACTOR_NOT_LOCAL", message: "locality verification unavailable" };
       }
 
-      return { ok: true };
+      return { ok: false, error: "ACTOR_NOT_LOCAL", message: "actorUri not local" };
     },
 
     /**

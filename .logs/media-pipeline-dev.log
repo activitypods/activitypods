@@ -1,0 +1,20 @@
+
+> activitypods-media-pipeline-sidecar@0.1.0 server:dev
+> node --import tsx src/dev/runLocalStack.ts
+
+[media-local-stack] service-started {"service":"ingress","pid":10058}
+[media-local-stack] service-started {"service":"worker:ingest","pid":10059}
+[media-local-stack] service-started {"service":"worker:fetch","pid":10060}
+[media-local-stack] service-started {"service":"worker:process:image","pid":10061}
+[media-local-stack] service-started {"service":"worker:process:video","pid":10062}
+[media-local-stack] service-started {"service":"worker:rendition:video","pid":10063}
+[media-local-stack] service-started {"service":"worker:finalize","pid":10064}
+[worker:ingest] {"level":30,"time":1776473300423,"pid":10059,"hostname":"Mac.lan","msg":"redis-ready"}
+[ingress] {"level":30,"time":1776473300517,"pid":10058,"hostname":"Mac.lan","msg":"redis-ready"}
+[ingress] {"level":30,"time":1776473300518,"pid":10058,"hostname":"Mac.lan","host":"0.0.0.0","port":8090,"msg":"queue-ingress-listening"}
+[worker:finalize] {"level":"WARN","timestamp":"2026-04-18T00:48:20.529Z","logger":"kafkajs","message":"KafkaJS v2.0.0 switched default partitioner. To retain the same partitioning behavior as in previous versions, create the producer with the option \"createPartitioner: Partitioners.LegacyPartitioner\". See the migration guide at https://kafka.js.org/docs/migration-guide-v2.0.0#producer-new-default-partitioner for details. Silence this warning by setting the environment variable \"KAFKAJS_NO_PARTITIONER_WARNING=1\""}
+[worker:finalize] {"level":30,"time":1776473300546,"pid":10064,"hostname":"Mac.lan","msg":"redis-ready"}
+[worker:process:video] {"level":30,"time":1776473300736,"pid":10062,"hostname":"Mac.lan","msg":"redis-ready"}
+[worker:fetch] {"level":30,"time":1776473300736,"pid":10060,"hostname":"Mac.lan","msg":"redis-ready"}
+[worker:rendition:video] {"level":30,"time":1776473300737,"pid":10063,"hostname":"Mac.lan","msg":"redis-ready"}
+[worker:process:image] {"level":30,"time":1776473300737,"pid":10061,"hostname":"Mac.lan","msg":"redis-ready"}

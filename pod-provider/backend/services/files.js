@@ -15,7 +15,7 @@ module.exports = {
     typeIndex: 'public',
     // MimeTypesMixin settings
     mimeTypes: {
-      accepted: ['image/*']
+      accepted: ['image/*', 'video/*']
     }
   }
 };

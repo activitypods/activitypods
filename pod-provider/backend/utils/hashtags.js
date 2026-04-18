@@ -1,9 +1,13 @@
-const HASHTAG_BODY_RE = /^(?!\d+\b)[\p{L}\p{N}_]+$/u;
-const HASHTAG_WITH_PREFIX_RE = /^#(?!\d+\b)[\p{L}\p{N}_]+$/u;
-const HASHTAG_SCAN_RE = /#(?!\d+\b)([\p{L}\p{N}_]+)/gu;
+const HASHTAG_HASH_RE = /^[#＃]/u;
+const HASHTAG_SCAN_RE = /[#＃]([\p{L}\p{M}\p{N}\p{Pc}\u00B7\u30FB\u200C]+)/gu;
+const HASHTAG_STRIP_URL_RE = /\bhttps?:\/\/[^\s<>'"]+/giu;
+const HASHTAG_SEPARATOR_TRAILING_RE = /[\u00B7\u30FB\u200C]+$/gu;
+const HASHTAG_INVALID_EDGE_RE = /^[^\p{L}\p{N}]|[^\p{L}\p{M}\p{N}\p{Pc}]$/u;
+const HASHTAG_ALLOWED_BODY_RE = /^[\p{L}\p{M}\p{N}\p{Pc}\u00B7\u30FB\u200C]+$/u;
+const HASHTAG_REQUIRES_LETTER_RE = /[\p{L}\p{M}]/u;
 
 const PUBLIC_HASHTAG_TYPE = 'Hashtag';
-const HASHTAG_LINK_SCAN_RE = /(^|[^\p{L}\p{N}_&;\/])#(?!\d+\b)([\p{L}\p{N}_]+)/gu;
+const HASHTAG_LINK_SCAN_RE = /(^|[^\p{L}\p{M}\p{N}\p{Pc}\u00B7\u30FB\u200C&;\/])[#＃]([\p{L}\p{M}\p{N}\p{Pc}\u00B7\u30FB\u200C]+)/gu;
 
 const toArray = value => (Array.isArray(value) ? value : value ? [value] : []);
 
@@ -117,10 +121,27 @@ const linkifyHashtagsInHtml = (html, { baseUrl } = {}) => {
 };
 
 const normalizeHashtagBody = value => {
-  if (!HASHTAG_BODY_RE.test(value)) {
+  const normalized = value
+    .normalize('NFKC')
+    .replace(HASHTAG_SEPARATOR_TRAILING_RE, '');
+
+  if (!normalized) {
     return null;
   }
-  return value.toLowerCase();
+
+  if (!HASHTAG_ALLOWED_BODY_RE.test(normalized)) {
+    return null;
+  }
+
+  if (HASHTAG_INVALID_EDGE_RE.test(normalized)) {
+    return null;
+  }
+
+  if (!HASHTAG_REQUIRES_LETTER_RE.test(normalized)) {
+    return null;
+  }
+
+  return normalized.toLowerCase();
 };
 
 const normalizeHashtag = (value, { allowMissingHash = false } = {}) => {
@@ -133,10 +154,7 @@ const normalizeHashtag = (value, { allowMissingHash = false } = {}) => {
     return null;
   }
 
-  if (trimmed.startsWith('#')) {
-    if (!HASHTAG_WITH_PREFIX_RE.test(trimmed)) {
-      return null;
-    }
+  if (HASHTAG_HASH_RE.test(trimmed)) {
     return normalizeHashtagBody(trimmed.slice(1));
   }
 
@@ -148,7 +166,7 @@ const normalizeHashtag = (value, { allowMissingHash = false } = {}) => {
 };
 
 const extractHashtagsFromText = text => {
-  const input = stripHtml(text);
+  const input = stripHtml(text).replace(HASHTAG_STRIP_URL_RE, ' ');
   if (!input) {
     return [];
   }

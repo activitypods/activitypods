@@ -1,10 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const {
-  normalizeHashtag,
-  extractHashtagsFromText,
-  extractHashtagsFromActivityPubTags
-} = require('../utils/hashtags');
+const { normalizeHashtag, extractHashtagsFromText, extractHashtagsFromActivityPubTags } = require('../utils/hashtags');
 
 const conformancePath = path.resolve(
   __dirname,

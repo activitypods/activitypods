@@ -1258,7 +1258,9 @@ const ModerationPage = () => {
 
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
             <FormControlLabel
-              control={<Checkbox checked={followedHashtagNotify} onChange={e => setFollowedHashtagNotify(e.target.checked)} />}
+              control={
+                <Checkbox checked={followedHashtagNotify} onChange={e => setFollowedHashtagNotify(e.target.checked)} />
+              }
               label="Notify on matches"
             />
             <FormControlLabel

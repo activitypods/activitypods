@@ -454,15 +454,15 @@ module.exports = {
       const authority = await ctx.call('activitypub.actor.get', { actorUri: authorityUri }).catch(() => null);
       if (!authority || !normalizeIri(authority.outbox)) return null;
 
-      const parentObject = parentObjectUri
-        ? (await this.loadObject(ctx, parentObjectUri, 'system')) || {}
-        : {};
+      const parentObject = parentObjectUri ? (await this.loadObject(ctx, parentObjectUri, 'system')) || {} : {};
       const repliesCollectionUri = await this.ensureRepliesCollection(ctx, parentObject, parentObjectUri);
       if (repliesCollectionUri) {
-        await ctx.call('activitypub.collection.remove', {
-          collectionUri: repliesCollectionUri,
-          itemUri: replyObjectUri
-        }).catch(() => null);
+        await ctx
+          .call('activitypub.collection.remove', {
+            collectionUri: repliesCollectionUri,
+            itemUri: replyObjectUri
+          })
+          .catch(() => null);
       }
 
       const activityToSend = {
@@ -481,11 +481,7 @@ module.exports = {
     },
 
     getRepliesCollectionUri(object) {
-      return normalizeIri(
-        object?.replies ||
-        object?.['as:replies'] ||
-        object?.[REPLIES_PREDICATE]
-      );
+      return normalizeIri(object?.replies || object?.['as:replies'] || object?.[REPLIES_PREDICATE]);
     }
   }
 };

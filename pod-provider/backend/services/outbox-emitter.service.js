@@ -14,14 +14,14 @@
 const { ulid } = require('ulid');
 const { retryWithBackoff } = require('../utils/backoff');
 
-const { getSearchableBy, isSearchableBy, AS_PUBLIC } = require('../utils/search-consent');
+const { resolvePublicSearchConsent } = require('../utils/search-consent');
 
 const { extractHashtagsFromText } = require('../utils/hashtags');
 
 module.exports = {
   name: 'outbox-emitter',
 
-  dependencies: ['activitypub.outbox'],
+  dependencies: ['activitypub.outbox', 'followable'],
 
   settings: {
     // Sidecar webhook URL for event delivery
@@ -43,6 +43,9 @@ module.exports = {
       async handler(ctx) {
         const { activity } = ctx.params;
         const actorUri = typeof activity.actor === 'string' ? activity.actor : activity.actor?.id || null;
+        const visibility = this.determineVisibility(activity);
+        const isPublicActivity = visibility === 'public' || visibility === 'unlisted';
+        const searchConsent = await this.buildSearchConsent(ctx, activity, actorUri);
 
         // Resolve remote delivery targets (not provided by ActivityPods in this event)
         let deliveryTargets = [];
@@ -76,10 +79,11 @@ module.exports = {
 
           // Metadata
           meta: {
-            isPublicIndexable: this.isPublicIndexable(activity),
+            isPublicActivity,
+            isPublicIndexable: isPublicActivity && searchConsent.isPublic,
             isDeleteOrTombstone: this.isDeleteOrTombstone(activity),
-            visibility: this.determineVisibility(activity),
-            searchConsent: this.buildSearchConsent(activity),
+            visibility,
+            searchConsent,
             hashtags: this.extractMetadataHashtags(activity)
           }
         };
@@ -105,6 +109,9 @@ module.exports = {
       },
       async handler(ctx) {
         const { actorUri, activity, deliveryTargets } = ctx.params;
+        const visibility = this.determineVisibility(activity);
+        const isPublicActivity = visibility === 'public' || visibility === 'unlisted';
+        const searchConsent = await this.buildSearchConsent(ctx, activity, actorUri);
 
         const event = {
           schema: 'ap.outbox.committed.v1',
@@ -117,10 +124,11 @@ module.exports = {
           activity,
           deliveryTargets: deliveryTargets || [],
           meta: {
-            isPublicIndexable: this.isPublicIndexable(activity),
+            isPublicActivity,
+            isPublicIndexable: isPublicActivity && searchConsent.isPublic,
             isDeleteOrTombstone: this.isDeleteOrTombstone(activity),
-            visibility: this.determineVisibility(activity),
-            searchConsent: this.buildSearchConsent(activity),
+            visibility,
+            searchConsent,
             hashtags: this.extractMetadataHashtags(activity)
           }
         };
@@ -141,6 +149,23 @@ module.exports = {
       },
       async handler(ctx) {
         const { actorUri, activity } = ctx.params;
+
+        if (this.isFollowActivity(activity)) {
+          const resolved = await ctx.call('followable.resolveFollowActivityDelivery', {
+            activity,
+            recursionLimit: 1,
+            requireFollowersCollection: true,
+            webId: 'system'
+          });
+
+          if (this.isLikelyLocalDelivery(actorUri, resolved.delivery)) {
+            return { targets: [] };
+          }
+
+          return {
+            targets: [this.toWebhookDeliveryTarget(resolved.delivery)]
+          };
+        }
 
         // Get recipients from to/cc/bto/bcc
         const recipients = this.extractRecipients(activity);
@@ -201,14 +226,18 @@ module.exports = {
       try {
         await retryWithBackoff(
           async () => {
+            const headers = {
+              'Content-Type': 'application/json',
+              'X-Event-Id': event.eventId,
+              'X-Event-Schema': event.schema
+            };
+            if (this.settings.sidecarToken) {
+              headers.Authorization = `Bearer ${this.settings.sidecarToken}`;
+            }
+
             const response = await fetch(url, {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${this.settings.sidecarToken}`,
-                'X-Event-Id': event.eventId,
-                'X-Event-Schema': event.schema
-              },
+              headers,
               body: JSON.stringify(payload),
               signal: AbortSignal.timeout(this.settings.webhookTimeoutMs)
             });
@@ -251,16 +280,6 @@ module.exports = {
     },
 
     /**
-     * Check if activity is publicly indexable.
-     */
-    isPublicIndexable(activity) {
-      // Use FEP-268d search consent to determine public indexability.
-      // Falls back to audience-based check when no searchableBy is present.
-      const obj = activity.object && typeof activity.object === 'object' ? activity.object : activity;
-      return isSearchableBy(obj, AS_PUBLIC);
-    },
-
-    /**
      * Check if activity is a delete or tombstone.
      */
     isDeleteOrTombstone(activity) {
@@ -295,14 +314,26 @@ module.exports = {
      *
      * Shape: { raw: string[], isPublic: boolean, explicitlySet: boolean }
      */
-    buildSearchConsent(activity) {
+    async buildSearchConsent(ctx, activity, actorUri) {
       const obj = activity.object && typeof activity.object === 'object' ? activity.object : activity;
-      const raw = getSearchableBy(obj);
-      return {
-        raw,
-        isPublic: isSearchableBy(obj, AS_PUBLIC),
-        explicitlySet: raw.length > 0
-      };
+      let attributedToActor = null;
+
+      if (actorUri && typeof ctx.call === 'function') {
+        attributedToActor = await Promise.resolve(
+          ctx.call('activitypub.actor.get', {
+            actorUri,
+            webId: 'system'
+          })
+        ).catch(error => {
+          this.logger.warn('Failed to resolve actor search consent for outbox event', {
+            actorUri,
+            error: error.message
+          });
+          return null;
+        });
+      }
+
+      return resolvePublicSearchConsent(obj, { attributedToActor });
     },
 
     /**
@@ -354,6 +385,29 @@ module.exports = {
       }
 
       return [...seen.values()];
+    },
+
+    isFollowActivity(activity) {
+      const type = activity?.type || activity?.['@type'];
+      return type === 'Follow';
+    },
+
+    toWebhookDeliveryTarget(delivery) {
+      return {
+        targetDomain: delivery.targetDomain,
+        inboxUrl: delivery.recipients[0],
+        ...(delivery.sharedInbox ? { sharedInboxUrl: delivery.sharedInbox } : {})
+      };
+    },
+
+    isLikelyLocalDelivery(actorUri, delivery) {
+      try {
+        const actorOrigin = new URL(actorUri).origin;
+        const inboxOrigin = new URL(delivery.recipients[0]).origin;
+        return actorOrigin === inboxOrigin;
+      } catch {
+        return false;
+      }
     }
   }
 };

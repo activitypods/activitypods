@@ -150,8 +150,59 @@ const ok = async (label, fn) => {
     const outboxCall = calls.find(entry => entry.action === 'activitypub.outbox.post');
     assert(outboxCall);
     assert.equal(outboxCall.params.type, 'Follow');
-    assert.equal(outboxCall.params.object, 'https://social.example/objects/4');
+    assert.deepEqual(outboxCall.params.object, {
+      id: 'https://social.example/objects/4',
+      followers: 'https://social.example/objects/4/followers',
+      attributedTo: 'https://social.example/actors/alice'
+    });
     assert.equal(outboxCall.params.to, 'https://social.example/actors/alice');
+  });
+
+  console.log('\n§ 3  delivery resolution for follow activities');
+
+  await ok('resolves a follow activity to a single remote inbox delivery', async () => {
+    const service = {
+      ...followableService.methods,
+      logger: { debug: () => {} }
+    };
+
+    const ctx = {
+      params: {
+        activity: {
+          type: 'Follow',
+          object: {
+            id: 'https://social.example/objects/5',
+            followers: 'https://social.example/objects/5/followers',
+            attributedTo: 'https://social.example/actors/alice'
+          }
+        },
+        recursionLimit: 9
+      },
+      call: async (action, params) => {
+        if (action === 'ldp.remote.store') return true;
+        if (action === 'ldp.resource.get') {
+          if (params.resourceUri === 'https://social.example/actors/alice') {
+            return {
+              id: 'https://social.example/actors/alice',
+              inbox: 'https://social.example/actors/alice/inbox'
+            };
+          }
+          return null;
+        }
+        if (action === 'activitypub.actor.get') return null;
+        return null;
+      }
+    };
+
+    const result = await followableService.actions.resolveFollowActivityDelivery.handler.call(service, ctx);
+
+    assert.equal(result.success, true);
+    assert.equal(result.resolved.recursionDepthUsed, 1);
+    assert.deepEqual(result.delivery, {
+      actor: 'https://social.example/actors/alice',
+      targetDomain: 'social.example',
+      recipients: ['https://social.example/actors/alice/inbox']
+    });
   });
 
   if (failed > 0) {

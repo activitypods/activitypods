@@ -83,12 +83,7 @@ export const dashboardApi = {
 
   listFollowedHashtags: () => req('hashtags/follows'),
 
-  followHashtag: (data: {
-    tag: string;
-    notify?: boolean;
-    includeCrossProtocol?: boolean;
-    includeRelated?: boolean;
-  }) =>
+  followHashtag: (data: { tag: string; notify?: boolean; includeCrossProtocol?: boolean; includeRelated?: boolean }) =>
     req('hashtags/follows', {
       method: 'POST',
       body: JSON.stringify({ data })

@@ -28,7 +28,9 @@ assert.ok(!normalized.content.includes('<script>'), 'content should strip script
 assert.ok(!normalized.summary.includes('<img'), 'summary should strip embedded media');
 assert.ok(normalized.preview, 'preview should be generated for Article');
 assert.strictEqual(normalized.preview.type, 'Note');
-assert.ok(normalized.preview.content.includes('Read more'), 'preview should include read-more link');
+assert.ok(!normalized.preview.content.includes('Read more'), 'preview should not include a read-more link');
+assert.ok(normalized.preview.content.includes('Long-form Title'), 'preview should include the article title');
+assert.ok(normalized.preview.content.includes('Intro'), 'preview should include the article summary');
 
 const extracted = extractMediaAttachmentLinks(normalized.content);
 assert.ok(Array.isArray(extracted) && extracted.length >= 2, 'should extract media links from content');
@@ -79,6 +81,22 @@ const mfmArticle = normalizeArticleObject({
 
 assert.ok(mfmArticle.content.includes('mfm-x2'), 'MFM operator should be preserved as classed span');
 assert.ok(mfmArticle.content.includes('/tags/mfm'), 'MFM hashtags should be linkified');
+
+const providedPreviewArticle = normalizeArticleObject({
+  type: 'Article',
+  id: 'https://example.com/articles/preview-1',
+  attributedTo: 'https://example.com/users/alice',
+  summary: '<p>Preview summary</p>',
+  image: { type: 'Image', url: 'https://example.com/cover.png' },
+  preview: {
+    type: 'Note',
+    content: '<p>Safe preview</p><a href="https://example.com/full">Read more</a><script>alert(1)</script>'
+  }
+});
+
+assert.ok(!providedPreviewArticle.preview.content.includes('<a '), 'provided preview should strip links');
+assert.ok(!providedPreviewArticle.preview.content.includes('<script>'), 'provided preview should strip scripts');
+assert.deepStrictEqual(providedPreviewArticle.preview.attachment, { type: 'Image', url: 'https://example.com/cover.png' });
 
 const hashtagNormalized = normalizeActivityPubObjectHashtags({
   id: 'https://example.com/articles/tagged',

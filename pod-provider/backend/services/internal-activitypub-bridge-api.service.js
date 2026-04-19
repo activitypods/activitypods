@@ -222,7 +222,7 @@ const MAX_CONCURRENT_RESOLUTIONS = 10;
 module.exports = {
   name: 'internal-activitypub-bridge-api',
 
-  dependencies: ['api', 'activitypub.actor'],
+  dependencies: ['api', 'activitypub.actor', 'followable'],
 
   settings: {
     auth: {
@@ -369,8 +369,9 @@ module.exports = {
           throw new MoleculerError('Missing activity object', 400, 'INVALID_INPUT');
         }
 
-        const recipientUris = this.extractRecipientUris(activity);
-        const deliveries = await this.resolveRemoteDeliveries(ctx, recipientUris);
+        const deliveries = this.isFollowActivity(activity)
+          ? await this.resolveFollowDeliveries(ctx, actorUri, activity)
+          : await this.resolveRemoteDeliveries(ctx, this.extractRecipientUris(activity));
 
         return {
           actorUri,
@@ -501,7 +502,11 @@ module.exports = {
     },
 
     hashRemoteIp(remoteIp) {
-      return crypto.createHash('sha256').update(String(remoteIp || ''), 'utf8').digest('hex').slice(0, 16);
+      return crypto
+        .createHash('sha256')
+        .update(String(remoteIp || ''), 'utf8')
+        .digest('hex')
+        .slice(0, 16);
     },
 
     getAllowedInboxOrigins() {
@@ -703,6 +708,36 @@ module.exports = {
         return this.normalizeAbsoluteUrl(value, 'url');
       } catch {
         return undefined;
+      }
+    },
+
+    isFollowActivity(activity) {
+      const type = activity?.type || activity?.['@type'];
+      return type === 'Follow';
+    },
+
+    async resolveFollowDeliveries(ctx, actorUri, activity) {
+      const resolved = await ctx.call('followable.resolveFollowActivityDelivery', {
+        activity,
+        recursionLimit: 1,
+        requireFollowersCollection: true,
+        webId: 'system'
+      });
+
+      if (this.isLikelyLocalDelivery(actorUri, resolved.delivery)) {
+        return [];
+      }
+
+      return [resolved.delivery];
+    },
+
+    isLikelyLocalDelivery(actorUri, delivery) {
+      try {
+        const actorOrigin = new URL(actorUri).origin;
+        const inboxOrigin = new URL(delivery.recipients[0]).origin;
+        return actorOrigin === inboxOrigin;
+      } catch {
+        return false;
       }
     }
   }

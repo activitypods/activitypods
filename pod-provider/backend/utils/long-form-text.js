@@ -73,6 +73,28 @@ const SUMMARY_ALLOWED_ATTRIBUTES = {
   li: ['value']
 };
 
+const PREVIEW_ALLOWED_TAGS = [
+  'p',
+  'span',
+  'br',
+  'em',
+  'strong',
+  'b',
+  'i',
+  'u',
+  'ul',
+  'ol',
+  'li',
+  'blockquote',
+  'code'
+];
+
+const PREVIEW_ALLOWED_ATTRIBUTES = {
+  span: ['class'],
+  ol: ['start', 'reversed'],
+  li: ['value']
+};
+
 const URL_RE = /^https?:\/\//i;
 const HTTPS_RE = /^https:\/\//i;
 
@@ -179,6 +201,16 @@ const sanitizeLongFormContent = value => {
   return sanitizeHtml(value, {
     allowedTags: FEP_B2B8_ALLOWED_TAGS,
     allowedAttributes: FEP_B2B8_ALLOWED_ATTRIBUTES,
+    disallowedTagsMode: 'discard',
+    allowedSchemes: ['http', 'https']
+  });
+};
+
+const sanitizePreviewContent = value => {
+  if (typeof value !== 'string') return value;
+  return sanitizeHtml(value, {
+    allowedTags: PREVIEW_ALLOWED_TAGS,
+    allowedAttributes: PREVIEW_ALLOWED_ATTRIBUTES,
     disallowedTagsMode: 'discard',
     allowedSchemes: ['http', 'https']
   });
@@ -330,22 +362,32 @@ const normalizeUrlForPreview = url => {
 };
 
 const buildArticlePreview = article => {
-  if (article.preview) {
-    return article.preview;
+  if (article.preview && typeof article.preview === 'object') {
+    const preview = {
+      ...article.preview,
+      type: NOTE_TYPE
+    };
+
+    if (typeof preview.content === 'string') {
+      preview.content = sanitizePreviewContent(preview.content);
+    }
+    if (article.image && !preview.attachment) {
+      preview.attachment = article.image;
+    }
+
+    return preview;
   }
 
-  const url = normalizeUrlForPreview(article.url || article.id);
   const nameText = toText(article.name);
   const summaryText = toText(article.summary);
 
-  if (!nameText && !summaryText && !url) {
+  if (!nameText && !summaryText) {
     return undefined;
   }
 
   const parts = [];
   if (nameText) parts.push(`<p><strong>${nameText}</strong></p>`);
   if (summaryText) parts.push(`<p>${summaryText}</p>`);
-  if (url) parts.push(`<p><a href='${url}' rel='noopener noreferrer'>Read more</a></p>`);
 
   const preview = {
     type: NOTE_TYPE,

@@ -47,11 +47,7 @@ module.exports = {
 
   settings: {
     auth: {
-      bearerToken:
-        process.env.ACTIVITYPODS_TOKEN ||
-        process.env.INTERNAL_API_TOKEN ||
-        process.env.SIDECAR_TOKEN ||
-        ''
+      bearerToken: process.env.ACTIVITYPODS_TOKEN || process.env.INTERNAL_API_TOKEN || process.env.SIDECAR_TOKEN || ''
     },
     routePath: '/api/internal/followers-sync'
   },
@@ -111,9 +107,7 @@ module.exports = {
         const actorIdentifier = String(
           ctx.params?.actorIdentifier ?? ctx.meta.queryString?.actorIdentifier ?? ''
         ).trim();
-        const domain = String(
-          ctx.params?.domain ?? ctx.meta.queryString?.domain ?? ''
-        ).trim();
+        const domain = String(ctx.params?.domain ?? ctx.meta.queryString?.domain ?? '').trim();
 
         if (!actorIdentifier) {
           ctx.meta.$statusCode = 400;
@@ -170,9 +164,7 @@ module.exports = {
 
     getLocalFollowersOfRemote: {
       async handler(ctx) {
-        const remoteActorUri = String(
-          ctx.params?.remoteActorUri ?? ctx.meta.queryString?.remoteActorUri ?? ''
-        ).trim();
+        const remoteActorUri = String(ctx.params?.remoteActorUri ?? ctx.meta.queryString?.remoteActorUri ?? '').trim();
 
         if (!remoteActorUri) {
           ctx.meta.$statusCode = 400;
@@ -211,9 +203,7 @@ module.exports = {
             accept: MIME_TYPES.JSON,
             webId: 'system'
           });
-          actorUris = rows
-            .filter(row => row.actorUri?.value)
-            .map(row => row.actorUri.value);
+          actorUris = rows.filter(row => row.actorUri?.value).map(row => row.actorUri.value);
         } catch (err) {
           this.logger.error('[FollowersSyncApi] getLocalFollowersOfRemote: SPARQL query failed', {
             remoteActorUri,
@@ -386,10 +376,7 @@ module.exports = {
         // ActivityPods uses the predicate https://purl.archive.org/socialweb/blocked#blocked
         // which may appear as `actor.blocked`, `actor['bl:blocked']`, or via the full URI key.
         const BLOCKED_PREDICATE = 'https://purl.archive.org/socialweb/blocked#blocked';
-        const blockedCollectionUri =
-          actor.blocked ||
-          actor['bl:blocked'] ||
-          actor[BLOCKED_PREDICATE];
+        const blockedCollectionUri = actor.blocked || actor['bl:blocked'] || actor[BLOCKED_PREDICATE];
 
         if (!blockedCollectionUri) {
           ctx.meta.$statusCode = 200;

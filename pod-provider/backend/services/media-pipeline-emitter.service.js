@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /**
  * ActivityPods Media Pipeline Emitter
@@ -12,73 +12,72 @@
  */
 
 const SEMAPPS_FILE_TYPES = new Set([
-  "semapps:File",
-  "http://semapps.org/ns/core#File",
-  "https://semapps.org/ns/core#File",
+  'semapps:File',
+  'http://semapps.org/ns/core#File',
+  'https://semapps.org/ns/core#File'
 ]);
 
 module.exports = {
-  name: "media-pipeline-emitter",
+  name: 'media-pipeline-emitter',
 
   settings: {
-    enabled: process.env.MEDIA_PIPELINE_ENABLED !== "false",
-    includeUpdates: process.env.MEDIA_PIPELINE_INCLUDE_UPDATES === "true",
+    enabled: process.env.MEDIA_PIPELINE_ENABLED !== 'false',
+    includeUpdates: process.env.MEDIA_PIPELINE_INCLUDE_UPDATES === 'true',
     mediaPipelineIngressUrl:
-      process.env.MEDIA_PIPELINE_INGRESS_URL ||
-      "http://media-pipeline-sidecar:8090/internal/media/ingest",
-    mediaPipelineToken: process.env.MEDIA_PIPELINE_TOKEN || "",
+      process.env.MEDIA_PIPELINE_INGRESS_URL || 'http://media-pipeline-sidecar:8090/internal/media/ingest',
+    mediaPipelineToken: process.env.MEDIA_PIPELINE_TOKEN || '',
     requestTimeoutMs: Number(process.env.MEDIA_PIPELINE_TIMEOUT_MS) || 5000,
-    retries: Number(process.env.MEDIA_PIPELINE_RETRIES) || 3,
+    retries: Number(process.env.MEDIA_PIPELINE_RETRIES) || 3
   },
 
   async started() {
     if (!this.settings.enabled) {
-      this.logger.info("[MediaPipelineEmitter] Disabled by MEDIA_PIPELINE_ENABLED=false");
+      this.logger.info('[MediaPipelineEmitter] Disabled by MEDIA_PIPELINE_ENABLED=false');
       return;
     }
 
     if (!this.settings.mediaPipelineToken) {
-      this.logger.warn("[MediaPipelineEmitter] MEDIA_PIPELINE_TOKEN is not set; media ingest calls will be skipped");
+      this.logger.warn('[MediaPipelineEmitter] MEDIA_PIPELINE_TOKEN is not set; media ingest calls will be skipped');
     }
 
-    this.logger.info("[MediaPipelineEmitter] Ready", {
+    this.logger.info('[MediaPipelineEmitter] Ready', {
       includeUpdates: this.settings.includeUpdates,
-      mediaPipelineIngressUrl: this.settings.mediaPipelineIngressUrl,
+      mediaPipelineIngressUrl: this.settings.mediaPipelineIngressUrl
     });
   },
 
   events: {
-    "ldp.resource.created": {
+    'ldp.resource.created': {
       async handler(ctx) {
         if (!this.settings.enabled) {
           return;
         }
 
         await this.forwardIfEligible({
-          eventName: "ldp.resource.created",
+          eventName: 'ldp.resource.created',
           resourceUri: ctx.params?.resourceUri,
           resource: ctx.params?.newData,
           webId: ctx.params?.webId || ctx.meta?.webId || null,
-          dataset: ctx.params?.dataset || ctx.meta?.dataset || null,
+          dataset: ctx.params?.dataset || ctx.meta?.dataset || null
         });
-      },
+      }
     },
 
-    "ldp.resource.updated": {
+    'ldp.resource.updated': {
       async handler(ctx) {
         if (!this.settings.enabled || !this.settings.includeUpdates) {
           return;
         }
 
         await this.forwardIfEligible({
-          eventName: "ldp.resource.updated",
+          eventName: 'ldp.resource.updated',
           resourceUri: ctx.params?.resourceUri,
           resource: ctx.params?.newData,
           webId: ctx.params?.webId || ctx.meta?.webId || null,
-          dataset: ctx.params?.dataset || ctx.meta?.dataset || null,
+          dataset: ctx.params?.dataset || ctx.meta?.dataset || null
         });
-      },
-    },
+      }
+    }
   },
 
   methods: {
@@ -93,36 +92,36 @@ module.exports = {
       }
 
       const ownerId = extractOwnerId({ resource, webId, dataset, resourceUri: normalizedResourceUri });
-      const alt = extractFirstString(resource, ["alt", "name", "title"]);
-      const contentWarning = extractFirstString(resource, ["contentWarning", "summary"]);
-      const isSensitive = extractBoolean(resource, ["isSensitive", "sensitive"]);
+      const alt = extractFirstString(resource, ['alt', 'name', 'title']);
+      const contentWarning = extractFirstString(resource, ['contentWarning', 'summary']);
+      const isSensitive = extractBoolean(resource, ['isSensitive', 'sensitive']);
 
       const body = JSON.stringify({
         sourceUrl: normalizedResourceUri,
         ownerId,
-        sourceResolver: "activitypods-file",
+        sourceResolver: 'activitypods-file',
         alt: alt || undefined,
         contentWarning: contentWarning || undefined,
-        isSensitive,
+        isSensitive
       });
 
       try {
         await this.retryWithBackoff(async () => {
           const response = await fetch(this.settings.mediaPipelineIngressUrl, {
-            method: "POST",
+            method: 'POST',
             headers: {
-              "content-type": "application/json",
-              authorization: `Bearer ${this.settings.mediaPipelineToken}`,
+              'content-type': 'application/json',
+              authorization: `Bearer ${this.settings.mediaPipelineToken}`
             },
             body,
-            signal: AbortSignal.timeout(this.settings.requestTimeoutMs),
+            signal: AbortSignal.timeout(this.settings.requestTimeoutMs)
           });
 
           if (response.ok) {
-            this.logger.debug("[MediaPipelineEmitter] Queued media ingest", {
+            this.logger.debug('[MediaPipelineEmitter] Queued media ingest', {
               eventName,
               resourceUri: normalizedResourceUri,
-              ownerId,
+              ownerId
             });
             return;
           }
@@ -132,11 +131,11 @@ module.exports = {
           throw error;
         });
       } catch (error) {
-        this.logger.error("[MediaPipelineEmitter] Failed to enqueue media resource", {
+        this.logger.error('[MediaPipelineEmitter] Failed to enqueue media resource', {
           eventName,
           resourceUri: normalizedResourceUri,
           ownerId,
-          error: error?.message || String(error),
+          error: error?.message || String(error)
         });
       }
     },
@@ -161,12 +160,12 @@ module.exports = {
           await sleep(delayMs);
         }
       }
-    },
-  },
+    }
+  }
 };
 
 function isEligibleMediaResource(resourceUri, resource) {
-  if (!resource || typeof resource !== "object" || Array.isArray(resource)) {
+  if (!resource || typeof resource !== 'object' || Array.isArray(resource)) {
     return false;
   }
 
@@ -176,7 +175,7 @@ function isEligibleMediaResource(resourceUri, resource) {
   }
 
   const types = normalizeTypes(resource);
-  if (types.some((type) => SEMAPPS_FILE_TYPES.has(type))) {
+  if (types.some(type => SEMAPPS_FILE_TYPES.has(type))) {
     return true;
   }
 
@@ -189,31 +188,22 @@ function isEligibleMediaResource(resourceUri, resource) {
 }
 
 function extractOwnerId({ resource, webId, dataset, resourceUri }) {
-  const attributedTo = extractFirstString(resource, ["attributedTo", "owner", "creator"]);
+  const attributedTo = extractFirstString(resource, ['attributedTo', 'owner', 'creator']);
   return attributedTo || webId || dataset || resourceUri;
 }
 
 function extractMimeType(resource) {
-  return normalizeMimeType(
-    extractFirstString(resource, [
-      "mediaType",
-      "dcat:mediaType",
-      "dc:format",
-      "mimeType",
-    ]),
-  );
+  return normalizeMimeType(extractFirstString(resource, ['mediaType', 'dcat:mediaType', 'dc:format', 'mimeType']));
 }
 
 function isSupportedMediaMime(mimeType) {
-  return mimeType.startsWith("image/") || mimeType.startsWith("video/");
+  return mimeType.startsWith('image/') || mimeType.startsWith('video/');
 }
 
 function normalizeTypes(resource) {
-  const raw = resource?.type ?? resource?.["@type"];
+  const raw = resource?.type ?? resource?.['@type'];
   const values = Array.isArray(raw) ? raw : raw ? [raw] : [];
-  return values
-    .map((value) => (typeof value === "string" ? value.trim() : ""))
-    .filter(Boolean);
+  return values.map(value => (typeof value === 'string' ? value.trim() : '')).filter(Boolean);
 }
 
 function extractFirstString(resource, keys) {
@@ -224,13 +214,13 @@ function extractFirstString(resource, keys) {
       return value;
     }
   }
-  return "";
+  return '';
 }
 
 function extractStringValue(value) {
-  if (typeof value === "string") {
+  if (typeof value === 'string') {
     const trimmed = value.trim();
-    return trimmed || "";
+    return trimmed || '';
   }
 
   if (Array.isArray(value)) {
@@ -242,32 +232,32 @@ function extractStringValue(value) {
     }
   }
 
-  return "";
+  return '';
 }
 
 function extractBoolean(resource, keys) {
   for (const key of keys) {
     const raw = resource?.[key];
-    if (typeof raw === "boolean") {
+    if (typeof raw === 'boolean') {
       return raw;
     }
-    if (typeof raw === "string") {
+    if (typeof raw === 'string') {
       const normalized = raw.trim().toLowerCase();
-      if (normalized === "true") return true;
-      if (normalized === "false") return false;
+      if (normalized === 'true') return true;
+      if (normalized === 'false') return false;
     }
   }
   return undefined;
 }
 
 function normalizeAbsoluteUrl(value) {
-  if (typeof value !== "string" || !value.trim()) {
+  if (typeof value !== 'string' || !value.trim()) {
     return null;
   }
 
   try {
     const parsed = new URL(value.trim());
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       return null;
     }
     return parsed.toString();
@@ -278,11 +268,11 @@ function normalizeAbsoluteUrl(value) {
 
 function normalizeMimeType(value) {
   if (!value) {
-    return "";
+    return '';
   }
-  return value.split(";")[0].trim().toLowerCase();
+  return value.split(';')[0].trim().toLowerCase();
 }
 
 function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

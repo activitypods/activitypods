@@ -6,6 +6,10 @@ const FOLLOWABLE_ERRORS = Object.freeze({
   TARGET_NOT_RESOLVABLE: 'TARGET_NOT_RESOLVABLE'
 });
 
+const ACTOR_TYPES = new Set(['Person', 'Group', 'Organization', 'Application', 'Service']);
+const DEFAULT_RECURSION_LIMIT = 1;
+const MAX_RECURSION_LIMIT = 1;
+
 const isObject = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
 const normalizeIri = value => {
@@ -34,6 +38,28 @@ const hasFollowersCollection = object => {
   return Boolean(firstIri(object.followers));
 };
 
+const getObjectType = object => {
+  if (!isObject(object)) return null;
+  const type = object.type || object['@type'];
+  if (typeof type === 'string') return type;
+  if (Array.isArray(type)) {
+    for (const entry of type) {
+      if (typeof entry === 'string' && entry.trim().length > 0) {
+        return entry.trim();
+      }
+    }
+  }
+  return null;
+};
+
+const isActorType = value => typeof value === 'string' && ACTOR_TYPES.has(value.trim());
+
+const normalizeRecursionLimit = value => {
+  if (!Number.isInteger(value)) return DEFAULT_RECURSION_LIMIT;
+  if (value < 0) return 0;
+  return Math.min(value, MAX_RECURSION_LIMIT);
+};
+
 const findInboxOnObject = object => {
   if (!isObject(object)) return null;
   return firstIri(object.inbox) || null;
@@ -53,7 +79,7 @@ const resolveAttributedToRef = object => {
  * @returns {Promise<{ inboxUri: string, recipientUri: string, recursionDepthUsed: number, objectId: string | null, followersUri: string | null }>}
  */
 const resolveFollowDeliveryTarget = async (objectToFollow, dereferenceByUri, options = {}) => {
-  const recursionLimit = Number.isInteger(options.recursionLimit) ? options.recursionLimit : 1;
+  const recursionLimit = normalizeRecursionLimit(options.recursionLimit);
   const requireFollowersCollection = options.requireFollowersCollection !== false;
 
   if (!isObject(objectToFollow)) {
@@ -127,5 +153,9 @@ const resolveFollowDeliveryTarget = async (objectToFollow, dereferenceByUri, opt
 
 module.exports = {
   FOLLOWABLE_ERRORS,
+  firstIri,
+  getObjectType,
+  isActorType,
+  normalizeRecursionLimit,
   resolveFollowDeliveryTarget
 };

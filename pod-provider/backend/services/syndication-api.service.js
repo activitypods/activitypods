@@ -52,11 +52,7 @@ const toEntries = (payload, fallbackUrl) => {
       id;
 
     const summary =
-      typeof value.summary === 'string'
-        ? value.summary
-        : typeof value.content === 'string'
-          ? value.content
-          : undefined;
+      typeof value.summary === 'string' ? value.summary : typeof value.content === 'string' ? value.content : undefined;
 
     const publishedAt =
       typeof value.published === 'string'
@@ -257,7 +253,8 @@ module.exports = {
       const entries = toEntries(payload, targetUrl);
       const xml = format === 'rss' ? toRss(targetUrl, entries) : toAtom(targetUrl, entries);
 
-      ctx.meta.$responseType = format === 'rss' ? 'application/rss+xml; charset=utf-8' : 'application/atom+xml; charset=utf-8';
+      ctx.meta.$responseType =
+        format === 'rss' ? 'application/rss+xml; charset=utf-8' : 'application/atom+xml; charset=utf-8';
       ctx.meta.$responseHeaders = {
         'cache-control': 'public, max-age=120'
       };

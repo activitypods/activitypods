@@ -13,14 +13,9 @@ const APODS = 'http://activitypods.org/ns/core#';
 const SEMAPPS_FILE_TYPES = new Set([
   'semapps:File',
   'http://semapps.org/ns/core#File',
-  'https://semapps.org/ns/core#File',
+  'https://semapps.org/ns/core#File'
 ]);
-const SAFETY_SIGNAL_SOURCES = new Set([
-  'google-vision',
-  'google-video',
-  'safe-browsing',
-  'cloudflare-csam',
-]);
+const SAFETY_SIGNAL_SOURCES = new Set(['google-vision', 'google-video', 'safe-browsing', 'cloudflare-csam']);
 const MAX_SIGNAL_COUNT = 8;
 const MAX_SIGNAL_LABELS = 16;
 const MAX_SIGNAL_LABEL_LENGTH = 64;
@@ -31,7 +26,7 @@ const MEDIA_PIPELINE_CONTEXT = {
   xsd: 'http://www.w3.org/2001/XMLSchema#',
   'apods:mediaPipelineSignalsUpdatedAt': { '@type': 'xsd:dateTime' },
   'apods:mediaPipelineModerationUpdatedAt': { '@type': 'xsd:dateTime' },
-  'apods:mediaPipelineModerationConfidence': { '@type': 'xsd:double' },
+  'apods:mediaPipelineModerationConfidence': { '@type': 'xsd:double' }
 };
 const MEDIA_PIPELINE_PREDICATES = [
   `${AS}summary`,
@@ -50,7 +45,7 @@ const MEDIA_PIPELINE_PREDICATES = [
   `${APODS}mediaPipelineModerationUpdatedAt`,
   `${APODS}mediaPipelineModerationConfidence`,
   `${APODS}mediaPipelineModerationReason`,
-  `${APODS}mediaPipelineModerationContentWarning`,
+  `${APODS}mediaPipelineModerationContentWarning`
 ];
 
 module.exports = {
@@ -60,7 +55,7 @@ module.exports = {
 
   settings: {
     auth: {
-      bearerToken: process.env.ACTIVITYPODS_TOKEN || process.env.INTERNAL_API_TOKEN || process.env.SIDECAR_TOKEN || '',
+      bearerToken: process.env.ACTIVITYPODS_TOKEN || process.env.INTERNAL_API_TOKEN || process.env.SIDECAR_TOKEN || ''
     },
     routePath: '/api/internal/media-pipeline',
     baseUrl: String(process.env.SEMAPPS_HOME_URL || process.env.BASE_URL || '').replace(/\/$/, ''),
@@ -69,7 +64,7 @@ module.exports = {
       .map(value => value.trim())
       .filter(Boolean),
     uploadsRoot: path.resolve(process.env.MEDIA_PIPELINE_UPLOADS_ROOT || path.join(process.cwd(), 'uploads')),
-    maxSourceBytes: Number(process.env.MEDIA_PIPELINE_MAX_SOURCE_BYTES || 100 * 1024 * 1024),
+    maxSourceBytes: Number(process.env.MEDIA_PIPELINE_MAX_SOURCE_BYTES || 100 * 1024 * 1024)
   },
 
   async started() {
@@ -96,15 +91,15 @@ module.exports = {
             ...(ctx.meta.$responseHeaders || {}),
             'Cache-Control': 'no-store',
             Pragma: 'no-cache',
-            'X-Content-Type-Options': 'nosniff',
+            'X-Content-Type-Options': 'nosniff'
           };
         },
         aliases: {
           'POST /resolve-source': 'internal-media-pipeline-api.resolveSource',
-          'POST /assets': 'internal-media-pipeline-api.ingestAsset',
-        },
+          'POST /assets': 'internal-media-pipeline-api.ingestAsset'
+        }
       },
-      toBottom: false,
+      toBottom: false
     });
 
     this.logger.info('[InternalMediaPipelineApi] Internal routes registered under /api/internal/media-pipeline');
@@ -134,7 +129,7 @@ module.exports = {
 
       const sniffBuffer = await this.readSniffBytes(localPath, 512);
       const headerMime = this.normalizeMimeType(
-        resource['semapps:mimeType'] || resource.mediaType || resource.mimeType,
+        resource['semapps:mimeType'] || resource.mediaType || resource.mimeType
       );
       const mimeType = this.chooseMediaMimeType(headerMime, this.sniffMediaMimeType(sniffBuffer));
       if (!mimeType) {
@@ -145,7 +140,7 @@ module.exports = {
       ctx.meta.$responseHeaders = {
         ...(ctx.meta.$responseHeaders || {}),
         'Content-Length': String(stat.size),
-        'Content-Disposition': 'inline',
+        'Content-Disposition': 'inline'
       };
 
       return fs.createReadStream(localPath);
@@ -186,7 +181,7 @@ module.exports = {
           resourceUri: sourceUrl,
           resource: next,
           contentType: JSON_LD,
-          webId: 'system',
+          webId: 'system'
         });
         await this.persistMediaPipelineMetadata(ctx, sourceUrl, asset, mediaPipelineSignals, moderation);
 
@@ -202,9 +197,9 @@ module.exports = {
         updatedCount: updatedResources.length,
         updatedResources,
         skippedCount: skippedResources.length,
-        skippedResources,
+        skippedResources
       };
-    },
+    }
   },
 
   methods: {
@@ -252,7 +247,7 @@ module.exports = {
       const resource = await ctx.call('ldp.resource.get', {
         resourceUri,
         accept: JSON_LD,
-        webId: 'system',
+        webId: 'system'
       });
 
       const rawTypes = Array.isArray(resource?.type)
@@ -263,9 +258,7 @@ module.exports = {
             ? [resource.type || resource['@type']]
             : [];
 
-      const normalizedTypes = rawTypes
-        .map(value => (typeof value === 'string' ? value.trim() : ''))
-        .filter(Boolean);
+      const normalizedTypes = rawTypes.map(value => (typeof value === 'string' ? value.trim() : '')).filter(Boolean);
 
       if (!normalizedTypes.some(type => SEMAPPS_FILE_TYPES.has(type))) {
         throw new MoleculerError('Resource is not a SemApps file', 422, 'UNSUPPORTED_MEDIA_TYPE');
@@ -275,20 +268,14 @@ module.exports = {
     },
 
     resolveLocalPath(resource) {
-      const localPath = typeof resource?.['semapps:localPath'] === 'string'
-        ? resource['semapps:localPath']
-        : null;
+      const localPath = typeof resource?.['semapps:localPath'] === 'string' ? resource['semapps:localPath'] : null;
       if (!localPath) {
         throw new MoleculerError('Resolved file resource is missing semapps:localPath', 422, 'INVALID_RESOURCE');
       }
 
       const resolvedPath = path.resolve(localPath);
       const relativeToUploads = path.relative(this.settings.uploadsRoot, resolvedPath);
-      if (
-        relativeToUploads === '' ||
-        relativeToUploads.startsWith('..') ||
-        path.isAbsolute(relativeToUploads)
-      ) {
+      if (relativeToUploads === '' || relativeToUploads.startsWith('..') || path.isAbsolute(relativeToUploads)) {
         throw new MoleculerError('Resolved file path is outside the configured uploads root', 403, 'FORBIDDEN');
       }
 
@@ -324,7 +311,8 @@ module.exports = {
         b[5] === 0x0a &&
         b[6] === 0x1a &&
         b[7] === 0x0a
-      ) return 'image/png';
+      )
+        return 'image/png';
       if (b.length >= 6) {
         const signature = b.subarray(0, 6).toString('ascii');
         if (signature === 'GIF87a' || signature === 'GIF89a') return 'image/gif';
@@ -333,7 +321,8 @@ module.exports = {
         b.length >= 12 &&
         b.subarray(0, 4).toString('ascii') === 'RIFF' &&
         b.subarray(8, 12).toString('ascii') === 'WEBP'
-      ) return 'image/webp';
+      )
+        return 'image/webp';
       if (b.length >= 12 && b.subarray(4, 8).toString('ascii') === 'ftyp') {
         const brand = b.subarray(8, 12).toString('ascii');
         return brand === 'qt  ' ? 'video/quicktime' : 'video/mp4';
@@ -343,12 +332,7 @@ module.exports = {
     },
 
     chooseMediaMimeType(headerMime, sniffedMime) {
-      if (
-        sniffedMime &&
-        headerMime &&
-        headerMime !== 'application/octet-stream' &&
-        sniffedMime !== headerMime
-      ) {
+      if (sniffedMime && headerMime && headerMime !== 'application/octet-stream' && sniffedMime !== headerMime) {
         return null;
       }
 
@@ -375,7 +359,7 @@ module.exports = {
 
       return {
         url,
-        mediaType: binding.mediaType.trim(),
+        mediaType: binding.mediaType.trim()
       };
     },
 
@@ -396,15 +380,17 @@ module.exports = {
           continue;
         }
 
-        const labels = [...new Set(
-          (Array.isArray(signal.labels) ? signal.labels : [])
-            .map(label => this.normalizeSignalLabel(label))
-            .filter(Boolean)
-        )].slice(0, MAX_SIGNAL_LABELS);
+        const labels = [
+          ...new Set(
+            (Array.isArray(signal.labels) ? signal.labels : [])
+              .map(label => this.normalizeSignalLabel(label))
+              .filter(Boolean)
+          )
+        ].slice(0, MAX_SIGNAL_LABELS);
 
         const next = {
           source,
-          labels,
+          labels
         };
 
         if (typeof signal.confidence === 'number' && Number.isFinite(signal.confidence)) {
@@ -430,8 +416,10 @@ module.exports = {
         return null;
       }
 
-      const desiredAction = typeof value.desiredAction === 'string' ? value.desiredAction.trim().toLowerCase() : 'accept';
-      const appliedAction = typeof value.appliedAction === 'string' ? value.appliedAction.trim().toLowerCase() : 'accept';
+      const desiredAction =
+        typeof value.desiredAction === 'string' ? value.desiredAction.trim().toLowerCase() : 'accept';
+      const appliedAction =
+        typeof value.appliedAction === 'string' ? value.appliedAction.trim().toLowerCase() : 'accept';
       const moduleId = typeof value.moduleId === 'string' ? value.moduleId.trim() : '';
       const traceId = typeof value.traceId === 'string' ? value.traceId.trim() : '';
 
@@ -445,17 +433,21 @@ module.exports = {
         mode: typeof value.mode === 'string' ? value.mode.trim().toLowerCase() : 'dry-run',
         desiredAction: ['accept', 'label', 'filter', 'reject'].includes(desiredAction) ? desiredAction : 'accept',
         appliedAction: ['accept', 'label', 'filter', 'reject'].includes(appliedAction) ? appliedAction : 'accept',
-        matchedLabels: [...new Set(
-          (Array.isArray(value.matchedLabels) ? value.matchedLabels : [])
-            .map(label => this.normalizeSignalLabel(label))
-            .filter(Boolean)
-        )],
-        matchedSources: [...new Set(
-          (Array.isArray(value.matchedSources) ? value.matchedSources : [])
-            .map(source => typeof source === 'string' ? source.trim().toLowerCase() : '')
-            .filter(Boolean)
-        )],
-        markSensitive: value.markSensitive === true,
+        matchedLabels: [
+          ...new Set(
+            (Array.isArray(value.matchedLabels) ? value.matchedLabels : [])
+              .map(label => this.normalizeSignalLabel(label))
+              .filter(Boolean)
+          )
+        ],
+        matchedSources: [
+          ...new Set(
+            (Array.isArray(value.matchedSources) ? value.matchedSources : [])
+              .map(source => (typeof source === 'string' ? source.trim().toLowerCase() : ''))
+              .filter(Boolean)
+          )
+        ],
+        markSensitive: value.markSensitive === true
       };
 
       if (typeof value.confidence === 'number' && Number.isFinite(value.confidence)) {
@@ -511,11 +503,7 @@ module.exports = {
 
     resolveCandidateSourceUrls(asset) {
       const values = Array.isArray(asset.sourceUrls) ? asset.sourceUrls : [];
-      return [...new Set(
-        values
-          .map(value => this.normalizeHttpUrl(value))
-          .filter(Boolean)
-      )];
+      return [...new Set(values.map(value => this.normalizeHttpUrl(value)).filter(Boolean))];
     },
 
     ensureMediaPipelineContext(resource) {
@@ -584,14 +572,14 @@ module.exports = {
 
       if (Array.isArray(mediaPipelineSignals) && mediaPipelineSignals.length > 0) {
         next.mediaPipelineSignals = mediaPipelineSignals;
-        next.mediaPipelineSignalLabels = [...new Set(
-          mediaPipelineSignals.flatMap(signal => Array.isArray(signal.labels) ? signal.labels : [])
-        )];
-        next.mediaPipelineSignalSources = [...new Set(
-          mediaPipelineSignals
-            .map(signal => (typeof signal.source === 'string' ? signal.source : ''))
-            .filter(Boolean)
-        )];
+        next.mediaPipelineSignalLabels = [
+          ...new Set(mediaPipelineSignals.flatMap(signal => (Array.isArray(signal.labels) ? signal.labels : [])))
+        ];
+        next.mediaPipelineSignalSources = [
+          ...new Set(
+            mediaPipelineSignals.map(signal => (typeof signal.source === 'string' ? signal.source : '')).filter(Boolean)
+          )
+        ];
         next.mediaPipelineSignalsUpdatedAt = new Date().toISOString();
         next['apods:mediaPipelineSignalsJson'] = JSON.stringify(mediaPipelineSignals);
         next['apods:mediaPipelineSignalLabel'] = next.mediaPipelineSignalLabels;
@@ -611,7 +599,7 @@ module.exports = {
           matchedSources: moderation.matchedSources,
           confidence: moderation.confidence,
           reason: moderation.reason,
-          updatedAt: moderationUpdatedAt,
+          updatedAt: moderationUpdatedAt
         };
         next.mediaPipelineModerationAction = moderation.appliedAction;
         next.mediaPipelineModerationLabels = moderation.matchedLabels;
@@ -649,10 +637,17 @@ module.exports = {
       const metadata = this.buildMediaPipelineMetadata(resourceUri, asset, mediaPipelineSignals, moderation);
       const quads = await ctx.call('jsonld.parser.toQuads', { input: metadata });
       const insertQuads = quads.filter(
-        quad => quad.subject.termType === 'NamedNode' && quad.subject.value === resourceUri && MEDIA_PIPELINE_PREDICATES.includes(quad.predicate.value)
+        quad =>
+          quad.subject.termType === 'NamedNode' &&
+          quad.subject.value === resourceUri &&
+          MEDIA_PIPELINE_PREDICATES.includes(quad.predicate.value)
       );
-      const deleteTriples = MEDIA_PIPELINE_PREDICATES.map((predicate, index) => `OPTIONAL { <${resourceUri}> <${predicate}> ?existing${index} . }`).join('\n');
-      const deleteTemplate = MEDIA_PIPELINE_PREDICATES.map((predicate, index) => `<${resourceUri}> <${predicate}> ?existing${index} .`).join('\n');
+      const deleteTriples = MEDIA_PIPELINE_PREDICATES.map(
+        (predicate, index) => `OPTIONAL { <${resourceUri}> <${predicate}> ?existing${index} . }`
+      ).join('\n');
+      const deleteTemplate = MEDIA_PIPELINE_PREDICATES.map(
+        (predicate, index) => `<${resourceUri}> <${predicate}> ?existing${index} .`
+      ).join('\n');
       let query = `DELETE {\n${deleteTemplate}\n}`;
       if (insertQuads.length > 0) {
         query += `\nINSERT {\n${insertQuads.map(quad => this.quadToSparql(quad)).join('\n')}\n}`;
@@ -662,14 +657,14 @@ module.exports = {
       await ctx.call('triplestore.update', {
         query,
         dataset: getDatasetFromUri(resourceUri),
-        webId: 'system',
+        webId: 'system'
       });
     },
 
     buildMediaPipelineMetadata(resourceUri, asset, mediaPipelineSignals, moderation) {
       const metadata = {
         '@context': ['https://www.w3.org/ns/activitystreams', MEDIA_PIPELINE_CONTEXT],
-        id: resourceUri,
+        id: resourceUri
       };
 
       if (typeof asset.contentWarning === 'string' && asset.contentWarning.trim()) {
@@ -679,14 +674,14 @@ module.exports = {
         metadata['as:sensitive'] = true;
       }
       if (Array.isArray(mediaPipelineSignals) && mediaPipelineSignals.length > 0) {
-        const signalLabels = [...new Set(
-          mediaPipelineSignals.flatMap(signal => Array.isArray(signal.labels) ? signal.labels : [])
-        )];
-        const signalSources = [...new Set(
-          mediaPipelineSignals
-            .map(signal => (typeof signal.source === 'string' ? signal.source : ''))
-            .filter(Boolean)
-        )];
+        const signalLabels = [
+          ...new Set(mediaPipelineSignals.flatMap(signal => (Array.isArray(signal.labels) ? signal.labels : [])))
+        ];
+        const signalSources = [
+          ...new Set(
+            mediaPipelineSignals.map(signal => (typeof signal.source === 'string' ? signal.source : '')).filter(Boolean)
+          )
+        ];
         metadata['apods:mediaPipelineSignalsJson'] = JSON.stringify(mediaPipelineSignals);
         metadata['apods:mediaPipelineSignalLabel'] = signalLabels;
         metadata['apods:mediaPipelineSignalSource'] = signalSources;
@@ -753,6 +748,6 @@ module.exports = {
 
       const normalizedSeconds = Number(value.toFixed(3));
       return `PT${normalizedSeconds}S`;
-    },
-  },
+    }
+  }
 };

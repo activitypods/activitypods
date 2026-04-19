@@ -1698,7 +1698,9 @@ module.exports = {
           continue;
         }
 
-        const key = String(item.tag || '').trim().toLowerCase();
+        const key = String(item.tag || '')
+          .trim()
+          .toLowerCase();
         if (!key) {
           continue;
         }
@@ -1720,11 +1722,7 @@ module.exports = {
     enforceFollowedHashtagLimit(hashtags) {
       const deduped = this.dedupeFollowedHashtags(hashtags);
       if (deduped.length > HASHTAG_FOLLOWS_MAX) {
-        throw new MoleculerError(
-          `Too many followed hashtags (max ${HASHTAG_FOLLOWS_MAX})`,
-          400,
-          'VALIDATION_ERROR'
-        );
+        throw new MoleculerError(`Too many followed hashtags (max ${HASHTAG_FOLLOWS_MAX})`, 400, 'VALIDATION_ERROR');
       }
 
       return deduped;

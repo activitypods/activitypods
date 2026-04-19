@@ -15,7 +15,11 @@ for (const testCase of conformance.extractFromText) {
 }
 
 for (const testCase of conformance.normalizeStrict) {
-  assert.strictEqual(normalizeHashtag(testCase.input), testCase.expected, `strict normalize mismatch: ${testCase.input}`);
+  assert.strictEqual(
+    normalizeHashtag(testCase.input),
+    testCase.expected,
+    `strict normalize mismatch: ${testCase.input}`
+  );
 }
 
 for (const testCase of conformance.normalizeAllowMissingHash) {

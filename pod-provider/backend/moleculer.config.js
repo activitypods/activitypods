@@ -12,6 +12,7 @@ const ReplyPoliciesMiddleware = require('./middlewares/reply-policies');
 const SearchConsentMiddleware = require('./middlewares/search-consent');
 const QuotePostsMiddleware = require('./middlewares/quote-posts');
 const ActorMetadataMiddleware = require('./middlewares/actor-metadata');
+const AuthorAttributionMiddleware = require('./middlewares/author-attribution');
 const Fep4adbMiddleware = require('./middlewares/fep-4adb');
 const Fep5bf0CollectionViewsMiddleware = require('./middlewares/fep-5bf0-collection-views');
 const CONFIG = require('./config/config');
@@ -47,6 +48,7 @@ module.exports = {
     QuotePostsMiddleware(),
     ReplyPoliciesMiddleware(),
     ActorMetadataMiddleware(),
+    AuthorAttributionMiddleware(),
     Fep4adbMiddleware(),
     Fep5bf0CollectionViewsMiddleware(CONFIG.BASE_URL),
     HashtagNormalizationMiddleware(),

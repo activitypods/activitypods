@@ -96,7 +96,10 @@ const providedPreviewArticle = normalizeArticleObject({
 
 assert.ok(!providedPreviewArticle.preview.content.includes('<a '), 'provided preview should strip links');
 assert.ok(!providedPreviewArticle.preview.content.includes('<script>'), 'provided preview should strip scripts');
-assert.deepStrictEqual(providedPreviewArticle.preview.attachment, { type: 'Image', url: 'https://example.com/cover.png' });
+assert.deepStrictEqual(providedPreviewArticle.preview.attachment, {
+  type: 'Image',
+  url: 'https://example.com/cover.png'
+});
 
 const hashtagNormalized = normalizeActivityPubObjectHashtags({
   id: 'https://example.com/articles/tagged',

@@ -28,7 +28,8 @@ import useRealmContext from '../../../hooks/useRealmContext';
 import {
   buildProfileFormDefaults,
   createEmptyProfileField,
-  mergeProfileFieldsIntoAttachment
+  mergeProfileFieldsIntoAttachment,
+  normalizeAuthorAttributionDomains
 } from '../../../profileMetadata';
 
 const PublicProfileWarning = () => {
@@ -67,7 +68,7 @@ export const PublicProfilePage = () => {
   const defaultValues = useMemo(() => buildProfileFormDefaults(data?.webIdData || {}), [data]);
 
   const onSubmit = useCallback(
-    async ({ name, icon, metadataFields = [], ...rest }) => {
+    async ({ name, icon, metadataFields = [], attributionDomains = [], ...rest }) => {
       try {
         let nextIcon = icon;
 
@@ -84,6 +85,7 @@ export const PublicProfilePage = () => {
         }
 
         const attachment = mergeProfileFieldsIntoAttachment(data?.webIdData?.attachment, metadataFields);
+        const normalizedAttributionDomains = normalizeAuthorAttributionDomains(attributionDomains);
 
         await dataProvider.update('Actor', {
           id: data?.id,
@@ -94,7 +96,8 @@ export const PublicProfilePage = () => {
             'foaf:name': name,
             preferredUsername: data?.webIdData?.preferredUsername,
             icon: nextIcon,
-            attachment
+            attachment,
+            attributionDomains: normalizedAttributionDomains
           },
           previousData: data?.webIdData
         });
@@ -106,6 +109,14 @@ export const PublicProfilePage = () => {
         setVerificationResult(null);
         await refetch();
       } catch (error) {
+        if (error?.code === 'INVALID_AUTHOR_ATTRIBUTION_DOMAIN') {
+          notify('app.notification.author_attribution_invalid', { type: 'error' });
+          return;
+        }
+        if (error?.code === 'TOO_MANY_AUTHOR_ATTRIBUTION_DOMAINS') {
+          notify('app.notification.author_attribution_too_many', { type: 'error' });
+          return;
+        }
         notify(error.message || 'app.notification.update_settings_error', { type: 'error' });
       }
     },
@@ -263,6 +274,25 @@ export const PublicProfilePage = () => {
               </SimpleFormIterator>
             </ArrayInput>
             {renderVerificationSummary()}
+          </Box>
+
+          <Box mt={2} width="100%">
+            <Typography variant="h6" gutterBottom>
+              {translate('app.setting.author_attribution')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+              {translate('app.helper.author_attribution')}
+            </Typography>
+            <ArrayInput source="attributionDomains">
+              <SimpleFormIterator
+                disableReordering
+                inline
+                getItemLabel={index => `${translate('app.input.author_attribution_domain')} ${index + 1}`}
+                addButton={<Button label="app.action.add" onClick={undefined} />}
+              >
+                <TextInput source="" label="app.input.author_attribution_domain" fullWidth />
+              </SimpleFormIterator>
+            </ArrayInput>
           </Box>
         </SimpleForm>
       </Card>

@@ -111,6 +111,7 @@ module.exports = {
       public_profile_desc: 'Visible by everyone, without restriction',
       profile_metadata: 'Profile fields',
       profile_metadata_field: 'Field',
+      author_attribution: 'Author attribution domains',
       email: 'Email address',
       password: 'Password',
       addresses: 'My addresses',
@@ -191,7 +192,8 @@ module.exports = {
       profile_field_type_text: 'Text',
       profile_field_type_link: 'Link',
       profile_field_value: 'Value',
-      profile_field_rel_me: 'Use rel=me'
+      profile_field_rel_me: 'Use rel=me',
+      author_attribution_domain: 'Allowed domain'
     },
     helper: {
       add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',
@@ -232,6 +234,8 @@ module.exports = {
       username_cannot_be_modified: 'The user ID cannot be modified',
       profile_metadata:
         'Add profile fields like pronouns, website or portfolio links. Link fields may include rel=me for verification.',
+      author_attribution:
+        'Allow websites to credit your fediverse profile in link previews. Enter bare domains like example.com.',
       public_profile_view: 'You are viewing your public profile, visible by everyone',
       private_profile_view: 'You are viewing your private profile, visible only by your contacts',
       create_group: 'Please select on the list below the provider that you wish to use to create your group',
@@ -284,6 +288,8 @@ module.exports = {
       update_settings_error: 'An error occurred',
       profile_metadata_verified: 'Profile links verified',
       profile_metadata_verify_failed: 'Unable to verify profile links: %{error}',
+      author_attribution_invalid: 'One or more author attribution domains are invalid',
+      author_attribution_too_many: 'You can configure at most 10 author attribution domains',
       verified_applications_load_failed: 'Unable to load the list of verified applications',
       app_registration_progress: 'App registration in progress...',
       app_upgrade_progress: 'App upgrade in progress...',

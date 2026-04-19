@@ -60,12 +60,8 @@ module.exports = {
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri }).catch(() => null);
         if (!recipient || !normalizeIri(recipient.outbox)) return;
 
-        const requestorUri = normalizeIri(
-          typeof activity.actor === 'string' ? activity.actor : activity.actor?.id
-        );
-        const quotePostUri = normalizeIri(
-          typeof activity.object === 'string' ? activity.object : activity.object?.id
-        );
+        const requestorUri = normalizeIri(typeof activity.actor === 'string' ? activity.actor : activity.actor?.id);
+        const quotePostUri = normalizeIri(typeof activity.object === 'string' ? activity.object : activity.object?.id);
         const quotedObjectUri = normalizeIri(
           typeof activity.target === 'string' ? activity.target : activity.target?.id
         );
@@ -79,22 +75,19 @@ module.exports = {
           type: QUOTE_AUTHORIZATION_TYPE,
           attributedTo: recipientUri,
           interactingObject: quotePostUri,
-          ...(quotedObjectUri ? { interactionTarget: quotedObjectUri } : {}),
+          ...(quotedObjectUri ? { interactionTarget: quotedObjectUri } : {})
         };
 
         await ctx.call('activitypub.outbox.post', {
           collectionUri: recipient.outbox,
-          '@context': [
-            'https://www.w3.org/ns/activitystreams',
-            FEP044F_CONTEXT,
-          ],
+          '@context': ['https://www.w3.org/ns/activitystreams', FEP044F_CONTEXT],
           type: 'Accept',
           actor: recipientUri,
           object: requestId,
           result: stamp,
-          to: requestorUri,
+          to: requestorUri
         });
-      },
-    },
-  },
+      }
+    }
+  }
 };

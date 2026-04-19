@@ -10,11 +10,7 @@ module.exports = {
 
   settings: {
     auth: {
-      bearerToken:
-        process.env.ACTIVITYPODS_TOKEN ||
-        process.env.INTERNAL_API_TOKEN ||
-        process.env.SIDECAR_TOKEN ||
-        ''
+      bearerToken: process.env.ACTIVITYPODS_TOKEN || process.env.INTERNAL_API_TOKEN || process.env.SIDECAR_TOKEN || ''
     },
     routePath: '/api/internal/actors'
   },

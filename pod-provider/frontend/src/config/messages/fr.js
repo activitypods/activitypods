@@ -110,6 +110,7 @@ module.exports = {
       public_profile_desc: 'Visible de tout le monde, sans restriction',
       profile_metadata: 'Champs de profil',
       profile_metadata_field: 'Champ',
+      author_attribution: "Domaines d'attribution d'auteur",
       email: 'Adresse mail',
       password: 'Mot de passe',
       addresses: 'Mes adresses',
@@ -191,7 +192,8 @@ module.exports = {
       profile_field_type_text: 'Texte',
       profile_field_type_link: 'Lien',
       profile_field_value: 'Valeur',
-      profile_field_rel_me: 'Utiliser rel=me'
+      profile_field_rel_me: 'Utiliser rel=me',
+      author_attribution_domain: 'Domaine autorisé'
     },
     helper: {
       add_contact:
@@ -236,6 +238,8 @@ module.exports = {
       username_cannot_be_modified: 'Votre identifiant ne peut être modifié',
       profile_metadata:
         'Ajoutez des champs de profil comme les pronoms, votre site web ou votre portfolio. Les champs de type lien peuvent utiliser rel=me pour la vérification.',
+      author_attribution:
+        'Autorisez des sites web à créditer votre profil fediverse dans les aperçus de liens. Entrez des domaines nus comme example.com.',
       public_profile_view: 'Vous visualisez votre profil public, visible de tout le monde.',
       private_profile_view: 'Vous visualisez votre profil privé, visible seulement de vos contacts.',
       create_group:
@@ -291,6 +295,8 @@ module.exports = {
       update_settings_error: "Une erreur s'est produite",
       profile_metadata_verified: 'Les liens du profil ont été vérifiés',
       profile_metadata_verify_failed: 'Impossible de vérifier les liens du profil : %{error}',
+      author_attribution_invalid: "Un ou plusieurs domaines d'attribution d'auteur sont invalides",
+      author_attribution_too_many: "Vous pouvez configurer au maximum 10 domaines d'attribution d'auteur",
       verified_applications_load_failed: 'Impossible de charger la liste des applications vérifiées',
       app_registration_progress: 'Enregistrement en cours...',
       app_upgrade_progress: 'Mise à jour en cours...',

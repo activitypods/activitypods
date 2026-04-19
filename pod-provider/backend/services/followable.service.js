@@ -129,14 +129,10 @@ module.exports = {
     async resolveTarget(ctx, { objectUri, object, recursionLimit, requireFollowersCollection, webId }) {
       const targetObject = object || (await this.loadObject(ctx, objectUri, webId));
 
-      return resolveFollowDeliveryTarget(
-        targetObject,
-        async uri => this.loadObject(ctx, uri, webId),
-        {
-          recursionLimit: normalizeRecursionLimit(recursionLimit),
-          requireFollowersCollection
-        }
-      );
+      return resolveFollowDeliveryTarget(targetObject, async uri => this.loadObject(ctx, uri, webId), {
+        recursionLimit: normalizeRecursionLimit(recursionLimit),
+        requireFollowersCollection
+      });
     },
 
     extractFollowObjectReference(activity) {

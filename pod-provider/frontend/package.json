@@ -20,6 +20,7 @@
     "@semapps/input-components": "1.1.2",
     "@semapps/list-components": "1.1.2",
     "@semapps/semantic-data-provider": "1.1.2",
+    "@simplewebauthn/browser": "^13.3.0",
     "@uiw/react-json-view": "^2.0.0-alpha.27",
     "copy-to-clipboard": "^3.0.0",
     "dashify": "2.0.0",
@@ -48,12 +49,12 @@
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/url-join": "^4.0.1",
-    "react-scripts": "^5.0.1",
-    "typescript": "^5.2.2",
-    "yalc": "1.0.0-pre.53",
+    "eslint": "^9.17.0",
     "eslint-plugin-prettier": "^5.2.1",
     "prettier": "^3.4.2",
-    "eslint": "^9.17.0"
+    "react-scripts": "^5.0.1",
+    "typescript": "^5.2.2",
+    "yalc": "1.0.0-pre.53"
   },
   "browserslist": [
     ">0.2%",

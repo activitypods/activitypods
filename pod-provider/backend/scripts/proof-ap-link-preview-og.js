@@ -6,10 +6,11 @@
  * Validates without a running Moleculer broker or remote network:
  *
  *   1. fetchOpenGraph() — null on bad URLs, parses OG tags from local server
- *   2. extractFirstPreviewUrl() — finds first external URL in Note source/content
- *   3. enrichNoteWithLinkPreview() — attaches OG as ActivityStreams Link
- *   4. buildLinkPreviewAttachment() — correct AS2 Link shape
- *   5. LinkPreviewMiddleware — skips non-Note activities, enriches Notes
+ *   2. Author attribution resolution — fediverse:creator → verified preview authors
+ *   3. extractFirstPreviewUrl() — prefers attached Link hrefs before Note source/content
+ *   4. enrichNoteWithLinkPreview() — attaches OG as FEP-8967 ActivityStreams Link
+ *   5. buildLinkPreviewAttachment() — correct AS2 Link + preview shape
+ *   6. LinkPreviewMiddleware — skips non-Note activities, enriches Notes
  *
  * Usage:
  *   node scripts/proof-ap-link-preview-og.js
@@ -18,6 +19,7 @@
 const assert = require('assert');
 const http = require('http');
 const { fetchOpenGraph } = require('../utils/opengraph');
+const { normalizeActorAuthorAttributionForOutput } = require('../utils/author-attribution');
 const {
   extractFirstPreviewUrl,
   enrichNoteWithLinkPreview,
@@ -41,7 +43,15 @@ const stopServer = server => new Promise(resolve => server.close(() => resolve()
 
 const serverUrl = server => `http://127.0.0.1:${server.address().port}/page`;
 
+const startRouterServer = handler =>
+  new Promise(resolve => {
+    const server = http.createServer(handler);
+    server.listen(0, '127.0.0.1', () => resolve(server));
+  });
+
 async function run() {
+  process.env.ALLOW_PRIVATE_PREVIEW_FETCHES = '1';
+
   // ---------------------------------------------------------------------------
   // § 1  fetchOpenGraph() — failure paths
   // ---------------------------------------------------------------------------
@@ -115,10 +125,135 @@ async function run() {
   }
 
   // ---------------------------------------------------------------------------
+  // § 1d  actor attribution output normalization
+  // ---------------------------------------------------------------------------
+
+  {
+    const actor = normalizeActorAuthorAttributionForOutput({
+      '@context': 'https://www.w3.org/ns/activitystreams',
+      type: 'Person',
+      id: 'https://social.example/users/alice',
+      attributionDomains: ['Example.com', 'news.example.com', 'example.com']
+    });
+
+    assert.deepStrictEqual(
+      actor.attributionDomains,
+      ['example.com', 'news.example.com'],
+      'actor attribution domains normalized and deduplicated'
+    );
+    assert.ok(Array.isArray(actor['@context']), 'author attribution context added');
+    assert.ok(
+      actor['@context'].some(entry => entry?.attributionDomains === 'toot:attributionDomains'),
+      'Mastodon attributionDomains context mapping added'
+    );
+
+    console.log('  [ok] author attribution actor normalization');
+  }
+
+  // ---------------------------------------------------------------------------
+  // § 1e  fetchOpenGraph() — Mastodon author attribution
+  // ---------------------------------------------------------------------------
+
+  {
+    let actorDocumentHits = 0;
+    const server = await startRouterServer((req, res) => {
+      if (req.url === '/page') {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(`<!DOCTYPE html><html><head>
+          <meta property="og:title" content="Verified Story" />
+          <meta property="og:description" content="Byline-aware story preview." />
+          <meta name="fediverse:creator" content="@alice@127.0.0.1:${server.address().port}" />
+        </head><body>story</body></html>`);
+        return;
+      }
+
+      if (req.url && req.url.startsWith('/.well-known/webfinger?')) {
+        res.writeHead(200, { 'Content-Type': 'application/jrd+json' });
+        res.end(
+          JSON.stringify({
+            subject: `acct:alice@127.0.0.1:${server.address().port}`,
+            links: [
+              {
+                rel: 'self',
+                type: 'application/activity+json',
+                href: `http://127.0.0.1:${server.address().port}/users/alice`
+              },
+              {
+                rel: 'http://webfinger.net/rel/profile-page',
+                href: `http://127.0.0.1:${server.address().port}/@alice`
+              }
+            ]
+          })
+        );
+        return;
+      }
+
+      if (req.url === '/users/alice') {
+        actorDocumentHits += 1;
+        res.writeHead(200, { 'Content-Type': 'application/activity+json' });
+        res.end(
+          JSON.stringify({
+            '@context': [
+              'https://www.w3.org/ns/activitystreams',
+              {
+                toot: 'http://joinmastodon.org/ns#',
+                attributionDomains: 'toot:attributionDomains'
+              }
+            ],
+            type: 'Person',
+            id: `http://127.0.0.1:${server.address().port}/users/alice`,
+            name: 'Alice Example',
+            url: `http://127.0.0.1:${server.address().port}/@alice`,
+            icon: {
+              type: 'Image',
+              url: `http://127.0.0.1:${server.address().port}/media/alice.png`
+            },
+            attributionDomains: ['127.0.0.1']
+          })
+        );
+        return;
+      }
+
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('not found');
+    });
+
+    try {
+      const og = await fetchOpenGraph(serverUrl(server));
+      assert.ok(og, 'author-attributed page resolves OG metadata');
+      assert.strictEqual(og.authorName, 'Alice Example', 'primary author name set');
+      assert.strictEqual(og.authorUrl, `http://127.0.0.1:${server.address().port}/@alice`, 'primary author URL set');
+      assert.ok(Array.isArray(og.authors) && og.authors.length === 1, 'authors array populated');
+      assert.strictEqual(og.authors[0].verificationState, 'verified', 'author marked verified');
+      assert.strictEqual(og.authors[0].verificationReason, 'domain_authorized', 'verification reason preserved');
+      assert.strictEqual(actorDocumentHits, 1, 'actor document resolved exactly once');
+
+      const attachment = buildLinkPreviewAttachment(og);
+      assert.strictEqual(attachment.authorName, 'Alice Example', 'attachment keeps authorName');
+      assert.strictEqual(attachment.authorUrl, `http://127.0.0.1:${server.address().port}/@alice`, 'attachment keeps authorUrl');
+      assert.ok(Array.isArray(attachment.authors) && attachment.authors.length === 1, 'attachment keeps authors array');
+
+      console.log('  [ok] fetchOpenGraph author attribution + Link attachment preservation');
+    } finally {
+      await stopServer(server);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // § 2  extractFirstPreviewUrl()
   // ---------------------------------------------------------------------------
 
   {
+    const note0 = {
+      type: 'Note',
+      content: '<p>Inline https://example.com/body-link</p>',
+      attachment: {
+        type: 'Link',
+        href: 'https://example.com/attached-link'
+      }
+    };
+    assert.strictEqual(extractFirstPreviewUrl(note0), 'https://example.com/attached-link', 'explicit Link attachment wins');
+
     // From source.content plain text
     const note1 = {
       type: 'Note',
@@ -203,6 +338,16 @@ async function run() {
     assert.strictEqual(full.name, 'Page Title', 'name is title');
     assert.strictEqual(full.summary, 'A short description.', 'summary is description');
     assert.deepStrictEqual(full.icon, { type: 'Image', url: 'https://example.com/thumb.jpg' }, 'icon built');
+    assert.deepStrictEqual(
+      full.preview,
+      {
+        type: 'Article',
+        name: 'Page Title',
+        summary: 'A short description.',
+        image: { type: 'Image', url: 'https://example.com/thumb.jpg' }
+      },
+      'preview object built'
+    );
 
     // No description, no thumb
     const minimal = buildLinkPreviewAttachment({
@@ -211,6 +356,7 @@ async function run() {
     });
     assert.ok(!minimal.summary, 'no summary when no description');
     assert.ok(!minimal.icon, 'no icon when no thumbUrl');
+    assert.deepStrictEqual(minimal.preview, { type: 'Article', name: 'Minimal Title' }, 'minimal preview included');
 
     console.log('  [ok] buildLinkPreviewAttachment');
   }
@@ -233,6 +379,7 @@ async function run() {
     assert.strictEqual(attachment.type, 'Link', 'attachment type is Link');
     assert.strictEqual(attachment.href, 'https://example.com/page', 'attachment href');
     assert.strictEqual(attachment.name, 'Page', 'attachment name');
+    assert.deepStrictEqual(attachment.preview, { type: 'Article', name: 'Page', summary: 'Desc.' }, 'attachment preview');
 
     // No double-add
     const enrichedAgain = enrichNoteWithLinkPreview(enriched, ogData);
@@ -260,6 +407,21 @@ async function run() {
       mergedArr.some(a => a.type === 'Link'),
       'new Link added'
     );
+
+    const noteWithPublisherCard = {
+      ...baseNote,
+      attachment: {
+        type: 'Link',
+        href: 'https://example.com/page',
+        name: 'Publisher Title'
+      }
+    };
+    const preservedPublisherCard = enrichNoteWithLinkPreview(noteWithPublisherCard, ogData);
+    const preservedAttachment = Array.isArray(preservedPublisherCard.attachment)
+      ? preservedPublisherCard.attachment[0]
+      : preservedPublisherCard.attachment;
+    assert.strictEqual(preservedAttachment.name, 'Publisher Title', 'publisher-provided name preserved');
+    assert.ok(!preservedAttachment.preview, 'publisher-provided attachment not overwritten');
 
     console.log('  [ok] enrichNoteWithLinkPreview');
   }

@@ -60,6 +60,7 @@
     "@semapps/webacl": "1.1.2",
     "@semapps/webfinger": "1.1.2",
     "@semapps/webid": "1.1.2",
+    "@simplewebauthn/server": "^13.3.0",
     "@types/archiver": "6.0.2",
     "@types/rdfjs__formats": "^4.0.1",
     "archiver": "^7.0.1",

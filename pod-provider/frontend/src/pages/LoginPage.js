@@ -20,6 +20,7 @@ import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Header from '../common/Header';
+import { signInWithPasskey } from '../utils/passkeys';
 
 const BlueskyGlyph = () => (
   <Box component="img" src="/bluesky-logo.svg" alt="" aria-hidden sx={{ width: 16, height: 16 }} />
@@ -447,6 +448,7 @@ const LogInForm = ({ onLogin, interactionId, redirectTarget }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
 
   const normalizeIdentifier = value => {
@@ -462,6 +464,14 @@ const LogInForm = ({ onLogin, interactionId, redirectTarget }) => {
       return raw.slice(1);
     }
 
+    return raw;
+  };
+
+  const sanitizeRedirectPath = value => {
+    const raw = String(value || '').trim();
+    if (!raw.startsWith('/')) return '/network';
+    if (raw.startsWith('//')) return '/network';
+    if (raw.includes('://')) return '/network';
     return raw;
   };
 
@@ -485,7 +495,7 @@ const LogInForm = ({ onLogin, interactionId, redirectTarget }) => {
     setLoading(true);
     setPasswordError('');
     try {
-      const redirectAfterLogin = options.redirectAfterLogin || redirectTarget || '/network';
+      const redirectAfterLogin = sanitizeRedirectPath(options.redirectAfterLogin || redirectTarget || '/network');
       const normalizedIdentifier = normalizeIdentifier(identifier);
       await login({ username: normalizedIdentifier, password }, redirectAfterLogin);
       await finishInteraction();
@@ -497,8 +507,26 @@ const LogInForm = ({ onLogin, interactionId, redirectTarget }) => {
     }
   };
 
-  const handlePasskey = () => {
-    notify('Passkey support coming soon.', { type: 'info' });
+  const handlePasskey = async () => {
+    setPasskeyLoading(true);
+    setPasswordError('');
+    try {
+      const { token, webId } = await signInWithPasskey();
+      if (!token || !webId) {
+        throw new Error('Passkey sign-in did not return an account token.');
+      }
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('webId', webId);
+
+      await finishInteraction();
+      const redirectAfterLogin = sanitizeRedirectPath(redirectTarget || '/network');
+      window.location.href = redirectAfterLogin;
+    } catch (err) {
+      notify(err.message || 'Passkey sign-in failed.', { type: 'error' });
+    } finally {
+      setPasskeyLoading(false);
+    }
   };
 
   const instanceHost = CONFIG.BACKEND_URL ? new URL(CONFIG.BACKEND_URL).host : 'yourpod.example.org';
@@ -564,6 +592,7 @@ const LogInForm = ({ onLogin, interactionId, redirectTarget }) => {
             fullWidth
             variant="outlined"
             onClick={handlePasskey}
+            disabled={loading || passkeyLoading}
             sx={{
               borderColor: '#ddd',
               color: '#555',
@@ -576,13 +605,13 @@ const LogInForm = ({ onLogin, interactionId, redirectTarget }) => {
               '&:hover': { backgroundColor: '#eee', borderColor: '#ccc' }
             }}
           >
-            Use Passkey
+            {passkeyLoading ? 'Waiting for passkey…' : 'Use Passkey'}
           </Button>
           <Button
             type="submit"
             fullWidth
             variant="contained"
-            disabled={loading}
+            disabled={loading || passkeyLoading}
             sx={{
               backgroundColor: '#5B57E5',
               color: '#fff',

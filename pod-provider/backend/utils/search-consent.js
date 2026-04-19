@@ -31,8 +31,7 @@ const TOOT_CONTEXT = {
 
 const toArray = value => (Array.isArray(value) ? value : value != null ? [value] : []);
 
-const asRecord = value =>
-  value && typeof value === 'object' && !Array.isArray(value) ? value : null;
+const asRecord = value => (value && typeof value === 'object' && !Array.isArray(value) ? value : null);
 
 const expandIri = iri => {
   if (!iri || typeof iri !== 'string') return null;
@@ -78,11 +77,7 @@ const getIndexableValue = actor => {
   const record = asRecord(actor);
   if (!record) return null;
 
-  const raw =
-    record.indexable ??
-    record[TOOT_INDEXABLE_IRI] ??
-    record[TOOT_INDEXABLE_SHORT] ??
-    null;
+  const raw = record.indexable ?? record[TOOT_INDEXABLE_IRI] ?? record[TOOT_INDEXABLE_SHORT] ?? null;
 
   if (typeof raw === 'boolean') return raw;
   if (raw === 'true') return true;
@@ -179,8 +174,7 @@ const isSearchableBy = (object, searchingActorUri, opts = {}) => {
   if (objectSearchableBy.length > 0) {
     const attributedTo = object?.attributedTo;
     if (attributedTo) {
-      const attributedToId =
-        typeof attributedTo === 'string' ? attributedTo : attributedTo.id || attributedTo['@id'];
+      const attributedToId = typeof attributedTo === 'string' ? attributedTo : attributedTo.id || attributedTo['@id'];
       if (attributedToId && attributedToId === searchingActorUri) {
         return true;
       }

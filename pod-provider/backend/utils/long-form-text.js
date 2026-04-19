@@ -73,21 +73,7 @@ const SUMMARY_ALLOWED_ATTRIBUTES = {
   li: ['value']
 };
 
-const PREVIEW_ALLOWED_TAGS = [
-  'p',
-  'span',
-  'br',
-  'em',
-  'strong',
-  'b',
-  'i',
-  'u',
-  'ul',
-  'ol',
-  'li',
-  'blockquote',
-  'code'
-];
+const PREVIEW_ALLOWED_TAGS = ['p', 'span', 'br', 'em', 'strong', 'b', 'i', 'u', 'ul', 'ol', 'li', 'blockquote', 'code'];
 
 const PREVIEW_ALLOWED_ATTRIBUTES = {
   span: ['class'],

@@ -71,7 +71,8 @@ module.exports = {
         ctx.meta.$responseHeaders = {
           ...(ctx.meta.$responseHeaders || {}),
           'Cache-Control': 'public, max-age=120, stale-while-revalidate=60',
-          'Content-Security-Policy': "default-src 'none'; img-src https: http: data:; media-src https: http: data:; style-src 'unsafe-inline'; font-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; connect-src 'none'; script-src 'none'",
+          'Content-Security-Policy':
+            "default-src 'none'; img-src https: http: data:; media-src https: http: data:; style-src 'unsafe-inline'; font-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; connect-src 'none'; script-src 'none'",
           'Referrer-Policy': 'strict-origin-when-cross-origin',
           'X-Content-Type-Options': 'nosniff',
           'X-Frame-Options': 'DENY',
@@ -99,7 +100,9 @@ module.exports = {
     resolveShareUrl(ctx, objectUri, postId) {
       const requestOrigin = this.resolveRequestOrigin(ctx);
       const preferred = buildArticleShareUrl(requestOrigin || CONFIG.BASE_URL, objectUri);
-      return preferred || `${String(CONFIG.BASE_URL || '').replace(/\/+$/, '')}/posts/${encodeURIComponent(postId)}/share`;
+      return (
+        preferred || `${String(CONFIG.BASE_URL || '').replace(/\/+$/, '')}/posts/${encodeURIComponent(postId)}/share`
+      );
     },
 
     resolveRequestOrigin(ctx) {

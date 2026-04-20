@@ -115,7 +115,12 @@ const ensureOptionsPayload = payload => {
 };
 
 const ensureAuthResult = payload => {
-  if (!payload || typeof payload !== 'object' || typeof payload.token !== 'string' || typeof payload.webId !== 'string') {
+  if (
+    !payload ||
+    typeof payload !== 'object' ||
+    typeof payload.token !== 'string' ||
+    typeof payload.webId !== 'string'
+  ) {
     throw new Error('Passkey sign-in did not return account credentials.');
   }
   return payload;

@@ -3,18 +3,14 @@ const matchActivity = require('@semapps/activitypub/utils/matchActivity');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { sanitizeSparqlQuery } = require('@semapps/triplestore');
 
-const BLOCKED_PREDICATE = 'https://purl.archive.org/socialweb/blocked#blocked';
-const BLOCKS_PREDICATE = 'https://purl.archive.org/socialweb/blocked#blocks';
-const BLOCKED_OF_PREDICATE = 'https://www.w3.org/ns/activitystreams#blockedOf';
-const BLOCKS_OF_PREDICATE = 'https://www.w3.org/ns/activitystreams#blocksOf';
+const MUTED_PREDICATE = 'http://activitypods.org/ns/core#muted';
+const MUTED_OF_PREDICATE = 'http://activitypods.org/ns/core#mutedOf';
+const APODS_PUBLIC_MUTED_COLLECTION = 'http://activitypods.org/ns/core#publicMutedCollection';
 const AS_ATTRIBUTED_TO_PREDICATE = 'https://www.w3.org/ns/activitystreams#attributedTo';
 const AS_FOLLOWERS_PREDICATE = 'https://www.w3.org/ns/activitystreams#followers';
-const APODS_PUBLIC_BLOCKED_COLLECTION = 'http://activitypods.org/ns/core#publicBlockedCollection';
-const DESC_ORDER = 'http://semapps.org/ns/core#DescOrder';
-const PUBLISHED_PREDICATE = 'https://www.w3.org/ns/activitystreams#published';
 const XSD_BOOLEAN = 'http://www.w3.org/2001/XMLSchema#boolean';
-const PATCHED_PROCESSOR_FLAG = '__activitypodsBlockedCollectionProcessorPatched';
-const BLOCKED_COLLECTION_PATH_RE = /^\/users\/([A-Za-z0-9._-]{1,128})\/blocked$/;
+const PATCHED_PROCESSOR_FLAG = '__activitypodsMutedCollectionProcessorPatched';
+const MUTED_COLLECTION_PATH_RE = /^\/users\/([A-Za-z0-9._-]{1,128})\/muted$/;
 const DEFAULT_GRAPH = {
   termType: 'DefaultGraph',
   value: '',
@@ -69,30 +65,18 @@ function quad(subject, predicate, object, graph = DEFAULT_GRAPH) {
 }
 
 module.exports = {
-  name: 'activitypub.blocked',
+  name: 'activitypub.muted',
   mixins: [ActivitiesHandlerMixin],
   settings: {
-    blockedCollectionOptions: {
-      path: '/blocked',
+    mutedCollectionOptions: {
+      path: '/muted',
       attachToTypes: Object.values(ACTOR_TYPES),
-      attachPredicate: BLOCKED_PREDICATE,
+      attachPredicate: MUTED_PREDICATE,
       ordered: true,
-      dereferenceItems: true,
-      sortPredicate: PUBLISHED_PREDICATE,
-      sortOrder: DESC_ORDER,
+      dereferenceItems: false,
       permissions: {}
     },
-    blocksCollectionOptions: {
-      path: '/blocks',
-      attachToTypes: Object.values(ACTOR_TYPES),
-      attachPredicate: BLOCKS_PREDICATE,
-      ordered: true,
-      dereferenceItems: true,
-      sortPredicate: PUBLISHED_PREDICATE,
-      sortOrder: DESC_ORDER,
-      permissions: {}
-    },
-    blockedFollowersCollectionOptions: {
+    mutedFollowersCollectionOptions: {
       path: '/followers',
       attachPredicate: AS_FOLLOWERS_PREDICATE,
       ordered: false,
@@ -111,8 +95,7 @@ module.exports = {
     'webacl'
   ],
   async started() {
-    await this.broker.call('activitypub.collections-registry.register', this.settings.blockedCollectionOptions);
-    await this.broker.call('activitypub.collections-registry.register', this.settings.blocksCollectionOptions);
+    await this.broker.call('activitypub.collections-registry.register', this.settings.mutedCollectionOptions);
 
     const accounts = await this.broker.call('auth.account.find');
     for (const account of accounts) {
@@ -123,97 +106,45 @@ module.exports = {
     this.patchDefaultFollowProcessors();
   },
   actions: {
-    async updateCollectionsOptions(ctx) {
-      const { dataset } = ctx.params;
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.blockedCollectionOptions,
-        dataset
-      });
-      await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
-        collection: this.settings.blocksCollectionOptions,
-        dataset
-      });
+    backfillMutedCollections(ctx) {
+      return this.handleBackfillMutedCollections(ctx);
     },
-    async backfillBlockedCollections(ctx) {
-      const accounts = await ctx.call('auth.account.find');
-      for (const account of accounts) {
-        if (!account?.webId) continue;
-        await this.ensureCollectionsForActor(ctx, account.webId);
-      }
-    },
-    getBlockedCollectionSharingState: {
+    getMutedCollectionSharingState: {
       params: {
         actorUri: { type: 'string', min: 1 }
       },
       async handler(ctx) {
-        return this.getBlockedCollectionSharingStateForActor(ctx, ctx.params.actorUri);
+        return this.getMutedCollectionSharingStateForActor(ctx, ctx.params.actorUri);
       }
     },
-    setBlockedCollectionPublic: {
+    setMutedCollectionPublic: {
       params: {
         actorUri: { type: 'string', min: 1 },
         isPublic: { type: 'boolean', convert: true }
       },
       async handler(ctx) {
-        return this.setBlockedCollectionPublicState(ctx, ctx.params.actorUri, ctx.params.isPublic);
+        return this.setMutedCollectionPublicState(ctx, ctx.params.actorUri, ctx.params.isPublic);
       }
     }
   },
   activities: {
-    blockActor: {
-      async match(activity) {
-        if (this.hasType(activity, ACTIVITY_TYPES.BLOCK)) {
-          return { match: true, dereferencedActivity: activity };
-        }
-        return { match: false, dereferencedActivity: activity };
-      },
-      async onEmit(ctx, activity, emitterUri) {
-        const blockActivityId = activity?.id || activity?.['@id'];
-        if (!blockActivityId) return;
-
-        await this.mutateBlockCollections(ctx, emitterUri, blockActivityId, 'add');
-      }
-    },
-    undoBlockActor: {
-      async match(activity) {
-        if (!this.hasType(activity, ACTIVITY_TYPES.UNDO)) {
-          return { match: false, dereferencedActivity: activity };
-        }
-
-        if (typeof activity.object === 'string') {
-          return { match: true, dereferencedActivity: activity };
-        }
-
-        if (this.hasType(activity.object, ACTIVITY_TYPES.BLOCK)) {
-          return { match: true, dereferencedActivity: activity };
-        }
-
-        return { match: false, dereferencedActivity: activity };
-      },
-      async onEmit(ctx, activity, emitterUri) {
-        const blockActivityId = await this.resolveUndoneBlockActivityId(ctx, activity, emitterUri);
-        if (!blockActivityId) return;
-
-        await this.mutateBlockCollections(ctx, emitterUri, blockActivityId, 'remove');
-      }
-    },
-    followBlockedCollection: {
+    followMutedCollection: {
       priority: 5,
       async match(activity, fetcher) {
-        return this.matchFollowBlockedCollection(activity, fetcher);
+        return this.matchFollowMutedCollection(activity, fetcher);
       },
       async onReceive(ctx, activity, recipientUri) {
         const targetCollectionUri = this.extractFollowTargetCollectionUri(activity);
         if (!targetCollectionUri) return;
 
-        const ownerActorUri = this.getBlockedCollectionOwnerUri(targetCollectionUri);
+        const ownerActorUri = this.getMutedCollectionOwnerUri(targetCollectionUri);
         if (!ownerActorUri || (recipientUri && recipientUri !== ownerActorUri)) {
           return;
         }
 
-        const state = await this.getBlockedCollectionSharingStateByCollectionUri(ctx, targetCollectionUri);
+        const state = await this.getMutedCollectionSharingStateByCollectionUri(ctx, targetCollectionUri);
         if (!state.public) {
-          this.logger.info('[blocked] ignoring Follow for private blocked collection', {
+          this.logger.info('[muted] ignoring Follow for private muted collection', {
             targetCollectionUri,
             actor: this.extractActorUri(activity.actor)
           });
@@ -223,7 +154,7 @@ module.exports = {
         const followerUri = this.extractActorUri(activity.actor);
         if (!followerUri) return;
 
-        const followersCollectionUri = await this.ensureBlockedFollowersCollection(ctx, targetCollectionUri, ownerActorUri);
+        const followersCollectionUri = await this.ensureMutedFollowersCollection(ctx, targetCollectionUri, ownerActorUri);
         await ctx.call('activitypub.collection.add', {
           collectionUri: followersCollectionUri,
           item: followerUri
@@ -231,7 +162,7 @@ module.exports = {
 
         const ownerActor = await ctx.call('activitypub.actor.get', { actorUri: ownerActorUri });
         if (!ownerActor?.outbox) {
-          this.logger.warn('[blocked] unable to accept blocked-collection follow because owner outbox is missing', {
+          this.logger.warn('[muted] unable to accept muted-collection follow because owner outbox is missing', {
             ownerActorUri,
             targetCollectionUri
           });
@@ -249,24 +180,24 @@ module.exports = {
         });
       }
     },
-    undoFollowBlockedCollection: {
+    undoFollowMutedCollection: {
       priority: 5,
       async match(activity, fetcher) {
-        return this.matchUndoFollowBlockedCollection(activity, fetcher);
+        return this.matchUndoFollowMutedCollection(activity, fetcher);
       },
       async onReceive(ctx, activity, recipientUri) {
         const followActivity = await this.resolveUndoFollowObject(activity);
         const targetCollectionUri = this.extractFollowTargetCollectionUri(followActivity);
         if (!targetCollectionUri) return;
 
-        const ownerActorUri = this.getBlockedCollectionOwnerUri(targetCollectionUri);
+        const ownerActorUri = this.getMutedCollectionOwnerUri(targetCollectionUri);
         if (!ownerActorUri || (recipientUri && recipientUri !== ownerActorUri)) {
           return;
         }
 
-        const state = await this.getBlockedCollectionSharingStateByCollectionUri(ctx, targetCollectionUri);
+        const state = await this.getMutedCollectionSharingStateByCollectionUri(ctx, targetCollectionUri);
         const followersCollectionUri =
-          state.followersCollectionUri || `${targetCollectionUri}${this.settings.blockedFollowersCollectionOptions.path}`;
+          state.followersCollectionUri || `${targetCollectionUri}${this.settings.mutedFollowersCollectionOptions.path}`;
 
         const followerUri = this.extractActorUri(followActivity?.actor) || this.extractActorUri(activity.actor);
         if (!followerUri) return;
@@ -279,6 +210,13 @@ module.exports = {
     }
   },
   methods: {
+    async handleBackfillMutedCollections(ctx) {
+      const accounts = await ctx.call('auth.account.find');
+      for (const account of accounts) {
+        if (!account?.webId) continue;
+        await this.ensureCollectionsForActor(ctx, account.webId);
+      }
+    },
     hasType(activityLike, type) {
       if (!activityLike) return false;
       const raw = activityLike.type || activityLike['@type'];
@@ -310,23 +248,23 @@ module.exports = {
 
       return null;
     },
-    isBlockedCollectionUri(uri) {
+    isMutedCollectionUri(uri) {
       if (typeof uri !== 'string' || uri.length === 0) {
         return false;
       }
 
       try {
         const parsed = new URL(uri);
-        return BLOCKED_COLLECTION_PATH_RE.test(parsed.pathname);
+        return MUTED_COLLECTION_PATH_RE.test(parsed.pathname);
       } catch {
         return false;
       }
     },
-    getBlockedCollectionOwnerUri(collectionUri) {
-      if (!this.isBlockedCollectionUri(collectionUri)) {
+    getMutedCollectionOwnerUri(collectionUri) {
+      if (!this.isMutedCollectionUri(collectionUri)) {
         return null;
       }
-      return collectionUri.replace(/\/blocked$/, '');
+      return collectionUri.replace(/\/muted$/, '');
     },
     async runMatcher(matcher, activity, fetcher) {
       if (typeof matcher === 'function') {
@@ -334,7 +272,7 @@ module.exports = {
       }
       return matchActivity(matcher, activity, fetcher);
     },
-    async matchFollowBlockedCollection(activity, fetcher) {
+    async matchFollowMutedCollection(activity, fetcher) {
       const { match, dereferencedActivity } = await this.runMatcher(
         {
           type: ACTIVITY_TYPES.FOLLOW
@@ -348,11 +286,11 @@ module.exports = {
 
       const targetCollectionUri = this.extractFollowTargetCollectionUri(dereferencedActivity);
       return {
-        match: this.isBlockedCollectionUri(targetCollectionUri),
+        match: this.isMutedCollectionUri(targetCollectionUri),
         dereferencedActivity
       };
     },
-    async matchUndoFollowBlockedCollection(activity, fetcher) {
+    async matchUndoFollowMutedCollection(activity, fetcher) {
       const { match, dereferencedActivity } = await this.runMatcher(
         {
           type: ACTIVITY_TYPES.UNDO
@@ -371,7 +309,7 @@ module.exports = {
 
       const targetCollectionUri = this.extractFollowTargetCollectionUri(followActivity);
       return {
-        match: this.isBlockedCollectionUri(targetCollectionUri),
+        match: this.isMutedCollectionUri(targetCollectionUri),
         dereferencedActivity: {
           ...dereferencedActivity,
           object: followActivity
@@ -403,7 +341,7 @@ module.exports = {
     patchDefaultFollowProcessors() {
       const sideEffects = this.broker.getLocalService('activitypub.side-effects');
       if (!sideEffects || !Array.isArray(sideEffects.processors)) {
-        this.logger.warn('[blocked] activitypub.side-effects processors are not available for patching');
+        this.logger.warn('[muted] activitypub.side-effects processors are not available for patching');
         return;
       }
 
@@ -424,7 +362,7 @@ module.exports = {
             ? this.extractFollowTargetCollectionUri(await this.resolveUndoFollowObject(activity, fetcher))
             : this.extractFollowTargetCollectionUri(activity);
 
-          if (this.isBlockedCollectionUri(targetCollectionUri)) {
+          if (this.isMutedCollectionUri(targetCollectionUri)) {
             return {
               match: false,
               dereferencedActivity: activity
@@ -436,47 +374,25 @@ module.exports = {
         processor[PATCHED_PROCESSOR_FLAG] = true;
       }
     },
-    async resolveBlockedCollectionUri(ctx, actorUri) {
+    async resolveMutedCollectionUri(ctx, actorUri) {
       const actor = await ctx.call('activitypub.actor.get', { actorUri });
       if (!actor || typeof actor !== 'object') return null;
 
-      return actor.blocked || actor['bl:blocked'] || actor[BLOCKED_PREDICATE] || null;
-    },
-    async resolveBlocksCollectionUri(ctx, actorUri) {
-      const actor = await ctx.call('activitypub.actor.get', { actorUri });
-      if (!actor || typeof actor !== 'object') return null;
-
-      return actor.blocks || actor['bl:blocks'] || actor[BLOCKS_PREDICATE] || null;
-    },
-    async resolveBlockCollectionUris(ctx, actorUri) {
-      const actor = await ctx.call('activitypub.actor.get', { actorUri });
-      if (!actor || typeof actor !== 'object') return [];
-
-      return [
-        actor.blocked || actor['bl:blocked'] || actor[BLOCKED_PREDICATE] || null,
-        actor.blocks || actor['bl:blocks'] || actor[BLOCKS_PREDICATE] || null
-      ].filter(Boolean);
+      return actor.muted || actor['apods:muted'] || actor[MUTED_PREDICATE] || null;
     },
     async ensureCollectionsForActor(ctx, actorUri) {
       await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
         objectUri: actorUri,
-        collection: this.settings.blockedCollectionOptions
-      });
-      await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
-        objectUri: actorUri,
-        collection: this.settings.blocksCollectionOptions
+        collection: this.settings.mutedCollectionOptions
       });
 
-      const blockedCollectionUri = (await this.resolveBlockedCollectionUri(ctx, actorUri)) || `${actorUri}/blocked`;
-      const blocksCollectionUri = (await this.resolveBlocksCollectionUri(ctx, actorUri)) || `${actorUri}/blocks`;
+      const mutedCollectionUri = (await this.resolveMutedCollectionUri(ctx, actorUri)) || `${actorUri}/muted`;
+      await this.ensureCollectionMetadata(ctx, mutedCollectionUri, actorUri, MUTED_OF_PREDICATE);
 
-      await this.ensureCollectionMetadata(ctx, blockedCollectionUri, actorUri, BLOCKED_OF_PREDICATE);
-      await this.ensureCollectionMetadata(ctx, blocksCollectionUri, actorUri, BLOCKS_OF_PREDICATE);
-
-      const blockedState = await this.getBlockedCollectionSharingStateByCollectionUri(ctx, blockedCollectionUri);
-      if (blockedState.public) {
-        await this.ensureBlockedFollowersCollection(ctx, blockedCollectionUri, actorUri);
-        await this.ensurePublicReadOnBlockedCollection(ctx, blockedCollectionUri, actorUri, true);
+      const mutedState = await this.getMutedCollectionSharingStateByCollectionUri(ctx, mutedCollectionUri);
+      if (mutedState.public) {
+        await this.ensureMutedFollowersCollection(ctx, mutedCollectionUri, actorUri);
+        await this.ensurePublicReadOnMutedCollection(ctx, mutedCollectionUri, actorUri, true);
       }
     },
     async ensureCollectionMetadata(ctx, collectionUri, actorUri, inversePredicate) {
@@ -496,10 +412,10 @@ module.exports = {
         }
       );
     },
-    async ensureBlockedFollowersCollection(ctx, blockedCollectionUri, actorUri) {
-      const existingState = await this.getBlockedCollectionSharingStateByCollectionUri(ctx, blockedCollectionUri);
+    async ensureMutedFollowersCollection(ctx, mutedCollectionUri, actorUri) {
+      const existingState = await this.getMutedCollectionSharingStateByCollectionUri(ctx, mutedCollectionUri);
       const followersCollectionUri =
-        existingState.followersCollectionUri || `${blockedCollectionUri}${this.settings.blockedFollowersCollectionOptions.path}`;
+        existingState.followersCollectionUri || `${mutedCollectionUri}${this.settings.mutedFollowersCollectionOptions.path}`;
 
       const exists = await ctx.call('activitypub.collection.exist', {
         resourceUri: followersCollectionUri,
@@ -512,12 +428,12 @@ module.exports = {
           {
             resource: {
               type: 'Collection',
-              summary: 'Followers of the blocked collection',
+              summary: 'Followers of the muted collection',
               'semapps:dereferenceItems': false
             },
             contentType: MIME_TYPES.JSON,
             webId: actorUri,
-            permissions: this.settings.blockedFollowersCollectionOptions.permissions
+            permissions: this.settings.mutedFollowersCollectionOptions.permissions
           },
           {
             meta: {
@@ -530,9 +446,9 @@ module.exports = {
       await ctx.call(
         'ldp.resource.patch',
         {
-          resourceUri: blockedCollectionUri,
+          resourceUri: mutedCollectionUri,
           triplesToAdd: [
-            quad(namedNode(blockedCollectionUri), namedNode(AS_FOLLOWERS_PREDICATE), namedNode(followersCollectionUri))
+            quad(namedNode(mutedCollectionUri), namedNode(AS_FOLLOWERS_PREDICATE), namedNode(followersCollectionUri))
           ]
         },
         {
@@ -544,8 +460,8 @@ module.exports = {
 
       return followersCollectionUri;
     },
-    async detachBlockedFollowersCollection(ctx, blockedCollectionUri) {
-      const state = await this.getBlockedCollectionSharingStateByCollectionUri(ctx, blockedCollectionUri);
+    async detachMutedFollowersCollection(ctx, mutedCollectionUri) {
+      const state = await this.getMutedCollectionSharingStateByCollectionUri(ctx, mutedCollectionUri);
       if (!state.followersCollectionUri) {
         return null;
       }
@@ -553,10 +469,10 @@ module.exports = {
       await ctx.call(
         'ldp.resource.patch',
         {
-          resourceUri: blockedCollectionUri,
+          resourceUri: mutedCollectionUri,
           triplesToRemove: [
             quad(
-              namedNode(blockedCollectionUri),
+              namedNode(mutedCollectionUri),
               namedNode(AS_FOLLOWERS_PREDICATE),
               namedNode(state.followersCollectionUri)
             )
@@ -571,18 +487,18 @@ module.exports = {
 
       return state.followersCollectionUri;
     },
-    async setBlockedCollectionPublicFlag(ctx, blockedCollectionUri, isPublic) {
+    async setMutedCollectionPublicFlag(ctx, mutedCollectionUri, isPublic) {
       const trueLiteral = literal('true', namedNode(XSD_BOOLEAN));
       const patch = {
-        resourceUri: blockedCollectionUri,
+        resourceUri: mutedCollectionUri,
         triplesToRemove: [
-          quad(namedNode(blockedCollectionUri), namedNode(APODS_PUBLIC_BLOCKED_COLLECTION), trueLiteral)
+          quad(namedNode(mutedCollectionUri), namedNode(APODS_PUBLIC_MUTED_COLLECTION), trueLiteral)
         ]
       };
 
       if (isPublic) {
         patch.triplesToAdd = [
-          quad(namedNode(blockedCollectionUri), namedNode(APODS_PUBLIC_BLOCKED_COLLECTION), trueLiteral)
+          quad(namedNode(mutedCollectionUri), namedNode(APODS_PUBLIC_MUTED_COLLECTION), trueLiteral)
         ];
       }
 
@@ -596,10 +512,10 @@ module.exports = {
         }
       );
     },
-    async ensurePublicReadOnBlockedCollection(ctx, blockedCollectionUri, actorUri, isPublic) {
+    async ensurePublicReadOnMutedCollection(ctx, mutedCollectionUri, actorUri, isPublic) {
       if (isPublic) {
         await ctx.call('webacl.resource.addRights', {
-          resourceUri: blockedCollectionUri,
+          resourceUri: mutedCollectionUri,
           additionalRights: {
             anon: {
               read: true
@@ -611,7 +527,7 @@ module.exports = {
       }
 
       await ctx.call('webacl.resource.removeRights', {
-        resourceUri: blockedCollectionUri,
+        resourceUri: mutedCollectionUri,
         rights: {
           anon: {
             read: true
@@ -620,17 +536,17 @@ module.exports = {
         webId: actorUri
       });
     },
-    async getBlockedCollectionSharingStateForActor(ctx, actorUri) {
-      const blockedCollectionUri = (await this.resolveBlockedCollectionUri(ctx, actorUri)) || `${actorUri}/blocked`;
-      return this.getBlockedCollectionSharingStateByCollectionUri(ctx, blockedCollectionUri);
+    async getMutedCollectionSharingStateForActor(ctx, actorUri) {
+      const mutedCollectionUri = (await this.resolveMutedCollectionUri(ctx, actorUri)) || `${actorUri}/muted`;
+      return this.getMutedCollectionSharingStateByCollectionUri(ctx, mutedCollectionUri);
     },
-    async getBlockedCollectionSharingStateByCollectionUri(ctx, blockedCollectionUri) {
+    async getMutedCollectionSharingStateByCollectionUri(ctx, mutedCollectionUri) {
       const rows = await ctx.call('triplestore.query', {
         query: sanitizeSparqlQuery`
           SELECT ?public ?followersCollectionUri
           WHERE {
-            OPTIONAL { <${blockedCollectionUri}> <${APODS_PUBLIC_BLOCKED_COLLECTION}> ?public . }
-            OPTIONAL { <${blockedCollectionUri}> <${AS_FOLLOWERS_PREDICATE}> ?followersCollectionUri . }
+            OPTIONAL { <${mutedCollectionUri}> <${APODS_PUBLIC_MUTED_COLLECTION}> ?public . }
+            OPTIONAL { <${mutedCollectionUri}> <${AS_FOLLOWERS_PREDICATE}> ?followersCollectionUri . }
           }
         `,
         webId: 'system'
@@ -642,74 +558,25 @@ module.exports = {
       const followersCollectionUri = first?.followersCollectionUri?.value || null;
 
       return {
-        collectionUri: blockedCollectionUri,
+        collectionUri: mutedCollectionUri,
         public: publicFlag,
         followersCollectionUri
       };
     },
-    async setBlockedCollectionPublicState(ctx, actorUri, isPublic) {
+    async setMutedCollectionPublicState(ctx, actorUri, isPublic) {
       await this.ensureCollectionsForActor(ctx, actorUri);
 
-      const blockedCollectionUri = (await this.resolveBlockedCollectionUri(ctx, actorUri)) || `${actorUri}/blocked`;
+      const mutedCollectionUri = (await this.resolveMutedCollectionUri(ctx, actorUri)) || `${actorUri}/muted`;
       if (isPublic) {
-        await this.ensureBlockedFollowersCollection(ctx, blockedCollectionUri, actorUri);
+        await this.ensureMutedFollowersCollection(ctx, mutedCollectionUri, actorUri);
       } else {
-        await this.detachBlockedFollowersCollection(ctx, blockedCollectionUri);
+        await this.detachMutedFollowersCollection(ctx, mutedCollectionUri);
       }
 
-      await this.setBlockedCollectionPublicFlag(ctx, blockedCollectionUri, isPublic);
-      await this.ensurePublicReadOnBlockedCollection(ctx, blockedCollectionUri, actorUri, isPublic);
+      await this.setMutedCollectionPublicFlag(ctx, mutedCollectionUri, isPublic);
+      await this.ensurePublicReadOnMutedCollection(ctx, mutedCollectionUri, actorUri, isPublic);
 
-      return this.getBlockedCollectionSharingStateByCollectionUri(ctx, blockedCollectionUri);
-    },
-    async mutateBlockCollections(ctx, actorUri, itemUri, operation) {
-      const collectionUris = await this.resolveBlockCollectionUris(ctx, actorUri);
-
-      if (collectionUris.length === 0) return;
-
-      const uniqueCollectionUris = [...new Set(collectionUris)];
-      for (const collectionUri of uniqueCollectionUris) {
-        await ctx.call(`activitypub.collection.${operation}`, {
-          collectionUri,
-          itemUri
-        });
-      }
-    },
-    async resolveUndoneBlockActivityId(ctx, undoActivity, actorUri) {
-      if (typeof undoActivity?.object === 'string') return undoActivity.object;
-
-      if (undoActivity?.object?.id) return undoActivity.object.id;
-      if (undoActivity?.object?.['@id']) return undoActivity.object['@id'];
-
-      const targetActor = undoActivity?.object?.object;
-      if (!targetActor) return null;
-
-      const actor = await ctx.call('activitypub.actor.get', { actorUri });
-      const outboxUri = actor?.outbox;
-      if (!outboxUri) return null;
-
-      const account = await ctx.call('auth.account.findByWebId', { webId: actorUri });
-      const dataset = account?.username;
-      if (!dataset) return null;
-
-      const result = await ctx.call('triplestore.query', {
-        query: `
-          PREFIX as: <https://www.w3.org/ns/activitystreams#>
-          SELECT ?block
-          WHERE {
-            <${outboxUri}> as:items ?block .
-            ?block a as:Block ;
-                   as:object <${targetActor}> .
-            OPTIONAL { ?block as:published ?published . }
-          }
-          ORDER BY DESC(?published)
-          LIMIT 1
-        `,
-        webId: 'system',
-        dataset
-      });
-
-      return result?.[0]?.block?.value || null;
+      return this.getMutedCollectionSharingStateByCollectionUri(ctx, mutedCollectionUri);
     }
   }
 };

@@ -111,11 +111,7 @@ const isLinkPreviewAttachment = attachment => {
   const type = typeof record.type === 'string' ? record.type.trim() : '';
   const mediaType = typeof record.mediaType === 'string' ? record.mediaType.trim().toLowerCase() : '';
   const href = sanitizeHttpUrl(
-    typeof record.href === 'string'
-      ? record.href
-      : typeof record.url === 'string'
-        ? record.url
-        : null
+    typeof record.href === 'string' ? record.href : typeof record.url === 'string' ? record.url : null
   );
 
   if (!href) return false;
@@ -124,9 +120,11 @@ const isLinkPreviewAttachment = attachment => {
     return false;
   }
 
-  return type === 'Link'
-    || (!type && typeof record.href === 'string')
-    || (type === 'Document' && (!mediaType || mediaType === 'text/html'));
+  return (
+    type === 'Link' ||
+    (!type && typeof record.href === 'string') ||
+    (type === 'Document' && (!mediaType || mediaType === 'text/html'))
+  );
 };
 
 const findExistingLinkAttachmentIndex = (noteObject, href) => {
@@ -137,11 +135,7 @@ const findExistingLinkAttachmentIndex = (noteObject, href) => {
     if (!isLinkPreviewAttachment(attachment)) return false;
     const record = asRecord(attachment);
     const candidateHref = sanitizeHttpUrl(
-      typeof record?.href === 'string'
-        ? record.href
-        : typeof record?.url === 'string'
-          ? record.url
-          : null
+      typeof record?.href === 'string' ? record.href : typeof record?.url === 'string' ? record.url : null
     );
     return candidateHref === targetHref;
   });
@@ -152,11 +146,7 @@ const findExplicitPreviewAttachmentUrl = noteObject => {
     if (!isLinkPreviewAttachment(attachment)) continue;
     const record = asRecord(attachment);
     const href = sanitizeHttpUrl(
-      typeof record?.href === 'string'
-        ? record.href
-        : typeof record?.url === 'string'
-          ? record.url
-          : null
+      typeof record?.href === 'string' ? record.href : typeof record?.url === 'string' ? record.url : null
     );
     if (href) return href;
   }
@@ -199,38 +189,37 @@ const buildLinkPreviewAttachment = ogData => {
     };
   }
 
-  const previewAuthors = Array.isArray(ogData.authors) && ogData.authors.length > 0
-    ? ogData.authors
-      .map(author => {
-        const name = typeof author?.name === 'string' ? author.name.trim() : '';
-        if (!name) return null;
+  const previewAuthors =
+    Array.isArray(ogData.authors) && ogData.authors.length > 0
+      ? ogData.authors
+          .map(author => {
+            const name = typeof author?.name === 'string' ? author.name.trim() : '';
+            if (!name) return null;
 
-        const entry = {
-          type: 'Person',
-          name
-        };
-        if (typeof author?.url === 'string' && author.url.trim()) {
-          entry.url = author.url.trim();
-        }
-        if (typeof author?.account?.avatarUrl === 'string' && author.account.avatarUrl.trim()) {
-          entry.icon = {
-            type: 'Image',
-            url: author.account.avatarUrl.trim()
-          };
-        }
-        return entry;
-      })
-      .filter(Boolean)
-    : [];
+            const entry = {
+              type: 'Person',
+              name
+            };
+            if (typeof author?.url === 'string' && author.url.trim()) {
+              entry.url = author.url.trim();
+            }
+            if (typeof author?.account?.avatarUrl === 'string' && author.account.avatarUrl.trim()) {
+              entry.icon = {
+                type: 'Image',
+                url: author.account.avatarUrl.trim()
+              };
+            }
+            return entry;
+          })
+          .filter(Boolean)
+      : [];
   if (previewAuthors.length > 0) {
     preview.attributedTo = previewAuthors.length === 1 ? previewAuthors[0] : previewAuthors;
   } else if (typeof ogData.authorName === 'string' && ogData.authorName.trim()) {
     preview.attributedTo = {
       type: 'Person',
       name: ogData.authorName.trim(),
-      ...(typeof ogData.authorUrl === 'string' && ogData.authorUrl.trim()
-        ? { url: ogData.authorUrl.trim() }
-        : {})
+      ...(typeof ogData.authorUrl === 'string' && ogData.authorUrl.trim() ? { url: ogData.authorUrl.trim() } : {})
     };
   }
 
@@ -289,9 +278,9 @@ const enrichNoteWithLinkPreview = (noteObject, ogData) => {
       return noteObject;
     }
 
-    const merged = existing.map((attachment, index) => (index === existingIndex
-      ? { ...previewAttachment, ...current, href: previewAttachment.href }
-      : attachment));
+    const merged = existing.map((attachment, index) =>
+      index === existingIndex ? { ...previewAttachment, ...current, href: previewAttachment.href } : attachment
+    );
     return {
       ...noteObject,
       attachment: merged.length === 1 ? merged[0] : merged

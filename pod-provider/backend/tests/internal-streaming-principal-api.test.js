@@ -79,9 +79,7 @@ describe('internal-streaming-principal-api', () => {
       call: jest.fn()
     };
 
-    await expect(
-      serviceDefinition.actions.resolvePrincipal.call(service, ctx)
-    ).rejects.toMatchObject({
+    await expect(serviceDefinition.actions.resolvePrincipal.call(service, ctx)).rejects.toMatchObject({
       code: 401,
       type: 'LOGIN_REQUIRED'
     });

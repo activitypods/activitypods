@@ -81,11 +81,19 @@ function authorizeTopic(topic) {
     const wildcardIndex = firstWildcardIndex(segments);
 
     if (!looksLikeAuthoritySegment(segments[0])) {
-      return deny(topic, 'wildcard_namespace_forbidden', 'Wildcard subscriptions are limited to URI-derived ActivityPub topics');
+      return deny(
+        topic,
+        'wildcard_namespace_forbidden',
+        'Wildcard subscriptions are limited to URI-derived ActivityPub topics'
+      );
     }
 
     if (wildcardIndex < 2) {
-      return deny(topic, 'wildcard_scope_too_broad', 'Wildcard subscriptions must include at least one exact path segment after the authority');
+      return deny(
+        topic,
+        'wildcard_scope_too_broad',
+        'Wildcard subscriptions must include at least one exact path segment after the authority'
+      );
     }
 
     return { allowed: true };
@@ -208,7 +216,9 @@ module.exports = {
     const bearerToken = this.settings.auth.bearerToken;
 
     if (!bearerToken) {
-      this.logger.warn('[StreamingTopicAuthorization] No internal bearer token configured; all requests will be rejected');
+      this.logger.warn(
+        '[StreamingTopicAuthorization] No internal bearer token configured; all requests will be rejected'
+      );
     }
 
     await this.broker.call('api.addRoute', {
@@ -231,7 +241,9 @@ module.exports = {
       toBottom: false
     });
 
-    this.logger.info('[StreamingTopicAuthorization] Internal route registered under /api/internal/streaming/authorize-topics');
+    this.logger.info(
+      '[StreamingTopicAuthorization] Internal route registered under /api/internal/streaming/authorize-topics'
+    );
   },
 
   actions: {

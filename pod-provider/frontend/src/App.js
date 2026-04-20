@@ -41,6 +41,7 @@ import GroupSettingsPage from './pages/SettingsPage/GroupSettingsPage';
 import PublicProfilePage from './pages/SettingsPage/ProfilesPage/PublicProfilePage';
 import PrivateProfilePage from './pages/SettingsPage/ProfilesPage/PrivateProfilePage';
 import ModerationPage from './pages/SettingsPage/ModerationPage';
+import ModerationListsPage from './pages/SettingsPage/ModerationListsPage';
 import AppPermissionsPage from './pages/SettingsPage/AppPermissionsPage';
 import TrustSourcesPage from './pages/SettingsPage/TrustSourcesPage';
 import MrfControlPage from './pages/SettingsPage/MrfControlPage';
@@ -119,7 +120,8 @@ const App = () => (
             <Route path="advanced" element={<AdvancedSettingsPage />} />
             <Route path="export" element={<SettingsExportPage />} />
             <Route path="delete" element={<SettingsDeletePage />} />
-            <Route path="moderation" element={<ModerationPage />} />
+            <Route path="moderation" element={<ModerationListsPage />} />
+            <Route path="moderation/rules" element={<ModerationPage />} />
             <Route path="apps" element={<AppPermissionsPage />} />
             <Route path="trust-sources" element={<TrustSourcesPage />} />
             <Route path="mrf" element={<MrfControlPage />} />

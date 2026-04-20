@@ -1,7 +1,18 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useCheckAuthenticated, PasswordStrengthIndicator, validatePasswordStrength } from '@semapps/auth-provider';
 import { required, useAuthProvider, useNotify, useTranslate, SimpleForm, TextInput } from 'react-admin';
-import { Box, Button, Card, Chip, CircularProgress, Divider, List, ListItem, ListItemText, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Card,
+  Chip,
+  CircularProgress,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  Typography
+} from '@mui/material';
 import scorer from '../../config/scorer';
 import { deletePasskey, listPasskeys, registerPasskey } from '../../utils/passkeys';
 
@@ -175,7 +186,11 @@ const SettingsPasswordPage = () => {
                   key={passkey.credentialId}
                   divider
                   secondaryAction={
-                    <Button color="error" onClick={() => handleDeletePasskey(passkey.credentialId)} disabled={passkeyBusy}>
+                    <Button
+                      color="error"
+                      onClick={() => handleDeletePasskey(passkey.credentialId)}
+                      disabled={passkeyBusy}
+                    >
                       Remove
                     </Button>
                   }
@@ -188,9 +203,20 @@ const SettingsPasswordPage = () => {
                         <Chip size="small" label={passkey.backedUp ? 'Backed up' : 'Not backed up'} />
                         <Chip
                           size="small"
-                          label={formatTimestamp(passkey.lastUsedAt) ? `Last used ${formatTimestamp(passkey.lastUsedAt)}` : 'Not used yet'}
+                          label={
+                            formatTimestamp(passkey.lastUsedAt)
+                              ? `Last used ${formatTimestamp(passkey.lastUsedAt)}`
+                              : 'Not used yet'
+                          }
                         />
-                        <Chip size="small" label={formatTimestamp(passkey.createdAt) ? `Created ${formatTimestamp(passkey.createdAt)}` : 'Created time unavailable'} />
+                        <Chip
+                          size="small"
+                          label={
+                            formatTimestamp(passkey.createdAt)
+                              ? `Created ${formatTimestamp(passkey.createdAt)}`
+                              : 'Created time unavailable'
+                          }
+                        />
                       </Box>
                     }
                   />

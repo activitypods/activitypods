@@ -1,9 +1,6 @@
 'use strict';
 
-const {
-  hasActorType,
-  normalizeActorAuthorAttributionForOutput
-} = require('../utils/author-attribution');
+const { hasActorType, normalizeActorAuthorAttributionForOutput } = require('../utils/author-attribution');
 
 const OBJECT_BEARING_TYPES = new Set(['Create', 'Update']);
 

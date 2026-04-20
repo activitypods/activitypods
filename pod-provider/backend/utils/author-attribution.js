@@ -27,9 +27,7 @@ const normalizeDomain = value => {
   const trimmed = value.trim();
   if (!trimmed) return null;
 
-  const candidate = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)
-    ? trimmed
-    : `https://${trimmed.replace(/^\/+/, '')}`;
+  const candidate = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed.replace(/^\/+/, '')}`;
 
   try {
     const parsed = new URL(candidate);
@@ -45,9 +43,7 @@ const getAttributionDomains = actor => {
   if (!record) return [];
 
   const raw =
-    record.attributionDomains ??
-    record[TOOT_ATTRIBUTION_DOMAINS_IRI] ??
-    record[TOOT_ATTRIBUTION_DOMAINS_SHORT];
+    record.attributionDomains ?? record[TOOT_ATTRIBUTION_DOMAINS_IRI] ?? record[TOOT_ATTRIBUTION_DOMAINS_SHORT];
 
   return [...new Set(toArray(raw).map(normalizeDomain).filter(Boolean))];
 };

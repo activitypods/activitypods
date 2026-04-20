@@ -63,9 +63,7 @@ describe('realtime-private-emitter', () => {
       meta: {}
     };
 
-    await expect(
-      serviceDefinition.actions.publish.call(service, ctx)
-    ).rejects.toMatchObject({
+    await expect(serviceDefinition.actions.publish.call(service, ctx)).rejects.toMatchObject({
       code: 400,
       type: 'INVALID_TOPIC'
     });

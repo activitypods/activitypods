@@ -11,8 +11,8 @@ function headers() {
   return h;
 }
 
-async function req(path: string, options: RequestInit = {}) {
-  const res = await fetch(urlJoin(BASE, path), {
+async function reqWithBase(base: string, path: string, options: RequestInit = {}) {
+  const res = await fetch(urlJoin(base, path), {
     ...options,
     headers: headers()
   });
@@ -40,6 +40,14 @@ async function req(path: string, options: RequestInit = {}) {
   }
 
   return json;
+}
+
+async function req(path: string, options: RequestInit = {}) {
+  return reqWithBase(BASE, path, options);
+}
+
+async function apiReq(path: string, options: RequestInit = {}) {
+  return reqWithBase(CONFIG.BACKEND_URL, path, options);
 }
 
 export const dashboardApi = {
@@ -79,6 +87,22 @@ export const dashboardApi = {
     req('settings/app-consents', {
       method: 'POST',
       body: JSON.stringify({ data })
+    }),
+
+  getBlockedListVisibility: () => apiReq('/api/block-lists/blocked/visibility'),
+
+  setBlockedListVisibility: (isPublic: boolean) =>
+    apiReq('/api/block-lists/blocked/visibility', {
+      method: 'PUT',
+      body: JSON.stringify({ public: isPublic })
+    }),
+
+  getMutedListVisibility: () => apiReq('/api/mute-lists/muted/visibility'),
+
+  setMutedListVisibility: (isPublic: boolean) =>
+    apiReq('/api/mute-lists/muted/visibility', {
+      method: 'PUT',
+      body: JSON.stringify({ public: isPublic })
     }),
 
   listFollowedHashtags: () => req('hashtags/follows'),

@@ -24,6 +24,7 @@ import {
   Typography
 } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { dashboardApi } from './dashboardApi';
 
 type LdpResource = { '@id': string };
@@ -407,6 +408,7 @@ const SectionShell = ({
 );
 
 const ModerationPage = () => {
+  const navigate = useNavigate();
   const filters = useSection<KeywordFilter>('filters');
   const mutes = useSection<MutedAccount>('mutes');
   const blocks = useSection<BlockedAccount>('blocks');
@@ -1089,13 +1091,31 @@ const ModerationPage = () => {
 
   return (
     <Box p={3}>
-      <Typography variant="h5" gutterBottom>
-        Moderation
-      </Typography>
-      <Typography variant="body2" color="text.secondary" mb={2}>
-        These rules are stored in your Pod and shared with apps that request access. Apps can choose where to apply them
-        in their own UI contexts.
-      </Typography>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        spacing={2}
+        justifyContent="space-between"
+        alignItems={{ xs: 'stretch', md: 'flex-start' }}
+        mb={2}
+      >
+        <Box>
+          <Typography variant="h5" gutterBottom>
+            Moderation Rules
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Keyword filters, sensitive media preferences, ATProto sync, labelers, and compatibility imports stay here.
+            Your direct muted and blocked accounts now live in a dedicated list-first manager.
+          </Typography>
+        </Box>
+        <Button variant="outlined" onClick={() => navigate('/settings/moderation')}>
+          Open moderation lists
+        </Button>
+      </Stack>
+
+      <Alert severity="info" sx={{ mb: 2 }}>
+        Need to review muted or blocked accounts the way Bluesky does? Use the dedicated moderation lists page for
+        account-level list management and ActivityPub sharing controls.
+      </Alert>
 
       <SectionShell
         title="Pod User: Keyword Filters"

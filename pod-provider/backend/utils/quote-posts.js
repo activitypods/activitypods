@@ -17,12 +17,51 @@
 
 const sanitizeHtml = require('sanitize-html');
 
+const FEP_E232_MEDIA_TYPE = 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+const ACTIVITY_JSON_MEDIA_TYPE = 'application/activity+json';
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
 
 const isObject = v => Boolean(v) && typeof v === 'object' && !Array.isArray(v);
 const asArray = v => (Array.isArray(v) ? v : v == null ? [] : [v]);
+
+const normalizeUrl = value => {
+  if (typeof value !== 'string') return null;
+  const raw = value.trim();
+  if (!raw || raw.length > 4096) return null;
+  try {
+    const parsed = new URL(raw);
+    if ((parsed.protocol === 'http:' || parsed.protocol === 'https:') && !parsed.username && !parsed.password) {
+      return parsed.toString();
+    }
+  } catch {
+    return null;
+  }
+  return null;
+};
+
+const normalizeToken = (value, maxLength = 512) => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > maxLength) return null;
+  return trimmed;
+};
+
+const normalizeMediaType = value => {
+  const token = normalizeToken(value, 256);
+  if (!token) return null;
+  const normalized = token.toLowerCase();
+  if (normalized === ACTIVITY_JSON_MEDIA_TYPE) {
+    // FEP-e232 allows treating application/activity+json as equivalent.
+    return FEP_E232_MEDIA_TYPE;
+  }
+  if (normalized === FEP_E232_MEDIA_TYPE.toLowerCase()) {
+    return FEP_E232_MEDIA_TYPE;
+  }
+  return null;
+};
 
 const firstIri = value => {
   if (typeof value === 'string' && value.startsWith('http')) return value;
@@ -78,15 +117,26 @@ const normalizeTag = tag => {
   if (!isObject(tag)) return null;
 
   const type = tag.type || tag['@type'];
-  if (type !== 'Mention' && type !== 'Hashtag') return null;
+  if (type !== 'Mention' && type !== 'Hashtag' && type !== 'Link') return null;
 
-  const href = typeof tag.href === 'string' && tag.href.startsWith('http') ? tag.href : null;
+  const href = normalizeUrl(tag.href);
   if (!href) return null;
 
   const result = { type, href };
 
-  const name = typeof tag.name === 'string' ? tag.name.trim() : null;
+  const name = normalizeToken(tag.name);
   if (name) result.name = name;
+
+  if (type === 'Link') {
+    const mediaType = normalizeMediaType(tag.mediaType);
+    if (!mediaType) return null;
+    result.mediaType = mediaType;
+
+    const rel = normalizeToken(tag.rel);
+    if (rel) {
+      result.rel = rel;
+    }
+  }
 
   return result;
 };
@@ -101,8 +151,17 @@ const normalizeTag = tag => {
 const normalizeTags = tagValue => {
   if (tagValue == null) return undefined;
   const entries = asArray(tagValue).map(normalizeTag).filter(Boolean);
-  if (entries.length === 0) return undefined;
-  return entries.length === 1 ? entries[0] : entries;
+  const deduped = [];
+  const seen = new Set();
+  for (const entry of entries) {
+    const key = `${entry.type}|${entry.href}|${entry.name || ''}|${entry.mediaType || ''}|${entry.rel || ''}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      deduped.push(entry);
+    }
+  }
+  if (deduped.length === 0) return undefined;
+  return deduped.length === 1 ? deduped[0] : deduped;
 };
 
 /**

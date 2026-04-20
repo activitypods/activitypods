@@ -215,7 +215,10 @@ const normalizeCreatorAuthority = value => {
 
 const normalizeCreatorHandle = value => {
   if (!value || typeof value !== 'string') return null;
-  const trimmed = value.trim().replace(/^acct:/i, '').replace(/^@/, '');
+  const trimmed = value
+    .trim()
+    .replace(/^acct:/i, '')
+    .replace(/^@/, '');
   const match = /^([^@\s]+)@([^@\s]+)$/.exec(trimmed);
   if (!match) return null;
 
@@ -248,7 +251,9 @@ const buildPreviewAuthorAccount = (actorDocument, creator) => {
   return {
     acct: creator.acct,
     uri: sanitizeHttpUrl(typeof actorDocument.id === 'string' ? actorDocument.id : null),
-    url: extractFirstHttpUrl(actorDocument.url) || sanitizeHttpUrl(typeof actorDocument.id === 'string' ? actorDocument.id : null),
+    url:
+      extractFirstHttpUrl(actorDocument.url) ||
+      sanitizeHttpUrl(typeof actorDocument.id === 'string' ? actorDocument.id : null),
     displayName:
       typeof actorDocument.name === 'string' && actorDocument.name.trim()
         ? actorDocument.name.trim().slice(0, 300)

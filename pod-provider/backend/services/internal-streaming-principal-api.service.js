@@ -60,15 +60,7 @@ function normalizeResolvedPrincipal(candidate) {
     return null;
   }
 
-  return normalizePrincipal(
-    String(
-      candidate.principal ||
-      candidate.webId ||
-      candidate.webid ||
-      candidate.id ||
-      ''
-    )
-  );
+  return normalizePrincipal(String(candidate.principal || candidate.webId || candidate.webid || candidate.id || ''));
 }
 
 module.exports = {
@@ -84,9 +76,7 @@ module.exports = {
         process.env.OAUTH_SESSION_SECRET || process.env.ACTIVITYPODS_TOKEN || 'dev-oauth-session-secret'
       ),
       cookieResolverAction: process.env.STREAMING_PRINCIPAL_COOKIE_RESOLVER_ACTION || '',
-      tokenCookieNames: String(
-        process.env.STREAMING_PRINCIPAL_TOKEN_COOKIE_NAMES || 'access_token,token,jwt,id_token'
-      )
+      tokenCookieNames: String(process.env.STREAMING_PRINCIPAL_TOKEN_COOKIE_NAMES || 'access_token,token,jwt,id_token')
         .split(',')
         .map(value => value.trim())
         .filter(Boolean)
@@ -98,7 +88,9 @@ module.exports = {
     const bearerToken = this.settings.auth.bearerToken;
 
     if (!bearerToken) {
-      this.logger.warn('[InternalStreamingPrincipalApi] No internal bearer token configured; all requests will be rejected');
+      this.logger.warn(
+        '[InternalStreamingPrincipalApi] No internal bearer token configured; all requests will be rejected'
+      );
     }
 
     await this.broker.call('api.addRoute', {
@@ -121,28 +113,31 @@ module.exports = {
       toBottom: false
     });
 
-    this.logger.info('[InternalStreamingPrincipalApi] Internal route registered under /api/internal/streaming/resolve-principal');
+    this.logger.info(
+      '[InternalStreamingPrincipalApi] Internal route registered under /api/internal/streaming/resolve-principal'
+    );
   },
 
   actions: {
     async resolvePrincipal(ctx) {
       this.applyResponseHeaders(ctx);
 
-      const forwardedAuthorization = typeof ctx.params?.authorization === 'string'
-        ? ctx.params.authorization.trim()
-        : '';
-      const forwardedCookie = typeof ctx.params?.cookie === 'string'
-        ? ctx.params.cookie.trim()
-        : '';
+      const forwardedAuthorization =
+        typeof ctx.params?.authorization === 'string' ? ctx.params.authorization.trim() : '';
+      const forwardedCookie = typeof ctx.params?.cookie === 'string' ? ctx.params.cookie.trim() : '';
 
       const principal =
-        await this.resolvePrincipalFromBearerToken(ctx, forwardedAuthorization) ||
+        (await this.resolvePrincipalFromBearerToken(ctx, forwardedAuthorization)) ||
         this.resolvePrincipalFromOauthSessionCookie(forwardedCookie) ||
-        await this.resolvePrincipalFromCookieAction(ctx, forwardedCookie) ||
-        await this.resolvePrincipalFromTokenCookie(ctx, forwardedCookie);
+        (await this.resolvePrincipalFromCookieAction(ctx, forwardedCookie)) ||
+        (await this.resolvePrincipalFromTokenCookie(ctx, forwardedCookie));
 
       if (!principal || principal === 'anon') {
-        throw new MoleculerError('The forwarded auth context does not identify an authenticated principal', 401, 'LOGIN_REQUIRED');
+        throw new MoleculerError(
+          'The forwarded auth context does not identify an authenticated principal',
+          401,
+          'LOGIN_REQUIRED'
+        );
       }
 
       return {
@@ -237,9 +232,7 @@ module.exports = {
       }
 
       const cookies = parseCookieHeader(forwardedCookie);
-      const raw = typeof cookies[sessionCookieName] === 'string'
-        ? decodeURIComponent(cookies[sessionCookieName])
-        : '';
+      const raw = typeof cookies[sessionCookieName] === 'string' ? decodeURIComponent(cookies[sessionCookieName]) : '';
       if (!raw) {
         return null;
       }
@@ -249,10 +242,7 @@ module.exports = {
         return null;
       }
 
-      const expected = crypto
-        .createHmac('sha256', sessionSecret)
-        .update(payload, 'utf8')
-        .digest('base64url');
+      const expected = crypto.createHmac('sha256', sessionSecret).update(payload, 'utf8').digest('base64url');
       if (!safeTokenEquals(expected, sig)) {
         return null;
       }

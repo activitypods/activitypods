@@ -57,9 +57,21 @@ const html = renderArticleShareHtml({
   instanceName: 'ActivityPods Test'
 });
 
-assert.match(html, /<meta name="fediverse:creator" content="@alice@pod\.example" \/>/, 'authorized local domain should emit fediverse:creator');
-assert.match(html, /<meta property="og:title" content="An Article About Author Attribution" \/>/, 'share page should emit OpenGraph title');
-assert.match(html, /<link rel="alternate" type="application\/activity\+json" href="https:\/\/pod\.example\/posts\/abc123" \/>/, 'share page should link back to AP JSON');
+assert.match(
+  html,
+  /<meta name="fediverse:creator" content="@alice@pod\.example" \/>/,
+  'authorized local domain should emit fediverse:creator'
+);
+assert.match(
+  html,
+  /<meta property="og:title" content="An Article About Author Attribution" \/>/,
+  'share page should emit OpenGraph title'
+);
+assert.match(
+  html,
+  /<link rel="alternate" type="application\/activity\+json" href="https:\/\/pod\.example\/posts\/abc123" \/>/,
+  'share page should link back to AP JSON'
+);
 
 const unauthorizedHtml = renderArticleShareHtml({
   shareUrl: 'https://news.example/posts/abc123/share',
@@ -69,9 +81,6 @@ const unauthorizedHtml = renderArticleShareHtml({
   instanceName: 'ActivityPods Test'
 });
 
-assert.ok(
-  !unauthorizedHtml.includes('fediverse:creator'),
-  'unauthorized host must not emit fediverse:creator'
-);
+assert.ok(!unauthorizedHtml.includes('fediverse:creator'), 'unauthorized host must not emit fediverse:creator');
 
 console.log('proof-author-attribution-share-page: ok');

@@ -18,12 +18,7 @@ describe('streaming-topic-authorization', () => {
     const ctx = {
       params: {
         principal: 'https://example.com/users/alice',
-        topics: [
-          'feeds/public/local',
-          'feeds/local',
-          'server.example/note/123',
-          'server.example/note/#'
-        ]
+        topics: ['feeds/public/local', 'feeds/local', 'server.example/note/123', 'server.example/note/#']
       },
       meta: {}
     };
@@ -31,12 +26,7 @@ describe('streaming-topic-authorization', () => {
     const result = await serviceDefinition.actions.authorizeTopics.call(service, ctx);
 
     expect(result).toEqual({
-      allowedTopics: [
-        'feeds/local',
-        'feeds/public/local',
-        'server.example/note/#',
-        'server.example/note/123'
-      ],
+      allowedTopics: ['feeds/local', 'feeds/public/local', 'server.example/note/#', 'server.example/note/123'],
       deniedTopics: []
     });
   });
@@ -46,11 +36,7 @@ describe('streaming-topic-authorization', () => {
     const ctx = {
       params: {
         principal: 'https://example.com/users/alice',
-        topics: [
-          '#',
-          'server.example/#',
-          'server.example/#/extra'
-        ]
+        topics: ['#', 'server.example/#', 'server.example/#/extra']
       },
       meta: {}
     };

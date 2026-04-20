@@ -16,6 +16,7 @@ import TranslateIcon from '@mui/icons-material/Translate';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import AppsIcon from '@mui/icons-material/Apps';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
+import ViewListIcon from '@mui/icons-material/ViewList';
 import Header from '../../common/Header';
 import useContactLink from '../../hooks/useContactLink';
 import SettingsItem from './SettingsItem';
@@ -112,9 +113,16 @@ const SettingsOwnerDashboardPage = () => {
           </Typography>
           <SettingsItem
             onClick={() => navigate('/settings/moderation')}
+            icon={<ViewListIcon />}
+            label="Moderation lists"
+            value="Muted accounts, blocked accounts, public sharing"
+            actionIcon={<ArrowForwardIosIcon />}
+          />
+          <SettingsItem
+            onClick={() => navigate('/settings/moderation/rules')}
             icon={<GavelIcon />}
-            label="app.setting.moderation"
-            value="Keyword filters, sensitive media, mute/block lists, monthly summary"
+            label="Moderation rules"
+            value="Keyword filters, sensitive media, ATProto sync, monthly summary"
             actionIcon={<ArrowForwardIosIcon />}
           />
           <SettingsItem

@@ -146,8 +146,31 @@ const ok = async (label, fn) => {
     assert.deepStrictEqual(normalizeTag(tag), tag);
   });
 
+  await ok('normalizes a valid FEP-e232 Link tag', () => {
+    const tag = {
+      type: 'Link',
+      mediaType: 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
+      href: 'https://example.com/objects/123',
+      name: 'RE: https://example.com/objects/123'
+    };
+    assert.deepStrictEqual(normalizeTag(tag), tag);
+  });
+
+  await ok('treats application/activity+json as equivalent for Link tags', () => {
+    const out = normalizeTag({
+      type: 'Link',
+      mediaType: 'application/activity+json',
+      href: 'https://example.com/objects/123'
+    });
+    assert.deepStrictEqual(out, {
+      type: 'Link',
+      mediaType: 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
+      href: 'https://example.com/objects/123'
+    });
+  });
+
   await ok('rejects unknown tag type', () => {
-    assert.equal(normalizeTag({ type: 'Link', href: 'https://example.com' }), null);
+    assert.equal(normalizeTag({ type: 'Emoji', href: 'https://example.com' }), null);
   });
 
   await ok('rejects tag missing href', () => {
@@ -156,6 +179,17 @@ const ok = async (label, fn) => {
 
   await ok('rejects non-http href', () => {
     assert.equal(normalizeTag({ type: 'Hashtag', href: 'javascript:evil()', name: 'foo' }), null);
+  });
+
+  await ok('rejects Link tag missing mediaType', () => {
+    assert.equal(normalizeTag({ type: 'Link', href: 'https://example.com/objects/123' }), null);
+  });
+
+  await ok('rejects Link tag with unsupported mediaType', () => {
+    assert.equal(
+      normalizeTag({ type: 'Link', mediaType: 'text/html', href: 'https://example.com/objects/123' }),
+      null
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -215,12 +249,22 @@ const ok = async (label, fn) => {
       object: 'https://example.com/notes/1234',
       content: 'Some commentary',
       tag: [
-        { type: 'Hashtag', href: 'https://example.com/tags/foo', name: 'foo' },
+        {
+          type: 'Link',
+          mediaType: 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
+          href: 'https://example.com/objects/123',
+          name: 'RE: https://example.com/objects/123'
+        },
         { type: 'Unknown', href: 'https://example.com/whatever' }
       ]
     };
     const result = normalizeQuotePost(activity);
-    assert.deepStrictEqual(result.tag, { type: 'Hashtag', href: 'https://example.com/tags/foo', name: 'foo' });
+    assert.deepStrictEqual(result.tag, {
+      type: 'Link',
+      mediaType: 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
+      href: 'https://example.com/objects/123',
+      name: 'RE: https://example.com/objects/123'
+    });
   });
 
   await ok('normalizes inReplyTo object to plain URI', () => {

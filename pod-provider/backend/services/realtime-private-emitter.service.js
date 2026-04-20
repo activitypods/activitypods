@@ -117,7 +117,11 @@ module.exports = {
     async publish(ctx) {
       const topic = typeof ctx.params?.topic === 'string' ? ctx.params.topic.trim() : '';
       if (!TOPICS.has(topic)) {
-        throw new MoleculerError(`topic must be ${TOPIC_NOTIFICATIONS} or ${TOPIC_PERSONAL_FEED}`, 400, 'INVALID_TOPIC');
+        throw new MoleculerError(
+          `topic must be ${TOPIC_NOTIFICATIONS} or ${TOPIC_PERSONAL_FEED}`,
+          400,
+          'INVALID_TOPIC'
+        );
       }
 
       const event = typeof ctx.params?.event === 'string' ? ctx.params.event.trim() : '';
@@ -130,14 +134,14 @@ module.exports = {
         throw new MoleculerError('principal must be a valid authenticated actor URI', 400, 'INVALID_PRINCIPAL');
       }
 
-      const occurredAt = typeof ctx.params?.occurredAt === 'string' && ctx.params.occurredAt.trim()
-        ? new Date(ctx.params.occurredAt).toISOString()
-        : new Date().toISOString();
+      const occurredAt =
+        typeof ctx.params?.occurredAt === 'string' && ctx.params.occurredAt.trim()
+          ? new Date(ctx.params.occurredAt).toISOString()
+          : new Date().toISOString();
 
       const payload = normalizePayload(ctx.params?.payload);
-      const id = typeof ctx.params?.id === 'string' && ctx.params.id.trim()
-        ? ctx.params.id.trim().slice(0, 512)
-        : undefined;
+      const id =
+        typeof ctx.params?.id === 'string' && ctx.params.id.trim() ? ctx.params.id.trim().slice(0, 512) : undefined;
 
       await this.redis.publish(
         this.settings.channel,

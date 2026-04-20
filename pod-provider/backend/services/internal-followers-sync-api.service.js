@@ -3,8 +3,9 @@
 /**
  * FEP-8fcf: Followers Collection Synchronization — ActivityPods Backend Endpoints
  *
- * Provides three internal API endpoints that the Fedify sidecar calls during
- * followers-collection synchronization.  All three require a bearer token
+ * Provides internal API endpoints that the Fedify sidecar calls during
+ * followers-collection synchronization plus block/mute collection
+ * projection. All routes require a bearer token
  * matching ACTIVITYPODS_TOKEN (same secret used by the other internal APIs).
  *
  * Routes registered under /api/internal/followers-sync:
@@ -29,13 +30,52 @@
  *        Removes a local actor's follow of a remote actor without sending an
  *        Undo Follow activity (the sidecar sends that separately).
  *
+ *   GET  /blocked-collection
+ *          ?actorIdentifier={id}
+ *        → { items: string[], public: boolean, followersCollection?: string|null }
+ *        Returns blocked actor URIs in reverse-chronological order plus the
+ *        current public/followable state of the blocked collection.
+ *
+ *   GET  /blocked-followers-collection
+ *          ?actorIdentifier={id}
+ *        → { items: string[], public: boolean, followersCollection?: string|null }
+ *        Returns follower actor URIs for a public blocked collection.
+ *
+ *   GET  /blocks-collection
+ *          ?actorIdentifier={id}
+ *        → { items: Array<{ id, type, object, published? }> }
+ *        Returns active Block activities in reverse-chronological order.
+ *
+ *   GET  /muted-collection
+ *          ?actorIdentifier={id}
+ *        → { items: Array<{ type, subjectCanonicalId, subjectProtocol, id?, published? }>,
+ *            public: boolean,
+ *            followersCollection?: string|null }
+ *        Returns muted subject projections in reverse-chronological order plus
+ *        the current public/followable state of the muted collection.
+ *
+ *   GET  /muted-followers-collection
+ *          ?actorIdentifier={id}
+ *        → { items: string[], public: boolean, followersCollection?: string|null }
+ *        Returns follower actor URIs for a public muted collection.
+ *
  * Spec: https://codeberg.org/fediverse/fep/src/branch/main/fep/8fcf/fep-8fcf.md
  */
 
 const crypto = require('crypto');
 const { Errors: WebErrors } = require('moleculer-web');
+const { getDatasetFromUri } = require('@semapps/ldp');
 const { MIME_TYPES } = require('@semapps/mime-types');
 const { sanitizeSparqlQuery } = require('@semapps/triplestore');
+
+const BLOCKED_PREDICATE = 'https://purl.archive.org/socialweb/blocked#blocked';
+const BLOCKS_PREDICATE = 'https://purl.archive.org/socialweb/blocked#blocks';
+const MUTED_PREDICATE = 'http://activitypods.org/ns/core#muted';
+const MUTE_RESOURCE_CLASS_URI = 'https://activitypods.org/ns/core#Mute';
+const APODS_SUBJECT_CANONICAL_ID = 'https://activitypods.org/ns/core#subjectCanonicalId';
+const APODS_SUBJECT_PROTOCOL = 'https://activitypods.org/ns/core#subjectProtocol';
+const DCTERMS_CREATED = 'http://purl.org/dc/terms/created';
+const DCTERMS_MODIFIED = 'http://purl.org/dc/terms/modified';
 
 // Maximum concurrent actor lookups for getLocalFollowersOfRemote
 const MAX_CONCURRENT_LOOKUPS = 10;
@@ -43,7 +83,15 @@ const MAX_CONCURRENT_LOOKUPS = 10;
 module.exports = {
   name: 'internal-followers-sync-api',
 
-  dependencies: ['api', 'activitypub.actor', 'activitypub.collection', 'auth.account', 'triplestore'],
+  dependencies: [
+    'api',
+    'activitypub.actor',
+    'activitypub.blocked',
+    'activitypub.muted',
+    'activitypub.collection',
+    'auth.account',
+    'triplestore'
+  ],
 
   settings: {
     auth: {
@@ -83,7 +131,11 @@ module.exports = {
           'GET /partial-collection': 'internal-followers-sync-api.getPartialCollection',
           'GET /local-followers-of-remote': 'internal-followers-sync-api.getLocalFollowersOfRemote',
           'POST /unfollow': 'internal-followers-sync-api.unfollow',
-          'GET /blocked-collection': 'internal-followers-sync-api.getBlockedCollection'
+          'GET /blocked-collection': 'internal-followers-sync-api.getBlockedCollection',
+          'GET /blocked-followers-collection': 'internal-followers-sync-api.getBlockedFollowersCollection',
+          'GET /blocks-collection': 'internal-followers-sync-api.getBlocksCollection',
+          'GET /muted-collection': 'internal-followers-sync-api.getMutedCollection',
+          'GET /muted-followers-collection': 'internal-followers-sync-api.getMutedFollowersCollection'
         }
       },
       toBottom: false
@@ -91,7 +143,7 @@ module.exports = {
 
     this.logger.info(
       '[FollowersSyncApi] Internal routes registered under /api/internal/followers-sync: ' +
-        'partial-collection, local-followers-of-remote, unfollow'
+        'partial-collection, local-followers-of-remote, unfollow, blocked-collection, blocked-followers-collection, blocks-collection, muted-collection, muted-followers-collection'
     );
   },
 
@@ -372,25 +424,19 @@ module.exports = {
           return { error: 'not_found', message: `Actor not found: ${actorIdentifier}` };
         }
 
-        // Resolve the blocked collection URI from the actor document.
-        // ActivityPods uses the predicate https://purl.archive.org/socialweb/blocked#blocked
-        // which may appear as `actor.blocked`, `actor['bl:blocked']`, or via the full URI key.
-        const BLOCKED_PREDICATE = 'https://purl.archive.org/socialweb/blocked#blocked';
-        const blockedCollectionUri = actor.blocked || actor['bl:blocked'] || actor[BLOCKED_PREDICATE];
+        const blockedCollectionUri =
+          this.resolveBlockedCollectionUriFromActor(actor) || this.resolveBlocksCollectionUriFromActor(actor);
 
         if (!blockedCollectionUri) {
           ctx.meta.$statusCode = 200;
-          return { items: [] };
+          return { items: [], public: false, followersCollection: null };
         }
 
-        // Retrieve the collection.  ActivityPods stores Block activity IDs with
-        // dereferenceItems: true, so orderedItems contains full Block activity objects.
+        const sharingState = await this.getBlockedCollectionSharingState(ctx, actor);
+
         let collection;
         try {
-          collection = await ctx.call('activitypub.collection.get', {
-            resourceUri: blockedCollectionUri,
-            webId: 'system'
-          });
+          collection = await this.getCollectionByUri(ctx, blockedCollectionUri);
         } catch (err) {
           this.logger.error('[FollowersSyncApi] getBlockedCollection: failed to fetch collection', {
             actorIdentifier,
@@ -401,23 +447,7 @@ module.exports = {
           return { error: 'internal_error', message: 'Failed to fetch blocked collection' };
         }
 
-        // Extract blocked actor URIs from Block activity `object` fields.
-        const rawItems = collection?.orderedItems || collection?.items || [];
-        const items = [];
-        for (const item of rawItems) {
-          if (typeof item === 'string') {
-            // Plain URI stored directly — treat as actor URI.
-            items.push(item);
-          } else if (item && typeof item === 'object') {
-            // Dereferenced Block activity object: extract `object` field.
-            const obj = item.object;
-            if (typeof obj === 'string') {
-              items.push(obj);
-            } else if (obj && typeof obj === 'object' && typeof obj.id === 'string') {
-              items.push(obj.id);
-            }
-          }
-        }
+        const items = this.extractBlockedActorUris(collection);
 
         this.logger.debug('[FollowersSyncApi] getBlockedCollection', {
           actorIdentifier,
@@ -425,7 +455,217 @@ module.exports = {
         });
 
         ctx.meta.$statusCode = 200;
+        return {
+          items,
+          public: sharingState.public,
+          followersCollection: sharingState.followersCollectionUri
+        };
+      }
+    },
+
+    getBlockedFollowersCollection: {
+      async handler(ctx) {
+        const actorIdentifier = String(
+          ctx.params?.actorIdentifier ?? ctx.meta.queryString?.actorIdentifier ?? ''
+        ).trim();
+
+        if (!actorIdentifier) {
+          ctx.meta.$statusCode = 400;
+          return { error: 'invalid_request', message: 'actorIdentifier is required' };
+        }
+
+        const actor = await this.findActorByIdentifier(ctx, actorIdentifier);
+        if (!actor) {
+          ctx.meta.$statusCode = 404;
+          return { error: 'not_found', message: `Actor not found: ${actorIdentifier}` };
+        }
+
+        const sharingState = await this.getBlockedCollectionSharingState(ctx, actor);
+        if (!sharingState.public || !sharingState.followersCollectionUri) {
+          ctx.meta.$statusCode = 200;
+          return { items: [], public: false, followersCollection: null };
+        }
+
+        let collection;
+        try {
+          collection = await this.getCollectionByUri(ctx, sharingState.followersCollectionUri);
+        } catch (err) {
+          this.logger.error('[FollowersSyncApi] getBlockedFollowersCollection: failed to fetch collection', {
+            actorIdentifier,
+            followersCollectionUri: sharingState.followersCollectionUri,
+            error: err.message
+          });
+          ctx.meta.$statusCode = 500;
+          return { error: 'internal_error', message: 'Failed to fetch blocked followers collection' };
+        }
+
+        const items = this.extractCollectionActorUris(collection);
+
+        this.logger.debug('[FollowersSyncApi] getBlockedFollowersCollection', {
+          actorIdentifier,
+          itemCount: items.length
+        });
+
+        ctx.meta.$statusCode = 200;
+        return {
+          items,
+          public: true,
+          followersCollection: sharingState.followersCollectionUri
+        };
+      }
+    },
+
+    // =========================================================================
+    // GET /blocks-collection?actorIdentifier={id}
+    // =========================================================================
+
+    /**
+     * FEP-c648: Return the active Block activities for a local actor.
+     *
+     * The preferred source is the actor's `blocks` collection. For older data,
+     * fall back to the existing `blocked` collection, which also stores Block
+     * activities and preserves reverse-chronological order.
+     *
+     * Returns: { items: Array<{ id, type, object, published? }> }
+     */
+    getBlocksCollection: {
+      async handler(ctx) {
+        const actorIdentifier = String(
+          ctx.params?.actorIdentifier ?? ctx.meta.queryString?.actorIdentifier ?? ''
+        ).trim();
+
+        if (!actorIdentifier) {
+          ctx.meta.$statusCode = 400;
+          return { error: 'invalid_request', message: 'actorIdentifier is required' };
+        }
+
+        const actor = await this.findActorByIdentifier(ctx, actorIdentifier);
+        if (!actor) {
+          ctx.meta.$statusCode = 404;
+          return { error: 'not_found', message: `Actor not found: ${actorIdentifier}` };
+        }
+
+        const blocksCollectionUri =
+          this.resolveBlocksCollectionUriFromActor(actor) || this.resolveBlockedCollectionUriFromActor(actor);
+
+        if (!blocksCollectionUri) {
+          ctx.meta.$statusCode = 200;
+          return { items: [] };
+        }
+
+        let collection;
+        try {
+          collection = await this.getCollectionByUri(ctx, blocksCollectionUri);
+        } catch (err) {
+          this.logger.error('[FollowersSyncApi] getBlocksCollection: failed to fetch collection', {
+            actorIdentifier,
+            blocksCollectionUri,
+            error: err.message
+          });
+          ctx.meta.$statusCode = 500;
+          return { error: 'internal_error', message: 'Failed to fetch blocks collection' };
+        }
+
+        const items = this.extractBlockActivities(collection);
+
+        this.logger.debug('[FollowersSyncApi] getBlocksCollection', {
+          actorIdentifier,
+          itemCount: items.length
+        });
+
+        ctx.meta.$statusCode = 200;
         return { items };
+      }
+    },
+
+    getMutedCollection: {
+      async handler(ctx) {
+        const actorIdentifier = String(
+          ctx.params?.actorIdentifier ?? ctx.meta.queryString?.actorIdentifier ?? ''
+        ).trim();
+
+        if (!actorIdentifier) {
+          ctx.meta.$statusCode = 400;
+          return { error: 'invalid_request', message: 'actorIdentifier is required' };
+        }
+
+        const actor = await this.findActorByIdentifier(ctx, actorIdentifier);
+        if (!actor) {
+          ctx.meta.$statusCode = 404;
+          return { error: 'not_found', message: `Actor not found: ${actorIdentifier}` };
+        }
+
+        const mutedCollectionUri =
+          this.resolveMutedCollectionUriFromActor(actor) || `${actor.id || actor['@id']}/muted`;
+
+        const sharingState = await this.getMutedCollectionSharingState(ctx, actor);
+        const rows = await this.queryMuteSubjectRows(ctx, actor.id || actor['@id']);
+        const items = this.normalizeMutedSubjects(rows);
+
+        this.logger.debug('[FollowersSyncApi] getMutedCollection', {
+          actorIdentifier,
+          itemCount: items.length
+        });
+
+        ctx.meta.$statusCode = 200;
+        return {
+          items,
+          public: sharingState.public,
+          followersCollection: sharingState.followersCollectionUri,
+          collectionUri: mutedCollectionUri
+        };
+      }
+    },
+
+    getMutedFollowersCollection: {
+      async handler(ctx) {
+        const actorIdentifier = String(
+          ctx.params?.actorIdentifier ?? ctx.meta.queryString?.actorIdentifier ?? ''
+        ).trim();
+
+        if (!actorIdentifier) {
+          ctx.meta.$statusCode = 400;
+          return { error: 'invalid_request', message: 'actorIdentifier is required' };
+        }
+
+        const actor = await this.findActorByIdentifier(ctx, actorIdentifier);
+        if (!actor) {
+          ctx.meta.$statusCode = 404;
+          return { error: 'not_found', message: `Actor not found: ${actorIdentifier}` };
+        }
+
+        const sharingState = await this.getMutedCollectionSharingState(ctx, actor);
+        if (!sharingState.public || !sharingState.followersCollectionUri) {
+          ctx.meta.$statusCode = 200;
+          return { items: [], public: false, followersCollection: null };
+        }
+
+        let collection;
+        try {
+          collection = await this.getCollectionByUri(ctx, sharingState.followersCollectionUri);
+        } catch (err) {
+          this.logger.error('[FollowersSyncApi] getMutedFollowersCollection: failed to fetch collection', {
+            actorIdentifier,
+            followersCollectionUri: sharingState.followersCollectionUri,
+            error: err.message
+          });
+          ctx.meta.$statusCode = 500;
+          return { error: 'internal_error', message: 'Failed to fetch muted followers collection' };
+        }
+
+        const items = this.extractCollectionActorUris(collection);
+
+        this.logger.debug('[FollowersSyncApi] getMutedFollowersCollection', {
+          actorIdentifier,
+          itemCount: items.length
+        });
+
+        ctx.meta.$statusCode = 200;
+        return {
+          items,
+          public: true,
+          followersCollection: sharingState.followersCollectionUri
+        };
       }
     }
   },
@@ -452,6 +692,303 @@ module.exports = {
       } catch {
         return null;
       }
+    },
+
+    resolveBlockedCollectionUriFromActor(actor) {
+      if (!actor || typeof actor !== 'object') return null;
+      return actor.blocked || actor['bl:blocked'] || actor[BLOCKED_PREDICATE] || null;
+    },
+
+    resolveBlocksCollectionUriFromActor(actor) {
+      if (!actor || typeof actor !== 'object') return null;
+      return actor.blocks || actor['bl:blocks'] || actor[BLOCKS_PREDICATE] || null;
+    },
+
+    resolveMutedCollectionUriFromActor(actor) {
+      if (!actor || typeof actor !== 'object') return null;
+      return actor.muted || actor['apods:muted'] || actor[MUTED_PREDICATE] || null;
+    },
+
+    async getCollectionByUri(ctx, resourceUri) {
+      return ctx.call('activitypub.collection.get', {
+        resourceUri,
+        webId: 'system'
+      });
+    },
+    async getBlockedCollectionSharingState(ctx, actor) {
+      const actorUri = actor?.id || actor?.['@id'];
+      if (typeof actorUri !== 'string' || actorUri.length === 0) {
+        return {
+          public: false,
+          followersCollectionUri: null
+        };
+      }
+
+      try {
+        const state = await ctx.call('activitypub.blocked.getBlockedCollectionSharingState', {
+          actorUri
+        });
+
+        return {
+          public: state?.public === true,
+          followersCollectionUri: state?.followersCollectionUri || null
+        };
+      } catch (err) {
+        this.logger.warn('[FollowersSyncApi] failed to resolve blocked collection sharing state', {
+          actorUri,
+          error: err.message
+        });
+        return {
+          public: false,
+          followersCollectionUri: null
+        };
+      }
+    },
+    async getMutedCollectionSharingState(ctx, actor) {
+      const actorUri = actor?.id || actor?.['@id'];
+      if (typeof actorUri !== 'string' || actorUri.length === 0) {
+        return {
+          public: false,
+          followersCollectionUri: null
+        };
+      }
+
+      try {
+        const state = await ctx.call('activitypub.muted.getMutedCollectionSharingState', {
+          actorUri
+        });
+
+        return {
+          public: state?.public === true,
+          followersCollectionUri: state?.followersCollectionUri || null
+        };
+      } catch (err) {
+        this.logger.warn('[FollowersSyncApi] failed to resolve muted collection sharing state', {
+          actorUri,
+          error: err.message
+        });
+        return {
+          public: false,
+          followersCollectionUri: null
+        };
+      }
+    },
+
+    getCollectionItems(collection) {
+      if (!collection || typeof collection !== 'object') return [];
+      const items = collection.orderedItems || collection.items || [];
+      return Array.isArray(items) ? items : [];
+    },
+    extractCollectionActorUris(collection) {
+      const rawItems = this.getCollectionItems(collection);
+      const items = [];
+      const seen = new Set();
+
+      for (const item of rawItems) {
+        const actorUri =
+          typeof item === 'string'
+            ? item
+            : item?.id || item?.['@id'] || null;
+
+        if (typeof actorUri !== 'string' || seen.has(actorUri)) continue;
+
+        seen.add(actorUri);
+        items.push(actorUri);
+      }
+
+      return items;
+    },
+
+    extractBlockedActorUris(collection) {
+      const rawItems = this.getCollectionItems(collection);
+      const items = [];
+      const seen = new Set();
+
+      for (const item of rawItems) {
+        const actorUri = this.extractBlockObjectUri(item);
+        if (!actorUri || seen.has(actorUri)) continue;
+
+        seen.add(actorUri);
+        items.push(actorUri);
+      }
+
+      return items;
+    },
+
+    extractBlockActivities(collection) {
+      const rawItems = this.getCollectionItems(collection);
+      const items = [];
+      const seen = new Set();
+
+      for (const item of rawItems) {
+        const normalized = this.normalizeBlockActivity(item);
+        if (!normalized || seen.has(normalized.id)) continue;
+
+        seen.add(normalized.id);
+        items.push(normalized);
+      }
+
+      return items;
+    },
+
+    extractBlockObjectUri(item) {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+
+      const obj = item.object;
+      if (typeof obj === 'string') {
+        return obj;
+      }
+
+      if (obj && typeof obj === 'object') {
+        if (typeof obj.id === 'string') return obj.id;
+        if (typeof obj['@id'] === 'string') return obj['@id'];
+      }
+
+      return null;
+    },
+
+    normalizeBlockObject(value) {
+      if (typeof value === 'string') {
+        return value;
+      }
+
+      if (!value || typeof value !== 'object') {
+        return null;
+      }
+
+      const id = value.id || value['@id'];
+      if (typeof id !== 'string') {
+        return null;
+      }
+
+      const normalized = { id };
+      const type = value.type || value['@type'];
+      if (typeof type === 'string' || Array.isArray(type)) {
+        normalized.type = type;
+      }
+      if (typeof value.name === 'string') {
+        normalized.name = value.name;
+      }
+
+      return normalized;
+    },
+
+    normalizeBlockActivity(item) {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+
+      const id = item.id || item['@id'];
+      if (typeof id !== 'string') {
+        return null;
+      }
+
+      const type = item.type || item['@type'] || 'Block';
+      const includesBlock = Array.isArray(type) ? type.includes('Block') : type === 'Block';
+      if (!includesBlock) {
+        return null;
+      }
+
+      const object = this.normalizeBlockObject(item.object);
+      if (!object) {
+        return null;
+      }
+
+      const normalized = { id, type, object };
+      if (typeof item.published === 'string') {
+        normalized.published = item.published;
+      }
+
+      return normalized;
+    },
+    base(webId) {
+      const url = new URL(webId);
+      url.hash = '';
+      let baseUri = url.toString();
+      if (!baseUri.endsWith('/')) {
+        baseUri += '/';
+      }
+      return baseUri;
+    },
+    dataContainer(webId) {
+      return `${this.base(webId)}data/`;
+    },
+    async queryMuteSubjectRows(ctx, actorUri) {
+      if (typeof actorUri !== 'string' || actorUri.length === 0) {
+        return [];
+      }
+
+      const dataset = getDatasetFromUri(actorUri);
+      const dataBase = this.dataContainer(actorUri);
+
+      try {
+        const rows = await ctx.call('triplestore.query', {
+          query: sanitizeSparqlQuery`
+            SELECT DISTINCT ?resource ?subjectCanonicalId ?subjectProtocol ?createdAt ?updatedAt
+            WHERE {
+              ?resource a <${MUTE_RESOURCE_CLASS_URI}> .
+              FILTER(STRSTARTS(STR(?resource), "${dataBase}"))
+              OPTIONAL { ?resource <${APODS_SUBJECT_CANONICAL_ID}> ?subjectCanonicalId . }
+              OPTIONAL { ?resource <${APODS_SUBJECT_PROTOCOL}> ?subjectProtocol . }
+              OPTIONAL { ?resource <${DCTERMS_CREATED}> ?createdAt . }
+              OPTIONAL { ?resource <${DCTERMS_MODIFIED}> ?updatedAt . }
+            }
+            ORDER BY DESC(?createdAt) DESC(?updatedAt) DESC(?resource)
+          `,
+          dataset,
+          webId: 'system'
+        });
+
+        return Array.isArray(rows) ? rows : [];
+      } catch (err) {
+        this.logger.error('[FollowersSyncApi] failed to query mute subject rows', {
+          actorUri,
+          error: err.message
+        });
+        return [];
+      }
+    },
+    isAbsoluteUri(value) {
+      return typeof value === 'string' && /^[a-z][a-z0-9+.-]*:/i.test(value.trim());
+    },
+    normalizeMutedSubjects(rows) {
+      const items = [];
+      const seen = new Set();
+
+      for (const row of rows) {
+        const subjectCanonicalId = String(row?.subjectCanonicalId?.value || '').trim();
+        const subjectProtocol = String(row?.subjectProtocol?.value || '').trim().toLowerCase();
+        if (!subjectCanonicalId || !subjectProtocol) {
+          continue;
+        }
+
+        const key = `${subjectProtocol}\u0000${subjectCanonicalId.toLowerCase()}`;
+        if (seen.has(key)) {
+          continue;
+        }
+        seen.add(key);
+
+        const normalized = {
+          type: 'Object',
+          subjectCanonicalId,
+          subjectProtocol
+        };
+
+        if (this.isAbsoluteUri(subjectCanonicalId)) {
+          normalized.id = subjectCanonicalId;
+        }
+
+        const published = String(row?.createdAt?.value || row?.updatedAt?.value || '').trim();
+        if (published) {
+          normalized.published = published;
+        }
+
+        items.push(normalized);
+      }
+
+      return items;
     },
 
     // -------------------------------------------------------------------------

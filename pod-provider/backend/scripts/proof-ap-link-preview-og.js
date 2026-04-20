@@ -230,7 +230,11 @@ async function run() {
 
       const attachment = buildLinkPreviewAttachment(og);
       assert.strictEqual(attachment.authorName, 'Alice Example', 'attachment keeps authorName');
-      assert.strictEqual(attachment.authorUrl, `http://127.0.0.1:${server.address().port}/@alice`, 'attachment keeps authorUrl');
+      assert.strictEqual(
+        attachment.authorUrl,
+        `http://127.0.0.1:${server.address().port}/@alice`,
+        'attachment keeps authorUrl'
+      );
       assert.ok(Array.isArray(attachment.authors) && attachment.authors.length === 1, 'attachment keeps authors array');
 
       console.log('  [ok] fetchOpenGraph author attribution + Link attachment preservation');
@@ -252,7 +256,11 @@ async function run() {
         href: 'https://example.com/attached-link'
       }
     };
-    assert.strictEqual(extractFirstPreviewUrl(note0), 'https://example.com/attached-link', 'explicit Link attachment wins');
+    assert.strictEqual(
+      extractFirstPreviewUrl(note0),
+      'https://example.com/attached-link',
+      'explicit Link attachment wins'
+    );
 
     // From source.content plain text
     const note1 = {
@@ -379,7 +387,11 @@ async function run() {
     assert.strictEqual(attachment.type, 'Link', 'attachment type is Link');
     assert.strictEqual(attachment.href, 'https://example.com/page', 'attachment href');
     assert.strictEqual(attachment.name, 'Page', 'attachment name');
-    assert.deepStrictEqual(attachment.preview, { type: 'Article', name: 'Page', summary: 'Desc.' }, 'attachment preview');
+    assert.deepStrictEqual(
+      attachment.preview,
+      { type: 'Article', name: 'Page', summary: 'Desc.' },
+      'attachment preview'
+    );
 
     // No double-add
     const enrichedAgain = enrichNoteWithLinkPreview(enriched, ogData);

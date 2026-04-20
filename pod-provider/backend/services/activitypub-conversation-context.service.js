@@ -362,11 +362,7 @@ module.exports = {
             {
               resourceUri: contextCollectionUri,
               triplesToAdd: [
-                triple(
-                  namedNode(contextCollectionUri),
-                  namedNode(AS_ATTRIBUTED_TO_PREDICATE),
-                  namedNode(actorUri)
-                )
+                triple(namedNode(contextCollectionUri), namedNode(AS_ATTRIBUTED_TO_PREDICATE), namedNode(actorUri))
               ],
               webId: 'system'
             },
@@ -391,11 +387,7 @@ module.exports = {
       await retryWithBackoff(
         async () => {
           const alreadyPresent = await ctx
-            .call(
-              'activitypub.collection.includes',
-              { collectionUri, itemUri },
-              { meta: { webId: actorUri, dataset } }
-            )
+            .call('activitypub.collection.includes', { collectionUri, itemUri }, { meta: { webId: actorUri, dataset } })
             .catch(() => false);
 
           if (alreadyPresent) return;

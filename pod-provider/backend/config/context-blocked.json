@@ -4,6 +4,18 @@
     "blocked": {
       "@id": "bl:blocked",
       "@type": "@id"
+    },
+    "blocks": {
+      "@id": "bl:blocks",
+      "@type": "@id"
+    },
+    "blockedOf": {
+      "@id": "https://www.w3.org/ns/activitystreams#blockedOf",
+      "@type": "@id"
+    },
+    "blocksOf": {
+      "@id": "https://www.w3.org/ns/activitystreams#blocksOf",
+      "@type": "@id"
     }
   }
 }

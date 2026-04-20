@@ -4,7 +4,22 @@ const sanitizeHtml = require('sanitize-html');
 const { getAttributionDomains, isAuthorizedAttributionDomain } = require('./author-attribution');
 const { sanitizeLongFormContent } = require('./long-form-text');
 
-const SUMMARY_ALLOWED_TAGS = ['p', 'span', 'br', 'a', 'em', 'strong', 'b', 'i', 'u', 'ul', 'ol', 'li', 'blockquote', 'code'];
+const SUMMARY_ALLOWED_TAGS = [
+  'p',
+  'span',
+  'br',
+  'a',
+  'em',
+  'strong',
+  'b',
+  'i',
+  'u',
+  'ul',
+  'ol',
+  'li',
+  'blockquote',
+  'code'
+];
 const SUMMARY_ALLOWED_ATTRIBUTES = {
   span: ['class'],
   a: ['href', 'rel', 'class'],
@@ -267,7 +282,9 @@ const renderArticleShareHtml = ({ shareUrl, objectUri, article, actor, instanceN
 
   const summaryHtml = sanitizeSummaryHtml(normalizedArticle.summary);
   const previewHtml = sanitizeSummaryHtml(asRecord(normalizedArticle.preview)?.content);
-  const bodyHtml = sanitizeLongFormContent(typeof normalizedArticle.content === 'string' ? normalizedArticle.content : '');
+  const bodyHtml = sanitizeLongFormContent(
+    typeof normalizedArticle.content === 'string' ? normalizedArticle.content : ''
+  );
   const description =
     stripHtml(normalizedArticle.summary) ||
     stripHtml(asRecord(normalizedArticle.preview)?.content) ||
@@ -287,8 +304,7 @@ const renderArticleShareHtml = ({ shareUrl, objectUri, article, actor, instanceN
 
   const fediverseCreator = buildFediverseCreatorHandle(normalizedActor);
   const emitFediverseCreator =
-    fediverseCreator &&
-    isAuthorizedAttributionDomain(shareLocation.hostname, getAttributionDomains(normalizedActor));
+    fediverseCreator && isAuthorizedAttributionDomain(shareLocation.hostname, getAttributionDomains(normalizedActor));
 
   const siteName = stripHtml(instanceName) || shareLocation.hostname;
   const published = formatIsoDate(normalizedArticle.published);

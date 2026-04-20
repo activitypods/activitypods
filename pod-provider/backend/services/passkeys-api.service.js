@@ -107,7 +107,11 @@ module.exports = {
       const ticket = this.readTicket(ctx.params.ticket, 'registration');
 
       if (ticket.webId !== webId) {
-        throw new MoleculerError('Passkey ticket does not match the authenticated user', 400, 'PASSKEY_TICKET_MISMATCH');
+        throw new MoleculerError(
+          'Passkey ticket does not match the authenticated user',
+          400,
+          'PASSKEY_TICKET_MISMATCH'
+        );
       }
 
       let verification;
@@ -421,7 +425,12 @@ module.exports = {
 
     normalizeCredentialId(response) {
       const credentialId = response?.id || response?.rawId;
-      if (!credentialId || typeof credentialId !== 'string' || credentialId.length > 2048 || !/^[A-Za-z0-9_-]+$/.test(credentialId)) {
+      if (
+        !credentialId ||
+        typeof credentialId !== 'string' ||
+        credentialId.length > 2048 ||
+        !/^[A-Za-z0-9_-]+$/.test(credentialId)
+      ) {
         throw new MoleculerError('Missing credential ID', 400, 'PASSKEY_CREDENTIAL_ID_MISSING');
       }
       return credentialId;
@@ -463,7 +472,8 @@ module.exports = {
         `  apods:createdAt ${this.sparqlLiteral(record.createdAt)}`
       ];
 
-      if (record.deviceType) triples.splice(triples.length - 1, 0, `  apods:deviceType ${this.sparqlLiteral(record.deviceType)} ;`);
+      if (record.deviceType)
+        triples.splice(triples.length - 1, 0, `  apods:deviceType ${this.sparqlLiteral(record.deviceType)} ;`);
       if (record.backedUp !== null) {
         triples.splice(triples.length - 1, 0, `  apods:backedUp ${this.sparqlLiteral(record.backedUp)} ;`);
       }
@@ -503,18 +513,24 @@ ${triples.join('\n')}
     },
 
     async getCredentialByCredentialId(ctx, credentialId) {
-      const records = await this.queryCredentials(ctx, sanitizeSparqlQuery`
+      const records = await this.queryCredentials(
+        ctx,
+        sanitizeSparqlQuery`
         ?credential a apods:PasskeyCredential .
         ?credential apods:credentialId ${this.sparqlLiteral(credentialId)} .
-      `);
+      `
+      );
       return records[0] || null;
     },
 
     async listCredentialsByWebId(ctx, webId) {
-      return this.queryCredentials(ctx, sanitizeSparqlQuery`
+      return this.queryCredentials(
+        ctx,
+        sanitizeSparqlQuery`
         ?credential a apods:PasskeyCredential .
         ?credential apods:webId ${this.sparqlLiteral(webId)} .
-      `);
+      `
+      );
     },
 
     async queryCredentials(ctx, whereClause) {
@@ -593,27 +609,21 @@ ${triples.join('\n')}
     },
 
     async triplestoreQueryWithBackoff(ctx, payload) {
-      return retryWithBackoff(
-        () => ctx.call('triplestore.query', payload),
-        {
-          maxRetries: 3,
-          baseDelayMs: 60,
-          maxDelayMs: 1200,
-          retryIf: err => this.triplestoreRetryPolicy(err)
-        }
-      );
+      return retryWithBackoff(() => ctx.call('triplestore.query', payload), {
+        maxRetries: 3,
+        baseDelayMs: 60,
+        maxDelayMs: 1200,
+        retryIf: err => this.triplestoreRetryPolicy(err)
+      });
     },
 
     async triplestoreUpdateWithBackoff(ctx, payload) {
-      return retryWithBackoff(
-        () => ctx.call('triplestore.update', payload),
-        {
-          maxRetries: 3,
-          baseDelayMs: 60,
-          maxDelayMs: 1200,
-          retryIf: err => this.triplestoreRetryPolicy(err)
-        }
-      );
+      return retryWithBackoff(() => ctx.call('triplestore.update', payload), {
+        maxRetries: 3,
+        baseDelayMs: 60,
+        maxDelayMs: 1200,
+        retryIf: err => this.triplestoreRetryPolicy(err)
+      });
     }
   }
 };

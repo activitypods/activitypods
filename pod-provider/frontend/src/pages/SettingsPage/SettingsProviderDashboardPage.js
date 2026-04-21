@@ -56,7 +56,8 @@ const SettingsProviderDashboardPage = () => {
         Pod provider dashboard
       </Typography>
       <Typography variant="body2" sx={{ mt: 1, mb: 2 }}>
-        Manage moderation, trust sources, provider-level federation controls, announcements, and invitations.
+        Manage moderation, blocked-image policy, trust sources, provider-level federation controls, announcements, and
+        invitations.
       </Typography>
 
       {/* Stats summary */}

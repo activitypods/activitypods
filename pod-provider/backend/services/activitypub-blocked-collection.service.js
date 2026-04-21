@@ -40,12 +40,14 @@ function literal(value, datatype) {
     language: '',
     datatype,
     equals(other) {
-      return Boolean(other)
-        && other.termType === 'Literal'
-        && other.value === value
-        && other.language === ''
-        && Boolean(other.datatype)
-        && other.datatype.value === datatype.value;
+      return (
+        Boolean(other) &&
+        other.termType === 'Literal' &&
+        other.value === value &&
+        other.language === '' &&
+        Boolean(other.datatype) &&
+        other.datatype.value === datatype.value
+      );
     }
   };
 }
@@ -58,12 +60,14 @@ function quad(subject, predicate, object, graph = DEFAULT_GRAPH) {
     object,
     graph,
     equals(other) {
-      return Boolean(other)
-        && other.termType === 'Quad'
-        && subject.equals(other.subject)
-        && predicate.equals(other.predicate)
-        && object.equals(other.object)
-        && graph.equals(other.graph);
+      return (
+        Boolean(other) &&
+        other.termType === 'Quad' &&
+        subject.equals(other.subject) &&
+        predicate.equals(other.predicate) &&
+        object.equals(other.object) &&
+        graph.equals(other.graph)
+      );
     }
   };
 }
@@ -117,7 +121,14 @@ module.exports = {
     const accounts = await this.broker.call('auth.account.find');
     for (const account of accounts) {
       if (!account?.webId) continue;
-      await this.ensureCollectionsForActor(this.broker, account.webId);
+      try {
+        await this.ensureCollectionsForActor(this.broker, account.webId);
+      } catch (error) {
+        this.logger.warn('[activitypub.blocked] blocked collection bootstrap skipped for actor', {
+          actorUri: account.webId,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
     }
 
     this.patchDefaultFollowProcessors();
@@ -223,7 +234,11 @@ module.exports = {
         const followerUri = this.extractActorUri(activity.actor);
         if (!followerUri) return;
 
-        const followersCollectionUri = await this.ensureBlockedFollowersCollection(ctx, targetCollectionUri, ownerActorUri);
+        const followersCollectionUri = await this.ensureBlockedFollowersCollection(
+          ctx,
+          targetCollectionUri,
+          ownerActorUri
+        );
         await ctx.call('activitypub.collection.add', {
           collectionUri: followersCollectionUri,
           item: followerUri
@@ -266,7 +281,8 @@ module.exports = {
 
         const state = await this.getBlockedCollectionSharingStateByCollectionUri(ctx, targetCollectionUri);
         const followersCollectionUri =
-          state.followersCollectionUri || `${targetCollectionUri}${this.settings.blockedFollowersCollectionOptions.path}`;
+          state.followersCollectionUri ||
+          `${targetCollectionUri}${this.settings.blockedFollowersCollectionOptions.path}`;
 
         const followerUri = this.extractActorUri(followActivity?.actor) || this.extractActorUri(activity.actor);
         if (!followerUri) return;
@@ -420,9 +436,10 @@ module.exports = {
 
         const originalMatcher = processor.matcher;
         processor.matcher = async (activity, fetcher) => {
-          const targetCollectionUri = processor.key === 'undoFollow'
-            ? this.extractFollowTargetCollectionUri(await this.resolveUndoFollowObject(activity, fetcher))
-            : this.extractFollowTargetCollectionUri(activity);
+          const targetCollectionUri =
+            processor.key === 'undoFollow'
+              ? this.extractFollowTargetCollectionUri(await this.resolveUndoFollowObject(activity, fetcher))
+              : this.extractFollowTargetCollectionUri(activity);
 
           if (this.isBlockedCollectionUri(targetCollectionUri)) {
             return {
@@ -499,7 +516,8 @@ module.exports = {
     async ensureBlockedFollowersCollection(ctx, blockedCollectionUri, actorUri) {
       const existingState = await this.getBlockedCollectionSharingStateByCollectionUri(ctx, blockedCollectionUri);
       const followersCollectionUri =
-        existingState.followersCollectionUri || `${blockedCollectionUri}${this.settings.blockedFollowersCollectionOptions.path}`;
+        existingState.followersCollectionUri ||
+        `${blockedCollectionUri}${this.settings.blockedFollowersCollectionOptions.path}`;
 
       const exists = await ctx.call('activitypub.collection.exist', {
         resourceUri: followersCollectionUri,
@@ -586,15 +604,11 @@ module.exports = {
         ];
       }
 
-      await ctx.call(
-        'ldp.resource.patch',
-        patch,
-        {
-          meta: {
-            skipObjectsWatcher: true
-          }
+      await ctx.call('ldp.resource.patch', patch, {
+        meta: {
+          skipObjectsWatcher: true
         }
-      );
+      });
     },
     async ensurePublicReadOnBlockedCollection(ctx, blockedCollectionUri, actorUri, isPublic) {
       if (isPublic) {

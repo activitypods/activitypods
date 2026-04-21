@@ -82,11 +82,7 @@ describe('viewership-history-api', () => {
     const ctx = {
       params: {
         actorId: 'https://example.com/users/alice',
-        objectIds: [
-          'https://example.com/objects/1',
-          'https://example.com/objects/1',
-          'https://example.com/objects/2'
-        ],
+        objectIds: ['https://example.com/objects/1', 'https://example.com/objects/1', 'https://example.com/objects/2'],
         viewedAt: '2026-04-19T00:00:00.000Z'
       },
       meta: {}
@@ -121,11 +117,7 @@ describe('viewership-history-api', () => {
     const ctx = {
       params: {
         actorId: 'https://example.com/users/alice',
-        objectIds: [
-          'https://example.com/objects/1',
-          'https://example.com/objects/2',
-          'https://example.com/objects/3'
-        ]
+        objectIds: ['https://example.com/objects/1', 'https://example.com/objects/2', 'https://example.com/objects/3']
       },
       meta: {}
     };
@@ -134,10 +126,7 @@ describe('viewership-history-api', () => {
 
     expect(result).toEqual({
       actorId: 'https://example.com/users/alice',
-      viewedObjectIds: [
-        'https://example.com/objects/1',
-        'https://example.com/objects/3'
-      ],
+      viewedObjectIds: ['https://example.com/objects/1', 'https://example.com/objects/3'],
       count: 2
     });
   });

@@ -124,14 +124,6 @@ main() {
     exit 1
   fi
 
-  ensure_colima
-
-  log "starting ActivityPods compose dependencies"
-  docker compose -f "$AP_ROOT/pod-provider/docker-compose.yml" up -d
-
-  log "starting federation compose dependencies"
-  docker compose -f "$FEDIFY_ROOT/docker-compose.yml" up -d opensearch opensearch-dashboards redpanda redpanda-console prometheus grafana
-
   if [ ! -f "$FEDIFY_ROOT/.env.local" ] && [ -f "$FEDIFY_ROOT/.env.local.example" ]; then
     log "creating $FEDIFY_ROOT/.env.local from template"
     cp "$FEDIFY_ROOT/.env.local.example" "$FEDIFY_ROOT/.env.local"
@@ -139,6 +131,23 @@ main() {
 
   load_env_file "$FEDIFY_ROOT/.env.local"
   load_env_file "$AP_ROOT/pod-provider/backend/.env"
+
+  : "${PDQ_HASH_SERVICE_PORT:=7070}"
+  : "${PDQ_HASH_SERVICE_BASE_URL:=http://localhost:${PDQ_HASH_SERVICE_PORT}}"
+  : "${PDQ_HASH_SERVICE_BEARER_TOKEN:=}"
+  : "${PDQ_HASH_REDIS_URI:=redis://host.docker.internal:6379}"
+  export PDQ_HASH_SERVICE_PORT
+  export PDQ_HASH_SERVICE_BASE_URL
+  export PDQ_HASH_SERVICE_BEARER_TOKEN
+  export PDQ_HASH_REDIS_URI
+
+  ensure_colima
+
+  log "starting ActivityPods compose dependencies"
+  docker compose -f "$AP_ROOT/pod-provider/docker-compose.yml" up -d
+
+  log "starting federation compose dependencies"
+  docker compose -f "$FEDIFY_ROOT/docker-compose.yml" up -d pdq-hash opensearch opensearch-dashboards redpanda redpanda-console prometheus grafana
 
   : "${ACTIVITYPODS_URL:=http://localhost:3000}"
   ACTIVITYPODS_URL=$(printf '%s' "$ACTIVITYPODS_URL" | sed 's#/*$##')
@@ -191,7 +200,6 @@ main() {
   export ENABLE_AT_JETSTREAM
   export ENABLE_FEDIFY_RUNTIME_INTEGRATION
   export OPENSEARCH_URL
-
   log "bootstrapping RedPanda topics"
   npm --prefix "$FEDIFY_ROOT" run topics:bootstrap
 
@@ -213,6 +221,7 @@ main() {
   log "backend:        ${ACTIVITYPODS_URL}"
   log "fedify sidecar: http://localhost:8080/health"
   log "media sidecar:  http://localhost:${MEDIA_PIPELINE_PORT}/health"
+  log "pdq hash:       ${PDQ_HASH_SERVICE_BASE_URL}"
 }
 
 main "$@"

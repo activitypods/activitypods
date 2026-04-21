@@ -57,12 +57,10 @@ type SharingState = {
 
 type ListDraftState = Record<ListKind, { subject: string; protocol: SubjectProtocol; search: string }>;
 
-type PendingVisibilityAction =
-  | {
-      kind: ListKind;
-      nextPublic: boolean;
-    }
-  | null;
+type PendingVisibilityAction = {
+  kind: ListKind;
+  nextPublic: boolean;
+} | null;
 
 const PROTOCOL_OPTIONS: Array<{ value: SubjectProtocol; label: string }> = [
   { value: 'ap', label: 'ActivityPub' },
@@ -359,7 +357,9 @@ const ModerationListsPage = () => {
                   variant="outlined"
                   size="small"
                 />
-                {protocolCounts.ap > 0 && <Chip label={`${protocolCounts.ap} ActivityPub`} size="small" variant="outlined" />}
+                {protocolCounts.ap > 0 && (
+                  <Chip label={`${protocolCounts.ap} ActivityPub`} size="small" variant="outlined" />
+                )}
                 {protocolCounts.atproto > 0 && (
                   <Chip label={`${protocolCounts.atproto} ATProto`} size="small" variant="outlined" />
                 )}
@@ -367,7 +367,10 @@ const ModerationListsPage = () => {
               <Typography variant="body2" color="text.secondary" mb={1}>
                 {meta.description}
               </Typography>
-              <Alert severity={sharingState?.public ? (kind === 'blocks' ? 'warning' : 'success') : 'info'} sx={{ mt: 2 }}>
+              <Alert
+                severity={sharingState?.public ? (kind === 'blocks' ? 'warning' : 'success') : 'info'}
+                sx={{ mt: 2 }}
+              >
                 {sharingState?.public ? meta.publicNotice : meta.privateNotice}
               </Alert>
             </Box>
@@ -450,7 +453,8 @@ const ModerationListsPage = () => {
             Manage members
           </Typography>
           <Typography variant="body2" color="text.secondary" mb={2}>
-            This mirrors Bluesky’s list-first flow: add people directly to the list, then review or remove them from one place.
+            This mirrors Bluesky’s list-first flow: add people directly to the list, then review or remove them from one
+            place.
           </Typography>
 
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} mb={2}>
@@ -584,8 +588,8 @@ const ModerationListsPage = () => {
             Moderation Lists
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            A Bluesky-style, list-first view for your muted and blocked accounts. These lists are still pod-wide settings
-            shared with compatible apps.
+            A Bluesky-style, list-first view for your muted and blocked accounts. These lists are still pod-wide
+            settings shared with compatible apps.
           </Typography>
         </Box>
         <Button variant="outlined" startIcon={<SettingsIcon />} onClick={() => navigate('/settings/moderation/rules')}>
@@ -615,7 +619,12 @@ const ModerationListsPage = () => {
         </Box>
       </Paper>
 
-      <Dialog open={pendingVisibilityAction !== null} onClose={() => setPendingVisibilityAction(null)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={pendingVisibilityAction !== null}
+        onClose={() => setPendingVisibilityAction(null)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
           {pendingVisibilityAction?.nextPublic
             ? `Make ${dialogMeta.title.toLowerCase()} public?`

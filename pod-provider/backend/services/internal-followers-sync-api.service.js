@@ -785,10 +785,7 @@ module.exports = {
       const seen = new Set();
 
       for (const item of rawItems) {
-        const actorUri =
-          typeof item === 'string'
-            ? item
-            : item?.id || item?.['@id'] || null;
+        const actorUri = typeof item === 'string' ? item : item?.id || item?.['@id'] || null;
 
         if (typeof actorUri !== 'string' || seen.has(actorUri)) continue;
 
@@ -959,7 +956,9 @@ module.exports = {
 
       for (const row of rows) {
         const subjectCanonicalId = String(row?.subjectCanonicalId?.value || '').trim();
-        const subjectProtocol = String(row?.subjectProtocol?.value || '').trim().toLowerCase();
+        const subjectProtocol = String(row?.subjectProtocol?.value || '')
+          .trim()
+          .toLowerCase();
         if (!subjectCanonicalId || !subjectProtocol) {
           continue;
         }

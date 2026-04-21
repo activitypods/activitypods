@@ -35,7 +35,14 @@ import {
 } from '@mui/material';
 import { dashboardApi } from './dashboardApi';
 
-type TrustSourceType = 'relay' | 'curator' | 'list' | 'algorithmic' | 'atproto-labeler' | 'domain-blocklist';
+type TrustSourceType =
+  | 'relay'
+  | 'curator'
+  | 'list'
+  | 'algorithmic'
+  | 'atproto-labeler'
+  | 'domain-blocklist'
+  | 'fediseer';
 type TrustScope = 'filter:content' | 'filter:actor' | 'label:content' | 'label:actor' | 'rank:down' | 'rank:up';
 type MRFMode = 'disabled' | 'dry-run' | 'enforce';
 
@@ -64,7 +71,8 @@ const SOURCE_TYPES: TrustSourceType[] = [
   'list',
   'algorithmic',
   'atproto-labeler',
-  'domain-blocklist'
+  'domain-blocklist',
+  'fediseer'
 ];
 
 const TRUST_SCOPES: TrustScope[] = [
@@ -91,7 +99,8 @@ const SOURCE_TYPE_LABELS: Record<TrustSourceType, string> = {
   list: 'List',
   algorithmic: 'Algorithmic',
   'atproto-labeler': 'ATProto Labeler',
-  'domain-blocklist': 'Domain Blocklist'
+  'domain-blocklist': 'Domain Blocklist',
+  fediseer: 'Fediseer'
 };
 
 const MODE_LABELS: Record<MRFMode, string> = {
@@ -547,6 +556,8 @@ const TrustSourcesPage = () => {
       ? 'ATProto labeler DID or declaration URL'
       : sourceType === 'domain-blocklist'
         ? 'Domain, wildcard domain, or blocklist URL'
+        : sourceType === 'fediseer'
+          ? 'Fediseer issuer domain or instance URL'
         : 'Source URL';
 
   return (
@@ -556,7 +567,8 @@ const TrustSourcesPage = () => {
           Trust Sources
         </Typography>
         <Typography variant="body2" color="text.secondary" mb={2}>
-          Manage external moderation and ranking signals, including ATProto labelers and domain blocklists.
+          Manage external moderation and ranking signals, including ATProto labelers, Fediseer issuers, and domain
+          blocklists.
         </Typography>
 
         <Box
@@ -729,7 +741,17 @@ const TrustSourcesPage = () => {
               <Typography variant="body2" color="text.secondary" mb={1}>
                 Source type
               </Typography>
-              <Select size="small" value={sourceType} onChange={e => setSourceType(e.target.value as TrustSourceType)}>
+              <Select
+                size="small"
+                value={sourceType}
+                onChange={e => {
+                  const nextType = e.target.value as TrustSourceType;
+                  setSourceType(nextType);
+                  if (nextType === 'fediseer') {
+                    setSelectedScopes(new Set(['label:actor', 'filter:actor']));
+                  }
+                }}
+              >
                 {SOURCE_TYPES.map(type => (
                   <MenuItem key={type} value={type}>
                     {SOURCE_TYPE_LABELS[type]}
@@ -751,6 +773,8 @@ const TrustSourcesPage = () => {
                   ? 'did:plc:xxxx... or https://labeler.example/.well-known/did.json'
                   : sourceType === 'domain-blocklist'
                     ? 'example.org or *.example.org or https://example.org/blocklist.txt'
+                    : sourceType === 'fediseer'
+                      ? 'beehaw.org or https://beehaw.org'
                     : 'https://example.org/moderation/list'
               }
               fullWidth
@@ -762,7 +786,12 @@ const TrustSourcesPage = () => {
                         <IconButton
                           size="small"
                           onClick={handleFetchPreview}
-                          disabled={source.trim().length === 0 || previewLoading || sourceType === 'domain-blocklist'}
+                          disabled={
+                            source.trim().length === 0 ||
+                            previewLoading ||
+                            sourceType === 'domain-blocklist' ||
+                            sourceType === 'fediseer'
+                          }
                         >
                           {previewLoading ? <CircularProgress size={16} /> : <SearchIcon fontSize="small" />}
                         </IconButton>

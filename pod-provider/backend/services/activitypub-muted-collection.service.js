@@ -36,12 +36,14 @@ function literal(value, datatype) {
     language: '',
     datatype,
     equals(other) {
-      return Boolean(other)
-        && other.termType === 'Literal'
-        && other.value === value
-        && other.language === ''
-        && Boolean(other.datatype)
-        && other.datatype.value === datatype.value;
+      return (
+        Boolean(other) &&
+        other.termType === 'Literal' &&
+        other.value === value &&
+        other.language === '' &&
+        Boolean(other.datatype) &&
+        other.datatype.value === datatype.value
+      );
     }
   };
 }
@@ -54,14 +56,34 @@ function quad(subject, predicate, object, graph = DEFAULT_GRAPH) {
     object,
     graph,
     equals(other) {
-      return Boolean(other)
-        && other.termType === 'Quad'
-        && subject.equals(other.subject)
-        && predicate.equals(other.predicate)
-        && object.equals(other.object)
-        && graph.equals(other.graph);
+      return (
+        Boolean(other) &&
+        other.termType === 'Quad' &&
+        subject.equals(other.subject) &&
+        predicate.equals(other.predicate) &&
+        object.equals(other.object) &&
+        graph.equals(other.graph)
+      );
     }
   };
+}
+
+function normalizeResourceUri(value) {
+  if (typeof value === 'string' && value.trim()) {
+    return value.trim();
+  }
+
+  if (value && typeof value === 'object') {
+    if (typeof value.id === 'string' && value.id.trim()) {
+      return value.id.trim();
+    }
+
+    if (typeof value.value === 'string' && value.value.trim()) {
+      return value.value.trim();
+    }
+  }
+
+  return null;
 }
 
 module.exports = {
@@ -100,7 +122,14 @@ module.exports = {
     const accounts = await this.broker.call('auth.account.find');
     for (const account of accounts) {
       if (!account?.webId) continue;
-      await this.ensureCollectionsForActor(this.broker, account.webId);
+      try {
+        await this.ensureCollectionsForActor(this.broker, account.webId);
+      } catch (error) {
+        this.logger.warn('[activitypub.muted] muted collection bootstrap skipped for actor', {
+          actorUri: account.webId,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
     }
 
     this.patchDefaultFollowProcessors();
@@ -154,7 +183,11 @@ module.exports = {
         const followerUri = this.extractActorUri(activity.actor);
         if (!followerUri) return;
 
-        const followersCollectionUri = await this.ensureMutedFollowersCollection(ctx, targetCollectionUri, ownerActorUri);
+        const followersCollectionUri = await this.ensureMutedFollowersCollection(
+          ctx,
+          targetCollectionUri,
+          ownerActorUri
+        );
         await ctx.call('activitypub.collection.add', {
           collectionUri: followersCollectionUri,
           item: followerUri
@@ -358,9 +391,10 @@ module.exports = {
 
         const originalMatcher = processor.matcher;
         processor.matcher = async (activity, fetcher) => {
-          const targetCollectionUri = processor.key === 'undoFollow'
-            ? this.extractFollowTargetCollectionUri(await this.resolveUndoFollowObject(activity, fetcher))
-            : this.extractFollowTargetCollectionUri(activity);
+          const targetCollectionUri =
+            processor.key === 'undoFollow'
+              ? this.extractFollowTargetCollectionUri(await this.resolveUndoFollowObject(activity, fetcher))
+              : this.extractFollowTargetCollectionUri(activity);
 
           if (this.isMutedCollectionUri(targetCollectionUri)) {
             return {
@@ -378,7 +412,12 @@ module.exports = {
       const actor = await ctx.call('activitypub.actor.get', { actorUri });
       if (!actor || typeof actor !== 'object') return null;
 
-      return actor.muted || actor['apods:muted'] || actor[MUTED_PREDICATE] || null;
+      return (
+        normalizeResourceUri(actor.muted) ||
+        normalizeResourceUri(actor['apods:muted']) ||
+        normalizeResourceUri(actor[MUTED_PREDICATE]) ||
+        null
+      );
     },
     async ensureCollectionsForActor(ctx, actorUri) {
       await ctx.call('activitypub.collections-registry.createAndAttachCollection', {
@@ -415,7 +454,8 @@ module.exports = {
     async ensureMutedFollowersCollection(ctx, mutedCollectionUri, actorUri) {
       const existingState = await this.getMutedCollectionSharingStateByCollectionUri(ctx, mutedCollectionUri);
       const followersCollectionUri =
-        existingState.followersCollectionUri || `${mutedCollectionUri}${this.settings.mutedFollowersCollectionOptions.path}`;
+        existingState.followersCollectionUri ||
+        `${mutedCollectionUri}${this.settings.mutedFollowersCollectionOptions.path}`;
 
       const exists = await ctx.call('activitypub.collection.exist', {
         resourceUri: followersCollectionUri,
@@ -491,9 +531,7 @@ module.exports = {
       const trueLiteral = literal('true', namedNode(XSD_BOOLEAN));
       const patch = {
         resourceUri: mutedCollectionUri,
-        triplesToRemove: [
-          quad(namedNode(mutedCollectionUri), namedNode(APODS_PUBLIC_MUTED_COLLECTION), trueLiteral)
-        ]
+        triplesToRemove: [quad(namedNode(mutedCollectionUri), namedNode(APODS_PUBLIC_MUTED_COLLECTION), trueLiteral)]
       };
 
       if (isPublic) {
@@ -502,20 +540,21 @@ module.exports = {
         ];
       }
 
-      await ctx.call(
-        'ldp.resource.patch',
-        patch,
-        {
-          meta: {
-            skipObjectsWatcher: true
-          }
+      await ctx.call('ldp.resource.patch', patch, {
+        meta: {
+          skipObjectsWatcher: true
         }
-      );
+      });
     },
     async ensurePublicReadOnMutedCollection(ctx, mutedCollectionUri, actorUri, isPublic) {
+      const collectionUri = normalizeResourceUri(mutedCollectionUri);
+      if (!collectionUri) {
+        return;
+      }
+
       if (isPublic) {
         await ctx.call('webacl.resource.addRights', {
-          resourceUri: mutedCollectionUri,
+          resourceUri: collectionUri,
           additionalRights: {
             anon: {
               read: true
@@ -527,7 +566,7 @@ module.exports = {
       }
 
       await ctx.call('webacl.resource.removeRights', {
-        resourceUri: mutedCollectionUri,
+        resourceUri: collectionUri,
         rights: {
           anon: {
             read: true
@@ -541,12 +580,21 @@ module.exports = {
       return this.getMutedCollectionSharingStateByCollectionUri(ctx, mutedCollectionUri);
     },
     async getMutedCollectionSharingStateByCollectionUri(ctx, mutedCollectionUri) {
+      const collectionUri = normalizeResourceUri(mutedCollectionUri);
+      if (!collectionUri) {
+        return {
+          collectionUri: null,
+          public: false,
+          followersCollectionUri: null
+        };
+      }
+
       const rows = await ctx.call('triplestore.query', {
         query: sanitizeSparqlQuery`
           SELECT ?public ?followersCollectionUri
           WHERE {
-            OPTIONAL { <${mutedCollectionUri}> <${APODS_PUBLIC_MUTED_COLLECTION}> ?public . }
-            OPTIONAL { <${mutedCollectionUri}> <${AS_FOLLOWERS_PREDICATE}> ?followersCollectionUri . }
+            OPTIONAL { <${collectionUri}> <${APODS_PUBLIC_MUTED_COLLECTION}> ?public . }
+            OPTIONAL { <${collectionUri}> <${AS_FOLLOWERS_PREDICATE}> ?followersCollectionUri . }
           }
         `,
         webId: 'system'
@@ -558,7 +606,7 @@ module.exports = {
       const followersCollectionUri = first?.followersCollectionUri?.value || null;
 
       return {
-        collectionUri: mutedCollectionUri,
+        collectionUri,
         public: publicFlag,
         followersCollectionUri
       };

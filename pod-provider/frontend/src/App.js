@@ -50,6 +50,7 @@ import ProviderAnnouncementsPage from './pages/SettingsPage/ProviderAnnouncement
 import ProviderInvitationsPage from './pages/SettingsPage/ProviderInvitationsPage';
 import ProviderPodsPage from './pages/SettingsPage/ProviderPodsPage';
 import ProviderAuditLogPage from './pages/SettingsPage/ProviderAuditLogPage';
+import ProviderCrossProtocolModerationPage from './pages/SettingsPage/ProviderCrossProtocolModerationPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -132,7 +133,7 @@ const App = () => (
             <Route path="provider/invitations" element={<ProviderInvitationsPage />} />
             <Route path="provider/pods" element={<ProviderPodsPage />} />
             <Route path="provider/audit-log" element={<ProviderAuditLogPage />} />
-            <Route path="provider/moderation" element={<MrfControlPage />} />
+            <Route path="provider/moderation" element={<ProviderCrossProtocolModerationPage />} />
           </Route>
           <Route path="/group/:groupId">
             <Route path="settings">

@@ -3,7 +3,7 @@
 const CURRENT_SCHEMA_VERSION = 1;
 
 const KNOWN_CONSENT_SCOPES = new Set(['read:moderation', 'write:moderation', 'app:overrides', 'read:trust']);
-const TRUST_SOURCE_TYPES = new Set(['relay', 'curator', 'list', 'algorithmic', 'atproto-labeler', 'domain-blocklist']);
+const TRUST_SOURCE_TYPES = new Set(['relay', 'curator', 'list', 'algorithmic', 'atproto-labeler', 'domain-blocklist', 'fediseer']);
 const TRUST_SOURCE_SCOPES = new Set([
   'filter:content',
   'filter:actor',
@@ -266,6 +266,10 @@ function validateTrustSource(data) {
   if (data.sourceType === 'atproto-labeler') {
     if (!isAtprotoDid(data.source) && !isHttpUrl(data.source)) {
       return 'ATProto labeler sources must be a DID or an http(s) declaration URL';
+    }
+  } else if (data.sourceType === 'fediseer') {
+    if (!isDomainPattern(data.source) && !isHttpUrl(data.source)) {
+      return 'Fediseer trust sources must be a fediverse domain or an http(s) URL';
     }
   } else if (data.sourceType === 'domain-blocklist') {
     if (!isDomainPattern(data.source) && !isHttpUrl(data.source)) {

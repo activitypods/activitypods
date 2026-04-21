@@ -71,10 +71,7 @@ describe('internal-followers-sync-api block collection projections', () => {
 
     expect(ctx.meta.$statusCode).toBe(200);
     expect(result).toEqual({
-      items: [
-        'https://remote.example/users/spammer',
-        'https://remote.example/users/noisy'
-      ],
+      items: ['https://remote.example/users/spammer', 'https://remote.example/users/noisy'],
       public: true,
       followersCollection: 'https://fed.example.com/users/alice/blocked/followers'
     });
@@ -192,10 +189,7 @@ describe('internal-followers-sync-api block collection projections', () => {
 
     expect(ctx.meta.$statusCode).toBe(200);
     expect(result).toEqual({
-      items: [
-        'https://remote.example/users/moderator',
-        'https://remote.example/users/ally'
-      ],
+      items: ['https://remote.example/users/moderator', 'https://remote.example/users/ally'],
       public: true,
       followersCollection: 'https://fed.example.com/users/alice/blocked/followers'
     });

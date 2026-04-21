@@ -239,7 +239,7 @@ describe('validateTrustSource', () => {
         weight: 0.8,
         scopes: ['filter:content']
       })
-    ).toMatch(/valid URI/);
+    ).toMatch(/http\(s\) URI|valid URI/);
   });
 
   test('accepts ATProto labeler DID', () => {
@@ -271,6 +271,18 @@ describe('validateTrustSource', () => {
       validateTrustSource({
         source: '*.spam.example',
         sourceType: 'domain-blocklist',
+        enabled: true,
+        weight: 1,
+        scopes: ['label:actor', 'filter:actor']
+      })
+    ).toBeNull();
+  });
+
+  test('accepts Fediseer source domains', () => {
+    expect(
+      validateTrustSource({
+        source: 'beehaw.org',
+        sourceType: 'fediseer',
         enabled: true,
         weight: 1,
         scopes: ['label:actor', 'filter:actor']
@@ -370,6 +382,7 @@ describe('validateTrustSource', () => {
       'atproto-labeler',
       'curator',
       'domain-blocklist',
+      'fediseer',
       'list',
       'relay'
     ]);

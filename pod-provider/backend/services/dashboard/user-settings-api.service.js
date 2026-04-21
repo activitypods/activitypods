@@ -89,7 +89,12 @@ const MODERATION_QUERY_KEYS = new Set([
   'limit',
   'action',
   'targetAtDid',
+  'targetActorUri',
   'targetWebId',
+  'status',
+  'sourceActorUri',
+  'recipientWebId',
+  'reportedActorUri',
   'includeRevoked',
   'subject',
   'uriPatterns',
@@ -120,6 +125,10 @@ const MIN_SYNC_INTERVAL_HOURS = 1;
 const MAX_SYNC_INTERVAL_HOURS = 24;
 const ATPROTO_LABELER_DIRECTORY_URL = 'https://www.bluesky-labelers.io/';
 const ATPROTO_LABELER_DIRECTORY_CACHE_TTL_MS = 15 * 60 * 1000;
+const FEDISEER_MANAGED_RULE_PREFIX = 'fediseer:domain:';
+const FEDISEER_DEFAULT_BASE_URL = 'https://fediseer.com';
+const FEDISEER_MAX_SYNC_PAGES = 10;
+const FEDISEER_PAGE_SIZE = 200;
 
 module.exports = {
   name: 'user-settings-api',
@@ -149,7 +158,11 @@ module.exports = {
     blueskyDefaultLabelerDid: (process.env.BLUESKY_DEFAULT_LABELER_DID || 'did:plc:ar7c4by46qjdydhdevvrndac').trim(),
     blueskyDefaultLabelerHandle: (process.env.BLUESKY_DEFAULT_LABELER_HANDLE || 'moderation.bsky.app').trim(),
     blueskyDefaultLabelerName: (process.env.BLUESKY_DEFAULT_LABELER_NAME || 'Bluesky Moderation Service').trim(),
-    blueskyDefaultLabelerEnabled: process.env.BLUESKY_DEFAULT_LABELER_ENABLED !== 'false'
+    blueskyDefaultLabelerEnabled: process.env.BLUESKY_DEFAULT_LABELER_ENABLED !== 'false',
+    pdqHashServiceBaseUrl: (process.env.PDQ_HASH_SERVICE_BASE_URL || '').trim(),
+    pdqHashServiceBearerToken: process.env.PDQ_HASH_SERVICE_BEARER_TOKEN || '',
+    fediseerBaseUrl: (process.env.FEDISEER_BASE_URL || FEDISEER_DEFAULT_BASE_URL).trim(),
+    fediseerApiKey: process.env.FEDISEER_API_KEY || ''
   },
 
   created() {
@@ -166,10 +179,12 @@ module.exports = {
     this._invitations = [];
     this._auditLog = [];
     this._moderationDecisions = [];
+    this._moderationCases = [];
     this._atprotoAutoSyncTimer = null;
     this._atprotoAutoSyncInFlight = false;
     this._atprotoMirrorInFlightByWebId = new Set();
     this._atprotoMirrorLastRunByWebId = new Map();
+    this._providerDataWriteChains = new Map();
     this._atprotoLabelerDirectoryCache = {
       expiresAt: 0,
       entries: []
@@ -190,6 +205,7 @@ module.exports = {
     this._invitations = await this.loadProviderData('invitations');
     this._auditLog = await this.loadProviderData('audit-log');
     this._moderationDecisions = await this.loadProviderData('moderation-decisions');
+    this._moderationCases = await this.loadProviderData('moderation-cases');
 
     await this.broker.call('api.addRoute', {
       route: {
@@ -225,9 +241,14 @@ module.exports = {
           'POST /provider/moderation/decisions': 'user-settings-api.applyModerationDecision',
           'GET /provider/moderation/decisions': 'user-settings-api.listModerationDecisions',
           'DELETE /provider/moderation/decisions/:id': 'user-settings-api.revokeModerationDecision',
+          'GET /provider/moderation/cases': 'user-settings-api.listModerationCases',
           'GET /provider/moderation/labels': 'user-settings-api.listAtLabels',
           'GET /provider/moderation/labels/known': 'user-settings-api.listKnownAtLabels',
           'GET /provider/moderation/default-source': 'user-settings-api.providerDefaultModerationSourceStatus',
+          'GET /provider/moderation/pdq/status': 'user-settings-api.getPdqHashStatus',
+          'POST /provider/moderation/pdq/hash': 'user-settings-api.lookupPdqHash',
+          'GET /provider/moderation/fediseer/status': 'user-settings-api.getFediseerStatus',
+          'POST /provider/moderation/fediseer/sync': 'user-settings-api.syncFediseerDomainSignals',
           'POST /moderation/atproto/lists/fetch': 'user-settings-api.fetchAtprotoUserLists',
           'POST /moderation/atproto/lists/sync': 'user-settings-api.syncAtprotoUserLists',
           'GET /moderation/atproto/labelers/catalog': 'user-settings-api.listAtprotoLabelerCatalog',
@@ -265,10 +286,15 @@ module.exports = {
     );
   },
 
-  stopped() {
+  async stopped() {
     if (this._atprotoAutoSyncTimer) {
       clearInterval(this._atprotoAutoSyncTimer);
       this._atprotoAutoSyncTimer = null;
+    }
+
+    if (this._providerDataWriteChains?.size) {
+      await Promise.allSettled([...this._providerDataWriteChains.values()]);
+      this._providerDataWriteChains.clear();
     }
   },
 
@@ -658,11 +684,13 @@ module.exports = {
       }
 
       const targetWebId = typeof input.targetWebId === 'string' ? input.targetWebId.trim() : undefined;
-      const targetAtDid = typeof input.targetAtDid === 'string' ? input.targetAtDid.trim() : undefined;
+      const targetActorUri = typeof input.targetActorUri === 'string' ? input.targetActorUri.trim() : undefined;
+      let targetAtDid = typeof input.targetAtDid === 'string' ? input.targetAtDid.trim() : undefined;
       const targetHandle = typeof input.targetHandle === 'string' ? input.targetHandle.trim() : undefined;
+      const sourceCaseId = typeof input.sourceCaseId === 'string' ? input.sourceCaseId.trim() : undefined;
 
-      if (!targetWebId && !targetAtDid && !targetHandle) {
-        throw new MoleculerError('targetWebId, targetAtDid, or targetHandle is required', 400, 'VALIDATION_ERROR');
+      if (!targetWebId && !targetActorUri && !targetAtDid && !targetHandle) {
+        throw new MoleculerError('targetWebId, targetActorUri, targetAtDid, or targetHandle is required', 400, 'VALIDATION_ERROR');
       }
 
       const labels = Array.isArray(input.labels)
@@ -677,10 +705,25 @@ module.exports = {
         : [];
       const reason = typeof input.reason === 'string' ? input.reason.trim().slice(0, 500) : undefined;
 
+      if (!targetAtDid && targetHandle) {
+        try {
+          const resolved = await this.resolveAtprotoHandleValue(targetHandle);
+          if (resolved?.did) {
+            targetAtDid = resolved.did;
+          }
+        } catch (err) {
+          if (!targetWebId && !targetActorUri) {
+            throw err;
+          }
+        }
+      }
+
       const payload = {
         targetWebId,
+        targetActorUri,
         targetAtDid,
         targetHandle,
+        sourceCaseId,
         action,
         labels,
         reason
@@ -701,11 +744,29 @@ module.exports = {
           this._moderationDecisions = this._moderationDecisions.slice(-max);
         }
         await this.saveProviderData('moderation-decisions', this._moderationDecisions);
+        if (sourceCaseId) {
+          this._moderationCases = this._moderationCases.map(entry =>
+            entry?.id === sourceCaseId
+              ? {
+                  ...entry,
+                  status: 'resolved',
+                  updatedAt: decision.appliedAt,
+                  resolvedAt: decision.appliedAt,
+                  resolvedBy: webId,
+                  relatedDecisionIds: [
+                    ...new Set([...(Array.isArray(entry?.relatedDecisionIds) ? entry.relatedDecisionIds : []), decision.id])
+                  ]
+                }
+              : entry
+          );
+          await this.saveProviderData('moderation-cases', this._moderationCases);
+        }
       }
 
       this.recordAuditEvent(webId, 'moderation_apply', {
         action,
         targetWebId: targetWebId || null,
+        targetActorUri: targetActorUri || null,
         targetAtDid: targetAtDid || null,
         targetHandle: targetHandle || null,
         labels
@@ -714,12 +775,46 @@ module.exports = {
       return upstream;
     },
 
+    async listModerationCases(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const query = this.pickModerationQuery(ctx.meta.$query || {});
+      try {
+        const qs = new URLSearchParams(query).toString();
+        const path = qs ? `/internal/admin/moderation/cases?${qs}` : '/internal/admin/moderation/cases';
+
+        const upstream = await this.mrfProxy(ctx, {
+          method: 'GET',
+          path,
+          permission: 'provider:read'
+        });
+
+        const cases = Array.isArray(upstream?.cases) ? upstream.cases : [];
+        if (cases.length > 0) {
+          const merged = this.mergeModerationCaseCache(cases);
+          if (merged.changed) {
+            this._moderationCases = merged.entries;
+            await this.saveProviderData('moderation-cases', this._moderationCases);
+          }
+        }
+
+        return {
+          data: cases,
+          cursor: upstream?.cursor || null
+        };
+      } catch (err) {
+        this.logger.warn('[ModerationBridge] Falling back to local case cache: %s', err.message);
+        return this.buildModerationCaseCachePage(query);
+      }
+    },
+
     async listModerationDecisions(ctx) {
       const webId = this.requireWebId(ctx);
       this.requireProvider(webId);
 
+      const query = this.pickModerationQuery(ctx.meta.$query || {});
       try {
-        const query = this.pickModerationQuery(ctx.meta.$query || {});
         const qs = new URLSearchParams(query).toString();
         const path = qs ? `/internal/admin/moderation/decisions?${qs}` : '/internal/admin/moderation/decisions';
 
@@ -735,9 +830,7 @@ module.exports = {
         };
       } catch (err) {
         this.logger.warn('[ModerationBridge] Falling back to local decision cache: %s', err.message);
-        const limit = Math.min(Number(ctx.meta.$query?.limit) || 100, 500);
-        const entries = [...this._moderationDecisions].reverse().slice(0, limit);
-        return { data: entries, total: this._moderationDecisions.length, source: 'cache' };
+        return this.buildModerationDecisionCachePage(query);
       }
     },
 
@@ -758,6 +851,23 @@ module.exports = {
           existing.id === decision.id ? decision : existing
         );
         await this.saveProviderData('moderation-decisions', this._moderationDecisions);
+        if (decision.sourceCaseId) {
+          const hasActiveSibling = this._moderationDecisions.some(existing =>
+            existing?.sourceCaseId === decision.sourceCaseId && existing?.id !== decision.id && existing?.revoked !== true
+          );
+          this._moderationCases = this._moderationCases.map(entry =>
+            entry?.id === decision.sourceCaseId
+              ? {
+                  ...entry,
+                  status: hasActiveSibling ? 'resolved' : 'open',
+                  updatedAt: decision.revokedAt || new Date().toISOString(),
+                  resolvedAt: hasActiveSibling ? entry?.resolvedAt : undefined,
+                  resolvedBy: hasActiveSibling ? entry?.resolvedBy : undefined
+                }
+              : entry
+          );
+          await this.saveProviderData('moderation-cases', this._moderationCases);
+        }
       }
 
       this.recordAuditEvent(webId, 'moderation_revoke', { id });
@@ -821,43 +931,147 @@ module.exports = {
       };
     },
 
-    async resolveAtprotoHandle(ctx) {
-      this.requireWebId(ctx);
-
-      const handle = this.normalizeAtprotoHandle(ctx.params?.handle || ctx.meta?.$query?.handle || '');
-      const pdsUrl = this.normalizeHttpUrlOrDefault(
-        ctx.params?.pdsUrl || ctx.meta?.$query?.pdsUrl,
-        'https://bsky.social'
-      );
-      const endpoint = new URL('/xrpc/com.atproto.identity.resolveHandle', pdsUrl);
-      endpoint.searchParams.set('handle', handle);
-
-      const response = await fetch(endpoint.toString(), {
-        method: 'GET',
-        headers: {
-          accept: 'application/json'
-        },
-        signal: AbortSignal.timeout(8000)
-      });
-
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new MoleculerError(
-          payload?.message || `Failed to resolve ATProto handle (${response.status})`,
-          response.status,
-          'ATPROTO_HANDLE_RESOLVE_FAILED'
-        );
-      }
-
-      const did = typeof payload?.did === 'string' ? payload.did.trim() : '';
-      if (!did) {
-        throw new MoleculerError('Resolved DID is missing', 502, 'ATPROTO_HANDLE_RESOLVE_FAILED');
-      }
+    async getPdqHashStatus(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
 
       return {
         data: {
-          handle,
-          did
+          configured: Boolean(this.settings.pdqHashServiceBaseUrl),
+          serviceBaseUrl: this.settings.pdqHashServiceBaseUrl || null,
+          hasBearerToken: Boolean(this.settings.pdqHashServiceBearerToken)
+        }
+      };
+    },
+
+    async lookupPdqHash(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const input = ctx.params?.data || ctx.params || {};
+      const imageUrl = this.normalizeHttpUrl(input.imageUrl, 'imageUrl');
+      const result = await this.fetchPdqHashFromService(imageUrl);
+
+      this.recordAuditEvent(webId, 'moderation_pdq_lookup', {
+        imageUrl,
+        quality: result.quality
+      });
+
+      return {
+        data: {
+          imageUrl,
+          pdqHashBinary: result.pdqHashBinary,
+          quality: result.quality
+        }
+      };
+    },
+
+    async getFediseerStatus(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      return {
+        data: {
+          configured: Boolean(this.settings.fediseerBaseUrl),
+          serviceBaseUrl: this.settings.fediseerBaseUrl || null,
+          hasApiKey: Boolean(this.settings.fediseerApiKey),
+          sourceDomains: await this.getFediseerSourceDomainsForWebId(ctx, webId)
+        }
+      };
+    },
+
+    async syncFediseerDomainSignals(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const input = ctx.params?.data || ctx.params || {};
+      const apply = input.apply !== false;
+      const replaceExisting = input.replaceExisting !== false;
+      const includeCensures = input.includeCensures !== false;
+      const includeHesitations = input.includeHesitations !== false;
+      const censureAction = input.censureAction === 'filter' ? 'filter' : 'reject';
+      const hesitationAction = input.hesitationAction === 'reject' ? 'reject' : 'filter';
+
+      if (!includeCensures && !includeHesitations) {
+        throw new MoleculerError(
+          'Select at least one Fediseer signal to import',
+          400,
+          'FEDISEER_SIGNAL_REQUIRED'
+        );
+      }
+
+      const sourceDomains = this.normalizeFediseerSourceDomains(
+        Array.isArray(input.sourceDomains) ? input.sourceDomains : input.sourceDomains ? [input.sourceDomains] : []
+      );
+      const effectiveSourceDomains =
+        sourceDomains.length > 0 ? sourceDomains : await this.getFediseerSourceDomainsForWebId(ctx, webId);
+
+      if (effectiveSourceDomains.length === 0) {
+        throw new MoleculerError(
+          'Add at least one enabled Fediseer trust source or provide sourceDomains explicitly',
+          400,
+          'FEDISEER_SOURCE_REQUIRED'
+        );
+      }
+
+      const maxPages = this.clampInt(input.maxPages, 3, 1, FEDISEER_MAX_SYNC_PAGES);
+      const censureEntries = includeCensures
+        ? await this.fetchFediseerSignalEntries('censures_given', effectiveSourceDomains, 'censure', maxPages)
+        : [];
+      const hesitationEntries = includeHesitations
+        ? await this.fetchFediseerSignalEntries('hesitations_given', effectiveSourceDomains, 'hesitation', maxPages)
+        : [];
+      const aggregatedEntries = this.aggregateFediseerSignalEntries(
+        [...censureEntries, ...hesitationEntries],
+        {
+          censureAction,
+          hesitationAction
+        }
+      );
+
+      let applied = null;
+      if (apply) {
+        applied = await this.applyFediseerRules(ctx, webId, aggregatedEntries, {
+          replaceExisting
+        });
+      }
+
+      this.recordAuditEvent(webId, 'moderation_fediseer_sync', {
+        apply,
+        replaceExisting,
+        sourceDomains: effectiveSourceDomains,
+        importedDomains: aggregatedEntries.length,
+        includeCensures,
+        includeHesitations
+      });
+
+      return {
+        data: {
+          apply,
+          replaceExisting,
+          sourceDomains: effectiveSourceDomains,
+          signals: {
+            censures: censureEntries.length,
+            hesitations: hesitationEntries.length
+          },
+          entries: aggregatedEntries,
+          applied
+        }
+      };
+    },
+
+    async resolveAtprotoHandle(ctx) {
+      this.requireWebId(ctx);
+
+      const resolved = await this.resolveAtprotoHandleValue(
+        ctx.params?.handle || ctx.meta?.$query?.handle || '',
+        ctx.params?.pdsUrl || ctx.meta?.$query?.pdsUrl
+      );
+
+      return {
+        data: {
+          handle: resolved.handle,
+          did: resolved.did
         }
       };
     },
@@ -1450,6 +1664,106 @@ module.exports = {
       return out;
     },
 
+    buildModerationDecisionCachePage(query = {}) {
+      const limit = Math.min(Number(query.limit) || 100, 500);
+      const cursor = typeof query.cursor === 'string' ? query.cursor.trim() : '';
+      const includeRevoked = query.includeRevoked !== 'false';
+      const action = typeof query.action === 'string' ? query.action : '';
+      const targetAtDid = typeof query.targetAtDid === 'string' ? query.targetAtDid : '';
+      const targetActorUri = typeof query.targetActorUri === 'string' ? query.targetActorUri : '';
+      const targetWebId = typeof query.targetWebId === 'string' ? query.targetWebId : '';
+
+      const ordered = [...this._moderationDecisions]
+        .reverse()
+        .filter(entry => {
+          if (!includeRevoked && entry?.revoked) return false;
+          if (action && entry?.action !== action) return false;
+          if (targetAtDid && entry?.targetAtDid !== targetAtDid) return false;
+          if (targetActorUri && entry?.targetActorUri !== targetActorUri) return false;
+          if (targetWebId && entry?.targetWebId !== targetWebId) return false;
+          return true;
+        });
+
+      let start = 0;
+      if (cursor) {
+        const cursorIndex = ordered.findIndex(entry => entry?.id === cursor);
+        start = cursorIndex >= 0 ? cursorIndex + 1 : 0;
+      }
+
+      const data = ordered.slice(start, start + limit);
+      const nextCursor = start + limit < ordered.length ? data[data.length - 1]?.id || null : null;
+      return {
+        data,
+        cursor: nextCursor,
+        total: ordered.length,
+        source: 'cache'
+      };
+    },
+
+    mergeModerationCaseCache(entries = []) {
+      const ordered = Array.isArray(this._moderationCases) ? [...this._moderationCases] : [];
+      const byId = new Map(ordered.map(entry => [entry?.id, entry]));
+      let changed = false;
+
+      for (const entry of entries) {
+        if (!entry?.id) continue;
+        const existing = byId.get(entry.id);
+        const nextSerialized = JSON.stringify(entry);
+        if (!existing || JSON.stringify(existing) !== nextSerialized) {
+          byId.set(entry.id, entry);
+          changed = true;
+        }
+      }
+
+      const merged = [...byId.values()]
+        .filter(Boolean)
+        .sort((left, right) => {
+          const leftTs = Date.parse(left?.receivedAt || left?.updatedAt || 0) || 0;
+          const rightTs = Date.parse(right?.receivedAt || right?.updatedAt || 0) || 0;
+          return rightTs - leftTs;
+        })
+        .slice(0, this.settings.auditLogMaxEntries);
+
+      return {
+        changed,
+        entries: merged
+      };
+    },
+
+    buildModerationCaseCachePage(query = {}) {
+      const limit = Math.min(Number(query.limit) || 100, 500);
+      const cursor = typeof query.cursor === 'string' ? query.cursor.trim() : '';
+      const status = typeof query.status === 'string' ? query.status : '';
+      const sourceActorUri = typeof query.sourceActorUri === 'string' ? query.sourceActorUri : '';
+      const recipientWebId = typeof query.recipientWebId === 'string' ? query.recipientWebId : '';
+      const reportedActorUri = typeof query.reportedActorUri === 'string' ? query.reportedActorUri : '';
+
+      const ordered = [...this._moderationCases]
+        .filter(entry => {
+          if (status && entry?.status !== status) return false;
+          if (sourceActorUri && entry?.sourceActorUri !== sourceActorUri) return false;
+          if (recipientWebId && entry?.recipientWebId !== recipientWebId) return false;
+          if (reportedActorUri && !Array.isArray(entry?.reportedActorUris)) return false;
+          if (reportedActorUri && !entry.reportedActorUris.includes(reportedActorUri)) return false;
+          return true;
+        });
+
+      let start = 0;
+      if (cursor) {
+        const cursorIndex = ordered.findIndex(entry => entry?.id === cursor);
+        start = cursorIndex >= 0 ? cursorIndex + 1 : 0;
+      }
+
+      const data = ordered.slice(start, start + limit);
+      const nextCursor = start + limit < ordered.length ? data[data.length - 1]?.id || null : null;
+      return {
+        data,
+        cursor: nextCursor,
+        total: ordered.length,
+        source: 'cache'
+      };
+    },
+
     async mrfProxy(ctx, { method, path, permission, body }) {
       const webId = this.requireWebId(ctx);
 
@@ -1528,6 +1842,407 @@ module.exports = {
       } catch {
         return {};
       }
+    },
+
+    normalizeDomainLike(value, fieldName = 'domain') {
+      const candidate = String(value || '').trim().toLowerCase();
+      if (!candidate) {
+        throw new MoleculerError(`${fieldName} is required`, 400, 'VALIDATION_ERROR');
+      }
+
+      const withoutWildcard = candidate.startsWith('*.') ? candidate.slice(2) : candidate;
+      const urlLike = /^[a-z][a-z0-9+.-]*:\/\//i.test(withoutWildcard) ? withoutWildcard : `https://${withoutWildcard}`;
+
+      try {
+        const parsed = new URL(urlLike);
+        if (!parsed.hostname) {
+          throw new Error('missing_host');
+        }
+        return parsed.hostname.toLowerCase();
+      } catch {
+        throw new MoleculerError(`Invalid ${fieldName}`, 400, 'VALIDATION_ERROR');
+      }
+    },
+
+    normalizeFediseerSourceDomains(values) {
+      const unique = new Set();
+      for (const value of Array.isArray(values) ? values : []) {
+        if (value === undefined || value === null || value === '') continue;
+        unique.add(this.normalizeDomainLike(value, 'sourceDomain'));
+      }
+      return [...unique];
+    },
+
+    splitFediseerList(value) {
+      if (Array.isArray(value)) {
+        return [
+          ...new Set(
+            value
+              .map(item => (typeof item === 'string' ? item.trim() : ''))
+              .filter(Boolean)
+          )
+        ];
+      }
+
+      if (typeof value === 'string' && value.trim().length > 0) {
+        return [
+          ...new Set(
+            value
+              .split(',')
+              .map(item => item.trim())
+              .filter(Boolean)
+          )
+        ];
+      }
+
+      return [];
+    },
+
+    extractFediseerItems(payload) {
+      if (Array.isArray(payload)) return payload;
+      if (!payload || typeof payload !== 'object') return [];
+
+      for (const key of ['instances', 'data', 'items', 'results', 'domains']) {
+        if (Array.isArray(payload[key])) {
+          return payload[key];
+        }
+      }
+
+      return [];
+    },
+
+    normalizeFediseerSignalEntries(items, signal, fallbackSourceDomains) {
+      const out = [];
+
+      for (const item of items) {
+        if (typeof item === 'string') {
+          try {
+            out.push({
+              targetDomain: this.normalizeDomainLike(item, 'targetDomain'),
+              signal,
+              sourceDomains: [...fallbackSourceDomains],
+              reasons: [],
+              evidence: [],
+              count: 1
+            });
+          } catch {
+            // Ignore malformed domains in remote payloads.
+          }
+          continue;
+        }
+
+        if (!item || typeof item !== 'object') continue;
+
+        const targetCandidate =
+          item.domain ||
+          item.hostname ||
+          item.host ||
+          item.instance ||
+          item.name ||
+          item.domain_name ||
+          item.instance_domain ||
+          item?.instance?.domain ||
+          item?.instance?.name ||
+          item?.instance?.host;
+
+        let targetDomain;
+        try {
+          targetDomain = this.normalizeDomainLike(targetCandidate, 'targetDomain');
+        } catch {
+          continue;
+        }
+
+        const sourceDomainCandidates = [
+          ...(Array.isArray(item.sourceDomains) ? item.sourceDomains : []),
+          ...(Array.isArray(item.source_domains) ? item.source_domains : []),
+          ...this.splitFediseerList(item.sources),
+          ...this.splitFediseerList(item.domains),
+          ...this.splitFediseerList(item.censured_by),
+          ...this.splitFediseerList(item.hesitated_by),
+          ...this.splitFediseerList(item.endorsed_by),
+          ...this.splitFediseerList(item.source),
+          ...this.splitFediseerList(item.source_domain),
+          ...this.splitFediseerList(item.given_by)
+        ];
+
+        let sourceDomains = [...fallbackSourceDomains];
+        if (sourceDomainCandidates.length > 0) {
+          try {
+            sourceDomains = this.normalizeFediseerSourceDomains(sourceDomainCandidates);
+          } catch {
+            sourceDomains = [...fallbackSourceDomains];
+          }
+        }
+
+        const reasons = this.splitFediseerList(
+          item[`${signal}_reasons`] || item.reasons || item.reason || item.comment || item.comments
+        ).slice(0, 20);
+        const evidence = this.splitFediseerList(
+          item[`${signal}_evidence`] || item.evidence || item.details || item.notes
+        ).slice(0, 10);
+        const countValue = Number(
+          item[`${signal}_count`] ?? item.count ?? item.instance_count ?? item.votes ?? (sourceDomains.length || 1)
+        );
+
+        out.push({
+          targetDomain,
+          signal,
+          sourceDomains,
+          reasons,
+          evidence,
+          count: Number.isFinite(countValue) ? Math.max(1, Math.trunc(countValue)) : 1
+        });
+      }
+
+      return out;
+    },
+
+    buildFediseerServiceUrl(pathname) {
+      const base = String(this.settings.fediseerBaseUrl || FEDISEER_DEFAULT_BASE_URL).trim();
+      if (!base) {
+        throw new MoleculerError('Fediseer is not configured', 503, 'FEDISEER_NOT_CONFIGURED');
+      }
+
+      const normalizedBase = base.endsWith('/') ? base : `${base}/`;
+      return new URL(pathname.replace(/^\//, ''), normalizedBase);
+    },
+
+    async fetchFediseerSignalEntries(endpoint, sourceDomains, signal, maxPages = 3) {
+      const normalizedSources = this.normalizeFediseerSourceDomains(sourceDomains);
+      if (normalizedSources.length === 0) return [];
+
+      const entries = [];
+      const seenPageFingerprints = new Set();
+
+      for (let page = 1; page <= maxPages; page += 1) {
+        const endpointUrl = this.buildFediseerServiceUrl(
+          `api/v1/${endpoint}/${encodeURIComponent(normalizedSources.join(','))}`
+        );
+        endpointUrl.searchParams.set('page', String(page));
+        endpointUrl.searchParams.set('per_page', String(FEDISEER_PAGE_SIZE));
+
+        const execute = async () => {
+          const response = await fetch(endpointUrl.toString(), {
+            method: 'GET',
+            headers: {
+              accept: 'application/json',
+              ...(this.settings.fediseerApiKey ? { apikey: this.settings.fediseerApiKey } : {})
+            },
+            signal: AbortSignal.timeout(Math.max(1000, this.settings.mrfTimeoutMs))
+          });
+
+          const text = await response.text();
+          const payload = text ? this.tryParseJson(text) : {};
+          if (!response.ok) {
+            const error = new MoleculerError(
+              payload?.message || `Fediseer request failed (${response.status})`,
+              response.status,
+              'FEDISEER_FETCH_FAILED'
+            );
+            error.retryable = response.status === 429 || response.status >= 500;
+            throw error;
+          }
+
+          return payload;
+        };
+
+        const payload = await retryWithBackoff(execute, {
+          maxRetries: Math.max(0, this.settings.mrfRetries - 1),
+          baseDelayMs: Math.max(25, this.settings.mrfRetryBaseDelayMs),
+          maxDelayMs: Math.max(this.settings.mrfRetryBaseDelayMs, this.settings.mrfRetryMaxDelayMs),
+          retryIf: err => err?.retryable !== false
+        });
+
+        const pageEntries = this.normalizeFediseerSignalEntries(
+          this.extractFediseerItems(payload),
+          signal,
+          normalizedSources
+        );
+        if (pageEntries.length === 0) break;
+
+        const fingerprint = JSON.stringify(
+          pageEntries.map(entry => `${entry.targetDomain}|${entry.signal}|${entry.sourceDomains.join(',')}`).slice(0, 64)
+        );
+        if (seenPageFingerprints.has(fingerprint)) {
+          break;
+        }
+        seenPageFingerprints.add(fingerprint);
+
+        entries.push(...pageEntries);
+        if (pageEntries.length < FEDISEER_PAGE_SIZE) break;
+      }
+
+      const deduped = new Map();
+      for (const entry of entries) {
+        const key = `${entry.signal}:${entry.targetDomain}`;
+        const existing = deduped.get(key);
+        if (!existing) {
+          deduped.set(key, {
+            ...entry,
+            sourceDomains: [...new Set(entry.sourceDomains)],
+            reasons: [...new Set(entry.reasons)],
+            evidence: [...new Set(entry.evidence)]
+          });
+          continue;
+        }
+
+        deduped.set(key, {
+          ...existing,
+          sourceDomains: [...new Set([...(existing.sourceDomains || []), ...(entry.sourceDomains || [])])],
+          reasons: [...new Set([...(existing.reasons || []), ...(entry.reasons || [])])],
+          evidence: [...new Set([...(existing.evidence || []), ...(entry.evidence || [])])],
+          count: Math.max(Number(existing.count || 1), Number(entry.count || 1))
+        });
+      }
+
+      return [...deduped.values()].sort((left, right) => left.targetDomain.localeCompare(right.targetDomain));
+    },
+
+    aggregateFediseerSignalEntries(entries, { censureAction, hesitationAction }) {
+      const byDomain = new Map();
+
+      for (const entry of entries) {
+        if (!entry?.targetDomain) continue;
+        const nextAction = entry.signal === 'censure' ? censureAction : hesitationAction;
+        const existing = byDomain.get(entry.targetDomain) || {
+          targetDomain: entry.targetDomain,
+          ruleId: `${FEDISEER_MANAGED_RULE_PREFIX}${entry.targetDomain}`,
+          action: nextAction,
+          signals: [],
+          sourceDomains: [],
+          reasons: [],
+          evidence: [],
+          censureCount: 0,
+          hesitationCount: 0
+        };
+
+        const strongerAction =
+          existing.action === 'reject' || nextAction === 'reject' ? 'reject' : 'filter';
+        existing.action = strongerAction;
+        existing.signals = [...new Set([...(existing.signals || []), entry.signal])];
+        existing.sourceDomains = [...new Set([...(existing.sourceDomains || []), ...(entry.sourceDomains || [])])];
+        existing.reasons = [...new Set([...(existing.reasons || []), ...(entry.reasons || [])])].slice(0, 20);
+        existing.evidence = [...new Set([...(existing.evidence || []), ...(entry.evidence || [])])].slice(0, 10);
+        if (entry.signal === 'censure') {
+          existing.censureCount += Number(entry.count || 1);
+        } else {
+          existing.hesitationCount += Number(entry.count || 1);
+        }
+
+        byDomain.set(entry.targetDomain, existing);
+      }
+
+      return [...byDomain.values()]
+        .map(entry => ({
+          ...entry,
+          reason: this.buildFediseerRuleReason(entry)
+        }))
+        .sort((left, right) => {
+          const actionRank = left.action === right.action ? 0 : left.action === 'reject' ? -1 : 1;
+          return actionRank || left.targetDomain.localeCompare(right.targetDomain);
+        });
+    },
+
+    buildFediseerRuleReason(entry) {
+      const sourcePreview = (entry.sourceDomains || []).slice(0, 4).join(', ');
+      const sourceSuffix =
+        Array.isArray(entry.sourceDomains) && entry.sourceDomains.length > 4
+          ? ` and ${entry.sourceDomains.length - 4} more`
+          : '';
+      const signalSummary = [
+        entry.censureCount > 0 ? `${entry.censureCount} censure${entry.censureCount === 1 ? '' : 's'}` : null,
+        entry.hesitationCount > 0 ? `${entry.hesitationCount} hesitation${entry.hesitationCount === 1 ? '' : 's'}` : null
+      ]
+        .filter(Boolean)
+        .join(', ');
+      const reasonSummary =
+        Array.isArray(entry.reasons) && entry.reasons.length > 0
+          ? ` Reasons: ${entry.reasons.slice(0, 3).join(', ')}${entry.reasons.length > 3 ? ', ...' : ''}.`
+          : '';
+
+      return [
+        `Fediseer ${entry.action} import for ${entry.targetDomain}.`,
+        signalSummary ? ` Signals: ${signalSummary}.` : '',
+        sourcePreview ? ` Sources: ${sourcePreview}${sourceSuffix}.` : '',
+        reasonSummary
+      ]
+        .join('')
+        .trim()
+        .slice(0, 500);
+    },
+
+    async getFediseerSourceDomainsForWebId(ctx, webId) {
+      const trustSources = await this.listByContainer(ctx, webId, 'trust-sources', { seedProviderDefaults: false });
+      return this.normalizeFediseerSourceDomains(
+        trustSources
+          .filter(item => item?.enabled !== false && String(item?.sourceType || '').toLowerCase() === 'fediseer')
+          .map(item => item?.source)
+      );
+    },
+
+    async applyFediseerRules(ctx, webId, entries, { replaceExisting }) {
+      const moduleResponse = await this.mrfProxy(ctx, {
+        method: 'GET',
+        path: '/internal/admin/mrf/modules/activitypub-subject-policy',
+        permission: 'provider:read'
+      });
+
+      const moduleConfig = moduleResponse?.data?.config || {};
+      const revision = Number.isInteger(moduleConfig?.revision) ? moduleConfig.revision : 0;
+      const currentRules = Array.isArray(moduleConfig?.config?.rules) ? moduleConfig.config.rules : [];
+      const manualRules = currentRules.filter(rule => !String(rule?.id || '').startsWith(FEDISEER_MANAGED_RULE_PREFIX));
+      const existingFediseerRules = currentRules.filter(rule => String(rule?.id || '').startsWith(FEDISEER_MANAGED_RULE_PREFIX));
+      const nextFediseerRules = entries.map(entry => ({
+        id: entry.ruleId,
+        action: entry.action,
+        domain: entry.targetDomain,
+        reason: entry.reason,
+        createdAt: new Date().toISOString(),
+        createdBy: webId
+      }));
+
+      const mergedRules = replaceExisting
+        ? [...manualRules, ...nextFediseerRules]
+        : [
+            ...manualRules,
+            ...existingFediseerRules.filter(
+              rule => !nextFediseerRules.some(nextRule => nextRule.id === rule.id)
+            ),
+            ...nextFediseerRules
+          ];
+
+      if (mergedRules.length > 1000) {
+        throw new MoleculerError(
+          `Fediseer sync would exceed the ActivityPub subject-policy limit of 1000 rules (${mergedRules.length})`,
+          400,
+          'FEDISEER_RULE_LIMIT_EXCEEDED',
+          { totalRules: mergedRules.length }
+        );
+      }
+
+      const nextMode = moduleConfig?.mode === 'disabled' ? 'enforce' : moduleConfig?.mode || 'enforce';
+      const patchResponse = await this.mrfProxy(ctx, {
+        method: 'PATCH',
+        path: '/internal/admin/mrf/modules/activitypub-subject-policy',
+        permission: 'provider:write',
+        body: {
+          enabled: true,
+          mode: nextMode,
+          config: {
+            rules: mergedRules
+          },
+          expectedRevision: revision
+        }
+      });
+
+      return {
+        previousManagedRules: existingFediseerRules.length,
+        activeManagedRules: nextFediseerRules.length,
+        totalRules: mergedRules.length,
+        removedRules: replaceExisting ? Math.max(0, existingFediseerRules.length - nextFediseerRules.length) : 0,
+        revision: patchResponse?.data?.revision || null,
+        mode: patchResponse?.data?.mode || nextMode
+      };
     },
 
     requireWebId(ctx) {
@@ -1625,6 +2340,131 @@ module.exports = {
       } catch {
         throw new MoleculerError('Invalid ATProto PDS URL', 400, 'ATPROTO_PDS_URL_INVALID');
       }
+    },
+
+    normalizeHttpUrl(value, fieldName = 'url') {
+      const candidate = typeof value === 'string' ? value.trim() : '';
+      if (!candidate) {
+        throw new MoleculerError(`${fieldName} is required`, 400, 'VALIDATION_ERROR');
+      }
+
+      try {
+        const parsed = new URL(candidate);
+        if ((parsed.protocol !== 'http:' && parsed.protocol !== 'https:') || parsed.username || parsed.password) {
+          throw new Error('invalid_url');
+        }
+        return parsed.toString();
+      } catch {
+        throw new MoleculerError(`${fieldName} must be a valid http(s) URL`, 400, 'VALIDATION_ERROR');
+      }
+    },
+
+    async resolveAtprotoHandleValue(handleInput, pdsUrlInput) {
+      const handle = this.normalizeAtprotoHandle(handleInput || '');
+      const pdsUrl = this.normalizeHttpUrlOrDefault(pdsUrlInput, 'https://bsky.social');
+      const endpoint = new URL('/xrpc/com.atproto.identity.resolveHandle', pdsUrl);
+      endpoint.searchParams.set('handle', handle);
+
+      const execute = async () => {
+        const response = await fetch(endpoint.toString(), {
+          method: 'GET',
+          headers: {
+            accept: 'application/json'
+          },
+          signal: AbortSignal.timeout(8000)
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const error = new MoleculerError(
+            payload?.message || `Failed to resolve ATProto handle (${response.status})`,
+            response.status,
+            'ATPROTO_HANDLE_RESOLVE_FAILED'
+          );
+          error.retryable = response.status === 429 || response.status >= 500;
+          throw error;
+        }
+
+        const did = typeof payload?.did === 'string' ? payload.did.trim() : '';
+        if (!did) {
+          const error = new MoleculerError('Resolved DID is missing', 502, 'ATPROTO_HANDLE_RESOLVE_FAILED');
+          error.retryable = false;
+          throw error;
+        }
+
+        return { handle, did };
+      };
+
+      return retryWithBackoff(execute, {
+        maxRetries: 1,
+        baseDelayMs: 100,
+        maxDelayMs: 1200,
+        retryIf: err => err?.retryable !== false
+      });
+    },
+
+    buildPdqHashServiceUrl(imageUrl) {
+      if (!this.settings.pdqHashServiceBaseUrl) {
+        throw new MoleculerError('PDQ hash service is not configured', 503, 'PDQ_HASH_NOT_CONFIGURED');
+      }
+
+      const base = this.settings.pdqHashServiceBaseUrl.endsWith('/')
+        ? this.settings.pdqHashServiceBaseUrl
+        : `${this.settings.pdqHashServiceBaseUrl}/`;
+      const endpoint = new URL('pdq-hash', base);
+      endpoint.searchParams.set('image_url', imageUrl);
+      return endpoint.toString();
+    },
+
+    async fetchPdqHashFromService(imageUrl) {
+      const endpoint = this.buildPdqHashServiceUrl(imageUrl);
+      const execute = async () => {
+        const response = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            accept: 'application/json',
+            ...(this.settings.pdqHashServiceBearerToken
+              ? { Authorization: `Bearer ${this.settings.pdqHashServiceBearerToken}` }
+              : {})
+          },
+          signal: AbortSignal.timeout(Math.max(1000, this.settings.mrfTimeoutMs))
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const error = new MoleculerError(
+            payload?.message || `PDQ hash lookup failed (${response.status})`,
+            response.status,
+            'PDQ_HASH_LOOKUP_FAILED'
+          );
+          error.retryable = response.status === 429 || response.status >= 500;
+          throw error;
+        }
+
+        const pdqHashBinary =
+          typeof payload?.pdq_hash_binary === 'string'
+            ? payload.pdq_hash_binary.trim()
+            : typeof payload?.pdqHashBinary === 'string'
+              ? payload.pdqHashBinary.trim()
+              : '';
+        const quality =
+          typeof payload?.quality === 'number' ? Math.max(0, Math.min(100, Math.trunc(payload.quality))) : null;
+
+        if (!/^[01]{256}$/.test(pdqHashBinary) || quality === null) {
+          const error = new MoleculerError('PDQ hash service returned an invalid response', 502, 'PDQ_HASH_INVALID_RESPONSE');
+          error.retryable = false;
+          throw error;
+        }
+
+        return { pdqHashBinary, quality };
+      };
+
+      return retryWithBackoff(execute, {
+        maxRetries: Math.max(0, this.settings.mrfRetries - 1),
+        baseDelayMs: Math.max(25, this.settings.mrfRetryBaseDelayMs),
+        maxDelayMs: Math.max(this.settings.mrfRetryBaseDelayMs, this.settings.mrfRetryMaxDelayMs),
+        retryIf: err => err?.retryable !== false
+      });
     },
 
     normalizeAtprotoHandle(value) {
@@ -2459,22 +3299,53 @@ module.exports = {
       }
     },
 
+    enqueueProviderDataWrite(key, writer) {
+      const previous = this._providerDataWriteChains.get(key) || Promise.resolve();
+      const next = previous.catch(() => undefined).then(writer);
+      const tracked = next.finally(() => {
+        if (this._providerDataWriteChains.get(key) === tracked) {
+          this._providerDataWriteChains.delete(key);
+        }
+      });
+      this._providerDataWriteChains.set(key, tracked);
+      return tracked;
+    },
+
     async loadProviderData(key) {
       const filePath = path.join(this.settings.providerDataDir, `${key}.json`);
       try {
         const content = await fs.promises.readFile(filePath, 'utf8');
         const parsed = JSON.parse(content);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+        this.logger.warn('[ProviderData] Ignoring non-array payload in %s', filePath);
+        return [];
+      } catch (err) {
+        if (err?.code !== 'ENOENT') {
+          this.logger.warn('[ProviderData] Failed to load %s: %s', filePath, err.message);
+        }
         return [];
       }
     },
 
     async saveProviderData(key, data) {
       const dir = this.settings.providerDataDir;
-      await fs.promises.mkdir(dir, { recursive: true });
       const filePath = path.join(dir, `${key}.json`);
-      await fs.promises.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
+      const serialized = JSON.stringify(data, null, 2);
+      return this.enqueueProviderDataWrite(key, async () => {
+        await fs.promises.mkdir(dir, { recursive: true });
+        const tempSuffix = `${process.pid}-${Date.now()}-${crypto.randomBytes(6).toString('hex')}`;
+        const tempPath = `${filePath}.${tempSuffix}.tmp`;
+
+        try {
+          await fs.promises.writeFile(tempPath, serialized, 'utf8');
+          await fs.promises.rename(tempPath, filePath);
+        } catch (err) {
+          await fs.promises.unlink(tempPath).catch(() => undefined);
+          throw err;
+        }
+      });
     },
 
     recordAuditEvent(actor, action, detail = {}) {

@@ -22,8 +22,8 @@ ADD frontend /app/frontend
 
 RUN yarn run build
 
-EXPOSE 5000
+EXPOSE 5001
 
 ENTRYPOINT ["/app/frontend/docker-entrypoint.sh"]
 
-CMD /usr/local/bin/serve -s build -l 5000
+CMD /usr/local/bin/serve -s build -l 5001

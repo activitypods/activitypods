@@ -178,7 +178,9 @@ module.exports = {
 
     const internalToken = this.settings.auth.bearerToken;
     if (!internalToken) {
-      this.logger.warn('[ViewershipHistoryApi] No internal bearer token configured; internal requests will be rejected');
+      this.logger.warn(
+        '[ViewershipHistoryApi] No internal bearer token configured; internal requests will be rejected'
+      );
     }
 
     await this.broker.call('api.addRoute', {
@@ -220,7 +222,9 @@ module.exports = {
       toBottom: false
     });
 
-    this.logger.info('[ViewershipHistoryApi] Routes registered under /api/viewership-history and /api/internal/viewership-history');
+    this.logger.info(
+      '[ViewershipHistoryApi] Routes registered under /api/viewership-history and /api/internal/viewership-history'
+    );
   },
 
   async stopped() {

@@ -206,8 +206,10 @@ export const dashboardApi = {
 
   applyModerationDecision: (data: {
     targetWebId?: string;
+    targetActorUri?: string;
     targetAtDid?: string;
     targetHandle?: string;
+    sourceCaseId?: string;
     action: 'label' | 'warn' | 'filter' | 'block' | 'suspend';
     labels?: string[];
     reason?: string;
@@ -222,6 +224,11 @@ export const dashboardApi = {
     return req(params ? `provider/moderation/decisions?${params.toString()}` : 'provider/moderation/decisions');
   },
 
+  listModerationCases: (query?: Record<string, string | number | boolean>) => {
+    const params = query ? new URLSearchParams(Object.entries(query).map(([k, v]) => [k, String(v)])) : null;
+    return req(params ? `provider/moderation/cases?${params.toString()}` : 'provider/moderation/cases');
+  },
+
   revokeModerationDecision: (id: string) =>
     req(`provider/moderation/decisions/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 
@@ -233,6 +240,31 @@ export const dashboardApi = {
   listKnownAtLabels: () => req('provider/moderation/labels/known'),
 
   getProviderDefaultModerationSourceStatus: () => req('provider/moderation/default-source'),
+
+  getPdqHashStatus: () => req('provider/moderation/pdq/status'),
+
+  getFediseerStatus: () => req('provider/moderation/fediseer/status'),
+
+  lookupPdqHash: (data: { imageUrl: string }) =>
+    req('provider/moderation/pdq/hash', {
+      method: 'POST',
+      body: JSON.stringify({ data })
+    }),
+
+  syncFediseerDomainSignals: (data: {
+    sourceDomains?: string[];
+    apply?: boolean;
+    replaceExisting?: boolean;
+    includeCensures?: boolean;
+    includeHesitations?: boolean;
+    censureAction?: 'reject' | 'filter';
+    hesitationAction?: 'filter' | 'reject';
+    maxPages?: number;
+  }) =>
+    req('provider/moderation/fediseer/sync', {
+      method: 'POST',
+      body: JSON.stringify({ data })
+    }),
 
   fetchAtprotoModerationLists: (data: {
     identifier: string;

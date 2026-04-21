@@ -186,10 +186,7 @@ const ok = async (label, fn) => {
   });
 
   await ok('rejects Link tag with unsupported mediaType', () => {
-    assert.equal(
-      normalizeTag({ type: 'Link', mediaType: 'text/html', href: 'https://example.com/objects/123' }),
-      null
-    );
+    assert.equal(normalizeTag({ type: 'Link', mediaType: 'text/html', href: 'https://example.com/objects/123' }), null);
   });
 
   // ---------------------------------------------------------------------------

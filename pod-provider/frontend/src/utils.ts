@@ -1,5 +1,6 @@
 import urlJoin from 'url-join';
 import { FetchFn } from '@semapps/semantic-data-provider';
+import { fetchUtils } from 'react-admin';
 const VC_API_PATH = '/vc/v0.3';
 
 const credentialContext = [

@@ -179,7 +179,7 @@ function useModerationSubjects(container: ListKind) {
 }
 
 const ModerationListsPage = () => {
-  useCheckAuthenticated();
+  useCheckAuthenticated('Please sign in to manage moderation lists.');
 
   const navigate = useNavigate();
   const notify = useNotify();

@@ -178,13 +178,7 @@ const normalizePdqHash = (value: unknown): string | null => {
 
 const normalizePdqHashes = (value: unknown) =>
   Array.isArray(value)
-    ? [
-        ...new Set(
-          value
-            .map(normalizePdqHash)
-            .filter((entry): entry is string => Boolean(entry))
-        )
-      ]
+    ? [...new Set(value.map(normalizePdqHash).filter((entry): entry is string => Boolean(entry)))]
     : [];
 
 const extractPdqHashesFromText = (value: string) => {
@@ -204,8 +198,7 @@ const extractPdqHashesFromText = (value: string) => {
   return normalizePdqHashes(matches);
 };
 
-const truncatePdqHash = (hash: string) =>
-  hash.length > 40 ? `${hash.slice(0, 18)}…${hash.slice(-18)}` : hash;
+const truncatePdqHash = (hash: string) => (hash.length > 40 ? `${hash.slice(0, 18)}…${hash.slice(-18)}` : hash);
 
 const describeModerationPropagation = (decision: ModerationDecision | null | undefined) => {
   switch (decision?.protocols) {
@@ -220,15 +213,14 @@ const describeModerationPropagation = (decision: ModerationDecision | null | und
   }
 };
 
-const parseFediseerSourceDomains = (value: string) =>
-  [
-    ...new Set(
-      value
-        .split(/[\s,]+/)
-        .map(item => item.trim().toLowerCase())
-        .filter(Boolean)
-    )
-  ];
+const parseFediseerSourceDomains = (value: string) => [
+  ...new Set(
+    value
+      .split(/[\s,]+/)
+      .map(item => item.trim().toLowerCase())
+      .filter(Boolean)
+  )
+];
 
 const caseStatusColor = (status: ModerationCase['status']) => {
   switch (status) {
@@ -310,7 +302,15 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const [decisionResult, caseResult, labelResult, knownResult, mediaPolicyResult, pdqStatusResult, fediseerStatusResult] = await Promise.all([
+      const [
+        decisionResult,
+        caseResult,
+        labelResult,
+        knownResult,
+        mediaPolicyResult,
+        pdqStatusResult,
+        fediseerStatusResult
+      ] = await Promise.all([
         dashboardApi.listModerationDecisions({ limit: 200 }),
         dashboardApi.listModerationCases({ limit: 200 }).catch(() => null),
         dashboardApi.listAtLabels({ limit: 200 }),
@@ -347,7 +347,11 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
   }, [pdqLookupImageUrl]);
 
   useEffect(() => {
-    if (!fediseerSourceDomainsInput.trim() && Array.isArray(fediseerStatus?.sourceDomains) && fediseerStatus.sourceDomains.length > 0) {
+    if (
+      !fediseerSourceDomainsInput.trim() &&
+      Array.isArray(fediseerStatus?.sourceDomains) &&
+      fediseerStatus.sourceDomains.length > 0
+    ) {
       setFediseerSourceDomainsInput(fediseerStatus.sourceDomains.join(', '));
     }
   }, [fediseerSourceDomainsInput, fediseerStatus]);
@@ -481,7 +485,9 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
       setFediseerEntries((data?.entries as FediseerEntry[]) || []);
       if (apply) {
         const activeManagedRules = data?.applied?.activeManagedRules ?? data?.entries?.length ?? 0;
-        setSuccess(`Fediseer sync applied ${activeManagedRules} managed ActivityPub domain rule${activeManagedRules === 1 ? '' : 's'}.`);
+        setSuccess(
+          `Fediseer sync applied ${activeManagedRules} managed ActivityPub domain rule${activeManagedRules === 1 ? '' : 's'}.`
+        );
       } else {
         const previewCount = data?.entries?.length ?? 0;
         setSuccess(`Fediseer preview loaded ${previewCount} domain candidate${previewCount === 1 ? '' : 's'}.`);
@@ -537,18 +543,12 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
     }
 
     const nextHashes = [...new Set([...blockedPdqHashes, pdqLookupResult.pdqHashBinary])];
-    await persistPdqPolicyPatch(
-      { blockedPdqHashes: nextHashes },
-      'Blocked image hash added to media policy.'
-    );
+    await persistPdqPolicyPatch({ blockedPdqHashes: nextHashes }, 'Blocked image hash added to media policy.');
   };
 
   const removePdqHashFromBlocklist = async (hash: string) => {
     const nextHashes = blockedPdqHashes.filter(entry => entry !== hash);
-    await persistPdqPolicyPatch(
-      { blockedPdqHashes: nextHashes },
-      'Blocked image hash removed.'
-    );
+    await persistPdqPolicyPatch({ blockedPdqHashes: nextHashes }, 'Blocked image hash removed.');
   };
 
   const importPdqHashes = async () => {
@@ -628,8 +628,8 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
             <Stack spacing={2}>
               {sourceCaseId && (
                 <Alert severity="info">
-                  This decision is linked to incoming report <strong>{sourceCaseId}</strong>. Submitting it will mark the
-                  report resolved until all linked decisions are revoked.
+                  This decision is linked to incoming report <strong>{sourceCaseId}</strong>. Submitting it will mark
+                  the report resolved until all linked decisions are revoked.
                 </Alert>
               )}
               <TextField
@@ -774,11 +774,17 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <Stack spacing={0.25}>
-                            {(entry.reportedActorUris.length > 0 ? entry.reportedActorUris : entry.reportedUris).slice(0, 2).map(uri => (
-                              <Typography key={`${entry.id}-${uri}`} variant="caption" sx={{ fontFamily: 'monospace' }}>
-                                {uri}
-                              </Typography>
-                            ))}
+                            {(entry.reportedActorUris.length > 0 ? entry.reportedActorUris : entry.reportedUris)
+                              .slice(0, 2)
+                              .map(uri => (
+                                <Typography
+                                  key={`${entry.id}-${uri}`}
+                                  variant="caption"
+                                  sx={{ fontFamily: 'monospace' }}
+                                >
+                                  {uri}
+                                </Typography>
+                              ))}
                             {(entry.reportedActorUris.length > 2 || entry.reportedUris.length > 2) && (
                               <Typography variant="caption" color="text.secondary">
                                 + more reported objects
@@ -804,7 +810,11 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                             <Button size="small" onClick={() => prepareDecisionFromCase(entry, 'filter')}>
                               Prepare filter
                             </Button>
-                            <Button size="small" color="warning" onClick={() => prepareDecisionFromCase(entry, 'block')}>
+                            <Button
+                              size="small"
+                              color="warning"
+                              onClick={() => prepareDecisionFromCase(entry, 'block')}
+                            >
                               Prepare block
                             </Button>
                           </Stack>
@@ -996,10 +1006,14 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                     useful for bringing trusted instance-level reputation into exact inbound AP enforcement.
                   </Typography>
                   <Typography variant="body2">
-                    Service: {fediseerStatus?.configured ? fediseerStatus.serviceBaseUrl || 'Configured' : 'Not configured'}
+                    Service:{' '}
+                    {fediseerStatus?.configured ? fediseerStatus.serviceBaseUrl || 'Configured' : 'Not configured'}
                   </Typography>
                   <Typography variant="body2">
-                    Trusted sources: {fediseerStatus?.sourceDomains?.length ? fediseerStatus.sourceDomains.join(', ') : 'None configured yet'}
+                    Trusted sources:{' '}
+                    {fediseerStatus?.sourceDomains?.length
+                      ? fediseerStatus.sourceDomains.join(', ')
+                      : 'None configured yet'}
                   </Typography>
                 </Stack>
               </Alert>
@@ -1114,17 +1128,17 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                             </Typography>
                           </TableCell>
                           <TableCell>
-                            <Chip size="small" label={entry.action} color={entry.action === 'reject' ? 'warning' : 'info'} />
+                            <Chip
+                              size="small"
+                              label={entry.action}
+                              color={entry.action === 'reject' ? 'warning' : 'info'}
+                            />
                           </TableCell>
                           <TableCell>
-                            <Typography variant="caption">
-                              {entry.signals.join(', ')}
-                            </Typography>
+                            <Typography variant="caption">{entry.signals.join(', ')}</Typography>
                           </TableCell>
                           <TableCell>
-                            <Typography variant="caption">
-                              {entry.sourceDomains.join(', ')}
-                            </Typography>
+                            <Typography variant="caption">{entry.sourceDomains.join(', ')}</Typography>
                           </TableCell>
                           <TableCell>
                             <Typography variant="caption">
@@ -1224,7 +1238,7 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                   label="Bulk import PDQ hashes"
                   value={pdqImportText}
                   onChange={e => setPdqImportText(e.target.value)}
-                  placeholder='Paste hashes, a JSON array, or exported `blocked_image` rows here'
+                  placeholder="Paste hashes, a JSON array, or exported `blocked_image` rows here"
                   multiline
                   minRows={5}
                   fullWidth

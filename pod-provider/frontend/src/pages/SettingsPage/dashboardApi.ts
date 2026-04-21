@@ -267,7 +267,7 @@ export const dashboardApi = {
     }),
 
   fetchAtprotoModerationLists: (data: {
-    identifier: string;
+    identifier?: string;
     password?: string;
     pdsUrl?: string;
     limit?: number;
@@ -279,7 +279,7 @@ export const dashboardApi = {
     }),
 
   syncAtprotoModerationLists: (data: {
-    identifier: string;
+    identifier?: string;
     password?: string;
     pdsUrl?: string;
     limit?: number;

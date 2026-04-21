@@ -690,7 +690,11 @@ module.exports = {
       const sourceCaseId = typeof input.sourceCaseId === 'string' ? input.sourceCaseId.trim() : undefined;
 
       if (!targetWebId && !targetActorUri && !targetAtDid && !targetHandle) {
-        throw new MoleculerError('targetWebId, targetActorUri, targetAtDid, or targetHandle is required', 400, 'VALIDATION_ERROR');
+        throw new MoleculerError(
+          'targetWebId, targetActorUri, targetAtDid, or targetHandle is required',
+          400,
+          'VALIDATION_ERROR'
+        );
       }
 
       const labels = Array.isArray(input.labels)
@@ -754,7 +758,10 @@ module.exports = {
                   resolvedAt: decision.appliedAt,
                   resolvedBy: webId,
                   relatedDecisionIds: [
-                    ...new Set([...(Array.isArray(entry?.relatedDecisionIds) ? entry.relatedDecisionIds : []), decision.id])
+                    ...new Set([
+                      ...(Array.isArray(entry?.relatedDecisionIds) ? entry.relatedDecisionIds : []),
+                      decision.id
+                    ])
                   ]
                 }
               : entry
@@ -852,8 +859,11 @@ module.exports = {
         );
         await this.saveProviderData('moderation-decisions', this._moderationDecisions);
         if (decision.sourceCaseId) {
-          const hasActiveSibling = this._moderationDecisions.some(existing =>
-            existing?.sourceCaseId === decision.sourceCaseId && existing?.id !== decision.id && existing?.revoked !== true
+          const hasActiveSibling = this._moderationDecisions.some(
+            existing =>
+              existing?.sourceCaseId === decision.sourceCaseId &&
+              existing?.id !== decision.id &&
+              existing?.revoked !== true
           );
           this._moderationCases = this._moderationCases.map(entry =>
             entry?.id === decision.sourceCaseId
@@ -993,11 +1003,7 @@ module.exports = {
       const hesitationAction = input.hesitationAction === 'reject' ? 'reject' : 'filter';
 
       if (!includeCensures && !includeHesitations) {
-        throw new MoleculerError(
-          'Select at least one Fediseer signal to import',
-          400,
-          'FEDISEER_SIGNAL_REQUIRED'
-        );
+        throw new MoleculerError('Select at least one Fediseer signal to import', 400, 'FEDISEER_SIGNAL_REQUIRED');
       }
 
       const sourceDomains = this.normalizeFediseerSourceDomains(
@@ -1021,13 +1027,10 @@ module.exports = {
       const hesitationEntries = includeHesitations
         ? await this.fetchFediseerSignalEntries('hesitations_given', effectiveSourceDomains, 'hesitation', maxPages)
         : [];
-      const aggregatedEntries = this.aggregateFediseerSignalEntries(
-        [...censureEntries, ...hesitationEntries],
-        {
-          censureAction,
-          hesitationAction
-        }
-      );
+      const aggregatedEntries = this.aggregateFediseerSignalEntries([...censureEntries, ...hesitationEntries], {
+        censureAction,
+        hesitationAction
+      });
 
       let applied = null;
       if (apply) {
@@ -1673,16 +1676,14 @@ module.exports = {
       const targetActorUri = typeof query.targetActorUri === 'string' ? query.targetActorUri : '';
       const targetWebId = typeof query.targetWebId === 'string' ? query.targetWebId : '';
 
-      const ordered = [...this._moderationDecisions]
-        .reverse()
-        .filter(entry => {
-          if (!includeRevoked && entry?.revoked) return false;
-          if (action && entry?.action !== action) return false;
-          if (targetAtDid && entry?.targetAtDid !== targetAtDid) return false;
-          if (targetActorUri && entry?.targetActorUri !== targetActorUri) return false;
-          if (targetWebId && entry?.targetWebId !== targetWebId) return false;
-          return true;
-        });
+      const ordered = [...this._moderationDecisions].reverse().filter(entry => {
+        if (!includeRevoked && entry?.revoked) return false;
+        if (action && entry?.action !== action) return false;
+        if (targetAtDid && entry?.targetAtDid !== targetAtDid) return false;
+        if (targetActorUri && entry?.targetActorUri !== targetActorUri) return false;
+        if (targetWebId && entry?.targetWebId !== targetWebId) return false;
+        return true;
+      });
 
       let start = 0;
       if (cursor) {
@@ -1738,15 +1739,14 @@ module.exports = {
       const recipientWebId = typeof query.recipientWebId === 'string' ? query.recipientWebId : '';
       const reportedActorUri = typeof query.reportedActorUri === 'string' ? query.reportedActorUri : '';
 
-      const ordered = [...this._moderationCases]
-        .filter(entry => {
-          if (status && entry?.status !== status) return false;
-          if (sourceActorUri && entry?.sourceActorUri !== sourceActorUri) return false;
-          if (recipientWebId && entry?.recipientWebId !== recipientWebId) return false;
-          if (reportedActorUri && !Array.isArray(entry?.reportedActorUris)) return false;
-          if (reportedActorUri && !entry.reportedActorUris.includes(reportedActorUri)) return false;
-          return true;
-        });
+      const ordered = [...this._moderationCases].filter(entry => {
+        if (status && entry?.status !== status) return false;
+        if (sourceActorUri && entry?.sourceActorUri !== sourceActorUri) return false;
+        if (recipientWebId && entry?.recipientWebId !== recipientWebId) return false;
+        if (reportedActorUri && !Array.isArray(entry?.reportedActorUris)) return false;
+        if (reportedActorUri && !entry.reportedActorUris.includes(reportedActorUri)) return false;
+        return true;
+      });
 
       let start = 0;
       if (cursor) {
@@ -1845,7 +1845,9 @@ module.exports = {
     },
 
     normalizeDomainLike(value, fieldName = 'domain') {
-      const candidate = String(value || '').trim().toLowerCase();
+      const candidate = String(value || '')
+        .trim()
+        .toLowerCase();
       if (!candidate) {
         throw new MoleculerError(`${fieldName} is required`, 400, 'VALIDATION_ERROR');
       }
@@ -1875,13 +1877,7 @@ module.exports = {
 
     splitFediseerList(value) {
       if (Array.isArray(value)) {
-        return [
-          ...new Set(
-            value
-              .map(item => (typeof item === 'string' ? item.trim() : ''))
-              .filter(Boolean)
-          )
-        ];
+        return [...new Set(value.map(item => (typeof item === 'string' ? item.trim() : '')).filter(Boolean))];
       }
 
       if (typeof value === 'string' && value.trim().length > 0) {
@@ -2061,7 +2057,9 @@ module.exports = {
         if (pageEntries.length === 0) break;
 
         const fingerprint = JSON.stringify(
-          pageEntries.map(entry => `${entry.targetDomain}|${entry.signal}|${entry.sourceDomains.join(',')}`).slice(0, 64)
+          pageEntries
+            .map(entry => `${entry.targetDomain}|${entry.signal}|${entry.sourceDomains.join(',')}`)
+            .slice(0, 64)
         );
         if (seenPageFingerprints.has(fingerprint)) {
           break;
@@ -2116,8 +2114,7 @@ module.exports = {
           hesitationCount: 0
         };
 
-        const strongerAction =
-          existing.action === 'reject' || nextAction === 'reject' ? 'reject' : 'filter';
+        const strongerAction = existing.action === 'reject' || nextAction === 'reject' ? 'reject' : 'filter';
         existing.action = strongerAction;
         existing.signals = [...new Set([...(existing.signals || []), entry.signal])];
         existing.sourceDomains = [...new Set([...(existing.sourceDomains || []), ...(entry.sourceDomains || [])])];
@@ -2151,7 +2148,9 @@ module.exports = {
           : '';
       const signalSummary = [
         entry.censureCount > 0 ? `${entry.censureCount} censure${entry.censureCount === 1 ? '' : 's'}` : null,
-        entry.hesitationCount > 0 ? `${entry.hesitationCount} hesitation${entry.hesitationCount === 1 ? '' : 's'}` : null
+        entry.hesitationCount > 0
+          ? `${entry.hesitationCount} hesitation${entry.hesitationCount === 1 ? '' : 's'}`
+          : null
       ]
         .filter(Boolean)
         .join(', ');
@@ -2191,7 +2190,9 @@ module.exports = {
       const revision = Number.isInteger(moduleConfig?.revision) ? moduleConfig.revision : 0;
       const currentRules = Array.isArray(moduleConfig?.config?.rules) ? moduleConfig.config.rules : [];
       const manualRules = currentRules.filter(rule => !String(rule?.id || '').startsWith(FEDISEER_MANAGED_RULE_PREFIX));
-      const existingFediseerRules = currentRules.filter(rule => String(rule?.id || '').startsWith(FEDISEER_MANAGED_RULE_PREFIX));
+      const existingFediseerRules = currentRules.filter(rule =>
+        String(rule?.id || '').startsWith(FEDISEER_MANAGED_RULE_PREFIX)
+      );
       const nextFediseerRules = entries.map(entry => ({
         id: entry.ruleId,
         action: entry.action,
@@ -2205,9 +2206,7 @@ module.exports = {
         ? [...manualRules, ...nextFediseerRules]
         : [
             ...manualRules,
-            ...existingFediseerRules.filter(
-              rule => !nextFediseerRules.some(nextRule => nextRule.id === rule.id)
-            ),
+            ...existingFediseerRules.filter(rule => !nextFediseerRules.some(nextRule => nextRule.id === rule.id)),
             ...nextFediseerRules
           ];
 
@@ -2451,7 +2450,11 @@ module.exports = {
           typeof payload?.quality === 'number' ? Math.max(0, Math.min(100, Math.trunc(payload.quality))) : null;
 
         if (!/^[01]{256}$/.test(pdqHashBinary) || quality === null) {
-          const error = new MoleculerError('PDQ hash service returned an invalid response', 502, 'PDQ_HASH_INVALID_RESPONSE');
+          const error = new MoleculerError(
+            'PDQ hash service returned an invalid response',
+            502,
+            'PDQ_HASH_INVALID_RESPONSE'
+          );
           error.retryable = false;
           throw error;
         }

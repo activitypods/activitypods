@@ -3,7 +3,15 @@
 const CURRENT_SCHEMA_VERSION = 1;
 
 const KNOWN_CONSENT_SCOPES = new Set(['read:moderation', 'write:moderation', 'app:overrides', 'read:trust']);
-const TRUST_SOURCE_TYPES = new Set(['relay', 'curator', 'list', 'algorithmic', 'atproto-labeler', 'domain-blocklist', 'fediseer']);
+const TRUST_SOURCE_TYPES = new Set([
+  'relay',
+  'curator',
+  'list',
+  'algorithmic',
+  'atproto-labeler',
+  'domain-blocklist',
+  'fediseer'
+]);
 const TRUST_SOURCE_SCOPES = new Set([
   'filter:content',
   'filter:actor',

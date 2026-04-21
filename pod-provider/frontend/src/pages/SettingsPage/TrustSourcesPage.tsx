@@ -558,7 +558,7 @@ const TrustSourcesPage = () => {
         ? 'Domain, wildcard domain, or blocklist URL'
         : sourceType === 'fediseer'
           ? 'Fediseer issuer domain or instance URL'
-        : 'Source URL';
+          : 'Source URL';
 
   return (
     <>
@@ -775,7 +775,7 @@ const TrustSourcesPage = () => {
                     ? 'example.org or *.example.org or https://example.org/blocklist.txt'
                     : sourceType === 'fediseer'
                       ? 'beehaw.org or https://beehaw.org'
-                    : 'https://example.org/moderation/list'
+                      : 'https://example.org/moderation/list'
               }
               fullWidth
               InputProps={{

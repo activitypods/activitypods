@@ -89,7 +89,8 @@ const OwnerModerationPage: React.FC = () => {
         <Alert severity="info" sx={{ mb: 2 }}>
           <Typography variant="body2">
             App API surfaces: <strong>`/api/moderation/reports`</strong> for reports you filed and{' '}
-            <strong>`/api/moderation/actions`</strong> for actions affecting you.
+            <strong>`/api/moderation/actions`</strong> for actions affecting you. Apps that subscribe to the private{' '}
+            <strong>`notifications`</strong> stream can also receive moderation update events as this state changes.
           </Typography>
         </Alert>
 
@@ -276,7 +277,9 @@ const OwnerModerationPage: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             <Stack spacing={0.25}>
-                              {decision.targetHandle && <Typography variant="caption">{decision.targetHandle}</Typography>}
+                              {decision.targetHandle && (
+                                <Typography variant="caption">{decision.targetHandle}</Typography>
+                              )}
                               {decision.targetAtDid && (
                                 <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
                                   {decision.targetAtDid}
@@ -310,7 +313,9 @@ const OwnerModerationPage: React.FC = () => {
                             )}
                           </TableCell>
                           <TableCell>
-                            <Typography variant="caption">{decision.reason || 'No moderator note provided.'}</Typography>
+                            <Typography variant="caption">
+                              {decision.reason || 'No moderator note provided.'}
+                            </Typography>
                             {decision.sourceCaseId && (
                               <Typography variant="caption" display="block" color="text.secondary">
                                 linked report: {decision.sourceCaseId}

@@ -182,7 +182,6 @@ const parseFediseerSourceDomains = (value: string) => [
   )
 ];
 
-
 export const ProviderCrossProtocolModerationPage: React.FC = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState(0);

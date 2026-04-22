@@ -62,9 +62,13 @@ module.exports = {
     listReports: {
       async handler(ctx) {
         this.requireAuthenticatedWebId(ctx);
-        return ctx.call('user-settings-api.listOwnerModerationCases', { query: ctx.params || {} }, {
-          meta: { ...ctx.meta, $query: ctx.meta.$query || ctx.params || {}, correlationId: ctx.meta.correlationId }
-        });
+        return ctx.call(
+          'user-settings-api.listOwnerModerationCases',
+          { query: ctx.params || {} },
+          {
+            meta: { ...ctx.meta, $query: ctx.meta.$query || ctx.params || {}, correlationId: ctx.meta.correlationId }
+          }
+        );
       }
     },
 
@@ -80,9 +84,13 @@ module.exports = {
     listActions: {
       async handler(ctx) {
         this.requireAuthenticatedWebId(ctx);
-        return ctx.call('user-settings-api.listOwnerModerationDecisions', { query: ctx.params || {} }, {
-          meta: { ...ctx.meta, $query: ctx.meta.$query || ctx.params || {}, correlationId: ctx.meta.correlationId }
-        });
+        return ctx.call(
+          'user-settings-api.listOwnerModerationDecisions',
+          { query: ctx.params || {} },
+          {
+            meta: { ...ctx.meta, $query: ctx.meta.$query || ctx.params || {}, correlationId: ctx.meta.correlationId }
+          }
+        );
       }
     }
   },

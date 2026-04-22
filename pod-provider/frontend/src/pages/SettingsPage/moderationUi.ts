@@ -237,13 +237,7 @@ export const caseForwardingBadges = (entry: ModerationCase): ForwardingBadge[] =
       key: `${entry.id}-activitypub`,
       label: `AP ${status}`,
       color:
-        status === 'delivered'
-          ? 'success'
-          : status === 'failed'
-            ? 'error'
-            : status === 'skipped'
-              ? 'warning'
-              : 'info'
+        status === 'delivered' ? 'success' : status === 'failed' ? 'error' : status === 'skipped' ? 'warning' : 'info'
     });
   }
 
@@ -253,13 +247,7 @@ export const caseForwardingBadges = (entry: ModerationCase): ForwardingBadge[] =
       key: `${entry.id}-atproto`,
       label: `AT ${status}`,
       color:
-        status === 'delivered'
-          ? 'success'
-          : status === 'failed'
-            ? 'error'
-            : status === 'skipped'
-              ? 'warning'
-              : 'info'
+        status === 'delivered' ? 'success' : status === 'failed' ? 'error' : status === 'skipped' ? 'warning' : 'info'
     });
   }
 

@@ -771,7 +771,7 @@ module.exports = {
         if (sourceCaseId) {
           const existingCase = this.findStoredModerationCaseById(sourceCaseId);
           if (existingCase) {
-            await this.patchStoredModerationCase(sourceCaseId, {
+            const updatedCase = await this.patchStoredModerationCase(sourceCaseId, {
               status: 'resolved',
               updatedAt: decision.appliedAt,
               resolvedAt: decision.appliedAt,
@@ -783,8 +783,12 @@ module.exports = {
                 ])
               ]
             });
+            if (updatedCase) {
+              await this.emitModerationCaseUpdateNotifications(ctx, existingCase, updatedCase);
+            }
           }
         }
+        await this.emitModerationDecisionNotification(ctx, decision, 'applied');
       }
 
       this.recordAuditEvent(webId, 'moderation_apply', {
@@ -811,6 +815,7 @@ module.exports = {
         authoritativeProtocol: created.case.subject.authoritativeProtocol || null,
         canonicalPublished: created.canonicalPublished
       });
+      await this.emitModerationReportCreatedNotification(ctx, created.case);
 
       return {
         data: created.case,
@@ -885,10 +890,12 @@ module.exports = {
     async patchModerationCaseInternal(ctx) {
       const id = this.sanitizePathSegment(ctx.params.id, 'id');
       const patch = this.requirePlainObject(ctx.params?.patch || {}, 'patch');
+      const existing = this.findStoredModerationCaseById(id);
       const updated = await this.patchStoredModerationCase(id, patch);
       if (!updated) {
         throw new MoleculerError('Moderation case not found', 404, 'NOT_FOUND');
       }
+      await this.emitModerationCaseUpdateNotifications(ctx, existing, updated);
       return { case: updated };
     },
 
@@ -960,14 +967,18 @@ module.exports = {
           );
           const existingCase = this.findStoredModerationCaseById(decision.sourceCaseId);
           if (existingCase) {
-            await this.patchStoredModerationCase(decision.sourceCaseId, {
+            const updatedCase = await this.patchStoredModerationCase(decision.sourceCaseId, {
               status: hasActiveSibling ? 'resolved' : 'open',
               updatedAt: decision.revokedAt || new Date().toISOString(),
               resolvedAt: hasActiveSibling ? existingCase?.resolvedAt : null,
               resolvedBy: hasActiveSibling ? existingCase?.resolvedBy : null
             });
+            if (updatedCase) {
+              await this.emitModerationCaseUpdateNotifications(ctx, existingCase, updatedCase);
+            }
           }
         }
+        await this.emitModerationDecisionNotification(ctx, decision, 'revoked');
       }
 
       this.recordAuditEvent(webId, 'moderation_revoke', { id });
@@ -1855,9 +1866,10 @@ module.exports = {
       const deliveredAt = this.normalizeOptionalIsoTimestamp(raw.deliveredAt);
       const lastError = this.normalizeOptionalTrimmedString(raw.lastError, 1024);
       const skippedReason = this.normalizeOptionalTrimmedString(raw.skippedReason, 128);
-      const lastStatusCode = Number.isInteger(raw.lastStatusCode) && raw.lastStatusCode >= 100 && raw.lastStatusCode <= 599
-        ? raw.lastStatusCode
-        : null;
+      const lastStatusCode =
+        Number.isInteger(raw.lastStatusCode) && raw.lastStatusCode >= 100 && raw.lastStatusCode <= 599
+          ? raw.lastStatusCode
+          : null;
 
       return {
         status,
@@ -1892,9 +1904,10 @@ module.exports = {
       const deliveredAt = this.normalizeOptionalIsoTimestamp(raw.deliveredAt);
       const lastError = this.normalizeOptionalTrimmedString(raw.lastError, 1024);
       const skippedReason = this.normalizeOptionalTrimmedString(raw.skippedReason, 128);
-      const lastStatusCode = Number.isInteger(raw.lastStatusCode) && raw.lastStatusCode >= 100 && raw.lastStatusCode <= 599
-        ? raw.lastStatusCode
-        : null;
+      const lastStatusCode =
+        Number.isInteger(raw.lastStatusCode) && raw.lastStatusCode >= 100 && raw.lastStatusCode <= 599
+          ? raw.lastStatusCode
+          : null;
 
       return {
         status,
@@ -2680,6 +2693,168 @@ module.exports = {
       };
 
       return this.buildModerationDecisionCachePage(mergedQuery);
+    },
+
+    async emitPrivateModerationNotification(ctx, principal, payload) {
+      const normalizedPrincipal = this.normalizeOptionalHttpUrl(principal);
+      if (!normalizedPrincipal) return false;
+
+      try {
+        await ctx.call('realtime-private-emitter.publish', {
+          topic: 'notifications',
+          event: 'notification',
+          principal: normalizedPrincipal,
+          id: `moderation:${ulid().toLowerCase()}`,
+          payload: {
+            scope: 'moderation',
+            emittedAt: new Date().toISOString(),
+            link: '/settings/moderation/reports',
+            ...payload
+          }
+        });
+        return true;
+      } catch (error) {
+        this.logger.warn('[ModerationNotifications] Failed to emit private moderation notification', {
+          principal: normalizedPrincipal,
+          kind: payload?.kind,
+          error: error?.message
+        });
+        return false;
+      }
+    },
+
+    async emitModerationReportCreatedNotification(ctx, caseRecord) {
+      const reporterWebId = this.normalizeOptionalHttpUrl(caseRecord?.reporter?.webId);
+      if (!reporterWebId) return false;
+
+      return this.emitPrivateModerationNotification(ctx, reporterWebId, {
+        kind: 'moderation.report.created',
+        title: 'Report submitted',
+        body: caseRecord?.requestedForwarding?.remote
+          ? 'Your report was saved and remote forwarding was requested where supported.'
+          : 'Your report was saved for provider review.',
+        caseId: caseRecord.id,
+        status: caseRecord.status,
+        reasonType: caseRecord.reasonType,
+        authoritativeProtocol: caseRecord?.subject?.authoritativeProtocol || 'local'
+      });
+    },
+
+    async emitModerationCaseUpdateNotifications(ctx, previousCase, nextCase) {
+      const reporterWebId = this.normalizeOptionalHttpUrl(nextCase?.reporter?.webId);
+      if (!reporterWebId || !nextCase) return false;
+
+      const messages = [];
+      if (previousCase?.status !== nextCase?.status) {
+        if (nextCase.status === 'resolved') {
+          messages.push('A moderator resolved your report.');
+        } else if (nextCase.status === 'dismissed') {
+          messages.push('A moderator dismissed your report.');
+        } else if (nextCase.status === 'open' && previousCase?.status && previousCase.status !== 'open') {
+          messages.push('Your report was reopened for further review.');
+        }
+      }
+
+      const previousApStatus = previousCase?.forwarding?.activityPub?.status || null;
+      const nextApStatus = nextCase?.forwarding?.activityPub?.status || null;
+      if (previousApStatus !== nextApStatus) {
+        if (nextApStatus === 'queued') {
+          messages.push('Your report was queued for remote ActivityPub forwarding.');
+        } else if (nextApStatus === 'delivered') {
+          messages.push('Your report was delivered to the remote ActivityPub server.');
+        } else if (nextApStatus === 'failed') {
+          messages.push('Remote ActivityPub forwarding failed.');
+        } else if (nextApStatus === 'skipped') {
+          messages.push('Remote ActivityPub forwarding was skipped.');
+        }
+      }
+
+      const previousAtStatus = previousCase?.forwarding?.atproto?.status || null;
+      const nextAtStatus = nextCase?.forwarding?.atproto?.status || null;
+      if (previousAtStatus !== nextAtStatus) {
+        if (nextAtStatus === 'delivered') {
+          messages.push('Your report was delivered to the remote AT Protocol moderation service.');
+        } else if (nextAtStatus === 'failed') {
+          messages.push('Remote AT Protocol forwarding failed.');
+        } else if (nextAtStatus === 'skipped') {
+          messages.push('Remote AT Protocol forwarding was skipped.');
+        }
+      }
+
+      if (messages.length === 0) return false;
+
+      return this.emitPrivateModerationNotification(ctx, reporterWebId, {
+        kind: 'moderation.report.updated',
+        title: 'Report update',
+        body: messages.join(' '),
+        caseId: nextCase.id,
+        status: nextCase.status,
+        reasonType: nextCase.reasonType,
+        forwarding: {
+          activityPub: nextApStatus,
+          atproto: nextAtStatus
+        }
+      });
+    },
+
+    async resolveDecisionNotificationPrincipal(ctx, decision) {
+      const explicitWebId = this.normalizeOptionalHttpUrl(decision?.targetWebId);
+      if (explicitWebId) return explicitWebId;
+
+      const targetAtDid = this.normalizeOptionalTrimmedString(decision?.targetAtDid, 512);
+      if (targetAtDid) {
+        try {
+          const projection = await ctx.call('internal-identity-projection.getByDid', {
+            atprotoDid: targetAtDid
+          });
+          return this.normalizeOptionalHttpUrl(projection?.webId);
+        } catch (error) {
+          this.logger.debug?.('[ModerationNotifications] Failed to resolve local DID target', {
+            targetAtDid,
+            error: error?.message
+          });
+        }
+      }
+
+      const targetHandle = this.normalizeOptionalTrimmedString(decision?.targetHandle, 512);
+      if (targetHandle) {
+        try {
+          const projection = await ctx.call('internal-identity-projection.getByHandle', {
+            atprotoHandle: targetHandle.toLowerCase()
+          });
+          return this.normalizeOptionalHttpUrl(projection?.webId);
+        } catch (error) {
+          this.logger.debug?.('[ModerationNotifications] Failed to resolve local handle target', {
+            targetHandle,
+            error: error?.message
+          });
+        }
+      }
+
+      return null;
+    },
+
+    async emitModerationDecisionNotification(ctx, decision, lifecycle) {
+      const principal = await this.resolveDecisionNotificationPrincipal(ctx, decision);
+      if (!principal) return false;
+
+      const action = this.normalizeOptionalTrimmedString(decision?.action, 64) || 'moderation';
+      const protocols = this.normalizeOptionalTrimmedString(decision?.protocols, 32) || 'none';
+      const reason = this.normalizeOptionalTrimmedString(decision?.reason, 500);
+
+      return this.emitPrivateModerationNotification(ctx, principal, {
+        kind: lifecycle === 'revoked' ? 'moderation.decision.revoked' : 'moderation.decision.applied',
+        title: lifecycle === 'revoked' ? 'Moderation action revoked' : 'Moderation action applied',
+        body:
+          lifecycle === 'revoked'
+            ? `A previous ${action} moderation action affecting your pod identity was revoked.`
+            : `A ${action} moderation action affecting your pod identity was applied.`,
+        decisionId: decision?.id || null,
+        action,
+        protocols,
+        ...(reason ? { reason } : {}),
+        ...(decision?.sourceCaseId ? { sourceCaseId: decision.sourceCaseId } : {})
+      });
     },
 
     async mrfProxy(ctx, { method, path, permission, body }) {
@@ -4617,7 +4792,9 @@ module.exports = {
     async collectEnabledAtprotoModerationServices(ctx, webId) {
       const trustSources = await this.listByContainer(ctx, webId, 'trust-sources', { seedProviderDefaults: false });
       return trustSources
-        .filter(entry => String(entry?.sourceType || '').toLowerCase() === 'atproto-labeler' && entry?.enabled !== false)
+        .filter(
+          entry => String(entry?.sourceType || '').toLowerCase() === 'atproto-labeler' && entry?.enabled !== false
+        )
         .map(entry => ({
           did: this.normalizeOptionalTrimmedString(entry?.source, 512),
           priority: Number.isFinite(Number(entry?.priority)) ? Number(entry.priority) : 0
@@ -4651,7 +4828,9 @@ module.exports = {
 
       const rawAtUri =
         this.normalizeOptionalTrimmedString(caseRecord.subject.object?.atUri, 2048) ||
-        (String(caseRecord.subject.object?.canonicalObjectId || '').trim().startsWith('at://')
+        (String(caseRecord.subject.object?.canonicalObjectId || '')
+          .trim()
+          .startsWith('at://')
           ? String(caseRecord.subject.object.canonicalObjectId).trim()
           : null);
       const cid = this.normalizeOptionalTrimmedString(caseRecord.subject.object?.cid, 512);
@@ -4661,7 +4840,11 @@ module.exports = {
       }
 
       if (!cid) {
-        throw new MoleculerError('ATProto record reports require a CID for precise record reporting', 400, 'VALIDATION_ERROR');
+        throw new MoleculerError(
+          'ATProto record reports require a CID for precise record reporting',
+          400,
+          'VALIDATION_ERROR'
+        );
       }
 
       const parsed = this.parseAtUri(rawAtUri);

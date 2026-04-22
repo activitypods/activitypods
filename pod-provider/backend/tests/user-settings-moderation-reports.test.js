@@ -11,8 +11,10 @@ function createService(publishResult = { ok: true, canonicalIntentId: 'intent-12
     logger: {
       warn: jest.fn(),
       info: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
+      debug: jest.fn()
     },
+    _auditLog: [],
     _moderationCases: [],
     ...serviceDefinition.methods,
     saveProviderData: jest.fn().mockResolvedValue(undefined),
@@ -30,6 +32,16 @@ function createCtx() {
           atprotoDid: 'did:plc:alice123',
           atprotoHandle: 'alice.test',
           atprotoPdsUrl: 'https://pod.example'
+        };
+      }
+
+      if (actionName === 'realtime-private-emitter.publish') {
+        return { ok: true };
+      }
+
+      if (actionName === 'internal-identity-projection.getByDid') {
+        return {
+          webId: 'https://pod.example/alice#me'
         };
       }
 
@@ -155,6 +167,29 @@ describe('user-settings moderation reports', () => {
     expect(service._moderationCases).toHaveLength(1);
   });
 
+  test('createModerationReport emits a private notification for the reporting user', async () => {
+    const service = createService();
+    const ctx = createCtx();
+    ctx.meta = { webId: 'https://pod.example/alice#me' };
+    ctx.params = { data: makeReportInput() };
+
+    const result = await serviceDefinition.actions.createModerationReport.call(service, ctx);
+
+    expect(result.data.id).toBeTruthy();
+    expect(ctx.call).toHaveBeenCalledWith(
+      'realtime-private-emitter.publish',
+      expect.objectContaining({
+        topic: 'notifications',
+        event: 'notification',
+        principal: 'https://pod.example/alice#me',
+        payload: expect.objectContaining({
+          kind: 'moderation.report.created',
+          caseId: result.data.id
+        })
+      })
+    );
+  });
+
   test('preserves and deep-merges ActivityPub forwarding state on case patches', async () => {
     const service = createService();
     const ctx = createCtx();
@@ -236,7 +271,10 @@ describe('user-settings moderation reports', () => {
         })
       })
     );
-    expect(service.createManagedAtprotoSession).toHaveBeenCalledWith('https://pod.example', 'https://pod.example/alice#me');
+    expect(service.createManagedAtprotoSession).toHaveBeenCalledWith(
+      'https://pod.example',
+      'https://pod.example/alice#me'
+    );
   });
 
   test('skips ATProto forwarding when a record report lacks a CID', async () => {
@@ -319,5 +357,69 @@ describe('user-settings moderation reports', () => {
       deliveredAt: '2026-04-22T12:06:00.000Z',
       lastStatusCode: 200
     });
+  });
+
+  test('emits a report update notification when remote forwarding reaches a terminal state', async () => {
+    const service = createService();
+    const ctx = createCtx();
+    const created = await service.createLocalModerationReport(ctx, 'https://pod.example/alice#me', makeReportInput());
+    const previousCase = created.case;
+    const nextCase = {
+      ...previousCase,
+      forwarding: {
+        atproto: {
+          status: 'delivered',
+          serviceDid: 'did:plc:labeler123',
+          pdsUrl: 'https://pds.example/',
+          subjectDid: 'did:plc:bob123'
+        }
+      }
+    };
+
+    await service.emitModerationCaseUpdateNotifications(ctx, previousCase, nextCase);
+
+    expect(ctx.call).toHaveBeenCalledWith(
+      'realtime-private-emitter.publish',
+      expect.objectContaining({
+        principal: 'https://pod.example/alice#me',
+        payload: expect.objectContaining({
+          kind: 'moderation.report.updated',
+          caseId: nextCase.id
+        })
+      })
+    );
+  });
+
+  test('emits a moderation decision notification for a local user resolved from DID', async () => {
+    const service = createService();
+    const ctx = createCtx();
+
+    await service.emitModerationDecisionNotification(
+      ctx,
+      {
+        id: 'decision-1',
+        action: 'block',
+        targetAtDid: 'did:plc:alice123',
+        protocols: 'both'
+      },
+      'applied'
+    );
+
+    expect(ctx.call).toHaveBeenCalledWith(
+      'internal-identity-projection.getByDid',
+      expect.objectContaining({ atprotoDid: 'did:plc:alice123' })
+    );
+    expect(ctx.call).toHaveBeenCalledWith(
+      'realtime-private-emitter.publish',
+      expect.objectContaining({
+        principal: 'https://pod.example/alice#me',
+        payload: expect.objectContaining({
+          kind: 'moderation.decision.applied',
+          decisionId: 'decision-1',
+          action: 'block',
+          protocols: 'both'
+        })
+      })
+    );
   });
 });

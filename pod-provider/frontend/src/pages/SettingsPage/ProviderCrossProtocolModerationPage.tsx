@@ -27,97 +27,19 @@ import {
   Typography
 } from '@mui/material';
 import { dashboardApi } from './dashboardApi';
-
-type ModerationAction = 'label' | 'warn' | 'filter' | 'block' | 'suspend';
+import {
+  caseForwardingBadges,
+  caseForwardingNotes,
+  caseReporterLines,
+  caseStatusColor,
+  caseTargetLines,
+  describeCaseSource,
+  protocolColor,
+  type ModerationAction,
+  type ModerationCase,
+  type ModerationDecision
+} from './moderationUi';
 type MRFMode = 'disabled' | 'dry-run' | 'enforce';
-
-type ModerationDecision = {
-  id: string;
-  appliedAt: string;
-  appliedBy: string;
-  action: ModerationAction;
-  labels: string[];
-  targetWebId?: string;
-  targetActorUri?: string;
-  targetAtDid?: string;
-  targetHandle?: string;
-  sourceCaseId?: string;
-  reason?: string;
-  protocols?: 'none' | 'ap' | 'at' | 'both';
-  revoked?: boolean;
-};
-
-type ModerationCase = {
-  id: string;
-  activityId?: string;
-  source: 'activitypub-flag' | 'local-user-report';
-  protocol: 'ap' | 'activitypods';
-  reporter?: {
-    canonicalAccountId?: string;
-    did?: string;
-    webId?: string;
-    activityPubActorUri?: string;
-    handle?: string;
-  } | null;
-  recipient?: {
-    webId?: string;
-    activityPubActorUri?: string;
-  } | null;
-  inboxPath?: string;
-  reasonType: 'spam' | 'harassment' | 'abuse' | 'impersonation' | 'copyright' | 'illegal' | 'safety' | 'other';
-  reason?: string;
-  requestedForwarding?: { remote: boolean } | null;
-  clientContext?: { app?: string | null; surface?: string | null } | null;
-  subject:
-    | {
-        kind: 'account';
-        authoritativeProtocol?: 'local' | 'ap' | 'at';
-        actor: {
-          canonicalAccountId?: string;
-          did?: string;
-          webId?: string;
-          activityPubActorUri?: string;
-          handle?: string;
-        };
-      }
-    | {
-        kind: 'object';
-        authoritativeProtocol?: 'local' | 'ap' | 'at';
-        object: {
-          canonicalObjectId: string;
-          atUri?: string;
-          activityPubObjectId?: string;
-          canonicalUrl?: string;
-        };
-        owner?: {
-          canonicalAccountId?: string;
-          did?: string;
-          webId?: string;
-          activityPubActorUri?: string;
-          handle?: string;
-        } | null;
-      };
-  evidenceObjectRefs: Array<{
-    canonicalObjectId: string;
-    atUri?: string;
-    activityPubObjectId?: string;
-    canonicalUrl?: string;
-  }>;
-  receivedAt: string;
-  createdAt?: string;
-  status: 'open' | 'resolved' | 'dismissed';
-  relatedDecisionIds: string[];
-  canonicalEvent?: {
-    status: 'pending' | 'published' | 'failed';
-    canonicalIntentId?: string;
-    lastAttemptAt?: string;
-    publishedAt?: string;
-    lastError?: string;
-  };
-  updatedAt?: string;
-  resolvedAt?: string;
-  resolvedBy?: string;
-};
 
 type AtLabel = {
   src: string;
@@ -193,18 +115,6 @@ const DEFAULT_AT_LABELS = [
 const DEFAULT_PDQ_QUALITY = 70;
 const DEFAULT_PDQ_THRESHOLD = 15;
 
-const protocolColor = (protocols: ModerationDecision['protocols']) => {
-  switch (protocols) {
-    case 'both':
-      return 'success';
-    case 'ap':
-    case 'at':
-      return 'info';
-    default:
-      return 'default';
-  }
-};
-
 const clampInt = (value: unknown, fallback: number, min: number, max: number) => {
   const parsed = typeof value === 'number' ? value : Number(value);
   if (!Number.isFinite(parsed)) return fallback;
@@ -272,71 +182,6 @@ const parseFediseerSourceDomains = (value: string) => [
   )
 ];
 
-const caseStatusColor = (status: ModerationCase['status']) => {
-  switch (status) {
-    case 'resolved':
-      return 'success';
-    case 'dismissed':
-      return 'warning';
-    default:
-      return 'default';
-  }
-};
-
-const firstNonEmpty = (...values: Array<string | undefined | null>) => values.find(value => Boolean(value && value.trim()));
-
-const describeCaseSource = (entry: ModerationCase) =>
-  entry.source === 'activitypub-flag' ? 'Inbound ActivityPub Flag' : 'Local user report';
-
-const caseReporterLines = (entry: ModerationCase) => {
-  const primary = firstNonEmpty(
-    entry.reporter?.webId,
-    entry.reporter?.activityPubActorUri,
-    entry.reporter?.did,
-    entry.reporter?.handle
-  );
-  const secondary = firstNonEmpty(
-    entry.reporter?.activityPubActorUri && entry.reporter.activityPubActorUri !== primary
-      ? entry.reporter.activityPubActorUri
-      : null,
-    entry.reporter?.did && entry.reporter.did !== primary ? entry.reporter.did : null,
-    entry.reporter?.handle && entry.reporter.handle !== primary ? entry.reporter.handle : null
-  );
-  const lines = [primary, secondary].filter((value): value is string => Boolean(value));
-  return lines.length > 0 ? lines : ['Unknown reporter'];
-};
-
-const caseTargetLines = (entry: ModerationCase) => {
-  if (entry.subject.kind === 'account') {
-    return [
-      firstNonEmpty(
-        entry.subject.actor.webId,
-        entry.subject.actor.activityPubActorUri,
-        entry.subject.actor.did,
-        entry.subject.actor.handle
-      )
-    ].filter((value): value is string => Boolean(value));
-  }
-
-  const primaryObject =
-    firstNonEmpty(entry.subject.object.canonicalUrl, entry.subject.object.activityPubObjectId, entry.subject.object.atUri, entry.subject.object.canonicalObjectId) ||
-    entry.subject.object.canonicalObjectId;
-  const owner =
-    firstNonEmpty(
-      entry.subject.owner?.webId,
-      entry.subject.owner?.activityPubActorUri,
-      entry.subject.owner?.did,
-      entry.subject.owner?.handle
-    ) || null;
-  return [
-    primaryObject,
-    owner,
-    ...entry.evidenceObjectRefs
-      .slice(0, 2)
-      .map(ref => firstNonEmpty(ref.canonicalUrl, ref.activityPubObjectId, ref.atUri, ref.canonicalObjectId))
-      .filter((value): value is string => Boolean(value))
-  ].filter((value): value is string => Boolean(value));
-};
 
 export const ProviderCrossProtocolModerationPage: React.FC = () => {
   const navigate = useNavigate();
@@ -510,21 +355,15 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
 
   const prepareDecisionFromCase = (entry: ModerationCase, nextAction: ModerationAction) => {
     const targetWebId =
-      entry.subject.kind === 'account'
-        ? entry.subject.actor.webId || ''
-        : entry.subject.owner?.webId || '';
+      entry.subject.kind === 'account' ? entry.subject.actor.webId || '' : entry.subject.owner?.webId || '';
     const targetActorUri =
       entry.subject.kind === 'account'
         ? entry.subject.actor.activityPubActorUri || ''
         : entry.subject.owner?.activityPubActorUri || '';
     const nextTargetAtDid =
-      entry.subject.kind === 'account'
-        ? entry.subject.actor.did || ''
-        : entry.subject.owner?.did || '';
+      entry.subject.kind === 'account' ? entry.subject.actor.did || '' : entry.subject.owner?.did || '';
     const nextTargetHandle =
-      entry.subject.kind === 'account'
-        ? entry.subject.actor.handle || ''
-        : entry.subject.owner?.handle || '';
+      entry.subject.kind === 'account' ? entry.subject.actor.handle || '' : entry.subject.owner?.handle || '';
 
     if (!targetWebId && !targetActorUri && !nextTargetAtDid && !nextTargetHandle) {
       setError('This report does not include a subject account we can target directly yet.');
@@ -869,6 +708,9 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                         <strong>Status</strong>
                       </TableCell>
                       <TableCell>
+                        <strong>Forwarding</strong>
+                      </TableCell>
+                      <TableCell>
                         <strong>Reason</strong>
                       </TableCell>
                       <TableCell align="right">
@@ -877,76 +719,119 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {cases.map(entry => (
-                      <TableRow key={entry.id} hover>
-                        <TableCell>
-                          <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
-                            {new Date(entry.receivedAt).toLocaleString()}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="caption" color="text.secondary">
-                            {describeCaseSource(entry)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Stack spacing={0.25}>
-                            {caseReporterLines(entry).map(line => (
-                              <Typography key={`${entry.id}-reporter-${line}`} variant="caption" sx={{ fontFamily: 'monospace' }}>
-                                {line}
-                              </Typography>
-                            ))}
-                          </Stack>
-                        </TableCell>
-                        <TableCell>
-                          <Stack spacing={0.25}>
-                            {caseTargetLines(entry)
-                              .slice(0, 3)
-                              .map(line => (
-                                <Typography key={`${entry.id}-${line}`} variant="caption" sx={{ fontFamily: 'monospace' }}>
+                    {cases.map(entry => {
+                      const forwardingBadges = caseForwardingBadges(entry);
+                      const forwardingNotes = caseForwardingNotes(entry);
+                      return (
+                        <TableRow key={entry.id} hover>
+                          <TableCell>
+                            <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+                              {new Date(entry.receivedAt).toLocaleString()}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="caption" color="text.secondary">
+                              {describeCaseSource(entry)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Stack spacing={0.25}>
+                              {caseReporterLines(entry).map(line => (
+                                <Typography
+                                  key={`${entry.id}-reporter-${line}`}
+                                  variant="caption"
+                                  sx={{ fontFamily: 'monospace' }}
+                                >
                                   {line}
                                 </Typography>
                               ))}
-                            {entry.evidenceObjectRefs.length > 2 && (
-                              <Typography variant="caption" color="text.secondary">
-                                + more evidence objects
-                              </Typography>
-                            )}
-                          </Stack>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={entry.status}
-                            size="small"
-                            color={caseStatusColor(entry.status) as 'default' | 'success' | 'warning'}
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Stack spacing={0.25}>
-                            <Typography variant="caption">{entry.reason || 'No reason text provided.'}</Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {entry.reasonType}
-                              {entry.requestedForwarding?.remote ? ' • requested remote forwarding' : ''}
-                            </Typography>
-                          </Stack>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Stack direction="row" spacing={1} justifyContent="flex-end">
-                            <Button size="small" onClick={() => prepareDecisionFromCase(entry, 'filter')}>
-                              Prepare filter
-                            </Button>
-                            <Button
+                            </Stack>
+                          </TableCell>
+                          <TableCell>
+                            <Stack spacing={0.25}>
+                              {caseTargetLines(entry)
+                                .slice(0, 3)
+                                .map(line => (
+                                  <Typography
+                                    key={`${entry.id}-${line}`}
+                                    variant="caption"
+                                    sx={{ fontFamily: 'monospace' }}
+                                  >
+                                    {line}
+                                  </Typography>
+                                ))}
+                              {entry.evidenceObjectRefs.length > 2 && (
+                                <Typography variant="caption" color="text.secondary">
+                                  + more evidence objects
+                                </Typography>
+                              )}
+                            </Stack>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={entry.status}
                               size="small"
-                              color="warning"
-                              onClick={() => prepareDecisionFromCase(entry, 'block')}
-                            >
-                              Prepare block
-                            </Button>
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              color={caseStatusColor(entry.status) as 'default' | 'success' | 'warning'}
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Stack spacing={0.75}>
+                              <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
+                                {forwardingBadges.length > 0 ? (
+                                  forwardingBadges.map(badge => (
+                                    <Chip
+                                      key={badge.key}
+                                      label={badge.label}
+                                      size="small"
+                                      color={badge.color as 'default' | 'success' | 'info' | 'warning' | 'error'}
+                                      variant="outlined"
+                                    />
+                                  ))
+                                ) : (
+                                  <Typography variant="caption" color="text.secondary">
+                                    No forwarding state yet
+                                  </Typography>
+                                )}
+                              </Stack>
+                              {forwardingNotes.slice(0, 2).map(note => (
+                                <Typography
+                                  key={`${entry.id}-${note}`}
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{ wordBreak: 'break-word' }}
+                                >
+                                  {note}
+                                </Typography>
+                              ))}
+                            </Stack>
+                          </TableCell>
+                          <TableCell>
+                            <Stack spacing={0.25}>
+                              <Typography variant="caption">{entry.reason || 'No reason text provided.'}</Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {entry.reasonType}
+                                {entry.requestedForwarding?.remote ? ' • requested remote forwarding' : ''}
+                              </Typography>
+                            </Stack>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                              <Button size="small" onClick={() => prepareDecisionFromCase(entry, 'filter')}>
+                                Prepare filter
+                              </Button>
+                              <Button
+                                size="small"
+                                color="warning"
+                                onClick={() => prepareDecisionFromCase(entry, 'block')}
+                              >
+                                Prepare block
+                              </Button>
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>

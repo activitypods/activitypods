@@ -37,7 +37,9 @@ module.exports = {
     const bearerToken = this.settings.auth.bearerToken;
 
     if (!bearerToken) {
-      this.logger.warn('[InternalModerationCaseApi] No internal bearer token configured; all requests will be rejected');
+      this.logger.warn(
+        '[InternalModerationCaseApi] No internal bearer token configured; all requests will be rejected'
+      );
     }
 
     await this.broker.call('api.addRoute', {
@@ -66,7 +68,8 @@ module.exports = {
           'GET /cases': 'internal-moderation-case-api.listCases',
           'GET /cases/:id': 'internal-moderation-case-api.getCase',
           'PATCH /cases/:id': 'internal-moderation-case-api.patchCase',
-          'GET /cases/by-dedupe/:dedupeKey': 'internal-moderation-case-api.findCaseByDedupe'
+          'GET /cases/by-dedupe/:dedupeKey': 'internal-moderation-case-api.findCaseByDedupe',
+          'POST /cases/:id/forwarding/atproto/prepare': 'internal-moderation-case-api.prepareAtprotoForwarding'
         }
       },
       toBottom: false
@@ -99,6 +102,10 @@ module.exports = {
 
     async findCaseByDedupe(ctx) {
       return ctx.call('user-settings-api.findModerationCaseByDedupeInternal', ctx.params);
+    },
+
+    async prepareAtprotoForwarding(ctx) {
+      return ctx.call('user-settings-api.prepareModerationCaseAtprotoForwardingInternal', ctx.params);
     }
   }
 };

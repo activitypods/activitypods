@@ -257,6 +257,18 @@ export const dashboardApi = {
       body: JSON.stringify({ data })
     }),
 
+  listMyModerationCases: (query?: Record<string, string | number | boolean>) => {
+    const params = query ? new URLSearchParams(Object.entries(query).map(([k, v]) => [k, String(v)])) : null;
+    return apiReq(params ? `/api/moderation/reports?${params.toString()}` : '/api/moderation/reports');
+  },
+
+  getMyModerationCase: (id: string) => apiReq(`/api/moderation/reports/${encodeURIComponent(id)}`),
+
+  listMyModerationDecisions: (query?: Record<string, string | number | boolean>) => {
+    const params = query ? new URLSearchParams(Object.entries(query).map(([k, v]) => [k, String(v)])) : null;
+    return apiReq(params ? `/api/moderation/actions?${params.toString()}` : '/api/moderation/actions');
+  },
+
   syncFediseerDomainSignals: (data: {
     sourceDomains?: string[];
     apply?: boolean;

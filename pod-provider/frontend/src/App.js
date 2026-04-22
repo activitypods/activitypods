@@ -51,6 +51,7 @@ import ProviderInvitationsPage from './pages/SettingsPage/ProviderInvitationsPag
 import ProviderPodsPage from './pages/SettingsPage/ProviderPodsPage';
 import ProviderAuditLogPage from './pages/SettingsPage/ProviderAuditLogPage';
 import ProviderCrossProtocolModerationPage from './pages/SettingsPage/ProviderCrossProtocolModerationPage';
+import OwnerModerationPage from './pages/SettingsPage/OwnerModerationPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -122,6 +123,7 @@ const App = () => (
             <Route path="export" element={<SettingsExportPage />} />
             <Route path="delete" element={<SettingsDeletePage />} />
             <Route path="moderation" element={<ModerationListsPage />} />
+            <Route path="moderation/reports" element={<OwnerModerationPage />} />
             <Route path="moderation/rules" element={<ModerationPage />} />
             <Route path="apps" element={<AppPermissionsPage />} />
             <Route path="trust-sources" element={<TrustSourcesPage />} />

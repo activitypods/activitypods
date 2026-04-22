@@ -119,6 +119,13 @@ const SettingsOwnerDashboardPage = () => {
             actionIcon={<ArrowForwardIosIcon />}
           />
           <SettingsItem
+            onClick={() => navigate('/settings/moderation/reports')}
+            icon={<GavelIcon />}
+            label="Reports & actions"
+            value="Reports you filed, cross-protocol delivery, actions affecting you"
+            actionIcon={<ArrowForwardIosIcon />}
+          />
+          <SettingsItem
             onClick={() => navigate('/settings/moderation/rules')}
             icon={<GavelIcon />}
             label="Moderation rules"

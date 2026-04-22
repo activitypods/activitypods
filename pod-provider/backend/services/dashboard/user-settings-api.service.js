@@ -214,7 +214,9 @@ module.exports = {
     this._auditLog = await this.loadProviderData('audit-log');
     this._moderationDecisions = await this.loadProviderData('moderation-decisions');
     {
-      const normalizedModerationCases = this.normalizeModerationCaseList(await this.loadProviderData('moderation-cases'));
+      const normalizedModerationCases = this.normalizeModerationCaseList(
+        await this.loadProviderData('moderation-cases')
+      );
       this._moderationCases = normalizedModerationCases.entries;
       if (normalizedModerationCases.changed) {
         await this.saveProviderData('moderation-cases', this._moderationCases);
@@ -264,6 +266,9 @@ module.exports = {
           'GET /provider/moderation/fediseer/status': 'user-settings-api.getFediseerStatus',
           'POST /provider/moderation/fediseer/sync': 'user-settings-api.syncFediseerDomainSignals',
           'POST /moderation/reports': 'user-settings-api.createModerationReport',
+          'GET /moderation/cases': 'user-settings-api.listOwnerModerationCases',
+          'GET /moderation/cases/:id': 'user-settings-api.getOwnerModerationCase',
+          'GET /moderation/decisions': 'user-settings-api.listOwnerModerationDecisions',
           'POST /moderation/atproto/lists/fetch': 'user-settings-api.fetchAtprotoUserLists',
           'POST /moderation/atproto/lists/sync': 'user-settings-api.syncAtprotoUserLists',
           'GET /moderation/atproto/labelers/catalog': 'user-settings-api.listAtprotoLabelerCatalog',
@@ -772,7 +777,10 @@ module.exports = {
               resolvedAt: decision.appliedAt,
               resolvedBy: webId,
               relatedDecisionIds: [
-                ...new Set([...(Array.isArray(existingCase.relatedDecisionIds) ? existingCase.relatedDecisionIds : []), decision.id])
+                ...new Set([
+                  ...(Array.isArray(existingCase.relatedDecisionIds) ? existingCase.relatedDecisionIds : []),
+                  decision.id
+                ])
               ]
             });
           }
@@ -810,6 +818,28 @@ module.exports = {
         canonicalPublished: created.canonicalPublished,
         canonicalIntentId: created.canonicalIntentId || null
       };
+    },
+
+    async listOwnerModerationCases(ctx) {
+      const webId = this.requireWebId(ctx);
+      const query = this.pickModerationQuery(ctx.meta.$query || ctx.params?.query || ctx.params || {});
+      return this.buildOwnerModerationCasePage(webId, query);
+    },
+
+    async getOwnerModerationCase(ctx) {
+      const webId = this.requireWebId(ctx);
+      const id = this.sanitizePathSegment(ctx.params.id, 'id');
+      const entry = this.findStoredModerationCaseById(id);
+      if (!entry || !this.caseBelongsToReporter(entry, webId)) {
+        throw new MoleculerError('Moderation case not found', 404, 'NOT_FOUND');
+      }
+      return { data: entry };
+    },
+
+    async listOwnerModerationDecisions(ctx) {
+      const webId = this.requireWebId(ctx);
+      const query = this.pickModerationQuery(ctx.meta.$query || ctx.params?.query || ctx.params || {});
+      return await this.buildOwnerModerationDecisionPage(ctx, webId, query);
     },
 
     async listModerationCases(ctx) {
@@ -860,6 +890,23 @@ module.exports = {
         throw new MoleculerError('Moderation case not found', 404, 'NOT_FOUND');
       }
       return { case: updated };
+    },
+
+    async prepareModerationCaseAtprotoForwardingInternal(ctx) {
+      const id = this.sanitizePathSegment(ctx.params.id, 'id');
+      const input = this.requirePlainObject(ctx.params || {}, 'params');
+      const caseRecord = this.findStoredModerationCaseById(id);
+      if (!caseRecord) {
+        throw new MoleculerError('Moderation case not found', 404, 'NOT_FOUND');
+      }
+
+      const canonicalIntentId = this.normalizeOptionalTrimmedString(input.canonicalIntentId, 512);
+      return {
+        case: caseRecord,
+        plan: await this.buildAtprotoModerationForwardingPlan(ctx, caseRecord, {
+          canonicalIntentId: canonicalIntentId || undefined
+        })
+      };
     },
 
     async listModerationDecisions(ctx) {
@@ -1637,9 +1684,7 @@ module.exports = {
         .trim()
         .toLowerCase();
       if (
-        ['spam', 'harassment', 'abuse', 'impersonation', 'copyright', 'illegal', 'safety', 'other'].includes(
-          normalized
-        )
+        ['spam', 'harassment', 'abuse', 'impersonation', 'copyright', 'illegal', 'safety', 'other'].includes(normalized)
       ) {
         return normalized;
       }
@@ -1687,7 +1732,10 @@ module.exports = {
       const canonicalUrl = this.normalizeOptionalHttpUrl(value.canonicalUrl);
       const cid = this.normalizeOptionalTrimmedString(value.cid, 512);
       const canonicalObjectId =
-        this.normalizeOptionalTrimmedString(value.canonicalObjectId, 2048) || atUri || activityPubObjectId || canonicalUrl;
+        this.normalizeOptionalTrimmedString(value.canonicalObjectId, 2048) ||
+        atUri ||
+        activityPubObjectId ||
+        canonicalUrl;
 
       if (!canonicalObjectId) {
         throw new MoleculerError(
@@ -1746,7 +1794,9 @@ module.exports = {
 
       if (value.kind === 'object') {
         const object = this.normalizeModerationObjectRef(value.object, `${fieldName}.object`);
-        const owner = value.owner ? this.normalizeModerationActorRef(value.owner, `${fieldName}.owner`, { allowEmpty: true }) : null;
+        const owner = value.owner
+          ? this.normalizeModerationActorRef(value.owner, `${fieldName}.owner`, { allowEmpty: true })
+          : null;
         const authoritativeProtocol = ['local', 'ap', 'at'].includes(value.authoritativeProtocol)
           ? value.authoritativeProtocol
           : this.inferModerationSubjectAuthority({ kind: 'object', object, owner });
@@ -1786,6 +1836,101 @@ module.exports = {
         ...(publishedAt ? { publishedAt } : {}),
         ...(lastError ? { lastError } : {})
       };
+    },
+
+    normalizeModerationActivityPubForwardingState(value) {
+      const raw = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+      const status = ['pending', 'queued', 'delivered', 'failed', 'skipped'].includes(raw.status)
+        ? raw.status
+        : 'pending';
+      const canonicalIntentId = this.normalizeOptionalTrimmedString(raw.canonicalIntentId, 512);
+      const moderationActorUri = this.normalizeOptionalHttpUrl(raw.moderationActorUri);
+      const activityId = this.normalizeOptionalHttpUrl(raw.activityId);
+      const outboxIntentId = this.normalizeOptionalTrimmedString(raw.outboxIntentId, 256);
+      const targetActorUri = this.normalizeOptionalHttpUrl(raw.targetActorUri);
+      const targetInbox = this.normalizeOptionalHttpUrl(raw.targetInbox);
+      const targetDomain = this.normalizeOptionalTrimmedString(raw.targetDomain, 255);
+      const lastAttemptAt = this.normalizeOptionalIsoTimestamp(raw.lastAttemptAt);
+      const queuedAt = this.normalizeOptionalIsoTimestamp(raw.queuedAt);
+      const deliveredAt = this.normalizeOptionalIsoTimestamp(raw.deliveredAt);
+      const lastError = this.normalizeOptionalTrimmedString(raw.lastError, 1024);
+      const skippedReason = this.normalizeOptionalTrimmedString(raw.skippedReason, 128);
+      const lastStatusCode = Number.isInteger(raw.lastStatusCode) && raw.lastStatusCode >= 100 && raw.lastStatusCode <= 599
+        ? raw.lastStatusCode
+        : null;
+
+      return {
+        status,
+        ...(canonicalIntentId ? { canonicalIntentId } : {}),
+        ...(moderationActorUri ? { moderationActorUri } : {}),
+        ...(activityId ? { activityId } : {}),
+        ...(outboxIntentId ? { outboxIntentId } : {}),
+        ...(targetActorUri ? { targetActorUri } : {}),
+        ...(targetInbox ? { targetInbox } : {}),
+        ...(targetDomain ? { targetDomain } : {}),
+        ...(lastAttemptAt ? { lastAttemptAt } : {}),
+        ...(queuedAt ? { queuedAt } : {}),
+        ...(deliveredAt ? { deliveredAt } : {}),
+        ...(lastError ? { lastError } : {}),
+        ...(skippedReason ? { skippedReason } : {}),
+        ...(lastStatusCode ? { lastStatusCode } : {})
+      };
+    },
+
+    normalizeModerationAtprotoForwardingState(value) {
+      const raw = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+      const status = ['pending', 'delivered', 'failed', 'skipped'].includes(raw.status) ? raw.status : 'pending';
+      const canonicalIntentId = this.normalizeOptionalTrimmedString(raw.canonicalIntentId, 512);
+      const serviceDid = this.normalizeOptionalTrimmedString(raw.serviceDid, 512);
+      const pdsUrl = this.normalizeOptionalHttpUrl(raw.pdsUrl);
+      const reporterDid = this.normalizeOptionalTrimmedString(raw.reporterDid, 512);
+      const reporterHandle = this.normalizeOptionalTrimmedString(raw.reporterHandle, 512);
+      const subjectDid = this.normalizeOptionalTrimmedString(raw.subjectDid, 512);
+      const subjectAtUri = this.normalizeOptionalTrimmedString(raw.subjectAtUri, 2048);
+      const reportId = Number.isInteger(raw.reportId) && raw.reportId >= 0 ? raw.reportId : null;
+      const lastAttemptAt = this.normalizeOptionalIsoTimestamp(raw.lastAttemptAt);
+      const deliveredAt = this.normalizeOptionalIsoTimestamp(raw.deliveredAt);
+      const lastError = this.normalizeOptionalTrimmedString(raw.lastError, 1024);
+      const skippedReason = this.normalizeOptionalTrimmedString(raw.skippedReason, 128);
+      const lastStatusCode = Number.isInteger(raw.lastStatusCode) && raw.lastStatusCode >= 100 && raw.lastStatusCode <= 599
+        ? raw.lastStatusCode
+        : null;
+
+      return {
+        status,
+        ...(canonicalIntentId ? { canonicalIntentId } : {}),
+        ...(serviceDid ? { serviceDid } : {}),
+        ...(pdsUrl ? { pdsUrl } : {}),
+        ...(reporterDid ? { reporterDid } : {}),
+        ...(reporterHandle ? { reporterHandle } : {}),
+        ...(subjectDid ? { subjectDid } : {}),
+        ...(subjectAtUri ? { subjectAtUri } : {}),
+        ...(reportId !== null ? { reportId } : {}),
+        ...(lastAttemptAt ? { lastAttemptAt } : {}),
+        ...(deliveredAt ? { deliveredAt } : {}),
+        ...(lastError ? { lastError } : {}),
+        ...(skippedReason ? { skippedReason } : {}),
+        ...(lastStatusCode ? { lastStatusCode } : {})
+      };
+    },
+
+    normalizeModerationForwardingState(value) {
+      const raw = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+      const activityPub =
+        raw.activityPub && typeof raw.activityPub === 'object'
+          ? this.normalizeModerationActivityPubForwardingState(raw.activityPub)
+          : null;
+      const atproto =
+        raw.atproto && typeof raw.atproto === 'object'
+          ? this.normalizeModerationAtprotoForwardingState(raw.atproto)
+          : null;
+
+      return activityPub || atproto
+        ? {
+            ...(activityPub ? { activityPub } : {}),
+            ...(atproto ? { atproto } : {})
+          }
+        : null;
     },
 
     normalizeOptionalTrimmedString(value, maxLen = 2048) {
@@ -1841,7 +1986,9 @@ module.exports = {
       }
 
       const legacyReportedUris = Array.isArray(value.reportedUris) ? value.reportedUris.filter(Boolean) : [];
-      const legacyReportedActorUris = Array.isArray(value.reportedActorUris) ? value.reportedActorUris.filter(Boolean) : [];
+      const legacyReportedActorUris = Array.isArray(value.reportedActorUris)
+        ? value.reportedActorUris.filter(Boolean)
+        : [];
       const subject =
         value.subject && typeof value.subject === 'object'
           ? this.normalizeModerationSubject(value.subject, 'subject')
@@ -1855,7 +2002,8 @@ module.exports = {
                 kind: 'object',
                 object: this.normalizeModerationObjectRef(
                   {
-                    canonicalObjectId: legacyReportedUris[0] || `urn:moderation:case:${String(value.id || '').trim() || ulid()}`
+                    canonicalObjectId:
+                      legacyReportedUris[0] || `urn:moderation:case:${String(value.id || '').trim() || ulid()}`
                   },
                   'subject.object'
                 ),
@@ -1878,13 +2026,17 @@ module.exports = {
       const recipient =
         value.recipient && typeof value.recipient === 'object'
           ? {
-              ...(this.normalizeOptionalHttpUrl(value.recipient.webId) ? { webId: this.normalizeOptionalHttpUrl(value.recipient.webId) } : {}),
+              ...(this.normalizeOptionalHttpUrl(value.recipient.webId)
+                ? { webId: this.normalizeOptionalHttpUrl(value.recipient.webId) }
+                : {}),
               ...(this.normalizeOptionalHttpUrl(value.recipient.activityPubActorUri)
                 ? { activityPubActorUri: this.normalizeOptionalHttpUrl(value.recipient.activityPubActorUri) }
                 : {})
             }
           : {
-              ...(this.normalizeOptionalHttpUrl(value.recipientWebId) ? { webId: this.normalizeOptionalHttpUrl(value.recipientWebId) } : {}),
+              ...(this.normalizeOptionalHttpUrl(value.recipientWebId)
+                ? { webId: this.normalizeOptionalHttpUrl(value.recipientWebId) }
+                : {}),
               ...(this.normalizeOptionalHttpUrl(value.recipientActorUri)
                 ? { activityPubActorUri: this.normalizeOptionalHttpUrl(value.recipientActorUri) }
                 : {})
@@ -1942,10 +2094,14 @@ module.exports = {
         id,
         source: value.source === 'activitypub-flag' ? 'activitypub-flag' : 'local-user-report',
         protocol: value.protocol === 'ap' ? 'ap' : 'activitypods',
-        ...(this.normalizeOptionalTrimmedString(value.activityId, 2048) ? { activityId: this.normalizeOptionalTrimmedString(value.activityId, 2048) } : {}),
+        ...(this.normalizeOptionalTrimmedString(value.activityId, 2048)
+          ? { activityId: this.normalizeOptionalTrimmedString(value.activityId, 2048) }
+          : {}),
         dedupeKey,
         ...(reporter ? { reporter } : {}),
-        ...(this.normalizeOptionalTrimmedString(value.inboxPath, 2048) ? { inboxPath: this.normalizeOptionalTrimmedString(value.inboxPath, 2048) } : {}),
+        ...(this.normalizeOptionalTrimmedString(value.inboxPath, 2048)
+          ? { inboxPath: this.normalizeOptionalTrimmedString(value.inboxPath, 2048) }
+          : {}),
         ...(Object.keys(recipient).length > 0 ? { recipient } : {}),
         reasonType,
         ...(reason ? { reason } : {}),
@@ -1953,16 +2109,27 @@ module.exports = {
         ...(clientContext && Object.keys(clientContext).length > 0 ? { clientContext } : {}),
         subject,
         evidenceObjectRefs,
-        ...(this.normalizeOptionalIsoTimestamp(value.createdAt) ? { createdAt: this.normalizeOptionalIsoTimestamp(value.createdAt) } : {}),
+        ...(this.normalizeOptionalIsoTimestamp(value.createdAt)
+          ? { createdAt: this.normalizeOptionalIsoTimestamp(value.createdAt) }
+          : {}),
         receivedAt: this.normalizeOptionalIsoTimestamp(value.receivedAt) || new Date().toISOString(),
         status: ['open', 'resolved', 'dismissed'].includes(value.status) ? value.status : 'open',
         relatedDecisionIds: Array.isArray(value.relatedDecisionIds)
           ? [...new Set(value.relatedDecisionIds.map(item => String(item || '').trim()).filter(Boolean))]
           : [],
         canonicalEvent: this.normalizeModerationCanonicalEventState(value.canonicalEvent),
-        ...(this.normalizeOptionalIsoTimestamp(value.updatedAt) ? { updatedAt: this.normalizeOptionalIsoTimestamp(value.updatedAt) } : {}),
-        ...(this.normalizeOptionalIsoTimestamp(value.resolvedAt) ? { resolvedAt: this.normalizeOptionalIsoTimestamp(value.resolvedAt) } : {}),
-        ...(this.normalizeOptionalTrimmedString(value.resolvedBy, 2048) ? { resolvedBy: this.normalizeOptionalTrimmedString(value.resolvedBy, 2048) } : {})
+        ...(this.normalizeModerationForwardingState(value.forwarding)
+          ? { forwarding: this.normalizeModerationForwardingState(value.forwarding) }
+          : {}),
+        ...(this.normalizeOptionalIsoTimestamp(value.updatedAt)
+          ? { updatedAt: this.normalizeOptionalIsoTimestamp(value.updatedAt) }
+          : {}),
+        ...(this.normalizeOptionalIsoTimestamp(value.resolvedAt)
+          ? { resolvedAt: this.normalizeOptionalIsoTimestamp(value.resolvedAt) }
+          : {}),
+        ...(this.normalizeOptionalTrimmedString(value.resolvedBy, 2048)
+          ? { resolvedBy: this.normalizeOptionalTrimmedString(value.resolvedBy, 2048) }
+          : {})
       };
     },
 
@@ -2003,8 +2170,12 @@ module.exports = {
     },
 
     findStoredModerationCaseByDedupe(dedupeKey) {
-      const normalizedDedupe = String(dedupeKey || '').trim().toLowerCase();
-      return this._moderationCases.find(entry => String(entry?.dedupeKey || '').toLowerCase() === normalizedDedupe) || null;
+      const normalizedDedupe = String(dedupeKey || '')
+        .trim()
+        .toLowerCase();
+      return (
+        this._moderationCases.find(entry => String(entry?.dedupeKey || '').toLowerCase() === normalizedDedupe) || null
+      );
     },
 
     async replaceStoredModerationCases(entries) {
@@ -2015,7 +2186,8 @@ module.exports = {
 
     async ingestStoredModerationCase(input) {
       const normalized = this.normalizeModerationCaseRecord(input);
-      const duplicate = this.findStoredModerationCaseByDedupe(normalized.dedupeKey) || this.findStoredModerationCaseById(normalized.id);
+      const duplicate =
+        this.findStoredModerationCaseByDedupe(normalized.dedupeKey) || this.findStoredModerationCaseById(normalized.id);
       if (duplicate) {
         return { case: duplicate, duplicate: true };
       }
@@ -2042,7 +2214,32 @@ module.exports = {
         canonicalEvent:
           patch.canonicalEvent && typeof patch.canonicalEvent === 'object'
             ? { ...(existing.canonicalEvent || {}), ...patch.canonicalEvent }
-            : existing.canonicalEvent
+            : existing.canonicalEvent,
+        forwarding:
+          patch.forwarding && typeof patch.forwarding === 'object'
+            ? {
+                ...(existing.forwarding || {}),
+                ...patch.forwarding,
+                activityPub:
+                  patch.forwarding.activityPub && typeof patch.forwarding.activityPub === 'object'
+                    ? {
+                        ...((existing.forwarding && existing.forwarding.activityPub) || {}),
+                        ...patch.forwarding.activityPub
+                      }
+                    : patch.forwarding.activityPub === null
+                      ? null
+                      : existing.forwarding && existing.forwarding.activityPub,
+                atproto:
+                  patch.forwarding.atproto && typeof patch.forwarding.atproto === 'object'
+                    ? {
+                        ...((existing.forwarding && existing.forwarding.atproto) || {}),
+                        ...patch.forwarding.atproto
+                      }
+                    : patch.forwarding.atproto === null
+                      ? null
+                      : existing.forwarding && existing.forwarding.atproto
+              }
+            : existing.forwarding
       });
 
       await this.replaceStoredModerationCases(
@@ -2134,9 +2331,7 @@ module.exports = {
         };
       } catch (err) {
         const message =
-          err instanceof CircuitOpenError
-            ? err.message
-            : err?.message || 'canonical_report_bridge_failed';
+          err instanceof CircuitOpenError ? err.message : err?.message || 'canonical_report_bridge_failed';
         this.logger.warn('[ModerationReport] Failed to publish canonical report create event', {
           caseId: caseRecord.id,
           error: message
@@ -2428,6 +2623,39 @@ module.exports = {
       };
     },
 
+    caseBelongsToReporter(entry, webId) {
+      return Boolean(entry?.reporter?.webId && String(entry.reporter.webId).trim() === String(webId).trim());
+    },
+
+    buildOwnerModerationCasePage(webId, query = {}) {
+      const limit = Math.min(Number(query.limit) || 100, 500);
+      const cursor = typeof query.cursor === 'string' ? query.cursor.trim() : '';
+      const status = typeof query.status === 'string' ? query.status : '';
+      const source = typeof query.source === 'string' ? query.source : '';
+
+      const ordered = this.sortStoredModerationCases(this._moderationCases).filter(entry => {
+        if (!this.caseBelongsToReporter(entry, webId)) return false;
+        if (status && entry?.status !== status) return false;
+        if (source && entry?.source !== source) return false;
+        return true;
+      });
+
+      let start = 0;
+      if (cursor) {
+        const cursorIndex = ordered.findIndex(entry => entry?.id === cursor);
+        start = cursorIndex >= 0 ? cursorIndex + 1 : 0;
+      }
+
+      const data = ordered.slice(start, start + limit);
+      const nextCursor = start + limit < ordered.length ? data[data.length - 1]?.id || null : null;
+      return {
+        data,
+        cursor: nextCursor,
+        total: ordered.length,
+        source: 'local'
+      };
+    },
+
     caseMatchesReportedActorUri(entry, actorUri) {
       if (!entry || !actorUri) return false;
       if (entry.subject?.kind === 'account' && entry.subject?.actor?.activityPubActorUri === actorUri) {
@@ -2437,6 +2665,21 @@ module.exports = {
         return true;
       }
       return false;
+    },
+
+    async buildOwnerModerationDecisionPage(ctx, webId, query = {}) {
+      const binding = await this.getOptionalIdentityBindingForWebId(ctx, webId);
+      const targetWebId = String(webId).trim();
+      const targetActorUri = this.normalizeOptionalHttpUrl(binding?.activityPubActorUri);
+      const targetAtDid = this.normalizeOptionalTrimmedString(binding?.atprotoDid, 512);
+      const mergedQuery = {
+        ...query,
+        ...(query.targetWebId ? {} : targetWebId ? { targetWebId } : {}),
+        ...(query.targetActorUri ? {} : targetActorUri ? { targetActorUri } : {}),
+        ...(query.targetAtDid ? {} : targetAtDid ? { targetAtDid } : {})
+      };
+
+      return this.buildModerationDecisionCachePage(mergedQuery);
     },
 
     async mrfProxy(ctx, { method, path, permission, body }) {
@@ -2939,6 +3182,17 @@ module.exports = {
       }
 
       return webId;
+    },
+
+    async getOptionalIdentityBindingForWebId(ctx, webId) {
+      try {
+        const binding = await ctx.call('identitybindings.getByCanonicalAccountId', {
+          canonicalAccountId: webId
+        });
+        return binding && typeof binding === 'object' ? binding : null;
+      } catch {
+        return null;
+      }
     },
 
     requireContainer(c) {
@@ -4206,6 +4460,268 @@ module.exports = {
           explicitPdsUrl || config.pdsUrl || binding.atprotoPdsUrl,
           binding.atprotoPdsUrl
         )
+      };
+    },
+
+    async buildAtprotoModerationForwardingPlan(ctx, caseRecord, { canonicalIntentId } = {}) {
+      if (!caseRecord || caseRecord.source !== 'local-user-report') {
+        return { status: 'skipped', reason: 'case_not_local_user_report' };
+      }
+
+      if (!caseRecord.requestedForwarding?.remote) {
+        return { status: 'skipped', reason: 'not_requested' };
+      }
+
+      if (caseRecord.subject?.authoritativeProtocol !== 'at') {
+        return { status: 'skipped', reason: 'authoritative_protocol_not_atproto' };
+      }
+
+      const reporterWebId = this.normalizeOptionalHttpUrl(caseRecord.reporter?.webId);
+      if (!reporterWebId) {
+        return { status: 'skipped', reason: 'reporter_webid_missing' };
+      }
+
+      let binding;
+      try {
+        binding = await this.getAtprotoBindingForWebId(ctx, reporterWebId);
+      } catch (error) {
+        this.logger.warn('[ModerationReport] ATProto reporter binding unavailable', {
+          caseId: caseRecord.id,
+          reporterWebId,
+          error: error?.message
+        });
+        return { status: 'skipped', reason: 'reporter_atproto_identity_missing' };
+      }
+
+      let credentials;
+      try {
+        credentials = await this.resolveAtprotoSyncCredentials(ctx, reporterWebId, {}, binding);
+      } catch (error) {
+        this.logger.warn('[ModerationReport] ATProto reporter credentials unavailable', {
+          caseId: caseRecord.id,
+          reporterWebId,
+          error: error?.message
+        });
+        return { status: 'skipped', reason: 'reporter_credentials_unavailable' };
+      }
+
+      let session;
+      try {
+        session = await this.createModerationReportingAtprotoSession({
+          reporterWebId,
+          binding,
+          credentials
+        });
+      } catch (error) {
+        this.logger.warn('[ModerationReport] Failed to create ATProto reporting session', {
+          caseId: caseRecord.id,
+          reporterWebId,
+          error: error?.message
+        });
+        return { status: 'skipped', reason: 'reporter_session_unavailable' };
+      }
+
+      let labelerDid;
+      try {
+        labelerDid = await this.resolveAtprotoModerationServiceDid(ctx, reporterWebId);
+      } catch (error) {
+        this.logger.warn('[ModerationReport] Failed to resolve ATProto moderation service', {
+          caseId: caseRecord.id,
+          reporterWebId,
+          error: error?.message
+        });
+        return { status: 'skipped', reason: 'moderation_service_resolution_failed' };
+      }
+
+      if (!labelerDid) {
+        return { status: 'skipped', reason: 'no_moderation_service' };
+      }
+
+      let subjectPayload;
+      try {
+        subjectPayload = await this.buildAtprotoModerationSubject(caseRecord);
+      } catch (error) {
+        this.logger.warn('[ModerationReport] Failed to normalize ATProto moderation subject', {
+          caseId: caseRecord.id,
+          error: error?.message
+        });
+        return {
+          status: 'skipped',
+          reason: error?.code === 'VALIDATION_ERROR' ? 'invalid_subject' : 'subject_resolution_failed'
+        };
+      }
+
+      const reasonType = this.mapCanonicalReasonTypeToAtproto(caseRecord.reasonType);
+      const reason = this.normalizeOptionalTrimmedString(caseRecord.reason, 2000);
+
+      return {
+        status: 'ready',
+        ...(canonicalIntentId ? { canonicalIntentId } : {}),
+        serviceDid: labelerDid,
+        pdsUrl: this.normalizeHttpUrlOrDefault(credentials.pdsUrl || binding.atprotoPdsUrl, binding.atprotoPdsUrl),
+        accessJwt: session.accessJwt,
+        reporterDid: binding.atprotoDid,
+        ...(binding.atprotoHandle ? { reporterHandle: binding.atprotoHandle } : {}),
+        ...(subjectPayload.subjectDid ? { subjectDid: subjectPayload.subjectDid } : {}),
+        ...(subjectPayload.subjectAtUri ? { subjectAtUri: subjectPayload.subjectAtUri } : {}),
+        request: {
+          reasonType,
+          ...(reason ? { reason } : {}),
+          subject: subjectPayload.subject,
+          modTool: this.buildAtprotoModerationToolMetadata(caseRecord.clientContext)
+        }
+      };
+    },
+
+    async createModerationReportingAtprotoSession({ reporterWebId, binding, credentials }) {
+      const execute = async () => {
+        return credentials.mode === 'managed-internal'
+          ? await this.createManagedAtprotoSession(credentials.pdsUrl, binding.canonicalAccountId || reporterWebId)
+          : await this.createAtprotoSession(credentials.pdsUrl, credentials.identifier, credentials.password);
+      };
+
+      return retryWithBackoff(execute, {
+        maxRetries: 1,
+        baseDelayMs: 150,
+        maxDelayMs: 1500,
+        retryIf: error => {
+          const statusCode = [error?.statusCode, error?.status]
+            .map(value => Number(value))
+            .find(value => Number.isInteger(value) && value >= 100 && value <= 599);
+          if (error?.code === 'ATPROTO_EXTERNAL_AUTH_FAILED' || error?.code === 'ATPROTO_MANAGED_SESSION_FAILED') {
+            return statusCode === 429 || statusCode >= 500;
+          }
+          return error?.retryable !== false;
+        }
+      });
+    },
+
+    async resolveAtprotoModerationServiceDid(ctx, webId) {
+      const candidates = await this.collectEnabledAtprotoModerationServices(ctx, webId);
+      if (candidates.length === 0) {
+        return this.settings.blueskyDefaultLabelerDid || null;
+      }
+
+      const highestPriority = Math.max(...candidates.map(item => Number(item.priority || 0)));
+      const top = candidates.filter(item => Number(item.priority || 0) === highestPriority);
+      if (top.length > 1) {
+        const distinct = [...new Set(top.map(item => String(item.did || '').toLowerCase()).filter(Boolean))];
+        if (distinct.length > 1) {
+          return null;
+        }
+      }
+
+      return top[0]?.did || null;
+    },
+
+    async collectEnabledAtprotoModerationServices(ctx, webId) {
+      const trustSources = await this.listByContainer(ctx, webId, 'trust-sources', { seedProviderDefaults: false });
+      return trustSources
+        .filter(entry => String(entry?.sourceType || '').toLowerCase() === 'atproto-labeler' && entry?.enabled !== false)
+        .map(entry => ({
+          did: this.normalizeOptionalTrimmedString(entry?.source, 512),
+          priority: Number.isFinite(Number(entry?.priority)) ? Number(entry.priority) : 0
+        }))
+        .filter(entry => Boolean(entry.did))
+        .sort((left, right) => {
+          if (left.priority !== right.priority) return right.priority - left.priority;
+          return String(left.did).localeCompare(String(right.did));
+        });
+    },
+
+    async buildAtprotoModerationSubject(caseRecord) {
+      if (caseRecord.subject.kind === 'account') {
+        const actor = caseRecord.subject.actor || {};
+        let did = this.normalizeOptionalTrimmedString(actor.did, 512);
+
+        if (!did && actor.handle) {
+          const resolved = await this.resolveAtprotoHandleValue(actor.handle);
+          did = resolved.did;
+        }
+
+        if (!did) {
+          throw new MoleculerError('ATProto account reports require a resolvable DID', 400, 'VALIDATION_ERROR');
+        }
+
+        return {
+          subject: { did },
+          subjectDid: did
+        };
+      }
+
+      const rawAtUri =
+        this.normalizeOptionalTrimmedString(caseRecord.subject.object?.atUri, 2048) ||
+        (String(caseRecord.subject.object?.canonicalObjectId || '').trim().startsWith('at://')
+          ? String(caseRecord.subject.object.canonicalObjectId).trim()
+          : null);
+      const cid = this.normalizeOptionalTrimmedString(caseRecord.subject.object?.cid, 512);
+
+      if (!rawAtUri) {
+        throw new MoleculerError('ATProto record reports require an at:// URI', 400, 'VALIDATION_ERROR');
+      }
+
+      if (!cid) {
+        throw new MoleculerError('ATProto record reports require a CID for precise record reporting', 400, 'VALIDATION_ERROR');
+      }
+
+      const parsed = this.parseAtUri(rawAtUri);
+      return {
+        subject: {
+          uri: parsed.uri,
+          cid
+        },
+        subjectDid: parsed.did,
+        subjectAtUri: parsed.uri
+      };
+    },
+
+    parseAtUri(value) {
+      const candidate = String(value || '').trim();
+      const match = /^at:\/\/([^/]+)\/([^/]+)\/([^/?#]+)$/.exec(candidate);
+      if (!match) {
+        throw new MoleculerError('Expected a valid at:// URI', 400, 'VALIDATION_ERROR');
+      }
+
+      return {
+        uri: candidate,
+        did: match[1],
+        collection: match[2],
+        rkey: match[3]
+      };
+    },
+
+    mapCanonicalReasonTypeToAtproto(reasonType) {
+      switch (String(reasonType || '').trim()) {
+        case 'spam':
+          return 'com.atproto.moderation.defs#reasonSpam';
+        case 'harassment':
+          return 'com.atproto.moderation.defs#reasonRude';
+        case 'impersonation':
+          return 'com.atproto.moderation.defs#reasonMisleading';
+        case 'copyright':
+        case 'illegal':
+        case 'safety':
+        case 'abuse':
+          return 'com.atproto.moderation.defs#reasonViolation';
+        default:
+          return 'com.atproto.moderation.defs#reasonOther';
+      }
+    },
+
+    buildAtprotoModerationToolMetadata(clientContext) {
+      const app = this.normalizeOptionalTrimmedString(clientContext?.app, 64);
+      const surface = this.normalizeOptionalTrimmedString(clientContext?.surface, 64);
+      const toolName = app ? `activitypods/${app.toLowerCase()}` : 'activitypods/moderation';
+
+      return {
+        name: toolName,
+        ...(surface
+          ? {
+              meta: {
+                surface
+              }
+            }
+          : {})
       };
     },
 

@@ -2,7 +2,7 @@
 > activitypods-fedify-sidecar@5.0.0 server:dev
 > node --import tsx src/index.ts
 
-{"level":30,"time":"2026-04-18T00:48:22.211Z","service":"fedify-sidecar","version":"1.0.0","msg":"Starting Fedify Sidecar for ActivityPods"}
+{"level":30,"time":"2026-04-20T23:00:51.986Z","service":"fedify-sidecar","version":"1.0.0","msg":"Starting Fedify Sidecar for ActivityPods"}
 
 ========================================================================
   WARNING: AT_LOCAL_FIXTURE=true — LOCAL FIXTURE MODE ENABLED
@@ -13,44 +13,9 @@
     • http://localhost:3000/atproto365133
 ========================================================================
 
-{"level":30,"time":"2026-04-18T00:48:22.234Z","service":"fedify-sidecar","version":"1.0.0","msg":"Redis Streams Queue connected"}
-{"level":"WARN","timestamp":"2026-04-18T00:48:22.234Z","logger":"kafkajs","message":"KafkaJS v2.0.0 switched default partitioner. To retain the same partitioning behavior as in previous versions, create the producer with the option \"createPartitioner: Partitioners.LegacyPartitioner\". See the migration guide at https://kafka.js.org/docs/migration-guide-v2.0.0#producer-new-default-partitioner for details. Silence this warning by setting the environment variable \"KAFKAJS_NO_PARTITIONER_WARNING=1\""}
-{"level":30,"time":"2026-04-18T00:48:22.234Z","service":"fedify-sidecar","version":"1.0.0","msg":"Redis Streams queue connected"}
-{"level":30,"time":"2026-04-18T00:48:22.234Z","service":"fedify-sidecar","version":"1.0.0","msg":"Signing client initialized"}
-{"level":40,"time":"2026-04-18T00:48:22.235Z","service":"fedify-sidecar","version":"1.0.0","msg":"AP_RELAY_ACTOR_URLS configured but ENABLE_FEDIFY_RUNTIME_INTEGRATION is false — relay subscription disabled"}
-{"level":30,"time":"2026-04-18T00:48:22.328Z","service":"fedify-sidecar","version":"1.0.0","msg":"Fedify Sidecar listening on 0.0.0.0:8080"}
-{"level":30,"time":"2026-04-18T00:48:22.328Z","service":"fedify-sidecar","version":"1.0.0","msg":"Metrics available at http://0.0.0.0:8080/metrics"}
-{"level":30,"time":"2026-04-18T00:48:22.328Z","service":"fedify-sidecar","version":"1.0.0","msg":"Configuration summary"}
-{"level":30,"time":"2026-04-18T00:48:22.328Z","service":"fedify-sidecar","version":"1.0.0","msg":"HTTP server is listening while background startup continues"}
-{"level":30,"time":"2026-04-18T00:48:22.328Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task started"}
-(node:10039) TimeoutNegativeWarning: -1776473302342 is a negative number.
-Timeout duration was set to 1.
-(Use `node --trace-warnings ...` to show where the warning was created)
-{"level":30,"time":"2026-04-18T00:48:22.353Z","service":"fedify-sidecar","version":"1.0.0","msg":"Redpanda topic governance verification passed"}
-{"level":30,"time":"2026-04-18T00:48:22.353Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task completed"}
-{"level":30,"time":"2026-04-18T00:48:22.353Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task started"}
-{"level":30,"time":"2026-04-18T00:48:22.355Z","service":"fedify-sidecar","version":"1.0.0","msg":"RedPanda producer connected"}
-{"level":30,"time":"2026-04-18T00:48:22.355Z","service":"fedify-sidecar","version":"1.0.0","msg":"RedPanda producer connected"}
-{"level":30,"time":"2026-04-18T00:48:22.355Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task completed"}
-{"level":30,"time":"2026-04-18T00:48:22.355Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task started"}
-{"level":30,"time":"2026-04-18T00:48:22.487Z","service":"fedify-sidecar","version":"1.0.0","msg":"[SearchIndexerService] OpenSearch index initialized"}
-{"level":30,"time":"2026-04-18T00:48:22.487Z","service":"fedify-sidecar","version":"1.0.0","msg":"OpenSearch indexer started"}
-{"level":30,"time":"2026-04-18T00:48:22.487Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task completed"}
-{"level":30,"time":"2026-04-18T00:48:22.487Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task started"}
-{"level":30,"time":"2026-04-18T00:48:22.487Z","service":"fedify-sidecar","version":"1.0.0","msg":"Outbound worker started"}
-{"level":30,"time":"2026-04-18T00:48:22.487Z","service":"fedify-sidecar","version":"1.0.0","msg":"Outbound worker started"}
-{"level":30,"time":"2026-04-18T00:48:22.487Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task completed"}
-{"level":30,"time":"2026-04-18T00:48:22.487Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task started"}
-{"level":30,"time":"2026-04-18T00:48:22.488Z","service":"fedify-sidecar","version":"1.0.0","msg":"Outbox intent worker started"}
-{"level":30,"time":"2026-04-18T00:48:22.488Z","service":"fedify-sidecar","version":"1.0.0","msg":"Outbox intent worker started"}
-{"level":30,"time":"2026-04-18T00:48:22.488Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task completed"}
-{"level":30,"time":"2026-04-18T00:48:22.488Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task started"}
-{"level":30,"time":"2026-04-18T00:48:22.488Z","service":"fedify-sidecar","version":"1.0.0","msg":"Inbound worker started"}
-{"level":30,"time":"2026-04-18T00:48:22.488Z","service":"fedify-sidecar","version":"1.0.0","msg":"Inbound worker started"}
-{"level":30,"time":"2026-04-18T00:48:22.488Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task completed"}
-{"level":30,"time":"2026-04-18T00:48:22.488Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task started"}
-{"level":30,"time":"2026-04-18T00:48:22.517Z","service":"fedify-sidecar","version":"1.0.0","msg":"[SearchIndexerService] Started"}
-{"level":30,"time":"2026-04-18T00:48:22.520Z","service":"fedify-sidecar","version":"1.0.0","topic":"media.asset.created.v1","groupId":"fedify-sidecar-protocol-bridge-media-assets","msg":"MediaAssetSyncConsumer started"}
-{"level":30,"time":"2026-04-18T00:48:22.520Z","service":"fedify-sidecar","version":"1.0.0","msg":"Media asset sync consumer started"}
-{"level":30,"time":"2026-04-18T00:48:22.520Z","service":"fedify-sidecar","version":"1.0.0","msg":"Startup task completed"}
-{"level":30,"time":"2026-04-18T00:48:22.520Z","service":"fedify-sidecar","version":"1.0.0","msg":"Background startup completed"}
+{"level":30,"time":"2026-04-20T23:00:52.025Z","service":"fedify-sidecar","version":"1.0.0","msg":"Redis Streams Queue connected"}
+{"level":"WARN","timestamp":"2026-04-20T23:00:52.026Z","logger":"kafkajs","message":"KafkaJS v2.0.0 switched default partitioner. To retain the same partitioning behavior as in previous versions, create the producer with the option \"createPartitioner: Partitioners.LegacyPartitioner\". See the migration guide at https://kafka.js.org/docs/migration-guide-v2.0.0#producer-new-default-partitioner for details. Silence this warning by setting the environment variable \"KAFKAJS_NO_PARTITIONER_WARNING=1\""}
+{"level":30,"time":"2026-04-20T23:00:52.025Z","service":"fedify-sidecar","version":"1.0.0","msg":"Redis Streams queue connected"}
+{"level":30,"time":"2026-04-20T23:00:52.025Z","service":"fedify-sidecar","version":"1.0.0","msg":"Signing client initialized"}
+{"level":40,"time":"2026-04-20T23:00:52.026Z","service":"fedify-sidecar","version":"1.0.0","msg":"AP_RELAY_ACTOR_URLS configured but ENABLE_FEDIFY_RUNTIME_INTEGRATION is false — relay subscription disabled"}
+{"level":50,"time":"2026-04-20T23:00:52.272Z","service":"fedify-sidecar","version":"1.0.0","error":"Cannot read properties of undefined (reading 'url')","stack":"TypeError: Cannot read properties of undefined (reading 'url')\n    at main (/Users/damonoutlaw/activitypods-work/mastopod-federation-architecture/fedify-sidecar/src/index.ts:1631:75)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)","msg":"Failed to start Fedify Sidecar"}

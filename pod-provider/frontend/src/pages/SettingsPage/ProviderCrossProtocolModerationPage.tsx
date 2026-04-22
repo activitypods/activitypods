@@ -50,20 +50,70 @@ type ModerationDecision = {
 type ModerationCase = {
   id: string;
   activityId?: string;
-  source: 'activitypub-flag';
-  protocol: 'ap';
-  sourceActorUri: string;
-  sourceActorWebId?: string;
-  recipientActorUri?: string;
-  recipientWebId?: string;
-  inboxPath: string;
+  source: 'activitypub-flag' | 'local-user-report';
+  protocol: 'ap' | 'activitypods';
+  reporter?: {
+    canonicalAccountId?: string;
+    did?: string;
+    webId?: string;
+    activityPubActorUri?: string;
+    handle?: string;
+  } | null;
+  recipient?: {
+    webId?: string;
+    activityPubActorUri?: string;
+  } | null;
+  inboxPath?: string;
+  reasonType: 'spam' | 'harassment' | 'abuse' | 'impersonation' | 'copyright' | 'illegal' | 'safety' | 'other';
   reason?: string;
-  reportedUris: string[];
-  reportedActorUris: string[];
+  requestedForwarding?: { remote: boolean } | null;
+  clientContext?: { app?: string | null; surface?: string | null } | null;
+  subject:
+    | {
+        kind: 'account';
+        authoritativeProtocol?: 'local' | 'ap' | 'at';
+        actor: {
+          canonicalAccountId?: string;
+          did?: string;
+          webId?: string;
+          activityPubActorUri?: string;
+          handle?: string;
+        };
+      }
+    | {
+        kind: 'object';
+        authoritativeProtocol?: 'local' | 'ap' | 'at';
+        object: {
+          canonicalObjectId: string;
+          atUri?: string;
+          activityPubObjectId?: string;
+          canonicalUrl?: string;
+        };
+        owner?: {
+          canonicalAccountId?: string;
+          did?: string;
+          webId?: string;
+          activityPubActorUri?: string;
+          handle?: string;
+        } | null;
+      };
+  evidenceObjectRefs: Array<{
+    canonicalObjectId: string;
+    atUri?: string;
+    activityPubObjectId?: string;
+    canonicalUrl?: string;
+  }>;
   receivedAt: string;
   createdAt?: string;
   status: 'open' | 'resolved' | 'dismissed';
   relatedDecisionIds: string[];
+  canonicalEvent?: {
+    status: 'pending' | 'published' | 'failed';
+    canonicalIntentId?: string;
+    lastAttemptAt?: string;
+    publishedAt?: string;
+    lastError?: string;
+  };
   updatedAt?: string;
   resolvedAt?: string;
   resolvedBy?: string;
@@ -231,6 +281,61 @@ const caseStatusColor = (status: ModerationCase['status']) => {
     default:
       return 'default';
   }
+};
+
+const firstNonEmpty = (...values: Array<string | undefined | null>) => values.find(value => Boolean(value && value.trim()));
+
+const describeCaseSource = (entry: ModerationCase) =>
+  entry.source === 'activitypub-flag' ? 'Inbound ActivityPub Flag' : 'Local user report';
+
+const caseReporterLines = (entry: ModerationCase) => {
+  const primary = firstNonEmpty(
+    entry.reporter?.webId,
+    entry.reporter?.activityPubActorUri,
+    entry.reporter?.did,
+    entry.reporter?.handle
+  );
+  const secondary = firstNonEmpty(
+    entry.reporter?.activityPubActorUri && entry.reporter.activityPubActorUri !== primary
+      ? entry.reporter.activityPubActorUri
+      : null,
+    entry.reporter?.did && entry.reporter.did !== primary ? entry.reporter.did : null,
+    entry.reporter?.handle && entry.reporter.handle !== primary ? entry.reporter.handle : null
+  );
+  const lines = [primary, secondary].filter((value): value is string => Boolean(value));
+  return lines.length > 0 ? lines : ['Unknown reporter'];
+};
+
+const caseTargetLines = (entry: ModerationCase) => {
+  if (entry.subject.kind === 'account') {
+    return [
+      firstNonEmpty(
+        entry.subject.actor.webId,
+        entry.subject.actor.activityPubActorUri,
+        entry.subject.actor.did,
+        entry.subject.actor.handle
+      )
+    ].filter((value): value is string => Boolean(value));
+  }
+
+  const primaryObject =
+    firstNonEmpty(entry.subject.object.canonicalUrl, entry.subject.object.activityPubObjectId, entry.subject.object.atUri, entry.subject.object.canonicalObjectId) ||
+    entry.subject.object.canonicalObjectId;
+  const owner =
+    firstNonEmpty(
+      entry.subject.owner?.webId,
+      entry.subject.owner?.activityPubActorUri,
+      entry.subject.owner?.did,
+      entry.subject.owner?.handle
+    ) || null;
+  return [
+    primaryObject,
+    owner,
+    ...entry.evidenceObjectRefs
+      .slice(0, 2)
+      .map(ref => firstNonEmpty(ref.canonicalUrl, ref.activityPubObjectId, ref.atUri, ref.canonicalObjectId))
+      .filter((value): value is string => Boolean(value))
+  ].filter((value): value is string => Boolean(value));
 };
 
 export const ProviderCrossProtocolModerationPage: React.FC = () => {
@@ -404,17 +509,33 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
   };
 
   const prepareDecisionFromCase = (entry: ModerationCase, nextAction: ModerationAction) => {
-    const primaryTarget = entry.reportedActorUris[0] || entry.reportedUris[0] || '';
-    if (!primaryTarget) {
-      setError('This Flag report did not include a reported actor or object URI we can target directly.');
+    const targetWebId =
+      entry.subject.kind === 'account'
+        ? entry.subject.actor.webId || ''
+        : entry.subject.owner?.webId || '';
+    const targetActorUri =
+      entry.subject.kind === 'account'
+        ? entry.subject.actor.activityPubActorUri || ''
+        : entry.subject.owner?.activityPubActorUri || '';
+    const nextTargetAtDid =
+      entry.subject.kind === 'account'
+        ? entry.subject.actor.did || ''
+        : entry.subject.owner?.did || '';
+    const nextTargetHandle =
+      entry.subject.kind === 'account'
+        ? entry.subject.actor.handle || ''
+        : entry.subject.owner?.handle || '';
+
+    if (!targetWebId && !targetActorUri && !nextTargetAtDid && !nextTargetHandle) {
+      setError('This report does not include a subject account we can target directly yet.');
       return;
     }
 
     setSourceCaseId(entry.id);
-    setTargetActorUri(primaryTarget);
-    setTargetWebId('');
-    setTargetAtDid('');
-    setTargetHandle('');
+    setTargetWebId(targetWebId);
+    setTargetActorUri(targetActorUri);
+    setTargetAtDid(nextTargetAtDid);
+    setTargetHandle(nextTargetHandle);
     setAction(nextAction);
     setLabelsInput('');
     setReason(entry.reason || '');
@@ -576,7 +697,7 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
           Provider Moderation
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Apply cross-protocol moderation decisions, triage inbound ActivityPub Flag reports, sync Fediseer domain
+          Apply cross-protocol moderation decisions, triage local and federated report cases, sync Fediseer domain
           signals into ActivityPub enforcement, and maintain a PDQ-backed blocked-image list for media policy.
         </Typography>
       </Box>
@@ -611,7 +732,7 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
 
       <Tabs value={tab} onChange={(_, next) => setTab(next)} sx={{ mb: 2 }}>
         <Tab label="Apply decision" />
-        <Tab label="Flag reports" />
+        <Tab label="Reports & cases" />
         <Tab label="Decision history" />
         <Tab label="AT labels" />
         <Tab label="Fediseer" />
@@ -628,7 +749,7 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
             <Stack spacing={2}>
               {sourceCaseId && (
                 <Alert severity="info">
-                  This decision is linked to incoming report <strong>{sourceCaseId}</strong>. Submitting it will mark
+                  This decision is linked to moderation case <strong>{sourceCaseId}</strong>. Submitting it will mark
                   the report resolved until all linked decisions are revoked.
                 </Alert>
               )}
@@ -725,7 +846,7 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
           {tab === 1 &&
             (cases.length === 0 ? (
               <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
-                No inbound ActivityPub Flag reports recorded yet.
+                No moderation cases recorded yet.
               </Typography>
             ) : (
               <TableContainer>
@@ -734,6 +855,9 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                     <TableRow>
                       <TableCell>
                         <strong>Received</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Source</strong>
                       </TableCell>
                       <TableCell>
                         <strong>Reporter</strong>
@@ -761,33 +885,31 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                           </Typography>
                         </TableCell>
                         <TableCell>
+                          <Typography variant="caption" color="text.secondary">
+                            {describeCaseSource(entry)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
                           <Stack spacing={0.25}>
-                            <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
-                              {entry.sourceActorUri}
-                            </Typography>
-                            {entry.sourceActorWebId && (
-                              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
-                                {entry.sourceActorWebId}
+                            {caseReporterLines(entry).map(line => (
+                              <Typography key={`${entry.id}-reporter-${line}`} variant="caption" sx={{ fontFamily: 'monospace' }}>
+                                {line}
                               </Typography>
-                            )}
+                            ))}
                           </Stack>
                         </TableCell>
                         <TableCell>
                           <Stack spacing={0.25}>
-                            {(entry.reportedActorUris.length > 0 ? entry.reportedActorUris : entry.reportedUris)
-                              .slice(0, 2)
-                              .map(uri => (
-                                <Typography
-                                  key={`${entry.id}-${uri}`}
-                                  variant="caption"
-                                  sx={{ fontFamily: 'monospace' }}
-                                >
-                                  {uri}
+                            {caseTargetLines(entry)
+                              .slice(0, 3)
+                              .map(line => (
+                                <Typography key={`${entry.id}-${line}`} variant="caption" sx={{ fontFamily: 'monospace' }}>
+                                  {line}
                                 </Typography>
                               ))}
-                            {(entry.reportedActorUris.length > 2 || entry.reportedUris.length > 2) && (
+                            {entry.evidenceObjectRefs.length > 2 && (
                               <Typography variant="caption" color="text.secondary">
-                                + more reported objects
+                                + more evidence objects
                               </Typography>
                             )}
                           </Stack>
@@ -801,9 +923,13 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                           />
                         </TableCell>
                         <TableCell>
-                          <Typography variant="caption">
-                            {entry.reason || 'No reason text provided in the Flag activity.'}
-                          </Typography>
+                          <Stack spacing={0.25}>
+                            <Typography variant="caption">{entry.reason || 'No reason text provided.'}</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {entry.reasonType}
+                              {entry.requestedForwarding?.remote ? ' • requested remote forwarding' : ''}
+                            </Typography>
+                          </Stack>
                         </TableCell>
                         <TableCell align="right">
                           <Stack direction="row" spacing={1} justifyContent="flex-end">

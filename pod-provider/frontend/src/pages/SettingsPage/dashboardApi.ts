@@ -251,6 +251,12 @@ export const dashboardApi = {
       body: JSON.stringify({ data })
     }),
 
+  createModerationReport: (data: unknown) =>
+    req('moderation/reports', {
+      method: 'POST',
+      body: JSON.stringify({ data })
+    }),
+
   syncFediseerDomainSignals: (data: {
     sourceDomains?: string[];
     apply?: boolean;

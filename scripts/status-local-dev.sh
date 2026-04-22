@@ -1,11 +1,12 @@
 #!/usr/bin/env sh
 set -eu
 
+SCRIPT_NAME="status-local-dev"
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-AP_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
-WORK_ROOT=$(CDPATH= cd -- "$AP_ROOT/.." && pwd)
-FEDIFY_ROOT="$WORK_ROOT/mastopod-federation-architecture/fedify-sidecar"
+# shellcheck source=./lib/dev-common.sh
+. "$SCRIPT_DIR/lib/dev-common.sh"
 
+AP_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 PID_DIR="$AP_ROOT/.pids"
 
 print_section() {
@@ -21,7 +22,7 @@ print_pid_status() {
   fi
 
   pid=$(cat "$pidfile" 2>/dev/null || true)
-  if [ -n "$pid" ] && kill -0 "$pid" >/dev/null 2>&1; then
+  if is_pid_running "$pid"; then
     printf '[pid]  %s -> running (%s)\n' "$name" "$pid"
   else
     printf '[pid]  %s -> stale pidfile\n' "$name"
@@ -42,7 +43,7 @@ print_pattern_status() {
 print_port_status() {
   port="$1"
   name="$2"
-  if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+  if is_port_listening "$port"; then
     printf '[up]   %s (:%s)\n' "$name" "$port"
   else
     printf '[down] %s (:%s)\n' "$name" "$port"
@@ -67,31 +68,13 @@ print_pid_status "$PID_DIR/fedify-sidecar.pid" "Fedify sidecar"
 print_pid_status "$PID_DIR/media-pipeline-sidecar.pid" "Media pipeline sidecar"
 print_pattern_status "media-pipeline-sidecar/src/dev/runLocalStack.ts" "Media pipeline supervisor"
 
-print_section "Colima"
-if command -v colima >/dev/null 2>&1; then
-  if colima status >/dev/null 2>&1; then
-    colima list
-  else
-    echo "colima is not running"
-  fi
-else
-  echo "colima command not found"
-fi
+"$SCRIPT_DIR/infra-core-status.sh"
 
-print_section "ActivityPods Compose"
-docker compose -f "$AP_ROOT/pod-provider/docker-compose.yml" ps || true
-
-print_section "Federation Compose"
-docker compose -f "$FEDIFY_ROOT/docker-compose.yml" ps || true
-
-print_section "Local Ports"
+print_section "Local Service Ports"
 print_port_status 3000 "ActivityPods backend"
 print_port_status 5000 "ActivityPods frontend"
 print_port_status 8080 "Fedify sidecar"
 print_port_status 8090 "Media pipeline sidecar"
-print_port_status 7070 "PDQ hash service"
-print_port_status 9200 "OpenSearch"
-print_port_status 19092 "RedPanda"
 
 print_section "HTTP Endpoints"
 print_http_status "http://localhost:3000/" "ActivityPods backend root"
@@ -100,5 +83,3 @@ print_http_status "http://localhost:8080/health" "Fedify sidecar health"
 print_http_status "http://localhost:8080/metrics" "Fedify sidecar metrics"
 print_http_status "http://localhost:8090/health" "Media pipeline sidecar health"
 print_http_status "http://localhost:8090/ready" "Media pipeline sidecar ready"
-print_http_status "http://localhost:7070/" "PDQ hash service"
-print_http_status "http://localhost:9200" "OpenSearch"

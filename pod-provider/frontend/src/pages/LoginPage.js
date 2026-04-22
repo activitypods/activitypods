@@ -137,13 +137,48 @@ function getLocalUsernameError(u) {
   return null;
 }
 
+function resolvePostLoginTarget(value) {
+  const fallback = { mode: 'internal', url: '/network' };
+  const raw = String(value || '').trim();
+
+  if (!raw) return fallback;
+
+  if (raw.startsWith('/') && !raw.startsWith('//') && !raw.includes('://')) {
+    return { mode: 'internal', url: raw };
+  }
+
+  try {
+    const parsed = new URL(raw);
+
+    if (CONFIG.BACKEND_URL && raw.startsWith(CONFIG.BACKEND_URL)) {
+      return { mode: 'external', url: raw };
+    }
+
+    if (typeof window !== 'undefined' && parsed.origin === window.location.origin) {
+      return { mode: 'internal', url: `${parsed.pathname}${parsed.search}${parsed.hash}` || '/network' };
+    }
+  } catch (_error) {
+    return fallback;
+  }
+
+  return fallback;
+}
+
 // ─── Sign-Up form ─────────────────────────────────────────────────────────────
 
-const SignUpForm = ({ onSignup, interactionId }) => {
+const SignUpForm = ({ onSignup, interactionId, redirectTarget }) => {
   const [locale] = useLocaleState();
   const translate = useTranslate();
   const dataProvider = useDataProvider();
   const notify = useNotify();
+  const loginHref = `/login${
+    interactionId || redirectTarget
+      ? `?${new URLSearchParams({
+          ...(interactionId ? { interaction_id: interactionId } : {}),
+          ...(redirectTarget ? { redirect: redirectTarget } : {})
+        }).toString()}`
+      : ''
+  }`;
 
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -427,7 +462,7 @@ const SignUpForm = ({ onSignup, interactionId }) => {
 
         <Typography sx={{ fontSize: 13, color: '#888', textAlign: 'center' }}>
           Have an account already?{' '}
-          <Link to="/login" style={{ color: '#5B57E5', fontWeight: 600, textDecoration: 'none' }}>
+          <Link to={loginHref} style={{ color: '#5B57E5', fontWeight: 600, textDecoration: 'none' }}>
             Log-In
           </Link>
         </Typography>
@@ -467,13 +502,11 @@ const LogInForm = ({ onLogin, interactionId, redirectTarget }) => {
     return raw;
   };
 
-  const sanitizeRedirectPath = value => {
-    const raw = String(value || '').trim();
-    if (!raw.startsWith('/')) return '/network';
-    if (raw.startsWith('//')) return '/network';
-    if (raw.includes('://')) return '/network';
-    return raw;
-  };
+  const signupHref = `/login?${new URLSearchParams({
+    signup: 'true',
+    ...(interactionId ? { interaction_id: interactionId } : {}),
+    ...(redirectTarget ? { redirect: redirectTarget } : {})
+  }).toString()}`;
 
   const finishInteraction = useCallback(async () => {
     if (interactionId) {
@@ -495,11 +528,18 @@ const LogInForm = ({ onLogin, interactionId, redirectTarget }) => {
     setLoading(true);
     setPasswordError('');
     try {
-      const redirectAfterLogin = sanitizeRedirectPath(options.redirectAfterLogin || redirectTarget || '/network');
+      const redirectTargetResolved = resolvePostLoginTarget(options.redirectAfterLogin || redirectTarget || '/network');
       const normalizedIdentifier = normalizeIdentifier(identifier);
-      await login({ username: normalizedIdentifier, password }, redirectAfterLogin);
+      await login(
+        { username: normalizedIdentifier, password },
+        redirectTargetResolved.mode === 'internal' ? redirectTargetResolved.url : '/network'
+      );
       await finishInteraction();
-      navigate(redirectAfterLogin, { replace: true });
+      if (redirectTargetResolved.mode === 'external') {
+        window.location.href = redirectTargetResolved.url;
+      } else {
+        navigate(redirectTargetResolved.url, { replace: true });
+      }
     } catch (err) {
       setPasswordError('Invalid username/email or password.');
     } finally {
@@ -520,8 +560,8 @@ const LogInForm = ({ onLogin, interactionId, redirectTarget }) => {
       localStorage.setItem('webId', webId);
 
       await finishInteraction();
-      const redirectAfterLogin = sanitizeRedirectPath(redirectTarget || '/network');
-      window.location.href = redirectAfterLogin;
+      const redirectTargetResolved = resolvePostLoginTarget(redirectTarget || '/network');
+      window.location.href = redirectTargetResolved.url;
     } catch (err) {
       notify(err.message || 'Passkey sign-in failed.', { type: 'error' });
     } finally {
@@ -668,7 +708,7 @@ const LogInForm = ({ onLogin, interactionId, redirectTarget }) => {
             Reset password
           </Link>
           <Typography sx={{ color: '#aaa', fontSize: 13 }}>·</Typography>
-          <Link to="/login?signup" style={{ color: '#aaa', fontSize: 13, textDecoration: 'none' }}>
+          <Link to={signupHref} style={{ color: '#aaa', fontSize: 13, textDecoration: 'none' }}>
             Sign-Up
           </Link>
         </Box>
@@ -686,7 +726,7 @@ const LoginPage = () => {
   const redirectTarget = searchParams.get('redirect') || '/network';
 
   return isSignup ? (
-    <SignUpForm interactionId={interactionId} />
+    <SignUpForm interactionId={interactionId} redirectTarget={redirectTarget} />
   ) : (
     <LogInForm interactionId={interactionId} redirectTarget={redirectTarget} />
   );

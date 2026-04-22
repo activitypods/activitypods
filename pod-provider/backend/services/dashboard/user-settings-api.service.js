@@ -87,6 +87,7 @@ const MRF_METRICS_QUERY_KEYS = new Set(['from', 'to', 'moduleId', 'action', 'ori
 const MODERATION_QUERY_KEYS = new Set([
   'cursor',
   'limit',
+  'source',
   'action',
   'targetAtDid',
   'targetActorUri',
@@ -142,6 +143,8 @@ module.exports = {
       'http://fedify-sidecar:8080'
     ).replace(/\/$/, ''),
     mrfAdminToken: process.env.MRF_ADMIN_TOKEN || '',
+    internalBridgeToken:
+      process.env.ACTIVITYPODS_TOKEN || process.env.INTERNAL_API_TOKEN || process.env.SIDECAR_TOKEN || '',
     mrfTimeoutMs: Number(process.env.MRF_TIMEOUT_MS) || 5000,
     mrfRetries: Number(process.env.MRF_RETRIES) || 3,
     mrfRetryBaseDelayMs: Number(process.env.MRF_RETRY_BASE_DELAY_MS) || 150,
@@ -170,6 +173,11 @@ module.exports = {
 
     this.mrfCircuit = new CircuitBreaker({
       name: 'mrf-admin-gateway',
+      failureThreshold: Math.max(1, this.settings.mrfCircuitFailureThreshold),
+      resetTimeoutMs: Math.max(1000, this.settings.mrfCircuitResetTimeoutMs)
+    });
+    this.reportBridgeCircuit = new CircuitBreaker({
+      name: 'canonical-report-bridge',
       failureThreshold: Math.max(1, this.settings.mrfCircuitFailureThreshold),
       resetTimeoutMs: Math.max(1000, this.settings.mrfCircuitResetTimeoutMs)
     });
@@ -205,7 +213,13 @@ module.exports = {
     this._invitations = await this.loadProviderData('invitations');
     this._auditLog = await this.loadProviderData('audit-log');
     this._moderationDecisions = await this.loadProviderData('moderation-decisions');
-    this._moderationCases = await this.loadProviderData('moderation-cases');
+    {
+      const normalizedModerationCases = this.normalizeModerationCaseList(await this.loadProviderData('moderation-cases'));
+      this._moderationCases = normalizedModerationCases.entries;
+      if (normalizedModerationCases.changed) {
+        await this.saveProviderData('moderation-cases', this._moderationCases);
+      }
+    }
 
     await this.broker.call('api.addRoute', {
       route: {
@@ -249,6 +263,7 @@ module.exports = {
           'POST /provider/moderation/pdq/hash': 'user-settings-api.lookupPdqHash',
           'GET /provider/moderation/fediseer/status': 'user-settings-api.getFediseerStatus',
           'POST /provider/moderation/fediseer/sync': 'user-settings-api.syncFediseerDomainSignals',
+          'POST /moderation/reports': 'user-settings-api.createModerationReport',
           'POST /moderation/atproto/lists/fetch': 'user-settings-api.fetchAtprotoUserLists',
           'POST /moderation/atproto/lists/sync': 'user-settings-api.syncAtprotoUserLists',
           'GET /moderation/atproto/labelers/catalog': 'user-settings-api.listAtprotoLabelerCatalog',
@@ -749,24 +764,18 @@ module.exports = {
         }
         await this.saveProviderData('moderation-decisions', this._moderationDecisions);
         if (sourceCaseId) {
-          this._moderationCases = this._moderationCases.map(entry =>
-            entry?.id === sourceCaseId
-              ? {
-                  ...entry,
-                  status: 'resolved',
-                  updatedAt: decision.appliedAt,
-                  resolvedAt: decision.appliedAt,
-                  resolvedBy: webId,
-                  relatedDecisionIds: [
-                    ...new Set([
-                      ...(Array.isArray(entry?.relatedDecisionIds) ? entry.relatedDecisionIds : []),
-                      decision.id
-                    ])
-                  ]
-                }
-              : entry
-          );
-          await this.saveProviderData('moderation-cases', this._moderationCases);
+          const existingCase = this.findStoredModerationCaseById(sourceCaseId);
+          if (existingCase) {
+            await this.patchStoredModerationCase(sourceCaseId, {
+              status: 'resolved',
+              updatedAt: decision.appliedAt,
+              resolvedAt: decision.appliedAt,
+              resolvedBy: webId,
+              relatedDecisionIds: [
+                ...new Set([...(Array.isArray(existingCase.relatedDecisionIds) ? existingCase.relatedDecisionIds : []), decision.id])
+              ]
+            });
+          }
         }
       }
 
@@ -782,38 +791,75 @@ module.exports = {
       return upstream;
     },
 
+    async createModerationReport(ctx) {
+      const webId = this.requireWebId(ctx);
+      const input = this.requirePlainObject(ctx.params?.data || ctx.params || {}, 'data');
+      const created = await this.createLocalModerationReport(ctx, webId, input);
+
+      this.recordAuditEvent(webId, 'moderation_report_create', {
+        caseId: created.case.id,
+        source: created.case.source,
+        subjectKind: created.case.subject.kind,
+        authoritativeProtocol: created.case.subject.authoritativeProtocol || null,
+        canonicalPublished: created.canonicalPublished
+      });
+
+      return {
+        data: created.case,
+        duplicate: created.duplicate,
+        canonicalPublished: created.canonicalPublished,
+        canonicalIntentId: created.canonicalIntentId || null
+      };
+    },
+
     async listModerationCases(ctx) {
       const webId = this.requireWebId(ctx);
       this.requireProvider(webId);
 
       const query = this.pickModerationQuery(ctx.meta.$query || {});
-      try {
-        const qs = new URLSearchParams(query).toString();
-        const path = qs ? `/internal/admin/moderation/cases?${qs}` : '/internal/admin/moderation/cases';
+      return this.buildModerationCaseCachePage(query);
+    },
 
-        const upstream = await this.mrfProxy(ctx, {
-          method: 'GET',
-          path,
-          permission: 'provider:read'
-        });
+    async ingestModerationCaseInternal(ctx) {
+      const input = this.requirePlainObject(ctx.params || {}, 'case');
+      return this.ingestStoredModerationCase(input);
+    },
 
-        const cases = Array.isArray(upstream?.cases) ? upstream.cases : [];
-        if (cases.length > 0) {
-          const merged = this.mergeModerationCaseCache(cases);
-          if (merged.changed) {
-            this._moderationCases = merged.entries;
-            await this.saveProviderData('moderation-cases', this._moderationCases);
-          }
-        }
-
-        return {
-          data: cases,
-          cursor: upstream?.cursor || null
-        };
-      } catch (err) {
-        this.logger.warn('[ModerationBridge] Falling back to local case cache: %s', err.message);
-        return this.buildModerationCaseCachePage(query);
+    async getModerationCaseInternal(ctx) {
+      const id = this.sanitizePathSegment(ctx.params.id, 'id');
+      const entry = this.findStoredModerationCaseById(id);
+      if (!entry) {
+        throw new MoleculerError('Moderation case not found', 404, 'NOT_FOUND');
       }
+      return { case: entry };
+    },
+
+    async findModerationCaseByDedupeInternal(ctx) {
+      const dedupeKey = this.requireModerationCaseDedupeKey(ctx.params?.dedupeKey);
+      const entry = this.findStoredModerationCaseByDedupe(dedupeKey);
+      if (!entry) {
+        throw new MoleculerError('Moderation case not found', 404, 'NOT_FOUND');
+      }
+      return { case: entry };
+    },
+
+    async listModerationCasesInternal(ctx) {
+      const query = this.pickModerationQuery(ctx.params?.query || ctx.params || {});
+      const page = this.buildModerationCaseCachePage(query);
+      return {
+        cases: page.data,
+        cursor: page.cursor || undefined
+      };
+    },
+
+    async patchModerationCaseInternal(ctx) {
+      const id = this.sanitizePathSegment(ctx.params.id, 'id');
+      const patch = this.requirePlainObject(ctx.params?.patch || {}, 'patch');
+      const updated = await this.patchStoredModerationCase(id, patch);
+      if (!updated) {
+        throw new MoleculerError('Moderation case not found', 404, 'NOT_FOUND');
+      }
+      return { case: updated };
     },
 
     async listModerationDecisions(ctx) {
@@ -865,18 +911,15 @@ module.exports = {
               existing?.id !== decision.id &&
               existing?.revoked !== true
           );
-          this._moderationCases = this._moderationCases.map(entry =>
-            entry?.id === decision.sourceCaseId
-              ? {
-                  ...entry,
-                  status: hasActiveSibling ? 'resolved' : 'open',
-                  updatedAt: decision.revokedAt || new Date().toISOString(),
-                  resolvedAt: hasActiveSibling ? entry?.resolvedAt : undefined,
-                  resolvedBy: hasActiveSibling ? entry?.resolvedBy : undefined
-                }
-              : entry
-          );
-          await this.saveProviderData('moderation-cases', this._moderationCases);
+          const existingCase = this.findStoredModerationCaseById(decision.sourceCaseId);
+          if (existingCase) {
+            await this.patchStoredModerationCase(decision.sourceCaseId, {
+              status: hasActiveSibling ? 'resolved' : 'open',
+              updatedAt: decision.revokedAt || new Date().toISOString(),
+              resolvedAt: hasActiveSibling ? existingCase?.resolvedAt : null,
+              resolvedBy: hasActiveSibling ? existingCase?.resolvedBy : null
+            });
+          }
         }
       }
 
@@ -1573,6 +1616,626 @@ module.exports = {
   },
 
   methods: {
+    requireModerationCaseDedupeKey(value) {
+      const dedupeKey = String(value || '').trim();
+      if (!/^[a-f0-9]{32,128}$/i.test(dedupeKey)) {
+        throw new MoleculerError('dedupeKey must be a hex digest', 400, 'VALIDATION_ERROR');
+      }
+      return dedupeKey.toLowerCase();
+    },
+
+    inferModerationReasonType(reason) {
+      const normalized = String(reason || '').toLowerCase();
+      if (!normalized) return 'other';
+      if (/\b(spam|scam|bot|phishing)\b/.test(normalized)) return 'spam';
+      if (/\b(harass|abuse|threat|stalk|bully)\b/.test(normalized)) return 'harassment';
+      return 'other';
+    },
+
+    normalizeModerationReasonType(value) {
+      const normalized = String(value || '')
+        .trim()
+        .toLowerCase();
+      if (
+        ['spam', 'harassment', 'abuse', 'impersonation', 'copyright', 'illegal', 'safety', 'other'].includes(
+          normalized
+        )
+      ) {
+        return normalized;
+      }
+      throw new MoleculerError('reasonType is invalid', 400, 'VALIDATION_ERROR');
+    },
+
+    normalizeModerationActorRef(value, fieldName, options = {}) {
+      if (value === undefined || value === null) {
+        if (options.allowEmpty) return null;
+        throw new MoleculerError(`${fieldName} is required`, 400, 'VALIDATION_ERROR');
+      }
+      if (typeof value !== 'object' || Array.isArray(value)) {
+        throw new MoleculerError(`${fieldName} must be an object`, 400, 'VALIDATION_ERROR');
+      }
+
+      const canonicalAccountId = this.normalizeOptionalTrimmedString(value.canonicalAccountId, 512);
+      const did = this.normalizeOptionalTrimmedString(value.did, 512);
+      const webId = this.normalizeOptionalHttpUrl(value.webId);
+      const activityPubActorUri = this.normalizeOptionalHttpUrl(value.activityPubActorUri);
+      const handle = this.normalizeOptionalTrimmedString(value.handle, 512);
+
+      const actor = {
+        ...(canonicalAccountId ? { canonicalAccountId } : {}),
+        ...(did ? { did } : {}),
+        ...(webId ? { webId } : {}),
+        ...(activityPubActorUri ? { activityPubActorUri } : {}),
+        ...(handle ? { handle } : {})
+      };
+
+      if (Object.keys(actor).length === 0) {
+        if (options.allowEmpty) return null;
+        throw new MoleculerError(`${fieldName} must include at least one identity`, 400, 'VALIDATION_ERROR');
+      }
+
+      return actor;
+    },
+
+    normalizeModerationObjectRef(value, fieldName) {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        throw new MoleculerError(`${fieldName} must be an object`, 400, 'VALIDATION_ERROR');
+      }
+
+      const atUri = this.normalizeOptionalTrimmedString(value.atUri, 2048);
+      const activityPubObjectId = this.normalizeOptionalHttpUrl(value.activityPubObjectId);
+      const canonicalUrl = this.normalizeOptionalHttpUrl(value.canonicalUrl);
+      const cid = this.normalizeOptionalTrimmedString(value.cid, 512);
+      const canonicalObjectId =
+        this.normalizeOptionalTrimmedString(value.canonicalObjectId, 2048) || atUri || activityPubObjectId || canonicalUrl;
+
+      if (!canonicalObjectId) {
+        throw new MoleculerError(
+          `${fieldName} must include canonicalObjectId, atUri, activityPubObjectId, or canonicalUrl`,
+          400,
+          'VALIDATION_ERROR'
+        );
+      }
+
+      return {
+        canonicalObjectId,
+        ...(atUri ? { atUri } : {}),
+        ...(cid ? { cid } : {}),
+        ...(activityPubObjectId ? { activityPubObjectId } : {}),
+        ...(canonicalUrl ? { canonicalUrl } : {})
+      };
+    },
+
+    inferModerationSubjectAuthority(subject) {
+      if (!subject || typeof subject !== 'object') return 'local';
+
+      if (subject.kind === 'account') {
+        const actor = subject.actor || {};
+        if (actor.webId || actor.canonicalAccountId) return 'local';
+        if (actor.did || actor.handle) return 'at';
+        if (actor.activityPubActorUri) return 'ap';
+        return 'local';
+      }
+
+      if (subject.kind === 'object') {
+        const object = subject.object || {};
+        if (subject.owner?.webId || subject.owner?.canonicalAccountId) return 'local';
+        if (object.atUri) return 'at';
+        if (object.activityPubObjectId) return 'ap';
+      }
+
+      return 'local';
+    },
+
+    normalizeModerationSubject(value, fieldName = 'subject') {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        throw new MoleculerError(`${fieldName} is required`, 400, 'VALIDATION_ERROR');
+      }
+
+      if (value.kind === 'account') {
+        const actor = this.normalizeModerationActorRef(value.actor, `${fieldName}.actor`);
+        const authoritativeProtocol = ['local', 'ap', 'at'].includes(value.authoritativeProtocol)
+          ? value.authoritativeProtocol
+          : this.inferModerationSubjectAuthority({ kind: 'account', actor });
+        return {
+          kind: 'account',
+          actor,
+          authoritativeProtocol
+        };
+      }
+
+      if (value.kind === 'object') {
+        const object = this.normalizeModerationObjectRef(value.object, `${fieldName}.object`);
+        const owner = value.owner ? this.normalizeModerationActorRef(value.owner, `${fieldName}.owner`, { allowEmpty: true }) : null;
+        const authoritativeProtocol = ['local', 'ap', 'at'].includes(value.authoritativeProtocol)
+          ? value.authoritativeProtocol
+          : this.inferModerationSubjectAuthority({ kind: 'object', object, owner });
+        return {
+          kind: 'object',
+          object,
+          ...(owner ? { owner } : {}),
+          authoritativeProtocol
+        };
+      }
+
+      throw new MoleculerError(`${fieldName}.kind must be "account" or "object"`, 400, 'VALIDATION_ERROR');
+    },
+
+    normalizeModerationEvidenceObjectRefs(value) {
+      if (value === undefined || value === null) return [];
+      if (!Array.isArray(value)) {
+        throw new MoleculerError('evidenceObjectRefs must be an array', 400, 'VALIDATION_ERROR');
+      }
+      return value
+        .slice(0, 20)
+        .map((entry, index) => this.normalizeModerationObjectRef(entry, `evidenceObjectRefs[${index}]`));
+    },
+
+    normalizeModerationCanonicalEventState(value) {
+      const raw = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+      const status = ['pending', 'published', 'failed'].includes(raw.status) ? raw.status : 'pending';
+      const canonicalIntentId = this.normalizeOptionalTrimmedString(raw.canonicalIntentId, 512);
+      const lastAttemptAt = this.normalizeOptionalIsoTimestamp(raw.lastAttemptAt);
+      const publishedAt = this.normalizeOptionalIsoTimestamp(raw.publishedAt);
+      const lastError = this.normalizeOptionalTrimmedString(raw.lastError, 1024);
+
+      return {
+        status,
+        ...(canonicalIntentId ? { canonicalIntentId } : {}),
+        ...(lastAttemptAt ? { lastAttemptAt } : {}),
+        ...(publishedAt ? { publishedAt } : {}),
+        ...(lastError ? { lastError } : {})
+      };
+    },
+
+    normalizeOptionalTrimmedString(value, maxLen = 2048) {
+      if (value === undefined || value === null) return null;
+      const trimmed = String(value).trim();
+      if (!trimmed) return null;
+      if (trimmed.length > maxLen) {
+        throw new MoleculerError(`Value exceeds maximum length (${maxLen})`, 400, 'VALIDATION_ERROR');
+      }
+      return trimmed;
+    },
+
+    normalizeOptionalIsoTimestamp(value) {
+      const candidate = this.normalizeOptionalTrimmedString(value, 128);
+      if (!candidate) return null;
+      const timestamp = Date.parse(candidate);
+      if (Number.isNaN(timestamp)) {
+        throw new MoleculerError('Invalid ISO 8601 timestamp', 400, 'VALIDATION_ERROR');
+      }
+      return new Date(timestamp).toISOString();
+    },
+
+    normalizeOptionalHttpUrl(value) {
+      const candidate = this.normalizeOptionalTrimmedString(value, 2048);
+      if (!candidate) return null;
+      try {
+        const parsed = new URL(candidate);
+        if ((parsed.protocol !== 'http:' && parsed.protocol !== 'https:') || parsed.username || parsed.password) {
+          throw new Error('invalid_url');
+        }
+        return parsed.toString();
+      } catch {
+        throw new MoleculerError('Expected a valid http(s) URL', 400, 'VALIDATION_ERROR');
+      }
+    },
+
+    buildModerationCaseDedupeKey(input) {
+      const payload = JSON.stringify({
+        source: input.source,
+        reporterWebId: input.reporterWebId || null,
+        subject: input.subject,
+        reasonType: input.reasonType,
+        reason: input.reason || null,
+        evidenceObjectRefs: (input.evidenceObjectRefs || []).map(ref => ref.canonicalObjectId).sort(),
+        requestedForwardingRemote: input.requestedForwarding?.remote === true
+      });
+      return crypto.createHash('sha256').update(payload, 'utf8').digest('hex');
+    },
+
+    normalizeModerationCaseRecord(value) {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        throw new MoleculerError('Moderation case must be an object', 400, 'VALIDATION_ERROR');
+      }
+
+      const legacyReportedUris = Array.isArray(value.reportedUris) ? value.reportedUris.filter(Boolean) : [];
+      const legacyReportedActorUris = Array.isArray(value.reportedActorUris) ? value.reportedActorUris.filter(Boolean) : [];
+      const subject =
+        value.subject && typeof value.subject === 'object'
+          ? this.normalizeModerationSubject(value.subject, 'subject')
+          : legacyReportedActorUris.length > 0
+            ? {
+                kind: 'account',
+                actor: { activityPubActorUri: String(legacyReportedActorUris[0]).trim() },
+                authoritativeProtocol: 'ap'
+              }
+            : {
+                kind: 'object',
+                object: this.normalizeModerationObjectRef(
+                  {
+                    canonicalObjectId: legacyReportedUris[0] || `urn:moderation:case:${String(value.id || '').trim() || ulid()}`
+                  },
+                  'subject.object'
+                ),
+                authoritativeProtocol: 'ap'
+              };
+
+      const reporter =
+        value.reporter && typeof value.reporter === 'object'
+          ? this.normalizeModerationActorRef(value.reporter, 'reporter', { allowEmpty: true })
+          : value.sourceActorUri
+            ? this.normalizeModerationActorRef(
+                {
+                  activityPubActorUri: value.sourceActorUri,
+                  webId: value.sourceActorWebId
+                },
+                'reporter'
+              )
+            : null;
+
+      const recipient =
+        value.recipient && typeof value.recipient === 'object'
+          ? {
+              ...(this.normalizeOptionalHttpUrl(value.recipient.webId) ? { webId: this.normalizeOptionalHttpUrl(value.recipient.webId) } : {}),
+              ...(this.normalizeOptionalHttpUrl(value.recipient.activityPubActorUri)
+                ? { activityPubActorUri: this.normalizeOptionalHttpUrl(value.recipient.activityPubActorUri) }
+                : {})
+            }
+          : {
+              ...(this.normalizeOptionalHttpUrl(value.recipientWebId) ? { webId: this.normalizeOptionalHttpUrl(value.recipientWebId) } : {}),
+              ...(this.normalizeOptionalHttpUrl(value.recipientActorUri)
+                ? { activityPubActorUri: this.normalizeOptionalHttpUrl(value.recipientActorUri) }
+                : {})
+            };
+
+      const evidenceObjectRefs =
+        Array.isArray(value.evidenceObjectRefs) && value.evidenceObjectRefs.length > 0
+          ? this.normalizeModerationEvidenceObjectRefs(value.evidenceObjectRefs)
+          : legacyReportedUris
+              .filter(uri => !(subject.kind === 'account' && subject.actor.activityPubActorUri === uri))
+              .map(uri =>
+                this.normalizeModerationObjectRef(
+                  {
+                    canonicalObjectId: uri,
+                    activityPubObjectId: uri,
+                    canonicalUrl: uri
+                  },
+                  'evidenceObjectRefs[]'
+                )
+              );
+
+      const reasonType = value.reasonType
+        ? this.normalizeModerationReasonType(value.reasonType)
+        : this.inferModerationReasonType(value.reason);
+      const reason = this.normalizeOptionalTrimmedString(value.reason, 2000);
+      const requestedForwarding =
+        value.requestedForwarding && typeof value.requestedForwarding === 'object'
+          ? { remote: Boolean(value.requestedForwarding.remote) }
+          : null;
+      const clientContext =
+        value.clientContext && typeof value.clientContext === 'object'
+          ? {
+              ...(this.normalizeOptionalTrimmedString(value.clientContext.app, 128)
+                ? { app: this.normalizeOptionalTrimmedString(value.clientContext.app, 128) }
+                : {}),
+              ...(this.normalizeOptionalTrimmedString(value.clientContext.surface, 128)
+                ? { surface: this.normalizeOptionalTrimmedString(value.clientContext.surface, 128) }
+                : {})
+            }
+          : null;
+      const id = this.normalizeOptionalTrimmedString(value.id, 256) || ulid().toLowerCase();
+      const dedupeKey = value.dedupeKey
+        ? this.requireModerationCaseDedupeKey(value.dedupeKey)
+        : this.buildModerationCaseDedupeKey({
+            source: value.source || 'local-user-report',
+            reporterWebId: reporter?.webId || null,
+            subject,
+            reasonType,
+            reason,
+            evidenceObjectRefs,
+            requestedForwarding
+          });
+
+      return {
+        id,
+        source: value.source === 'activitypub-flag' ? 'activitypub-flag' : 'local-user-report',
+        protocol: value.protocol === 'ap' ? 'ap' : 'activitypods',
+        ...(this.normalizeOptionalTrimmedString(value.activityId, 2048) ? { activityId: this.normalizeOptionalTrimmedString(value.activityId, 2048) } : {}),
+        dedupeKey,
+        ...(reporter ? { reporter } : {}),
+        ...(this.normalizeOptionalTrimmedString(value.inboxPath, 2048) ? { inboxPath: this.normalizeOptionalTrimmedString(value.inboxPath, 2048) } : {}),
+        ...(Object.keys(recipient).length > 0 ? { recipient } : {}),
+        reasonType,
+        ...(reason ? { reason } : {}),
+        ...(requestedForwarding ? { requestedForwarding } : {}),
+        ...(clientContext && Object.keys(clientContext).length > 0 ? { clientContext } : {}),
+        subject,
+        evidenceObjectRefs,
+        ...(this.normalizeOptionalIsoTimestamp(value.createdAt) ? { createdAt: this.normalizeOptionalIsoTimestamp(value.createdAt) } : {}),
+        receivedAt: this.normalizeOptionalIsoTimestamp(value.receivedAt) || new Date().toISOString(),
+        status: ['open', 'resolved', 'dismissed'].includes(value.status) ? value.status : 'open',
+        relatedDecisionIds: Array.isArray(value.relatedDecisionIds)
+          ? [...new Set(value.relatedDecisionIds.map(item => String(item || '').trim()).filter(Boolean))]
+          : [],
+        canonicalEvent: this.normalizeModerationCanonicalEventState(value.canonicalEvent),
+        ...(this.normalizeOptionalIsoTimestamp(value.updatedAt) ? { updatedAt: this.normalizeOptionalIsoTimestamp(value.updatedAt) } : {}),
+        ...(this.normalizeOptionalIsoTimestamp(value.resolvedAt) ? { resolvedAt: this.normalizeOptionalIsoTimestamp(value.resolvedAt) } : {}),
+        ...(this.normalizeOptionalTrimmedString(value.resolvedBy, 2048) ? { resolvedBy: this.normalizeOptionalTrimmedString(value.resolvedBy, 2048) } : {})
+      };
+    },
+
+    normalizeModerationCaseList(entries) {
+      const normalized = [];
+      let changed = false;
+      for (const entry of Array.isArray(entries) ? entries : []) {
+        try {
+          const next = this.normalizeModerationCaseRecord(entry);
+          normalized.push(next);
+          if (JSON.stringify(entry) !== JSON.stringify(next)) {
+            changed = true;
+          }
+        } catch (err) {
+          changed = true;
+          this.logger.warn('[ModerationCases] Dropping invalid case entry: %s', err.message);
+        }
+      }
+      return {
+        changed,
+        entries: this.sortStoredModerationCases(normalized)
+      };
+    },
+
+    sortStoredModerationCases(entries) {
+      return [...entries]
+        .sort((left, right) => {
+          const leftTs = Date.parse(left?.receivedAt || left?.updatedAt || 0) || 0;
+          const rightTs = Date.parse(right?.receivedAt || right?.updatedAt || 0) || 0;
+          return rightTs - leftTs;
+        })
+        .slice(0, this.settings.auditLogMaxEntries);
+    },
+
+    findStoredModerationCaseById(id) {
+      const normalizedId = String(id || '').trim();
+      return this._moderationCases.find(entry => entry?.id === normalizedId) || null;
+    },
+
+    findStoredModerationCaseByDedupe(dedupeKey) {
+      const normalizedDedupe = String(dedupeKey || '').trim().toLowerCase();
+      return this._moderationCases.find(entry => String(entry?.dedupeKey || '').toLowerCase() === normalizedDedupe) || null;
+    },
+
+    async replaceStoredModerationCases(entries) {
+      this._moderationCases = this.sortStoredModerationCases(entries);
+      await this.saveProviderData('moderation-cases', this._moderationCases);
+      return this._moderationCases;
+    },
+
+    async ingestStoredModerationCase(input) {
+      const normalized = this.normalizeModerationCaseRecord(input);
+      const duplicate = this.findStoredModerationCaseByDedupe(normalized.dedupeKey) || this.findStoredModerationCaseById(normalized.id);
+      if (duplicate) {
+        return { case: duplicate, duplicate: true };
+      }
+
+      await this.replaceStoredModerationCases([normalized, ...this._moderationCases]);
+      return { case: normalized, duplicate: false };
+    },
+
+    async patchStoredModerationCase(id, patch) {
+      const existing = this.findStoredModerationCaseById(id);
+      if (!existing) return null;
+
+      const merged = this.normalizeModerationCaseRecord({
+        ...existing,
+        ...patch,
+        reporter:
+          patch.reporter && typeof patch.reporter === 'object'
+            ? { ...(existing.reporter || {}), ...patch.reporter }
+            : existing.reporter,
+        recipient:
+          patch.recipient && typeof patch.recipient === 'object'
+            ? { ...(existing.recipient || {}), ...patch.recipient }
+            : existing.recipient,
+        canonicalEvent:
+          patch.canonicalEvent && typeof patch.canonicalEvent === 'object'
+            ? { ...(existing.canonicalEvent || {}), ...patch.canonicalEvent }
+            : existing.canonicalEvent
+      });
+
+      await this.replaceStoredModerationCases(
+        this._moderationCases.map(entry => (entry?.id === existing.id ? merged : entry))
+      );
+
+      return merged;
+    },
+
+    async buildCanonicalActorRefForWebId(ctx, webId, canonicalAccountId) {
+      const actor = {
+        canonicalAccountId: canonicalAccountId || webId,
+        webId
+      };
+
+      try {
+        const binding = await ctx.call('identitybindings.getByCanonicalAccountId', {
+          canonicalAccountId
+        });
+
+        if (binding?.activityPubActorUri) actor.activityPubActorUri = binding.activityPubActorUri;
+        if (binding?.atprotoDid) actor.did = binding.atprotoDid;
+        if (binding?.atprotoHandle) actor.handle = binding.atprotoHandle;
+      } catch {
+        // Keep the WebID-only reporter reference when the binding service is unavailable.
+      }
+
+      return actor;
+    },
+
+    async publishCanonicalModerationReport(caseRecord) {
+      if (!this.settings.mrfAdminBaseUrl || !this.settings.internalBridgeToken) {
+        return { ok: false, error: 'not_configured' };
+      }
+
+      const execute = async () => {
+        const response = await fetch(`${this.settings.mrfAdminBaseUrl}/internal/bridge/moderation/reports`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${this.settings.internalBridgeToken}`,
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store'
+          },
+          body: JSON.stringify({
+            caseId: caseRecord.id,
+            sourceEventId: `activitypods:report:${caseRecord.id}`,
+            reporterWebId: caseRecord.reporter?.webId || null,
+            sourceAccountRef: caseRecord.reporter || null,
+            subject: caseRecord.subject,
+            reasonType: caseRecord.reasonType,
+            reason: caseRecord.reason || null,
+            evidenceObjectRefs: caseRecord.evidenceObjectRefs || [],
+            requestedForwarding: caseRecord.requestedForwarding || null,
+            clientContext: caseRecord.clientContext || null,
+            createdAt: caseRecord.createdAt || caseRecord.receivedAt,
+            observedAt: new Date().toISOString()
+          }),
+          signal: AbortSignal.timeout(this.settings.mrfTimeoutMs)
+        });
+
+        const text = await response.text();
+        const payload = text ? this.tryParseJson(text) : {};
+        if (!response.ok) {
+          const error = new MoleculerError(
+            payload?.error?.message || `Canonical report bridge failed (${response.status})`,
+            response.status,
+            payload?.error?.code || 'CANONICAL_REPORT_BRIDGE_FAILED'
+          );
+          error.retryable = response.status === 429 || response.status >= 500;
+          throw error;
+        }
+
+        return payload;
+      };
+
+      try {
+        const payload = await this.reportBridgeCircuit.execute(() =>
+          retryWithBackoff(execute, {
+            maxRetries: Math.max(0, this.settings.mrfRetries - 1),
+            baseDelayMs: Math.max(25, this.settings.mrfRetryBaseDelayMs),
+            maxDelayMs: Math.max(this.settings.mrfRetryBaseDelayMs, this.settings.mrfRetryMaxDelayMs),
+            deadlineMs: this.settings.mrfTimeoutMs * Math.max(1, this.settings.mrfRetries),
+            retryIf: err => err?.retryable !== false
+          })
+        );
+        return {
+          ok: true,
+          canonicalIntentId: payload?.canonicalIntentId || null
+        };
+      } catch (err) {
+        const message =
+          err instanceof CircuitOpenError
+            ? err.message
+            : err?.message || 'canonical_report_bridge_failed';
+        this.logger.warn('[ModerationReport] Failed to publish canonical report create event', {
+          caseId: caseRecord.id,
+          error: message
+        });
+        return { ok: false, error: message };
+      }
+    },
+
+    async createLocalModerationReport(ctx, webId, input) {
+      const canonicalAccountId = await this.resolveCanonicalAccountId(ctx, webId);
+      const reporter = await this.buildCanonicalActorRefForWebId(ctx, webId, canonicalAccountId);
+      const subject = this.normalizeModerationSubject(input.subject, 'subject');
+      const reasonType = this.normalizeModerationReasonType(input.reasonType);
+      const reason = this.normalizeOptionalTrimmedString(input.reason, 2000);
+      const evidenceObjectRefs = this.normalizeModerationEvidenceObjectRefs(input.evidenceObjectRefs);
+      const requestedForwarding =
+        input.requestedForwarding && typeof input.requestedForwarding === 'object'
+          ? { remote: Boolean(input.requestedForwarding.remote) }
+          : null;
+      const clientContext =
+        input.clientContext && typeof input.clientContext === 'object'
+          ? {
+              ...(this.normalizeOptionalTrimmedString(input.clientContext.app, 128)
+                ? { app: this.normalizeOptionalTrimmedString(input.clientContext.app, 128) }
+                : {}),
+              ...(this.normalizeOptionalTrimmedString(input.clientContext.surface, 128)
+                ? { surface: this.normalizeOptionalTrimmedString(input.clientContext.surface, 128) }
+                : {})
+            }
+          : null;
+      const dedupeKey = this.buildModerationCaseDedupeKey({
+        source: 'local-user-report',
+        reporterWebId: webId,
+        subject,
+        reasonType,
+        reason,
+        evidenceObjectRefs,
+        requestedForwarding
+      });
+      const existing = this.findStoredModerationCaseByDedupe(dedupeKey);
+      if (existing) {
+        return {
+          case: existing,
+          duplicate: true,
+          canonicalPublished: existing.canonicalEvent?.status === 'published',
+          canonicalIntentId: existing.canonicalEvent?.canonicalIntentId || null
+        };
+      }
+
+      const now = new Date().toISOString();
+      const created = await this.ingestStoredModerationCase({
+        id: ulid().toLowerCase(),
+        source: 'local-user-report',
+        protocol: 'activitypods',
+        dedupeKey,
+        reporter,
+        reasonType,
+        reason,
+        requestedForwarding,
+        clientContext,
+        subject,
+        evidenceObjectRefs,
+        createdAt: now,
+        receivedAt: now,
+        status: 'open',
+        relatedDecisionIds: [],
+        canonicalEvent: {
+          status: 'pending'
+        }
+      });
+
+      const publishResult = await this.publishCanonicalModerationReport(created.case);
+      const canonicalPatch = publishResult.ok
+        ? {
+            canonicalEvent: {
+              status: 'published',
+              canonicalIntentId: publishResult.canonicalIntentId || undefined,
+              lastAttemptAt: now,
+              publishedAt: now,
+              lastError: undefined
+            }
+          }
+        : {
+            canonicalEvent: {
+              status: 'failed',
+              lastAttemptAt: now,
+              lastError: publishResult.error
+            }
+          };
+      const updatedCase = (await this.patchStoredModerationCase(created.case.id, canonicalPatch)) || created.case;
+
+      return {
+        case: updatedCase,
+        duplicate: false,
+        canonicalPublished: publishResult.ok,
+        canonicalIntentId: publishResult.canonicalIntentId || null
+      };
+    },
+
     parseProviderActors(raw) {
       const values = String(raw || '')
         .split(',')
@@ -1697,7 +2360,7 @@ module.exports = {
         data,
         cursor: nextCursor,
         total: ordered.length,
-        source: 'cache'
+        source: 'local'
       };
     },
 
@@ -1734,17 +2397,18 @@ module.exports = {
     buildModerationCaseCachePage(query = {}) {
       const limit = Math.min(Number(query.limit) || 100, 500);
       const cursor = typeof query.cursor === 'string' ? query.cursor.trim() : '';
+      const source = typeof query.source === 'string' ? query.source : '';
       const status = typeof query.status === 'string' ? query.status : '';
       const sourceActorUri = typeof query.sourceActorUri === 'string' ? query.sourceActorUri : '';
       const recipientWebId = typeof query.recipientWebId === 'string' ? query.recipientWebId : '';
       const reportedActorUri = typeof query.reportedActorUri === 'string' ? query.reportedActorUri : '';
 
-      const ordered = [...this._moderationCases].filter(entry => {
+      const ordered = this.sortStoredModerationCases(this._moderationCases).filter(entry => {
+        if (source && entry?.source !== source) return false;
         if (status && entry?.status !== status) return false;
-        if (sourceActorUri && entry?.sourceActorUri !== sourceActorUri) return false;
-        if (recipientWebId && entry?.recipientWebId !== recipientWebId) return false;
-        if (reportedActorUri && !Array.isArray(entry?.reportedActorUris)) return false;
-        if (reportedActorUri && !entry.reportedActorUris.includes(reportedActorUri)) return false;
+        if (sourceActorUri && entry?.reporter?.activityPubActorUri !== sourceActorUri) return false;
+        if (recipientWebId && entry?.recipient?.webId !== recipientWebId) return false;
+        if (reportedActorUri && !this.caseMatchesReportedActorUri(entry, reportedActorUri)) return false;
         return true;
       });
 
@@ -1760,8 +2424,19 @@ module.exports = {
         data,
         cursor: nextCursor,
         total: ordered.length,
-        source: 'cache'
+        source: 'local'
       };
+    },
+
+    caseMatchesReportedActorUri(entry, actorUri) {
+      if (!entry || !actorUri) return false;
+      if (entry.subject?.kind === 'account' && entry.subject?.actor?.activityPubActorUri === actorUri) {
+        return true;
+      }
+      if (entry.subject?.kind === 'object' && entry.subject?.owner?.activityPubActorUri === actorUri) {
+        return true;
+      }
+      return false;
     },
 
     async mrfProxy(ctx, { method, path, permission, body }) {

@@ -16,6 +16,12 @@
     "@fontsource/pt-sans": "5.0.12",
     "astro": "4.3.5",
     "sharp": "0.33.5",
-    "typescript": "5.3.3"
+    "typescript": "5.2.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "@astrojs/sitemap": "3.0.5",
+      "sitemap": "7.1.1"
+    }
   }
 }

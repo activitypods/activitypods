@@ -355,9 +355,9 @@ export const fetchCapabilityResources = async (capabilityUri: string) => {
     const capability = await capRes.json();
     // The capability has a credentialSubject with `hasAuthorization`
     const availableResources = arrayOf(capability?.credentialSubject?.['apods:hasAuthorization'])
-      .map(auth => auth['acl:accessTo'])
-      .flat()
-      .flatMap(res => res?.id || res);
+      .flatMap(auth => arrayOf(auth?.['acl:accessTo']))
+      .map(res => res?.id || res?.['@id'] || res)
+      .filter(res => typeof res === 'string');
 
     if (availableResources.length === 0) {
       throw new Error('Invite link capability is empty');

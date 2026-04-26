@@ -28,7 +28,7 @@ module.exports = ({ enabled = false } = {}) => {
           );
         }
 
-        return undefined;
+        return {};
       };
     }
   };

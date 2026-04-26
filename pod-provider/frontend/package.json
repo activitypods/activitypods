@@ -3,6 +3,7 @@
   "scripts": {
     "dev": "react-scripts start",
     "build": "react-scripts build",
+    "test": "react-scripts test --watchAll=false",
     "eject": "react-scripts eject",
     "link-semapps-packages": "yalc link @semapps/activitypub-components @semapps/auth-provider @semapps/date-components @semapps/field-components @semapps/geo-components @semapps/input-components @semapps/list-components @semapps/markdown-components @semapps/semantic-data-provider",
     "unlink-semapps-packages": "yalc remove --all && rm -rf node_modules/@semapps && yarn install --force"

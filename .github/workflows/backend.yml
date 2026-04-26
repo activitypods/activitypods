@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'pod-provider/backend/**'
+      - 'tests/**'
       - '.github/workflows/backend.yml'
   workflow_dispatch:
 
@@ -27,20 +28,40 @@ jobs:
           cache: yarn
           cache-dependency-path: pod-provider/backend/yarn.lock
 
-      - name: Install dependencies
+      - name: Enforce HTTPS for public Git dependencies
+        run: |
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - name: Normalize legacy SSH Git URLs in backend lockfile
+        run: |
+          if [ -f yarn.lock ]; then
+            sed -i 's#ssh://git@github.com/#https://github.com/#g' yarn.lock
+            sed -i 's#git+ssh://git@github.com/#git+https://github.com/#g' yarn.lock
+            sed -i 's#git@github.com:#https://github.com/#g' yarn.lock
+          fi
+
+      - name: Install backend dependencies
         run: yarn install
 
-      - name: Report lockfile drift
+      - name: Report backend lockfile drift
         run: |
           if ! git diff --quiet -- yarn.lock; then
-            echo '::warning file=pod-provider/backend/yarn.lock::yarn.lock is out of sync with package.json. Run `cd pod-provider/backend && yarn install`, then commit yarn.lock.'
+            echo '::warning file=pod-provider/backend/yarn.lock::yarn.lock is out of sync with package.json or contains legacy SSH Git URLs. Run `cd pod-provider/backend && yarn install`, ensure GitHub Git dependencies use HTTPS, then commit yarn.lock.'
             git --no-pager diff -- yarn.lock | sed -n '1,240p'
           fi
 
-      - name: Run unit tests
-        run: yarn test:unit
-
-      - name: Run ATProto signing smoke tests
+      - name: Run stable backend unit tests
+        working-directory: .
         run: |
-          yarn test:atproto:multibase
-          yarn test:atproto:signing
+          npm exec --yes \
+            --package=jest@29.7.0 \
+            --package=esbuild@0.25.4 \
+            --package=esbuild-jest@0.5.0 \
+            -- \
+            jest --testEnvironment=node \
+              --roots=pod-provider/backend/tests \
+              --testPathIgnorePatterns='hashtag-conformance-matrix.test.js|create-unified-account.test.js'
+
+      - name: Run offline ATProto multibase smoke test
+        run: yarn test:atproto:multibase

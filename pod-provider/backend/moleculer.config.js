@@ -15,6 +15,7 @@ const ActorMetadataMiddleware = require('./middlewares/actor-metadata');
 const AuthorAttributionMiddleware = require('./middlewares/author-attribution');
 const Fep4adbMiddleware = require('./middlewares/fep-4adb');
 const Fep5bf0CollectionViewsMiddleware = require('./middlewares/fep-5bf0-collection-views');
+const SkipOrphanBlankNodesCleanupMiddleware = require('./middlewares/skip-orphan-blank-nodes-cleanup');
 const CONFIG = require('./config/config');
 const errorHandler = require('./config/errorHandler');
 const RdfJSONSerializer = require('./RdfJSONSerializer');
@@ -41,6 +42,7 @@ module.exports = {
   middlewares: [
     CacherMiddleware(cacherConfig), // Set the cacher before the WebAcl middleware
     WebAclMiddleware({ baseUrl: CONFIG.BASE_URL, podProvider: true }),
+    SkipOrphanBlankNodesCleanupMiddleware({ enabled: CONFIG.SKIP_ORPHAN_BLANK_NODE_CLEANUP }),
     ObjectsWatcherMiddleware({ baseUrl: CONFIG.BASE_URL, podProvider: true, postWithoutRecipients: true }),
     LongFormTextMiddleware(),
     ContentWarningMiddleware(),

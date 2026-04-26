@@ -1,6 +1,7 @@
 import urlJoin from 'url-join';
 import { FetchFn } from '@semapps/semantic-data-provider';
 import { fetchUtils } from 'react-admin';
+import { normalizeCapabilityResourceUris } from './utils/capabilityResources';
 const VC_API_PATH = '/vc/v0.3';
 
 const credentialContext = [
@@ -353,11 +354,7 @@ export const fetchCapabilityResources = async (capabilityUri: string) => {
       throw new Error('Capability fetch failed');
     }
     const capability = await capRes.json();
-    // The capability has a credentialSubject with `hasAuthorization`
-    const availableResources = arrayOf(capability?.credentialSubject?.['apods:hasAuthorization'])
-      .flatMap(auth => arrayOf(auth?.['acl:accessTo']))
-      .map(res => res?.id || res?.['@id'] || res)
-      .filter(res => typeof res === 'string');
+    const availableResources = normalizeCapabilityResourceUris(capability);
 
     if (availableResources.length === 0) {
       throw new Error('Invite link capability is empty');

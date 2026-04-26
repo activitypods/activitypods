@@ -22,11 +22,26 @@ const Header = ({ title, titleVariables, keywords, description }) => {
     return translatedTitle;
   }, [title, titleVariables, translate]);
 
+  const defaultDescription = React.useMemo(
+    () => `${CONFIG.INSTANCE_NAME} is a federated social platform powered by ActivityPub and personal pods.`,
+    []
+  );
+  const effectiveDescription = description || defaultDescription;
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : undefined;
+
   return (
     <Helmet>
       <title>{translatedTitle}</title>
       {keywords && <meta name="keywords" content={keywords} />}
-      {description && <meta name="description" content={description} />}
+      <meta name="description" content={effectiveDescription} />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content={CONFIG.INSTANCE_NAME} />
+      <meta property="og:title" content={translatedTitle} />
+      <meta property="og:description" content={effectiveDescription} />
+      {currentUrl && <meta property="og:url" content={currentUrl} />}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={translatedTitle} />
+      <meta name="twitter:description" content={effectiveDescription} />
     </Helmet>
   );
 };

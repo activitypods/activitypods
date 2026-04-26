@@ -5,6 +5,23 @@ const { MoleculerError } = require('moleculer').Errors;
 const { randomToken, sanitizeErrorMessage, parseBoolean, assertHttpsUrl } = require('../utils/oauth-security');
 const { generateKeyPair, exportJWK, importJWK, SignJWT, calculateJwkThumbprint } = require('jose');
 
+function normalizeLoopbackRedirectUri(rawUrl) {
+  const parsed = new URL(String(rawUrl));
+  if (parsed.hostname === 'localhost') {
+    parsed.hostname = '127.0.0.1';
+  }
+  return parsed.toString();
+}
+
+const defaultRedirectUri = normalizeLoopbackRedirectUri(
+  process.env.LINK_ATPROTO_OAUTH_REDIRECT_URI ||
+    `${(process.env.SEMAPPS_HOME_URL || 'http://localhost:3000').replace(/\/$/, '')}/api/accounts/link-atproto/oauth/callback`
+);
+const defaultScope = process.env.LINK_ATPROTO_OAUTH_SCOPE || 'atproto';
+const defaultClientId =
+  process.env.LINK_ATPROTO_OAUTH_CLIENT_ID ||
+  `http://localhost/?redirect_uri=${encodeURIComponent(defaultRedirectUri)}&scope=${encodeURIComponent(defaultScope)}`;
+
 /**
  * Generate an ES256 DPoP key pair.
  * Returns { privateKeyJwk (string), publicKeyJwk (object), thumbprint (string) }.
@@ -12,13 +29,13 @@ const { generateKeyPair, exportJWK, importJWK, SignJWT, calculateJwkThumbprint }
 async function generateDpopKeypair() {
   const { privateKey, publicKey } = await generateKeyPair('ES256', { extractable: true });
   const privateJwk = await exportJWK(privateKey);
-  const publicJwk  = await exportJWK(publicKey);
+  const publicJwk = await exportJWK(publicKey);
   const thumbprint = await calculateJwkThumbprint(publicJwk);
   privateJwk.kid = thumbprint;
-  publicJwk.kid  = thumbprint;
+  publicJwk.kid = thumbprint;
   return {
     privateKeyJwk: JSON.stringify(privateJwk),
-    publicKeyJwk,
+    publicKeyJwk: publicJwk,
     thumbprint
   };
 }
@@ -46,9 +63,7 @@ async function buildDpopProof(privateKeyJwkStr, htu, htm, nonce) {
     payload.nonce = nonce;
   }
 
-  return new SignJWT(payload)
-    .setProtectedHeader({ alg: 'ES256', typ: 'dpop+jwt', jwk: publicJwk })
-    .sign(privateKey);
+  return new SignJWT(payload).setProtectedHeader({ alg: 'ES256', typ: 'dpop+jwt', jwk: publicJwk }).sign(privateKey);
 }
 
 function sleep(ms) {
@@ -68,7 +83,7 @@ function isRetryableStatus(status) {
 }
 
 function randomBackoffMs(attempt) {
-  const cap = Math.min(250 * (2 ** Math.max(0, attempt - 1)), 5000);
+  const cap = Math.min(250 * 2 ** Math.max(0, attempt - 1), 5000);
   return Math.floor(Math.random() * cap);
 }
 
@@ -80,12 +95,13 @@ module.exports = {
     redisUrl: process.env.SEMAPPS_REDIS_CACHE_URL || 'redis://localhost:6379',
     stateKeyPrefix: 'oauth:link-atproto:state',
     stateTtlSec: Math.max(60, Math.min(Number(process.env.LINK_ATPROTO_OAUTH_STATE_TTL_SECONDS) || 600, 1800)),
-    allowHttpLocalhost: parseBoolean(process.env.LINK_ATPROTO_OAUTH_ALLOW_HTTP_LOCALHOST, process.env.NODE_ENV !== 'production'),
-    clientId: process.env.LINK_ATPROTO_OAUTH_CLIENT_ID || 'http://localhost:3901/memory-pwa.client.json',
-    redirectUri:
-      process.env.LINK_ATPROTO_OAUTH_REDIRECT_URI ||
-      `${(process.env.SEMAPPS_HOME_URL || 'http://localhost:3000').replace(/\/$/, '')}/api/accounts/link-atproto/oauth/callback`,
-    scope: process.env.LINK_ATPROTO_OAUTH_SCOPE || 'atproto',
+    allowHttpLocalhost: parseBoolean(
+      process.env.LINK_ATPROTO_OAUTH_ALLOW_HTTP_LOCALHOST,
+      process.env.NODE_ENV !== 'production'
+    ),
+    clientId: defaultClientId,
+    redirectUri: defaultRedirectUri,
+    scope: defaultScope,
     timeoutMs: Math.max(1000, Math.min(Number(process.env.LINK_ATPROTO_OAUTH_TIMEOUT_MS) || 8000, 15000)),
     maxAttempts: Math.max(1, Math.min(Number(process.env.LINK_ATPROTO_OAUTH_MAX_ATTEMPTS) || 5, 5))
   },
@@ -114,7 +130,8 @@ module.exports = {
         onBeforeCall: (ctx, route, req) => {
           ctx.meta.$headers = req.headers;
           ctx.meta.$query = req.query;
-          ctx.meta.$remoteIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || req.connection?.remoteAddress || '';
+          ctx.meta.$remoteIp =
+            req.headers['x-forwarded-for'] || req.socket?.remoteAddress || req.connection?.remoteAddress || '';
         },
         aliases: {
           'POST /start': 'link-atproto-oauth-api.start',
@@ -163,7 +180,6 @@ module.exports = {
         const metadata = await this.discoverOAuthMetadata(pdsUrl);
 
         const state = randomToken(24);
-        const nonce = randomToken(24);
         const codeVerifier = randomToken(48);
         const codeChallenge = asBase64UrlSha256(codeVerifier);
 
@@ -175,10 +191,10 @@ module.exports = {
 
         const record = {
           state,
-          nonce,
           codeVerifier,
           createdAt: Date.now(),
           pdsUrl,
+          issuer: metadata.issuer,
           tokenEndpoint: metadata.token_endpoint,
           dpopPrivateKeyJwk: dpopKeypair.privateKeyJwk,
           activitypods: ctx.params.activitypods,
@@ -191,27 +207,19 @@ module.exports = {
           redirectAfterLink: ctx.params.redirectAfterLink || undefined
         };
 
-        await this.redis.set(
-          this.stateKey(state),
-          JSON.stringify(record),
-          'EX',
-          this.settings.stateTtlSec
-        );
+        await this.redis.set(this.stateKey(state), JSON.stringify(record), 'EX', this.settings.stateTtlSec);
+
+        const pushedAuthorization = await this.createPushedAuthorizationRequest({
+          metadata,
+          state,
+          codeChallenge,
+          dpopPrivateKeyJwk: dpopKeypair.privateKeyJwk,
+          identifier: record.atproto.identifier || undefined
+        });
 
         const authorizeUrl = new URL(String(metadata.authorization_endpoint));
-        authorizeUrl.searchParams.set('response_type', 'code');
         authorizeUrl.searchParams.set('client_id', this.settings.clientId);
-        authorizeUrl.searchParams.set('redirect_uri', this.settings.redirectUri);
-        authorizeUrl.searchParams.set('scope', this.settings.scope);
-        authorizeUrl.searchParams.set('state', state);
-        authorizeUrl.searchParams.set('code_challenge', codeChallenge);
-        authorizeUrl.searchParams.set('code_challenge_method', 'S256');
-        authorizeUrl.searchParams.set('nonce', nonce);
-        // dpop_jkt binds the authorization grant to the DPoP key (RFC 9449 §10)
-        authorizeUrl.searchParams.set('dpop_jkt', dpopKeypair.thumbprint);
-        if (record.atproto.identifier) {
-          authorizeUrl.searchParams.set('login_hint', record.atproto.identifier);
-        }
+        authorizeUrl.searchParams.set('request_uri', pushedAuthorization.request_uri);
 
         return {
           authorizationUrl: authorizeUrl.toString(),
@@ -225,6 +233,7 @@ module.exports = {
       params: {
         state: 'string|min:8',
         code: { type: 'string', optional: true },
+        iss: { type: 'string', optional: true },
         error: { type: 'string', optional: true },
         error_description: { type: 'string', optional: true }
       },
@@ -249,6 +258,11 @@ module.exports = {
           throw new MoleculerError('OAuth state is invalid or expired', 400, 'INVALID_REQUEST');
         }
 
+        const issuer = String(ctx.params.iss || '').trim();
+        if (record.issuer && issuer && issuer !== record.issuer) {
+          throw new MoleculerError('OAuth issuer mismatch', 400, 'ATPROTO_OAUTH_ISSUER_MISMATCH');
+        }
+
         const tokenPayload = await this.exchangeCodeForToken({
           tokenEndpoint: record.tokenEndpoint,
           code,
@@ -256,7 +270,18 @@ module.exports = {
           dpopPrivateKeyJwk: record.dpopPrivateKeyJwk
         });
 
+        const subjectDid = String(tokenPayload.sub || '').trim();
         const accessToken = String(tokenPayload.access_token || '').trim();
+        const grantedScope = String(tokenPayload.scope || '').trim();
+
+        if (!subjectDid) {
+          throw new MoleculerError('Token endpoint did not return sub', 502, 'ATPROTO_OAUTH_TOKEN_FAILED');
+        }
+
+        if (!grantedScope || !grantedScope.split(/\s+/).includes('atproto')) {
+          throw new MoleculerError('Token endpoint did not grant atproto scope', 502, 'ATPROTO_OAUTH_TOKEN_FAILED');
+        }
+
         if (!accessToken) {
           throw new MoleculerError('Token endpoint did not return access_token', 502, 'ATPROTO_OAUTH_TOKEN_FAILED');
         }
@@ -264,6 +289,7 @@ module.exports = {
         const verifiedAtproto = await ctx.call('atproto-verification.verifyDelegatedIdentity', {
           pdsUrl: record.pdsUrl,
           accessToken,
+          subjectDid,
           did: record.atproto.did,
           handle: record.atproto.handle
         });
@@ -309,9 +335,7 @@ module.exports = {
       }
 
       const isLocalhost =
-        parsed.hostname === 'localhost' ||
-        parsed.hostname === '127.0.0.1' ||
-        parsed.hostname === '::1';
+        parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '::1';
 
       const schemeAllowed =
         parsed.protocol === 'https:' ||
@@ -337,7 +361,40 @@ module.exports = {
     },
 
     async discoverOAuthMetadata(pdsUrl) {
-      const metadataUrl = new URL('/.well-known/oauth-authorization-server', pdsUrl).toString();
+      let authorizationServerOrigin = pdsUrl;
+      let protectedResourceBody = null;
+
+      const protectedResourceUrl = new URL('/.well-known/oauth-protected-resource', pdsUrl).toString();
+      try {
+        protectedResourceBody = await this.fetchJsonWithRetry(
+          protectedResourceUrl,
+          {
+            method: 'GET',
+            headers: {
+              accept: 'application/json'
+            }
+          },
+          {
+            acceptedErrorStatuses: [404]
+          }
+        );
+      } catch (error) {
+        if (!(error instanceof MoleculerError) || error.type !== 'ATPROTO_OAUTH_UPSTREAM_INVALID') {
+          throw error;
+        }
+      }
+
+      const authorizationServers = Array.isArray(protectedResourceBody?.authorization_servers)
+        ? protectedResourceBody.authorization_servers.filter(
+            value => typeof value === 'string' && value.trim().length > 0
+          )
+        : [];
+
+      if (authorizationServers.length > 0) {
+        authorizationServerOrigin = String(authorizationServers[0]).trim().replace(/\/$/, '');
+      }
+
+      const metadataUrl = new URL('/.well-known/oauth-authorization-server', authorizationServerOrigin).toString();
       const body = await this.fetchJsonWithRetry(metadataUrl, {
         method: 'GET',
         headers: {
@@ -349,12 +406,19 @@ module.exports = {
         throw new MoleculerError('OAuth metadata response is invalid', 502, 'ATPROTO_OAUTH_DISCOVERY_FAILED');
       }
 
+      const issuer = String(body.issuer || '').trim();
       const authorizationEndpoint = String(body.authorization_endpoint || '').trim();
       const tokenEndpoint = String(body.token_endpoint || '').trim();
-      if (!authorizationEndpoint || !tokenEndpoint) {
+      const pushedAuthorizationRequestEndpoint = String(body.pushed_authorization_request_endpoint || '').trim();
+
+      if (!issuer || !authorizationEndpoint || !tokenEndpoint || !pushedAuthorizationRequestEndpoint) {
         throw new MoleculerError('OAuth metadata is missing required endpoints', 502, 'ATPROTO_OAUTH_DISCOVERY_FAILED');
       }
 
+      assertHttpsUrl(issuer, {
+        allowLocalhostHttp: this.settings.allowHttpLocalhost,
+        field: 'issuer'
+      });
       assertHttpsUrl(authorizationEndpoint, {
         allowLocalhostHttp: this.settings.allowHttpLocalhost,
         field: 'authorization_endpoint'
@@ -363,35 +427,72 @@ module.exports = {
         allowLocalhostHttp: this.settings.allowHttpLocalhost,
         field: 'token_endpoint'
       });
+      assertHttpsUrl(pushedAuthorizationRequestEndpoint, {
+        allowLocalhostHttp: this.settings.allowHttpLocalhost,
+        field: 'pushed_authorization_request_endpoint'
+      });
 
       return {
+        issuer,
         authorization_endpoint: authorizationEndpoint,
-        token_endpoint: tokenEndpoint
+        token_endpoint: tokenEndpoint,
+        pushed_authorization_request_endpoint: pushedAuthorizationRequestEndpoint
+      };
+    },
+
+    async createPushedAuthorizationRequest({ metadata, state, codeChallenge, dpopPrivateKeyJwk, identifier }) {
+      const body = await this.fetchJsonWithDpopNonceRetry(
+        metadata.pushed_authorization_request_endpoint,
+        {
+          method: 'POST',
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/x-www-form-urlencoded'
+          },
+          body: withFormUrlEncoded({
+            client_id: this.settings.clientId,
+            redirect_uri: this.settings.redirectUri,
+            response_type: 'code',
+            scope: this.settings.scope,
+            state,
+            code_challenge: codeChallenge,
+            code_challenge_method: 'S256',
+            ...(identifier ? { login_hint: identifier } : {})
+          })
+        },
+        {
+          dpopPrivateKeyJwk,
+          acceptedErrorStatuses: [400, 401]
+        }
+      );
+
+      if (body.error) {
+        throw new MoleculerError(
+          sanitizeErrorMessage(body.error_description || body.error),
+          400,
+          'ATPROTO_OAUTH_PAR_FAILED'
+        );
+      }
+
+      const requestUri = String(body.request_uri || '').trim();
+      if (!requestUri) {
+        throw new MoleculerError('PAR response is missing request_uri', 502, 'ATPROTO_OAUTH_PAR_FAILED');
+      }
+
+      return {
+        request_uri: requestUri
       };
     },
 
     async exchangeCodeForToken({ tokenEndpoint, code, codeVerifier, dpopPrivateKeyJwk }) {
-      // Generate a DPoP proof for the token-endpoint call.
-      // Per RFC 9449 §5, no `ath` claim is needed at the token endpoint.
-      let dpopProof;
-      if (dpopPrivateKeyJwk) {
-        const htu = tokenEndpoint.split('?')[0];
-        dpopProof = await buildDpopProof(dpopPrivateKeyJwk, htu, 'POST');
-      }
-
-      const requestHeaders = {
-        accept: 'application/json',
-        'content-type': 'application/x-www-form-urlencoded'
-      };
-      if (dpopProof) {
-        requestHeaders['DPoP'] = dpopProof;
-      }
-
-      const body = await this.fetchJsonWithRetry(
+      const body = await this.fetchJsonWithDpopNonceRetry(
         tokenEndpoint,
         {
           method: 'POST',
-          headers: requestHeaders,
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/x-www-form-urlencoded'
+          },
           body: withFormUrlEncoded({
             grant_type: 'authorization_code',
             code,
@@ -401,6 +502,7 @@ module.exports = {
           })
         },
         {
+          dpopPrivateKeyJwk,
           acceptedErrorStatuses: [400, 401, 403]
         }
       );
@@ -416,7 +518,75 @@ module.exports = {
       return body;
     },
 
+    async fetchJsonWithDpopNonceRetry(url, options, extra = {}) {
+      const method = String(options.method || 'GET').toUpperCase();
+      const htu = String(url).split('?')[0];
+      let nonce;
+
+      for (let attempt = 1; attempt <= 2; attempt += 1) {
+        const headers = {
+          ...(options.headers || {})
+        };
+
+        if (extra.dpopPrivateKeyJwk) {
+          headers.DPoP = await buildDpopProof(extra.dpopPrivateKeyJwk, htu, method, nonce);
+        }
+
+        const response = await this.fetchJsonResponseWithRetry(url, {
+          ...options,
+          headers
+        });
+
+        if (
+          extra.dpopPrivateKeyJwk &&
+          (response.status === 400 || response.status === 401) &&
+          String(response.body?.error || '').trim() === 'use_dpop_nonce' &&
+          response.headers['dpop-nonce'] &&
+          attempt < 2
+        ) {
+          nonce = response.headers['dpop-nonce'];
+          continue;
+        }
+
+        if (response.ok) {
+          return response.body;
+        }
+
+        if (extra.acceptedErrorStatuses && extra.acceptedErrorStatuses.includes(response.status)) {
+          return response.body;
+        }
+
+        throw new MoleculerError(
+          sanitizeErrorMessage(`Upstream OAuth request failed with status ${response.status}`),
+          502,
+          'ATPROTO_OAUTH_UPSTREAM_FAILED',
+          { status: response.status }
+        );
+      }
+
+      throw new MoleculerError('OAuth DPoP nonce retry failed', 502, 'ATPROTO_OAUTH_UPSTREAM_FAILED');
+    },
+
     async fetchJsonWithRetry(url, options, extra = {}) {
+      const response = await this.fetchJsonResponseWithRetry(url, options);
+
+      if (response.ok) {
+        return response.body;
+      }
+
+      if (extra.acceptedErrorStatuses && extra.acceptedErrorStatuses.includes(response.status)) {
+        return response.body;
+      }
+
+      throw new MoleculerError(
+        sanitizeErrorMessage(`Upstream OAuth request failed with status ${response.status}`),
+        502,
+        'ATPROTO_OAUTH_UPSTREAM_FAILED',
+        { status: response.status }
+      );
+    },
+
+    async fetchJsonResponseWithRetry(url, options) {
       let lastError = null;
 
       for (let attempt = 1; attempt <= this.settings.maxAttempts; attempt += 1) {
@@ -439,12 +609,18 @@ module.exports = {
             throw new MoleculerError('Upstream response is not valid JSON', 502, 'ATPROTO_OAUTH_UPSTREAM_INVALID');
           }
 
-          if (response.ok) {
-            return json;
+          const headers = {};
+          for (const [key, value] of response.headers.entries()) {
+            headers[String(key).toLowerCase()] = value;
           }
 
-          if (extra.acceptedErrorStatuses && extra.acceptedErrorStatuses.includes(response.status)) {
-            return json;
+          if (response.ok) {
+            return {
+              ok: true,
+              status: response.status,
+              headers,
+              body: json
+            };
           }
 
           if (isRetryableStatus(response.status) && attempt < this.settings.maxAttempts) {
@@ -452,12 +628,12 @@ module.exports = {
             continue;
           }
 
-          throw new MoleculerError(
-            sanitizeErrorMessage(`Upstream OAuth request failed with status ${response.status}`),
-            502,
-            'ATPROTO_OAUTH_UPSTREAM_FAILED',
-            { status: response.status }
-          );
+          return {
+            ok: false,
+            status: response.status,
+            headers,
+            body: json
+          };
         } catch (error) {
           lastError = error;
           if (attempt >= this.settings.maxAttempts) {

@@ -1,0 +1,18 @@
+
+> activitypods-media-pipeline-sidecar@0.1.0 server:dev
+> node --import tsx src/dev/runLocalStack.ts
+
+/Users/damonoutlaw/activitypods-work/mastopod-federation-architecture/media-pipeline-sidecar/src/utils/videoTooling.ts:42
+    throw new Error(`${label} invocation failed: ${message}`);
+          ^
+
+Error: ffprobe invocation failed: Command failed: /Users/damonoutlaw/activitypods-work/mastopod-federation-architecture/media-pipeline-sidecar/node_modules/ffprobe-static/bin/darwin/arm64/ffprobe -version
+
+    at <anonymous> (/Users/damonoutlaw/activitypods-work/mastopod-federation-architecture/media-pipeline-sidecar/src/utils/videoTooling.ts:42:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async assertExecutable (/Users/damonoutlaw/activitypods-work/mastopod-federation-architecture/media-pipeline-sidecar/src/utils/videoTooling.ts:40:3)
+    at async Promise.all (index 1)
+    at async assertVideoToolingReady (/Users/damonoutlaw/activitypods-work/mastopod-federation-architecture/media-pipeline-sidecar/src/utils/videoTooling.ts:29:3)
+    at async <anonymous> (/Users/damonoutlaw/activitypods-work/mastopod-federation-architecture/media-pipeline-sidecar/src/dev/runLocalStack.ts:157:1)
+
+Node.js v24.14.0

@@ -15,6 +15,7 @@ const {
 const CONFIG = require('../../config/config');
 
 module.exports = {
+  // Don't specify name/dependencies - the mixin provides them
   mixins: [OntologiesService],
   settings: {
     // TODO remove pair from core ontologies

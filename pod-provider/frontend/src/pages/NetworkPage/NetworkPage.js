@@ -1,7 +1,7 @@
 import React from 'react';
-import { Button, useTranslate, SimpleList } from 'react-admin';
+import { Button, useTranslate, useListContext } from 'react-admin';
 import { Link } from 'react-router-dom';
-import { Avatar } from '@mui/material';
+import { Avatar, Box, Typography, Paper } from '@mui/material';
 import Header from '../../common/Header';
 import AddIcon from '@mui/icons-material/Add';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
@@ -11,6 +11,86 @@ import ShareContactCard from '../../common/cards/ShareContactCard';
 import TagsButton from '../../common/buttons/TagsButton';
 import ContactRequestsBlock from '../../common/blocks/ContactRequestsBlock';
 import { formatUsername } from '../../utils';
+
+const ContactCard = ({ record }) => {
+  const translate = useTranslate();
+  const name = record['vcard:given-name'] || 'Unknown';
+  const initial = name.toUpperCase()[0];
+  const webfingerId = formatUsername(record.describes);
+
+  return (
+    <Paper
+      component={Link}
+      to={`/network/${webfingerId}`}
+      elevation={0}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        p: 2,
+        borderRadius: '12px',
+        border: '1px solid rgba(0,0,0,0.07)',
+        backgroundColor: '#fff',
+        textDecoration: 'none',
+        cursor: 'pointer',
+        transition: 'box-shadow 0.15s ease, border-color 0.15s ease',
+        '&:hover': {
+          boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
+          borderColor: 'rgba(91,87,229,0.25)'
+        }
+      }}
+      aria-label={translate('app.action.view_contact_profile', { name })}
+    >
+      <Avatar
+        src={record['vcard:photo']}
+        alt={translate('app.accessibility.profile_picture_of', { name })}
+        sx={{ width: 52, height: 52, mb: 1, fontSize: 20 }}
+      >
+        {initial}
+      </Avatar>
+      <Typography
+        sx={{
+          fontSize: 13,
+          fontWeight: 600,
+          color: '#1a1a1a',
+          textAlign: 'center',
+          lineHeight: 1.3,
+          maxWidth: '100%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}
+      >
+        {name}
+      </Typography>
+      {webfingerId && (
+        <Typography sx={{ fontSize: 11, color: '#999', mt: 0.25 }}>
+          {webfingerId.replace(/^@/, '').split('@')[0]}
+        </Typography>
+      )}
+    </Paper>
+  );
+};
+
+const ContactGrid = () => {
+  const { data } = useListContext();
+  if (!data || data.length === 0) return null;
+
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+        gap: 1.5,
+        mt: 1
+      }}
+    >
+      {data.map(record => (
+        <ContactCard key={record.id} record={record} />
+      ))}
+    </Box>
+  );
+};
 
 const NetworkPage = () => {
   const { identity } = useCheckAuthenticated();
@@ -31,29 +111,7 @@ const NetworkPage = () => {
         perPage={1000}
       >
         <ContactRequestsBlock />
-        <SimpleList
-          primaryText={record => record['vcard:given-name']}
-          secondaryText={record => formatUsername(record.describes)}
-          leftAvatar={record => (
-            <Avatar
-              src={record['vcard:photo']}
-              alt={translate('app.accessibility.profile_picture_of', { name: record['vcard:given-name'] })}
-            >
-              {record['vcard:given-name']?.toUpperCase()?.[0]}
-            </Avatar>
-          )}
-          linkType={record => `/network/${formatUsername(record.describes)}`}
-          linkProps={record => ({
-            'aria-label': translate('app.action.view_contact_profile', { name: record['vcard:given-name'] })
-          })}
-          rowSx={() => ({
-            backgroundColor: 'white',
-            p: 1,
-            mb: 1,
-            boxShadow:
-              '0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)'
-          })}
-        />
+        <ContactGrid />
       </List>
     </>
   );

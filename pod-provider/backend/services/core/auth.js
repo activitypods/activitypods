@@ -6,6 +6,7 @@ const transport = require('../../config/transport');
 
 module.exports = {
   mixins: [AuthLocalService],
+  dependencies: ['dataset-provisioning'],
   settings: {
     baseUrl: CONFIG.BASE_URL,
     jwtPath: path.resolve(__dirname, '../../jwt'),
@@ -25,9 +26,67 @@ module.exports = {
       }
     }
   },
+  actions: {
+    async signup(ctx) {
+      const { username, email, password, ...rest } = ctx.params;
+
+      ctx.meta.skipObjectsWatcher = true;
+      this.logger.info(`[Auth] signup start for ${username}`);
+
+      if (username) {
+        await ctx.call('username-moderation.assertSafe', {
+          username,
+          flow: 'signup',
+          email: email || undefined
+        });
+        this.logger.info(`[Auth] signup moderation passed for ${username}`);
+
+        await ctx.call('dataset-provisioning.ensureSecureDataset', {
+          dataset: String(username).trim().toLowerCase()
+        });
+
+        const datasetExists = await ctx.call('triplestore.dataset.exist', {
+          dataset: String(username).trim().toLowerCase()
+        });
+
+        this.logger.info(`[Auth] dataset check for ${username}: ${datasetExists ? 'exists' : 'missing'}`);
+      }
+
+      let accountData = await ctx.call('auth.account.create', {
+        username,
+        email,
+        password,
+        ...this.pickAccountData(rest)
+      });
+
+      try {
+        const profileData = { nick: accountData.username, email: accountData.email, ...rest };
+        const webId = await ctx.call('webid.createWebId', this.pickWebIdData(profileData), {
+          meta: {
+            isSignup: true
+          }
+        });
+
+        accountData = await ctx.call('auth.account.attachWebId', { accountUri: accountData['@id'], webId });
+
+        ctx.emit('auth.registered', { webId, profileData, accountData });
+
+        const token = await ctx.call('auth.jwt.generateServerSignedToken', { payload: { webId } });
+
+        return { token, webId, newUser: true };
+      } catch (e) {
+        await ctx.call('auth.account.remove', { id: accountData['@id'] });
+        throw e;
+      }
+    }
+  },
   hooks: {
     after: {
       async signup(ctx, res) {
+        if (process.env.NODE_ENV !== 'production') {
+          return res;
+        }
+
         const allowIncompleteSignupBootstrap =
           process.env.SEMAPPS_ALLOW_INCOMPLETE_SIGNUP_BOOTSTRAP === 'true' || process.env.NODE_ENV !== 'production';
 
@@ -57,9 +116,7 @@ module.exports = {
         } catch (e) {
           if (!allowIncompleteSignupBootstrap) throw e;
 
-          this.logger.warn(
-            `[Auth] Continuing signup with incomplete local bootstrap for ${webId}: ${e.message}`
-          );
+          this.logger.warn(`[Auth] Continuing signup with incomplete local bootstrap for ${webId}: ${e.message}`);
         }
 
         return res;

@@ -4,7 +4,10 @@
     "preinstall": "git config core.hooksPath config/git-hooks",
     "lint": "eslint .",
     "lint-files": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dev:bootstrap-all": "sh ./scripts/bootstrap-local-dev.sh",
+    "dev:shutdown-all": "sh ./scripts/shutdown-local-dev.sh",
+    "dev:status-all": "sh ./scripts/status-local-dev.sh"
   },
   "devDependencies": {
     "@eslint/js": "^9.3.0",
@@ -24,6 +27,7 @@
     "globals": "^15.3.0",
     "prettier": "^3.2.5",
     "typescript": "^5.2.2",
-    "typescript-eslint": "^7.10.0"
+    "typescript-eslint": "^7.10.0",
+    "vite-plugin-pwa": "^1.2.0"
   }
 }

@@ -69,7 +69,7 @@ module.exports = {
       const token = req.headers.authorization?.split(' ')[1];
       if (token) {
         const payload = await ctx.call('auth.jwt.decodeToken', { token });
-        if (payload.azp) {
+        if (payload?.azp) {
           // This is a OIDC provider-generated ID token
           return ctx.call('solid-oidc.authorize', { route, req, res });
         }

@@ -1,95 +1,78 @@
 import React from 'react';
-import { Box, Card, Typography, Avatar } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
-import { useGetIdentity } from 'react-admin';
+import { Box, Paper, Typography, Avatar, Button } from '@mui/material';
+import { useGetIdentity, useLogout, useTranslate } from 'react-admin';
 import { formatUsername } from '../../utils';
-import EditProfileButton from '../buttons/EditProfileButton';
-import { useTranslate } from 'react-admin';
-
-const useStyles = makeStyles(theme => ({
-  root: {
-    marginTop: 5,
-    marginBottom: 24,
-    [theme.breakpoints.down('sm')]: {
-      marginTop: 16,
-      marginBottom: 16
-    }
-  },
-  title: {
-    backgroundRepeat: 'no-repeat',
-    backgroundSize: 'cover',
-    backgroundImage: `radial-gradient(circle at 50% 14em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
-    color: theme.palette.primary.contrastText,
-    height: 85,
-    position: 'relative',
-    [theme.breakpoints.down('sm')]: {
-      height: 70
-    }
-  },
-  avatarWrapper: {
-    position: 'absolute',
-    margin: 10,
-    top: 0,
-    left: 0,
-    right: 0,
-    textAlign: 'center'
-  },
-  avatar: {
-    width: 150,
-    height: 150,
-    [theme.breakpoints.down('sm')]: {
-      width: 100,
-      height: 100
-    }
-  },
-  block: {
-    backgroundColor: 'white',
-    paddingTop: 80,
-    paddingBottom: 20,
-    [theme.breakpoints.down('sm')]: {
-      paddingTop: 50,
-      paddingBottom: 16
-    }
-  },
-  button: {
-    backgroundColor: 'white',
-    textAlign: 'center',
-    '& a': {
-      textDecoration: 'none'
-    }
-  },
-  status: {
-    marginTop: 8,
-    color: theme.palette.primary.main
-  }
-}));
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 const ProfileCard = () => {
-  const classes = useStyles();
   const { data: identity } = useGetIdentity();
+  const logout = useLogout();
   const translate = useTranslate();
+
   if (!identity) return null;
+
+  const joinedDate = identity.createdAt
+    ? new Date(identity.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+    : null;
+
   return (
-    <Card className={classes.root}>
-      <Box className={classes.title}>
-        <Box display="flex" justifyContent="center" className={classes.avatarWrapper}>
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: '14px',
+        border: '1px solid rgba(0,0,0,0.07)',
+        backgroundColor: '#fff',
+        overflow: 'hidden',
+        mb: 2
+      }}
+    >
+      <Box sx={{ px: 2.5, pt: 2.5, pb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
           <Avatar
             src={identity.avatar}
-            className={classes.avatar}
             alt={translate('app.accessibility.your_profile_picture')}
-          />
+            sx={{ width: 40, height: 40, fontSize: 16 }}
+          >
+            {identity.fullName?.toUpperCase()[0]}
+          </Avatar>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              sx={{
+                fontWeight: 700,
+                fontSize: 14,
+                color: '#1a1a1a',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {identity.fullName}
+            </Typography>
+            {joinedDate && <Typography sx={{ fontSize: 11, color: '#aaa', mt: 0.2 }}>Joined {joinedDate}</Typography>}
+          </Box>
         </Box>
+
+        <Button
+          fullWidth
+          variant="contained"
+          onClick={() => logout()}
+          endIcon={<OpenInNewIcon sx={{ fontSize: '14px !important' }} />}
+          sx={{
+            backgroundColor: '#5B57E5',
+            color: '#fff',
+            borderRadius: 50,
+            textTransform: 'none',
+            fontWeight: 600,
+            fontSize: 13,
+            py: 0.75,
+            boxShadow: 'none',
+            '&:hover': { backgroundColor: '#4a46d4', boxShadow: 'none' }
+          }}
+        >
+          {translate('ra.auth.logout')}
+        </Button>
       </Box>
-      <Box className={classes.block}>
-        <Typography variant="h2" align="center">
-          {identity.fullName}
-        </Typography>
-        <Typography align="center">{formatUsername(identity.id)}</Typography>
-      </Box>
-      <Box className={classes.button} pb={3} pr={3} pl={3}>
-        <EditProfileButton color="secondary" />
-      </Box>
-    </Card>
+    </Paper>
   );
 };
 

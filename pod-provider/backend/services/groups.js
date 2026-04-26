@@ -122,6 +122,7 @@ const GroupsService = {
     async list(ctx) {
       const ownerWebId = ctx.meta.webId;
       const ownerAccount = await ctx.call('auth.account.findByWebId', { webId: ownerWebId });
+      if (!ownerAccount) return [];
       return arrayOf(ownerAccount.owns);
     },
     async claim(ctx) {

@@ -37,6 +37,36 @@
         "down": true,
         "files": ["${workspaceFolder}/pod-provider/docker-compose-test.yml"]
       }
+    },
+    {
+      "label": "Run frontend dev server",
+      "type": "shell",
+      "command": "cd pod-provider/frontend && npm run dev",
+      "isBackground": true
+    },
+    {
+      "label": "Run backend dev server",
+      "type": "shell",
+      "command": "cd pod-provider/backend && npm run dev",
+      "isBackground": true
+    },
+    {
+      "label": "Restart backend dev server",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/pod-provider/backend && npm run dev",
+      "isBackground": true
+    },
+    {
+      "label": "Restart frontend dev server",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/pod-provider/frontend && npm start",
+      "isBackground": true
+    },
+    {
+      "label": "Restart frontend dev server",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/pod-provider/frontend && npm run dev",
+      "isBackground": true
     }
   ]
 }

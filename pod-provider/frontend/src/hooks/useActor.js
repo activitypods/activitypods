@@ -1,6 +1,7 @@
 import { useGetOne, useGetIdentity } from 'react-admin';
 import { stripHtmlTags } from '../utils';
 import useWebfingerId from './useWebfingerId';
+import { extractProfileFields } from '../profileMetadata';
 
 const useActor = (actorUri, options = {}) => {
   const { loadPrivateProfile = true } = options;
@@ -31,6 +32,7 @@ const useActor = (actorUri, options = {}) => {
     summary: loadPrivateProfile
       ? privateProfile?.['vcard:note'] || stripHtmlTags(webId?.summary)
       : stripHtmlTags(webId?.summary),
+    metadataFields: extractProfileFields(webId?.attachment),
     privateProfile,
     webfinger,
     isLoading: isWebIdLoading || isPrivateProfileLoading

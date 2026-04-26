@@ -106,8 +106,8 @@ const BackgroundChecks: FunctionComponent<Props> = ({ clientId, listeningTo = []
   useEffect(() => {
     if (identity?.id && nodeinfo) {
       checkAppStatus();
-      const timerId = setInterval(checkAppStatus, 120000);
-      return () => clearInterval(timerId);
+      const timerId = window.setInterval(checkAppStatus, 120000);
+      return () => window.clearInterval(timerId);
     }
   }, [identity, nodeinfo, checkAppStatus]);
 

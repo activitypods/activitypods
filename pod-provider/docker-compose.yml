@@ -1,4 +1,30 @@
 services:
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./docker/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./docker/traefik/dynamic:/etc/traefik/dynamic:ro
+      - letsencrypt:/letsencrypt
+    environment:
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+
+  domain-guard:
+    build:
+      context: ./docker/domain-guard
+      dockerfile: Dockerfile
+    container_name: domain-guard
+    restart: unless-stopped
+    expose:
+      - '3000'
+    labels:
+      - 'traefik.enable=false'
+
   fuseki:
     image: semapps/jena-fuseki-webacl
     container_name: fuseki
@@ -28,7 +54,7 @@ services:
       - '6379:6379'
     volumes:
       - ./data/redis:/data:z
-    command: [ 'redis-server', '--appendonly', 'yes' ]
+    command: ['redis-server', '--appendonly', 'yes']
 
   arena:
     image: activitypods/arena
@@ -64,4 +90,10 @@ volumes:
     driver_opts:
       type: none
       device: './data/shapes'
+      o: bind
+  letsencrypt:
+    driver: local
+    driver_opts:
+      type: none
+      device: './data/letsencrypt'
       o: bind

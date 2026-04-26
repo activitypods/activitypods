@@ -3,6 +3,7 @@
     "@vocab": "_:",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "as": "https://www.w3.org/ns/activitystreams#",
+    "bl": "https://purl.archive.org/socialweb/blocked#",
     "ldp": "http://www.w3.org/ns/ldp#",
     "vcard": "http://www.w3.org/2006/vcard/ns#",
     "id": "@id",
@@ -336,6 +337,10 @@
     },
     "liked": {
       "@id": "as:liked",
+      "@type": "@id"
+    },
+    "blocked": {
+      "@id": "bl:blocked",
       "@type": "@id"
     },
     "oauthAuthorizationEndpoint": {

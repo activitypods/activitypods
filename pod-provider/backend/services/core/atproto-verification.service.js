@@ -2,31 +2,16 @@ const dns = require('node:dns').promises;
 const fetch = require('node-fetch');
 const { MoleculerError } = require('moleculer').Errors;
 
-const TRANSIENT_NETWORK_CODES = new Set([
-  'ECONNRESET',
-  'ECONNREFUSED',
-  'EAI_AGAIN',
-  'ENOTFOUND',
-  'ETIMEDOUT',
-]);
+const TRANSIENT_NETWORK_CODES = new Set(['ECONNRESET', 'ECONNREFUSED', 'EAI_AGAIN', 'ENOTFOUND', 'ETIMEDOUT']);
 
 module.exports = {
   name: 'atproto-verification',
 
   settings: {
     plcDirectoryUrl: process.env.ATPROTO_PLC_DIRECTORY_URL || 'https://plc.directory',
-    requestTimeoutMs: Math.max(
-      1_000,
-      Math.min(Number(process.env.ATPROTO_VERIFICATION_TIMEOUT_MS) || 5_000, 15_000)
-    ),
-    maxAttempts: Math.max(
-      1,
-      Math.min(Number(process.env.ATPROTO_VERIFICATION_MAX_ATTEMPTS) || 5, 5)
-    ),
-    baseRetryDelayMs: Math.max(
-      100,
-      Math.min(Number(process.env.ATPROTO_VERIFICATION_BASE_DELAY_MS) || 250, 2_000)
-    ),
+    requestTimeoutMs: Math.max(1_000, Math.min(Number(process.env.ATPROTO_VERIFICATION_TIMEOUT_MS) || 5_000, 15_000)),
+    maxAttempts: Math.max(1, Math.min(Number(process.env.ATPROTO_VERIFICATION_MAX_ATTEMPTS) || 5, 5)),
+    baseRetryDelayMs: Math.max(100, Math.min(Number(process.env.ATPROTO_VERIFICATION_BASE_DELAY_MS) || 250, 2_000)),
     maxResponseBytes: Math.max(
       8_192,
       Math.min(Number(process.env.ATPROTO_VERIFICATION_MAX_RESPONSE_BYTES) || 262_144, 1_048_576)
@@ -59,28 +44,16 @@ module.exports = {
         const handle = claimedHandle || this.normalizeHandle(session.handle);
 
         if (claimedDid && claimedDid !== did) {
-          throw new MoleculerError(
-            'ATProto session DID mismatch',
-            400,
-            'ATPROTO_SESSION_DID_MISMATCH'
-          );
+          throw new MoleculerError('ATProto session DID mismatch', 400, 'ATPROTO_SESSION_DID_MISMATCH');
         }
 
         if (session.handle && claimedHandle && this.normalizeHandle(session.handle) !== claimedHandle) {
-          throw new MoleculerError(
-            'ATProto session handle mismatch',
-            400,
-            'ATPROTO_SESSION_HANDLE_MISMATCH'
-          );
+          throw new MoleculerError('ATProto session handle mismatch', 400, 'ATPROTO_SESSION_HANDLE_MISMATCH');
         }
 
         const resolvedHandleDid = await this.resolveHandleToDid(handle);
         if (resolvedHandleDid !== did) {
-          throw new MoleculerError(
-            'ATProto handle does not resolve to DID',
-            400,
-            'ATPROTO_HANDLE_DID_MISMATCH'
-          );
+          throw new MoleculerError('ATProto handle does not resolve to DID', 400, 'ATPROTO_HANDLE_DID_MISMATCH');
         }
 
         const didDocument = await this.resolveDidDocument(did);
@@ -114,7 +87,8 @@ module.exports = {
     verifyDelegatedIdentity: {
       params: {
         pdsUrl: 'string|min:1',
-        accessToken: 'string|min:20',
+        accessToken: { type: 'string', min: 20, optional: true },
+        subjectDid: { type: 'string', optional: true },
         did: { type: 'string', optional: true },
         handle: { type: 'string', optional: true }
       },
@@ -122,12 +96,17 @@ module.exports = {
         const claimedDid = ctx.params.did ? this.normalizeDid(ctx.params.did) : null;
         const claimedHandle = ctx.params.handle ? this.normalizeHandle(ctx.params.handle) : null;
         const pdsUrl = this.normalizePdsUrl(ctx.params.pdsUrl);
-        const accessToken = String(ctx.params.accessToken || '').trim();
+        const subjectDid = ctx.params.subjectDid ? this.normalizeDid(ctx.params.subjectDid) : null;
 
-        const session = await this.getSessionFromAccessToken({
-          pdsUrl,
-          accessToken
-        });
+        const session = subjectDid
+          ? {
+              did: subjectDid,
+              handle: claimedHandle || null
+            }
+          : await this.getSessionFromAccessToken({
+              pdsUrl,
+              accessToken: String(ctx.params.accessToken || '').trim()
+            });
 
         return this.buildVerifiedIdentityFromSession({
           session,
@@ -157,7 +136,9 @@ module.exports = {
     },
 
     normalizeHandle(handle) {
-      const normalized = String(handle || '').trim().toLowerCase();
+      const normalized = String(handle || '')
+        .trim()
+        .toLowerCase();
       if (
         !normalized ||
         normalized.length > 253 ||
@@ -181,20 +162,14 @@ module.exports = {
       }
 
       const isLocalhost =
-        parsed.hostname === 'localhost' ||
-        parsed.hostname === '127.0.0.1' ||
-        parsed.hostname === '::1';
+        parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '::1';
 
       const schemeAllowed =
         parsed.protocol === 'https:' ||
         (this.settings.allowHttpLocalhost && isLocalhost && parsed.protocol === 'http:');
 
       if (!schemeAllowed) {
-        throw new MoleculerError(
-          'PDS URL must use HTTPS',
-          400,
-          'ATPROTO_PDS_URL_INVALID'
-        );
+        throw new MoleculerError('PDS URL must use HTTPS', 400, 'ATPROTO_PDS_URL_INVALID');
       }
 
       return parsed.origin;
@@ -221,11 +196,7 @@ module.exports = {
       );
 
       if (response.status === 400 || response.status === 401 || response.status === 403) {
-        throw new MoleculerError(
-          'External ATProto authentication failed',
-          401,
-          'ATPROTO_EXTERNAL_AUTH_FAILED'
-        );
+        throw new MoleculerError('External ATProto authentication failed', 401, 'ATPROTO_EXTERNAL_AUTH_FAILED');
       }
 
       const did = response.body?.did;
@@ -270,11 +241,7 @@ module.exports = {
       );
 
       if (response.status === 400 || response.status === 401 || response.status === 403) {
-        throw new MoleculerError(
-          'External ATProto delegated token is invalid',
-          401,
-          'ATPROTO_EXTERNAL_AUTH_FAILED'
-        );
+        throw new MoleculerError('External ATProto delegated token is invalid', 401, 'ATPROTO_EXTERNAL_AUTH_FAILED');
       }
 
       const did = response.body?.did;
@@ -304,34 +271,30 @@ module.exports = {
 
     async buildVerifiedIdentityFromSession({ session, pdsUrl, claimedDid, claimedHandle }) {
       const did = this.normalizeDid(session.did);
-      const handle = claimedHandle || this.normalizeHandle(session.handle);
+      let didDocument;
+      let resolvedHandle = claimedHandle || (session.handle ? this.normalizeHandle(session.handle) : null);
+
+      if (!resolvedHandle) {
+        didDocument = await this.resolveDidDocument(did);
+        resolvedHandle = this.extractHandleFromDidDocument({ didDocument, did });
+      }
+
+      const handle = resolvedHandle;
 
       if (claimedDid && claimedDid !== did) {
-        throw new MoleculerError(
-          'ATProto session DID mismatch',
-          400,
-          'ATPROTO_SESSION_DID_MISMATCH'
-        );
+        throw new MoleculerError('ATProto session DID mismatch', 400, 'ATPROTO_SESSION_DID_MISMATCH');
       }
 
       if (session.handle && claimedHandle && this.normalizeHandle(session.handle) !== claimedHandle) {
-        throw new MoleculerError(
-          'ATProto session handle mismatch',
-          400,
-          'ATPROTO_SESSION_HANDLE_MISMATCH'
-        );
+        throw new MoleculerError('ATProto session handle mismatch', 400, 'ATPROTO_SESSION_HANDLE_MISMATCH');
       }
 
       const resolvedHandleDid = await this.resolveHandleToDid(handle);
       if (resolvedHandleDid !== did) {
-        throw new MoleculerError(
-          'ATProto handle does not resolve to DID',
-          400,
-          'ATPROTO_HANDLE_DID_MISMATCH'
-        );
+        throw new MoleculerError('ATProto handle does not resolve to DID', 400, 'ATPROTO_HANDLE_DID_MISMATCH');
       }
 
-      const didDocument = await this.resolveDidDocument(did);
+      didDocument = didDocument || (await this.resolveDidDocument(did));
       this.assertDidDocumentClaimsHandle({ didDocument, did, handle });
       const signingKey = this.extractAtprotoSigningKey({ didDocument, did });
       const didDocumentPdsUrl = this.extractPdsEndpoint({ didDocument, did });
@@ -356,6 +319,21 @@ module.exports = {
           handle: session.handle ? this.normalizeHandle(session.handle) : handle
         }
       };
+    },
+
+    extractHandleFromDidDocument({ didDocument, did }) {
+      const alsoKnownAs = Array.isArray(didDocument?.alsoKnownAs) ? didDocument.alsoKnownAs : [];
+      const handleUri = alsoKnownAs.find(value => typeof value === 'string' && value.startsWith('at://'));
+
+      if (!handleUri) {
+        throw new MoleculerError(
+          `Resolved DID document for ${did} does not advertise an ATProto handle`,
+          400,
+          'ATPROTO_HANDLE_NOT_CLAIMED'
+        );
+      }
+
+      return this.normalizeHandle(handleUri.slice('at://'.length));
     },
 
     async resolveHandleToDid(handle) {
@@ -427,10 +405,9 @@ module.exports = {
 
     async resolveDidDocument(did) {
       const normalizedDid = this.normalizeDid(did);
-      const url =
-        normalizedDid.startsWith('did:plc:')
-          ? `${this.settings.plcDirectoryUrl.replace(/\/$/, '')}/${encodeURIComponent(normalizedDid)}`
-          : this.didWebDocumentUrl(normalizedDid);
+      const url = normalizedDid.startsWith('did:plc:')
+        ? `${this.settings.plcDirectoryUrl.replace(/\/$/, '')}/${encodeURIComponent(normalizedDid)}`
+        : this.didWebDocumentUrl(normalizedDid);
 
       const response = await this.fetchJsonWithRetry(
         url,
@@ -447,20 +424,12 @@ module.exports = {
       );
 
       if (response.status === 404) {
-        throw new MoleculerError(
-          'ATProto DID document was not found',
-          404,
-          'ATPROTO_DID_DOCUMENT_NOT_FOUND'
-        );
+        throw new MoleculerError('ATProto DID document was not found', 404, 'ATPROTO_DID_DOCUMENT_NOT_FOUND');
       }
 
       const didDocument = this.normalizeDidDocument(response.body, normalizedDid);
       if (didDocument.id !== normalizedDid) {
-        throw new MoleculerError(
-          'Resolved DID document does not match DID',
-          400,
-          'ATPROTO_DID_DOCUMENT_MISMATCH'
-        );
+        throw new MoleculerError('Resolved DID document does not match DID', 400, 'ATPROTO_DID_DOCUMENT_MISMATCH');
       }
 
       return didDocument;
@@ -473,10 +442,7 @@ module.exports = {
       if (!hostname) {
         throw new MoleculerError('Invalid did:web DID', 400, 'ATPROTO_DID_INVALID');
       }
-      const isLocalhost =
-        hostname === 'localhost' ||
-        hostname === '127.0.0.1' ||
-        hostname === '::1';
+      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
       const protocol = this.settings.allowHttpLocalhost && isLocalhost ? 'http:' : 'https:';
       const path = parts.length === 0 ? '/.well-known/did.json' : `/${parts.join('/')}/did.json`;
       return `${protocol}//${hostname}${path}`;
@@ -484,11 +450,7 @@ module.exports = {
 
     normalizeDidDocument(payload, did) {
       if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-        throw new MoleculerError(
-          'Resolved DID document is invalid',
-          502,
-          'ATPROTO_DID_DOCUMENT_INVALID'
-        );
+        throw new MoleculerError('Resolved DID document is invalid', 502, 'ATPROTO_DID_DOCUMENT_INVALID');
       }
 
       if (payload.id === did) {
@@ -504,37 +466,23 @@ module.exports = {
         };
       }
 
-      throw new MoleculerError(
-        'Resolved DID document is invalid',
-        502,
-        'ATPROTO_DID_DOCUMENT_INVALID'
-      );
+      throw new MoleculerError('Resolved DID document is invalid', 502, 'ATPROTO_DID_DOCUMENT_INVALID');
     },
 
     assertDidDocumentClaimsHandle({ didDocument, did, handle }) {
       if (didDocument.id !== did) {
-        throw new MoleculerError(
-          'Resolved DID document does not match DID',
-          400,
-          'ATPROTO_DID_DOCUMENT_MISMATCH'
-        );
+        throw new MoleculerError('Resolved DID document does not match DID', 400, 'ATPROTO_DID_DOCUMENT_MISMATCH');
       }
 
       const alsoKnownAs = Array.isArray(didDocument.alsoKnownAs) ? didDocument.alsoKnownAs : [];
       const expected = `at://${handle}`;
       if (!alsoKnownAs.some(value => value === expected)) {
-        throw new MoleculerError(
-          'DID document does not claim handle',
-          400,
-          'ATPROTO_HANDLE_NOT_CLAIMED'
-        );
+        throw new MoleculerError('DID document does not claim handle', 400, 'ATPROTO_HANDLE_NOT_CLAIMED');
       }
     },
 
     extractAtprotoSigningKey({ didDocument, did }) {
-      const verificationMethods = Array.isArray(didDocument.verificationMethod)
-        ? didDocument.verificationMethod
-        : [];
+      const verificationMethods = Array.isArray(didDocument.verificationMethod) ? didDocument.verificationMethod : [];
 
       const match = verificationMethods.find(
         item =>
@@ -547,11 +495,7 @@ module.exports = {
       );
 
       if (!match) {
-        throw new MoleculerError(
-          'DID document missing valid ATProto signing key',
-          400,
-          'ATPROTO_SIGNING_KEY_MISSING'
-        );
+        throw new MoleculerError('DID document missing valid ATProto signing key', 400, 'ATPROTO_SIGNING_KEY_MISSING');
       }
 
       return {
@@ -571,11 +515,7 @@ module.exports = {
       );
 
       if (!service) {
-        throw new MoleculerError(
-          'DID document missing PDS service endpoint',
-          400,
-          'ATPROTO_PDS_SERVICE_MISSING'
-        );
+        throw new MoleculerError('DID document missing PDS service endpoint', 400, 'ATPROTO_PDS_SERVICE_MISSING');
       }
 
       return this.normalizePdsUrl(service.serviceEndpoint);
@@ -587,11 +527,7 @@ module.exports = {
       try {
         body = await response.json();
       } catch (_error) {
-        throw new MoleculerError(
-          'Remote response was not valid JSON',
-          502,
-          'ATPROTO_REMOTE_RESPONSE_INVALID'
-        );
+        throw new MoleculerError('Remote response was not valid JSON', 502, 'ATPROTO_REMOTE_RESPONSE_INVALID');
       }
       return {
         status: response.status,
@@ -631,11 +567,7 @@ module.exports = {
           }
 
           if (!response.ok && !allowStatuses.includes(response.status) && response.status >= 500) {
-            throw new MoleculerError(
-              `${responseLabel || 'remote'} request failed`,
-              503,
-              'ATPROTO_REMOTE_UNAVAILABLE'
-            );
+            throw new MoleculerError(`${responseLabel || 'remote'} request failed`, 503, 'ATPROTO_REMOTE_UNAVAILABLE');
           }
 
           return response;
@@ -654,11 +586,7 @@ module.exports = {
         throw lastError;
       }
 
-      throw new MoleculerError(
-        `${responseLabel || 'remote'} request failed`,
-        503,
-        'ATPROTO_REMOTE_UNAVAILABLE'
-      );
+      throw new MoleculerError(`${responseLabel || 'remote'} request failed`, 503, 'ATPROTO_REMOTE_UNAVAILABLE');
     },
 
     isRetryableStatus(status) {
@@ -674,10 +602,7 @@ module.exports = {
     },
 
     computeFullJitterDelay(attempt) {
-      const cap = Math.min(
-        this.settings.baseRetryDelayMs * Math.pow(2, attempt - 1),
-        5_000
-      );
+      const cap = Math.min(this.settings.baseRetryDelayMs * Math.pow(2, attempt - 1), 5_000);
       return Math.floor(Math.random() * cap);
     },
 

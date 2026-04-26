@@ -20,6 +20,27 @@ yarn install
 yarn run dev
 ```
 
+#### Provider dashboard access control
+
+The backend uses the `PROVIDER_ACTORS` environment variable to decide who is a pod provider for dashboard/operator features.
+
+- `GET /api/dashboard/whoami` returns `isProvider` based on this allowlist.
+- `/settings` auto-redirects to `/settings/provider` when `isProvider=true`, otherwise `/settings/owner`.
+- MRF admin proxy endpoints under `/api/dashboard/mrf/*` require `isProvider=true`.
+
+Accepted `PROVIDER_ACTORS` formats (comma-separated):
+
+- Full WebID: `https://example.org/alice`
+- Host + path: `example.org/alice`
+- Username-like first path segment: `alice`
+- Wildcard: `*` (treat every authenticated user as provider)
+
+Example:
+
+```bash
+export PROVIDER_ACTORS="alice,https://example.org/bob"
+```
+
 ### Launch the frontend
 
 ```bash

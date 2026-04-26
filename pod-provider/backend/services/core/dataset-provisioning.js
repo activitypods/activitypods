@@ -33,27 +33,17 @@ module.exports = {
         }
 
         try {
-          await ctx.call('triplestore.dataset.create', { dataset, secure: true });
-          return { dataset, created: true, strategy: 'secure_assembler' };
-        } catch (secureErr) {
-          if (!this.isAssemblerUploadCompatibilityError(secureErr)) {
-            throw new MoleculerError(
-              `Secure dataset creation failed for "${dataset}"`,
-              500,
-              'DATASET_SECURE_CREATE_FAILED',
-              { dataset, reason: secureErr.message }
-            );
-          }
-
-          this.logger.warn(
-            `[DatasetProvisioning] Secure assembler upload is not supported by the current Fuseki runtime, switching to admin API strategy for ${dataset}: ${secureErr.message}`
-          );
-
+          // Prefer Fuseki admin creation to avoid known hangs in secure assembler creation.
           await this.createDatasetViaFusekiAdmin(dataset);
           await ctx.call('triplestore.dataset.waitForCreation', { dataset });
           await this.ensureSemappsNamedGraphs(ctx, dataset);
 
           return { dataset, created: true, strategy: 'fuseki_admin_tdb2' };
+        } catch (adminErr) {
+          throw new MoleculerError(`Dataset creation failed for "${dataset}"`, 500, 'DATASET_CREATE_FAILED', {
+            dataset,
+            reason: adminErr.message
+          });
         }
       }
     }

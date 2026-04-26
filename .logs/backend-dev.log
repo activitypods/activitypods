@@ -1,0 +1,461 @@
+
+> start
+> moleculer-runner services/*.js services/**/*.js
+
+dotenv-flow: "SEMAPPS_INSTANCE_NAME" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_INSTANCE_DESCRIPTION_EN" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_INSTANCE_DESCRIPTION_FR" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_INSTANCE_OWNER" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_INSTANCE_AREA" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_AVAILABLE_LOCALES" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_DEFAULT_LOCALE" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_ENABLE_GROUPS" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_HOME_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_PORT" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_FRONTEND_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SHAPE_REPOSITORY_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_MAPBOX_ACCESS_TOKEN" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_COLOR_PRIMARY" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_COLOR_SECONDARY" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SPARQL_ENDPOINT" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_JENA_USER" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_JENA_PASSWORD" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_FUSEKI_BASE" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_REDIS_CACHE_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_QUEUE_SERVICE_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_REDIS_TRANSPORTER_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_REDIS_OIDC_PROVIDER_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_COOKIE_SECRET" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_FROM_EMAIL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_FROM_NAME" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SMTP_HOST" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SMTP_PORT" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SMTP_SECURE" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SMTP_USER" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SMTP_PASS" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_AUTH_RESERVED_USER_NAMES" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_AUTH_ACCOUNTS_DATASET" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_BACKUP_COPY_METHOD" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_BACKUP_SERVER_PATH" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_BACKUP_SERVER_HOST" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_BACKUP_SERVER_USER" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_BACKUP_SERVER_PASSWORD" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_BACKUP_SERVER_PORT" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SIDECAR_WEBHOOK_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SIDECAR_TOKEN" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "ACTIVITYPODS_TOKEN" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SIGNING_API_TOKEN" is already defined in `process.env` and will not be overwritten
+[00:48:20.988Z] INFO  BROKER: Moleculer v0.14.34 is starting...
+[00:48:20.989Z] INFO  BROKER: Namespace: <not defined>
+[00:48:20.989Z] INFO  BROKER: Node ID: pod-provider
+[00:48:20.989Z] INFO  REGISTRY: Strategy: RoundRobinStrategy
+[00:48:20.989Z] INFO  REGISTRY: Discoverer: LocalDiscoverer
+[00:48:20.990Z] INFO  BROKER: Serializer: JSONSerializer
+[00:48:20.994Z] INFO  BROKER: Validator: FastestValidator
+[00:48:20.995Z] INFO  BROKER: Registered 30 middleware(s).
+[00:48:21.021Z] INFO  API: API Gateway server created.
+[00:48:21.021Z] INFO  API: Register route to '/favicon.ico'
+[00:48:21.032Z] INFO  API:      GET /favicon.ico => api.favicon
+[00:48:21.032Z] INFO  API: 
+[00:48:21.032Z] INFO  API: Register route to '/'
+[00:48:21.032Z] INFO  API:      GET / => api.redirectToFront
+[00:48:21.038Z] INFO  API: 
+dotenv-flow: "SEMAPPS_INSTANCE_NAME" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_INSTANCE_DESCRIPTION_EN" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_INSTANCE_DESCRIPTION_FR" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_INSTANCE_OWNER" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_INSTANCE_AREA" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_AVAILABLE_LOCALES" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_DEFAULT_LOCALE" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_ENABLE_GROUPS" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_HOME_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_PORT" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_FRONTEND_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SHAPE_REPOSITORY_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_MAPBOX_ACCESS_TOKEN" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_COLOR_PRIMARY" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_COLOR_SECONDARY" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SPARQL_ENDPOINT" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_JENA_USER" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_JENA_PASSWORD" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_FUSEKI_BASE" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_REDIS_CACHE_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_QUEUE_SERVICE_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_REDIS_TRANSPORTER_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_REDIS_OIDC_PROVIDER_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_COOKIE_SECRET" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_FROM_EMAIL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_FROM_NAME" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SMTP_HOST" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SMTP_PORT" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SMTP_SECURE" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SMTP_USER" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_SMTP_PASS" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_AUTH_RESERVED_USER_NAMES" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_AUTH_ACCOUNTS_DATASET" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_BACKUP_COPY_METHOD" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_BACKUP_SERVER_PATH" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_BACKUP_SERVER_HOST" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_BACKUP_SERVER_USER" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_BACKUP_SERVER_PASSWORD" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SEMAPPS_BACKUP_SERVER_PORT" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SIDECAR_WEBHOOK_URL" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SIDECAR_TOKEN" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "ACTIVITYPODS_TOKEN" is already defined in `process.env` and will not be overwritten
+dotenv-flow: "SIGNING_API_TOKEN" is already defined in `process.env` and will not be overwritten
+[00:48:21.329Z] WARN  ATPROTO-MIGRATION: [AtprotoMigration] Using ephemeral in-memory encryption key for migration secrets
+[00:48:21.792Z] INFO  ACCOUNTS: Waiting for service(s) 'auth'...
+[00:48:21.793Z] INFO  ACTIVITYPUB.BLOCKED: Waiting for service(s) 'activitypub.collections-registry, activitypub.collection, activitypub.actor, auth.account, activitypub.side-effects'...
+[00:48:21.793Z] INFO  ACTIVITYPUB-PROVISIONING: Waiting for service(s) 'activitypub'...
+[00:48:21.793Z] INFO  ACTOR-METADATA-API: Waiting for service(s) 'api, actor-metadata-verification'...
+[00:48:21.793Z] INFO  APP-OPENER: Waiting for service(s) 'api, ldp'...
+[00:48:21.793Z] INFO  APP-STATUS: Waiting for service(s) 'api'...
+[00:48:21.793Z] INFO  ATPROTO-MIGRATION-API: Waiting for service(s) 'api, auth.account, atproto-migration'...
+[00:48:21.793Z] INFO  ATPROTO-REPAIR-PROVISIONING: Waiting for service(s) 'identitybindings, signing'...
+[00:48:21.793Z] INFO  AUTH-INTERNAL: Waiting for service(s) 'api, auth.account'...
+[00:48:21.793Z] INFO  FILES: Waiting for service(s) 'ldp'...
+[00:48:21.793Z] INFO  FOLLOWABLE-API: Waiting for service(s) 'api, followable'...
+[00:48:21.793Z] INFO  FRONTEND-CONFIG: Waiting for service(s) 'api'...
+[00:48:21.793Z] INFO  GROUPS: Waiting for service(s) 'api, ldp'...
+[00:48:21.793Z] INFO  IDENTITYBINDINGS: Waiting for service(s) 'ldp'...
+[00:48:21.793Z] INFO  INTERNAL-ACTIVITYPUB-BRIDGE-API: Waiting for service(s) 'api, activitypub.actor'...
+[00:48:21.793Z] INFO  INTERNAL-ATPROTO-REPAIR-API: Waiting for service(s) 'api, atproto-repair-provisioning'...
+[00:48:21.793Z] INFO  INTERNAL-BRIDGE-CANONICAL-NOTIFICATION-API: Waiting for service(s) 'api, activitypub.actor, activitypub.inbox, internal-identity-projection'...
+[00:48:21.793Z] INFO  INTERNAL-IDENTITY-CHANGES: Waiting for service(s) 'identitybindings'...
+[00:48:21.793Z] INFO  INTERNAL-IDENTITY-PROJECTION-API: Waiting for service(s) 'api, internal-identity-projection, internal-identity-changes'...
+[00:48:21.793Z] INFO  INTERNAL-IDENTITY-PROJECTION: Waiting for service(s) 'identitybindings'...
+[00:48:21.793Z] INFO  INTERNAL-MEDIA-PIPELINE-API: Waiting for service(s) 'api'...
+[00:48:21.793Z] INFO  LINK-ATPROTO-API: Waiting for service(s) 'api, atproto-verification, atproto-linking'...
+[00:48:21.793Z] INFO  LINK-ATPROTO-OAUTH-API: Waiting for service(s) 'api, atproto-verification, atproto-linking'...
+[00:48:21.793Z] INFO  MAIL-NOTIFICATIONS: Waiting for service(s) 'activitypub.side-effects'...
+[00:48:21.793Z] INFO  MANAGEMENT: Waiting for service(s) 'api, ldp'...
+[00:48:21.793Z] INFO  NODEINFO: Waiting for service(s) 'api'...
+[00:48:21.793Z] INFO  OUTBOX-EMITTER: Waiting for service(s) 'activitypub.outbox'...
+[00:48:21.793Z] INFO  REPLY-POLICIES-API: Waiting for service(s) 'api, reply-policies'...
+[00:48:21.793Z] INFO  SIGNING: Waiting for service(s) 'api, keys, activitypub.actor, identitybindings, auth.account'...
+[00:48:21.793Z] INFO  UNIFIED-ACCOUNT-API: Waiting for service(s) 'api, unified-account'...
+[00:48:21.793Z] INFO  UNIFIED-ACCOUNT: Waiting for service(s) 'accounts, webid-provisioning, activitypub-provisioning, atproto-provisioning, account-provisioning-state'...
+[00:48:21.793Z] INFO  SIDECAR.INBOX-RECEIVER: Waiting for service(s) 'api'...
+[00:48:21.793Z] INFO  WEBID-PROVISIONING: Waiting for service(s) 'auth, solid-storage'...
+[00:48:21.793Z] INFO  CONTACTS.MANAGER: Waiting for service(s) 'activitypub.collections-registry, webacl, activitypub.side-effects'...
+[00:48:21.793Z] INFO  CONTACTS.MESSAGE: Waiting for service(s) 'ldp, activitypub.side-effects'...
+[00:48:21.793Z] INFO  CONTACTS.REQUEST: Waiting for service(s) 'activitypub.collections-registry, webacl, activitypub.side-effects'...
+[00:48:21.793Z] INFO  ACTIVITYPUB.COLLECTION: Waiting for service(s) 'triplestore, ldp.resource, ldp'...
+[00:48:21.793Z] INFO  ACTIVITYPUB.COLLECTIONS-REGISTRY: Waiting for service(s) 'triplestore, ldp'...
+[00:48:21.793Z] INFO  ACTIVITYPUB.ACTOR: Waiting for service(s) 'activitypub.collection, ldp, signature'...
+[00:48:21.793Z] INFO  ACTIVITYPUB.API: Waiting for service(s) 'api, ldp, ldp.registry'...
+[00:48:21.793Z] INFO  ACTIVITYPUB.OBJECT: Waiting for service(s) 'ldp.resource'...
+[00:48:21.794Z] INFO  ACTIVITYPUB.ACTIVITY: Waiting for service(s) 'ldp.container, ldp, activitypub.side-effects'...
+[00:48:21.794Z] INFO  ACTIVITYPUB.FOLLOW: Waiting for service(s) 'activitypub.outbox, activitypub.collection, activitypub.side-effects'...
+[00:48:21.794Z] INFO  ACTIVITYPUB.INBOX: Waiting for service(s) 'activitypub.collection, activitypub.collections-registry'...
+[00:48:21.794Z] INFO  ACTIVITYPUB.LIKE: Waiting for service(s) 'activitypub.outbox, activitypub.collection, activitypub.side-effects'...
+[00:48:21.794Z] INFO  ACTIVITYPUB.SHARE: Waiting for service(s) 'activitypub.outbox, activitypub.collection, activitypub.side-effects'...
+[00:48:21.794Z] INFO  ACTIVITYPUB.REPLY: Waiting for service(s) 'activitypub.outbox, activitypub.collection, activitypub.side-effects'...
+[00:48:21.794Z] INFO  ACTIVITYPUB.OUTBOX: Waiting for service(s) 'activitypub.object, activitypub.collection, activitypub.collections-registry'...
+[00:48:21.794Z] INFO  ACTIVITYPUB: Waiting for service(s) 'api, ontologies'...
+[00:48:21.794Z] INFO  ATPROTO-LINKING: Waiting for service(s) 'accounts, auth.account, webid-provisioning, activitypub-provisioning, identitybindings'...
+[00:48:21.794Z] INFO  ATPROTO-MIGRATION: Waiting for service(s) 'identitybindings, atproto-service-auth, atproto-repo-transfer, atproto-blob-transfer, atproto-preferences-transfer, atproto-identity-transfer'...
+[00:48:21.794Z] INFO  ATPROTO-PROVISIONING: Waiting for service(s) 'keys, identitybindings, signing'...
+[00:48:21.794Z] INFO  AUTH.ACCOUNT: Waiting for service(s) 'triplestore'...
+[00:48:21.794Z] INFO  AUTH: Waiting for service(s) 'dataset-provisioning, webid, api'...
+[00:48:21.794Z] INFO  DATASET-PROVISIONING: Waiting for service(s) 'triplestore'...
+[00:48:21.794Z] INFO  FEP-4ADB-DEREFERENCER: Waiting for service(s) 'webfinger, activitypub.actor, auth.account, ldp.resource, fep-612d-dns-resolver'...
+[00:48:21.794Z] INFO  FEP-4ADB-OUTBOUND: Waiting for service(s) 'fep-4adb-dereferencer, fep-4adb-processor, activitypub.actor'...
+[00:48:21.794Z] INFO  FEP-4ADB-PROCESSOR: Waiting for service(s) 'fep-4adb-dereferencer, fep-612d-dns-resolver'...
+[00:48:21.794Z] INFO  FEP-4ADB-WEBFINGER: Waiting for service(s) 'webfinger, fep-4adb-dereferencer'...
+[00:48:21.794Z] INFO  FEP-5BF0-COLLECTION-VIEWS: Waiting for service(s) 'activitypub.collection, activitypub.actor, triplestore, ldp.resource'...
+[00:48:21.794Z] INFO  JSONLD.CONTEXT: Waiting for service(s) 'jsonld.document-loader'...
+[00:48:21.794Z] INFO  JSONLD.PARSER: Waiting for service(s) 'jsonld.document-loader'...
+[00:48:21.794Z] INFO  JSONLD.API: Waiting for service(s) 'api'...
+[00:48:21.794Z] INFO  JSONLD: Waiting for service(s) 'ontologies'...
+[00:48:21.794Z] INFO  KEYS.CONTAINER: Waiting for service(s) 'ldp'...
+[00:48:21.794Z] INFO  KEYS.PUBLIC-CONTAINER: Waiting for service(s) 'ldp'...
+[00:48:21.794Z] INFO  KEYS: Waiting for service(s) 'ontologies, keys.container, keys.public-container, signature.keypair, keys.migration'...
+[00:48:21.794Z] INFO  LDP.CONTAINER: Waiting for service(s) 'triplestore, jsonld'...
+[00:48:21.794Z] INFO  LDP.RESOURCE: Waiting for service(s) 'triplestore, jsonld'...
+[00:48:21.794Z] INFO  LDP.REMOTE: Waiting for service(s) 'triplestore, jsonld'...
+[00:48:21.794Z] INFO  LDP.REGISTRY: Waiting for service(s) 'ldp.container, api'...
+[00:48:21.794Z] INFO  LDP.API: Waiting for service(s) 'api'...
+[00:48:21.794Z] INFO  LDP: Waiting for service(s) 'ldp.container, ldp.resource, ldp.registry, ontologies, jsonld'...
+[00:48:21.794Z] INFO  SIGNATURE.PROXY: Waiting for service(s) 'api, ldp'...
+[00:48:21.794Z] INFO  SPARQLENDPOINT: Waiting for service(s) 'triplestore, api, ldp'...
+[00:48:21.794Z] INFO  TRIPLESTORE: Waiting for service(s) 'jsonld.parser'...
+[00:48:21.794Z] INFO  USERNAME-MODERATION: Waiting for service(s) 'api'...
+[00:48:21.794Z] INFO  CRYPTO.VC.HOLDER: Waiting for service(s) 'jsonld, jsonld.context'...
+[00:48:21.794Z] INFO  CRYPTO.VC.VERIFIER: Waiting for service(s) 'ldp, jsonld'...
+[00:48:21.794Z] INFO  CRYPTO.VC.DATA-INTEGRITY: Waiting for service(s) 'ldp, api'...
+[00:48:21.794Z] INFO  CRYPTO.VC.HOLDER.PRESENTATION-CONTAINER: Waiting for service(s) 'ldp, ldp.resource'...
+[00:48:21.794Z] INFO  CRYPTO.VC.ISSUER.CREDENTIAL-CONTAINER: Waiting for service(s) 'ontologies, ldp, ldp.resource'...
+[00:48:21.794Z] INFO  CRYPTO.VC.API: Waiting for service(s) 'api, ldp'...
+[00:48:21.794Z] INFO  CRYPTO.VC: Waiting for service(s) 'ontologies'...
+[00:48:21.794Z] INFO  WEBACL.RESOURCE: Waiting for service(s) 'triplestore, jsonld, ldp.link-header'...
+[00:48:21.794Z] INFO  WEBACL.GROUP: Waiting for service(s) 'triplestore, webacl.resource, ldp.container'...
+[00:48:21.794Z] INFO  WEBACL: Waiting for service(s) 'api, ontologies'...
+[00:48:21.794Z] INFO  WEBFINGER: Waiting for service(s) 'api, auth.account'...
+[00:48:21.794Z] INFO  WEBID: Waiting for service(s) 'ldp.resource, ontologies, ldp'...
+[00:48:21.794Z] INFO  MODERATION-SUMMARY-SCHEDULER: Waiting for service(s) 'user-settings-api, auth.account'...
+[00:48:21.794Z] INFO  USER-SETTINGS-API: Waiting for service(s) 'api, ldp.container, ldp.resource'...
+[00:48:21.794Z] INFO  OAUTH-API: Waiting for service(s) 'api, auth.jwt, oauth-authorization-server-metadata, oauth-protected-resource-metadata, oauth-client-metadata, oauth-dpop-nonce, oauth-par, oauth-authorization, oauth-consent-challenge, oauth-token, oauth-refresh-session'...
+[00:48:21.794Z] INFO  OAUTH-AUTHORIZATION: Waiting for service(s) 'oauth-par, oauth-code-store, oauth-consent, oauth-consent-challenge, identitybindings'...
+[00:48:21.794Z] INFO  OAUTH-PAR: Waiting for service(s) 'oauth-client-metadata, oauth-dpop-nonce'...
+[00:48:21.794Z] INFO  OAUTH-REFRESH-FAMILY: Waiting for service(s) 'oauth-refresh-session'...
+[00:48:21.794Z] INFO  OAUTH-TOKEN: Waiting for service(s) 'oauth-code-store, oauth-refresh-session, oauth-dpop-nonce, jwk'...
+[00:48:21.794Z] INFO  PROFILES.CONTACTGROUP: Waiting for service(s) 'ldp'...
+[00:48:21.794Z] INFO  PROFILES.LOCATION: Waiting for service(s) 'ldp'...
+[00:48:21.794Z] INFO  PROFILES.PROFILE: Waiting for service(s) 'activitypub, webacl, ldp'...
+[00:48:21.794Z] INFO  ACCESS-AUTHORIZATIONS: Waiting for service(s) 'ldp'...
+[00:48:21.794Z] INFO  ACCESS-GRANTS: Waiting for service(s) 'ldp'...
+[00:48:21.794Z] INFO  AGENT-REGISTRY: Waiting for service(s) 'registry-set, ldp'...
+[00:48:21.794Z] INFO  APP-REGISTRATIONS: Waiting for service(s) 'ldp'...
+[00:48:21.794Z] INFO  APPLICATIONS: Waiting for service(s) 'ldp'...
+[00:48:21.794Z] INFO  AUTH-AGENT: Waiting for service(s) 'api, ldp'...
+[00:48:21.794Z] INFO  AUTH-REGISTRY: Waiting for service(s) 'registry-set, ldp'...
+[00:48:21.794Z] INFO  DATA-AUTHORIZATIONS: Waiting for service(s) 'ldp'...
+[00:48:21.794Z] INFO  DATA-GRANTS: Waiting for service(s) 'ldp, ldp.registry'...
+[00:48:21.794Z] INFO  DATA-REGISTRY: Waiting for service(s) 'registry-set, ldp'...
+[00:48:21.794Z] INFO  REGISTRY-SET: Waiting for service(s) 'ldp'...
+[00:48:21.794Z] INFO  ANNOUNCER: Waiting for service(s) 'activitypub.collections-registry, activitypub.side-effects'...
+[00:48:21.795Z] INFO  SYNCHRONIZER: Waiting for service(s) 'activitypub.side-effects'...
+[00:48:21.795Z] INFO  SOLID-ENDPOINT: Waiting for service(s) 'api, ldp'...
+[00:48:21.795Z] INFO  SOLID-NOTIFICATIONS.PROVIDER.WEBHOOK: Waiting for service(s) 'api, solid-endpoint, ldp'...
+[00:48:21.795Z] INFO  SOLID-NOTIFICATIONS.PROVIDER.WEBSOCKET: Waiting for service(s) 'api, solid-endpoint, ldp'...
+[00:48:21.795Z] INFO  SOLID-NOTIFICATIONS.PROVIDER: Waiting for service(s) 'api, ontologies'...
+[00:48:21.795Z] INFO  SOLID-PREFERENCES-FILE: Waiting for service(s) 'ontologies, ldp'...
+[00:48:21.795Z] INFO  SOLID-OIDC: Waiting for service(s) 'jwk, api'...
+[00:48:21.795Z] INFO  SOLID-STORAGE: Waiting for service(s) 'dataset-provisioning, ontologies, ldp.registry'...
+[00:48:21.795Z] INFO  TYPE-REGISTRATIONS: Waiting for service(s) 'ldp'...
+[00:48:21.795Z] INFO  TYPE-INDEXES: Waiting for service(s) 'ontologies, ldp, ldp.resource'...
+[00:48:21.795Z] INFO  BACKUP: Waiting for service(s) 'triplestore'...
+[00:48:21.815Z] INFO  MEDIA-PIPELINE-EMITTER: [MediaPipelineEmitter] Ready { includeUpdates: false, mediaPipelineIngressUrl: 'http://localhost:8090/internal/media/ingest' }
+[00:48:21.815Z] INFO  SIGNATURE.KEYPAIR: Waiting for service(s) 'keys.migration'...
+[00:48:21.815Z] INFO  BROKER: Waiting for service(s) 'triplestore'...
+[00:48:21.815Z] INFO  BROKER: Waiting for service(s) 'triplestore'...
+[00:48:21.815Z] INFO  BROKER: Waiting for service(s) 'ontologies.registry'...
+[00:48:21.817Z] INFO  REGISTRY: '$node' service is registered.
+[00:48:21.818Z] INFO  REGISTRY: 'account-provisioning-state' service is registered.
+[00:48:21.818Z] INFO  REGISTRY: 'actor-metadata-verification' service is registered.
+[00:48:21.819Z] INFO  REGISTRY: 'followable' service is registered.
+[00:48:21.819Z] INFO  REGISTRY: 'polls-manager' service is registered.
+[00:48:21.820Z] INFO  REGISTRY: 'reply-policies' service is registered.
+[00:48:21.820Z] INFO  REGISTRY: 'atproto-blob-transfer' service is registered.
+[00:48:21.821Z] INFO  REGISTRY: 'atproto-identity-transfer' service is registered.
+[00:48:21.821Z] INFO  REGISTRY: 'atproto-preferences-transfer' service is registered.
+[00:48:21.821Z] INFO  REGISTRY: 'atproto-repo-transfer' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'atproto-service-auth' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'atproto-verification' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'auth.jwt' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'fep-612d-dns-resolver' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'jwk' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'keys.migration' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'signature' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'migration-2-0-0' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'migration-2-0-5' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'migration-2-1-0' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'migration-2-1-1' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'migration-2-2-0' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'oauth-authorization-server-metadata' service is registered.
+[00:48:21.822Z] INFO  REGISTRY: 'oauth-client-metadata' service is registered.
+[00:48:21.823Z] INFO  REGISTRY: 'oauth-code-store' service is registered.
+[00:48:21.823Z] INFO  REGISTRY: 'oauth-consent-challenge' service is registered.
+[00:48:21.823Z] INFO  REGISTRY: 'oauth-consent' service is registered.
+[00:48:21.823Z] INFO  REGISTRY: 'oauth-dpop-nonce' service is registered.
+[00:48:21.823Z] INFO  REGISTRY: 'oauth-protected-resource-metadata' service is registered.
+[00:48:21.824Z] INFO  REGISTRY: 'oauth-refresh-session' service is registered.
+[00:48:21.824Z] INFO  REGISTRY: 'data-registrations' service is registered.
+[00:48:21.824Z] INFO  REGISTRY: 'shacl' service is registered.
+[00:48:21.824Z] INFO  REGISTRY: 'shape-trees' service is registered.
+[00:48:21.824Z] INFO  REGISTRY: 'repair' service is registered.
+[00:48:21.824Z] INFO  REGISTRY: 'media-pipeline-emitter' service is registered.
+[00:48:21.824Z] INFO  REGISTRY: 'auth.mail' service is registered.
+[00:48:21.825Z] INFO  REGISTRY: 'ldp.link-header' service is registered.
+[00:48:21.825Z] INFO  REGISTRY: 'triplestore.dataset' service is registered.
+[00:48:21.825Z] INFO  REGISTRY: 'username-review-worker' service is registered.
+[00:48:21.825Z] INFO  REGISTRY: 'crypto.vc.issuer' service is registered.
+[00:48:21.825Z] INFO  REGISTRY: 'crypto.vc.presentation.challenge' service is registered.
+[00:48:21.825Z] INFO  $NODE: Service '$node' started.
+[00:48:21.825Z] INFO  ACCOUNT-PROVISIONING-STATE: Service 'account-provisioning-state' started.
+[00:48:21.825Z] INFO  ACTOR-METADATA-VERIFICATION: Service 'actor-metadata-verification' started.
+[00:48:21.825Z] INFO  FOLLOWABLE: Service 'followable' started.
+[00:48:21.825Z] INFO  POLLS-MANAGER: Service 'polls-manager' started.
+[00:48:21.825Z] INFO  REPLY-POLICIES: Service 'reply-policies' started.
+[00:48:21.825Z] INFO  ATPROTO-BLOB-TRANSFER: Service 'atproto-blob-transfer' started.
+[00:48:21.825Z] INFO  ATPROTO-IDENTITY-TRANSFER: Service 'atproto-identity-transfer' started.
+[00:48:21.825Z] INFO  ATPROTO-PREFERENCES-TRANSFER: Service 'atproto-preferences-transfer' started.
+[00:48:21.825Z] INFO  ATPROTO-REPO-TRANSFER: Service 'atproto-repo-transfer' started.
+[00:48:21.826Z] INFO  ATPROTO-SERVICE-AUTH: Service 'atproto-service-auth' started.
+[00:48:21.826Z] INFO  ATPROTO-VERIFICATION: Service 'atproto-verification' started.
+[00:48:21.826Z] INFO  AUTH.JWT: Service 'auth.jwt' started.
+[00:48:21.826Z] INFO  FEP-612D-DNS-RESOLVER: Service 'fep-612d-dns-resolver' started.
+[00:48:21.826Z] INFO  JWK: Service 'jwk' started.
+[00:48:21.826Z] INFO  KEYS.MIGRATION: Service 'keys.migration' started.
+[00:48:21.826Z] INFO  SIGNATURE: Service 'signature' started.
+[00:48:21.826Z] INFO  MIGRATION-2-0-0: Service 'migration-2-0-0' started.
+[00:48:21.826Z] INFO  MIGRATION-2-0-5: Service 'migration-2-0-5' started.
+[00:48:21.826Z] INFO  MIGRATION-2-1-0: Service 'migration-2-1-0' started.
+[00:48:21.826Z] INFO  MIGRATION-2-1-1: Service 'migration-2-1-1' started.
+[00:48:21.826Z] INFO  MIGRATION-2-2-0: Service 'migration-2-2-0' started.
+[00:48:21.826Z] INFO  OAUTH-AUTHORIZATION-SERVER-METADATA: Service 'oauth-authorization-server-metadata' started.
+[00:48:21.826Z] INFO  OAUTH-CLIENT-METADATA: Service 'oauth-client-metadata' started.
+[00:48:21.826Z] INFO  OAUTH-CODE-STORE: Service 'oauth-code-store' started.
+[00:48:21.826Z] INFO  OAUTH-CONSENT-CHALLENGE: Service 'oauth-consent-challenge' started.
+[00:48:21.826Z] INFO  OAUTH-CONSENT: Service 'oauth-consent' started.
+[00:48:21.826Z] INFO  OAUTH-DPOP-NONCE: Service 'oauth-dpop-nonce' started.
+[00:48:21.826Z] INFO  OAUTH-PROTECTED-RESOURCE-METADATA: Service 'oauth-protected-resource-metadata' started.
+[00:48:21.826Z] INFO  OAUTH-REFRESH-SESSION: Service 'oauth-refresh-session' started.
+[00:48:21.826Z] INFO  DATA-REGISTRATIONS: Service 'data-registrations' started.
+[00:48:21.826Z] INFO  SHACL: Service 'shacl' started.
+[00:48:21.826Z] INFO  SHAPE-TREES: Service 'shape-trees' started.
+[00:48:21.826Z] INFO  REPAIR: Service 'repair' started.
+[00:48:21.826Z] INFO  MEDIA-PIPELINE-EMITTER: Service 'media-pipeline-emitter' started.
+[00:48:21.826Z] INFO  AUTH.MAIL: Service 'auth.mail' started.
+[00:48:21.826Z] INFO  LDP.LINK-HEADER: Service 'ldp.link-header' started.
+[00:48:21.826Z] INFO  TRIPLESTORE.DATASET: Service 'triplestore.dataset' started.
+[00:48:21.826Z] INFO  USERNAME-REVIEW-WORKER: Service 'username-review-worker' started.
+[00:48:21.826Z] INFO  CRYPTO.VC.ISSUER: Service 'crypto.vc.issuer' started.
+[00:48:21.826Z] INFO  CRYPTO.VC.PRESENTATION.CHALLENGE: Service 'crypto.vc.presentation.challenge' started.
+[00:48:21.826Z] INFO  REGISTRY: 'activitypub.side-effects' service is registered.
+[00:48:21.826Z] INFO  ACTIVITYPUB.SIDE-EFFECTS: Service 'activitypub.side-effects' started.
+(node:10021) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[00:48:21.842Z] INFO  API: API Gateway listening on http://0.0.0.0:3000
+[00:48:21.843Z] INFO  REGISTRY: 'api' service is registered.
+[00:48:21.846Z] INFO  API: Service 'api' started.
+[00:48:21.849Z] INFO  REGISTRY: 'rate-limiter' service is registered.
+[00:48:21.849Z] INFO  RATE-LIMITER: Service 'rate-limiter' started.
+[00:48:21.850Z] INFO  REGISTRY: 'jsonld.document-loader' service is registered.
+[00:48:21.851Z] INFO  JSONLD.DOCUMENT-LOADER: Service 'jsonld.document-loader' started.
+[00:48:22.795Z] INFO  ACTOR-METADATA-API: Service(s) 'api, actor-metadata-verification' are available.
+[00:48:22.799Z] INFO  API: Register route to '/api/actor-metadata'
+[00:48:22.800Z] INFO  API:     POST /api/actor-metadata/verify => actor-metadata-api.verifyActorMetadata
+[00:48:22.800Z] INFO  API:     POST /api/actor-metadata/verify-link => actor-metadata-api.verifyRelMeLink
+[00:48:22.800Z] INFO  API: 
+[00:48:22.800Z] INFO  ACTOR-METADATA-API: [ActorMetadataApi] Routes POST /api/actor-metadata/verify and /verify-link registered
+[00:48:22.800Z] INFO  REGISTRY: 'actor-metadata-api' service is registered.
+[00:48:22.800Z] INFO  ACTOR-METADATA-API: Service 'actor-metadata-api' started.
+[00:48:22.801Z] INFO  APP-STATUS: Service(s) 'api' are available.
+[00:48:22.801Z] INFO  API: Register route to '/.well-known/app-status'
+[00:48:22.801Z] INFO  API:      GET /.well-known/app-status => app-status.get
+[00:48:22.801Z] INFO  API: 
+[00:48:22.801Z] INFO  REGISTRY: 'app-status' service is registered.
+[00:48:22.801Z] INFO  APP-STATUS: Service 'app-status' started.
+[00:48:22.801Z] INFO  FOLLOWABLE-API: Service(s) 'api, followable' are available.
+[00:48:22.801Z] INFO  API: Register route to '/api/followable'
+[00:48:22.801Z] INFO  API:     POST /api/followable/follow => followable-api.follow
+[00:48:22.801Z] INFO  API:     POST /api/followable/resolve => followable-api.resolve
+[00:48:22.801Z] INFO  API: 
+[00:48:22.801Z] INFO  FOLLOWABLE-API: [FollowableApi] Routes POST /api/followable/follow and /api/followable/resolve registered
+[00:48:22.802Z] INFO  REGISTRY: 'followable-api' service is registered.
+[00:48:22.802Z] INFO  FOLLOWABLE-API: Service 'followable-api' started.
+[00:48:22.802Z] INFO  FRONTEND-CONFIG: Service(s) 'api' are available.
+[00:48:22.802Z] INFO  API: Register route to '/.well-known/config.js'
+[00:48:22.802Z] INFO  API:      GET /.well-known/config.js => frontend-config.get
+[00:48:22.802Z] INFO  API: 
+[00:48:22.802Z] INFO  REGISTRY: 'frontend-config' service is registered.
+[00:48:22.802Z] INFO  FRONTEND-CONFIG: Service 'frontend-config' started.
+[00:48:22.803Z] INFO  INTERNAL-MEDIA-PIPELINE-API: Service(s) 'api' are available.
+[00:48:22.803Z] INFO  API: Register route to '/api/internal/media-pipeline'
+[00:48:22.803Z] INFO  API:     POST /api/internal/media-pipeline/resolve-source => internal-media-pipeline-api.resolveSource
+[00:48:22.803Z] INFO  API:     POST /api/internal/media-pipeline/assets => internal-media-pipeline-api.ingestAsset
+[00:48:22.803Z] INFO  API: 
+[00:48:22.803Z] INFO  INTERNAL-MEDIA-PIPELINE-API: [InternalMediaPipelineApi] Internal routes registered under /api/internal/media-pipeline
+[00:48:22.803Z] INFO  REGISTRY: 'internal-media-pipeline-api' service is registered.
+[00:48:22.803Z] INFO  INTERNAL-MEDIA-PIPELINE-API: Service 'internal-media-pipeline-api' started.
+[00:48:22.803Z] INFO  MAIL-NOTIFICATIONS: Service(s) 'activitypub.side-effects' are available.
+[00:48:22.804Z] INFO  MAIL-NOTIFICATIONS: Registering handlebars helper encodeUri
+[00:48:22.804Z] INFO  MAIL-NOTIFICATIONS: Registering handlebars helper removeHtmlTags
+[00:48:22.804Z] INFO  REGISTRY: 'mail-notifications' service is registered.
+[00:48:22.804Z] INFO  MAIL-NOTIFICATIONS: Service 'mail-notifications' started.
+[00:48:22.804Z] INFO  NODEINFO: Service(s) 'api' are available.
+[00:48:22.804Z] INFO  API: Register route to '/.well-known/nodeinfo'
+[00:48:22.804Z] INFO  API:      GET /.well-known/nodeinfo => nodeinfo.getLinks
+[00:48:22.804Z] INFO  API: 
+[00:48:22.804Z] INFO  API: Register route to '/nodeinfo/2.1'
+[00:48:22.804Z] INFO  API:      GET /nodeinfo/2.1 => nodeinfo.getSchema
+[00:48:22.804Z] INFO  API: 
+[00:48:22.804Z] INFO  REGISTRY: 'nodeinfo' service is registered.
+[00:48:22.804Z] INFO  NODEINFO: Service 'nodeinfo' started.
+[00:48:22.804Z] INFO  REPLY-POLICIES-API: Service(s) 'api, reply-policies' are available.
+[00:48:22.804Z] INFO  API: Register route to '/api/reply-policies'
+[00:48:22.804Z] INFO  API:     POST /api/reply-policies/resolve => reply-policies-api.resolve
+[00:48:22.805Z] INFO  API:     POST /api/reply-policies/reply => reply-policies-api.reply
+[00:48:22.805Z] INFO  API: 
+[00:48:22.805Z] INFO  REPLY-POLICIES-API: [ReplyPoliciesApi] Routes POST /api/reply-policies/resolve and /api/reply-policies/reply registered
+[00:48:22.805Z] INFO  REGISTRY: 'reply-policies-api' service is registered.
+[00:48:22.805Z] INFO  REPLY-POLICIES-API: Service 'reply-policies-api' started.
+[00:48:22.805Z] INFO  SIDECAR.INBOX-RECEIVER: Service(s) 'api' are available.
+[00:48:22.805Z] INFO  API: Register route to '/api/internal/inbox'
+[00:48:22.805Z] INFO  API:     POST /api/internal/inbox/receive => sidecar.inbox-receiver.receive
+[00:48:22.805Z] INFO  API: 
+[00:48:22.805Z] INFO  SIDECAR.INBOX-RECEIVER: [SidecarInbox] Route POST /api/internal/inbox/receive registered
+[00:48:22.805Z] INFO  REGISTRY: 'sidecar.inbox-receiver' service is registered.
+[00:48:22.805Z] INFO  SIDECAR.INBOX-RECEIVER: Service 'sidecar.inbox-receiver' started.
+[00:48:22.805Z] INFO  JSONLD.CONTEXT: Service(s) 'jsonld.document-loader' are available.
+[00:48:22.806Z] INFO  REGISTRY: 'jsonld.context' service is registered.
+[00:48:22.806Z] INFO  JSONLD.CONTEXT: Service 'jsonld.context' started.
+[00:48:22.806Z] INFO  JSONLD.PARSER: Service(s) 'jsonld.document-loader' are available.
+[00:48:22.807Z] INFO  REGISTRY: 'jsonld.parser' service is registered.
+[00:48:22.807Z] INFO  JSONLD.PARSER: Service 'jsonld.parser' started.
+[00:48:22.807Z] INFO  JSONLD.API: Service(s) 'api' are available.
+[00:48:22.807Z] INFO  API: Register route to '.well-known/context.jsonld'
+[00:48:22.807Z] INFO  API:      GET /.well-known/context.jsonld => jsonld.api.getContext
+[00:48:22.807Z] INFO  API: 
+[00:48:22.807Z] INFO  REGISTRY: 'jsonld.api' service is registered.
+[00:48:22.807Z] INFO  JSONLD.API: Service 'jsonld.api' started.
+[00:48:22.807Z] INFO  LDP.API: Service(s) 'api' are available.
+[00:48:22.808Z] INFO  API: Register route to '/:username([^/.][^/]+)'
+[00:48:22.809Z] INFO  API:      GET /:username([^/.][^/]+) => <Function>
+[00:48:22.809Z] INFO  API:     HEAD /:username([^/.][^/]+) => <Function>
+[00:48:22.809Z] INFO  API:      GET /:username([^/.][^/]+)/:collection => <Function>
+[00:48:22.809Z] INFO  API:    PATCH /:username([^/.][^/]+)/:collection => <Function>
+[00:48:22.809Z] INFO  API: 
+[00:48:22.809Z] INFO  API: Register route to '/:username([^/.][^/]+)/:slugParts*'
+[00:48:22.809Z] INFO  API:      GET /:username([^/.][^/]+)/:slugParts* => <Function>
+[00:48:22.809Z] INFO  API:     HEAD /:username([^/.][^/]+)/:slugParts* => <Function>
+[00:48:22.809Z] INFO  API:     POST /:username([^/.][^/]+)/:slugParts* => <Function>
+[00:48:22.809Z] INFO  API:      PUT /:username([^/.][^/]+)/:slugParts* => <Function>
+[00:48:22.809Z] INFO  API:    PATCH /:username([^/.][^/]+)/:slugParts* => <Function>
+[00:48:22.810Z] INFO  API:   DELETE /:username([^/.][^/]+)/:slugParts* => <Function>
+[00:48:22.810Z] INFO  API: 
+[00:48:22.810Z] INFO  REGISTRY: 'ldp.api' service is registered.
+[00:48:22.810Z] INFO  LDP.API: Service 'ldp.api' started.
+[00:48:22.810Z] INFO  TRIPLESTORE: Service(s) 'jsonld.parser' are available.
+[00:48:22.811Z] INFO  REGISTRY: 'triplestore' service is registered.
+[00:48:22.811Z] INFO  TRIPLESTORE: Service 'triplestore' started.
+[00:48:22.811Z] INFO  USERNAME-MODERATION: Service(s) 'api' are available.
+[00:48:22.811Z] INFO  API: Register route to '/v1/usernames'
+[00:48:22.811Z] INFO  API:     POST /v1/usernames/check => username-moderation.httpCheck
+[00:48:22.811Z] INFO  API:      GET /v1/usernames/available => username-moderation.httpAvailable
+[00:48:22.811Z] INFO  API: 
+[00:48:22.811Z] INFO  USERNAME-MODERATION: [username-moderation] HTTP routes registered at /v1/usernames/{check,available}
+[00:48:22.812Z] INFO  REGISTRY: 'username-moderation' service is registered.
+[00:48:22.812Z] INFO  USERNAME-MODERATION: Service 'username-moderation' started.
+[00:48:22.812Z] INFO  OAUTH-PAR: Service(s) 'oauth-client-metadata, oauth-dpop-nonce' are available.
+[00:48:22.813Z] INFO  REGISTRY: 'oauth-par' service is registered.
+[00:48:22.813Z] INFO  OAUTH-PAR: Service 'oauth-par' started.
+[00:48:22.813Z] INFO  OAUTH-REFRESH-FAMILY: Service(s) 'oauth-refresh-session' are available.
+[00:48:22.813Z] INFO  REGISTRY: 'oauth-refresh-family' service is registered.
+[00:48:22.813Z] INFO  OAUTH-REFRESH-FAMILY: Service 'oauth-refresh-family' started.
+[00:48:22.813Z] INFO  OAUTH-TOKEN: Service(s) 'oauth-code-store, oauth-refresh-session, oauth-dpop-nonce, jwk' are available.
+[00:48:22.813Z] INFO  REGISTRY: 'oauth-token' service is registered.
+[00:48:22.814Z] INFO  OAUTH-TOKEN: Service 'oauth-token' started.
+[00:48:22.814Z] INFO  SYNCHRONIZER: Service(s) 'activitypub.side-effects' are available.
+[00:48:22.814Z] INFO  REGISTRY: 'synchronizer' service is registered.
+[00:48:22.814Z] INFO  SYNCHRONIZER: Service 'synchronizer' started.
+[00:48:22.814Z] INFO  SOLID-OIDC: Service(s) 'jwk, api' are available.
+[00:48:22.964Z] INFO  API: Register route to '/.well-known/openid-configuration'
+[00:48:22.964Z] INFO  API:      GET /.well-known/openid-configuration => solid-oidc.proxyConfig
+[00:48:22.964Z] INFO  API: 
+[00:48:22.964Z] INFO  API: Register route to '/.oidc/login-completed'
+[00:48:22.964Z] INFO  API:     POST /.oidc/login-completed => solid-oidc.loginCompleted
+[00:48:22.964Z] INFO  API: 
+[00:48:22.965Z] INFO  BACKUP: Service(s) 'triplestore' are available.
+[00:48:22.971Z] INFO  REGISTRY: 'backup' service is registered.
+[00:48:22.971Z] INFO  BACKUP: Service 'backup' started.
+[00:48:22.971Z] INFO  SIGNATURE.KEYPAIR: Service(s) 'keys.migration' are available.
+[00:48:22.971Z] INFO  REGISTRY: 'signature.keypair' service is registered.
+[00:48:22.971Z] INFO  SIGNATURE.KEYPAIR: Service 'signature.keypair' started.
+[00:48:22.971Z] INFO  BROKER: Service(s) 'triplestore' are available.
+[00:48:22.973Z] INFO  BROKER: Service(s) 'triplestore' are available.
+[00:48:23.016Z] INFO  REGISTRY: 'ontologies.registry' service is registered.
+[00:48:23.016Z] INFO  ONTOLOGIES.REGISTRY: Service 'ontologies.registry' started.
+[00:48:23.017Z] INFO  ONTOLOGIES.REGISTRY: Service 'ontologies.registry' started.

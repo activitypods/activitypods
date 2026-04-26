@@ -1,0 +1,46 @@
+name: Backend checks
+
+on:
+  pull_request:
+    paths:
+      - 'pod-provider/backend/**'
+      - '.github/workflows/backend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pod-provider/backend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: pod-provider/backend/yarn.lock
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Report lockfile drift
+        run: |
+          if ! git diff --quiet -- yarn.lock; then
+            echo '::warning file=pod-provider/backend/yarn.lock::yarn.lock is out of sync with package.json. Run `cd pod-provider/backend && yarn install`, then commit yarn.lock.'
+            git --no-pager diff -- yarn.lock | sed -n '1,240p'
+          fi
+
+      - name: Run unit tests
+        run: yarn test:unit
+
+      - name: Run ATProto signing smoke tests
+        run: |
+          yarn test:atproto:multibase
+          yarn test:atproto:signing

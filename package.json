@@ -32,7 +32,8 @@
   },
   "pnpm": {
     "overrides": {
-      "@astrojs/sitemap": "3.0.5"
+      "@astrojs/sitemap": "3.0.5",
+      "sitemap": "7.1.1"
     }
   }
 }

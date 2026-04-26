@@ -188,11 +188,13 @@ module.exports = {
     this._auditLog = [];
     this._moderationDecisions = [];
     this._moderationCases = [];
+    this._providerInboxEvents = [];
     this._atprotoAutoSyncTimer = null;
     this._atprotoAutoSyncInFlight = false;
     this._atprotoMirrorInFlightByWebId = new Set();
     this._atprotoMirrorLastRunByWebId = new Map();
     this._providerDataWriteChains = new Map();
+    this._moderationCaseOperationChains = new Map();
     this._atprotoLabelerDirectoryCache = {
       expiresAt: 0,
       entries: []
@@ -222,6 +224,7 @@ module.exports = {
         await this.saveProviderData('moderation-cases', this._moderationCases);
       }
     }
+    this._providerInboxEvents = await this.loadProviderData('provider-inbox-events');
 
     await this.broker.call('api.addRoute', {
       route: {
@@ -258,6 +261,8 @@ module.exports = {
           'GET /provider/moderation/decisions': 'user-settings-api.listModerationDecisions',
           'DELETE /provider/moderation/decisions/:id': 'user-settings-api.revokeModerationDecision',
           'GET /provider/moderation/cases': 'user-settings-api.listModerationCases',
+          'POST /provider/moderation/cases/:id/forwarding/retry': 'user-settings-api.retryModerationCaseForwarding',
+          'GET /provider/moderation/inbox-events': 'user-settings-api.listProviderInboxEvents',
           'GET /provider/moderation/labels': 'user-settings-api.listAtLabels',
           'GET /provider/moderation/labels/known': 'user-settings-api.listKnownAtLabels',
           'GET /provider/moderation/default-source': 'user-settings-api.providerDefaultModerationSourceStatus',
@@ -315,6 +320,11 @@ module.exports = {
     if (this._providerDataWriteChains?.size) {
       await Promise.allSettled([...this._providerDataWriteChains.values()]);
       this._providerDataWriteChains.clear();
+    }
+
+    if (this._moderationCaseOperationChains?.size) {
+      await Promise.allSettled([...this._moderationCaseOperationChains.values()]);
+      this._moderationCaseOperationChains.clear();
     }
   },
 
@@ -855,6 +865,115 @@ module.exports = {
       return this.buildModerationCaseCachePage(query);
     },
 
+    async retryModerationCaseForwarding(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const id = this.sanitizePathSegment(ctx.params.id, 'id');
+      const input = this.requirePlainObject(ctx.params?.data || ctx.params || {}, 'data');
+
+      return this.enqueueModerationCaseOperation(id, async () => {
+        const existingCase = this.findStoredModerationCaseById(id);
+        if (!existingCase) {
+          throw new MoleculerError('Moderation case not found', 404, 'NOT_FOUND');
+        }
+
+        const eligibleProtocols = this.getModerationCaseRetryProtocols(existingCase);
+        if (eligibleProtocols.length === 0) {
+          throw new MoleculerError(
+            'This moderation case does not have a remote authoritative protocol to forward',
+            400,
+            'MODERATION_FORWARDING_NOT_AVAILABLE'
+          );
+        }
+
+        const protocols = this.normalizeModerationForwardingRetryProtocols(input.protocols, eligibleProtocols);
+        const invalidProtocol = protocols.find(protocol => !eligibleProtocols.includes(protocol));
+        if (invalidProtocol) {
+          throw new MoleculerError(
+            `${invalidProtocol} forwarding is not valid for this moderation case`,
+            400,
+            'MODERATION_FORWARDING_PROTOCOL_INVALID'
+          );
+        }
+
+        const currentResults = this.buildModerationForwardingRetryResults(existingCase, protocols);
+        const enableRemoteForwarding = input.enableRemoteForwarding === true;
+
+        let caseRecord = existingCase;
+        if (!caseRecord.requestedForwarding?.remote) {
+          if (!enableRemoteForwarding) {
+            throw new MoleculerError(
+              'Remote forwarding was not requested for this report. Enable it explicitly before retrying.',
+              400,
+              'MODERATION_FORWARDING_NOT_REQUESTED'
+            );
+          }
+
+          caseRecord =
+            (await this.patchStoredModerationCase(id, {
+              requestedForwarding: { remote: true },
+              updatedAt: new Date().toISOString()
+            })) || caseRecord;
+        }
+
+        const pendingOrDelivered =
+          protocols.length > 0 &&
+          protocols.every(protocol => {
+            const result = currentResults[protocol];
+            return result?.status === 'pending' || result?.status === 'already-forwarded';
+          });
+        if (pendingOrDelivered) {
+          this.recordAuditEvent(webId, 'moderation_case_forward_retry_noop', {
+            caseId: id,
+            protocols,
+            enableRemoteForwarding
+          });
+          return {
+            data: caseRecord,
+            results: currentResults,
+            changed: false
+          };
+        }
+
+        try {
+          const upstream = await this.mrfProxy(ctx, {
+            method: 'POST',
+            path: `/internal/admin/moderation/cases/${encodeURIComponent(id)}/forwarding/retry`,
+            permission: 'provider:write',
+            body: { protocols }
+          });
+
+          const results = this.normalizeModerationForwardingRetryResultMap(
+            upstream?.results && typeof upstream.results === 'object' ? upstream.results : currentResults,
+            protocols
+          );
+          const refreshedCase = this.findStoredModerationCaseById(id) || caseRecord;
+
+          this.recordAuditEvent(webId, 'moderation_case_forward_retry', {
+            caseId: id,
+            protocols,
+            enableRemoteForwarding,
+            results
+          });
+
+          return {
+            data: refreshedCase,
+            results,
+            changed: true
+          };
+        } catch (error) {
+          this.recordAuditEvent(webId, 'moderation_case_forward_retry_failed', {
+            caseId: id,
+            protocols,
+            enableRemoteForwarding,
+            error: error?.message || 'unknown_error'
+          });
+          throw error;
+        }
+      });
+    },
+
     async ingestModerationCaseInternal(ctx) {
       const input = this.requirePlainObject(ctx.params || {}, 'case');
       return this.ingestStoredModerationCase(input);
@@ -914,6 +1033,24 @@ module.exports = {
           canonicalIntentId: canonicalIntentId || undefined
         })
       };
+    },
+
+    async ingestProviderInboxEventInternal(ctx) {
+      const input = this.requirePlainObject(ctx.params || {}, 'event');
+      return this.ingestStoredProviderInboxEvent(input);
+    },
+
+    async listProviderInboxEventsInternal(ctx) {
+      const rawLimit = parseInt(String((ctx.params || {}).limit || (ctx.meta?.$query || {}).limit || 100), 10);
+      const limit = Math.min(Math.max(1, isNaN(rawLimit) ? 100 : rawLimit), 500);
+      const events = Array.isArray(this._providerInboxEvents) ? this._providerInboxEvents : [];
+      return { events: events.slice(0, limit), total: events.length };
+    },
+
+    async listProviderInboxEvents(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+      return this.actions.listProviderInboxEventsInternal(ctx);
     },
 
     async listModerationDecisions(ctx) {
@@ -1946,6 +2083,110 @@ module.exports = {
         : null;
     },
 
+    getModerationCaseRetryProtocols(caseRecord) {
+      if (!caseRecord || caseRecord.source !== 'local-user-report') return [];
+
+      switch (caseRecord.subject?.authoritativeProtocol) {
+        case 'ap':
+          return ['activityPub'];
+        case 'at':
+          return ['atproto'];
+        default:
+          return [];
+      }
+    },
+
+    normalizeModerationForwardingRetryProtocols(value, fallback = []) {
+      if (value === undefined || value === null) {
+        return [...fallback];
+      }
+
+      const input = Array.isArray(value) ? value : [value];
+      const normalized = [
+        ...new Set(
+          input
+            .filter(entry => typeof entry === 'string')
+            .map(entry => entry.trim())
+            .filter(entry => entry === 'activityPub' || entry === 'atproto')
+        )
+      ];
+
+      if (normalized.length === 0) {
+        throw new MoleculerError('protocols must include "activityPub" or "atproto"', 400, 'VALIDATION_ERROR');
+      }
+
+      return normalized;
+    },
+
+    buildModerationForwardingRetryResults(caseRecord, protocols) {
+      const results = {};
+
+      for (const protocol of Array.isArray(protocols) ? protocols : []) {
+        if (protocol === 'activityPub') {
+          const state = caseRecord?.forwarding?.activityPub || null;
+          if (state?.status === 'pending' || state?.status === 'queued') {
+            results.activityPub = {
+              status: 'pending',
+              canonicalIntentId: state.canonicalIntentId || undefined,
+              reason: 'already_in_progress'
+            };
+          } else if (state?.status === 'delivered') {
+            results.activityPub = {
+              status: 'already-forwarded',
+              canonicalIntentId: state.canonicalIntentId || undefined,
+              reason: 'already_delivered'
+            };
+          }
+          continue;
+        }
+
+        if (protocol === 'atproto') {
+          const state = caseRecord?.forwarding?.atproto || null;
+          if (state?.status === 'pending') {
+            results.atproto = {
+              status: 'pending',
+              canonicalIntentId: state.canonicalIntentId || undefined,
+              reason: 'already_in_progress'
+            };
+          } else if (state?.status === 'delivered') {
+            results.atproto = {
+              status: 'already-forwarded',
+              canonicalIntentId: state.canonicalIntentId || undefined,
+              reason: 'already_delivered'
+            };
+          }
+        }
+      }
+
+      return results;
+    },
+
+    normalizeModerationForwardingRetryResultMap(value, protocols) {
+      const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+      const normalized = {};
+
+      for (const protocol of Array.isArray(protocols) ? protocols : []) {
+        const raw = source[protocol];
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue;
+        const status = this.normalizeOptionalTrimmedString(raw.status, 64);
+        if (!['pending', 'ignored', 'skipped', 'queued', 'delivered', 'already-forwarded', 'failed'].includes(status)) {
+          continue;
+        }
+
+        normalized[protocol] = {
+          status,
+          ...(this.normalizeOptionalTrimmedString(raw.canonicalIntentId, 512)
+            ? { canonicalIntentId: this.normalizeOptionalTrimmedString(raw.canonicalIntentId, 512) }
+            : {}),
+          ...(this.normalizeOptionalTrimmedString(raw.reason, 128)
+            ? { reason: this.normalizeOptionalTrimmedString(raw.reason, 128) }
+            : {})
+        };
+      }
+
+      return normalized;
+    },
+
     normalizeOptionalTrimmedString(value, maxLen = 2048) {
       if (value === undefined || value === null) return null;
       const trimmed = String(value).trim();
@@ -2260,6 +2501,125 @@ module.exports = {
       );
 
       return merged;
+    },
+
+    async enqueueModerationCaseOperation(caseId, work) {
+      const key = String(caseId || '')
+        .trim()
+        .toLowerCase();
+      const previous = this._moderationCaseOperationChains.get(key) || Promise.resolve();
+      const next = previous.catch(() => undefined).then(work);
+      const tracked = next.finally(() => {
+        if (this._moderationCaseOperationChains.get(key) === tracked) {
+          this._moderationCaseOperationChains.delete(key);
+        }
+      });
+      this._moderationCaseOperationChains.set(key, tracked);
+      return tracked;
+    },
+
+    // ─── Provider inbox events ────────────────────────────────────────────────
+
+    /**
+     * Ingest a non-Flag provider-directed AP activity forwarded by the sidecar.
+     *
+     * Idempotent: a second call with the same activityId returns the existing
+     * record without mutating state.
+     *
+     * For UndoFlag events the original Flag moderation case is patched with a
+     * retraction note; ActivityPods (not the sidecar) decides case closure policy.
+     * Accept, Reject, and Generic events are stored as raw provider inbox events.
+     */
+    async ingestStoredProviderInboxEvent(input) {
+      const MAX_EVENTS = 2000;
+
+      // ── Normalize & validate ──────────────────────────────────────────────
+      const eventType =
+        String(input.eventType || '')
+          .trim()
+          .slice(0, 64) || 'Generic';
+      const activityId =
+        String(input.activityId || '')
+          .trim()
+          .slice(0, 512) || null;
+      const actorUri = String(input.actorUri || '')
+        .trim()
+        .slice(0, 2048);
+      const envelopePath = String(input.envelopePath || '')
+        .trim()
+        .slice(0, 2048);
+      const receivedAt = String(input.receivedAt || new Date().toISOString()).trim();
+
+      if (!actorUri) {
+        throw new MoleculerError('actorUri is required', 400, 'VALIDATION_ERROR');
+      }
+
+      // ── Idempotency guard ─────────────────────────────────────────────────
+      if (activityId) {
+        const existing = this._providerInboxEvents.find(e => e.activityId === activityId);
+        if (existing) {
+          return { event: existing, duplicate: true };
+        }
+      }
+
+      const eventId = `pie-${ulid()}`;
+      const storedAt = new Date().toISOString();
+
+      // ── UndoFlag: patch the originating case ──────────────────────────────
+      if (eventType === 'UndoFlag') {
+        const originalFlagId =
+          String(input.originalFlagId || '')
+            .trim()
+            .slice(0, 512) || null;
+
+        if (originalFlagId) {
+          const matchingCase = this._moderationCases.find(c => {
+            const canonicalEventId = c?.canonicalEvent?.sourceEventId;
+            return canonicalEventId && String(canonicalEventId).trim() === originalFlagId;
+          });
+
+          if (matchingCase) {
+            await this.patchStoredModerationCase(matchingCase.id, {
+              notes: [
+                ...(Array.isArray(matchingCase.notes) ? matchingCase.notes : []),
+                {
+                  id: eventId,
+                  timestamp: storedAt,
+                  source: 'activitypub-undo-flag',
+                  content: `Reporter retracted original flag (Undo received from ${actorUri}).`,
+                  actorUri,
+                  originalFlagId
+                }
+              ]
+            });
+            this.logger.info('[ProviderInbox] UndoFlag applied to moderation case %s', matchingCase.id);
+          } else {
+            this.logger.info('[ProviderInbox] UndoFlag received but no matching case found', {
+              originalFlagId,
+              actorUri
+            });
+          }
+        }
+      }
+
+      // ── Persist the raw event ─────────────────────────────────────────────
+      const event = {
+        id: eventId,
+        eventType,
+        activityId,
+        actorUri,
+        envelopePath,
+        receivedAt,
+        storedAt,
+        objectId: input.objectId != null ? String(input.objectId).trim().slice(0, 512) : null,
+        activityType: input.activityType ? String(input.activityType).trim().slice(0, 64) : null,
+        rawActivity: input.rawActivity || null
+      };
+
+      this._providerInboxEvents = [event, ...this._providerInboxEvents].slice(0, MAX_EVENTS);
+      await this.saveProviderData('provider-inbox-events', this._providerInboxEvents);
+
+      return { event, duplicate: false };
     },
 
     async buildCanonicalActorRefForWebId(ctx, webId, canonicalAccountId) {
@@ -2758,7 +3118,9 @@ module.exports = {
       const previousApStatus = previousCase?.forwarding?.activityPub?.status || null;
       const nextApStatus = nextCase?.forwarding?.activityPub?.status || null;
       if (previousApStatus !== nextApStatus) {
-        if (nextApStatus === 'queued') {
+        if (nextApStatus === 'pending') {
+          messages.push('Your report is being prepared for remote ActivityPub forwarding.');
+        } else if (nextApStatus === 'queued') {
           messages.push('Your report was queued for remote ActivityPub forwarding.');
         } else if (nextApStatus === 'delivered') {
           messages.push('Your report was delivered to the remote ActivityPub server.');
@@ -2772,7 +3134,9 @@ module.exports = {
       const previousAtStatus = previousCase?.forwarding?.atproto?.status || null;
       const nextAtStatus = nextCase?.forwarding?.atproto?.status || null;
       if (previousAtStatus !== nextAtStatus) {
-        if (nextAtStatus === 'delivered') {
+        if (nextAtStatus === 'pending') {
+          messages.push('Your report is being sent to the remote AT Protocol moderation service.');
+        } else if (nextAtStatus === 'delivered') {
           messages.push('Your report was delivered to the remote AT Protocol moderation service.');
         } else if (nextAtStatus === 'failed') {
           messages.push('Remote AT Protocol forwarding failed.');

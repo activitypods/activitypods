@@ -13,6 +13,9 @@ export type ModerationDecision = {
   sourceCaseId?: string;
   reason?: string;
   protocols?: 'none' | 'ap' | 'at' | 'both';
+  mrfPatched?: boolean;
+  atLabelEmitted?: boolean;
+  atStatusUpdated?: boolean;
   revoked?: boolean;
 };
 
@@ -132,6 +135,14 @@ export type ForwardingBadge = {
   color: ModerationChipColor;
 };
 
+export type ForwardingProtocol = 'activityPub' | 'atproto';
+
+export type CaseForwardingControl = {
+  protocol: ForwardingProtocol;
+  label: string;
+  enableRemoteForwarding?: boolean;
+};
+
 const firstNonEmpty = (...values: Array<string | undefined | null>) =>
   values.find(value => Boolean(value && value.trim()));
 
@@ -160,6 +171,20 @@ export const caseStatusColor = (status: ModerationCase['status']): ModerationChi
 
 export const describeCaseSource = (entry: ModerationCase) =>
   entry.source === 'activitypub-flag' ? 'Inbound ActivityPub Flag' : 'Local user report';
+
+export const caseSubjectKindLabel = (entry: ModerationCase) =>
+  entry.subject.kind === 'account' ? 'Account report' : 'Object report';
+
+export const caseAuthorityLabel = (entry: ModerationCase) => {
+  switch (entry.subject.authoritativeProtocol) {
+    case 'ap':
+      return 'Authority: ActivityPub';
+    case 'at':
+      return 'Authority: AT Protocol';
+    default:
+      return 'Authority: Local';
+  }
+};
 
 export const caseReporterLines = (entry: ModerationCase) => {
   const primary = firstNonEmpty(
@@ -274,4 +299,57 @@ export const caseForwardingNotes = (entry: ModerationCase) => {
   }
 
   return [...notes];
+};
+
+export const caseForwardingControl = (entry: ModerationCase): CaseForwardingControl | null => {
+  if (entry.source !== 'local-user-report' || entry.status === 'dismissed') {
+    return null;
+  }
+
+  if (entry.subject.authoritativeProtocol === 'ap') {
+    const state = entry.forwarding?.activityPub;
+    if (state?.status === 'pending' || state?.status === 'queued' || state?.status === 'delivered') {
+      return null;
+    }
+    return {
+      protocol: 'activityPub',
+      label: entry.requestedForwarding?.remote ? 'Retry AP forward' : 'Forward to AP',
+      enableRemoteForwarding: !entry.requestedForwarding?.remote
+    };
+  }
+
+  if (entry.subject.authoritativeProtocol === 'at') {
+    const state = entry.forwarding?.atproto;
+    if (state?.status === 'pending' || state?.status === 'delivered') {
+      return null;
+    }
+    return {
+      protocol: 'atproto',
+      label: entry.requestedForwarding?.remote ? 'Retry AT forward' : 'Forward to AT',
+      enableRemoteForwarding: !entry.requestedForwarding?.remote
+    };
+  }
+
+  return null;
+};
+
+export const decisionEnforcementLines = (decision: ModerationDecision) => {
+  const lines = [];
+
+  if (decision.mrfPatched) {
+    lines.push('AP subject rule applied');
+  }
+  if (decision.atLabelEmitted) {
+    lines.push('AT label emitted');
+  }
+  if (decision.atStatusUpdated) {
+    lines.push('AT account status updated');
+  }
+  if (lines.length === 0) {
+    lines.push(
+      decision.protocols && decision.protocols !== 'none' ? 'Protocol propagation recorded' : 'No enforcement'
+    );
+  }
+
+  return lines;
 };

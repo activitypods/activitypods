@@ -229,6 +229,18 @@ export const dashboardApi = {
     return req(params ? `provider/moderation/cases?${params.toString()}` : 'provider/moderation/cases');
   },
 
+  retryModerationCaseForwarding: (
+    id: string,
+    data: {
+      protocols?: Array<'activityPub' | 'atproto'>;
+      enableRemoteForwarding?: boolean;
+    }
+  ) =>
+    req(`provider/moderation/cases/${encodeURIComponent(id)}/forwarding/retry`, {
+      method: 'POST',
+      body: JSON.stringify({ data })
+    }),
+
   revokeModerationDecision: (id: string) =>
     req(`provider/moderation/decisions/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 
@@ -344,5 +356,8 @@ export const dashboardApi = {
     req('moderation/summary/monthly/send', {
       method: 'POST',
       body: JSON.stringify({ force })
-    })
+    }),
+
+  listProviderInboxEvents: (limit?: number) =>
+    req(limit ? `provider/moderation/inbox-events?limit=${limit}` : 'provider/moderation/inbox-events')
 };

@@ -21,10 +21,13 @@ import {
 import Header from '../../common/Header';
 import { dashboardApi } from './dashboardApi';
 import {
+  caseAuthorityLabel,
   caseForwardingBadges,
   caseForwardingNotes,
   caseStatusColor,
+  caseSubjectKindLabel,
   caseTargetLines,
+  decisionEnforcementLines,
   describeCaseSource,
   protocolColor,
   type ModerationCase,
@@ -167,6 +170,15 @@ const OwnerModerationPage: React.FC = () => {
                             </TableCell>
                             <TableCell>
                               <Stack spacing={0.25}>
+                                <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
+                                  <Chip label={caseSubjectKindLabel(entry)} size="small" variant="outlined" />
+                                  <Chip
+                                    label={caseAuthorityLabel(entry)}
+                                    size="small"
+                                    variant="outlined"
+                                    color="info"
+                                  />
+                                </Stack>
                                 {caseTargetLines(entry)
                                   .slice(0, 3)
                                   .map(line => (
@@ -190,6 +202,9 @@ const OwnerModerationPage: React.FC = () => {
                             </TableCell>
                             <TableCell>
                               <Stack spacing={0.75}>
+                                <Typography variant="caption" color="text.secondary">
+                                  {entry.requestedForwarding?.remote ? 'Remote forwarding requested' : 'Stored locally'}
+                                </Typography>
                                 <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
                                   {forwardingBadges.length > 0 ? (
                                     forwardingBadges.map(badge => (
@@ -223,7 +238,6 @@ const OwnerModerationPage: React.FC = () => {
                               <Typography variant="caption">{entry.reason || 'No reason text provided.'}</Typography>
                               <Typography variant="caption" display="block" color="text.secondary">
                                 {entry.reasonType}
-                                {entry.requestedForwarding?.remote ? ' • requested remote forwarding' : ''}
                               </Typography>
                             </TableCell>
                           </TableRow>
@@ -255,6 +269,9 @@ const OwnerModerationPage: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <strong>Propagation</strong>
+                        </TableCell>
+                        <TableCell>
+                          <strong>Enforcement</strong>
                         </TableCell>
                         <TableCell>
                           <strong>Status</strong>
@@ -304,6 +321,19 @@ const OwnerModerationPage: React.FC = () => {
                               size="small"
                               variant="outlined"
                             />
+                          </TableCell>
+                          <TableCell>
+                            <Stack spacing={0.25}>
+                              {decisionEnforcementLines(decision).map(line => (
+                                <Typography
+                                  key={`${decision.id}-enforcement-${line}`}
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {line}
+                                </Typography>
+                              ))}
+                            </Stack>
                           </TableCell>
                           <TableCell>
                             {decision.revoked ? (

@@ -8,6 +8,7 @@ function createService(publishResult = { ok: true, canonicalIntentId: 'intent-12
       auditLogMaxEntries: 500,
       blueskyDefaultLabelerDid: 'did:plc:defaultlabeler123'
     },
+    providerActors: new Set(['*']),
     logger: {
       warn: jest.fn(),
       info: jest.fn(),
@@ -16,6 +17,7 @@ function createService(publishResult = { ok: true, canonicalIntentId: 'intent-12
     },
     _auditLog: [],
     _moderationCases: [],
+    _moderationCaseOperationChains: new Map(),
     ...serviceDefinition.methods,
     saveProviderData: jest.fn().mockResolvedValue(undefined),
     publishCanonicalModerationReport: jest.fn().mockResolvedValue(publishResult)
@@ -386,6 +388,121 @@ describe('user-settings moderation reports', () => {
           kind: 'moderation.report.updated',
           caseId: nextCase.id
         })
+      })
+    );
+  });
+
+  test('emits a report update notification when remote forwarding becomes pending', async () => {
+    const service = createService();
+    const ctx = createCtx();
+    const created = await service.createLocalModerationReport(ctx, 'https://pod.example/alice#me', makeReportInput());
+
+    await service.emitModerationCaseUpdateNotifications(ctx, created.case, {
+      ...created.case,
+      forwarding: {
+        activityPub: {
+          status: 'pending',
+          canonicalIntentId: 'retry-intent-1'
+        }
+      }
+    });
+
+    expect(ctx.call).toHaveBeenCalledWith(
+      'realtime-private-emitter.publish',
+      expect.objectContaining({
+        principal: 'https://pod.example/alice#me',
+        payload: expect.objectContaining({
+          kind: 'moderation.report.updated',
+          forwarding: expect.objectContaining({
+            activityPub: 'pending'
+          })
+        })
+      })
+    );
+  });
+
+  test('retryModerationCaseForwarding enables remote forwarding and requests ActivityPub retry', async () => {
+    const service = createService();
+    const ctx = createCtx();
+    const created = await service.createLocalModerationReport(ctx, 'https://pod.example/alice#me', {
+      ...makeReportInput(),
+      requestedForwarding: { remote: false }
+    });
+    service.mrfProxy = jest.fn().mockResolvedValue({
+      results: {
+        activityPub: {
+          status: 'queued',
+          canonicalIntentId: 'retry-intent-1'
+        }
+      }
+    });
+    ctx.meta = { webId: 'https://provider.example/admin#me' };
+    ctx.params = {
+      id: created.case.id,
+      data: {
+        protocols: ['activityPub'],
+        enableRemoteForwarding: true
+      }
+    };
+
+    const result = await serviceDefinition.actions.retryModerationCaseForwarding.call(service, ctx);
+
+    expect(service.mrfProxy).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({
+        method: 'POST',
+        path: `/internal/admin/moderation/cases/${encodeURIComponent(created.case.id)}/forwarding/retry`,
+        permission: 'provider:write',
+        body: { protocols: ['activityPub'] }
+      })
+    );
+    expect(result.results.activityPub).toEqual(
+      expect.objectContaining({
+        status: 'queued',
+        canonicalIntentId: 'retry-intent-1'
+      })
+    );
+    expect(service.findStoredModerationCaseById(created.case.id)).toEqual(
+      expect.objectContaining({
+        requestedForwarding: { remote: true }
+      })
+    );
+  });
+
+  test('retryModerationCaseForwarding short-circuits when AT delivery already completed', async () => {
+    const service = createService();
+    const ctx = createCtx();
+    const created = await service.createLocalModerationReport(
+      ctx,
+      'https://pod.example/alice#me',
+      makeAtprotoReportInput()
+    );
+    await service.patchStoredModerationCase(created.case.id, {
+      forwarding: {
+        atproto: {
+          status: 'delivered',
+          canonicalIntentId: 'delivered-intent-1',
+          subjectDid: 'did:plc:bob123'
+        }
+      }
+    });
+    service.mrfProxy = jest.fn();
+    ctx.meta = { webId: 'https://provider.example/admin#me' };
+    ctx.params = {
+      id: created.case.id,
+      data: {
+        protocols: ['atproto']
+      }
+    };
+
+    const result = await serviceDefinition.actions.retryModerationCaseForwarding.call(service, ctx);
+
+    expect(service.mrfProxy).not.toHaveBeenCalled();
+    expect(result.changed).toBe(false);
+    expect(result.results.atproto).toEqual(
+      expect.objectContaining({
+        status: 'already-forwarded',
+        canonicalIntentId: 'delivered-intent-1'
       })
     );
   });

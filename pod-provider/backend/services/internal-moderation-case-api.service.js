@@ -69,7 +69,9 @@ module.exports = {
           'GET /cases/:id': 'internal-moderation-case-api.getCase',
           'PATCH /cases/:id': 'internal-moderation-case-api.patchCase',
           'GET /cases/by-dedupe/:dedupeKey': 'internal-moderation-case-api.findCaseByDedupe',
-          'POST /cases/:id/forwarding/atproto/prepare': 'internal-moderation-case-api.prepareAtprotoForwarding'
+          'POST /cases/:id/forwarding/atproto/prepare': 'internal-moderation-case-api.prepareAtprotoForwarding',
+          'POST /inbox-events': 'internal-moderation-case-api.ingestProviderInboxEvent',
+          'GET /inbox-events': 'internal-moderation-case-api.listProviderInboxEvents'
         }
       },
       toBottom: false
@@ -106,6 +108,14 @@ module.exports = {
 
     async prepareAtprotoForwarding(ctx) {
       return ctx.call('user-settings-api.prepareModerationCaseAtprotoForwardingInternal', ctx.params);
+    },
+
+    async ingestProviderInboxEvent(ctx) {
+      return ctx.call('user-settings-api.ingestProviderInboxEventInternal', ctx.params);
+    },
+
+    async listProviderInboxEvents(ctx) {
+      return ctx.call('user-settings-api.listProviderInboxEventsInternal', ctx.params || {});
     }
   }
 };

@@ -28,11 +28,15 @@ import {
 } from '@mui/material';
 import { dashboardApi } from './dashboardApi';
 import {
+  caseAuthorityLabel,
+  caseForwardingControl,
   caseForwardingBadges,
   caseForwardingNotes,
   caseReporterLines,
   caseStatusColor,
+  caseSubjectKindLabel,
   caseTargetLines,
+  decisionEnforcementLines,
   describeCaseSource,
   protocolColor,
   type ModerationAction,
@@ -182,6 +186,39 @@ const parseFediseerSourceDomains = (value: string) => [
   )
 ];
 
+const describeForwardingProtocol = (protocol: 'activityPub' | 'atproto') =>
+  protocol === 'activityPub' ? 'ActivityPub' : 'AT Protocol';
+
+const describeForwardingRetryOutcome = (
+  protocol: 'activityPub' | 'atproto',
+  result: { status?: string; reason?: string } | undefined,
+  enabledRemoteForwarding: boolean
+) => {
+  const target = describeForwardingProtocol(protocol);
+  switch (result?.status) {
+    case 'queued':
+      return enabledRemoteForwarding
+        ? `Remote forwarding is enabled and the ${target} report is queued.`
+        : `${target} report retry queued.`;
+    case 'delivered':
+      return enabledRemoteForwarding
+        ? `Remote forwarding is enabled and the ${target} report was delivered.`
+        : `${target} report delivered.`;
+    case 'pending':
+      return `${target} forwarding is already in progress.`;
+    case 'already-forwarded':
+      return `${target} forwarding was already completed.`;
+    case 'skipped':
+      return `${target} forwarding was skipped${result.reason ? ` (${result.reason})` : ''}.`;
+    case 'failed':
+      return `${target} forwarding failed.`;
+    default:
+      return enabledRemoteForwarding
+        ? `Remote forwarding was enabled for the ${target} report.`
+        : `${target} forwarding retry requested.`;
+  }
+};
+
 export const ProviderCrossProtocolModerationPage: React.FC = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState(0);
@@ -203,6 +240,7 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
   const [pdqLookupLoading, setPdqLookupLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [retryingCases, setRetryingCases] = useState<Record<string, boolean>>({});
 
   const [decisions, setDecisions] = useState<ModerationDecision[]>([]);
   const [cases, setCases] = useState<ModerationCase[]>([]);
@@ -390,6 +428,33 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
       await loadAll();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to revoke decision');
+    }
+  };
+
+  const retryCaseForwarding = async (entry: ModerationCase) => {
+    const control = caseForwardingControl(entry);
+    if (!control) return;
+
+    setRetryingCases(prev => ({ ...prev, [entry.id]: true }));
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response = await dashboardApi.retryModerationCaseForwarding(entry.id, {
+        protocols: [control.protocol],
+        ...(control.enableRemoteForwarding ? { enableRemoteForwarding: true } : {})
+      });
+      const result = response?.results?.[control.protocol] as { status?: string; reason?: string } | undefined;
+      setSuccess(describeForwardingRetryOutcome(control.protocol, result, Boolean(control.enableRemoteForwarding)));
+      await loadAll();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to retry remote forwarding.');
+    } finally {
+      setRetryingCases(prev => {
+        const next = { ...prev };
+        delete next[entry.id];
+        return next;
+      });
     }
   };
 
@@ -721,6 +786,8 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                     {cases.map(entry => {
                       const forwardingBadges = caseForwardingBadges(entry);
                       const forwardingNotes = caseForwardingNotes(entry);
+                      const forwardingControl = caseForwardingControl(entry);
+                      const retryingCase = Boolean(retryingCases[entry.id]);
                       return (
                         <TableRow key={entry.id} hover>
                           <TableCell>
@@ -748,6 +815,10 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             <Stack spacing={0.25}>
+                              <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
+                                <Chip label={caseSubjectKindLabel(entry)} size="small" variant="outlined" />
+                                <Chip label={caseAuthorityLabel(entry)} size="small" variant="outlined" color="info" />
+                              </Stack>
                               {caseTargetLines(entry)
                                 .slice(0, 3)
                                 .map(line => (
@@ -776,6 +847,11 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             <Stack spacing={0.75}>
+                              <Typography variant="caption" color="text.secondary">
+                                {entry.requestedForwarding?.remote
+                                  ? 'Remote forwarding requested'
+                                  : 'Local-only review'}
+                              </Typography>
                               <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
                                 {forwardingBadges.length > 0 ? (
                                   forwardingBadges.map(badge => (
@@ -810,12 +886,16 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                               <Typography variant="caption">{entry.reason || 'No reason text provided.'}</Typography>
                               <Typography variant="caption" color="text.secondary">
                                 {entry.reasonType}
-                                {entry.requestedForwarding?.remote ? ' • requested remote forwarding' : ''}
                               </Typography>
                             </Stack>
                           </TableCell>
                           <TableCell align="right">
                             <Stack direction="row" spacing={1} justifyContent="flex-end">
+                              {forwardingControl && (
+                                <Button size="small" disabled={retryingCase} onClick={() => retryCaseForwarding(entry)}>
+                                  {retryingCase ? 'Working…' : forwardingControl.label}
+                                </Button>
+                              )}
                               <Button size="small" onClick={() => prepareDecisionFromCase(entry, 'filter')}>
                                 Prepare filter
                               </Button>
@@ -860,6 +940,9 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <strong>Propagation</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Enforcement</strong>
                       </TableCell>
                       <TableCell>
                         <strong>Status</strong>
@@ -916,6 +999,15 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                             size="small"
                             variant="outlined"
                           />
+                        </TableCell>
+                        <TableCell>
+                          <Stack spacing={0.25}>
+                            {decisionEnforcementLines(decision).map(line => (
+                              <Typography key={`${decision.id}-${line}`} variant="caption" color="text.secondary">
+                                {line}
+                              </Typography>
+                            ))}
+                          </Stack>
                         </TableCell>
                         <TableCell>
                           {decision.revoked ? (

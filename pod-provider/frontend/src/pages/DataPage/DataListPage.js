@@ -41,7 +41,7 @@ const DataListPage = () => {
   const [locale] = useLocaleState();
   const getPrefixFromUri = useGetPrefixFromUri();
   const developerMode = !!localStorage.getItem('developer_mode');
-  const containers = useContainers(undefined, 'user');
+  const containers = useContainers(undefined, '@pod');
 
   return (
     <>

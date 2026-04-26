@@ -27,6 +27,11 @@ jobs:
           cache: yarn
           cache-dependency-path: pod-provider/backend/yarn.lock
 
+      - name: Enforce HTTPS for public Git dependencies
+        run: |
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+
       - name: Install dependencies
         run: yarn install
 

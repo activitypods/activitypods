@@ -130,6 +130,9 @@ const FEDISEER_MANAGED_RULE_PREFIX = 'fediseer:domain:';
 const FEDISEER_DEFAULT_BASE_URL = 'https://fediseer.com';
 const FEDISEER_MAX_SYNC_PAGES = 10;
 const FEDISEER_PAGE_SIZE = 200;
+const PROVIDER_INBOX_EVENTS_MAX = 2000;
+const PROVIDER_INBOX_RAW_MAX_CHARS = 32 * 1024;
+const PROVIDER_INBOX_EVENT_TYPES = new Set(['UndoFlag', 'Accept', 'Reject', 'Generic']);
 
 module.exports = {
   name: 'user-settings-api',
@@ -195,6 +198,7 @@ module.exports = {
     this._atprotoMirrorLastRunByWebId = new Map();
     this._providerDataWriteChains = new Map();
     this._moderationCaseOperationChains = new Map();
+    this._providerInboxEventOperationChain = Promise.resolve();
     this._atprotoLabelerDirectoryCache = {
       expiresAt: 0,
       entries: []
@@ -325,6 +329,11 @@ module.exports = {
     if (this._moderationCaseOperationChains?.size) {
       await Promise.allSettled([...this._moderationCaseOperationChains.values()]);
       this._moderationCaseOperationChains.clear();
+    }
+
+    if (this._providerInboxEventOperationChain) {
+      await this._providerInboxEventOperationChain.catch(() => undefined);
+      this._providerInboxEventOperationChain = Promise.resolve();
     }
   },
 
@@ -1037,7 +1046,7 @@ module.exports = {
 
     async ingestProviderInboxEventInternal(ctx) {
       const input = this.requirePlainObject(ctx.params || {}, 'event');
-      return this.ingestStoredProviderInboxEvent(input);
+      return this.enqueueProviderInboxEventOperation(() => this.ingestStoredProviderInboxEvent(input));
     },
 
     async listProviderInboxEventsInternal(ctx) {
@@ -2343,6 +2352,7 @@ module.exports = {
             evidenceObjectRefs,
             requestedForwarding
           });
+      const notes = this.normalizeModerationCaseNotes(value.notes);
 
       return {
         id,
@@ -2372,6 +2382,7 @@ module.exports = {
           ? [...new Set(value.relatedDecisionIds.map(item => String(item || '').trim()).filter(Boolean))]
           : [],
         canonicalEvent: this.normalizeModerationCanonicalEventState(value.canonicalEvent),
+        ...(notes.length > 0 ? { notes } : {}),
         ...(this.normalizeModerationForwardingState(value.forwarding)
           ? { forwarding: this.normalizeModerationForwardingState(value.forwarding) }
           : {}),
@@ -2385,6 +2396,34 @@ module.exports = {
           ? { resolvedBy: this.normalizeOptionalTrimmedString(value.resolvedBy, 2048) }
           : {})
       };
+    },
+
+    normalizeModerationCaseNotes(value) {
+      if (!Array.isArray(value)) return [];
+
+      return value
+        .slice(-100)
+        .map(entry => {
+          if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return null;
+
+          const id = this.normalizeOptionalTrimmedString(entry.id, 256) || ulid().toLowerCase();
+          const timestamp = this.normalizeOptionalIsoTimestamp(entry.timestamp) || new Date().toISOString();
+          const source = this.normalizeOptionalTrimmedString(entry.source, 128) || 'operator-note';
+          const content = this.normalizeOptionalTrimmedString(entry.content, 2000);
+          if (!content) return null;
+          const actorUri = this.normalizeOptionalHttpUrl(entry.actorUri);
+          const originalFlagId = this.normalizeOptionalTrimmedString(entry.originalFlagId, 512);
+
+          return {
+            id,
+            timestamp,
+            source,
+            content,
+            ...(actorUri ? { actorUri } : {}),
+            ...(originalFlagId ? { originalFlagId } : {})
+          };
+        })
+        .filter(Boolean);
     },
 
     normalizeModerationCaseList(entries) {
@@ -2518,6 +2557,13 @@ module.exports = {
       return tracked;
     },
 
+    async enqueueProviderInboxEventOperation(work) {
+      const previous = this._providerInboxEventOperationChain || Promise.resolve();
+      const next = previous.catch(() => undefined).then(work);
+      this._providerInboxEventOperationChain = next.catch(() => undefined);
+      return next;
+    },
+
     // ─── Provider inbox events ────────────────────────────────────────────────
 
     /**
@@ -2531,28 +2577,20 @@ module.exports = {
      * Accept, Reject, and Generic events are stored as raw provider inbox events.
      */
     async ingestStoredProviderInboxEvent(input) {
-      const MAX_EVENTS = 2000;
-
       // ── Normalize & validate ──────────────────────────────────────────────
-      const eventType =
-        String(input.eventType || '')
-          .trim()
-          .slice(0, 64) || 'Generic';
-      const activityId =
-        String(input.activityId || '')
-          .trim()
-          .slice(0, 512) || null;
-      const actorUri = String(input.actorUri || '')
-        .trim()
-        .slice(0, 2048);
-      const envelopePath = String(input.envelopePath || '')
-        .trim()
-        .slice(0, 2048);
-      const receivedAt = String(input.receivedAt || new Date().toISOString()).trim();
-
-      if (!actorUri) {
-        throw new MoleculerError('actorUri is required', 400, 'VALIDATION_ERROR');
-      }
+      const receivedAt = this.normalizeProviderInboxTimestamp(input.receivedAt);
+      const actorUri = this.requireProviderInboxHttpUrl(input.actorUri, 'actorUri');
+      const envelopePath = this.normalizeProviderInboxEnvelopePath(input.envelopePath);
+      const activityId = this.normalizeProviderInboxToken(input.activityId, 512);
+      const objectId = this.normalizeProviderInboxToken(input.objectId, 512);
+      const originalFlagId = this.normalizeProviderInboxToken(input.originalFlagId, 512);
+      const requestedEventType = this.normalizeProviderInboxToken(input.eventType, 64) || 'Generic';
+      const eventType = PROVIDER_INBOX_EVENT_TYPES.has(requestedEventType) ? requestedEventType : 'Generic';
+      const activityType =
+        eventType === 'Generic'
+          ? this.normalizeProviderInboxToken(input.activityType || requestedEventType, 64)
+          : eventType;
+      const rawActivity = this.normalizeProviderInboxRawActivity(input.rawActivity);
 
       // ── Idempotency guard ─────────────────────────────────────────────────
       if (activityId) {
@@ -2567,11 +2605,6 @@ module.exports = {
 
       // ── UndoFlag: patch the originating case ──────────────────────────────
       if (eventType === 'UndoFlag') {
-        const originalFlagId =
-          String(input.originalFlagId || '')
-            .trim()
-            .slice(0, 512) || null;
-
         if (originalFlagId) {
           const matchingCase = this._moderationCases.find(c => {
             const canonicalEventId = c?.canonicalEvent?.sourceEventId;
@@ -2611,15 +2644,81 @@ module.exports = {
         envelopePath,
         receivedAt,
         storedAt,
-        objectId: input.objectId != null ? String(input.objectId).trim().slice(0, 512) : null,
-        activityType: input.activityType ? String(input.activityType).trim().slice(0, 64) : null,
-        rawActivity: input.rawActivity || null
+        objectId,
+        activityType,
+        rawActivity
       };
 
-      this._providerInboxEvents = [event, ...this._providerInboxEvents].slice(0, MAX_EVENTS);
+      this._providerInboxEvents = [event, ...this._providerInboxEvents].slice(0, PROVIDER_INBOX_EVENTS_MAX);
       await this.saveProviderData('provider-inbox-events', this._providerInboxEvents);
 
       return { event, duplicate: false };
+    },
+
+    normalizeProviderInboxToken(value, maxLength) {
+      if (value === undefined || value === null) return null;
+      const normalized = String(value).trim();
+      return normalized ? normalized.slice(0, maxLength) : null;
+    },
+
+    requireProviderInboxHttpUrl(value, label) {
+      const normalized = this.normalizeProviderInboxToken(value, 2048);
+      if (!normalized) {
+        throw new MoleculerError(`${label} is required`, 400, 'VALIDATION_ERROR');
+      }
+
+      try {
+        const parsed = new URL(normalized);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+          throw new Error('unsupported_protocol');
+        }
+        return parsed.toString().slice(0, 2048);
+      } catch {
+        throw new MoleculerError(`${label} must be an absolute HTTP(S) URL`, 400, 'VALIDATION_ERROR');
+      }
+    },
+
+    normalizeProviderInboxEnvelopePath(value) {
+      const normalized = this.normalizeProviderInboxToken(value, 2048);
+      if (!normalized) return null;
+      if (normalized.startsWith('/')) return normalized;
+
+      try {
+        const parsed = new URL(normalized);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+        return parsed.toString().slice(0, 2048);
+      } catch {
+        return null;
+      }
+    },
+
+    normalizeProviderInboxTimestamp(value) {
+      const normalized = this.normalizeProviderInboxToken(value, 64);
+      if (!normalized) return new Date().toISOString();
+
+      const parsed = new Date(normalized);
+      if (Number.isNaN(parsed.getTime())) {
+        return new Date().toISOString();
+      }
+      return parsed.toISOString();
+    },
+
+    normalizeProviderInboxRawActivity(value) {
+      if (value === undefined || value === null) return null;
+
+      let raw;
+      if (typeof value === 'string') {
+        raw = value;
+      } else {
+        try {
+          raw = JSON.stringify(value);
+        } catch {
+          raw = null;
+        }
+      }
+
+      if (!raw) return null;
+      return raw.length > PROVIDER_INBOX_RAW_MAX_CHARS ? raw.slice(0, PROVIDER_INBOX_RAW_MAX_CHARS) : raw;
     },
 
     async buildCanonicalActorRefForWebId(ctx, webId, canonicalAccountId) {

@@ -17,7 +17,9 @@ function createService(publishResult = { ok: true, canonicalIntentId: 'intent-12
     },
     _auditLog: [],
     _moderationCases: [],
+    _providerInboxEvents: [],
     _moderationCaseOperationChains: new Map(),
+    _providerInboxEventOperationChain: Promise.resolve(),
     ...serviceDefinition.methods,
     saveProviderData: jest.fn().mockResolvedValue(undefined),
     publishCanonicalModerationReport: jest.fn().mockResolvedValue(publishResult)
@@ -503,6 +505,99 @@ describe('user-settings moderation reports', () => {
       expect.objectContaining({
         status: 'already-forwarded',
         canonicalIntentId: 'delivered-intent-1'
+      })
+    );
+  });
+
+  test('ingestProviderInboxEventInternal sanitizes and stores generic provider inbox events', async () => {
+    const service = createService();
+    const ctx = createCtx();
+    ctx.params = {
+      eventType: 'Like',
+      activityId: 'https://remote.example/activities/1',
+      actorUri: 'https://remote.example/users/bob',
+      activityType: 'Like',
+      envelopePath: '/actor/inbox',
+      receivedAt: 'not-a-date',
+      rawActivity: 'x'.repeat(40000)
+    };
+
+    const result = await serviceDefinition.actions.ingestProviderInboxEventInternal.call(service, ctx);
+
+    expect(result.duplicate).toBe(false);
+    expect(result.event).toEqual(
+      expect.objectContaining({
+        eventType: 'Generic',
+        activityType: 'Like',
+        activityId: 'https://remote.example/activities/1',
+        actorUri: 'https://remote.example/users/bob',
+        envelopePath: '/actor/inbox'
+      })
+    );
+    expect(result.event.rawActivity).toHaveLength(32 * 1024);
+    expect(Number.isNaN(Date.parse(result.event.receivedAt))).toBe(false);
+    expect(service._providerInboxEvents).toHaveLength(1);
+    expect(service.saveProviderData).toHaveBeenCalledWith('provider-inbox-events', service._providerInboxEvents);
+  });
+
+  test('ingestProviderInboxEventInternal rejects provider inbox events without an absolute actor URL', async () => {
+    const service = createService();
+    const ctx = createCtx();
+    ctx.params = {
+      eventType: 'Accept',
+      activityId: 'https://remote.example/activities/2',
+      actorUri: 'acct:bob@example.com',
+      envelopePath: '/actor/inbox',
+      receivedAt: new Date().toISOString(),
+      rawActivity: {}
+    };
+
+    await expect(serviceDefinition.actions.ingestProviderInboxEventInternal.call(service, ctx)).rejects.toMatchObject({
+      code: 400,
+      type: 'VALIDATION_ERROR'
+    });
+    expect(service._providerInboxEvents).toHaveLength(0);
+  });
+
+  test('ingestProviderInboxEventInternal serializes UndoFlag ingest and preserves case status policy', async () => {
+    const service = createService();
+    const ctx = createCtx();
+    const created = await service.createLocalModerationReport(ctx, 'https://pod.example/alice#me', makeReportInput());
+    const originalFlagId = 'https://remote.example/activities/flag-1';
+    service._moderationCases[0].canonicalEvent.sourceEventId = originalFlagId;
+    const originalPatchStoredModerationCase = service.patchStoredModerationCase.bind(service);
+    service.patchStoredModerationCase = jest.fn(async (...args) => {
+      await new Promise(resolve => setTimeout(resolve, 10));
+      return originalPatchStoredModerationCase(...args);
+    });
+
+    const event = {
+      eventType: 'UndoFlag',
+      activityId: 'https://remote.example/activities/undo-1',
+      actorUri: 'https://remote.example/users/bob',
+      originalFlagId,
+      envelopePath: '/users/provider/inbox',
+      receivedAt: new Date().toISOString(),
+      rawActivity: { type: 'Undo', object: originalFlagId }
+    };
+
+    const [first, second] = await Promise.all([
+      serviceDefinition.actions.ingestProviderInboxEventInternal.call(service, { ...ctx, params: event }),
+      serviceDefinition.actions.ingestProviderInboxEventInternal.call(service, { ...ctx, params: event })
+    ]);
+
+    expect([first.duplicate, second.duplicate].sort()).toEqual([false, true]);
+    expect(service._providerInboxEvents).toHaveLength(1);
+    expect(service.patchStoredModerationCase).toHaveBeenCalledTimes(1);
+    expect(service.findStoredModerationCaseById(created.case.id)).toEqual(
+      expect.objectContaining({
+        status: created.case.status,
+        notes: expect.arrayContaining([
+          expect.objectContaining({
+            source: 'activitypub-undo-flag',
+            originalFlagId
+          })
+        ])
       })
     );
   });

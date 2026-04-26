@@ -40,9 +40,9 @@ module.exports = {
   // You can set all ServiceBroker configurations here
   // See https://moleculer.services/docs/0.14/configuration.html
   middlewares: [
-    SkipOrphanBlankNodesCleanupMiddleware({ enabled: CONFIG.SKIP_ORPHAN_BLANK_NODE_CLEANUP }),
     CacherMiddleware(cacherConfig), // Set the cacher before the WebAcl middleware
     WebAclMiddleware({ baseUrl: CONFIG.BASE_URL, podProvider: true }),
+    SkipOrphanBlankNodesCleanupMiddleware({ enabled: CONFIG.SKIP_ORPHAN_BLANK_NODE_CLEANUP }),
     ObjectsWatcherMiddleware({ baseUrl: CONFIG.BASE_URL, podProvider: true, postWithoutRecipients: true }),
     LongFormTextMiddleware(),
     ContentWarningMiddleware(),

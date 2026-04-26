@@ -32,13 +32,21 @@ jobs:
           git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
           git config --global url."https://github.com/".insteadOf "git@github.com:"
 
+      - name: Normalize legacy SSH Git URLs in lockfile
+        run: |
+          if [ -f yarn.lock ]; then
+            sed -i 's#ssh://git@github.com/#https://github.com/#g' yarn.lock
+            sed -i 's#git+ssh://git@github.com/#git+https://github.com/#g' yarn.lock
+            sed -i 's#git@github.com:#https://github.com/#g' yarn.lock
+          fi
+
       - name: Install dependencies
         run: yarn install
 
       - name: Report lockfile drift
         run: |
           if ! git diff --quiet -- yarn.lock; then
-            echo '::warning file=pod-provider/backend/yarn.lock::yarn.lock is out of sync with package.json. Run `cd pod-provider/backend && yarn install`, then commit yarn.lock.'
+            echo '::warning file=pod-provider/backend/yarn.lock::yarn.lock is out of sync with package.json or contains legacy SSH Git URLs. Run `cd pod-provider/backend && yarn install`, ensure GitHub Git dependencies use HTTPS, then commit yarn.lock.'
             git --no-pager diff -- yarn.lock | sed -n '1,240p'
           fi
 

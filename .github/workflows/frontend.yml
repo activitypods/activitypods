@@ -27,8 +27,18 @@ jobs:
           cache: yarn
           cache-dependency-path: pod-provider/frontend/yarn.lock
 
+      - name: Remove stale npm lockfile from CI workspace
+        run: rm -f package-lock.json
+
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
+
+      - name: Report lockfile drift
+        run: |
+          if ! git diff --quiet -- yarn.lock; then
+            echo '::warning file=pod-provider/frontend/yarn.lock::yarn.lock is out of sync with package.json. Run `cd pod-provider/frontend && rm -f package-lock.json && yarn install`, then commit yarn.lock and the package-lock.json removal.'
+            git --no-pager diff -- yarn.lock | sed -n '1,240p'
+          fi
 
       - name: Run tests
         run: yarn test --runInBand

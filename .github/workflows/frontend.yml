@@ -1,0 +1,47 @@
+name: Frontend checks
+
+on:
+  pull_request:
+    paths:
+      - 'pod-provider/frontend/**'
+      - '.github/workflows/frontend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pod-provider/frontend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: pod-provider/frontend/yarn.lock
+
+      - name: Remove stale npm lockfile from CI workspace
+        run: rm -f package-lock.json
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Report lockfile drift
+        run: |
+          if ! git diff --quiet -- yarn.lock; then
+            echo '::warning file=pod-provider/frontend/yarn.lock::yarn.lock is out of sync with package.json. Run `cd pod-provider/frontend && rm -f package-lock.json && yarn install`, then commit yarn.lock and the package-lock.json removal.'
+            git --no-pager diff -- yarn.lock | sed -n '1,240p'
+          fi
+
+      - name: Run tests
+        run: yarn test --runInBand
+
+      - name: Build frontend
+        run: yarn build

@@ -17,10 +17,5 @@
     "astro": "^4.3.5",
     "sharp": "^0.33.5",
     "typescript": "^5.3.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "@astrojs/sitemap": "3.0.5"
-    }
   }
 }

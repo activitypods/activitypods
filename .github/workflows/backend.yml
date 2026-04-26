@@ -51,14 +51,15 @@ jobs:
             git --no-pager diff -- yarn.lock | sed -n '1,240p'
           fi
 
-      - name: Install Jest runner for backend unit tests
-        working-directory: tests
-        run: |
-          rm -rf node_modules
-          yarn add --dev --no-lockfile --ignore-scripts --non-interactive jest@^29.7.0 esbuild@^0.25.4 esbuild-jest@^0.5.0 @types/jest@^29.5.14
-
       - name: Run unit tests
-        run: yarn test:unit
+        working-directory: .
+        run: |
+          npm exec --yes \
+            --package=jest@29.7.0 \
+            --package=esbuild@0.25.4 \
+            --package=esbuild-jest@0.5.0 \
+            -- \
+            jest --testEnvironment=node --roots=pod-provider/backend/tests
 
       - name: Run ATProto signing smoke tests
         run: |

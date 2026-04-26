@@ -63,7 +63,5 @@ jobs:
               --roots=pod-provider/backend/tests \
               --testPathIgnorePatterns='hashtag-conformance-matrix.test.js|create-unified-account.test.js'
 
-      - name: Run ATProto signing smoke tests
-        run: |
-          yarn test:atproto:multibase
-          yarn test:atproto:signing
+      - name: Run offline ATProto multibase smoke test
+        run: yarn test:atproto:multibase

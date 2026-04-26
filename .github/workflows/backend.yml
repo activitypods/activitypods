@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'pod-provider/backend/**'
+      - 'tests/**'
       - '.github/workflows/backend.yml'
   workflow_dispatch:
 
@@ -25,14 +26,16 @@ jobs:
         with:
           node-version: 22
           cache: yarn
-          cache-dependency-path: pod-provider/backend/yarn.lock
+          cache-dependency-path: |
+            pod-provider/backend/yarn.lock
+            tests/yarn.lock
 
       - name: Enforce HTTPS for public Git dependencies
         run: |
           git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
           git config --global url."https://github.com/".insteadOf "git@github.com:"
 
-      - name: Normalize legacy SSH Git URLs in lockfile
+      - name: Normalize legacy SSH Git URLs in backend lockfile
         run: |
           if [ -f yarn.lock ]; then
             sed -i 's#ssh://git@github.com/#https://github.com/#g' yarn.lock
@@ -40,13 +43,34 @@ jobs:
             sed -i 's#git@github.com:#https://github.com/#g' yarn.lock
           fi
 
-      - name: Install dependencies
+      - name: Install backend dependencies
         run: yarn install
 
-      - name: Report lockfile drift
+      - name: Report backend lockfile drift
         run: |
           if ! git diff --quiet -- yarn.lock; then
             echo '::warning file=pod-provider/backend/yarn.lock::yarn.lock is out of sync with package.json or contains legacy SSH Git URLs. Run `cd pod-provider/backend && yarn install`, ensure GitHub Git dependencies use HTTPS, then commit yarn.lock.'
+            git --no-pager diff -- yarn.lock | sed -n '1,240p'
+          fi
+
+      - name: Normalize legacy SSH Git URLs in tests lockfile
+        working-directory: tests
+        run: |
+          if [ -f yarn.lock ]; then
+            sed -i 's#ssh://git@github.com/#https://github.com/#g' yarn.lock
+            sed -i 's#git+ssh://git@github.com/#git+https://github.com/#g' yarn.lock
+            sed -i 's#git@github.com:#https://github.com/#g' yarn.lock
+          fi
+
+      - name: Install test dependencies
+        working-directory: tests
+        run: yarn install
+
+      - name: Report tests lockfile drift
+        working-directory: tests
+        run: |
+          if ! git diff --quiet -- yarn.lock; then
+            echo '::warning file=tests/yarn.lock::tests/yarn.lock is out of sync with package.json or contains legacy SSH Git URLs. Run `cd tests && yarn install`, ensure GitHub Git dependencies use HTTPS, then commit yarn.lock.'
             git --no-pager diff -- yarn.lock | sed -n '1,240p'
           fi
 

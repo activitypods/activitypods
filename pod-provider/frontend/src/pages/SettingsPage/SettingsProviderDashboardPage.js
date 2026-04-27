@@ -8,6 +8,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import GavelIcon from '@mui/icons-material/Gavel';
 import MailIcon from '@mui/icons-material/Mail';
 import PublicIcon from '@mui/icons-material/Public';
+import SecurityIcon from '@mui/icons-material/Security';
 import TuneIcon from '@mui/icons-material/Tune';
 import HistoryIcon from '@mui/icons-material/History';
 import Header from '../../common/Header';
@@ -90,6 +91,12 @@ const SettingsProviderDashboardPage = () => {
             onClick={() => navigate('/settings/provider/moderation')}
             icon={<GavelIcon />}
             label="app.setting.provider_moderation"
+            actionIcon={<ArrowForwardIosIcon />}
+          />
+          <SettingsItem
+            onClick={() => navigate('/settings/provider/spam')}
+            icon={<SecurityIcon />}
+            label="app.setting.provider_spam_protection"
             actionIcon={<ArrowForwardIosIcon />}
           />
           <SettingsItem

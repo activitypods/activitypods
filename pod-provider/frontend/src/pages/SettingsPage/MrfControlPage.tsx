@@ -776,6 +776,7 @@ const MrfControlPage = () => {
                     onChange={e => setPriority(Number(e.target.value))}
                     inputProps={{ min: 0, max: 10000, step: 1 }}
                     sx={{ width: 140 }}
+                    helperText="Informational — execution order is managed by the filtering service"
                   />
                   <FormControlLabel
                     control={<Switch checked={stopOnMatch} onChange={e => setStopOnMatch(e.target.checked)} />}

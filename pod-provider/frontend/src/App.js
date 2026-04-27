@@ -51,6 +51,7 @@ import ProviderInvitationsPage from './pages/SettingsPage/ProviderInvitationsPag
 import ProviderPodsPage from './pages/SettingsPage/ProviderPodsPage';
 import ProviderAuditLogPage from './pages/SettingsPage/ProviderAuditLogPage';
 import ProviderCrossProtocolModerationPage from './pages/SettingsPage/ProviderCrossProtocolModerationPage';
+import ProviderSpamProtectionPage from './pages/SettingsPage/ProviderSpamProtectionPage';
 import OwnerModerationPage from './pages/SettingsPage/OwnerModerationPage';
 
 const queryClient = new QueryClient({
@@ -136,6 +137,7 @@ const App = () => (
             <Route path="provider/pods" element={<ProviderPodsPage />} />
             <Route path="provider/audit-log" element={<ProviderAuditLogPage />} />
             <Route path="provider/moderation" element={<ProviderCrossProtocolModerationPage />} />
+            <Route path="provider/spam" element={<ProviderSpamProtectionPage />} />
           </Route>
           <Route path="/group/:groupId">
             <Route path="settings">

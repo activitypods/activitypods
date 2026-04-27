@@ -1569,14 +1569,16 @@ const ModerationPage = () => {
                           )}
                         </Box>
                         <Stack direction="row" spacing={1} alignItems="center">
-                          <Button
-                            size="small"
-                            variant={item.enabled ? 'contained' : 'outlined'}
-                            onClick={() => toggleAtprotoLabeler(item, !item.enabled)}
-                            disabled={atprotoLabelerActionKey === actionKey}
-                          >
-                            {item.enabled ? 'Disable' : 'Enable'}
-                          </Button>
+                          {!item.immutable && (
+                            <Button
+                              size="small"
+                              variant={item.enabled ? 'contained' : 'outlined'}
+                              onClick={() => toggleAtprotoLabeler(item, !item.enabled)}
+                              disabled={atprotoLabelerActionKey === actionKey}
+                            >
+                              {item.enabled ? 'Disable' : 'Enable'}
+                            </Button>
+                          )}
                           <Button
                             size="small"
                             variant="text"

@@ -5,12 +5,18 @@ import {
   Box,
   Button,
   Checkbox,
+  Chip,
   CircularProgress,
   Divider,
   FormControl,
   FormControlLabel,
   FormHelperText,
+  IconButton,
   InputLabel,
+  List,
+  ListItem,
+  ListItemSecondaryAction,
+  ListItemText,
   MenuItem,
   Paper,
   Select,
@@ -20,6 +26,7 @@ import {
   Typography
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Header from '../../common/Header';
 import { dashboardApi } from './dashboardApi';
 
@@ -45,6 +52,16 @@ type ContentFingerprintConfig = {
   normalizeUrls: boolean;
   action: 'label' | 'filter' | 'reject';
   traceReasons: boolean;
+};
+
+type DomainReputationConfig = {
+  action: 'label' | 'filter' | 'reject';
+  traceReasons: boolean;
+};
+
+type DomainEntry = {
+  domain: string;
+  subdomainMatch: boolean;
 };
 
 type ModuleState<T> = {
@@ -76,6 +93,11 @@ const CFP_DEFAULTS: ContentFingerprintConfig = {
   traceReasons: true
 };
 
+const DR_DEFAULTS: DomainReputationConfig = {
+  action: 'filter',
+  traceReasons: true
+};
+
 const MODE_LABELS: Record<MRFMode, string> = {
   disabled: 'Disabled',
   'dry-run': 'Dry run (observe only)',
@@ -88,13 +110,7 @@ const clampInt = (value: string | number, min: number, max: number): number => {
   return Math.max(min, Math.min(max, n));
 };
 
-const ModeSelect = ({
-  value,
-  onChange
-}: {
-  value: MRFMode;
-  onChange: (m: MRFMode) => void;
-}) => (
+const ModeSelect = ({ value, onChange }: { value: MRFMode; onChange: (m: MRFMode) => void }) => (
   <FormControl size="small" sx={{ minWidth: 200 }}>
     <InputLabel>Mode</InputLabel>
     <Select value={value} label="Mode" onChange={e => onChange(e.target.value as MRFMode)}>
@@ -133,13 +149,46 @@ const ProviderSpamProtectionPage = () => {
   const [cfpError, setCfpError] = useState<string | null>(null);
   const [cfpConfirmEnforce, setCfpConfirmEnforce] = useState(false);
 
+  // ── Domain Reputation state ───────────────────────────────────────────────
+  const [drEnabled, setDrEnabled] = useState(false);
+  const [drMode, setDrMode] = useState<MRFMode>('dry-run');
+  const [drRevision, setDrRevision] = useState(0);
+  const [drConfig, setDrConfig] = useState<DomainReputationConfig>({ ...DR_DEFAULTS });
+  const [drSaving, setDrSaving] = useState(false);
+  const [drSaved, setDrSaved] = useState(false);
+  const [drError, setDrError] = useState<string | null>(null);
+
+  // Domain list
+  const [domainEntries, setDomainEntries] = useState<DomainEntry[]>([]);
+  const [domainListLoading, setDomainListLoading] = useState(false);
+  const [domainListError, setDomainListError] = useState<string | null>(null);
+  const [newDomain, setNewDomain] = useState('');
+  const [newDomainSubMatch, setNewDomainSubMatch] = useState(false);
+  const [addingDomain, setAddingDomain] = useState(false);
+  const [addDomainError, setAddDomainError] = useState<string | null>(null);
+
+  const loadDomains = useCallback(async () => {
+    setDomainListLoading(true);
+    setDomainListError(null);
+    try {
+      const res = await dashboardApi.listSpamDomains();
+      const data = res as { domains?: DomainEntry[] } | null;
+      setDomainEntries(data?.domains ?? []);
+    } catch (err: unknown) {
+      setDomainListError(err instanceof Error ? err.message : 'Failed to load domain blocklist.');
+    } finally {
+      setDomainListLoading(false);
+    }
+  }, []);
+
   const loadModules = useCallback(async () => {
     setLoading(true);
     setGlobalError(null);
     try {
-      const [arRes, cfpRes] = await Promise.all([
+      const [arRes, cfpRes, drRes] = await Promise.all([
         dashboardApi.getMrfModule('actor-reputation'),
-        dashboardApi.getMrfModule('content-fingerprint')
+        dashboardApi.getMrfModule('content-fingerprint'),
+        dashboardApi.getMrfModule('domain-reputation')
       ]);
 
       const ar = arRes?.data as ModuleState<ActorReputationConfig> | null;
@@ -157,12 +206,18 @@ const ProviderSpamProtectionPage = () => {
         setCfpRevision(cfp.revision ?? 0);
         setCfpConfig({ ...CFP_DEFAULTS, ...(cfp.config ?? {}) });
       }
+
+      const dr = drRes?.data as ModuleState<DomainReputationConfig> | null;
+      if (dr) {
+        setDrEnabled(dr.enabled ?? false);
+        setDrMode(dr.mode ?? 'dry-run');
+        setDrRevision(dr.revision ?? 0);
+        setDrConfig({ ...DR_DEFAULTS, ...(dr.config ?? {}) });
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to load spam protection settings.';
       setGlobalError(
-        msg.includes('not configured')
-          ? 'Spam protection is not available — connect the filtering service first.'
-          : msg
+        msg.includes('not configured') ? 'Spam protection is not available — connect the filtering service first.' : msg
       );
     } finally {
       setLoading(false);
@@ -171,22 +226,22 @@ const ProviderSpamProtectionPage = () => {
 
   useEffect(() => {
     loadModules();
-  }, [loadModules]);
+    loadDomains();
+  }, [loadModules, loadDomains]);
 
-  const setArField = <K extends keyof ActorReputationConfig>(
-    key: K,
-    value: ActorReputationConfig[K]
-  ) => {
+  const setArField = <K extends keyof ActorReputationConfig>(key: K, value: ActorReputationConfig[K]) => {
     setArSaved(false);
     setArConfig(prev => ({ ...prev, [key]: value }));
   };
 
-  const setcfpField = <K extends keyof ContentFingerprintConfig>(
-    key: K,
-    value: ContentFingerprintConfig[K]
-  ) => {
+  const setcfpField = <K extends keyof ContentFingerprintConfig>(key: K, value: ContentFingerprintConfig[K]) => {
     setCfpSaved(false);
     setCfpConfig(prev => ({ ...prev, [key]: value }));
+  };
+
+  const setDrField = <K extends keyof DomainReputationConfig>(key: K, value: DomainReputationConfig[K]) => {
+    setDrSaved(false);
+    setDrConfig(prev => ({ ...prev, [key]: value }));
   };
 
   const saveActorReputation = async () => {
@@ -227,6 +282,51 @@ const ProviderSpamProtectionPage = () => {
     }
   };
 
+  const saveDomainReputation = async () => {
+    setDrSaving(true);
+    setDrSaved(false);
+    setDrError(null);
+    try {
+      await dashboardApi.patchMrfModule('domain-reputation', {
+        enabled: drEnabled,
+        mode: drMode,
+        config: drConfig
+      });
+      setDrSaved(true);
+      setDrRevision(r => r + 1);
+    } catch (err: unknown) {
+      setDrError(err instanceof Error ? err.message : 'Save failed.');
+    } finally {
+      setDrSaving(false);
+    }
+  };
+
+  const handleAddDomain = async () => {
+    const domain = newDomain.trim().toLowerCase();
+    if (!domain) return;
+    setAddingDomain(true);
+    setAddDomainError(null);
+    try {
+      await dashboardApi.addSpamDomain({ domain, subdomainMatch: newDomainSubMatch });
+      setNewDomain('');
+      setNewDomainSubMatch(false);
+      await loadDomains();
+    } catch (err: unknown) {
+      setAddDomainError(err instanceof Error ? err.message : 'Failed to add domain.');
+    } finally {
+      setAddingDomain(false);
+    }
+  };
+
+  const handleRemoveDomain = async (entry: DomainEntry) => {
+    try {
+      await dashboardApi.removeSpamDomain({ domain: entry.domain, subdomainMatch: entry.subdomainMatch });
+      await loadDomains();
+    } catch (err: unknown) {
+      setDomainListError(err instanceof Error ? err.message : 'Failed to remove domain.');
+    }
+  };
+
   const arEnforceRisky = arMode === 'enforce' && arConfig.action === 'reject';
   const cfpEnforceRisky = cfpMode === 'enforce' && cfpConfig.action === 'reject';
 
@@ -257,8 +357,8 @@ const ProviderSpamProtectionPage = () => {
         Spam Protection
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Two complementary detection layers. Run both in dry-run mode first and review MRF traces
-        before enabling enforcement on either.
+        Three complementary detection layers. Run each in dry-run mode first and review MRF traces before enabling
+        enforcement.
       </Typography>
 
       {globalError && (
@@ -273,9 +373,8 @@ const ProviderSpamProtectionPage = () => {
           Actor Reputation
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Detects spam from new or unsocialised accounts: excessive links, hashtag floods, and
-          mention storms (AntiLinkSpam + HellThread patterns). Multiple signals must fire together
-          before action is taken.
+          Detects spam from new or unsocialised accounts: excessive links, hashtag floods, and mention storms
+          (AntiLinkSpam + HellThread patterns). Multiple signals must fire together before action is taken.
         </Typography>
 
         {arError && (
@@ -294,7 +393,13 @@ const ProviderSpamProtectionPage = () => {
             control={<Switch checked={arEnabled} onChange={e => setArEnabled(e.target.checked)} />}
             label="Enabled"
           />
-          <ModeSelect value={arMode} onChange={m => { setArMode(m); setArConfirmEnforce(false); }} />
+          <ModeSelect
+            value={arMode}
+            onChange={m => {
+              setArMode(m);
+              setArConfirmEnforce(false);
+            }}
+          />
         </Stack>
 
         <Typography variant="subtitle2" sx={{ mb: 1, mt: 1 }}>
@@ -335,10 +440,7 @@ const ProviderSpamProtectionPage = () => {
             />
             <FormControlLabel
               control={
-                <Switch
-                  checked={arConfig.requireBio}
-                  onChange={e => setArField('requireBio', e.target.checked)}
-                />
+                <Switch checked={arConfig.requireBio} onChange={e => setArField('requireBio', e.target.checked)} />
               }
               label="Require bio"
             />
@@ -410,10 +512,7 @@ const ProviderSpamProtectionPage = () => {
           </FormControl>
           <FormControlLabel
             control={
-              <Switch
-                checked={arConfig.traceReasons}
-                onChange={e => setArField('traceReasons', e.target.checked)}
-              />
+              <Switch checked={arConfig.traceReasons} onChange={e => setArField('traceReasons', e.target.checked)} />
             }
             label="Trace reasons"
             sx={{ mt: 0.5 }}
@@ -461,9 +560,9 @@ const ProviderSpamProtectionPage = () => {
           Content Fingerprint
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Detects copy-paste spam by fingerprinting post content and tracking how many distinct
-          accounts send the same text within a rolling time window. Effective against coordinated
-          spam campaigns that bypass actor-level checks.
+          Detects copy-paste spam by fingerprinting post content and tracking how many distinct accounts send the same
+          text within a rolling time window. Effective against coordinated spam campaigns that bypass actor-level
+          checks.
         </Typography>
 
         {cfpError && (
@@ -479,9 +578,7 @@ const ProviderSpamProtectionPage = () => {
 
         <Stack direction="row" spacing={3} alignItems="center" sx={{ mb: 2 }}>
           <FormControlLabel
-            control={
-              <Switch checked={cfpEnabled} onChange={e => setCfpEnabled(e.target.checked)} />
-            }
+            control={<Switch checked={cfpEnabled} onChange={e => setCfpEnabled(e.target.checked)} />}
             label="Enabled"
           />
           <ModeSelect
@@ -538,10 +635,7 @@ const ProviderSpamProtectionPage = () => {
           />
           <FormControlLabel
             control={
-              <Switch
-                checked={cfpConfig.traceReasons}
-                onChange={e => setcfpField('traceReasons', e.target.checked)}
-              />
+              <Switch checked={cfpConfig.traceReasons} onChange={e => setcfpField('traceReasons', e.target.checked)} />
             }
             label="Trace reasons"
           />
@@ -553,9 +647,7 @@ const ProviderSpamProtectionPage = () => {
             <Select
               value={cfpConfig.action}
               label="Action"
-              onChange={e =>
-                setcfpField('action', e.target.value as ContentFingerprintConfig['action'])
-              }
+              onChange={e => setcfpField('action', e.target.value as ContentFingerprintConfig['action'])}
             >
               <MenuItem value="label">Label</MenuItem>
               <MenuItem value="filter">Filter</MenuItem>
@@ -567,8 +659,7 @@ const ProviderSpamProtectionPage = () => {
 
         {cfpEnforceRisky && (
           <Alert severity="warning" sx={{ mb: 2 }}>
-            Reject in enforce mode — cross-posted legitimate content may be caught. Ensure
-            maxDistinctActors ≥ 3.
+            Reject in enforce mode — cross-posted legitimate content may be caught. Ensure maxDistinctActors ≥ 3.
             <Box sx={{ mt: 1 }}>
               <FormControlLabel
                 control={
@@ -599,6 +690,170 @@ const ProviderSpamProtectionPage = () => {
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
           Module: content-fingerprint · Revision: {cfpRevision}
         </Typography>
+      </Paper>
+
+      {/* ── Domain Reputation ─────────────────────────────────────────────── */}
+      <Paper variant="outlined" sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+        <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>
+          Domain Reputation
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Blocks activities containing links to domains on your blocklist. Supports exact matches and wildcard
+          subdomain matches. Effective for known spam infrastructure and abusive link-shorteners.
+        </Typography>
+
+        {drError && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setDrError(null)}>
+            {drError}
+          </Alert>
+        )}
+        {drSaved && (
+          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setDrSaved(false)}>
+            Domain reputation settings saved.
+          </Alert>
+        )}
+
+        <Stack direction="row" spacing={3} alignItems="center" sx={{ mb: 2 }}>
+          <FormControlLabel
+            control={<Switch checked={drEnabled} onChange={e => setDrEnabled(e.target.checked)} />}
+            label="Enabled"
+          />
+          <ModeSelect value={drMode} onChange={setDrMode} />
+        </Stack>
+
+        <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ mb: 2 }}>
+          <FormControl size="small" sx={{ width: 240 }}>
+            <InputLabel>Action</InputLabel>
+            <Select
+              value={drConfig.action}
+              label="Action"
+              onChange={e => setDrField('action', e.target.value as DomainReputationConfig['action'])}
+            >
+              <MenuItem value="label">Label</MenuItem>
+              <MenuItem value="filter">Filter</MenuItem>
+              <MenuItem value="reject">Reject</MenuItem>
+            </Select>
+            <FormHelperText>Applied when a blocked domain appears in content</FormHelperText>
+          </FormControl>
+          <FormControlLabel
+            control={
+              <Switch checked={drConfig.traceReasons} onChange={e => setDrField('traceReasons', e.target.checked)} />
+            }
+            label="Trace reasons"
+            sx={{ mt: 0.5 }}
+          />
+        </Stack>
+
+        <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+          <Button variant="contained" onClick={saveDomainReputation} disabled={drSaving}>
+            {drSaving ? <CircularProgress size={20} /> : 'Save'}
+          </Button>
+          <Button variant="outlined" onClick={loadModules} disabled={drSaving || loading}>
+            Reset
+          </Button>
+        </Stack>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+          Module: domain-reputation · Revision: {drRevision}
+        </Typography>
+
+        <Divider sx={{ mb: 2 }} />
+
+        {/* Domain blocklist management */}
+        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+          Blocked domain list
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Exact match blocks only that hostname. Subdomain match also blocks all subdomains (e.g. adding
+          &quot;example.com&quot; with subdomain match will block &quot;sub.example.com&quot; too).
+        </Typography>
+
+        {domainListError && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setDomainListError(null)}>
+            {domainListError}
+          </Alert>
+        )}
+
+        {/* Add domain form */}
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+          <TextField
+            label="Domain"
+            placeholder="e.g. spam.example.com"
+            size="small"
+            value={newDomain}
+            onChange={e => {
+              setNewDomain(e.target.value);
+              setAddDomainError(null);
+            }}
+            onKeyDown={e => { if (e.key === 'Enter') handleAddDomain(); }}
+            error={!!addDomainError}
+            helperText={addDomainError ?? ''}
+            sx={{ width: 280 }}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={newDomainSubMatch}
+                onChange={e => setNewDomainSubMatch(e.target.checked)}
+              />
+            }
+            label="Include subdomains"
+            sx={{ whiteSpace: 'nowrap' }}
+          />
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleAddDomain}
+            disabled={addingDomain || !newDomain.trim()}
+          >
+            {addingDomain ? <CircularProgress size={16} /> : 'Add'}
+          </Button>
+        </Stack>
+
+        {/* Domain list */}
+        {domainListLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+            <CircularProgress size={24} />
+          </Box>
+        ) : domainEntries.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
+            No domains blocked yet.
+          </Typography>
+        ) : (
+          <List dense disablePadding>
+            {domainEntries.map(entry => (
+              <ListItem
+                key={`${entry.domain}-${entry.subdomainMatch}`}
+                disableGutters
+                divider
+                sx={{ py: 0.5 }}
+              >
+                <ListItemText
+                  primary={
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography variant="body2" component="span" sx={{ fontFamily: 'monospace' }}>
+                        {entry.domain}
+                      </Typography>
+                      {entry.subdomainMatch && (
+                        <Chip label="+ subdomains" size="small" variant="outlined" color="warning" />
+                      )}
+                    </Stack>
+                  }
+                />
+                <ListItemSecondaryAction>
+                  <IconButton
+                    edge="end"
+                    size="small"
+                    aria-label={`Remove ${entry.domain}`}
+                    onClick={() => handleRemoveDomain(entry)}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </ListItemSecondaryAction>
+              </ListItem>
+            ))}
+          </List>
+        )}
       </Paper>
 
       <Divider sx={{ mb: 2 }} />

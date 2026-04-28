@@ -23,6 +23,7 @@
     "proof:secure-dataset": "node scripts/proof-secure-dataset-provisioning.js",
     "proof:identity-projection": "node scripts/proof-internal-identity-projection.js",
     "proof:identity-changes": "node scripts/proof-internal-identity-changes.js",
+    "proof:provider-inbox-events:dashboard": "node scripts/proof-provider-inbox-events-dashboard.js",
     "proof:oauth:metadata": "node scripts/proof-oauth-metadata.js",
     "proof:oauth:par": "node scripts/proof-oauth-par.js",
     "proof:oauth:managed-login": "node scripts/proof-oauth-managed-login.js",

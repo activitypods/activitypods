@@ -197,6 +197,7 @@ module.exports = {
         `http://${domain}/.well-known/webfinger?resource=${encodeURIComponent(identifier)}`
       ];
 
+      const errors = [];
       for (const url of candidates) {
         try {
           const response = await fetch(url, {
@@ -209,8 +210,11 @@ module.exports = {
           const href = this.extractActivityPubHref(body);
           if (href) return href;
         } catch (e) {
-          this.logger.debug(`FEP-4adb webfinger request failed (${url}): ${e.message}`);
+          errors.push(`${url}: ${e.message}`);
         }
+      }
+      if (errors.length > 0) {
+        this.logger.warn(`FEP-4adb webfinger lookup failed for ${identifier} at ${domain}. Tried: ${errors.join('; ')}`);
       }
 
       if (accountMatch) {

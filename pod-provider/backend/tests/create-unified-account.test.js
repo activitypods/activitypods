@@ -82,6 +82,18 @@ describe('unified-account service', () => {
           };
           bindingStore[ctx.params.canonicalAccountId] = rec;
           return rec;
+        },
+        upsertRepoBootstrap: async ctx => {
+          const existing = bindingStore[ctx.params.canonicalAccountId];
+          if (!existing) throw new Error("IDENTITY_BINDING_NOT_FOUND");
+          const updated = {
+            ...existing,
+            repoInitialized: ctx.params.repoInitialized,
+            repoRootCid: ctx.params.rootCid,
+            repoRev: ctx.params.rev
+          };
+          bindingStore[ctx.params.canonicalAccountId] = updated;
+          return updated;
         }
       }
     });

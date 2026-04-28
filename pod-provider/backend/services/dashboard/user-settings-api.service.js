@@ -164,6 +164,11 @@ module.exports = {
     blueskyDefaultLabelerDid: (process.env.BLUESKY_DEFAULT_LABELER_DID || 'did:plc:ar7c4by46qjdydhdevvrndac').trim(),
     blueskyDefaultLabelerHandle: (process.env.BLUESKY_DEFAULT_LABELER_HANDLE || 'moderation.bsky.app').trim(),
     blueskyDefaultLabelerName: (process.env.BLUESKY_DEFAULT_LABELER_NAME || 'Bluesky Moderation Service').trim(),
+    // The Bluesky Moderation Service is the pod provider's primary safety layer.
+    // It provides CSAM detection, spam filtering, and legal-risk content screening
+    // that would otherwise require expensive independent infrastructure.  Disabling
+    // it (BLUESKY_DEFAULT_LABELER_ENABLED=false) removes this protection entirely —
+    // only do so if you have an equivalent alternative safety provider in place.
     blueskyDefaultLabelerEnabled: process.env.BLUESKY_DEFAULT_LABELER_ENABLED !== 'false',
     pdqHashServiceBaseUrl: (process.env.PDQ_HASH_SERVICE_BASE_URL || '').trim(),
     pdqHashServiceBearerToken: process.env.PDQ_HASH_SERVICE_BEARER_TOKEN || '',
@@ -251,6 +256,10 @@ module.exports = {
           'POST /mrf/simulations': 'user-settings-api.mrfSimulationCreate',
           'GET /mrf/simulations/:jobId': 'user-settings-api.mrfSimulationItem',
           'GET /mrf/metrics': 'user-settings-api.mrfMetrics',
+          // Spam domain reputation blocklist
+          'GET /spam/domains': 'user-settings-api.spamDomainList',
+          'POST /spam/domains': 'user-settings-api.spamDomainAdd',
+          'DELETE /spam/domains': 'user-settings-api.spamDomainRemove',
           // Provider-only platform management routes
           'GET /provider/stats': 'user-settings-api.providerStats',
           'GET /provider/pods': 'user-settings-api.providerListPods',
@@ -265,6 +274,7 @@ module.exports = {
           'GET /provider/moderation/decisions': 'user-settings-api.listModerationDecisions',
           'DELETE /provider/moderation/decisions/:id': 'user-settings-api.revokeModerationDecision',
           'GET /provider/moderation/cases': 'user-settings-api.listModerationCases',
+          'PATCH /provider/moderation/cases/:id': 'user-settings-api.updateModerationCaseStatus',
           'POST /provider/moderation/cases/:id/forwarding/retry': 'user-settings-api.retryModerationCaseForwarding',
           'GET /provider/moderation/inbox-events': 'user-settings-api.listProviderInboxEvents',
           'GET /provider/moderation/labels': 'user-settings-api.listAtLabels',
@@ -496,6 +506,38 @@ module.exports = {
         method: 'GET',
         path,
         permission: 'provider:read'
+      });
+    },
+
+    // ─── Spam domain reputation blocklist ────────────────────────────────────
+
+    async spamDomainList(ctx) {
+      return this.mrfProxy(ctx, {
+        method: 'GET',
+        path: '/internal/admin/spam/domains',
+        permission: 'provider:read'
+      });
+    },
+
+    async spamDomainAdd(ctx) {
+      const data = ctx.params.data || ctx.params;
+      const { domain, subdomainMatch } = data;
+      return this.mrfProxy(ctx, {
+        method: 'POST',
+        path: '/internal/admin/spam/domains',
+        permission: 'provider:write',
+        body: { domain, subdomainMatch: subdomainMatch === true }
+      });
+    },
+
+    async spamDomainRemove(ctx) {
+      const data = ctx.params.data || ctx.params;
+      const { domain, subdomainMatch } = data;
+      return this.mrfProxy(ctx, {
+        method: 'DELETE',
+        path: '/internal/admin/spam/domains',
+        permission: 'provider:write',
+        body: { domain, subdomainMatch: subdomainMatch === true }
       });
     },
 
@@ -872,6 +914,32 @@ module.exports = {
 
       const query = this.pickModerationQuery(ctx.meta.$query || {});
       return this.buildModerationCaseCachePage(query);
+    },
+
+    async updateModerationCaseStatus(ctx) {
+      const webId = this.requireWebId(ctx);
+      this.requireProvider(webId);
+
+      const id = this.sanitizePathSegment(ctx.params.id, 'id');
+      const input = this.requirePlainObject(ctx.params?.data || ctx.params || {}, 'data');
+      const VALID_STATUS = new Set(['open', 'dismissed']);
+      if (typeof input.status !== 'string' || !VALID_STATUS.has(input.status)) {
+        throw new MoleculerError('status must be open or dismissed', 400, 'VALIDATION_ERROR');
+      }
+
+      const upstream = await this.mrfProxy(ctx, {
+        method: 'PATCH',
+        path: `/internal/admin/moderation/cases/${encodeURIComponent(id)}`,
+        permission: 'provider:write',
+        body: { status: input.status }
+      });
+
+      if (upstream?.case) {
+        await this.patchStoredModerationCase(id, { status: input.status });
+        this.recordAuditEvent(webId, 'moderation_case_status_update', { caseId: id, status: input.status });
+      }
+
+      return upstream;
     },
 
     async retryModerationCaseForwarding(ctx) {
@@ -5511,7 +5579,7 @@ module.exports = {
         weight: 1,
         scopes: ['label:content', 'label:actor', 'filter:content', 'filter:actor'],
         name: this.settings.blueskyDefaultLabelerName,
-        description: 'Default Bluesky-managed moderation labeler for baseline safety and legal risk reduction.',
+        description: 'Primary pod-provider safety layer: CSAM detection, spam filtering, and legal-risk content screening via the Bluesky Moderation Service. Required for responsible operation.',
         priority: 100,
         schemaVersion: 1
       });
@@ -5700,7 +5768,7 @@ module.exports = {
           source: this.settings.blueskyDefaultLabelerDid,
           sourceType: 'atproto-labeler',
           name: this.settings.blueskyDefaultLabelerName,
-          description: 'Default Bluesky-managed moderation labeler for baseline safety and legal risk reduction.',
+          description: 'Primary pod-provider safety layer: CSAM detection, spam filtering, and legal-risk content screening via the Bluesky Moderation Service. Required for responsible operation.',
           scopes: defaultScopes,
           enabled: true,
           installed: false,

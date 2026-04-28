@@ -603,6 +603,14 @@ const TrustSourcesPage = () => {
           </Stack>
         </Box>
 
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          <strong>Bluesky Moderation Service is the pod provider's required primary safety layer.</strong> It provides
+          CSAM detection, spam filtering, and legal-risk content screening that would otherwise require expensive
+          independent infrastructure. The trust evaluator runs in enforce mode by default so these signals actively
+          reject harmful content. Do not disable the Bluesky Moderation Service entry or switch to dry-run mode in
+          production unless you have an equivalent alternative safety provider in place.
+        </Alert>
+
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -641,7 +649,13 @@ const TrustSourcesPage = () => {
                         label={SOURCE_TYPE_LABELS[item.sourceType] || item.sourceType}
                       />
                       {immutableDefault && (
-                        <Chip size="small" color="warning" variant="outlined" label="Default (immutable)" />
+                        <Chip
+                          size="small"
+                          color="error"
+                          variant="outlined"
+                          label="Required safety layer (immutable)"
+                          title="This is the pod provider's primary CSAM, spam, and legal-risk screening service and cannot be removed."
+                        />
                       )}
                       <Chip
                         size="small"

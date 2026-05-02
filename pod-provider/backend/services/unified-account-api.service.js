@@ -93,12 +93,17 @@ module.exports = {
         }
 
         const statusCode = Number.isFinite(Number(e.code)) ? Number(e.code) : 500;
-        throw new MoleculerError(e.message || 'Unable to create account', statusCode, e.type || 'UNIFIED_ACCOUNT_CREATE_FAILED', {
-          phase: e.data?.phase,
-          capabilityId: e.data?.capabilityId,
-          reasonCode: e.data?.reasonCode,
-          retryable: e.data?.retryable
-        });
+        throw new MoleculerError(
+          e.message || 'Unable to create account',
+          statusCode,
+          e.type || 'UNIFIED_ACCOUNT_CREATE_FAILED',
+          {
+            phase: e.data?.phase,
+            capabilityId: e.data?.capabilityId,
+            reasonCode: e.data?.reasonCode,
+            retryable: e.data?.retryable
+          }
+        );
       }
     }
   },
@@ -130,9 +135,7 @@ module.exports = {
             ...(accountParams.atproto || {}),
             enabled: atprotoConfig.enabled === true,
             requestedHandle:
-              atprotoConfig.handle ||
-              atprotoConfig.requestedHandle ||
-              accountParams.atproto?.requestedHandle,
+              atprotoConfig.handle || atprotoConfig.requestedHandle || accountParams.atproto?.requestedHandle,
             didMethod: this.normalizeDidMethod(atprotoConfig.didMethod || accountParams.atproto?.didMethod),
             force: atprotoConfig.force ?? accountParams.atproto?.force
           };
@@ -173,12 +176,14 @@ module.exports = {
     fingerprintAccountCreateRequest(input) {
       return crypto
         .createHash('sha256')
-        .update(this.stableStringify({
-          appClientId: input.appClientId || null,
-          redirectUri: input.redirectUri || null,
-          account: input.accountParams,
-          requestedProtocols: input.requestedProtocols
-        }))
+        .update(
+          this.stableStringify({
+            appClientId: input.appClientId || null,
+            redirectUri: input.redirectUri || null,
+            account: input.accountParams,
+            requestedProtocols: input.requestedProtocols
+          })
+        )
         .digest('hex');
     },
 

@@ -91,8 +91,8 @@ module.exports = {
   dependencies: ['triplestore', 'auth.account', 'activitypub.actor'],
 
   settings: {
-    minPoolSize: (n => n > 0 ? n : DEFAULT_MIN_POOL_SIZE)(Number(process.env.MLS_KEYPACKAGE_MIN_POOL)),
-    ttlDays: (n => n > 0 ? n : DEFAULT_TTL_DAYS)(Number(process.env.MLS_KEYPACKAGE_TTL_DAYS)),
+    minPoolSize: (n => (n > 0 ? n : DEFAULT_MIN_POOL_SIZE))(Number(process.env.MLS_KEYPACKAGE_MIN_POOL)),
+    ttlDays: (n => (n > 0 ? n : DEFAULT_TTL_DAYS))(Number(process.env.MLS_KEYPACKAGE_TTL_DAYS))
   },
 
   created() {
@@ -110,7 +110,7 @@ module.exports = {
     } catch (err) {
       // Non-fatal: will retry on first action call
       this.logger.warn('[mls.keys] ts-mls pre-load failed; will retry on demand', {
-        error: err instanceof Error ? err.message : String(err),
+        error: err instanceof Error ? err.message : String(err)
       });
     }
 
@@ -153,17 +153,21 @@ module.exports = {
     },
 
     async triQuery(ctx, query, dataset) {
-      return retryWithBackoff(
-        () => ctx.call('triplestore.query', { query, dataset, webId: 'system' }),
-        { maxRetries: 3, baseDelayMs: 60, maxDelayMs: 1200, retryIf: isRetryable },
-      );
+      return retryWithBackoff(() => ctx.call('triplestore.query', { query, dataset, webId: 'system' }), {
+        maxRetries: 3,
+        baseDelayMs: 60,
+        maxDelayMs: 1200,
+        retryIf: isRetryable
+      });
     },
 
     async triUpdate(ctx, query, dataset) {
-      return retryWithBackoff(
-        () => ctx.call('triplestore.update', { query, dataset, webId: 'system' }),
-        { maxRetries: 3, baseDelayMs: 60, maxDelayMs: 1200, retryIf: isRetryable },
-      );
+      return retryWithBackoff(() => ctx.call('triplestore.update', { query, dataset, webId: 'system' }), {
+        maxRetries: 3,
+        baseDelayMs: 60,
+        maxDelayMs: 1200,
+        retryIf: isRetryable
+      });
     },
 
     requireActorUri(actorUri) {
@@ -192,20 +196,21 @@ module.exports = {
         const ttlDays = this.settings.ttlDays || DEFAULT_TTL_DAYS;
         const cutoff = new Date(Date.now() - ttlDays * 24 * 60 * 60 * 1000).toISOString();
         await retryWithBackoff(
-          () => this.broker.call('triplestore.update', {
-            query: sweepQuery(cutoff),
-            dataset: 'users',
-            webId: 'system',
-          }),
-          { maxRetries: 3, baseDelayMs: 60, maxDelayMs: 1200, retryIf: isRetryable },
+          () =>
+            this.broker.call('triplestore.update', {
+              query: sweepQuery(cutoff),
+              dataset: 'users',
+              webId: 'system'
+            }),
+          { maxRetries: 3, baseDelayMs: 60, maxDelayMs: 1200, retryIf: isRetryable }
         );
         this.logger.info('[mls.keys] TTL sweep completed', { ttlDays, cutoff });
       } catch (err) {
         this.logger.warn('[mls.keys] TTL sweep failed', {
-          error: err instanceof Error ? err.message : String(err),
+          error: err instanceof Error ? err.message : String(err)
         });
       }
-    },
+    }
   },
 
   actions: {
@@ -218,18 +223,13 @@ module.exports = {
       const { actorUri } = ctx.params;
       this.requireActorUri(actorUri);
 
-      const {
-        generateKeyPackage,
-        defaultCapabilities,
-        defaultLifetime,
-        encodeMlsMessage,
-      } = await this.getMlsModule();
+      const { generateKeyPackage, defaultCapabilities, defaultLifetime, encodeMlsMessage } = await this.getMlsModule();
       const cs = await this.getCsImpl();
 
       // Basic credential: actor URI encoded as identity bytes per MLS spec
       const credential = {
         credentialType: 'basic',
-        identity: Buffer.from(actorUri),
+        identity: Buffer.from(actorUri)
       };
 
       const kp = await generateKeyPackage(credential, defaultCapabilities(), defaultLifetime, [], cs);
@@ -248,7 +248,9 @@ module.exports = {
       const hpkePrivKey = Buffer.from(kp.privatePackage.hpkePrivateKey).toString('base64');
       const sigPrivKey = Buffer.from(kp.privatePackage.signaturePrivateKey).toString('base64');
 
-      await this.triUpdate(ctx, `
+      await this.triUpdate(
+        ctx,
+        `
         PREFIX mls: <${MLS_NS}>
         PREFIX dcterms: <${DCTERMS_NS}>
         INSERT DATA {
@@ -265,7 +267,9 @@ module.exports = {
               dcterms:created ${sparqlStr(now)} .
           }
         }
-      `, dataset);
+      `,
+        dataset
+      );
 
       this.logger.debug('[mls.keys] key package generated', { actorUri, id });
       return { id, cipherSuite: DEFAULT_CIPHERSUITE, publicBytes };
@@ -301,7 +305,9 @@ module.exports = {
       const nodeUri = keyPackageNodeUri(actorUri, id);
 
       // Client-submitted packages have no private key fields
-      await this.triUpdate(ctx, `
+      await this.triUpdate(
+        ctx,
+        `
         PREFIX mls: <${MLS_NS}>
         PREFIX dcterms: <${DCTERMS_NS}>
         INSERT DATA {
@@ -316,7 +322,9 @@ module.exports = {
               dcterms:created ${sparqlStr(now)} .
           }
         }
-      `, dataset);
+      `,
+        dataset
+      );
 
       this.logger.debug('[mls.keys] client key package submitted', { actorUri, id, cipherSuite });
       return { id, cipherSuite, publicBytes };
@@ -333,7 +341,9 @@ module.exports = {
       const dataset = getDatasetFromUri(actorUri);
       const graph = keyPackageGraph(actorUri);
 
-      const rows = await this.triQuery(ctx, `
+      const rows = await this.triQuery(
+        ctx,
+        `
         PREFIX mls: <${MLS_NS}>
         PREFIX dcterms: <${DCTERMS_NS}>
         SELECT ?id ?cipherSuite ?publicBytes ?created WHERE {
@@ -347,14 +357,16 @@ module.exports = {
           }
         }
         ORDER BY ?created
-      `, dataset);
+      `,
+        dataset
+      );
 
       return (Array.isArray(rows) ? rows : [])
         .map(row => ({
           id: readBinding(row, 'id'),
           cipherSuite: readBinding(row, 'cipherSuite'),
           publicBytes: readBinding(row, 'publicBytes'),
-          createdAt: readBinding(row, 'created'),
+          createdAt: readBinding(row, 'created')
         }))
         .filter(item => item.id && item.publicBytes);
     },
@@ -372,7 +384,9 @@ module.exports = {
       const graph = keyPackageGraph(actorUri);
       const nodeUri = keyPackageNodeUri(actorUri, keyPackageId);
 
-      const rows = await this.triQuery(ctx, `
+      const rows = await this.triQuery(
+        ctx,
+        `
         PREFIX mls: <${MLS_NS}>
         SELECT ?initPrivateKey ?hpkePrivateKey ?signaturePrivateKey WHERE {
           GRAPH <${graph}> {
@@ -383,14 +397,16 @@ module.exports = {
           }
         }
         LIMIT 1
-      `, dataset);
+      `,
+        dataset
+      );
 
       if (!Array.isArray(rows) || rows.length === 0) return null;
       const row = rows[0];
       return {
         initPrivateKey: readBinding(row, 'initPrivateKey'),
         hpkePrivateKey: readBinding(row, 'hpkePrivateKey'),
-        signaturePrivateKey: readBinding(row, 'signaturePrivateKey'),
+        signaturePrivateKey: readBinding(row, 'signaturePrivateKey')
       };
     },
 
@@ -401,14 +417,17 @@ module.exports = {
     async replenish(ctx) {
       const { actorUri } = ctx.params;
       this.requireActorUri(actorUri);
-      const minCount = typeof ctx.params.minCount === 'number'
-        ? ctx.params.minCount
-        : (this.settings.minPoolSize || DEFAULT_MIN_POOL_SIZE);
+      const minCount =
+        typeof ctx.params.minCount === 'number'
+          ? ctx.params.minCount
+          : this.settings.minPoolSize || DEFAULT_MIN_POOL_SIZE;
 
       const dataset = getDatasetFromUri(actorUri);
       const graph = keyPackageGraph(actorUri);
 
-      const countRows = await this.triQuery(ctx, `
+      const countRows = await this.triQuery(
+        ctx,
+        `
         PREFIX mls: <${MLS_NS}>
         SELECT (COUNT(?node) AS ?count) WHERE {
           GRAPH <${graph}> {
@@ -416,27 +435,29 @@ module.exports = {
               mls:status "active" .
           }
         }
-      `, dataset);
+      `,
+        dataset
+      );
 
-      const currentCount = parseInt(
-        readBinding(Array.isArray(countRows) && countRows[0] ? countRows[0] : null, 'count') ?? '0',
-        10,
-      ) || 0;
+      const currentCount =
+        parseInt(readBinding(Array.isArray(countRows) && countRows[0] ? countRows[0] : null, 'count') ?? '0', 10) || 0;
 
       const needed = Math.max(0, minCount - currentCount);
       if (needed === 0) {
         this.logger.debug('[mls.keys] pool at capacity, no replenishment needed', {
-          actorUri, currentCount, minCount,
+          actorUri,
+          currentCount,
+          minCount
         });
         return { generated: 0, total: currentCount };
       }
 
-      await Promise.all(
-        Array.from({ length: needed }, () => ctx.call('mls.keys.generate', { actorUri })),
-      );
+      await Promise.all(Array.from({ length: needed }, () => ctx.call('mls.keys.generate', { actorUri })));
 
       this.logger.info('[mls.keys] pool replenished', {
-        actorUri, generated: needed, total: currentCount + needed,
+        actorUri,
+        generated: needed,
+        total: currentCount + needed
       });
       return { generated: needed, total: currentCount + needed };
     },
@@ -446,14 +467,13 @@ module.exports = {
      * Runs on a daily schedule; also callable on demand.
      */
     async sweepExpired(ctx) {
-      const ttlDays = typeof ctx.params?.ttlDays === 'number'
-        ? ctx.params.ttlDays
-        : (this.settings.ttlDays || DEFAULT_TTL_DAYS);
+      const ttlDays =
+        typeof ctx.params?.ttlDays === 'number' ? ctx.params.ttlDays : this.settings.ttlDays || DEFAULT_TTL_DAYS;
       const cutoff = new Date(Date.now() - ttlDays * 24 * 60 * 60 * 1000).toISOString();
 
       await retryWithBackoff(
         () => ctx.call('triplestore.update', { query: sweepQuery(cutoff), dataset: 'users', webId: 'system' }),
-        { maxRetries: 3, baseDelayMs: 60, maxDelayMs: 1200, retryIf: isRetryable },
+        { maxRetries: 3, baseDelayMs: 60, maxDelayMs: 1200, retryIf: isRetryable }
       );
 
       this.logger.info('[mls.keys] sweepExpired completed', { ttlDays, cutoff });
@@ -474,26 +494,32 @@ module.exports = {
       const graph = keyPackageGraph(actorUri);
       const nodeUri = keyPackageNodeUri(actorUri, keyPackageId);
 
-      await this.triUpdate(ctx, `
+      await this.triUpdate(
+        ctx,
+        `
         PREFIX mls: <${MLS_NS}>
         WITH <${graph}>
         DELETE { <${nodeUri}> mls:status "active" }
         INSERT { <${nodeUri}> mls:status "consumed" }
         WHERE  { <${nodeUri}> a mls:KeyPackage ; mls:status "active" }
-      `, dataset);
+      `,
+        dataset
+      );
 
       this.logger.debug('[mls.keys] key package consumed', { actorUri, keyPackageId });
 
       // Fire-and-forget: replenish pool without blocking the consume response
-      ctx.call('mls.keys.replenish', {
-        actorUri,
-        minCount: this.settings.minPoolSize || DEFAULT_MIN_POOL_SIZE,
-      }).catch(err => {
-        this.logger.warn('[mls.keys] replenishment after consume failed', {
+      ctx
+        .call('mls.keys.replenish', {
           actorUri,
-          error: err instanceof Error ? err.message : String(err),
+          minCount: this.settings.minPoolSize || DEFAULT_MIN_POOL_SIZE
+        })
+        .catch(err => {
+          this.logger.warn('[mls.keys] replenishment after consume failed', {
+            actorUri,
+            error: err instanceof Error ? err.message : String(err)
+          });
         });
-      });
     },
 
     /**
@@ -508,14 +534,18 @@ module.exports = {
       const graph = keyPackageGraph(actorUri);
       const nodeUri = keyPackageNodeUri(actorUri, keyPackageId);
 
-      await this.triUpdate(ctx, `
+      await this.triUpdate(
+        ctx,
+        `
         PREFIX mls: <${MLS_NS}>
         WITH <${graph}>
         DELETE { <${nodeUri}> ?p ?o }
         WHERE  { <${nodeUri}> a mls:KeyPackage ; ?p ?o }
-      `, dataset);
+      `,
+        dataset
+      );
 
       this.logger.debug('[mls.keys] key package deleted', { actorUri, keyPackageId });
-    },
-  },
+    }
+  }
 };

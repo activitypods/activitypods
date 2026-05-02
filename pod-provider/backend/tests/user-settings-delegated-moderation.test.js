@@ -61,9 +61,7 @@ describe('delegated-moderation-api', () => {
         meta: { webId: undefined, impersonatedUser: 'https://pod.example/users/bob#me' }
       });
 
-      await expect(
-        serviceDefinition.actions.listAppModerationPreferences.call(service, ctx)
-      ).rejects.toMatchObject({
+      await expect(serviceDefinition.actions.listAppModerationPreferences.call(service, ctx)).rejects.toMatchObject({
         message: expect.stringMatching(/unauthorized|webId/i)
       });
     });
@@ -74,9 +72,7 @@ describe('delegated-moderation-api', () => {
         meta: { webId: undefined, impersonatedUser: 'https://pod.example/users/bob#me' }
       });
 
-      await expect(
-        serviceDefinition.actions.createAppModerationPreference.call(service, ctx)
-      ).rejects.toMatchObject({
+      await expect(serviceDefinition.actions.createAppModerationPreference.call(service, ctx)).rejects.toMatchObject({
         message: expect.stringMatching(/unauthorized|webId/i)
       });
     });
@@ -87,9 +83,7 @@ describe('delegated-moderation-api', () => {
         meta: { webId: undefined, impersonatedUser: 'https://pod.example/users/bob#me' }
       });
 
-      await expect(
-        serviceDefinition.actions.listAppModerationBlocks.call(service, ctx)
-      ).rejects.toMatchObject({
+      await expect(serviceDefinition.actions.listAppModerationBlocks.call(service, ctx)).rejects.toMatchObject({
         message: expect.stringMatching(/unauthorized|webId/i)
       });
     });
@@ -109,9 +103,7 @@ describe('delegated-moderation-api', () => {
         }
       });
 
-      await expect(
-        serviceDefinition.actions.listAppModerationPreferences.call(service, ctx)
-      ).rejects.toMatchObject({
+      await expect(serviceDefinition.actions.listAppModerationPreferences.call(service, ctx)).rejects.toMatchObject({
         code: 403,
         type: 'APP_CONSENT_REQUIRED'
       });
@@ -130,9 +122,7 @@ describe('delegated-moderation-api', () => {
         }
       });
 
-      await expect(
-        serviceDefinition.actions.createAppModerationPreference.call(service, ctx)
-      ).rejects.toMatchObject({
+      await expect(serviceDefinition.actions.createAppModerationPreference.call(service, ctx)).rejects.toMatchObject({
         code: 403,
         type: 'APP_CONSENT_REQUIRED'
       });
@@ -151,9 +141,7 @@ describe('delegated-moderation-api', () => {
         }
       });
 
-      await expect(
-        serviceDefinition.actions.listAppTrustSources.call(service, ctx)
-      ).rejects.toMatchObject({
+      await expect(serviceDefinition.actions.listAppTrustSources.call(service, ctx)).rejects.toMatchObject({
         code: 403,
         type: 'APP_CONSENT_REQUIRED'
       });
@@ -172,9 +160,7 @@ describe('delegated-moderation-api', () => {
         }
       });
 
-      await expect(
-        serviceDefinition.actions.createAppTrustSource.call(service, ctx)
-      ).rejects.toMatchObject({
+      await expect(serviceDefinition.actions.createAppTrustSource.call(service, ctx)).rejects.toMatchObject({
         code: 403,
         type: 'APP_CONSENT_REQUIRED'
       });
@@ -309,9 +295,7 @@ describe('delegated-moderation-api', () => {
   describe('First-Party Access (No Delegation Required)', () => {
     test('listAppModerationPreferences allows first-party caller without impersonatedUser', async () => {
       const service = createService({
-        listByContainer: jest.fn().mockResolvedValue([
-          { category: 'sensitive-media-display', value: 'warn' }
-        ])
+        listByContainer: jest.fn().mockResolvedValue([{ category: 'sensitive-media-display', value: 'warn' }])
       });
 
       const ctx = createCtx({
@@ -325,11 +309,7 @@ describe('delegated-moderation-api', () => {
 
       expect(result.data).toBeDefined();
       expect(Array.isArray(result.data)).toBe(true);
-      expect(service.listByContainer).toHaveBeenCalledWith(
-        ctx,
-        'https://pod.example/users/alice#me',
-        'preferences'
-      );
+      expect(service.listByContainer).toHaveBeenCalledWith(ctx, 'https://pod.example/users/alice#me', 'preferences');
     });
 
     test('createAppModerationPreference allows first-party caller without impersonatedUser', async () => {
@@ -501,9 +481,7 @@ describe('delegated-moderation-api', () => {
 
   describe('Success Paths - Trust Sources Container', () => {
     test('listAppTrustSources returns trust sources data', async () => {
-      const trustSourcesData = [
-        { sourceType: 'atproto-labeler', sourceId: 'did:plc:labeler1', enabled: true }
-      ];
+      const trustSourcesData = [{ sourceType: 'atproto-labeler', sourceId: 'did:plc:labeler1', enabled: true }];
 
       const service = createService({
         listByContainer: jest.fn().mockResolvedValue(trustSourcesData)
@@ -516,15 +494,10 @@ describe('delegated-moderation-api', () => {
       const result = await serviceDefinition.actions.listAppTrustSources.call(service, ctx);
 
       expect(result.data).toEqual(trustSourcesData);
-      expect(service.listByContainer).toHaveBeenCalledWith(
-        ctx,
-        ctx.meta.webId,
-        'trust-sources',
-        {
-          seedProviderDefaults: false,
-          skipAtprotoMirror: true
-        }
-      );
+      expect(service.listByContainer).toHaveBeenCalledWith(ctx, ctx.meta.webId, 'trust-sources', {
+        seedProviderDefaults: false,
+        skipAtprotoMirror: true
+      });
     });
 
     test('createAppTrustSource delegates to user-settings-api.create', async () => {
@@ -613,9 +586,7 @@ describe('delegated-moderation-api', () => {
 
   describe('Success Paths - Blocks Container', () => {
     test('listAppModerationBlocks returns blocks data', async () => {
-      const blocksData = [
-        { subjectCanonicalId: 'https://remote.example/users/bob#me', blockedAt: new Date() }
-      ];
+      const blocksData = [{ subjectCanonicalId: 'https://remote.example/users/bob#me', blockedAt: new Date() }];
 
       const service = createService({
         listByContainer: jest.fn().mockResolvedValue(blocksData)
@@ -660,9 +631,7 @@ describe('delegated-moderation-api', () => {
 
   describe('Success Paths - Mutes Container', () => {
     test('listAppModerationMutes returns mutes data', async () => {
-      const mutesData = [
-        { subjectCanonicalId: 'https://remote.example/users/noisy#me', mutedAt: new Date() }
-      ];
+      const mutesData = [{ subjectCanonicalId: 'https://remote.example/users/noisy#me', mutedAt: new Date() }];
 
       const service = createService({
         listByContainer: jest.fn().mockResolvedValue(mutesData)
@@ -707,9 +676,7 @@ describe('delegated-moderation-api', () => {
 
   describe('Success Paths - Filters Container', () => {
     test('listAppModerationFilters returns filters data', async () => {
-      const filtersData = [
-        { keywords: ['spam', 'phishing'], caseSensitive: false }
-      ];
+      const filtersData = [{ keywords: ['spam', 'phishing'], caseSensitive: false }];
 
       const service = createService({
         listByContainer: jest.fn().mockResolvedValue(filtersData)
@@ -897,11 +864,7 @@ describe('delegated-moderation-api', () => {
       const result = await serviceDefinition.actions.listAppModerationPreferences.call(service, ctx);
 
       // Whitespace impersonatedUser should be treated as first-party
-      expect(service.listByContainer).toHaveBeenCalledWith(
-        ctx,
-        'https://pod.example/users/alice#me',
-        'preferences'
-      );
+      expect(service.listByContainer).toHaveBeenCalledWith(ctx, 'https://pod.example/users/alice#me', 'preferences');
     });
 
     test('removeAppModerationPreference uses resourceUri from query params as fallback', async () => {

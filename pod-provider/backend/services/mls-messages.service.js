@@ -75,17 +75,21 @@ module.exports = {
 
   methods: {
     async triQuery(ctx, query, dataset) {
-      return retryWithBackoff(
-        () => ctx.call('triplestore.query', { query, dataset, webId: 'system' }),
-        { maxRetries: 3, baseDelayMs: 60, maxDelayMs: 1200, retryIf: isRetryable },
-      );
+      return retryWithBackoff(() => ctx.call('triplestore.query', { query, dataset, webId: 'system' }), {
+        maxRetries: 3,
+        baseDelayMs: 60,
+        maxDelayMs: 1200,
+        retryIf: isRetryable
+      });
     },
 
     async triUpdate(ctx, query, dataset) {
-      return retryWithBackoff(
-        () => ctx.call('triplestore.update', { query, dataset, webId: 'system' }),
-        { maxRetries: 3, baseDelayMs: 60, maxDelayMs: 1200, retryIf: isRetryable },
-      );
+      return retryWithBackoff(() => ctx.call('triplestore.update', { query, dataset, webId: 'system' }), {
+        maxRetries: 3,
+        baseDelayMs: 60,
+        maxDelayMs: 1200,
+        retryIf: isRetryable
+      });
     },
 
     requireActorUri(actorUri) {
@@ -106,7 +110,7 @@ module.exports = {
       } catch {
         throw new Error(`senderUri must be a valid http(s) URL: ${senderUri}`);
       }
-    },
+    }
   },
 
   actions: {
@@ -136,11 +140,12 @@ module.exports = {
       const graph = messagesGraph(actorUri);
       const nodeUri = messageNodeUri(actorUri, id);
 
-      const externalIdTriple = externalId && typeof externalId === 'string'
-        ? `mls:externalId ${sparqlStr(externalId)} ;`
-        : '';
+      const externalIdTriple =
+        externalId && typeof externalId === 'string' ? `mls:externalId ${sparqlStr(externalId)} ;` : '';
 
-      await this.triUpdate(ctx, `
+      await this.triUpdate(
+        ctx,
+        `
         PREFIX mls: <${MLS_NS}>
         PREFIX dcterms: <${DCTERMS_NS}>
         PREFIX as: <${AS_NS}>
@@ -158,7 +163,9 @@ module.exports = {
               dcterms:created ${sparqlStr(now)} .
           }
         }
-      `, dataset);
+      `,
+        dataset
+      );
 
       this.logger.debug('[mls.messages] message stored', { actorUri, id, type, senderUri });
 
@@ -176,7 +183,9 @@ module.exports = {
       const dataset = getDatasetFromUri(actorUri);
       const graph = messagesGraph(actorUri);
 
-      const rows = await this.triQuery(ctx, `
+      const rows = await this.triQuery(
+        ctx,
+        `
         PREFIX mls: <${MLS_NS}>
         PREFIX dcterms: <${DCTERMS_NS}>
         PREFIX as: <${AS_NS}>
@@ -190,7 +199,9 @@ module.exports = {
           }
         }
         ORDER BY DESC(?created)
-      `, dataset);
+      `,
+        dataset
+      );
 
       return (Array.isArray(rows) ? rows : [])
         .map(row => ({
@@ -198,7 +209,7 @@ module.exports = {
           type: readBinding(row, 'type'),
           senderUri: readBinding(row, 'senderUri'),
           content: readBinding(row, 'content'),
-          publishedAt: readBinding(row, 'created'),
+          publishedAt: readBinding(row, 'created')
         }))
         .filter(item => item.id && item.content);
     },
@@ -217,14 +228,18 @@ module.exports = {
       const graph = messagesGraph(actorUri);
       const nodeUri = messageNodeUri(actorUri, messageId);
 
-      await this.triUpdate(ctx, `
+      await this.triUpdate(
+        ctx,
+        `
         PREFIX mls: <${MLS_NS}>
         WITH <${graph}>
         DELETE { <${nodeUri}> ?p ?o }
         WHERE  { <${nodeUri}> ?p ?o }
-      `, dataset);
+      `,
+        dataset
+      );
 
       this.logger.debug('[mls.messages] message deleted', { actorUri, messageId });
-    },
-  },
+    }
+  }
 };

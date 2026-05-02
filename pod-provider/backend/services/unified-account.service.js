@@ -131,11 +131,7 @@ module.exports = {
           }
 
           if (!solid?.webId) {
-            throw new MoleculerError(
-              'WebID provisioning did not return a webId',
-              500,
-              'WEBID_PROVISIONING_FAILED'
-            );
+            throw new MoleculerError('WebID provisioning did not return a webId', 500, 'WEBID_PROVISIONING_FAILED');
           }
 
           if (canonical.canonicalAccountId !== solid.webId) {
@@ -182,11 +178,7 @@ module.exports = {
             });
 
             if (!atproto?.did || !atproto?.repoInitialized) {
-              throw new MoleculerError(
-                'ATProto provisioning incomplete',
-                500,
-                'ATPROTO_PROVISIONING_INCOMPLETE'
-              );
+              throw new MoleculerError('ATProto provisioning incomplete', 500, 'ATPROTO_PROVISIONING_INCOMPLETE');
             }
 
             await ctx.call('account-provisioning-state.markPhase', {

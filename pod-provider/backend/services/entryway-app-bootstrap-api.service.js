@@ -37,23 +37,26 @@ function parseApprovedApps(value) {
       ? parsed.apps
       : Object.entries(parsed).map(([clientId, config]) => ({ clientId, ...(config || {}) }));
 
-  return entries.map(entry => ({
-    appClientId: normalizeString(entry.clientId || entry.appClientId || entry.appUri || entry.id),
-    appUri: normalizeString(entry.appUri || entry.clientId || entry.appClientId || entry.id),
-    acceptedAccessNeeds: normalizeStringArray([
-      entry.acceptedAccessNeed,
-      ...asArray(entry.acceptedAccessNeeds),
-      ...asArray(entry.accessNeeds)
-    ]),
-    acceptedSpecialRights: normalizeStringArray([
-      entry.acceptedSpecialRight,
-      ...asArray(entry.acceptedSpecialRights),
-      ...asArray(entry.specialRights)
-    ]),
-    sessionHandoff: entry.sessionHandoff && typeof entry.sessionHandoff === 'object'
-      ? normalizeSessionHandoff(entry.sessionHandoff)
-      : null
-  })).filter(app => app.appClientId && app.appUri);
+  return entries
+    .map(entry => ({
+      appClientId: normalizeString(entry.clientId || entry.appClientId || entry.appUri || entry.id),
+      appUri: normalizeString(entry.appUri || entry.clientId || entry.appClientId || entry.id),
+      acceptedAccessNeeds: normalizeStringArray([
+        entry.acceptedAccessNeed,
+        ...asArray(entry.acceptedAccessNeeds),
+        ...asArray(entry.accessNeeds)
+      ]),
+      acceptedSpecialRights: normalizeStringArray([
+        entry.acceptedSpecialRight,
+        ...asArray(entry.acceptedSpecialRights),
+        ...asArray(entry.specialRights)
+      ]),
+      sessionHandoff:
+        entry.sessionHandoff && typeof entry.sessionHandoff === 'object'
+          ? normalizeSessionHandoff(entry.sessionHandoff)
+          : null
+    }))
+    .filter(app => app.appClientId && app.appUri);
 }
 
 function normalizeSessionHandoff(value) {
@@ -137,7 +140,11 @@ module.exports = {
         const webId = this.assertAbsoluteHttpUrl(ctx.params.webId, 'webId');
         const canonicalAccountId = this.assertAbsoluteHttpUrl(ctx.params.canonicalAccountId, 'canonicalAccountId');
         if (canonicalAccountId !== webId) {
-          throw new MoleculerError('canonicalAccountId must match webId for current bootstrap path', 400, 'IDENTITY_MISMATCH');
+          throw new MoleculerError(
+            'canonicalAccountId must match webId for current bootstrap path',
+            400,
+            'IDENTITY_MISMATCH'
+          );
         }
 
         const appConfig = this.findApprovedApp(ctx.params.appClientId);

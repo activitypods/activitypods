@@ -85,15 +85,8 @@ function normalizeApprovedApp(entry) {
   return {
     clientId: normalizeString(entry.clientId || entry.appClientId || entry.id || entry.appUri),
     bearerTokens,
-    verificationTokens: normalizeStringArray([
-      entry.verificationToken,
-      ...asArray(entry.verificationTokens)
-    ]),
-    allowedOrigins: normalizeStringArray([
-      entry.origin,
-      ...asArray(entry.allowedOrigins),
-      ...asArray(entry.origins)
-    ]),
+    verificationTokens: normalizeStringArray([entry.verificationToken, ...asArray(entry.verificationTokens)]),
+    allowedOrigins: normalizeStringArray([entry.origin, ...asArray(entry.allowedOrigins), ...asArray(entry.origins)]),
     allowedRedirectUris: normalizeStringArray([
       entry.redirectUri,
       ...asArray(entry.allowedRedirectUris),
@@ -101,9 +94,7 @@ function normalizeApprovedApp(entry) {
     ]),
     allowAtproto: entry.allowAtproto !== false,
     allowUnsigned: entry.allowUnsigned === true,
-    maxAccountsPerDay: Number.isFinite(Number(entry.maxAccountsPerDay))
-      ? Number(entry.maxAccountsPerDay)
-      : null
+    maxAccountsPerDay: Number.isFinite(Number(entry.maxAccountsPerDay)) ? Number(entry.maxAccountsPerDay) : null
   };
 }
 
@@ -131,8 +122,18 @@ module.exports = {
     requiresUserVerification: parseBoolean(process.env.PROVIDER_ACCOUNT_PROVISIONING_REQUIRES_USER_VERIFICATION, true),
     requireBearerToken: parseBoolean(process.env.PROVIDER_ACCOUNT_PROVISIONING_REQUIRES_BEARER, true),
     allowTrustedVerification: parseBoolean(process.env.PROVIDER_ACCOUNT_PROVISIONING_ALLOW_TRUSTED_VERIFICATION, false),
-    maxAccountsPerAppPerDay: parseInteger(process.env.PROVIDER_ACCOUNT_PROVISIONING_MAX_ACCOUNTS_PER_APP_PER_DAY, 250, 1, 100000),
-    grantTtlMs: parseInteger(process.env.PROVIDER_ACCOUNT_PROVISIONING_GRANT_TTL_MS, 5 * 60 * 1000, 1000, 60 * 60 * 1000),
+    maxAccountsPerAppPerDay: parseInteger(
+      process.env.PROVIDER_ACCOUNT_PROVISIONING_MAX_ACCOUNTS_PER_APP_PER_DAY,
+      250,
+      1,
+      100000
+    ),
+    grantTtlMs: parseInteger(
+      process.env.PROVIDER_ACCOUNT_PROVISIONING_GRANT_TTL_MS,
+      5 * 60 * 1000,
+      1000,
+      60 * 60 * 1000
+    ),
     requireIdempotencyKey: parseBoolean(process.env.PROVIDER_ACCOUNT_PROVISIONING_REQUIRE_IDEMPOTENCY_KEY, true),
     idempotencyTtlMs: parseInteger(
       process.env.PROVIDER_ACCOUNT_PROVISIONING_IDEMPOTENCY_TTL_MS,
@@ -234,7 +235,11 @@ module.exports = {
         statusCode: { type: 'number', optional: true }
       },
       handler(ctx) {
-        return this.completeAccountProvisioning(ctx.params.grant || {}, ctx.params.response || {}, ctx.params.statusCode);
+        return this.completeAccountProvisioning(
+          ctx.params.grant || {},
+          ctx.params.response || {},
+          ctx.params.statusCode
+        );
       }
     },
 
@@ -331,9 +336,7 @@ module.exports = {
           approvedAppsRequired: this.settings.requiresApprovedApps === true,
           requiresUserVerification: this.settings.requiresUserVerification === true,
           maxAccountsPerAppPerDay: this.settings.maxAccountsPerAppPerDay,
-          supportedProtocolSet: this.settings.atprotoEnabled
-            ? 'solid,activitypub,atproto'
-            : 'solid,activitypub'
+          supportedProtocolSet: this.settings.atprotoEnabled ? 'solid,activitypub,atproto' : 'solid,activitypub'
         },
         ...(enabled ? {} : { disabledReason: 'provider_policy' })
       };
@@ -358,23 +361,48 @@ module.exports = {
 
       if (this.settings.requiresApprovedApps) {
         if (!app) {
-          return this.deny('unauthorized_app', 'Account provisioning is only available to approved applications', false, 403);
+          return this.deny(
+            'unauthorized_app',
+            'Account provisioning is only available to approved applications',
+            false,
+            403
+          );
         }
 
         if (!this.verifyAppAuthorization(app, input.authorization)) {
-          return this.deny('unauthorized_app', 'Approved application authorization is required for account provisioning', false, 403);
+          return this.deny(
+            'unauthorized_app',
+            'Approved application authorization is required for account provisioning',
+            false,
+            403
+          );
         }
 
         if (!this.matchesAllowedValue(app.allowedOrigins, input.origin)) {
-          return this.deny('unauthorized_app', 'Application origin is not approved for account provisioning', false, 403);
+          return this.deny(
+            'unauthorized_app',
+            'Application origin is not approved for account provisioning',
+            false,
+            403
+          );
         }
 
         if (!this.matchesAllowedValue(app.allowedRedirectUris, input.redirectUri)) {
-          return this.deny('unauthorized_app', 'Application redirect URI is not approved for account provisioning', false, 403);
+          return this.deny(
+            'unauthorized_app',
+            'Application redirect URI is not approved for account provisioning',
+            false,
+            403
+          );
         }
 
         if (requestedProtocols.atproto && app.allowAtproto === false) {
-          return this.deny('protocol_disabled', 'Approved application is not allowed to request ATProto provisioning', false, 403);
+          return this.deny(
+            'protocol_disabled',
+            'Approved application is not allowed to request ATProto provisioning',
+            false,
+            403
+          );
         }
       }
 
@@ -410,12 +438,7 @@ module.exports = {
 
       const idempotencyKey = normalizeString(input.idempotencyKey);
       if (this.settings.requireIdempotencyKey && !idempotencyKey) {
-        return this.deny(
-          'idempotency_key_required',
-          'Idempotency-Key is required for account provisioning',
-          true,
-          400
-        );
+        return this.deny('idempotency_key_required', 'Idempotency-Key is required for account provisioning', true, 400);
       }
 
       if (!idempotencyKey) {
@@ -424,7 +447,8 @@ module.exports = {
 
       const appClientId = authorization.appClientId || 'provider';
       const idempotencyRecordKey = this.buildIdempotencyRecordKey(appClientId, idempotencyKey);
-      const requestFingerprint = normalizeString(input.requestFingerprint) || this.fingerprintProvisioningRequest(input);
+      const requestFingerprint =
+        normalizeString(input.requestFingerprint) || this.fingerprintProvisioningRequest(input);
       const existing = this.idempotencyRecords.get(idempotencyRecordKey);
 
       if (existing && existing.expiresAt > Date.now()) {
@@ -693,12 +717,14 @@ module.exports = {
     fingerprintProvisioningRequest(input) {
       return crypto
         .createHash('sha256')
-        .update(JSON.stringify({
-          appClientId: normalizeString(input.appClientId),
-          username: normalizeString(input.username),
-          email: normalizeString(input.email),
-          requestedProtocols: this.normalizeRequestedProtocols(input.requestedProtocols || {})
-        }))
+        .update(
+          JSON.stringify({
+            appClientId: normalizeString(input.appClientId),
+            username: normalizeString(input.username),
+            email: normalizeString(input.email),
+            requestedProtocols: this.normalizeRequestedProtocols(input.requestedProtocols || {})
+          })
+        )
         .digest('hex');
     },
 
@@ -739,8 +765,9 @@ module.exports = {
       const maxEntries = this.settings.idempotencyMaxEntries;
       if (this.idempotencyRecords.size <= maxEntries) return;
 
-      const entries = [...this.idempotencyRecords.entries()]
-        .sort((a, b) => (a[1].updatedAt || a[1].createdAt || 0) - (b[1].updatedAt || b[1].createdAt || 0));
+      const entries = [...this.idempotencyRecords.entries()].sort(
+        (a, b) => (a[1].updatedAt || a[1].createdAt || 0) - (b[1].updatedAt || b[1].createdAt || 0)
+      );
 
       for (const [key] of entries.slice(0, this.idempotencyRecords.size - maxEntries)) {
         this.idempotencyRecords.delete(key);

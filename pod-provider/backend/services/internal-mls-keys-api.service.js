@@ -27,22 +27,16 @@ module.exports = {
 
   settings: {
     auth: {
-      bearerToken:
-        process.env.ACTIVITYPODS_TOKEN ||
-        process.env.INTERNAL_API_TOKEN ||
-        process.env.SIDECAR_TOKEN ||
-        '',
+      bearerToken: process.env.ACTIVITYPODS_TOKEN || process.env.INTERNAL_API_TOKEN || process.env.SIDECAR_TOKEN || ''
     },
-    routePath: '/api/internal/mls-keys',
+    routePath: '/api/internal/mls-keys'
   },
 
   async started() {
     const bearerToken = this.settings.auth.bearerToken;
 
     if (!bearerToken) {
-      this.logger.warn(
-        '[MlsKeysApi] No internal bearer token configured; all requests will be rejected',
-      );
+      this.logger.warn('[MlsKeysApi] No internal bearer token configured; all requests will be rejected');
     }
 
     await this.broker.call('api.addRoute', {
@@ -53,37 +47,27 @@ module.exports = {
         authentication: false,
         bodyParsers: { json: { strict: false, limit: '16kb' } },
         onBeforeCall: (ctx, route, req) => {
-          const authHeader = (
-            req.headers.authorization ||
-            req.headers.Authorization ||
-            ''
-          ).trim();
+          const authHeader = (req.headers.authorization || req.headers.Authorization || '').trim();
           const token = this.parseBearerToken(authHeader);
           if (!this.safeTokenEquals(bearerToken, token)) {
-            throw new WebErrors.UnAuthorizedError(
-              WebErrors.ERR_INVALID_TOKEN,
-              null,
-              'Unauthorized',
-            );
+            throw new WebErrors.UnAuthorizedError(WebErrors.ERR_INVALID_TOKEN, null, 'Unauthorized');
           }
           ctx.meta.$responseHeaders = {
             ...(ctx.meta.$responseHeaders || {}),
             'Cache-Control': 'no-store',
             Pragma: 'no-cache',
-            'X-Content-Type-Options': 'nosniff',
+            'X-Content-Type-Options': 'nosniff'
           };
         },
         aliases: {
           'GET /key-packages': 'internal-mls-keys-api.getKeyPackages',
-          'POST /submit': 'internal-mls-keys-api.submitKeyPackage',
-        },
+          'POST /submit': 'internal-mls-keys-api.submitKeyPackage'
+        }
       },
-      toBottom: false,
+      toBottom: false
     });
 
-    this.logger.info(
-      '[MlsKeysApi] Internal routes registered under /api/internal/mls-keys: key-packages, submit',
-    );
+    this.logger.info('[MlsKeysApi] Internal routes registered under /api/internal/mls-keys: key-packages, submit');
   },
 
   actions: {
@@ -94,7 +78,7 @@ module.exports = {
     getKeyPackages: {
       async handler(ctx) {
         const actorIdentifier = String(
-          ctx.params?.actorIdentifier ?? ctx.meta.queryString?.actorIdentifier ?? '',
+          ctx.params?.actorIdentifier ?? ctx.meta.queryString?.actorIdentifier ?? ''
         ).trim();
 
         if (!actorIdentifier) {
@@ -121,7 +105,7 @@ module.exports = {
           this.logger.error('[MlsKeysApi] failed to list key packages', {
             actorIdentifier,
             actorUri,
-            error: err instanceof Error ? err.message : String(err),
+            error: err instanceof Error ? err.message : String(err)
           });
           ctx.meta.$statusCode = 500;
           return { error: 'internal_error', message: 'Failed to retrieve key packages' };
@@ -129,12 +113,12 @@ module.exports = {
 
         this.logger.debug('[MlsKeysApi] getKeyPackages', {
           actorIdentifier,
-          itemCount: items.length,
+          itemCount: items.length
         });
 
         ctx.meta.$statusCode = 200;
         return { items };
-      },
+      }
     },
 
     // =========================================================================
@@ -147,9 +131,7 @@ module.exports = {
       async handler(ctx) {
         const body = ctx.params ?? {};
 
-        const actorIdentifier = typeof body.actorIdentifier === 'string'
-          ? body.actorIdentifier.trim()
-          : '';
+        const actorIdentifier = typeof body.actorIdentifier === 'string' ? body.actorIdentifier.trim() : '';
         const cipherSuite = typeof body.cipherSuite === 'string' ? body.cipherSuite.trim() : '';
         const content = typeof body.content === 'string' ? body.content.trim() : '';
 
@@ -183,7 +165,7 @@ module.exports = {
           result = await ctx.call('mls.keys.submit', {
             actorUri,
             cipherSuite,
-            publicBytes: content,
+            publicBytes: content
           });
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
@@ -194,7 +176,7 @@ module.exports = {
           }
           this.logger.error('[MlsKeysApi] failed to submit key package', {
             actorIdentifier,
-            error: msg,
+            error: msg
           });
           ctx.meta.$statusCode = 500;
           return { error: 'internal_error', message: 'Failed to store key package' };
@@ -203,24 +185,24 @@ module.exports = {
         this.logger.debug('[MlsKeysApi] key package submitted', {
           actorIdentifier,
           id: result.id,
-          cipherSuite,
+          cipherSuite
         });
 
         ctx.meta.$statusCode = 201;
         return { id: result.id, cipherSuite: result.cipherSuite };
-      },
-    },
+      }
+    }
   },
 
   methods: {
     async findActorByIdentifier(ctx, identifier) {
       try {
         const account = await ctx.call('auth.account.findByUsername', {
-          username: identifier,
+          username: identifier
         });
         if (!account?.webId) return null;
         const actor = await ctx.call('activitypub.actor.get', {
-          actorUri: account.webId,
+          actorUri: account.webId
         });
         return actor || null;
       } catch {
@@ -243,6 +225,6 @@ module.exports = {
       const b = Buffer.from(provided, 'utf8');
       if (a.length !== b.length) return false;
       return crypto.timingSafeEqual(a, b);
-    },
-  },
+    }
+  }
 };

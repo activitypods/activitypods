@@ -7,13 +7,8 @@ describe('entryway-app-bootstrap-api service', () => {
   const approvedApp = {
     appClientId: 'https://memory.example/app',
     appUri: 'https://memory.example/app',
-    acceptedAccessNeeds: [
-      'https://memory.example/ns/access-needs#timeline'
-    ],
-    acceptedSpecialRights: [
-      'apods:ReadInbox',
-      'apods:ReadOutbox'
-    ]
+    acceptedAccessNeeds: ['https://memory.example/ns/access-needs#timeline'],
+    acceptedSpecialRights: ['apods:ReadInbox', 'apods:ReadOutbox']
   };
 
   beforeEach(async () => {
@@ -40,9 +35,7 @@ describe('entryway-app-bootstrap-api service', () => {
     broker.createService({
       name: 'access-grants',
       actions: {
-        getForApp: async () => [
-          { id: 'http://localhost:3000/alice/data/grant-memory' }
-        ]
+        getForApp: async () => [{ id: 'http://localhost:3000/alice/data/grant-memory' }]
       }
     });
 
@@ -103,12 +96,16 @@ describe('entryway-app-bootstrap-api service', () => {
 
   test('rejects apps that are not approved for bootstrap', async () => {
     await expect(
-      broker.call('entryway-app-bootstrap-api.bootstrap', {
-        ...bootstrapPayload(),
-        appClientId: 'https://unknown.example/app'
-      }, {
-        meta: { $headers: { authorization: 'Bearer provider-internal-token' } }
-      })
+      broker.call(
+        'entryway-app-bootstrap-api.bootstrap',
+        {
+          ...bootstrapPayload(),
+          appClientId: 'https://unknown.example/app'
+        },
+        {
+          meta: { $headers: { authorization: 'Bearer provider-internal-token' } }
+        }
+      )
     ).rejects.toMatchObject({
       code: 403,
       type: 'UNAUTHORIZED_APP'
@@ -117,12 +114,16 @@ describe('entryway-app-bootstrap-api service', () => {
 
   test('rejects mismatched canonicalAccountId and webId for current bootstrap path', async () => {
     await expect(
-      broker.call('entryway-app-bootstrap-api.bootstrap', {
-        ...bootstrapPayload(),
-        canonicalAccountId: 'http://localhost:3000/alice/internal-subject'
-      }, {
-        meta: { $headers: { authorization: 'Bearer provider-internal-token' } }
-      })
+      broker.call(
+        'entryway-app-bootstrap-api.bootstrap',
+        {
+          ...bootstrapPayload(),
+          canonicalAccountId: 'http://localhost:3000/alice/internal-subject'
+        },
+        {
+          meta: { $headers: { authorization: 'Bearer provider-internal-token' } }
+        }
+      )
     ).rejects.toMatchObject({
       code: 400,
       type: 'IDENTITY_MISMATCH'

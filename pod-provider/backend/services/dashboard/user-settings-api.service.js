@@ -310,7 +310,24 @@ module.exports = {
           'DELETE /hashtags/follows': 'user-settings-api.unfollowHashtag',
           'POST /hashtags/follows/import': 'user-settings-api.importFollowedHashtags',
           'GET /app-consents': 'user-settings-api.listAppConsents',
-          'POST /app-consents': 'user-settings-api.createAppConsent'
+          'POST /app-consents': 'user-settings-api.createAppConsent',
+          // OIDC app-facing moderation filters API (delegated access via app-consents)
+          'GET /apps/moderation/preferences': 'user-settings-api.listAppModerationPreferences',
+          'POST /apps/moderation/preferences': 'user-settings-api.createAppModerationPreference',
+          'PUT /apps/moderation/preferences': 'user-settings-api.updateAppModerationPreference',
+          'DELETE /apps/moderation/preferences': 'user-settings-api.removeAppModerationPreference',
+          'GET /apps/moderation/trust-sources': 'user-settings-api.listAppTrustSources',
+          'POST /apps/moderation/trust-sources': 'user-settings-api.createAppTrustSource',
+          'PUT /apps/moderation/trust-sources': 'user-settings-api.updateAppTrustSource',
+          'DELETE /apps/moderation/trust-sources': 'user-settings-api.removeAppTrustSource',
+          'GET /apps/moderation/blocks': 'user-settings-api.listAppModerationBlocks',
+          'POST /apps/moderation/blocks': 'user-settings-api.createAppModerationBlock',
+          'GET /apps/moderation/mutes': 'user-settings-api.listAppModerationMutes',
+          'POST /apps/moderation/mutes': 'user-settings-api.createAppModerationMute',
+          'GET /apps/moderation/filters': 'user-settings-api.listAppModerationFilters',
+          'POST /apps/moderation/filters': 'user-settings-api.createAppModerationFilter',
+          'PUT /apps/moderation/filters': 'user-settings-api.updateAppModerationFilter',
+          'DELETE /apps/moderation/filters': 'user-settings-api.removeAppModerationFilter'
         }
       }
     });
@@ -1792,6 +1809,221 @@ module.exports = {
       });
 
       return { data: created };
+    },
+
+    async listAppModerationPreferences(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, 'read:moderation');
+      return { data: await this.listByContainer(ctx, delegated.ownerWebId, 'preferences') };
+    },
+
+    async createAppModerationPreference(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, 'write:moderation');
+
+      return ctx.call(
+        'user-settings-api.create',
+        {
+          container: 'preferences',
+          data: ctx.params.data || {}
+        },
+        {
+          meta: {
+            webId: delegated.ownerWebId
+          }
+        }
+      );
+    },
+
+    async updateAppModerationPreference(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, 'write:moderation');
+
+      return ctx.call(
+        'user-settings-api.update',
+        {
+          resourceUri: ctx.params.resourceUri,
+          data: ctx.params.data || {}
+        },
+        {
+          meta: {
+            webId: delegated.ownerWebId
+          }
+        }
+      );
+    },
+
+    async removeAppModerationPreference(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, 'write:moderation');
+
+      return ctx.call(
+        'user-settings-api.remove',
+        {
+          resourceUri: ctx.params.resourceUri || ctx.meta?.$query?.resourceUri
+        },
+        {
+          meta: {
+            webId: delegated.ownerWebId
+          }
+        }
+      );
+    },
+
+    async listAppTrustSources(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, ['read:trust', 'read:moderation']);
+      return {
+        data: await this.listByContainer(ctx, delegated.ownerWebId, 'trust-sources', {
+          seedProviderDefaults: false,
+          skipAtprotoMirror: true
+        })
+      };
+    },
+
+    async createAppTrustSource(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, ['write:trust', 'write:moderation']);
+
+      return ctx.call(
+        'user-settings-api.create',
+        {
+          container: 'trust-sources',
+          data: ctx.params.data || {}
+        },
+        {
+          meta: {
+            webId: delegated.ownerWebId
+          }
+        }
+      );
+    },
+
+    async updateAppTrustSource(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, ['write:trust', 'write:moderation']);
+
+      return ctx.call(
+        'user-settings-api.update',
+        {
+          resourceUri: ctx.params.resourceUri,
+          data: ctx.params.data || {}
+        },
+        {
+          meta: {
+            webId: delegated.ownerWebId
+          }
+        }
+      );
+    },
+
+    async removeAppTrustSource(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, ['write:trust', 'write:moderation']);
+
+      return ctx.call(
+        'user-settings-api.remove',
+        {
+          resourceUri: ctx.params.resourceUri || ctx.meta?.$query?.resourceUri
+        },
+        {
+          meta: {
+            webId: delegated.ownerWebId
+          }
+        }
+      );
+    },
+
+    async listAppModerationBlocks(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, 'read:moderation');
+      return { data: await this.listByContainer(ctx, delegated.ownerWebId, 'blocks') };
+    },
+
+    async createAppModerationBlock(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, 'write:moderation');
+
+      return ctx.call(
+        'user-settings-api.create',
+        {
+          container: 'blocks',
+          data: ctx.params.data || {}
+        },
+        {
+          meta: {
+            webId: delegated.ownerWebId
+          }
+        }
+      );
+    },
+
+    async listAppModerationMutes(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, 'read:moderation');
+      return { data: await this.listByContainer(ctx, delegated.ownerWebId, 'mutes') };
+    },
+
+    async createAppModerationMute(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, 'write:moderation');
+
+      return ctx.call(
+        'user-settings-api.create',
+        {
+          container: 'mutes',
+          data: ctx.params.data || {}
+        },
+        {
+          meta: {
+            webId: delegated.ownerWebId
+          }
+        }
+      );
+    },
+
+    async listAppModerationFilters(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, 'read:moderation');
+
+      return { data: await this.listByContainer(ctx, delegated.ownerWebId, 'filters') };
+    },
+
+    async createAppModerationFilter(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, 'write:moderation');
+
+      return ctx.call(
+        'user-settings-api.create',
+        {
+          container: 'filters',
+          data: ctx.params.data || {}
+        },
+        {
+          meta: {
+            webId: delegated.ownerWebId
+          }
+        }
+      );
+    },
+
+    async updateAppModerationFilter(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, 'write:moderation');
+
+      return ctx.call(
+        'user-settings-api.update',
+        {
+          resourceUri: ctx.params.resourceUri,
+          data: ctx.params.data || {}
+        },
+        {
+          meta: {
+            webId: delegated.ownerWebId
+          }
+        }
+      );
+    },
+
+    async removeAppModerationFilter(ctx) {
+      const delegated = await this.requireDelegatedModerationAccess(ctx, 'write:moderation');
+
+      return ctx.call(
+        'user-settings-api.remove',
+        {
+          resourceUri: ctx.params.resourceUri || ctx.meta?.$query?.resourceUri
+        },
+        {
+          meta: {
+            webId: delegated.ownerWebId
+          }
+        }
+      );
     },
 
     async listFollowedHashtags(ctx) {
@@ -3874,6 +4106,123 @@ module.exports = {
       return webId;
     },
 
+    normalizeClientIdentifier(value) {
+      if (typeof value !== 'string') return null;
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+
+      try {
+        const parsed = new URL(trimmed);
+        parsed.hash = '';
+        parsed.search = '';
+
+        // Keep the path stable while avoiding cosmetic mismatches from trailing slashes.
+        if (parsed.pathname.length > 1) {
+          parsed.pathname = parsed.pathname.replace(/\/+$/, '');
+        }
+
+        return parsed.toString();
+      } catch {
+        return trimmed;
+      }
+    },
+
+    parseConsentPermissions(value) {
+      const list = Array.isArray(value) ? value : value ? [value] : [];
+      return [
+        ...new Set(
+          list
+            .map(item => (typeof item === 'string' ? item.trim() : ''))
+            .filter(Boolean)
+        )
+      ];
+    },
+
+    parseTokenPermissions(tokenPayload) {
+      if (!tokenPayload || typeof tokenPayload !== 'object') return [];
+
+      const fromScopeString = typeof tokenPayload.scope === 'string' ? tokenPayload.scope.split(/\s+/) : [];
+      const fromScopeArray = Array.isArray(tokenPayload.scope) ? tokenPayload.scope : [];
+      const fromScpArray = Array.isArray(tokenPayload.scp) ? tokenPayload.scp : [];
+
+      return this.parseConsentPermissions([...fromScopeString, ...fromScopeArray, ...fromScpArray]);
+    },
+
+    hasConsentPermission(permissions, requiredPermission) {
+      if (!requiredPermission) return true;
+
+      const scopes = new Set(this.parseConsentPermissions(permissions));
+      if (scopes.has(requiredPermission)) return true;
+
+      // write:moderation is a strict superset of read:moderation.
+      if (requiredPermission === 'read:moderation' && scopes.has('write:moderation')) {
+        return true;
+      }
+
+      if (requiredPermission === 'read:trust' && scopes.has('write:trust')) {
+        return true;
+      }
+
+      return false;
+    },
+
+    hasAnyConsentPermission(permissions, requiredPermissions) {
+      const required = Array.isArray(requiredPermissions) ? requiredPermissions : [requiredPermissions];
+      return required.some(permission => this.hasConsentPermission(permissions, permission));
+    },
+
+    async findAppConsentForClient(ctx, ownerWebId, clientId) {
+      const client = this.normalizeClientIdentifier(clientId);
+      if (!client) return null;
+
+      const consents = await this.listByContainer(ctx, ownerWebId, 'app-consents', {
+        seedProviderDefaults: false,
+        skipAtprotoMirror: true
+      });
+
+      return (
+        consents.find(item => {
+          const consentClient = this.normalizeClientIdentifier(item?.clientId);
+          return consentClient && consentClient === client;
+        }) || null
+      );
+    },
+
+    async requireDelegatedModerationAccess(ctx, requiredPermission) {
+      const actingWebId = this.requireWebId(ctx);
+      const impersonatedUser = typeof ctx.meta?.impersonatedUser === 'string' ? ctx.meta.impersonatedUser.trim() : '';
+      const requiredPermissions = Array.isArray(requiredPermission) ? requiredPermission : [requiredPermission];
+
+      // Non-delegated first-party callers (e.g., dashboard session) are allowed.
+      if (!impersonatedUser || impersonatedUser === actingWebId) {
+        return {
+          ownerWebId: actingWebId,
+          clientId: null,
+          consent: null
+        };
+      }
+
+      const tokenPermissions = this.parseTokenPermissions(ctx.meta?.tokenPayload);
+      if (this.hasAnyConsentPermission(tokenPermissions, requiredPermissions)) {
+        return {
+          ownerWebId: impersonatedUser,
+          clientId: actingWebId,
+          consent: null
+        };
+      }
+
+      const consent = await this.findAppConsentForClient(ctx, impersonatedUser, actingWebId);
+      if (!consent || !this.hasAnyConsentPermission(consent.permissions, requiredPermissions)) {
+        throw new MoleculerError('Forbidden', 403, 'APP_CONSENT_REQUIRED');
+      }
+
+      return {
+        ownerWebId: impersonatedUser,
+        clientId: actingWebId,
+        consent
+      };
+    },
+
     async resolveCanonicalAccountId(ctx, webId) {
       try {
         const binding = await ctx.call('identitybindings.getByCanonicalAccountId', {
@@ -5579,7 +5928,8 @@ module.exports = {
         weight: 1,
         scopes: ['label:content', 'label:actor', 'filter:content', 'filter:actor'],
         name: this.settings.blueskyDefaultLabelerName,
-        description: 'Primary pod-provider safety layer: CSAM detection, spam filtering, and legal-risk content screening via the Bluesky Moderation Service. Required for responsible operation.',
+        description:
+          'Primary pod-provider safety layer: CSAM detection, spam filtering, and legal-risk content screening via the Bluesky Moderation Service. Required for responsible operation.',
         priority: 100,
         schemaVersion: 1
       });
@@ -5768,7 +6118,8 @@ module.exports = {
           source: this.settings.blueskyDefaultLabelerDid,
           sourceType: 'atproto-labeler',
           name: this.settings.blueskyDefaultLabelerName,
-          description: 'Primary pod-provider safety layer: CSAM detection, spam filtering, and legal-risk content screening via the Bluesky Moderation Service. Required for responsible operation.',
+          description:
+            'Primary pod-provider safety layer: CSAM detection, spam filtering, and legal-risk content screening via the Bluesky Moderation Service. Required for responsible operation.',
           scopes: defaultScopes,
           enabled: true,
           installed: false,

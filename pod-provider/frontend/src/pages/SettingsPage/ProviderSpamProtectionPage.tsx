@@ -698,8 +698,8 @@ const ProviderSpamProtectionPage = () => {
           Domain Reputation
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Blocks activities containing links to domains on your blocklist. Supports exact matches and wildcard
-          subdomain matches. Effective for known spam infrastructure and abusive link-shorteners.
+          Blocks activities containing links to domains on your blocklist. Supports exact matches and wildcard subdomain
+          matches. Effective for known spam infrastructure and abusive link-shorteners.
         </Typography>
 
         {drError && (
@@ -784,7 +784,9 @@ const ProviderSpamProtectionPage = () => {
               setNewDomain(e.target.value);
               setAddDomainError(null);
             }}
-            onKeyDown={e => { if (e.key === 'Enter') handleAddDomain(); }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') handleAddDomain();
+            }}
             error={!!addDomainError}
             helperText={addDomainError ?? ''}
             sx={{ width: 280 }}
@@ -822,12 +824,7 @@ const ProviderSpamProtectionPage = () => {
         ) : (
           <List dense disablePadding>
             {domainEntries.map(entry => (
-              <ListItem
-                key={`${entry.domain}-${entry.subdomainMatch}`}
-                disableGutters
-                divider
-                sx={{ py: 0.5 }}
-              >
+              <ListItem key={`${entry.domain}-${entry.subdomainMatch}`} disableGutters divider sx={{ py: 0.5 }}>
                 <ListItemText
                   primary={
                     <Stack direction="row" spacing={1} alignItems="center">

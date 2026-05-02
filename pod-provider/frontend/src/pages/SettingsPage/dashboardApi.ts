@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/promise-function-async */
 import urlJoin from 'url-join';
 
 declare const CONFIG: { BACKEND_URL: string };
@@ -38,7 +37,8 @@ async function reqWithBase(base: string, path: string, options: RequestInit = {}
   if (!res.ok) {
     const payload = asRecord(json);
     const errorPayload = asRecord(payload?.error);
-    const errorMessage = asString(errorPayload?.message) || asString(payload?.message) || `Request failed (${res.status})`;
+    const errorMessage =
+      asString(errorPayload?.message) || asString(payload?.message) || `Request failed (${res.status})`;
     const error: Error & { code?: string; status?: number; details?: unknown; requestId?: string } = new Error(
       errorMessage
     );

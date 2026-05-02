@@ -42,7 +42,7 @@ import {
   type ModerationAction,
   type ModerationCase,
   type ModerationDecision,
-  type ProviderInboxEvent,
+  type ProviderInboxEvent
 } from './moderationUi';
 type MRFMode = 'disabled' | 'dry-run' | 'enforce';
 
@@ -300,7 +300,7 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
         mediaPolicyResult,
         pdqStatusResult,
         fediseerStatusResult,
-        inboxEventsResult,
+        inboxEventsResult
       ] = await Promise.all([
         dashboardApi.listModerationDecisions({ limit: 200 }),
         dashboardApi.listModerationCases({ limit: 200 }).catch(() => null),
@@ -309,7 +309,7 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
         dashboardApi.getMrfModule('media-policy').catch(() => null),
         dashboardApi.getPdqHashStatus().catch(() => null),
         dashboardApi.getFediseerStatus().catch(() => null),
-        dashboardApi.listProviderInboxEvents(200).catch(() => null),
+        dashboardApi.listProviderInboxEvents(200).catch(() => null)
       ]);
 
       setDecisions(decisionResult?.data || decisionResult?.decisions || []);
@@ -1328,12 +1328,24 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell><strong>Received</strong></TableCell>
-                        <TableCell><strong>Event type</strong></TableCell>
-                        <TableCell><strong>Activity type</strong></TableCell>
-                        <TableCell><strong>Sender</strong></TableCell>
-                        <TableCell><strong>Object / flag ref</strong></TableCell>
-                        <TableCell><strong>Inbox path</strong></TableCell>
+                        <TableCell>
+                          <strong>Received</strong>
+                        </TableCell>
+                        <TableCell>
+                          <strong>Event type</strong>
+                        </TableCell>
+                        <TableCell>
+                          <strong>Activity type</strong>
+                        </TableCell>
+                        <TableCell>
+                          <strong>Sender</strong>
+                        </TableCell>
+                        <TableCell>
+                          <strong>Object / flag ref</strong>
+                        </TableCell>
+                        <TableCell>
+                          <strong>Inbox path</strong>
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>

@@ -4129,13 +4129,7 @@ module.exports = {
 
     parseConsentPermissions(value) {
       const list = Array.isArray(value) ? value : value ? [value] : [];
-      return [
-        ...new Set(
-          list
-            .map(item => (typeof item === 'string' ? item.trim() : ''))
-            .filter(Boolean)
-        )
-      ];
+      return [...new Set(list.map(item => (typeof item === 'string' ? item.trim() : '')).filter(Boolean))];
     },
 
     parseTokenPermissions(tokenPayload) {

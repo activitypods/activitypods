@@ -1,7 +1,8 @@
 {
   "name": "activitypods-frontend",
   "scripts": {
-    "dev": "react-scripts start",
+    "dev": "node ./scripts/start-dev.mjs",
+    "start": "npm run dev",
     "build": "react-scripts build",
     "eject": "react-scripts eject",
     "link-semapps-packages": "yalc link @semapps/activitypub-components @semapps/auth-provider @semapps/date-components @semapps/field-components @semapps/geo-components @semapps/input-components @semapps/list-components @semapps/markdown-components @semapps/semantic-data-provider",

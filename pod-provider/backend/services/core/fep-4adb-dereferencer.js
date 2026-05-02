@@ -214,7 +214,9 @@ module.exports = {
         }
       }
       if (errors.length > 0) {
-        this.logger.warn(`FEP-4adb webfinger lookup failed for ${identifier} at ${domain}. Tried: ${errors.join('; ')}`);
+        this.logger.warn(
+          `FEP-4adb webfinger lookup failed for ${identifier} at ${domain}. Tried: ${errors.join('; ')}`
+        );
       }
 
       if (accountMatch) {

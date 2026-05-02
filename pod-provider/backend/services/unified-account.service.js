@@ -13,6 +13,7 @@ module.exports = {
   },
 
   dependencies: [
+    'provider-capabilities',
     'accounts',
     'webid-provisioning',
     'activitypub-provisioning',
@@ -60,10 +61,16 @@ module.exports = {
       },
       async handler(ctx) {
         const input = ctx.params;
+        const requestedProtocols = this.requestedProtocolsFromInput(input);
 
-        const enableSolid = input.solid?.enabled ?? this.settings.defaults.enableSolid;
-        const enableActivityPub = input.activitypub?.enabled ?? this.settings.defaults.enableActivityPub;
-        const enableAtproto = input.atproto?.enabled ?? this.settings.defaults.enableAtproto;
+        await ctx.call('provider-capabilities.assertAccountProvisioningGrant', {
+          grant: ctx.meta?.accountProvisioning || {},
+          requestedProtocols
+        });
+
+        const enableSolid = requestedProtocols.solid;
+        const enableActivityPub = requestedProtocols.activitypub;
+        const enableAtproto = requestedProtocols.atproto;
         const atprotoDidMethod = input.atproto?.didMethod ?? this.settings.defaults.atprotoDidMethod;
 
         const warnings = [];
@@ -254,6 +261,16 @@ module.exports = {
           );
         }
       }
+    }
+  },
+
+  methods: {
+    requestedProtocolsFromInput(input) {
+      return {
+        solid: input.solid?.enabled ?? this.settings.defaults.enableSolid,
+        activitypub: input.activitypub?.enabled ?? this.settings.defaults.enableActivityPub,
+        atproto: input.atproto?.enabled ?? this.settings.defaults.enableAtproto
+      };
     }
   }
 };

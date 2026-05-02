@@ -7,10 +7,7 @@ const path = require('path');
 
 module.exports = tsEslint.config({
   name: 'react, react-hooks, jsx-a11y',
-  files: [
-    'pod-provider/frontend/**/*.{js,jsx,mjs,cjs,ts,tsx}',
-    'app-framework/react/**/*.{js,jsx,mjs,cjs,ts,tsx}'
-  ],
+  files: ['pod-provider/frontend/**/*.{js,jsx,mjs,cjs,ts,tsx}', 'app-framework/react/**/*.{js,jsx,mjs,cjs,ts,tsx}'],
   plugins: {
     react: eslintReact,
     'react-hooks': eslintReactHooks,

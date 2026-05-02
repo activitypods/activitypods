@@ -515,7 +515,7 @@ module.exports = {
               to: [recipientWebId],
               cc: [],
               content: text.length > 8192 ? text.slice(0, 8192) : text,
-              published: createdAt,
+              published: createdAt
             }
           };
         }

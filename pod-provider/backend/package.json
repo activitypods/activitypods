@@ -42,6 +42,9 @@
   },
   "dependencies": {
     "@2toad/profanity": "^3.3.0",
+    "@hpke/core": "^1.9.0",
+    "@noble/curves": "^2.0.1",
+    "@noble/hashes": "^2.2.0",
     "@rdfjs/formats": "4.0.0",
     "@semapps/activitypub": "1.1.2",
     "@semapps/auth": "1.1.2",
@@ -80,6 +83,7 @@
     "oidc-provider": "^8.4.1",
     "readable-stream": "^4.5.2",
     "sanitize-html": "^2.6.1",
+    "ts-mls": "^1.6.2",
     "ulid": "^3.0.2",
     "unicode-confusables": "^0.1.1",
     "url-join": "^4.0.1",

@@ -247,7 +247,9 @@ module.exports = {
       } catch (err) {
         // If the actor service doesn't know about this URI (e.g. it's a
         // non-Actor object), fall back to a plain HTTP fetch.
-        this.logger.debug(`Broker activitypub.actor.get failed for ${uri}, falling back to direct fetch: ${err.message}`);
+        this.logger.debug(
+          `Broker activitypub.actor.get failed for ${uri}, falling back to direct fetch: ${err.message}`
+        );
       }
 
       const response = await fetch(uri, {

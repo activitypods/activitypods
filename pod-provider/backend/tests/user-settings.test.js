@@ -872,29 +872,31 @@ describe('user-settings-api.create validation wiring', () => {
   });
 
   test('listAppModerationFilters allows delegated app with read:moderation consent', async () => {
-    const listByContainerSpy = jest.spyOn(service, 'listByContainer').mockImplementation(async (_ctx, webId, container) => {
-      if (container === 'app-consents') {
-        return [
-          {
-            '@id': 'http://localhost/alice/data/consent-memory',
-            clientId: 'https://memory.example/apps/memory',
-            permissions: ['read:moderation']
-          }
-        ];
-      }
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, webId, container) => {
+        if (container === 'app-consents') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/consent-memory',
+              clientId: 'https://memory.example/apps/memory',
+              permissions: ['read:moderation']
+            }
+          ];
+        }
 
-      if (container === 'filters') {
-        return [
-          {
-            '@id': 'http://localhost/alice/data/filter-1',
-            pattern: 'spoiler',
-            action: 'hide'
-          }
-        ];
-      }
+        if (container === 'filters') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/filter-1',
+              pattern: 'spoiler',
+              action: 'hide'
+            }
+          ];
+        }
 
-      throw new Error(`Unexpected container ${container} for ${webId}`);
-    });
+        throw new Error(`Unexpected container ${container} for ${webId}`);
+      });
 
     const result = await broker.call(
       'user-settings-api.listAppModerationFilters',
@@ -916,18 +918,20 @@ describe('user-settings-api.create validation wiring', () => {
   });
 
   test('createAppModerationFilter requires write:moderation consent', async () => {
-    const listByContainerSpy = jest.spyOn(service, 'listByContainer').mockImplementation(async (_ctx, _webId, container) => {
-      if (container === 'app-consents') {
-        return [
-          {
-            '@id': 'http://localhost/alice/data/consent-memory',
-            clientId: 'https://memory.example/apps/memory',
-            permissions: ['read:moderation']
-          }
-        ];
-      }
-      return [];
-    });
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, _webId, container) => {
+        if (container === 'app-consents') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/consent-memory',
+              clientId: 'https://memory.example/apps/memory',
+              permissions: ['read:moderation']
+            }
+          ];
+        }
+        return [];
+      });
 
     await expect(
       broker.call(
@@ -952,18 +956,20 @@ describe('user-settings-api.create validation wiring', () => {
   });
 
   test('createAppModerationFilter writes into impersonated user pod container', async () => {
-    const listByContainerSpy = jest.spyOn(service, 'listByContainer').mockImplementation(async (_ctx, _webId, container) => {
-      if (container === 'app-consents') {
-        return [
-          {
-            '@id': 'http://localhost/alice/data/consent-memory',
-            clientId: 'https://memory.example/apps/memory',
-            permissions: ['read:moderation', 'write:moderation']
-          }
-        ];
-      }
-      return [];
-    });
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, _webId, container) => {
+        if (container === 'app-consents') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/consent-memory',
+              clientId: 'https://memory.example/apps/memory',
+              permissions: ['read:moderation', 'write:moderation']
+            }
+          ];
+        }
+        return [];
+      });
 
     await broker.call(
       'user-settings-api.createAppModerationFilter',
@@ -994,23 +1000,25 @@ describe('user-settings-api.create validation wiring', () => {
   });
 
   test('listAppModerationFilters allows delegated app with token scope and no persisted consent', async () => {
-    const listByContainerSpy = jest.spyOn(service, 'listByContainer').mockImplementation(async (_ctx, _webId, container) => {
-      if (container === 'filters') {
-        return [
-          {
-            '@id': 'http://localhost/alice/data/filter-token',
-            pattern: 'token-granted',
-            action: 'hide'
-          }
-        ];
-      }
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, _webId, container) => {
+        if (container === 'filters') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/filter-token',
+              pattern: 'token-granted',
+              action: 'hide'
+            }
+          ];
+        }
 
-      if (container === 'app-consents') {
-        return [];
-      }
+        if (container === 'app-consents') {
+          return [];
+        }
 
-      throw new Error(`Unexpected container ${container}`);
-    });
+        throw new Error(`Unexpected container ${container}`);
+      });
 
     const result = await broker.call(
       'user-settings-api.listAppModerationFilters',
@@ -1030,18 +1038,20 @@ describe('user-settings-api.create validation wiring', () => {
   });
 
   test('updateAppModerationFilter updates user-owned filter with delegated write consent', async () => {
-    const listByContainerSpy = jest.spyOn(service, 'listByContainer').mockImplementation(async (_ctx, _webId, container) => {
-      if (container === 'app-consents') {
-        return [
-          {
-            '@id': 'http://localhost/alice/data/consent-memory',
-            clientId: 'https://memory.example/apps/memory',
-            permissions: ['read:moderation', 'write:moderation']
-          }
-        ];
-      }
-      return [];
-    });
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, _webId, container) => {
+        if (container === 'app-consents') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/consent-memory',
+              clientId: 'https://memory.example/apps/memory',
+              permissions: ['read:moderation', 'write:moderation']
+            }
+          ];
+        }
+        return [];
+      });
 
     await broker.call(
       'user-settings-api.updateAppModerationFilter',
@@ -1068,18 +1078,20 @@ describe('user-settings-api.create validation wiring', () => {
   });
 
   test('removeAppModerationFilter deletes user-owned filter with delegated write consent', async () => {
-    const listByContainerSpy = jest.spyOn(service, 'listByContainer').mockImplementation(async (_ctx, _webId, container) => {
-      if (container === 'app-consents') {
-        return [
-          {
-            '@id': 'http://localhost/alice/data/consent-memory',
-            clientId: 'https://memory.example/apps/memory',
-            permissions: ['read:moderation', 'write:moderation']
-          }
-        ];
-      }
-      return [];
-    });
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, _webId, container) => {
+        if (container === 'app-consents') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/consent-memory',
+              clientId: 'https://memory.example/apps/memory',
+              permissions: ['read:moderation', 'write:moderation']
+            }
+          ];
+        }
+        return [];
+      });
 
     const result = await broker.call(
       'user-settings-api.removeAppModerationFilter',
@@ -1121,24 +1133,26 @@ describe('user-settings-api.create validation wiring', () => {
   });
 
   test('listAppTrustSources allows delegated app with read:trust token scope', async () => {
-    const listByContainerSpy = jest.spyOn(service, 'listByContainer').mockImplementation(async (_ctx, _webId, container) => {
-      if (container === 'trust-sources') {
-        return [
-          {
-            '@id': 'http://localhost/alice/data/trust-memory',
-            source: 'did:web:mod.example.org',
-            sourceType: 'atproto-labeler',
-            scopes: ['label:content', 'filter:content']
-          }
-        ];
-      }
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, _webId, container) => {
+        if (container === 'trust-sources') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/trust-memory',
+              source: 'did:web:mod.example.org',
+              sourceType: 'atproto-labeler',
+              scopes: ['label:content', 'filter:content']
+            }
+          ];
+        }
 
-      if (container === 'app-consents') {
-        return [];
-      }
+        if (container === 'app-consents') {
+          return [];
+        }
 
-      throw new Error(`Unexpected container ${container}`);
-    });
+        throw new Error(`Unexpected container ${container}`);
+      });
 
     const result = await broker.call(
       'user-settings-api.listAppTrustSources',

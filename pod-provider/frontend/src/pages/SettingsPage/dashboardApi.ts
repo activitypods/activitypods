@@ -48,7 +48,7 @@ async function reqWithBase(base: string, path: string, options: RequestInit = {}
     );
     error.code = asString(errorPayload?.code);
     error.status = res.status;
-      error.details = errorPayload?.details;
+    error.details = errorPayload?.details;
     error.requestId = asString(errorPayload?.requestId);
     throw error;
   }

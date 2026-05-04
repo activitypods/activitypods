@@ -6,7 +6,7 @@ const transport = require('../../config/transport');
 
 module.exports = {
   mixins: [AuthLocalService],
-  dependencies: ['dataset-provisioning'],
+  dependencies: ['dataset-provisioning', 'atproto-provisioning'],
   settings: {
     baseUrl: CONFIG.BASE_URL,
     jwtPath: path.resolve(__dirname, '../../jwt'),
@@ -24,6 +24,10 @@ module.exports = {
         locale: CONFIG.DEFAULT_LOCALE,
         frontUrl: CONFIG.FRONTEND_URL
       }
+    },
+    atproto: {
+      autoProvisionOnSignup: process.env.APODS_AUTO_PROVISION_ATPROTO_ON_SIGNUP !== 'false',
+      didMethod: process.env.APODS_ATPROTO_DID_METHOD || 'plc'
     }
   },
   actions: {
@@ -69,11 +73,44 @@ module.exports = {
 
         accountData = await ctx.call('auth.account.attachWebId', { accountUri: accountData['@id'], webId });
 
+        let atprotoProvisioning = null;
+        if (this.settings.atproto.autoProvisionOnSignup) {
+          try {
+            atprotoProvisioning = await ctx.call('atproto-provisioning.provisionForAccount', {
+              canonicalAccountId: webId,
+              webId,
+              didMethod: this.settings.atproto.didMethod,
+              profile: {
+                displayName: rest?.name || accountData?.username || username,
+                ...(rest?.summary ? { summary: rest.summary } : {})
+              }
+            });
+          } catch (e) {
+            this.logger.error(`[Auth] ATProto provisioning failed for ${webId}: ${e.message}`);
+            throw new MoleculerError(
+              `ATProto provisioning failed during signup: ${e.message}`,
+              Number.isFinite(Number(e.code)) ? Number(e.code) : 500,
+              e.type || 'ATPROTO_PROVISIONING_FAILED'
+            );
+          }
+        }
+
         ctx.emit('auth.registered', { webId, profileData, accountData });
 
         const token = await ctx.call('auth.jwt.generateServerSignedToken', { payload: { webId } });
 
-        return { token, webId, newUser: true };
+        return {
+          token,
+          webId,
+          newUser: true,
+          ...(atprotoProvisioning
+            ? {
+                atprotoDid: atprotoProvisioning.did,
+                atprotoHandle: atprotoProvisioning.handle,
+                atprotoRepoInitialized: !!atprotoProvisioning.repoInitialized
+              }
+            : {})
+        };
       } catch (e) {
         await ctx.call('auth.account.remove', { id: accountData['@id'] });
         throw e;

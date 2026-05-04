@@ -1,5 +1,6 @@
 const path = require('path');
 const urlJoin = require('url-join');
+const { Errors: { MoleculerError } } = require('moleculer');
 const { AuthLocalService } = require('@semapps/auth');
 const CONFIG = require('../../config/config');
 const transport = require('../../config/transport');
@@ -73,9 +74,17 @@ module.exports = {
 
         accountData = await ctx.call('auth.account.attachWebId', { accountUri: accountData['@id'], webId });
 
+        // Emit auth.registered first so event listeners (solid.storage, ldp containers, activitypub actor, etc.)
+        // begin creating the pod storage containers and actor synchronously.
+        ctx.emit('auth.registered', { webId, profileData, accountData });
+
         let atprotoProvisioning = null;
         if (this.settings.atproto.autoProvisionOnSignup) {
           try {
+            // Wait for the key container (/data/key) to be created before AT provisioning.
+            // The container is created asynchronously by auth.registered event listeners.
+            // keys.container.waitForContainerCreation polls until it exists.
+            await ctx.call('keys.container.waitForContainerCreation', { webId });
             atprotoProvisioning = await ctx.call('atproto-provisioning.provisionForAccount', {
               canonicalAccountId: webId,
               webId,
@@ -94,8 +103,6 @@ module.exports = {
             );
           }
         }
-
-        ctx.emit('auth.registered', { webId, profileData, accountData });
 
         const token = await ctx.call('auth.jwt.generateServerSignedToken', { payload: { webId } });
 
@@ -116,6 +123,23 @@ module.exports = {
         throw e;
       }
     }
+  },
+  async started() {
+    // The AuthLocalService mixin registers /auth/signup with toBottom:true (default),
+    // placing it AFTER the LDP catch-all /:username/:slugParts* in moleculer-web's route list.
+    // moleculer-web's addRoute() replaces in-place when names match (ignoring toBottom),
+    // so we must remove the route first, then re-add at position 0 (toBottom:false).
+    const { pathname: basePath } = new URL(this.settings.baseUrl);
+    await this.broker.call('api.removeRoute', { name: 'auth-signup' });
+    await this.broker.call('api.addRoute', {
+      route: {
+        name: 'auth-signup',
+        path: `${basePath}/auth/signup`.replace(/\/+/g, '/'),
+        aliases: { 'POST /': 'auth.signup' }
+      },
+      toBottom: false
+    });
+    this.logger.info('[Auth] /auth/signup route promoted above LDP catch-all');
   },
   hooks: {
     after: {

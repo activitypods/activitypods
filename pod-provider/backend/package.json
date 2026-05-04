@@ -18,6 +18,7 @@
     "test:atproto:signing": "node scripts/atproto-signing-smoke.js",
     "proof:unified-account": "node scripts/unified-account-live-proof.js",
     "proof:unified-account:at-ready": "node scripts/proof-unified-account-at-ready.js",
+    "proof:auth-signup:at-ready": "node scripts/proof-auth-signup-atproto-ready.js",
     "proof:atproto-legacy-repair": "node scripts/proof-atproto-legacy-repair-http.js",
     "proof:link-external-atproto": "node scripts/proof-link-external-atproto.js",
     "proof:secure-dataset": "node scripts/proof-secure-dataset-provisioning.js",

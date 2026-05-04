@@ -171,7 +171,9 @@ module.exports = {
             atproto = await ctx.call('atproto-provisioning.provisionForAccount', {
               canonicalAccountId: canonical.canonicalAccountId,
               webId: solid.webId,
-              requestedHandle: input.atproto?.requestedHandle,
+              requestedHandle: input.atproto?.requestedHandle || input.username,
+              activityPubActorId: activitypub?.actorId || solid.webId,
+              activityPubHandle: activitypub?.handle || null,
               didMethod: atprotoDidMethod,
               profile: input.profile,
               force: input.atproto?.force ?? false

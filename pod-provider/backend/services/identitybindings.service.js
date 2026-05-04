@@ -119,47 +119,36 @@ module.exports = {
 
         const exists = await ctx.call('ldp.resource.exist', { resourceUri, webId: 'system' });
         const existing = exists
-          ? await this.actions.get(
-              { resourceUri, webId: 'system', accept: MIME_TYPES.JSON },
-              { parentCtx: ctx }
-            )
+          ? await this.actions.get({ resourceUri, webId: 'system', accept: MIME_TYPES.JSON }, { parentCtx: ctx })
           : null;
 
         const existingValue = key => (existing ? this._readField(existing, key) : null);
         const existingBoolean = key => this._coerceBoolean(existingValue(key));
 
-        const resolvedAtprotoSource =
-          atprotoSource ||
-          existingValue('atprotoSource') ||
-          'local';
+        const resolvedAtprotoSource = atprotoSource || existingValue('atprotoSource') || 'local';
 
         const resolvedAtprotoManaged =
           typeof atprotoManaged === 'boolean'
             ? atprotoManaged
-            : existingBoolean('atprotoManaged') ?? (resolvedAtprotoSource !== 'external');
+            : existingBoolean('atprotoManaged') ?? resolvedAtprotoSource !== 'external';
 
         const resolvedRepoInitialized =
-          typeof repoInitialized === 'boolean'
-            ? repoInitialized
-            : existingBoolean('repoInitialized') ?? false;
+          typeof repoInitialized === 'boolean' ? repoInitialized : existingBoolean('repoInitialized') ?? false;
 
         const resource = this._compactNulls({
           '@id': resourceUri,
           '@type': [BINDING_TYPE],
           [PREDICATES.canonicalAccountId]: canonicalAccountId,
           [PREDICATES.webId]: webId,
-          [PREDICATES.activityPubActorId]:
-            activityPubActorId || existingValue('activityPubActorId') || webId,
-          [PREDICATES.activityPubHandle]:
-            activityPubHandle || existingValue('activityPubHandle') || null,
+          [PREDICATES.activityPubActorId]: activityPubActorId || existingValue('activityPubActorId') || webId,
+          [PREDICATES.activityPubHandle]: activityPubHandle || existingValue('activityPubHandle') || null,
           [PREDICATES.atprotoDid]: atprotoDid || existingValue('atprotoDid'),
           [PREDICATES.atprotoHandle]: atprotoHandle || existingValue('atprotoHandle'),
           [PREDICATES.atprotoSource]: resolvedAtprotoSource,
           [PREDICATES.atprotoManaged]: resolvedAtprotoManaged,
           [PREDICATES.atprotoPdsUrl]: atprotoPdsUrl || existingValue('atprotoPdsUrl') || null,
           [PREDICATES.atSigningKeyRef]: atSigningKeyRef || existingValue('atSigningKeyRef'),
-          [PREDICATES.atRotationKeyRef]:
-            atRotationKeyRef || existingValue('atRotationKeyRef'),
+          [PREDICATES.atRotationKeyRef]: atRotationKeyRef || existingValue('atRotationKeyRef'),
           [PREDICATES.status]: status || existingValue('status') || 'pending',
           [PREDICATES.repoInitialized]: resolvedRepoInitialized,
           [PREDICATES.repoRootCid]: repoRootCid || existingValue('repoRootCid') || null,
@@ -223,19 +212,11 @@ module.exports = {
         }
 
         if (existing.atprotoDid && existing.atprotoDid !== ctx.params.did) {
-          throw new MoleculerError(
-            'Repo bootstrap DID mismatch',
-            400,
-            'ATPROTO_DID_MISMATCH'
-          );
+          throw new MoleculerError('Repo bootstrap DID mismatch', 400, 'ATPROTO_DID_MISMATCH');
         }
 
         if (existing.atprotoHandle && existing.atprotoHandle !== ctx.params.handle) {
-          throw new MoleculerError(
-            'Repo bootstrap handle mismatch',
-            400,
-            'ATPROTO_HANDLE_MISMATCH'
-          );
+          throw new MoleculerError('Repo bootstrap handle mismatch', 400, 'ATPROTO_HANDLE_MISMATCH');
         }
 
         return ctx.call(
@@ -296,15 +277,41 @@ module.exports = {
           limit: ctx.params.limit || 100
         });
       }
+    },
+
+    /**
+     * Remove an identity binding (LDP resource + SPARQL index entry).
+     * Idempotent: returns { removed:false } if no binding exists.
+     * Used by signup rollback paths to avoid orphaned bindings on failure.
+     */
+    remove: {
+      params: {
+        canonicalAccountId: { type: 'string', min: 1 }
+      },
+      async handler(ctx) {
+        const canonicalAccountId = String(ctx.params.canonicalAccountId).trim();
+        const { resourceUri } = await this._resolveBindingLocation(canonicalAccountId, ctx);
+
+        const exists = await ctx.call('ldp.resource.exist', { resourceUri, webId: 'system' });
+        if (!exists) {
+          // Still attempt index cleanup in case of partial state.
+          await this._removeBindingIndex(ctx, canonicalAccountId).catch(() => {});
+          return { removed: false, canonicalAccountId };
+        }
+
+        await this.actions.delete({ resourceUri, webId: 'system' }, { parentCtx: ctx });
+        await this._removeBindingIndex(ctx, canonicalAccountId).catch(err => {
+          // Index cleanup is best-effort; LDP resource is the source of truth.
+          this.logger.warn(`[identitybindings] index cleanup failed for ${canonicalAccountId}: ${err.message}`);
+        });
+        return { removed: true, canonicalAccountId };
+      }
     }
   },
   methods: {
     async _resolveBindingLocation(canonicalAccountId, ctx) {
       const bindingWebId = canonicalAccountId;
-      const containerUri = await this.actions.getContainerUri(
-        { webId: bindingWebId },
-        { parentCtx: ctx }
-      );
+      const containerUri = await this.actions.getContainerUri({ webId: bindingWebId }, { parentCtx: ctx });
       const slug = this._bindingSlug(canonicalAccountId);
       const resourceUri = urlJoin(containerUri, slug);
       return { bindingWebId, containerUri, slug, resourceUri };
@@ -348,9 +355,7 @@ module.exports = {
     },
 
     _readField(resource, key) {
-      return this._unwrapFieldValue(
-        resource[key] ?? resource[`apods:${key}`] ?? resource[PREDICATES[key]]
-      );
+      return this._unwrapFieldValue(resource[key] ?? resource[`apods:${key}`] ?? resource[PREDICATES[key]]);
     },
 
     _unwrapFieldValue(value) {
@@ -457,6 +462,19 @@ ${insertBody}
       });
     },
 
+    async _removeBindingIndex(ctx, canonicalAccountId) {
+      if (!canonicalAccountId) return;
+      const indexUri = this._bindingIndexUri(canonicalAccountId);
+      await ctx.call('triplestore.update', {
+        query: `
+          DELETE { <${indexUri}> ?p ?o . }
+          WHERE  { <${indexUri}> ?p ?o . }
+        `,
+        dataset: 'settings',
+        webId: 'system'
+      });
+    },
+
     async _findByHandleWithSparql(ctx, atprotoHandle) {
       try {
         const handleLower = String(atprotoHandle).toLowerCase();
@@ -485,9 +503,7 @@ ${insertBody}
 
           if (!binding?.[field]) continue;
 
-          const actualValue = field === 'atprotoHandle'
-            ? String(binding[field]).toLowerCase()
-            : String(binding[field]);
+          const actualValue = field === 'atprotoHandle' ? String(binding[field]).toLowerCase() : String(binding[field]);
 
           if (actualValue === expectedValue) {
             return binding;
@@ -594,7 +610,7 @@ ${insertBody}
 
     async _queryBindingsWithSparql(ctx) {
       const results = await ctx.call('triplestore.query', {
-          query: sanitizeSparqlQuery`
+        query: sanitizeSparqlQuery`
             PREFIX apods: <${APODS}>
             SELECT ?binding ?canonicalAccountId ?webId ?activityPubActorId ?activityPubHandle
                    ?atprotoDid ?atprotoHandle ?atprotoSource ?atprotoManaged ?atprotoPdsUrl
@@ -621,30 +637,26 @@ ${insertBody}
               OPTIONAL { ?binding apods:updatedAt ?updatedAt . }
             }
           `,
-          dataset: 'settings',
-          webId: 'system'
-        });
+        dataset: 'settings',
+        webId: 'system'
+      });
 
       return (results || []).map(row => ({
         id: this._readQueryBinding(row, 'binding'),
         canonicalAccountId: this._readQueryBinding(row, 'canonicalAccountId'),
         webId: this._readQueryBinding(row, 'webId'),
         activityPubActorId:
-          this._readQueryBinding(row, 'activityPubActorId') ||
-          this._readQueryBinding(row, 'webId') ||
-          null,
+          this._readQueryBinding(row, 'activityPubActorId') || this._readQueryBinding(row, 'webId') || null,
         activityPubHandle: this._readQueryBinding(row, 'activityPubHandle'),
         atprotoDid: this._readQueryBinding(row, 'atprotoDid'),
         atprotoHandle: this._readQueryBinding(row, 'atprotoHandle'),
         atprotoSource: this._readQueryBinding(row, 'atprotoSource') || 'local',
-        atprotoManaged:
-          this._coerceBoolean(this._readQueryBinding(row, 'atprotoManaged')) ?? true,
+        atprotoManaged: this._coerceBoolean(this._readQueryBinding(row, 'atprotoManaged')) ?? true,
         atprotoPdsUrl: this._readQueryBinding(row, 'atprotoPdsUrl'),
         atSigningKeyRef: this._readQueryBinding(row, 'atSigningKeyRef'),
         atRotationKeyRef: this._readQueryBinding(row, 'atRotationKeyRef'),
         status: this._readQueryBinding(row, 'status'),
-        repoInitialized:
-          this._coerceBoolean(this._readQueryBinding(row, 'repoInitialized')) ?? false,
+        repoInitialized: this._coerceBoolean(this._readQueryBinding(row, 'repoInitialized')) ?? false,
         repoRootCid: this._readQueryBinding(row, 'repoRootCid'),
         repoRev: this._readQueryBinding(row, 'repoRev'),
         createdAt: this._readQueryBinding(row, 'createdAt'),
@@ -702,9 +714,7 @@ ${insertBody}
 
       return {
         items,
-        nextCursor: last
-          ? this._encodeCursor(last)
-          : since || null
+        nextCursor: last ? this._encodeCursor(last) : since || null
       };
     }
   }

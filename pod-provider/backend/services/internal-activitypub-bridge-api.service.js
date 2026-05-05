@@ -571,15 +571,10 @@ module.exports = {
       if (!expected || !provided) return false;
       const exp = Buffer.from(String(expected), 'utf8');
       const got = Buffer.from(String(provided), 'utf8');
-      // Pad to equal length, then compare both length and content in constant time
-      const maxLen = Math.max(exp.length, got.length);
-      const expPadded = Buffer.alloc(maxLen, 0);
-      const gotPadded = Buffer.alloc(maxLen, 0);
-      exp.copy(expPadded);
-      got.copy(gotPadded);
-      const lengthMatch = exp.length === got.length;
-      const contentMatch = crypto.timingSafeEqual(expPadded, gotPadded);
-      return lengthMatch && contentMatch;
+      // Reject if lengths differ (fail fast without timing info leakage)
+      if (exp.length !== got.length) return false;
+      // Compare content in constant time
+      return crypto.timingSafeEqual(exp, got);
     },
 
     /**

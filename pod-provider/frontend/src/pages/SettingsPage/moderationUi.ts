@@ -1,6 +1,20 @@
 export type ModerationAction = 'label' | 'warn' | 'filter' | 'block' | 'suspend';
 
-export type ModerationDecision = {
+export type ProviderInboxEventType = 'UndoFlag' | 'Accept' | 'Reject' | 'Generic';
+
+export interface ProviderInboxEvent {
+  id: string;
+  eventType: ProviderInboxEventType;
+  activityId: string | null;
+  actorUri: string;
+  envelopePath: string | null;
+  receivedAt: string;
+  storedAt: string;
+  objectId: string | null;
+  activityType: string | null;
+}
+
+export interface ModerationDecision {
   id: string;
   appliedAt: string;
   appliedBy: string;
@@ -17,9 +31,9 @@ export type ModerationDecision = {
   atLabelEmitted?: boolean;
   atStatusUpdated?: boolean;
   revoked?: boolean;
-};
+}
 
-export type ModerationCase = {
+export interface ModerationCase {
   id: string;
   activityId?: string;
   source: 'activitypub-flag' | 'local-user-report';
@@ -70,13 +84,13 @@ export type ModerationCase = {
           handle?: string;
         } | null;
       };
-  evidenceObjectRefs: Array<{
+  evidenceObjectRefs: {
     canonicalObjectId: string;
     atUri?: string;
     cid?: string;
     activityPubObjectId?: string;
     canonicalUrl?: string;
-  }>;
+  }[];
   receivedAt: string;
   createdAt?: string;
   status: 'open' | 'resolved' | 'dismissed';
@@ -125,25 +139,25 @@ export type ModerationCase = {
   updatedAt?: string;
   resolvedAt?: string;
   resolvedBy?: string;
-};
+}
 
 export type ModerationChipColor = 'default' | 'success' | 'info' | 'warning' | 'error';
 
-export type ForwardingBadge = {
+export interface ForwardingBadge {
   key: string;
   label: string;
   color: ModerationChipColor;
-};
+}
 
 export type ForwardingProtocol = 'activityPub' | 'atproto';
 
-export type CaseForwardingControl = {
+export interface CaseForwardingControl {
   protocol: ForwardingProtocol;
   label: string;
   enableRemoteForwarding?: boolean;
-};
+}
 
-const firstNonEmpty = (...values: Array<string | undefined | null>) =>
+const firstNonEmpty = (...values: (string | undefined | null)[]) =>
   values.find(value => Boolean(value && value.trim()));
 
 export const protocolColor = (protocols: ModerationDecision['protocols']): ModerationChipColor => {

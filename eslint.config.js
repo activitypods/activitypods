@@ -27,16 +27,16 @@ module.exports = tsEslint.config(
       eqeqeq: 'warn',
       'global-require': 'warn',
       'guard-for-in': 'warn',
-      'import/extensions': 'warn',
-      'import/newline-after-import': 'warn',
-      'import/no-cycle': 'warn',
-      'import/no-duplicates': 'warn',
-      'import/no-dynamic-require': 'off',
-      'import/no-named-default': 'warn',
-      'import/no-unresolved': 'warn',
-      'import/no-useless-path-segments': 'warn',
-      'import/order': 'warn',
-      'jest/no-conditional-expect': 'warn',
+      'import-x/extensions': 'warn',
+      'import-x/newline-after-import': 'warn',
+      'import-x/no-cycle': 'warn',
+      'import-x/no-duplicates': 'warn',
+      'import-x/no-dynamic-require': 'off',
+      'import-x/no-named-default': 'warn',
+      'import-x/no-unresolved': 'warn',
+      'import-x/no-useless-path-segments': 'warn',
+      'import-x/order': 'warn',
+
       'jsdoc/require-jsdoc': 'off',
       'jsdoc/require-param': 'off',
       'jsdoc/require-returns': 'off',
@@ -64,7 +64,7 @@ module.exports = tsEslint.config(
       'no-unused-vars': 'warn',
       'no-use-before-define': 'warn',
       'no-var': 'warn',
-      'node/no-unsupported-features/es-syntax': 'off',
+
       'object-shorthand': 'off',
       'one-var': 'warn',
       'operator-assignment': 'warn',
@@ -82,7 +82,15 @@ module.exports = tsEslint.config(
   },
   // Node globals
   {
-    files: ['app-framework/app/**', 'pod-provider/backend/**', 'tests/**', 'conf/*'],
+    files: [
+      'app-framework/app/**',
+      'pod-provider/backend/**',
+      'tests/**',
+      'pod-provider/backend/tests/**',
+      'conf/*',
+      'config/eslint/**',
+      'eslint.config.js'
+    ],
     languageOptions: { globals: { ...globals.node } }
   },
   // Rules
@@ -96,7 +104,7 @@ module.exports = tsEslint.config(
   },
   // Tests
   {
-    files: ['tests/**'],
+    files: ['tests/**', 'pod-provider/backend/tests/**'],
     languageOptions: { globals: { ...globals.jest } },
     // plugins: { jest: eslintJest },
     rules: {

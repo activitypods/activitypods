@@ -2,7 +2,13 @@
 
 const CURRENT_SCHEMA_VERSION = 1;
 
-const KNOWN_CONSENT_SCOPES = new Set(['read:moderation', 'write:moderation', 'app:overrides', 'read:trust']);
+const KNOWN_CONSENT_SCOPES = new Set([
+  'read:moderation',
+  'write:moderation',
+  'app:overrides',
+  'read:trust',
+  'write:trust'
+]);
 const TRUST_SOURCE_TYPES = new Set([
   'relay',
   'curator',
@@ -253,6 +259,9 @@ function validateAppConsent(data) {
   }
   if (scopeList.includes('write:moderation') && !scopeList.includes('read:moderation')) {
     return 'write:moderation requires read:moderation';
+  }
+  if (scopeList.includes('write:trust') && !scopeList.includes('read:trust')) {
+    return 'write:trust requires read:trust';
   }
   return null;
 }

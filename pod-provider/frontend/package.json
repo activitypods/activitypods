@@ -1,7 +1,8 @@
 {
   "name": "activitypods-frontend",
   "scripts": {
-    "dev": "react-scripts start",
+    "dev": "node ./scripts/start-dev.mjs",
+    "start": "npm run dev",
     "build": "react-scripts build",
     "test": "react-scripts test --watchAll=false",
     "eject": "react-scripts eject",

@@ -151,7 +151,7 @@ describe('validateAppConsent', () => {
     expect(
       validateAppConsent({
         clientId: 'my-app',
-        permissions: ['read:moderation', 'write:moderation', 'app:overrides', 'read:trust']
+        permissions: ['read:moderation', 'write:moderation', 'app:overrides', 'read:trust', 'write:trust']
       })
     ).toBeNull();
   });
@@ -177,6 +177,10 @@ describe('validateAppConsent', () => {
     );
   });
 
+  test('rejects write:trust without read:trust', () => {
+    expect(validateAppConsent({ clientId: 'my-app', permissions: ['write:trust'] })).toMatch(/requires read:trust/);
+  });
+
   test('rejects missing permissions', () => {
     expect(validateAppConsent({ clientId: 'my-app' })).toMatch(/scope/);
   });
@@ -197,7 +201,7 @@ describe('validateAppConsent', () => {
 
   test('KNOWN_CONSENT_SCOPES contains expected values', () => {
     expect([...KNOWN_CONSENT_SCOPES].sort()).toEqual(
-      ['app:overrides', 'read:moderation', 'read:trust', 'write:moderation'].sort()
+      ['app:overrides', 'read:moderation', 'read:trust', 'write:moderation', 'write:trust'].sort()
     );
   });
 
@@ -474,7 +478,10 @@ const UserSettingsApiService = require('../services/dashboard/user-settings-api.
 
 describe('user-settings-api.create validation wiring', () => {
   let broker;
+  let service;
   let lastPostedResource;
+  let lastPostedContainerUri;
+  let lastPostedWebId;
   let lastPutResource;
 
   beforeAll(async () => {
@@ -487,6 +494,8 @@ describe('user-settings-api.create validation wiring', () => {
       actions: {
         post: async ctx => {
           lastPostedResource = ctx.params.resource;
+          lastPostedContainerUri = ctx.params.containerUri;
+          lastPostedWebId = ctx.params.webId;
           return 'http://localhost/alice/data/res1';
         }
       }
@@ -539,6 +548,7 @@ describe('user-settings-api.create validation wiring', () => {
     });
 
     await broker.start();
+    service = broker.getLocalService('user-settings-api');
   });
 
   afterAll(() => broker.stop());
@@ -839,5 +849,331 @@ describe('user-settings-api.create validation wiring', () => {
     await expect(
       broker.call('user-settings-api.remove', { resourceUri: 'http://localhost/bob/data/res1' }, { meta: callerMeta })
     ).rejects.toMatchObject({ code: 403 });
+  });
+
+  test('listAppModerationFilters rejects delegated app without matching consent', async () => {
+    const listByContainerSpy = jest.spyOn(service, 'listByContainer').mockResolvedValue([]);
+
+    await expect(
+      broker.call(
+        'user-settings-api.listAppModerationFilters',
+        {},
+        {
+          meta: {
+            webId: 'https://memory.example/apps/memory',
+            impersonatedUser: 'http://localhost/alice#me',
+            tokenPayload: { scope: 'openid webid' }
+          }
+        }
+      )
+    ).rejects.toMatchObject({ code: 403, type: 'APP_CONSENT_REQUIRED' });
+
+    listByContainerSpy.mockRestore();
+  });
+
+  test('listAppModerationFilters allows delegated app with read:moderation consent', async () => {
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, webId, container) => {
+        if (container === 'app-consents') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/consent-memory',
+              clientId: 'https://memory.example/apps/memory',
+              permissions: ['read:moderation']
+            }
+          ];
+        }
+
+        if (container === 'filters') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/filter-1',
+              pattern: 'spoiler',
+              action: 'hide'
+            }
+          ];
+        }
+
+        throw new Error(`Unexpected container ${container} for ${webId}`);
+      });
+
+    const result = await broker.call(
+      'user-settings-api.listAppModerationFilters',
+      {},
+      {
+        meta: {
+          webId: 'https://memory.example/apps/memory',
+          impersonatedUser: 'http://localhost/alice#me',
+          tokenPayload: { scope: 'openid webid' }
+        }
+      }
+    );
+
+    expect(Array.isArray(result.data)).toBe(true);
+    expect(result.data[0].pattern).toBe('spoiler');
+    expect(listByContainerSpy).toHaveBeenCalledWith(expect.any(Object), 'http://localhost/alice#me', 'filters');
+
+    listByContainerSpy.mockRestore();
+  });
+
+  test('createAppModerationFilter requires write:moderation consent', async () => {
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, _webId, container) => {
+        if (container === 'app-consents') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/consent-memory',
+              clientId: 'https://memory.example/apps/memory',
+              permissions: ['read:moderation']
+            }
+          ];
+        }
+        return [];
+      });
+
+    await expect(
+      broker.call(
+        'user-settings-api.createAppModerationFilter',
+        {
+          data: {
+            pattern: 'topic',
+            action: 'hide'
+          }
+        },
+        {
+          meta: {
+            webId: 'https://memory.example/apps/memory',
+            impersonatedUser: 'http://localhost/alice#me',
+            tokenPayload: { scope: 'openid webid' }
+          }
+        }
+      )
+    ).rejects.toMatchObject({ code: 403, type: 'APP_CONSENT_REQUIRED' });
+
+    listByContainerSpy.mockRestore();
+  });
+
+  test('createAppModerationFilter writes into impersonated user pod container', async () => {
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, _webId, container) => {
+        if (container === 'app-consents') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/consent-memory',
+              clientId: 'https://memory.example/apps/memory',
+              permissions: ['read:moderation', 'write:moderation']
+            }
+          ];
+        }
+        return [];
+      });
+
+    await broker.call(
+      'user-settings-api.createAppModerationFilter',
+      {
+        data: {
+          pattern: 'sensitive term',
+          action: 'warn',
+          terms: ['sensitive term', '#sensitiveterm'],
+          matchType: 'phrase'
+        }
+      },
+      {
+        meta: {
+          webId: 'https://memory.example/apps/memory',
+          impersonatedUser: 'http://localhost/alice#me',
+          tokenPayload: { scope: 'openid webid' }
+        }
+      }
+    );
+
+    expect(lastPostedContainerUri).toBe('http://localhost/alice/data/');
+    expect(lastPostedWebId).toBe('http://localhost/alice#me');
+    expect(lastPostedResource.pattern).toBe('sensitive term');
+    expect(lastPostedResource.action).toBe('warn');
+    expect(lastPostedResource.terms).toEqual(['sensitive term', '#sensitiveterm']);
+
+    listByContainerSpy.mockRestore();
+  });
+
+  test('listAppModerationFilters allows delegated app with token scope and no persisted consent', async () => {
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, _webId, container) => {
+        if (container === 'filters') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/filter-token',
+              pattern: 'token-granted',
+              action: 'hide'
+            }
+          ];
+        }
+
+        if (container === 'app-consents') {
+          return [];
+        }
+
+        throw new Error(`Unexpected container ${container}`);
+      });
+
+    const result = await broker.call(
+      'user-settings-api.listAppModerationFilters',
+      {},
+      {
+        meta: {
+          webId: 'https://memory.example/apps/memory',
+          impersonatedUser: 'http://localhost/alice#me',
+          tokenPayload: { scope: 'openid webid read:moderation' }
+        }
+      }
+    );
+
+    expect(result.data[0].pattern).toBe('token-granted');
+
+    listByContainerSpy.mockRestore();
+  });
+
+  test('updateAppModerationFilter updates user-owned filter with delegated write consent', async () => {
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, _webId, container) => {
+        if (container === 'app-consents') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/consent-memory',
+              clientId: 'https://memory.example/apps/memory',
+              permissions: ['read:moderation', 'write:moderation']
+            }
+          ];
+        }
+        return [];
+      });
+
+    await broker.call(
+      'user-settings-api.updateAppModerationFilter',
+      {
+        resourceUri: 'http://localhost/alice/data/res1',
+        data: {
+          pattern: 'updated keyword',
+          action: 'filter'
+        }
+      },
+      {
+        meta: {
+          webId: 'https://memory.example/apps/memory',
+          impersonatedUser: 'http://localhost/alice#me',
+          tokenPayload: { scope: 'openid webid' }
+        }
+      }
+    );
+
+    expect(lastPutResource.pattern).toBe('updated keyword');
+    expect(lastPutResource.action).toBe('filter');
+
+    listByContainerSpy.mockRestore();
+  });
+
+  test('removeAppModerationFilter deletes user-owned filter with delegated write consent', async () => {
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, _webId, container) => {
+        if (container === 'app-consents') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/consent-memory',
+              clientId: 'https://memory.example/apps/memory',
+              permissions: ['read:moderation', 'write:moderation']
+            }
+          ];
+        }
+        return [];
+      });
+
+    const result = await broker.call(
+      'user-settings-api.removeAppModerationFilter',
+      {
+        resourceUri: 'http://localhost/alice/data/res1'
+      },
+      {
+        meta: {
+          webId: 'https://memory.example/apps/memory',
+          impersonatedUser: 'http://localhost/alice#me',
+          tokenPayload: { scope: 'openid webid' }
+        }
+      }
+    );
+
+    expect(result.deleted).toBe(true);
+
+    listByContainerSpy.mockRestore();
+  });
+
+  test('listAppTrustSources requires trust/moderation read scope', async () => {
+    const listByContainerSpy = jest.spyOn(service, 'listByContainer').mockResolvedValue([]);
+
+    await expect(
+      broker.call(
+        'user-settings-api.listAppTrustSources',
+        {},
+        {
+          meta: {
+            webId: 'https://memory.example/apps/memory',
+            impersonatedUser: 'http://localhost/alice#me',
+            tokenPayload: { scope: 'openid webid' }
+          }
+        }
+      )
+    ).rejects.toMatchObject({ code: 403, type: 'APP_CONSENT_REQUIRED' });
+
+    listByContainerSpy.mockRestore();
+  });
+
+  test('listAppTrustSources allows delegated app with read:trust token scope', async () => {
+    const listByContainerSpy = jest
+      .spyOn(service, 'listByContainer')
+      .mockImplementation(async (_ctx, _webId, container) => {
+        if (container === 'trust-sources') {
+          return [
+            {
+              '@id': 'http://localhost/alice/data/trust-memory',
+              source: 'did:web:mod.example.org',
+              sourceType: 'atproto-labeler',
+              scopes: ['label:content', 'filter:content']
+            }
+          ];
+        }
+
+        if (container === 'app-consents') {
+          return [];
+        }
+
+        throw new Error(`Unexpected container ${container}`);
+      });
+
+    const result = await broker.call(
+      'user-settings-api.listAppTrustSources',
+      {},
+      {
+        meta: {
+          webId: 'https://memory.example/apps/memory',
+          impersonatedUser: 'http://localhost/alice#me',
+          tokenPayload: { scope: 'openid webid read:trust' }
+        }
+      }
+    );
+
+    expect(result.data[0].sourceType).toBe('atproto-labeler');
+    expect(listByContainerSpy).toHaveBeenCalledWith(
+      expect.any(Object),
+      'http://localhost/alice#me',
+      'trust-sources',
+      expect.objectContaining({ seedProviderDefaults: false, skipAtprotoMirror: true })
+    );
+
+    listByContainerSpy.mockRestore();
   });
 });

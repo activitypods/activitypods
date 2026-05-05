@@ -13,6 +13,7 @@ module.exports = {
   },
 
   dependencies: [
+    'provider-capabilities',
     'accounts',
     'webid-provisioning',
     'activitypub-provisioning',
@@ -60,10 +61,16 @@ module.exports = {
       },
       async handler(ctx) {
         const input = ctx.params;
+        const requestedProtocols = this.requestedProtocolsFromInput(input);
 
-        const enableSolid = input.solid?.enabled ?? this.settings.defaults.enableSolid;
-        const enableActivityPub = input.activitypub?.enabled ?? this.settings.defaults.enableActivityPub;
-        const enableAtproto = input.atproto?.enabled ?? this.settings.defaults.enableAtproto;
+        await ctx.call('provider-capabilities.assertAccountProvisioningGrant', {
+          grant: ctx.meta?.accountProvisioning || {},
+          requestedProtocols
+        });
+
+        const enableSolid = requestedProtocols.solid;
+        const enableActivityPub = requestedProtocols.activitypub;
+        const enableAtproto = requestedProtocols.atproto;
         const atprotoDidMethod = input.atproto?.didMethod ?? this.settings.defaults.atprotoDidMethod;
 
         const warnings = [];
@@ -124,11 +131,7 @@ module.exports = {
           }
 
           if (!solid?.webId) {
-            throw new MoleculerError(
-              'WebID provisioning did not return a webId',
-              500,
-              'WEBID_PROVISIONING_FAILED'
-            );
+            throw new MoleculerError('WebID provisioning did not return a webId', 500, 'WEBID_PROVISIONING_FAILED');
           }
 
           if (canonical.canonicalAccountId !== solid.webId) {
@@ -168,18 +171,16 @@ module.exports = {
             atproto = await ctx.call('atproto-provisioning.provisionForAccount', {
               canonicalAccountId: canonical.canonicalAccountId,
               webId: solid.webId,
-              requestedHandle: input.atproto?.requestedHandle,
+              requestedHandle: input.atproto?.requestedHandle || input.username,
+              activityPubActorId: activitypub?.actorId || solid.webId,
+              activityPubHandle: activitypub?.handle || null,
               didMethod: atprotoDidMethod,
               profile: input.profile,
               force: input.atproto?.force ?? false
             });
 
             if (!atproto?.did || !atproto?.repoInitialized) {
-              throw new MoleculerError(
-                'ATProto provisioning incomplete',
-                500,
-                'ATPROTO_PROVISIONING_INCOMPLETE'
-              );
+              throw new MoleculerError('ATProto provisioning incomplete', 500, 'ATPROTO_PROVISIONING_INCOMPLETE');
             }
 
             await ctx.call('account-provisioning-state.markPhase', {
@@ -254,6 +255,16 @@ module.exports = {
           );
         }
       }
+    }
+  },
+
+  methods: {
+    requestedProtocolsFromInput(input) {
+      return {
+        solid: input.solid?.enabled ?? this.settings.defaults.enableSolid,
+        activitypub: input.activitypub?.enabled ?? this.settings.defaults.enableActivityPub,
+        atproto: input.atproto?.enabled ?? this.settings.defaults.enableAtproto
+      };
     }
   }
 };

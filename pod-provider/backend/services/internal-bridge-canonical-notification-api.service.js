@@ -20,10 +20,11 @@ const VALID_KINDS = new Set([
   'FollowAdd',
   'FollowRemove',
   'ProfileUpdate',
-  'AccountState'
+  'AccountState',
+  'DirectMessage'
 ]);
 
-const NOTIFICATION_KINDS = new Set(['ReactionAdd', 'ShareAdd', 'FollowAdd', 'PostCreate']);
+const NOTIFICATION_KINDS = new Set(['ReactionAdd', 'ShareAdd', 'FollowAdd', 'PostCreate', 'DirectMessage']);
 
 const VALID_PROTOCOLS = new Set(['activitypub', 'atproto']);
 
@@ -341,6 +342,15 @@ module.exports = {
               }
             }
           }
+        } else if (kind === 'DirectMessage') {
+          // Recipient is a CanonicalActorRef describing the intended receiver
+          const recipientRef = payload.recipient;
+          if (recipientRef && typeof recipientRef === 'object' && !Array.isArray(recipientRef)) {
+            const recipientUri = recipientRef.activityPubActorUri || recipientRef.webId;
+            if (recipientUri && typeof recipientUri === 'string' && this.isHttpUrl(recipientUri)) {
+              candidates.add(recipientUri.trim());
+            }
+          }
         }
       } catch (err) {
         this.logger.warn('[CanonicalNotificationApi] resolveLocalRecipients error', {
@@ -485,6 +495,27 @@ module.exports = {
               content: content.length > 8192 ? content.slice(0, 8192) : content,
               to: mentions.length > 0 ? mentions : [recipientWebId],
               tag: mentions.map(href => ({ type: 'Mention', href }))
+            }
+          };
+        }
+
+        case 'DirectMessage': {
+          const text = typeof payload.text === 'string' ? payload.text : '';
+          const noteId = `${baseUrl}/_bridge/canonical/${encodeURIComponent(canonicalIntentId)}#note`;
+          return {
+            ...base,
+            type: 'Create',
+            to: [recipientWebId],
+            cc: [],
+            object: {
+              '@context': AS_CONTEXT,
+              id: noteId,
+              type: 'Note',
+              attributedTo: actorUri,
+              to: [recipientWebId],
+              cc: [],
+              content: text.length > 8192 ? text.slice(0, 8192) : text,
+              published: createdAt
             }
           };
         }

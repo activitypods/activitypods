@@ -4,6 +4,17 @@ declare const CONFIG: { BACKEND_URL: string };
 
 const BASE = urlJoin(CONFIG.BACKEND_URL, '/api/dashboard');
 
+type UnknownRecord = Record<string, unknown>;
+// Settings pages consume heterogeneous API payloads and refine types at call sites.
+// Keep this transport layer permissive to avoid forcing brittle unions here.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type JsonObject = any;
+
+const asRecord = (value: unknown): UnknownRecord | null =>
+  value && typeof value === 'object' ? (value as UnknownRecord) : null;
+
+const asString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
+
 function headers() {
   const token = localStorage.getItem('token');
   const h = new Headers({ 'Content-Type': 'application/json' });
@@ -11,13 +22,13 @@ function headers() {
   return h;
 }
 
-async function reqWithBase(base: string, path: string, options: RequestInit = {}) {
+async function reqWithBase(base: string, path: string, options: RequestInit = {}): Promise<JsonObject> {
   const res = await fetch(urlJoin(base, path), {
     ...options,
     headers: headers()
   });
 
-  let json: any = {};
+  let json: JsonObject = {};
   const text = await res.text();
 
   try {
@@ -28,25 +39,28 @@ async function reqWithBase(base: string, path: string, options: RequestInit = {}
   }
 
   if (!res.ok) {
-    const errorMessage = json?.error?.message || json?.message || `Request failed (${res.status})`;
+    const payload = asRecord(json);
+    const errorPayload = asRecord(payload?.error);
+    const errorMessage =
+      asString(errorPayload?.message) || asString(payload?.message) || `Request failed (${res.status})`;
     const error: Error & { code?: string; status?: number; details?: unknown; requestId?: string } = new Error(
       errorMessage
     );
-    error.code = json?.error?.code || undefined;
+    error.code = asString(errorPayload?.code);
     error.status = res.status;
-    error.details = json?.error?.details || undefined;
-    error.requestId = json?.error?.requestId || undefined;
+    error.details = errorPayload?.details;
+    error.requestId = asString(errorPayload?.requestId);
     throw error;
   }
 
   return json;
 }
 
-async function req(path: string, options: RequestInit = {}) {
+async function req(path: string, options: RequestInit = {}): Promise<JsonObject> {
   return reqWithBase(BASE, path, options);
 }
 
-async function apiReq(path: string, options: RequestInit = {}) {
+async function apiReq(path: string, options: RequestInit = {}): Promise<JsonObject> {
   return reqWithBase(CONFIG.BACKEND_URL, path, options);
 }
 
@@ -183,6 +197,22 @@ export const dashboardApi = {
 
   getMrfSimulation: (jobId: string) => req(`mrf/simulations/${encodeURIComponent(jobId)}`),
 
+  // ─── Spam domain reputation blocklist ────────────────────────────────────
+
+  listSpamDomains: () => req('spam/domains'),
+
+  addSpamDomain: (data: { domain: string; subdomainMatch: boolean }) =>
+    req('spam/domains', {
+      method: 'POST',
+      body: JSON.stringify({ data })
+    }),
+
+  removeSpamDomain: (data: { domain: string; subdomainMatch: boolean }) =>
+    req('spam/domains', {
+      method: 'DELETE',
+      body: JSON.stringify({ data })
+    }),
+
   // ─── Provider platform management ────────────────────────────────────────
   getProviderStats: () => req('provider/stats'),
 
@@ -229,10 +259,16 @@ export const dashboardApi = {
     return req(params ? `provider/moderation/cases?${params.toString()}` : 'provider/moderation/cases');
   },
 
+  updateModerationCaseStatus: (id: string, status: 'open' | 'dismissed') =>
+    req(`provider/moderation/cases/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ data: { status } })
+    }),
+
   retryModerationCaseForwarding: (
     id: string,
     data: {
-      protocols?: Array<'activityPub' | 'atproto'>;
+      protocols?: ('activityPub' | 'atproto')[];
       enableRemoteForwarding?: boolean;
     }
   ) =>

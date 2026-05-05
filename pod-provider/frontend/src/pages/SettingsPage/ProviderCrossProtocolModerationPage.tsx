@@ -41,7 +41,8 @@ import {
   protocolColor,
   type ModerationAction,
   type ModerationCase,
-  type ModerationDecision
+  type ModerationDecision,
+  type ProviderInboxEvent
 } from './moderationUi';
 type MRFMode = 'disabled' | 'dry-run' | 'enforce';
 
@@ -241,10 +242,12 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [retryingCases, setRetryingCases] = useState<Record<string, boolean>>({});
+  const [dismissingCases, setDismissingCases] = useState<Record<string, boolean>>({});
 
   const [decisions, setDecisions] = useState<ModerationDecision[]>([]);
   const [cases, setCases] = useState<ModerationCase[]>([]);
   const [labels, setLabels] = useState<AtLabel[]>([]);
+  const [inboxEvents, setInboxEvents] = useState<ProviderInboxEvent[]>([]);
 
   const [mediaPolicyState, setMediaPolicyState] = useState<ModuleConfigState | null>(null);
   const [pdqStatus, setPdqStatus] = useState<PdqStatus | null>(null);
@@ -296,7 +299,8 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
         knownResult,
         mediaPolicyResult,
         pdqStatusResult,
-        fediseerStatusResult
+        fediseerStatusResult,
+        inboxEventsResult
       ] = await Promise.all([
         dashboardApi.listModerationDecisions({ limit: 200 }),
         dashboardApi.listModerationCases({ limit: 200 }).catch(() => null),
@@ -304,12 +308,14 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
         dashboardApi.listKnownAtLabels().catch(() => null),
         dashboardApi.getMrfModule('media-policy').catch(() => null),
         dashboardApi.getPdqHashStatus().catch(() => null),
-        dashboardApi.getFediseerStatus().catch(() => null)
+        dashboardApi.getFediseerStatus().catch(() => null),
+        dashboardApi.listProviderInboxEvents(200).catch(() => null)
       ]);
 
       setDecisions(decisionResult?.data || decisionResult?.decisions || []);
       setCases(caseResult?.data || caseResult?.cases || []);
       setLabels(labelResult?.labels || []);
+      setInboxEvents(inboxEventsResult?.events || []);
       applyMediaPolicyState((mediaPolicyResult?.data?.config as ModuleConfigState | null) || null);
       setPdqStatus((pdqStatusResult?.data as PdqStatus | null) || null);
       setFediseerStatus((fediseerStatusResult?.data as FediseerStatus | null) || null);
@@ -451,6 +457,26 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
       setError(err instanceof Error ? err.message : 'Failed to retry remote forwarding.');
     } finally {
       setRetryingCases(prev => {
+        const next = { ...prev };
+        delete next[entry.id];
+        return next;
+      });
+    }
+  };
+
+  const dismissCase = async (entry: ModerationCase) => {
+    const nextStatus = entry.status === 'dismissed' ? 'open' : 'dismissed';
+    setDismissingCases(prev => ({ ...prev, [entry.id]: true }));
+    setError(null);
+    setSuccess(null);
+    try {
+      await dashboardApi.updateModerationCaseStatus(entry.id, nextStatus);
+      setSuccess(nextStatus === 'dismissed' ? 'Case dismissed.' : 'Case reopened.');
+      await loadAll();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to update case status.');
+    } finally {
+      setDismissingCases(prev => {
         const next = { ...prev };
         delete next[entry.id];
         return next;
@@ -640,6 +666,7 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
         <Tab label="AT labels" />
         <Tab label="Fediseer" />
         <Tab label="PDQ blocklist" />
+        <Tab label="Provider inbox" />
       </Tabs>
 
       {loading ? (
@@ -656,6 +683,11 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                   the report resolved until all linked decisions are revoked.
                 </Alert>
               )}
+              <Alert severity="info" sx={{ fontSize: '0.8rem' }}>
+                <strong>Protocol targeting:</strong> supplying an AP actor URI or WebID enforces via ActivityPub (MRF
+                rule). Supplying an AT DID or handle enforces via AT Protocol (signed label + suspension if applicable).
+                Both sets of identifiers will apply to both protocols simultaneously.
+              </Alert>
               <TextField
                 label="Target WebID"
                 value={targetWebId}
@@ -890,21 +922,46 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                             </Stack>
                           </TableCell>
                           <TableCell align="right">
-                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                            <Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
                               {forwardingControl && (
                                 <Button size="small" disabled={retryingCase} onClick={() => retryCaseForwarding(entry)}>
                                   {retryingCase ? 'Working…' : forwardingControl.label}
                                 </Button>
                               )}
-                              <Button size="small" onClick={() => prepareDecisionFromCase(entry, 'filter')}>
-                                Prepare filter
-                              </Button>
+                              {entry.status !== 'resolved' && (
+                                <Button size="small" onClick={() => prepareDecisionFromCase(entry, 'filter')}>
+                                  Prepare filter
+                                </Button>
+                              )}
+                              {entry.status !== 'resolved' && (
+                                <Button
+                                  size="small"
+                                  color="warning"
+                                  onClick={() => prepareDecisionFromCase(entry, 'block')}
+                                >
+                                  Prepare block
+                                </Button>
+                              )}
+                              {entry.status !== 'resolved' && (
+                                <Button
+                                  size="small"
+                                  color="error"
+                                  onClick={() => prepareDecisionFromCase(entry, 'suspend')}
+                                >
+                                  Prepare suspend
+                                </Button>
+                              )}
                               <Button
                                 size="small"
-                                color="warning"
-                                onClick={() => prepareDecisionFromCase(entry, 'block')}
+                                color={entry.status === 'dismissed' ? 'inherit' : 'secondary'}
+                                disabled={Boolean(dismissingCases[entry.id])}
+                                onClick={() => dismissCase(entry)}
                               >
-                                Prepare block
+                                {dismissingCases[entry.id]
+                                  ? 'Working…'
+                                  : entry.status === 'dismissed'
+                                    ? 'Reopen'
+                                    : 'Dismiss'}
                               </Button>
                             </Stack>
                           </TableCell>
@@ -1245,6 +1302,92 @@ export const ProviderCrossProtocolModerationPage: React.FC = () => {
                           <TableCell>
                             <Typography variant="caption">
                               {entry.reasons.length > 0 ? entry.reasons.join(', ') : entry.reason}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Stack>
+          )}
+
+          {tab === 6 && (
+            <Stack spacing={2}>
+              <Typography variant="body2" color="text.secondary">
+                Non-Flag ActivityPub activities received at the provider actor inbox — Accept, Reject, UndoFlag, and
+                unrecognised types. These are forwarded by the sidecar inbound worker for operator visibility.
+              </Typography>
+              {inboxEvents.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+                  No provider inbox events recorded yet.
+                </Typography>
+              ) : (
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>
+                          <strong>Received</strong>
+                        </TableCell>
+                        <TableCell>
+                          <strong>Event type</strong>
+                        </TableCell>
+                        <TableCell>
+                          <strong>Activity type</strong>
+                        </TableCell>
+                        <TableCell>
+                          <strong>Sender</strong>
+                        </TableCell>
+                        <TableCell>
+                          <strong>Object / flag ref</strong>
+                        </TableCell>
+                        <TableCell>
+                          <strong>Inbox path</strong>
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {inboxEvents.map(event => (
+                        <TableRow key={event.id} hover>
+                          <TableCell>
+                            <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+                              {new Date(event.receivedAt).toLocaleString()}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={event.eventType}
+                              size="small"
+                              color={
+                                event.eventType === 'Accept'
+                                  ? 'success'
+                                  : event.eventType === 'Reject'
+                                    ? 'error'
+                                    : event.eventType === 'UndoFlag'
+                                      ? 'warning'
+                                      : 'default'
+                              }
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="caption">{event.activityType || '—'}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="caption" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                              {event.actorUri}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="caption" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                              {event.objectId || '—'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+                              {event.envelopePath || '—'}
                             </Typography>
                           </TableCell>
                         </TableRow>

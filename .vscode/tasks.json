@@ -59,12 +59,6 @@
     {
       "label": "Restart frontend dev server",
       "type": "shell",
-      "command": "cd ${workspaceFolder}/pod-provider/frontend && npm start",
-      "isBackground": true
-    },
-    {
-      "label": "Restart frontend dev server",
-      "type": "shell",
       "command": "cd ${workspaceFolder}/pod-provider/frontend && npm run dev",
       "isBackground": true
     }

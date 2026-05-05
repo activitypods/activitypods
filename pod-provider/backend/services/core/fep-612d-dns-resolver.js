@@ -244,9 +244,12 @@ module.exports = {
       // Prefer the broker's actor service so that caching/signing is applied.
       try {
         return await this.broker.call('activitypub.actor.get', { id: uri });
-      } catch {
+      } catch (err) {
         // If the actor service doesn't know about this URI (e.g. it's a
         // non-Actor object), fall back to a plain HTTP fetch.
+        this.logger.debug(
+          `Broker activitypub.actor.get failed for ${uri}, falling back to direct fetch: ${err.message}`
+        );
       }
 
       const response = await fetch(uri, {

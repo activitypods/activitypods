@@ -2,6 +2,7 @@ type JsonLdResourceRef = string | { id?: unknown; '@id'?: unknown } | null | und
 
 type CapabilityAuthorization = {
   'acl:accessTo'?: JsonLdResourceRef | JsonLdResourceRef[];
+  [key: string]: unknown;
 };
 
 type CapabilityWithAuthorizations = {

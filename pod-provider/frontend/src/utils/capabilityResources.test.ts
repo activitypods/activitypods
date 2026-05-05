@@ -1,5 +1,9 @@
 import { normalizeCapabilityResourceUris } from './capabilityResources';
 
+declare const describe: (name: string, fn: () => void) => void;
+declare const it: (name: string, fn: () => void) => void;
+declare const expect: (value: unknown) => { toEqual(expected: unknown): void };
+
 describe('normalizeCapabilityResourceUris', () => {
   it('extracts the profile URI from the profile-only JSON-LD @id shape', () => {
     expect(

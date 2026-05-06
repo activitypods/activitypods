@@ -59,7 +59,11 @@ The `app` part of the setting allow you to describe your application. These info
 
 ### OIDC
 
-ActivityPods integrate a full OIDC provider. To register your application with this provider, it needs a few informations:
+OpenID Connect (OIDC) is an authentication layer built on OAuth 2.0. It lets clients verify a user's identity after authentication and obtain basic profile claims in a standard way.
+
+ActivityPods includes an OIDC provider. For a broader explanation of the authentication model, see the [Authentication architecture page](/architecture/authentication/).
+
+To register your application with this provider, configure the following:
 
 - `clientUri`: The frontend URL
 - `redirectUris`: The URL to redirect after login. If you use React-Admin, it will usually be `/auth-callback`

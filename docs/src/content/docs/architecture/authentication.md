@@ -4,6 +4,12 @@ sidebar:
   order: 3
 ---
 
+## OpenID Connect (OIDC)
+
+OpenID Connect (OIDC) is an authentication layer built on OAuth 2.0. It allows clients to verify the authenticated user and retrieve standard identity claims.
+
+In ActivityPods, OIDC is used for application authentication flows. For practical configuration fields, see [Application registration](/app-framework/backend/application-registration/).
+
 ## Solid-OIDC
 
 In v2.0, we partly support authentication through [Solid-OIDC](https://solidproject.org/TR/oidc). This is detailed in [#121](https://github.com/assemblee-virtuelle/activitypods/issues/121).

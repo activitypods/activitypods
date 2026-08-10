@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:22-alpine
 
 RUN node -v
 RUN npm -v
@@ -8,6 +8,8 @@ WORKDIR /app/frontend
 RUN apk add --update --no-cache autoconf bash libtool automake python3 py3-pip alpine-sdk openssh-keygen yarn nano
 
 RUN yarn global add serve
+
+ADD tsconfig.json /app/tsconfig.json
 
 # Install packages first so that Docker doesn't run `yarn install` if the packages haven't changed
 # See https://making.close.com/posts/reduce-docker-image-size

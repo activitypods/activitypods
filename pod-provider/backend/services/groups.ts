@@ -35,8 +35,8 @@ const GroupsService = {
        */
       async handler(ctx) {
         const { id, type } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
-        const ownerWebId = ctx.meta.webId;
+        // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type '{}'.
+        const ownerWebId = ctx.meta.impersonatedUser || ctx.meta.webId;
         const groupWebId = urlJoin(CONFIG.BASE_URL, id);
 
         if (!['foaf:Organization', 'foaf:Group'].includes(type))
@@ -132,9 +132,10 @@ const GroupsService = {
 
     list: {
       async handler(ctx) {
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
-        const ownerWebId = ctx.meta.webId;
+        // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type '{}'.
+        const ownerWebId = ctx.meta.impersonatedUser || ctx.meta.webId;
         const ownerAccount = await ctx.call('auth.account.findByWebId', { webId: ownerWebId });
+        if (!ownerAccount) return [];
         return arrayOf(ownerAccount.owns);
       }
     },
@@ -142,8 +143,8 @@ const GroupsService = {
     claim: {
       async handler(ctx) {
         const { username, groupWebId } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
-        const webId = ctx.meta.webId;
+        // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type '{}'.
+        const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
 
         const account = await ctx.call('auth.account.findByUsername', { username });
         if (!account) throw404('Actor not found');
@@ -163,8 +164,8 @@ const GroupsService = {
     undoClaim: {
       async handler(ctx) {
         const { username, groupWebId } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
-        const webId = ctx.meta.webId;
+        // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type '{}'.
+        const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
 
         const account = await ctx.call('auth.account.findByUsername', { username });
         if (!account) throw404('Actor not found');

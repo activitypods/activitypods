@@ -35,7 +35,7 @@ const GroupsService = {
        */
       async handler(ctx: any) {
         const { id, type } = ctx.params;
-        
+
         const ownerWebId = ctx.meta.impersonatedUser || ctx.meta.webId;
         const groupWebId = urlJoin(CONFIG.BASE_URL, id);
 

@@ -1,6 +1,6 @@
 {
   "name": "@activitypods/app",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "Base services for ActivityPods backend apps",
   "license": "Apache-2.0",
   "author": "Virtual Assembly",
@@ -33,7 +33,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22"
   },
   "devDependencies": {
     "@types/rdfjs__data-model": "^2.0.9",

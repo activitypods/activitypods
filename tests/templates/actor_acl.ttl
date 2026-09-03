@@ -1,0 +1,450 @@
+<http://localhost:3000/_acl/alice#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice#Write>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/alice#Control>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .
+
+<http://localhost:3000/_acl/alice/data#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data#Write>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/alice/data#Control>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .
+
+<http://localhost:3000/_acl/alice/data#DefaultRead>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#default>
+                <http://localhost:3000/alice/data> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data#DefaultWrite>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#default>
+                <http://localhost:3000/alice/data> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/alice/data#DefaultControl>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#default>
+                <http://localhost:3000/alice/data> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .
+
+<http://localhost:3000/_acl/_groups/alice/contacts#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/_groups/alice/contacts> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_groups/alice/contacts>
+        a       <http://www.w3.org/2006/vcard/ns#Group> .
+
+<http://localhost:3000/_acl/_groups/alice/contacts#Write>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/_groups/alice/contacts> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/_groups/alice/contacts#Control>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/_groups/alice/contacts> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .
+
+<http://localhost:3000/_acl/alice/data/public-key#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/public-key> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://www.w3.org/ns/auth/acl#AuthenticatedAgent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/inbox#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/inbox> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/inbox#Write>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/inbox> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/alice/inbox#Control>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/inbox> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .
+
+<http://localhost:3000/_acl/alice/outbox#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/outbox> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/outbox#Write>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/outbox> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/alice/outbox#Control>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/outbox> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .
+
+<http://localhost:3000/_acl/alice/followers#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/followers> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/followers#Write>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/followers> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/alice/followers#Control>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/followers> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .
+
+<http://localhost:3000/_acl/alice/following#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/following> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/following#Write>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/following> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/alice/following#Control>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/following> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .
+
+<http://localhost:3000/_acl/alice/liked#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/liked> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/liked#Write>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/liked> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/alice/liked#Control>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/liked> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .
+
+<http://localhost:3000/_acl/alice/data/179f6b65-7fe7-4d4d-ae29-ec3f5812c63a#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/179f6b65-7fe7-4d4d-ae29-ec3f5812c63a> ;
+        <http://www.w3.org/ns/auth/acl#agentGroup>
+                <http://localhost:3000/_groups/alice/contacts> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/86066881-f807-4e22-8c23-08298a1b6b49#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/86066881-f807-4e22-8c23-08298a1b6b49> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/7a569ad0-25de-4e76-ab15-771d8bedfb3f#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/7a569ad0-25de-4e76-ab15-771d8bedfb3f> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/ea34d84f-f3cd-4650-a433-7bec966f4cbf#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/ea34d84f-f3cd-4650-a433-7bec966f4cbf> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/20ae5e46-90ab-45ad-8631-ef3f4166e0a6#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/20ae5e46-90ab-45ad-8631-ef3f4166e0a6> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/86fc159d-1606-45cd-b9c0-fc74ca374f7c#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/86fc159d-1606-45cd-b9c0-fc74ca374f7c> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/2268a703-b08f-4569-bc7d-211cc1b0a4ed#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/2268a703-b08f-4569-bc7d-211cc1b0a4ed> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/27d1a048-392b-4ec9-a8a7-5675745dcac3#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/27d1a048-392b-4ec9-a8a7-5675745dcac3> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba#Write>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba#Control>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .
+
+<http://localhost:3000/_acl/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558#Write>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558#Control>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .
+
+<http://localhost:3000/_acl/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea#Write>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea#Control>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .
+
+<http://localhost:3000/_acl/alice/data/80358761-3506-462e-b709-e2b1465bbbea#Read>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/80358761-3506-462e-b709-e2b1465bbbea> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#agentClass>
+                <http://xmlns.com/foaf/0.1/Agent> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Read> .
+
+<http://localhost:3000/_acl/alice/data/80358761-3506-462e-b709-e2b1465bbbea#Write>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/80358761-3506-462e-b709-e2b1465bbbea> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Write> .
+
+<http://localhost:3000/_acl/alice/data/80358761-3506-462e-b709-e2b1465bbbea#Control>
+        a       <http://www.w3.org/ns/auth/acl#Authorization> ;
+        <http://www.w3.org/ns/auth/acl#accessTo>
+                <http://localhost:3000/alice/data/80358761-3506-462e-b709-e2b1465bbbea> ;
+        <http://www.w3.org/ns/auth/acl#agent>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/auth/acl#mode>
+                <http://www.w3.org/ns/auth/acl#Control> .

@@ -21,8 +21,7 @@ const TranslatorSchema = {
   },
   actions: {
     translate: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { template, templateParams, actorUri } = ctx.params;
 
         // Get the locale of the actor

@@ -1,54 +1,44 @@
-import urlJoin from 'url-join';
-import { MIME_TYPES } from '@semapps/mime-types';
 import rdf from '@rdfjs/data-model';
-import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
+import { ServiceBroker } from 'moleculer';
+import {
+  connectPodProvider,
+  clearAllData,
+  initializeAppServer,
+  installApp,
+  createTestActor,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
+import { TestActor, TestApp } from './utilTypes.js';
+
 jest.setTimeout(80000);
-const NUM_PODS = 2;
-const APP_SERVER_BASE_URL = 'http://localhost:3001';
-const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
 describe('Test Pod resources handling', () => {
-  let actors: any = [],
-    podProvider: any,
-    alice: any,
-    bob: any,
-    appServer: any,
-    aliceEventUri,
-    bobEventUri: any,
-    bobNoteUri: any;
+  let podProvider: ServiceBroker,
+    appServer: ServiceBroker,
+    alice: TestActor,
+    bob: TestActor,
+    app: TestApp,
+    aliceEventsContainerUri: string,
+    bobEventsContainerUri: string,
+    bobNotesContainerUri: string,
+    aliceEventUri: string,
+    bobEventUri: string,
+    bobNoteUri: string;
 
   beforeAll(async () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
+    alice = await createTestActor(podProvider, 'alice');
+    bob = await createTestActor(podProvider, 'bob');
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
     await appServer.start();
+    app = await getTestApp(appServer);
 
-    for (let i = 1; i <= NUM_PODS; i++) {
-      const actorData = require(`./data/actor${i}.json`);
-      const { webId } = await podProvider.call('auth.signup', actorData);
-      actors[i] = await podProvider.call(
-        'activitypub.actor.awaitCreateComplete',
-        {
-          actorUri: webId,
-          additionalKeys: ['url']
-        },
-        { meta: { dataset: actorData.username } }
-      );
-      actors[i].call = (actionName: any, params: any, options = {}) =>
-        podProvider.call(actionName, params, {
-          ...options,
-          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
-        });
-    }
-
-    alice = actors[1];
-    bob = actors[2];
-
-    await installApp(alice, APP_URI);
-    await installApp(bob, APP_URI);
+    await installApp(alice, app.id);
+    await installApp(bob, app.id);
   }, 120000);
 
   afterAll(async () => {
@@ -57,17 +47,18 @@ describe('Test Pod resources handling', () => {
   });
 
   test('Get local data through app', async () => {
+    aliceEventsContainerUri = await alice.getContainerUri('as:Event');
+
     aliceEventUri = await alice.call('ldp.container.post', {
-      containerUri: urlJoin(alice.id, 'data/as/event'),
+      containerUri: aliceEventsContainerUri,
       resource: {
         type: 'Event',
         name: 'Birthday party !'
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
     await expect(
-      appServer.call('pod-resources.get', {
+      app.call('pod-resources.get', {
         resourceUri: aliceEventUri,
         actorUri: alice.id
       })
@@ -80,18 +71,19 @@ describe('Test Pod resources handling', () => {
   });
 
   test('Get remote data through app', async () => {
+    bobEventsContainerUri = await bob.getContainerUri('as:Event');
+
     bobEventUri = await bob.call('ldp.container.post', {
-      containerUri: urlJoin(bob.id, 'data/as/event'),
+      containerUri: bobEventsContainerUri,
       resource: {
         type: 'Event',
         name: 'Vegan barbecue'
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
     // Alice hasn't right (yet) to see Bob event
     await expect(
-      appServer.call('pod-resources.get', {
+      app.call('pod-resources.get', {
         resourceUri: bobEventUri,
         actorUri: alice.id
       })
@@ -110,7 +102,7 @@ describe('Test Pod resources handling', () => {
     });
 
     await expect(
-      appServer.call('pod-resources.get', {
+      app.call('pod-resources.get', {
         resourceUri: bobEventUri,
         actorUri: alice.id
       })
@@ -124,9 +116,9 @@ describe('Test Pod resources handling', () => {
 
   test('Cannot post to non-container', async () => {
     await expect(
-      appServer.call('pod-resources.post', {
+      app.call('pod-resources.post', {
         resource: {
-          id: alice.id + '/sparql',
+          id: alice.baseUrl + '/sparql',
           hackMe: 'if you can ?'
         },
         actorUri: alice.id
@@ -136,16 +128,17 @@ describe('Test Pod resources handling', () => {
 
   test('Cannot get data not registered by app', async () => {
     await bob.call('ldp.registry.register', {
-      acceptedTypes: 'as:Note'
+      types: 'as:Note'
     });
 
+    bobNotesContainerUri = await bob.getContainerUri('as:Note');
+
     bobNoteUri = await bob.call('ldp.container.post', {
-      containerUri: urlJoin(bob.id, 'data/as/note'),
+      containerUri: bobNotesContainerUri,
       resource: {
         type: 'Note',
         name: 'Note to myself'
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
     await bob.call('webacl.resource.addRights', {
@@ -155,19 +148,16 @@ describe('Test Pod resources handling', () => {
           uri: alice.id,
           read: true
         }
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
     // Bob's note is shared with Alice, but the app has not registered as:Note
     await expect(
-      appServer.call('pod-resources.get', {
+      app.call('pod-resources.get', {
         resourceUri: bobNoteUri,
         actorUri: alice.id
       })
-    ).resolves.toMatchObject({
-      status: 403
-    });
+    ).resolves.toMatchObject({ status: 403 });
   });
 
   test('PUT data registered by app', async () => {
@@ -178,12 +168,11 @@ describe('Test Pod resources handling', () => {
           uri: alice.id,
           write: true
         }
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
     await expect(
-      appServer.call('pod-resources.put', {
+      app.call('pod-resources.put', {
         resource: {
           id: bobEventUri,
           type: 'Event',
@@ -194,7 +183,7 @@ describe('Test Pod resources handling', () => {
     ).resolves.not.toThrow();
 
     await expect(
-      appServer.call('pod-resources.get', {
+      app.call('pod-resources.get', {
         resourceUri: bobEventUri,
         actorUri: alice.id
       })
@@ -214,13 +203,12 @@ describe('Test Pod resources handling', () => {
           uri: alice.id,
           write: true
         }
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
     // Bob gave write permission to Alice, but the app has not registered as:Note
     await expect(
-      appServer.call('pod-resources.put', {
+      app.call('pod-resources.put', {
         resource: {
           id: bobNoteUri,
           type: 'Note',
@@ -235,13 +223,13 @@ describe('Test Pod resources handling', () => {
 
   test('PATCH data registered by app', async () => {
     await expect(
-      appServer.call('pod-resources.patch', {
+      app.call('pod-resources.patch', {
         resourceUri: bobEventUri,
         triplesToAdd: [
           rdf.quad(
             rdf.namedNode(bobEventUri),
             rdf.namedNode('https://www.w3.org/ns/activitystreams#summary'),
-            literal('A super-powerful AI-generated summary')
+            rdf.literal('A super-powerful AI-generated summary')
           )
         ],
         actorUri: alice.id
@@ -249,7 +237,7 @@ describe('Test Pod resources handling', () => {
     ).resolves.not.toThrow();
 
     await expect(
-      appServer.call('pod-resources.get', {
+      app.call('pod-resources.get', {
         resourceUri: bobEventUri,
         actorUri: alice.id
       })
@@ -265,7 +253,7 @@ describe('Test Pod resources handling', () => {
   test('DELETE data registered by app', async () => {
     // Alice has write permission on Bob's event
     await expect(
-      appServer.call('pod-resources.delete', {
+      app.call('pod-resources.delete', {
         resourceUri: bobEventUri,
         actorUri: alice.id
       })
@@ -274,7 +262,7 @@ describe('Test Pod resources handling', () => {
     });
 
     await expect(
-      appServer.call('pod-resources.get', {
+      app.call('pod-resources.get', {
         resourceUri: bobEventUri,
         actorUri: alice.id
       })

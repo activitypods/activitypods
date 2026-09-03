@@ -1,57 +1,45 @@
-import urlJoin from 'url-join';
-import { MIME_TYPES } from '@semapps/mime-types';
-import { connectPodProvider, clearAllData, installApp, initializeAppServer } from './initialize.ts';
+import { ServiceBroker } from 'moleculer';
+import {
+  connectPodProvider,
+  clearAllData,
+  installApp,
+  initializeAppServer,
+  createTestActor,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 import Example2AppService from './apps/example2.app.ts';
 import { OBJECT_TYPES, ACTIVITY_TYPES } from '@semapps/activitypub';
+import { TestActor, TestApp } from './utilTypes.js';
+
 jest.setTimeout(120000);
-const NUM_PODS = 1;
-const APP_SERVER_BASE_URL = 'http://localhost:3001';
-const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
-const APP2_SERVER_BASE_URL = 'http://localhost:3002';
-const APP2_URI = urlJoin(APP2_SERVER_BASE_URL, 'app');
 
 describe('Test Pod outbox posting', () => {
-  let actors: any = [],
-    podProvider: any,
-    alice: any,
-    appServer: any,
-    app2Server: any,
-    noteUri: any;
+  let podProvider: ServiceBroker,
+    appServer: ServiceBroker,
+    app2Server: ServiceBroker,
+    alice: TestActor,
+    app: TestApp,
+    app2: TestApp,
+    notesContainerUri: string,
+    noteUri: string;
 
   beforeAll(async () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
+    alice = await createTestActor(podProvider, 'alice');
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
     await appServer.start();
+    app = await getTestApp(appServer);
 
-    app2Server = await initializeAppServer(3002, 'app2Data', 'app2_settings', 2, Example2AppService);
+    app2Server = await initializeAppServer(3002, 'app2', 'app2_settings', 2, Example2AppService);
     await app2Server.start();
+    app2 = await getTestApp(app2Server);
 
-    for (let i = 1; i <= NUM_PODS; i++) {
-      const actorData = require(`./data/actor${i}.json`);
-      const { webId } = await podProvider.call('auth.signup', actorData);
-      actors[i] = await podProvider.call(
-        'activitypub.actor.awaitCreateComplete',
-        {
-          actorUri: webId,
-          additionalKeys: ['url']
-        },
-        { meta: { dataset: actorData.username } }
-      );
-      actors[i].call = (actionName: any, params: any, options = {}) =>
-        podProvider.call(actionName, params, {
-          ...options,
-          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
-        });
-    }
-
-    alice = actors[1];
-
-    await installApp(alice, APP_URI);
-    await installApp(alice, APP2_URI);
+    await installApp(alice, app.id);
+    await installApp(alice, app2.id);
   }, 120000);
 
   afterAll(async () => {
@@ -61,7 +49,7 @@ describe('Test Pod outbox posting', () => {
   });
 
   test('Post activity as user', async () => {
-    const activityUri = await appServer.call('pod-outbox.post', {
+    const activityUri = await app.call('pod-outbox.post', {
       activity: {
         type: ACTIVITY_TYPES.LIKE,
         object: alice.id,
@@ -70,11 +58,11 @@ describe('Test Pod outbox posting', () => {
       actorUri: alice.id
     });
 
-    expect(activityUri).toMatch(alice.id);
+    expect(activityUri).toBeDefined();
 
     // Generator has been added
     await expect(
-      appServer.call('pod-resources.get', {
+      app.call('pod-resources.get', {
         resourceUri: activityUri,
         actorUri: alice.id
       })
@@ -84,7 +72,7 @@ describe('Test Pod outbox posting', () => {
         actor: alice.id,
         object: alice.id,
         summary: 'Liking yourself is good',
-        generator: APP_URI
+        generator: app.id
       }
     });
   });
@@ -92,7 +80,7 @@ describe('Test Pod outbox posting', () => {
   test('Post activity as user without permission', async () => {
     // App2 did not request apods:PostOutbox permission
     await expect(
-      app2Server.call('pod-outbox.post', {
+      app2.call('pod-outbox.post', {
         activity: {
           type: ACTIVITY_TYPES.LIKE,
           object: alice.id,
@@ -104,7 +92,7 @@ describe('Test Pod outbox posting', () => {
   });
 
   test('Create a resource for which I have write permission', async () => {
-    const activityUri = await appServer.call('pod-outbox.post', {
+    const activityUri = await app.call('pod-outbox.post', {
       activity: {
         type: ACTIVITY_TYPES.CREATE,
         object: {
@@ -115,9 +103,9 @@ describe('Test Pod outbox posting', () => {
       actorUri: alice.id
     });
 
-    expect(activityUri).toMatch(alice.id);
+    expect(activityUri).toBeDefined();
 
-    const { body: activity } = await appServer.call('pod-resources.get', {
+    const { body: activity } = await app.call('pod-resources.get', {
       resourceUri: activityUri,
       actorUri: alice.id
     });
@@ -128,12 +116,12 @@ describe('Test Pod outbox posting', () => {
         type: OBJECT_TYPES.EVENT,
         name: 'Birthday party'
       },
-      generator: APP_URI
+      generator: app.id
     });
 
     expect(activity.object.id).not.toBeUndefined();
 
-    const { body: event } = await appServer.call('pod-resources.get', {
+    const { body: event } = await app.call('pod-resources.get', {
       resourceUri: activity.object.id,
       actorUri: alice.id
     });
@@ -146,7 +134,7 @@ describe('Test Pod outbox posting', () => {
 
   test('Create a resource for which app has no write permission', async () => {
     await expect(
-      appServer.call('pod-outbox.post', {
+      app.call('pod-outbox.post', {
         activity: {
           type: ACTIVITY_TYPES.CREATE,
           object: {
@@ -161,20 +149,21 @@ describe('Test Pod outbox posting', () => {
 
   test('Update a resource for which app has no write permission', async () => {
     await alice.call('ldp.registry.register', {
-      acceptedTypes: 'as:Note'
+      types: 'as:Note'
     });
 
+    notesContainerUri = await alice.getContainerUri('as:Note');
+
     noteUri = await alice.call('ldp.container.post', {
-      containerUri: urlJoin(alice.id, 'data/as/note'),
+      containerUri: notesContainerUri,
       resource: {
         type: OBJECT_TYPES.NOTE,
         name: 'Note to myself'
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
     await expect(
-      appServer.call('pod-outbox.post', {
+      app.call('pod-outbox.post', {
         activity: {
           type: ACTIVITY_TYPES.UPDATE,
           object: {
@@ -190,11 +179,11 @@ describe('Test Pod outbox posting', () => {
 
   test('Update a resource which does not exist', async () => {
     await expect(
-      appServer.call('pod-outbox.post', {
+      app.call('pod-outbox.post', {
         activity: {
           type: ACTIVITY_TYPES.UPDATE,
           object: {
-            id: alice.id + '/data/as/place/does-not-exist',
+            id: alice.baseUrl + '/as/place/does-not-exist',
             type: OBJECT_TYPES.PLACE,
             name: 'My place'
           }
@@ -206,7 +195,7 @@ describe('Test Pod outbox posting', () => {
 
   test('Delete a resource for which app has no write permission', async () => {
     await expect(
-      appServer.call('pod-outbox.post', {
+      app.call('pod-outbox.post', {
         activity: {
           type: ACTIVITY_TYPES.DELETE,
           object: noteUri

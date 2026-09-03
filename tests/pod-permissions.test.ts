@@ -1,75 +1,66 @@
-import urlJoin from 'url-join';
-import { MIME_TYPES } from '@semapps/mime-types';
-import { connectPodProvider, clearAllData, initializeAppServer, installApp } from './initialize.ts';
+import waitForExpect from 'wait-for-expect';
+import { ServiceBroker } from 'moleculer';
+import {
+  connectPodProvider,
+  clearAllData,
+  initializeAppServer,
+  installApp,
+  createTestActor,
+  getTestApp
+} from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 import Example2AppService from './apps/example2.app.ts';
+import { TestActor, TestApp } from './utilTypes.js';
+
 jest.setTimeout(100000);
-const NUM_PODS = 1;
-const APP_SERVER_BASE_URL = 'http://localhost:3001';
-const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
-const APP2_SERVER_BASE_URL = 'http://localhost:3002';
-const APP2_URI = urlJoin(APP2_SERVER_BASE_URL, 'app');
 
 describe('Test Pod resources handling', () => {
-  let actors: any = [],
-    podProvider: any,
-    alice: any,
-    appServer: any,
-    app2Server: any,
-    eventUri: any;
+  let podProvider: ServiceBroker,
+    appServer: ServiceBroker,
+    app2Server: ServiceBroker,
+    alice: TestActor,
+    app: TestApp,
+    app2: TestApp,
+    eventUri: string,
+    aliceEventsContainerUri: string;
 
   beforeAll(async () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
+    alice = await createTestActor(podProvider, 'alice');
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
     await appServer.start();
+    app = await getTestApp(appServer);
 
-    app2Server = await initializeAppServer(3002, 'app2Data', 'app2_settings', 2, Example2AppService);
+    app2Server = await initializeAppServer(3002, 'app2', 'app2_settings', 2, Example2AppService);
     await app2Server.start();
+    app2 = await getTestApp(app2Server);
 
-    for (let i = 1; i <= NUM_PODS; i++) {
-      const actorData = require(`./data/actor${i}.json`);
-      const { webId } = await podProvider.call('auth.signup', actorData);
-      actors[i] = await podProvider.call(
-        'activitypub.actor.awaitCreateComplete',
-        {
-          actorUri: webId,
-          additionalKeys: ['url']
-        },
-        { meta: { dataset: actorData.username } }
-      );
-      actors[i].call = (actionName: any, params: any, options = {}) =>
-        podProvider.call(actionName, params, {
-          ...options,
-          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
-        });
-    }
-
-    alice = actors[1];
-
-    await installApp(alice, APP_URI);
-    await installApp(alice, APP2_URI);
+    await installApp(alice, app.id);
+    await installApp(alice, app2.id);
   }, 100000);
 
   afterAll(async () => {
     await podProvider.stop();
     await appServer.stop();
+    await app2Server.stop();
   });
 
   test('Add permission with acl:Control permission', async () => {
+    aliceEventsContainerUri = await alice.getContainerUri('as:Event');
+
     eventUri = await alice.call('ldp.container.post', {
-      containerUri: urlJoin(alice.id, 'data/as/event'),
+      containerUri: aliceEventsContainerUri,
       resource: {
         type: 'Event',
         name: 'Birthday party !'
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
     await expect(
-      appServer.call('pod-permissions.add', {
+      app.call('pod-permissions.add', {
         uri: eventUri,
         agentUri: 'http://localhost:3000/bob',
         agentPredicate: 'acl:agent',
@@ -79,13 +70,12 @@ describe('Test Pod resources handling', () => {
     ).resolves.toBeTruthy();
 
     await expect(
-      appServer.call('pod-permissions.get', {
+      app.call('pod-permissions.get', {
         uri: eventUri,
         actorUri: alice.id
       })
     ).resolves.toContainEqual(
       expect.objectContaining({
-        '@id': '#Read',
         '@type': 'acl:Authorization',
         'acl:accessTo': eventUri,
         'acl:agent': 'http://localhost:3000/bob',
@@ -96,7 +86,7 @@ describe('Test Pod resources handling', () => {
 
   test('Add permission without acl:Control permission', async () => {
     await expect(
-      app2Server.call('pod-permissions.add', {
+      app2.call('pod-permissions.add', {
         uri: eventUri,
         agentUri: 'http://localhost:3000/craig',
         agentPredicate: 'acl:agent',
@@ -108,7 +98,7 @@ describe('Test Pod resources handling', () => {
 
   test('Remove permission', async () => {
     await expect(
-      appServer.call('pod-permissions.add', {
+      app.call('pod-permissions.add', {
         uri: eventUri,
         agentUri: 'http://localhost:3000/craig',
         agentPredicate: 'acl:agent',
@@ -118,7 +108,7 @@ describe('Test Pod resources handling', () => {
     ).resolves.toBeTruthy();
 
     await expect(
-      appServer.call('pod-permissions.remove', {
+      app.call('pod-permissions.remove', {
         uri: eventUri,
         agentUri: 'http://localhost:3000/craig',
         agentPredicate: 'acl:agent',
@@ -128,13 +118,12 @@ describe('Test Pod resources handling', () => {
     ).resolves.toBeTruthy();
 
     await expect(
-      appServer.call('pod-permissions.get', {
+      app.call('pod-permissions.get', {
         uri: eventUri,
         actorUri: alice.id
       })
     ).resolves.toContainEqual(
       expect.objectContaining({
-        '@id': '#Read',
         '@type': 'acl:Authorization',
         'acl:accessTo': eventUri,
         'acl:agent': 'http://localhost:3000/bob',

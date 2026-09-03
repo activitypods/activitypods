@@ -5,7 +5,7 @@ const ShaclSchema = {
   name: 'shacl' as const,
   actions: {
     get: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri } = ctx.params;
         return await ctx.call('ldp.remote.get', { resourceUri, accept: MIME_TYPES.JSON });
       }
@@ -13,7 +13,7 @@ const ShaclSchema = {
 
     getTypes: {
       // Extract the required types from the SHACL shape
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri } = ctx.params;
         const shape = await this.actions.get({ resourceUri }, { parentCtx: ctx });
         return shape[0]['http://www.w3.org/ns/shacl#targetClass']?.map((node: any) => node['@id']) || [];

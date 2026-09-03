@@ -1,2 +1,3 @@
-import { TypeIndexesService } from '@semapps/solid';
-export const mixins = [TypeIndexesService];
+import { TypeIndexService } from '@semapps/solid';
+
+export default TypeIndexService;

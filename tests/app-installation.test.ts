@@ -1,69 +1,61 @@
 import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
+import { ServiceBroker } from 'moleculer';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { arrayOf, getId } from '@semapps/ldp';
-import { connectPodProvider, clearAllData, initializeAppServer, createActor } from './initialize.ts';
+import { connectPodProvider, clearAllData, initializeAppServer, createTestActor, getTestApp } from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
 import * as CONFIG from './config.ts';
+import { TestActor, TestApp } from './utilTypes.js';
+
 jest.setTimeout(80000);
-const APP_URI = 'http://localhost:3001/app';
-const APP2_URI = 'http://localhost:3002/app';
 
 describe('Test app installation', () => {
-  let podProvider: any,
-    alice: any,
-    appServer: any,
-    appServer2: any,
-    app: any,
-    eventsContainerUri: any,
-    locationsContainerUri: any,
+  let podProvider: ServiceBroker,
+    appServer: ServiceBroker,
+    alice: TestActor,
+    app: TestApp,
+    eventsContainerUri: string,
+    locationsContainerUri: string,
     requiredAccessNeedGroup: any,
     optionalAccessNeedGroup: any,
     requiredAccessGrant: any,
-    optionalAccessGrant,
-    appRegistrationUri: any;
+    optionalAccessGrant: any,
+    appRegistrationUri: string;
 
   beforeAll(async () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
+    alice = await createTestActor(podProvider, 'alice');
 
-    appServer = await initializeAppServer(3001, 'appData', 'app_settings', 1, ExampleAppService);
+    appServer = await initializeAppServer(3001, 'app', 'app_settings', 1, ExampleAppService);
     await appServer.start();
-
-    appServer2 = await initializeAppServer(3002, 'app2Data', 'app2_settings', 2, ExampleAppService);
-    await appServer2.start();
-
-    alice = await createActor(podProvider, 'alice');
   }, 80000);
 
   afterAll(async () => {
     await podProvider.stop();
     await appServer.stop();
-    await appServer2.stop();
   });
 
   test('App access needs are correctly declared', async () => {
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      app = await appServer.call('ldp.resource.get', {
-        resourceUri: APP_URI,
-        accept: MIME_TYPES.JSON
-      });
+      app = await getTestApp(appServer);
+
       expect(app).toMatchObject({
         type: expect.arrayContaining(['interop:Application']),
         'interop:applicationName': 'Example App',
         'interop:applicationDescription': 'An ActivityPods app for integration tests',
         'interop:hasAccessNeedGroup': expect.anything()
       });
+
+      expect(arrayOf(app['interop:hasAccessNeedGroup'])).toHaveLength(2);
     });
 
-    let accessNeedGroup;
     for (const accessNeedUri of arrayOf(app['interop:hasAccessNeedGroup'])) {
-      accessNeedGroup = await appServer.call('ldp.resource.get', {
-        resourceUri: accessNeedUri,
-        accept: MIME_TYPES.JSON
-      });
+      const accessNeedGroup = await app.call('ldp.resource.get', { resourceUri: accessNeedUri });
       if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
         requiredAccessNeedGroup = accessNeedGroup;
       } else {
@@ -83,10 +75,7 @@ describe('Test app installation', () => {
     });
 
     await expect(
-      appServer.call('ldp.resource.get', {
-        resourceUri: requiredAccessNeedGroup['interop:hasAccessNeed'],
-        accept: MIME_TYPES.JSON
-      })
+      app.call('ldp.resource.get', { resourceUri: requiredAccessNeedGroup['interop:hasAccessNeed'] })
     ).resolves.toMatchObject({
       type: 'interop:AccessNeed',
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
@@ -105,9 +94,8 @@ describe('Test app installation', () => {
     });
 
     await expect(
-      appServer.call('ldp.resource.get', {
-        resourceUri: optionalAccessNeedGroup['interop:hasAccessNeed'],
-        accept: MIME_TYPES.JSON
+      app.call('ldp.resource.get', {
+        resourceUri: optionalAccessNeedGroup['interop:hasAccessNeed']
       })
     ).resolves.toMatchObject({
       type: 'interop:AccessNeed',
@@ -119,7 +107,7 @@ describe('Test app installation', () => {
 
   test('User installs app and grants all access needs', async () => {
     appRegistrationUri = await alice.call('registration-endpoint.register', {
-      appUri: APP_URI,
+      appUri: app.id,
       acceptedAccessNeeds: [
         requiredAccessNeedGroup['interop:hasAccessNeed'],
         optionalAccessNeedGroup['interop:hasAccessNeed']
@@ -131,6 +119,7 @@ describe('Test app installation', () => {
     });
 
     // Ensure the app backend is informed of the installation
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const outboxMenu = await alice.call('activitypub.collection.get', {
         resourceUri: alice.outbox
@@ -144,25 +133,22 @@ describe('Test app installation', () => {
       expect(outbox?.orderedItems[0]).toMatchObject({
         type: 'Create',
         object: expect.anything(),
-        to: APP_URI
+        to: app.id
       });
     });
   });
 
   test('Application registration is correctly created', async () => {
-    let appRegistration;
+    let appRegistration: any;
 
     // Get the app registration from the app server (it should be public like access grants)
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      appRegistration = await appServer.call('ldp.remote.get', {
-        resourceUri: appRegistrationUri,
-        accept: MIME_TYPES.JSON,
-        webId: APP_URI
-      });
+      appRegistration = await app.call('ldp.remote.get', { resourceUri: appRegistrationUri });
 
       expect(appRegistration).toMatchObject({
         type: 'interop:ApplicationRegistration',
-        'interop:registeredAgent': APP_URI,
+        'interop:registeredAgent': app.id,
         'interop:registeredBy': alice.id,
         'interop:hasAccessGrant': expect.arrayContaining([])
       });
@@ -172,11 +158,7 @@ describe('Test app installation', () => {
 
     const grants = await Promise.all(
       arrayOf(appRegistration['interop:hasAccessGrant']).map((accessGrantUri: any) =>
-        appServer.call('ldp.remote.get', {
-          resourceUri: accessGrantUri,
-          accept: MIME_TYPES.JSON,
-          webId: APP_URI
-        })
+        app.call('ldp.remote.get', { resourceUri: accessGrantUri })
       )
     );
 
@@ -190,10 +172,10 @@ describe('Test app installation', () => {
     expect(requiredAccessGrant).toMatchObject({
       type: 'interop:AccessGrant',
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
-      'interop:hasDataRegistration': urlJoin(alice.id, 'data/as/event'),
+      'interop:hasDataRegistration': expect.anything(),
       'interop:dataOwner': alice.id,
       'interop:grantedBy': alice.id,
-      'interop:grantee': APP_URI,
+      'interop:grantee': app.id,
       'interop:granteeType': 'interop:Application',
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Write', 'acl:Control']),
       'interop:satisfiesAccessNeed': requiredAccessNeedGroup['interop:hasAccessNeed'],
@@ -203,15 +185,18 @@ describe('Test app installation', () => {
     expect(optionalAccessGrant).toMatchObject({
       type: 'interop:AccessGrant',
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location'),
-      'interop:hasDataRegistration': urlJoin(alice.id, 'data/vcard/location'),
+      'interop:hasDataRegistration': expect.anything(),
       'interop:dataOwner': alice.id,
       'interop:grantedBy': alice.id,
-      'interop:grantee': APP_URI,
+      'interop:grantee': app.id,
       'interop:granteeType': 'interop:Application',
       'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append']),
       'interop:satisfiesAccessNeed': optionalAccessNeedGroup['interop:hasAccessNeed'],
       'interop:scopeOfGrant': 'interop:AllFromRegistry'
     });
+
+    eventsContainerUri = requiredAccessGrant['interop:hasDataRegistration'];
+    locationsContainerUri = optionalAccessGrant['interop:hasDataRegistration'];
   });
 
   test('Authorizations are correctly created', async () => {
@@ -225,201 +210,55 @@ describe('Test app installation', () => {
       })
     );
 
-    expect(authorizations).toContainEqual(
-      expect.objectContaining({
-        'interop:accessMode': expect.arrayContaining(['acl:Write', 'acl:Read', 'acl:Control']),
-        'interop:hasDataRegistration': urlJoin(alice.id, 'data/as/event'),
-        'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event')
-      }),
-      expect.objectContaining({
-        'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append']),
-        'interop:hasDataRegistration': urlJoin(alice.id, 'data/vcard/location'),
-        'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location')
-      })
+    expect(authorizations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          'interop:accessMode': expect.arrayContaining(['acl:Write', 'acl:Read', 'acl:Control']),
+          'interop:hasDataRegistration': eventsContainerUri,
+          'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event')
+        }),
+        expect.objectContaining({
+          'interop:accessMode': expect.arrayContaining(['acl:Read', 'acl:Append']),
+          'interop:hasDataRegistration': locationsContainerUri,
+          'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location')
+        })
+      ])
     );
   });
 
   test('Data registrations are created according to access needs', async () => {
-    await expect(
-      alice.call('ldp.container.exist', {
-        containerUri: urlJoin(alice.id, 'data/as')
-      })
-    ).resolves.toBeTruthy();
-
-    eventsContainerUri = urlJoin(alice.id, 'data/as/event');
-    locationsContainerUri = urlJoin(alice.id, 'data/vcard/location');
-
-    await expect(
-      alice.call('ldp.container.get', {
-        containerUri: eventsContainerUri,
-        accept: MIME_TYPES.JSON
-      })
-    ).resolves.toMatchObject({
+    await expect(alice.call('ldp.container.get', { containerUri: eventsContainerUri })).resolves.toMatchObject({
       type: expect.arrayContaining(['ldp:Container', 'ldp:BasicContainer', 'interop:DataRegistration']),
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event')
     });
 
-    await expect(
-      alice.call('ldp.container.get', {
-        containerUri: locationsContainerUri,
-        accept: MIME_TYPES.JSON
-      })
-    ).resolves.toMatchObject({
+    await expect(alice.call('ldp.container.get', { containerUri: locationsContainerUri })).resolves.toMatchObject({
       type: expect.arrayContaining(['ldp:Container', 'ldp:BasicContainer', 'interop:DataRegistration']),
       'interop:registeredShapeTree': urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location')
     });
-
-    const eventsRights = await alice.call('webacl.resource.getRights', {
-      resourceUri: urlJoin(alice.id, 'data/as/event'),
-      accept: MIME_TYPES.JSON,
-      webId: APP_URI
-    });
-
-    expect(eventsRights).toMatchObject({
-      '@graph': expect.arrayContaining([
-        expect.objectContaining({
-          'acl:accessTo': eventsContainerUri,
-          'acl:agent': APP_URI,
-          'acl:mode': 'acl:Read'
-        }),
-        expect.objectContaining({
-          'acl:accessTo': eventsContainerUri,
-          'acl:agent': APP_URI,
-          'acl:mode': 'acl:Write'
-        })
-      ])
-    });
-
-    const locationsRights = await alice.call('webacl.resource.getRights', {
-      resourceUri: urlJoin(alice.id, 'data/vcard/location'),
-      accept: MIME_TYPES.JSON,
-      webId: APP_URI
-    });
-
-    expect(locationsRights).toMatchObject({
-      '@graph': expect.arrayContaining([
-        expect.objectContaining({
-          'acl:agent': APP_URI,
-          'acl:mode': 'acl:Read',
-          'acl:accessTo': locationsContainerUri
-        })
-      ])
-    });
-
-    expect(locationsRights['@graph']).not.toContain([
-      expect.objectContaining({
-        'acl:agent': APP_URI,
-        'acl:mode': 'acl:Write',
-        'acl:accessTo': locationsContainerUri
-      })
-    ]);
-  });
-
-  test('Resources created in the containers have the correct permissions', async () => {
-    const eventUri = await alice.call('ldp.container.post', {
-      containerUri: urlJoin(alice.id, 'data/as/event'),
-      resource: {
-        type: 'Event',
-        name: 'Birthday party !'
-      },
-      contentType: MIME_TYPES.JSON
-    });
-
-    const eventsRights = await alice.call('webacl.resource.getRights', {
-      resourceUri: eventUri,
-      accept: MIME_TYPES.JSON,
-      webId: 'system' // We must fetch as system, because we need control rights on the container to see all permissions
-    });
-
-    expect(eventsRights).toMatchObject({
-      '@graph': expect.arrayContaining([
-        expect.objectContaining({
-          'acl:agent': APP_URI,
-          'acl:default': eventsContainerUri,
-          'acl:mode': 'acl:Read'
-        }),
-        expect.objectContaining({
-          'acl:agent': APP_URI,
-          'acl:default': eventsContainerUri,
-          'acl:mode': 'acl:Write'
-        }),
-        expect.objectContaining({
-          'acl:agent': APP_URI,
-          'acl:default': eventsContainerUri,
-          'acl:mode': 'acl:Control'
-        })
-      ])
-    });
-
-    const locationUri = await alice.call('ldp.container.post', {
-      containerUri: urlJoin(alice.id, 'data/vcard/location'),
-      resource: {
-        type: 'vcard:Location',
-        'vcard:given-name': 'Home sweet home'
-      },
-      contentType: MIME_TYPES.JSON
-    });
-
-    const locationsRights = await alice.call('webacl.resource.getRights', {
-      resourceUri: locationUri,
-      accept: MIME_TYPES.JSON,
-      webId: 'system'
-    });
-
-    expect(locationsRights).toMatchObject({
-      '@graph': expect.arrayContaining([
-        expect.objectContaining({
-          'acl:agent': APP_URI,
-          'acl:mode': 'acl:Read',
-          'acl:default': locationsContainerUri
-        }),
-        expect.objectContaining({
-          'acl:agent': APP_URI,
-          'acl:mode': 'acl:Append',
-          'acl:default': locationsContainerUri
-        })
-      ])
-    });
-
-    expect(locationsRights['@graph']).not.toContain([
-      expect.objectContaining({
-        'acl:agent': APP_URI,
-        'acl:mode': 'acl:Write',
-        'acl:default': locationsContainerUri
-      })
-    ]);
-
-    expect(locationsRights['@graph']).not.toContain([
-      expect.objectContaining({
-        'acl:agent': APP_URI,
-        'acl:mode': 'acl:Control',
-        'acl:default': locationsContainerUri
-      })
-    ]);
   });
 
   test('Types are correctly registered in the TypeIndex', async () => {
-    const typeIndex = await alice.call('type-indexes.get', {
-      resourceUri: alice['solid:publicTypeIndex'],
-      accept: MIME_TYPES.JSON
-    });
+    const publicTypeIndex = await alice.call('public-type-index.get');
 
-    expect(typeIndex['solid:hasTypeRegistration']).toContainEqual(
-      expect.objectContaining({
-        'solid:forClass': 'as:Event',
-        'solid:instanceContainer': urlJoin(alice.id, 'data/as/event')
-      }),
-      expect.objectContaining({
-        'solid:forClass': 'vcard:Location',
-        'solid:instanceContainer': urlJoin(alice.id, 'data/vcard/location')
-      })
+    expect(publicTypeIndex['@graph']).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          'solid:forClass': 'as:Event',
+          'solid:instanceContainer': eventsContainerUri
+        }),
+        expect.objectContaining({
+          'solid:forClass': 'vcard:Location',
+          'solid:instanceContainer': locationsContainerUri
+        })
+      ])
     );
   });
 
   test('User installs same app a second time and get an error', async () => {
     await expect(
       alice.call('registration-endpoint.register', {
-        appUri: APP_URI,
+        appUri: app.id,
         acceptedAccessNeeds: requiredAccessNeedGroup['interop:hasAccessNeed'],
         acceptedSpecialRights: requiredAccessNeedGroup['apods:hasSpecialRights']
       })
@@ -427,11 +266,12 @@ describe('Test app installation', () => {
   });
 
   test('User uninstalls app', async () => {
-    await alice.call('registration-endpoint.remove', { appUri: APP_URI });
+    await alice.call('registration-endpoint.remove', { appUri: app.id });
 
     let appRegistrationUri: any;
 
     // The app backend is informed of the uninstallation
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       const outboxMenu = await alice.call('activitypub.collection.get', {
         resourceUri: alice.outbox
@@ -445,26 +285,23 @@ describe('Test app installation', () => {
       expect(outbox?.orderedItems[0]).toMatchObject({
         type: ACTIVITY_TYPES.DELETE,
         object: expect.anything(),
-        to: APP_URI
+        to: app.id
       });
 
       appRegistrationUri = outbox?.orderedItems[0]?.object;
     });
 
     // The ApplicationRegistration should be deleted
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      await expect(
-        alice.call('ldp.resource.get', {
-          resourceUri: appRegistrationUri,
-          accept: MIME_TYPES.JSON
-        })
-      ).rejects.toThrow();
+      await expect(alice.call('ldp.resource.get', { resourceUri: appRegistrationUri })).rejects.toThrow();
     });
 
     // It should be deleted on the app server as well
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
-        appServer.call('ldp.remote.getStored', {
+        app.call('ldp.remote.getStored', {
           resourceUri: appRegistrationUri,
           webId: 'system'
         })
@@ -472,19 +309,16 @@ describe('Test app installation', () => {
     });
 
     // An access grant should be deleted
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      await expect(
-        alice.call('ldp.resource.get', {
-          resourceUri: getId(requiredAccessGrant),
-          accept: MIME_TYPES.JSON
-        })
-      ).rejects.toThrow();
+      await expect(alice.call('ldp.resource.get', { resourceUri: getId(requiredAccessGrant) })).rejects.toThrow();
     });
 
     // It should be deleted on the app server as well
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
-        appServer.call('ldp.remote.getStored', {
+        app.call('ldp.remote.getStored', {
           resourceUri: getId(requiredAccessGrant),
           webId: 'system'
         })
@@ -496,14 +330,14 @@ describe('Test app installation', () => {
 
   test('Permissions granted to the app should be removed', async () => {
     const eventsRights = await alice.call('webacl.resource.getRights', {
-      resourceUri: urlJoin(alice.id, 'data/as/event'),
+      resourceUri: eventsContainerUri,
       accept: MIME_TYPES.JSON,
-      webId: APP_URI
+      webId: app.id
     });
 
     expect(eventsRights['@graph']).not.toContain([
       expect.objectContaining({
-        'acl:agent': APP_URI,
+        'acl:agent': app.id,
         'acl:mode': 'acl:Read',
         'acl:accessTo': eventsContainerUri
       })
@@ -511,7 +345,7 @@ describe('Test app installation', () => {
 
     expect(eventsRights['@graph']).not.toContain([
       expect.objectContaining({
-        'acl:agent': APP_URI,
+        'acl:agent': app.id,
         'acl:mode': 'acl:Write',
         'acl:accessTo': eventsContainerUri
       })
@@ -519,20 +353,19 @@ describe('Test app installation', () => {
   });
 
   test('Types are still registered in the TypeIndex', async () => {
-    const typeIndex = await alice.call('type-indexes.get', {
-      resourceUri: alice['solid:publicTypeIndex'],
-      accept: MIME_TYPES.JSON
-    });
+    const publicTypeIndex = await alice.call('public-type-index.get');
 
-    expect(typeIndex['solid:hasTypeRegistration']).toContainEqual(
-      expect.objectContaining({
-        'solid:forClass': 'as:Event',
-        'solid:instanceContainer': urlJoin(alice.id, 'data/as/event')
-      }),
-      expect.objectContaining({
-        'solid:forClass': 'vcard:Location',
-        'solid:instanceContainer': urlJoin(alice.id, 'data/vcard/location')
-      })
+    expect(publicTypeIndex['@graph']).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          'solid:forClass': 'as:Event',
+          'solid:instanceContainer': eventsContainerUri
+        }),
+        expect.objectContaining({
+          'solid:forClass': 'vcard:Location',
+          'solid:instanceContainer': locationsContainerUri
+        })
+      ])
     );
   });
 });

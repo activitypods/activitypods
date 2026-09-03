@@ -34,7 +34,7 @@ const DetailsList = ({ children }: any) => {
             <>{/*  @ts-expect-error TS(2571): Object is of type 'unknown'.*/}</>
             {field.props.label !== false ? (
               <Grid container spacing={3} className={classes.container}>
-                <Grid sx={{ xs: 4, sm: 3 }} className={classes.item}>
+                <Grid size={{ xs: 4, sm: 3 }} className={classes.item}>
                   <Typography color="textSecondary" align="right" variant="body2">
                     {translate(
                       ...getFieldLabelTranslationArgs({
@@ -47,7 +47,7 @@ const DetailsList = ({ children }: any) => {
                     )}
                   </Typography>
                 </Grid>
-                <Grid sx={{ xs: 8, sm: 9 }} className={classes.item}>
+                <Grid size={{ xs: 8, sm: 9 }} className={classes.item}>
                   <Typography variant="body2" component="div">
                     {field}
                   </Typography>

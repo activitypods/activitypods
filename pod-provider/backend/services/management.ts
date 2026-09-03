@@ -12,6 +12,7 @@ import { sanitizeSparqlQuery } from '@semapps/triplestore';
 import { arrayOf } from '@semapps/ldp';
 import * as CONFIG from '../config/config.ts';
 import { ServiceSchema } from 'moleculer';
+import { Account } from '@semapps/auth';
 // @ts-expect-error TS(7034): Variable 'Readable' implicitly has type 'any' in s... Remove this comment to see the full error message
 let Readable, NTriplesSerializer;
 
@@ -22,7 +23,6 @@ const importAsync = async () => {
 
 importAsync();
 
-/** @type {import('moleculer').ServiceSchema} */
 const ManagementService = {
   name: 'management' as const,
   mixins: [QueueService(CONFIG.QUEUE_SERVICE_URL)],
@@ -58,13 +58,12 @@ const ManagementService = {
       params: {
         username: { type: 'string' }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
 
         // Validate that the actor exists.
-        const account = await ctx.call('auth.account.findByUsername', { username });
+        const account: Account = await ctx.call('auth.account.findByUsername', { username });
         if (!account) throw404('Actor not found');
 
         // Validate that the authenticated user has the right to delete
@@ -157,13 +156,12 @@ const ManagementService = {
         withBackups: { type: 'boolean', default: false, convert: true },
         withSettings: { type: 'boolean', default: false, convert: true }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username, withBackups, withSettings } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
 
         // Validate that the actor exists
-        const account = await ctx.call('auth.account.findByUsername', { username });
+        const account: Account = await ctx.call('auth.account.findByUsername', { username });
         if (!account) throw404('Actor not found');
 
         // Validate that the authenticated user has the right to export
@@ -179,14 +177,13 @@ const ManagementService = {
           }
         }
 
-        const storageUrl = await ctx.call('solid-storage.getUrl', { webId: account.webId });
+        const storageUrl = await ctx.call('solid-storage.getBaseUrl', { webId: account.webId });
 
         // If there has been an export less than 5 minutes ago, we won't create a new one.
         // The last one might have stopped during download.
         const recentExport = await this.findRecentExport(username, this.settings.retainTmpExportsMs);
         if (recentExport) {
           // Return file stream.
-          // @ts-expect-error TS(2339): Property '$responseType' does not exist on type '{... Remove this comment to see the full error message
           ctx.meta.$responseType = 'application/zip';
           return fs.promises.readFile(recentExport);
         }
@@ -241,7 +238,6 @@ const ManagementService = {
         }
 
         // Return file by reading it from fs.
-        // @ts-expect-error TS(2339): Property '$responseType' does not exist on type '{... Remove this comment to see the full error message
         ctx.meta.$responseType = 'application/zip';
         return fs.promises.readFile(fileName);
       }
@@ -357,7 +353,7 @@ const ManagementService = {
     async createRdfDump(dataset, webId, withSettings = false) {
       /** @type {object[]} */
       const datasetDump = await this.broker.call('triplestore.query', {
-        query: `SELECT * { { ?s ?p ?o } UNION { GRAPH ?g { ?s ?p ?o } } }`,
+        query: `SELECT * { GRAPH ?g { ?s ?p ?o } }`,
         webId: 'system',
         dataset,
         accept: MIME_TYPES.JSON
@@ -368,8 +364,10 @@ const ManagementService = {
             dataset: this.settings.settingsDataset,
             query: sanitizeSparqlQuery`
               SELECT * WHERE {
-                ?s ?p ?o .
-                FILTER EXISTS { ?s <http://semapps.org/ns/core#webId> "${webId}" }
+                GRAPH ?g {
+                  ?s ?p ?o .
+                  FILTER EXISTS { ?s <http://semapps.org/ns/core#webId> "${webId}" }
+                }
               }
             `,
             accept: MIME_TYPES.JSON

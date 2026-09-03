@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Box, Container, Typography, Grid } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import UserMenu from './UserMenu';
+import { useDefaultTitle } from 'react-admin';
 
 const useStyles = makeStyles()(theme => ({
   topBar: {
@@ -23,19 +24,20 @@ const useStyles = makeStyles()(theme => ({
   }
 }));
 
-const AppBar = ({ title }: any) => {
+const AppBar = () => {
   const { classes } = useStyles();
+  const title = useDefaultTitle();
   return (
     <Box className={classes.topBar}>
       <Container>
         <Grid container>
-          <Grid sx={{ xs: 6 }}>
+          <Grid size={6}>
             <Typography variant="h1" className={classes.title}>
               <Link to="/network">{title}</Link>
             </Typography>
           </Grid>
-          <Grid sx={{ xs: 6 }}>
-            <Box display="flex" alignItems="start" justifyContent="right" pt={{ xs: 1, sm: 2 }}>
+          <Grid size={6}>
+            <Box display="flex" alignItems="start" justifyContent="right" pt={{ xs: 1, sm: 2 }} sx={{ width: '100%' }}>
               <UserMenu />
             </Box>
           </Grid>

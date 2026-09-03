@@ -3,7 +3,7 @@ import urlJoin from 'url-join';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { arrayOf } from '@semapps/ldp';
+import { arrayOf, Registration } from '@semapps/ldp';
 import { throw403, throw404 } from '@semapps/middlewares';
 import * as CONFIG from '../config/config.ts';
 import { ServiceSchema } from 'moleculer';
@@ -33,9 +33,9 @@ const GroupsService = {
        * @param id Unique identifier for the group
        * @param type
        */
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { id, type } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type '{}'.
+
         const ownerWebId = ctx.meta.impersonatedUser || ctx.meta.webId;
         const groupWebId = urlJoin(CONFIG.BASE_URL, id);
 
@@ -58,14 +58,14 @@ const GroupsService = {
         const storageUrl = await ctx.call('solid-storage.create', { username: id });
 
         // Create containers
-        const registeredContainers = await ctx.call('ldp.registry.list');
-        // @ts-expect-error TS(2339): Property 'path' does not exist on type 'unknown'.
-        for (const { path, permissions } of Object.values(registeredContainers)) {
-          await ctx.call('ldp.container.createAndAttach', {
-            containerUri: urlJoin(storageUrl, path),
-            permissions, // Used by the WebAclMiddleware
-            webId: ownerWebId
-          });
+        const registrations = (await ctx.call('ldp.registry.list')) as { [name: string]: Registration };
+        for (const registration of Object.values(registrations)) {
+          if (registration.isContainer) {
+            await ctx.call('ldp.container.create', {
+              registration,
+              webId: ownerWebId
+            });
+          }
         }
 
         // Create WebID
@@ -118,14 +118,11 @@ const GroupsService = {
         });
 
         // We need to set the Location twice or we get a Moleculer warning
-        // @ts-expect-error TS(2339): Property '$responseHeaders' does not exist on type... Remove this comment to see the full error message
         ctx.meta.$responseHeaders = {
           Location: groupWebId,
           'Content-Length': 0
         };
-        // @ts-expect-error TS(2339): Property '$location' does not exist on type '{}'.
         ctx.meta.$location = groupWebId;
-        // @ts-expect-error TS(2339): Property '$statusCode' does not exist on type '{}'... Remove this comment to see the full error message
         ctx.meta.$statusCode = 201;
       }
     },
@@ -141,9 +138,8 @@ const GroupsService = {
     },
 
     claim: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username, groupWebId } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type '{}'.
         const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
 
         const account = await ctx.call('auth.account.findByUsername', { username });
@@ -162,9 +158,8 @@ const GroupsService = {
     },
 
     undoClaim: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { username, groupWebId } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type '{}'.
         const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
 
         const account = await ctx.call('auth.account.findByUsername', { username });
@@ -177,7 +172,6 @@ const GroupsService = {
         // Detach group from account
         await ctx.call('auth.account.update', {
           id: account['@id'],
-          // @ts-expect-error TS(2339): Property 'owns' does not exist on type 'never'.
           owns: arrayOf(account.owns).filter(uri => uri !== groupWebId)
         });
       }

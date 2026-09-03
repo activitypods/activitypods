@@ -1,18 +1,18 @@
-import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
+import { ServiceBroker } from 'moleculer';
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
 import { arrayOf } from '@semapps/ldp';
-import { connectPodProvider, clearAllData } from './initialize.ts';
+import { connectPodProvider, clearAllData, createTestActor } from './initialize.ts';
 import { fetchMails } from './utils.ts';
+import { TestActor } from './utilTypes.js';
+
 jest.setTimeout(80000);
-const NUM_PODS = 3;
 
 describe('Test contacts features', () => {
-  let actors: any = [],
-    podProvider: any,
-    alice: any,
-    bob: any,
-    craig: any,
+  let podProvider: ServiceBroker,
+    alice: TestActor,
+    bob: TestActor,
+    craig: TestActor,
     contactRequestToBob: any,
     contactRequestToCraig: any;
 
@@ -21,27 +21,9 @@ describe('Test contacts features', () => {
 
     podProvider = await connectPodProvider();
 
-    for (let i = 1; i <= NUM_PODS; i++) {
-      const actorData = require(`./data/actor${i}.json`);
-      const { webId } = await podProvider.call('auth.signup', actorData);
-      actors[i] = await podProvider.call(
-        'activitypub.actor.awaitCreateComplete',
-        {
-          actorUri: webId,
-          additionalKeys: ['url', 'apods:contacts', 'apods:contactRequests', 'apods:rejectedContacts']
-        },
-        { meta: { dataset: actorData.username } }
-      );
-      actors[i].call = (actionName: any, params: any, options = {}) =>
-        podProvider.call(actionName, params, {
-          ...options,
-          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
-        });
-    }
-
-    alice = actors[1];
-    bob = actors[2];
-    craig = actors[3];
+    alice = await createTestActor(podProvider, 'alice');
+    bob = await createTestActor(podProvider, 'bob');
+    craig = await createTestActor(podProvider, 'craig');
   });
 
   afterAll(async () => {
@@ -62,6 +44,7 @@ describe('Test contacts features', () => {
       to: bob.id
     });
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(fetchMails()).resolves.toContainEqual(
         expect.objectContaining({
@@ -69,8 +52,9 @@ describe('Test contacts features', () => {
           subject: 'Alice would like to connect with you'
         })
       );
-    }, 80_000);
+    }, 50_000);
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         alice.call('webacl.resource.hasRights', {
@@ -81,6 +65,7 @@ describe('Test contacts features', () => {
       ).resolves.toMatchObject({ read: true });
     });
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         bob.call('activitypub.collection.includes', {
@@ -103,6 +88,7 @@ describe('Test contacts features', () => {
       to: craig.id
     });
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         bob.call('activitypub.collection.includes', {
@@ -112,6 +98,7 @@ describe('Test contacts features', () => {
       ).resolves.toBeFalsy();
     });
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(fetchMails()).resolves.toContainEqual(
         expect.objectContaining({
@@ -131,6 +118,7 @@ describe('Test contacts features', () => {
       to: alice.id
     });
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         bob.call('activitypub.collection.includes', {
@@ -140,62 +128,75 @@ describe('Test contacts features', () => {
       ).resolves.toBeFalsy();
     });
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         bob.call('activitypub.collection.includes', { collectionUri: bob['apods:contacts'], itemUri: alice.id })
       ).resolves.toBeTruthy();
     });
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         alice.call('activitypub.collection.includes', { collectionUri: alice['apods:contacts'], itemUri: bob.id })
       ).resolves.toBeTruthy();
     });
 
-    // Bob profile is cached in Alice dataset
+    // Alice profile is cached in Bob dataset
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
-        alice.call('triplestore.countTriplesOfSubject', {
+        bob.call('triplestore.countTriplesOfSubject', {
           uri: alice.url,
+          graphName: alice.url,
           dataset: bob.preferredUsername,
           webId: 'system'
         })
       ).resolves.toBeTruthy();
     });
 
-    // Bob profile is attached to Alice /profiles container
-    await waitForExpect(async () => {
-      await expect(
-        alice.call('ldp.container.includes', {
-          containerUri: urlJoin(alice.id, 'data', 'vcard', 'individual'),
-          resourceUri: bob.url,
-          webId: alice.id
-        })
-      ).resolves.toBeTruthy();
-    });
-
-    // Alice profile is cached in Bob dataset
-    await waitForExpect(async () => {
-      await expect(
-        bob.call('triplestore.countTriplesOfSubject', {
-          uri: bob.url,
-          dataset: alice.preferredUsername,
-          webId: 'system'
-        })
-      ).resolves.toBeTruthy();
-    });
+    const bobProfilesContainerUri = await bob.getContainerUri('vcard:Individual');
 
     // Alice profile is attached to Bob /profiles container
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         bob.call('ldp.container.includes', {
-          containerUri: urlJoin(bob.id, 'data', 'vcard', 'individual'),
+          containerUri: bobProfilesContainerUri,
           resourceUri: alice.url,
           webId: bob.id
         })
       ).resolves.toBeTruthy();
     });
 
+    // Bob profile is cached in Alice dataset
+    // @ts-expect-error This expression is not callable
+    await waitForExpect(async () => {
+      await expect(
+        alice.call('triplestore.countTriplesOfSubject', {
+          uri: bob.url,
+          graphName: bob.url,
+          dataset: alice.preferredUsername,
+          webId: 'system'
+        })
+      ).resolves.toBeTruthy();
+    });
+
+    const aliceProfilesContainerUri = await alice.getContainerUri('vcard:Individual');
+
+    // Bob profile is attached to Alice /profiles container
+    // @ts-expect-error This expression is not callable
+    await waitForExpect(async () => {
+      await expect(
+        alice.call('ldp.container.includes', {
+          containerUri: aliceProfilesContainerUri,
+          resourceUri: bob.url,
+          webId: alice.id
+        })
+      ).resolves.toBeTruthy();
+    });
+
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(fetchMails()).resolves.toContainEqual(
         expect.objectContaining({
@@ -215,6 +216,7 @@ describe('Test contacts features', () => {
       to: alice.id
     });
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         craig.call('activitypub.collection.includes', {
@@ -224,6 +226,7 @@ describe('Test contacts features', () => {
       ).resolves.toBeFalsy();
     });
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         craig.call('activitypub.collection.includes', {
@@ -243,6 +246,7 @@ describe('Test contacts features', () => {
       origin: bob['apods:contacts']
     });
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         bob.call('activitypub.collection.includes', {
@@ -252,10 +256,13 @@ describe('Test contacts features', () => {
       ).resolves.toBeFalsy();
     });
 
+    const bobProfilesContainerUri = await bob.getContainerUri('vcard:Individual');
+
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         bob.call('ldp.container.includes', {
-          containerUri: urlJoin(bob.id, 'data', 'vcard', 'individual'),
+          containerUri: bobProfilesContainerUri,
           resourceUri: alice.url,
           webId: alice.id
         })
@@ -276,6 +283,7 @@ describe('Test contacts features', () => {
       { meta: { doNotProcessObject: true } }
     );
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         alice.call('activitypub.collection.includes', {
@@ -285,15 +293,19 @@ describe('Test contacts features', () => {
       ).resolves.toBeFalsy();
     });
 
+    const aliceProfilesContainerUri = await alice.getContainerUri('vcard:Individual');
+
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       await expect(
         alice.call('ldp.container.includes', {
-          containerUri: urlJoin(alice.id, 'data', 'vcard', 'individual'),
+          containerUri: aliceProfilesContainerUri,
           resourceUri: bob.url
         })
       ).resolves.toBeFalsy();
     });
 
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
       // TODO new action to only get most recent item in collection
       const outboxMenu = await bob.call('activitypub.collection.get', {
@@ -305,7 +317,7 @@ describe('Test contacts features', () => {
         afterEq: new URL(outboxMenu?.first).searchParams.get('afterEq')
       });
 
-      await expect(arrayOf(outbox.orderedItems)[0]).toMatchObject({
+      expect(arrayOf(outbox.orderedItems)[0]).toMatchObject({
         type: ACTIVITY_TYPES.ACCEPT,
         object: activity.id,
         actor: alice.id,

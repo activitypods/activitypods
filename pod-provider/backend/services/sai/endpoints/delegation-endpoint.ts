@@ -2,7 +2,7 @@ import path from 'path';
 const { MoleculerError } = require('moleculer').Errors;
 import { arrayOf, getDatasetFromUri, getId } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { parseHeader, negotiateContentType, parseJson, parseTurtle } from '@semapps/middlewares';
+import { parseHeader, negotiateContentType, parseRawBody, parseJson } from '@semapps/middlewares';
 import { ServiceSchema } from 'moleculer';
 
 const DelegationEndpointSchema = {
@@ -10,7 +10,7 @@ const DelegationEndpointSchema = {
   dependencies: ['api', 'ldp'],
   async started() {
     const basePath = await this.broker.call('ldp.getBasePath');
-    const middlewares = [parseHeader, negotiateContentType, parseJson, parseTurtle];
+    const middlewares = [parseHeader, negotiateContentType, parseRawBody, parseJson];
     await this.broker.call('api.addRoute', {
       route: {
         name: 'sai-delegation-endpoint',
@@ -26,28 +26,23 @@ const DelegationEndpointSchema = {
   },
   actions: {
     issue_api: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const delegatedGrant = ctx.params;
 
-        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = getDatasetFromUri(delegatedGrant['interop:dataOwner']);
 
         const grantUri = await this.actions.issue({ delegatedGrant }, { parentCtx: ctx });
 
-        // @ts-expect-error TS(2339): Property '$responseHeaders' does not exist on type... Remove this comment to see the full error message
         ctx.meta.$responseHeaders = { Location: grantUri };
         // We need to set this also here (in addition to above) or we get a Moleculer warning
-        // @ts-expect-error TS(2339): Property '$location' does not exist on type '{}'.
         ctx.meta.$location = grantUri;
-        // @ts-expect-error TS(2339): Property '$statusCode' does not exist on type '{}'... Remove this comment to see the full error message
         ctx.meta.$statusCode = 201;
       }
     },
 
     issue: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { delegatedGrant } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
         const dataOwner = delegatedGrant['interop:dataOwner'];
 

@@ -1,7 +1,8 @@
-import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
-import sparqljsModule from 'sparqljs';
+import sparqljs from 'sparqljs';
 import { ServiceSchema } from 'moleculer';
-const SparqlGenerator = sparqljsModule.Generator;
+import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
+
+const SparqlGenerator = sparqljs.Generator;
 
 const PodResourcesSchema = {
   name: 'pod-resources' as const,
@@ -18,7 +19,7 @@ const PodResourcesSchema = {
         resource: { type: 'object', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { containerUri, actorUri } = ctx.params;
         let { resource } = ctx.params;
         // Adds the default context, if it is missing
@@ -29,15 +30,18 @@ const PodResourcesSchema = {
           };
         }
 
-        const { ok, headers } = await this.actions.fetch({
-          url: containerUri,
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/ld+json'
+        const { ok, headers } = await this.actions.fetch(
+          {
+            url: containerUri,
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/ld+json'
+            },
+            body: JSON.stringify(resource),
+            actorUri
           },
-          body: JSON.stringify(resource),
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
 
         if (ok) {
           return headers.get('Location');
@@ -52,18 +56,21 @@ const PodResourcesSchema = {
         containerUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { containerUri, actorUri } = ctx.params;
 
-        return await this.actions.fetch({
-          url: containerUri,
-          method: 'GET',
-          headers: {
-            Accept: 'application/ld+json',
-            JsonLdContext: JSON.stringify(await ctx.call('jsonld.context.get'))
+        return await this.actions.fetch(
+          {
+            url: containerUri,
+            method: 'GET',
+            headers: {
+              Accept: 'application/ld+json',
+              JsonLdContext: JSON.stringify(await ctx.call('jsonld.context.get'))
+            },
+            actorUri
           },
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
       }
     },
 
@@ -72,18 +79,21 @@ const PodResourcesSchema = {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, actorUri } = ctx.params;
 
-        return await this.actions.fetch({
-          url: resourceUri,
-          method: 'GET',
-          headers: {
-            Accept: 'application/ld+json',
-            JsonLdContext: JSON.stringify(await ctx.call('jsonld.context.get'))
+        return await this.actions.fetch(
+          {
+            url: resourceUri,
+            method: 'GET',
+            headers: {
+              Accept: 'application/ld+json',
+              JsonLdContext: JSON.stringify(await ctx.call('jsonld.context.get'))
+            },
+            actorUri
           },
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
       }
     },
 
@@ -94,7 +104,7 @@ const PodResourcesSchema = {
         triplesToRemove: { type: 'array', optional: true },
         actorUri: { type: 'string', optional: false }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, triplesToAdd, triplesToRemove, actorUri } = ctx.params;
 
         let sparqlUpdate = {
@@ -118,15 +128,18 @@ const PodResourcesSchema = {
           });
         }
 
-        return await this.actions.fetch({
-          url: resourceUri,
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/sparql-update'
+        return await this.actions.fetch(
+          {
+            url: resourceUri,
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/sparql-update'
+            },
+            body: this.sparqlGenerator.stringify(sparqlUpdate),
+            actorUri
           },
-          body: this.sparqlGenerator.stringify(sparqlUpdate),
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
       }
     },
 
@@ -135,7 +148,7 @@ const PodResourcesSchema = {
         resource: { type: 'object', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      async handler(ctx) {
+      async handler(ctx: any) {
         let { resource, actorUri } = ctx.params;
         const resourceUri = resource.id || resource['@id'];
 
@@ -147,15 +160,18 @@ const PodResourcesSchema = {
           };
         }
 
-        return await this.actions.fetch({
-          url: resourceUri,
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/ld+json'
+        return await this.actions.fetch(
+          {
+            url: resourceUri,
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/ld+json'
+            },
+            body: JSON.stringify(resource),
+            actorUri
           },
-          body: JSON.stringify(resource),
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
       }
     },
 
@@ -164,15 +180,17 @@ const PodResourcesSchema = {
         resourceUri: { type: 'string', optional: false },
         actorUri: { type: 'string', optional: false }
       },
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, actorUri } = ctx.params;
 
-        return await this.actions.fetch({
-          url: resourceUri,
-          method: 'DELETE',
-          actorUri
-        });
+        return await this.actions.fetch(
+          {
+            url: resourceUri,
+            method: 'DELETE',
+            actorUri
+          },
+          { parentCtx: ctx }
+        );
       }
     }
   }

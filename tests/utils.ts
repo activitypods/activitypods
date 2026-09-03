@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import { delay } from '@semapps/ldp';
 import * as CONFIG from './config.ts';
+import { FetchOptions } from './utilTypes.js';
 
 const arrayOf = (value: any) => {
   // If the field is null-ish, we suppose there are no values.
@@ -15,7 +16,7 @@ const arrayOf = (value: any) => {
   return [value];
 };
 
-const fetchServer = (url: any, options = {}) => {
+const fetchServer = async (url: string, options: FetchOptions = {}) => {
   if (!options.headers) options.headers = new fetch.Headers();
 
   switch (options.method) {
@@ -33,13 +34,14 @@ const fetchServer = (url: any, options = {}) => {
       break;
   }
 
-  if (options.body && options.headers.get('Content-Type').includes('json')) {
+  if (options.body && options.headers.get('Content-Type')?.includes('json')) {
     options.body = JSON.stringify(options.body);
   }
 
   return fetch(url, {
+    ...options,
     method: options.method || 'GET',
-    body: options.body,
+    body: options.body as fetch.BodyInit,
     headers: options.headers
   })
     .then(response =>
@@ -84,11 +86,15 @@ const clearMails = async () => {
  * If not, try again after `delayMs` until `maxTries` is reached.
  * If `fieldNames` is `undefined`, the return value of `callback` is expected to not be
  * `undefined`.
- * @type {import("./utilTypes").waitForResource}
  */
-const waitForResource = async (delayMs: any, fieldNames: any, maxTries: any, callback: any) => {
+const waitForResource = async <T>(
+  delayMs: number,
+  fieldNames: keyof T | string | (string | keyof T)[],
+  maxTries: number,
+  callback: () => Promise<T>
+): Promise<T> => {
   for (let i = 0; i < maxTries; i += 1) {
-    const result = await callback();
+    const result: any = await callback();
     // If a result (and the expected field, if required) is present, return.
     if (result !== undefined && arrayOf(fieldNames).every(fieldName => Object.keys(result).includes(fieldName))) {
       return result;

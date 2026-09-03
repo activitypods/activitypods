@@ -1,10 +1,9 @@
 import path from 'path';
-import urlJoin from 'url-join';
-import { arrayOf, getDatasetFromUri } from '@semapps/ldp';
-import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
+import { arrayOf, getDatasetFromUri, getType } from '@semapps/ldp';
+import { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
-import matchActivity from '@semapps/activitypub/utils/matchActivity';
 import { ServiceSchema } from 'moleculer';
+import { TypeRegistration } from '@semapps/solid';
 
 const getAnnouncesGroupUri = (eventUri: any) => {
   const uri = new URL(eventUri);
@@ -20,6 +19,7 @@ const getAnnouncersGroupUri = (eventUri: any) => {
 
 const AnnouncerSchema = {
   name: 'announcer' as const,
+  // @ts-expect-error
   mixins: [ActivitiesHandlerMixin],
   settings: {
     announcesCollectionOptions: {
@@ -40,7 +40,7 @@ const AnnouncerSchema = {
   dependencies: ['activitypub.collections-registry'],
   actions: {
     giveRightsAfterAnnouncesCollectionCreate: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { objectUri } = ctx.params;
 
         const object = await ctx.call('ldp.resource.awaitCreateComplete', {
@@ -85,7 +85,7 @@ const AnnouncerSchema = {
     },
 
     giveRightsAfterAnnouncersCollectionCreate: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { objectUri } = ctx.params;
 
         const object = await ctx.call('ldp.resource.awaitCreateComplete', {
@@ -120,7 +120,7 @@ const AnnouncerSchema = {
     },
 
     updateCollectionsOptions: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { dataset } = ctx.params;
         await ctx.call('activitypub.collections-registry.updateCollectionsOptions', {
           collection: this.settings.announcesCollectionOptions,
@@ -260,66 +260,49 @@ const AnnouncerSchema = {
       /**
        * On receipt of an announce activity, cache locally the announced object
        */
-      async onReceive(ctx: any, activity: any, recipientUri: any) {
+      async onReceive(ctx: any, activity: any) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
         // Sometimes a recipient may be the original announcer
         // So ensure this is a remote resource before storing it locally
-        if (!resourceUri.startsWith(urlJoin(recipientUri, '/'))) {
+        if (await ctx.call('ldp.remote.isRemote', { resourceUri })) {
           // Get the latest version of the resource and store it locally
-          const resource = await ctx.call('ldp.remote.store', {
-            resourceUri,
-            webId: recipientUri
+          const resource = await ctx.call('ldp.remote.store', { resourceUri });
+
+          const [expandedType] = await ctx.call('jsonld.parser.expandTypes', { types: getType(resource) });
+
+          const typeRegistration: TypeRegistration = await ctx.call('type-index.getByType', {
+            type: expandedType,
+            isContainer: true
           });
 
-          const expandedTypes = await ctx.call('jsonld.parser.expandTypes', {
-            types: resource['@type'] || resource.type
-          });
+          let containerUri = typeRegistration?.uri;
 
-          // Go through all the resource's types and attach it to the corresponding container
-          for (const expandedType of expandedTypes) {
-            let containersUris = await ctx.call('type-registrations.findContainersUris', {
-              type: expandedType,
-              webId: recipientUri
+          // If no container exist yet for this type, create it and register it in the TypeIndex
+          if (!containerUri) {
+            // Create the container and attach it to the storage's root container
+            containerUri = await ctx.call('ldp.container.create');
+            const rootContainerUri = await ctx.call('solid-storage.getRootContainerUri');
+            await ctx.call('ldp.container.attach', { containerUri: rootContainerUri, resourceUri: containerUri });
+
+            // If the resource type is invalid, an error will be thrown here
+            await ctx.call('type-index.register', {
+              types: [expandedType],
+              uri: containerUri,
+              isContainer: true,
+              isPrivate: false
             });
-
-            // If no container exist yet for this type, create it and register it in the TypeIndex
-            if (containersUris.length === 0) {
-              // Generate a path for the new container
-              const containerPath = await ctx.call('ldp.container.getPath', { resourceType: expandedType });
-              // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
-              this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${expandedType}`);
-
-              // Create the container and attach it to its parent(s)
-              const podUrl = await ctx.call('solid-storage.getUrl', { webId: recipientUri });
-              containersUris[0] = urlJoin(podUrl, containerPath);
-              await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId: recipientUri });
-
-              // If the resource type is invalid, an error will be thrown here
-              // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
-              await this.broker.call('type-registrations.register', {
-                types: [expandedType],
-                containerUri: containersUris[0],
-                webId: recipientUri
-              });
-            }
-
-            for (const containerUri of containersUris) {
-              await ctx.call('ldp.container.attach', {
-                containerUri,
-                resourceUri,
-                webId: recipientUri
-              });
-            }
           }
+
+          // Attach the resource to the container
+          await ctx.call('ldp.container.attach', { containerUri, resourceUri });
         }
       }
     }
   },
   events: {
     'ldp.resource.deleted': {
-      async handler(ctx) {
-        // @ts-expect-error TS(2339): Property 'oldData' does not exist on type 'Optiona... Remove this comment to see the full error message
+      async handler(ctx: any) {
         const { oldData, webId } = ctx.params;
 
         if (oldData['apods:announces'])
@@ -333,8 +316,7 @@ const AnnouncerSchema = {
     'delegated-access-grants.issued': {
       // When a delegated grant is issued, add the grantee to the announces collection
       // This hack will be gone when we can do without announces/announcers collections
-      async handler(ctx) {
-        // @ts-expect-error TS(2339): Property 'delegatedGrant' does not exist on type '... Remove this comment to see the full error message
+      async handler(ctx: any) {
         const { delegatedGrant } = ctx.params;
 
         if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
@@ -342,9 +324,7 @@ const AnnouncerSchema = {
           return;
         }
 
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         ctx.meta.webId = delegatedGrant['interop:dataOwner'];
-        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = getDatasetFromUri(delegatedGrant['interop:dataOwner']);
 
         for (const resourceUri of arrayOf(delegatedGrant['interop:hasDataInstance'])) {
@@ -353,7 +333,6 @@ const AnnouncerSchema = {
             collection: this.settings.announcesCollectionOptions
           });
 
-          // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
           await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
 
           await ctx.call('activitypub.collection.add', {

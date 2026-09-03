@@ -8,37 +8,35 @@ import { ServiceSchema } from 'moleculer';
 
 const ProfilesProfileSchema = {
   name: 'profiles.profile' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
     // ControlledContainerMixin settings
     path: '/vcard/individual',
-    acceptedTypes: ['vcard:Individual', OBJECT_TYPES.PROFILE],
-    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Profile'),
+    types: ['vcard:Individual', OBJECT_TYPES.PROFILE],
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL!, 'shapetrees/as/Profile'),
     permissions: {},
     newResourcesPermissions: {},
     typeIndex: 'public'
   },
   dependencies: ['activitypub', 'webacl'],
   events: {
-    'auth.registered': {
-      async handler(ctx) {
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'Optionali... Remove this comment to see the full error message
-        const { webId, profileData } = ctx.params;
-        const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
+    'auth.account.created': {
+      async handler(ctx: any) {
+        const { webId } = ctx.params;
 
-        await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
+        const containerUri = await this.actions.waitForContainerCreation({}, { parentCtx: ctx });
 
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
         const profileUri = await this.actions.post(
           {
             containerUri,
             resource: {
               '@type': ['vcard:Individual', OBJECT_TYPES.PROFILE],
-              'vcard:fn': profileData.familyName
-                ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
-                : profileData.name,
-              'vcard:given-name': profileData.name,
-              'vcard:family-name': profileData.familyName,
+              // 'vcard:fn': profileData.familyName
+              //   ? `${profileData.name} ${profileData.familyName.toUpperCase()}`
+              //   : profileData.name,
+              // 'vcard:given-name': profileData.name,
+              // 'vcard:family-name': profileData.familyName,
               describes: webId
             },
             contentType: MIME_TYPES.JSON,

@@ -39,6 +39,7 @@
     "@semapps/webid": "1.2.0",
     "@types/archiver": "6.0.2",
     "@types/rdfjs__formats": "^4.0.1",
+    "@types/url-join": "^4.0.1",
     "archiver": "^7.0.1",
     "dotenv-flow": "^3.2.0",
     "handlebars": "^4.7.7",
@@ -54,8 +55,7 @@
     "oidc-provider": "^8.4.1",
     "readable-stream": "^4.5.2",
     "sanitize-html": "^2.6.1",
-    "url-join": "^4.0.1",
-    "ws": "^8.17.0"
+    "url-join": "^4.0.1"
   },
   "type": "module",
   "engines": {
@@ -63,6 +63,7 @@
   },
   "devDependencies": {
     "@types/rdfjs__data-model": "^2.0.9",
+    "@types/ioredis": "^4.27.0",
     "tsx": "^4.20.3"
   }
 }

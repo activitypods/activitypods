@@ -1,48 +1,31 @@
 import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
+import { ServiceBroker } from 'moleculer';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { connectPodProvider, clearAllData } from './initialize.ts';
-jest.setTimeout(80000);
-const NUM_PODS = 1;
+import { connectPodProvider, clearAllData, createTestActor } from './initialize.ts';
+import { TestActor } from './utilTypes.js';
+
+jest.setTimeout(50000);
 
 describe('Test pods creation', () => {
-  let actors: any = [],
-    podProvider: any,
-    alice: any,
-    projectUri: any;
+  let podProvider: ServiceBroker;
+  let alice: TestActor;
+  let projectUri: string;
 
   beforeAll(async () => {
     await clearAllData();
 
     podProvider = await connectPodProvider();
 
-    for (let i = 1; i <= NUM_PODS; i++) {
-      const actorData = require(`./data/actor${i}.json`);
-      const { webId } = await podProvider.call('auth.signup', actorData);
-      actors[i] = await podProvider.call(
-        'activitypub.actor.awaitCreateComplete',
-        {
-          actorUri: webId,
-          additionalKeys: ['url']
-        },
-        { meta: { dataset: actorData.username } }
-      );
-      actors[i].call = (actionName: any, params: any, options = {}) =>
-        podProvider.call(actionName, params, {
-          ...options,
-          meta: { ...options.meta, webId, dataset: actors[i].preferredUsername }
-        });
-    }
-
-    alice = actors[1];
+    alice = await createTestActor(podProvider, 'alice');
   }, 80000);
 
   afterAll(async () => {
     await podProvider.stop();
   });
 
-  test('Alice WebID has the required informations', async () => {
-    expect(alice['pim:storage']).toBe(urlJoin(alice.id, 'data'));
+  test('Alice WebID has the required information', async () => {
+    expect(alice['pim:storage']).toBeDefined();
     expect(alice['solid:oidcIssuer']).toBe(new URL(alice.id).origin);
     expect(alice['solid:publicTypeIndex']).toBeDefined();
     expect(alice['interop:hasAuthorizationAgent']).toBeDefined();
@@ -88,37 +71,21 @@ describe('Test pods creation', () => {
   }, 80000);
 
   test('Alice profile can be fetched', async () => {
-    await expect(
-      alice.call('ldp.resource.get', {
-        resourceUri: alice.url,
-        accept: MIME_TYPES.JSON
-      })
-    ).resolves.toMatchObject({
+    await expect(alice.call('ldp.resource.get', { resourceUri: alice.url })).resolves.toMatchObject({
       describes: alice.id
     });
   }, 80000);
 
   test('Alice TypeIndex has been created', async () => {
-    const aliceData = await alice.call('ldp.resource.get', {
-      resourceUri: alice.id,
-      accept: MIME_TYPES.JSON
-    });
-
-    const typeIndexUri = aliceData['solid:publicTypeIndex'];
-
-    expect(typeIndexUri).not.toBeNull();
-
     // TypeRegistrations take time to be populated
+    // @ts-expect-error This expression is not callable
     await waitForExpect(async () => {
-      const typeIndex = await alice.call('type-indexes.get', {
-        resourceUri: typeIndexUri,
-        accept: MIME_TYPES.JSON
-      });
+      const publicTypeIndex = await alice.call('public-type-index.get');
 
-      expect(typeIndex['solid:hasTypeRegistration']).toContainEqual(
+      expect(publicTypeIndex['@graph']).toContainEqual(
         expect.objectContaining({
-          'solid:forClass': expect.arrayContaining(['as:Profile', 'vcard:Individual']),
-          'solid:instanceContainer': urlJoin(alice.id, '/data/vcard/individual')
+          'solid:forClass': expect.arrayContaining(['vcard:Individual', 'as:Profile']),
+          'solid:instanceContainer': expect.anything()
         })
       );
     });
@@ -131,16 +98,10 @@ describe('Test pods creation', () => {
         '@context': 'https://activitypods.org/context.json',
         type: 'pair:Project',
         'pair:label': 'ActivityPods'
-      },
-      contentType: MIME_TYPES.JSON
+      }
     });
 
-    await expect(
-      alice.call('ldp.resource.get', {
-        resourceUri: projectUri,
-        accept: MIME_TYPES.JSON
-      })
-    ).resolves.toMatchObject({
+    await expect(alice.call('ldp.resource.get', { resourceUri: projectUri })).resolves.toMatchObject({
       type: 'pair:Project',
       'pair:label': 'ActivityPods'
     });
@@ -151,7 +112,9 @@ describe('Test pods creation', () => {
       query: `
         SELECT ?type
         WHERE {
-          <${projectUri}> a ?type
+          GRAPH <${projectUri}> {
+            <${projectUri}> a ?type
+          }
         }
       `,
       username: 'alice',

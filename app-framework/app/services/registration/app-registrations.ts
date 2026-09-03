@@ -1,21 +1,22 @@
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
-import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema } from 'moleculer';
 
 /**
  * Mirror container for application registrations
  */
-const AppRegistrationsSchema = {
+const AppRegistrationsService = {
   name: 'app-registrations' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
-    acceptedTypes: ['interop:ApplicationRegistration'],
+    path: '/app-registrations',
+    types: ['interop:ApplicationRegistration'],
     newResourcesPermissions: {}
   },
   actions: {
     verify: {
       // Verify that the grants of an application registration match with the app's access needs
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { appRegistrationUri } = ctx.params;
 
         // Use local context to get all data
@@ -28,12 +29,8 @@ const AppRegistrationsSchema = {
         });
 
         const accessGrants = await Promise.all(
-          arrayOf(appRegistration['interop:hasAccessGrant']).map((grantUri: any) =>
-            ctx.call('ldp.remote.get', {
-              resourceUri: grantUri,
-              jsonContext,
-              accept: MIME_TYPES.JSON
-            })
+          arrayOf(appRegistration['interop:hasAccessGrant']).map((grantUri: string) =>
+            ctx.call('ldp.remote.get', { resourceUri: grantUri, jsonContext })
           )
         );
 
@@ -41,8 +38,7 @@ const AppRegistrationsSchema = {
         const filteredContainer = await ctx.call('access-needs-groups.list', {
           filters: {
             'http://www.w3.org/ns/solid/interop#accessNecessity': 'http://www.w3.org/ns/solid/interop#AccessRequired'
-          },
-          accept: MIME_TYPES.JSON
+          }
         });
         const requiredAccessNeedGroups = arrayOf(filteredContainer['ldp:contains']);
 
@@ -62,7 +58,7 @@ const AppRegistrationsSchema = {
     },
 
     getForActor: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { actorUri } = ctx.params;
 
         const filteredContainer = await this.actions.list(
@@ -80,8 +76,7 @@ const AppRegistrationsSchema = {
     },
 
     getRegisteredPods: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const filteredContainer = await this.actions.list({ webId: 'system' }, { parentCtx: ctx });
 
         return filteredContainer['ldp:contains']?.map(
@@ -108,12 +103,12 @@ const AppRegistrationsSchema = {
   }
 } satisfies ServiceSchema;
 
-export default AppRegistrationsSchema;
+export default AppRegistrationsService;
 
 declare global {
   export namespace Moleculer {
     export interface AllServices {
-      [AppRegistrationsSchema.name]: typeof AppRegistrationsSchema;
+      [AppRegistrationsService.name]: typeof AppRegistrationsService;
     }
   }
 }

@@ -6,10 +6,11 @@ import { ServiceSchema } from 'moleculer';
 
 const ProfilesLocationSchema = {
   name: 'profiles.location' as const,
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
-    acceptedTypes: ['vcard:Location'],
-    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location'),
+    types: ['vcard:Location'],
+    shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL!, 'shapetrees/vcard/Location'),
     excludeFromMirror: true,
     permissions: {},
     newResourcesPermissions: {},
@@ -17,7 +18,7 @@ const ProfilesLocationSchema = {
   },
   actions: {
     getHomeLocation: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
 
         const results = await ctx.call('triplestore.query', {
@@ -26,38 +27,47 @@ const ProfilesLocationSchema = {
             PREFIX as: <https://www.w3.org/ns/activitystreams#>
             SELECT ?homeLocation
             WHERE {
-              <${webId}> as:url ?profile .
-              ?profile vcard:hasAddress ?homeLocation .
+              GRAPH <${webId}> {
+                <${webId}> as:url ?profile .
+              }
+              GRAPH ?profile {
+                ?profile vcard:hasAddress ?homeLocation .
+              }
             }
           `,
           accept: MIME_TYPES.JSON,
           webId
         });
 
-        // @ts-expect-error TS(2339): Property 'length' does not exist on type 'never'.
         return results.length > 0 ? results[0].homeLocation.value : null;
       }
     },
 
     clearHomeLocation: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { webId } = ctx.params;
         await ctx.call('triplestore.update', {
           query: `
             PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
             PREFIX as: <https://www.w3.org/ns/activitystreams#>
             DELETE {
-              ?profile vcard:hasAddress ?homeLocation .
-              ?hasGeo vcard:latitude ?latitude .
-              ?hasGeo vcard:longitude ?longitude .
-              ?profile vcard:hasGeo ?hasGeo .
+              GRAPH ?profile {
+                ?profile vcard:hasAddress ?homeLocation .
+                ?hasGeo vcard:latitude ?latitude .
+                ?hasGeo vcard:longitude ?longitude .
+                ?profile vcard:hasGeo ?hasGeo .
+              }
             }
             WHERE {
-              <${webId}> as:url ?profile .
-              ?profile vcard:hasAddress ?homeLocation .
-              ?profile vcard:hasGeo ?hasGeo .
-              ?hasGeo vcard:latitude ?latitude .
-              ?hasGeo vcard:longitude ?longitude .
+              GRAPH <${webId}> {
+                <${webId}> as:url ?profile .
+              }
+              GRAPH ?profile {
+                ?profile vcard:hasAddress ?homeLocation .
+                ?profile vcard:hasGeo ?hasGeo .
+                ?hasGeo vcard:latitude ?latitude .
+                ?hasGeo vcard:longitude ?longitude .
+              }
             }
           `,
           webId

@@ -8,9 +8,10 @@ import { ServiceSchema } from 'moleculer';
 
 const SocialAgentRegistrationsSchema = {
   name: 'social-agent-registrations' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; types: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin, AgentRegistrationsMixin, ActivitiesHandlerMixin],
   settings: {
-    acceptedTypes: ['interop:SocialAgentRegistration'],
+    types: ['interop:SocialAgentRegistration'],
     newResourcesPermissions: {
       anon: {
         read: true
@@ -22,7 +23,7 @@ const SocialAgentRegistrationsSchema = {
   },
   actions: {
     createOrUpdate: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         let { agentUri, podOwner, reciprocalRegistrationUri, label, note } = ctx.params;
 
         const agentRegistration = await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx });
@@ -61,7 +62,7 @@ const SocialAgentRegistrationsSchema = {
               resource: {
                 type: 'interop:SocialAgentRegistration',
                 'interop:registeredBy': podOwner,
-                'interop:registeredWith': await ctx.call('auth-agent.getResourceUri', { webId: podOwner }),
+                'interop:registeredWith': await ctx.call('auth-agent.getUri'),
                 'interop:registeredAt': new Date().toISOString(),
                 'interop:updatedAt': new Date().toISOString(),
                 'interop:registeredAgent': agentUri,
@@ -92,7 +93,7 @@ const SocialAgentRegistrationsSchema = {
     },
 
     addReciprocalRegistration: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { agentUri, podOwner } = ctx.params;
 
         const agentRegistration = await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx });
@@ -122,7 +123,7 @@ const SocialAgentRegistrationsSchema = {
     getReciprocalRegistrationUri: {
       // Find reciprocal registration using Agent Registration Discovery
       // https://solid.github.io/data-interoperability-panel/specification/#agent-registration-discovery
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { agentUri, podOwner } = ctx.params;
 
         const agent = await ctx.call('activitypub.actor.get', { actorUri: agentUri });
@@ -146,7 +147,7 @@ const SocialAgentRegistrationsSchema = {
     },
 
     getAgentName: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { agentUri, podOwner } = ctx.params;
         try {
           const agentProfile = await ctx.call('activitypub.actor.getProfile', {
@@ -163,11 +164,10 @@ const SocialAgentRegistrationsSchema = {
     },
 
     notifyAgent: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { agentRegistrationUri, agentUri, podOwner, activityType } = ctx.params;
         const agent = await ctx.call('activitypub.actor.get', { actorUri: agentUri });
 
-        // @ts-expect-error TS(2339): Property 'inbox' does not exist on type 'never'.
         if (agent.inbox) {
           const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
             actorUri: podOwner,
@@ -191,20 +191,28 @@ const SocialAgentRegistrationsSchema = {
 
     getSharedGrants: {
       // Get all access grants that have been shared with pod owner through reciprocal registration
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { podOwner } = ctx.params;
         let grants = [];
 
-        const registrationsContainer = await this.actions.list({ webId: podOwner });
+        const registrationsContainer = await this.actions.list({ webId: podOwner }, { parentCtx: ctx });
 
         for (const registration of arrayOf(registrationsContainer['ldp:contains'])) {
           if (registration['interop:reciprocalRegistration'] && registration['interop:registeredBy'] === podOwner) {
-            const reciprocalRegistration = await this.actions.get({
-              resourceUri: registration['interop:reciprocalRegistration'],
-              webId: podOwner
-            });
+            const reciprocalRegistration = await this.actions.get(
+              {
+                resourceUri: registration['interop:reciprocalRegistration'],
+                webId: podOwner
+              },
+              { parentCtx: ctx }
+            );
 
-            grants.push(...(await this.actions.getGrants({ agentRegistration: reciprocalRegistration, podOwner })));
+            grants.push(
+              ...(await this.actions.getGrants(
+                { agentRegistration: reciprocalRegistration, podOwner },
+                { parentCtx: ctx }
+              ))
+            );
           }
         }
 
@@ -217,11 +225,11 @@ const SocialAgentRegistrationsSchema = {
        * Look at the provided social agent registration and, if needed,
        * generate delegated grants for apps that requested 'interop:All' scope for the same data
        */
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { socialAgentRegistration, podOwner } = ctx.params;
 
         // Get all grants from agent registration
-        const grants = await this.actions.getGrants({ agentRegistration: socialAgentRegistration });
+        const grants = await this.actions.getGrants({ agentRegistration: socialAgentRegistration }, { parentCtx: ctx });
 
         // TODO Filter out grants which have not changed to improve performances
 

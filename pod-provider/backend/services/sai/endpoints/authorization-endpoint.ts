@@ -26,13 +26,11 @@ const AuthorizationEndpointSchema = {
   },
   actions: {
     getAuthorizations: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resource: resourceUri } = ctx.params;
 
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
         const account = await ctx.call('auth.account.findByWebId', { webId });
-        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = account.username;
 
         if (!resourceUri.startsWith(`${webId}/`))
@@ -42,7 +40,6 @@ const AuthorizationEndpointSchema = {
 
         return {
           resourceUri,
-          // @ts-expect-error TS(2339): Property 'map' does not exist on type 'never'.
           authorizations: authorizations.map((authorization: any) => ({
             grantee: authorization['interop:grantee'],
             accessModes: arrayOf(authorization['interop:accessMode'])
@@ -55,13 +52,11 @@ const AuthorizationEndpointSchema = {
       /**
        * Mass-update access authorizations for a single resource
        */
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, authorizations } = ctx.params;
 
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const podOwner = ctx.meta.webId;
         const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
-        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = account.username;
 
         if (!resourceUri.startsWith(`${podOwner}/`))

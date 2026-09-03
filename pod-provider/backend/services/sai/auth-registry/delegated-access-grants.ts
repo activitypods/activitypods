@@ -1,14 +1,16 @@
+import { ServiceSchema } from 'moleculer';
 import { ControlledContainerMixin, arrayOf, getId, getDatasetFromUri } from '@semapps/ldp';
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
 import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
 import AccessGrantsMixin from '../../../mixins/access-grants.ts';
-import { ServiceSchema } from 'moleculer';
+import { arraysEqual } from '../../../utils.ts';
 
 const DelegatedAccessGrantsSchema = {
   name: 'delegated-access-grants' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; types: nul... Remove this comment to see the full error message
   mixins: [ImmutableContainerMixin, ControlledContainerMixin, AccessGrantsMixin],
   settings: {
-    acceptedTypes: ['interop:DelegatedAccessGrant'],
+    types: ['interop:DelegatedAccessGrant'],
     excludeFromMirror: true,
     activateTombstones: false,
     typeIndex: 'private'
@@ -17,9 +19,8 @@ const DelegatedAccessGrantsSchema = {
     remoteIssue: {
       // Issue a delegated grant on the data owner's storage
       // Also store a local copy and add it to the agent registration
-      async handler(ctx) {
+      async handler(ctx: any) {
         let { delegatedGrant } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId || 'anon';
         let delegatedGrantUri;
 
@@ -29,14 +30,11 @@ const DelegatedAccessGrantsSchema = {
         // If user is on same server, call endpoint directly
         if (dataOwnerUri.startsWith(baseUrl)) {
           // Change dataset but keep it in memory to restore it
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           const oldDataset = ctx.meta.dataset;
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = getDatasetFromUri(dataOwnerUri);
 
           delegatedGrantUri = await ctx.call('delegation-endpoint.issue', { delegatedGrant, webId });
 
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = oldDataset;
         } else {
           const dataOwner = await ctx.call('activitypub.actor.get', { actorUri: dataOwnerUri });
@@ -71,7 +69,7 @@ const DelegatedAccessGrantsSchema = {
         }
 
         // Now the delegated grant has been created and validated, store it locally
-        delegatedGrant = await ctx.call('ldp.remote.store', { resourceUri: delegatedGrantUri, webId });
+        delegatedGrant = await ctx.call('ldp.remote.store', { resourceUri: delegatedGrantUri });
         await this.actions.attach({ resourceUri: delegatedGrantUri, webId }, { parentCtx: ctx });
 
         // Attach it to the agent registration
@@ -88,9 +86,8 @@ const DelegatedAccessGrantsSchema = {
     remoteDelete: {
       // Delete a delegated grant on the data owner's storage
       // Also delete the local copy and remove it from the agent registration
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { delegatedGrant } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId || 'anon';
 
         const delegatedGrantUri = getId(delegatedGrant);
@@ -100,9 +97,7 @@ const DelegatedAccessGrantsSchema = {
         // If user is on same server, delete directly
         if (dataOwnerUri.startsWith(baseUrl)) {
           // Change dataset but keep it in memory to restore it
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           const oldDataset = ctx.meta.dataset;
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = getDatasetFromUri(dataOwnerUri);
 
           try {
@@ -115,7 +110,6 @@ const DelegatedAccessGrantsSchema = {
             this.logger.warn(`Could not delete delegated grant ${delegatedGrantUri}. Deleting local cache anyway.`);
           }
 
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = oldDataset;
         } else {
           const response = await ctx.call('signature.proxy.query', {
@@ -144,7 +138,7 @@ const DelegatedAccessGrantsSchema = {
 
     generateFromAllScopeAllAuthorizations: {
       // Generate the delegated access grants from all access authorizations with `interop:All` scope
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { grant, podOwner } = ctx.params;
 
         const authorizations = await ctx.call('access-authorizations.listScopeAll', {
@@ -164,7 +158,7 @@ const DelegatedAccessGrantsSchema = {
     generateFromSingleScopeAllAuthorization: {
       // Generate a delegated access grant from a single access authorization with `interop:All` scope
       // If a delegated grant already exist but is linked to a different grant, it will be deleted
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { authorization, grant } = ctx.params;
 
         if (authorization['interop:scopeOfAuthorization'] !== 'interop:All') {
@@ -232,9 +226,8 @@ const DelegatedAccessGrantsSchema = {
     },
 
     generateFromAuthorization: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { authorization } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         // Find original grant (it should be stored in the user's local cache)
@@ -256,7 +249,6 @@ const DelegatedAccessGrantsSchema = {
         const delegateGrantUri = await this.actions.remoteIssue(
           {
             delegatedGrant: {
-              // @ts-expect-error TS(2698): Spread types may only be created from object types... Remove this comment to see the full error message
               ...grant,
               id: undefined,
               type: 'interop:DelegatedAccessGrant',
@@ -291,9 +283,8 @@ const DelegatedAccessGrantsSchema = {
 
     deleteByGrant: {
       // Delete all delegated access grants linked with a access grant
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { grant } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId || 'anon';
 
         const filteredContainer = await this.actions.list(
@@ -318,7 +309,7 @@ const DelegatedAccessGrantsSchema = {
 
     getByGrant: {
       // Get the delegated access grant generated for a grantee from a access grant
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { grantUri, grantee, podOwner } = ctx.params;
 
         const filteredContainer = await this.actions.list(
@@ -338,7 +329,7 @@ const DelegatedAccessGrantsSchema = {
 
     getByAuthorization: {
       // Find the delegated access grants, stored in the granter storage
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { authorization } = ctx.params;
 
         const filteredContainer = await this.actions.list(
@@ -354,13 +345,24 @@ const DelegatedAccessGrantsSchema = {
           { parentCtx: ctx }
         );
 
-        return filteredContainer['ldp:contains']?.[0];
+        if (
+          filteredContainer['ldp:contains'].length > 1 &&
+          authorization['interop:scopeOfAuthorization'] === 'interop:SelectedFromRegistry'
+        ) {
+          // If the authorization is for selected data instances, find the grant that match the same data instances
+          // We cannot use the `filters` parameter above because it does not work with arrays
+          return filteredContainer['ldp:contains'].find((grant: any) =>
+            arraysEqual(authorization['interop:hasDataInstance'], grant['interop:hasDataInstance'])
+          );
+        } else {
+          return filteredContainer['ldp:contains']?.[0];
+        }
       }
     },
 
     listByScopeAllAuthorization: {
       // Get the delegated access grants generated automatically from a `interop:All` access authorization
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { authorization } = ctx.params;
 
         if (authorization['interop:scopeOfAuthorization'] !== 'interop:All') {

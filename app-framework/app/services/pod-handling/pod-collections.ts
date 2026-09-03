@@ -16,7 +16,7 @@ const PodCollectionsSchema = {
   },
   actions: {
     getItems: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { collectionUri, actorUri } = ctx.params;
 
         const { body: collection } = await ctx.call('pod-resources.get', { resourceUri: collectionUri, actorUri });
@@ -26,7 +26,7 @@ const PodCollectionsSchema = {
     },
 
     createAndAttach: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, attachPredicate, collectionOptions, actorUri } = ctx.params;
         const { ordered, summary, itemsPerPage, dereferenceItems, sortPredicate, sortOrder } = collectionOptions;
 
@@ -38,23 +38,29 @@ const PodCollectionsSchema = {
         // Ensure no similar collection is already attached to the resource
         // (May happen if another app is already attaching the same kind of collections)
         if (!expandedResource[expandedAttachPredicate]) {
-          const { status, headers } = await this.actions.fetch({
-            method: 'POST',
-            url: urlJoin(actorUri, '/data/as/collection'), // TODO use TypeIndex to find container URL
-            headers: {
-              'Content-Type': 'application/ld+json'
+          // TODO Use shapetree to find the collection URI shared with the application ?
+          const containerUri = await ctx.call('pod-containers.getByType', { type: 'as:Collection', actorUri });
+
+          const { status, statusText, headers } = await this.actions.fetch(
+            {
+              method: 'POST',
+              url: containerUri,
+              headers: {
+                'Content-Type': 'application/ld+json'
+              },
+              body: JSON.stringify({
+                '@context': await ctx.call('jsonld.context.get'),
+                type: ordered ? 'OrderedCollection' : 'Collection',
+                summary,
+                'semapps:itemsPerPage': itemsPerPage,
+                'semapps:dereferenceItems': dereferenceItems,
+                'semapps:sortPredicate': ordered ? sortPredicate : undefined,
+                'semapps:sortOrder': ordered ? sortOrder : undefined
+              }),
+              actorUri
             },
-            body: JSON.stringify({
-              '@context': await ctx.call('jsonld.context.get'),
-              type: ordered ? 'OrderedCollection' : 'Collection',
-              summary,
-              'semapps:itemsPerPage': itemsPerPage,
-              'semapps:dereferenceItems': dereferenceItems,
-              'semapps:sortPredicate': ordered ? sortPredicate : undefined,
-              'semapps:sortOrder': ordered ? sortOrder : undefined
-            }),
-            actorUri
-          });
+            { parentCtx: ctx }
+          );
 
           if (status === 201) {
             const collectionUri = headers.location;
@@ -72,13 +78,17 @@ const PodCollectionsSchema = {
             });
 
             return collectionUri;
+          } else {
+            this.logger.warn(
+              `Could not create collection with predicate ${attachPredicate} for user ${actorUri}. Error ${status}: ${statusText}`
+            );
           }
         }
       }
     },
 
     deleteAndDetach: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resourceUri, attachPredicate, actorUri } = ctx.params;
 
         const { ok, body: resource } = await ctx.call('pod-resources.get', {
@@ -91,10 +101,13 @@ const PodCollectionsSchema = {
             predicate: attachPredicate
           });
 
-          const collectionUri = await this.actions.getCollectionUriFromResource({
-            resource,
-            attachPredicate: expandedAttachPredicate
-          });
+          const collectionUri = await this.actions.getCollectionUriFromResource(
+            {
+              resource,
+              attachPredicate: expandedAttachPredicate
+            },
+            { parentCtx: ctx }
+          );
           if (!collectionUri)
             throw new Error(`No collection with predicate ${attachPredicate} attached to ${resourceUri}`);
 
@@ -115,7 +128,7 @@ const PodCollectionsSchema = {
     },
 
     add: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { collectionUri, itemUri, actorUri } = ctx.params;
 
         const sparqlUpdate = {
@@ -139,20 +152,23 @@ const PodCollectionsSchema = {
           ]
         };
 
-        await this.actions.fetch({
-          url: collectionUri,
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/sparql-update'
+        await this.actions.fetch(
+          {
+            url: collectionUri,
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/sparql-update'
+            },
+            body: this.sparqlGenerator.stringify(sparqlUpdate),
+            actorUri
           },
-          body: this.sparqlGenerator.stringify(sparqlUpdate),
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
       }
     },
 
     remove: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { collectionUri, itemUri, actorUri } = ctx.params;
 
         const sparqlUpdate = {
@@ -176,20 +192,23 @@ const PodCollectionsSchema = {
           ]
         };
 
-        await this.actions.fetch({
-          url: collectionUri,
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/sparql-update'
+        await this.actions.fetch(
+          {
+            url: collectionUri,
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/sparql-update'
+            },
+            body: this.sparqlGenerator.stringify(sparqlUpdate),
+            actorUri
           },
-          body: this.sparqlGenerator.stringify(sparqlUpdate),
-          actorUri
-        });
+          { parentCtx: ctx }
+        );
       }
     },
 
     createAndAttachMissing: {
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { shapeTreeUri, attachPredicate, collectionOptions } = ctx.params;
 
         const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
@@ -228,8 +247,7 @@ const PodCollectionsSchema = {
 
     getCollectionUriFromResource: {
       // Find the collection attached to a given resource (or undefined if no collection is attached)
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { resource, attachPredicate } = ctx.params;
         const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });
         const [expandedResource] = await ctx.call('jsonld.parser.expand', { input: resource });

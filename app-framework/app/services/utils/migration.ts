@@ -9,8 +9,7 @@ const MigrationSchema = {
   },
   actions: {
     migrate: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
-      async handler(ctx) {
+      async handler(ctx: any) {
         const { version } = ctx.params;
 
         if (version === '2.1.0') {
@@ -45,12 +44,12 @@ const MigrationSchema = {
             webId: 'system'
           });
 
-          const app = await ctx.call('app.get');
+          const appUri = await ctx.call('app.getUri');
           await ctx.call('ldp.resource.patch', {
-            resourceUri: app.id,
+            resourceUri: appUri,
             triplesToRemove: accessDescriptionSetsUris.map((uri: any) =>
               rdf.quad(
-                rdf.namedNode(app.id),
+                rdf.namedNode(appUri),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessDescriptionSet'),
                 rdf.namedNode(uri)
               )

@@ -1,40 +1,43 @@
 import rdf from '@rdfjs/data-model';
-import { SingleResourceContainerMixin } from '@semapps/ldp';
+import { ControlledResourceMixin } from '@semapps/ldp';
 import { ServiceSchema } from 'moleculer';
 
-const RegistrySetSchema = {
+const RegistrySetService = {
   name: 'registry-set' as const,
-  mixins: [SingleResourceContainerMixin],
+  // @ts-expect-error TS(2322): Type '{ mixins: { settings: { path: null; accepted... Remove this comment to see the full error message
+  mixins: [ControlledResourceMixin],
   settings: {
-    acceptedTypes: ['interop:RegistrySet'],
-    podProvider: true
+    path: '/registry-set',
+    types: ['interop:RegistrySet'],
+    typeIndex: 'private'
   },
-  hooks: {
-    after: {
-      async post(ctx, res) {
+  events: {
+    'webid.created': {
+      async handler(ctx: any) {
+        const { resourceUri: webId } = ctx.params;
+        const registrySetUri = await this.actions.waitForCreation({}, { parentCtx: ctx });
         await ctx.call('ldp.resource.patch', {
-          resourceUri: ctx.params.webId,
+          resourceUri: webId,
           triplesToAdd: [
             rdf.quad(
-              rdf.namedNode(ctx.params.webId),
+              rdf.namedNode(webId),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasRegistrySet'),
-              rdf.namedNode(res)
+              rdf.namedNode(registrySetUri)
             )
           ],
           webId: 'system'
         });
-        return res;
       }
     }
   }
 } satisfies ServiceSchema;
 
-export default RegistrySetSchema;
+export default RegistrySetService;
 
 declare global {
   export namespace Moleculer {
     export interface AllServices {
-      [RegistrySetSchema.name]: typeof RegistrySetSchema;
+      [RegistrySetService.name]: typeof RegistrySetService;
     }
   }
 }

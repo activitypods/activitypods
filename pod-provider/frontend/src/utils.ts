@@ -275,16 +275,6 @@ export const getLangString = (value: string | LangString[], locale: string): str
   }
 };
 
-export const getWebIdFromResourceUri = (resourceUri: string) => {
-  try {
-    const uri = new URL(resourceUri);
-    const username = /\/([^/]+)/.exec(uri.pathname)?.[1];
-    return username && `${uri.origin}/${username}`;
-  } catch (e) {
-    return undefined;
-  }
-};
-
 export const base64urlEncode = (str: string) => {
   const bytes = new TextEncoder().encode(str);
   const binString = Array.from(bytes, byte => String.fromCodePoint(byte)).join('');

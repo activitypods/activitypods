@@ -1,10 +1,12 @@
-const { ControlledContainerMixin } = require('@semapps/ldp');
+import { ServiceSchema } from 'moleculer';
+import { ControlledContainerMixin } from '@semapps/ldp';
 
-module.exports = {
-  name: 'data-grants',
+const DataGrantsService = {
+  name: 'data-grants' as const,
+  // @ts-expect-error TS(2322): Type '{ settings: { path: null; types: nul... Remove this comment to see the full error message
   mixins: [ControlledContainerMixin],
   settings: {
-    acceptedTypes: ['interop:DataGrant'],
+    types: ['interop:DataGrant'],
     newResourcesPermissions: {
       anon: {
         read: true
@@ -53,4 +55,14 @@ module.exports = {
       );
     }
   }
-};
+} satisfies ServiceSchema;
+
+export default DataGrantsService;
+
+declare global {
+  export namespace Moleculer {
+    export interface AllServices {
+      [DataGrantsService.name]: typeof DataGrantsService;
+    }
+  }
+}

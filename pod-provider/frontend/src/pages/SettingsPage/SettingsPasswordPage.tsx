@@ -3,6 +3,7 @@ import { useCheckAuthenticated, PasswordStrengthIndicator, validatePasswordStren
 import { required, useAuthProvider, useNotify, useTranslate, SimpleForm, TextInput } from 'react-admin';
 import { Box, Card, Typography } from '@mui/material';
 import scorer from '../../config/scorer';
+import ToolbarWithoutDelete from '../../common/ToolbarWithoutDelete';
 
 const validateConfirmNewPassword = [
   (value: any, { newPassword, confirmNewPassword }: any) => {
@@ -25,9 +26,8 @@ const SettingsPasswordPage = () => {
   const onSubmit = useCallback(
     async (params: any) => {
       try {
-        await authProvider.updateAccountSettings({ ...params });
-        // @ts-expect-error TS(2345): Argument of type 'string' is not assignable to par... Remove this comment to see the full error message
-        notify('auth.message.account_settings_updated', 'success');
+        await authProvider!.updateAccountSettings({ ...params });
+        notify('auth.message.account_settings_updated', { type: 'success' });
       } catch (error) {
         // @ts-expect-error TS(2571): Object is of type 'unknown'.
         notify(error.message, { type: 'error' });
@@ -45,7 +45,7 @@ const SettingsPasswordPage = () => {
       </Typography>
       <Box mt={1}>
         <Card>
-          <SimpleForm onSubmit={onSubmit}>
+          <SimpleForm onSubmit={onSubmit} toolbar={<ToolbarWithoutDelete />}>
             <TextInput
               label={translate('app.input.current_password')}
               source="currentPassword"

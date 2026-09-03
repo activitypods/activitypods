@@ -1,6 +1,6 @@
 services:
   fuseki_test:
-    image: semapps/jena-fuseki-webacl
+    image: stain/jena-fuseki:5.1.0
     volumes:
       - ./data/fuseki_test:/fuseki:z
     ports:

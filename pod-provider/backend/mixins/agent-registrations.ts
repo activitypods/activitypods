@@ -100,14 +100,17 @@ const AgentRegistrationsMixin = {
               rdf.quad(
                 rdf.namedNode(getId(agentRegistration)),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-                rdf.literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
+                rdf.literal(new Date().toISOString(), rdf.namedNode('http://www.w3.org/2001/XMLSchema#dateTime'))
               )
             ],
             triplesToRemove: agentRegistration['interop:updatedAt'] && [
               rdf.quad(
                 rdf.namedNode(getId(agentRegistration)),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-                rdf.literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
+                rdf.literal(
+                  agentRegistration['interop:updatedAt'],
+                  rdf.namedNode('http://www.w3.org/2001/XMLSchema#dateTime')
+                )
               )
             ],
             webId: 'system'
@@ -143,7 +146,10 @@ const AgentRegistrationsMixin = {
               rdf.quad(
                 rdf.namedNode(getId(agentRegistration)),
                 rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-                rdf.literal(agentRegistration['interop:updatedAt'], 'http://www.w3.org/2001/XMLSchema#dateTime')
+                rdf.literal(
+                  agentRegistration['interop:updatedAt'],
+                  rdf.namedNode('http://www.w3.org/2001/XMLSchema#dateTime')
+                )
               )
             );
           }
@@ -155,7 +161,7 @@ const AgentRegistrationsMixin = {
                 rdf.quad(
                   rdf.namedNode(getId(agentRegistration)),
                   rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-                  rdf.literal(new Date().toISOString(), 'http://www.w3.org/2001/XMLSchema#dateTime')
+                  rdf.literal(new Date().toISOString(), rdf.namedNode('http://www.w3.org/2001/XMLSchema#dateTime'))
                 )
               ],
               triplesToRemove,

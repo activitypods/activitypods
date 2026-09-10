@@ -2,7 +2,7 @@ import { getContainerFromUri, arrayOf, isObject, isURL } from '@semapps/ldp';
 import { matchActivity } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { objectDepth } from '../../utils.ts';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const queueOptions =
   process.env.NODE_ENV === 'test'

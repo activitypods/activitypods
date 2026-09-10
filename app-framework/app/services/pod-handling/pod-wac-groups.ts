@@ -1,7 +1,7 @@
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'spea... Remove this comment to see the full error message
 import createSlug from 'speakingurl';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const PodWacGroupsSchema = {
   name: 'pod-wac-groups' as const,

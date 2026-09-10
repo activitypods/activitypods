@@ -21,7 +21,7 @@ import ShapeTreesService from './services/utils/shape-trees.ts';
 import TimerService from './services/utils/timer.ts';
 import TranslatorService from './services/utils/translator.ts';
 import MigrationService from './services/utils/migration.ts';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const AppSchema = {
   name: 'app' as const,

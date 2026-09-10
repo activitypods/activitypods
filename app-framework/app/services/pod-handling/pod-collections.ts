@@ -4,7 +4,7 @@ import sparqljsModule from 'sparqljs';
 const SparqlGenerator = sparqljsModule.Generator;
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 import { arrayOf } from '@semapps/ldp';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const PodCollectionsSchema = {
   name: 'pod-collections' as const,

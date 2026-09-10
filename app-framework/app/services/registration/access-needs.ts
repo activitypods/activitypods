@@ -1,7 +1,7 @@
 import { ControlledContainerMixin } from '@semapps/ldp';
 import { necessityMapping } from '../../mappings.ts';
 import { arraysEqual } from '../../utils.ts';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const AccessNeedsSchema = {
   name: 'access-needs' as const,

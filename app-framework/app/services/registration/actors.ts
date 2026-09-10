@@ -4,7 +4,7 @@ import { ControlledContainerMixin, DereferenceMixin } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 // @ts-expect-error TS(6059): File '/home/laurin/projects/virtual-assembly/semap... Remove this comment to see the full error message
 import { ACTOR_TYPES } from '@semapps/activitypub';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const ActorsSchema = {
   name: 'actors' as const,

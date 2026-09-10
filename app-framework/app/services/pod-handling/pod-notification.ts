@@ -1,6 +1,6 @@
 import urlJoin from 'url-join';
 import { OBJECT_TYPES } from '@semapps/activitypub';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const PodNotificationsSchema = {
   name: 'pod-notifications' as const,

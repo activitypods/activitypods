@@ -2,7 +2,7 @@ import { Readable } from 'stream';
 import { FormData } from 'formdata-node';
 import { FormDataEncoder } from 'form-data-encoder';
 import { stream2buffer } from '../utils.ts';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const Schema = {
   actions: {

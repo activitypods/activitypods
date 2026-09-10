@@ -1,5 +1,5 @@
 import PodResourcesHandlerMixin from './pod-resources-handler.ts';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const Schema = {
   mixins: [PodResourcesHandlerMixin],

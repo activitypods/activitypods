@@ -1,6 +1,6 @@
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 /**
  * Mirror container for application registrations

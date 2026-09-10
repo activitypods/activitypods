@@ -1,5 +1,5 @@
 import { MIME_TYPES } from '@semapps/mime-types';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const ShapeTreesSchema = {
   name: 'shape-trees' as const,

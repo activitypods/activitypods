@@ -1,6 +1,6 @@
 import Handlebars from 'handlebars';
 import { isObject } from '@semapps/ldp';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const TranslatorSchema = {
   name: 'translator' as const,

@@ -1,4 +1,4 @@
-const { ControlledContainerMixin, arrayOf } = require('@semapps/ldp');
+import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
 
 /**
  * Mirror container for data grants which have been granted to the app

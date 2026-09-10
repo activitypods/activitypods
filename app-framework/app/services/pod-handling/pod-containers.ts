@@ -3,7 +3,7 @@ const SparqlGenerator = sparqljsModule.Generator;
 import rdf from '@rdfjs/data-model';
 import { arrayOf, isURL } from '@semapps/ldp';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const PodContainersSchema = {
   name: 'pod-containers' as const,

@@ -1,6 +1,6 @@
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 import sparqljsModule from 'sparqljs';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 const SparqlGenerator = sparqljsModule.Generator;
 
 const PodResourcesSchema = {

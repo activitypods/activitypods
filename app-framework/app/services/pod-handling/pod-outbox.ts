@@ -1,4 +1,4 @@
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const PodOutboxSchema = {
   name: 'pod-outbox' as const,

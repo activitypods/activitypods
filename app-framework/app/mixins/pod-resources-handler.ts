@@ -1,7 +1,7 @@
 import { ACTIVITY_TYPES, OBJECT_TYPES, matchActivity } from '@semapps/activitypub';
 import PodActivitiesHandlerMixin from './pod-activities-handler.ts';
 import ShapeTreeFetcherMixin from './shape-tree-fetcher.ts';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const Schema = {
   mixins: [PodActivitiesHandlerMixin, ShapeTreeFetcherMixin],

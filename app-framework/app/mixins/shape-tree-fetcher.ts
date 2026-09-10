@@ -1,4 +1,4 @@
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 /**
  * Load the types associated with the shape tree

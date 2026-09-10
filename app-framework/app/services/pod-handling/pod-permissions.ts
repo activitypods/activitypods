@@ -5,7 +5,7 @@ import LinkHeader from 'http-link-header';
 import { getAclUriFromResourceUri } from '@semapps/webacl';
 import { arrayOf } from '@semapps/ldp';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 const PodPermissionsSchema = {
   name: 'pod-permissions' as const,

@@ -1,5 +1,5 @@
 import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
-import { ServiceSchema } from 'moleculer';
+import type { ServiceSchema } from 'moleculer';
 
 /**
  * Mirror container for access grants which have been granted to the app

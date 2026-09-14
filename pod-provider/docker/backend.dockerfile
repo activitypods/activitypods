@@ -1,5 +1,9 @@
 FROM node:22-alpine
 
+# Exposed through the NodeInfo endpoint (see backend/services/nodeinfo.ts)
+ARG ACTIVITYPODS_VERSION
+ENV ACTIVITYPODS_VERSION=$ACTIVITYPODS_VERSION
+
 RUN node -v
 RUN npm -v
 

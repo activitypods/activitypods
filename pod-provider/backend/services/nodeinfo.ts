@@ -10,8 +10,7 @@ const Schema = {
     baseUrl: CONFIG.BASE_URL,
     software: {
       name: 'activitypods' as const,
-      // @ts-expect-error TS(2339): Property 'version' does not exist on type '{ name:... Remove this comment to see the full error message
-      version: packageDesc.version,
+      version: CONFIG.ACTIVITYPODS_VERSION,
       repository: packageDesc.repository?.url,
       homepage: packageDesc.homepage
     },

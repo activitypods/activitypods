@@ -2,6 +2,8 @@
 // See https://github.com/kerimdzhanov/dotenv-flow for more details
 require('dotenv-flow').config();
 
+// Set at Docker build time (see docker/backend.dockerfile); undefined when running from sources
+export const ACTIVITYPODS_VERSION = process.env.ACTIVITYPODS_VERSION;
 export const INSTANCE_NAME = process.env.SEMAPPS_INSTANCE_NAME;
 
 export const INSTANCE_DESCRIPTION = {

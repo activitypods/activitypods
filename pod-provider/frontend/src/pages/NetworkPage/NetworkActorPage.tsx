@@ -4,6 +4,7 @@ import {
   useTranslate,
   Button,
   ResourceContextProvider,
+  RecordContextProvider,
   EditButton,
   useCreatePath,
   useRecordContext
@@ -77,47 +78,48 @@ const NetworkActorPage = () => {
   return (
     <BlockAnonymous>
       <ResourceContextProvider value="Actor">
-        <ShowView
-          title={actor.name}
-          actions={
-            actor.isLoggedUser
-              ? [publicProfileOnly ? <EditButton /> : <EditPrivateProfileButton />]
-              : [
-                  <Button component={Link} to="/network" label="ra.action.list">
-                    <ListIcon />
-                  </Button>
-                ]
-          }
-          asides={[<ContactCard actor={actor} publicProfileOnly={publicProfileOnly} />]}
-        >
-          {actor.isLoggedUser && <ProfileWarning publicProfileOnly={publicProfileOnly} />}
-          <Hero image={actor.image}>
-            <ValueField value={actor.name} label={translate('resources.Profile.fields.vcard:given-name')} />
-            <ValueField value={actor.webfinger} label={translate('resources.Actor.fields.preferredUsername')} />
-            <ValueField
-              value={actor.summary}
-              label={translate('resources.Profile.fields.vcard:note')}
-              sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', mr: 4 }}
-            />
-            <DateField
-              source="dc:created"
-              locales={CONFIG.DEFAULT_LOCALE}
-              options={{ month: 'long', day: 'numeric', year: 'numeric' }}
-            />
-            {!actor.isLoggedUser && (
-              <TagsListEdit
-                source="id"
-                addLabel
-                label={translate('app.tag.tag')}
-                relationshipPredicate="vcard:hasMember"
-                namePredicate="vcard:label"
-                avatarPredicate="vcard:photo"
-                tagResource="Tag"
-                recordIdPredicate="id"
+        <RecordContextProvider value={actor}>
+          <ShowView
+            title={actor.name}
+            actions={
+              actor.isLoggedUser
+                ? [publicProfileOnly ? <EditButton /> : <EditPrivateProfileButton />]
+                : [
+                    <Button component={Link} to="/network" label="ra.action.list">
+                      <ListIcon />
+                    </Button>
+                  ]
+            }
+            asides={[<ContactCard actor={actor} publicProfileOnly={publicProfileOnly} />]}
+          >
+            {actor.isLoggedUser && <ProfileWarning publicProfileOnly={publicProfileOnly} />}
+            <Hero image={actor.image}>
+              <ValueField value={actor.name} label={translate('resources.Profile.fields.vcard:given-name')} />
+              <ValueField value={actor.webfinger} label={translate('resources.Actor.fields.preferredUsername')} />
+              <ValueField
+                value={actor.summary}
+                label={translate('resources.Profile.fields.vcard:note')}
+                sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', mr: 4 }}
               />
-            )}
-          </Hero>
-          {/* <ResourceContextProvider value="Profile">
+              <DateField
+                source="dc:created"
+                locales={CONFIG.DEFAULT_LOCALE}
+                options={{ month: 'long', day: 'numeric', year: 'numeric' }}
+              />
+              {!actor.isLoggedUser && (
+                <TagsListEdit
+                  source="id"
+                  addLabel
+                  label={translate('app.tag.tag')}
+                  relationshipPredicate="vcard:hasMember"
+                  namePredicate="vcard:label"
+                  avatarPredicate="vcard:photo"
+                  tagResource="Tag"
+                  recordIdPredicate="id"
+                />
+              )}
+            </Hero>
+            {/* <ResourceContextProvider value="Profile">
               <RecordContextProvider value={actor.privateProfile}>
                 <MainList>
                   <ReferenceField reference="Location" source="vcard:hasAddress" link={false}>
@@ -144,10 +146,11 @@ const NetworkActorPage = () => {
                 </MainList>
               </RecordContextProvider>
             </ResourceContextProvider> */}
-          <MainList>
-            {!actor.isLoggedUser && <ContactField source="id" label={translate('app.action.send_message')} />}
-          </MainList>
-        </ShowView>
+            <MainList>
+              {!actor.isLoggedUser && <ContactField source="id" label={translate('app.action.send_message')} />}
+            </MainList>
+          </ShowView>
+        </RecordContextProvider>
       </ResourceContextProvider>
     </BlockAnonymous>
   );

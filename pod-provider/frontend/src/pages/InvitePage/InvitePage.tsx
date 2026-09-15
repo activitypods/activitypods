@@ -53,8 +53,12 @@ const InvitePage = () => {
 
     fetchCapabilityResources(capabilityUri)
       .then(resources => {
-        const imageBlob: Blob = resources.find(resource => resource.type?.includes('image/'));
-        const profileDoc = resources.find(resource => arrayOf(resource.type).includes('Profile'));
+        const imageBlob: Blob = resources.find(resource => resource?.type?.includes('image/'));
+        const profileDoc = resources.find(resource => arrayOf(resource?.type).includes('Profile'));
+
+        if (!profileDoc) {
+          throw new Error('The capability does not give access to a profile');
+        }
 
         if (imageBlob && profileDoc) {
           // Set the profile image as blob URI manually, sorry a bit hacky.

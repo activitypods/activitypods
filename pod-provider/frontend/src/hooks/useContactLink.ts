@@ -30,7 +30,7 @@ const useContactLink = () => {
     if (!contactLink && !creatingLink && profileData?.describes && credentials && credentialsLoaded) {
       // Try to find an invite link record in the VCs.
       const inviteCapability = credentials.find(
-        vc => vc['https://schema.org/name'] ?? vc['schema:name'] ?? vc.name === 'Invite Link'
+        vc => (vc['https://schema.org/name'] ?? vc['schema:name'] ?? vc.name) === 'Invite Link'
       );
 
       if (inviteCapability) {

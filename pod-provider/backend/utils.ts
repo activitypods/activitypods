@@ -55,4 +55,24 @@ const hasActivityGrant = (capabilityPresentation: any, templateActivity: any) =>
   });
 };
 
-export { arraysEqual, hasActivityGrant };
+/**
+ * Return a copy of the given vcard:hasGeo coordinates, randomly shifted by up to `radius` meters
+ * (uniform distribution within the disc), so that the exact location cannot be inferred.
+ */
+const fuzzGeo = (geo: any, radius: number) => {
+  const latitude = parseFloat(geo['vcard:latitude']);
+  const longitude = parseFloat(geo['vcard:longitude']);
+
+  const distance = radius * Math.sqrt(Math.random());
+  const angle = 2 * Math.PI * Math.random();
+
+  const metersPerDegreeLat = 111320;
+  const metersPerDegreeLng = metersPerDegreeLat * Math.cos((latitude * Math.PI) / 180);
+
+  return {
+    'vcard:latitude': Number((latitude + (distance * Math.cos(angle)) / metersPerDegreeLat).toFixed(5)),
+    'vcard:longitude': Number((longitude + (distance * Math.sin(angle)) / metersPerDegreeLng).toFixed(5))
+  };
+};
+
+export { arraysEqual, hasActivityGrant, fuzzGeo };

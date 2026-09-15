@@ -5,6 +5,10 @@ import { OBJECT_TYPES, AS_PREFIX } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
+import { fuzzGeo } from '../../utils.ts';
+
+// Radius (in meters) of the area in which the home position shown on the profile is randomly shifted
+const HOME_LOCATION_FUZZ_RADIUS = 1000;
 
 const ProfilesProfileSchema = {
   name: 'profiles.profile' as const,
@@ -84,12 +88,31 @@ const ProfilesProfileSchema = {
       async put(ctx) {
         // Update vcard:hasGeo if vcard:hasAddress is set
         if (ctx.params.resource['vcard:hasAddress']) {
+          const webId = ctx.params.webId || ctx.meta.webId;
           const location = await ctx.call('profiles.location.get', {
             resourceUri: ctx.params.resource['vcard:hasAddress'],
-            webId: ctx.params.webId
+            webId
           });
-          if (location && location['vcard:hasAddress'] && location['vcard:hasAddress']['vcard:hasGeo']) {
-            ctx.params.resource['vcard:hasGeo'] = location['vcard:hasAddress']['vcard:hasGeo'];
+          const exactGeo = location?.['vcard:hasAddress']?.['vcard:hasGeo'];
+          if (exactGeo) {
+            // The profile is visible by all contacts, while the location is only visible to those it was shared with.
+            // So we only store an approximate position on the profile, to avoid leaking the exact home address.
+            const oldData = await ctx.call('profiles.profile.get', {
+              resourceUri: ctx.params.resource.id || ctx.params.resource['@id'],
+              accept: MIME_TYPES.JSON,
+              webId
+            });
+            const oldGeo = oldData['vcard:hasGeo'];
+            if (oldData['vcard:hasAddress'] === ctx.params.resource['vcard:hasAddress'] && oldGeo) {
+              // Keep the same approximate position as long as the home address does not change,
+              // otherwise the exact position could be inferred by averaging successive values
+              ctx.params.resource['vcard:hasGeo'] = {
+                'vcard:latitude': oldGeo['vcard:latitude'],
+                'vcard:longitude': oldGeo['vcard:longitude']
+              };
+            } else {
+              ctx.params.resource['vcard:hasGeo'] = fuzzGeo(exactGeo, HOME_LOCATION_FUZZ_RADIUS);
+            }
           } else {
             // @ts-expect-error TS(2339): Property 'warn' does not exist on type 'string | A... Remove this comment to see the full error message
             this.logger.warn(

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Box, Container, Typography, Grid } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import UserMenu from './UserMenu';
-import { useDefaultTitle } from 'react-admin';
+import { useTranslate } from 'react-admin';
 
 const useStyles = makeStyles()(theme => ({
   topBar: {
@@ -13,8 +13,10 @@ const useStyles = makeStyles()(theme => ({
     fontWeight: '800',
     lineHeight: 0.8,
     paddingTop: '2rem',
+    whiteSpace: 'nowrap',
 
     [theme.breakpoints.down('sm')]: {
+      fontSize: 24,
       paddingTop: '1.3rem',
       lineHeight: 0.8
     },
@@ -26,17 +28,17 @@ const useStyles = makeStyles()(theme => ({
 
 const AppBar = () => {
   const { classes } = useStyles();
-  const title = useDefaultTitle();
+  const translate = useTranslate();
   return (
     <Box className={classes.topBar}>
       <Container>
         <Grid container>
-          <Grid size={6}>
+          <Grid size={{ xs: 8, sm: 6 }}>
             <Typography variant="h1" className={classes.title}>
-              <Link to="/network">{title}</Link>
+              <Link to="/network">{translate('app.page.my_pod')}</Link>
             </Typography>
           </Grid>
-          <Grid size={6}>
+          <Grid size={{ xs: 4, sm: 6 }}>
             <Box display="flex" alignItems="start" justifyContent="right" pt={{ xs: 1, sm: 2 }} sx={{ width: '100%' }}>
               <UserMenu />
             </Box>

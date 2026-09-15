@@ -58,6 +58,7 @@ export default {
       group: 'Groupe'
     },
     page: {
+      my_pod: 'Mon porte-données',
       contacts: 'Mon réseau',
       contacts_short: 'Réseau',
       data: 'Mes données',
@@ -89,15 +90,16 @@ export default {
       export_pod: 'Exporter les données'
     },
     description: {
-      delete_pod: `En continuant, vous effacerez votre espace de données et toutes les données qui s'y trouvent. Cette action est irréversible! Nous vous conseillons d'exporter d'abord vos données (dans les paramètres avancés). Pour continuer, tapez "%{confirm_text}".`,
+      delete_pod: `En continuant, vous effacerez votre porte-données et toutes les données qui s'y trouvent. Cette action est irréversible! Nous vous conseillons d'exporter d'abord vos données (dans les paramètres avancés). Pour continuer, tapez "%{confirm_text}".`,
       delete_pod_confirm_text: 'effacer compte',
       export_pod:
-        'Vous pouvez télécharger toutes les données de votre espace de donnée. Cette action peut prendre un certain temps.'
+        'Vous pouvez télécharger toutes les données de votre porte-données. Cette action peut prendre un certain temps.'
     },
     dialog: {
       app_permissions: "Permissions de l'application"
     },
     setting: {
+      pod_provider: 'Hébergeur',
       profiles: 'Mes profils',
       profile: '%{smart_count} profil |||| %{smart_count} profils',
       private_profile: 'Profil privé',
@@ -178,10 +180,10 @@ export default {
       invite_text_logged_in:
         "En acceptant l'invitation, %{username} sera ajouté à vos contacts. Par ailleurs, vous lui donnez le droit de voir votre profil et de vous ajouter à ses propre contacts",
       choose_provider_text_signup:
-        'Comme pour les e-mails, vous pouvez décider où vous souhaitez créer votre espace personnel. Choisissez un hébergeur qui vous semble digne de confiance ou qui est proche de vous.',
-      more_about_pods: 'En savoir plus sur les espaces de données.',
+        'Comme pour les e-mails, vous pouvez décider où vous souhaitez créer votre porte-données. Choisissez un hébergeur qui vous semble digne de confiance ou qui est proche de vous.',
+      more_about_pods: 'En savoir plus sur les porte-données.',
       choose_pod_provider:
-        'The pod provider is the place where your data space is located. Like with an email provider, it will store your data.',
+        "L'hébergeur est l'endroit où se trouve votre porte-données. Comme pour un fournisseur d'e-mail, c'est lui qui stockera vos données.",
       choose_custom_provider:
         "Si l'hébergeur que vous recherchez n'est pas listé, vous pouvez entrer son adresse ci-dessous (par exemple https://mon-fournisseur.com).",
       username_cannot_be_modified: 'Votre identifiant ne peut être modifié',
@@ -287,7 +289,7 @@ export default {
     steps: {
       title: 'Comment ça marche ?',
       1: {
-        title: 'Je crée mon espace de donnée personnel (Pod)',
+        title: 'Je crée mon porte-données personnel (Pod)',
         text: "Un seul endroit pour toutes mes données, c'est pas trop tôt !"
       },
       2: {

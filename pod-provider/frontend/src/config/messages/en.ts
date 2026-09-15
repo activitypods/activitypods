@@ -58,6 +58,7 @@ export default {
       group: 'Group'
     },
     page: {
+      my_pod: 'My Pod',
       contacts: 'My network',
       contacts_short: 'Network',
       data: 'My data',
@@ -97,6 +98,7 @@ export default {
       export_pod: 'You can export and download all your data as a backup. The action might take a short while.'
     },
     setting: {
+      pod_provider: 'Pod provider',
       profiles: 'My profiles',
       profile: '%{smart_count} profile |||| %{smart_count} profiles',
       private_profile: 'Private profile',

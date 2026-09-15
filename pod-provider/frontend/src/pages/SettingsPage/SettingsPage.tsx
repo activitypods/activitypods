@@ -12,6 +12,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import LinkIcon from '@mui/icons-material/Link';
 import TuneIcon from '@mui/icons-material/Tune';
 import TranslateIcon from '@mui/icons-material/Translate';
+import StorageIcon from '@mui/icons-material/Storage';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import Header from '../../common/Header';
@@ -94,6 +95,11 @@ const SettingsPage = () => {
               actionIcon={<FileCopyIcon />}
             />
           </CopyToClipboard>
+          <SettingsItem
+            icon={<StorageIcon />}
+            label="app.setting.pod_provider"
+            value={`${CONFIG.INSTANCE_NAME} (${new URL(CONFIG.BACKEND_URL).host})`}
+          />
           <SettingsItem
             onClick={() => navigate('/settings/advanced')}
             icon={<TuneIcon />}

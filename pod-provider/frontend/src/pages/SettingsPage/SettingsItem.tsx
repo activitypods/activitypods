@@ -42,14 +42,16 @@ const SettingsItem: FunctionComponent<Props> = ({ onClick, icon, actionIcon, lab
           <Switch edge="end" onChange={onClick} checked={value} />
         </ListItemButton>
       ) : (
-        <ListItemButton onClick={onClick}>
+        <ListItemButton onClick={onClick} disabled={!onClick} sx={{ '&.Mui-disabled': { opacity: 1 } }}>
           <ListItemAvatar>
             <Avatar>{icon}</Avatar>
           </ListItemAvatar>
           <ListItemText primary={translate(label)} secondary={value} className={classes.listItemText} />
-          <ListItemSecondaryAction>
-            <IconButton>{actionIcon || <EditIcon />}</IconButton>
-          </ListItemSecondaryAction>
+          {onClick && (
+            <ListItemSecondaryAction>
+              <IconButton>{actionIcon || <EditIcon />}</IconButton>
+            </ListItemSecondaryAction>
+          )}
         </ListItemButton>
       )}
     </ListItem>
@@ -57,7 +59,7 @@ const SettingsItem: FunctionComponent<Props> = ({ onClick, icon, actionIcon, lab
 };
 
 type Props = {
-  onClick: () => void;
+  onClick?: () => void;
   icon: ReactNode;
   actionIcon?: ReactNode;
   label: string;

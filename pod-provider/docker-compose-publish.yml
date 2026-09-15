@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: ./docker/backend.dockerfile
+      args:
+        ACTIVITYPODS_VERSION: ${VERSION}
       platforms:
         - linux/arm64
         - linux/amd64

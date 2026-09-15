@@ -8,11 +8,11 @@ type Props = {
 
 export default function InfoBox({ textBlock, ...gridProps }: Props) {
   return (
-    <Grid container item textAlign="left" {...gridProps} sx={{ flexFlow: 'row', alignItems: 'start', ...gridProps.sx }}>
-      <Grid item mr={1}>
+    <Grid container textAlign="left" sx={{ flexFlow: 'row', alignItems: 'start', ...gridProps.sx }}>
+      <Grid mr={1}>
         <InfoIcon color="info" />
       </Grid>
-      <Grid item>{textBlock}</Grid>
+      <Grid>{textBlock}</Grid>
     </Grid>
   );
 }

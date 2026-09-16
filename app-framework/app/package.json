@@ -1,6 +1,6 @@
 {
   "name": "@activitypods/app",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "main": "./index.ts",
   "description": "Base services for ActivityPods backend apps",
   "license": "Apache-2.0",
@@ -13,7 +13,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json || echo 'tsc reported type errors (see above), JS output was still emitted to dist/'",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build && npm pkg set main=./dist/index.js",
+    "postpublish": "npm pkg set main=./index.ts"
   },
   "files": [
     "dist",
@@ -38,8 +39,7 @@
     "url-join": "^4.0.1"
   },
   "publishConfig": {
-    "access": "public",
-    "main": "./dist/index.js"
+    "access": "public"
   },
   "engines": {
     "node": ">=22"

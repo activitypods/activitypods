@@ -7,6 +7,6 @@
     "outDir": "dist",
     "rootDir": "./"
   },
-  "include": ["*.ts", "mixins", "services", "utils"],
+  "include": ["*.ts", "mixins", "services", "utils", "../types/moleculer/*.d.ts"],
   "exclude": ["dist", "node_modules"]
 }

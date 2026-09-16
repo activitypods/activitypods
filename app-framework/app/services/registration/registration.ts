@@ -1,11 +1,10 @@
 // `moleculer` is CommonJS: reach its exports through the default import rather than
 // `require`, which does not exist when this TypeScript source is loaded as ESM
-import moleculer from 'moleculer';
-
-const { MoleculerError } = moleculer.Errors;
+import moleculer, { type ServiceSchema } from 'moleculer';
 import { ActivitiesHandlerMixin, ACTIVITY_TYPES } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
-import type { ServiceSchema } from 'moleculer';
+
+const { MoleculerError } = moleculer.Errors;
 
 const AppRegistrationSchema = {
   name: 'app.registration' as const,

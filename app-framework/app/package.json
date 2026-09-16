@@ -1,6 +1,6 @@
 {
   "name": "@activitypods/app",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "main": "./index.ts",
   "description": "Base services for ActivityPods backend apps",
   "license": "Apache-2.0",
@@ -11,14 +11,22 @@
     "url": "https://github.com/assemblee-virtuelle/activitypods.git",
     "directory": "app-framework/app"
   },
+  "scripts": {
+    "build": "tsc -p tsconfig.json || echo 'tsc reported type errors (see above), JS output was still emitted to dist/'",
+    "prepublishOnly": "yarn build"
+  },
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
   "dependencies": {
     "@rdfjs/data-model": "2.1.1",
-    "@semapps/activitypub": "1.2.0",
-    "@semapps/ldp": "1.2.0",
-    "@semapps/mime-types": "1.2.0",
-    "@semapps/nodeinfo": "1.2.0",
-    "@semapps/ontologies": "1.2.0",
-    "@semapps/webacl": "1.2.0",
+    "@semapps/activitypub": "1.2.2",
+    "@semapps/ldp": "1.2.2",
+    "@semapps/mime-types": "1.2.2",
+    "@semapps/nodeinfo": "1.2.2",
+    "@semapps/ontologies": "1.2.2",
+    "@semapps/webacl": "1.2.2",
     "form-data-encoder": "1.9.0",
     "formdata-node": "4.4.1",
     "handlebars": "^4.7.7",
@@ -30,12 +38,14 @@
     "url-join": "^4.0.1"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "main": "./dist/index.js"
   },
   "engines": {
     "node": ">=22"
   },
   "devDependencies": {
-    "@types/rdfjs__data-model": "^2.0.9"
+    "@types/rdfjs__data-model": "^2.0.9",
+    "typescript": "^5.2.2"
   }
 }

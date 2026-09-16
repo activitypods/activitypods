@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": false,
+    "rewriteRelativeImportExtensions": true,
+    "outDir": "dist",
+    "rootDir": "./"
+  },
+  "include": ["*.ts", "mixins", "services", "utils"],
+  "exclude": ["dist", "node_modules"]
+}

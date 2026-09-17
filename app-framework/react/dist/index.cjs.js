@@ -30,8 +30,9 @@ function $parcel$interopDefault(a) {
 $parcel$export(module.exports, "BackgroundChecks", () => $88874b19fd1a9965$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "LoginPage", () => $8c4e86009f42299d$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "RedirectPage", () => $691cae6a20c06149$export$2e2bcd8739ae039);
-$parcel$export(module.exports, "ShareButton", () => $c30b6e8e8f4f1d51$export$2e2bcd8739ae039);
-$parcel$export(module.exports, "ShareDialog", () => $8ffb7dd40d703ae5$export$2e2bcd8739ae039);
+$parcel$export(module.exports, "RemoteShareButton", () => $4903061d2059908d$export$2e2bcd8739ae039);
+$parcel$export(module.exports, "ShareButton", () => $3cedfe91fd45b28b$export$2e2bcd8739ae039);
+$parcel$export(module.exports, "ShareDialog", () => $54b617fbff242b38$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "SyncUserLocale", () => $418040ff16c1a946$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "UserMenu", () => $fc1368eec161415d$export$2e2bcd8739ae039);
 $parcel$export(module.exports, "englishMessages", () => $4b1314efa6ba34c8$export$2e2bcd8739ae039);
@@ -216,7 +217,11 @@ var $9a8d0fd57dda054c$export$2e2bcd8739ae039 = $9a8d0fd57dda054c$var$useRegister
         checkAppStatus
     ]);
     (0, $fvx3m$react.useEffect)(()=>{
-        if (localStorage.getItem("redirect")) redirect(localStorage.getItem("redirect"));
+        const redirectUrl = localStorage.getItem("redirect");
+        if (redirectUrl) {
+            localStorage.removeItem("redirect");
+            redirect(redirectUrl);
+        }
     }, [
         redirect
     ]);
@@ -510,6 +515,55 @@ var $691cae6a20c06149$export$2e2bcd8739ae039 = $691cae6a20c06149$var$RedirectPag
 
 
 
+// Share by redirecting to the user's Authorization Agent
+// To open a modal inside the app, use the ShareButton instead
+const $4903061d2059908d$var$RemoteShareButton = ({ clientId: clientId, ...rest })=>{
+    const dataProvider = (0, $fvx3m$reactadmin.useDataProvider)();
+    const record = (0, $fvx3m$reactadmin.useRecordContext)();
+    const { data: identity, isLoading: isLoading } = (0, $fvx3m$reactadmin.useGetIdentity)();
+    const [authAgent, setAuthAgent] = (0, $fvx3m$react.useState)();
+    const [isAuthAgentLoading, setIsAuthAgentLoading] = (0, $fvx3m$react.useState)(false);
+    (0, $fvx3m$react.useEffect)(()=>{
+        if (!isAuthAgentLoading && !authAgent && record?.["dc:creator"] === identity?.id) {
+            const authAgentUri = identity?.webIdData?.["interop:hasAuthorizationAgent"];
+            if (authAgentUri) {
+                setIsAuthAgentLoading(true);
+                dataProvider.fetch(authAgentUri).then(({ json: json })=>{
+                    setAuthAgent(json);
+                    setIsAuthAgentLoading(false);
+                });
+            }
+        }
+    }, [
+        identity,
+        record,
+        dataProvider,
+        authAgent,
+        setAuthAgent,
+        isAuthAgentLoading,
+        setIsAuthAgentLoading
+    ]);
+    const onClick = (0, $fvx3m$react.useCallback)(()=>{
+        // Save current path, so that the BackgroundChecks component may redirect there after registration
+        localStorage.setItem("redirect", window.location.pathname);
+        const redirectUrl = new URL(authAgent?.["interop:hasAuthorizationRedirectEndpoint"]);
+        redirectUrl.searchParams.append("client_id", clientId);
+        redirectUrl.searchParams.append("resource", record?.id);
+        window.location.href = redirectUrl.toString();
+    }, [
+        authAgent,
+        clientId,
+        record
+    ]);
+    if (isLoading || isAuthAgentLoading || !authAgent || !record || record?.["dc:creator"] !== identity?.id) return null;
+    return /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$reactadmin.Button), {
+        onClick: onClick,
+        startIcon: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, ($parcel$interopDefault($fvx3m$muiiconsmaterialShare))), {}),
+        label: "apods.action.share",
+        ...rest
+    });
+};
+var $4903061d2059908d$export$2e2bcd8739ae039 = $4903061d2059908d$var$RemoteShareButton;
 
 
 
@@ -528,9 +582,13 @@ var $691cae6a20c06149$export$2e2bcd8739ae039 = $691cae6a20c06149$var$RedirectPag
 
 
 
-/**
- * @typedef {import("./GroupContactsItem").InvitationState} InvitationState
- */ const $86676b500f2a011a$var$useStyles = (0, ($parcel$interopDefault($fvx3m$muistylesmakeStyles)))((theme)=>({
+
+
+
+
+
+
+const $866f07f5fdf0e8f0$var$useStyles = (0, ($parcel$interopDefault($fvx3m$muistylesmakeStyles)))((theme)=>({
         listItem: {
             paddingLeft: 0,
             paddingRight: 0
@@ -552,17 +610,12 @@ var $691cae6a20c06149$export$2e2bcd8739ae039 = $691cae6a20c06149$var$RedirectPag
             minWidth: 50
         },
         avatar: {
+            // @ts-ignore
             backgroundImage: `radial-gradient(circle at 50% 3em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`
         }
     }));
-/**
- * @param {Object} props
- * @param {import("react-admin").Record} props.record
- * @param {InvitationState} [props.invitation]
- * @param {(invitations: Record<string, InvitationState>) => void} props.onChange
- * @param {boolean} props.isCreator
- */ const $86676b500f2a011a$var$ContactItem = ({ record: record, invitation: invitation, onChange: onChange, isCreator: isCreator })=>{
-    const classes = $86676b500f2a011a$var$useStyles();
+const $866f07f5fdf0e8f0$var$ContactItem = ({ record: record, invitation: invitation, onChange: onChange, isCreator: isCreator })=>{
+    const classes = $866f07f5fdf0e8f0$var$useStyles();
     const translate = (0, $fvx3m$reactadmin.useTranslate)();
     // The invitation may still be undefined. In that case, create a default one.
     // TODO: Maybe, this should be handled in the ShareDialog instead?
@@ -633,7 +686,7 @@ var $691cae6a20c06149$export$2e2bcd8739ae039 = $691cae6a20c06149$var$RedirectPag
         ]
     });
 };
-var $86676b500f2a011a$export$2e2bcd8739ae039 = $86676b500f2a011a$var$ContactItem;
+var $866f07f5fdf0e8f0$export$2e2bcd8739ae039 = $866f07f5fdf0e8f0$var$ContactItem;
 
 
 
@@ -643,7 +696,7 @@ var $86676b500f2a011a$export$2e2bcd8739ae039 = $86676b500f2a011a$var$ContactItem
 
 
 
-/** @typedef {import("./ShareDialog").InvitationState} InvitationState */ const $35582d4b0c1bf8ac$var$useStyles = (0, ($parcel$interopDefault($fvx3m$muistylesmakeStyles)))((theme)=>({
+/** @typedef {import("./ShareDialog").InvitationState} InvitationState */ const $2b460a6c2c5219e7$var$useStyles = (0, ($parcel$interopDefault($fvx3m$muistylesmakeStyles)))((theme)=>({
         listItem: {
             paddingLeft: 0,
             paddingRight: 0
@@ -665,17 +718,12 @@ var $86676b500f2a011a$export$2e2bcd8739ae039 = $86676b500f2a011a$var$ContactItem
             minWidth: 50
         },
         avatar: {
+            // @ts-ignore
             backgroundImage: `radial-gradient(circle at 50% 3em, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`
         }
     }));
-/**
- * @param {Object} props
- * @param {import("react-admin").Record} props.group
- * @param {Record<string, InvitationState} props.invitations
- * @param {(invitations: Record<string, InvitationState>) => void} props.onChange
- * @param {boolean} props.isCreator
- */ const $35582d4b0c1bf8ac$var$GroupContactsItem = ({ group: group, onChange: onChange, invitations: invitations, isCreator: isCreator })=>{
-    const classes = $35582d4b0c1bf8ac$var$useStyles();
+const $2b460a6c2c5219e7$var$GroupContactsItem = ({ group: group, invitations: invitations, onChange: onChange, isCreator: isCreator })=>{
+    const classes = $2b460a6c2c5219e7$var$useStyles();
     const translate = (0, $fvx3m$reactadmin.useTranslate)();
     const groupMemberIds = (0, $f21bc75053423cc3$export$e57ff0f701c44363)(group?.["vcard:hasMember"]);
     const viewChecked = groupMemberIds.every((memberId)=>invitations[memberId]?.canView || invitations[memberId]?.canShare);
@@ -774,16 +822,17 @@ var $86676b500f2a011a$export$2e2bcd8739ae039 = $86676b500f2a011a$var$ContactItem
         ]
     });
 };
-var $35582d4b0c1bf8ac$export$2e2bcd8739ae039 = $35582d4b0c1bf8ac$var$GroupContactsItem;
+var $2b460a6c2c5219e7$export$2e2bcd8739ae039 = $2b460a6c2c5219e7$var$GroupContactsItem;
 
 
 
 /**
  * @typedef {import('./ShareDialog').InvitationState} InvitationState
- */ const $d4e71d4ba572ee47$var$useStyles = (0, ($parcel$interopDefault($fvx3m$muistylesmakeStyles)))((theme)=>({
+ */ const $2788e04d8cf891b0$var$useStyles = (0, ($parcel$interopDefault($fvx3m$muistylesmakeStyles)))((theme)=>({
         list: {
             width: "98%",
             maxWidth: "98%",
+            // @ts-ignore
             backgroundColor: theme.palette.background.paper,
             padding: 0
         }
@@ -793,8 +842,8 @@ var $35582d4b0c1bf8ac$export$2e2bcd8739ae039 = $35582d4b0c1bf8ac$var$GroupContac
  * @param {Record<string, InvitationState} props.invitations
  * @param {(invitations: Record<string, InvitationState) => void} props.onChange
  * @param {boolean} props.isCreator
- */ const $d4e71d4ba572ee47$var$ContactsShareList = ({ invitations: invitations, onChange: onChange, organizerUri: organizerUri, isCreator: isCreator, profileResource: profileResource, groupResource: groupResource })=>{
-    const classes = $d4e71d4ba572ee47$var$useStyles();
+ */ const $2788e04d8cf891b0$var$ContactsShareList = ({ invitations: invitations, onChange: onChange, organizerUri: organizerUri, isCreator: isCreator, profileResource: profileResource, groupResource: groupResource })=>{
+    const classes = $2788e04d8cf891b0$var$useStyles();
     const translate = (0, $fvx3m$reactadmin.useTranslate)();
     const { data: identity } = (0, $fvx3m$reactadmin.useGetIdentity)();
     const [searchText, setSearchText] = (0, $fvx3m$react.useState)("");
@@ -844,13 +893,13 @@ var $35582d4b0c1bf8ac$export$2e2bcd8739ae039 = $35582d4b0c1bf8ac$var$GroupContac
                 size: "small",
                 margin: "dense"
             }),
-            groupsFiltered?.map((group)=>/*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $35582d4b0c1bf8ac$export$2e2bcd8739ae039), {
+            groupsFiltered?.map((group)=>/*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $2b460a6c2c5219e7$export$2e2bcd8739ae039), {
                     group: group,
                     invitations: invitations,
                     onChange: onChange,
                     isCreator: isCreator
                 }, group.id)),
-            profilesFiltered?.map((profile)=>/*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $86676b500f2a011a$export$2e2bcd8739ae039), {
+            profilesFiltered?.map((profile)=>/*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $866f07f5fdf0e8f0$export$2e2bcd8739ae039), {
                     record: profile,
                     invitation: invitations[profile.describes],
                     onChange: onChange,
@@ -866,11 +915,14 @@ var $35582d4b0c1bf8ac$export$2e2bcd8739ae039 = $35582d4b0c1bf8ac$var$GroupContac
                     thickness: 6
                 })
             }),
-            !loadingProfiles && (profilesFiltered?.length, false)
+            !loadingProfiles && profilesFiltered?.length !== 0 && /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.Alert), {
+                severity: "warning",
+                children: translate("apods.helper.no_contact")
+            })
         ]
     });
 };
-var $d4e71d4ba572ee47$export$2e2bcd8739ae039 = $d4e71d4ba572ee47$var$ContactsShareList;
+var $2788e04d8cf891b0$export$2e2bcd8739ae039 = $2788e04d8cf891b0$var$ContactsShareList;
 
 
 /**
@@ -879,13 +931,14 @@ var $d4e71d4ba572ee47$export$2e2bcd8739ae039 = $d4e71d4ba572ee47$var$ContactsSha
  * @property {boolean} canShare
  * @property {boolean} viewReadonly
  * @property {boolean} shareReadonly
- */ const $8ffb7dd40d703ae5$var$useStyles = (0, ($parcel$interopDefault($fvx3m$muistylesmakeStyles)))((theme)=>({
+ */ const $54b617fbff242b38$var$useStyles = (0, ($parcel$interopDefault($fvx3m$muistylesmakeStyles)))((theme)=>({
         dialogPaper: {
             margin: 16
         },
         title: {
             padding: 24,
             paddingBottom: 8,
+            // @ts-ignore
             [theme.breakpoints.down("sm")]: {
                 padding: 16,
                 paddingBottom: 4
@@ -898,6 +951,7 @@ var $d4e71d4ba572ee47$export$2e2bcd8739ae039 = $d4e71d4ba572ee47$var$ContactsSha
         list: {
             width: "100%",
             maxWidth: "100%",
+            // @ts-ignore
             backgroundColor: theme.palette.background.paper,
             padding: 0
         },
@@ -907,6 +961,7 @@ var $d4e71d4ba572ee47$export$2e2bcd8739ae039 = $d4e71d4ba572ee47$var$ContactsSha
             paddingRight: 0,
             marginRight: 24,
             height: 400,
+            // @ts-ignore
             [theme.breakpoints.down("sm")]: {
                 padding: "0px 16px",
                 margin: 0,
@@ -914,8 +969,9 @@ var $d4e71d4ba572ee47$export$2e2bcd8739ae039 = $d4e71d4ba572ee47$var$ContactsSha
             }
         }
     }));
-const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resourceUri, profileResource: profileResource = "Profile", groupResource: groupResource = "Group" })=>{
-    const classes = $8ffb7dd40d703ae5$var$useStyles();
+// @ts-ignore
+const $54b617fbff242b38$var$ShareDialog = ({ close: close, resourceUri: resourceUri, profileResource: profileResource = "Profile", groupResource: groupResource = "Group" })=>{
+    const classes = $54b617fbff242b38$var$useStyles();
     const { data: identity } = (0, $fvx3m$reactadmin.useGetIdentity)();
     const record = (0, $fvx3m$reactadmin.useRecordContext)();
     const translate = (0, $fvx3m$reactadmin.useTranslate)();
@@ -928,6 +984,7 @@ const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resource
     /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */ const [newInvitations, setNewInvitations] = (0, $fvx3m$react.useState)({});
     /** @type {[Record<string, InvitationState>, (invitations: Record<string, InvitationState>) => void]} */ const [savedInvitations, setSavedInvitations] = (0, $fvx3m$react.useState)({});
     const [sendingInvitation, setSendingInvitation] = (0, $fvx3m$react.useState)(false);
+    // @ts-ignore
     const xs = (0, $fvx3m$muimaterial.useMediaQuery)((theme)=>theme.breakpoints.down("xs"), {
         noSsr: true
     });
@@ -960,7 +1017,7 @@ const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resource
         setInvitations,
         setSavedInvitations
     ]);
-    /** @param {Record<string, InvitationState} changedRights */ const onChange = (0, $fvx3m$react.useCallback)((changedRights)=>{
+    const onChange = (0, $fvx3m$react.useCallback)((changedRights)=>{
         // Compare changedRights to invitations, to know where we need to update the collection.
         const newInvitationsUnfiltered = {
             ...newInvitations,
@@ -981,39 +1038,21 @@ const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resource
     ]);
     const sendInvitations = (0, $fvx3m$react.useCallback)(async ()=>{
         setSendingInvitation(true);
-        const actorsWithNewViewRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canView && !savedInvitations[actorUri]?.canView);
-        if (actorsWithNewViewRight.length > 0) {
-            if (isCreator) outbox.post({
-                type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
-                actor: outbox.owner,
-                object: resourceUri,
-                target: actorsWithNewViewRight,
-                to: actorsWithNewViewRight
-            });
-            else // Offer the organizer to invite these people
-            outbox.post({
-                type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).OFFER,
-                actor: outbox.owner,
-                object: {
-                    type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
-                    actor: outbox.owner,
-                    object: resourceUri,
-                    target: actorsWithNewViewRight
-                },
-                target: record["dc:creator"],
-                to: record["dc:creator"]
-            });
-        }
+        const actorsWithNewViewRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canView && !newInvitations[actorUri].canShare);
+        if (actorsWithNewViewRight.length > 0) outbox.post({
+            type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
+            actor: outbox.owner,
+            object: resourceUri,
+            to: actorsWithNewViewRight
+        });
         const actorsWithNewShareRight = Object.keys(newInvitations).filter((actorUri)=>newInvitations[actorUri].canShare);
         if (actorsWithNewShareRight.length > 0) outbox.post({
-            type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).OFFER,
+            type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
             actor: outbox.owner,
-            object: {
-                type: (0, $fvx3m$semappsactivitypubcomponents.ACTIVITY_TYPES).ANNOUNCE,
-                object: resourceUri
-            },
-            target: actorsWithNewShareRight,
-            to: actorsWithNewShareRight
+            object: resourceUri,
+            to: actorsWithNewShareRight,
+            "interop:delegationAllowed": true,
+            "interop:delegationLimit": 1
         });
         notify("apods.notification.invitation_sent", {
             type: "success",
@@ -1048,7 +1087,7 @@ const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resource
             }),
             /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $fvx3m$muimaterial.DialogContent), {
                 className: classes.listForm,
-                children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $d4e71d4ba572ee47$export$2e2bcd8739ae039), {
+                children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $2788e04d8cf891b0$export$2e2bcd8739ae039), {
                     invitations: invitations,
                     onChange: onChange,
                     organizerUri: creatorUri,
@@ -1081,13 +1120,13 @@ const $8ffb7dd40d703ae5$var$ShareDialog = ({ close: close, resourceUri: resource
         ]
     });
 };
-var $8ffb7dd40d703ae5$export$2e2bcd8739ae039 = $8ffb7dd40d703ae5$var$ShareDialog;
+var $54b617fbff242b38$export$2e2bcd8739ae039 = $54b617fbff242b38$var$ShareDialog;
 
 
 /**
  * Allow to share the record in the current RecordContext
  * Use the `Announce` and `Offer > Announce` activities handled by ActivityPods
- */ const $c30b6e8e8f4f1d51$var$ShareButton = ({ profileResource: profileResource = "Profile", groupResource: groupResource = "Group" })=>{
+ */ const $3cedfe91fd45b28b$var$ShareButton = ({ profileResource: profileResource = "Profile", groupResource: groupResource = "Group" })=>{
     const [shareOpen, setShareOpen] = (0, $fvx3m$react.useState)(false);
     const record = (0, $fvx3m$reactadmin.useRecordContext)();
     const { error: error, isLoading: isLoading } = (0, $fvx3m$semappsactivitypubcomponents.useCollection)(record?.["apods:announces"]);
@@ -1100,7 +1139,7 @@ var $8ffb7dd40d703ae5$export$2e2bcd8739ae039 = $8ffb7dd40d703ae5$var$ShareDialog
                 onClick: ()=>setShareOpen(true),
                 children: /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, ($parcel$interopDefault($fvx3m$muiiconsmaterialShare))), {})
             }),
-            shareOpen && /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $8ffb7dd40d703ae5$export$2e2bcd8739ae039), {
+            shareOpen && /*#__PURE__*/ (0, $fvx3m$reactjsxruntime.jsx)((0, $54b617fbff242b38$export$2e2bcd8739ae039), {
                 resourceUri: record.id,
                 close: ()=>setShareOpen(false),
                 profileResource: profileResource,
@@ -1110,7 +1149,7 @@ var $8ffb7dd40d703ae5$export$2e2bcd8739ae039 = $8ffb7dd40d703ae5$var$ShareDialog
     });
     else return null;
 };
-var $c30b6e8e8f4f1d51$export$2e2bcd8739ae039 = $c30b6e8e8f4f1d51$var$ShareButton;
+var $3cedfe91fd45b28b$export$2e2bcd8739ae039 = $3cedfe91fd45b28b$var$ShareButton;
 
 
 

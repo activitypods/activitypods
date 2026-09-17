@@ -1,10 +1,11 @@
 /** @type {import('jest').Config} */
 const config = {
   testEnvironment: 'node',
-  transform: {
-    '\\.[jt]sx?$': ['esbuild-jest']
-  },
+  // transform: {
+  //   '\\.[jt]sx?$': ['esbuild-jest']
+  // },
+  maxWorkers: 1,
   transformIgnorePatterns: []
 };
 
-module.exports = config;
+export default config;

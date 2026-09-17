@@ -14,6 +14,7 @@ import useGroupContext from '../../hooks/useRealmContext';
 const GroupSettingsPage = () => {
   const translate = useTranslate();
   const navigate = useNavigate();
+  // @ts-expect-error TS(2339): Property 'isLoading' does not exist on type 'unkno... Remove this comment to see the full error message
   const { isLoading, data } = useGroupContext();
 
   if (isLoading) return null;
@@ -22,6 +23,7 @@ const GroupSettingsPage = () => {
     <>
       <Header
         title="app.titles.group_settings"
+        // @ts-expect-error TS(2322): Type '{ title: string; titleVariables: { groupName... Remove this comment to see the full error message
         titleVariables={{
           groupName: data.fullName
         }}

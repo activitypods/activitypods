@@ -62,3 +62,16 @@ services:
       - '1080:1080'
       - '1025:1025'
     restart: on-failure
+
+  tripleadmin:
+    image: mguihal/tripleadmin
+    container_name: tripleadmin
+    depends_on:
+      - fuseki_test
+    ports:
+      - '3033:3033'
+    extra_hosts:
+      - 'localhost:host-gateway'
+    environment:
+      - TRIPLEADMIN_HOST=http://localhost:3040/
+      - TRIPLEADMIN_USERNAME=admin

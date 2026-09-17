@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDataProvider, useGetIdentity, useGetList } from 'react-admin';
 import { createContactCapability } from '../utils';
 import { SemanticDataProvider } from '@semapps/semantic-data-provider';
-import { useQueryClient } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 
 const inviteLinkFromCapUri = (capUri: string) => {
   return `${new URL(window.location.href).origin}/invite/${encodeURIComponent(capUri)}`;
@@ -30,7 +30,7 @@ const useContactLink = () => {
     if (!contactLink && !creatingLink && profileData?.describes && credentials && credentialsLoaded) {
       // Try to find an invite link record in the VCs.
       const inviteCapability = credentials.find(
-        vc => vc['https://schema.org/name'] ?? vc['schema:name'] ?? vc.name === 'Invite Link'
+        vc => (vc['https://schema.org/name'] ?? vc['schema:name'] ?? vc.name) === 'Invite Link'
       );
 
       if (inviteCapability) {
@@ -43,7 +43,7 @@ const useContactLink = () => {
             setContactLink(inviteLinkFromCapUri(vcLink));
             setStatus('loaded');
             // Invalidate cache
-            queryClient.refetchQueries('VerifiableCredential');
+            queryClient.refetchQueries({ queryKey: ['VerifiableCredential'] });
           })
           .catch(error => {
             setStatus('error');

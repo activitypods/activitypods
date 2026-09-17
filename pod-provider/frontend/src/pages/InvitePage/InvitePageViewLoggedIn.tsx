@@ -47,12 +47,12 @@ const InvitePageViewLoggedIn = ({
       }
     >
       {/* Connect Avatars & Info */}
-      <Grid container item flexDirection="column" alignSelf="center" alignItems="center" width="fit-content">
+      <Grid container flexDirection="column" alignSelf="center" alignItems="center" width="fit-content">
         <ConnectAvatars frontProfile={inviterProfile} backProfile={ownProfile} avatarSize="min(45vw, 12rem)" />
-        <Grid item>
+        <Grid>
           <Typography align="center">{formatUsername(inviterWebId)}</Typography>
         </Grid>
-        <Grid item display="flex" justifyContent="center">
+        <Grid display="flex" justifyContent="center">
           <Typography variant="body2" component="label">
             {translate('app.user.member_since')}
             &nbsp;
@@ -62,15 +62,28 @@ const InvitePageViewLoggedIn = ({
           </Typography>
         </Grid>
       </Grid>
-
       {/* Connect / Cancel Buttons */}
-      <Grid container item spacing={1} sx={{ flexFlow: 'column', alignItems: 'center', mt: 1 }}>
-        <Grid container item xs={12} md={8} lg={6}>
+      <Grid container spacing={1} sx={{ flexFlow: 'column', alignItems: 'center', mt: 1 }}>
+        <Grid
+          container
+          size={{
+            xs: 12,
+            md: 8,
+            lg: 6
+          }}
+        >
           <Button fullWidth variant="contained" color="primary" size="large" onClick={onConnectClick}>
             {translate('app.action.connect')}
           </Button>
         </Grid>
-        <Grid container item xs={12} md={8} lg={6}>
+        <Grid
+          container
+          size={{
+            xs: 12,
+            md: 8,
+            lg: 6
+          }}
+        >
           <Button fullWidth variant="contained" color="secondary" size="large" onClick={onCancelClick}>
             {translate('ra.action.cancel')}
           </Button>

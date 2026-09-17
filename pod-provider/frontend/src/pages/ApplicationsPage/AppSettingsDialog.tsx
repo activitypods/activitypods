@@ -1,0 +1,161 @@
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useTranslate, Button, useNotify, useRefresh } from 'react-admin';
+import { Dialog, DialogTitle, DialogActions, DialogContent, IconButton, Alert } from '@mui/material';
+import useAccessNeeds from '../../hooks/useAccessNeeds';
+import AccessNeedsList from '../../common/list/AccessNeedsList';
+import CloseIcon from '@mui/icons-material/Close';
+import BlockIcon from '@mui/icons-material/Block';
+import LoopIcon from '@mui/icons-material/Loop';
+import useAccessGrants from '../../hooks/useAccessGrants';
+import useAgentRegistration from '../../hooks/useAgentRegistration';
+import useUpgradeApp from '../../hooks/useUpgradeApp';
+import useRemoveApp from '../../hooks/useRemoveApp';
+import { arraysEqual, arrayOf } from '../../utils';
+
+const AppSettingsDialog = ({ application, open, onClose }: any) => {
+  const [oldAccessNeedsUris, setOldAccessNeedsUris] = useState();
+  const [newAccessNeedsUris, setNewAccessNeedsUris] = useState();
+  const [isPending, setIsPending] = useState(false);
+  const translate = useTranslate();
+  const notify = useNotify();
+  const refresh = useRefresh();
+
+  const {
+    requiredAccessNeeds,
+    optionalAccessNeeds,
+    loaded: accessNeedsLoaded,
+    error: accessNeedsError
+  } = useAccessNeeds(application);
+  const { accessGrants, loaded: accessGrantsLoaded } = useAccessGrants(application.id);
+  const { agentRegistration, loaded: agentRegistrationLoaded } = useAgentRegistration(application.id);
+  const removeApp = useRemoveApp();
+  const upgradeApp = useUpgradeApp();
+
+  useEffect(() => {
+    if (accessGrantsLoaded && agentRegistrationLoaded && accessNeedsLoaded) {
+      const requiredAccessNeedsUris = requiredAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id));
+      // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
+      const optionalAccessNeedsUris = optionalAccessNeeds.map(a => (typeof a === 'string' ? a : a?.id));
+
+      const grantedAccessNeedsUris = [
+        ...accessGrants.map(a => a?.['interop:satisfiesAccessNeed']),
+        ...arrayOf(agentRegistration?.['apods:hasSpecialRights'])
+      ];
+
+      // Filter out from the list of granted access needs the ones that are not existing anymore
+      const grantedExistingAccessNeedsUris = grantedAccessNeedsUris.filter(
+        uri => requiredAccessNeedsUris.includes(uri) || optionalAccessNeedsUris.includes(uri)
+      );
+      // @ts-expect-error TS(2345): Argument of type 'never[]' is not assignable to pa... Remove this comment to see the full error message
+      setOldAccessNeedsUris(grantedExistingAccessNeedsUris);
+
+      // If there are new required access needs (in the remote app), automatically select them
+      // This will display the "Upgrade" button so that the user can upgrade the app from here
+      // @ts-expect-error TS(2345): Argument of type 'any[]' is not assignable to para... Remove this comment to see the full error message
+      setNewAccessNeedsUris([...new Set([...grantedExistingAccessNeedsUris, ...requiredAccessNeedsUris])]);
+    }
+  }, [
+    accessGrantsLoaded,
+    accessNeedsLoaded,
+    accessGrants,
+    agentRegistration,
+    agentRegistrationLoaded,
+    setOldAccessNeedsUris,
+    requiredAccessNeeds,
+    optionalAccessNeeds,
+    setNewAccessNeedsUris
+  ]);
+
+  const onRemove = useCallback(() => {
+    try {
+      notify('app.notification.app_removal_in_progress');
+      setIsPending(true);
+      // This will redirect to the app logout and then back to the applications page
+      removeApp({ application });
+    } catch (e) {
+      setIsPending(false);
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
+      notify(`Error on app removal: ${e.message}`, { type: 'error' });
+      console.error(e);
+    }
+  }, [removeApp, application, setIsPending, notify]);
+
+  const onUpgrade = useCallback(async () => {
+    try {
+      notify(`app.notification.app_upgrade_progress`);
+      setIsPending(true);
+      await upgradeApp({
+        appUri: application.id,
+        grantedAccessNeeds: newAccessNeedsUris
+      });
+      notify(`app.notification.app_upgraded`, { type: 'success' });
+      setIsPending(false);
+      refresh();
+      onClose();
+    } catch (e) {
+      setIsPending(false);
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
+      notify(`Error on app upgrade: ${e.message}`, { type: 'error' });
+      console.error(e);
+    }
+  }, [upgradeApp, newAccessNeedsUris, setIsPending, onClose, notify, refresh]);
+
+  // Will be true if there is a difference between the old and the new access needs
+  const showUpgradeButton = useMemo(() => {
+    // @ts-expect-error TS(2345): Argument of type 'undefined' is not assignable to ... Remove this comment to see the full error message
+    return !arraysEqual(oldAccessNeedsUris, newAccessNeedsUris);
+  }, [oldAccessNeedsUris, newAccessNeedsUris]);
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="xs">
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', pb: 1 }}>
+        {translate('app.dialog.app_permissions')}
+        <IconButton sx={{ ml: 'auto' }} onClick={onClose} aria-label={translate('ra.action.close')}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ pb: 0 }}>
+        {accessNeedsError ? (
+          <Alert severity="warning">{translate('app.helper.cannot_show_permissions_of_offline_app')}</Alert>
+        ) : (
+          <>
+            <AccessNeedsList
+              required
+              accessNeeds={requiredAccessNeeds}
+              allowedAccessNeeds={newAccessNeedsUris}
+              setAllowedAccessNeeds={setNewAccessNeedsUris}
+            />
+            <AccessNeedsList
+              accessNeeds={optionalAccessNeeds}
+              allowedAccessNeeds={newAccessNeedsUris}
+              setAllowedAccessNeeds={setNewAccessNeedsUris}
+            />
+          </>
+        )}
+      </DialogContent>
+      <DialogActions sx={{ px: 3, py: 2 }}>
+        <Button
+          variant="contained"
+          color="error"
+          label="app.action.revoke_access"
+          aria-label={translate('app.action.revoke_access')}
+          startIcon={<BlockIcon />}
+          onClick={onRemove}
+          disabled={isPending}
+        />
+        {showUpgradeButton && (
+          <Button
+            variant="contained"
+            label="app.action.upgrade"
+            aria-label={translate('app.action.upgrade')}
+            startIcon={<LoopIcon />}
+            onClick={onUpgrade}
+            disabled={isPending}
+          />
+        )}
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+export default AppSettingsDialog;

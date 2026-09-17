@@ -5,8 +5,17 @@ node_modules
 yarn-error.log
 
 /app-framework/react/dist
+/app-framework/app/dist
 
 .parcel-cache
 
 .yalc
 yalc.lock
+
+.pnp.*
+.yarn/
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

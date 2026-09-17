@@ -5,7 +5,8 @@ name: Publish Pod provider Docker images
 # Registry (ghcr.io/<owner>/<component>), replacing the local `make publish-*` targets in
 # pod-provider/Makefile (still usable as a fallback).
 #
-#   push of a `v*` git tag -> :vX.Y.Z  (plus :latest when asked for in a manual run)
+#   push of a `v*` git tag -> :vX.Y.Z
+#   push on `master`       -> :latest  (the stable Pod providers follow it)
 #   push on `next`         -> :next    (moving tag for the development Pod providers)
 #
 # Each platform is built on a native runner (no QEMU: `yarn install` under emulation dies
@@ -17,14 +18,9 @@ name: Publish Pod provider Docker images
 
 on:
   push:
-    branches: [next]
+    branches: [master, next]
     tags: ['v*']
   workflow_dispatch:
-    inputs:
-      latest:
-        description: Also move the :latest tag to this build
-        type: boolean
-        default: false
 
 concurrency:
   group: publish-images-${{ github.ref }}
@@ -153,7 +149,7 @@ jobs:
           tags: |
             type=raw,value=next,enable=${{ github.ref == 'refs/heads/next' }}
             type=semver,pattern={{raw}}
-            type=raw,value=latest,enable=${{ github.event.inputs.latest == 'true' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
 
       - name: Create the multi-arch manifests
         working-directory: /tmp/digests

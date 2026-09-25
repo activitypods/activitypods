@@ -1,0 +1,166 @@
+name: Publish Pod provider Docker images
+
+# Builds the Pod provider images (backend, frontend, arena) for linux/amd64 and linux/arm64
+# and pushes them to Docker Hub (activitypods/<component>) and to the GitHub Container
+# Registry (ghcr.io/<owner>/<component>), replacing the local `make publish-*` targets in
+# pod-provider/Makefile (still usable as a fallback).
+#
+#   push of a `v*` git tag -> :vX.Y.Z
+#   push on `master`       -> :latest  (the stable Pod providers follow it)
+#   push on `next`         -> :next    (moving tag for the development Pod providers)
+#
+# Each platform is built on a native runner (no QEMU: `yarn install` under emulation dies
+# with "Illegal instruction" on arm64), pushed by digest, then the `merge` job assembles
+# the multi-arch manifest and applies the tags.
+#
+# Docker Hub needs the DOCKERHUB_USERNAME / DOCKERHUB_TOKEN repository secrets; until they
+# are set only ghcr.io is pushed to (GITHUB_TOKEN is enough there).
+
+on:
+  push:
+    branches: [master, next]
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: publish-images-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOCKERHUB_IMAGE_PREFIX: docker.io/activitypods
+  GHCR_IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [backend, frontend, arena]
+        platform:
+          - { os: ubuntu-latest, arch: amd64 }
+          - { os: ubuntu-24.04-arm, arch: arm64 }
+    runs-on: ${{ matrix.platform.os }}
+    permissions:
+      contents: read
+      packages: write
+    env:
+      # Secrets can't be tested in `if:` directly, so surface their presence as an env var
+      HAS_DOCKERHUB: ${{ secrets.DOCKERHUB_TOKEN != '' }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so that `git describe` sees the tags
+          fetch-depth: 0
+
+      - name: Compute the version baked into the backend (shown in nodeinfo)
+        id: version
+        run: echo "version=$(git describe --tags --always --match 'v[0-9]*' | sed 's/^v//')" >> "$GITHUB_OUTPUT"
+
+      - name: Select the registries to push to
+        id: images
+        run: |
+          names="$GHCR_IMAGE_PREFIX/${{ matrix.component }}"
+          if [ "$HAS_DOCKERHUB" = "true" ]; then
+            names="$DOCKERHUB_IMAGE_PREFIX/${{ matrix.component }},$names"
+          fi
+          echo "names=$names" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/login-action@v3
+        if: env.HAS_DOCKERHUB == 'true'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ./pod-provider
+          file: ./pod-provider/docker/${{ matrix.component }}.dockerfile
+          platforms: linux/${{ matrix.platform.arch }}
+          outputs: type=image,"name=${{ steps.images.outputs.names }}",push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.component }}-${{ matrix.platform.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.component }}-${{ matrix.platform.arch }}
+          # Only the backend image uses it
+          build-args: |
+            ACTIVITYPODS_VERSION=${{ steps.version.outputs.version }}
+
+      - name: Export the digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.component }}-${{ matrix.platform.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      HAS_DOCKERHUB: ${{ secrets.DOCKERHUB_TOKEN != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [backend, frontend, arena]
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digest-${{ matrix.component }}-*
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/login-action@v3
+        if: env.HAS_DOCKERHUB == 'true'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Tags only (no image name): applied below to each registry
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: placeholder
+          tags: |
+            type=raw,value=next,enable=${{ github.ref == 'refs/heads/next' }}
+            type=semver,pattern={{raw}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+
+      - name: Create the multi-arch manifests
+        working-directory: /tmp/digests
+        run: |
+          registries="$GHCR_IMAGE_PREFIX"
+          if [ "$HAS_DOCKERHUB" = "true" ]; then registries="$DOCKERHUB_IMAGE_PREFIX $registries"; fi
+          tags=$(jq -r '.tags[] | split(":")[1]' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          for registry in $registries; do
+            image="$registry/${{ matrix.component }}"
+            args=""
+            for tag in $tags; do args="$args -t $image:$tag"; done
+            docker buildx imagetools create $args $(printf "$image@sha256:%s " *)
+            docker buildx imagetools inspect "$image:$(echo "$tags" | head -1)"
+          done

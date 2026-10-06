@@ -114,7 +114,13 @@ const MailNotificationsSchema = {
     async queueMail(ctx, title, payload) {
       payload.template = 'single-mail';
       if (this.createJob) {
-        return this.createJob('sendMail', title, payload, { removeOnComplete: 10000, removeOnFail: 10000 });
+        return this.createJob('sendMail', title, payload, {
+          // Try again if the mail server is unavailable: after 1 minute and until ~1 hour later
+          attempts: 6,
+          backoff: { type: 'exponential', delay: 60000 },
+          removeOnComplete: 10000,
+          removeOnFail: 10000
+        });
       }
       return await this.actions.send(payload, { parentCtx: ctx });
     },

@@ -4,7 +4,21 @@ import { arrayOf, getDatasetFromUri } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import matchActivity from '@semapps/activitypub/utils/matchActivity';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'mole... Remove this comment to see the full error message
+import QueueService from 'moleculer-bull';
 import { ServiceSchema } from 'moleculer';
+import * as CONFIG from '../../config/config.ts';
+
+// The authorizations of each recipient are generated in a job of their own, so that sharing with
+// many people doesn't block the sharer's request, and that a failure for one recipient is retried
+// without affecting the others. Try again after 1 minute and until ~17 hours later.
+const authorizationJobOptions = {
+  attempts: 10,
+  backoff: { type: 'exponential', delay: 60000 },
+  // Bull 3 only accepts a boolean or a number here
+  removeOnComplete: 10000,
+  removeOnFail: 10000
+};
 
 const getAnnouncesGroupUri = (eventUri: any) => {
   const uri = new URL(eventUri);
@@ -20,7 +34,9 @@ const getAnnouncersGroupUri = (eventUri: any) => {
 
 const AnnouncerSchema = {
   name: 'announcer' as const,
-  mixins: [ActivitiesHandlerMixin],
+  mixins: CONFIG.QUEUE_SERVICE_URL
+    ? [ActivitiesHandlerMixin, QueueService(CONFIG.QUEUE_SERVICE_URL)]
+    : [ActivitiesHandlerMixin],
   settings: {
     announcesCollectionOptions: {
       path: '/announces',
@@ -182,13 +198,16 @@ const AnnouncerSchema = {
 
         /**
          * CREATE AUTHORIZATIONS FOR AGENTS
+         * This is the costly part (authorization, grant, social agent registration, activities), so it is done
+         * in the background. Access to the resource is given synchronously below, through the announces group.
          */
 
         for (let grantee of arrayOf(activity.to)) {
-          await ctx.call('access-authorizations.addForSingleResource', {
+          // @ts-expect-error TS(2339): Property 'queueAuthorization' does not exist on type '{ match(... Remove this comment to see the full error message
+          await this.queueAuthorization(ctx, {
             resourceUri,
             grantee,
-            accessModes: ['acl:Read'],
+            emitterUri,
             delegationAllowed: !!activity['interop:delegationAllowed'],
             delegationLimit: activity['interop:delegationLimit']
           });
@@ -316,6 +335,42 @@ const AnnouncerSchema = {
       }
     }
   },
+  methods: {
+    async queueAuthorization(ctx, params) {
+      if (this.createJob) {
+        await this.createJob('addAuthorization', params.grantee, params, authorizationJobOptions);
+      } else {
+        await this.addAuthorization(params);
+      }
+    },
+    async addAuthorization({ resourceUri, grantee, emitterUri, delegationAllowed, delegationLimit }) {
+      // Same context as the activity processors of the side-effects service
+      const dataset = await this.broker.call('auth.account.findDatasetByWebId', { webId: emitterUri });
+
+      await this.broker.call(
+        'access-authorizations.addForSingleResource',
+        {
+          resourceUri,
+          grantee,
+          accessModes: ['acl:Read'],
+          delegationAllowed,
+          delegationLimit,
+          webId: emitterUri
+        },
+        { meta: { webId: emitterUri, dataset } }
+      );
+    }
+  },
+  queues: {
+    addAuthorization: {
+      name: '*',
+      async process(job: any) {
+        // @ts-expect-error TS(2339): Property 'addAuthorization' does not exist on type '{ name: string; process(... Remove this comment to see the full error message
+        await this.addAuthorization(job.data);
+        return { resourceUri: job.data.resourceUri, grantee: job.data.grantee };
+      }
+    }
+  },
   events: {
     'ldp.resource.deleted': {
       async handler(ctx) {
@@ -353,7 +408,6 @@ const AnnouncerSchema = {
             collection: this.settings.announcesCollectionOptions
           });
 
-          // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
           await this.actions.giveRightsAfterAnnouncesCollectionCreate({ objectUri: resourceUri }, { parentCtx: ctx });
 
           await ctx.call('activitypub.collection.add', {

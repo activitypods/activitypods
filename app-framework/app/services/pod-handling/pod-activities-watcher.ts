@@ -8,8 +8,10 @@ const queueOptions =
   process.env.NODE_ENV === 'test'
     ? {}
     : {
-        // Keep completed jobs for 3 days
-        removeOnComplete: { age: 259200 },
+        // Bull 3 (used by moleculer-bull 0.2) only accepts a boolean or a number here: a { age } object is
+        // ignored and every job is kept forever. Keep the last 10000 completed and failed jobs.
+        removeOnComplete: 10000,
+        removeOnFail: 10000,
         // Try again after 3 minutes and until 48 hours later
         // Method to calculate it: Math.round((Math.pow(2, attemptsMade) - 1) * delay)
         attempts: 10,
@@ -184,7 +186,7 @@ const PodActivitiesWatcherSchema = {
             'registerListener',
             appRegistration['interop:registeredBy'] + ' outbox',
             { actorUri: appRegistration['interop:registeredBy'], collectionPredicate: 'outbox' },
-            appRegistration
+            queueOptions
           );
         }
       }

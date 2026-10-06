@@ -114,7 +114,7 @@ const MailNotificationsSchema = {
     async queueMail(ctx, title, payload) {
       payload.template = 'single-mail';
       if (this.createJob) {
-        return this.createJob('sendMail', title, payload);
+        return this.createJob('sendMail', title, payload, { removeOnComplete: 10000, removeOnFail: 10000 });
       }
       return await this.actions.send(payload, { parentCtx: ctx });
     },

@@ -70,13 +70,21 @@ const RepairSchema = {
     upgradeAllApps: {
       /**
        * Upgrade all existing applications, accepting all required access needs
+       * Pass appUri (one URI or several, comma-separated) to only upgrade these applications.
+       * An application that can't be upgraded (e.g. unreachable) is skipped, the others go on.
        * TODO: find existing optional access needs, and grant them also
        */
       async handler(ctx) {
-        const { username } = ctx.params;
+        const { username, appUri } = ctx.params;
+        const onlyAppsUris = appUri ? arrayOf(appUri).flatMap((uri: string) => uri.split(',')) : undefined;
         const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
 
-        for (const { webId, username: dataset } of accounts) {
+        let upgraded = 0;
+        const failed: string[] = [];
+
+        for (const { webId, username: dataset, deletedAt } of accounts) {
+          if (deletedAt) continue;
+
           // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = dataset;
           // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
@@ -85,14 +93,31 @@ const RepairSchema = {
           const container = await ctx.call('applications.list', { webId });
 
           for (let application of arrayOf(container['ldp:contains'])) {
+            if (onlyAppsUris && !onlyAppsUris.includes(application.id)) continue;
+
             this.logger.info(`Upgrading app ${application.id} for ${webId}...`);
 
-            await ctx.call('registration-endpoint.upgrade', {
-              appUri: application.id,
-              acceptAllRequirements: true
-            });
+            try {
+              await ctx.call('registration-endpoint.upgrade', {
+                appUri: application.id,
+                acceptAllRequirements: true
+              });
+              upgraded++;
+            } catch (e) {
+              failed.push(`${application.id} (${webId})`);
+              // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
+              this.logger.warn(`Unable to upgrade app ${application.id} for ${webId}. Error: ${e.message}`);
+            }
           }
         }
+
+        this.logger.info(
+          `Apps upgrade finished: ${upgraded} upgraded, ${failed.length} failed${
+            failed.length > 0 ? ` (${failed.join(', ')})` : ''
+          }`
+        );
+
+        return { upgraded, failed };
       }
     },
 

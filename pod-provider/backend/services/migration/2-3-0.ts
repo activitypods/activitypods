@@ -27,6 +27,19 @@ const Migration230Schema = {
         let migrated = 0;
         const failed: string[] = [];
 
+        // Create the missing containers of ALL local Pods first, including the ones that are not migrated by this call:
+        // the authorizations generated below are sent to local contacts, whose Pods need a social agent registrations container
+        const allAccounts = (username === '*' ? accounts : await ctx.call('auth.account.find')) as any[];
+        for (const account of allAccounts) {
+          if (account.deletedAt) continue;
+          try {
+            await ctx.call('repair.createMissingContainers', { username: account.username });
+          } catch (e) {
+            // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
+            this.logger.warn(`Unable to create the missing containers of ${account.webId}. Error: ${e.message}`);
+          }
+        }
+
         for (const { webId, username, version, ...rest } of accounts) {
           if (version === MIGRATION_VERSION) {
             this.logger.info(`Pod of ${webId} is already on v${MIGRATION_VERSION}, skipping...`);
@@ -41,9 +54,6 @@ const Migration230Schema = {
             ctx.meta.skipObjectsWatcher = true; // We don't want to trigger an Update activity
 
             try {
-              // Create missing containers first: the authorizations need the social agent registrations container
-              await ctx.call('repair.createMissingContainers', { username });
-
               const errors =
                 (await this.actions.shareProfileWithContacts({ webId }, { parentCtx: ctx })) +
                 (await this.actions.generateAuthorizationsFromAnnounces(

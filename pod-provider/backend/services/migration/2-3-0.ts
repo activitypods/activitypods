@@ -41,6 +41,9 @@ const Migration230Schema = {
             ctx.meta.skipObjectsWatcher = true; // We don't want to trigger an Update activity
 
             try {
+              // Create missing containers first: the authorizations need the social agent registrations container
+              await ctx.call('repair.createMissingContainers', { username });
+
               const errors =
                 (await this.actions.shareProfileWithContacts({ webId }, { parentCtx: ctx })) +
                 (await this.actions.generateAuthorizationsFromAnnounces(
@@ -59,9 +62,6 @@ const Migration230Schema = {
                   await ctx.call('ldp.container.delete', { containerUri, webId: 'system' });
                 }
               }
-
-              // Create missing containers (delegated access grants, social agent registration...)
-              await ctx.call('repair.createMissingContainers', { username });
 
               await ctx.call('auth.account.update', {
                 id: rest['@id'],

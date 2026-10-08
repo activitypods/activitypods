@@ -319,6 +319,8 @@ const AccessAuthorizationsSchema = {
           { parentCtx: ctx }
         );
         for (const dataAuthorization of dataAuthorizations) {
+          // Authorizations of the v2.1 format (one per access need group) are not linked with a single access need
+          if (!dataAuthorization['interop:satisfiesAccessNeed']) continue;
           try {
             await ctx.call('ldp.remote.get', { resourceUri: dataAuthorization['interop:satisfiesAccessNeed'] });
           } catch (e) {

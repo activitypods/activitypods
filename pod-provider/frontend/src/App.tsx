@@ -10,6 +10,7 @@ import i18nProvider from './config/i18nProvider';
 import * as resources from './resources';
 
 import Layout from './layout/Layout';
+import MaintenanceBanner from './common/MaintenanceBanner';
 import theme from './config/theme';
 
 import HomePage from './pages/HomePage';
@@ -51,6 +52,7 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <StyledEngineProvider>
+    <MaintenanceBanner />
     <BrowserRouter>
       <Admin
         title={CONFIG.INSTANCE_NAME}

@@ -17,5 +17,8 @@ else
   sed -r -i -e 's|<script id="config-script" src="([^"]*)"></script>|<script id="config-script" src="'"${CONFIG_URL}"'"></script>|g' /app/frontend/build/index.html
 fi
 
+# Banner shown on every page, e.g. during a maintenance (empty: no banner). JSON.stringify escapes the message.
+node -e 'process.stdout.write("window.MAINTENANCE_MESSAGE = " + JSON.stringify(process.env.MAINTENANCE_MESSAGE || "") + ";\n")' > /app/frontend/build/maintenance.js
+
 # Execute the CMD (usually "serve")
 exec "$@"

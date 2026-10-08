@@ -5,6 +5,8 @@ import { MIME_TYPES } from '@semapps/mime-types';
 import AgentRegistrationsMixin from '../../../mixins/agent-registrations.ts';
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
 import { ServiceSchema } from 'moleculer';
+import urlJoin from 'url-join';
+import * as CONFIG from '../../../config/config.ts';
 
 const SocialAgentRegistrationsSchema = {
   name: 'social-agent-registrations' as const,
@@ -199,12 +201,37 @@ const SocialAgentRegistrationsSchema = {
 
         for (const registration of arrayOf(registrationsContainer['ldp:contains'])) {
           if (registration['interop:reciprocalRegistration'] && registration['interop:registeredBy'] === podOwner) {
-            const reciprocalRegistration = await this.actions.get({
-              resourceUri: registration['interop:reciprocalRegistration'],
-              webId: podOwner
-            });
+            const reciprocalRegistrationUri = registration['interop:reciprocalRegistration'];
 
-            grants.push(...(await this.actions.getGrants({ agentRegistration: reciprocalRegistration, podOwner })));
+            if (urlJoin(reciprocalRegistrationUri, '/').startsWith(urlJoin(CONFIG.BASE_URL as string, '/'))) {
+              const reciprocalRegistration = await this.actions.get({
+                resourceUri: reciprocalRegistrationUri,
+                webId: podOwner
+              });
+
+              grants.push(...(await this.actions.getGrants({ agentRegistration: reciprocalRegistration, podOwner })));
+            } else {
+              // The contact is on another server: its registration and grants can't be read locally
+              try {
+                const reciprocalRegistration = await ctx.call('ldp.remote.get', {
+                  resourceUri: reciprocalRegistrationUri,
+                  webId: podOwner,
+                  strategy: 'networkOnly'
+                });
+                for (const grantUri of arrayOf(reciprocalRegistration['interop:hasAccessGrant'])) {
+                  grants.push(
+                    await ctx.call('ldp.remote.get', {
+                      resourceUri: grantUri,
+                      webId: podOwner,
+                      strategy: 'networkOnly'
+                    })
+                  );
+                }
+              } catch (e) {
+                // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
+                this.logger.warn(`Unable to get the grants of ${reciprocalRegistrationUri}. Error: ${e.message}`);
+              }
+            }
           }
         }
 

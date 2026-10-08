@@ -369,10 +369,19 @@ const AccessAuthorizationsSchema = {
           });
           for (const grant of grants) {
             if (grant['interop:registeredShapeTree'] === authorization['interop:registeredShapeTree']) {
-              await ctx.call('delegated-access-grants.generateFromSingleScopeAllAuthorization', {
-                authorization,
-                grant
-              });
+              // Don't let a grant shared from another server (whose delegation isn't supported yet) prevent the
+              // authorization from being created: the access is still given by the WAC groups
+              try {
+                await ctx.call('delegated-access-grants.generateFromSingleScopeAllAuthorization', {
+                  authorization,
+                  grant
+                });
+              } catch (e) {
+                this.logger.warn(
+                  // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
+                  `Unable to generate a delegated grant of ${getId(grant)} for ${authorization['interop:grantee']}. Error: ${e.message}`
+                );
+              }
             }
           }
         }

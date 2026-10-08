@@ -113,7 +113,9 @@ const PermissionsMapperSchema = {
 
     addPermissionsFromSpecialRights: {
       async handler(ctx) {
-        const { podOwner, appUri, specialRightsUris } = ctx.params;
+        const { podOwner, appUri } = ctx.params;
+        // Missing when the app had no special rights, a single string when it had only one
+        const specialRightsUris = arrayOf(ctx.params.specialRightsUris);
 
         // Give read permissions on all activities, if requested
         if (specialRightsUris.includes('apods:ReadInbox') || specialRightsUris.includes('apods:ReadOutbox')) {
@@ -190,7 +192,9 @@ const PermissionsMapperSchema = {
 
     removePermissionsFromSpecialRights: {
       async handler(ctx) {
-        const { podOwner, appUri, specialRightsUris } = ctx.params;
+        const { podOwner, appUri } = ctx.params;
+        // Missing when the app had no special rights, a single string when it had only one
+        const specialRightsUris = arrayOf(ctx.params.specialRightsUris);
 
         // Remove read permissions on all activities, if requested
         if (specialRightsUris.includes('apods:ReadInbox') || specialRightsUris.includes('apods:ReadOutbox')) {

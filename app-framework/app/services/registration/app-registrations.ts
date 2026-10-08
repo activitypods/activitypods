@@ -80,7 +80,6 @@ const AppRegistrationsSchema = {
     },
 
     getRegisteredPods: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const filteredContainer = await this.actions.list({ webId: 'system' }, { parentCtx: ctx });
 

@@ -169,7 +169,6 @@ const SocialAgentRegistrationsSchema = {
         const { agentRegistrationUri, agentUri, podOwner, activityType } = ctx.params;
         const agent = await ctx.call('activitypub.actor.get', { actorUri: agentUri });
 
-        // @ts-expect-error TS(2339): Property 'inbox' does not exist on type 'never'.
         if (agent.inbox) {
           const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
             actorUri: podOwner,

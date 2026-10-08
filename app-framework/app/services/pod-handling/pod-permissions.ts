@@ -67,7 +67,6 @@ const PodPermissionsSchema = {
     },
 
     remove: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { uri, agentUri, agentPredicate, mode, actorUri } = ctx.params;
 

@@ -23,7 +23,6 @@ const Schema = {
     getUsersCount: {
       async handler(ctx) {
         const accounts = await ctx.call('auth.account.find');
-        // @ts-expect-error TS(2339): Property 'length' does not exist on type 'never'.
         const totalPods = accounts.length;
         return {
           total: totalPods,

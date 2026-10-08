@@ -24,11 +24,8 @@ const Migration205Schema = {
           } else {
             this.logger.info(`Migrating Pod of ${account.webId} to v${version}...`);
 
-            // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
             ctx.meta.dataset = account.username;
-            // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
             ctx.meta.webId = account.webId;
-            // @ts-expect-error TS(2339): Property 'skipObjectsWatcher' does not exist on ty... Remove this comment to see the full error message
             ctx.meta.skipObjectsWatcher = true; // We don't want to trigger an Update
 
             if (version === '2.0.5') {

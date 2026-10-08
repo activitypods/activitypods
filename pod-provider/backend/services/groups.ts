@@ -35,7 +35,6 @@ const GroupsService = {
        */
       async handler(ctx) {
         const { id, type } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type '{}'.
         const ownerWebId = ctx.meta.impersonatedUser || ctx.meta.webId;
         const groupWebId = urlJoin(CONFIG.BASE_URL, id);
 
@@ -118,21 +117,17 @@ const GroupsService = {
         });
 
         // We need to set the Location twice or we get a Moleculer warning
-        // @ts-expect-error TS(2339): Property '$responseHeaders' does not exist on type... Remove this comment to see the full error message
         ctx.meta.$responseHeaders = {
           Location: groupWebId,
           'Content-Length': 0
         };
-        // @ts-expect-error TS(2339): Property '$location' does not exist on type '{}'.
         ctx.meta.$location = groupWebId;
-        // @ts-expect-error TS(2339): Property '$statusCode' does not exist on type '{}'... Remove this comment to see the full error message
         ctx.meta.$statusCode = 201;
       }
     },
 
     list: {
       async handler(ctx) {
-        // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type '{}'.
         const ownerWebId = ctx.meta.impersonatedUser || ctx.meta.webId;
         const ownerAccount = await ctx.call('auth.account.findByWebId', { webId: ownerWebId });
         if (!ownerAccount) return [];
@@ -143,7 +138,6 @@ const GroupsService = {
     claim: {
       async handler(ctx) {
         const { username, groupWebId } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type '{}'.
         const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
 
         const account = await ctx.call('auth.account.findByUsername', { username });
@@ -164,7 +158,6 @@ const GroupsService = {
     undoClaim: {
       async handler(ctx) {
         const { username, groupWebId } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type '{}'.
         const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
 
         const account = await ctx.call('auth.account.findByUsername', { username });
@@ -177,7 +170,6 @@ const GroupsService = {
         // Detach group from account
         await ctx.call('auth.account.update', {
           id: account['@id'],
-          // @ts-expect-error TS(2339): Property 'owns' does not exist on type 'never'.
           owns: arrayOf(account.owns).filter(uri => uri !== groupWebId)
         });
       }

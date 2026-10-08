@@ -365,7 +365,6 @@ const AnnouncerSchema = {
     addAuthorization: {
       name: '*',
       async process(job: any) {
-        // @ts-expect-error TS(2339): Property 'addAuthorization' does not exist on type '{ name: string; process(... Remove this comment to see the full error message
         await this.addAuthorization(job.data);
         return { resourceUri: job.data.resourceUri, grantee: job.data.grantee };
       }
@@ -374,7 +373,6 @@ const AnnouncerSchema = {
   events: {
     'ldp.resource.deleted': {
       async handler(ctx) {
-        // @ts-expect-error TS(2339): Property 'oldData' does not exist on type 'Optiona... Remove this comment to see the full error message
         const { oldData, webId } = ctx.params;
 
         if (oldData['apods:announces'])
@@ -389,7 +387,6 @@ const AnnouncerSchema = {
       // When a delegated grant is issued, add the grantee to the announces collection
       // This hack will be gone when we can do without announces/announcers collections
       async handler(ctx) {
-        // @ts-expect-error TS(2339): Property 'delegatedGrant' does not exist on type '... Remove this comment to see the full error message
         const { delegatedGrant } = ctx.params;
 
         if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
@@ -397,9 +394,7 @@ const AnnouncerSchema = {
           return;
         }
 
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         ctx.meta.webId = delegatedGrant['interop:dataOwner'];
-        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = getDatasetFromUri(delegatedGrant['interop:dataOwner']);
 
         for (const resourceUri of arrayOf(delegatedGrant['interop:hasDataInstance'])) {

@@ -19,7 +19,6 @@ const DelegatedAccessGrantsSchema = {
       // Also store a local copy and add it to the agent registration
       async handler(ctx) {
         let { delegatedGrant } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId || 'anon';
         let delegatedGrantUri;
 
@@ -29,14 +28,11 @@ const DelegatedAccessGrantsSchema = {
         // If user is on same server, call endpoint directly
         if (dataOwnerUri.startsWith(baseUrl)) {
           // Change dataset but keep it in memory to restore it
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           const oldDataset = ctx.meta.dataset;
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = getDatasetFromUri(dataOwnerUri);
 
           delegatedGrantUri = await ctx.call('delegation-endpoint.issue', { delegatedGrant, webId });
 
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = oldDataset;
         } else {
           const dataOwner = await ctx.call('activitypub.actor.get', { actorUri: dataOwnerUri });
@@ -90,7 +86,6 @@ const DelegatedAccessGrantsSchema = {
       // Also delete the local copy and remove it from the agent registration
       async handler(ctx) {
         const { delegatedGrant } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId || 'anon';
 
         const delegatedGrantUri = getId(delegatedGrant);
@@ -100,9 +95,7 @@ const DelegatedAccessGrantsSchema = {
         // If user is on same server, delete directly
         if (dataOwnerUri.startsWith(baseUrl)) {
           // Change dataset but keep it in memory to restore it
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           const oldDataset = ctx.meta.dataset;
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = getDatasetFromUri(dataOwnerUri);
 
           try {
@@ -115,7 +108,6 @@ const DelegatedAccessGrantsSchema = {
             this.logger.warn(`Could not delete delegated grant ${delegatedGrantUri}. Deleting local cache anyway.`);
           }
 
-          // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
           ctx.meta.dataset = oldDataset;
         } else {
           const response = await ctx.call('signature.proxy.query', {
@@ -234,7 +226,6 @@ const DelegatedAccessGrantsSchema = {
     generateFromAuthorization: {
       async handler(ctx) {
         const { authorization } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         // Find original grant (it should be stored in the user's local cache)
@@ -256,7 +247,6 @@ const DelegatedAccessGrantsSchema = {
         const delegateGrantUri = await this.actions.remoteIssue(
           {
             delegatedGrant: {
-              // @ts-expect-error TS(2698): Spread types may only be created from object types... Remove this comment to see the full error message
               ...grant,
               id: undefined,
               type: 'interop:DelegatedAccessGrant',
@@ -293,7 +283,6 @@ const DelegatedAccessGrantsSchema = {
       // Delete all delegated access grants linked with a access grant
       async handler(ctx) {
         const { grant } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId || 'anon';
 
         const filteredContainer = await this.actions.list(

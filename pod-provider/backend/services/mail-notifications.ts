@@ -65,7 +65,6 @@ const MailNotificationsSchema = {
         const values = this.parseTemplate(template, templateParams, locale);
 
         return await this.queueMail(ctx, values.title, {
-          // @ts-expect-error TS(2339): Property 'email' does not exist on type 'never'.
           to: account.email,
           data: {
             title: values.title,
@@ -154,10 +153,8 @@ const MailNotificationsSchema = {
   queues: {
     sendMail: {
       name: '*',
-      // @ts-expect-error TS(7023): 'process' implicitly has return type 'any' because... Remove this comment to see the full error message
       async process(job: any) {
         job.progress(0);
-        // @ts-expect-error TS(7022): 'result' implicitly has type 'any' because it does... Remove this comment to see the full error message
         const result = await this.actions.send(job.data);
         job.progress(100);
         return result;

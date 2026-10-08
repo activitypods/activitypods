@@ -34,17 +34,71 @@ declare global {
     //   ValidationSchemaMetaKeys;
     type ValidatorSchema = Record<string, ParameterSchema>;
 
-    /** Schema of a single fastet-validator property, like `{type: "boolean", optional: true}` */
-    type ParameterSchema<DefaultType extends any = never> = (
-      | { optional?: true }
-      | { default?: DefaultType } // TODO: Bind this to the allowable schema definitions.
-    ) &
-      (
-        | { type: 'multi'; rules: ParameterSchema[] }
-        | { type: 'object'; params: Record<string, ParameterSchema> }
-        | { type: 'array'; items: keyof BasicValidatorTypeMap }
-        | { type: keyof BasicValidatorTypeMap }
-      );
+    /**
+     * Fastest-validator shorthand, e.g. `"string"` or `"string|optional"`.
+     * @see https://github.com/icebob/fastest-validator#shorthand-definitions
+     */
+    type ParameterShorthand = `${keyof BasicValidatorTypeMap}` | `${keyof BasicValidatorTypeMap}|${string}`;
+
+    type ParameterSchema<DefaultType extends any = never> =
+      | ParameterShorthand
+      | ((
+          | { optional?: boolean }
+          | { default?: DefaultType } // TODO: Bind this to the allowable schema definitions.
+        ) &
+          (
+            | { type: 'multi'; rules: ParameterSchema[] }
+            | { type: 'object'; params?: Record<string, ParameterSchema> }
+            | { type: 'array'; items?: keyof BasicValidatorTypeMap }
+            | { type: keyof BasicValidatorTypeMap }
+          ) &
+          // Remaining fastest-validator rule keys (min, max, values, convert, props...)
+          ValidationSchemaMetaKeys & { [key: string]: any });
+
+    /** Infers the type described by a shorthand such as `"number"` or `"string|optional"`. */
+    type TypeFromShorthand<S extends string> = S extends `${infer T}|${infer Modifiers}`
+      ?
+          | (T extends keyof BasicValidatorTypeMap ? BasicValidatorTypeMap[T] : any)
+          | (Modifiers extends `${string}optional${string}` ? undefined : never)
+      : S extends keyof BasicValidatorTypeMap
+        ? BasicValidatorTypeMap[S]
+        : any;
+
+    /** True when `T` is `any`, which the index signature of `ParameterSchema` would otherwise let through. */
+    type IsAny<T> = 0 extends 1 & T ? true : false;
+
+    /** Reads the `items` of an array schema, falling back to `any` when it is not declared. */
+    type ItemsOf<Param> = Param extends { items: infer I }
+      ? IsAny<I> extends true
+        ? 'any'
+        : I extends string
+          ? I
+          : 'any'
+      : 'any';
+
+    /** Reads the `params` of an object schema, falling back to an empty schema when it is not declared. */
+    type ParamsOf<Param> = Param extends { params: infer S }
+      ? IsAny<S> extends true
+        ? {}
+        : // `S` is the generic schema type rather than a literal one: recursing into it would not terminate.
+          Record<string, ParameterSchema> extends S
+          ? {}
+          : S extends Record<string, ParameterSchema>
+            ? S
+            : {}
+      : {};
+
+    /** Reads the `rules` of a multi schema. */
+    type RulesOf<Param> = Param extends { rules: infer R }
+      ? IsAny<R> extends true
+        ? []
+        : // `R` is the generic rules type rather than a literal one: recursing into it would not terminate.
+          ParameterSchema[] extends R
+          ? []
+          : R extends ParameterSchema[]
+            ? R
+            : []
+      : [];
 
     /*
      * # Schema INFERENCE TYPES
@@ -78,18 +132,19 @@ declare global {
      * - `{ type: "number", default: 2}` returns type `number | undefined`.
      * - `{ type: "array", items: "string"}` returns type `string[]`
      */
-    type TypeFromSchemaParam<Param extends ParameterSchema> =
-      // Base type inferred from the `type` property
-      | TypeFromParsedParam<
-          Param['type'],
-          Param['items'], // 'items' extends keyof Param ? Extract<Param['items'], string>: undefined, // Present for arrays.
-          Param['params'], // 'params' extends keyof Param ? Param['params']: undefined, // Present for objects.
-          Param['rules'] // 'rules' extends keyof Param ? Param['rules']: undefined // Present for objects with multiple possible types.
-        >
-      // Include the type of `default` if it exists
-      | (Param extends { default: infer D } ? (D & {}) | undefined : never)
-      // Include `undefined` if `optional` is true
-      | (Param extends { optional: true } ? undefined : never);
+    type TypeFromSchemaParam<Param extends ParameterSchema> = Param extends string
+      ? TypeFromShorthand<Param>
+      : // Base type inferred from the `type` property
+        | TypeFromParsedParam<
+              Param['type'],
+              ItemsOf<Param>, // Present for arrays.
+              ParamsOf<Param>, // Present for objects.
+              RulesOf<Param> // Present for objects with multiple possible types.
+            >
+          // Include the type of `default` if it exists
+          | (Param extends { default: infer D } ? (D & {}) | undefined : never)
+          // Include `undefined` if `optional` is true
+          | (Param extends { optional: true } ? undefined : never);
 
     /**
      * Infers the type from a fastest-validator string type, e.g.
@@ -100,9 +155,9 @@ declare global {
      */
     type TypeFromParsedParam<
       T extends string, // The basic type as string.
-      ItemTypeValue extends string = never, // If items property is present for array type.
-      ObjectSchema extends ParameterSchema = never, // ...
-      MultiTypeSchemas extends ParameterSchema[] = never // ...
+      ItemTypeValue extends string = 'any', // If items property is present for array type.
+      ObjectSchema extends Record<string, ParameterSchema> = {}, // ...
+      MultiTypeSchemas extends ParameterSchema[] = [] // ...
     > = T extends keyof BasicValidatorTypeMap
       ? BasicValidatorTypeMap[T]
       : T extends 'array'
@@ -110,7 +165,10 @@ declare global {
         : T extends 'multi'
           ? MultiType<MultiTypeSchemas>
           : T extends 'object'
-            ? TypeFromSchema<ObjectSchema>
+            ? // An object schema without `params` describes an arbitrary object.
+              keyof ObjectSchema extends never
+              ? Record<string, any>
+              : TypeFromSchema<ObjectSchema>
             : never;
 
     /** Fastest-validator types with primitive mapping.  */
@@ -171,7 +229,7 @@ declare global {
      *  actions: {
      *    action1: defineAction({
      *      params: { stringParam: { type: 'string' } },
-     *      async handler(ctx) {...}
+     *      async handler(ctx: any) {...}
      *    })
      *  }
      * };
@@ -250,7 +308,7 @@ declare global {
 
       // See https://github.com/moleculerjs/moleculer/issues/467#issuecomment-705583471
       [key: string]: string | boolean | any[] | number | Record<any, any> | null | undefined;
-    }; // ThisType<Service>?
+    } & ThisType<Service>;
     /**
      * Calls an action by name with appropriate parameter typing. For known actions, enforces correct parameter requirements;
      * for unknown action names, defaults to an unknown parameter type.
@@ -312,7 +370,7 @@ declare global {
 
     class Context<
       Params extends Record<string, any> = Record<string, any>,
-      Meta extends object = {},
+      Meta extends object = ContextMeta,
       Locals = GenericObject
     > {
       constructor(broker: ServiceBroker, endpoint: Endpoint);
@@ -389,9 +447,30 @@ declare global {
     type ActionHandler<
       Params extends Record<string, any> = Record<string, any>,
       ReturnType extends any = any,
-      Meta extends object = {},
+      Meta extends object = ContextMeta,
       Locals = Moleculer.GenericObject
     > = (ctx: Context<Params, Meta, Locals>) => ReturnType;
+
+    /**
+     * Keys the framework itself puts on `ctx.meta`.
+     * Application keys are declared separately, see `types/custom-meta.d.ts`.
+     */
+    interface ContextMeta {
+      /** Response status code, read by moleculer-web. */
+      $statusCode?: number;
+      /** Response status message, read by moleculer-web. */
+      $statusMessage?: string;
+      /** Response `Content-Type`, read by moleculer-web. */
+      $responseType?: string;
+      /** Extra response headers, read by moleculer-web. */
+      $responseHeaders?: Record<string, string | number>;
+      /** Value of the response `Location` header, read by moleculer-web. */
+      $location?: string;
+      /** Set to `false` to bypass the cacher for a call. */
+      $cache?: boolean | { ttl?: number; keys?: string[] };
+      /** Request id, set by moleculer-web. */
+      $requestID?: string;
+    }
 
     interface ServiceSettingSchema {
       $noVersionPrefix?: boolean;
@@ -418,7 +497,8 @@ declare global {
       context?: boolean;
       debounce?: number;
       throttle?: number;
-      handler?: ServiceEventHandler<TypeFromSchema<Schema>>; // | ServiceEventLegacyHandler<TypeFromSchema<Schema>>;
+      // An event without a `params` schema receives an arbitrary payload.
+      handler?: ServiceEventHandler<keyof Schema extends never ? GenericObject : TypeFromSchema<Schema>>; // | ServiceEventLegacyHandler<TypeFromSchema<Schema>>;
     }
 
     interface ServiceSchema<S = ServiceSettingSchema, T = Service<S>> {
@@ -509,6 +589,11 @@ declare global {
       loadServices(folder?: string, fileMask?: string): number;
       loadService(filePath: string): Service;
       createService(schema: ServiceSchema, schemaMods?: Partial<ServiceSchema>): Service;
+      /** The name may be omitted when it is provided by one of the mixins. */
+      createService(
+        schema: Omit<Partial<ServiceSchema>, 'mixins'> & { mixins: Partial<ServiceSchema>[] },
+        schemaMods?: Partial<ServiceSchema>
+      ): Service;
       destroyService(service: Service | string | ServiceSearchObj): Promise<void>;
 
       getLocalService(name: string | ServiceSearchObj): Service;

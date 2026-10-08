@@ -156,7 +156,6 @@ const AccessNeedsGroupsSchema = {
     },
 
     findByNecessity: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { necessity } = ctx.params;
 

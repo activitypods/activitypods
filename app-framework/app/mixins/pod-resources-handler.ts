@@ -60,7 +60,6 @@ const Schema = {
     },
 
     getContainerUri: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         return await ctx.call('access-grants.getContainerByShapeTree', {
           shapeTreeUri: this.settings.shapeTreeUri,

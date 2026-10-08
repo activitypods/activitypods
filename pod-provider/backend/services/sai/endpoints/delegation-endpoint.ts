@@ -29,17 +29,13 @@ const DelegationEndpointSchema = {
       async handler(ctx) {
         const delegatedGrant = ctx.params;
 
-        // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
         ctx.meta.dataset = getDatasetFromUri(delegatedGrant['interop:dataOwner']);
 
         const grantUri = await this.actions.issue({ delegatedGrant }, { parentCtx: ctx });
 
-        // @ts-expect-error TS(2339): Property '$responseHeaders' does not exist on type... Remove this comment to see the full error message
         ctx.meta.$responseHeaders = { Location: grantUri };
         // We need to set this also here (in addition to above) or we get a Moleculer warning
-        // @ts-expect-error TS(2339): Property '$location' does not exist on type '{}'.
         ctx.meta.$location = grantUri;
-        // @ts-expect-error TS(2339): Property '$statusCode' does not exist on type '{}'... Remove this comment to see the full error message
         ctx.meta.$statusCode = 201;
       }
     },
@@ -47,7 +43,6 @@ const DelegationEndpointSchema = {
     issue: {
       async handler(ctx) {
         const { delegatedGrant } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
         const dataOwner = delegatedGrant['interop:dataOwner'];
 

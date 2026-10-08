@@ -85,7 +85,6 @@ const AccessGrantsSchema = {
     getByResourceUri: {
       async handler(ctx) {
         const { resourceUri } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId || 'anon';
 
         const filteredContainer = await this.actions.list(

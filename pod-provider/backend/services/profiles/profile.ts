@@ -26,13 +26,11 @@ const ProfilesProfileSchema = {
   events: {
     'auth.registered': {
       async handler(ctx) {
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type 'Optionali... Remove this comment to see the full error message
         const { webId, profileData } = ctx.params;
         const containerUri = await this.actions.getContainerUri({ webId }, { parentCtx: ctx });
 
         await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
         const profileUri = await this.actions.post(
           {
             containerUri,
@@ -114,7 +112,6 @@ const ProfilesProfileSchema = {
               ctx.params.resource['vcard:hasGeo'] = fuzzGeo(exactGeo, HOME_LOCATION_FUZZ_RADIUS);
             }
           } else {
-            // @ts-expect-error TS(2339): Property 'warn' does not exist on type 'string | A... Remove this comment to see the full error message
             this.logger.warn(
               `Could not fetch location ${ctx.params.resource['vcard:hasAddress']} when updating profile`
             );

@@ -81,7 +81,6 @@ const ApplicationsSchema = {
               webId: podOwner
             });
 
-            // @ts-expect-error TS(2488): Type 'never' must have a '[Symbol.iterator]()' met... Remove this comment to see the full error message
             const [appExpandedType] = await ctx.call('jsonld.parser.expandTypes', {
               types: [classDescription['apods:describedClass']],
               context: classDescription['@context']

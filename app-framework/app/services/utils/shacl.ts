@@ -13,7 +13,6 @@ const ShaclSchema = {
 
     getTypes: {
       // Extract the required types from the SHACL shape
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resourceUri } = ctx.params;
         const shape = await this.actions.get({ resourceUri }, { parentCtx: ctx });

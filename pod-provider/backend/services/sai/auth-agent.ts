@@ -26,17 +26,13 @@ const AuthAgentSchema = {
       async handler(ctx) {
         let agentRegistration;
 
-        // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type... Remove this comment to see the full error message
         if (ctx.meta.impersonatedUser) {
           // The fetch is made by a registered app
-          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           const agentUri = ctx.meta.webId;
-          // @ts-expect-error TS(2339): Property 'impersonatedUser' does not exist on type... Remove this comment to see the full error message
           const podOwner = ctx.meta.impersonatedUser;
           agentRegistration = await ctx.call('app-registrations.getForAgent', { agentUri, podOwner });
         } else {
           // The fetch is made by a social agent
-          // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
           const agentUri = ctx.meta.webId;
           const podOwner = getWebIdFromUri(ctx.params.uri);
           agentRegistration = await ctx.call('social-agent-registrations.getForAgent', { agentUri, podOwner });
@@ -46,7 +42,6 @@ const AuthAgentSchema = {
           return [
             {
               uri: agentRegistration['interop:registeredAgent'],
-              // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
               anchor: agentRegistration.id || agentRegistration['@id'],
               rel: 'http://www.w3.org/ns/solid/interop#registeredAgent'
             }

@@ -182,7 +182,6 @@ const AgentRegistrationsMixin = {
         await ctx.call('agent-registry.add', {
           podOwner: webId,
           agentRegistrationUri: res,
-          // @ts-expect-error TS(2339): Property 'acceptedTypes' does not exist on type 's... Remove this comment to see the full error message
           agentRegistrationType: arrayOf(this.settings.acceptedTypes)[0]
         });
 
@@ -212,7 +211,6 @@ const AgentRegistrationsMixin = {
         await ctx.call('agent-registry.remove', {
           podOwner,
           agentRegistrationUri: res.resourceUri,
-          // @ts-expect-error TS(2339): Property 'acceptedTypes' does not exist on type 's... Remove this comment to see the full error message
           agentRegistrationType: arrayOf(this.settings.acceptedTypes)[0]
         });
 

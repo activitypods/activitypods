@@ -70,7 +70,6 @@ const AccessAuthorizationsSchema = {
       // Add an authorization for a single resource
       async handler(ctx) {
         const { resourceUri, grantee, accessModes, delegationAllowed, delegationLimit } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const dataRegistration = await ctx.call('data-registrations.getByResourceUri', { resourceUri, webId });
@@ -185,7 +184,6 @@ const AccessAuthorizationsSchema = {
       // The grantee param is optional. If provided, it will only delete authorizations for the grantee
       async handler(ctx) {
         const { resourceUri, grantee } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const filters = {
@@ -231,7 +229,6 @@ const AccessAuthorizationsSchema = {
       // List all authorizations for a single resource
       async handler(ctx) {
         const { resourceUri } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const filteredContainer = await this.actions.list(
@@ -437,12 +434,10 @@ const AccessAuthorizationsSchema = {
   events: {
     'ldp.resource.deleted': {
       async handler(ctx) {
-        // @ts-expect-error TS(2339): Property 'resourceUri' does not exist on type 'Opt... Remove this comment to see the full error message
         const { resourceUri, dataset } = ctx.params;
         const webId = getWebIdFromUri(resourceUri);
 
         // Delete all authorizations associated with this resource
-        // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
         await this.actions.removeForSingleResource({ resourceUri, webId }, { meta: { dataset }, parentCtx: ctx });
       }
     }

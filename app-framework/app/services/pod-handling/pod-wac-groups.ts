@@ -1,4 +1,3 @@
-// @ts-expect-error TS(7016): Could not find a declaration file for module 'spea... Remove this comment to see the full error message
 import createSlug from 'speakingurl';
 import FetchPodOrProxyMixin from '../../mixins/fetch-pod-or-proxy.ts';
 import type { ServiceSchema } from 'moleculer';
@@ -116,7 +115,6 @@ const PodWacGroupsSchema = {
     },
 
     getUriFromCollectionUri: {
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { collectionUri } = ctx.params;
         const { origin, pathname } = new URL(collectionUri);

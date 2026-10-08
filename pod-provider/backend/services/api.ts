@@ -4,7 +4,6 @@ import ApiGatewayService from 'moleculer-web';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
 import WebSocketMixin from '../mixins/websocket.ts';
-// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../config/config.ts';
 import { ServiceSchema } from 'moleculer';
 
@@ -40,7 +39,6 @@ const Schema = {
   actions: {
     favicon: {
       handler(ctx) {
-        // @ts-expect-error TS(2339): Property '$responseType' does not exist on type '{... Remove this comment to see the full error message
         ctx.meta.$responseType = 'image/x-icon';
         return fs.readFileSync(path.resolve(__dirname, '../static/favicon.ico'));
       }
@@ -48,9 +46,7 @@ const Schema = {
 
     redirectToFront: {
       handler(ctx) {
-        // @ts-expect-error TS(2339): Property '$statusCode' does not exist on type '{}'... Remove this comment to see the full error message
         ctx.meta.$statusCode = 302;
-        // @ts-expect-error TS(2339): Property '$location' does not exist on type '{}'.
         ctx.meta.$location = CONFIG.FRONTEND_URL;
       }
     }

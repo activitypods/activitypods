@@ -34,7 +34,6 @@ const ProfilesLocationSchema = {
           webId
         });
 
-        // @ts-expect-error TS(2339): Property 'length' does not exist on type 'never'.
         return results.length > 0 ? results[0].homeLocation.value : null;
       }
     },
@@ -69,10 +68,8 @@ const ProfilesLocationSchema = {
     after: {
       async delete(ctx, res) {
         // If the deleted location is the home location of the current user, clear it from profile
-        // @ts-expect-error TS(2339): Property 'getHomeLocation' does not exist on type ... Remove this comment to see the full error message
         const homeLocation = await this.actions.getHomeLocation({ webId: res.webId }, { parentCtx: ctx });
         if (homeLocation === res.resourceUri) {
-          // @ts-expect-error TS(2339): Property 'clearHomeLocation' does not exist on typ... Remove this comment to see the full error message
           await this.actions.clearHomeLocation({ webId: res.webId }, { parentCtx: ctx });
         }
         return res;

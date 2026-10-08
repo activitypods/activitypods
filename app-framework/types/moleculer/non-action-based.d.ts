@@ -497,7 +497,11 @@ declare global {
 
     type CallMiddlewareHandler = (actionName: ActionName, params: any, opts: CallingOptions) => Promise<any>;
     type Middleware = {
+      /** Name of the middleware, used in logs. */
+      name?: string;
       [name: string]:
+        | string
+        | undefined
         | ((handler: ActionHandler, action: ActionSchema) => any)
         | ((handler: ActionHandler, event: ServiceEvent) => any)
         | ((handler: ActionHandler) => any)
@@ -541,9 +545,9 @@ declare global {
     }
 
     interface ServiceHooks {
-      before?: ServiceHooksBefore;
-      after?: ServiceHooksAfter;
-      error?: ServiceHooksError;
+      before?: ServiceHooksBefore & ThisType<Service>;
+      after?: ServiceHooksAfter & ThisType<Service>;
+      error?: ServiceHooksError & ThisType<Service>;
     }
 
     interface ServiceDependency {

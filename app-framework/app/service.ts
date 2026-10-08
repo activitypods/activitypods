@@ -129,7 +129,6 @@ const AppSchema = {
       href: this.appActor.id
     });
 
-    // @ts-expect-error TS(2339): Property 'broker' does not exist on type 'void'.
     await this.broker.call('access-needs-groups.createOrUpdate', {
       accessNeeds: {
         // Ensure we have one key per necessity, otherwise we may fail to delete unused access needs

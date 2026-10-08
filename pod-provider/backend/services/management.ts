@@ -60,7 +60,6 @@ const ManagementService = {
       },
       async handler(ctx) {
         const { username } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
 
         // Validate that the actor exists.
@@ -159,7 +158,6 @@ const ManagementService = {
       },
       async handler(ctx) {
         const { username, withBackups, withSettings } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.meta.webId;
 
         // Validate that the actor exists
@@ -186,7 +184,6 @@ const ManagementService = {
         const recentExport = await this.findRecentExport(username, this.settings.retainTmpExportsMs);
         if (recentExport) {
           // Return file stream.
-          // @ts-expect-error TS(2339): Property '$responseType' does not exist on type '{... Remove this comment to see the full error message
           ctx.meta.$responseType = 'application/zip';
           return fs.promises.readFile(recentExport);
         }
@@ -241,7 +238,6 @@ const ManagementService = {
         }
 
         // Return file by reading it from fs.
-        // @ts-expect-error TS(2339): Property '$responseType' does not exist on type '{... Remove this comment to see the full error message
         ctx.meta.$responseType = 'application/zip';
         return fs.promises.readFile(fileName);
       }
@@ -380,7 +376,6 @@ const ManagementService = {
         record.g = settingsGraphNode;
       });
       // Add settings triples to export dataset.
-      // @ts-expect-error TS(2339): Property 'push' does not exist on type 'never'.
       datasetDump.push(...settingsDump);
 
       // Convert to rdf-js quads.
@@ -393,32 +388,26 @@ const ManagementService = {
   queues: {
     deleteDataset: {
       name: '*',
-      // @ts-expect-error TS(7006): Parameter 'job' implicitly has an 'any' type.
       async process(job) {
         const { dataset } = job.data;
         job.progress(0);
-        // @ts-expect-error TS(2339): Property 'deleteDataset' does not exist on type '{... Remove this comment to see the full error message
         await this.deleteDataset(dataset);
         job.progress(100);
       }
     },
     deleteAccountInfo: {
       name: '*',
-      // @ts-expect-error TS(7006): Parameter 'job' implicitly has an 'any' type.
       async process(job) {
         const { webId } = job.data;
         job.progress(0);
-        // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ name: ... Remove this comment to see the full error message
         await this.broker.call('auth.account.deleteByWebId', { webId });
         job.progress(100);
       }
     },
     cleanUpExports: {
       name: '*',
-      // @ts-expect-error TS(7006): Parameter 'job' implicitly has an 'any' type.
       async process(job) {
         const { offsetMs } = job.data;
-        // @ts-expect-error TS(2339): Property 'deleteOutdatedExports' does not exist on... Remove this comment to see the full error message
         await this.deleteOutdatedExports(offsetMs ?? this.settings.retainTmpExportsMs);
       }
     }

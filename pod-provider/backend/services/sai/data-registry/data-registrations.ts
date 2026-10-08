@@ -185,7 +185,6 @@ const DataRegistrationsSchema = {
        */
       async handler(ctx) {
         const { resourceUri } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const baseUrl = await ctx.call('ldp.getBaseUrl');
@@ -233,7 +232,6 @@ const DataRegistrationsSchema = {
        */
       async handler(ctx) {
         const { resourceUri } = ctx.params;
-        // @ts-expect-error TS(2339): Property 'webId' does not exist on type '{}'.
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const dataRegistrationUri = await this.actions.getUriByResourceUri({ resourceUri, webId }, { parentCtx: ctx });
@@ -242,7 +240,6 @@ const DataRegistrationsSchema = {
           return await this.actions.get({ dataRegistrationUri }, { parentCtx: ctx });
         } else {
           throw new MoleculerError(
-            // @ts-expect-error TS(2339): Property 'dataset' does not exist on type '{}'.
             `Data registration not found for resource ${resourceUri} (webId ${webId}, dataset ${ctx.meta.dataset})`,
             404,
             'NOT_FOUND'
@@ -307,12 +304,10 @@ const DataRegistrationsSchema = {
   events: {
     'ldp.container.created': {
       async handler(ctx) {
-        // @ts-expect-error TS(2339): Property 'containerUri' does not exist on type 'Op... Remove this comment to see the full error message
         const { containerUri, options, webId } = ctx.params;
 
         // If a shape tree is in the container option of the newly-created container, attach
         if (options?.shapeTreeUri) {
-          // @ts-expect-error TS(2339): Property 'actions' does not exist on type 'Service... Remove this comment to see the full error message
           await this.actions.attachToContainer(
             {
               shapeTreeUri: options.shapeTreeUri,

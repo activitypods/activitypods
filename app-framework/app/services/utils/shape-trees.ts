@@ -23,7 +23,6 @@ const ShapeTreesSchema = {
     getShape: {
       // TODO Remove when the following commit has been released
       // https://github.com/assemblee-virtuelle/semapps/commit/7854a20c71239f7b305b99257103b03c3c0465e8
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         return this.actions.getShapeUri(ctx.params, { parentCtx: ctx });
       }

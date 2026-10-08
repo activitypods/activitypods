@@ -1,5 +1,4 @@
 import path from 'path';
-// @ts-expect-error TS(1192): Module '"/home/laurin/projects/virtual-assembly/ac... Remove this comment to see the full error message
 import * as CONFIG from '../config/config.ts';
 import { sanitizeSparqlQuery } from '@semapps/triplestore';
 import { ServiceSchema } from 'moleculer';
@@ -87,16 +86,12 @@ const AppOpenerSchema = {
         const appBaseUrl = new URL(appUri).origin;
 
         if (uri) {
-          // @ts-expect-error TS(2339): Property '$statusCode' does not exist on type '{}'... Remove this comment to see the full error message
           ctx.meta.$statusCode = 302;
-          // @ts-expect-error TS(2339): Property '$location' does not exist on type '{}'.
           ctx.meta.$location = `${appBaseUrl}/r/?type=${encodeURIComponent(type)}&uri=${encodeURIComponent(uri)}&mode=${
             mode || 'show'
           }`;
         } else {
-          // @ts-expect-error TS(2339): Property '$statusCode' does not exist on type '{}'... Remove this comment to see the full error message
           ctx.meta.$statusCode = 302;
-          // @ts-expect-error TS(2339): Property '$location' does not exist on type '{}'.
           ctx.meta.$location = `${appBaseUrl}/r/?type=${encodeURIComponent(type)}&mode=${mode || 'list'}`;
         }
       }

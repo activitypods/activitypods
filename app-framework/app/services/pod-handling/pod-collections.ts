@@ -228,7 +228,6 @@ const PodCollectionsSchema = {
 
     getCollectionUriFromResource: {
       // Find the collection attached to a given resource (or undefined if no collection is attached)
-      // @ts-expect-error TS(7006): Parameter 'ctx' implicitly has an 'any' type.
       async handler(ctx) {
         const { resource, attachPredicate } = ctx.params;
         const expandedAttachPredicate = await ctx.call('jsonld.parser.expandPredicate', { predicate: attachPredicate });

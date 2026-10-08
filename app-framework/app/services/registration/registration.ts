@@ -8,7 +8,6 @@ const { MoleculerError } = moleculer.Errors;
 
 const AppRegistrationSchema = {
   name: 'app.registration' as const,
-  // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Serv... Remove this comment to see the full error message
   mixins: [ActivitiesHandlerMixin],
   activities: {
     createAppRegistration: {

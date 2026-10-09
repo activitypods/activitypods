@@ -39,6 +39,8 @@ declare global {
       skipEmitEvent?: boolean;
       /** Do not notify the objects watcher for this call. */
       skipObjectsWatcher?: boolean;
+      /** Do not send the Create activities of new grants and social agent registrations (used by the 2.3.0 migration). */
+      skipNotifications?: boolean;
       /** Accept the activity without verifying its HTTP signature. */
       skipSignatureValidation?: boolean;
       /** Do not apply the activity's side effects to its object. */

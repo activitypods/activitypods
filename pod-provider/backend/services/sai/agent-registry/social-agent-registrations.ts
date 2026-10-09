@@ -78,15 +78,17 @@ const SocialAgentRegistrationsSchema = {
           );
 
           // This shouldn't be necessary if we set excludeFromMirror to false
-          await this.actions.notifyAgent(
-            {
-              agentRegistrationUri,
-              agentUri,
-              podOwner,
-              activityType: ACTIVITY_TYPES.CREATE
-            },
-            { parentCtx: ctx }
-          );
+          // The 2.3.0 migration sets skipNotifications for local agents, as it creates the reciprocal registration itself
+          if (!ctx.meta.skipNotifications)
+            await this.actions.notifyAgent(
+              {
+                agentRegistrationUri,
+                agentUri,
+                podOwner,
+                activityType: ACTIVITY_TYPES.CREATE
+              },
+              { parentCtx: ctx }
+            );
 
           return agentRegistrationUri;
         }

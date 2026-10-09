@@ -64,7 +64,12 @@ const AccessGrantsMixin = {
 
         // Only send notifications for grants generated for social agents
         // For delegated grants, the granter will take care of notifying the grantee
-        if (getType(grant) === 'interop:AccessGrant' && grant['interop:granteeType'] === 'interop:SocialAgent') {
+        // The 2.3.0 migration sets skipNotifications for local grantees, as it writes their side directly
+        if (
+          getType(grant) === 'interop:AccessGrant' &&
+          grant['interop:granteeType'] === 'interop:SocialAgent' &&
+          !ctx.meta.skipNotifications
+        ) {
           const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
             actorUri: grant['interop:dataOwner'],
             predicate: 'outbox'

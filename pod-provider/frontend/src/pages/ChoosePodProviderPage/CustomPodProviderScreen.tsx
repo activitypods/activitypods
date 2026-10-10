@@ -46,7 +46,7 @@ const CustomPodProviderScreen = ({
     >
       <Form defaultValues={formDefaultValues} onSubmit={onSubmit}>
         {/* Provider URI Input */}
-        <Grid container item display="flex" justifyContent="center">
+        <Grid container display="flex" justifyContent="center">
           <TextInput
             fullWidth
             source="podProvider"
@@ -60,20 +60,19 @@ const CustomPodProviderScreen = ({
         {/* Buttons */}
         <Grid
           container
-          item
           display="flex"
           spacing={1}
           justifyContent="center"
           sx={{ flexFlow: 'column', alignItems: 'center' }}
         >
-          <Grid container item mt={2}>
+          <Grid container mt={2}>
             {/* Submit Button */}
             <Button type="submit" variant="contained" fullWidth color="primary">
               {translate('app.action.select')}
             </Button>
           </Grid>
           {/* Cancel Button */}
-          <Grid container item>
+          <Grid container>
             <Button variant="contained" fullWidth type="reset" onClick={onCancel} color="secondary">
               {translate('ra.action.back')}
             </Button>

@@ -1,0 +1,728 @@
+<http://localhost:3000/alice/data>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/presentations> , <http://localhost:3000/alice/data/credentials> , <http://localhost:3000/alice/data/vcard> , <http://localhost:3000/alice/data/interop> , <http://localhost:3000/alice/data/pim> , <http://localhost:3000/alice/data/solid> , <http://localhost:3000/alice/data/semapps> , <http://localhost:3000/alice/data/as> , <http://localhost:3000/alice/data/key> , <http://localhost:3000/alice/data/public-key> , <http://localhost:3000/alice/data/notify> .
+
+<http://localhost:3000/alice>
+        a       <http://xmlns.com/foaf/0.1/Person> , <https://www.w3.org/ns/activitystreams#Person> ;
+        <http://activitypods.org/ns/core#contactRequests>
+                <http://localhost:3000/alice/contact-requests> ;
+        <http://activitypods.org/ns/core#contacts>
+                <http://localhost:3000/alice/contacts> ;
+        <http://activitypods.org/ns/core#ignoredContacts>
+                <http://localhost:3000/alice/ignored-contacts> ;
+        <http://activitypods.org/ns/core#rejectedContacts>
+                <http://localhost:3000/alice/rejected-contacts> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:30.185Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:54.691Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://schema.org/knowsLanguage>
+                "en" ;
+        <http://www.w3.org/ns/ldp#inbox>
+                <http://localhost:3000/alice/inbox> ;
+        <http://www.w3.org/ns/pim/space#preferencesFile>
+                <http://localhost:3000/alice/data/402a7875-9da3-45ba-8fe1-f7acb88c8a1f> ;
+        <http://www.w3.org/ns/pim/space#storage>
+                <http://localhost:3000/alice/data> ;
+        <http://www.w3.org/ns/solid/interop#hasAuthorizationAgent>
+                <http://localhost:3000/alice/data/86066881-f807-4e22-8c23-08298a1b6b49> ;
+        <http://www.w3.org/ns/solid/interop#hasRegistrySet>
+                <http://localhost:3000/alice/data/695d823d-5123-4cc0-a3f4-77a8658b4e07> ;
+        <http://www.w3.org/ns/solid/terms#oidcIssuer>
+                <http://localhost:3000> ;
+        <http://www.w3.org/ns/solid/terms#publicTypeIndex>
+                <http://localhost:3000/alice/data/7a569ad0-25de-4e76-ab15-771d8bedfb3f> ;
+        <http://xmlns.com/foaf/0.1/nick>
+                "alice" ;
+        <https://w3id.org/security#assertionMethod>
+                <http://localhost:3000/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea> ;
+        <https://w3id.org/security#publicKey>
+                <http://localhost:3000/alice/data/80358761-3506-462e-b709-e2b1465bbbea> ;
+        <https://www.w3.org/ns/activitystreams#endpoints>
+                [ <http://rdfs.org/ns/void#sparqlEndpoint>
+                          <http://localhost:3000/alice/sparql> ;
+                  <https://www.w3.org/ns/activitystreams#proxyUrl>
+                          <http://localhost:3000/alice/proxy>
+                ] ;
+        <https://www.w3.org/ns/activitystreams#followers>
+                <http://localhost:3000/alice/followers> ;
+        <https://www.w3.org/ns/activitystreams#following>
+                <http://localhost:3000/alice/following> ;
+        <https://www.w3.org/ns/activitystreams#liked>
+                <http://localhost:3000/alice/liked> ;
+        <https://www.w3.org/ns/activitystreams#outbox>
+                <http://localhost:3000/alice/outbox> ;
+        <https://www.w3.org/ns/activitystreams#preferredUsername>
+                "alice" ;
+        <https://www.w3.org/ns/activitystreams#url>
+                <http://localhost:3000/alice/data/179f6b65-7fe7-4d4d-ae29-ec3f5812c63a> .
+
+<http://localhost:3000/alice/data/presentations>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> .
+
+<http://localhost:3000/alice/data/credentials>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> .
+
+<http://localhost:3000/alice/data/vcard>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/vcard/group> , <http://localhost:3000/alice/data/vcard/location> , <http://localhost:3000/alice/data/vcard/individual> .
+
+<http://localhost:3000/alice/data/vcard/group>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> , <http://www.w3.org/ns/solid/interop#DataRegistration> ;
+        <http://www.w3.org/ns/solid/interop#registeredAt>
+                "2025-05-16T16:47:31.154Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/interop#registeredBy>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/solid/interop#registeredShapeTree>
+                <https://shapes.activitypods.org/shapetrees/vcard/Group> ;
+        <http://www.w3.org/ns/solid/interop#registeredWith>
+                <http://localhost:3000/alice/data/86066881-f807-4e22-8c23-08298a1b6b49> ;
+        <http://www.w3.org/ns/solid/interop#updatedAt>
+                "2025-05-16T16:47:31.154Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+
+<http://localhost:3000/alice/data/vcard/location>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> , <http://www.w3.org/ns/solid/interop#DataRegistration> ;
+        <http://www.w3.org/ns/solid/interop#registeredAt>
+                "2025-05-16T16:47:31.315Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/interop#registeredBy>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/solid/interop#registeredShapeTree>
+                <https://shapes.activitypods.org/shapetrees/vcard/Location> ;
+        <http://www.w3.org/ns/solid/interop#registeredWith>
+                <http://localhost:3000/alice/data/86066881-f807-4e22-8c23-08298a1b6b49> ;
+        <http://www.w3.org/ns/solid/interop#updatedAt>
+                "2025-05-16T16:47:31.315Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+
+<http://localhost:3000/alice/data/vcard/individual>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> , <http://www.w3.org/ns/solid/interop#DataRegistration> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/179f6b65-7fe7-4d4d-ae29-ec3f5812c63a> ;
+        <http://www.w3.org/ns/solid/interop#registeredAt>
+                "2025-05-16T16:47:31.492Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/interop#registeredBy>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/solid/interop#registeredShapeTree>
+                <https://shapes.activitypods.org/shapetrees/as/Profile> ;
+        <http://www.w3.org/ns/solid/interop#registeredWith>
+                <http://localhost:3000/alice/data/86066881-f807-4e22-8c23-08298a1b6b49> ;
+        <http://www.w3.org/ns/solid/interop#updatedAt>
+                "2025-05-16T16:47:31.492Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+
+<http://localhost:3000/alice/data/interop>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/interop/application> , <http://localhost:3000/alice/data/interop/authorization-agent> , <http://localhost:3000/alice/data/interop/registry-set> , <http://localhost:3000/alice/data/interop/agent-registry> , <http://localhost:3000/alice/data/interop/application-registration> , <http://localhost:3000/alice/data/interop/social-agent-registration> , <http://localhost:3000/alice/data/interop/access-authorization> , <http://localhost:3000/alice/data/interop/access-grant> , <http://localhost:3000/alice/data/interop/authorization-registry> , <http://localhost:3000/alice/data/interop/data-registry> , <http://localhost:3000/alice/data/interop/delegated-access-grant> .
+
+<http://localhost:3000/alice/data/interop/application>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> .
+
+<http://localhost:3000/alice/data/interop/authorization-agent>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/86066881-f807-4e22-8c23-08298a1b6b49> .
+
+<http://localhost:3000/alice/data/interop/registry-set>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/695d823d-5123-4cc0-a3f4-77a8658b4e07> .
+
+<http://localhost:3000/alice/data/pim>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/pim/configuration-file> .
+
+<http://localhost:3000/alice/data/pim/configuration-file>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/402a7875-9da3-45ba-8fe1-f7acb88c8a1f> .
+
+<http://localhost:3000/alice/data/solid>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/solid/type-registration> , <http://localhost:3000/alice/data/solid/type-index> .
+
+<http://localhost:3000/alice/data/solid/type-registration>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/ea34d84f-f3cd-4650-a433-7bec966f4cbf> , <http://localhost:3000/alice/data/20ae5e46-90ab-45ad-8631-ef3f4166e0a6> , <http://localhost:3000/alice/data/86fc159d-1606-45cd-b9c0-fc74ca374f7c> , <http://localhost:3000/alice/data/35dc160a-0be4-48fd-93dd-14f38079fc69> , <http://localhost:3000/alice/data/78933e64-5055-4c98-af0b-5276577acd41> , <http://localhost:3000/alice/data/6607b415-dc13-410c-97a7-ae2dc196d80d> , <http://localhost:3000/alice/data/b189e8ca-95bb-4259-849b-dff3be640058> , <http://localhost:3000/alice/data/f5e939aa-dbd1-40ec-b031-70a137f63ac8> , <http://localhost:3000/alice/data/f8f312cb-eaaa-4feb-bd83-8e16f3074397> , <http://localhost:3000/alice/data/9d95b3cf-870a-465b-b22d-58c6f3491de1> , <http://localhost:3000/alice/data/536a0526-c215-47d9-b5c4-a65287fc5bbf> , <http://localhost:3000/alice/data/2268a703-b08f-4569-bc7d-211cc1b0a4ed> , <http://localhost:3000/alice/data/27d1a048-392b-4ec9-a8a7-5675745dcac3> , <http://localhost:3000/alice/data/3e0dc474-d7b3-4454-b52c-4482c7e98e56> , <http://localhost:3000/alice/data/67580273-327a-4c30-8829-60d66088bfd0> .
+
+<http://localhost:3000/alice/data/solid/type-index>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/7a569ad0-25de-4e76-ab15-771d8bedfb3f> , <http://localhost:3000/alice/data/8489203c-0b60-4419-8b11-4451814e3f68> .
+
+<http://localhost:3000/alice/data/interop/agent-registry>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/6f4a8819-ced4-46c1-ba1d-6ffb2ca1562c> .
+
+<http://localhost:3000/alice/data/interop/application-registration>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> .
+
+<http://localhost:3000/alice/data/interop/social-agent-registration>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> .
+
+<http://localhost:3000/alice/data/interop/access-authorization>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> .
+
+<http://localhost:3000/alice/data/interop/access-grant>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> .
+
+<http://localhost:3000/alice/data/interop/authorization-registry>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/88c6e957-34ee-4810-812f-9e4e9c7d401a> .
+
+<http://localhost:3000/alice/data/interop/data-registry>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/9388e277-f6a5-4206-8aa0-66aa3b4ba532> .
+
+<http://localhost:3000/alice/data/semapps>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/semapps/file> .
+
+<http://localhost:3000/alice/data/semapps/file>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> , <http://www.w3.org/ns/solid/interop#DataRegistration> ;
+        <http://www.w3.org/ns/solid/interop#registeredAt>
+                "2025-05-16T16:47:45.098Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/interop#registeredBy>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/solid/interop#registeredShapeTree>
+                <https://shapes.activitypods.org/shapetrees/File> ;
+        <http://www.w3.org/ns/solid/interop#registeredWith>
+                <http://localhost:3000/alice/data/86066881-f807-4e22-8c23-08298a1b6b49> ;
+        <http://www.w3.org/ns/solid/interop#updatedAt>
+                "2025-05-16T16:47:45.098Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+
+<http://localhost:3000/alice/data/as>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/as/note> , <http://localhost:3000/alice/data/as/collection> , <http://localhost:3000/alice/data/as/activity> .
+
+<http://localhost:3000/alice/data/as/note>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> , <http://www.w3.org/ns/solid/interop#DataRegistration> ;
+        <http://www.w3.org/ns/solid/interop#registeredAt>
+                "2025-05-16T16:47:46.646Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/interop#registeredBy>
+                <http://localhost:3000/alice> ;
+        <http://www.w3.org/ns/solid/interop#registeredShapeTree>
+                <https://shapes.activitypods.org/shapetrees/as/Note> ;
+        <http://www.w3.org/ns/solid/interop#registeredWith>
+                <http://localhost:3000/alice/data/86066881-f807-4e22-8c23-08298a1b6b49> ;
+        <http://www.w3.org/ns/solid/interop#updatedAt>
+                "2025-05-16T16:47:46.646Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+
+<http://localhost:3000/alice/data/as/collection>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/inbox> , <http://localhost:3000/alice/outbox> , <http://localhost:3000/alice/ignored-contacts> , <http://localhost:3000/alice/contacts> , <http://localhost:3000/alice/contact-requests> , <http://localhost:3000/alice/rejected-contacts> , <http://localhost:3000/alice/followers> , <http://localhost:3000/alice/following> , <http://localhost:3000/alice/liked> .
+
+<http://localhost:3000/alice/data/as/activity>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> .
+
+<http://localhost:3000/alice/data/key>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba> , <http://localhost:3000/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558> .
+
+<http://localhost:3000/alice/data/public-key>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea> , <http://localhost:3000/alice/data/80358761-3506-462e-b709-e2b1465bbbea> .
+
+<http://localhost:3000/alice/inbox>
+        a       <https://www.w3.org/ns/activitystreams#OrderedCollection> , <https://www.w3.org/ns/activitystreams#Collection> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:48.163Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:48.163Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://semapps.org/ns/core#dereferenceItems>
+                true ;
+        <http://semapps.org/ns/core#itemsPerPage>
+                10 ;
+        <http://semapps.org/ns/core#sortOrder>
+                <http://semapps.org/ns/core#DescOrder> ;
+        <http://semapps.org/ns/core#sortPredicate>
+                <https://www.w3.org/ns/activitystreams#published> .
+
+<http://localhost:3000/alice/data/notify>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> ;
+        <http://www.w3.org/ns/ldp#contains>
+                <http://localhost:3000/alice/data/notify/webhook-channel2023> , <http://localhost:3000/alice/data/notify/web-socket-channel2023> .
+
+<http://localhost:3000/alice/data/notify/webhook-channel2023>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> .
+
+<http://localhost:3000/alice/data/notify/web-socket-channel2023>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> .
+
+<http://localhost:3000/alice/outbox>
+        a       <https://www.w3.org/ns/activitystreams#OrderedCollection> , <https://www.w3.org/ns/activitystreams#Collection> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:49.077Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:49.077Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://semapps.org/ns/core#dereferenceItems>
+                true ;
+        <http://semapps.org/ns/core#itemsPerPage>
+                10 ;
+        <http://semapps.org/ns/core#sortOrder>
+                <http://semapps.org/ns/core#DescOrder> ;
+        <http://semapps.org/ns/core#sortPredicate>
+                <https://www.w3.org/ns/activitystreams#published> .
+
+<http://localhost:3000/alice/ignored-contacts>
+        a       <https://www.w3.org/ns/activitystreams#Collection> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:50.064Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:50.064Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://semapps.org/ns/core#dereferenceItems>
+                false .
+
+<http://localhost:3000/alice/contacts>
+        a       <https://www.w3.org/ns/activitystreams#Collection> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:50.776Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:50.776Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://semapps.org/ns/core#dereferenceItems>
+                false .
+
+<http://localhost:3000/alice/contact-requests>
+        a       <https://www.w3.org/ns/activitystreams#Collection> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:51.778Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:51.778Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://semapps.org/ns/core#dereferenceItems>
+                true .
+
+<http://localhost:3000/alice/rejected-contacts>
+        a       <https://www.w3.org/ns/activitystreams#Collection> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:52.451Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:52.451Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://semapps.org/ns/core#dereferenceItems>
+                false .
+
+<http://localhost:3000/alice/followers>
+        a       <https://www.w3.org/ns/activitystreams#Collection> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:53.081Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:53.081Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://semapps.org/ns/core#dereferenceItems>
+                false .
+
+<http://localhost:3000/alice/following>
+        a       <https://www.w3.org/ns/activitystreams#Collection> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:53.801Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:53.801Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://semapps.org/ns/core#dereferenceItems>
+                false .
+
+<http://localhost:3000/alice/liked>
+        a       <https://www.w3.org/ns/activitystreams#Collection> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:54.45Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:54.45Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://semapps.org/ns/core#dereferenceItems>
+                false .
+
+<http://localhost:3000/alice/data/179f6b65-7fe7-4d4d-ae29-ec3f5812c63a>
+        a       <https://www.w3.org/ns/activitystreams#Profile> , <http://www.w3.org/2006/vcard/ns#Individual> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:31.851Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:31.851Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/2006/vcard/ns#fn>
+                "Alice" ;
+        <http://www.w3.org/2006/vcard/ns#given-name>
+                "Alice" ;
+        <https://www.w3.org/ns/activitystreams#describes>
+                <http://localhost:3000/alice> .
+
+<http://localhost:3000/alice/data/695d823d-5123-4cc0-a3f4-77a8658b4e07>
+        a       <http://www.w3.org/ns/solid/interop#RegistrySet> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:33.143Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:46.099Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/interop#hasAgentRegistry>
+                <http://localhost:3000/alice/data/6f4a8819-ced4-46c1-ba1d-6ffb2ca1562c> ;
+        <http://www.w3.org/ns/solid/interop#hasAuthorizationRegistry>
+                <http://localhost:3000/alice/data/88c6e957-34ee-4810-812f-9e4e9c7d401a> ;
+        <http://www.w3.org/ns/solid/interop#hasDataRegistry>
+                <http://localhost:3000/alice/data/9388e277-f6a5-4206-8aa0-66aa3b4ba532> .
+
+<http://localhost:3000/alice/data/86066881-f807-4e22-8c23-08298a1b6b49>
+        a       <http://www.w3.org/ns/solid/interop#AuthorizationAgent> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:33.072Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:33.072Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/interop#hasAuthorizationRedirectEndpoint>
+                "http://localhost:5000/authorize" ;
+        <http://www.w3.org/ns/solid/interop#hasDelegationIssuanceEndpoint>
+                "http://localhost:3000/.auth-agent/delegation/issue" .
+
+<http://localhost:3000/alice/data/402a7875-9da3-45ba-8fe1-f7acb88c8a1f>
+        a       <http://www.w3.org/ns/pim/space#ConfigurationFile> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:41.289Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:42.857Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#privateTypeIndex>
+                <http://localhost:3000/alice/data/8489203c-0b60-4419-8b11-4451814e3f68> .
+
+<http://localhost:3000/alice/data/7a569ad0-25de-4e76-ab15-771d8bedfb3f>
+        a       <http://www.w3.org/ns/solid/terms#ListedDocument> , <http://www.w3.org/ns/solid/terms#TypeIndex> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:41.591Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:48.289Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#hasTypeRegistration>
+                <http://localhost:3000/alice/data/ea34d84f-f3cd-4650-a433-7bec966f4cbf> , <http://localhost:3000/alice/data/20ae5e46-90ab-45ad-8631-ef3f4166e0a6> , <http://localhost:3000/alice/data/86fc159d-1606-45cd-b9c0-fc74ca374f7c> , <http://localhost:3000/alice/data/2268a703-b08f-4569-bc7d-211cc1b0a4ed> , <http://localhost:3000/alice/data/27d1a048-392b-4ec9-a8a7-5675745dcac3> .
+
+<http://localhost:3000/alice/data/6f4a8819-ced4-46c1-ba1d-6ffb2ca1562c>
+        a       <http://www.w3.org/ns/solid/interop#AgentRegistry> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:42.604Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:42.604Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+
+<http://localhost:3000/alice/data/8489203c-0b60-4419-8b11-4451814e3f68>
+        a       <http://www.w3.org/ns/solid/terms#TypeIndex> , <http://www.w3.org/ns/solid/terms#UnlistedDocument> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:42.782Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:49.696Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#hasTypeRegistration>
+                <http://localhost:3000/alice/data/35dc160a-0be4-48fd-93dd-14f38079fc69> , <http://localhost:3000/alice/data/78933e64-5055-4c98-af0b-5276577acd41> , <http://localhost:3000/alice/data/6607b415-dc13-410c-97a7-ae2dc196d80d> , <http://localhost:3000/alice/data/b189e8ca-95bb-4259-849b-dff3be640058> , <http://localhost:3000/alice/data/f5e939aa-dbd1-40ec-b031-70a137f63ac8> , <http://localhost:3000/alice/data/f8f312cb-eaaa-4feb-bd83-8e16f3074397> , <http://localhost:3000/alice/data/9d95b3cf-870a-465b-b22d-58c6f3491de1> , <http://localhost:3000/alice/data/536a0526-c215-47d9-b5c4-a65287fc5bbf> , <http://localhost:3000/alice/data/3e0dc474-d7b3-4454-b52c-4482c7e98e56> , <http://localhost:3000/alice/data/67580273-327a-4c30-8829-60d66088bfd0> .
+
+<http://localhost:3000/alice/data/ea34d84f-f3cd-4650-a433-7bec966f4cbf>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:43.423Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:43.423Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <http://www.w3.org/2006/vcard/ns#Group> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/vcard/group> .
+
+<http://localhost:3000/alice/data/interop/delegated-access-grant>
+        a       <http://www.w3.org/ns/ldp#BasicContainer> , <http://www.w3.org/ns/ldp#Container> .
+
+<http://localhost:3000/alice/data/20ae5e46-90ab-45ad-8631-ef3f4166e0a6>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:43.633Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:43.633Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <https://www.w3.org/ns/activitystreams#Profile> , <http://www.w3.org/2006/vcard/ns#Individual> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/vcard/individual> .
+
+<http://localhost:3000/alice/data/86fc159d-1606-45cd-b9c0-fc74ca374f7c>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:43.705Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:43.705Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <http://www.w3.org/2006/vcard/ns#Location> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/vcard/location> .
+
+<http://localhost:3000/alice/data/88c6e957-34ee-4810-812f-9e4e9c7d401a>
+        a       <http://www.w3.org/ns/solid/interop#AuthorizationRegistry> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:44.474Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:44.474Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+
+<http://localhost:3000/alice/data/35dc160a-0be4-48fd-93dd-14f38079fc69>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:44.54Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:44.54Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <http://www.w3.org/ns/solid/interop#SocialAgentRegistration> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/interop/social-agent-registration> .
+
+<http://localhost:3000/alice/data/78933e64-5055-4c98-af0b-5276577acd41>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:44.776Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:44.776Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <http://www.w3.org/ns/solid/interop#DelegatedAccessGrant> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/interop/delegated-access-grant> .
+
+<http://localhost:3000/alice/data/6607b415-dc13-410c-97a7-ae2dc196d80d>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:44.799Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:44.799Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <http://www.w3.org/ns/solid/interop#AccessAuthorization> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/interop/access-authorization> .
+
+<http://localhost:3000/alice/data/b189e8ca-95bb-4259-849b-dff3be640058>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:45.071Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:45.071Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <https://www.w3.org/2018/credentials#VerifiableCredential> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/credentials> .
+
+<http://localhost:3000/alice/data/f5e939aa-dbd1-40ec-b031-70a137f63ac8>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:45.809Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:45.809Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <http://www.w3.org/ns/solid/interop#Application> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/interop/application> .
+
+<http://localhost:3000/alice/data/f8f312cb-eaaa-4feb-bd83-8e16f3074397>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:45.909Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:45.909Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <http://www.w3.org/ns/solid/interop#AccessGrant> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/interop/access-grant> .
+
+<http://localhost:3000/alice/data/9388e277-f6a5-4206-8aa0-66aa3b4ba532>
+        a       <http://www.w3.org/ns/solid/interop#DataRegistry> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:45.879Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:47.269Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/interop#hasDataRegistration>
+                <http://localhost:3000/alice/data/vcard/group> , <http://localhost:3000/alice/data/vcard/location> , <http://localhost:3000/alice/data/vcard/individual> , <http://localhost:3000/alice/data/semapps/file> , <http://localhost:3000/alice/data/as/note> .
+
+<http://localhost:3000/alice/data/9d95b3cf-870a-465b-b22d-58c6f3491de1>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:45.957Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:45.957Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <https://www.w3.org/2018/credentials#VerifiablePresentation> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/presentations> .
+
+<http://localhost:3000/alice/data/536a0526-c215-47d9-b5c4-a65287fc5bbf>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:46.223Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:46.223Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <http://www.w3.org/ns/solid/interop#ApplicationRegistration> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/interop/application-registration> .
+
+<http://localhost:3000/alice/data/2268a703-b08f-4569-bc7d-211cc1b0a4ed>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:47.14Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:47.14Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <http://semapps.org/ns/core#File> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/semapps/file> .
+
+<http://localhost:3000/alice/data/27d1a048-392b-4ec9-a8a7-5675745dcac3>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:47.865Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:47.865Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <https://www.w3.org/ns/activitystreams#Note> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/as/note> .
+
+<http://localhost:3000/alice/data/3e0dc474-d7b3-4454-b52c-4482c7e98e56>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:49.292Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:49.292Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <http://www.w3.org/ns/solid/notifications#WebhookChannel2023> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/notify/webhook-channel2023> .
+
+<http://localhost:3000/alice/data/1a15400d-f70a-4ef4-821f-d851ae91ccba>
+        a       <https://w3id.org/security#VerificationMethod> , <https://w3id.org/security#Multikey> , <urn:ed25519-key> ;
+        <http://www.w3.org/2000/01/rdf-schema#seeAlso>
+                <http://localhost:3000/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:50.489Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:50.966Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <https://w3id.org/security#controller>
+                <http://localhost:3000/alice> ;
+        <https://w3id.org/security#owner>
+                <http://localhost:3000/alice> ;
+        <https://w3id.org/security#publicKeyMultibase>
+                "z6MkgzKLtUPAhkZmWnsWe5vpjcEaP7XCyTDKThmXqrAWpsLs"^^<https://w3id.org/security#multibase> ;
+        <https://w3id.org/security#secretKeyMultibase>
+                "zrv4iBXCoDMf4ABp33MnjFEL4gAsshk2vTe1uLZrJpvSn3dnfFhQpNuQfbo69HqbNMxp85u6TYVSBosQJeSVy2HzAST"^^<https://w3id.org/security#multibase> .
+
+<http://localhost:3000/alice/data/67580273-327a-4c30-8829-60d66088bfd0>
+        a       <http://www.w3.org/ns/solid/terms#TypeRegistration> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:49.477Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:49.477Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/ns/solid/terms#forClass>
+                <http://www.w3.org/ns/solid/notifications#WebSocketChannel2023> ;
+        <http://www.w3.org/ns/solid/terms#instanceContainer>
+                <http://localhost:3000/alice/data/notify/web-socket-channel2023> .
+
+<http://localhost:3000/alice/data/7fdf6ef8-630c-446c-96cd-6b90eb46a558>
+        a       <https://w3id.org/security#VerificationMethod> , <https://www.w3.org/ns/auth/rsa#RSAKey> ;
+        <http://www.w3.org/2000/01/rdf-schema#seeAlso>
+                <http://localhost:3000/alice/data/80358761-3506-462e-b709-e2b1465bbbea> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:50.701Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:51.183Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <https://w3id.org/security#controller>
+                <http://localhost:3000/alice> ;
+        <https://w3id.org/security#owner>
+                <http://localhost:3000/alice> ;
+        <https://w3id.org/security#privateKeyPem>
+                "-----BEGIN PRIVATE KEY-----\n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\nDJRaJ2QCWnXV4CIhLGUSBhqwyLNtEQ==\n-----END PRIVATE KEY-----\n" ;
+        <https://w3id.org/security#publicKeyPem>
+                "-----BEGIN PUBLIC KEY-----\nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAsabSvafisKC5WHfXcxH3\ns4gTVCiDQvecZAk+6DJHlKlPAwBLDHDnFheLDAsnf8wovu+ZZhjk/ELebwZNMqbA\ndutHZeglmTAVa8VEihf32+qGcPAgjbkxDKF4Q/xLAHGoLtwmMVN+FkltH1E19enA\nw51xrQ8BIb1y40SpmPrrpNi9n7j4FpJQWbqgh/W2u10G9zWFhkh2zbSgfhAbwdP3\nR3rT8EICgm/ivHq76MaWXsEPehtjvI9OggJoXDVfyhcKO7jgIqUPzGTH9yXX3eJ9\nX7EaPmu0xiZkTMQ7Vjta/E4ypV3JzKO727CgCs86JunyD55JkctKQxqmUlSvNnI8\nXP4mWxbAlGCVAjTUb5AExgQPPD3PaeUiklRZnE0HvUes89evo3O4OEVpe3Z4VAaS\nP0inhTdNNeIzGsx9Rdj7GDZKY3K5DUkTmu4Ea0OEmc0lKHjGwxiWjI0aBgaACfkT\nEUhUthYEMprca0fFgmTfwQzahOFsYC4NmRDFtEmHVPdMFq7KWan6fV3Tk/v6fe9B\n6/fMsyM34auVoGvN/whZfZekKZGJzpXf7tqrZ9pxPg4X0L+EHpg7i62c1yi7fhdN\nXh7pgibjDXGuc1xKBSzNB+XVCDjT9zzu/SfnWU358AxhoJYmMZo3z1HaJEUjAHBf\nyNUV7ml07XrLQvyaKfj6oo0CAwEAAQ==\n-----END PUBLIC KEY-----\n" .
+
+<http://localhost:3000/alice/data/cda5d828-5d4f-42d6-801d-b03e771568ea>
+        a       <https://w3id.org/security#VerificationMethod> , <https://w3id.org/security#Multikey> , <urn:ed25519-key> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:50.937Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:50.937Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <https://w3id.org/security#controller>
+                <http://localhost:3000/alice> ;
+        <https://w3id.org/security#owner>
+                <http://localhost:3000/alice> ;
+        <https://w3id.org/security#publicKeyMultibase>
+                "z6MkgzKLtUPAhkZmWnsWe5vpjcEaP7XCyTDKThmXqrAWpsLs"^^<https://w3id.org/security#multibase> .
+
+<http://localhost:3000/alice/data/80358761-3506-462e-b709-e2b1465bbbea>
+        a       <https://w3id.org/security#VerificationMethod> , <https://www.w3.org/ns/auth/rsa#RSAKey> ;
+        <http://purl.org/dc/terms/created>
+                "2025-05-16T16:47:51.107Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>
+                <http://localhost:3000/alice> ;
+        <http://purl.org/dc/terms/modified>
+                "2025-05-16T16:47:51.107Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <https://w3id.org/security#controller>
+                <http://localhost:3000/alice> ;
+        <https://w3id.org/security#owner>
+                <http://localhost:3000/alice> ;
+        <https://w3id.org/security#publicKeyPem>
+                "-----BEGIN PUBLIC KEY-----\nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAsabSvafisKC5WHfXcxH3\ns4gTVCiDQvecZAk+6DJHlKlPAwBLDHDnFheLDAsnf8wovu+ZZhjk/ELebwZNMqbA\ndutHZeglmTAVa8VEihf32+qGcPAgjbkxDKF4Q/xLAHGoLtwmMVN+FkltH1E19enA\nw51xrQ8BIb1y40SpmPrrpNi9n7j4FpJQWbqgh/W2u10G9zWFhkh2zbSgfhAbwdP3\nR3rT8EICgm/ivHq76MaWXsEPehtjvI9OggJoXDVfyhcKO7jgIqUPzGTH9yXX3eJ9\nX7EaPmu0xiZkTMQ7Vjta/E4ypV3JzKO727CgCs86JunyD55JkctKQxqmUlSvNnI8\nXP4mWxbAlGCVAjTUb5AExgQPPD3PaeUiklRZnE0HvUes89evo3O4OEVpe3Z4VAaS\nP0inhTdNNeIzGsx9Rdj7GDZKY3K5DUkTmu4Ea0OEmc0lKHjGwxiWjI0aBgaACfkT\nEUhUthYEMprca0fFgmTfwQzahOFsYC4NmRDFtEmHVPdMFq7KWan6fV3Tk/v6fe9B\n6/fMsyM34auVoGvN/whZfZekKZGJzpXf7tqrZ9pxPg4X0L+EHpg7i62c1yi7fhdN\nXh7pgibjDXGuc1xKBSzNB+XVCDjT9zzu/SfnWU358AxhoJYmMZo3z1HaJEUjAHBf\nyNUV7ml07XrLQvyaKfj6oo0CAwEAAQ==\n-----END PUBLIC KEY-----\n" .

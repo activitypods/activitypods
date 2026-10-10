@@ -322,12 +322,7 @@ const DelegatedAccessGrantsSchema = {
 
         if (this.createJob) {
           // A single queue, so that the jobs of an authorization deleted then re-created are processed in order
-          await this.createJob(
-            'scopeAllAuthorization',
-            operation,
-            { authorization, operation },
-            scopeAllJobOptions
-          );
+          await this.createJob('scopeAllAuthorization', operation, { authorization, operation }, scopeAllJobOptions);
         } else {
           await this.processScopeAllAuthorization({ authorization, operation });
         }

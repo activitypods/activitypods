@@ -57,8 +57,11 @@ const AgentRegistrationsMixin = {
 
     addGrant: {
       // Attach a grant to the grantee's agent registration
+      // Pass grants instead of grant to attach several grants of the same grantee with a single patch
       async handler(ctx) {
-        const { grant } = ctx.params;
+        const grants = ctx.params.grants || [ctx.params.grant];
+        if (grants.length === 0) return;
+        const [grant] = grants;
 
         let agentRegistration = await this.actions.getForAgent(
           {
@@ -92,10 +95,12 @@ const AgentRegistrationsMixin = {
           {
             resourceUri: getId(agentRegistration),
             triplesToAdd: [
-              rdf.quad(
-                rdf.namedNode(getId(agentRegistration)),
-                rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
-                rdf.namedNode(getId(grant))
+              ...grants.map((g: any) =>
+                rdf.quad(
+                  rdf.namedNode(getId(agentRegistration)),
+                  rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
+                  rdf.namedNode(getId(g))
+                )
               ),
               rdf.quad(
                 rdf.namedNode(getId(agentRegistration)),
@@ -121,8 +126,11 @@ const AgentRegistrationsMixin = {
     },
 
     removeGrant: {
+      // Pass grants instead of grant to detach several grants of the same grantee with a single patch
       async handler(ctx) {
-        const { grant } = ctx.params;
+        const grants = ctx.params.grants || [ctx.params.grant];
+        if (grants.length === 0) return;
+        const [grant] = grants;
 
         const agentRegistration = await this.actions.getForAgent(
           {
@@ -133,13 +141,13 @@ const AgentRegistrationsMixin = {
         );
 
         if (agentRegistration) {
-          const triplesToRemove = [
+          const triplesToRemove = grants.map((g: any) =>
             rdf.quad(
               rdf.namedNode(getId(agentRegistration)),
               rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
-              rdf.namedNode(getId(grant))
+              rdf.namedNode(getId(g))
             )
-          ];
+          );
 
           if (agentRegistration['interop:updatedAt']) {
             triplesToRemove.push(

@@ -2,11 +2,24 @@ import { ControlledContainerMixin, arrayOf, getId, getDatasetFromUri } from '@se
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
 import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
 import AccessGrantsMixin from '../../../mixins/access-grants.ts';
+// @ts-expect-error TS(7016): Could not find a declaration file for module 'mole... Remove this comment to see the full error message
+import QueueService from 'moleculer-bull';
 import { ServiceSchema } from 'moleculer';
+import * as CONFIG from '../../../config/config.ts';
+
+const scopeAllJobOptions = {
+  attempts: 3,
+  backoff: { type: 'exponential', delay: 60000 },
+  // Bull 3 only accepts a boolean or a number here
+  removeOnComplete: 10000,
+  removeOnFail: 10000
+};
 
 const DelegatedAccessGrantsSchema = {
   name: 'delegated-access-grants' as const,
-  mixins: [ImmutableContainerMixin, ControlledContainerMixin, AccessGrantsMixin],
+  mixins: CONFIG.QUEUE_SERVICE_URL
+    ? [ImmutableContainerMixin, ControlledContainerMixin, AccessGrantsMixin, QueueService(CONFIG.QUEUE_SERVICE_URL)]
+    : [ImmutableContainerMixin, ControlledContainerMixin, AccessGrantsMixin],
   settings: {
     acceptedTypes: ['interop:DelegatedAccessGrant'],
     excludeFromMirror: true,
@@ -16,9 +29,9 @@ const DelegatedAccessGrantsSchema = {
   actions: {
     remoteIssue: {
       // Issue a delegated grant on the data owner's storage
-      // Also store a local copy and add it to the agent registration
+      // Also store a local copy and add it to the agent registration (unless skipAgentRegistration is true)
       async handler(ctx) {
-        let { delegatedGrant } = ctx.params;
+        let { delegatedGrant, skipAgentRegistration = false } = ctx.params;
         const webId = ctx.params.webId || ctx.meta.webId || 'anon';
         let delegatedGrantUri;
 
@@ -71,10 +84,12 @@ const DelegatedAccessGrantsSchema = {
         await this.actions.attach({ resourceUri: delegatedGrantUri, webId }, { parentCtx: ctx });
 
         // Attach it to the agent registration
-        if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
-          await ctx.call('app-registrations.addGrant', { grant: delegatedGrant });
-        } else {
-          await ctx.call('social-agent-registrations.addGrant', { grant: delegatedGrant });
+        if (!skipAgentRegistration) {
+          if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
+            await ctx.call('app-registrations.addGrant', { grant: delegatedGrant });
+          } else {
+            await ctx.call('social-agent-registrations.addGrant', { grant: delegatedGrant });
+          }
         }
 
         return delegatedGrantUri;
@@ -83,9 +98,9 @@ const DelegatedAccessGrantsSchema = {
 
     remoteDelete: {
       // Delete a delegated grant on the data owner's storage
-      // Also delete the local copy and remove it from the agent registration
+      // Also delete the local copy and remove it from the agent registration (unless skipAgentRegistration is true)
       async handler(ctx) {
-        const { delegatedGrant } = ctx.params;
+        const { delegatedGrant, skipAgentRegistration = false } = ctx.params;
         const webId = ctx.params.webId || ctx.meta.webId || 'anon';
 
         const delegatedGrantUri = getId(delegatedGrant);
@@ -126,10 +141,12 @@ const DelegatedAccessGrantsSchema = {
         await this.actions.detach({ resourceUri: delegatedGrantUri, webId }, { parentCtx: ctx });
 
         // Detach it from the agent registration
-        if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
-          await ctx.call('app-registrations.removeGrant', { grant: delegatedGrant });
-        } else {
-          await ctx.call('social-agent-registrations.removeGrant', { grant: delegatedGrant });
+        if (!skipAgentRegistration) {
+          if (delegatedGrant['interop:granteeType'] === 'interop:Application') {
+            await ctx.call('app-registrations.removeGrant', { grant: delegatedGrant });
+          } else {
+            await ctx.call('social-agent-registrations.removeGrant', { grant: delegatedGrant });
+          }
         }
       }
     },
@@ -156,8 +173,12 @@ const DelegatedAccessGrantsSchema = {
     generateFromSingleScopeAllAuthorization: {
       // Generate a delegated access grant from a single access authorization with `interop:All` scope
       // If a delegated grant already exist but is linked to a different grant, it will be deleted
+      // Pass delegatedGrants (the result of listByScopeAllAuthorization) to avoid listing them again
+      // Return the URIs of the issued delegated grants and the deleted delegated grants
       async handler(ctx) {
-        const { authorization, grant } = ctx.params;
+        const { authorization, grant, skipAgentRegistration = false } = ctx.params;
+        const issued: string[] = [];
+        const deleted: any[] = [];
 
         if (authorization['interop:scopeOfAuthorization'] !== 'interop:All') {
           throw new Error(
@@ -172,9 +193,9 @@ const DelegatedAccessGrantsSchema = {
         }
 
         // Get all delegated grants generated from this authorization
-        const delegatedGrants = await ctx.call('delegated-access-grants.listByScopeAllAuthorization', {
-          authorization
-        });
+        const delegatedGrants =
+          ctx.params.delegatedGrants ||
+          (await ctx.call('delegated-access-grants.listByScopeAllAuthorization', { authorization }));
 
         // Find if a delegated grant already exist for this social agent
         const delegatedGrant = delegatedGrants.find(
@@ -187,38 +208,128 @@ const DelegatedAccessGrantsSchema = {
           } else {
             this.logger.info(`Access grant ${grant.id} has been updated, regenerating the delegated grant...`);
 
-            await this.actions.remoteDelete({ delegatedGrant }, { parentCtx: ctx });
+            await this.actions.remoteDelete({ delegatedGrant, skipAgentRegistration }, { parentCtx: ctx });
+            deleted.push(delegatedGrant);
 
-            await this.actions.remoteIssue(
-              {
-                delegatedGrant: {
-                  ...delegatedGrant,
-                  id: undefined,
-                  'interop:hasDataInstance': grant['interop:hasDataInstance'],
-                  'interop:delegationOfGrant': getId(grant)
-                }
-              },
-              { parentCtx: ctx }
+            issued.push(
+              await this.actions.remoteIssue(
+                {
+                  delegatedGrant: {
+                    ...delegatedGrant,
+                    id: undefined,
+                    'interop:hasDataInstance': grant['interop:hasDataInstance'],
+                    'interop:delegationOfGrant': getId(grant)
+                  },
+                  skipAgentRegistration
+                },
+                { parentCtx: ctx }
+              )
             );
           }
         } else {
           this.logger.info(`Access grant ${grant.id} has no associated delegated access grant, generating...`);
 
-          await this.actions.remoteIssue(
-            {
-              delegatedGrant: {
-                ...grant,
-                id: undefined,
-                type: 'interop:DelegatedAccessGrant',
-                'interop:grantee': authorization['interop:grantee'],
-                'interop:granteeType': authorization['interop:granteeType'],
-                'interop:grantedBy': authorization['interop:grantedBy'],
-                'interop:satisfiesAccessNeed': authorization['interop:satisfiesAccessNeed'],
-                'interop:delegationOfGrant': getId(grant)
-              }
-            },
+          issued.push(
+            await this.actions.remoteIssue(
+              {
+                delegatedGrant: {
+                  ...grant,
+                  id: undefined,
+                  type: 'interop:DelegatedAccessGrant',
+                  'interop:grantee': authorization['interop:grantee'],
+                  'interop:granteeType': authorization['interop:granteeType'],
+                  'interop:grantedBy': authorization['interop:grantedBy'],
+                  'interop:satisfiesAccessNeed': authorization['interop:satisfiesAccessNeed'],
+                  'interop:delegationOfGrant': getId(grant)
+                },
+                skipAgentRegistration
+              },
+              { parentCtx: ctx }
+            )
+          );
+        }
+
+        return { issued, deleted };
+      }
+    },
+
+    generateFromScopeAllAuthorization: {
+      // Generate the delegated access grants of all the grants shared with the pod owner that match a new
+      // access authorization with `interop:All` scope. The existing delegated grants are listed only once, and
+      // the agent registration of the grantee is updated only once at the end.
+      async handler(ctx) {
+        const { authorization } = ctx.params;
+        const dataOwner = authorization['interop:dataOwner'];
+
+        const grants = (await ctx.call('social-agent-registrations.getSharedGrants', { podOwner: dataOwner })).filter(
+          (grant: any) => grant['interop:registeredShapeTree'] === authorization['interop:registeredShapeTree']
+        );
+        if (grants.length === 0) return;
+
+        const delegatedGrants = await this.actions.listByScopeAllAuthorization({ authorization }, { parentCtx: ctx });
+        const issued: string[] = [];
+        const deleted: any[] = [];
+
+        for (const grant of grants) {
+          // Don't let a grant shared from another server (whose delegation isn't supported yet) prevent the
+          // other delegated grants from being generated: the access is still given by the WAC groups
+          try {
+            const result = await this.actions.generateFromSingleScopeAllAuthorization(
+              { authorization, grant, delegatedGrants, skipAgentRegistration: true },
+              { parentCtx: ctx }
+            );
+            issued.push(...result.issued);
+            deleted.push(...result.deleted);
+          } catch (e) {
+            this.logger.warn(
+              // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
+              `Unable to generate a delegated grant of ${getId(grant)} for ${authorization['interop:grantee']}. Error: ${e.message}`
+            );
+          }
+        }
+
+        await this.updateAgentRegistration(ctx, authorization, issued, deleted);
+
+        this.logger.info(
+          `Generated ${issued.length} delegated grant(s) of ${dataOwner} for ${authorization['interop:grantee']}`
+        );
+      }
+    },
+
+    deleteFromScopeAllAuthorization: {
+      // Delete the delegated access grants generated automatically from a deleted `interop:All` access authorization
+      async handler(ctx) {
+        const { authorization } = ctx.params;
+
+        const delegatedGrants = await this.actions.listByScopeAllAuthorization({ authorization }, { parentCtx: ctx });
+
+        for (const delegatedGrant of delegatedGrants) {
+          await this.actions.remoteDelete(
+            { delegatedGrant, webId: authorization['interop:grantedBy'], skipAgentRegistration: true },
             { parentCtx: ctx }
           );
+        }
+
+        await this.updateAgentRegistration(ctx, authorization, [], delegatedGrants);
+      }
+    },
+
+    queueScopeAllAuthorization: {
+      // Generate or delete the delegated grants of an `interop:All` access authorization in a background job,
+      // as it may take several minutes for a pod owner with many contacts
+      async handler(ctx) {
+        const { authorization, operation } = ctx.params;
+
+        if (this.createJob) {
+          // A single queue, so that the jobs of an authorization deleted then re-created are processed in order
+          await this.createJob(
+            'scopeAllAuthorization',
+            operation,
+            { authorization, operation },
+            scopeAllJobOptions
+          );
+        } else {
+          await this.processScopeAllAuthorization({ authorization, operation });
         }
       }
     },
@@ -372,6 +483,46 @@ const DelegatedAccessGrantsSchema = {
         );
 
         return arrayOf(filteredContainer['ldp:contains']);
+      }
+    }
+  },
+  methods: {
+    async updateAgentRegistration(ctx, authorization, issuedUris, deletedGrants) {
+      // The delegated grants generated from an authorization all have the same grantee and grantor
+      const toGrant = (uri: string) => ({
+        id: uri,
+        'interop:grantee': authorization['interop:grantee'],
+        'interop:grantedBy': authorization['interop:grantedBy']
+      });
+      const serviceName =
+        authorization['interop:granteeType'] === 'interop:Application'
+          ? 'app-registrations'
+          : 'social-agent-registrations';
+
+      if (deletedGrants.length > 0) {
+        await ctx.call(`${serviceName}.removeGrant`, { grants: deletedGrants.map((g: any) => toGrant(getId(g))) });
+      }
+      if (issuedUris.length > 0) {
+        await ctx.call(`${serviceName}.addGrant`, { grants: issuedUris.map(toGrant) });
+      }
+    },
+    async processScopeAllAuthorization({ authorization, operation }) {
+      const podOwner = authorization['interop:grantedBy'];
+      const dataset = await this.broker.call('auth.account.findDatasetByWebId', { webId: podOwner });
+      const action =
+        operation === 'delete'
+          ? 'delegated-access-grants.deleteFromScopeAllAuthorization'
+          : 'delegated-access-grants.generateFromScopeAllAuthorization';
+
+      await this.broker.call(action, { authorization }, { meta: { webId: podOwner, dataset } });
+    }
+  },
+  queues: {
+    scopeAllAuthorization: {
+      name: '*',
+      async process(job: any) {
+        await this.processScopeAllAuthorization(job.data);
+        return { authorization: getId(job.data.authorization), operation: job.data.operation };
       }
     }
   }

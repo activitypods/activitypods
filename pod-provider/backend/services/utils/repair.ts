@@ -130,6 +130,7 @@ const RepairSchema = {
 
         let deletedGrants = 0;
         let deletedDataGrants = 0;
+        const skipped: string[] = [];
         const failed: string[] = [];
 
         for (const { webId, username: dataset, deletedAt } of accounts) {
@@ -175,6 +176,35 @@ const RepairSchema = {
 
             const grantsUris = [...new Set<string>(grantsResults.map((r: any) => r.grantUri.value))];
             if (grantsUris.length === 0 && dataGrantsResults.length === 0) continue;
+
+            // An app which has not been upgraded only has its legacy grants: don't leave it without any grant
+            const notUpgradedResults = await ctx.call('triplestore.query', {
+              query: `
+                PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+                SELECT DISTINCT ?agentUri
+                WHERE {
+                  ?registrationUri a interop:ApplicationRegistration ;
+                    interop:registeredAgent ?agentUri .
+                  FILTER NOT EXISTS {
+                    ?registrationUri interop:hasAccessGrant ?grantUri .
+                    ?grantUri interop:scopeOfGrant ?scope .
+                  }
+                }
+              `,
+              accept: MIME_TYPES.JSON,
+              webId: 'system',
+              dataset
+            });
+
+            if (notUpgradedResults.length > 0) {
+              skipped.push(webId);
+              this.logger.warn(
+                `Skipping ${webId}: apps not upgraded (${notUpgradedResults
+                  .map((r: any) => r.agentUri.value)
+                  .join(', ')}). Run repair.upgradeAllApps first.`
+              );
+              continue;
+            }
 
             this.logger.info(
               `${dryRun ? '[dry run] ' : ''}Deleting ${grantsUris.length} legacy access grants and ${
@@ -247,11 +277,13 @@ const RepairSchema = {
 
         this.logger.info(
           `Legacy grants deletion finished: ${deletedGrants} access grants and ${deletedDataGrants} data grants deleted, ${
-            failed.length
-          } failed${failed.length > 0 ? ` (${failed.join(', ')})` : ''}`
+            skipped.length
+          } skipped${skipped.length > 0 ? ` (${skipped.join(', ')})` : ''}, ${failed.length} failed${
+            failed.length > 0 ? ` (${failed.join(', ')})` : ''
+          }`
         );
 
-        return { deletedGrants, deletedDataGrants, failed };
+        return { deletedGrants, deletedDataGrants, skipped, failed };
       }
     },
 

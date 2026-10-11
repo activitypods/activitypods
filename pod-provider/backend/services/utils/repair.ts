@@ -1,5 +1,6 @@
 import urlJoin from 'url-join';
 import { arrayOf, getParentContainerUri } from '@semapps/ldp';
+import { ACTIVITY_TYPES } from '@semapps/activitypub';
 import rdf from '@rdfjs/data-model';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema } from 'moleculer';
@@ -111,6 +112,146 @@ const RepairSchema = {
         );
 
         return { upgraded, failed };
+      }
+    },
+
+    deleteLegacyGrants: {
+      /**
+       * Delete the AccessGrants and DataGrants of ActivityPods 2.1 (AccessGrants without interop:scopeOfGrant).
+       * The app upgrade adds the new grants to the app registration, but leaves the old ones.
+       * They are detached from the app registrations, which are sent to the apps with an Update.
+       * They are deleted as system, without the hooks of the access-grants service: the permissions of
+       * the apps are given by the new grants, and must not be removed.
+       * Pass dryRun: true to only log what would be deleted.
+       */
+      async handler(ctx) {
+        const { username, dryRun = false } = ctx.params;
+        const accounts = await ctx.call('auth.account.find', { query: username === '*' ? undefined : { username } });
+
+        let deletedGrants = 0;
+        let deletedDataGrants = 0;
+        const failed: string[] = [];
+
+        for (const { webId, username: dataset, deletedAt } of accounts) {
+          if (deletedAt) continue;
+
+          ctx.meta.dataset = dataset;
+          ctx.meta.webId = webId;
+
+          try {
+            const grantsResults = await ctx.call('triplestore.query', {
+              query: `
+                PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+                SELECT ?grantUri ?registrationUri ?agentUri ?isApp
+                WHERE {
+                  ?grantUri a interop:AccessGrant ;
+                    interop:grantedBy <${webId}> .
+                  FILTER NOT EXISTS { ?grantUri interop:scopeOfGrant ?scope }
+                  OPTIONAL {
+                    ?registrationUri interop:hasAccessGrant ?grantUri ;
+                      interop:registeredAgent ?agentUri .
+                    BIND(EXISTS { ?registrationUri a interop:ApplicationRegistration } AS ?isApp)
+                  }
+                }
+              `,
+              accept: MIME_TYPES.JSON,
+              webId: 'system',
+              dataset
+            });
+
+            const dataGrantsResults = await ctx.call('triplestore.query', {
+              query: `
+                PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+                SELECT ?dataGrantUri
+                WHERE {
+                  ?dataGrantUri a interop:DataGrant ;
+                    interop:dataOwner <${webId}> .
+                }
+              `,
+              accept: MIME_TYPES.JSON,
+              webId: 'system',
+              dataset
+            });
+
+            const grantsUris = [...new Set<string>(grantsResults.map((r: any) => r.grantUri.value))];
+            if (grantsUris.length === 0 && dataGrantsResults.length === 0) continue;
+
+            this.logger.info(
+              `${dryRun ? '[dry run] ' : ''}Deleting ${grantsUris.length} legacy access grants and ${
+                dataGrantsResults.length
+              } data grants of ${webId}...`
+            );
+
+            if (dryRun) continue;
+
+            // Detach the grants from the registrations. The patch is done directly on the resource, because
+            // the hooks of the app-registrations service fetch the app, and would fail if it is offline.
+            const registrations: Record<string, { agentUri: string; isApp: boolean; grantsUris: string[] }> = {};
+            for (const { grantUri, registrationUri, agentUri, isApp } of grantsResults) {
+              if (!registrationUri) continue;
+              (registrations[registrationUri.value] ||= {
+                agentUri: agentUri.value,
+                isApp: isApp?.value === 'true',
+                grantsUris: []
+              }).grantsUris.push(grantUri.value);
+            }
+
+            for (const [registrationUri, { grantsUris: registrationGrantsUris }] of Object.entries(registrations)) {
+              await ctx.call('ldp.resource.patch', {
+                resourceUri: registrationUri,
+                triplesToRemove: registrationGrantsUris.map(grantUri =>
+                  rdf.quad(
+                    rdf.namedNode(registrationUri),
+                    rdf.namedNode('http://www.w3.org/ns/solid/interop#hasAccessGrant'),
+                    rdf.namedNode(grantUri)
+                  )
+                ),
+                webId: 'system'
+              });
+            }
+
+            for (const grantUri of grantsUris) {
+              await ctx.call('ldp.resource.delete', { resourceUri: grantUri, webId: 'system' });
+              deletedGrants++;
+            }
+
+            for (const { dataGrantUri } of dataGrantsResults) {
+              await ctx.call('ldp.resource.delete', { resourceUri: dataGrantUri.value, webId: 'system' });
+              deletedDataGrants++;
+            }
+
+            // Let the apps update their cache of the app registration
+            for (const [registrationUri, { agentUri, isApp }] of Object.entries(registrations)) {
+              if (!isApp) continue;
+              try {
+                const app = await ctx.call('ldp.remote.get', { resourceUri: agentUri, webId });
+                if (app.inbox) {
+                  await ctx.call('activitypub.outbox.post', {
+                    collectionUri: urlJoin(webId, 'outbox'),
+                    '@type': ACTIVITY_TYPES.UPDATE,
+                    object: registrationUri,
+                    to: agentUri
+                  });
+                }
+              } catch (e) {
+                // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
+                this.logger.warn(`Could not notify app ${agentUri} for ${webId}. Error: ${e.message}`);
+              }
+            }
+          } catch (e) {
+            failed.push(webId);
+            // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
+            this.logger.warn(`Unable to delete the legacy grants of ${webId}. Error: ${e.message}`);
+          }
+        }
+
+        this.logger.info(
+          `Legacy grants deletion finished: ${deletedGrants} access grants and ${deletedDataGrants} data grants deleted, ${
+            failed.length
+          } failed${failed.length > 0 ? ` (${failed.join(', ')})` : ''}`
+        );
+
+        return { deletedGrants, deletedDataGrants, failed };
       }
     },
 

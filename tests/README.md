@@ -73,6 +73,19 @@ We have configured the `launch.json` configuration file so that you can run test
 
 Just open the test suite you want to run, and press F5.
 
+## Run the benchmarks
+
+The [benchmarks](./benchmarks) directory contains performance measures, which are not run with the tests. They use the same Pod provider and helpers.
+
+```bash
+yarn run bench // Run all benchmarks
+BENCH_NUM_RESOURCES=200 BENCH_RUNS=3 yarn run bench ldp-container // Run a specific benchmark with custom settings
+```
+
+The available settings are described at the top of each benchmark. The results are printed as a table at the end.
+
+Benchmarks are heavy: limit the memory of Jena Fuseki (e.g. `docker run --memory 2g ...`), otherwise its JVM may use up to 65% of the RAM of your machine. Start the Pod provider without `SEMAPPS_REDIS_CACHE_URL` to measure without cache.
+
 ## Data visualization tools
 
 There are several tools that can help to explore the data that are produced during the tests. These data are cleared at the beginning of every test suites, but not at the end. So if you run a single test suite, all data will be here.

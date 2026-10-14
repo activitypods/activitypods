@@ -5,7 +5,7 @@ import { OBJECT_TYPES, AS_PREFIX } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
-import { fuzzGeo } from '../../utils.ts';
+import { fuzzGeo, geoDistance } from '../../utils.ts';
 
 // Radius (in meters) of the area in which the home position shown on the profile is randomly shifted
 const HOME_LOCATION_FUZZ_RADIUS = 1000;
@@ -81,41 +81,90 @@ const ProfilesProfileSchema = {
       }
     }
   },
+  actions: {
+    updateHomeGeo: {
+      params: {
+        locationUri: { type: 'string' }
+      },
+      async handler(ctx) {
+        const { locationUri } = ctx.params;
+
+        // Find the profile(s) using this location as home address
+        const results = await ctx.call('triplestore.query', {
+          query: `
+            PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+            SELECT ?profile
+            WHERE {
+              ?profile vcard:hasAddress <${locationUri}> .
+            }
+          `,
+          accept: MIME_TYPES.JSON,
+          webId: 'system'
+        });
+
+        for (const result of results) {
+          const profile = await this.actions.get(
+            { resourceUri: result.profile.value, accept: MIME_TYPES.JSON, webId: 'system' },
+            { parentCtx: ctx }
+          );
+          const homeGeo = await this.computeHomeGeo(ctx, profile, locationUri, 'system');
+          if (homeGeo && JSON.stringify(homeGeo) !== JSON.stringify(profile['vcard:hasGeo'])) {
+            // Call ldp.resource.put directly, as the geo has already been computed
+            // We don't use a raw SPARQL update, so that contacts are notified of the change
+            await ctx.call('ldp.resource.put', {
+              resource: { ...profile, 'vcard:hasGeo': homeGeo },
+              contentType: MIME_TYPES.JSON,
+              webId: 'system'
+            });
+          }
+        }
+      }
+    }
+  },
+  methods: {
+    /**
+     * Return the approximate position to store on the profile, based on the given home location.
+     * The profile is visible by all contacts, while the location is only visible to those it was shared with.
+     * So we only store an approximate position on the profile, to avoid leaking the exact home address.
+     */
+    async computeHomeGeo(ctx, oldProfile, locationUri, webId) {
+      const location = await ctx.call('profiles.location.get', { resourceUri: locationUri, webId });
+      const exactGeo = location?.['vcard:hasAddress']?.['vcard:hasGeo'];
+      if (!exactGeo) {
+        this.logger.warn(`Could not fetch location ${locationUri} when updating profile`);
+        return undefined;
+      }
+
+      const oldGeo = oldProfile?.['vcard:hasGeo'];
+      if (
+        oldProfile?.['vcard:hasAddress'] === locationUri &&
+        oldGeo &&
+        geoDistance(oldGeo, exactGeo) <= HOME_LOCATION_FUZZ_RADIUS
+      ) {
+        // Keep the same approximate position as long as the home address does not change,
+        // otherwise the exact position could be inferred by averaging successive values.
+        // The location may have been edited in place, so we also check the old position is still close enough.
+        return {
+          'vcard:latitude': oldGeo['vcard:latitude'],
+          'vcard:longitude': oldGeo['vcard:longitude']
+        };
+      }
+
+      return fuzzGeo(exactGeo, HOME_LOCATION_FUZZ_RADIUS);
+    }
+  },
   hooks: {
     before: {
       async put(ctx) {
         // Update vcard:hasGeo if vcard:hasAddress is set
         if (ctx.params.resource['vcard:hasAddress']) {
           const webId = ctx.params.webId || ctx.meta.webId;
-          const location = await ctx.call('profiles.location.get', {
-            resourceUri: ctx.params.resource['vcard:hasAddress'],
-            webId
-          });
-          const exactGeo = location?.['vcard:hasAddress']?.['vcard:hasGeo'];
-          if (exactGeo) {
-            // The profile is visible by all contacts, while the location is only visible to those it was shared with.
-            // So we only store an approximate position on the profile, to avoid leaking the exact home address.
-            const oldData = await ctx.call('profiles.profile.get', {
-              resourceUri: ctx.params.resource.id || ctx.params.resource['@id'],
-              accept: MIME_TYPES.JSON,
-              webId
-            });
-            const oldGeo = oldData['vcard:hasGeo'];
-            if (oldData['vcard:hasAddress'] === ctx.params.resource['vcard:hasAddress'] && oldGeo) {
-              // Keep the same approximate position as long as the home address does not change,
-              // otherwise the exact position could be inferred by averaging successive values
-              ctx.params.resource['vcard:hasGeo'] = {
-                'vcard:latitude': oldGeo['vcard:latitude'],
-                'vcard:longitude': oldGeo['vcard:longitude']
-              };
-            } else {
-              ctx.params.resource['vcard:hasGeo'] = fuzzGeo(exactGeo, HOME_LOCATION_FUZZ_RADIUS);
-            }
-          } else {
-            this.logger.warn(
-              `Could not fetch location ${ctx.params.resource['vcard:hasAddress']} when updating profile`
-            );
-          }
+          const oldProfile = await this.actions.get(
+            { resourceUri: ctx.params.resource.id || ctx.params.resource['@id'], accept: MIME_TYPES.JSON, webId },
+            { parentCtx: ctx }
+          );
+          const homeGeo = await this.computeHomeGeo(ctx, oldProfile, ctx.params.resource['vcard:hasAddress'], webId);
+          if (homeGeo) ctx.params.resource['vcard:hasGeo'] = homeGeo;
         } else {
           if (ctx.params.resource['vcard:hasGeo']) {
             delete ctx.params.resource['vcard:hasGeo'];

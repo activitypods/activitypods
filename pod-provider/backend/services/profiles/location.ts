@@ -66,6 +66,15 @@ const ProfilesLocationSchema = {
   },
   hooks: {
     after: {
+      async put(ctx, res) {
+        // If the location has been edited in place, update the approximate position of the profile(s) using it
+        const oldGeo = res.oldData?.['vcard:hasAddress']?.['vcard:hasGeo'];
+        const newGeo = res.newData?.['vcard:hasAddress']?.['vcard:hasGeo'];
+        if (newGeo && JSON.stringify(oldGeo) !== JSON.stringify(newGeo)) {
+          await ctx.call('profiles.profile.updateHomeGeo', { locationUri: res.resourceUri });
+        }
+        return res;
+      },
       async delete(ctx, res) {
         // If the deleted location is the home location of the current user, clear it from profile
         const homeLocation = await this.actions.getHomeLocation({ webId: res.webId }, { parentCtx: ctx });

@@ -75,4 +75,16 @@ const fuzzGeo = (geo: any, radius: number) => {
   };
 };
 
-export { arraysEqual, hasActivityGrant, fuzzGeo };
+/**
+ * Return the approximate distance in meters between two vcard:hasGeo coordinates
+ */
+const geoDistance = (geo1: any, geo2: any) => {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const lat1 = toRad(parseFloat(geo1['vcard:latitude']));
+  const lat2 = toRad(parseFloat(geo2['vcard:latitude']));
+  const deltaLng = toRad(parseFloat(geo2['vcard:longitude']) - parseFloat(geo1['vcard:longitude']));
+  const a = Math.sin((lat2 - lat1) / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLng / 2) ** 2;
+  return 2 * 6371000 * Math.asin(Math.sqrt(a));
+};
+
+export { arraysEqual, hasActivityGrant, fuzzGeo, geoDistance };

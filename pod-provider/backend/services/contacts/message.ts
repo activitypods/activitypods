@@ -1,5 +1,5 @@
 import urlJoin from 'url-join';
-import { ControlledContainerMixin, arrayOf } from '@semapps/ldp';
+import { ControlledContainerMixin, arrayOf, isObject } from '@semapps/ldp';
 import { ACTIVITY_TYPES, OBJECT_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 import * as CONFIG from '../../config/config.ts';
 import { ServiceSchema } from 'moleculer';
@@ -37,6 +37,11 @@ const ContactsMessageSchema = {
         // For now, only send notification for direct messages (not sent through followers list, nor CCed)
         // Otherwise we may get dozens of messages from Mastodon actors, which should be read on Mastopod feed
         if (arrayOf(activity.to).includes(recipientUri)) {
+          // An app may point to where the message should be read with a `Link` in the object's `url`
+          // (e.g. a comment on a resource); otherwise, link to the emitter in the contacts list.
+          const link = arrayOf(activity.object.url).find(
+            (url: any) => isObject(url) && typeof url.href === 'string' && /^https?:\/\//.test(url.href)
+          );
           return await ctx.call('mail-notifications.notify', {
             template: {
               title: {
@@ -45,17 +50,23 @@ const ContactsMessageSchema = {
               },
               content: '{{removeHtmlTags activity.object.content}}',
               actions: [
-                {
-                  caption: {
-                    en: 'Reply',
-                    fr: 'Répondre'
-                  },
-                  link: '/network/{{encodeUri emitter.id}}'
-                }
+                link
+                  ? {
+                      caption: '{{#if link.name}}{{{link.name}}}{{else}}{{{link.href}}}{{/if}}',
+                      link: '{{{link.href}}}'
+                    }
+                  : {
+                      caption: {
+                        en: 'Reply',
+                        fr: 'Répondre'
+                      },
+                      link: '/network/{{encodeUri emitter.id}}'
+                    }
               ]
             },
             recipientUri,
             activity,
+            link,
             context: activity.object.id
           });
         }

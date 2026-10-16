@@ -2,7 +2,6 @@ import path from 'node:path';
 import urlJoin from 'url-join';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
-import { MIME_TYPES } from '@semapps/mime-types';
 import { arrayOf } from '@semapps/ldp';
 import { throw403, throw404 } from '@semapps/middlewares';
 import * as CONFIG from '../config/config.ts';
@@ -53,32 +52,13 @@ const GroupsService = {
           owner: ownerWebId
         });
 
-        // Create storage
-        const storageUrl = await ctx.call('solid-storage.create', { username: id });
-
-        // Create containers
-        const registeredContainers = await ctx.call('ldp.registry.list');
-        // @ts-expect-error TS(2339): Property 'path' does not exist on type 'unknown'.
-        for (const { path, permissions } of Object.values(registeredContainers)) {
-          await ctx.call('ldp.container.createAndAttach', {
-            containerUri: urlJoin(storageUrl, path),
-            permissions, // Used by the WebAclMiddleware
-            webId: ownerWebId
-          });
-        }
-
-        // Create WebID
-        await await ctx.call('webid.create', {
-          resource: {
-            '@id': groupWebId,
-            '@type':
-              type === 'foaf:Organization' ? ['foaf:Organization', 'as:Organization'] : ['foaf:Group', 'as:Group'],
-            'foaf:nick': id,
-            'pim:storage': storageUrl
-          },
-          contentType: MIME_TYPES.JSON,
-          webId: 'system'
+        // Create WebID and storage
+        await ctx.call('webid.createWebId', {
+          nick: id,
+          '@type': type === 'foaf:Organization' ? ['foaf:Organization', 'as:Organization'] : ['foaf:Group', 'as:Group']
         });
+
+        const storageUrl = await ctx.call('solid-storage.getUrl', { webId: groupWebId });
 
         // Give full rights to the group owner on the group WebId
         await ctx.call('webacl.resource.addRights', {

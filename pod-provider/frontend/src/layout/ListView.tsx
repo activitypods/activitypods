@@ -6,7 +6,7 @@ import SplitView from './SplitView';
 const ListView = ({ asides, actions = [<CreateButton />], title, children }: any) => {
   return (
     <SplitView asides={asides}>
-      <Grid container sx={{ mt: 2 }}>
+      <Grid container sx={{ mt: { xs: 0, sm: 2 } }}>
         <Grid
           size={{
             xs: 8,

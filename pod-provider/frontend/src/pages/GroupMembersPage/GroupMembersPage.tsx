@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslate } from 'react-admin';
-import { List } from '@mui/material';
+import { List, useMediaQuery } from '@mui/material';
 import Header from '../../common/Header';
 import ListView from '../../layout/ListView';
 import useRealmContext from '../../hooks/useRealmContext';
@@ -11,6 +11,7 @@ import ProfileCard from '../../common/cards/ProfileCard';
 
 const GroupMembersPage = () => {
   const translate = useTranslate();
+  const xs = useMediaQuery((theme: any) => theme.breakpoints.down('sm'), { noSsr: true });
   const { isLoading: isGroupLoading, data: group } = useRealmContext() as any;
   const { members, isLoading, addMember, removeMember, addOwner, removeOwner } = useGroupMembers();
 
@@ -22,10 +23,10 @@ const GroupMembersPage = () => {
       <ListView
         title={translate('app.page.members')}
         actions={[]}
-        asides={[<ProfileCard />, <AddMemberCard members={members} onAdd={addMember} />]}
+        asides={[...(xs ? [] : [<ProfileCard />]), <AddMemberCard members={members} onAdd={addMember} />]}
       >
         {!isLoading && (
-          <List sx={{ mt: 2 }}>
+          <List>
             {members?.map(member => (
               <MemberItem
                 key={member.webId}

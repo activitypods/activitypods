@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslate, SimpleList } from 'react-admin';
 import { Link } from 'react-router-dom';
-import { Avatar, Button } from '@mui/material';
+import { Avatar, Button, useMediaQuery } from '@mui/material';
 import Header from '../../common/Header';
 import AddIcon from '@mui/icons-material/Add';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
@@ -16,6 +16,7 @@ const NetworkPage = () => {
   // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
   const { identity } = useCheckAuthenticated();
   const translate = useTranslate();
+  const xs = useMediaQuery((theme: any) => theme.breakpoints.down('sm'), { noSsr: true });
   if (!identity?.id) return null;
   return (
     <>
@@ -29,7 +30,7 @@ const NetworkPage = () => {
           </Link>,
           <TagsButton />
         ]}
-        asides={[<ProfileCard />, <ShareContactCard />]}
+        asides={xs ? [<ShareContactCard />] : [<ProfileCard />, <ShareContactCard />]}
         sort={{ field: 'vcard:given-name', order: 'ASC' }}
         perPage={1000}
       >

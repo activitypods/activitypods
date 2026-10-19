@@ -80,7 +80,13 @@ const UNDO_IGNORE_CONTACT = {
   object: IGNORE_CONTACT
 };
 
+const ADD_GROUP_MEMBER = (activity: any) => ({
+  match: activity.type === ACTIVITY_TYPES.ADD && !activity.origin && activity.target === activity.actor,
+  dereferencedActivity: activity
+});
+
 export {
+  ADD_GROUP_MEMBER,
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
   IGNORE_CONTACT_REQUEST,

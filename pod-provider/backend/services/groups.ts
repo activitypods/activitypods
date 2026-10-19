@@ -3,13 +3,17 @@ import urlJoin from 'url-join';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
 import { arrayOf, getSlugFromUri } from '@semapps/ldp';
-import { ACTIVITY_TYPES } from '@semapps/activitypub';
+import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { throw403, throw404 } from '@semapps/middlewares';
 import * as CONFIG from '../config/config.ts';
+import { ADD_GROUP_MEMBER } from '../config/patterns.ts';
+import { ADD_GROUP_MEMBER_MAPPING } from '../config/mappings.ts';
 import { ServiceSchema } from 'moleculer';
 
 const GroupsService = {
   name: 'groups' as const,
+  // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Service<ServiceSettingSchema>): Promise<void>; ... Remove this comment to see the full error message
+  mixins: [ActivitiesHandlerMixin],
   dependencies: ['api', 'ldp'],
   async started() {
     const basePath = await this.broker.call('ldp.getBasePath');
@@ -244,6 +248,19 @@ const GroupsService = {
       }
     }
   },
+  activities: {
+    addedToGroup: {
+      match: ADD_GROUP_MEMBER,
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
+        if (activity.object !== recipientUri) return;
+        await ctx.call('mail-notifications.notify', {
+          template: ADD_GROUP_MEMBER_MAPPING,
+          recipientUri,
+          activity
+        });
+      }
+    }
+  },
   methods: {
     async getGroupWebId(ctx, username) {
       const account = await ctx.call('auth.account.findByUsername', { username });
@@ -258,8 +275,7 @@ const GroupsService = {
     },
     async getRoleUri(ctx, groupWebId, role) {
       const roleRegistrationUri = await ctx.call('role-registrations.getUri', { groupWebId, role });
-      if (!(await ctx.call('role-registrations.exist', { resourceUri: roleRegistrationUri, webId: 'system' })))
-        throw404(`Role ${role} not found`);
+      if (!roleRegistrationUri) throw404(`Role ${role} not found`);
       return roleRegistrationUri;
     },
     async addToGroup(ctx, groupWebId, memberUri) {

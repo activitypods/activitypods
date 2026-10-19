@@ -56,4 +56,25 @@ const ACCEPT_CONTACT_REQUEST_MAPPING = {
   ]
 };
 
-export { CONTACT_REQUEST_MAPPING, ACCEPT_CONTACT_REQUEST_MAPPING, AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING };
+const ADD_GROUP_MEMBER_MAPPING = {
+  title: {
+    en: `You are now a member of {{#if emitter.name}}{{{emitter.name}}}{{else}}{{emitter.preferredUsername}}{{/if}}`,
+    fr: `Vous êtes maintenant membre de {{#if emitter.name}}{{{emitter.name}}}{{else}}{{emitter.preferredUsername}}{{/if}}`
+  },
+  actions: [
+    {
+      caption: {
+        en: 'View',
+        fr: 'Voir'
+      },
+      link: '/network/{{encodeUri emitter.id}}'
+    }
+  ]
+};
+
+export {
+  CONTACT_REQUEST_MAPPING,
+  ACCEPT_CONTACT_REQUEST_MAPPING,
+  AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING,
+  ADD_GROUP_MEMBER_MAPPING
+};

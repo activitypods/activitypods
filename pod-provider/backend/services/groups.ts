@@ -2,14 +2,18 @@ import path from 'node:path';
 import urlJoin from 'url-join';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
-import { MIME_TYPES } from '@semapps/mime-types';
-import { arrayOf } from '@semapps/ldp';
+import { arrayOf, getSlugFromUri } from '@semapps/ldp';
+import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { throw403, throw404 } from '@semapps/middlewares';
 import * as CONFIG from '../config/config.ts';
+import { ADD_GROUP_MEMBER } from '../config/patterns.ts';
+import { ADD_GROUP_MEMBER_MAPPING } from '../config/mappings.ts';
 import { ServiceSchema } from 'moleculer';
 
 const GroupsService = {
   name: 'groups' as const,
+  // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Service<ServiceSettingSchema>): Promise<void>; ... Remove this comment to see the full error message
+  mixins: [ActivitiesHandlerMixin],
   dependencies: ['api', 'ldp'],
   async started() {
     const basePath = await this.broker.call('ldp.getBasePath');
@@ -21,8 +25,15 @@ const GroupsService = {
         aliases: {
           'POST /groups': 'groups.create',
           'GET /groups': 'groups.list',
-          'POST /:username/claimGroup': 'groups.claim'
-        }
+          'POST /:username/claimGroup': 'groups.claim',
+          'GET /:username/members': 'groups.listMembers',
+          'POST /:username/members': 'groups.addMember',
+          'DELETE /:username/members': 'groups.removeMember',
+          'GET /:username/roles': 'groups.listRoles',
+          'POST /:username/roles/:role/members': 'groups.addRoleMember',
+          'DELETE /:username/roles/:role/members': 'groups.removeRoleMember'
+        },
+        bodyParsers: { json: true }
       }
     });
   },
@@ -49,72 +60,18 @@ const GroupsService = {
         await ctx.call('auth.account.create', {
           username: id,
           webId: groupWebId,
-          group: true,
-          owner: ownerWebId
+          group: true
         });
 
-        // Create storage
-        const storageUrl = await ctx.call('solid-storage.create', { username: id });
-
-        // Create containers
-        const registeredContainers = await ctx.call('ldp.registry.list');
-        // @ts-expect-error TS(2339): Property 'path' does not exist on type 'unknown'.
-        for (const { path, permissions } of Object.values(registeredContainers)) {
-          await ctx.call('ldp.container.createAndAttach', {
-            containerUri: urlJoin(storageUrl, path),
-            permissions, // Used by the WebAclMiddleware
-            webId: ownerWebId
-          });
-        }
-
-        // Create WebID
-        await await ctx.call('webid.create', {
-          resource: {
-            '@id': groupWebId,
-            '@type':
-              type === 'foaf:Organization' ? ['foaf:Organization', 'as:Organization'] : ['foaf:Group', 'as:Group'],
-            'foaf:nick': id,
-            'pim:storage': storageUrl
-          },
-          contentType: MIME_TYPES.JSON,
-          webId: 'system'
+        // Create WebID and storage
+        await ctx.call('webid.createWebId', {
+          nick: id,
+          '@type': type === 'foaf:Organization' ? ['foaf:Organization', 'as:Organization'] : ['foaf:Group', 'as:Group']
         });
 
-        // Give full rights to the group owner on the group WebId
-        await ctx.call('webacl.resource.addRights', {
-          resourceUri: groupWebId,
-          additionalRights: {
-            user: {
-              uri: ownerWebId,
-              read: true,
-              write: true,
-              control: true
-            }
-          },
-          webId: 'system'
-        });
+        await this.setOwnerRights(ctx, groupWebId, ownerWebId, true);
 
-        // Give full rights to the group owner on the group storage
-        await ctx.call('webacl.resource.addRights', {
-          resourceUri: storageUrl,
-          additionalRights: {
-            user: {
-              uri: ownerWebId,
-              read: true,
-              write: true,
-              control: true
-            },
-            default: {
-              user: {
-                uri: ownerWebId,
-                read: true,
-                write: true,
-                control: true
-              }
-            }
-          },
-          webId: 'system'
-        });
+        await ctx.call('role-registrations.initializeForGroup', { groupWebId, ownerWebId });
 
         // We need to set the Location twice or we get a Moleculer warning
         ctx.meta.$responseHeaders = {
@@ -135,6 +92,122 @@ const GroupsService = {
       }
     },
 
+    listMembers: {
+      async handler(ctx) {
+        const groupWebId = await this.getGroupWebId(ctx, ctx.params.username);
+        await this.checkSpecialRight(ctx, groupWebId, 'interop:ReadMembers');
+
+        const roles = await ctx.call('role-registrations.listForGroup', { groupWebId });
+        const members: Record<string, string[]> = {};
+        for (const role of roles) {
+          for (const memberUri of arrayOf(role['interop:hasMember'])) {
+            members[memberUri] = [...(members[memberUri] || []), getSlugFromUri(role.id || role['@id'])];
+          }
+        }
+        return Object.entries(members).map(([webId, memberRoles]) => ({ webId, roles: memberRoles }));
+      }
+    },
+
+    listRoles: {
+      async handler(ctx) {
+        const groupWebId = await this.getGroupWebId(ctx, ctx.params.username);
+        await this.checkSpecialRight(ctx, groupWebId, 'interop:ReadMembers');
+
+        const roles = await ctx.call('role-registrations.listForGroup', { groupWebId });
+        return roles.map((role: any) => ({
+          id: getSlugFromUri(role.id || role['@id']),
+          label: role['skos:prefLabel'],
+          isDefaultRole: role['interop:isDefaultRole'] === true,
+          isSystemRole: role['interop:isSystemRole'] === true,
+          specialRights: arrayOf(role['interop:hasSpecialRight'])
+        }));
+      }
+    },
+
+    addMember: {
+      params: {
+        username: { type: 'string' },
+        memberUri: { type: 'string' }
+      },
+      async handler(ctx) {
+        const { username, memberUri } = ctx.params;
+        const groupWebId = await this.getGroupWebId(ctx, username);
+        await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageMembers');
+
+        await this.addToGroup(ctx, groupWebId, memberUri);
+      }
+    },
+
+    removeMember: {
+      params: {
+        username: { type: 'string' },
+        memberUri: { type: 'string' }
+      },
+      async handler(ctx) {
+        const { username, memberUri } = ctx.params;
+        const groupWebId = await this.getGroupWebId(ctx, username);
+        await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageMembers');
+
+        const isOwner = await ctx.call('role-registrations.hasRole', {
+          groupWebId,
+          agentUri: memberUri,
+          role: 'owner'
+        });
+        if (isOwner) {
+          await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageRoles');
+          await this.removeOwner(ctx, groupWebId, memberUri);
+        }
+
+        await this.removeFromGroup(ctx, groupWebId, memberUri);
+      }
+    },
+
+    addRoleMember: {
+      params: {
+        username: { type: 'string' },
+        role: { type: 'string' },
+        memberUri: { type: 'string' }
+      },
+      async handler(ctx) {
+        const { username, role, memberUri } = ctx.params;
+        const groupWebId = await this.getGroupWebId(ctx, username);
+        await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageRoles');
+
+        await this.addToGroup(ctx, groupWebId, memberUri);
+        if (role === 'member') return;
+
+        const roleRegistrationUri = await this.getRoleUri(ctx, groupWebId, role);
+        if (await ctx.call('role-registrations.hasRole', { groupWebId, agentUri: memberUri, role })) return;
+
+        await ctx.call('role-registrations.addMember', { roleRegistrationUri, agentUri: memberUri });
+        if (role === 'owner') await this.setOwnerRights(ctx, groupWebId, memberUri, true);
+      }
+    },
+
+    removeRoleMember: {
+      params: {
+        username: { type: 'string' },
+        role: { type: 'string' },
+        memberUri: { type: 'string' }
+      },
+      async handler(ctx) {
+        const { username, role, memberUri } = ctx.params;
+        const groupWebId = await this.getGroupWebId(ctx, username);
+        await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageRoles');
+
+        if (role === 'owner') {
+          await this.removeOwner(ctx, groupWebId, memberUri);
+        } else if (role === 'member') {
+          if (await ctx.call('role-registrations.hasRole', { groupWebId, agentUri: memberUri, role: 'owner' }))
+            await this.removeOwner(ctx, groupWebId, memberUri);
+          await this.removeFromGroup(ctx, groupWebId, memberUri);
+        } else {
+          const roleRegistrationUri = await this.getRoleUri(ctx, groupWebId, role);
+          await ctx.call('role-registrations.removeMember', { roleRegistrationUri, agentUri: memberUri });
+        }
+      }
+    },
+
     claim: {
       async handler(ctx) {
         const { username, groupWebId } = ctx.params;
@@ -150,7 +223,7 @@ const GroupsService = {
         // Attach group to account
         await ctx.call('auth.account.update', {
           id: account['@id'],
-          owns: account.owns ? [...arrayOf(account.owns), groupWebId] : groupWebId
+          owns: [...new Set([...arrayOf(account.owns), groupWebId])]
         });
       }
     },
@@ -173,6 +246,128 @@ const GroupsService = {
           owns: arrayOf(account.owns).filter(uri => uri !== groupWebId)
         });
       }
+    }
+  },
+  activities: {
+    addedToGroup: {
+      match: ADD_GROUP_MEMBER,
+      async onReceive(ctx: any, activity: any, recipientUri: any) {
+        if (activity.object !== recipientUri) return;
+        await ctx.call('mail-notifications.notify', {
+          template: ADD_GROUP_MEMBER_MAPPING,
+          recipientUri,
+          activity
+        });
+      }
+    }
+  },
+  methods: {
+    async getGroupWebId(ctx, username) {
+      const account = await ctx.call('auth.account.findByUsername', { username });
+      if (!account?.group) throw404('Group not found');
+      return account.webId;
+    },
+    async checkSpecialRight(ctx, groupWebId, right) {
+      const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+      if (webId === 'system') return;
+      const hasRight = await ctx.call('role-registrations.hasSpecialRight', { groupWebId, agentUri: webId, right });
+      if (!hasRight) throw403(`You need the ${right} right on this group`);
+    },
+    async getRoleUri(ctx, groupWebId, role) {
+      const roleRegistrationUri = await ctx.call('role-registrations.getUri', { groupWebId, role });
+      if (!roleRegistrationUri) throw404(`Role ${role} not found`);
+      return roleRegistrationUri;
+    },
+    async addToGroup(ctx, groupWebId, memberUri) {
+      if (await ctx.call('role-registrations.hasRole', { groupWebId, agentUri: memberUri, role: 'member' })) return;
+
+      const member = await ctx.call('activitypub.actor.get', { actorUri: memberUri });
+      if (!member || !arrayOf(member.type || member['@type']).includes('foaf:Person'))
+        throw new E.BadRequestError('Only persons can be added to a group');
+
+      await ctx.call('role-registrations.addMember', {
+        roleRegistrationUri: await this.getRoleUri(ctx, groupWebId, 'member'),
+        agentUri: memberUri
+      });
+
+      await ctx.call('social-agent-registrations.createOrUpdate', { agentUri: memberUri, podOwner: groupWebId });
+
+      await this.notifyMember(ctx, groupWebId, memberUri, ACTIVITY_TYPES.ADD);
+    },
+    async removeFromGroup(ctx, groupWebId, memberUri) {
+      const roles = await ctx.call('role-registrations.listForAgent', { groupWebId, agentUri: memberUri });
+      if (roles.length === 0) return;
+
+      for (const role of roles) {
+        await ctx.call('role-registrations.removeMember', {
+          roleRegistrationUri: role.id || role['@id'],
+          agentUri: memberUri
+        });
+      }
+
+      const registration = await ctx.call('social-agent-registrations.getForAgent', {
+        agentUri: memberUri,
+        podOwner: groupWebId
+      });
+      if (registration) {
+        await ctx.call('social-agent-registrations.delete', {
+          resourceUri: registration.id || registration['@id'],
+          webId: groupWebId
+        });
+      }
+
+      await this.notifyMember(ctx, groupWebId, memberUri, ACTIVITY_TYPES.REMOVE);
+    },
+    async removeOwner(ctx, groupWebId, ownerWebId) {
+      const roleRegistrationUri = await this.getRoleUri(ctx, groupWebId, 'owner');
+      const owners = await ctx.call('role-registrations.get', { resourceUri: roleRegistrationUri, webId: 'system' });
+      const ownersUris = arrayOf(owners['interop:hasMember']);
+      if (!ownersUris.includes(ownerWebId)) return;
+      if (ownersUris.length === 1) throw403('The last owner of a group cannot be removed');
+
+      await ctx.call('role-registrations.removeMember', { roleRegistrationUri, agentUri: ownerWebId });
+      await this.setOwnerRights(ctx, groupWebId, ownerWebId, false);
+    },
+    async setOwnerRights(ctx, groupWebId, ownerWebId, granted) {
+      const storageUrl = await ctx.call('solid-storage.getUrl', { webId: groupWebId });
+      const fullRights = { uri: ownerWebId, read: true, write: true, control: true };
+      const action = granted ? 'webacl.resource.addRights' : 'webacl.resource.removeRights';
+      const key = granted ? 'additionalRights' : 'rights';
+
+      await ctx.call(action, { resourceUri: groupWebId, [key]: { user: fullRights }, webId: 'system' });
+      await ctx.call(action, {
+        resourceUri: storageUrl,
+        [key]: { user: fullRights, default: { user: fullRights } },
+        webId: 'system'
+      });
+
+      const account = await ctx.call('auth.account.findByWebId', { webId: ownerWebId });
+      if (account) {
+        await ctx.call(
+          granted ? 'groups.claim' : 'groups.undoClaim',
+          { username: account.username, groupWebId },
+          { meta: { webId: 'system', impersonatedUser: undefined } }
+        );
+      }
+    },
+    async notifyMember(ctx, groupWebId, memberUri, type) {
+      const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
+        actorUri: groupWebId,
+        predicate: 'outbox'
+      });
+
+      await ctx.call(
+        'activitypub.outbox.post',
+        {
+          collectionUri: outboxUri,
+          type,
+          actor: groupWebId,
+          object: memberUri,
+          target: groupWebId,
+          to: memberUri
+        },
+        { meta: { webId: groupWebId } }
+      );
     }
   }
 } satisfies ServiceSchema;

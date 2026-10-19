@@ -31,7 +31,24 @@ env:
   GHCR_IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
 
 jobs:
+  check-draft:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      is-draft: ${{ steps.draft.outputs.is-draft }}
+    steps:
+      - id: draft
+        if: github.event_name == 'push' && github.ref == 'refs/heads/next'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          is_draft=$(gh pr list -R "${{ github.repository }}" --head next --state open --json isDraft --jq 'any(.[]; .isDraft)')
+          echo "is-draft=$is_draft" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: check-draft
+    if: needs.check-draft.outputs.is-draft != 'true'
     strategy:
       fail-fast: false
       matrix:

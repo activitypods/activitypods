@@ -18,6 +18,7 @@ import BlockAnonymous from '../../../common/BlockAnonymous';
 import ToolbarWithoutDelete from '../../../common/ToolbarWithoutDelete';
 import useWebfingerId from '../../../hooks/useWebfingerId';
 import useRealmContext from '../../../hooks/useRealmContext';
+import { compressImage } from '../../../utils';
 
 const PublicProfileWarning = () => {
   const translate = useTranslate();
@@ -54,10 +55,11 @@ export const PublicProfilePage = () => {
   const transform = useCallback(
     async ({ name, icon, ...rest }: any) => {
       if (icon?.rawFile) {
-        const iconUrl = await dataProvider.uploadFile(icon.rawFile);
+        const file = await compressImage(icon.rawFile);
+        const iconUrl = await dataProvider.uploadFile(file);
         icon = {
           type: 'Image',
-          mediaType: icon.rawFile?.type,
+          mediaType: file.type,
           url: iconUrl
         };
       } else if (icon?.fileToDelete) {

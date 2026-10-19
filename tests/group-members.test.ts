@@ -2,7 +2,7 @@ import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
 import fetch from 'node-fetch';
 import { connectPodProvider, clearAllData } from './initialize.ts';
-import { arrayOf } from './utils.ts';
+import { arrayOf, fetchMails } from './utils.ts';
 jest.setTimeout(100000);
 
 describe('Test groups members handling', () => {
@@ -22,9 +22,9 @@ describe('Test groups members handling', () => {
       body: body ? JSON.stringify(body) : undefined
     });
 
-  const getRole = (role: string) =>
+  const getRole = async (role: string) =>
     podProvider.call('role-registrations.get', {
-      resourceUri: urlJoin(groupWebId, 'data/interop/role-registration', role),
+      resourceUri: await podProvider.call('role-registrations.getUri', { groupWebId, role }),
       webId: 'system'
     });
 
@@ -109,6 +109,12 @@ describe('Test groups members handling', () => {
         expect.objectContaining({ type: 'Add', actor: groupWebId, object: bob.id, target: groupWebId })
       );
     });
+
+    await waitForExpect(async () => {
+      await expect(fetchMails()).resolves.toContainEqual(
+        expect.objectContaining({ recipients: ['<bob@test.com>'], subject: 'You are now a member of acme' })
+      );
+    });
   });
 
   test('Alice can list the members, but not Bob', async () => {
@@ -130,7 +136,7 @@ describe('Test groups members handling', () => {
 
     await expect(
       podProvider.call('ldp.resource.get', {
-        resourceUri: urlJoin(groupWebId, 'data/interop/role-registration/member'),
+        resourceUri: await podProvider.call('role-registrations.getUri', { groupWebId, role: 'member' }),
         webId: bob.id
       })
     ).rejects.toThrow();

@@ -1,6 +1,5 @@
-import urlJoin from 'url-join';
 import rdf from '@rdfjs/data-model';
-import { ControlledContainerMixin, arrayOf, getId } from '@semapps/ldp';
+import { ControlledContainerMixin, arrayOf, getId, getSlugFromUri } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema } from 'moleculer';
 
@@ -69,7 +68,8 @@ const RoleRegistrationsSchema = {
       async handler(ctx) {
         const { groupWebId, role } = ctx.params;
         const containerUri = await this.actions.getContainerUri({ webId: groupWebId }, { parentCtx: ctx });
-        return urlJoin(containerUri, role);
+        const uris: string[] = await ctx.call('ldp.container.getUris', { containerUri });
+        return uris.find(uri => getSlugFromUri(uri) === role);
       }
     },
 
@@ -92,10 +92,9 @@ const RoleRegistrationsSchema = {
     hasRole: {
       async handler(ctx) {
         const { groupWebId, agentUri, role } = ctx.params;
-        const roleRegistration = await this.actions.get(
-          { resourceUri: await this.actions.getUri({ groupWebId, role }, { parentCtx: ctx }), webId: 'system' },
-          { parentCtx: ctx }
-        );
+        const resourceUri = await this.actions.getUri({ groupWebId, role }, { parentCtx: ctx });
+        if (!resourceUri) return false;
+        const roleRegistration = await this.actions.get({ resourceUri, webId: 'system' }, { parentCtx: ctx });
         return arrayOf(roleRegistration['interop:hasMember']).includes(agentUri);
       }
     },

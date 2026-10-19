@@ -74,8 +74,8 @@ const UserMenu = () => {
           >
             <MenuItem onClick={handleClose}>
               <ListItemIcon>
-                {group['foaf:depiction'] ? (
-                  <Avatar src={group['foaf:depiction']} sx={{ width: 24, height: 24 }} />
+                {group.icon?.url || group['foaf:depiction'] ? (
+                  <Avatar src={group.icon?.url || group['foaf:depiction']} sx={{ width: 24, height: 24 }} />
                 ) : (
                   <GroupIcon />
                 )}

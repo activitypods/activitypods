@@ -72,12 +72,15 @@ const ProfileCard = () => {
   const { isGroup, data: identity } = useRealmContext() as any;
   const translate = useTranslate();
   if (!identity) return null;
-  const avatar = identity.avatar?.url || identity.avatar;
   return (
     <Card className={classes.root}>
       <Box className={classes.title}>
         <Box display="flex" justifyContent="center" className={classes.avatarWrapper}>
-          <Avatar src={avatar} className={classes.avatar} alt={translate('app.accessibility.your_profile_picture')} />
+          <Avatar
+            src={identity.avatar}
+            className={classes.avatar}
+            alt={translate('app.accessibility.your_profile_picture')}
+          />
         </Box>
       </Box>
       <Box className={classes.block}>

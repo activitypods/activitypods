@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import urlJoin from 'url-join';
 import {
   SimpleForm,
   TextInput,
@@ -54,7 +55,18 @@ export const PublicProfilePage = () => {
   const transform = useCallback(
     async ({ name, icon, ...rest }: any) => {
       if (icon?.rawFile) {
-        const iconUrl = await dataProvider.uploadFile(icon.rawFile);
+        let iconUrl;
+        if (isGroup) {
+          // Upload the file on the group's storage, not on the logged user's storage
+          const { headers } = await dataProvider.fetch(urlJoin(data.webIdData['pim:storage'], 'semapps/file'), {
+            method: 'POST',
+            body: icon.rawFile,
+            headers: new Headers({ 'Content-Type': icon.rawFile.type })
+          });
+          iconUrl = headers.get('Location');
+        } else {
+          iconUrl = await dataProvider.uploadFile(icon.rawFile);
+        }
         icon = {
           type: 'Image',
           mediaType: icon.rawFile?.type,
@@ -73,7 +85,7 @@ export const PublicProfilePage = () => {
         icon
       };
     },
-    [data, dataProvider]
+    [data, dataProvider, isGroup]
   );
 
   const onSuccess = useCallback(() => {
@@ -107,23 +119,21 @@ export const PublicProfilePage = () => {
           />
           <TextInput source="name" fullWidth />
           {!isGroup && <TextInput source="summary" fullWidth />}
-          {!isGroup && (
-            <ImageInput
-              source="icon"
-              accept={{ 'image/*': [] }}
-              format={v => {
-                if (v?.url) {
-                  return { src: v.url };
-                } else if (v?.fileToDelete) {
-                  return {};
-                } else {
-                  return v;
-                }
-              }}
-            >
-              <ImageField source="src" />
-            </ImageInput>
-          )}
+          <ImageInput
+            source="icon"
+            accept={{ 'image/*': [] }}
+            format={v => {
+              if (v?.url) {
+                return { src: v.url };
+              } else if (v?.fileToDelete) {
+                return {};
+              } else {
+                return v;
+              }
+            }}
+          >
+            <ImageField source="src" />
+          </ImageInput>
         </SimpleForm>
       </Edit>
     </BlockAnonymous>

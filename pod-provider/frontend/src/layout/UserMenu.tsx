@@ -69,7 +69,7 @@ const UserMenu = () => {
             // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
             key={group.id}
             // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
-            to={`/group/@${group['foaf:nick']}@${new URL(group.id).host}/settings`}
+            to={`/group/@${group['foaf:nick']}@${new URL(group.id).host}`}
             style={{ textDecoration: 'none' }}
           >
             <MenuItem onClick={handleClose}>

@@ -43,7 +43,14 @@ export default {
       view_public_profile: 'Voir votre profil public',
       create_group: 'Créer un groupe',
       skip_to_main: 'Passer au contenu principal',
-      view_contact_profile: 'Voir le profil de %{name}'
+      view_contact_profile: 'Voir le profil de %{name}',
+      add_member: 'Ajouter le membre',
+      remove_member: 'Retirer du groupe',
+      make_owner: 'Nommer propriétaire',
+      remove_owner: 'Retirer des propriétaires'
+    },
+    role: {
+      owner: 'Propriétaire'
     },
     tag: {
       members: 'Contacts',
@@ -87,7 +94,8 @@ export default {
       choose_custom_provider: 'Choisir un autre hébergeur',
       invite_success: 'Connection établie !',
       delete_pod: 'Effacer le compte',
-      export_pod: 'Exporter les données'
+      export_pod: 'Exporter les données',
+      members: 'Membres'
     },
     description: {
       delete_pod: `En continuant, vous effacerez votre porte-données et toutes les données qui s'y trouvent. Cette action est irréversible! Nous vous conseillons d'exporter d'abord vos données (dans les paramètres avancés). Pour continuer, tapez "%{confirm_text}".`,
@@ -134,7 +142,8 @@ export default {
     card: {
       add_contact: 'Ajouter un contact',
       contact_requests: 'Demandes de contact',
-      share_contact: "Créer un lien d'invitation"
+      share_contact: "Créer un lien d'invitation",
+      add_member: 'Ajouter un membre'
     },
     block: {
       contact_requests: 'Nouvelles demandes de contact'
@@ -163,6 +172,9 @@ export default {
         'Envoyer un message à %{username} lui donnera le droit de voir votre profil, pour lui permettre de vous répondre.',
       profile_visibility: "Votre profil n'est visible que des personnes que vous avez accepté dans votre réseau",
       share_contact: 'Pour vous connecter à une personne que vous connaissez, vous pouvez créer un lien ci-dessous.',
+      add_member:
+        "Choisissez un de vos contacts, ou saisissez l'identifiant d'un utilisateur (format : @bob@serveur.com).",
+      remove_member: 'Voulez-vous vraiment retirer %{name} du groupe ?',
       location_comment: 'Indications supplémentaires pour aider à trouver ce lieu',
       login: 'Je me connecte à mon espace personnel',
       signup: 'Je crée mon espace personnel',
@@ -231,6 +243,7 @@ export default {
       message_send_error: "Erreur lors de l'envoi du message: %{error}",
       profile_data_not_found: "Votre profil n'a pas été trouvé, veuillez vous déconnecter et vous reconnecter",
       user_not_found: "L'utilisateur %{username} n'existe pas",
+      member_added: 'Le membre a été ajouté',
       reset_password_submitted: 'Un e-mail a été envoyé avec les instructions de réinitialisation du mot de passe',
       reset_password_error: "Une erreur s'est produite",
       password_changed: 'Le mot de passe a été changé avec succès',
@@ -313,7 +326,8 @@ export default {
       settings: 'Paramètres - %{appName}',
       network: 'Mon réseau - %{appName}',
       create_group: 'Créer un groupe - %{appName}',
-      group_settings: 'Paramètres du groupe %{groupName} - %{appName}'
+      group_settings: 'Paramètres du groupe %{groupName} - %{appName}',
+      group_members: 'Membres du groupe %{groupName} - %{appName}'
     },
     placeholder: {
       user_id: '@utilisateur@serveur.com',

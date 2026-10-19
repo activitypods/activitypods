@@ -43,7 +43,14 @@ export default {
       view_public_profile: 'View your public profile',
       create_group: 'Create group',
       skip_to_main: 'Skip to main content',
-      view_contact_profile: "View %{name}'s profile"
+      view_contact_profile: "View %{name}'s profile",
+      add_member: 'Add member',
+      remove_member: 'Remove from group',
+      make_owner: 'Make owner',
+      remove_owner: 'Remove from owners'
+    },
+    role: {
+      owner: 'Owner'
     },
     tag: {
       members: 'Members',
@@ -86,7 +93,8 @@ export default {
       choose_custom_provider: 'Choose custom provider',
       invite_success: 'Success!',
       delete_pod: 'Delete account',
-      export_pod: 'Export all data'
+      export_pod: 'Export all data',
+      members: 'Members'
     },
     dialog: {
       app_permissions: 'Application permissions'
@@ -133,7 +141,8 @@ export default {
     card: {
       add_contact: 'Add a contact',
       contact_requests: 'Contact requests',
-      share_contact: 'Create contact link'
+      share_contact: 'Create contact link',
+      add_member: 'Add a member'
     },
     block: {
       contact_requests: 'New contact requests'
@@ -161,6 +170,8 @@ export default {
         'Sending a message to %{username} will give him/her the right to see your profile, in order to be able to respond.',
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',
       share_contact: 'To connect with someone you know, you can create a link below.',
+      add_member: 'Choose one of your contacts, or enter the ID of a user (format: @bob@server.com).',
+      remove_member: 'Do you really want to remove %{name} from the group?',
       location_comment: 'Additional information to help find this place',
       login: 'Sign in to your personal space',
       signup: 'Create your personal space',
@@ -223,6 +234,7 @@ export default {
       message_send_error: 'Error while sending the message: %{error}',
       profile_data_not_found: "Your profile couldn't be found, please reconnect yourself",
       user_not_found: "User %{username} doesn't exist",
+      member_added: 'The member has been added',
       reset_password_submitted: 'An email has been send with reset password instructions',
       reset_password_error: 'An error occurred',
       password_changed: 'Password changed successfully',
@@ -305,7 +317,8 @@ export default {
       settings: 'Settings - %{appName}',
       network: 'My network - %{appName}',
       create_group: 'Create group - %{appName}',
-      group_settings: 'Group settings of %{groupName} - %{appName}'
+      group_settings: 'Group settings of %{groupName} - %{appName}',
+      group_members: 'Members of %{groupName} - %{appName}'
     },
     placeholder: {
       user_id: '@user@server.com',

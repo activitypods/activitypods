@@ -60,6 +60,15 @@ const MenuBar = () => {
               {translate('app.page.data')}
             </Link>
           )}
+          {isGroup && (
+            <Link
+              to={`/group/${data?.webfingerId}/members`}
+              className={classes.link}
+              aria-label={translate('app.page.members')}
+            >
+              {translate('app.page.members')}
+            </Link>
+          )}
           <Link
             to={isGroup ? `/group/${data?.webfingerId}/settings` : '/settings'}
             className={classes.link}

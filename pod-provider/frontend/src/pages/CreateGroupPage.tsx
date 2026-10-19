@@ -91,7 +91,7 @@ const CreateGroupPage = () => {
         notify(`Group successfully created`, { type: 'success' });
 
         // @ts-expect-error TS(2345): Argument of type 'undefined' is not assignable to ... Remove this comment to see the full error message
-        navigate(`/group/@${id}@${new URL(podProviderUrl).host}/settings`);
+        navigate(`/group/@${id}@${new URL(podProviderUrl).host}`);
       } catch (e) {
         // @ts-expect-error TS(2571): Object is of type 'unknown'.
         notify(`Could not create group. Error: ${e.message}`, { type: 'error' });

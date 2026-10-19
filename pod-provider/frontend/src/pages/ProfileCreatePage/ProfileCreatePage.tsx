@@ -3,7 +3,7 @@ import { useGetIdentity, EditBase, useNotify, useRedirect } from 'react-admin';
 import { useSearchParams } from 'react-router-dom';
 import ProfileCreatePageView from './ProfileCreatePageView';
 import ProgressMessage from '../../common/ProgressMessage';
-import { isURL, isPath } from '../../utils';
+import { isURL, isPath, compressImage } from '../../utils';
 
 const ProfileCreatePage = () => {
   const notify = useNotify();
@@ -27,6 +27,14 @@ const ProfileCreatePage = () => {
       resource="Profile"
       id={identity?.profileData?.id}
       mutationMode="pessimistic"
+      transform={async (data: any) =>
+        data['vcard:photo']?.rawFile
+          ? {
+              ...data,
+              'vcard:photo': { ...data['vcard:photo'], rawFile: await compressImage(data['vcard:photo'].rawFile) }
+            }
+          : data
+      }
       mutationOptions={{
         onSuccess: () => {
           notify('ra.notification.updated', {

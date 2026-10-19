@@ -1,4 +1,4 @@
-import { ACTIVITY_TYPES, OBJECT_TYPES } from '@semapps/activitypub';
+import { ACTIVITY_TYPES, OBJECT_TYPES, matchActivity } from '@semapps/activitypub';
 import { ACTOR_TYPES } from '@semapps/activitypub/constants';
 
 const CONTACT_REQUEST = {
@@ -50,19 +50,23 @@ const REJECT_CONTACT_REQUEST = {
   }
 };
 
-const ADD_CONTACT = {
+// Groups also send Add/Remove of persons to their members, but without origin
+const withOrigin = (pattern: object) => (activity: any, fetcher: any) =>
+  activity.origin ? matchActivity(pattern, activity, fetcher) : { match: false, dereferencedActivity: activity };
+
+const ADD_CONTACT = withOrigin({
   type: ACTIVITY_TYPES.ADD,
   object: {
     type: ACTOR_TYPES.PERSON
   }
-};
+});
 
-const REMOVE_CONTACT = {
+const REMOVE_CONTACT = withOrigin({
   type: ACTIVITY_TYPES.REMOVE,
   object: {
     type: ACTOR_TYPES.PERSON
   }
-};
+});
 
 const IGNORE_CONTACT = {
   type: ACTIVITY_TYPES.IGNORE,

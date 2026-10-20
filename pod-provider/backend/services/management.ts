@@ -107,9 +107,8 @@ const ManagementService = {
         // TODO In the future, it would be good to send the activity to as many servers as possible
         // This is in order to delete cached versions of the account.
         if (account.group) {
-          const membersUri = await ctx.call('role-registrations.getUri', { groupWebId: account.webId, role: 'member' });
-          const members = await ctx.call('role-registrations.get', { resourceUri: membersUri, webId: 'system' });
-          recipients = [actor.followers, ...arrayOf(members['interop:hasMember']), PUBLIC_URI];
+          const members = await ctx.call('role-registrations.getMembers', { groupWebId: account.webId });
+          recipients = [actor.followers, ...Object.keys(members), PUBLIC_URI];
         } else {
           const contactsCollection = await ctx.call('activitypub.collection.get', {
             resourceUri: actor['apods:contacts'],

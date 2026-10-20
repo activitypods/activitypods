@@ -2,7 +2,7 @@ import path from 'node:path';
 import urlJoin from 'url-join';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
-import { arrayOf, getSlugFromUri } from '@semapps/ldp';
+import { arrayOf, getId, getSlugFromUri } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { throw403, throw404 } from '@semapps/middlewares';
 import * as CONFIG from '../config/config.ts';
@@ -30,6 +30,9 @@ const GroupsService = {
           'POST /:username/members': 'groups.addMember',
           'DELETE /:username/members': 'groups.removeMember',
           'GET /:username/roles': 'groups.listRoles',
+          'POST /:username/roles': 'groups.createRole',
+          'PUT /:username/roles/:role': 'groups.updateRole',
+          'DELETE /:username/roles/:role': 'groups.deleteRole',
           'POST /:username/roles/:role/members': 'groups.addRoleMember',
           'DELETE /:username/roles/:role/members': 'groups.removeRoleMember'
         },
@@ -97,13 +100,7 @@ const GroupsService = {
         const groupWebId = await this.getGroupWebId(ctx, ctx.params.username);
         await this.checkSpecialRight(ctx, groupWebId, 'interop:ReadMembers');
 
-        const roles = await ctx.call('role-registrations.listForGroup', { groupWebId });
-        const members: Record<string, string[]> = {};
-        for (const role of roles) {
-          for (const memberUri of arrayOf(role['interop:hasMember'])) {
-            members[memberUri] = [...(members[memberUri] || []), getSlugFromUri(role.id || role['@id'])];
-          }
-        }
+        const members = await ctx.call('role-registrations.getMembers', { groupWebId });
         return Object.entries(members).map(([webId, memberRoles]) => ({ webId, roles: memberRoles }));
       }
     },
@@ -115,12 +112,70 @@ const GroupsService = {
 
         const roles = await ctx.call('role-registrations.listForGroup', { groupWebId });
         return roles.map((role: any) => ({
-          id: getSlugFromUri(role.id || role['@id']),
+          id: getSlugFromUri(getId(role)),
           label: role['skos:prefLabel'],
           isDefaultRole: role['interop:isDefaultRole'] === true,
           isSystemRole: role['interop:isSystemRole'] === true,
+          extendsRoles: arrayOf(role['interop:extendsRole']).map(uri => getSlugFromUri(uri)),
           specialRights: arrayOf(role['interop:hasSpecialRight'])
         }));
+      }
+    },
+
+    createRole: {
+      params: {
+        username: { type: 'string' },
+        label: { type: 'string' },
+        extendsRoles: { type: 'array', items: 'string', optional: true },
+        specialRights: { type: 'array', items: 'string', optional: true }
+      },
+      async handler(ctx) {
+        const { username, ...params } = ctx.params;
+        const groupWebId = await this.getGroupWebId(ctx, username);
+        await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageRoles');
+
+        const role = await this.buildRole(ctx, groupWebId, params);
+        const roleRegistrationUri = await ctx.call('role-registrations.createRole', {
+          groupWebId,
+          slug: params.label,
+          role
+        });
+
+        return { id: getSlugFromUri(roleRegistrationUri) };
+      }
+    },
+
+    updateRole: {
+      params: {
+        username: { type: 'string' },
+        role: { type: 'string' },
+        label: { type: 'string' },
+        extendsRoles: { type: 'array', items: 'string', optional: true },
+        specialRights: { type: 'array', items: 'string', optional: true }
+      },
+      async handler(ctx) {
+        const { username, role: slug, ...params } = ctx.params;
+        const groupWebId = await this.getGroupWebId(ctx, username);
+        await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageRoles');
+
+        const resourceUri = await this.getEditableRoleUri(ctx, groupWebId, slug);
+        const role = await this.buildRole(ctx, groupWebId, params, resourceUri);
+        await ctx.call('role-registrations.updateRole', { resourceUri, role });
+      }
+    },
+
+    deleteRole: {
+      params: {
+        username: { type: 'string' },
+        role: { type: 'string' }
+      },
+      async handler(ctx) {
+        const { username, role: slug } = ctx.params;
+        const groupWebId = await this.getGroupWebId(ctx, username);
+        await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageRoles');
+
+        const resourceUri = await this.getEditableRoleUri(ctx, groupWebId, slug);
+        await ctx.call('role-registrations.deleteRole', { groupWebId, resourceUri });
       }
     },
 
@@ -148,16 +203,7 @@ const GroupsService = {
         const groupWebId = await this.getGroupWebId(ctx, username);
         await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageMembers');
 
-        const isOwner = await ctx.call('role-registrations.hasRole', {
-          groupWebId,
-          agentUri: memberUri,
-          role: 'owner'
-        });
-        if (isOwner) {
-          await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageRoles');
-          await this.removeOwner(ctx, groupWebId, memberUri);
-        }
-
+        await this.removeOwner(ctx, groupWebId, memberUri);
         await this.removeFromGroup(ctx, groupWebId, memberUri);
       }
     },
@@ -173,11 +219,14 @@ const GroupsService = {
         const groupWebId = await this.getGroupWebId(ctx, username);
         await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageRoles');
 
+        if (role === 'owner') await this.checkOwner(ctx, groupWebId);
+        const roleRegistrationUri = await this.getRoleUri(ctx, groupWebId, role);
+
         await this.addToGroup(ctx, groupWebId, memberUri);
         if (role === 'member') return;
 
-        const roleRegistrationUri = await this.getRoleUri(ctx, groupWebId, role);
-        if (await ctx.call('role-registrations.hasRole', { groupWebId, agentUri: memberUri, role })) return;
+        if (await ctx.call('role-registrations.hasRole', { groupWebId, agentUri: memberUri, role, direct: true }))
+          return;
 
         await ctx.call('role-registrations.addMember', { roleRegistrationUri, agentUri: memberUri });
         if (role === 'owner') await this.setOwnerRights(ctx, groupWebId, memberUri, true);
@@ -198,8 +247,7 @@ const GroupsService = {
         if (role === 'owner') {
           await this.removeOwner(ctx, groupWebId, memberUri);
         } else if (role === 'member') {
-          if (await ctx.call('role-registrations.hasRole', { groupWebId, agentUri: memberUri, role: 'owner' }))
-            await this.removeOwner(ctx, groupWebId, memberUri);
+          await this.removeOwner(ctx, groupWebId, memberUri);
           await this.removeFromGroup(ctx, groupWebId, memberUri);
         } else {
           const roleRegistrationUri = await this.getRoleUri(ctx, groupWebId, role);
@@ -273,13 +321,64 @@ const GroupsService = {
       const hasRight = await ctx.call('role-registrations.hasSpecialRight', { groupWebId, agentUri: webId, right });
       if (!hasRight) throw403(`You need the ${right} right on this group`);
     },
+    async checkOwner(ctx, groupWebId) {
+      const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+      if (webId === 'system') return;
+      const isOwner = await ctx.call('role-registrations.hasRole', { groupWebId, agentUri: webId, role: 'owner' });
+      if (!isOwner) throw403('Only owners can manage the Owner role');
+    },
+    async getEditableRoleUri(ctx, groupWebId, role) {
+      const resourceUri = await this.getRoleUri(ctx, groupWebId, role);
+      const roleRegistration = await ctx.call('role-registrations.get', { resourceUri, webId: 'system' });
+      if (roleRegistration['interop:isSystemRole'] === true) throw403('System roles cannot be modified');
+      return resourceUri;
+    },
+    async buildRole(ctx, groupWebId, { label, extendsRoles = [], specialRights = [] }, resourceUri?: string) {
+      const roles = await ctx.call('role-registrations.listForGroup', { groupWebId });
+
+      const extendedRolesUris = extendsRoles.map((slug: string) => {
+        if (slug === 'owner') throw403('No role can extend the Owner role');
+        const extendedRole = roles.find((role: any) => getSlugFromUri(getId(role)) === slug);
+        if (!extendedRole) throw404(`Role ${slug} not found`);
+        return getId(extendedRole);
+      });
+
+      if (resourceUri) {
+        const visited = new Set<string>();
+        const queue = [...extendedRolesUris];
+        while (queue.length > 0) {
+          const uri = queue.pop()!;
+          if (uri === resourceUri) throw new E.BadRequestError('A role cannot extend itself');
+          if (visited.has(uri)) continue;
+          visited.add(uri);
+          queue.push(...arrayOf(roles.find((role: any) => getId(role) === uri)?.['interop:extendsRole']));
+        }
+      }
+
+      const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+      if (webId !== 'system') {
+        const agentRoles = await ctx.call('role-registrations.listForAgent', { groupWebId, agentUri: webId });
+        const agentRights = agentRoles.flatMap((role: any) => arrayOf(role['interop:hasSpecialRight']));
+        if (specialRights.some((right: string) => !agentRights.includes(right)))
+          throw403('You cannot give special rights you do not have');
+      }
+
+      return {
+        'skos:prefLabel': label,
+        'interop:extendsRole': extendedRolesUris,
+        'interop:hasSpecialRight': specialRights
+      };
+    },
     async getRoleUri(ctx, groupWebId, role) {
       const roleRegistrationUri = await ctx.call('role-registrations.getUri', { groupWebId, role });
       if (!roleRegistrationUri) throw404(`Role ${role} not found`);
       return roleRegistrationUri;
     },
     async addToGroup(ctx, groupWebId, memberUri) {
-      if (await ctx.call('role-registrations.hasRole', { groupWebId, agentUri: memberUri, role: 'member' })) return;
+      if (
+        await ctx.call('role-registrations.hasRole', { groupWebId, agentUri: memberUri, role: 'member', direct: true })
+      )
+        return;
 
       const member = await ctx.call('activitypub.actor.get', { actorUri: memberUri });
       if (!member || !arrayOf(member.type || member['@type']).includes('foaf:Person'))
@@ -295,12 +394,16 @@ const GroupsService = {
       await this.notifyMember(ctx, groupWebId, memberUri, ACTIVITY_TYPES.ADD);
     },
     async removeFromGroup(ctx, groupWebId, memberUri) {
-      const roles = await ctx.call('role-registrations.listForAgent', { groupWebId, agentUri: memberUri });
+      const roles = await ctx.call('role-registrations.listForAgent', {
+        groupWebId,
+        agentUri: memberUri,
+        direct: true
+      });
       if (roles.length === 0) return;
 
       for (const role of roles) {
         await ctx.call('role-registrations.removeMember', {
-          roleRegistrationUri: role.id || role['@id'],
+          roleRegistrationUri: getId(role),
           agentUri: memberUri
         });
       }
@@ -323,6 +426,7 @@ const GroupsService = {
       const owners = await ctx.call('role-registrations.get', { resourceUri: roleRegistrationUri, webId: 'system' });
       const ownersUris = arrayOf(owners['interop:hasMember']);
       if (!ownersUris.includes(ownerWebId)) return;
+      await this.checkOwner(ctx, groupWebId);
       if (ownersUris.length === 1) throw403('The last owner of a group cannot be removed');
 
       await ctx.call('role-registrations.removeMember', { roleRegistrationUri, agentUri: ownerWebId });

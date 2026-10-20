@@ -55,7 +55,7 @@ describe('Test groups members handling', () => {
     await podProvider.stop();
   });
 
-  test('The group has a role registry with the Owner and Member roles', async () => {
+  test('The group has a role registry with the Owner, Admin and Member roles', async () => {
     const group = await podProvider.call('webid.get', { resourceUri: groupWebId });
     const registrySet = await podProvider.call('registry-set.get', {
       resourceUri: group['interop:hasRegistrySet'],
@@ -67,12 +67,22 @@ describe('Test groups members handling', () => {
       resourceUri: registrySet['interop:hasRoleRegistry'],
       webId: 'system'
     });
-    expect(arrayOf(roleRegistry['interop:hasRoleRegistration'])).toHaveLength(2);
+    expect(arrayOf(roleRegistry['interop:hasRoleRegistration'])).toHaveLength(3);
 
+    const adminUri = await podProvider.call('role-registrations.getUri', { groupWebId, role: 'admin' });
     await expect(getRole('owner')).resolves.toMatchObject({
       'interop:isSystemRole': true,
+      'interop:extendsRole': adminUri,
       'interop:hasMember': alice.id
     });
+
+    const admin = await getRole('admin');
+    expect(admin['interop:isSystemRole']).toBeUndefined();
+    expect(admin['interop:hasMember']).toBeUndefined();
+    expect(arrayOf(admin['interop:hasSpecialRight'])).toEqual(
+      expect.arrayContaining(['interop:ReadMembers', 'interop:ManageMembers', 'interop:ManageRoles'])
+    );
+
     await expect(getRole('member')).resolves.toMatchObject({
       'interop:isSystemRole': true,
       'interop:isDefaultRole': true,
@@ -122,7 +132,7 @@ describe('Test groups members handling', () => {
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual(
       expect.arrayContaining([
-        { webId: alice.id, roles: expect.arrayContaining(['member', 'owner']) },
+        { webId: alice.id, roles: expect.arrayContaining(['member', 'admin', 'owner']) },
         { webId: bob.id, roles: ['member'] }
       ])
     );
@@ -143,6 +153,59 @@ describe('Test groups members handling', () => {
 
     await expect(call(bob, 'management.deleteAccount', { username: 'acme' })).rejects.toThrow();
     await expect(call(bob, 'management.exportAccount', { username: 'acme' })).rejects.toThrow();
+  });
+
+  test('Alice makes Bob an admin, then Bob adds Craig but cannot touch the owners', async () => {
+    expect((await fetchAs(alice, 'roles/admin/members', 'POST', { memberUri: bob.id })).status).toBe(200);
+    expect((await fetchAs(bob, 'members', 'POST', { memberUri: craig.id })).status).toBe(200);
+
+    expect((await fetchAs(bob, 'roles/owner/members', 'POST', { memberUri: craig.id })).status).toBe(403);
+    expect((await fetchAs(bob, 'roles/owner/members', 'DELETE', { memberUri: alice.id })).status).toBe(403);
+    expect((await fetchAs(bob, 'members', 'DELETE', { memberUri: alice.id })).status).toBe(403);
+
+    const owner = await getRole('owner');
+    expect(arrayOf(owner['interop:hasMember'])).toEqual([alice.id]);
+  });
+
+  test('Bob creates a role extending Admin, with the rights he has', async () => {
+    let res = await fetchAs(bob, 'roles', 'POST', { label: 'Moderators', extendsRoles: ['owner'] });
+    expect(res.status).toBe(403);
+
+    res = await fetchAs(bob, 'roles', 'POST', { label: 'Moderators', specialRights: ['apods:PostOutbox'] });
+    expect(res.status).toBe(403);
+
+    res = await fetchAs(bob, 'roles', 'POST', {
+      label: 'Moderators',
+      extendsRoles: ['admin'],
+      specialRights: ['interop:ReadMembers']
+    });
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({ id: 'moderators' });
+
+    expect((await fetchAs(bob, 'roles/moderators/members', 'POST', { memberUri: craig.id })).status).toBe(200);
+
+    res = await fetchAs(bob, 'members');
+    await expect(res.json()).resolves.toContainEqual({
+      webId: craig.id,
+      roles: expect.arrayContaining(['member', 'admin', 'moderators'])
+    });
+    await expect(
+      podProvider.call('role-registrations.hasSpecialRight', {
+        groupWebId,
+        agentUri: craig.id,
+        right: 'interop:ManageRoles'
+      })
+    ).resolves.toBe(true);
+  });
+
+  test('Bob cannot create a cycle, nor modify or delete system roles', async () => {
+    let res = await fetchAs(bob, 'roles/admin', 'PUT', { label: 'Admin', extendsRoles: ['moderators'] });
+    expect(res.status).toBe(400);
+
+    res = await fetchAs(bob, 'roles/owner', 'PUT', { label: 'Owners' });
+    expect(res.status).toBe(403);
+    expect((await fetchAs(bob, 'roles/owner', 'DELETE')).status).toBe(403);
+    expect((await fetchAs(bob, 'roles/member', 'DELETE')).status).toBe(403);
   });
 
   test('Alice makes Bob an owner, then Bob adds Craig', async () => {
@@ -197,5 +260,30 @@ describe('Test groups members handling', () => {
     await expect(
       call(bob, 'groups.removeRoleMember', { username: 'acme', role: 'owner', memberUri: bob.id })
     ).rejects.toThrow();
+  });
+
+  test('Bob deletes the Admin role, the owners and moderators are still members', async () => {
+    const adminUri = await podProvider.call('role-registrations.getUri', { groupWebId, role: 'admin' });
+    expect((await fetchAs(bob, 'roles/admin', 'DELETE')).status).toBe(200);
+
+    await expect(podProvider.call('role-registrations.getUri', { groupWebId, role: 'admin' })).resolves.toBeUndefined();
+
+    const owner = await getRole('owner');
+    expect(owner['interop:extendsRole']).toBeUndefined();
+    const moderators = await getRole('moderators');
+    expect(moderators['interop:extendsRole']).toBeUndefined();
+
+    const roleRegistry = await podProvider.call('role-registry.get', {
+      resourceUri: await podProvider.call('role-registry.getResourceUri', { webId: groupWebId }),
+      webId: 'system'
+    });
+    expect(arrayOf(roleRegistry['interop:hasRoleRegistration'])).not.toContain(adminUri);
+
+    const res = await fetchAs(bob, 'members');
+    await expect(res.json()).resolves.toContainEqual({
+      webId: bob.id,
+      roles: expect.arrayContaining(['member', 'owner'])
+    });
+    await expect(call(bob, 'groups.listMembers', { username: 'acme' })).resolves.toHaveLength(2);
   });
 });

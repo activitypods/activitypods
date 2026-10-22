@@ -152,7 +152,7 @@ export default {
     card: {
       add_contact: 'Add a contact',
       contact_requests: 'Contact requests',
-      share_contact: 'Create contact link',
+      share_contact: 'Invitation link',
       add_member: 'Add a member'
     },
     block: {
@@ -183,7 +183,7 @@ export default {
       message_profile_show_right:
         'Sending a message to %{username} will give him/her the right to see your profile, in order to be able to respond.',
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',
-      share_contact: 'To connect with someone you know, you can create a link below.',
+      share_contact: 'To connect with someone you know, send them the link below.',
       add_member: 'Choose one of your contacts, or enter the ID of a user (format: @bob@server.com).',
       remove_member: 'Do you really want to remove %{name} from the group?',
       extends_role: 'Inherits from %{role}',

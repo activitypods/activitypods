@@ -153,7 +153,7 @@ export default {
     card: {
       add_contact: 'Ajouter un contact',
       contact_requests: 'Demandes de contact',
-      share_contact: "Créer un lien d'invitation",
+      share_contact: "Lien d'invitation",
       add_member: 'Ajouter un membre'
     },
     block: {
@@ -185,7 +185,7 @@ export default {
       message_profile_show_right:
         'Envoyer un message à %{username} lui donnera le droit de voir votre profil, pour lui permettre de vous répondre.',
       profile_visibility: "Votre profil n'est visible que des personnes que vous avez accepté dans votre réseau",
-      share_contact: 'Pour vous connecter à une personne que vous connaissez, vous pouvez créer un lien ci-dessous.',
+      share_contact: 'Pour vous connecter à une personne que vous connaissez, envoyez-lui le lien ci-dessous.',
       add_member:
         "Choisissez un de vos contacts, ou saisissez l'identifiant d'un utilisateur (format : @bob@serveur.com).",
       remove_member: 'Voulez-vous vraiment retirer %{name} du groupe ?',

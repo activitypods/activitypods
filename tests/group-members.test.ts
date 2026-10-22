@@ -22,6 +22,23 @@ describe('Test groups members handling', () => {
       body: body ? JSON.stringify(body) : undefined
     });
 
+  // Same request as a remote user would do, signed by the proxy of its own server
+  const proxyAs = (actor: any, path: string, method = 'GET', body?: any) =>
+    podProvider.call('signature.proxy.query', {
+      url: urlJoin(groupUrl, path),
+      method,
+      headers: { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+      actorUri: actor.id
+    });
+
+  const getGroups = async (actor: any) => {
+    const webIdData = await podProvider.call('webid.get', { resourceUri: actor.id });
+    if (!webIdData['apods:groups']) return [];
+    const collection = await call(actor, 'activitypub.collection.get', { resourceUri: webIdData['apods:groups'] });
+    return arrayOf(collection.items);
+  };
+
   const getRole = async (role: string) =>
     podProvider.call('role-registrations.get', {
       resourceUri: await podProvider.call('role-registrations.getUri', { groupWebId, role }),
@@ -90,6 +107,7 @@ describe('Test groups members handling', () => {
     });
 
     await expect(call(alice, 'groups.list', {})).resolves.toEqual([groupWebId]);
+    await expect(getGroups(alice)).resolves.toEqual([groupWebId]);
   });
 
   test('Users do not have a role registry', async () => {
@@ -125,6 +143,26 @@ describe('Test groups members handling', () => {
         expect.objectContaining({ recipients: ['<bob@test.com>'], subject: 'You are now a member of acme' })
       );
     });
+
+    await waitForExpect(async () => {
+      await expect(getGroups(bob)).resolves.toEqual([groupWebId]);
+    });
+  });
+
+  test('Members can see their own roles and rights, but not the others', async () => {
+    let res = await fetchAs(bob, 'me');
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({ roles: [{ id: 'member', label: 'Member' }], specialRights: [] });
+
+    res = await fetchAs(alice, 'me');
+    const aliceRoles = await res.json();
+    expect(aliceRoles.roles.map((role: any) => role.id)).toEqual(expect.arrayContaining(['member', 'admin', 'owner']));
+    expect(aliceRoles.specialRights).toHaveLength(3);
+
+    expect((await fetchAs(craig, 'me')).status).toBe(403);
+
+    await expect(proxyAs(bob, 'me')).resolves.toMatchObject({ ok: true, body: { specialRights: [] } });
+    await expect(proxyAs(craig, 'me')).resolves.toMatchObject({ ok: false, status: 403 });
   });
 
   test('Alice can list the members, but not Bob', async () => {
@@ -157,7 +195,7 @@ describe('Test groups members handling', () => {
 
   test('Alice makes Bob an admin, then Bob adds Craig but cannot touch the owners', async () => {
     expect((await fetchAs(alice, 'roles/admin/members', 'POST', { memberUri: bob.id })).status).toBe(200);
-    expect((await fetchAs(bob, 'members', 'POST', { memberUri: craig.id })).status).toBe(200);
+    await expect(proxyAs(bob, 'members', 'POST', { memberUri: craig.id })).resolves.toMatchObject({ ok: true });
 
     expect((await fetchAs(bob, 'roles/owner/members', 'POST', { memberUri: craig.id })).status).toBe(403);
     expect((await fetchAs(bob, 'roles/owner/members', 'DELETE', { memberUri: alice.id })).status).toBe(403);
@@ -165,6 +203,9 @@ describe('Test groups members handling', () => {
 
     const owner = await getRole('owner');
     expect(arrayOf(owner['interop:hasMember'])).toEqual([alice.id]);
+    await waitForExpect(async () => {
+      await expect(getGroups(craig)).resolves.toEqual([groupWebId]);
+    });
   });
 
   test('Bob creates a role extending Admin, with the rights he has', async () => {
@@ -241,6 +282,10 @@ describe('Test groups members handling', () => {
     await expect(
       podProvider.call('social-agent-registrations.getForAgent', { agentUri: craig.id, podOwner: groupWebId })
     ).resolves.toBeFalsy();
+
+    await waitForExpect(async () => {
+      await expect(getGroups(craig)).resolves.toEqual([]);
+    });
   });
 
   test('Bob removes Alice from the owners, but not himself as the last owner', async () => {

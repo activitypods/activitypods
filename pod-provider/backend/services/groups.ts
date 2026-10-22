@@ -3,10 +3,10 @@ import urlJoin from 'url-join';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
 import { arrayOf, getId, getSlugFromUri } from '@semapps/ldp';
-import { ACTIVITY_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
+import { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { throw403, throw404 } from '@semapps/middlewares';
 import * as CONFIG from '../config/config.ts';
-import { ADD_GROUP_MEMBER } from '../config/patterns.ts';
+import { ADD_GROUP_MEMBER, REMOVE_GROUP_MEMBER } from '../config/patterns.ts';
 import { ADD_GROUP_MEMBER_MAPPING } from '../config/mappings.ts';
 import { ServiceSchema } from 'moleculer';
 
@@ -14,8 +14,20 @@ const GroupsService = {
   name: 'groups' as const,
   // @ts-expect-error TS(2322): Type '{ dependencies: string[]; started(this: Service<ServiceSettingSchema>): Promise<void>; ... Remove this comment to see the full error message
   mixins: [ActivitiesHandlerMixin],
-  dependencies: ['api', 'ldp'],
+  settings: {
+    groupsCollectionOptions: {
+      path: '/groups',
+      attachToTypes: [ACTOR_TYPES.PERSON],
+      attachPredicate: 'http://activitypods.org/ns/core#groups',
+      ordered: false,
+      dereferenceItems: false,
+      permissions: {} // This collection is only visible by the Pod owner
+    }
+  },
+  dependencies: ['api', 'ldp', 'activitypub.collections-registry'],
   async started() {
+    await this.broker.call('activitypub.collections-registry.register', this.settings.groupsCollectionOptions);
+
     const basePath = await this.broker.call('ldp.getBasePath');
     this.broker.call('api.addRoute', {
       route: {
@@ -26,6 +38,7 @@ const GroupsService = {
           'POST /groups': 'groups.create',
           'GET /groups': 'groups.list',
           'POST /:username/claimGroup': 'groups.claim',
+          'GET /:username/me': 'groups.getOwnRoles',
           'GET /:username/members': 'groups.listMembers',
           'POST /:username/members': 'groups.addMember',
           'DELETE /:username/members': 'groups.removeMember',
@@ -75,6 +88,7 @@ const GroupsService = {
         await this.setOwnerRights(ctx, groupWebId, ownerWebId, true);
 
         await ctx.call('role-registrations.initializeForGroup', { groupWebId, ownerWebId });
+        await this.updateMemberGroups(ctx, ownerWebId, groupWebId, true);
 
         // We need to set the Location twice or we get a Moleculer warning
         ctx.meta.$responseHeaders = {
@@ -92,6 +106,21 @@ const GroupsService = {
         const ownerAccount = await ctx.call('auth.account.findByWebId', { webId: ownerWebId });
         if (!ownerAccount) return [];
         return arrayOf(ownerAccount.owns);
+      }
+    },
+
+    getOwnRoles: {
+      async handler(ctx) {
+        const groupWebId = await this.getGroupWebId(ctx, ctx.params.username);
+        const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+
+        const roles = await ctx.call('role-registrations.listForAgent', { groupWebId, agentUri: webId });
+        if (roles.length === 0) throw403('You are not a member of this group');
+
+        return {
+          roles: roles.map((role: any) => ({ id: getSlugFromUri(getId(role)), label: role['skos:prefLabel'] })),
+          specialRights: [...new Set(roles.flatMap((role: any) => arrayOf(role['interop:hasSpecialRight'])))]
+        };
       }
     },
 
@@ -299,17 +328,42 @@ const GroupsService = {
   activities: {
     addedToGroup: {
       match: ADD_GROUP_MEMBER,
-      async onReceive(ctx: any, activity: any, recipientUri: any) {
+      async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
         if (activity.object !== recipientUri) return;
+        await this.updateMemberGroups(ctx, recipientUri, activity.actor, true);
         await ctx.call('mail-notifications.notify', {
           template: ADD_GROUP_MEMBER_MAPPING,
           recipientUri,
           activity
         });
       }
+    },
+    removedFromGroup: {
+      match: REMOVE_GROUP_MEMBER,
+      async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
+        if (activity.object !== recipientUri) return;
+        await this.updateMemberGroups(ctx, recipientUri, activity.actor, false);
+      }
     }
   },
   methods: {
+    async updateMemberGroups(ctx, memberUri, groupWebId, isMember) {
+      // The context may come from the group (dataset of the group)
+      const account = await ctx.call('auth.account.findByWebId', { webId: memberUri });
+      const meta = { dataset: account.username };
+
+      // Created on the fly, as Pods created before groups do not have this collection
+      const collectionUri = await ctx.call(
+        'activitypub.collections-registry.createAndAttachCollection',
+        { objectUri: memberUri, collection: this.settings.groupsCollectionOptions, webId: 'system' },
+        { meta }
+      );
+      await ctx.call(
+        isMember ? 'activitypub.collection.add' : 'activitypub.collection.remove',
+        { collectionUri, item: groupWebId },
+        { meta }
+      );
+    },
     async getGroupWebId(ctx, username) {
       const account = await ctx.call('auth.account.findByUsername', { username });
       if (!account?.group) throw404('Group not found');

@@ -85,8 +85,14 @@ const ADD_GROUP_MEMBER = (activity: any) => ({
   dereferencedActivity: activity
 });
 
+const REMOVE_GROUP_MEMBER = (activity: any) => ({
+  match: activity.type === ACTIVITY_TYPES.REMOVE && !activity.origin && activity.target === activity.actor,
+  dereferencedActivity: activity
+});
+
 export {
   ADD_GROUP_MEMBER,
+  REMOVE_GROUP_MEMBER,
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
   IGNORE_CONTACT_REQUEST,

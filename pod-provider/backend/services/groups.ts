@@ -6,8 +6,16 @@ import { arrayOf, getId, getSlugFromUri } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { throw403, throw404 } from '@semapps/middlewares';
 import * as CONFIG from '../config/config.ts';
-import { ADD_GROUP_MEMBER, REMOVE_GROUP_MEMBER, LEAVE_GROUP, ACCEPT_LEAVE_GROUP } from '../config/patterns.ts';
-import { ADD_GROUP_MEMBER_MAPPING } from '../config/mappings.ts';
+import {
+  INVITE_TO_GROUP,
+  ACCEPT_GROUP_INVITATION,
+  REJECT_GROUP_INVITATION,
+  UNDO_GROUP_INVITATION,
+  REMOVE_GROUP_MEMBER,
+  LEAVE_GROUP,
+  ACCEPT_LEAVE_GROUP
+} from '../config/patterns.ts';
+import { INVITE_TO_GROUP_MAPPING, REMOVED_FROM_GROUP_MAPPING } from '../config/mappings.ts';
 import { ServiceSchema } from 'moleculer';
 
 const GroupsService = {
@@ -22,11 +30,32 @@ const GroupsService = {
       ordered: false,
       dereferenceItems: false,
       permissions: {} // This collection is only visible by the Pod owner
+    },
+    groupInvitationsCollectionOptions: {
+      path: '/group-invitations',
+      attachToTypes: [ACTOR_TYPES.PERSON],
+      attachPredicate: 'http://activitypods.org/ns/core#groupInvitations',
+      ordered: false,
+      dereferenceItems: true,
+      permissions: {}
+    },
+    // Invitations sent by a group and not answered yet
+    pendingInvitationsCollectionOptions: {
+      path: '/invitations',
+      attachToTypes: [ACTOR_TYPES.GROUP, ACTOR_TYPES.ORGANIZATION],
+      attachPredicate: 'http://activitypods.org/ns/core#invitations',
+      ordered: false,
+      dereferenceItems: true,
+      permissions: {}
     }
   },
   dependencies: ['api', 'ldp', 'activitypub.collections-registry'],
   async started() {
     await this.broker.call('activitypub.collections-registry.register', this.settings.groupsCollectionOptions);
+    await this.broker.call(
+      'activitypub.collections-registry.register',
+      this.settings.groupInvitationsCollectionOptions
+    );
 
     const basePath = await this.broker.call('ldp.getBasePath');
     this.broker.call('api.addRoute', {
@@ -130,7 +159,21 @@ const GroupsService = {
         await this.checkSpecialRight(ctx, groupWebId, 'interop:ReadMembers');
 
         const members = await ctx.call('role-registrations.getMembers', { groupWebId });
-        return Object.entries(members).map(([webId, memberRoles]) => ({ webId, roles: memberRoles }));
+
+        const { collectionUri, meta } = await this.getCollection(
+          ctx,
+          groupWebId,
+          this.settings.pendingInvitationsCollectionOptions
+        );
+        const pending = await ctx.call('activitypub.collection.get', { resourceUri: collectionUri }, { meta });
+        const invited = arrayOf(pending?.items)
+          .flatMap((invite: any) => arrayOf(invite.target))
+          .filter((webId: string) => !members[webId]);
+
+        return [
+          ...Object.entries(members).map(([webId, memberRoles]) => ({ webId, roles: memberRoles })),
+          ...[...new Set(invited)].map(webId => ({ webId, roles: [], invited: true }))
+        ];
       }
     },
 
@@ -218,7 +261,7 @@ const GroupsService = {
         const groupWebId = await this.getGroupWebId(ctx, username);
         await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageMembers');
 
-        await this.addToGroup(ctx, groupWebId, memberUri);
+        await this.invite(ctx, groupWebId, memberUri);
       }
     },
 
@@ -233,7 +276,8 @@ const GroupsService = {
         await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageMembers');
 
         await this.removeOwner(ctx, groupWebId, memberUri);
-        await this.removeFromGroup(ctx, groupWebId, memberUri);
+        await this.cancelInvitation(ctx, groupWebId, memberUri);
+        await this.expel(ctx, groupWebId, memberUri);
       }
     },
 
@@ -251,9 +295,13 @@ const GroupsService = {
         if (role === 'owner') await this.checkOwner(ctx, groupWebId);
         const roleRegistrationUri = await this.getRoleUri(ctx, groupWebId, role);
 
-        await this.addToGroup(ctx, groupWebId, memberUri);
-        if (role === 'member') return;
+        if (role === 'member') {
+          await this.invite(ctx, groupWebId, memberUri);
+          return;
+        }
 
+        if (!(await this.isMember(ctx, groupWebId, memberUri)))
+          throw new E.BadRequestError('Only members of the group can be given a role');
         if (await ctx.call('role-registrations.hasRole', { groupWebId, agentUri: memberUri, role, direct: true }))
           return;
 
@@ -277,7 +325,7 @@ const GroupsService = {
           await this.removeOwner(ctx, groupWebId, memberUri);
         } else if (role === 'member') {
           await this.removeOwner(ctx, groupWebId, memberUri);
-          await this.removeFromGroup(ctx, groupWebId, memberUri);
+          await this.expel(ctx, groupWebId, memberUri);
         } else {
           const roleRegistrationUri = await this.getRoleUri(ctx, groupWebId, role);
           await ctx.call('role-registrations.removeMember', { roleRegistrationUri, agentUri: memberUri });
@@ -326,13 +374,62 @@ const GroupsService = {
     }
   },
   activities: {
-    addedToGroup: {
-      match: ADD_GROUP_MEMBER,
+    inviteToGroup: {
+      match: INVITE_TO_GROUP,
       async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
-        if (activity.object !== recipientUri) return;
-        await this.updateMemberGroups(ctx, recipientUri, activity.actor, true);
+        if (!arrayOf(activity.target).includes(recipientUri)) return;
+
+        const { collectionUri, meta } = await this.getCollection(
+          ctx,
+          recipientUri,
+          this.settings.groupInvitationsCollectionOptions
+        );
+        await ctx.call('activitypub.collection.add', { collectionUri, item: activity.id }, { meta });
+
         await ctx.call('mail-notifications.notify', {
-          template: ADD_GROUP_MEMBER_MAPPING,
+          template: INVITE_TO_GROUP_MAPPING,
+          recipientUri,
+          activity,
+          context: activity.id
+        });
+      }
+    },
+    acceptGroupInvitation: {
+      match: ACCEPT_GROUP_INVITATION,
+      async onEmit(this: any, ctx: any, activity: any, emitterUri: any) {
+        const invite = activity.object;
+        await this.removeGroupInvitation(ctx, emitterUri, invite.id);
+        await this.updateMemberGroups(ctx, emitterUri, invite.actor, true);
+      },
+      async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
+        if (!(await this.consumePendingInvitation(ctx, activity, recipientUri))) return;
+        await this.addToGroup(ctx, recipientUri, activity.actor);
+      }
+    },
+    rejectGroupInvitation: {
+      match: REJECT_GROUP_INVITATION,
+      async onEmit(this: any, ctx: any, activity: any, emitterUri: any) {
+        await this.removeGroupInvitation(ctx, emitterUri, activity.object.id);
+      },
+      async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
+        await this.consumePendingInvitation(ctx, activity, recipientUri);
+      }
+    },
+    groupInvitationCancelled: {
+      match: UNDO_GROUP_INVITATION,
+      async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
+        const invite = activity.object;
+        if (invite.actor !== activity.actor || !arrayOf(invite.target).includes(recipientUri)) return;
+        await this.removeGroupInvitation(ctx, recipientUri, invite.id);
+      }
+    },
+    removedFromGroup: {
+      match: REMOVE_GROUP_MEMBER,
+      async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
+        if (activity.object.id !== recipientUri || getId(activity.origin) !== activity.actor) return;
+        await this.updateMemberGroups(ctx, recipientUri, activity.actor, false);
+        await ctx.call('mail-notifications.notify', {
+          template: REMOVED_FROM_GROUP_MAPPING,
           recipientUri,
           activity
         });
@@ -352,15 +449,19 @@ const GroupsService = {
         const ownersUris = arrayOf(owners['interop:hasMember']);
         if (ownersUris.includes(memberUri)) {
           if (ownersUris.length === 1) {
-            await this.replyToLeave(ctx, groupWebId, activity, ACTIVITY_TYPES.REJECT);
+            await this.postAsGroup(ctx, groupWebId, {
+              type: ACTIVITY_TYPES.REJECT,
+              object: activity.id,
+              to: memberUri
+            });
             return;
           }
           await ctx.call('role-registrations.removeMember', { roleRegistrationUri: ownersUri, agentUri: memberUri });
           await this.setOwnerRights(ctx, groupWebId, memberUri, false);
         }
 
-        await this.removeFromGroup(ctx, groupWebId, memberUri, false);
-        await this.replyToLeave(ctx, groupWebId, activity, ACTIVITY_TYPES.ACCEPT);
+        await this.removeFromGroup(ctx, groupWebId, memberUri);
+        await this.postAsGroup(ctx, groupWebId, { type: ACTIVITY_TYPES.ACCEPT, object: activity.id, to: memberUri });
       }
     },
     leaveAccepted: {
@@ -370,27 +471,24 @@ const GroupsService = {
         if (leave.actor !== recipientUri || leave.object !== activity.actor) return;
         await this.updateMemberGroups(ctx, recipientUri, activity.actor, false);
       }
-    },
-    removedFromGroup: {
-      match: REMOVE_GROUP_MEMBER,
-      async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
-        if (activity.object !== recipientUri) return;
-        await this.updateMemberGroups(ctx, recipientUri, activity.actor, false);
-      }
     }
   },
   methods: {
-    async updateMemberGroups(ctx, memberUri, groupWebId, isMember) {
-      // The context may come from the group (dataset of the group)
-      const account = await ctx.call('auth.account.findByWebId', { webId: memberUri });
+    async getCollection(ctx, actorUri, collection) {
+      // The context may come from another actor (and its dataset)
+      const account = await ctx.call('auth.account.findByWebId', { webId: actorUri });
       const meta = { dataset: account.username, webId: 'system' };
 
-      // Created on the fly, as Pods created before groups do not have this collection
+      // Created on the fly, as Pods created before groups do not have these collections
       const collectionUri = await ctx.call(
         'activitypub.collections-registry.createAndAttachCollection',
-        { objectUri: memberUri, collection: this.settings.groupsCollectionOptions, webId: 'system' },
+        { objectUri: actorUri, collection, webId: 'system' },
         { meta }
       );
+      return { collectionUri, meta };
+    },
+    async updateMemberGroups(ctx, memberUri, groupWebId, isMember) {
+      const { collectionUri, meta } = await this.getCollection(ctx, memberUri, this.settings.groupsCollectionOptions);
       await ctx.call(
         isMember ? 'activitypub.collection.add' : 'activitypub.collection.remove',
         { collectionUri, item: groupWebId },
@@ -461,15 +559,79 @@ const GroupsService = {
       if (!roleRegistrationUri) throw404(`Role ${role} not found`);
       return roleRegistrationUri;
     },
-    async addToGroup(ctx, groupWebId, memberUri) {
-      if (
-        await ctx.call('role-registrations.hasRole', { groupWebId, agentUri: memberUri, role: 'member', direct: true })
-      )
-        return;
+    async isMember(ctx, groupWebId, memberUri) {
+      return await ctx.call('role-registrations.hasRole', {
+        groupWebId,
+        agentUri: memberUri,
+        role: 'member',
+        direct: true
+      });
+    },
+    async invite(ctx, groupWebId, memberUri) {
+      if (await this.isMember(ctx, groupWebId, memberUri)) return;
 
       const member = await ctx.call('activitypub.actor.get', { actorUri: memberUri });
       if (!member || !arrayOf(member.type || member['@type']).includes('foaf:Person'))
-        throw new E.BadRequestError('Only persons can be added to a group');
+        throw new E.BadRequestError('Only persons can be invited to a group');
+
+      const { collectionUri, meta } = await this.getCollection(
+        ctx,
+        groupWebId,
+        this.settings.pendingInvitationsCollectionOptions
+      );
+      const pending = await ctx.call('activitypub.collection.get', { resourceUri: collectionUri }, { meta });
+      if (arrayOf(pending?.items).some((invite: any) => arrayOf(invite.target).includes(memberUri))) return;
+
+      const invite = await this.postAsGroup(ctx, groupWebId, {
+        type: ACTIVITY_TYPES.INVITE,
+        object: groupWebId,
+        target: memberUri,
+        to: memberUri
+      });
+      await ctx.call('activitypub.collection.add', { collectionUri, item: invite.id }, { meta });
+    },
+    async cancelInvitation(ctx, groupWebId, memberUri) {
+      const { collectionUri, meta } = await this.getCollection(
+        ctx,
+        groupWebId,
+        this.settings.pendingInvitationsCollectionOptions
+      );
+      const pending = await ctx.call('activitypub.collection.get', { resourceUri: collectionUri }, { meta });
+      for (const invite of arrayOf(pending?.items)) {
+        if (!arrayOf(invite.target).includes(memberUri)) continue;
+        await ctx.call('activitypub.collection.remove', { collectionUri, item: invite.id }, { meta });
+        await this.postAsGroup(ctx, groupWebId, { type: ACTIVITY_TYPES.UNDO, object: invite.id, to: memberUri });
+      }
+    },
+    async consumePendingInvitation(ctx, answer, groupWebId) {
+      const invite = answer.object;
+      if (invite.actor !== groupWebId || !arrayOf(invite.target).includes(answer.actor)) return false;
+
+      const { collectionUri, meta } = await this.getCollection(
+        ctx,
+        groupWebId,
+        this.settings.pendingInvitationsCollectionOptions
+      );
+      const isPending = await ctx.call(
+        'activitypub.collection.includes',
+        { collectionUri, itemUri: invite.id },
+        { meta }
+      );
+      if (!isPending) return false;
+
+      await ctx.call('activitypub.collection.remove', { collectionUri, item: invite.id }, { meta });
+      return true;
+    },
+    async removeGroupInvitation(ctx, memberUri, inviteUri) {
+      const { collectionUri, meta } = await this.getCollection(
+        ctx,
+        memberUri,
+        this.settings.groupInvitationsCollectionOptions
+      );
+      await ctx.call('activitypub.collection.remove', { collectionUri, item: inviteUri }, { meta });
+    },
+    async addToGroup(ctx, groupWebId, memberUri) {
+      if (await this.isMember(ctx, groupWebId, memberUri)) return;
 
       await ctx.call('role-registrations.addMember', {
         roleRegistrationUri: await this.getRoleUri(ctx, groupWebId, 'member'),
@@ -477,10 +639,8 @@ const GroupsService = {
       });
 
       await ctx.call('social-agent-registrations.createOrUpdate', { agentUri: memberUri, podOwner: groupWebId });
-
-      await this.notifyMember(ctx, groupWebId, memberUri, ACTIVITY_TYPES.ADD);
     },
-    async removeFromGroup(ctx, groupWebId, memberUri, notify = true) {
+    async removeFromGroup(ctx, groupWebId, memberUri) {
       const roles = await ctx.call('role-registrations.listForAgent', {
         groupWebId,
         agentUri: memberUri,
@@ -505,8 +665,16 @@ const GroupsService = {
           webId: groupWebId
         });
       }
-
-      if (notify) await this.notifyMember(ctx, groupWebId, memberUri, ACTIVITY_TYPES.REMOVE);
+    },
+    async expel(ctx, groupWebId, memberUri) {
+      if (!(await this.isMember(ctx, groupWebId, memberUri))) return;
+      await this.removeFromGroup(ctx, groupWebId, memberUri);
+      await this.postAsGroup(ctx, groupWebId, {
+        type: ACTIVITY_TYPES.REMOVE,
+        object: memberUri,
+        origin: groupWebId,
+        to: memberUri
+      });
     },
     async removeOwner(ctx, groupWebId, ownerWebId) {
       const roleRegistrationUri = await this.getRoleUri(ctx, groupWebId, 'owner');
@@ -541,40 +709,14 @@ const GroupsService = {
         );
       }
     },
-    async replyToLeave(ctx, groupWebId, leave, type) {
+    async postAsGroup(ctx, groupWebId, activity) {
       const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
         actorUri: groupWebId,
         predicate: 'outbox'
       });
-
-      await ctx.call(
+      return await ctx.call(
         'activitypub.outbox.post',
-        {
-          collectionUri: outboxUri,
-          type,
-          actor: groupWebId,
-          object: leave.id,
-          to: leave.actor
-        },
-        { meta: { webId: groupWebId } }
-      );
-    },
-    async notifyMember(ctx, groupWebId, memberUri, type) {
-      const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
-        actorUri: groupWebId,
-        predicate: 'outbox'
-      });
-
-      await ctx.call(
-        'activitypub.outbox.post',
-        {
-          collectionUri: outboxUri,
-          type,
-          actor: groupWebId,
-          object: memberUri,
-          target: groupWebId,
-          to: memberUri
-        },
+        { collectionUri: outboxUri, actor: groupWebId, ...activity },
         { meta: { webId: groupWebId } }
       );
     }

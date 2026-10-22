@@ -6,7 +6,7 @@ import { arrayOf, fetchMails } from './utils.ts';
 jest.setTimeout(100000);
 
 describe('Test groups members handling', () => {
-  let podProvider: any, alice: any, bob: any, craig: any, groupWebId: string, groupUrl: string;
+  let podProvider: any, alice: any, bob: any, craig: any, groupWebId: string, groupUrl: string, craigInvite: any;
 
   const call = (actor: any, actionName: string, params: any) =>
     podProvider.call(actionName, params, { meta: { webId: actor.id } });
@@ -32,12 +32,49 @@ describe('Test groups members handling', () => {
       actorUri: actor.id
     });
 
-  const getGroups = async (actor: any) => {
+  const getCollectionItems = async (actor: any, predicate: string) => {
     const webIdData = await podProvider.call('webid.get', { resourceUri: actor.id });
-    if (!webIdData['apods:groups']) return [];
-    const collection = await call(actor, 'activitypub.collection.get', { resourceUri: webIdData['apods:groups'] });
+    if (!webIdData[predicate]) return [];
+    const collection = await call(actor, 'activitypub.collection.get', { resourceUri: webIdData[predicate] });
     return arrayOf(collection.items);
   };
+
+  const getGroups = (actor: any) => getCollectionItems(actor, 'apods:groups');
+
+  const getInvitations = (actor: any) => getCollectionItems(actor, 'apods:groupInvitations');
+
+  const getInbox = async (actor: any) => {
+    const inboxMenu = await call(actor, 'activitypub.collection.get', { resourceUri: actor.inbox });
+    const inbox = await call(actor, 'activitypub.collection.get', {
+      resourceUri: actor.inbox,
+      afterEq: new URL(inboxMenu.first).searchParams.get('afterEq')
+    });
+    return arrayOf(inbox.orderedItems);
+  };
+
+  const waitForInvitation = async (actor: any) => {
+    let invite: any;
+    await waitForExpect(async () => {
+      invite = (await getInvitations(actor)).find((activity: any) => activity.actor === groupWebId);
+      expect(invite).toMatchObject({ type: 'Invite', object: groupWebId, target: actor.id });
+    });
+    return invite;
+  };
+
+  const answerInvitation = (actor: any, invite: any, type: 'Accept' | 'Reject') =>
+    call(actor, 'activitypub.outbox.post', {
+      collectionUri: actor.outbox,
+      type,
+      actor: actor.id,
+      object: invite.id,
+      to: groupWebId
+    });
+
+  const waitForMembership = (actor: any) =>
+    waitForExpect(async () => {
+      const member = await getRole('member');
+      expect(arrayOf(member['interop:hasMember'])).toContain(actor.id);
+    });
 
   const getRole = async (role: string) =>
     podProvider.call('role-registrations.get', {
@@ -115,38 +152,59 @@ describe('Test groups members handling', () => {
     expect(registrySet['interop:hasRoleRegistry']).toBeUndefined();
   });
 
-  test('Alice adds Bob to the group', async () => {
+  test('Alice invites Bob, who accepts the invitation', async () => {
     const res = await fetchAs(alice, 'members', 'POST', { memberUri: bob.id });
     expect(res.status).toBe(200);
 
-    await expect(getRole('member')).resolves.toMatchObject({
-      'interop:hasMember': expect.arrayContaining([alice.id, bob.id])
-    });
-
-    await expect(
-      podProvider.call('social-agent-registrations.getForAgent', { agentUri: bob.id, podOwner: groupWebId })
-    ).resolves.toBeTruthy();
-
-    await waitForExpect(async () => {
-      const inboxMenu = await call(bob, 'activitypub.collection.get', { resourceUri: bob.inbox });
-      const inbox = await call(bob, 'activitypub.collection.get', {
-        resourceUri: bob.inbox,
-        afterEq: new URL(inboxMenu.first).searchParams.get('afterEq')
-      });
-      expect(arrayOf(inbox.orderedItems)).toContainEqual(
-        expect.objectContaining({ type: 'Add', actor: groupWebId, object: bob.id, target: groupWebId })
-      );
+    const invite = await waitForInvitation(bob);
+    const member = await getRole('member');
+    expect(arrayOf(member['interop:hasMember'])).not.toContain(bob.id);
+    await expect((await fetchAs(alice, 'members')).json()).resolves.toContainEqual({
+      webId: bob.id,
+      roles: [],
+      invited: true
     });
 
     await waitForExpect(async () => {
       await expect(fetchMails()).resolves.toContainEqual(
-        expect.objectContaining({ recipients: ['<bob@test.com>'], subject: 'You are now a member of acme' })
+        expect.objectContaining({ recipients: ['<bob@test.com>'], subject: 'acme invites you to join the group' })
       );
     });
 
+    // A second invitation is not sent while the first one is pending
+    expect((await fetchAs(alice, 'members', 'POST', { memberUri: bob.id })).status).toBe(200);
+
+    await answerInvitation(bob, invite, 'Accept');
+
+    await waitForMembership(bob);
     await waitForExpect(async () => {
-      await expect(getGroups(bob)).resolves.toEqual([groupWebId]);
+      await expect(
+        podProvider.call('social-agent-registrations.getForAgent', { agentUri: bob.id, podOwner: groupWebId })
+      ).resolves.toBeTruthy();
     });
+    await expect(getGroups(bob)).resolves.toEqual([groupWebId]);
+    await expect(getInvitations(bob)).resolves.toEqual([]);
+
+    const sentInvites = (await getInbox(bob)).filter((activity: any) => activity.type === 'Invite');
+    expect(sentInvites).toHaveLength(1);
+  });
+
+  test('Alice cancels the invitation sent to Craig', async () => {
+    expect((await fetchAs(alice, 'members', 'POST', { memberUri: craig.id })).status).toBe(200);
+    const invite = await waitForInvitation(craig);
+
+    expect((await fetchAs(alice, 'members', 'DELETE', { memberUri: craig.id })).status).toBe(200);
+
+    await waitForExpect(async () => {
+      await expect(getInvitations(craig)).resolves.toEqual([]);
+    });
+    const members = await (await fetchAs(alice, 'members')).json();
+    expect(members.map((member: any) => member.webId)).not.toContain(craig.id);
+
+    // The cancelled invitation cannot be accepted anymore
+    await answerInvitation(craig, invite, 'Accept');
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    expect(arrayOf((await getRole('member'))['interop:hasMember'])).not.toContain(craig.id);
   });
 
   test('Members can see their own roles and rights, but not the others', async () => {
@@ -193,9 +251,22 @@ describe('Test groups members handling', () => {
     await expect(call(bob, 'management.exportAccount', { username: 'acme' })).rejects.toThrow();
   });
 
-  test('Alice makes Bob an admin, then Bob adds Craig but cannot touch the owners', async () => {
+  test('Alice makes Bob an admin, then Bob invites Craig but cannot touch the owners', async () => {
     expect((await fetchAs(alice, 'roles/admin/members', 'POST', { memberUri: bob.id })).status).toBe(200);
+    expect((await fetchAs(alice, 'roles/admin/members', 'POST', { memberUri: craig.id })).status).toBe(400);
+
     await expect(proxyAs(bob, 'members', 'POST', { memberUri: craig.id })).resolves.toMatchObject({ ok: true });
+    const invite = await waitForInvitation(craig);
+    await answerInvitation(craig, invite, 'Reject');
+    await waitForExpect(async () => {
+      await expect(getInvitations(craig)).resolves.toEqual([]);
+    });
+
+    await expect(proxyAs(bob, 'members', 'POST', { memberUri: craig.id })).resolves.toMatchObject({ ok: true });
+    craigInvite = await waitForInvitation(craig);
+    expect(craigInvite.id).not.toBe(invite.id);
+    await answerInvitation(craig, craigInvite, 'Accept');
+    await waitForMembership(craig);
 
     expect((await fetchAs(bob, 'roles/owner/members', 'POST', { memberUri: craig.id })).status).toBe(403);
     expect((await fetchAs(bob, 'roles/owner/members', 'DELETE', { memberUri: alice.id })).status).toBe(403);
@@ -286,6 +357,16 @@ describe('Test groups members handling', () => {
     await waitForExpect(async () => {
       await expect(getGroups(craig)).resolves.toEqual([]);
     });
+    await waitForExpect(async () => {
+      await expect(fetchMails()).resolves.toContainEqual(
+        expect.objectContaining({ recipients: ['<craig@test.com>'], subject: 'You are no longer a member of acme' })
+      );
+    });
+
+    // An invitation can only be accepted once
+    await answerInvitation(craig, craigInvite, 'Accept');
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    expect(arrayOf((await getRole('member'))['interop:hasMember'])).not.toContain(craig.id);
   });
 
   test('Bob removes Alice from the owners, but not himself as the last owner', async () => {
@@ -333,15 +414,6 @@ describe('Test groups members handling', () => {
   });
 
   test('Alice leaves the group, but Bob cannot as its last owner', async () => {
-    const getInbox = async (actor: any) => {
-      const inboxMenu = await call(actor, 'activitypub.collection.get', { resourceUri: actor.inbox });
-      const inbox = await call(actor, 'activitypub.collection.get', {
-        resourceUri: actor.inbox,
-        afterEq: new URL(inboxMenu.first).searchParams.get('afterEq')
-      });
-      return arrayOf(inbox.orderedItems);
-    };
-
     const leave = (actor: any) =>
       call(actor, 'activitypub.outbox.post', {
         collectionUri: actor.outbox,

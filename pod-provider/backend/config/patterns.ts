@@ -1,4 +1,4 @@
-import { ACTIVITY_TYPES, OBJECT_TYPES, matchActivity } from '@semapps/activitypub';
+import { ACTIVITY_TYPES, OBJECT_TYPES } from '@semapps/activitypub';
 import { ACTOR_TYPES } from '@semapps/activitypub/constants';
 
 const CONTACT_REQUEST = {
@@ -50,23 +50,25 @@ const REJECT_CONTACT_REQUEST = {
   }
 };
 
-// Groups also send Add/Remove of persons to their members, but without origin
-const withOrigin = (pattern: object) => (activity: any, fetcher: any) =>
-  activity.origin ? matchActivity(pattern, activity, fetcher) : { match: false, dereferencedActivity: activity };
-
-const ADD_CONTACT = withOrigin({
+const ADD_CONTACT = {
   type: ACTIVITY_TYPES.ADD,
   object: {
     type: ACTOR_TYPES.PERSON
+  },
+  origin: {
+    type: 'Collection'
   }
-});
+};
 
-const REMOVE_CONTACT = withOrigin({
+const REMOVE_CONTACT = {
   type: ACTIVITY_TYPES.REMOVE,
   object: {
     type: ACTOR_TYPES.PERSON
+  },
+  origin: {
+    type: 'Collection'
   }
-});
+};
 
 const IGNORE_CONTACT = {
   type: ACTIVITY_TYPES.IGNORE,
@@ -80,10 +82,41 @@ const UNDO_IGNORE_CONTACT = {
   object: IGNORE_CONTACT
 };
 
-const ADD_GROUP_MEMBER = (activity: any) => ({
-  match: activity.type === ACTIVITY_TYPES.ADD && !activity.origin && activity.target === activity.actor,
+const INVITE_TO_GROUP = (activity: any) => ({
+  match: activity.type === ACTIVITY_TYPES.INVITE && activity.object === activity.actor,
   dereferencedActivity: activity
 });
+
+const ACCEPT_GROUP_INVITATION = {
+  type: ACTIVITY_TYPES.ACCEPT,
+  object: {
+    type: ACTIVITY_TYPES.INVITE
+  }
+};
+
+const REJECT_GROUP_INVITATION = {
+  type: ACTIVITY_TYPES.REJECT,
+  object: {
+    type: ACTIVITY_TYPES.INVITE
+  }
+};
+
+const UNDO_GROUP_INVITATION = {
+  type: ACTIVITY_TYPES.UNDO,
+  object: {
+    type: ACTIVITY_TYPES.INVITE
+  }
+};
+
+const REMOVE_GROUP_MEMBER = {
+  type: ACTIVITY_TYPES.REMOVE,
+  object: {
+    type: ACTOR_TYPES.PERSON
+  },
+  origin: {
+    type: [ACTOR_TYPES.GROUP, ACTOR_TYPES.ORGANIZATION]
+  }
+};
 
 const LEAVE_GROUP = {
   type: ACTIVITY_TYPES.LEAVE
@@ -96,13 +129,11 @@ const ACCEPT_LEAVE_GROUP = {
   }
 };
 
-const REMOVE_GROUP_MEMBER = (activity: any) => ({
-  match: activity.type === ACTIVITY_TYPES.REMOVE && !activity.origin && activity.target === activity.actor,
-  dereferencedActivity: activity
-});
-
 export {
-  ADD_GROUP_MEMBER,
+  INVITE_TO_GROUP,
+  ACCEPT_GROUP_INVITATION,
+  REJECT_GROUP_INVITATION,
+  UNDO_GROUP_INVITATION,
   REMOVE_GROUP_MEMBER,
   LEAVE_GROUP,
   ACCEPT_LEAVE_GROUP,

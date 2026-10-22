@@ -56,16 +56,36 @@ const ACCEPT_CONTACT_REQUEST_MAPPING = {
   ]
 };
 
-const ADD_GROUP_MEMBER_MAPPING = {
+const INVITE_TO_GROUP_MAPPING = {
   title: {
-    en: `You are now a member of {{#if emitter.name}}{{{emitter.name}}}{{else}}{{emitter.preferredUsername}}{{/if}}`,
-    fr: `Vous êtes maintenant membre de {{#if emitter.name}}{{{emitter.name}}}{{else}}{{emitter.preferredUsername}}{{/if}}`
+    en: `{{#if emitter.name}}{{{emitter.name}}}{{else}}{{emitter.preferredUsername}}{{/if}} invites you to join the group`,
+    fr: `{{#if emitter.name}}{{{emitter.name}}}{{else}}{{emitter.preferredUsername}}{{/if}} vous invite à rejoindre le groupe`
+  },
+  content: {
+    en: 'You can accept or reject this invitation from the group page.',
+    fr: 'Vous pouvez accepter ou refuser cette invitation depuis la page du groupe.'
   },
   actions: [
     {
       caption: {
-        en: 'View',
-        fr: 'Voir'
+        en: 'View the invitation',
+        fr: "Voir l'invitation"
+      },
+      link: '/network/{{encodeUri emitter.id}}'
+    }
+  ]
+};
+
+const REMOVED_FROM_GROUP_MAPPING = {
+  title: {
+    en: `You are no longer a member of {{#if emitter.name}}{{{emitter.name}}}{{else}}{{emitter.preferredUsername}}{{/if}}`,
+    fr: `Vous ne faites plus partie du groupe {{#if emitter.name}}{{{emitter.name}}}{{else}}{{emitter.preferredUsername}}{{/if}}`
+  },
+  actions: [
+    {
+      caption: {
+        en: 'View the group',
+        fr: 'Voir le groupe'
       },
       link: '/network/{{encodeUri emitter.id}}'
     }
@@ -76,5 +96,6 @@ export {
   CONTACT_REQUEST_MAPPING,
   ACCEPT_CONTACT_REQUEST_MAPPING,
   AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING,
-  ADD_GROUP_MEMBER_MAPPING
+  INVITE_TO_GROUP_MAPPING,
+  REMOVED_FROM_GROUP_MAPPING
 };

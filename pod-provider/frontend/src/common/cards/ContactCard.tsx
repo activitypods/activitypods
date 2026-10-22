@@ -97,7 +97,7 @@ const ContactCard = ({ actor, publicProfileOnly }: any) => {
               activity={contactRequest}
               refetch={refetchAll}
               variant="contained"
-              color="grey"
+              color="secondary"
               fullWidth
             />
           ) : (
@@ -105,7 +105,7 @@ const ContactCard = ({ actor, publicProfileOnly }: any) => {
               activity={contactRequest}
               refetch={refetchAll}
               variant="contained"
-              color="grey"
+              color="secondary"
               fullWidth
             />
           )}

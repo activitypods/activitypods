@@ -14,7 +14,7 @@ import GroupCard from './GroupCard';
 const GroupPage = ({ groupUri }: { groupUri: string }) => {
   const translate = useTranslate();
   const roleLabel = useRoleLabel();
-  const { group, isLoading } = useGroup(groupUri);
+  const { group, isLoading, refetch } = useGroup(groupUri);
 
   if (isLoading) return null;
   if (!group) return <Typography sx={{ mt: 2 }}>{translate('app.helper.group_not_found')}</Typography>;
@@ -29,7 +29,7 @@ const GroupPage = ({ groupUri }: { groupUri: string }) => {
             <ListIcon />
           </Button>
         ]}
-        asides={[<GroupCard group={group} />]}
+        asides={[<GroupCard group={group} refetch={refetch} />]}
       >
         <ResourceContextProvider value="Actor">
           <RecordContextProvider value={group.webIdData}>

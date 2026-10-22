@@ -7,6 +7,8 @@ import { formatUsername } from '../../utils';
 import AcceptContactRequestButton from '../buttons/AcceptContactRequestButton';
 import IgnoreContactRequestButton from '../buttons/IgnoreContactRequestButton';
 import RejectContactRequestButton from '../buttons/RejectContactRequestButton';
+import AnswerGroupInvitationButton from '../buttons/AnswerGroupInvitationButton';
+import useActor from '../../hooks/useActor';
 
 const useStyles = makeStyles()(theme => ({
   root: {
@@ -96,7 +98,7 @@ const ContactRequest = ({ activity, refetch }: any) => {
                 activity={activity}
                 refetch={refetch}
                 variant="contained"
-                color="grey"
+                color="secondary"
                 className={classes.button}
               >
                 {translate('app.action.ignore')}
@@ -106,7 +108,7 @@ const ContactRequest = ({ activity, refetch }: any) => {
                 activity={activity}
                 refetch={refetch}
                 variant="contained"
-                color="grey"
+                color="secondary"
                 className={classes.button}
               >
                 {translate('app.action.reject')}
@@ -119,18 +121,75 @@ const ContactRequest = ({ activity, refetch }: any) => {
   );
 };
 
+const GroupInvitation = ({ activity, refetch }: any) => {
+  const { classes } = useStyles();
+  const xs = useMediaQuery((theme: any) => theme.breakpoints.down('sm'), { noSsr: true });
+  const translate = useTranslate();
+  const group = useActor(activity.actor);
+
+  if (group.isLoading) return null;
+
+  return (
+    <>
+      <Link to={`/network/${group.webfinger}`}>
+        <Avatar src={group.image} className={classes.avatar} />
+      </Link>
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, sm: 8 }}>
+          <div>
+            <Link to={`/network/${group.webfinger}`}>
+              <Typography variant="body1" className={classes.name} component="span">
+                {group.name}
+              </Typography>
+            </Link>
+            <Typography variant="subtitle1" component="span">
+              {group.webfinger}
+            </Typography>
+          </div>
+          <Typography variant="body2">{translate('app.message.group_invitation')}</Typography>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Box display="flex" alignItems="middle" justifyContent={xs ? 'flex-start' : 'flex-end'}>
+            <AnswerGroupInvitationButton
+              activity={activity}
+              accept
+              refetch={refetch}
+              variant="contained"
+              color="primary"
+              className={classes.button}
+            >
+              {translate('app.action.accept')}
+            </AnswerGroupInvitationButton>
+            <AnswerGroupInvitationButton
+              activity={activity}
+              accept={false}
+              refetch={refetch}
+              variant="contained"
+              color="secondary"
+              className={classes.button}
+            >
+              {translate('app.action.reject')}
+            </AnswerGroupInvitationButton>
+          </Box>
+        </Grid>
+      </Grid>
+    </>
+  );
+};
+
 const ContactRequestsBlock = () => {
   const { classes } = useStyles();
   const translate = useTranslate();
   const refresh = useRefresh();
   const { items: contactRequests, refetch } = useCollection('apods:contactRequests');
+  const { items: groupInvitations, refetch: refetchInvitations } = useCollection('apods:groupInvitations');
 
   const refetchAndRefresh = useCallback(async () => {
     await refetch();
     refresh();
   }, [refetch, refresh]);
 
-  if (!contactRequests || contactRequests.length === 0) return null;
+  if (!contactRequests?.length && !groupInvitations?.length) return null;
 
   return (
     <Card className={classes.root}>
@@ -141,6 +200,11 @@ const ContactRequestsBlock = () => {
         {contactRequests?.map(activity => (
           <Box className={classes.list} key={activity.id}>
             <ContactRequest activity={activity} refetch={refetchAndRefresh} />
+          </Box>
+        ))}
+        {groupInvitations?.map(activity => (
+          <Box className={classes.list} key={activity.id}>
+            <GroupInvitation activity={activity} refetch={refetchInvitations} />
           </Box>
         ))}
       </Box>

@@ -49,7 +49,9 @@ export default {
       manage_roles: 'Manage roles',
       create_role: 'Create role',
       edit_role: 'Edit role',
-      delete_role: 'Delete role'
+      delete_role: 'Delete role',
+      manage_group: 'Manage group',
+      leave_group: 'Leave group'
     },
     role: {
       owner: 'Owner',
@@ -104,7 +106,8 @@ export default {
       delete_pod: 'Delete account',
       export_pod: 'Export all data',
       members: 'Members',
-      roles: 'Roles'
+      roles: 'Roles',
+      my_groups: 'My groups'
     },
     dialog: {
       app_permissions: 'Application permissions'
@@ -156,7 +159,8 @@ export default {
       add_member: 'Add a member'
     },
     block: {
-      contact_requests: 'New contact requests'
+      contact_requests: 'New contact requests',
+      actions: 'Actions'
     },
     input: {
       about_you: 'A few words about you',
@@ -189,6 +193,10 @@ export default {
       extends_role: 'Inherits from %{role}',
       default_role: 'All the members of the group',
       delete_role: 'Do you really want to delete the role %{role}? Its members will stay in the group.',
+      leave_group: 'Do you really want to leave the group %{name}?',
+      last_owner_cannot_leave: 'You are the only owner of this group: make someone else an owner before leaving it.',
+      no_groups: 'You are not a member of any group.',
+      not_group_member: 'You are not a member of this group.',
       location_comment: 'Additional information to help find this place',
       login: 'Sign in to your personal space',
       signup: 'Create your personal space',
@@ -252,6 +260,7 @@ export default {
       profile_data_not_found: "Your profile couldn't be found, please reconnect yourself",
       user_not_found: "User %{username} doesn't exist",
       member_added: 'The member has been added',
+      group_left: 'You left the group %{name}',
       reset_password_submitted: 'An email has been send with reset password instructions',
       reset_password_error: 'An error occurred',
       password_changed: 'Password changed successfully',
@@ -293,7 +302,8 @@ export default {
       type_organization: 'Organization',
       type_group: 'Group',
       name: 'Name',
-      image: 'Logo'
+      image: 'Logo',
+      my_roles: 'My roles'
     },
     validation: {
       email: 'Must be a valid email',
@@ -336,7 +346,8 @@ export default {
       create_group: 'Create group - %{appName}',
       group_settings: 'Group settings of %{groupName} - %{appName}',
       group_members: 'Members of %{groupName} - %{appName}',
-      group_roles: 'Roles of %{groupName} - %{appName}'
+      group_roles: 'Roles of %{groupName} - %{appName}',
+      my_groups: 'My groups - %{appName}'
     },
     placeholder: {
       user_id: '@user@server.com',

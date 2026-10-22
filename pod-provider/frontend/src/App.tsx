@@ -38,6 +38,8 @@ import CreateGroupPage from './pages/CreateGroupPage';
 import GroupSettingsPage from './pages/SettingsPage/GroupSettingsPage';
 import GroupMembersPage from './pages/GroupMembersPage/GroupMembersPage';
 import GroupRolesPage from './pages/GroupRolesPage/GroupRolesPage';
+import GroupsPage from './pages/GroupsPage/GroupsPage';
+import GroupPage from './pages/GroupsPage/GroupPage';
 import PublicProfilePage from './pages/SettingsPage/ProfilesPage/PublicProfilePage';
 import PrivateProfilePage from './pages/SettingsPage/ProfilesPage/PrivateProfilePage';
 
@@ -88,6 +90,10 @@ const App = () => (
           <Route path="/network">
             <Route index element={<NetworkPage />} />
             <Route path="request" element={<NetworkRequestPage />} />
+            <Route path="groups">
+              <Route index element={<GroupsPage />} />
+              <Route path=":webfingerId" element={<GroupPage />} />
+            </Route>
             <Route path=":webfingerId" element={<NetworkActorPage />} />
           </Route>
           <Route path="/apps" element={<ApplicationsPage />} />

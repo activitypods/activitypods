@@ -9,6 +9,7 @@ import List from '../../layout/List';
 import ProfileCard from '../../common/cards/ProfileCard';
 import ShareContactCard from '../../common/cards/ShareContactCard';
 import TagsButton from '../../common/buttons/TagsButton';
+import GroupsButton from '../../common/buttons/GroupsButton';
 import ContactRequestsBlock from '../../common/blocks/ContactRequestsBlock';
 import { formatUsername } from '../../utils';
 
@@ -28,7 +29,8 @@ const NetworkPage = () => {
           <Link to="/network/request">
             <Button startIcon={<AddIcon />}>{translate('app.action.send_request')}</Button>
           </Link>,
-          <TagsButton />
+          <TagsButton />,
+          ...(CONFIG.ENABLE_GROUPS ? [<GroupsButton />] : [])
         ]}
         asides={xs ? [<ShareContactCard />] : [<ProfileCard />, <ShareContactCard />]}
         sort={{ field: 'vcard:given-name', order: 'ASC' }}

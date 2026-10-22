@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { useCreatePath, useTranslate } from 'react-admin';
-import { Box, Card, Typography, Avatar, Button } from '@mui/material';
+import { Box, Card, Typography, Avatar, Button, useMediaQuery } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import { Link } from 'react-router-dom';
 import { useCollection } from '@semapps/activitypub-components';
@@ -10,6 +10,7 @@ import AcceptContactRequestButton from '../buttons/AcceptContactRequestButton';
 import RejectContactRequestButton from '../buttons/RejectContactRequestButton';
 import IgnoreContactRequestButton from '../buttons/IgnoreContactRequestButton';
 import IgnoreContactButton from '../buttons/IgnoreContactButton';
+import ActionsBlock from '../blocks/ActionsBlock';
 
 const useStyles = makeStyles()(theme => ({
   root: {
@@ -61,6 +62,7 @@ const ContactCard = ({ actor, publicProfileOnly }: any) => {
   const { classes } = useStyles();
   const createPath = useCreatePath();
   const translate = useTranslate();
+  const xs = useMediaQuery((theme: any) => theme.breakpoints.down('sm'), { noSsr: true });
   const { items: contacts, refetch: refetchContacts } = useCollection('apods:contacts');
   const { items: contactRequests, refetch: refetchRequests } = useCollection('apods:contactRequests');
 
@@ -72,6 +74,55 @@ const ContactCard = ({ actor, publicProfileOnly }: any) => {
   const refetchAll = useCallback(async () => {
     await Promise.all([refetchContacts(), refetchRequests()]);
   }, [refetchContacts, refetchRequests]);
+
+  const actions = (
+    <>
+      {!actor.isLoggedUser &&
+        (contacts?.includes(actor.id) ? (
+          <RemoveContactButton refetch={refetchContacts} variant="contained" color="secondary" fullWidth />
+        ) : (
+          <AddContactButton refetch={refetchContacts} variant="contained" color="secondary" fullWidth />
+        ))}
+      {contactRequest && (
+        <>
+          <AcceptContactRequestButton
+            activity={contactRequest}
+            refetch={refetchAll}
+            variant="contained"
+            color="primary"
+            fullWidth
+          />
+          {contactRequest.context ? (
+            <IgnoreContactRequestButton
+              activity={contactRequest}
+              refetch={refetchAll}
+              variant="contained"
+              color="grey"
+              fullWidth
+            />
+          ) : (
+            <RejectContactRequestButton
+              activity={contactRequest}
+              refetch={refetchAll}
+              variant="contained"
+              color="grey"
+              fullWidth
+            />
+          )}
+        </>
+      )}
+      {!actor.isLoggedUser && !contactRequest && <IgnoreContactButton variant="contained" color="primary" fullWidth />}
+      {actor.isLoggedUser && (
+        <Link to={publicProfileOnly ? '/settings/profiles/public' : '/settings/profiles/private'}>
+          <Button variant="contained" color="secondary" type="submit" fullWidth={xs}>
+            {translate('app.action.edit_profile')}
+          </Button>
+        </Link>
+      )}
+    </>
+  );
+
+  if (xs) return <ActionsBlock>{actions}</ActionsBlock>;
 
   return (
     <Card className={classes.root}>
@@ -91,50 +142,7 @@ const ContactCard = ({ actor, publicProfileOnly }: any) => {
         <Typography align="center">{actor.webfinger}</Typography>
       </Box>
       <Box className={classes.button} pb={3} pr={3} pl={3}>
-        {!actor.isLoggedUser &&
-          (contacts?.includes(actor.id) ? (
-            <RemoveContactButton refetch={refetchContacts} variant="contained" color="secondary" fullWidth />
-          ) : (
-            <AddContactButton refetch={refetchContacts} variant="contained" color="secondary" fullWidth />
-          ))}
-        {contactRequest && (
-          <>
-            <AcceptContactRequestButton
-              activity={contactRequest}
-              refetch={refetchAll}
-              variant="contained"
-              color="primary"
-              fullWidth
-            />
-            {contactRequest.context ? (
-              <IgnoreContactRequestButton
-                activity={contactRequest}
-                refetch={refetchAll}
-                variant="contained"
-                color="grey"
-                fullWidth
-              />
-            ) : (
-              <RejectContactRequestButton
-                activity={contactRequest}
-                refetch={refetchAll}
-                variant="contained"
-                color="grey"
-                fullWidth
-              />
-            )}
-          </>
-        )}
-        {!actor.isLoggedUser && !contactRequest && (
-          <IgnoreContactButton variant="contained" color="primary" fullWidth />
-        )}
-        {actor.isLoggedUser && (
-          <Link to={publicProfileOnly ? '/settings/profiles/public' : '/settings/profiles/private'}>
-            <Button variant="contained" color="secondary" type="submit">
-              {translate('app.action.edit_profile')}
-            </Button>
-          </Link>
-        )}
+        {actions}
       </Box>
     </Card>
   );

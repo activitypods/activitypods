@@ -49,7 +49,9 @@ export default {
       manage_roles: 'Gérer les rôles',
       create_role: 'Créer un rôle',
       edit_role: 'Modifier le rôle',
-      delete_role: 'Supprimer le rôle'
+      delete_role: 'Supprimer le rôle',
+      manage_group: 'Gérer le groupe',
+      leave_group: 'Quitter le groupe'
     },
     role: {
       owner: 'Propriétaire',
@@ -105,7 +107,8 @@ export default {
       delete_pod: 'Effacer le compte',
       export_pod: 'Exporter les données',
       members: 'Membres',
-      roles: 'Rôles'
+      roles: 'Rôles',
+      my_groups: 'Mes groupes'
     },
     description: {
       delete_pod: `En continuant, vous effacerez votre porte-données et toutes les données qui s'y trouvent. Cette action est irréversible! Nous vous conseillons d'exporter d'abord vos données (dans les paramètres avancés). Pour continuer, tapez "%{confirm_text}".`,
@@ -157,7 +160,8 @@ export default {
       add_member: 'Ajouter un membre'
     },
     block: {
-      contact_requests: 'Nouvelles demandes de contact'
+      contact_requests: 'Nouvelles demandes de contact',
+      actions: 'Actions'
     },
     input: {
       about_you: 'Quelques mots sur vous',
@@ -192,6 +196,11 @@ export default {
       extends_role: 'Hérite de %{role}',
       default_role: 'Tous les membres du groupe',
       delete_role: 'Voulez-vous vraiment supprimer le rôle %{role} ? Ses membres resteront dans le groupe.',
+      leave_group: 'Voulez-vous vraiment quitter le groupe %{name} ?',
+      last_owner_cannot_leave:
+        'Vous êtes le seul propriétaire de ce groupe : nommez un autre propriétaire avant de le quitter.',
+      no_groups: "Vous n'êtes membre d'aucun groupe.",
+      not_group_member: "Vous n'êtes pas membre de ce groupe.",
       location_comment: 'Indications supplémentaires pour aider à trouver ce lieu',
       login: 'Je me connecte à mon espace personnel',
       signup: 'Je crée mon espace personnel',
@@ -261,6 +270,7 @@ export default {
       profile_data_not_found: "Votre profil n'a pas été trouvé, veuillez vous déconnecter et vous reconnecter",
       user_not_found: "L'utilisateur %{username} n'existe pas",
       member_added: 'Le membre a été ajouté',
+      group_left: 'Vous avez quitté le groupe %{name}',
       reset_password_submitted: 'Un e-mail a été envoyé avec les instructions de réinitialisation du mot de passe',
       reset_password_error: "Une erreur s'est produite",
       password_changed: 'Le mot de passe a été changé avec succès',
@@ -302,7 +312,8 @@ export default {
       type_organization: 'Organisation',
       type_group: 'Groupe',
       name: 'Nom',
-      image: 'Logo'
+      image: 'Logo',
+      my_roles: 'Mes rôles'
     },
     validation: {
       email: 'Doit être un email valide',
@@ -345,7 +356,8 @@ export default {
       create_group: 'Créer un groupe - %{appName}',
       group_settings: 'Paramètres du groupe %{groupName} - %{appName}',
       group_members: 'Membres du groupe %{groupName} - %{appName}',
-      group_roles: 'Rôles du groupe %{groupName} - %{appName}'
+      group_roles: 'Rôles du groupe %{groupName} - %{appName}',
+      my_groups: 'Mes groupes - %{appName}'
     },
     placeholder: {
       user_id: '@utilisateur@serveur.com',

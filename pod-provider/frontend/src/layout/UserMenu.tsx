@@ -65,20 +65,12 @@ const UserMenu = () => {
           </MenuItem>
         </Link>
         {groups.map(group => (
-          <Link
-            key={group.id}
-            to={`/group/@${group['foaf:nick']}@${new URL(group.id).host}`}
-            style={{ textDecoration: 'none' }}
-          >
+          <Link key={group.id} to={`/group/${group.webfingerId}`} style={{ textDecoration: 'none' }}>
             <MenuItem onClick={handleClose}>
               <ListItemIcon>
-                {group.icon?.url || group['foaf:depiction'] ? (
-                  <Avatar src={group.icon?.url || group['foaf:depiction']} sx={{ width: 24, height: 24 }} />
-                ) : (
-                  <GroupIcon />
-                )}
+                {group.avatar ? <Avatar src={group.avatar} sx={{ width: 24, height: 24 }} /> : <GroupIcon />}
               </ListItemIcon>
-              {group['foaf:name']}
+              {group.name}
             </MenuItem>
           </Link>
         ))}

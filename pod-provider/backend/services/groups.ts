@@ -350,7 +350,7 @@ const GroupsService = {
     async updateMemberGroups(ctx, memberUri, groupWebId, isMember) {
       // The context may come from the group (dataset of the group)
       const account = await ctx.call('auth.account.findByWebId', { webId: memberUri });
-      const meta = { dataset: account.username };
+      const meta = { dataset: account.username, webId: 'system' };
 
       // Created on the fly, as Pods created before groups do not have this collection
       const collectionUri = await ctx.call(

@@ -200,7 +200,7 @@ export default {
       last_owner_cannot_leave:
         'Vous êtes le seul propriétaire de ce groupe : nommez un autre propriétaire avant de le quitter.',
       no_groups: "Vous n'êtes membre d'aucun groupe.",
-      not_group_member: "Vous n'êtes pas membre de ce groupe.",
+      group_not_found: "Ce groupe n'a pas pu être trouvé.",
       location_comment: 'Indications supplémentaires pour aider à trouver ce lieu',
       login: 'Je me connecte à mon espace personnel',
       signup: 'Je crée mon espace personnel',

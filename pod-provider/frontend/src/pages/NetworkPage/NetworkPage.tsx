@@ -30,7 +30,7 @@ const NetworkPage = () => {
             <Button startIcon={<AddIcon />}>{translate('app.action.send_request')}</Button>
           </Link>,
           <TagsButton />,
-          ...(CONFIG.ENABLE_GROUPS ? [<GroupsButton />] : [])
+          <GroupsButton />
         ]}
         asides={xs ? [<ShareContactCard />] : [<ProfileCard />, <ShareContactCard />]}
         sort={{ field: 'vcard:given-name', order: 'ASC' }}

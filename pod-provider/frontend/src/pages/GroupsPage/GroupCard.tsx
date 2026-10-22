@@ -49,7 +49,7 @@ const GroupCard = ({ group }: { group: Group }) => {
     }
   };
 
-  const actions = (
+  const actions = group.isMember && (
     <>
       {canManage && (
         <Button
@@ -81,7 +81,7 @@ const GroupCard = ({ group }: { group: Group }) => {
     </>
   );
 
-  if (xs) return <ActionsBlock>{actions}</ActionsBlock>;
+  if (xs) return actions ? <ActionsBlock>{actions}</ActionsBlock> : null;
 
   return (
     <Card sx={{ mt: '5px', mb: 3 }}>

@@ -1,26 +1,23 @@
 import React from 'react';
 import { useTranslate, Button, DateField, RecordContextProvider, ResourceContextProvider } from 'react-admin';
-import { useParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Typography } from '@mui/material';
 import ListIcon from '@mui/icons-material/List';
 import Header from '../../common/Header';
 import Hero from '../../common/list/Hero/Hero';
 import ShowView from '../../layout/ShowView';
 import ValueField from '../../common/fields/ValueField';
-import useGroups from '../../hooks/useGroups';
+import { useGroup } from '../../hooks/useGroups';
 import useRoleLabel from '../../hooks/useRoleLabel';
 import GroupCard from './GroupCard';
 
-const GroupPage = () => {
+const GroupPage = ({ groupUri }: { groupUri: string }) => {
   const translate = useTranslate();
   const roleLabel = useRoleLabel();
-  const { webfingerId } = useParams();
-  const { groups, isLoading } = useGroups();
+  const { group, isLoading } = useGroup(groupUri);
 
   if (isLoading) return null;
-
-  const group = groups.find(g => g.webfingerId === webfingerId);
-  if (!group) return <Typography sx={{ mt: 2 }}>{translate('app.helper.not_group_member')}</Typography>;
+  if (!group) return <Typography sx={{ mt: 2 }}>{translate('app.helper.group_not_found')}</Typography>;
 
   return (
     <>

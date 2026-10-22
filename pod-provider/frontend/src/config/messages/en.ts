@@ -196,7 +196,7 @@ export default {
       leave_group: 'Do you really want to leave the group %{name}?',
       last_owner_cannot_leave: 'You are the only owner of this group: make someone else an owner before leaving it.',
       no_groups: 'You are not a member of any group.',
-      not_group_member: 'You are not a member of this group.',
+      group_not_found: 'This group could not be found.',
       location_comment: 'Additional information to help find this place',
       login: 'Sign in to your personal space',
       signup: 'Create your personal space',

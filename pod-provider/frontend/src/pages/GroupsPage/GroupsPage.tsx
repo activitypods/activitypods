@@ -47,7 +47,7 @@ const GroupsPage = () => {
             <ListItemButton
               key={group.id}
               component={Link}
-              to={`/network/groups/${group.webfingerId}`}
+              to={`/network/${group.webfingerId}`}
               sx={{ backgroundColor: 'white', mb: 1, boxShadow: 1 }}
             >
               <ListItemAvatar>

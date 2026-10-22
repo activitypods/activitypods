@@ -1,9 +1,7 @@
 import React from 'react';
 import { useTranslate, SimpleList } from 'react-admin';
-import { Link } from 'react-router-dom';
-import { Avatar, Button, useMediaQuery } from '@mui/material';
+import { Avatar, useMediaQuery } from '@mui/material';
 import Header from '../../common/Header';
-import AddIcon from '@mui/icons-material/Add';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import List from '../../layout/List';
 import ProfileCard from '../../common/cards/ProfileCard';
@@ -25,13 +23,7 @@ const NetworkPage = () => {
       <List
         resource="Profile"
         title={translate('app.page.contacts')}
-        actions={[
-          <Link to="/network/request">
-            <Button startIcon={<AddIcon />}>{translate('app.action.send_request')}</Button>
-          </Link>,
-          <TagsButton />,
-          <GroupsButton />
-        ]}
+        actions={[<TagsButton />, <GroupsButton />]}
         asides={xs ? [<ShareContactCard />] : [<ProfileCard />, <ShareContactCard />]}
         sort={{ field: 'vcard:given-name', order: 'ASC' }}
         perPage={1000}

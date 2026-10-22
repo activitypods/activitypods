@@ -6,7 +6,7 @@ import { arrayOf, getId, getSlugFromUri } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ACTOR_TYPES, ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { throw403, throw404 } from '@semapps/middlewares';
 import * as CONFIG from '../config/config.ts';
-import { ADD_GROUP_MEMBER, REMOVE_GROUP_MEMBER } from '../config/patterns.ts';
+import { ADD_GROUP_MEMBER, REMOVE_GROUP_MEMBER, LEAVE_GROUP, ACCEPT_LEAVE_GROUP } from '../config/patterns.ts';
 import { ADD_GROUP_MEMBER_MAPPING } from '../config/mappings.ts';
 import { ServiceSchema } from 'moleculer';
 
@@ -338,6 +338,39 @@ const GroupsService = {
         });
       }
     },
+    leaveGroup: {
+      match: LEAVE_GROUP,
+      async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
+        const groupWebId = typeof activity.object === 'string' ? activity.object : activity.object?.id;
+        if (groupWebId !== recipientUri) return;
+        const account = await ctx.call('auth.account.findByWebId', { webId: groupWebId });
+        if (!account?.group) return;
+
+        const memberUri = activity.actor;
+        const ownersUri = await this.getRoleUri(ctx, groupWebId, 'owner');
+        const owners = await ctx.call('role-registrations.get', { resourceUri: ownersUri, webId: 'system' });
+        const ownersUris = arrayOf(owners['interop:hasMember']);
+        if (ownersUris.includes(memberUri)) {
+          if (ownersUris.length === 1) {
+            await this.replyToLeave(ctx, groupWebId, activity, ACTIVITY_TYPES.REJECT);
+            return;
+          }
+          await ctx.call('role-registrations.removeMember', { roleRegistrationUri: ownersUri, agentUri: memberUri });
+          await this.setOwnerRights(ctx, groupWebId, memberUri, false);
+        }
+
+        await this.removeFromGroup(ctx, groupWebId, memberUri, false);
+        await this.replyToLeave(ctx, groupWebId, activity, ACTIVITY_TYPES.ACCEPT);
+      }
+    },
+    leaveAccepted: {
+      match: ACCEPT_LEAVE_GROUP,
+      async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
+        const leave = activity.object;
+        if (leave.actor !== recipientUri || leave.object !== activity.actor) return;
+        await this.updateMemberGroups(ctx, recipientUri, activity.actor, false);
+      }
+    },
     removedFromGroup: {
       match: REMOVE_GROUP_MEMBER,
       async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
@@ -447,7 +480,7 @@ const GroupsService = {
 
       await this.notifyMember(ctx, groupWebId, memberUri, ACTIVITY_TYPES.ADD);
     },
-    async removeFromGroup(ctx, groupWebId, memberUri) {
+    async removeFromGroup(ctx, groupWebId, memberUri, notify = true) {
       const roles = await ctx.call('role-registrations.listForAgent', {
         groupWebId,
         agentUri: memberUri,
@@ -473,7 +506,7 @@ const GroupsService = {
         });
       }
 
-      await this.notifyMember(ctx, groupWebId, memberUri, ACTIVITY_TYPES.REMOVE);
+      if (notify) await this.notifyMember(ctx, groupWebId, memberUri, ACTIVITY_TYPES.REMOVE);
     },
     async removeOwner(ctx, groupWebId, ownerWebId) {
       const roleRegistrationUri = await this.getRoleUri(ctx, groupWebId, 'owner');
@@ -507,6 +540,24 @@ const GroupsService = {
           { meta: { webId: 'system', impersonatedUser: undefined } }
         );
       }
+    },
+    async replyToLeave(ctx, groupWebId, leave, type) {
+      const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
+        actorUri: groupWebId,
+        predicate: 'outbox'
+      });
+
+      await ctx.call(
+        'activitypub.outbox.post',
+        {
+          collectionUri: outboxUri,
+          type,
+          actor: groupWebId,
+          object: leave.id,
+          to: leave.actor
+        },
+        { meta: { webId: groupWebId } }
+      );
     },
     async notifyMember(ctx, groupWebId, memberUri, type) {
       const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {

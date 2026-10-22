@@ -331,4 +331,53 @@ describe('Test groups members handling', () => {
     });
     await expect(call(bob, 'groups.listMembers', { username: 'acme' })).resolves.toHaveLength(2);
   });
+
+  test('Alice leaves the group, but Bob cannot as its last owner', async () => {
+    const getInbox = async (actor: any) => {
+      const inboxMenu = await call(actor, 'activitypub.collection.get', { resourceUri: actor.inbox });
+      const inbox = await call(actor, 'activitypub.collection.get', {
+        resourceUri: actor.inbox,
+        afterEq: new URL(inboxMenu.first).searchParams.get('afterEq')
+      });
+      return arrayOf(inbox.orderedItems);
+    };
+
+    const leave = (actor: any) =>
+      call(actor, 'activitypub.outbox.post', {
+        collectionUri: actor.outbox,
+        type: 'Leave',
+        actor: actor.id,
+        object: groupWebId,
+        to: groupWebId
+      });
+
+    await leave(alice);
+
+    await waitForExpect(async () => {
+      const member = await getRole('member');
+      expect(arrayOf(member['interop:hasMember'])).not.toContain(alice.id);
+    });
+    await expect(
+      podProvider.call('social-agent-registrations.getForAgent', { agentUri: alice.id, podOwner: groupWebId })
+    ).resolves.toBeFalsy();
+    await waitForExpect(async () => {
+      await expect(getInbox(alice)).resolves.toContainEqual(
+        expect.objectContaining({ type: 'Accept', actor: groupWebId, object: expect.stringContaining(alice.id) })
+      );
+    });
+    await waitForExpect(async () => {
+      await expect(getGroups(alice)).resolves.toEqual([]);
+    });
+
+    await leave(bob);
+    await waitForExpect(async () => {
+      await expect(getInbox(bob)).resolves.toContainEqual(
+        expect.objectContaining({ type: 'Reject', actor: groupWebId, object: expect.stringContaining(bob.id) })
+      );
+    });
+
+    const owner = await getRole('owner');
+    expect(arrayOf(owner['interop:hasMember'])).toEqual([bob.id]);
+    await expect(getGroups(bob)).resolves.toEqual([groupWebId]);
+  });
 });

@@ -85,6 +85,17 @@ const ADD_GROUP_MEMBER = (activity: any) => ({
   dereferencedActivity: activity
 });
 
+const LEAVE_GROUP = {
+  type: ACTIVITY_TYPES.LEAVE
+};
+
+const ACCEPT_LEAVE_GROUP = {
+  type: ACTIVITY_TYPES.ACCEPT,
+  object: {
+    type: ACTIVITY_TYPES.LEAVE
+  }
+};
+
 const REMOVE_GROUP_MEMBER = (activity: any) => ({
   match: activity.type === ACTIVITY_TYPES.REMOVE && !activity.origin && activity.target === activity.actor,
   dereferencedActivity: activity
@@ -93,6 +104,8 @@ const REMOVE_GROUP_MEMBER = (activity: any) => ({
 export {
   ADD_GROUP_MEMBER,
   REMOVE_GROUP_MEMBER,
+  LEAVE_GROUP,
+  ACCEPT_LEAVE_GROUP,
   CONTACT_REQUEST,
   ACCEPT_CONTACT_REQUEST,
   IGNORE_CONTACT_REQUEST,

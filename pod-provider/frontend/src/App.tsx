@@ -37,6 +37,7 @@ import SettingsProfilesPage from './pages/SettingsPage/ProfilesPage/SettingsProf
 import CreateGroupPage from './pages/CreateGroupPage';
 import GroupSettingsPage from './pages/SettingsPage/GroupSettingsPage';
 import GroupMembersPage from './pages/GroupMembersPage/GroupMembersPage';
+import GroupRolesPage from './pages/GroupRolesPage/GroupRolesPage';
 import PublicProfilePage from './pages/SettingsPage/ProfilesPage/PublicProfilePage';
 import PrivateProfilePage from './pages/SettingsPage/ProfilesPage/PrivateProfilePage';
 
@@ -114,6 +115,7 @@ const App = () => (
             <Route path="settings">
               <Route index element={<GroupSettingsPage />} />
               <Route path="profile" element={<PublicProfilePage />} />
+              <Route path="roles" element={<GroupRolesPage />} />
               <Route path="export" element={<SettingsExportPage />} />
               <Route path="delete" element={<SettingsDeletePage />} />
             </Route>

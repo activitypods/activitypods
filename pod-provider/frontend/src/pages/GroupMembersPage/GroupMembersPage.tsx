@@ -13,7 +13,8 @@ const GroupMembersPage = () => {
   const translate = useTranslate();
   const xs = useMediaQuery((theme: any) => theme.breakpoints.down('sm'), { noSsr: true });
   const { isLoading: isGroupLoading, data: group } = useRealmContext() as any;
-  const { members, isLoading, addMember, removeMember, addOwner, removeOwner } = useGroupMembers();
+  const { members, roles, isOwner, rights, isLoading, addMember, removeMember, addRoleMember, removeRoleMember } =
+    useGroupMembers();
 
   if (isGroupLoading) return null;
 
@@ -23,7 +24,10 @@ const GroupMembersPage = () => {
       <ListView
         title={translate('app.page.members')}
         actions={[]}
-        asides={[...(xs ? [] : [<ProfileCard />]), <AddMemberCard members={members} onAdd={addMember} />]}
+        asides={[
+          ...(xs ? [] : [<ProfileCard />]),
+          ...(rights.includes('interop:ManageMembers') ? [<AddMemberCard members={members} onAdd={addMember} />] : [])
+        ]}
       >
         {!isLoading && (
           <List>
@@ -31,8 +35,13 @@ const GroupMembersPage = () => {
               <MemberItem
                 key={member.webId}
                 member={member}
+                roles={roles || []}
+                isOwner={isOwner}
+                rights={rights}
                 onRemove={removeMember}
-                onToggleOwner={(memberUri, isOwner) => (isOwner ? removeOwner(memberUri) : addOwner(memberUri))}
+                onToggleRole={(role, memberUri, hasRole) =>
+                  hasRole ? removeRoleMember(role, memberUri) : addRoleMember(role, memberUri)
+                }
               />
             ))}
           </List>

@@ -46,11 +46,20 @@ export default {
       view_contact_profile: 'Voir le profil de %{name}',
       add_member: 'Ajouter le membre',
       remove_member: 'Retirer du groupe',
-      make_owner: 'Nommer propriétaire',
-      remove_owner: 'Retirer des propriétaires'
+      manage_roles: 'Gérer les rôles',
+      create_role: 'Créer un rôle',
+      edit_role: 'Modifier le rôle',
+      delete_role: 'Supprimer le rôle'
     },
     role: {
-      owner: 'Propriétaire'
+      owner: 'Propriétaire',
+      admin: 'Administrateur',
+      member: 'Membre'
+    },
+    special_right: {
+      ReadMembers: 'Voir les membres',
+      ManageMembers: 'Ajouter et retirer des membres',
+      ManageRoles: 'Gérer les rôles'
     },
     tag: {
       members: 'Contacts',
@@ -95,7 +104,8 @@ export default {
       invite_success: 'Connection établie !',
       delete_pod: 'Effacer le compte',
       export_pod: 'Exporter les données',
-      members: 'Membres'
+      members: 'Membres',
+      roles: 'Rôles'
     },
     description: {
       delete_pod: `En continuant, vous effacerez votre porte-données et toutes les données qui s'y trouvent. Cette action est irréversible! Nous vous conseillons d'exporter d'abord vos données (dans les paramètres avancés). Pour continuer, tapez "%{confirm_text}".`,
@@ -121,7 +131,8 @@ export default {
       locale: 'Langue',
       export: 'Exporter les données',
       delete: 'Effacer le compte',
-      developer_mode: 'Mode développeur'
+      developer_mode: 'Mode développeur',
+      roles: 'Rôles'
     },
     authorization: {
       required: 'Accès requis',
@@ -161,7 +172,10 @@ export default {
       created: 'Créé le',
       modified: 'Modifié le',
       confirm_delete: 'Confirmer la suppression',
-      with_backups: 'Inclure les backups de la base de donnée (si disponibles)'
+      with_backups: 'Inclure les backups de la base de donnée (si disponibles)',
+      role_label: 'Nom',
+      extends_roles: 'Hérite de',
+      special_rights: 'Droits spéciaux'
     },
     helper: {
       add_contact:
@@ -175,6 +189,9 @@ export default {
       add_member:
         "Choisissez un de vos contacts, ou saisissez l'identifiant d'un utilisateur (format : @bob@serveur.com).",
       remove_member: 'Voulez-vous vraiment retirer %{name} du groupe ?',
+      extends_role: 'Hérite de %{role}',
+      default_role: 'Tous les membres du groupe',
+      delete_role: 'Voulez-vous vraiment supprimer le rôle %{role} ? Ses membres resteront dans le groupe.',
       location_comment: 'Indications supplémentaires pour aider à trouver ce lieu',
       login: 'Je me connecte à mon espace personnel',
       signup: 'Je crée mon espace personnel',
@@ -327,7 +344,8 @@ export default {
       network: 'Mon réseau - %{appName}',
       create_group: 'Créer un groupe - %{appName}',
       group_settings: 'Paramètres du groupe %{groupName} - %{appName}',
-      group_members: 'Membres du groupe %{groupName} - %{appName}'
+      group_members: 'Membres du groupe %{groupName} - %{appName}',
+      group_roles: 'Rôles du groupe %{groupName} - %{appName}'
     },
     placeholder: {
       user_id: '@utilisateur@serveur.com',

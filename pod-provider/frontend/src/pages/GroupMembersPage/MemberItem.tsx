@@ -1,25 +1,50 @@
 import React, { useState } from 'react';
 import { useTranslate, useNotify, Confirm } from 'react-admin';
-import { ListItem, ListItemAvatar, ListItemText, Avatar, Chip, IconButton, Tooltip, Box } from '@mui/material';
-import StarIcon from '@mui/icons-material/Star';
-import StarBorderIcon from '@mui/icons-material/StarBorder';
+import {
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  ListItemIcon,
+  Avatar,
+  Chip,
+  IconButton,
+  Tooltip,
+  Box,
+  Menu,
+  MenuItem,
+  Checkbox
+} from '@mui/material';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import useActor from '../../hooks/useActor';
+import useRoleLabel from '../../hooks/useRoleLabel';
 import { formatUsername } from '../../utils';
-import { GroupMember } from '../../hooks/useGroupMembers';
+import { GroupMember, GroupRole, getInheritedRoles } from '../../hooks/useGroupMembers';
 
 type Props = {
   member: GroupMember;
+  roles: GroupRole[];
+  isOwner: boolean;
+  rights: string[];
   onRemove: (memberUri: string) => Promise<void>;
-  onToggleOwner: (memberUri: string, isOwner: boolean) => Promise<void>;
+  onToggleRole: (role: string, memberUri: string, hasRole: boolean) => Promise<void>;
 };
 
-const MemberItem = ({ member, onRemove, onToggleOwner }: Props) => {
+const MemberItem = ({ member, roles, isOwner, rights, onRemove, onToggleRole }: Props) => {
   const translate = useTranslate();
   const notify = useNotify();
   const actor = useActor(member.webId);
+  const roleLabel = useRoleLabel();
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const isOwner = member.roles.includes('owner');
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+
+  const inheritedRoles = getInheritedRoles(member.roles, roles);
+  const assignableRoles = roles.filter(role => !role.isDefaultRole);
+  const shownRoles = assignableRoles.filter(
+    role => member.roles.includes(role.id) && !inheritedRoles.includes(role.id)
+  );
+  const memberIsOwner = member.roles.includes('owner');
+  const canRemove = rights.includes('interop:ManageMembers') && (isOwner || !memberIsOwner);
 
   const run = async (action: () => Promise<void>) => {
     try {
@@ -34,19 +59,23 @@ const MemberItem = ({ member, onRemove, onToggleOwner }: Props) => {
       sx={{ backgroundColor: 'white', mb: 1, boxShadow: 1 }}
       secondaryAction={
         <Box>
-          <Tooltip title={translate(isOwner ? 'app.action.remove_owner' : 'app.action.make_owner')}>
-            <IconButton
-              aria-label={translate(isOwner ? 'app.action.remove_owner' : 'app.action.make_owner')}
-              onClick={() => run(() => onToggleOwner(member.webId, isOwner))}
-            >
-              {isOwner ? <StarIcon /> : <StarBorderIcon />}
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={translate('app.action.remove_member')}>
-            <IconButton aria-label={translate('app.action.remove_member')} onClick={() => setConfirmOpen(true)}>
-              <PersonRemoveIcon />
-            </IconButton>
-          </Tooltip>
+          {rights.includes('interop:ManageRoles') && (
+            <Tooltip title={translate('app.action.manage_roles')}>
+              <IconButton
+                aria-label={translate('app.action.manage_roles')}
+                onClick={event => setMenuAnchor(event.currentTarget)}
+              >
+                <ManageAccountsIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+          {canRemove && (
+            <Tooltip title={translate('app.action.remove_member')}>
+              <IconButton aria-label={translate('app.action.remove_member')} onClick={() => setConfirmOpen(true)}>
+                <PersonRemoveIcon />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       }
     >
@@ -57,11 +86,34 @@ const MemberItem = ({ member, onRemove, onToggleOwner }: Props) => {
         primary={
           <>
             {actor.name}
-            {isOwner && <Chip label={translate('app.role.owner')} size="small" sx={{ ml: 1 }} />}
+            {shownRoles.map(role => (
+              <Chip key={role.id} label={roleLabel(role)} size="small" sx={{ ml: 1 }} />
+            ))}
           </>
         }
         secondary={formatUsername(member.webId)}
       />
+      <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
+        {assignableRoles.map(role => {
+          const hasRole = member.roles.includes(role.id);
+          const isInherited = inheritedRoles.includes(role.id);
+          return (
+            <MenuItem
+              key={role.id}
+              disabled={isInherited || (role.id === 'owner' && !isOwner)}
+              onClick={() => {
+                setMenuAnchor(null);
+                run(() => onToggleRole(role.id, member.webId, hasRole));
+              }}
+            >
+              <ListItemIcon>
+                <Checkbox edge="start" checked={hasRole} disableRipple size="small" />
+              </ListItemIcon>
+              {roleLabel(role)}
+            </MenuItem>
+          );
+        })}
+      </Menu>
       <Confirm
         isOpen={confirmOpen}
         title={translate('app.action.remove_member')}

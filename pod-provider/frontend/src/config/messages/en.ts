@@ -46,11 +46,20 @@ export default {
       view_contact_profile: "View %{name}'s profile",
       add_member: 'Add member',
       remove_member: 'Remove from group',
-      make_owner: 'Make owner',
-      remove_owner: 'Remove from owners'
+      manage_roles: 'Manage roles',
+      create_role: 'Create role',
+      edit_role: 'Edit role',
+      delete_role: 'Delete role'
     },
     role: {
-      owner: 'Owner'
+      owner: 'Owner',
+      admin: 'Admin',
+      member: 'Member'
+    },
+    special_right: {
+      ReadMembers: 'See the members',
+      ManageMembers: 'Add and remove members',
+      ManageRoles: 'Manage roles'
     },
     tag: {
       members: 'Members',
@@ -94,7 +103,8 @@ export default {
       invite_success: 'Success!',
       delete_pod: 'Delete account',
       export_pod: 'Export all data',
-      members: 'Members'
+      members: 'Members',
+      roles: 'Roles'
     },
     dialog: {
       app_permissions: 'Application permissions'
@@ -120,7 +130,8 @@ export default {
       locale: 'Language',
       export: 'Export all my data',
       delete: 'Delete my Pod',
-      developer_mode: 'Developer mode'
+      developer_mode: 'Developer mode',
+      roles: 'Roles'
     },
     authorization: {
       required: 'Required access',
@@ -160,7 +171,10 @@ export default {
       created: 'Created',
       modified: 'Modified',
       confirm_delete: 'Confirm deletion',
-      with_backups: 'Include database backups (if available)'
+      with_backups: 'Include database backups (if available)',
+      role_label: 'Name',
+      extends_roles: 'Inherits from',
+      special_rights: 'Special rights'
     },
     helper: {
       add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',
@@ -172,6 +186,9 @@ export default {
       share_contact: 'To connect with someone you know, you can create a link below.',
       add_member: 'Choose one of your contacts, or enter the ID of a user (format: @bob@server.com).',
       remove_member: 'Do you really want to remove %{name} from the group?',
+      extends_role: 'Inherits from %{role}',
+      default_role: 'All the members of the group',
+      delete_role: 'Do you really want to delete the role %{role}? Its members will stay in the group.',
       location_comment: 'Additional information to help find this place',
       login: 'Sign in to your personal space',
       signup: 'Create your personal space',
@@ -318,7 +335,8 @@ export default {
       network: 'My network - %{appName}',
       create_group: 'Create group - %{appName}',
       group_settings: 'Group settings of %{groupName} - %{appName}',
-      group_members: 'Members of %{groupName} - %{appName}'
+      group_members: 'Members of %{groupName} - %{appName}',
+      group_roles: 'Roles of %{groupName} - %{appName}'
     },
     placeholder: {
       user_id: '@user@server.com',

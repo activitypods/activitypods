@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
+import CancelScheduleSendIcon from '@mui/icons-material/CancelScheduleSend';
 import useActor from '../../hooks/useActor';
 import useRoleLabel from '../../hooks/useRoleLabel';
 import { formatUsername } from '../../utils';
@@ -45,6 +46,7 @@ const MemberItem = ({ member, roles, isOwner, rights, onRemove, onToggleRole }: 
   );
   const memberIsOwner = member.roles.includes('owner');
   const canRemove = rights.includes('interop:ManageMembers') && (isOwner || !memberIsOwner);
+  const removeLabel = translate(member.invited ? 'app.action.cancel_invitation' : 'app.action.remove_member');
 
   const run = async (action: () => Promise<void>) => {
     try {
@@ -59,7 +61,7 @@ const MemberItem = ({ member, roles, isOwner, rights, onRemove, onToggleRole }: 
       sx={{ backgroundColor: 'white', mb: 1, boxShadow: 1 }}
       secondaryAction={
         <Box>
-          {rights.includes('interop:ManageRoles') && (
+          {!member.invited && rights.includes('interop:ManageRoles') && (
             <Tooltip title={translate('app.action.manage_roles')}>
               <IconButton
                 aria-label={translate('app.action.manage_roles')}
@@ -70,9 +72,9 @@ const MemberItem = ({ member, roles, isOwner, rights, onRemove, onToggleRole }: 
             </Tooltip>
           )}
           {canRemove && (
-            <Tooltip title={translate('app.action.remove_member')}>
-              <IconButton aria-label={translate('app.action.remove_member')} onClick={() => setConfirmOpen(true)}>
-                <PersonRemoveIcon />
+            <Tooltip title={removeLabel}>
+              <IconButton aria-label={removeLabel} onClick={() => setConfirmOpen(true)}>
+                {member.invited ? <CancelScheduleSendIcon /> : <PersonRemoveIcon />}
               </IconButton>
             </Tooltip>
           )}
@@ -86,6 +88,9 @@ const MemberItem = ({ member, roles, isOwner, rights, onRemove, onToggleRole }: 
         primary={
           <>
             {actor.name}
+            {member.invited && (
+              <Chip label={translate('app.role.invited')} size="small" variant="outlined" sx={{ ml: 1 }} />
+            )}
             {shownRoles.map(role => (
               <Chip key={role.id} label={roleLabel(role)} size="small" sx={{ ml: 1 }} />
             ))}
@@ -116,8 +121,10 @@ const MemberItem = ({ member, roles, isOwner, rights, onRemove, onToggleRole }: 
       </Menu>
       <Confirm
         isOpen={confirmOpen}
-        title={translate('app.action.remove_member')}
-        content={translate('app.helper.remove_member', { name: actor.name })}
+        title={removeLabel}
+        content={translate(member.invited ? 'app.helper.cancel_invitation' : 'app.helper.remove_member', {
+          name: actor.name
+        })}
         onConfirm={async () => {
           setConfirmOpen(false);
           await run(() => onRemove(member.webId));

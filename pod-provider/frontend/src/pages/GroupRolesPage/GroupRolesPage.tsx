@@ -34,13 +34,9 @@ const GroupRolesPage = () => {
   };
 
   const describe = (role: GroupRole) =>
-    [
-      ...role.specialRights.map(right => translate(`app.special_right.${right.split(':')[1]}`)),
-      ...role.extendsRoles
-        .map(id => roles?.find(r => r.id === id))
-        .filter(r => r)
-        .map(r => translate('app.helper.extends_role', { role: roleLabel(r!) }))
-    ].join(' · ');
+    role.specialRights.length > 0
+      ? role.specialRights.map(right => translate(`app.special_right.${right.split(':')[1]}`)).join(' · ')
+      : translate('app.helper.no_special_rights');
 
   return (
     <>
@@ -84,10 +80,7 @@ const GroupRolesPage = () => {
                   )
                 }
               >
-                <ListItemText
-                  primary={roleLabel(role)}
-                  secondary={role.isDefaultRole ? translate('app.helper.default_role') : describe(role)}
-                />
+                <ListItemText primary={roleLabel(role)} secondary={describe(role)} />
               </ListItem>
             ))}
           </List>

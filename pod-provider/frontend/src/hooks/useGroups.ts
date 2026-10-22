@@ -60,10 +60,10 @@ export const useGroup = (webfingerId?: string) => {
   const webfinger = useWebfinger();
   const [group, setGroup] = useState<Group>();
   const [isLoading, setIsLoading] = useState(true);
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     if (!webfingerId) return;
-    setIsLoading(true);
     (webfingerId.startsWith('http') ? Promise.resolve(webfingerId) : webfinger.fetch(webfingerId))
       .then(groupUri => (groupUri ? fetchGroup(dataProvider, groupUri) : undefined))
       .catch(() => undefined)
@@ -71,9 +71,9 @@ export const useGroup = (webfingerId?: string) => {
         setGroup(result);
         setIsLoading(false);
       });
-  }, [dataProvider, webfinger.fetch, webfingerId]);
+  }, [dataProvider, webfinger.fetch, webfingerId, version]);
 
-  return { group, isLoading };
+  return { group, isLoading, refetch: () => setVersion(v => v + 1) };
 };
 
 export default useGroups;

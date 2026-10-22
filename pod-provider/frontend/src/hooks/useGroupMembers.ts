@@ -3,7 +3,7 @@ import urlJoin from 'url-join';
 import { useDataProvider } from 'react-admin';
 import useGroupRights from './useGroupRights';
 
-export type GroupMember = { webId: string; roles: string[] };
+export type GroupMember = { webId: string; roles: string[]; invited?: boolean };
 
 export type GroupRole = {
   id: string;

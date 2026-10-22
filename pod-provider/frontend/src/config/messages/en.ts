@@ -44,19 +44,23 @@ export default {
       create_group: 'Create group',
       skip_to_main: 'Skip to main content',
       view_contact_profile: "View %{name}'s profile",
-      add_member: 'Add member',
+      add_member: 'Invite',
       remove_member: 'Remove from group',
       manage_roles: 'Manage roles',
       create_role: 'Create role',
       edit_role: 'Edit role',
       delete_role: 'Delete role',
       manage_group: 'Manage group',
-      leave_group: 'Leave group'
+      leave_group: 'Leave group',
+      cancel_invitation: 'Cancel the invitation',
+      accept_group_invitation: 'Accept the invitation',
+      reject_group_invitation: 'Reject the invitation'
     },
     role: {
       owner: 'Owner',
       admin: 'Admin',
-      member: 'Member'
+      member: 'Member',
+      invited: 'Invitation sent'
     },
     special_right: {
       ReadMembers: 'See the members',
@@ -156,10 +160,10 @@ export default {
       add_contact: 'Add a contact',
       contact_requests: 'Contact requests',
       share_contact: 'Invitation link',
-      add_member: 'Add a member'
+      add_member: 'Invite someone'
     },
     block: {
-      contact_requests: 'New contact requests',
+      contact_requests: 'New requests',
       actions: 'Actions'
     },
     input: {
@@ -190,8 +194,8 @@ export default {
       share_contact: 'To connect with someone you know, send them the link below.',
       add_member: 'Choose one of your contacts, or enter the ID of a user (format: @bob@server.com).',
       remove_member: 'Do you really want to remove %{name} from the group?',
-      extends_role: 'Inherits from %{role}',
-      default_role: 'All the members of the group',
+      no_special_rights: 'No special rights',
+      cancel_invitation: 'Do you really want to cancel the invitation sent to %{name}?',
       delete_role: 'Do you really want to delete the role %{role}? Its members will stay in the group.',
       leave_group: 'Do you really want to leave the group %{name}?',
       last_owner_cannot_leave: 'You are the only owner of this group: make someone else an owner before leaving it.',
@@ -231,6 +235,7 @@ export default {
       loading_invite_link_failed: 'Loading failed',
       no_condition: 'None',
       you_participated_to_same_event: 'You participated to the same event',
+      group_invitation: 'You are invited to join the group',
       verified_app: 'Verified application',
       verified: 'Verified',
       offline: 'Offline',
@@ -259,7 +264,9 @@ export default {
       message_send_error: 'Error while sending the message: %{error}',
       profile_data_not_found: "Your profile couldn't be found, please reconnect yourself",
       user_not_found: "User %{username} doesn't exist",
-      member_added: 'The member has been added',
+      member_added: 'The invitation has been sent',
+      group_invitation_accepted: 'Invitation accepted',
+      group_invitation_rejected: 'Invitation rejected',
       group_left: 'You left the group %{name}',
       reset_password_submitted: 'An email has been send with reset password instructions',
       reset_password_error: 'An error occurred',

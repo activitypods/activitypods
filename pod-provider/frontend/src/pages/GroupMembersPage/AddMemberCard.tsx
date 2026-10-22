@@ -69,9 +69,12 @@ const AddMemberCard = ({ members, onAdd }: Props) => {
           onChange={(_, newValue) => setValue(typeof newValue === 'string' ? null : newValue)}
           inputValue={inputValue}
           onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
-          getOptionLabel={option =>
-            typeof option === 'string' ? option : `${option['vcard:given-name']} (${formatUsername(option.describes)})`
-          }
+          getOptionLabel={option => (typeof option === 'string' ? option : formatUsername(option.describes))}
+          renderOption={({ key, ...props }, option) => (
+            <li key={key} {...props}>
+              {option['vcard:given-name']} ({formatUsername(option.describes)})
+            </li>
+          )}
           renderInput={params => (
             <TextField
               {...params}

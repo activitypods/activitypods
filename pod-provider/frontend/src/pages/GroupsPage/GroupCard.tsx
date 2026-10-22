@@ -4,12 +4,13 @@ import { useTranslate, useNotify, useDataProvider, useGetIdentity, Confirm } fro
 import { Link, useNavigate } from 'react-router-dom';
 import { Box, Card, Typography, Avatar, Button, useMediaQuery } from '@mui/material';
 import GroupIcon from '@mui/icons-material/PeopleAlt';
-import { useOutbox, ACTIVITY_TYPES } from '@semapps/activitypub-components';
+import { useOutbox, useCollection, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 import { getGroupEndpoint } from '../../hooks/useGroupRights';
 import ActionsBlock from '../../common/blocks/ActionsBlock';
+import AnswerGroupInvitationButton from '../../common/buttons/AnswerGroupInvitationButton';
 import { Group } from '../../hooks/useGroups';
 
-const GroupCard = ({ group }: { group: Group }) => {
+const GroupCard = ({ group, refetch }: { group: Group; refetch: () => void }) => {
   const translate = useTranslate();
   const xs = useMediaQuery((theme: any) => theme.breakpoints.down('sm'), { noSsr: true });
   const notify = useNotify();
@@ -19,6 +20,8 @@ const GroupCard = ({ group }: { group: Group }) => {
   const { data: identity } = useGetIdentity();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isLastOwner, setIsLastOwner] = useState(false);
+  const { items: invitations, refetch: refetchInvitations } = useCollection('apods:groupInvitations');
+  const invitation = invitations?.find((activity: any) => activity.actor === group.id);
 
   const isOwner = group.rights.roles.some(role => role.id === 'owner');
   const canManage = group.rights.specialRights.length > 0;
@@ -49,7 +52,34 @@ const GroupCard = ({ group }: { group: Group }) => {
     }
   };
 
-  const actions = group.isMember && (
+  const onAnswered = () => {
+    refetchInvitations();
+    refetch();
+  };
+
+  const invitationActions = invitation && (
+    <>
+      <AnswerGroupInvitationButton
+        activity={invitation}
+        accept
+        refetch={onAnswered}
+        variant="contained"
+        color="secondary"
+        fullWidth
+        sx={{ mb: 1 }}
+      />
+      <AnswerGroupInvitationButton
+        activity={invitation}
+        accept={false}
+        refetch={onAnswered}
+        variant="contained"
+        color="secondary"
+        fullWidth
+      />
+    </>
+  );
+
+  const memberActions = group.isMember && (
     <>
       {canManage && (
         <Button
@@ -63,7 +93,13 @@ const GroupCard = ({ group }: { group: Group }) => {
           {translate('app.action.manage_group')}
         </Button>
       )}
-      <Button variant="contained" color="grey" fullWidth disabled={isLastOwner} onClick={() => setConfirmOpen(true)}>
+      <Button
+        variant="contained"
+        color="secondary"
+        fullWidth
+        disabled={isLastOwner}
+        onClick={() => setConfirmOpen(true)}
+      >
         {translate('app.action.leave_group')}
       </Button>
       {isLastOwner && (
@@ -80,6 +116,8 @@ const GroupCard = ({ group }: { group: Group }) => {
       />
     </>
   );
+
+  const actions = memberActions || invitationActions;
 
   if (xs) return actions ? <ActionsBlock>{actions}</ActionsBlock> : null;
 

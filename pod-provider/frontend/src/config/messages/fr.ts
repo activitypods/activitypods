@@ -44,19 +44,23 @@ export default {
       create_group: 'Créer un groupe',
       skip_to_main: 'Passer au contenu principal',
       view_contact_profile: 'Voir le profil de %{name}',
-      add_member: 'Ajouter le membre',
+      add_member: 'Inviter',
       remove_member: 'Retirer du groupe',
       manage_roles: 'Gérer les rôles',
       create_role: 'Créer un rôle',
       edit_role: 'Modifier le rôle',
       delete_role: 'Supprimer le rôle',
       manage_group: 'Gérer le groupe',
-      leave_group: 'Quitter le groupe'
+      leave_group: 'Quitter le groupe',
+      cancel_invitation: "Annuler l'invitation",
+      accept_group_invitation: "Accepter l'invitation",
+      reject_group_invitation: "Refuser l'invitation"
     },
     role: {
       owner: 'Propriétaire',
       admin: 'Administrateur',
-      member: 'Membre'
+      member: 'Membre',
+      invited: 'Invitation envoyée'
     },
     special_right: {
       ReadMembers: 'Voir les membres',
@@ -157,10 +161,10 @@ export default {
       add_contact: 'Ajouter un contact',
       contact_requests: 'Demandes de contact',
       share_contact: "Lien d'invitation",
-      add_member: 'Ajouter un membre'
+      add_member: 'Inviter une personne'
     },
     block: {
-      contact_requests: 'Nouvelles demandes de contact',
+      contact_requests: 'Nouvelles demandes',
       actions: 'Actions'
     },
     input: {
@@ -193,8 +197,8 @@ export default {
       add_member:
         "Choisissez un de vos contacts, ou saisissez l'identifiant d'un utilisateur (format : @bob@serveur.com).",
       remove_member: 'Voulez-vous vraiment retirer %{name} du groupe ?',
-      extends_role: 'Hérite de %{role}',
-      default_role: 'Tous les membres du groupe',
+      no_special_rights: 'Pas de droits spéciaux',
+      cancel_invitation: "Voulez-vous vraiment annuler l'invitation envoyée à %{name} ?",
       delete_role: 'Voulez-vous vraiment supprimer le rôle %{role} ? Ses membres resteront dans le groupe.',
       leave_group: 'Voulez-vous vraiment quitter le groupe %{name} ?',
       last_owner_cannot_leave:
@@ -241,6 +245,7 @@ export default {
       loading_invite_link_failed: 'Échec du chargement',
       no_condition: 'Aucune',
       you_participated_to_same_event: 'Vous avez participé à la même rencontre',
+      group_invitation: 'Vous êtes invité à rejoindre le groupe',
       verified_app: 'Application vérifiée',
       verified: 'Vérifiée',
       offline: 'Hors ligne',
@@ -269,7 +274,9 @@ export default {
       message_send_error: "Erreur lors de l'envoi du message: %{error}",
       profile_data_not_found: "Votre profil n'a pas été trouvé, veuillez vous déconnecter et vous reconnecter",
       user_not_found: "L'utilisateur %{username} n'existe pas",
-      member_added: 'Le membre a été ajouté',
+      member_added: "L'invitation a été envoyée",
+      group_invitation_accepted: 'Invitation acceptée',
+      group_invitation_rejected: 'Invitation refusée',
       group_left: 'Vous avez quitté le groupe %{name}',
       reset_password_submitted: 'Un e-mail a été envoyé avec les instructions de réinitialisation du mot de passe',
       reset_password_error: "Une erreur s'est produite",

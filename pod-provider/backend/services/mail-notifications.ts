@@ -78,6 +78,13 @@ const MailNotificationsSchema = {
           }
         });
       }
+    },
+
+    render: {
+      handler(ctx) {
+        const { template, params, locale } = ctx.params;
+        return this.parseTemplate(template, params, locale);
+      }
     }
   },
   activities: {
@@ -101,7 +108,13 @@ const MailNotificationsSchema = {
             title: activity.name,
             content: activity.content,
             contentWithBr: activity.content ? activity.content.replace(/\r\n|\r|\n/g, '<br />') : undefined,
-            actions: arrayOf(activity.url).map(url => ({ caption: url.name, link: url.href })),
+            actions: arrayOf(activity.url).map(url => ({
+              caption: url.name,
+              link: url['apods:frontendPath']
+                ? // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ matc... Remove this comment to see the full error message
+                  urlJoin(this.settings.frontendUrl, url['apods:frontendPath'])
+                : url.href
+            })),
             // @ts-expect-error TS(2339): Property 'settings' does not exist on type '{ matc... Remove this comment to see the full error message
             ...this.settings.data
           }

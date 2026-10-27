@@ -18,7 +18,8 @@ const useActor = (actorUri: any, options = {}) => {
   const { data: privateProfile, isLoading: isPrivateProfileLoading } = useGetOne(
     'Profile',
     { id: webId?.url },
-    { enabled: !!webId?.url && loadPrivateProfile }
+    // Without access to the private profile, fall back to the public one instead of refetching on every mount
+    { enabled: !!webId?.url && loadPrivateProfile, retry: false, retryOnMount: false }
   );
 
   return {

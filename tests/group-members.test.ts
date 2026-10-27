@@ -215,12 +215,13 @@ describe('Test groups members handling', () => {
     res = await fetchAs(alice, 'me');
     const aliceRoles = await res.json();
     expect(aliceRoles.roles.map((role: any) => role.id)).toEqual(expect.arrayContaining(['member', 'admin', 'owner']));
-    expect(aliceRoles.specialRights).toHaveLength(3);
+    expect(aliceRoles.specialRights).toHaveLength(4);
+    expect(aliceRoles.specialRights).toContain('apods:ChangeJoinPolicy');
 
-    expect((await fetchAs(craig, 'me')).status).toBe(403);
+    await expect((await fetchAs(craig, 'me')).json()).resolves.toEqual({ roles: [], specialRights: [] });
 
     await expect(proxyAs(bob, 'me')).resolves.toMatchObject({ ok: true, body: { specialRights: [] } });
-    await expect(proxyAs(craig, 'me')).resolves.toMatchObject({ ok: false, status: 403 });
+    await expect(proxyAs(craig, 'me')).resolves.toMatchObject({ ok: true, body: { roles: [] } });
   });
 
   test('Alice can list the members, but not Bob', async () => {

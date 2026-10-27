@@ -19,6 +19,7 @@ import BlockAnonymous from '../../../common/BlockAnonymous';
 import ToolbarWithoutDelete from '../../../common/ToolbarWithoutDelete';
 import useWebfingerId from '../../../hooks/useWebfingerId';
 import useRealmContext from '../../../hooks/useRealmContext';
+import { compressImage } from '../../../utils';
 
 const PublicProfileWarning = () => {
   const translate = useTranslate();
@@ -55,21 +56,22 @@ export const PublicProfilePage = () => {
   const transform = useCallback(
     async ({ name, icon, ...rest }: any) => {
       if (icon?.rawFile) {
+        const file = await compressImage(icon.rawFile);
         let iconUrl;
         if (isGroup) {
           // Upload the file on the group's storage, not on the logged user's storage
           const { headers } = await dataProvider.fetch(urlJoin(data.webIdData['pim:storage'], 'semapps/file'), {
             method: 'POST',
-            body: icon.rawFile,
-            headers: new Headers({ 'Content-Type': icon.rawFile.type })
+            body: file,
+            headers: new Headers({ 'Content-Type': file.type })
           });
           iconUrl = headers.get('Location');
         } else {
-          iconUrl = await dataProvider.uploadFile(icon.rawFile);
+          iconUrl = await dataProvider.uploadFile(file);
         }
         icon = {
           type: 'Image',
-          mediaType: icon.rawFile?.type,
+          mediaType: file.type,
           url: iconUrl
         };
       } else if (icon?.fileToDelete) {

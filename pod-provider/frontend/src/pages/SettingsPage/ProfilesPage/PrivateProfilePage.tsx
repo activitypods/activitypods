@@ -7,6 +7,7 @@ import Edit from '../../../layout/Edit';
 import BlockAnonymous from '../../../common/BlockAnonymous';
 import QuickCreateLocationInput from '../../../common/inputs/QuickCreateLocationInput/QuickCreateLocationInput';
 import ToolbarWithoutDelete from '../../../common/ToolbarWithoutDelete';
+import { compressImage } from '../../../utils';
 
 const PrivateProfileWarning = () => {
   const translate = useTranslate();
@@ -48,9 +49,12 @@ export const PrivateProfilePage = () => {
         title={translate('app.setting.private_profile')}
         resource="Profile"
         id={identity?.profileData?.id}
-        transform={(data: any) => ({
+        transform={async (data: any) => ({
           ...data,
-          'vcard:fn': data['vcard:given-name']
+          'vcard:fn': data['vcard:given-name'],
+          'vcard:photo': data['vcard:photo']?.rawFile
+            ? { ...data['vcard:photo'], rawFile: await compressImage(data['vcard:photo'].rawFile) }
+            : data['vcard:photo']
         })}
         mutationMode="pessimistic"
         mutationOptions={{ onSuccess }}

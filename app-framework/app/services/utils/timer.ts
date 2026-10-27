@@ -24,13 +24,19 @@ const TimerSchema = {
         // Delete any existing timer with the same key
         await this.actions.delete({ key }, { parentCtx: ctx });
 
+        // Bull runs a job with a NaN delay immediately
+        const delay = new Date(time).getTime() - Date.now();
+        if (Number.isNaN(delay)) {
+          this.logger.warn(`Invalid time ${time} for timer ${this.serializeKey(key)}, ignoring it`);
+          return;
+        }
+
         this.createJob(
           'timeout',
           this.serializeKey(key),
           { actionName, params, time },
           {
-            // @ts-expect-error TS(2362): The left-hand side of an arithmetic operation must... Remove this comment to see the full error message
-            delay: new Date(time) - Date.now(),
+            delay,
             // Try again after 3 minutes and until 12 hours later
             attempts: 8,
             backoff: { type: 'exponential', delay: '180000' },

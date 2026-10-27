@@ -1,4 +1,5 @@
 import path from 'node:path';
+import rdf from '@rdfjs/data-model';
 import urlJoin from 'url-join';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
@@ -12,11 +13,26 @@ import {
   REJECT_GROUP_INVITATION,
   UNDO_GROUP_INVITATION,
   REMOVE_GROUP_MEMBER,
+  JOIN_GROUP,
+  ACCEPT_JOIN_GROUP,
+  REJECT_JOIN_GROUP,
+  UNDO_JOIN_GROUP,
   LEAVE_GROUP,
   ACCEPT_LEAVE_GROUP
 } from '../config/patterns.ts';
-import { INVITE_TO_GROUP_MAPPING, REMOVED_FROM_GROUP_MAPPING } from '../config/mappings.ts';
+import {
+  INVITE_TO_GROUP_MAPPING,
+  REMOVED_FROM_GROUP_MAPPING,
+  JOIN_REQUEST_MAPPING,
+  JOIN_ACCEPTED_MAPPING,
+  JOIN_REJECTED_MAPPING
+} from '../config/mappings.ts';
 import { ServiceSchema } from 'moleculer';
+
+const APODS = 'http://activitypods.org/ns/core#';
+const JOIN_POLICIES = ['apods:OpenJoin', 'apods:ModeratedJoin', 'apods:InviteOnly'];
+
+const getUri = (value: any) => (typeof value === 'string' ? value : value?.id);
 
 const GroupsService = {
   name: 'groups' as const,
@@ -41,9 +57,17 @@ const GroupsService = {
     },
     // Invitations sent by a group and not answered yet
     pendingInvitationsCollectionOptions: {
-      path: '/invitations',
+      path: '/pending-invitations',
       attachToTypes: [ACTOR_TYPES.GROUP, ACTOR_TYPES.ORGANIZATION],
-      attachPredicate: 'http://activitypods.org/ns/core#invitations',
+      attachPredicate: 'http://activitypods.org/ns/core#pendingInvitations',
+      ordered: false,
+      dereferenceItems: true,
+      permissions: {}
+    },
+    joinRequestsCollectionOptions: {
+      path: '/join-requests',
+      attachToTypes: [ACTOR_TYPES.GROUP, ACTOR_TYPES.ORGANIZATION],
+      attachPredicate: 'http://activitypods.org/ns/core#joinRequests',
       ordered: false,
       dereferenceItems: true,
       permissions: {}
@@ -68,6 +92,7 @@ const GroupsService = {
           'GET /groups': 'groups.list',
           'POST /:username/claimGroup': 'groups.claim',
           'GET /:username/me': 'groups.getOwnRoles',
+          'PUT /:username/join-policy': 'groups.setJoinPolicy',
           'GET /:username/members': 'groups.listMembers',
           'POST /:username/members': 'groups.addMember',
           'DELETE /:username/members': 'groups.removeMember',
@@ -117,6 +142,8 @@ const GroupsService = {
         await this.setOwnerRights(ctx, groupWebId, ownerWebId, true);
 
         await ctx.call('role-registrations.initializeForGroup', { groupWebId, ownerWebId });
+        await this.getCollection(ctx, groupWebId, this.settings.pendingInvitationsCollectionOptions);
+        await this.getCollection(ctx, groupWebId, this.settings.joinRequestsCollectionOptions);
         await this.updateMemberGroups(ctx, ownerWebId, groupWebId, true);
 
         // We need to set the Location twice or we get a Moleculer warning
@@ -144,11 +171,12 @@ const GroupsService = {
         const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
 
         const roles = await ctx.call('role-registrations.listForAgent', { groupWebId, agentUri: webId });
-        if (roles.length === 0) throw403('You are not a member of this group');
+        const { join } = roles.length === 0 ? await this.findJoinRequest(ctx, groupWebId, webId) : {};
 
         return {
           roles: roles.map((role: any) => ({ id: getSlugFromUri(getId(role)), label: role['skos:prefLabel'] })),
-          specialRights: [...new Set(roles.flatMap((role: any) => arrayOf(role['interop:hasSpecialRight'])))]
+          specialRights: [...new Set(roles.flatMap((role: any) => arrayOf(role['interop:hasSpecialRight'])))],
+          ...(join && { joinRequest: join.id })
         };
       }
     },
@@ -170,10 +198,37 @@ const GroupsService = {
           .flatMap((invite: any) => arrayOf(invite.target))
           .filter((webId: string) => !members[webId]);
 
+        const { joins } = await this.findJoinRequest(ctx, groupWebId);
+
         return [
           ...Object.entries(members).map(([webId, memberRoles]) => ({ webId, roles: memberRoles })),
-          ...[...new Set(invited)].map(webId => ({ webId, roles: [], invited: true }))
+          ...[...new Set(invited)].map(webId => ({ webId, roles: [], invited: true })),
+          ...joins.map((join: any) => ({ webId: join.actor, roles: [], requested: true, content: join.content }))
         ];
+      }
+    },
+
+    setJoinPolicy: {
+      params: {
+        username: { type: 'string' },
+        joinPolicy: { type: 'enum', values: JOIN_POLICIES }
+      },
+      async handler(ctx) {
+        const { username, joinPolicy } = ctx.params;
+        const groupWebId = await this.getGroupWebId(ctx, username);
+        await this.checkSpecialRight(ctx, groupWebId, 'apods:ChangeJoinPolicy');
+
+        const predicate = rdf.namedNode(`${APODS}joinPolicy`);
+        const currentPolicy = await this.getJoinPolicy(ctx, groupWebId);
+        const toQuad = (policy: string) =>
+          rdf.quad(rdf.namedNode(groupWebId), predicate, rdf.namedNode(APODS + policy.split(':')[1]));
+
+        await ctx.call('ldp.resource.patch', {
+          resourceUri: groupWebId,
+          triplesToRemove: [toQuad(currentPolicy)],
+          triplesToAdd: [toQuad(joinPolicy)],
+          webId: 'system'
+        });
       }
     },
 
@@ -261,6 +316,7 @@ const GroupsService = {
         const groupWebId = await this.getGroupWebId(ctx, username);
         await this.checkSpecialRight(ctx, groupWebId, 'interop:ManageMembers');
 
+        if (await this.answerJoinRequest(ctx, groupWebId, memberUri, true)) return;
         await this.invite(ctx, groupWebId, memberUri);
       }
     },
@@ -277,6 +333,7 @@ const GroupsService = {
 
         await this.removeOwner(ctx, groupWebId, memberUri);
         await this.cancelInvitation(ctx, groupWebId, memberUri);
+        await this.answerJoinRequest(ctx, groupWebId, memberUri, false);
         await this.expel(ctx, groupWebId, memberUri);
       }
     },
@@ -435,6 +492,76 @@ const GroupsService = {
         });
       }
     },
+    joinGroup: {
+      match: JOIN_GROUP,
+      async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
+        const groupWebId = getUri(activity.object);
+        if (groupWebId !== recipientUri) return;
+        const account = await ctx.call('auth.account.findByWebId', { webId: groupWebId });
+        if (!account?.group) return;
+
+        const memberUri = activity.actor;
+        if (await this.isMember(ctx, groupWebId, memberUri)) return;
+
+        const policy = await this.getJoinPolicy(ctx, groupWebId);
+        const wasInvited = await this.cancelInvitation(ctx, groupWebId, memberUri, false);
+
+        if (wasInvited || policy === 'apods:OpenJoin') {
+          await this.addToGroup(ctx, groupWebId, memberUri);
+          await this.replyTo(ctx, groupWebId, activity, ACTIVITY_TYPES.ACCEPT);
+        } else if (policy === 'apods:ModeratedJoin') {
+          const { collectionUri, meta, join } = await this.findJoinRequest(ctx, groupWebId, memberUri);
+          if (join) return;
+          await ctx.call('activitypub.collection.add', { collectionUri, item: activity.id }, { meta });
+          await this.notifyAdmins(ctx, groupWebId, activity);
+        } else {
+          await this.replyTo(ctx, groupWebId, activity, ACTIVITY_TYPES.REJECT);
+        }
+      }
+    },
+    joinAccepted: {
+      match: ACCEPT_JOIN_GROUP,
+      async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
+        const join = activity.object;
+        if (join.actor !== recipientUri || getUri(join.object) !== activity.actor) return;
+
+        await this.updateMemberGroups(ctx, recipientUri, activity.actor, true);
+
+        const { collectionUri, meta } = await this.getCollection(
+          ctx,
+          recipientUri,
+          this.settings.groupInvitationsCollectionOptions
+        );
+        const invitations = await ctx.call('activitypub.collection.get', { resourceUri: collectionUri }, { meta });
+        for (const invite of arrayOf(invitations?.items)) {
+          if (invite.actor === activity.actor) await this.removeGroupInvitation(ctx, recipientUri, invite.id);
+        }
+
+        await ctx.call('mail-notifications.notify', { template: JOIN_ACCEPTED_MAPPING, recipientUri, activity });
+      }
+    },
+    joinRejected: {
+      match: REJECT_JOIN_GROUP,
+      async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
+        const join = activity.object;
+        if (join.actor !== recipientUri || getUri(join.object) !== activity.actor) return;
+        await ctx.call('mail-notifications.notify', { template: JOIN_REJECTED_MAPPING, recipientUri, activity });
+      }
+    },
+    joinCancelled: {
+      match: UNDO_JOIN_GROUP,
+      async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
+        const join = activity.object;
+        if (join.actor !== activity.actor || getUri(join.object) !== recipientUri) return;
+
+        const { collectionUri, meta } = await this.getCollection(
+          ctx,
+          recipientUri,
+          this.settings.joinRequestsCollectionOptions
+        );
+        await ctx.call('activitypub.collection.remove', { collectionUri, item: join.id }, { meta });
+      }
+    },
     leaveGroup: {
       match: LEAVE_GROUP,
       async onReceive(this: any, ctx: any, activity: any, recipientUri: any) {
@@ -590,18 +717,92 @@ const GroupsService = {
       });
       await ctx.call('activitypub.collection.add', { collectionUri, item: invite.id }, { meta });
     },
-    async cancelInvitation(ctx, groupWebId, memberUri) {
+    async cancelInvitation(ctx, groupWebId, memberUri, undo = true) {
       const { collectionUri, meta } = await this.getCollection(
         ctx,
         groupWebId,
         this.settings.pendingInvitationsCollectionOptions
       );
       const pending = await ctx.call('activitypub.collection.get', { resourceUri: collectionUri }, { meta });
+      let found = false;
       for (const invite of arrayOf(pending?.items)) {
         if (!arrayOf(invite.target).includes(memberUri)) continue;
+        found = true;
         await ctx.call('activitypub.collection.remove', { collectionUri, item: invite.id }, { meta });
-        await this.postAsGroup(ctx, groupWebId, { type: ACTIVITY_TYPES.UNDO, object: invite.id, to: memberUri });
+        if (undo) {
+          await this.postAsGroup(ctx, groupWebId, { type: ACTIVITY_TYPES.UNDO, object: invite.id, to: memberUri });
+        }
       }
+      return found;
+    },
+    async getJoinPolicy(ctx, groupWebId) {
+      const group = await ctx.call('webid.get', { resourceUri: groupWebId });
+      return group['apods:joinPolicy'] || 'apods:InviteOnly';
+    },
+    async findJoinRequest(ctx, groupWebId, memberUri?: string) {
+      const { collectionUri, meta } = await this.getCollection(
+        ctx,
+        groupWebId,
+        this.settings.joinRequestsCollectionOptions
+      );
+      // The Join activities are stored by their authors and can only be read by the group
+      const collection = await ctx.call(
+        'activitypub.collection.get',
+        { resourceUri: collectionUri },
+        { meta: { ...meta, webId: groupWebId } }
+      );
+      const joins = arrayOf(collection?.items);
+      return { collectionUri, meta, joins, join: memberUri && joins.find((join: any) => join.actor === memberUri) };
+    },
+    async answerJoinRequest(ctx, groupWebId, memberUri, accept) {
+      const { collectionUri, meta, join } = await this.findJoinRequest(ctx, groupWebId, memberUri);
+      if (!join) return false;
+
+      await ctx.call('activitypub.collection.remove', { collectionUri, item: join.id }, { meta });
+      if (accept) await this.addToGroup(ctx, groupWebId, memberUri);
+      await this.replyTo(ctx, groupWebId, join, accept ? ACTIVITY_TYPES.ACCEPT : ACTIVITY_TYPES.REJECT);
+      return true;
+    },
+    async notifyAdmins(ctx, groupWebId, join) {
+      const roles = await ctx.call('role-registrations.listForGroup', { groupWebId });
+      const adminRoles = roles
+        .filter((role: any) => arrayOf(role['interop:hasSpecialRight']).includes('interop:ManageMembers'))
+        .map((role: any) => getSlugFromUri(getId(role)));
+      const members: Record<string, string[]> = await ctx.call('role-registrations.getMembers', { groupWebId });
+      const admins = Object.keys(members).filter(webId => members[webId].some(role => adminRoles.includes(role)));
+
+      const group = await ctx.call('activitypub.actor.get', { actorUri: groupWebId });
+      const requester = await ctx.call('activitypub.actor.get', { actorUri: join.actor });
+      const params = {
+        group: { ...group, webfingerId: `@${group.preferredUsername}@${new URL(groupWebId).host}` },
+        requester,
+        activity: join
+      };
+
+      // Sent as notifications so that admins on other servers also receive a mail
+      for (const adminUri of admins) {
+        const admin = await ctx.call('activitypub.actor.get', { actorUri: adminUri });
+        const values = await ctx.call('mail-notifications.render', {
+          template: JOIN_REQUEST_MAPPING,
+          params,
+          locale: admin?.['schema:knowsLanguage'] || 'en'
+        });
+        await this.postAsGroup(ctx, groupWebId, {
+          type: 'apods:Notification',
+          name: values.title,
+          content: values.content || undefined,
+          url: arrayOf(values.actions).map((action: any) => ({
+            type: 'Link',
+            name: action.caption,
+            href: urlJoin(CONFIG.FRONTEND_URL!, action.link),
+            'apods:frontendPath': action.link
+          })),
+          to: adminUri
+        });
+      }
+    },
+    async replyTo(ctx, groupWebId, activity, type) {
+      await this.postAsGroup(ctx, groupWebId, { type, object: activity.id, to: activity.actor });
     },
     async consumePendingInvitation(ctx, answer, groupWebId) {
       const invite = answer.object;

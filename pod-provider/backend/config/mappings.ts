@@ -92,10 +92,54 @@ const REMOVED_FROM_GROUP_MAPPING = {
   ]
 };
 
+// Sent by the group to its admins, possibly on other servers
+const JOIN_REQUEST_MAPPING = {
+  title: {
+    en: `{{#if requester.name}}{{{requester.name}}}{{else}}{{requester.preferredUsername}}{{/if}} would like to join {{#if group.name}}{{{group.name}}}{{else}}{{group.preferredUsername}}{{/if}}`,
+    fr: `{{#if requester.name}}{{{requester.name}}}{{else}}{{requester.preferredUsername}}{{/if}} souhaite rejoindre le groupe {{#if group.name}}{{{group.name}}}{{else}}{{group.preferredUsername}}{{/if}}`
+  },
+  content: `{{activity.content}}`,
+  actions: [
+    {
+      caption: {
+        en: 'View the request',
+        fr: 'Voir la demande'
+      },
+      link: '/group/{{group.webfingerId}}/members'
+    }
+  ]
+};
+
+const JOIN_ACCEPTED_MAPPING = {
+  title: {
+    en: `You are now a member of {{#if emitter.name}}{{{emitter.name}}}{{else}}{{emitter.preferredUsername}}{{/if}}`,
+    fr: `Vous êtes maintenant membre du groupe {{#if emitter.name}}{{{emitter.name}}}{{else}}{{emitter.preferredUsername}}{{/if}}`
+  },
+  actions: [
+    {
+      caption: {
+        en: 'View the group',
+        fr: 'Voir le groupe'
+      },
+      link: '/network/{{encodeUri emitter.id}}'
+    }
+  ]
+};
+
+const JOIN_REJECTED_MAPPING = {
+  title: {
+    en: `Your request to join {{#if emitter.name}}{{{emitter.name}}}{{else}}{{emitter.preferredUsername}}{{/if}} has been rejected`,
+    fr: `Votre demande pour rejoindre le groupe {{#if emitter.name}}{{{emitter.name}}}{{else}}{{emitter.preferredUsername}}{{/if}} a été refusée`
+  }
+};
+
 export {
   CONTACT_REQUEST_MAPPING,
   ACCEPT_CONTACT_REQUEST_MAPPING,
   AUTO_ACCEPTED_CONTACT_REQUEST_MAPPING,
   INVITE_TO_GROUP_MAPPING,
-  REMOVED_FROM_GROUP_MAPPING
+  REMOVED_FROM_GROUP_MAPPING,
+  JOIN_REQUEST_MAPPING,
+  JOIN_ACCEPTED_MAPPING,
+  JOIN_REJECTED_MAPPING
 };

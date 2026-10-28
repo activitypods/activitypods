@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { getGroupEndpoint } from '../../hooks/useGroupRights';
 
-export const JOIN_POLICIES = ['apods:OpenJoin', 'apods:ModeratedJoin', 'apods:InviteOnly'];
+export const JOIN_POLICIES = ['interop:OpenJoin', 'interop:ModeratedJoin', 'interop:InviteOnly'];
 
 type Props = {
   open: boolean;
@@ -26,7 +26,7 @@ const JoinPolicyDialog = ({ open, group, onClose, onSaved }: Props) => {
   const translate = useTranslate();
   const notify = useNotify();
   const dataProvider = useDataProvider();
-  const currentPolicy = group.webIdData['apods:joinPolicy'] || 'apods:InviteOnly';
+  const currentPolicy = group.webIdData['interop:joinPolicy'] || 'interop:InviteOnly';
   const [joinPolicy, setJoinPolicy] = useState(currentPolicy);
 
   useEffect(() => {

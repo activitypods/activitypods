@@ -182,7 +182,7 @@ const ContactRequestsBlock = () => {
   const translate = useTranslate();
   const refresh = useRefresh();
   const { items: contactRequests, refetch } = useCollection('apods:contactRequests');
-  const { items: groupInvitations, refetch: refetchInvitations } = useCollection('apods:groupInvitations');
+  const { items: groupInvitations, refetch: refetchInvitations } = useCollection('interop:groupInvitations');
 
   const refetchAndRefresh = useCallback(async () => {
     await refetch();

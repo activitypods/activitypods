@@ -30,17 +30,17 @@ const fetchGroup = async (dataProvider: DataProvider, groupUri: string): Promise
     avatar: data.image?.url || data.image || data.icon?.url || data.icon,
     summary: data.summary,
     webfingerId: `@${data['foaf:nick'] || data.preferredUsername}@${new URL(data.id).host}`,
-    joinPolicy: data['apods:joinPolicy'] || 'apods:InviteOnly',
+    joinPolicy: data['interop:joinPolicy'] || 'interop:InviteOnly',
     isMember: rights?.roles?.length > 0,
     rights: rights || { roles: [], specialRights: [] },
     webIdData: data
   };
 };
 
-// Groups listed in the user's apods:groups collection, which confirm the membership
+// Groups listed in the user's interop:groups collection, which confirm the membership
 const useGroups = () => {
   const dataProvider = useDataProvider();
-  const { items, isLoading: isCollectionLoading, refetch } = useCollection('apods:groups');
+  const { items, isLoading: isCollectionLoading, refetch } = useCollection('interop:groups');
   const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const groupsKey = (items || []).join(' ');

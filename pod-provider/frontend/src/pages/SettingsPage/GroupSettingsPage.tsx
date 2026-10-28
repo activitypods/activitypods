@@ -53,7 +53,7 @@ const GroupSettingsPage = () => {
               icon={<HowToRegIcon />}
               label="app.setting.join_policy"
               value={translate(
-                `app.join_policy.${(data.webIdData['apods:joinPolicy'] || 'apods:InviteOnly').split(':')[1]}`
+                `app.join_policy.${(data.webIdData['interop:joinPolicy'] || 'interop:InviteOnly').split(':')[1]}`
               )}
             />
           )}

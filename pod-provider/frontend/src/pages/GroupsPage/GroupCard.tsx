@@ -34,7 +34,7 @@ const GroupCard = ({ group, refetch }: { group: Group; refetch: () => void }) =>
   const [isLastOwner, setIsLastOwner] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [joinMessage, setJoinMessage] = useState('');
-  const { items: invitations, refetch: refetchInvitations } = useCollection('apods:groupInvitations');
+  const { items: invitations, refetch: refetchInvitations } = useCollection('interop:groupInvitations');
   const invitation = invitations?.find((activity: any) => activity.actor === group.id);
 
   const isOwner = group.rights.roles.some(role => role.id === 'owner');
@@ -80,7 +80,7 @@ const GroupCard = ({ group, refetch }: { group: Group; refetch: () => void }) =>
     setJoinDialogOpen(false);
     await post(
       { type: ACTIVITY_TYPES.JOIN, object: group.id, content: joinMessage.trim() || undefined },
-      group.joinPolicy === 'apods:OpenJoin' ? 'app.notification.group_joined' : 'app.notification.join_request_sent'
+      group.joinPolicy === 'interop:OpenJoin' ? 'app.notification.group_joined' : 'app.notification.join_request_sent'
     );
   };
 
@@ -171,13 +171,13 @@ const GroupCard = ({ group, refetch }: { group: Group; refetch: () => void }) =>
         </Button>
       </>
     );
-  } else if (group.joinPolicy === 'apods:OpenJoin') {
+  } else if (group.joinPolicy === 'interop:OpenJoin') {
     joinActions = (
       <Button variant="contained" color="secondary" fullWidth onClick={join}>
         {translate('app.action.join_group')}
       </Button>
     );
-  } else if (group.joinPolicy === 'apods:ModeratedJoin') {
+  } else if (group.joinPolicy === 'interop:ModeratedJoin') {
     joinActions = (
       <>
         <Button variant="contained" color="secondary" fullWidth onClick={() => setJoinDialogOpen(true)}>

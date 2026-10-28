@@ -2,7 +2,19 @@ import React, { useEffect, useState } from 'react';
 import urlJoin from 'url-join';
 import { useTranslate, useNotify, useDataProvider, useGetIdentity, Confirm } from 'react-admin';
 import { Link, useNavigate } from 'react-router-dom';
-import { Box, Card, Typography, Avatar, Button, useMediaQuery } from '@mui/material';
+import {
+  Box,
+  Card,
+  Typography,
+  Avatar,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  useMediaQuery
+} from '@mui/material';
 import GroupIcon from '@mui/icons-material/PeopleAlt';
 import { useOutbox, useCollection, ACTIVITY_TYPES } from '@semapps/activitypub-components';
 import { getGroupEndpoint } from '../../hooks/useGroupRights';
@@ -20,6 +32,8 @@ const GroupCard = ({ group, refetch }: { group: Group; refetch: () => void }) =>
   const { data: identity } = useGetIdentity();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isLastOwner, setIsLastOwner] = useState(false);
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+  const [joinMessage, setJoinMessage] = useState('');
   const { items: invitations, refetch: refetchInvitations } = useCollection('apods:groupInvitations');
   const invitation = invitations?.find((activity: any) => activity.actor === group.id);
 
@@ -50,6 +64,24 @@ const GroupCard = ({ group, refetch }: { group: Group; refetch: () => void }) =>
     } catch (e: any) {
       notify(e.message, { type: 'error' });
     }
+  };
+
+  const post = async (activity: object, notification: string) => {
+    try {
+      await outbox.post({ actor: identity?.id, to: group.id, ...activity });
+      notify(notification, { type: 'success', messageArgs: { name: group.name } });
+      setTimeout(refetch, 3000);
+    } catch (e: any) {
+      notify(e.message, { type: 'error' });
+    }
+  };
+
+  const join = async () => {
+    setJoinDialogOpen(false);
+    await post(
+      { type: ACTIVITY_TYPES.JOIN, object: group.id, content: joinMessage.trim() || undefined },
+      group.joinPolicy === 'apods:OpenJoin' ? 'app.notification.group_joined' : 'app.notification.join_request_sent'
+    );
   };
 
   const onAnswered = () => {
@@ -117,7 +149,65 @@ const GroupCard = ({ group, refetch }: { group: Group; refetch: () => void }) =>
     </>
   );
 
-  const actions = memberActions || invitationActions;
+  let joinActions;
+  if (group.rights.joinRequest) {
+    joinActions = (
+      <>
+        <Button variant="contained" fullWidth disabled sx={{ mb: 1 }}>
+          {translate('app.action.join_request_sent')}
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          fullWidth
+          onClick={() =>
+            post(
+              { type: ACTIVITY_TYPES.UNDO, object: group.rights.joinRequest },
+              'app.notification.join_request_cancelled'
+            )
+          }
+        >
+          {translate('app.action.cancel_join_request')}
+        </Button>
+      </>
+    );
+  } else if (group.joinPolicy === 'apods:OpenJoin') {
+    joinActions = (
+      <Button variant="contained" color="secondary" fullWidth onClick={join}>
+        {translate('app.action.join_group')}
+      </Button>
+    );
+  } else if (group.joinPolicy === 'apods:ModeratedJoin') {
+    joinActions = (
+      <>
+        <Button variant="contained" color="secondary" fullWidth onClick={() => setJoinDialogOpen(true)}>
+          {translate('app.action.request_to_join')}
+        </Button>
+        <Dialog open={joinDialogOpen} onClose={() => setJoinDialogOpen(false)} fullWidth maxWidth="sm">
+          <DialogTitle>{translate('app.action.request_to_join')}</DialogTitle>
+          <DialogContent>
+            <TextField
+              label={translate('app.input.join_message')}
+              value={joinMessage}
+              onChange={e => setJoinMessage(e.target.value)}
+              multiline
+              minRows={3}
+              fullWidth
+              margin="dense"
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setJoinDialogOpen(false)}>{translate('ra.action.cancel')}</Button>
+            <Button variant="contained" color="secondary" onClick={join}>
+              {translate('app.action.send')}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </>
+    );
+  }
+
+  const actions = memberActions || invitationActions || joinActions;
 
   if (xs) return actions ? <ActionsBlock>{actions}</ActionsBlock> : null;
 

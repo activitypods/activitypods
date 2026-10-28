@@ -7,6 +7,7 @@ import useRealmContext from '../../hooks/useRealmContext';
 import useGroupMembers from '../../hooks/useGroupMembers';
 import MemberItem from './MemberItem';
 import AddMemberCard from './AddMemberCard';
+import JoinRequestsBlock from './JoinRequestsBlock';
 import ProfileCard from '../../common/cards/ProfileCard';
 
 const GroupMembersPage = () => {
@@ -29,21 +30,30 @@ const GroupMembersPage = () => {
           ...(rights.includes('interop:ManageMembers') ? [<AddMemberCard members={members} onAdd={addMember} />] : [])
         ]}
       >
+        {!isLoading && rights.includes('interop:ManageMembers') && (
+          <JoinRequestsBlock
+            requests={members?.filter(member => member.requested) || []}
+            onAccept={addMember}
+            onReject={removeMember}
+          />
+        )}
         {!isLoading && (
           <List>
-            {members?.map(member => (
-              <MemberItem
-                key={member.webId}
-                member={member}
-                roles={roles || []}
-                isOwner={isOwner}
-                rights={rights}
-                onRemove={removeMember}
-                onToggleRole={(role, memberUri, hasRole) =>
-                  hasRole ? removeRoleMember(role, memberUri) : addRoleMember(role, memberUri)
-                }
-              />
-            ))}
+            {members
+              ?.filter(member => !member.requested)
+              .map(member => (
+                <MemberItem
+                  key={member.webId}
+                  member={member}
+                  roles={roles || []}
+                  isOwner={isOwner}
+                  rights={rights}
+                  onRemove={removeMember}
+                  onToggleRole={(role, memberUri, hasRole) =>
+                    hasRole ? removeRoleMember(role, memberUri) : addRoleMember(role, memberUri)
+                  }
+                />
+              ))}
           </List>
         )}
       </ListView>

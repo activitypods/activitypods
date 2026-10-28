@@ -37,6 +37,10 @@ const GroupPage = ({ groupUri }: { groupUri: string }) => {
               <ValueField value={group.name} label={translate('app.group.name')} />
               <ValueField value={group.webfingerId} label={translate('app.group.id')} />
               <ValueField value={group.summary} label={translate('resources.Profile.fields.vcard:note')} />
+              <ValueField
+                value={translate(`app.join_policy.${group.joinPolicy.split(':')[1]}`)}
+                label={translate('app.group.join_policy')}
+              />
               <DateField
                 source="dc:created"
                 label={translate('app.input.created')}

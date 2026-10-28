@@ -3,7 +3,7 @@ import urlJoin from 'url-join';
 import { useDataProvider } from 'react-admin';
 import useRealmContext from './useRealmContext';
 
-export type GroupRights = { roles: { id: string; label: string }[]; specialRights: string[] };
+export type GroupRights = { roles: { id: string; label: string }[]; specialRights: string[]; joinRequest?: string };
 
 // Remote groups endpoints are reached through the proxy of the user's server
 export const getGroupEndpoint = (groupActor: any) => {

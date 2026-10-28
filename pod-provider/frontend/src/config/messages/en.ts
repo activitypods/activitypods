@@ -53,6 +53,10 @@ export default {
       manage_group: 'Manage group',
       leave_group: 'Leave group',
       cancel_invitation: 'Cancel the invitation',
+      join_group: 'Join the group',
+      request_to_join: 'Ask to join',
+      join_request_sent: 'Request sent',
+      cancel_join_request: 'Cancel the request',
       accept_group_invitation: 'Accept the invitation',
       reject_group_invitation: 'Reject the invitation'
     },
@@ -65,7 +69,13 @@ export default {
     special_right: {
       ReadMembers: 'See the members',
       ManageMembers: 'Add and remove members',
-      ManageRoles: 'Manage roles'
+      ManageRoles: 'Manage roles',
+      ChangeJoinPolicy: 'Change the join policy'
+    },
+    join_policy: {
+      OpenJoin: 'Open',
+      ModeratedJoin: 'On request',
+      InviteOnly: 'By invitation'
     },
     tag: {
       members: 'Members',
@@ -138,6 +148,7 @@ export default {
       export: 'Export all my data',
       delete: 'Delete my Pod',
       developer_mode: 'Developer mode',
+      join_policy: 'Join policy',
       roles: 'Roles'
     },
     authorization: {
@@ -164,6 +175,7 @@ export default {
     },
     block: {
       contact_requests: 'New requests',
+      join_requests: 'Join requests',
       actions: 'Actions'
     },
     input: {
@@ -182,7 +194,8 @@ export default {
       with_backups: 'Include database backups (if available)',
       role_label: 'Name',
       extends_roles: 'Inherits from',
-      special_rights: 'Special rights'
+      special_rights: 'Special rights',
+      join_message: 'Message (optional)'
     },
     helper: {
       add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',
@@ -267,6 +280,9 @@ export default {
       member_added: 'The invitation has been sent',
       group_invitation_accepted: 'Invitation accepted',
       group_invitation_rejected: 'Invitation rejected',
+      group_joined: 'You joined the group %{name}',
+      join_request_sent: 'Your request has been sent',
+      join_request_cancelled: 'Your request has been cancelled',
       group_left: 'You left the group %{name}',
       reset_password_submitted: 'An email has been send with reset password instructions',
       reset_password_error: 'An error occurred',
@@ -310,7 +326,8 @@ export default {
       type_group: 'Group',
       name: 'Name',
       image: 'Logo',
-      my_roles: 'My roles'
+      my_roles: 'My roles',
+      join_policy: 'Membership'
     },
     validation: {
       email: 'Must be a valid email',

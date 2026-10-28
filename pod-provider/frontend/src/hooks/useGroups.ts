@@ -10,6 +10,7 @@ export type Group = {
   avatar?: string;
   summary?: string;
   webfingerId: string;
+  joinPolicy: string;
   isMember: boolean;
   rights: GroupRights;
   webIdData: any;
@@ -21,7 +22,7 @@ const fetchGroup = async (dataProvider: DataProvider, groupUri: string): Promise
   try {
     ({ json: rights } = await dataProvider.fetch(urlJoin(getGroupEndpoint(data)!, 'me')));
   } catch (e) {
-    // Not a member (403), or the group does not answer
+    // The group does not answer
   }
   return {
     id: data.id,
@@ -29,7 +30,8 @@ const fetchGroup = async (dataProvider: DataProvider, groupUri: string): Promise
     avatar: data.image?.url || data.image || data.icon?.url || data.icon,
     summary: data.summary,
     webfingerId: `@${data['foaf:nick'] || data.preferredUsername}@${new URL(data.id).host}`,
-    isMember: !!rights,
+    joinPolicy: data['apods:joinPolicy'] || 'apods:InviteOnly',
+    isMember: rights?.roles?.length > 0,
     rights: rights || { roles: [], specialRights: [] },
     webIdData: data
   };

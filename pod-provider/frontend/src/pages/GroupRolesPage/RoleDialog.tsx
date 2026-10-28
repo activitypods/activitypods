@@ -20,7 +20,12 @@ import {
 import useRoleLabel from '../../hooks/useRoleLabel';
 import { GroupRole, GroupRoleData } from '../../hooks/useGroupMembers';
 
-export const SPECIAL_RIGHTS = ['interop:ReadMembers', 'interop:ManageMembers', 'interop:ManageRoles'];
+export const SPECIAL_RIGHTS = [
+  'interop:ReadMembers',
+  'interop:ManageMembers',
+  'interop:ManageRoles',
+  'interop:ChangeJoinPolicy'
+];
 
 type Props = {
   open: boolean;

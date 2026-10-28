@@ -53,6 +53,10 @@ export default {
       manage_group: 'Gérer le groupe',
       leave_group: 'Quitter le groupe',
       cancel_invitation: "Annuler l'invitation",
+      join_group: 'Rejoindre le groupe',
+      request_to_join: 'Demander à rejoindre',
+      join_request_sent: 'Demande envoyée',
+      cancel_join_request: 'Annuler la demande',
       accept_group_invitation: "Accepter l'invitation",
       reject_group_invitation: "Refuser l'invitation"
     },
@@ -65,7 +69,13 @@ export default {
     special_right: {
       ReadMembers: 'Voir les membres',
       ManageMembers: 'Ajouter et retirer des membres',
-      ManageRoles: 'Gérer les rôles'
+      ManageRoles: 'Gérer les rôles',
+      ChangeJoinPolicy: "Modifier la politique d'adhésion"
+    },
+    join_policy: {
+      OpenJoin: 'Libre',
+      ModeratedJoin: 'Sur demande',
+      InviteOnly: 'Sur invitation'
     },
     tag: {
       members: 'Contacts',
@@ -139,6 +149,7 @@ export default {
       export: 'Exporter les données',
       delete: 'Effacer le compte',
       developer_mode: 'Mode développeur',
+      join_policy: "Politique d'adhésion",
       roles: 'Rôles'
     },
     authorization: {
@@ -165,6 +176,7 @@ export default {
     },
     block: {
       contact_requests: 'Nouvelles demandes',
+      join_requests: "Demandes d'adhésion",
       actions: 'Actions'
     },
     input: {
@@ -183,7 +195,8 @@ export default {
       with_backups: 'Inclure les backups de la base de donnée (si disponibles)',
       role_label: 'Nom',
       extends_roles: 'Hérite de',
-      special_rights: 'Droits spéciaux'
+      special_rights: 'Droits spéciaux',
+      join_message: 'Message (facultatif)'
     },
     helper: {
       add_contact:
@@ -277,6 +290,9 @@ export default {
       member_added: "L'invitation a été envoyée",
       group_invitation_accepted: 'Invitation acceptée',
       group_invitation_rejected: 'Invitation refusée',
+      group_joined: 'Vous avez rejoint le groupe %{name}',
+      join_request_sent: 'Votre demande a été envoyée',
+      join_request_cancelled: 'Votre demande a été annulée',
       group_left: 'Vous avez quitté le groupe %{name}',
       reset_password_submitted: 'Un e-mail a été envoyé avec les instructions de réinitialisation du mot de passe',
       reset_password_error: "Une erreur s'est produite",
@@ -320,7 +336,8 @@ export default {
       type_group: 'Groupe',
       name: 'Nom',
       image: 'Logo',
-      my_roles: 'Mes rôles'
+      my_roles: 'Mes rôles',
+      join_policy: 'Adhésion'
     },
     validation: {
       email: 'Doit être un email valide',

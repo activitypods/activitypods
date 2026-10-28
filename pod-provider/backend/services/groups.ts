@@ -29,8 +29,8 @@ import {
 } from '../config/mappings.ts';
 import { ServiceSchema } from 'moleculer';
 
-const APODS = 'http://activitypods.org/ns/core#';
-const JOIN_POLICIES = ['apods:OpenJoin', 'apods:ModeratedJoin', 'apods:InviteOnly'];
+const INTEROP = 'http://www.w3.org/ns/solid/interop#';
+const JOIN_POLICIES = ['interop:OpenJoin', 'interop:ModeratedJoin', 'interop:InviteOnly'];
 
 const getUri = (value: any) => (typeof value === 'string' ? value : value?.id);
 
@@ -42,7 +42,7 @@ const GroupsService = {
     groupsCollectionOptions: {
       path: '/groups',
       attachToTypes: [ACTOR_TYPES.PERSON],
-      attachPredicate: 'http://activitypods.org/ns/core#groups',
+      attachPredicate: 'http://www.w3.org/ns/solid/interop#groups',
       ordered: false,
       dereferenceItems: false,
       permissions: {} // This collection is only visible by the Pod owner
@@ -50,7 +50,7 @@ const GroupsService = {
     groupInvitationsCollectionOptions: {
       path: '/group-invitations',
       attachToTypes: [ACTOR_TYPES.PERSON],
-      attachPredicate: 'http://activitypods.org/ns/core#groupInvitations',
+      attachPredicate: 'http://www.w3.org/ns/solid/interop#groupInvitations',
       ordered: false,
       dereferenceItems: true,
       permissions: {}
@@ -59,7 +59,7 @@ const GroupsService = {
     pendingInvitationsCollectionOptions: {
       path: '/pending-invitations',
       attachToTypes: [ACTOR_TYPES.GROUP, ACTOR_TYPES.ORGANIZATION],
-      attachPredicate: 'http://activitypods.org/ns/core#pendingInvitations',
+      attachPredicate: 'http://www.w3.org/ns/solid/interop#pendingInvitations',
       ordered: false,
       dereferenceItems: true,
       permissions: {}
@@ -67,7 +67,7 @@ const GroupsService = {
     joinRequestsCollectionOptions: {
       path: '/join-requests',
       attachToTypes: [ACTOR_TYPES.GROUP, ACTOR_TYPES.ORGANIZATION],
-      attachPredicate: 'http://activitypods.org/ns/core#joinRequests',
+      attachPredicate: 'http://www.w3.org/ns/solid/interop#joinRequests',
       ordered: false,
       dereferenceItems: true,
       permissions: {}
@@ -218,10 +218,10 @@ const GroupsService = {
         const groupWebId = await this.getGroupWebId(ctx, username);
         await this.checkSpecialRight(ctx, groupWebId, 'interop:ChangeJoinPolicy');
 
-        const predicate = rdf.namedNode(`${APODS}joinPolicy`);
+        const predicate = rdf.namedNode(`${INTEROP}joinPolicy`);
         const currentPolicy = await this.getJoinPolicy(ctx, groupWebId);
         const toQuad = (policy: string) =>
-          rdf.quad(rdf.namedNode(groupWebId), predicate, rdf.namedNode(APODS + policy.split(':')[1]));
+          rdf.quad(rdf.namedNode(groupWebId), predicate, rdf.namedNode(INTEROP + policy.split(':')[1]));
 
         await ctx.call('ldp.resource.patch', {
           resourceUri: groupWebId,
@@ -506,10 +506,10 @@ const GroupsService = {
         const policy = await this.getJoinPolicy(ctx, groupWebId);
         const wasInvited = await this.cancelInvitation(ctx, groupWebId, memberUri, false);
 
-        if (wasInvited || policy === 'apods:OpenJoin') {
+        if (wasInvited || policy === 'interop:OpenJoin') {
           await this.addToGroup(ctx, groupWebId, memberUri);
           await this.replyTo(ctx, groupWebId, activity, ACTIVITY_TYPES.ACCEPT);
-        } else if (policy === 'apods:ModeratedJoin') {
+        } else if (policy === 'interop:ModeratedJoin') {
           const { collectionUri, meta, join } = await this.findJoinRequest(ctx, groupWebId, memberUri);
           if (join) return;
           await ctx.call('activitypub.collection.add', { collectionUri, item: activity.id }, { meta });
@@ -737,7 +737,7 @@ const GroupsService = {
     },
     async getJoinPolicy(ctx, groupWebId) {
       const group = await ctx.call('webid.get', { resourceUri: groupWebId });
-      return group['apods:joinPolicy'] || 'apods:InviteOnly';
+      return group['interop:joinPolicy'] || 'interop:InviteOnly';
     },
     async findJoinRequest(ctx, groupWebId, memberUri?: string) {
       const { collectionUri, meta } = await this.getCollection(

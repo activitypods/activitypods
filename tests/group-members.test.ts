@@ -39,9 +39,9 @@ describe('Test groups members handling', () => {
     return arrayOf(collection.items);
   };
 
-  const getGroups = (actor: any) => getCollectionItems(actor, 'apods:groups');
+  const getGroups = (actor: any) => getCollectionItems(actor, 'interop:groups');
 
-  const getInvitations = (actor: any) => getCollectionItems(actor, 'apods:groupInvitations');
+  const getInvitations = (actor: any) => getCollectionItems(actor, 'interop:groupInvitations');
 
   const getInbox = async (actor: any) => {
     const inboxMenu = await call(actor, 'activitypub.collection.get', { resourceUri: actor.inbox });

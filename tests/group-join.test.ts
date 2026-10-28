@@ -33,8 +33,8 @@ describe('Test joining groups', () => {
 
   const getGroups = async (actor: any) => {
     const webIdData = await podProvider.call('webid.get', { resourceUri: actor.id });
-    if (!webIdData['apods:groups']) return [];
-    const collection = await call(actor, 'activitypub.collection.get', { resourceUri: webIdData['apods:groups'] });
+    if (!webIdData['interop:groups']) return [];
+    const collection = await call(actor, 'activitypub.collection.get', { resourceUri: webIdData['interop:groups'] });
     return arrayOf(collection.items);
   };
 
@@ -106,12 +106,12 @@ describe('Test joining groups', () => {
   });
 
   test('Only those with the ChangeJoinPolicy right can change the join policy', async () => {
-    expect((await setJoinPolicy(bob, 'apods:OpenJoin')).status).toBe(403);
-    expect((await setJoinPolicy(alice, 'apods:Whatever')).status).toBe(422);
-    expect((await setJoinPolicy(alice, 'apods:ModeratedJoin')).status).toBe(200);
+    expect((await setJoinPolicy(bob, 'interop:OpenJoin')).status).toBe(403);
+    expect((await setJoinPolicy(alice, 'interop:Whatever')).status).toBe(422);
+    expect((await setJoinPolicy(alice, 'interop:ModeratedJoin')).status).toBe(200);
 
     const group = await podProvider.call('webid.get', { resourceUri: groupWebId });
-    expect(group['apods:joinPolicy']).toBe('apods:ModeratedJoin');
+    expect(group['interop:joinPolicy']).toBe('interop:ModeratedJoin');
   });
 
   test('Bob asks to join, the admins are notified, and Alice rejects the request', async () => {
@@ -204,7 +204,7 @@ describe('Test joining groups', () => {
 
   test('Anyone can join an open group', async () => {
     expect((await fetchAs(alice, 'members', 'DELETE', { memberUri: craig.id })).status).toBe(200);
-    expect((await setJoinPolicy(alice, 'apods:OpenJoin')).status).toBe(200);
+    expect((await setJoinPolicy(alice, 'interop:OpenJoin')).status).toBe(200);
 
     const joinActivity = await join(craig);
     await waitForAnswer(craig, 'Accept', joinActivity);

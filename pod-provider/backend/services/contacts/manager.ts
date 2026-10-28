@@ -1,7 +1,7 @@
 import urlJoin from 'url-join';
 import { ActivitiesHandlerMixin, ACTIVITY_TYPES, ACTOR_TYPES } from '@semapps/activitypub';
 import { sanitizeSparqlQuery } from '@semapps/triplestore';
-import { arrayOf } from '@semapps/ldp';
+import { arrayOf, getId } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ADD_CONTACT, REMOVE_CONTACT, IGNORE_CONTACT, UNDO_IGNORE_CONTACT } from '../../config/patterns.ts';
 import { ServiceSchema } from 'moleculer';
@@ -39,13 +39,12 @@ const ContactsManagerSchema = {
     addContact: {
       match: ADD_CONTACT,
       async onEmit(ctx: any, activity: any, emitterUri: any) {
-        if (!activity.origin) throw new Error('The origin property is missing from the Add activity');
-
-        if (!activity.origin.startsWith(emitterUri))
-          throw new Error(`Cannot add to collection ${activity.origin} as it is not owned by the emitter`);
+        const collectionUri = getId(activity.origin);
+        if (!collectionUri.startsWith(emitterUri))
+          throw new Error(`Cannot add to collection ${collectionUri} as it is not owned by the emitter`);
 
         await ctx.call('activitypub.collection.add', {
-          collectionUri: activity.origin,
+          collectionUri,
           item: activity.object.id
         });
 
@@ -64,13 +63,12 @@ const ContactsManagerSchema = {
     removeContact: {
       match: REMOVE_CONTACT,
       async onEmit(ctx: any, activity: any, emitterUri: any) {
-        if (!activity.origin) throw new Error('The origin property is missing from the Remove activity');
-
-        if (!activity.origin.startsWith(emitterUri))
-          throw new Error(`Cannot remove from collection ${activity.origin} as it is not owned by the emitter`);
+        const collectionUri = getId(activity.origin);
+        if (!collectionUri.startsWith(emitterUri))
+          throw new Error(`Cannot remove from collection ${collectionUri} as it is not owned by the emitter`);
 
         await ctx.call('activitypub.collection.remove', {
-          collectionUri: activity.origin,
+          collectionUri,
           item: activity.object.id
         });
 

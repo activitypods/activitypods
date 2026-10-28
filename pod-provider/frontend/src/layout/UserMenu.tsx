@@ -6,7 +6,7 @@ import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import GroupIcon from '@mui/icons-material/PeopleAlt';
 import PersonIcon from '@mui/icons-material/Person';
 import { Link } from 'react-router-dom';
-import useOwnedGroups from '../hooks/useOwnedGroups';
+import useManagedGroups from '../hooks/useManagedGroups';
 import useRealmContext from '../hooks/useRealmContext';
 
 const UserMenu = () => {
@@ -16,7 +16,7 @@ const UserMenu = () => {
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
   // @ts-expect-error TS(2339): Property 'isLoading' does not exist on type 'unkno... Remove this comment to see the full error message
   const { isLoading, isGroup, data } = useRealmContext();
-  const groups = useOwnedGroups();
+  const groups = useManagedGroups();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -65,22 +65,12 @@ const UserMenu = () => {
           </MenuItem>
         </Link>
         {groups.map(group => (
-          <Link
-            // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
-            key={group.id}
-            // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
-            to={`/group/@${group['foaf:nick']}@${new URL(group.id).host}/settings`}
-            style={{ textDecoration: 'none' }}
-          >
+          <Link key={group.id} to={`/group/${group.webfingerId}`} style={{ textDecoration: 'none' }}>
             <MenuItem onClick={handleClose}>
               <ListItemIcon>
-                {group['foaf:depiction'] ? (
-                  <Avatar src={group['foaf:depiction']} sx={{ width: 24, height: 24 }} />
-                ) : (
-                  <GroupIcon />
-                )}
+                {group.avatar ? <Avatar src={group.avatar} sx={{ width: 24, height: 24 }} /> : <GroupIcon />}
               </ListItemIcon>
-              {group['foaf:name']}
+              {group.name}
             </MenuItem>
           </Link>
         ))}

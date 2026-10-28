@@ -1,6 +1,6 @@
 import React from 'react';
 import { Admin, Resource, CustomRoutes, localStorageStore } from 'react-admin';
-import { BrowserRouter, Route } from 'react-router-dom';
+import { BrowserRouter, Route, Navigate } from 'react-router-dom';
 import { QueryClient } from '@tanstack/react-query';
 import { StyledEngineProvider } from '@mui/material/styles';
 
@@ -36,6 +36,9 @@ import SettingsLocalePage from './pages/SettingsPage/SettingsLocalePage';
 import SettingsProfilesPage from './pages/SettingsPage/ProfilesPage/SettingsProfilesPage';
 import CreateGroupPage from './pages/CreateGroupPage';
 import GroupSettingsPage from './pages/SettingsPage/GroupSettingsPage';
+import GroupMembersPage from './pages/GroupMembersPage/GroupMembersPage';
+import GroupRolesPage from './pages/GroupRolesPage/GroupRolesPage';
+import GroupsPage from './pages/GroupsPage/GroupsPage';
 import PublicProfilePage from './pages/SettingsPage/ProfilesPage/PublicProfilePage';
 import PrivateProfilePage from './pages/SettingsPage/ProfilesPage/PrivateProfilePage';
 
@@ -86,6 +89,7 @@ const App = () => (
           <Route path="/network">
             <Route index element={<NetworkPage />} />
             <Route path="request" element={<NetworkRequestPage />} />
+            <Route path="groups" element={<GroupsPage />} />
             <Route path=":webfingerId" element={<NetworkActorPage />} />
           </Route>
           <Route path="/apps" element={<ApplicationsPage />} />
@@ -108,9 +112,12 @@ const App = () => (
             <Route path="delete" element={<SettingsDeletePage />} />
           </Route>
           <Route path="/group/:groupId">
+            <Route index element={<Navigate to="members" replace />} />
+            <Route path="members" element={<GroupMembersPage />} />
             <Route path="settings">
               <Route index element={<GroupSettingsPage />} />
               <Route path="profile" element={<PublicProfilePage />} />
+              <Route path="roles" element={<GroupRolesPage />} />
               <Route path="export" element={<SettingsExportPage />} />
               <Route path="delete" element={<SettingsDeletePage />} />
             </Route>

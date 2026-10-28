@@ -6,6 +6,7 @@ import ScrollToTop from './ScrollToTop';
 import AppBar from './AppBar';
 import MenuBar from './MenuBar';
 import BottomBar from './BottomBar';
+import GroupBar from './GroupBar';
 import BackgroundChecks from '../common/BackgroundCheck';
 import SyncUserLocale from '../common/SyncUserLocale';
 import GroupContextProvider from '../common/RealmContextProvider';
@@ -27,6 +28,7 @@ const Layout = (props: any) => {
         <SkipLink />
         <AppBar title={title} />
         {!xs && <MenuBar />}
+        {xs && <GroupBar />}
         <Container disableGutters={xs}>
           <Box component="main" id="main" mt={{ xs: 2, sm: 2 }} m={{ xs: 2, sm: 0 }} mb={8}>
             {children}

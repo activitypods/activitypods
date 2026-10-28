@@ -43,7 +43,39 @@ export default {
       view_public_profile: 'View your public profile',
       create_group: 'Create group',
       skip_to_main: 'Skip to main content',
-      view_contact_profile: "View %{name}'s profile"
+      view_contact_profile: "View %{name}'s profile",
+      add_member: 'Invite',
+      remove_member: 'Remove from group',
+      manage_roles: 'Manage roles',
+      create_role: 'Create role',
+      edit_role: 'Edit role',
+      delete_role: 'Delete role',
+      manage_group: 'Manage group',
+      leave_group: 'Leave group',
+      cancel_invitation: 'Cancel the invitation',
+      join_group: 'Join the group',
+      request_to_join: 'Ask to join',
+      join_request_sent: 'Request sent',
+      cancel_join_request: 'Cancel the request',
+      accept_group_invitation: 'Accept the invitation',
+      reject_group_invitation: 'Reject the invitation'
+    },
+    role: {
+      owner: 'Owner',
+      admin: 'Admin',
+      member: 'Member',
+      invited: 'Invitation sent'
+    },
+    special_right: {
+      ReadMembers: 'See the members',
+      ManageMembers: 'Add and remove members',
+      ManageRoles: 'Manage roles',
+      ChangeJoinPolicy: 'Change the join policy'
+    },
+    join_policy: {
+      OpenJoin: 'Open',
+      ModeratedJoin: 'On request',
+      InviteOnly: 'By invitation'
     },
     tag: {
       members: 'Members',
@@ -86,7 +118,10 @@ export default {
       choose_custom_provider: 'Choose custom provider',
       invite_success: 'Success!',
       delete_pod: 'Delete account',
-      export_pod: 'Export all data'
+      export_pod: 'Export all data',
+      members: 'Members',
+      roles: 'Roles',
+      my_groups: 'My groups'
     },
     dialog: {
       app_permissions: 'Application permissions'
@@ -112,7 +147,9 @@ export default {
       locale: 'Language',
       export: 'Export all my data',
       delete: 'Delete my Pod',
-      developer_mode: 'Developer mode'
+      developer_mode: 'Developer mode',
+      join_policy: 'Join policy',
+      roles: 'Roles'
     },
     authorization: {
       required: 'Required access',
@@ -133,10 +170,13 @@ export default {
     card: {
       add_contact: 'Add a contact',
       contact_requests: 'Contact requests',
-      share_contact: 'Create contact link'
+      share_contact: 'Invitation link',
+      add_member: 'Invite someone'
     },
     block: {
-      contact_requests: 'New contact requests'
+      contact_requests: 'New requests',
+      join_requests: 'Join requests',
+      actions: 'Actions'
     },
     input: {
       about_you: 'A few words about you',
@@ -151,7 +191,11 @@ export default {
       created: 'Created',
       modified: 'Modified',
       confirm_delete: 'Confirm deletion',
-      with_backups: 'Include database backups (if available)'
+      with_backups: 'Include database backups (if available)',
+      role_label: 'Name',
+      extends_roles: 'Inherits from',
+      special_rights: 'Special rights',
+      join_message: 'Message (optional)'
     },
     helper: {
       add_contact: 'To add an user to your network, you need to know his ID (format: @bob@server.com).',
@@ -160,7 +204,16 @@ export default {
       message_profile_show_right:
         'Sending a message to %{username} will give him/her the right to see your profile, in order to be able to respond.',
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',
-      share_contact: 'To connect with someone you know, you can create a link below.',
+      share_contact: 'To connect with someone you know, send them the link below.',
+      add_member: 'Choose one of your contacts, or enter the ID of a user (format: @bob@server.com).',
+      remove_member: 'Do you really want to remove %{name} from the group?',
+      no_special_rights: 'No special rights',
+      cancel_invitation: 'Do you really want to cancel the invitation sent to %{name}?',
+      delete_role: 'Do you really want to delete the role %{role}? Its members will stay in the group.',
+      leave_group: 'Do you really want to leave the group %{name}?',
+      last_owner_cannot_leave: 'You are the only owner of this group: make someone else an owner before leaving it.',
+      no_groups: 'You are not a member of any group.',
+      group_not_found: 'This group could not be found.',
       location_comment: 'Additional information to help find this place',
       login: 'Sign in to your personal space',
       signup: 'Create your personal space',
@@ -195,6 +248,7 @@ export default {
       loading_invite_link_failed: 'Loading failed',
       no_condition: 'None',
       you_participated_to_same_event: 'You participated to the same event',
+      group_invitation: 'You are invited to join the group',
       verified_app: 'Verified application',
       verified: 'Verified',
       offline: 'Offline',
@@ -223,6 +277,13 @@ export default {
       message_send_error: 'Error while sending the message: %{error}',
       profile_data_not_found: "Your profile couldn't be found, please reconnect yourself",
       user_not_found: "User %{username} doesn't exist",
+      member_added: 'The invitation has been sent',
+      group_invitation_accepted: 'Invitation accepted',
+      group_invitation_rejected: 'Invitation rejected',
+      group_joined: 'You joined the group %{name}',
+      join_request_sent: 'Your request has been sent',
+      join_request_cancelled: 'Your request has been cancelled',
+      group_left: 'You left the group %{name}',
       reset_password_submitted: 'An email has been send with reset password instructions',
       reset_password_error: 'An error occurred',
       password_changed: 'Password changed successfully',
@@ -264,7 +325,9 @@ export default {
       type_organization: 'Organization',
       type_group: 'Group',
       name: 'Name',
-      image: 'Logo'
+      image: 'Logo',
+      my_roles: 'My roles',
+      join_policy: 'Membership'
     },
     validation: {
       email: 'Must be a valid email',
@@ -305,7 +368,10 @@ export default {
       settings: 'Settings - %{appName}',
       network: 'My network - %{appName}',
       create_group: 'Create group - %{appName}',
-      group_settings: 'Group settings of %{groupName} - %{appName}'
+      group_settings: 'Group settings of %{groupName} - %{appName}',
+      group_members: 'Members of %{groupName} - %{appName}',
+      group_roles: 'Roles of %{groupName} - %{appName}',
+      my_groups: 'My groups - %{appName}'
     },
     placeholder: {
       user_id: '@user@server.com',

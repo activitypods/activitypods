@@ -46,7 +46,7 @@ describe('Test delegation features', () => {
   test('Alice creates an event and gives delegation right to Bob', async () => {
     // Create container manually so that we don't need to install the app
     eventContainerUri = await alice.call('data-registrations.generateFromShapeTree', {
-      shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
+      shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL!, 'shapetrees/as/Event'),
       podOwner: alice.id
     });
 

@@ -1,14 +1,13 @@
 import React from 'react';
 import { useTranslate, SimpleList } from 'react-admin';
-import { Link } from 'react-router-dom';
-import { Avatar, Button } from '@mui/material';
+import { Avatar, useMediaQuery } from '@mui/material';
 import Header from '../../common/Header';
-import AddIcon from '@mui/icons-material/Add';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import List from '../../layout/List';
 import ProfileCard from '../../common/cards/ProfileCard';
 import ShareContactCard from '../../common/cards/ShareContactCard';
 import TagsButton from '../../common/buttons/TagsButton';
+import GroupsButton from '../../common/buttons/GroupsButton';
 import ContactRequestsBlock from '../../common/blocks/ContactRequestsBlock';
 import { formatUsername } from '../../utils';
 
@@ -16,6 +15,7 @@ const NetworkPage = () => {
   // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
   const { identity } = useCheckAuthenticated();
   const translate = useTranslate();
+  const xs = useMediaQuery((theme: any) => theme.breakpoints.down('sm'), { noSsr: true });
   if (!identity?.id) return null;
   return (
     <>
@@ -23,13 +23,8 @@ const NetworkPage = () => {
       <List
         resource="Profile"
         title={translate('app.page.contacts')}
-        actions={[
-          <Link to="/network/request">
-            <Button startIcon={<AddIcon />}>{translate('app.action.send_request')}</Button>
-          </Link>,
-          <TagsButton />
-        ]}
-        asides={[<ProfileCard />, <ShareContactCard />]}
+        actions={[<TagsButton />, <GroupsButton />]}
+        asides={xs ? [<ShareContactCard />] : [<ProfileCard />, <ShareContactCard />]}
         sort={{ field: 'vcard:given-name', order: 'ASC' }}
         perPage={1000}
       >

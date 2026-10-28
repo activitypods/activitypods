@@ -43,7 +43,39 @@ export default {
       view_public_profile: 'Voir votre profil public',
       create_group: 'Créer un groupe',
       skip_to_main: 'Passer au contenu principal',
-      view_contact_profile: 'Voir le profil de %{name}'
+      view_contact_profile: 'Voir le profil de %{name}',
+      add_member: 'Inviter',
+      remove_member: 'Retirer du groupe',
+      manage_roles: 'Gérer les rôles',
+      create_role: 'Créer un rôle',
+      edit_role: 'Modifier le rôle',
+      delete_role: 'Supprimer le rôle',
+      manage_group: 'Gérer le groupe',
+      leave_group: 'Quitter le groupe',
+      cancel_invitation: "Annuler l'invitation",
+      join_group: 'Rejoindre le groupe',
+      request_to_join: 'Demander à rejoindre',
+      join_request_sent: 'Demande envoyée',
+      cancel_join_request: 'Annuler la demande',
+      accept_group_invitation: "Accepter l'invitation",
+      reject_group_invitation: "Refuser l'invitation"
+    },
+    role: {
+      owner: 'Propriétaire',
+      admin: 'Administrateur',
+      member: 'Membre',
+      invited: 'Invitation envoyée'
+    },
+    special_right: {
+      ReadMembers: 'Voir les membres',
+      ManageMembers: 'Ajouter et retirer des membres',
+      ManageRoles: 'Gérer les rôles',
+      ChangeJoinPolicy: "Modifier la politique d'adhésion"
+    },
+    join_policy: {
+      OpenJoin: 'Libre',
+      ModeratedJoin: 'Sur demande',
+      InviteOnly: 'Sur invitation'
     },
     tag: {
       members: 'Contacts',
@@ -87,7 +119,10 @@ export default {
       choose_custom_provider: 'Choisir un autre hébergeur',
       invite_success: 'Connection établie !',
       delete_pod: 'Effacer le compte',
-      export_pod: 'Exporter les données'
+      export_pod: 'Exporter les données',
+      members: 'Membres',
+      roles: 'Rôles',
+      my_groups: 'Mes groupes'
     },
     description: {
       delete_pod: `En continuant, vous effacerez votre porte-données et toutes les données qui s'y trouvent. Cette action est irréversible! Nous vous conseillons d'exporter d'abord vos données (dans les paramètres avancés). Pour continuer, tapez "%{confirm_text}".`,
@@ -113,7 +148,9 @@ export default {
       locale: 'Langue',
       export: 'Exporter les données',
       delete: 'Effacer le compte',
-      developer_mode: 'Mode développeur'
+      developer_mode: 'Mode développeur',
+      join_policy: "Politique d'adhésion",
+      roles: 'Rôles'
     },
     authorization: {
       required: 'Accès requis',
@@ -134,10 +171,13 @@ export default {
     card: {
       add_contact: 'Ajouter un contact',
       contact_requests: 'Demandes de contact',
-      share_contact: "Créer un lien d'invitation"
+      share_contact: "Lien d'invitation",
+      add_member: 'Inviter une personne'
     },
     block: {
-      contact_requests: 'Nouvelles demandes de contact'
+      contact_requests: 'Nouvelles demandes',
+      join_requests: "Demandes d'adhésion",
+      actions: 'Actions'
     },
     input: {
       about_you: 'Quelques mots sur vous',
@@ -152,7 +192,11 @@ export default {
       created: 'Créé le',
       modified: 'Modifié le',
       confirm_delete: 'Confirmer la suppression',
-      with_backups: 'Inclure les backups de la base de donnée (si disponibles)'
+      with_backups: 'Inclure les backups de la base de donnée (si disponibles)',
+      role_label: 'Nom',
+      extends_roles: 'Hérite de',
+      special_rights: 'Droits spéciaux',
+      join_message: 'Message (facultatif)'
     },
     helper: {
       add_contact:
@@ -162,7 +206,18 @@ export default {
       message_profile_show_right:
         'Envoyer un message à %{username} lui donnera le droit de voir votre profil, pour lui permettre de vous répondre.',
       profile_visibility: "Votre profil n'est visible que des personnes que vous avez accepté dans votre réseau",
-      share_contact: 'Pour vous connecter à une personne que vous connaissez, vous pouvez créer un lien ci-dessous.',
+      share_contact: 'Pour vous connecter à une personne que vous connaissez, envoyez-lui le lien ci-dessous.',
+      add_member:
+        "Choisissez un de vos contacts, ou saisissez l'identifiant d'un utilisateur (format : @bob@serveur.com).",
+      remove_member: 'Voulez-vous vraiment retirer %{name} du groupe ?',
+      no_special_rights: 'Pas de droits spéciaux',
+      cancel_invitation: "Voulez-vous vraiment annuler l'invitation envoyée à %{name} ?",
+      delete_role: 'Voulez-vous vraiment supprimer le rôle %{role} ? Ses membres resteront dans le groupe.',
+      leave_group: 'Voulez-vous vraiment quitter le groupe %{name} ?',
+      last_owner_cannot_leave:
+        'Vous êtes le seul propriétaire de ce groupe : nommez un autre propriétaire avant de le quitter.',
+      no_groups: "Vous n'êtes membre d'aucun groupe.",
+      group_not_found: "Ce groupe n'a pas pu être trouvé.",
       location_comment: 'Indications supplémentaires pour aider à trouver ce lieu',
       login: 'Je me connecte à mon espace personnel',
       signup: 'Je crée mon espace personnel',
@@ -203,6 +258,7 @@ export default {
       loading_invite_link_failed: 'Échec du chargement',
       no_condition: 'Aucune',
       you_participated_to_same_event: 'Vous avez participé à la même rencontre',
+      group_invitation: 'Vous êtes invité à rejoindre le groupe',
       verified_app: 'Application vérifiée',
       verified: 'Vérifiée',
       offline: 'Hors ligne',
@@ -231,6 +287,13 @@ export default {
       message_send_error: "Erreur lors de l'envoi du message: %{error}",
       profile_data_not_found: "Votre profil n'a pas été trouvé, veuillez vous déconnecter et vous reconnecter",
       user_not_found: "L'utilisateur %{username} n'existe pas",
+      member_added: "L'invitation a été envoyée",
+      group_invitation_accepted: 'Invitation acceptée',
+      group_invitation_rejected: 'Invitation refusée',
+      group_joined: 'Vous avez rejoint le groupe %{name}',
+      join_request_sent: 'Votre demande a été envoyée',
+      join_request_cancelled: 'Votre demande a été annulée',
+      group_left: 'Vous avez quitté le groupe %{name}',
       reset_password_submitted: 'Un e-mail a été envoyé avec les instructions de réinitialisation du mot de passe',
       reset_password_error: "Une erreur s'est produite",
       password_changed: 'Le mot de passe a été changé avec succès',
@@ -272,7 +335,9 @@ export default {
       type_organization: 'Organisation',
       type_group: 'Groupe',
       name: 'Nom',
-      image: 'Logo'
+      image: 'Logo',
+      my_roles: 'Mes rôles',
+      join_policy: 'Adhésion'
     },
     validation: {
       email: 'Doit être un email valide',
@@ -313,7 +378,10 @@ export default {
       settings: 'Paramètres - %{appName}',
       network: 'Mon réseau - %{appName}',
       create_group: 'Créer un groupe - %{appName}',
-      group_settings: 'Paramètres du groupe %{groupName} - %{appName}'
+      group_settings: 'Paramètres du groupe %{groupName} - %{appName}',
+      group_members: 'Membres du groupe %{groupName} - %{appName}',
+      group_roles: 'Rôles du groupe %{groupName} - %{appName}',
+      my_groups: 'Mes groupes - %{appName}'
     },
     placeholder: {
       user_id: '@utilisateur@serveur.com',

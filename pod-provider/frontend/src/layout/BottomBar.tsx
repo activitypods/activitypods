@@ -7,6 +7,7 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import StorageIcon from '@mui/icons-material/Storage';
 import AppsIcon from '@mui/icons-material/Apps';
 import SettingsIcon from '@mui/icons-material/Settings';
+import useRealmContext from '../hooks/useRealmContext';
 
 const useStyles = makeStyles()(theme => ({
   box: {
@@ -38,9 +39,13 @@ const BottomBar = () => {
   const [value, setValue] = useState();
   const translate = useTranslate();
   const location = useLocation();
+  const { isGroup, data: group } = useRealmContext() as any;
 
   useEffect(() => {
-    if (location.pathname.startsWith('/network') || location.pathname.startsWith('/Tag')) {
+    if (isGroup && location.pathname.endsWith('/members')) {
+      // @ts-expect-error TS(2345): Argument of type '"members"' is not assignable to ... Remove this comment to see the full error message
+      setValue('members');
+    } else if (location.pathname.startsWith('/network') || location.pathname.startsWith('/Tag')) {
       // @ts-expect-error TS(2345): Argument of type '"network"' is not assignable to ... Remove this comment to see the full error message
       setValue('network');
     } else if (location.pathname.startsWith('/apps')) {
@@ -53,7 +58,7 @@ const BottomBar = () => {
       // @ts-expect-error TS(2345): Argument of type '"settings"' is not assignable to... Remove this comment to see the full error message
       setValue('settings');
     }
-  }, [location.pathname, setValue]);
+  }, [location.pathname, isGroup, setValue]);
 
   const onChange = useCallback(
     (e: any, newValue: any) => {
@@ -67,42 +72,59 @@ const BottomBar = () => {
       <Box className={classes.box} />
       <AppBar position="fixed" color="primary" className={classes.appBar}>
         <BottomNavigation showLabels className={classes.bottomNav} value={value} onChange={onChange}>
-          <BottomNavigationAction
-            label={translate('app.page.contacts_short')}
-            value="network"
-            icon={<PeopleAltIcon />}
-            component={Link}
-            to="/network"
-            classes={{ selected: classes.selected }}
-            aria-label={translate('app.page.contacts')}
-            aria-description={translate('app.accessibility.network_link_description')}
-          />
-          <BottomNavigationAction
-            label={translate('app.page.apps_short')}
-            value="apps"
-            icon={<AppsIcon />}
-            component={Link}
-            to="/apps"
-            classes={{ selected: classes.selected }}
-            aria-label={translate('app.page.apps')}
-            aria-description={translate('app.accessibility.apps_link_description')}
-          />
-          <BottomNavigationAction
-            label={translate('app.page.data_short')}
-            value="data"
-            icon={<StorageIcon />}
-            component={Link}
-            to="/data"
-            classes={{ selected: classes.selected }}
-            aria-label={translate('app.page.data')}
-            aria-description={translate('app.accessibility.data_link_description')}
-          />
+          {isGroup && (
+            <BottomNavigationAction
+              label={translate('app.page.members')}
+              value="members"
+              icon={<PeopleAltIcon />}
+              component={Link}
+              to={`/group/${group?.webfingerId}/members`}
+              classes={{ selected: classes.selected }}
+              aria-label={translate('app.page.members')}
+            />
+          )}
+          {!isGroup && (
+            <BottomNavigationAction
+              label={translate('app.page.contacts_short')}
+              value="network"
+              icon={<PeopleAltIcon />}
+              component={Link}
+              to="/network"
+              classes={{ selected: classes.selected }}
+              aria-label={translate('app.page.contacts')}
+              aria-description={translate('app.accessibility.network_link_description')}
+            />
+          )}
+          {!isGroup && (
+            <BottomNavigationAction
+              label={translate('app.page.apps_short')}
+              value="apps"
+              icon={<AppsIcon />}
+              component={Link}
+              to="/apps"
+              classes={{ selected: classes.selected }}
+              aria-label={translate('app.page.apps')}
+              aria-description={translate('app.accessibility.apps_link_description')}
+            />
+          )}
+          {!isGroup && (
+            <BottomNavigationAction
+              label={translate('app.page.data_short')}
+              value="data"
+              icon={<StorageIcon />}
+              component={Link}
+              to="/data"
+              classes={{ selected: classes.selected }}
+              aria-label={translate('app.page.data')}
+              aria-description={translate('app.accessibility.data_link_description')}
+            />
+          )}
           <BottomNavigationAction
             label={translate('app.page.settings_short')}
             value="settings"
             icon={<SettingsIcon />}
             component={Link}
-            to="/settings"
+            to={isGroup ? `/group/${group?.webfingerId}/settings` : '/settings'}
             classes={{ selected: classes.selected }}
             aria-label={translate('app.page.settings')}
             aria-description={translate('app.accessibility.settings_link_description')}

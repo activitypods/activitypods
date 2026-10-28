@@ -58,7 +58,7 @@ const RoleRegistrationsSchema = {
               'skos:prefLabel': 'Owner',
               'interop:isSystemRole': true,
               'interop:extendsRole': adminUri,
-              'interop:hasSpecialRight': [...specialRights, 'apods:ChangeJoinPolicy'],
+              'interop:hasSpecialRight': [...specialRights, 'interop:ChangeJoinPolicy'],
               'interop:hasMember': ownerWebId
             }
           },

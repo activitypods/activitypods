@@ -216,7 +216,7 @@ const GroupsService = {
       async handler(ctx) {
         const { username, joinPolicy } = ctx.params;
         const groupWebId = await this.getGroupWebId(ctx, username);
-        await this.checkSpecialRight(ctx, groupWebId, 'apods:ChangeJoinPolicy');
+        await this.checkSpecialRight(ctx, groupWebId, 'interop:ChangeJoinPolicy');
 
         const predicate = rdf.namedNode(`${APODS}joinPolicy`);
         const currentPolicy = await this.getJoinPolicy(ctx, groupWebId);

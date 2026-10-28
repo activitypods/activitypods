@@ -216,7 +216,7 @@ describe('Test groups members handling', () => {
     const aliceRoles = await res.json();
     expect(aliceRoles.roles.map((role: any) => role.id)).toEqual(expect.arrayContaining(['member', 'admin', 'owner']));
     expect(aliceRoles.specialRights).toHaveLength(4);
-    expect(aliceRoles.specialRights).toContain('apods:ChangeJoinPolicy');
+    expect(aliceRoles.specialRights).toContain('interop:ChangeJoinPolicy');
 
     await expect((await fetchAs(craig, 'me')).json()).resolves.toEqual({ roles: [], specialRights: [] });
 

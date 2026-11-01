@@ -85,6 +85,9 @@ const DelegationEndpointSchema = {
           throw new MoleculerError('Delegated grant does not match original grant', 400, 'BAD REQUEST');
         }
 
+        // Sent by older versions, which copied it from the original grant
+        delete delegatedGrant['interop:replaces'];
+
         const delegatedGrantUri = await ctx.call('delegated-access-grants.post', {
           resource: delegatedGrant,
           contentType: MIME_TYPES.JSON,

@@ -15,6 +15,19 @@ const scopeAllJobOptions = {
   removeOnFail: 10000
 };
 
+// The replaced grant of the original grant must not be kept: it may not exist anymore
+const copyGrant = (grant: any) => {
+  const {
+    id,
+    'interop:replaces': replaces,
+    'dc:created': created,
+    'dc:modified': modified,
+    'dc:creator': creator,
+    ...properties
+  } = grant;
+  return properties;
+};
+
 const DelegatedAccessGrantsSchema = {
   name: 'delegated-access-grants' as const,
   mixins: CONFIG.QUEUE_SERVICE_URL
@@ -215,8 +228,7 @@ const DelegatedAccessGrantsSchema = {
               await this.actions.remoteIssue(
                 {
                   delegatedGrant: {
-                    ...delegatedGrant,
-                    id: undefined,
+                    ...copyGrant(delegatedGrant),
                     'interop:hasDataInstance': grant['interop:hasDataInstance'],
                     'interop:delegationOfGrant': getId(grant)
                   },
@@ -233,8 +245,7 @@ const DelegatedAccessGrantsSchema = {
             await this.actions.remoteIssue(
               {
                 delegatedGrant: {
-                  ...grant,
-                  id: undefined,
+                  ...copyGrant(grant),
                   type: 'interop:DelegatedAccessGrant',
                   'interop:grantee': authorization['interop:grantee'],
                   'interop:granteeType': authorization['interop:granteeType'],
@@ -353,8 +364,7 @@ const DelegatedAccessGrantsSchema = {
         const delegateGrantUri = await this.actions.remoteIssue(
           {
             delegatedGrant: {
-              ...grant,
-              id: undefined,
+              ...copyGrant(grant),
               type: 'interop:DelegatedAccessGrant',
               'interop:grantee': authorization['interop:grantee'],
               'interop:granteeType': authorization['interop:granteeType'],

@@ -20,6 +20,7 @@ describe('Test delegation features', () => {
     craig: any,
     eventContainerUri: any,
     eventUri: any,
+    secondEventUri: any,
     craigAppRegistrationUri: any;
 
   beforeAll(async () => {
@@ -243,6 +244,64 @@ describe('Test delegation features', () => {
     await waitForExpect(async () => {
       const delegatedGrants = await craig.call('delegated-access-grants.list');
       expect(arrayOf(delegatedGrants['ldp:contains'])).toHaveLength(1);
+    });
+  });
+
+  test('Bob shares a second Alice event with Craig, after his grant was replaced', async () => {
+    secondEventUri = await alice.call('ldp.container.post', {
+      containerUri: eventContainerUri,
+      resource: {
+        type: OBJECT_TYPES.EVENT,
+        name: 'Garden party'
+      },
+      contentType: MIME_TYPES.JSON
+    });
+
+    await alice.call('access-authorizations.addForSingleResource', {
+      resourceUri: secondEventUri,
+      grantee: bob.id,
+      accessModes: ['acl:Read'],
+      delegationAllowed: true,
+      delegationLimit: 1
+    });
+
+    await waitForExpect(async () => {
+      const grant = await bob.call('access-grants.getByResourceUri', { resourceUri: secondEventUri });
+      expect(grant).toMatchObject({ 'interop:replaces': expect.any(String) });
+    });
+
+    await bob.call('access-authorizations.addForSingleResource', {
+      resourceUri: secondEventUri,
+      grantee: craig.id,
+      accessModes: ['acl:Read']
+    });
+
+    await waitForExpect(async () => {
+      const craigRegistration = await bob.call('social-agent-registrations.getForAgent', {
+        agentUri: craig.id,
+        podOwner: bob.id
+      });
+
+      const grants = await bob.call('social-agent-registrations.getGrants', {
+        agentRegistration: craigRegistration,
+        podOwner: bob.id
+      });
+
+      const delegatedGrant = grants.find((grant: any) =>
+        arrayOf(grant['interop:hasDataInstance']).includes(secondEventUri)
+      );
+      expect(delegatedGrant).toMatchObject({ type: 'interop:DelegatedAccessGrant', 'interop:grantee': craig.id });
+      expect(delegatedGrant['interop:replaces']).toBeUndefined();
+    });
+
+    // The permissions of the delegated grant were added
+    await waitForExpect(async () => {
+      await expect(
+        craig.call('ldp.resource.get', {
+          resourceUri: secondEventUri,
+          accept: MIME_TYPES.JSON
+        })
+      ).resolves.toMatchObject({ name: 'Garden party' });
     });
   });
 });

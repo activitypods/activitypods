@@ -304,4 +304,105 @@ describe('Test delegation features', () => {
       ).resolves.toMatchObject({ name: 'Garden party' });
     });
   });
+
+  test('Broken delegated shares are repaired without sending activities to the grantee', async () => {
+    const insert = (resource: string, dataset: string) =>
+      podProvider.call('triplestore.insert', {
+        resource: resource.replace(/interop:(\w+)/g, '<http://www.w3.org/ns/solid/interop#$1>'),
+        contentType: MIME_TYPES.TURTLE,
+        webId: 'system',
+        dataset
+      });
+
+    // Leftovers of failed attempts: an authorization in Bob storage and an incomplete delegated grant in Alice storage
+    const authorizationsContainerUri = await bob.call('access-authorizations.getContainerUri', { webId: bob.id });
+    const brokenAuthorizationUri = urlJoin(authorizationsContainerUri, 'broken');
+    await insert(
+      `
+        <${authorizationsContainerUri}> <http://www.w3.org/ns/ldp#contains> <${brokenAuthorizationUri}> .
+        <${brokenAuthorizationUri}> a interop:AccessAuthorization ;
+          interop:grantedBy <${bob.id}> ;
+          interop:dataOwner <${alice.id}> ;
+          interop:grantee <${craig.id}> ;
+          interop:granteeType interop:SocialAgent ;
+          interop:hasDataRegistration <${eventContainerUri}> ;
+          interop:hasDataInstance <${secondEventUri}> ;
+          interop:accessMode <http://www.w3.org/ns/auth/acl#Read> ;
+          interop:scopeOfAuthorization interop:SelectedFromRegistry .
+      `,
+      'bob'
+    );
+
+    const delegatedGrantsContainerUri = await alice.call('delegated-access-grants.getContainerUri', {
+      webId: alice.id
+    });
+    const orphanGrantUri = urlJoin(delegatedGrantsContainerUri, 'orphan');
+    await insert(
+      `
+        <${delegatedGrantsContainerUri}> <http://www.w3.org/ns/ldp#contains> <${orphanGrantUri}> .
+        <${orphanGrantUri}> a interop:DelegatedAccessGrant ;
+          interop:grantedBy <${bob.id}> ;
+          interop:dataOwner <${alice.id}> ;
+          interop:grantee <${craig.id}> ;
+          interop:hasDataRegistration <${eventContainerUri}> ;
+          interop:hasDataInstance <${secondEventUri}> ;
+          interop:replaces <${urlJoin(alice.id, 'data/deleted-grant')}> .
+      `,
+      'alice'
+    );
+
+    const inboxBefore = await craig.call('activitypub.collection.get', { resourceUri: craig.inbox, webId: craig.id });
+
+    await podProvider.call('repair.reshareDelegatedResources', { username: 'bob', dataOwner: alice.id });
+
+    const authorizations = arrayOf(
+      (
+        await bob.call('access-authorizations.list', {
+          filters: { 'http://www.w3.org/ns/solid/interop#grantee': craig.id }
+        })
+      )['ldp:contains']
+    );
+    expect(authorizations).toHaveLength(1);
+    expect(arrayOf(authorizations[0]['interop:hasDataInstance'])).toEqual(
+      expect.arrayContaining([eventUri, secondEventUri])
+    );
+
+    const issuedGrants = await podProvider.call('triplestore.query', {
+      query: `
+        PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+        SELECT ?grantUri WHERE { ?grantUri a interop:DelegatedAccessGrant ; interop:grantee <${craig.id}> }
+      `,
+      accept: MIME_TYPES.JSON,
+      webId: 'system',
+      dataset: 'alice'
+    });
+    expect(issuedGrants).toHaveLength(1);
+    expect(issuedGrants[0].grantUri.value).not.toBe(orphanGrantUri);
+
+    for (const resourceUri of [eventUri, secondEventUri]) {
+      await expect(craig.call('ldp.resource.get', { resourceUri, accept: MIME_TYPES.JSON })).resolves.toMatchObject({
+        type: OBJECT_TYPES.EVENT
+      });
+    }
+
+    // Craig is in the announces collection of the event
+    await waitForExpect(async () => {
+      const event = await alice.call('ldp.resource.get', { resourceUri: secondEventUri, accept: MIME_TYPES.JSON });
+      await expect(
+        alice.call('activitypub.collection.includes', { collectionUri: event['apods:announces'], itemUri: craig.id })
+      ).resolves.toBeTruthy();
+    });
+
+    // The event is stored in Craig storage
+    const [eventsContainerUri] = await craig.call('type-registrations.findContainersUris', {
+      type: 'https://www.w3.org/ns/activitystreams#Event',
+      webId: craig.id
+    });
+    await expect(craig.call('ldp.container.getUris', { containerUri: eventsContainerUri })).resolves.toEqual(
+      expect.arrayContaining([secondEventUri])
+    );
+
+    const inboxAfter = await craig.call('activitypub.collection.get', { resourceUri: craig.inbox, webId: craig.id });
+    expect(inboxAfter.totalItems).toBe(inboxBefore.totalItems);
+  });
 });

@@ -1,5 +1,5 @@
 import urlJoin from 'url-join';
-import { arrayOf, getParentContainerUri } from '@semapps/ldp';
+import { arrayOf, getDatasetFromUri, getParentContainerUri } from '@semapps/ldp';
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
 import rdf from '@rdfjs/data-model';
 import { MIME_TYPES } from '@semapps/mime-types';
@@ -284,6 +284,235 @@ const RepairSchema = {
         );
 
         return { deletedGrants, deletedDataGrants, skipped, failed };
+      }
+    },
+
+    reshareDelegatedResources: {
+      /**
+       * Repair the resources shared by a delegate (username) on behalf of a data owner (dataOwner), when the
+       * delegated grants could not be issued (before the fix, they copied the interop:replaces of the original
+       * grant). Each failed attempt left an authorization in the delegate storage and an incomplete delegated
+       * grant in the data owner storage.
+       * For each grantee with several authorizations, or without a delegated grant covering them, the
+       * authorizations and delegated grants are deleted without the hooks (which would remove the permissions
+       * given by other grants), then the resources are shared again. No Announce is sent, so the grantees are
+       * not notified again.
+       * Pass dryRun: true to only log what would be done.
+       */
+      async handler(ctx) {
+        const { username, dataOwner, dryRun = false } = ctx.params;
+        const [account] = await ctx.call('auth.account.find', { query: { username } });
+        if (!account) throw new Error(`No account found for ${username}`);
+        const { webId } = account;
+        const ownerDataset = getDatasetFromUri(dataOwner);
+
+        const authorizationsResults = await ctx.call('triplestore.query', {
+          query: `
+            PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+            SELECT ?authorizationUri ?grantee ?resourceUri ?delegationAllowed ?delegationLimit
+            WHERE {
+              ?authorizationUri a interop:AccessAuthorization ;
+                interop:grantedBy <${webId}> ;
+                interop:dataOwner <${dataOwner}> ;
+                interop:grantee ?grantee ;
+                interop:hasDataInstance ?resourceUri .
+              OPTIONAL { ?authorizationUri interop:delegationAllowed ?delegationAllowed }
+              OPTIONAL { ?authorizationUri interop:delegationLimit ?delegationLimit }
+            }
+          `,
+          accept: MIME_TYPES.JSON,
+          webId: 'system',
+          dataset: username
+        });
+
+        const attachedGrantsResults = await ctx.call('triplestore.query', {
+          query: `
+            PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+            SELECT ?grantUri ?grantee ?resourceUri
+            WHERE {
+              ?registrationUri interop:hasAccessGrant ?grantUri .
+              ?grantUri a interop:DelegatedAccessGrant ;
+                interop:grantedBy <${webId}> ;
+                interop:dataOwner <${dataOwner}> ;
+                interop:grantee ?grantee ;
+                interop:hasDataInstance ?resourceUri .
+            }
+          `,
+          accept: MIME_TYPES.JSON,
+          webId: 'system',
+          dataset: username
+        });
+
+        type GranteeShares = {
+          authorizations: Set<string>;
+          resources: Set<string>;
+          grants: Set<string>;
+          grantsResources: Set<string>;
+          delegationAllowed?: boolean;
+          delegationLimit?: number;
+        };
+        const grantees: Record<string, GranteeShares> = {};
+        const getShares = (granteeUri: string) =>
+          (grantees[granteeUri] ||= {
+            authorizations: new Set(),
+            resources: new Set(),
+            grants: new Set(),
+            grantsResources: new Set()
+          });
+
+        for (const r of authorizationsResults) {
+          const shares = getShares(r.grantee.value);
+          shares.authorizations.add(r.authorizationUri.value);
+          shares.resources.add(r.resourceUri.value);
+          if (r.delegationAllowed?.value === 'true') shares.delegationAllowed = true;
+          if (r.delegationLimit) shares.delegationLimit = parseInt(r.delegationLimit.value, 10);
+        }
+        for (const r of attachedGrantsResults) {
+          const shares = getShares(r.grantee.value);
+          shares.grants.add(r.grantUri.value);
+          shares.grantsResources.add(r.resourceUri.value);
+        }
+
+        const repaired: string[] = [];
+        const failed: string[] = [];
+
+        for (const [granteeUri, shares] of Object.entries(grantees)) {
+          if (granteeUri === webId || granteeUri === dataOwner) continue;
+
+          const isHealthy =
+            shares.authorizations.size === 1 &&
+            shares.grants.size === 1 &&
+            [...shares.resources].every(resourceUri => shares.grantsResources.has(resourceUri));
+          if (isHealthy) continue;
+
+          const issuedGrantsResults = await ctx.call('triplestore.query', {
+            query: `
+              PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+              SELECT DISTINCT ?grantUri
+              WHERE {
+                ?grantUri a interop:DelegatedAccessGrant ;
+                  interop:grantedBy <${webId}> ;
+                  interop:grantee <${granteeUri}> .
+              }
+            `,
+            accept: MIME_TYPES.JSON,
+            webId: 'system',
+            dataset: ownerDataset
+          });
+          const issuedGrantsUris: string[] = issuedGrantsResults.map((r: any) => r.grantUri.value);
+
+          this.logger.info(
+            `${dryRun ? '[dry run] ' : ''}${granteeUri}: deleting ${shares.authorizations.size} authorizations, ${
+              shares.grants.size
+            } attached and ${issuedGrantsUris.length} issued delegated grants, then sharing ${[
+              ...shares.resources
+            ].join(', ')}`
+          );
+
+          if (dryRun) continue;
+
+          try {
+            for (const authorizationUri of shares.authorizations) {
+              await ctx.call(
+                'ldp.resource.delete',
+                { resourceUri: authorizationUri, webId: 'system' },
+                { meta: { dataset: username } }
+              );
+              await ctx.call(
+                'auth-registry.remove',
+                { podOwner: webId, authorizationUri },
+                { meta: { dataset: username, webId } }
+              );
+            }
+
+            if (shares.grants.size > 0) {
+              await ctx.call(
+                'social-agent-registrations.removeGrant',
+                {
+                  grants: [...shares.grants].map(grantUri => ({
+                    id: grantUri,
+                    'interop:grantee': granteeUri,
+                    'interop:grantedBy': webId
+                  }))
+                },
+                { meta: { dataset: username, webId } }
+              );
+            }
+
+            for (const grantUri of issuedGrantsUris) {
+              await ctx.call(
+                'ldp.resource.delete',
+                { resourceUri: grantUri, webId: 'system' },
+                { meta: { dataset: ownerDataset } }
+              );
+            }
+
+            // Local copies of the delegated grants, in the delegate and grantee storages
+            const granteeAccount = await ctx.call('auth.account.findByWebId', { webId: granteeUri });
+            const copies = [[webId, username]];
+            if (granteeAccount) copies.push([granteeUri, granteeAccount.username]);
+            for (const [copyWebId, copyDataset] of copies) {
+              for (const grantUri of new Set([...shares.grants, ...issuedGrantsUris])) {
+                const graph = await ctx.call(
+                  'ldp.remote.getGraph',
+                  { resourceUri: grantUri },
+                  { meta: { dataset: copyDataset } }
+                );
+                if (graph !== false) {
+                  await ctx.call(
+                    'ldp.remote.delete',
+                    { resourceUri: grantUri, webId: copyWebId },
+                    { meta: { dataset: copyDataset } }
+                  );
+                }
+              }
+            }
+
+            for (const resourceUri of shares.resources) {
+              const exist = await ctx.call(
+                'ldp.resource.exist',
+                { resourceUri, webId: 'system' },
+                { meta: { dataset: ownerDataset } }
+              );
+              if (!exist) continue;
+
+              await ctx.call(
+                'access-authorizations.addForSingleResource',
+                {
+                  resourceUri,
+                  grantee: granteeUri,
+                  accessModes: ['acl:Read'],
+                  delegationAllowed: shares.delegationAllowed,
+                  delegationLimit: shares.delegationLimit,
+                  webId
+                },
+                { meta: { dataset: username, webId } }
+              );
+
+              if (granteeAccount) {
+                await ctx.call(
+                  'announcer.storeAnnouncedResource',
+                  { resourceUri, recipientUri: granteeUri },
+                  { meta: { dataset: granteeAccount.username, webId: granteeUri } }
+                );
+              }
+            }
+
+            repaired.push(granteeUri);
+          } catch (e) {
+            failed.push(granteeUri);
+            // @ts-expect-error TS(18046): 'e' is of type 'unknown'.
+            this.logger.warn(`Unable to repair the resources shared with ${granteeUri}. Error: ${e.message}`);
+          }
+        }
+
+        this.logger.info(
+          `Delegated resources repair finished: ${repaired.length} grantees repaired, ${failed.length} failed${
+            failed.length > 0 ? ` (${failed.join(', ')})` : ''
+          }`
+        );
+
+        return { repaired, failed };
       }
     },
 

@@ -377,7 +377,8 @@ const RepairSchema = {
         const failed: string[] = [];
 
         for (const [granteeUri, shares] of Object.entries(grantees)) {
-          if (granteeUri === webId || granteeUri === dataOwner) continue;
+          // Without authorization, the delegated grants were generated for an app (interop:All scope)
+          if (granteeUri === webId || granteeUri === dataOwner || shares.authorizations.size === 0) continue;
 
           const isHealthy =
             shares.authorizations.size === 1 &&

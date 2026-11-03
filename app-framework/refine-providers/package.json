@@ -1,0 +1,119 @@
+{
+  "name": "@activitypods/refine-providers",
+  "version": "2.3.2",
+  "private": false,
+  "type": "module",
+  "description": "Refine data and auth providers for ActivityPods",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/assemblee-virtuelle/activitypods.git",
+    "directory": "app-framework/refine-providers"
+  },
+  "homepage": "https://activitypods.org",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./auth-provider": {
+      "types": "./dist/auth-provider.d.ts",
+      "default": "./dist/auth-provider.js"
+    },
+    "./data-provider": {
+      "types": "./dist/data-provider.d.ts",
+      "default": "./dist/data-provider.js"
+    },
+    "./live-provider": {
+      "types": "./dist/live-provider.d.ts",
+      "default": "./dist/live-provider.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "default": "./dist/utils.js"
+    }
+  },
+  "targets": {
+    "index": {
+      "source": "src/index.ts",
+      "distDir": "dist",
+      "context": "browser",
+      "outputFormat": "esmodule",
+      "isLibrary": true,
+      "includeNodeModules": false,
+      "sourceMap": true
+    },
+    "auth-provider": {
+      "source": "src/auth-provider.ts",
+      "distDir": "dist",
+      "context": "browser",
+      "outputFormat": "esmodule",
+      "isLibrary": true,
+      "includeNodeModules": false,
+      "sourceMap": true
+    },
+    "data-provider": {
+      "source": "src/data-provider.ts",
+      "distDir": "dist",
+      "context": "browser",
+      "outputFormat": "esmodule",
+      "isLibrary": true,
+      "includeNodeModules": false,
+      "sourceMap": true
+    },
+    "live-provider": {
+      "source": "src/live-provider.ts",
+      "distDir": "dist",
+      "context": "browser",
+      "outputFormat": "esmodule",
+      "isLibrary": true,
+      "includeNodeModules": false,
+      "sourceMap": true
+    },
+    "utils": {
+      "source": "src/utils.ts",
+      "distDir": "dist",
+      "context": "browser",
+      "outputFormat": "esmodule",
+      "isLibrary": true,
+      "includeNodeModules": false,
+      "sourceMap": true
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rm -rf dist .parcel-cache && parcel build && tsc -p tsconfig.build.json && yalc publish --push --changed",
+    "watch": "concurrently -n parcel,tsc -c blue,yellow \"parcel watch --no-cache\" \"tsc -p tsconfig.build.json --watch --preserveWatchOutput\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "http-link-header": "^1.1.3",
+    "jsonld": "^8.0.0",
+    "jwt-decode": "^3.0.0",
+    "oauth4webapi": "^2.3.0"
+  },
+  "peerDependencies": {
+    "@refinedev/core": "^5.0.12"
+  },
+  "devDependencies": {
+    "@refinedev/core": "^5.0.12",
+    "@types/http-link-header": "^1.0.7",
+    "@types/jsonld": "^1.5.14",
+    "@types/react": "^19.1.0",
+    "concurrently": "^10.0.3",
+    "react": "^19.1.0",
+    "typescript": "^5.8.3",
+    "yalc": "^1.0.0-pre.53"
+  },
+  "author": "Virtual Assembly"
+}

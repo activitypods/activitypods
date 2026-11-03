@@ -5,6 +5,9 @@ node_modules
 yarn-error.log
 
 /app-framework/react-admin/dist
+/app-framework/refine-providers/dist
+/app-framework/refine-hooks/dist
+/app-framework/refine-antd/dist
 /app-framework/app/dist
 
 .parcel-cache

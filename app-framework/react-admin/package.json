@@ -33,8 +33,8 @@
   "devDependencies": {
     "@mui/icons-material": "^7.1.0",
     "@mui/material": "^7.1.0",
-    "@parcel/packager-ts": "2.12.0",
-    "@parcel/transformer-typescript-types": "2.12.0",
+    "@parcel/packager-ts": "^2.16.4",
+    "@parcel/transformer-typescript-types": "^2.16.4",
     "@types/rdfjs__data-model": "^2.0.9",
     "@types/url-join": "^4.0.1",
     "react": "^18.2.0",

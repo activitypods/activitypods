@@ -4,7 +4,7 @@
 node_modules
 yarn-error.log
 
-/app-framework/react/dist
+/app-framework/react-admin/dist
 /app-framework/app/dist
 
 .parcel-cache

@@ -87,3 +87,4 @@ The following special rights are allowed:
 - `apods:CreateWacGroup`: permission to [create WAC groups](../handling-permissions/#creating-wac-groups)
 - `apods:CreateCollection`: permission to [create custom collections](../handling-collections/)
 - `apods:UpdateWebId`: permission to update the Pod's owner [WebID](/architecture/identity/#webid)
+- `apods:QuerySparqlEndpoint`: permission to query the user's [SPARQL endpoint](/architecture/resources-management/#sparql-endpoint)

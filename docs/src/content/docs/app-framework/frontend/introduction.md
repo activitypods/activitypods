@@ -12,7 +12,7 @@ Although you can use any framework to build an ActivityPods-compatible applicati
 | `@activitypods/refine-hooks`     | React hooks to handle the login flow, the app status and [ActivityPub collections](../inbox-and-outbox/) |
 | `@activitypods/refine-antd`      | Ready-made components (login page, background checks) for [Ant Design](https://ant.design)               |
 
-The [app boilerplate](https://github.com/activitypods/app-boilerplate) uses these three packages, with Ant Design.
+The [app boilerplate](https://github.com/activitypods/app-boilerplate) uses these three packages, with Ant Design. If your app doesn't need a backend, have a look at the [frontend-only example app](https://github.com/activitypods/frontend-only-example-app).
 
 ```bash
 yarn add @activitypods/refine-providers @activitypods/refine-hooks @activitypods/refine-antd

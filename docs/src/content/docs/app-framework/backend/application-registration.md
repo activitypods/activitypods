@@ -23,7 +23,7 @@ module.exports = {
     },
     oidc: {
       clientUri: 'https://example.app',
-      redirectUris: 'https://example.app/auth-callback',
+      redirectUris: 'https://example.app/login',
       postLogoutRedirectUris: 'https://example.app/login?logout=true',
       tosUri: 'https://example.app/termes-of-services'
     },
@@ -62,7 +62,7 @@ The `app` part of the setting allow you to describe your application. These info
 ActivityPods integrate a full OIDC provider. To register your application with this provider, it needs a few informations:
 
 - `clientUri`: The frontend URL
-- `redirectUris`: The URL to redirect after login. If you use React-Admin, it will usually be `/auth-callback`
+- `redirectUris`: The URL to redirect after login. With the [Refine auth provider](../../frontend/auth-provider/), it is `/login` by default
 - `postLogoutRedirectUris`: The URL to redirect after logout. This URL should delete any token.
 - `tosUri`: The URL to your terms of service (not used for now)
 

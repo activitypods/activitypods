@@ -104,7 +104,7 @@ The "Hot module reload" feature is activated on the frontend, so you can do chan
 The "Hot module reload" feature has been temporarily disabled for the backend as it causes [performance issues](https://github.com/activitypods/activitypods/issues/215). You will need to restart the server whenever you make a change.
 :::
 
-For the frontend, check the excellent [React-Admin documentation](https://marmelab.com/react-admin/Readme.html) to find what you can do. Have a look at [SemApps website](https://semapps.org/docs/frontend) for specific components.
+The frontend is built with [Refine](https://refine.dev/core/docs/) and [Ant Design](https://ant.design). Check their documentation to find what you can do, as well as the documentation of the [ActivityPods frontend packages](../../app-framework/frontend/introduction/).
 
 For the backend, you will find plenty of documentation on this website.
 

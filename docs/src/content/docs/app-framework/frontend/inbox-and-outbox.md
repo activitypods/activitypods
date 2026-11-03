@@ -4,48 +4,49 @@ sidebar:
   order: 3
 ---
 
-## Fetching the inbox and outbox
+## Reading collections
 
-SemApps [`useCollection`](https://semapps.org/docs/frontend/activitypub-components#usecollection) hook make it easy to fetch the content of the inbox or outbox.
+The `useCollection` hook of `@activitypods/refine-hooks` fetches an ActivityPub collection. You can pass its URI, or a predicate of the user's WebID such as `inbox`, `outbox` or `apods:contacts`. Collections hosted on other servers are fetched through the user's Pod proxy.
 
-Note that if you pass only "inbox" or "outbox", it will fetch the collections of the logged user. Otherwise you may pass the URI of any actor's inbox or outbox to read them.
-
-```js
-import { useCollection } from '@semapps/activitypub-components';
+```tsx
+import { useCollection } from '@activitypods/refine-hooks';
 
 export const InboxPage = () => {
   const { items: activities, hasNextPage, fetchNextPage } = useCollection('inbox');
   return (
     <>
-      {activities?.map(activity => (
-        <div>
-          <h2>Activity Type: {activity.type}</h2>
+      {activities.map(activity => (
+        <div key={activity.id}>
+          <h2>Activity type: {activity.type}</h2>
           <p>{activity.content}</p>
         </div>
       ))}
-      {hasNextPage && <button onClick={fetchNextPage}>Fetch more activities</button>}
+      {hasNextPage && <button onClick={() => fetchNextPage()}>Fetch more activities</button>}
     </>
   );
 };
 ```
 
+Items are returned as they are in the collection: either URIs, or objects for embedded items. The hook also returns `addItem` and `removeItem` to update the collection optimistically, while your backend processes an activity.
+
 ## Posting to the outbox
 
-```js
-import { useOutbox } from '@semapps/activitypub-components';
+```tsx
+import { useOutbox } from '@activitypods/refine-hooks';
 
-export const MyPage = props => {
+export const FollowButton = ({ actorUri }) => {
   const outbox = useOutbox();
 
-  const follow = actorUrl => {
+  const follow = () =>
     outbox.post({
       type: 'Follow',
       actor: outbox.owner,
-      object: actorUrl,
-      to: actorUrl
+      object: actorUri,
+      to: actorUri
     });
-  };
 
-  return <button onClick={() => follow('http://localhost:3000/alice')}>Follow Alice</button>;
+  return <button onClick={follow}>Follow</button>;
 };
 ```
+
+`post` returns the URI of the created activity. Activities are sent with the ActivityStreams context, or with the `jsonContext` passed to `useOutbox`.

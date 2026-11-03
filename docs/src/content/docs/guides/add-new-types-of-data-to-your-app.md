@@ -143,68 +143,79 @@ If you created a new ontology, there are a few more steps to follow. Please have
 
 Congratulations, your application now has the right to read and write `foaf:Project` resources. So let's adapt the frontend to actually do it!
 
-### Adding a new resource to React-Admin
+### Configure the data provider
 
-[React-Admin](https://marmelab.com/react-admin/documentation.html) requires you to define "resources", which are the types of data that the application handles. For example, an application may handle events, projects, documents, etc.
+First, tell the [data provider](../../app-framework/frontend/data-provider/) how to find the new resource. Edit the `/frontend/src/config/providers.ts` file and add it to the `resources` object:
 
-We will create a new resource called `projects` but any other name will work too.
+```ts title="providers.ts" {7-9}
+export const resources = {
+  events: {
+    shapeTreeUri: urlJoin(SHAPE_REPOSITORY_URL, 'shapetrees/as/Event')
+  },
+  ...
+  projects: {
+    shapeTreeUri: urlJoin(SHAPE_REPOSITORY_URL, 'shapetrees/foaf/Project')
+  }
+};
+```
 
-Create a `projects` directory in `/src/resources` and add two `ProjectList.jsx` and `ProjectCreate.jsx` files based on the same model as the sample `EventList.jsx` and `EventCreate.jsx` components.
+We recommend using the `shapeTreeUri` property, because it identifies the data more accurately than its type. The data provider will look in the user's type index for the container registered for this shape tree.
 
-Now you can add this resource as a child of the main [`Admin`](https://marmelab.com/react-admin/Admin.html) component. Edit the `/frontend/src/App.js` file as follows:
+:::note
+`SHAPE_REPOSITORY_URL` comes from the `VITE_SHAPE_REPOSITORY_URL` environment variable that you previously set to your local shape repository. When you switch to the public shape repository, your code will continue to work.
+:::
 
-```jsx title="App.js" {2-3,9-13}
+### Add the pages
+
+[Refine](https://refine.dev/core/docs/) requires you to define "resources", which are the types of data that the application handles, and the routes of their pages.
+
+Create a `projects` directory in `/frontend/src/resources` and add two `ProjectList.tsx` and `ProjectCreate.tsx` files based on the same model as the sample `EventList.tsx` and `EventCreate.tsx` components.
+
+Then declare the resource and its routes in the `/frontend/src/App.tsx` file:
+
+```tsx title="App.tsx" {2-3,10-14,23-26}
 ...
 import ProjectList from './resources/projects/ProjectList';
 import ProjectCreate from './resources/projects/ProjectCreate';
 
 const App = () => (
-  <BrowserRouter>
-    <Admin ...>
+  ...
+  <Refine
+    resources={[
       // ... other resources here
-      <Resource
-        name="projects"
-        list={ProjectList}
-        create={ProjectCreate}
-      />
-    </Admin>
-  </BrowserRouter>
+      {
+        name: 'projects',
+        list: '/projects',
+        create: '/projects/create'
+      }
+    ]}
+    ...
+  >
+    <Routes>
+      ...
+      <Route element={...}>
+        ...
+        <Route path="/projects">
+          <Route index element={<ProjectList />} />
+          <Route path="create" element={<ProjectCreate />} />
+        </Route>
+      </Route>
+    </Routes>
+  </Refine>
 );
 ```
 
-:::note
-You can also add other components to show or edit resources. See the [React-Admin documentation](https://marmelab.com/react-admin/Resource.html) for more information.
-:::
-
-### Add the data model
-
-When you create a new resource in your application, you must also configure a corresponding [data model](https://semapps.org/docs/frontend/semantic-data-provider/data-model) in the data provider to help it find where the data resides and where to create it.
-
-At the very least, the data model must include a `type` or a `shapeTreeUri` property. The `type` corresponds to the class of the data. We recommend using the `shapeTreeUri` property because it identifies the data more accurately.
-
-Edit the `/src/frontend/config/dataProvider.js` file and add the data model of your new resource:
-
-```js title="dataProvider.js" {4-6}
-export default dataProvider({
-  resources: {
-    ...
-    projects: {
-      shapeTreeUri: urlJoin(import.meta.env.VITE_SHAPE_REPOSITORY_URL, 'shapetrees/foaf/Project')
-    }
-  },
-  ...
-});
-```
+The resource `name` must match the key you used in the data provider's `resources`.
 
 :::note
-We use the environment variable that you previously set to http://localhost:8000. This means that, when you want to switch to the public shape repository, your code will continue to work.
+You can also add pages to show or edit resources. See the [Refine documentation](https://refine.dev/core/docs/guides-concepts/general-concepts/) for more information, and the [Ant Design integration](https://refine.dev/core/docs/ui-integrations/ant-design/introduction/) for the available components.
 :::
 
 ## Conclusion
 
 That's it ! You should now be able to create `foaf:Project` resources in your application frontend. They will be posted in a dedicated container in your users' Pod.
 
-This is just an introductory guide. Please have look at the documentation of [React-Admin](https://marmelab.com/react-admin/documentation.html), [SemApps](https://semapps.org/docs/frontend/semantic-data-provider/) and ActivityPods for more complete information about this subject. And don't hesitate to ask questions in [our Matrix space](https://matrix.to/#/#activitypods:matrix.org)!
+This is just an introductory guide. Please have look at the documentation of [Refine](https://refine.dev/core/docs/) and of the [ActivityPods frontend packages](../../app-framework/frontend/introduction/) for more complete information about this subject. And don't hesitate to ask questions in [our Matrix space](https://matrix.to/#/#activitypods:matrix.org)!
 
 ## Appendix: Adding a new ontology
 

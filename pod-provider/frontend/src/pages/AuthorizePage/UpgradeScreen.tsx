@@ -70,7 +70,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }: any) => {
               : accessGrants.find(
                   g =>
                     typeof g !== 'string' &&
-                    g['apods:registeredClass'] === accessNeed['apods:registeredClass'] &&
+                    g['interop:registeredShapeTree'] === accessNeed['interop:registeredShapeTree'] &&
                     // Every mode in the access need must be in the existing grant.
                     // If the existing grant has more access mode, we will not ask user consent to remove it
                     arrayOf(accessNeed['interop:accessMode']).every(m => arrayOf(g['interop:accessMode']).includes(m))
@@ -97,8 +97,8 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }: any) => {
         ...missingAccessNeeds.optional.map(a => (typeof a === 'string' ? a : a?.id))
       ]);
 
-      // If at least one required access need is missing
-      if (missingAccessNeeds.required.length > 0) {
+      // If at least one access need is missing
+      if (missingAccessNeeds.required.length > 0 || missingAccessNeeds.optional.length > 0) {
         // Show screen to get consent
         // @ts-expect-error TS(2345): Argument of type '"ask"' is not assignable to para... Remove this comment to see the full error message
         setStep('ask');

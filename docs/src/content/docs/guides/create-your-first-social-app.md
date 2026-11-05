@@ -11,7 +11,7 @@ We created a boilerplate to help you quickly setup a social app in a local envir
 - Git
 - Makefile
 - [Docker](https://docs.docker.com/engine/install/) (make sure you have the `docker-compose-plugin` installed)
-- [NodeJS](https://nodejs.org) 20.0 or above
+- [NodeJS](https://nodejs.org) 22.12 or above
 - [Yarn](https://yarnpkg.com/)
 
 4Gb of RAM is required for Jena Fuseki to work properly.
@@ -55,7 +55,7 @@ If everything is running fine, you should be able to access your newly-created P
 
 ![](../../../assets/local-pod-provider.png)
 
-The environment variables you setup in the previous step, and some other configurations variables, should be visible at http://localhost:3000/.well-known/config.js (this javascript file is loaded by the frontend at the very beginning).
+The configuration of the Pod provider should be visible at http://localhost:3000/.well-known/config.js (this javascript file is loaded by its frontend at the very beginning).
 
 You can go ahead and create an account.
 
@@ -94,17 +94,28 @@ yarn install
 yarn run dev
 ```
 
-A browser window should automatically be launched. If not, you can access the app frontend at http://localhost:4001
+You can now access the app frontend at http://localhost:4001
+
+## Log in to the app
+
+The login page only offers your local Pod provider, because it is set as the `VITE_POD_PROVIDER_BASE_URL` variable in the `frontend/.env` file. Public Pod providers would not be able to reach your local application backend.
+
+Choose your local Pod provider: it will ask you to authorize the app to access your data, then redirect you to the app. You can now create an event. It will be stored in your Pod, and the app backend will add a summary to it (see `backend/services/events.service.js`).
 
 ## Play with the boilerplate
 
-The "Hot module reload" feature is activated on the frontend, so you can do changes to the code and it will be visible almost immediately.
+The "Hot module reload" feature is activated on both the frontend and the backend, so you can do changes to the code and it will be visible almost immediately.
 
-:::note
-The "Hot module reload" feature has been temporarily disabled for the backend as it causes [performance issues](https://github.com/activitypods/activitypods/issues/215). You will need to restart the server whenever you make a change.
-:::
+The frontend is built with [Refine](https://refine.dev/core/docs/) and [Ant Design](https://ant.design). Check their documentation to find what you can do, as well as the documentation of the [ActivityPods frontend packages](../../app-framework/frontend/introduction/). Here's where to start in the `frontend/src` directory:
 
-The frontend is built with [Refine](https://refine.dev/core/docs/) and [Ant Design](https://ant.design). Check their documentation to find what you can do, as well as the documentation of the [ActivityPods frontend packages](../../app-framework/frontend/introduction/).
+| File or directory     | Content                                                                                                                                                                                                                                      |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config/providers.ts` | The [auth provider](../../app-framework/frontend/auth-provider/), the [data provider](../../app-framework/frontend/data-provider/) and the live provider of `@activitypods/refine-providers`, and the shape tree of each resource of the app |
+| `App.tsx`             | The Refine resources and their routes, and the `LoginPage` of `@activitypods/refine-antd`                                                                                                                                                    |
+| `Layout.tsx`          | The layout of the app, wrapped in the `BackgroundChecks` component of `@activitypods/refine-antd`                                                                                                                                            |
+| `resources/`          | The pages of each resource. `events/JoinButton.tsx` shows how to use the [`useOutbox` and `useCollection` hooks](../../app-framework/frontend/inbox-and-outbox/) of `@activitypods/refine-hooks`                                             |
+
+To handle other types of data, see the [next guide](../add-new-types-of-data-to-your-app/).
 
 For the backend, you will find plenty of documentation on this website.
 

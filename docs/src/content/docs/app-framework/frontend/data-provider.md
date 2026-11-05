@@ -58,7 +58,7 @@ const { result } = useInfiniteList({
 
 ## Live updates
 
-The live provider uses [WebSocket channels](https://solidproject.org/TR/websocket-channel-2023) to refresh the pages when resources are created, updated or deleted. Give it the same `resources` and `jsonContext` as the data provider:
+The live provider uses [WebSocket channels](https://solid.github.io/notifications/websocket-channel-2023) to refresh the pages when resources are created, updated or deleted. Give it the same `resources` and `jsonContext` as the data provider:
 
 ```tsx
 import { liveProvider } from '@activitypods/refine-providers';

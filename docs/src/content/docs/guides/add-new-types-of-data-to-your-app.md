@@ -147,7 +147,7 @@ Congratulations, your application now has the right to read and write `foaf:Proj
 
 First, tell the [data provider](../../app-framework/frontend/data-provider/) how to find the new resource. Edit the `/frontend/src/config/providers.ts` file and add it to the `resources` object:
 
-```ts title="providers.ts" {7-9}
+```ts title="providers.ts" {6-8}
 export const resources = {
   events: {
     shapeTreeUri: urlJoin(SHAPE_REPOSITORY_URL, 'shapetrees/as/Event')
@@ -173,7 +173,7 @@ Create a `projects` directory in `/frontend/src/resources` and add two `ProjectL
 
 Then declare the resource and its routes in the `/frontend/src/App.tsx` file:
 
-```tsx title="App.tsx" {2-3,10-14,23-26}
+```tsx title="App.tsx" {2-3,10-14,22-25}
 ...
 import ProjectList from './resources/projects/ProjectList';
 import ProjectCreate from './resources/projects/ProjectCreate';

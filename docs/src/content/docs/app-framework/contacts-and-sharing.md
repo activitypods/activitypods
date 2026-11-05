@@ -101,6 +101,8 @@ Users can also create a contact link from the Pod provider frontend. Anyone who 
 To share a resource with some actors, post an `Announce` activity to the outbox of the creator of the resource:
 
 ```js
+import { useOutbox } from '@activitypods/refine-hooks';
+
 const outbox = useOutbox();
 
 outbox.post({
@@ -141,26 +143,78 @@ outbox.post({
 
 The recipients are then added to the `apods:announcers` collection, and they can post `Announce` activities for this resource from their own outbox. Only the creator of a resource can allow delegation.
 
-### Share buttons
+### Letting users choose the recipients
 
-The `@activitypods/react` package provides two components that you can include in the `actions` of a React-Admin `Show` view.
+There are two ways to let users choose with whom they share a resource.
 
-The `ShareButton` opens a dialog listing the contacts and contact groups of the user. For each contact, the user can choose whether they can view or share the resource. The button is hidden if the user cannot read the `apods:announces` collection, in other words if they are neither the creator nor an announcer.
+#### In your application
 
-```jsx
-import { ShareButton } from '@activitypods/react';
+If your application has access to the user's contacts, you can list them with the `contacts` resource declared above, and post an `Announce` activity for the selected ones. This requires the `apods:PostOutbox` special right.
 
-const EventShowActions = () => <ShareButton profileResource="contacts" groupResource="groups" />;
+The `apods:announces` collection tells you with whom the resource is already shared. Only the creator of the resource and the announcers can read it, so if `useCollection` returns an error, the user cannot share the resource.
+
+```tsx
+import { useGetIdentity, useList } from '@refinedev/core';
+import { useCollection, useOutbox } from '@activitypods/refine-hooks';
+
+export const ShareList = ({ record }) => {
+  const { data: identity } = useGetIdentity();
+  const { result: contacts } = useList({ resource: 'contacts', pagination: { mode: 'off' } });
+  const { items: announces, error } = useCollection(record['apods:announces']);
+  const outbox = useOutbox();
+
+  if (error) return null;
+
+  const share = actorUri =>
+    outbox.post({
+      type: 'Announce',
+      actor: outbox.owner,
+      object: record.id,
+      to: actorUri
+    });
+
+  return (
+    <ul>
+      {contacts.data
+        .filter(profile => profile.describes !== identity?.id)
+        .map(profile => (
+          <li key={profile.id}>
+            {profile['vcard:given-name']}
+            {!announces.includes(profile.describes) && <button onClick={() => share(profile.describes)}>Share</button>}
+          </li>
+        ))}
+    </ul>
+  );
+};
 ```
 
-The `profileResource` and `groupResource` props are the names of the data provider resources for the profiles and contact groups (see above).
+Contact groups are available in the same way with the `groups` resource.
 
-The `RemoteShareButton` redirects the user to the Pod provider, where they can choose with whom to share the resource. This way, your application doesn't need to have access to the user's contacts. It is only displayed to the creator of the resource.
+#### On the Pod provider
 
-```jsx
-import { RemoteShareButton } from '@activitypods/react';
+You can also redirect the user to the Pod provider, where they will choose the recipients. This way, your application doesn't need to have access to the user's contacts. This is only available to the creator of the resource.
 
-const EventShowActions = () => <RemoteShareButton clientId="https://example.app/app" />;
+```tsx
+import { STORAGE_KEY_REDIRECT, resolveAuthAgent } from '@activitypods/refine-providers';
+import { useAuthProvider } from '@activitypods/refine-hooks';
+
+export const RemoteShareButton = ({ record, clientId }) => {
+  const session = useAuthProvider().getSession();
+
+  if (!session || record['dc:creator'] !== session.webId) return null;
+
+  const share = async () => {
+    const { authAgent } = await resolveAuthAgent(session.webId, session.token);
+    const url = new URL(authAgent['interop:hasAuthorizationRedirectEndpoint']);
+    url.searchParams.set('client_id', clientId);
+    url.searchParams.set('resource', record.id);
+    // The BackgroundChecks component comes back to this page
+    localStorage.setItem(STORAGE_KEY_REDIRECT, window.location.pathname);
+    window.location.href = url.toString();
+  };
+
+  return <button onClick={share}>Share</button>;
+};
 ```
 
 ### Reacting to shared resources

@@ -2,7 +2,7 @@
 title: PodOutboxService
 ---
 
-This service, automatically created by the AppService with the key `pod-notification`, allows you to easily post as the Pod owner. See [this page](/app-framework/backend/posting-as-the-user) for usage examples.
+This service, automatically created by the AppService with the key `pod-outbox`, allows you to easily post as the Pod owner. See [this page](/app-framework/backend/posting-as-the-user) for usage examples.
 
 ## Actions
 

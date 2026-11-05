@@ -31,18 +31,11 @@ import { LoginPage } from '@activitypods/refine-antd';
 <Route path="/login" element={<LoginPage />} />;
 ```
 
-By default, it lists the [public Pod providers](https://activitypods.org/data/pod-providers) matching the current locale. You can change this with these props:
+By default, it lists the [public Pod providers](https://activitypods.org/data/pod-providers) matching the current locale. With the `defaultPodProvider` prop, it only offers the given Pod provider, which is useful for a local Pod provider in development. See the [reference](/reference/frontend/refine-antd/#loginpage) for the other props.
 
-| Prop                 | Description                                                                   |
-| -------------------- | ----------------------------------------------------------------------------- |
-| `defaultPodProvider` | Offer only this Pod provider (useful for a local Pod provider in development) |
-| `customPodProviders` | A list of `{ 'apods:baseUrl': string, 'apods:area'?: string }` objects        |
-| `redirect`           | Where to go once logged in. Defaults to `/`                                   |
-| `text`               | Text shown above the Pod providers                                            |
+The page also handles search params, for example `?signup` to go through the Pod provider's signup form or `?iss=<url>` to log in directly to a Pod provider. See the [list of search params](/reference/frontend/refine-hooks/#search-params).
 
-The page also handles these search params: `?signup` to go through the Pod provider's signup form, `?iss=<url>` to log in directly to a Pod provider, `?logout` to log out, and `?redirect=<path>`.
-
-To build a login page with another UI library, use the `useLoginFlow` hook of `@activitypods/refine-hooks`, which returns `{ isProcessing, error, podProviders, login, backToLogin }`.
+To build a login page with another UI library, use the [`useLoginFlow`](/reference/frontend/refine-hooks/#useloginflow) hook of `@activitypods/refine-hooks`.
 
 ## Background checks
 

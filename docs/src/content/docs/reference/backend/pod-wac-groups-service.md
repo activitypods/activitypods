@@ -2,7 +2,7 @@
 title: PodWacGroupsService
 ---
 
-This service, automatically created by the AppService with the key `pod-wac-groups`, allows you to manage WAC groups. See [this page](../../backend/handling-permissions) for usage examples.
+This service, automatically created by the AppService with the key `pod-wac-groups`, allows you to manage WAC groups. See [this page](/app-framework/backend/handling-permissions) for usage examples.
 
 ## Actions
 

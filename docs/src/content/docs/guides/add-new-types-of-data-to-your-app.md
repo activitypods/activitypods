@@ -46,7 +46,7 @@ This shape tree is automatically deployed to https://shapes.activitypods.org/sha
 
 Until we develop a nice frontend (and maybe a tool to automatically find the shape trees used by other applications), this is how you will find existing shape trees.
 
-If you have found a shape tree that meets your needs, you can skip directly to the [Declaring the app's access needs](#declaring-the-app-s-access-needs) section. Otherwise, please read on.
+If you have found a shape tree that meets your needs, you can skip directly to the [Declaring the app's access needs](#declaring-the-apps-access-needs) section. Otherwise, please read on.
 
 ## Creating new shape trees
 
@@ -136,7 +136,7 @@ With these few lines of code, your application is requesting read and write acce
 Stop and restart the application backend. It will automatically update itself with your new access needs. Now, when you open the application frontend, it will redirect you to an authorization screen asking if you agree to grant the application's new access needs.
 
 :::caution
-If you created a new ontology, there are a few more steps to follow. Please have a look at the [Adding a new ontology](#adding-a-new-ontology) appendix below before trying to register your application.
+If you created a new ontology, there are a few more steps to follow. Please have a look at the [Adding a new ontology](#appendix-adding-a-new-ontology) appendix below before trying to register your application.
 :::
 
 ## Configuring the frontend

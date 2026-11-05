@@ -45,7 +45,7 @@ export default dataProvider({
 
 Each profile includes a `describes` property with the WebID of the contact. Note that the user's own profile is in the same container.
 
-On the backend, you can get the WebIDs of the contacts with the [`PodCollectionsService`](/reference/pod-collections-service/):
+On the backend, you can get the WebIDs of the contacts with the [`PodCollectionsService`](/reference/backend/pod-collections-service/):
 
 ```js
 const { body: actor } = await ctx.call('pod-resources.get', { resourceUri: actorUri, actorUri });

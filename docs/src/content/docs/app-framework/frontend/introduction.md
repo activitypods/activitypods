@@ -20,6 +20,8 @@ yarn add @activitypods/refine-providers @activitypods/refine-hooks @activitypods
 
 If you prefer another UI library, you only need `@activitypods/refine-providers` and `@activitypods/refine-hooks`: the components of `@activitypods/refine-antd` are thin layers above the hooks.
 
+The API of each package is described in the Reference: [`refine-providers`](/reference/frontend/refine-providers/), [`refine-hooks`](/reference/frontend/refine-hooks/) and [`refine-antd`](/reference/frontend/refine-antd/).
+
 :::note
 Previous versions of the boilerplate used [React-Admin](https://marmelab.com/react-admin/) and [SemApps](https://semapps.org/docs/frontend) components. The ActivityPods components for React-Admin are still available in the `@activitypods/react-admin` package (formerly `@activitypods/react`), but new apps should use Refine.
 :::

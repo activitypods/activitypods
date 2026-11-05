@@ -2,7 +2,7 @@
 title: PodPermissionService
 ---
 
-This service, automatically created by the AppService with the key `pod-permissions`, allows you to manage WAC permissions on resources, containers and collections. See [this page](../../backend/handling-permissions) for usage examples.
+This service, automatically created by the AppService with the key `pod-permissions`, allows you to manage WAC permissions on resources, containers and collections. See [this page](/app-framework/backend/handling-permissions) for usage examples.
 
 ## Actions
 

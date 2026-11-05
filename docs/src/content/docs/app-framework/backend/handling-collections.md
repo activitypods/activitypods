@@ -25,7 +25,7 @@ const aliceFriendsCollectionUri = await ctx.call('pod-collections.createAndAttac
 });
 ```
 
-See the [this page`](/reference/pod-collections-service/#collection-options) for available collection options.
+See the [this page`](/reference/backend/pod-collections-service/#collection-options) for available collection options.
 
 ## Creating an ordered collection
 
@@ -46,7 +46,7 @@ await ctx.call('pod-collections.createAndAttach', {
 });
 ```
 
-See the [this page`](/reference/pod-collections-service/#collection-options) for available collection options.
+See the [this page`](/reference/backend/pod-collections-service/#collection-options) for available collection options.
 
 :::note
 The example above require the `apods:UpdateWebId` special right since you are modifying Alice webId.

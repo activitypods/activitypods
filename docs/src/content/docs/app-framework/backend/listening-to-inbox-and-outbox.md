@@ -4,13 +4,13 @@ sidebar:
   order: 3
 ---
 
-To listen to a Pod's inbox and outbox, applications can use [Solid Notifications](/design/live-update/#solid-notifications), and for backend-to-backend we recommend webhook subscriptions.
+To listen to a Pod's inbox and outbox, applications can use [Solid Notifications](/architecture/live-update/#solid-notifications), and for backend-to-backend we recommend webhook subscriptions.
 
 The mechanism for generating webhooks and subscribing to collections can be tedious, so fortunately we provide services and mixins that make this much easier.
 
 ## Watching for activities
 
-We provide a [`PodActivitiesWatcherService`](/reference/pod-activities-watcher-service). It will check for all users who have granted the `apods:ReadInbox' and `apods:ReadOutbox' special rights, and will automatically subscribe to webhooks.
+We provide a [`PodActivitiesWatcherService`](/reference/backend/pod-activities-watcher-service). It will check for all users who have granted the `apods:ReadInbox' and `apods:ReadOutbox' special rights, and will automatically subscribe to webhooks.
 
 Each service can monitor certain types of activity by calling the service's `watch` action like this:
 

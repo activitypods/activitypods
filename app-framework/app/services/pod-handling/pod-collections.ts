@@ -46,7 +46,7 @@ const PodCollectionsSchema = {
             },
             body: JSON.stringify({
               '@context': await ctx.call('jsonld.context.get'),
-              type: ordered ? 'OrderedCollection' : 'Collection',
+              type: ordered ? ['Collection', 'OrderedCollection'] : 'Collection',
               summary,
               'semapps:itemsPerPage': itemsPerPage,
               'semapps:dereferenceItems': dereferenceItems,

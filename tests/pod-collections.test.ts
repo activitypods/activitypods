@@ -90,6 +90,31 @@ describe('Test AS collections handling', () => {
     });
   });
 
+  test('Attach an ordered collection to Alice actor', async () => {
+    const orderedCollectionUri = await appServer.call('pod-collections.createAndAttach', {
+      resourceUri: alice.id,
+      attachPredicate: 'http://activitypods.org/ns/core#messages',
+      collectionOptions: {
+        ordered: true,
+        summary: 'Messages',
+        dereferenceItems: false
+      },
+      actorUri: alice.id
+    });
+
+    expect(orderedCollectionUri).not.toBeUndefined();
+
+    const { body: collection } = await appServer.call('pod-resources.get', {
+      resourceUri: orderedCollectionUri,
+      actorUri: alice.id
+    });
+
+    expect(collection).toMatchObject({
+      type: 'OrderedCollection',
+      summary: 'Messages'
+    });
+  });
+
   test('Add item to collection', async () => {
     await appServer.call('pod-collections.add', {
       collectionUri,

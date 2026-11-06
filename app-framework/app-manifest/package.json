@@ -1,0 +1,64 @@
+{
+  "name": "@activitypods/app-manifest",
+  "version": "2.3.2",
+  "private": false,
+  "type": "module",
+  "description": "Declare an ActivityPods app and its access needs, and generate its client ID document",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/assemblee-virtuelle/activitypods.git",
+    "directory": "app-framework/app-manifest"
+  },
+  "homepage": "https://activitypods.org",
+  "bin": {
+    "app-manifest": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "default": "./dist/vite.js"
+    },
+    "./client": {
+      "types": "./client.d.ts"
+    },
+    "./schema.json": "./schema.json"
+  },
+  "files": [
+    "dist",
+    "client.d.ts",
+    "schema.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "prepublishOnly": "yarn build",
+    "test": "node --test 'src/**/*.test.ts'",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "vite": ">=5"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.2",
+    "typescript": "^5.8.3",
+    "vite": "^5.4.21"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "author": "Virtual Assembly"
+}

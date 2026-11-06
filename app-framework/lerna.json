@@ -1,5 +1,5 @@
 {
   "version": "2.3.2",
   "npmClient": "yarn",
-  "packages": ["app", "react-admin", "refine-providers", "refine-hooks", "refine-antd"]
+  "packages": ["app", "app-manifest", "react-admin", "refine-providers", "refine-hooks", "refine-antd"]
 }

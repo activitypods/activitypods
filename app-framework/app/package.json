@@ -1,6 +1,6 @@
 {
   "name": "@activitypods/app",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "main": "./index.ts",
   "description": "Base services for ActivityPods backend apps",
   "license": "Apache-2.0",

@@ -111,7 +111,7 @@ You can add other constraints if you are familiar with [SHACL](https://fr.wikipe
 
 ## Declaring the app's access needs
 
-Now that you have a shape tree for `foaf:Project` resources, your application must declare this access need. Edit the `/backend/services/app.service.js` file and add an entry to the `accessNeeds.required` setting:
+Now that you have a shape tree for `foaf:Project` resources, your application must declare this access need. If your app has a backend, edit the `/backend/services/app.service.js` file and add an entry to the `accessNeeds.required` setting (without a backend, use [`npx app-manifest add`](/reference/frontend/app-manifest/#add) instead):
 
 ```js title="app.service.js" {7-10}
 module.exports = {

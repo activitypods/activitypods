@@ -6,6 +6,8 @@ sidebar:
 
 Application registration is a complex process [as can be read here](/architecture/application-interoperability/). Fortunately, we handle it behind the scene so you have nothing to do except configuring a few settings.
 
+If your app has no backend, these settings are declared in a file instead: see the guide [Create an app without a backend](/guides/create-an-app-without-a-backend/).
+
 ## `AppService`
 
 Here is an example of a configuration:

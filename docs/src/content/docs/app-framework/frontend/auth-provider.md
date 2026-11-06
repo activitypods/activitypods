@@ -21,6 +21,8 @@ export default authProvider({
 
 The `redirectUri` must be one of the `redirectUris` declared in the `oidc` settings of your backend's [AppService](../../backend/application-registration/).
 
+If your app has no backend, its client ID comes from [`@activitypods/app-manifest`](/guides/create-an-app-without-a-backend/).
+
 ## Login page
 
 The `LoginPage` component of `@activitypods/refine-antd` handles every step of the login: choice of the Pod provider, completion of the OIDC flow, and registration of the app. Mount it on the `redirectUri` route, outside of the authenticated routes:
@@ -63,8 +65,8 @@ const Layout = ({ children }) => {
 
 When you use this component, pass `appStatusCheckInterval: false` to the auth provider. Otherwise, the auth provider does a lighter check on its own: it only sends the user to the Pod provider if the access needs changed. The `useBackgroundChecks` hook lets you implement your own component.
 
-:::caution[Apps without backend]
-For apps without backend, the Pod provider detects that the access needs changed by comparing the `dc:modified` property of the app description (`app.json`) with the one it saw when the user registered the app. This property must be typed as `xsd:dateTime` in your JSON-LD context, and written without fractional seconds (`2026-08-05T00:00:00Z`). Only change it when the access needs change, otherwise all users will be asked again to grant them.
+:::note[Apps without backend]
+The Pod provider detects that the access needs changed when the URIs of the access need groups change. If you use [`@activitypods/app-manifest`](/reference/frontend/app-manifest/), this is handled for you, as these URIs depend on the content of the groups.
 :::
 
 ## Identity

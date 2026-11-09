@@ -28,30 +28,4 @@ We do not support yet the [ACP specification](https://solid.github.io/authorizat
 
 **Added in:** `activitypods@2.2`
 
-We support capabilities based on Verifiable Credentials. For example, you can issue capabilities to read and write ACL-controlled resources and to perform certain types of ActivityPub activities (if the activity handler supports it).
-The VC API is available at `/alice/vc/v0.3`. See the [SemApps documentation](https://semapps.org/docs/middleware/crypto/verifiable-credentials) for more details.
-
-For example, the contact links of the Pod provider frontend are capabilities issued by the user. They allow their holder to read the user's private profile and to send them a contact request, which will be automatically accepted:
-
-```json
-{
-  "type": "VerifiableCredential",
-  "name": "Invite Link",
-  "credentialSubject": {
-    "apods:hasActivityGrant": {
-      "type": "as:Offer",
-      "as:to": { "@id": "https://mypod.store/alice" },
-      "as:target": { "@id": "https://mypod.store/alice" },
-      "as:object": {
-        "type": "as:Add",
-        "as:object": { "type": "as:Profile" }
-      }
-    },
-    "apods:hasAuthorization": {
-      "type": "acl:Authorization",
-      "acl:mode": "acl:Read",
-      "acl:accessTo": { "@id": "https://mypod.store/alice/data/73582847-1b89-4501-ab61-8f810e8c7178" }
-    }
-  }
-}
-```
+Users can issue capabilities as Verifiable Credentials, to give read access to some resources, or to allow certain types of activities to be sent to them. The contact links of the Pod provider frontend work this way. See [Verifiable Credentials](/architecture/verifiable-credentials/#capabilities).

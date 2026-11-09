@@ -1,5 +1,5 @@
 import rdf from '@rdfjs/data-model';
-import { ControlledContainerMixin, arrayOf, getId, getSlugFromUri } from '@semapps/ldp';
+import { ControlledContainerMixin, arrayOf, getDatasetFromUri, getId, getSlugFromUri } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema } from 'moleculer';
 
@@ -24,7 +24,12 @@ const RoleRegistrationsSchema = {
         const containerUri = await this.actions.getContainerUri({ webId: groupWebId }, { parentCtx: ctx });
         await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
-        const specialRights = ['interop:ReadMembers', 'interop:ManageMembers', 'interop:ManageRoles'];
+        const specialRights = [
+          'interop:ReadMembers',
+          'interop:ManageMembers',
+          'interop:ManageRoles',
+          'interop:ManageAccess'
+        ];
 
         await this.actions.createRole(
           {
@@ -94,6 +99,7 @@ const RoleRegistrationsSchema = {
         );
 
         await ctx.call('role-registry.add', { podOwner: groupWebId, roleRegistrationUri });
+        await this.actions.syncWacGroups({ groupWebId }, { parentCtx: ctx });
 
         return roleRegistrationUri;
       }
@@ -112,6 +118,13 @@ const RoleRegistrationsSchema = {
           },
           { parentCtx: ctx }
         );
+
+        if (role['interop:extendsRole'] !== undefined) {
+          await this.actions.syncWacGroups(
+            { groupWebId: roleRegistration['interop:registeredBy'] },
+            { parentCtx: ctx }
+          );
+        }
       }
     },
 
@@ -141,6 +154,53 @@ const RoleRegistrationsSchema = {
 
         await ctx.call('role-registry.remove', { podOwner: groupWebId, roleRegistrationUri: resourceUri });
         await this.actions.delete({ resourceUri, webId: 'system' }, { parentCtx: ctx });
+
+        await ctx.call(
+          'webacl.group.delete',
+          { groupUri: await this.getWacGroupUri(ctx, groupWebId, resourceUri), webId: 'system' },
+          { meta: { dataset: getDatasetFromUri(groupWebId) } }
+        );
+        await this.actions.syncWacGroups({ groupWebId }, { parentCtx: ctx });
+      }
+    },
+
+    getWacGroupUri: {
+      async handler(ctx) {
+        const { groupWebId, roleRegistrationUri } = ctx.params;
+        return this.getWacGroupUri(ctx, groupWebId, roleRegistrationUri);
+      }
+    },
+
+    syncWacGroups: {
+      // Each role has a WAC group with its effective members, used to give rights to the role
+      async handler(ctx) {
+        const { groupWebId } = ctx.params;
+        const meta = { dataset: getDatasetFromUri(groupWebId) };
+        const roles = await this.actions.listForGroup({ groupWebId }, { parentCtx: ctx });
+        const effectiveMembers = this.getEffectiveMembers(roles);
+
+        for (const role of roles) {
+          const groupUri = await this.getWacGroupUri(ctx, groupWebId, getId(role));
+          let currentMembers: string[] = [];
+
+          if (await ctx.call('webacl.group.exist', { groupUri, webId: 'system' }, { meta })) {
+            currentMembers = await ctx.call('webacl.group.getMembers', { groupUri, webId: 'system' }, { meta });
+          } else {
+            await ctx.call('webacl.group.create', { groupUri, webId: groupWebId }, { meta });
+          }
+
+          const members = effectiveMembers.get(getId(role))!;
+          for (const memberUri of members) {
+            if (!currentMembers.includes(memberUri)) {
+              await ctx.call('webacl.group.addMember', { groupUri, memberUri, webId: 'system' }, { meta });
+            }
+          }
+          for (const memberUri of currentMembers) {
+            if (!members.has(memberUri)) {
+              await ctx.call('webacl.group.removeMember', { groupUri, memberUri, webId: 'system' }, { meta });
+            }
+          }
+        }
       }
     },
 
@@ -224,6 +284,11 @@ const RoleRegistrationsSchema = {
     }
   },
   methods: {
+    async getWacGroupUri(ctx, groupWebId, roleRegistrationUri) {
+      return await ctx.call('webacl.group.getUri', {
+        groupSlug: `${new URL(groupWebId).pathname}/roles/${getSlugFromUri(roleRegistrationUri)}`
+      });
+    },
     getEffectiveMembers(roles: any[]) {
       const members = new Map<string, Set<string>>(
         roles.map(role => [getId(role), new Set(arrayOf(role['interop:hasMember']))])
@@ -288,6 +353,8 @@ const RoleRegistrationsSchema = {
         },
         { parentCtx: ctx }
       );
+
+      await this.actions.syncWacGroups({ groupWebId: roleRegistration['interop:registeredBy'] }, { parentCtx: ctx });
     }
   }
 } satisfies ServiceSchema;

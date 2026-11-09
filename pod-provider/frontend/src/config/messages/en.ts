@@ -70,6 +70,7 @@ export default {
       ReadMembers: 'See the members',
       ManageMembers: 'Add and remove members',
       ManageRoles: 'Manage roles',
+      ManageAccess: 'Share the group data',
       ChangeJoinPolicy: 'Change the join policy'
     },
     join_policy: {

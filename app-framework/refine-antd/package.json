@@ -1,0 +1,63 @@
+{
+  "name": "@activitypods/refine-antd",
+  "version": "2.3.2",
+  "type": "module",
+  "description": "Ant Design components for ActivityPods apps built with Refine",
+  "license": "Apache-2.0",
+  "author": "Virtual Assembly",
+  "homepage": "https://activitypods.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/assemblee-virtuelle/activitypods.git",
+    "directory": "app-framework/refine-antd"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "targets": {
+    "index": {
+      "source": "src/index.ts",
+      "distDir": "dist",
+      "context": "browser",
+      "outputFormat": "esmodule",
+      "isLibrary": true,
+      "includeNodeModules": false,
+      "sourceMap": true
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rm -rf dist .parcel-cache && parcel build && tsc -p tsconfig.build.json && yalc publish --push --changed",
+    "watch": "concurrently -n parcel,tsc -c blue,yellow \"parcel watch --no-cache\" \"tsc -p tsconfig.build.json --watch --preserveWatchOutput\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@activitypods/refine-hooks": "2.3.2"
+  },
+  "peerDependencies": {
+    "@ant-design/icons": "^5.5.1",
+    "@refinedev/core": "^5.0.12",
+    "antd": "^5.23.0",
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@ant-design/icons": "^5.5.1",
+    "@refinedev/core": "^5.0.12",
+    "@types/react": "^19.1.0",
+    "antd": "^5.23.0",
+    "concurrently": "^10.0.3",
+    "react": "^19.1.0",
+    "typescript": "^5.8.3",
+    "yalc": "^1.0.0-pre.53"
+  }
+}

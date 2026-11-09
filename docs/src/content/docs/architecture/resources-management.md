@@ -10,7 +10,7 @@ Each Solid Pod must comply with the [Linked Data Platform](https://www.w3.org/TR
 
 ### Formats
 
-We support mainly the JSON-LD format. Turtle support is very weak, but will fixed in 2025.
+We support mainly the JSON-LD format. Turtle is also supported, but it is less used and tested.
 
 ### Containers
 
@@ -36,7 +36,7 @@ LDP resources and containers can be selectively modified using the HTTP `PATCH` 
 
 Initially, the recommended method for Solid servers was [SparqlPatch](http://www.w3.org/2001/sw/wiki/SparqlPatch) and this is what we implemented. In [2021](https://github.com/solid/specification/issues/332), it was switched to a new N3 Patch method, as described in the [Solid spec](https://solid.github.io/specification/protocol#writing-resources).
 
-We plan to support N3 Patch in 2025.
+We don't support N3 Patch yet.
 
 ##### SparqlPatch update to modify a LDP resource.
 
@@ -62,13 +62,32 @@ INSERT DATA { <http://mypod.store/alice/data/events> ldp:contains <http://url/of
 DELETE DATA { <http://mypod.store/alice/data/events> ldp:contains <http://url/of/resource/to/detach>. };
 ```
 
-#### LDP Prefer header
+### Containers paging, sorting and filtering
 
-👷 To be implemented. ([#1168](https://github.com/assemblee-virtuelle/semapps/issues/1168))
+Containers support the following [`Prefer`](https://www.w3.org/TR/ldp/#prefer-parameters) header parameters, which can be combined:
 
-#### LDP paging
+- `return=representation; include="http://www.w3.org/ns/ldp#PreferMinimalContainer"`: Only return the URIs of the contained resources, not their content.
+- `max-member-count="20"`: Paginate the container, as described in the [LDP Paging](https://www.w3.org/TR/ldp-paging/) specification. If no `page` query parameter is provided, the server redirects to the first page. The `first`, `prev`, `next` and `last` pages are returned in the `Link` header.
+- `sort-predicate="as:published"; sort-order="DESC"`: Sort the contained resources. The order can be `ASC` (default) or `DESC`.
 
-👷 To be implemented. ([#176](https://github.com/assemblee-virtuelle/semapps/issues/176))
+When some parameters were applied, they are returned in the `Preference-Applied` header.
+
+```
+GET /alice/data/as/event?page=2 HTTP/1.1
+Host: mypod.store
+Prefer: return=representation; max-member-count="20"; sort-predicate="as:startTime"; sort-order="DESC"
+```
+
+The following query parameters can be used to filter the contained resources:
+
+- `q`: Keywords to search in the literals of the resources (case-insensitive and accent-insensitive).
+- `q-predicate`: Only search in this predicate. Can be repeated.
+- `near` and `radius`: Only keep the resources whose `vcard:hasGeo` is less than `radius` km from the `near` point (`latitude,longitude`). Resources without location are kept.
+
+```
+GET /alice/data/as/event?q=party&q-predicate=as:name&near=48.85,2.35&radius=10 HTTP/1.1
+Host: mypod.store
+```
 
 ## Collections
 
@@ -106,7 +125,7 @@ There are [discussions in the fediverse](https://socialhub.activitypub.rocks/t/f
 
 ### Add or remove items
 
-It's possible to add items to (or remove items from) a collection using the [SparqlPatch](solid.mdx#patch-method) method, the `application/sparql-update` Content-Type and a SPARQL query like this on the body:
+It's possible to add items to (or remove items from) a collection using the [SparqlPatch](#patch-method) method, the `application/sparql-update` Content-Type and a SPARQL query like this on the body:
 
 ```sparql
 PREFIX as: <https://www.w3.org/ns/activitystreams#>
@@ -120,7 +139,7 @@ DELETE DATA {
 
 ## SPARQL endpoint
 
-Even though it is not required anymore by the Solid spec, every Pod comes with an SPARQL endpoint, linked to the WebID with the `void:sparqlEndpoint` predicate.
+Even though it is not required anymore by the Solid spec, every Pod comes with an SPARQL endpoint, linked to the WebID with the `void:sparqlEndpoint` predicate. Applications must request the `apods:QuerySparqlEndpoint` special right to use it.
 
 Only SPARQL _queries_ are supported, not [SPARQL _updates_](https://www.w3.org/TR/sparql11-update/) (You MUST use LDP or ActivityPub to modify data).
 WAC permissions are applied to all SPARQL queries, in order to return only the resources that the autenticated user or application has the right to see.

@@ -1,0 +1,26 @@
+---
+title: Standards support
+sidebar:
+  order: 0
+---
+
+ActivityPods is built on open standards from the Solid and ActivityPub ecosystems. The table below summarizes what is supported by Pod providers. See the other pages of this section for more details.
+
+| Standard                                                                                                                   | Support    | Notes                                                                                                                                        |
+| -------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ActivityPub](https://www.w3.org/TR/activitypub/)                                                                          | ✅ Yes     | Client-to-server and server-to-server. The [proxy endpoint](/architecture/authentication/#proxy-endpoint) is extended to all HTTP methods.   |
+| [Webfinger](https://www.rfc-editor.org/rfc/rfc7033)                                                                        | ✅ Yes     | See [Identity](/architecture/identity/#webfinger).                                                                                           |
+| [HTTP Signatures](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures)                                      | ✅ Yes     | Cavage draft, as used in the Fediverse. Accepted on all endpoints, not only inboxes.                                                         |
+| [Linked Data Signatures](https://www.w3.org/wiki/SocialCG/ActivityPub/Authentication_Authorization#Linked_Data_Signatures) | ❌ No      |                                                                                                                                              |
+| [Nodeinfo](https://nodeinfo.diaspora.software/)                                                                            | ✅ Yes     | Version 2.1.                                                                                                                                 |
+| [Linked Data Platform](https://www.w3.org/TR/ldp/)                                                                         | 🟡 Partial | Basic containers only. Binaries are supported. See [Resources management](/architecture/resources-management/).                              |
+| [LDP Paging](https://www.w3.org/TR/ldp-paging/)                                                                            | ✅ Yes     | With additional sorting and filtering. See [Containers paging](/architecture/resources-management/#containers-paging-sorting-and-filtering). |
+| [Solid Protocol](https://solidproject.org/TR/protocol)                                                                     | 🟡 Partial | No N3 Patch (SPARQL Update is supported), no `WAC-Allow` header.                                                                             |
+| [Solid-OIDC](https://solidproject.org/TR/oidc)                                                                             | 🟡 Partial | No DPoP. See [Authentication](/architecture/authentication/#solid-oidc).                                                                     |
+| [Web Access Control](https://solid.github.io/web-access-control-spec/)                                                     | ✅ Yes     | Except the `WAC-Allow` header.                                                                                                               |
+| [Access Control Policy](https://solid.github.io/authorization-panel/acp-specification/)                                    | ❌ No      |                                                                                                                                              |
+| [Solid Application Interoperability](https://solid.github.io/data-interoperability-panel/specification)                    | 🟡 Partial | Without Data Authorizations and Data Grants. See [Application interoperability](/architecture/application-interoperability/).                |
+| [Type Indexes](https://github.com/solid/type-indexes)                                                                      | ✅ Yes     | Public and private. Uses a custom predicate to link the registrations.                                                                       |
+| [Solid Notifications](https://solid.github.io/notifications/protocol)                                                      | ✅ Yes     | `WebSocketChannel2023` and `WebhookChannel2023`. See [Live update](/architecture/live-update/).                                              |
+| [Verifiable Credentials](https://www.w3.org/TR/vc-data-model-2.0/)                                                         | ✅ Yes     | VC API v0.3, `eddsa-rdfc-2022` cryptosuite. See [Authorization](/architecture/authorization/#capabilities-with-verifiable-credentials).      |
+| [WebID-TLS](https://www.w3.org/2005/Incubator/webid/spec/tls/)                                                             | ❌ No      | Not planned.                                                                                                                                 |

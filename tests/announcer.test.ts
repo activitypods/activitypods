@@ -97,6 +97,13 @@ describe('Test sharing through announcer', () => {
       ).resolves.toBeTruthy();
     });
 
+    // The grant with the delegation right is stored in Bob storage
+    await waitForExpect(async () => {
+      await expect(bob.call('access-grants.getByResourceUri', { resourceUri: eventUri })).resolves.toMatchObject({
+        'interop:delegationAllowed': true
+      });
+    });
+
     // Bob can fetch Alice event
     await waitForExpect(async () => {
       await expect(

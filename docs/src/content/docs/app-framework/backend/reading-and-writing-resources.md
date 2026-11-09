@@ -8,7 +8,7 @@ Writing and reading resources on the user's Pod is easy thanks to the [LDP speci
 
 ## Reading and writing resources
 
-If you need to read or write data to the Pod, you can use the [`PodResourcesService`](/reference/pod-resources-service/).
+If you need to read or write data to the Pod, you can use the [`PodResourcesService`](/reference/backend/pod-resources-service/).
 
 ```js
 const resourceUri = await ctx.call('pod-resources.post`, {
@@ -26,10 +26,10 @@ const { body: resource } = await ctx.call('pod-resources.get`, {
 });
 ```
 
-See the [`PodResourcesService`](/reference/pod-resources-service/) reference for all available actions.
+See the [`PodResourcesService`](/reference/backend/pod-resources-service/) reference for all available actions.
 
 :::tip[Remote resources]
-If the resources you want to fetch is not in the Pod of the user (`actorUri`) but on another Pod, the service will automatically pass through the [proxy endpoint](../design/authentication.md#proxy-endpoint) of the user. However the proxy endpoint will only allow you to read or write data that you requested during the registration.
+If the resources you want to fetch is not in the Pod of the user (`actorUri`) but on another Pod, the service will automatically pass through the [proxy endpoint](/architecture/authentication/#proxy-endpoint) of the user. However the proxy endpoint will only allow you to read or write data that you requested during the registration.
 :::
 
 ### Creating a dedicated service
@@ -47,11 +47,11 @@ module.exports = {
   }
 ```
 
-The `shapeTreeUri` must match a shape tree for which you requested access in the [application registration](../application-registration.md).
+The `shapeTreeUri` must match a shape tree for which you requested access in the [application registration](/app-framework/backend/application-registration/).
 
 ## Listening to resources changes
 
-The `PodResourcesHandlerMixin` can also be used to listen for changes in the Pod. If you set the `onCreate`, `onUpdate`, or `onDelete` methods, the mixin will automatically watch for `Create`, `Update`, and `Delete` activities related to these resources, thanks to the [`PodActivitiesWatcherService`](listening-to-inbox-and-outbox.md#podactivitieswatcherservice).
+The `PodResourcesHandlerMixin` can also be used to listen for changes in the Pod. If you set the `onCreate`, `onUpdate`, or `onDelete` methods, the mixin will automatically watch for `Create`, `Update`, and `Delete` activities related to these resources, thanks to the [`PodActivitiesWatcherService`](/reference/backend/pod-activities-watcher-service/).
 
 ```js
 const { triple, namedNode, literal } = require('@rdfjs/data-model');

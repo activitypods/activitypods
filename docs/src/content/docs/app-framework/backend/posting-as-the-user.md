@@ -11,7 +11,7 @@ Applications can post to the user's outbox as if they were the user. This can be
 You can use the `post` action of the `PodOutboxService` which is automatically created for every application.
 
 ```js
-const activityUri = await ctx.call('pod-outbox.send', {
+const activityUri = await ctx.call('pod-outbox.post', {
   activity: {
     type: 'Accept',
     object: 'http://localhost:3000/bob/eba0227a-3bbb-4582-b879'

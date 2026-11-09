@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ActivityPods app manifest",
+  "type": "object",
+  "required": ["name", "description", "accessNeeds"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": { "type": "string", "minLength": 1 },
+    "description": {
+      "description": "A string, or an object with one description per language",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } }
+      ]
+    },
+    "author": { "type": "string", "description": "URI of the app's author" },
+    "thumbnail": { "type": "string", "description": "URL, or path relative to the app" },
+    "tosUri": { "type": "string", "description": "URL of the terms of service" },
+    "supportedLocales": { "type": "array", "items": { "type": "string" } },
+    "accessNeeds": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": { "$ref": "#/definitions/accessNeeds" },
+        "optional": { "$ref": "#/definitions/accessNeeds" }
+      }
+    }
+  },
+  "definitions": {
+    "accessNeeds": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "enum": [
+              "apods:ReadInbox",
+              "apods:ReadOutbox",
+              "apods:PostOutbox",
+              "apods:QuerySparqlEndpoint",
+              "apods:CreateWacGroup",
+              "apods:CreateCollection",
+              "apods:UpdateWebId"
+            ]
+          },
+          {
+            "type": "object",
+            "required": ["shapeTreeUri", "accessMode"],
+            "additionalProperties": false,
+            "properties": {
+              "shapeTreeUri": { "type": "string", "format": "uri" },
+              "accessMode": {
+                "oneOf": [
+                  { "$ref": "#/definitions/accessMode" },
+                  { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/accessMode" } }
+                ]
+              },
+              "preferredScope": { "type": "string" }
+            }
+          }
+        ]
+      }
+    },
+    "accessMode": { "enum": ["acl:Read", "acl:Write", "acl:Append", "acl:Control"] }
+  }
+}

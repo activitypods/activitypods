@@ -151,7 +151,7 @@ const AccessNeedsList = ({ accessNeeds, required, allowedAccessNeeds, setAllowed
                 typeof label === 'string'
                   ? label
                   : translate('app.authorization.toggle_permission', {
-                      permission: accessNeed['apods:registeredClass'] || accessNeed
+                      permission: accessNeed['interop:registeredShapeTree'] || accessNeed
                     })
               }
             />

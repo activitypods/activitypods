@@ -4,11 +4,11 @@ sidebar:
   order: 5
 ---
 
-In Solid, permissions are handled through a standard called [Web Access Control](../../architecture/authorization.md#web-access-control-wac) (or WAC).
+In Solid, permissions are handled through a standard called [Web Access Control](/architecture/authorization/#web-access-control-wac) (or WAC).
 
 ## Adding or removing WAC permissions
 
-To add or remove permissions from a Pod, the app can use the [`PodPermissionsService`](../../reference/pod-permissions-service).
+To add or remove permissions from a Pod, the app can use the [`PodPermissionsService`](/reference/backend/pod-permissions-service).
 
 ```js
 await ctx.call('pod-permissions.add', {
@@ -28,7 +28,7 @@ Your application must have requested the `acl:Control` access need for the resou
 
 ## Creating WAC groups
 
-The [`PodWacGroupsService`](../../reference/pod-wac-groups-service) allows you to create or delete WAC groups, as well as add or remove members from these groups.
+The [`PodWacGroupsService`](/reference/backend/pod-wac-groups-service) allows you to create or delete WAC groups, as well as add or remove members from these groups.
 
 ```js
 const groupUri = await ctx.call('pod-wac-groups.create', {

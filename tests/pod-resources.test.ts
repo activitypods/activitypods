@@ -122,6 +122,19 @@ describe('Test Pod resources handling', () => {
     });
   });
 
+  test('Post a resource and get its URI', async () => {
+    const resourceUri = await appServer.call('pod-resources.post', {
+      containerUri: urlJoin(alice.id, 'data/as/event'),
+      resource: {
+        type: 'Event',
+        name: 'Picnic'
+      },
+      actorUri: alice.id
+    });
+
+    expect(resourceUri).toMatch(new RegExp(`^${urlJoin(alice.id, 'data')}`));
+  });
+
   test('Cannot post to non-container', async () => {
     await expect(
       appServer.call('pod-resources.post', {
@@ -241,7 +254,7 @@ describe('Test Pod resources handling', () => {
           rdf.quad(
             rdf.namedNode(bobEventUri),
             rdf.namedNode('https://www.w3.org/ns/activitystreams#summary'),
-            literal('A super-powerful AI-generated summary')
+            rdf.literal('A super-powerful AI-generated summary')
           )
         ],
         actorUri: alice.id

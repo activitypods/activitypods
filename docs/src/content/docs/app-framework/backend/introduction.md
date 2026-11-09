@@ -21,4 +21,4 @@ We use [SemApps](https://semapps.org), which itself rely on the [Moleculer](http
 
 ## Developing with other languages
 
-Since we are using documented standards and protocols, you can use any language you want to create your backend. In that case, you should have a look at the [design section](../../architecture/overall-architecture/) to know about these standards. But if you want to quickly try ActivityPods, we would recommend to test our built-in components.
+Since we are using documented standards and protocols, you can use any language you want to create your backend. In that case, you should have a look at the [key concepts](/key-concepts/) and [architecture](/architecture/application-interoperability/) pages to know about these standards. But if you want to quickly try ActivityPods, we would recommend to test our built-in components.

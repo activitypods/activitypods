@@ -135,6 +135,62 @@ const AnnouncerSchema = {
       }
     },
 
+    storeAnnouncedResource: {
+      // Store locally the announced resource, and attach it to the containers of its types
+      async handler(ctx) {
+        const { resourceUri, recipientUri } = ctx.params;
+
+        // Sometimes a recipient may be the original announcer
+        // So ensure this is a remote resource before storing it locally
+        if (!resourceUri.startsWith(urlJoin(recipientUri, '/'))) {
+          // Get the latest version of the resource and store it locally
+          const resource = await ctx.call('ldp.remote.store', {
+            resourceUri,
+            webId: recipientUri
+          });
+
+          const expandedTypes = await ctx.call('jsonld.parser.expandTypes', {
+            types: resource['@type'] || resource.type
+          });
+
+          // Go through all the resource's types and attach it to the corresponding container
+          for (const expandedType of expandedTypes) {
+            let containersUris = await ctx.call('type-registrations.findContainersUris', {
+              type: expandedType,
+              webId: recipientUri
+            });
+
+            // If no container exist yet for this type, create it and register it in the TypeIndex
+            if (containersUris.length === 0) {
+              // Generate a path for the new container
+              const containerPath = await ctx.call('ldp.container.getPath', { resourceType: expandedType });
+              this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${expandedType}`);
+
+              // Create the container and attach it to its parent(s)
+              const podUrl = await ctx.call('solid-storage.getUrl', { webId: recipientUri });
+              containersUris[0] = urlJoin(podUrl, containerPath);
+              await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId: recipientUri });
+
+              // If the resource type is invalid, an error will be thrown here
+              await ctx.call('type-registrations.register', {
+                types: [expandedType],
+                containerUri: containersUris[0],
+                webId: recipientUri
+              });
+            }
+
+            for (const containerUri of containersUris) {
+              await ctx.call('ldp.container.attach', {
+                containerUri,
+                resourceUri,
+                webId: recipientUri
+              });
+            }
+          }
+        }
+      }
+    },
+
     updateCollectionsOptions: {
       async handler(ctx) {
         const { dataset } = ctx.params;
@@ -282,56 +338,7 @@ const AnnouncerSchema = {
       async onReceive(ctx: any, activity: any, recipientUri: any) {
         const resourceUri = typeof activity.object === 'string' ? activity.object : activity.object.id;
 
-        // Sometimes a recipient may be the original announcer
-        // So ensure this is a remote resource before storing it locally
-        if (!resourceUri.startsWith(urlJoin(recipientUri, '/'))) {
-          // Get the latest version of the resource and store it locally
-          const resource = await ctx.call('ldp.remote.store', {
-            resourceUri,
-            webId: recipientUri
-          });
-
-          const expandedTypes = await ctx.call('jsonld.parser.expandTypes', {
-            types: resource['@type'] || resource.type
-          });
-
-          // Go through all the resource's types and attach it to the corresponding container
-          for (const expandedType of expandedTypes) {
-            let containersUris = await ctx.call('type-registrations.findContainersUris', {
-              type: expandedType,
-              webId: recipientUri
-            });
-
-            // If no container exist yet for this type, create it and register it in the TypeIndex
-            if (containersUris.length === 0) {
-              // Generate a path for the new container
-              const containerPath = await ctx.call('ldp.container.getPath', { resourceType: expandedType });
-              // @ts-expect-error TS(2339): Property 'logger' does not exist on type '{ match(... Remove this comment to see the full error message
-              this.logger.debug(`Automatically generated the path ${containerPath} for resource type ${expandedType}`);
-
-              // Create the container and attach it to its parent(s)
-              const podUrl = await ctx.call('solid-storage.getUrl', { webId: recipientUri });
-              containersUris[0] = urlJoin(podUrl, containerPath);
-              await ctx.call('ldp.container.createAndAttach', { containerUri: containersUris[0], webId: recipientUri });
-
-              // If the resource type is invalid, an error will be thrown here
-              // @ts-expect-error TS(2339): Property 'broker' does not exist on type '{ match(... Remove this comment to see the full error message
-              await this.broker.call('type-registrations.register', {
-                types: [expandedType],
-                containerUri: containersUris[0],
-                webId: recipientUri
-              });
-            }
-
-            for (const containerUri of containersUris) {
-              await ctx.call('ldp.container.attach', {
-                containerUri,
-                resourceUri,
-                webId: recipientUri
-              });
-            }
-          }
-        }
+        await ctx.call('announcer.storeAnnouncedResource', { resourceUri, recipientUri });
       }
     }
   },

@@ -40,7 +40,7 @@ const PodResourcesSchema = {
         });
 
         if (ok) {
-          return headers.get('Location');
+          return headers.location;
         } else {
           return false;
         }

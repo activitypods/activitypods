@@ -4,7 +4,9 @@ sidebar:
   order: 1
 ---
 
-Application registration is a complex process [as can be read here](../../architecture/application-interoperability/). Fortunately, we handle it behind the scene so you have nothing to do except configuring a few settings.
+Application registration is a complex process [as can be read here](/architecture/application-interoperability/). Fortunately, we handle it behind the scene so you have nothing to do except configuring a few settings.
+
+If your app has no backend, these settings are declared in a file instead: see the guide [Create an app without a backend](/guides/create-an-app-without-a-backend/).
 
 ## `AppService`
 
@@ -23,7 +25,7 @@ module.exports = {
     },
     oidc: {
       clientUri: 'https://example.app',
-      redirectUris: 'https://example.app/auth-callback',
+      redirectUris: 'https://example.app/login',
       postLogoutRedirectUris: 'https://example.app/login?logout=true',
       tosUri: 'https://example.app/termes-of-services'
     },
@@ -62,7 +64,7 @@ The `app` part of the setting allow you to describe your application. These info
 ActivityPods integrate a full OIDC provider. To register your application with this provider, it needs a few informations:
 
 - `clientUri`: The frontend URL
-- `redirectUris`: The URL to redirect after login. If you use React-Admin, it will usually be `/auth-callback`
+- `redirectUris`: The URL to redirect after login. With the [Refine auth provider](../../frontend/auth-provider/), it is `/login` by default
 - `postLogoutRedirectUris`: The URL to redirect after logout. This URL should delete any token.
 - `tosUri`: The URL to your terms of service (not used for now)
 
@@ -87,3 +89,4 @@ The following special rights are allowed:
 - `apods:CreateWacGroup`: permission to [create WAC groups](../handling-permissions/#creating-wac-groups)
 - `apods:CreateCollection`: permission to [create custom collections](../handling-collections/)
 - `apods:UpdateWebId`: permission to update the Pod's owner [WebID](/architecture/identity/#webid)
+- `apods:QuerySparqlEndpoint`: permission to query the user's [SPARQL endpoint](/architecture/resources-management/#sparql-endpoint)

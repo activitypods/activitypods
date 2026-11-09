@@ -4,8 +4,24 @@ sidebar:
   order: 0
 ---
 
-Although you can use any framework to build an ActivityPods-compatible application, [SemApps](https://semapps.org) provide React components and hooks to facilitate frontend development.
+Although you can use any framework to build an ActivityPods-compatible application, we provide packages to make it easier with [Refine](https://refine.dev), a React framework for data-intensive applications. Refine handles data fetching, caching (with [TanStack Query](https://tanstack.com/query/latest/)), forms and routing, and leaves you free to choose your UI library.
 
-SemApps rely on the excellent [React-Admin framework](https://marmelab.com/react-admin/), which in turn relies on high-quality libraries such as [MUI](https://mui.com/) and [TanStack Query](https://tanstack.com/query/latest/). React-Admin makes it very easy to manage data display, as well as forms. Initially designed as a tool to create admin frontends, it is flexible enough to handle any kind of application.
+| Package                          | Content                                                                                                  |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `@activitypods/refine-providers` | The [auth provider](../auth-provider/) and the [data provider](../data-provider/), with no UI            |
+| `@activitypods/refine-hooks`     | React hooks to handle the login flow, the app status and [ActivityPub collections](../inbox-and-outbox/) |
+| `@activitypods/refine-antd`      | Ready-made components (login page, background checks) for [Ant Design](https://ant.design)               |
 
-Note that the [data provider](../data-provider/) supplied by SemApps can be used outside React-Admin. We've managed to use it with [Astro](https://astro.build), for example.
+The [app boilerplate](https://github.com/activitypods/app-boilerplate) uses these three packages, with Ant Design. If your app doesn't need a backend, follow the guide [Create an app without a backend](/guides/create-an-app-without-a-backend/), or have a look at the [frontend-only example app](https://github.com/activitypods/frontend-only-example-app).
+
+```bash
+yarn add @activitypods/refine-providers @activitypods/refine-hooks @activitypods/refine-antd
+```
+
+If you prefer another UI library, you only need `@activitypods/refine-providers` and `@activitypods/refine-hooks`: the components of `@activitypods/refine-antd` are thin layers above the hooks.
+
+The API of each package is described in the Reference: [`refine-providers`](/reference/frontend/refine-providers/), [`refine-hooks`](/reference/frontend/refine-hooks/) and [`refine-antd`](/reference/frontend/refine-antd/). Apps without a backend also use [`app-manifest`](/reference/frontend/app-manifest/).
+
+:::note
+Previous versions of the boilerplate used [React-Admin](https://marmelab.com/react-admin/) and [SemApps](https://semapps.org/docs/frontend) components. The ActivityPods components for React-Admin are still available in the `@activitypods/react-admin` package (formerly `@activitypods/react`), but new apps should use Refine.
+:::

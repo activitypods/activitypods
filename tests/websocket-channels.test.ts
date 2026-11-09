@@ -13,7 +13,12 @@ const APP_SERVER_BASE_URL = 'http://localhost:3001';
 const APP_URI = urlJoin(APP_SERVER_BASE_URL, 'app');
 
 describe('Websocket channel', () => {
-  let podProvider: any, alice: any, appServer: any, webSocketChannelSubscriptionUrl: any;
+  let podProvider: any,
+    alice: any,
+    aliceToken: any,
+    bobWebId: any,
+    appServer: any,
+    webSocketChannelSubscriptionUrl: any;
 
   beforeAll(async () => {
     await clearAllData();
@@ -24,7 +29,8 @@ describe('Websocket channel', () => {
     await appServer.start();
 
     const actorData = require(`./data/actor1.json`);
-    const { webId } = await podProvider.call('auth.signup', actorData);
+    const { webId, token } = await podProvider.call('auth.signup', actorData);
+    aliceToken = token;
     alice = await podProvider.call(
       'activitypub.actor.awaitCreateComplete',
       {
@@ -40,6 +46,14 @@ describe('Websocket channel', () => {
       });
 
     await installApp(alice, APP_URI);
+
+    const bobData = require(`./data/actor2.json`);
+    ({ webId: bobWebId } = await podProvider.call('auth.signup', bobData));
+    await podProvider.call(
+      'activitypub.actor.awaitCreateComplete',
+      { actorUri: bobWebId },
+      { meta: { dataset: bobData.username } }
+    );
   }, 110_000);
 
   afterAll(async () => {
@@ -80,6 +94,47 @@ describe('Websocket channel', () => {
     });
 
     expect(status).toBe(403);
+  });
+
+  test('Create web socket channel with a bearer token', async () => {
+    const { json } = await fetchServer(webSocketChannelSubscriptionUrl, {
+      method: 'POST',
+      headers: new fetch.Headers({
+        'Content-Type': 'application/ld+json',
+        Authorization: `Bearer ${aliceToken}`
+      }),
+      body: {
+        '@context': {
+          notify: 'http://www.w3.org/ns/solid/notifications#'
+        },
+        '@type': 'notify:WebSocketChannel2023',
+        'notify:topic': alice.url
+      }
+    });
+
+    expect(json['notify:receiveFrom']).toBeTruthy();
+  });
+
+  test('Create web socket channel on a remote resource through the Pod proxy', async () => {
+    const body = await podProvider.call(
+      'signature.proxy.api_query',
+      {
+        username: alice.preferredUsername,
+        id: webSocketChannelSubscriptionUrl,
+        method: 'POST',
+        headers: JSON.stringify({ 'Content-Type': 'application/ld+json' }),
+        body: JSON.stringify({
+          '@context': {
+            notify: 'http://www.w3.org/ns/solid/notifications#'
+          },
+          '@type': 'notify:WebSocketChannel2023',
+          'notify:topic': bobWebId
+        })
+      },
+      { meta: { webId: APP_URI, dataset: alice.preferredUsername } }
+    );
+
+    expect(body['notify:receiveFrom']).toBeTruthy();
   });
 
   test('Cannot create web socket channel for non-existing resources', async () => {

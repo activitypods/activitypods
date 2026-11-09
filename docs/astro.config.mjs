@@ -1,10 +1,22 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import mermaid from 'astro-mermaid';
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://docs.activitypods.org',
+  redirects: {
+    '/reference/pod-activities-watcher-service': '/reference/backend/pod-activities-watcher-service',
+    '/reference/pod-collections-service': '/reference/backend/pod-collections-service',
+    '/reference/pod-notification-service': '/reference/backend/pod-notification-service',
+    '/reference/pod-outbox-service': '/reference/backend/pod-outbox-service',
+    '/reference/pod-permissions-service': '/reference/backend/pod-permissions-service',
+    '/reference/pod-resources-service': '/reference/backend/pod-resources-service',
+    '/reference/pod-wac-groups-service': '/reference/backend/pod-wac-groups-service'
+  },
   integrations: [
+    // Must be before Starlight, otherwise mermaid code blocks are handled by Expressive Code
+    mermaid(),
     starlight({
       title: 'Docs',
       logo: {
@@ -21,6 +33,10 @@ export default defineConfig({
       },
       sidebar: [
         {
+          label: 'Key concepts',
+          link: '/key-concepts/'
+        },
+        {
           label: 'Guides',
           autogenerate: { directory: 'guides' }
         },
@@ -34,6 +50,10 @@ export default defineConfig({
             {
               label: 'Frontend',
               autogenerate: { directory: 'app-framework/frontend' }
+            },
+            {
+              label: 'Contacts and sharing',
+              link: '/app-framework/contacts-and-sharing/'
             }
           ]
         },
@@ -43,7 +63,16 @@ export default defineConfig({
         },
         {
           label: 'Reference',
-          autogenerate: { directory: 'reference' }
+          items: [
+            {
+              label: 'Backend',
+              autogenerate: { directory: 'reference/backend' }
+            },
+            {
+              label: 'Frontend',
+              autogenerate: { directory: 'reference/frontend' }
+            }
+          ]
         }
       ],
       components: {

@@ -142,4 +142,36 @@ describe('Test Pod resources handling', () => {
       })
     );
   });
+
+  test('Remove permission of an agent class without removing the others', async () => {
+    await expect(
+      appServer.call('pod-permissions.add', {
+        uri: eventUri,
+        agentUri: 'foaf:Agent',
+        agentPredicate: 'acl:agentClass',
+        mode: 'acl:Read',
+        actorUri: alice.id
+      })
+    ).resolves.toBeTruthy();
+
+    await expect(
+      appServer.call('pod-permissions.remove', {
+        uri: eventUri,
+        agentUri: 'foaf:Agent',
+        agentPredicate: 'acl:agentClass',
+        mode: 'acl:Read',
+        actorUri: alice.id
+      })
+    ).resolves.toBeTruthy();
+
+    const permissions = await appServer.call('pod-permissions.get', {
+      uri: eventUri,
+      actorUri: alice.id
+    });
+
+    const readAuthorization = permissions.find((authorization: any) => authorization['@id'] === '#Read');
+
+    expect(readAuthorization['acl:agent']).toContain('http://localhost:3000/bob');
+    expect(readAuthorization['acl:agentClass']).toBeUndefined();
+  });
 });

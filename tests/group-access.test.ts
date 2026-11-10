@@ -1,10 +1,45 @@
 import urlJoin from 'url-join';
+import waitForExpect from 'wait-for-expect';
+import { OBJECT_TYPES } from '@semapps/activitypub';
+import { MIME_TYPES } from '@semapps/mime-types';
 import { connectPodProvider, clearAllData } from './initialize.ts';
 import { arrayOf } from './utils.ts';
+import * as CONFIG from './config.ts';
 jest.setTimeout(100000);
 
 describe('Test access to groups data through roles', () => {
-  let podProvider: any, alice: any, bob: any, craig: any, groupWebId: string;
+  let podProvider: any,
+    alice: any,
+    bob: any,
+    craig: any,
+    groupWebId: string,
+    containerUri: string,
+    eventUri: string,
+    event2Uri: string;
+
+  const callAsGroup = (actionName: string, params: any) =>
+    podProvider.call(actionName, params, { meta: { webId: groupWebId, dataset: 'acme' } });
+
+  const hasRights = async (actor: any, rights: any, resourceUri = eventUri) =>
+    podProvider.call('webacl.resource.hasRights', { resourceUri, rights, webId: actor.id });
+
+  const getRoleGrants = async () => {
+    const container = await podProvider.call('access-grants.list', {
+      filters: { 'http://www.w3.org/ns/solid/interop#derivedFromRoleRegistration': await getRoleUri('member') },
+      webId: groupWebId
+    });
+    return arrayOf(container['ldp:contains']);
+  };
+
+  const getGrantees = async () => (await getRoleGrants()).map((grant: any) => grant['interop:grantee']).sort();
+
+  const shareWithMembers = async (accessModes: string[], resourceUri = eventUri) =>
+    callAsGroup('access-authorizations.addForSingleResource', {
+      resourceUri,
+      grantee: await getRoleUri('member'),
+      accessModes,
+      webId: groupWebId
+    });
 
   const call = (actor: any, actionName: string, params: any) =>
     podProvider.call(actionName, params, { meta: { webId: actor.id } });
@@ -129,5 +164,160 @@ describe('Test access to groups data through roles', () => {
     await expect(wacGroupExists(wacGroupUri)).resolves.toBeFalsy();
     await expect(getWacGroupMembers('admin')).resolves.toEqual([alice.id]);
     await expect(getWacGroupMembers('member')).resolves.toHaveLength(2);
+  });
+
+  test('A resource of the group can be shared with a role', async () => {
+    containerUri = await callAsGroup('data-registrations.generateFromShapeTree', {
+      shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL!, 'shapetrees/as/Event'),
+      podOwner: groupWebId
+    });
+    eventUri = await callAsGroup('ldp.container.post', {
+      containerUri,
+      resource: { type: OBJECT_TYPES.EVENT, name: 'General assembly' },
+      contentType: MIME_TYPES.JSON,
+      webId: groupWebId
+    });
+
+    await expect(hasRights(bob, { read: true })).resolves.toMatchObject({ read: false });
+
+    await shareWithMembers(['acl:Read']);
+
+    const authorizations = await callAsGroup('access-authorizations.listForSingleResource', { resourceUri: eventUri });
+    expect(authorizations).toHaveLength(1);
+    expect(authorizations[0]['interop:grantee']).toBe(await getRoleUri('member'));
+
+    await expect(hasRights(bob, { read: true, write: true })).resolves.toMatchObject({ read: true, write: false });
+    await expect(hasRights(craig, { read: true })).resolves.toMatchObject({ read: false });
+  });
+
+  test('Each member of the role gets an access grant', async () => {
+    const memberRoleUri = await getRoleUri('member');
+    const grants = await getRoleGrants();
+    expect(grants.map((grant: any) => grant['interop:grantee']).sort()).toEqual([alice.id, bob.id].sort());
+    for (const grant of grants) {
+      expect(grant).toMatchObject({
+        'interop:dataOwner': groupWebId,
+        'interop:grantedBy': groupWebId,
+        'interop:scopeOfGrant': 'interop:SelectedFromRegistry',
+        'interop:hasDataInstance': eventUri,
+        'interop:accessMode': 'acl:Read'
+      });
+      expect(grant['interop:derivedFromRoleRegistration']).toBe(memberRoleUri);
+    }
+
+    const bobGrant = grants.find((grant: any) => grant['interop:grantee'] === bob.id);
+    const registration = await podProvider.call('social-agent-registrations.getForAgent', {
+      agentUri: bob.id,
+      podOwner: groupWebId
+    });
+    expect(arrayOf(registration['interop:hasAccessGrant'])).toContain(bobGrant.id);
+  });
+
+  test('A member removed from the role loses the access and the grant', async () => {
+    await removeFromRole(bob, 'member');
+
+    await expect(hasRights(bob, { read: true })).resolves.toMatchObject({ read: false });
+    await expect(getGrantees()).resolves.toEqual([alice.id]);
+  });
+
+  test('A member added to a role extending the shared role gets the access and a grant', async () => {
+    await addToRole(craig, 'owner');
+
+    await expect(hasRights(craig, { read: true })).resolves.toMatchObject({ read: true });
+    await expect(getGrantees()).resolves.toEqual([alice.id, craig.id].sort());
+  });
+
+  test('Changing the access modes recreates the grants', async () => {
+    const oldGrants = await getRoleGrants();
+
+    await shareWithMembers(['acl:Read', 'acl:Write']);
+
+    await expect(hasRights(craig, { read: true, write: true })).resolves.toMatchObject({ read: true, write: true });
+
+    const grants = await getRoleGrants();
+    expect(grants).toHaveLength(2);
+    for (const grant of grants) {
+      expect(arrayOf(grant['interop:accessMode']).sort()).toEqual(['acl:Read', 'acl:Write']);
+      expect(oldGrants.map((g: any) => g.id)).not.toContain(grant.id);
+    }
+  });
+
+  test('Sharing another resource with the same access modes replaces the grants', async () => {
+    event2Uri = await callAsGroup('ldp.container.post', {
+      containerUri,
+      resource: { type: OBJECT_TYPES.EVENT, name: 'Board meeting' },
+      contentType: MIME_TYPES.JSON,
+      webId: groupWebId
+    });
+    const oldGrants = await getRoleGrants();
+
+    await shareWithMembers(['acl:Read', 'acl:Write'], event2Uri);
+
+    await expect(hasRights(craig, { read: true }, event2Uri)).resolves.toMatchObject({ read: true });
+    await expect(hasRights(craig, { read: true })).resolves.toMatchObject({ read: true });
+
+    const grants = await getRoleGrants();
+    expect(grants).toHaveLength(2);
+    for (const grant of grants) {
+      expect(arrayOf(grant['interop:hasDataInstance']).sort()).toEqual([eventUri, event2Uri].sort());
+      const oldGrant = oldGrants.find((g: any) => g['interop:grantee'] === grant['interop:grantee']);
+      expect(grant['interop:replaces']).toBe(oldGrant.id);
+    }
+  });
+
+  test('Unsharing the resources removes the access and the grants', async () => {
+    await callAsGroup('access-authorizations.removeForSingleResource', {
+      resourceUri: eventUri,
+      grantee: await getRoleUri('member'),
+      webId: groupWebId
+    });
+
+    await expect(hasRights(craig, { read: true })).resolves.toMatchObject({ read: false });
+    await expect(hasRights(craig, { read: true }, event2Uri)).resolves.toMatchObject({ read: true });
+    await expect(getGrantees()).resolves.toEqual([alice.id, craig.id].sort());
+
+    await callAsGroup('access-authorizations.removeForSingleResource', {
+      resourceUri: event2Uri,
+      grantee: await getRoleUri('member'),
+      webId: groupWebId
+    });
+
+    await expect(hasRights(craig, { read: true }, event2Uri)).resolves.toMatchObject({ read: false });
+    await expect(getRoleGrants()).resolves.toHaveLength(0);
+
+    await waitForExpect(async () => {
+      const registration = await podProvider.call('social-agent-registrations.getForAgent', {
+        agentUri: craig.id,
+        podOwner: groupWebId
+      });
+      expect(arrayOf(registration?.['interop:hasAccessGrant'])).toHaveLength(0);
+    });
+  });
+
+  test('A direct share with the same content as a role share is kept apart', async () => {
+    await shareWithMembers(['acl:Read'], event2Uri);
+    await callAsGroup('access-authorizations.addForSingleResource', {
+      resourceUri: event2Uri,
+      grantee: craig.id,
+      accessModes: ['acl:Read'],
+      webId: groupWebId
+    });
+    await expect(getGrantees()).resolves.toEqual([alice.id, craig.id].sort());
+
+    await callAsGroup('access-authorizations.removeForSingleResource', {
+      resourceUri: event2Uri,
+      grantee: await getRoleUri('member'),
+      webId: groupWebId
+    });
+
+    await expect(getRoleGrants()).resolves.toHaveLength(0);
+    await expect(hasRights(craig, { read: true }, event2Uri)).resolves.toMatchObject({ read: true });
+
+    const directGrant = await podProvider.call('access-grants.getByResourceUri', {
+      resourceUri: event2Uri,
+      webId: groupWebId
+    });
+    expect(directGrant).toMatchObject({ 'interop:grantee': craig.id, 'interop:hasDataInstance': event2Uri });
+    expect(directGrant['interop:derivedFromRoleRegistration']).toBeUndefined();
   });
 });

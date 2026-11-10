@@ -1,5 +1,6 @@
 import rdf from '@rdfjs/data-model';
 import { ControlledContainerMixin, arrayOf, getDatasetFromUri, getId, getSlugFromUri } from '@semapps/ldp';
+import urlJoin from 'url-join';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema } from 'moleculer';
 
@@ -99,7 +100,7 @@ const RoleRegistrationsSchema = {
         );
 
         await ctx.call('role-registry.add', { podOwner: groupWebId, roleRegistrationUri });
-        await this.actions.syncWacGroups({ groupWebId }, { parentCtx: ctx });
+        await this.syncAccess(ctx, groupWebId);
 
         return roleRegistrationUri;
       }
@@ -120,10 +121,7 @@ const RoleRegistrationsSchema = {
         );
 
         if (role['interop:extendsRole'] !== undefined) {
-          await this.actions.syncWacGroups(
-            { groupWebId: roleRegistration['interop:registeredBy'] },
-            { parentCtx: ctx }
-          );
+          await this.syncAccess(ctx, roleRegistration['interop:registeredBy']);
         }
       }
     },
@@ -160,7 +158,24 @@ const RoleRegistrationsSchema = {
           { groupUri: await this.getWacGroupUri(ctx, groupWebId, resourceUri), webId: 'system' },
           { meta: { dataset: getDatasetFromUri(groupWebId) } }
         );
-        await this.actions.syncWacGroups({ groupWebId }, { parentCtx: ctx });
+        await this.syncAccess(ctx, groupWebId);
+      }
+    },
+
+    isRole: {
+      async handler(ctx) {
+        const { agentUri, podOwner } = ctx.params;
+        const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
+        return agentUri.startsWith(urlJoin(containerUri, '/'));
+      }
+    },
+
+    getEffectiveMembers: {
+      async handler(ctx) {
+        const { groupWebId } = ctx.params;
+        const roles = await this.actions.listForGroup({ groupWebId }, { parentCtx: ctx });
+        const effectiveMembers = this.getEffectiveMembers(roles);
+        return Object.fromEntries([...effectiveMembers].map(([roleUri, members]) => [roleUri, [...members]]));
       }
     },
 
@@ -284,6 +299,10 @@ const RoleRegistrationsSchema = {
     }
   },
   methods: {
+    async syncAccess(ctx, groupWebId) {
+      await this.actions.syncWacGroups({ groupWebId }, { parentCtx: ctx });
+      await ctx.call('role-access.syncGrants', { groupWebId });
+    },
     async getWacGroupUri(ctx, groupWebId, roleRegistrationUri) {
       return await ctx.call('webacl.group.getUri', {
         groupSlug: `${new URL(groupWebId).pathname}/roles/${getSlugFromUri(roleRegistrationUri)}`
@@ -354,7 +373,7 @@ const RoleRegistrationsSchema = {
         { parentCtx: ctx }
       );
 
-      await this.actions.syncWacGroups({ groupWebId: roleRegistration['interop:registeredBy'] }, { parentCtx: ctx });
+      await this.syncAccess(ctx, roleRegistration['interop:registeredBy']);
     }
   }
 } satisfies ServiceSchema;

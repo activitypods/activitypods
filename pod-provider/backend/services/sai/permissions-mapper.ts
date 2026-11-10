@@ -8,9 +8,11 @@ const PermissionsMapperSchema = {
   actions: {
     addPermissionsFromGrant: {
       async handler(ctx) {
-        const { grant } = ctx.params;
-
-        const grantee = grant['interop:grantee'];
+        const { grant, groupUri } = ctx.params;
+        // The rights of the grants derived from a role are given to the WAC group of the role
+        if (!groupUri && grant['interop:derivedFromRoleRegistration']) return;
+        const agentKey = groupUri ? 'group' : 'user';
+        const agentUri = groupUri || grant['interop:grantee'];
         const accessMode = arrayOf(grant['interop:accessMode']);
         const scope = grant['interop:scopeOfGrant'];
 
@@ -20,15 +22,15 @@ const PermissionsMapperSchema = {
             resourceUri: grant['interop:hasDataRegistration'],
             additionalRights: {
               // Container rights
-              user: {
-                uri: grantee,
+              [agentKey]: {
+                uri: agentUri,
                 read: accessMode.includes('acl:Read'),
                 write: accessMode.includes('acl:Write')
               },
               // Resources default rights
               default: {
-                user: {
-                  uri: grantee,
+                [agentKey]: {
+                  uri: agentUri,
                   read: accessMode.includes('acl:Read'),
                   append: accessMode.includes('acl:Append'),
                   write: accessMode.includes('acl:Write'),
@@ -44,8 +46,8 @@ const PermissionsMapperSchema = {
             await ctx.call('webacl.resource.addRights', {
               resourceUri,
               additionalRights: {
-                user: {
-                  uri: grantee,
+                [agentKey]: {
+                  uri: agentUri,
                   read: accessMode.includes('acl:Read'),
                   append: accessMode.includes('acl:Append'),
                   write: accessMode.includes('acl:Write'),
@@ -63,8 +65,11 @@ const PermissionsMapperSchema = {
 
     removePermissionsFromGrant: {
       async handler(ctx) {
-        const { grant } = ctx.params;
-        const grantee = grant['interop:grantee'];
+        const { grant, groupUri } = ctx.params;
+        // The rights of the grants derived from a role are given to the WAC group of the role
+        if (!groupUri && grant['interop:derivedFromRoleRegistration']) return;
+        const agentKey = groupUri ? 'group' : 'user';
+        const agentUri = groupUri || grant['interop:grantee'];
         const accessMode = arrayOf(grant['interop:accessMode']);
         const scope = grant['interop:scopeOfGrant'];
 
@@ -72,14 +77,14 @@ const PermissionsMapperSchema = {
           await ctx.call('webacl.resource.removeRights', {
             resourceUri: grant['interop:hasDataRegistration'],
             rights: {
-              user: {
-                uri: grantee,
+              [agentKey]: {
+                uri: agentUri,
                 read: accessMode.includes('acl:Read'),
                 write: accessMode.includes('acl:Write')
               },
               default: {
-                user: {
-                  uri: grantee,
+                [agentKey]: {
+                  uri: agentUri,
                   read: accessMode.includes('acl:Read'),
                   append: accessMode.includes('acl:Append'),
                   write: accessMode.includes('acl:Write'),
@@ -94,8 +99,8 @@ const PermissionsMapperSchema = {
             await ctx.call('webacl.resource.removeRights', {
               resourceUri,
               rights: {
-                user: {
-                  uri: grantee,
+                [agentKey]: {
+                  uri: agentUri,
                   read: accessMode.includes('acl:Read'),
                   append: accessMode.includes('acl:Append'),
                   write: accessMode.includes('acl:Write'),

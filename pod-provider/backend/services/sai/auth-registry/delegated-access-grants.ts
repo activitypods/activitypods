@@ -16,10 +16,12 @@ const scopeAllJobOptions = {
 };
 
 // The replaced grant of the original grant must not be kept: it may not exist anymore
+// The links to the role must not be kept either, or the delegated grant would give no WAC rights
 const copyGrant = (grant: any) => {
   const {
     id,
     'interop:replaces': replaces,
+    'interop:derivedFromRoleRegistration': derivedFromRoleRegistration,
     'dc:created': created,
     'dc:modified': modified,
     'dc:creator': creator,

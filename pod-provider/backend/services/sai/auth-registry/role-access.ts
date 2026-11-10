@@ -1,6 +1,7 @@
 import { arrayOf, getId } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema } from 'moleculer';
+import { getScopeOfGrant } from './access-grants.ts';
 
 const INTEROP = 'http://www.w3.org/ns/solid/interop#';
 
@@ -86,7 +87,7 @@ const RoleAccessSchema = {
       });
       return arrayOf(container['ldp:contains']).filter(
         (grant: any) =>
-          grant['interop:scopeOfGrant'] === this.getScopeOfGrant(authorization) &&
+          grant['interop:scopeOfGrant'] === getScopeOfGrant(authorization) &&
           sameItems(grant['interop:accessMode'], authorization['interop:accessMode']) &&
           sameItems(grant['interop:hasDataInstance'], authorization['interop:hasDataInstance'])
       );
@@ -108,7 +109,7 @@ const RoleAccessSchema = {
             type: 'interop:AccessGrant',
             'interop:grantee': memberUri,
             'interop:grantedBy': dataOwner,
-            'interop:scopeOfGrant': this.getScopeOfGrant(authorization),
+            'interop:scopeOfGrant': getScopeOfGrant(authorization),
             'interop:scopeOfAuthorization': undefined,
             'interop:replaces': replacedGrant && getId(replacedGrant),
             'interop:derivedFromRoleRegistration': authorization['interop:grantee']
@@ -132,13 +133,8 @@ const RoleAccessSchema = {
 
       await ctx.call(
         granted ? 'permissions-mapper.addPermissionsFromGrant' : 'permissions-mapper.removePermissionsFromGrant',
-        { grant: { ...authorization, 'interop:scopeOfGrant': this.getScopeOfGrant(authorization) }, groupUri }
+        { grant: { ...authorization, 'interop:scopeOfGrant': getScopeOfGrant(authorization) }, groupUri }
       );
-    },
-    getScopeOfGrant(authorization) {
-      return authorization['interop:scopeOfAuthorization'] === 'interop:All'
-        ? 'interop:AllFromRegistry'
-        : authorization['interop:scopeOfAuthorization'];
     }
   }
 } satisfies ServiceSchema;

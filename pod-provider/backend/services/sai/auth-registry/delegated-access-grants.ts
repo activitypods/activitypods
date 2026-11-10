@@ -177,6 +177,8 @@ const DelegatedAccessGrantsSchema = {
         });
 
         for (const authorization of authorizations) {
+          // Data shared with the pod owner is only delegated to applications, not to the social agents with whom we shared this type
+          if (authorization['interop:granteeType'] !== 'interop:Application') continue;
           await ctx.call('delegated-access-grants.generateFromSingleScopeAllAuthorization', {
             authorization,
             grant

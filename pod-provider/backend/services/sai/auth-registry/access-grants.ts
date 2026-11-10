@@ -4,6 +4,12 @@ import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.t
 import AccessGrantsMixin from '../../../mixins/access-grants.ts';
 import { ServiceSchema } from 'moleculer';
 
+// Map authorizations with interop:All scope to grants with interop:AllFromRegistry scope
+export const getScopeOfGrant = (authorization: any): string =>
+  authorization['interop:scopeOfAuthorization'] === 'interop:All'
+    ? 'interop:AllFromRegistry'
+    : authorization['interop:scopeOfAuthorization'];
+
 const AccessGrantsSchema = {
   name: 'access-grants' as const,
   // @ts-expect-error TS(2322): Type '{ settings: { path: null; acceptedTypes: nul... Remove this comment to see the full error message
@@ -21,11 +27,7 @@ const AccessGrantsSchema = {
         const { authorization } = ctx.params;
         let replacedGrant;
 
-        // Authorizations with scope interop:All map to grants with scope interop:AllFromRegistry
-        const scopeOfGrant =
-          authorization['interop:scopeOfAuthorization'] === 'interop:All'
-            ? 'interop:AllFromRegistry'
-            : authorization['interop:scopeOfAuthorization'];
+        const scopeOfGrant = getScopeOfGrant(authorization);
 
         // If the authorization replaces another one, get the replaced grant
         if (authorization['interop:replaces']) {
@@ -71,7 +73,11 @@ const AccessGrantsSchema = {
               'http://www.w3.org/ns/solid/interop#satisfiesAccessNeed': authorization['interop:satisfiesAccessNeed'],
               'http://www.w3.org/ns/solid/interop#dataOwner': authorization['interop:dataOwner'],
               'http://www.w3.org/ns/solid/interop#grantee': authorization['interop:grantee'],
-              'http://www.w3.org/ns/solid/interop#hasDataRegistration': authorization['interop:hasDataRegistration']
+              'http://www.w3.org/ns/solid/interop#hasDataRegistration': authorization['interop:hasDataRegistration'],
+              'http://www.w3.org/ns/solid/interop#scopeOfGrant': getScopeOfGrant(authorization).replace(
+                'interop:',
+                'http://www.w3.org/ns/solid/interop#'
+              )
             },
             webId: authorization['interop:dataOwner']
           },

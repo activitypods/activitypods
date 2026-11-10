@@ -320,4 +320,46 @@ describe('Test access to groups data through roles', () => {
     expect(directGrant).toMatchObject({ 'interop:grantee': craig.id, 'interop:hasDataInstance': event2Uri });
     expect(directGrant['interop:derivedFromRoleRegistration']).toBeUndefined();
   });
+
+  test('All the data of a type can be shared with a role, including write right', async () => {
+    const shapeTreeUri = urlJoin(CONFIG.SHAPE_REPOSITORY_URL!, 'shapetrees/as/Event');
+    await callAsGroup('access-authorizations.addForShapeTree', {
+      shapeTreeUri,
+      grantee: await getRoleUri('member'),
+      accessModes: ['acl:Read', 'acl:Write'],
+      webId: groupWebId
+    });
+
+    const grants = await getRoleGrants();
+    expect(grants.map((grant: any) => grant['interop:grantee']).sort()).toEqual([alice.id, craig.id].sort());
+    for (const grant of grants) {
+      expect(grant).toMatchObject({ 'interop:scopeOfGrant': 'interop:AllFromRegistry' });
+    }
+
+    await expect(hasRights(craig, { read: true, write: true })).resolves.toMatchObject({ read: true, write: true });
+    await expect(hasRights(bob, { read: true })).resolves.toMatchObject({ read: false });
+
+    const craigEventUri = await podProvider.call(
+      'ldp.container.post',
+      {
+        containerUri,
+        resource: { type: OBJECT_TYPES.EVENT, name: 'Workshop' },
+        contentType: MIME_TYPES.JSON,
+        webId: craig.id
+      },
+      { meta: { webId: craig.id, dataset: 'acme' } }
+    );
+    await expect(hasRights(craig, { read: true }, craigEventUri)).resolves.toMatchObject({ read: true });
+
+    await removeFromRole(craig, 'owner');
+    await expect(hasRights(craig, { read: true })).resolves.toMatchObject({ read: false });
+    await expect(getGrantees()).resolves.toEqual([alice.id]);
+
+    await callAsGroup('access-authorizations.removeForShapeTree', {
+      shapeTreeUri,
+      grantee: await getRoleUri('member'),
+      webId: groupWebId
+    });
+    await expect(getRoleGrants()).resolves.toHaveLength(0);
+  });
 });

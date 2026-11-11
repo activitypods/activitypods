@@ -235,6 +235,52 @@ describe('Test delegation features', () => {
     ).resolves.not.toThrow();
   });
 
+  test('Only the grantee of a grant can delegate it, if allowed', async () => {
+    const issueAsCraig = (grant: any, grantee: any, delegation = {}) => {
+      const { id, 'dc:created': c, 'dc:modified': m, 'dc:creator': cr, ...properties } = grant;
+      return podProvider.call(
+        'delegation-endpoint.issue',
+        {
+          delegatedGrant: {
+            ...properties,
+            type: 'interop:DelegatedAccessGrant',
+            'interop:grantee': grantee.id,
+            'interop:granteeType': 'interop:SocialAgent',
+            'interop:grantedBy': craig.id,
+            'interop:delegationOfGrant': id,
+            ...delegation
+          }
+        },
+        { meta: { webId: craig.id, dataset: 'alice' } }
+      );
+    };
+
+    // Craig delegates the grant received by Bob
+    const bobGrant = await bob.call('access-grants.getByResourceUri', { resourceUri: eventUri });
+    await expect(issueAsCraig(bobGrant, alice)).rejects.toMatchObject({ code: 403 });
+
+    // Craig delegates his own grant, which doesn't allow delegation
+    const craigRegistration = await bob.call('social-agent-registrations.getForAgent', {
+      agentUri: craig.id,
+      podOwner: bob.id
+    });
+    const [craigGrant] = await bob.call('social-agent-registrations.getGrants', {
+      agentRegistration: craigRegistration,
+      podOwner: bob.id
+    });
+    expect(craigGrant['interop:delegationAllowed']).toBeUndefined();
+    await expect(issueAsCraig(craigGrant, alice)).rejects.toMatchObject({ code: 403 });
+
+    // Craig's app cannot get more delegation rights than Craig
+    await expect(
+      issueAsCraig(
+        craigGrant,
+        { id: APP_URI },
+        { 'interop:granteeType': 'interop:Application', 'interop:delegationAllowed': true }
+      )
+    ).rejects.toMatchObject({ code: 403 });
+  });
+
   test('Craig remove the app and the delegated grant is deleted', async () => {
     await craig.call('registration-endpoint.remove', {
       appUri: APP_URI

@@ -55,18 +55,26 @@ const DelegationEndpointSchema = {
           webId: dataOwner
         });
 
-        if (delegatedGrant['interop:grantedBy'] !== webId) {
-          throw new MoleculerError('You cannot grant access for someone else', 401, 'FORBIDDEN');
+        if (delegatedGrant['interop:grantedBy'] !== webId || originalGrant['interop:grantee'] !== webId) {
+          throw new MoleculerError('You can only delegate the grants you received', 403, 'FORBIDDEN');
         }
 
         // Check delegation is allowed, except for applications
         if (
+          delegatedGrant['interop:granteeType'] !== 'interop:Application' &&
           (originalGrant['interop:delegationAllowed'] !== true ||
-            (originalGrant['interop:delegationLimit'] && originalGrant['interop:delegationLimit'] < 1)) &&
-          // @ts-expect-error TS(2367): This comparison appears to be unintentional becaus... Remove this comment to see the full error message
-          !delegatedGrant['interop:granteeType'] === 'interop:Application'
+            (originalGrant['interop:delegationLimit'] && originalGrant['interop:delegationLimit'] < 1))
         ) {
-          throw new MoleculerError('Delegation not allowed', 401, 'FORBIDDEN');
+          throw new MoleculerError('Delegation not allowed', 403, 'FORBIDDEN');
+        }
+
+        const originalLimit = originalGrant['interop:delegationLimit'];
+        const delegatedLimit = delegatedGrant['interop:delegationLimit'];
+        if (
+          delegatedGrant['interop:delegationAllowed'] === true &&
+          (originalGrant['interop:delegationAllowed'] !== true || (originalLimit && !(delegatedLimit < originalLimit)))
+        ) {
+          throw new MoleculerError('The delegation limit of the original grant is exceeded', 403, 'FORBIDDEN');
         }
 
         if (

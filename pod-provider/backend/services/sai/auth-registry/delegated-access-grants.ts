@@ -129,11 +129,7 @@ const DelegatedAccessGrantsSchema = {
           ctx.meta.dataset = getDatasetFromUri(dataOwnerUri);
 
           try {
-            await ctx.call(
-              'ldp.resource.delete',
-              { resourceUri: delegatedGrantUri, webId: dataOwnerUri },
-              { parentCtx: ctx }
-            );
+            await this.actions.delete({ resourceUri: delegatedGrantUri, webId: dataOwnerUri }, { parentCtx: ctx });
           } catch (e) {
             this.logger.warn(`Could not delete delegated grant ${delegatedGrantUri}. Deleting local cache anyway.`);
           }

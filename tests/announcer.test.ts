@@ -23,6 +23,28 @@ describe('Test sharing through announcer', () => {
     await podProvider.stop();
   });
 
+  const isAnnounced = (actor: any) =>
+    alice.call('activitypub.collection.includes', { collectionUri: event['apods:announces'], itemUri: actor.id });
+
+  const isInAnnouncesGroup = async (actor: any) => {
+    const groupUri = urlJoin(new URL(alice.id).origin, '_groups', new URL(eventUri).pathname, 'announces');
+    const members = await podProvider.call(
+      'webacl.group.getMembers',
+      { groupUri, webId: 'system' },
+      { meta: { dataset: 'alice' } }
+    );
+    return members.includes(actor.id);
+  };
+
+  const canRead = async (actor: any) => {
+    const { read } = await podProvider.call('webacl.resource.hasRights', {
+      resourceUri: eventUri,
+      rights: { read: true },
+      webId: actor.id
+    });
+    return read;
+  };
+
   test('Alice creates an event', async () => {
     // Create container manually so that we don't need to install the app
     eventContainerUri = await alice.call('data-registrations.generateFromShapeTree', {
@@ -148,7 +170,7 @@ describe('Test sharing through announcer', () => {
       await expect(
         alice.call('activitypub.collection.includes', {
           collectionUri: event['apods:announces'],
-          itemUri: bob.id
+          itemUri: craig.id
         })
       ).resolves.toBeTruthy();
     });
@@ -182,5 +204,31 @@ describe('Test sharing through announcer', () => {
         })
       ).rejects.toThrow();
     });
+  });
+
+  test('Bob stops sharing Alice event with Craig and Craig is removed from the announces collection', async () => {
+    await bob.call('access-authorizations.removeForSingleResource', { resourceUri: eventUri, grantee: craig.id });
+
+    await waitForExpect(async () => {
+      await expect(isAnnounced(craig)).resolves.toBeFalsy();
+      await expect(isInAnnouncesGroup(craig)).resolves.toBeFalsy();
+    });
+
+    await expect(canRead(craig)).resolves.toBeFalsy();
+    await expect(canRead(bob)).resolves.toBeTruthy();
+  });
+
+  test('Alice stops sharing her event with Bob and he is removed from the announces and announcers collections', async () => {
+    await alice.call('access-authorizations.removeForSingleResource', { resourceUri: eventUri, grantee: bob.id });
+
+    await waitForExpect(async () => {
+      await expect(isAnnounced(bob)).resolves.toBeFalsy();
+      await expect(isInAnnouncesGroup(bob)).resolves.toBeFalsy();
+      await expect(
+        alice.call('activitypub.collection.includes', { collectionUri: event['apods:announcers'], itemUri: bob.id })
+      ).resolves.toBeFalsy();
+    });
+
+    await expect(canRead(bob)).resolves.toBeFalsy();
   });
 });

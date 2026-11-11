@@ -135,6 +135,56 @@ const AnnouncerSchema = {
       }
     },
 
+    removeFromAnnounces: {
+      // Called when a grant is revoked, otherwise the announces WAC group still give read access
+      async handler(ctx) {
+        const { grant } = ctx.params;
+        const grantee = grant['interop:grantee'];
+        const dataOwner = grant['interop:dataOwner'];
+
+        if (grant['interop:granteeType'] !== 'interop:SocialAgent') return;
+
+        const oldDataset = ctx.meta.dataset;
+        ctx.meta.dataset = getDatasetFromUri(dataOwner);
+
+        for (const resourceUri of arrayOf(grant['interop:hasDataInstance'])) {
+          const filters = {
+            'http://www.w3.org/ns/solid/interop#grantee': grantee,
+            'http://www.w3.org/ns/solid/interop#hasDataInstance': resourceUri
+          };
+          const grants = await ctx.call('access-grants.list', { filters, webId: dataOwner });
+          const delegatedGrants = await ctx.call('delegated-access-grants.list', { filters, webId: dataOwner });
+          if (arrayOf(grants['ldp:contains']).length > 0 || arrayOf(delegatedGrants['ldp:contains']).length > 0)
+            continue;
+
+          let resource;
+          try {
+            resource = await ctx.call('ldp.resource.get', {
+              resourceUri,
+              accept: MIME_TYPES.JSON,
+              webId: 'system'
+            });
+          } catch (e) {
+            continue; // The resource was deleted
+          }
+
+          for (const [collectionUri, groupUri] of [
+            [resource['apods:announces'], getAnnouncesGroupUri(resourceUri)],
+            [resource['apods:announcers'], getAnnouncersGroupUri(resourceUri)]
+          ]) {
+            if (!collectionUri || !(await ctx.call('activitypub.collection.exist', { resourceUri: collectionUri })))
+              continue;
+            await ctx.call('activitypub.collection.remove', { collectionUri, item: grantee });
+            if (await ctx.call('webacl.group.exist', { groupUri, webId: 'system' })) {
+              await ctx.call('webacl.group.removeMember', { groupUri, memberUri: grantee, webId: 'system' });
+            }
+          }
+        }
+
+        ctx.meta.dataset = oldDataset;
+      }
+    },
+
     storeAnnouncedResource: {
       // Store locally the announced resource, and attach it to the containers of its types
       async handler(ctx) {
@@ -366,6 +416,36 @@ const AnnouncerSchema = {
         },
         { meta: { webId: emitterUri, dataset } }
       );
+
+      // Replacing a previous authorization of the grantee removed them from the announces collections
+      if (resourceUri.startsWith(urlJoin(emitterUri, '/'))) {
+        const resource = await this.broker.call(
+          'ldp.resource.get',
+          { resourceUri, accept: MIME_TYPES.JSON, webId: 'system' },
+          { meta: { dataset } }
+        );
+        const collections = [[resource['apods:announces'], getAnnouncesGroupUri(resourceUri)]];
+        if (delegationAllowed) collections.push([resource['apods:announcers'], getAnnouncersGroupUri(resourceUri)]);
+
+        for (const [collectionUri, groupUri] of collections) {
+          // The collection may still be created by the announce processor
+          if (
+            !collectionUri ||
+            !(await this.broker.call(
+              'activitypub.collection.exist',
+              { resourceUri: collectionUri },
+              { meta: { dataset } }
+            ))
+          )
+            continue;
+          await this.broker.call('activitypub.collection.add', { collectionUri, item: grantee }, { meta: { dataset } });
+          await this.broker.call(
+            'webacl.group.addMember',
+            { groupUri, memberUri: grantee, webId: 'system' },
+            { meta: { dataset } }
+          );
+        }
+      }
     }
   },
   queues: {

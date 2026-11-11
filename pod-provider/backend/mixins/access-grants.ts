@@ -96,6 +96,7 @@ const AccessGrantsMixin = {
         // Don't remove permissions when we are replacing
         if (!ctx.params.isReplacing) {
           await ctx.call('permissions-mapper.removePermissionsFromGrant', { grant });
+          await ctx.call('announcer.removeFromAnnounces', { grant });
         }
 
         // Detach grant from agent registrations, unless it is a delegated grant (will be done by the issuer)

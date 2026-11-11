@@ -147,7 +147,8 @@ const AccessAuthorizationsSchema = {
                   resourceUri
                 ]
               },
-              contentType: MIME_TYPES.JSON
+              contentType: MIME_TYPES.JSON,
+              webId
             },
             { parentCtx: ctx }
           );
@@ -169,7 +170,8 @@ const AccessAuthorizationsSchema = {
                 'interop:delegationAllowed': delegationAllowed,
                 'interop:delegationLimit': delegationLimit
               },
-              contentType: MIME_TYPES.JSON
+              contentType: MIME_TYPES.JSON,
+              webId
             },
             { parentCtx: ctx }
           );
@@ -316,6 +318,34 @@ const AccessAuthorizationsSchema = {
         );
 
         return arrayOf(filteredContainer['ldp:contains'])[0];
+      }
+    },
+
+    listForShapeTree: {
+      async handler(ctx) {
+        const { shapeTreeUri } = ctx.params;
+        const webId = ctx.params.webId || ctx.meta.webId;
+
+        const dataRegistrationUri = await ctx.call('data-registrations.getByShapeTree', {
+          shapeTreeUri,
+          podOwner: webId
+        });
+        if (!dataRegistrationUri) return [];
+
+        const filteredContainer = await this.actions.list(
+          {
+            filters: {
+              'http://www.w3.org/ns/solid/interop#dataOwner': webId,
+              'http://www.w3.org/ns/solid/interop#hasDataRegistration': dataRegistrationUri,
+              'http://www.w3.org/ns/solid/interop#granteeType': 'http://www.w3.org/ns/solid/interop#SocialAgent',
+              'http://www.w3.org/ns/solid/interop#scopeOfAuthorization': 'http://www.w3.org/ns/solid/interop#All'
+            },
+            webId
+          },
+          { parentCtx: ctx }
+        );
+
+        return arrayOf(filteredContainer['ldp:contains']);
       }
     },
 

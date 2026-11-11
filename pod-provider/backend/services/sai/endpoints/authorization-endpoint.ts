@@ -1,6 +1,6 @@
 import path from 'path';
-const { MoleculerError } = require('moleculer').Errors;
-import { arrayOf } from '@semapps/ldp';
+import { arrayOf, getDatasetFromUri } from '@semapps/ldp';
+import { throw400, throw403 } from '@semapps/middlewares';
 import { ServiceSchema } from 'moleculer';
 
 const AuthorizationEndpointSchema = {
@@ -26,20 +26,21 @@ const AuthorizationEndpointSchema = {
   },
   actions: {
     getAuthorizations: {
+      /**
+       * Get the access authorizations for a single resource, or for all the data matching a shape tree
+       */
       async handler(ctx) {
-        const { resource: resourceUri } = ctx.params;
+        const { resource: resourceUri, shapeTree: shapeTreeUri } = ctx.params;
 
-        const webId = ctx.meta.webId;
-        const account = await ctx.call('auth.account.findByWebId', { webId });
-        ctx.meta.dataset = account.username;
+        const podOwner = await this.getPodOwner(ctx, resourceUri, shapeTreeUri);
+        await this.checkAccess(ctx, podOwner);
 
-        if (!resourceUri.startsWith(`${webId}/`))
-          throw new MoleculerError('Only the owner of a resource can fetch its authorizations', 403, 'FORBIDDEN');
-
-        const authorizations = await ctx.call('access-authorizations.listForSingleResource', { resourceUri });
+        const authorizations = resourceUri
+          ? await ctx.call('access-authorizations.listForSingleResource', { resourceUri, webId: podOwner })
+          : await ctx.call('access-authorizations.listForShapeTree', { shapeTreeUri, webId: podOwner });
 
         return {
-          resourceUri,
+          ...(resourceUri ? { resourceUri } : { shapeTreeUri }),
           authorizations: authorizations.map((authorization: any) => ({
             grantee: authorization['interop:grantee'],
             accessModes: arrayOf(authorization['interop:accessMode'])
@@ -50,40 +51,74 @@ const AuthorizationEndpointSchema = {
 
     updateAuthorizations: {
       /**
-       * Mass-update access authorizations for a single resource
+       * Mass-update access authorizations for a single resource, or for all the data matching a shape tree
        */
       async handler(ctx) {
-        const { resourceUri, authorizations } = ctx.params;
+        const { resourceUri, shapeTreeUri, authorizations } = ctx.params;
 
-        const podOwner = ctx.meta.webId;
-        const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
-        ctx.meta.dataset = account.username;
+        const podOwner = await this.getPodOwner(ctx, resourceUri, shapeTreeUri);
+        const allowedGrantees = await this.checkAccess(ctx, podOwner);
 
-        if (!resourceUri.startsWith(`${podOwner}/`))
-          throw new MoleculerError('Only the owner of a resource can update its authorizations', 403, 'FORBIDDEN');
+        for (const { grantee } of authorizations) {
+          if (allowedGrantees && !allowedGrantees.includes(grantee))
+            throw403(`${grantee} is neither a role nor a member of the group`);
+        }
 
-        // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
-        for ({ grantee, accessModes } of authorizations) {
-          // @ts-expect-error TS(2304): Cannot find name 'accessModes'.
+        for (const { grantee, accessModes } of authorizations) {
+          const params = { resourceUri, shapeTreeUri, grantee, accessModes, webId: podOwner };
           if (accessModes.length > 0) {
-            await ctx.call('access-authorizations.addForSingleResource', {
-              resourceUri,
-              podOwner,
-              // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
-              grantee,
-              // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
-              accessModes
-            });
+            await ctx.call(
+              resourceUri ? 'access-authorizations.addForSingleResource' : 'access-authorizations.addForShapeTree',
+              params
+            );
           } else {
-            await ctx.call('access-authorizations.removeForSingleResource', {
-              resourceUri,
-              podOwner,
-              // @ts-expect-error TS(18004): No value exists in scope for the shorthand propert... Remove this comment to see the full error message
-              grantee
-            });
+            await ctx.call(
+              resourceUri
+                ? 'access-authorizations.removeForSingleResource'
+                : 'access-authorizations.removeForShapeTree',
+              params
+            );
           }
         }
       }
+    }
+  },
+  methods: {
+    async getPodOwner(ctx, resourceUri, shapeTreeUri) {
+      if (!resourceUri === !shapeTreeUri) throw400('A resource or a shape tree must be provided');
+
+      if (resourceUri) {
+        const account = await ctx.call('auth.account.findByUsername', { username: getDatasetFromUri(resourceUri) });
+        if (!account || !resourceUri.startsWith(`${account.webId}/`))
+          throw403('Only the owner of a resource can manage its authorizations');
+        return account.webId;
+      }
+
+      return ctx.params.podOwner || ctx.meta.webId;
+    },
+    // Return the agents which can be grantees, or undefined if there is no restriction
+    async checkAccess(ctx, podOwner) {
+      const { webId } = ctx.meta;
+
+      const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
+      if (!account) throw403('Only the pod owner can manage its authorizations');
+      ctx.meta.dataset = account.username;
+
+      if (webId === podOwner) return undefined;
+      if (!account.group) {
+        throw403('Only the pod owner can manage its authorizations');
+      }
+
+      const hasRight = await ctx.call('role-registrations.hasSpecialRight', {
+        groupWebId: podOwner,
+        agentUri: webId,
+        right: 'interop:ManageAccess'
+      });
+      if (!hasRight) throw403('You need the interop:ManageAccess right on this group');
+
+      // The data of a group can only be shared with its roles and its members
+      const members = await ctx.call('role-registrations.getEffectiveMembers', { groupWebId: podOwner });
+      return [...Object.keys(members), ...Object.values(members).flat()];
     }
   }
 } satisfies ServiceSchema;

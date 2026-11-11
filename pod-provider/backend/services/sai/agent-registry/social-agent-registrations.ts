@@ -1,8 +1,9 @@
 import LinkHeader from 'http-link-header';
+import rdf from '@rdfjs/data-model';
 import { ControlledContainerMixin, arrayOf, getId } from '@semapps/ldp';
 import { ActivitiesHandlerMixin } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
-import AgentRegistrationsMixin from '../../../mixins/agent-registrations.ts';
+import AgentRegistrationsMixin, { updatedAtTriples } from '../../../mixins/agent-registrations.ts';
 import { ACTIVITY_TYPES } from '@semapps/activitypub';
 import { ServiceSchema } from 'moleculer';
 import urlJoin from 'url-join';
@@ -32,26 +33,31 @@ const SocialAgentRegistrationsSchema = {
         if (!label) label = await this.actions.getAgentName({ agentUri, podOwner }, { parentCtx: ctx });
 
         if (agentRegistration) {
-          // If some data has changed, update the registration
-          if (
-            (label && agentRegistration['skos:prefLabel'] !== label) ||
-            (note && agentRegistration['skos:note'] !== note) ||
-            (reciprocalRegistrationUri &&
-              agentRegistration['interop:reciprocalRegistration'] !== reciprocalRegistrationUri)
-          ) {
-            await this.actions.put(
-              {
-                resource: {
-                  ...agentRegistration,
-                  'interop:updatedAt': new Date().toISOString(),
-                  'interop:reciprocalRegistration':
-                    reciprocalRegistrationUri || agentRegistration['interop:reciprocalRegistration'],
-                  'skos:prefLabel': label || agentRegistration['skos:prefLabel'],
-                  'skos:note': note || agentRegistration['skos:note']
-                },
-                contentType: MIME_TYPES.JSON,
-                webId: podOwner
-              },
+          // Patch rather than put, as grants may be attached or detached at the same time
+          const subject = rdf.namedNode(getId(agentRegistration));
+          const { toAdd, toRemove } = updatedAtTriples(agentRegistration);
+          const triplesToAdd = [toAdd];
+          const triplesToRemove = [...toRemove];
+
+          for (const [predicate, oldValue, newValue, toTerm] of [
+            ['http://www.w3.org/2004/02/skos/core#prefLabel', agentRegistration['skos:prefLabel'], label, rdf.literal],
+            ['http://www.w3.org/2004/02/skos/core#note', agentRegistration['skos:note'], note, rdf.literal],
+            [
+              'http://www.w3.org/ns/solid/interop#reciprocalRegistration',
+              agentRegistration['interop:reciprocalRegistration'],
+              reciprocalRegistrationUri,
+              rdf.namedNode
+            ]
+          ] as any[]) {
+            if (newValue && newValue !== oldValue) {
+              triplesToAdd.push(rdf.quad(subject, rdf.namedNode(predicate), toTerm(newValue)));
+              if (oldValue) triplesToRemove.push(rdf.quad(subject, rdf.namedNode(predicate), toTerm(oldValue)));
+            }
+          }
+
+          if (triplesToAdd.length > 1) {
+            await this.actions.patch(
+              { resourceUri: getId(agentRegistration), triplesToAdd, triplesToRemove, webId: podOwner },
               { parentCtx: ctx }
             );
           }

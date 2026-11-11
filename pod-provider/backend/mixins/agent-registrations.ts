@@ -2,6 +2,20 @@ import { arrayOf, getId } from '@semapps/ldp';
 import rdf from '@rdfjs/data-model';
 import { ServiceSchema } from 'moleculer';
 
+const UPDATED_AT = rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt');
+const DATE_TIME = rdf.namedNode('http://www.w3.org/2001/XMLSchema#dateTime');
+
+// Concurrent patches may leave several values, so all of them are removed
+export const updatedAtTriples = (agentRegistration: any) => {
+  const subject = rdf.namedNode(getId(agentRegistration));
+  return {
+    toAdd: rdf.quad(subject, UPDATED_AT, rdf.literal(new Date().toISOString(), DATE_TIME)),
+    toRemove: arrayOf(agentRegistration['interop:updatedAt']).map((value: string) =>
+      rdf.quad(subject, UPDATED_AT, rdf.literal(value, DATE_TIME))
+    )
+  };
+};
+
 /**
  * Mixin used by the AppRegistrationsService and SocialAgentRegistrationsService
  * See https://solid.github.io/data-interoperability-panel/specification/#ar
@@ -91,6 +105,8 @@ const AgentRegistrationsMixin = {
           );
         }
 
+        const { toAdd, toRemove } = updatedAtTriples(agentRegistration);
+
         await this.actions.patch(
           {
             resourceUri: getId(agentRegistration),
@@ -102,22 +118,9 @@ const AgentRegistrationsMixin = {
                   rdf.namedNode(getId(g))
                 )
               ),
-              rdf.quad(
-                rdf.namedNode(getId(agentRegistration)),
-                rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-                rdf.literal(new Date().toISOString(), rdf.namedNode('http://www.w3.org/2001/XMLSchema#dateTime'))
-              )
+              toAdd
             ],
-            triplesToRemove: agentRegistration['interop:updatedAt'] && [
-              rdf.quad(
-                rdf.namedNode(getId(agentRegistration)),
-                rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-                rdf.literal(
-                  agentRegistration['interop:updatedAt'],
-                  rdf.namedNode('http://www.w3.org/2001/XMLSchema#dateTime')
-                )
-              )
-            ],
+            triplesToRemove: toRemove.length > 0 ? toRemove : undefined,
             webId: 'system'
           },
           { parentCtx: ctx }
@@ -149,29 +152,13 @@ const AgentRegistrationsMixin = {
             )
           );
 
-          if (agentRegistration['interop:updatedAt']) {
-            triplesToRemove.push(
-              rdf.quad(
-                rdf.namedNode(getId(agentRegistration)),
-                rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-                rdf.literal(
-                  agentRegistration['interop:updatedAt'],
-                  rdf.namedNode('http://www.w3.org/2001/XMLSchema#dateTime')
-                )
-              )
-            );
-          }
+          const { toAdd, toRemove } = updatedAtTriples(agentRegistration);
+          triplesToRemove.push(...toRemove);
 
           await this.actions.patch(
             {
               resourceUri: getId(agentRegistration),
-              triplesToAdd: [
-                rdf.quad(
-                  rdf.namedNode(getId(agentRegistration)),
-                  rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt'),
-                  rdf.literal(new Date().toISOString(), rdf.namedNode('http://www.w3.org/2001/XMLSchema#dateTime'))
-                )
-              ],
+              triplesToAdd: [toAdd],
               triplesToRemove,
               webId: 'system'
             },

@@ -1,5 +1,6 @@
-import { ControlledContainerMixin, getId } from '@semapps/ldp';
+import { ControlledContainerMixin, arrayOf, getId } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
+import { arraysEqual } from '../../../utils.ts';
 import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
 import AccessGrantsMixin from '../../../mixins/access-grants.ts';
 import { ServiceSchema } from 'moleculer';
@@ -78,7 +79,12 @@ const AccessGrantsSchema = {
           { parentCtx: ctx }
         );
 
-        return filteredContainer['ldp:contains']?.[0];
+        // Several grants may be given to the same agent for the same registration
+        return arrayOf(filteredContainer['ldp:contains']).find(
+          (grant: any) =>
+            arraysEqual(grant['interop:accessMode'], authorization['interop:accessMode']) &&
+            arraysEqual(grant['interop:hasDataInstance'], authorization['interop:hasDataInstance'])
+        );
       }
     },
 

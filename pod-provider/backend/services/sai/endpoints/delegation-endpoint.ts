@@ -1,6 +1,6 @@
 import path from 'path';
 const { MoleculerError } = require('moleculer').Errors;
-import { arrayOf, getDatasetFromUri, getId } from '@semapps/ldp';
+import { arrayOf, getDatasetFromUri, getId, getParentContainerUri } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { parseHeader, negotiateContentType, parseJson, parseTurtle } from '@semapps/middlewares';
 import { ServiceSchema } from 'moleculer';
@@ -77,14 +77,20 @@ const DelegationEndpointSchema = {
           throw new MoleculerError('The delegation limit of the original grant is exceeded', 403, 'FORBIDDEN');
         }
 
+        // A grant on all the data of a registration may be delegated for some resources only
+        const isNarrowed =
+          originalGrant['interop:scopeOfGrant'] === 'interop:AllFromRegistry' &&
+          delegatedGrant['interop:scopeOfGrant'] === 'interop:SelectedFromRegistry';
+
         if (
           originalGrant['interop:dataOwner'] !== delegatedGrant['interop:dataOwner'] ||
-          originalGrant['interop:scopeOfGrant'] !== delegatedGrant['interop:scopeOfGrant'] ||
+          (originalGrant['interop:scopeOfGrant'] !== delegatedGrant['interop:scopeOfGrant'] && !isNarrowed) ||
           originalGrant['interop:hasDataRegistration'] !== delegatedGrant['interop:hasDataRegistration'] ||
           originalGrant['interop:registeredShapeTree'] !== delegatedGrant['interop:registeredShapeTree'] ||
-          originalGrant['interop:scopeOfGrant'] !== delegatedGrant['interop:scopeOfGrant'] ||
-          !arrayOf(delegatedGrant['interop:hasDataInstance']).every(uri =>
-            arrayOf(originalGrant['interop:hasDataInstance']).includes(uri)
+          !arrayOf(delegatedGrant['interop:hasDataInstance']).every((uri: string) =>
+            isNarrowed
+              ? getParentContainerUri(uri) === originalGrant['interop:hasDataRegistration']
+              : arrayOf(originalGrant['interop:hasDataInstance']).includes(uri)
           ) ||
           !arrayOf(delegatedGrant['interop:accessMode']).every(mode =>
             arrayOf(originalGrant['interop:accessMode']).includes(mode)

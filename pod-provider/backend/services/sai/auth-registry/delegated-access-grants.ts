@@ -159,6 +159,25 @@ const DelegatedAccessGrantsSchema = {
             await ctx.call('social-agent-registrations.removeGrant', { grant: delegatedGrant });
           }
         }
+
+        if (delegatedGrant['interop:granteeType'] === 'interop:SocialAgent') {
+          const grantedBy = delegatedGrant['interop:grantedBy'];
+          const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
+            actorUri: grantedBy,
+            predicate: 'outbox'
+          });
+          await ctx.call(
+            'activitypub.outbox.post',
+            {
+              collectionUri: outboxUri,
+              type: ACTIVITY_TYPES.DELETE,
+              object: delegatedGrantUri,
+              to: delegatedGrant['interop:grantee'],
+              transient: true
+            },
+            { meta: { webId: grantedBy } }
+          );
+        }
       }
     },
 
@@ -370,6 +389,12 @@ const DelegatedAccessGrantsSchema = {
               'interop:granteeType': authorization['interop:granteeType'],
               'interop:grantedBy': webId,
               'interop:delegationOfGrant': getId(grant),
+              // Only delegate what is authorized, which may be less than what the original grant gives
+              ...(authorization['interop:scopeOfAuthorization'] === 'interop:SelectedFromRegistry' && {
+                'interop:scopeOfGrant': 'interop:SelectedFromRegistry',
+                'interop:hasDataInstance': authorization['interop:hasDataInstance']
+              }),
+              'interop:accessMode': authorization['interop:accessMode'],
               'interop:delegationAllowed': delegationAllowed ? true : undefined,
               'interop:delegationLimit':
                 delegationAllowed && grant['interop:delegationLimit'] ? grant['interop:delegationLimit'] - 1 : undefined

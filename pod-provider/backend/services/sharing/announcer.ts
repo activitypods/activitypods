@@ -144,44 +144,52 @@ const AnnouncerSchema = {
 
         if (grant['interop:granteeType'] !== 'interop:SocialAgent') return;
 
-        const oldDataset = ctx.meta.dataset;
+        // Act as the data owner, so that the collections can be read
+        const { webId: oldWebId, dataset: oldDataset } = ctx.meta;
+        ctx.meta.webId = dataOwner;
         ctx.meta.dataset = getDatasetFromUri(dataOwner);
 
-        for (const resourceUri of arrayOf(grant['interop:hasDataInstance'])) {
-          const filters = {
-            'http://www.w3.org/ns/solid/interop#grantee': grantee,
-            'http://www.w3.org/ns/solid/interop#hasDataInstance': resourceUri
-          };
-          const grants = await ctx.call('access-grants.list', { filters, webId: dataOwner });
-          const delegatedGrants = await ctx.call('delegated-access-grants.list', { filters, webId: dataOwner });
-          if (arrayOf(grants['ldp:contains']).length > 0 || arrayOf(delegatedGrants['ldp:contains']).length > 0)
-            continue;
-
-          let resource;
-          try {
-            resource = await ctx.call('ldp.resource.get', {
-              resourceUri,
-              accept: MIME_TYPES.JSON,
-              webId: 'system'
-            });
-          } catch (e) {
-            continue; // The resource was deleted
-          }
-
-          for (const [collectionUri, groupUri] of [
-            [resource['apods:announces'], getAnnouncesGroupUri(resourceUri)],
-            [resource['apods:announcers'], getAnnouncersGroupUri(resourceUri)]
-          ]) {
-            if (!collectionUri || !(await ctx.call('activitypub.collection.exist', { resourceUri: collectionUri })))
+        try {
+          for (const resourceUri of arrayOf(grant['interop:hasDataInstance'])) {
+            const filters = {
+              'http://www.w3.org/ns/solid/interop#grantee': grantee,
+              'http://www.w3.org/ns/solid/interop#hasDataInstance': resourceUri
+            };
+            const grants = await ctx.call('access-grants.list', { filters, webId: dataOwner });
+            const delegatedGrants = await ctx.call('delegated-access-grants.list', { filters, webId: dataOwner });
+            if (arrayOf(grants['ldp:contains']).length > 0 || arrayOf(delegatedGrants['ldp:contains']).length > 0)
               continue;
-            await ctx.call('activitypub.collection.remove', { collectionUri, item: grantee });
-            if (await ctx.call('webacl.group.exist', { groupUri, webId: 'system' })) {
-              await ctx.call('webacl.group.removeMember', { groupUri, memberUri: grantee, webId: 'system' });
+
+            let resource;
+            try {
+              resource = await ctx.call('ldp.resource.get', {
+                resourceUri,
+                accept: MIME_TYPES.JSON,
+                webId: 'system'
+              });
+            } catch (e) {
+              continue; // The resource was deleted
+            }
+
+            for (const [collectionUri, groupUri] of [
+              [resource['apods:announces'], getAnnouncesGroupUri(resourceUri)],
+              [resource['apods:announcers'], getAnnouncersGroupUri(resourceUri)]
+            ]) {
+              if (
+                collectionUri &&
+                (await ctx.call('activitypub.collection.exist', { resourceUri: collectionUri, webId: 'system' }))
+              ) {
+                await ctx.call('activitypub.collection.remove', { collectionUri, item: grantee });
+              }
+              if (await ctx.call('webacl.group.exist', { groupUri, webId: 'system' })) {
+                await ctx.call('webacl.group.removeMember', { groupUri, memberUri: grantee, webId: 'system' });
+              }
             }
           }
+        } finally {
+          ctx.meta.webId = oldWebId;
+          ctx.meta.dataset = oldDataset;
         }
-
-        ctx.meta.dataset = oldDataset;
       }
     },
 
@@ -419,11 +427,8 @@ const AnnouncerSchema = {
 
       // Replacing a previous authorization of the grantee removed them from the announces collections
       if (resourceUri.startsWith(urlJoin(emitterUri, '/'))) {
-        const resource = await this.broker.call(
-          'ldp.resource.get',
-          { resourceUri, accept: MIME_TYPES.JSON, webId: 'system' },
-          { meta: { dataset } }
-        );
+        const meta = { webId: emitterUri, dataset };
+        const resource = await this.broker.call('ldp.resource.get', { resourceUri, accept: MIME_TYPES.JSON }, { meta });
         const collections = [[resource['apods:announces'], getAnnouncesGroupUri(resourceUri)]];
         if (delegationAllowed) collections.push([resource['apods:announcers'], getAnnouncersGroupUri(resourceUri)]);
 
@@ -431,19 +436,11 @@ const AnnouncerSchema = {
           // The collection may still be created by the announce processor
           if (
             !collectionUri ||
-            !(await this.broker.call(
-              'activitypub.collection.exist',
-              { resourceUri: collectionUri },
-              { meta: { dataset } }
-            ))
+            !(await this.broker.call('activitypub.collection.exist', { resourceUri: collectionUri }, { meta }))
           )
             continue;
-          await this.broker.call('activitypub.collection.add', { collectionUri, item: grantee }, { meta: { dataset } });
-          await this.broker.call(
-            'webacl.group.addMember',
-            { groupUri, memberUri: grantee, webId: 'system' },
-            { meta: { dataset } }
-          );
+          await this.broker.call('activitypub.collection.add', { collectionUri, item: grantee }, { meta });
+          await this.broker.call('webacl.group.addMember', { groupUri, memberUri: grantee }, { meta });
         }
       }
     }

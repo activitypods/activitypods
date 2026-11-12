@@ -109,7 +109,6 @@ const AccessGrantsMixin = {
         }
 
         // Only send Delete activity for access grants, when the grantee is a social agent and when this is not a replacement
-        // TODO: Warn grantees when delegated grants are deleted by the granter
         if (
           getType(grant) === 'interop:AccessGrant' &&
           grant['interop:granteeType'] === 'interop:SocialAgent' &&
@@ -193,12 +192,8 @@ const AccessGrantsMixin = {
         );
       },
       async onReceive(ctx: any, activity: any, recipientUri: any) {
-        const grant = activity.object;
-
-        if (getType(grant) === 'interop:AccessGrant') {
-          // Delete all delegated access grants linked with this access grant
-          await ctx.call('delegated-access-grants.deleteByGrant', { grant, webId: recipientUri });
-        }
+        // Delete all delegated access grants linked with this grant
+        await ctx.call('delegated-access-grants.deleteByGrant', { grant: activity.object, webId: recipientUri });
       }
     }
   }

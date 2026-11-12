@@ -451,4 +451,51 @@ describe('Test delegation features', () => {
     const inboxAfter = await craig.call('activitypub.collection.get', { resourceUri: craig.inbox, webId: craig.id });
     expect(inboxAfter.totalItems).toBe(inboxBefore.totalItems);
   });
+
+  test('Bob stops sharing one of Alice events with Craig, who keeps access to the other one', async () => {
+    await bob.call('access-authorizations.removeForSingleResource', { resourceUri: eventUri, grantee: craig.id });
+
+    await waitForExpect(async () => {
+      const container = await alice.call('delegated-access-grants.list', {
+        filters: { 'http://www.w3.org/ns/solid/interop#grantee': craig.id }
+      });
+      const delegatedGrants = arrayOf(container['ldp:contains']);
+      expect(delegatedGrants).toHaveLength(1);
+      expect(arrayOf(delegatedGrants[0]['interop:hasDataInstance'])).toEqual([secondEventUri]);
+    });
+
+    for (const [resourceUri, read] of [
+      [eventUri, false],
+      [secondEventUri, true]
+    ]) {
+      await expect(
+        podProvider.call('webacl.resource.hasRights', { resourceUri, rights: { read: true }, webId: craig.id })
+      ).resolves.toMatchObject({ read });
+    }
+  });
+
+  test('Bob stops sharing the other event with Craig, whose delegated grants are deleted', async () => {
+    const getCraigDelegatedGrants = async () =>
+      arrayOf((await craig.call('delegated-access-grants.list'))['ldp:contains']);
+
+    await installApp(craig, APP_URI);
+
+    await waitForExpect(async () => {
+      const appGrants = (await getCraigDelegatedGrants()).filter((grant: any) => grant['interop:grantee'] === APP_URI);
+      expect(appGrants).not.toHaveLength(0);
+    });
+
+    await bob.call('access-authorizations.removeForSingleResource', { resourceUri: secondEventUri, grantee: craig.id });
+
+    // Craig received a Delete activity: his copies and the grants delegated to his app are deleted
+    await waitForExpect(async () => {
+      await expect(getCraigDelegatedGrants()).resolves.toHaveLength(0);
+    });
+
+    for (const webId of [craig.id, APP_URI]) {
+      await expect(
+        podProvider.call('webacl.resource.hasRights', { resourceUri: secondEventUri, rights: { read: true }, webId })
+      ).resolves.toMatchObject({ read: false });
+    }
+  });
 });

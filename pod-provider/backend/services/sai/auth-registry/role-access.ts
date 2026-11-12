@@ -1,4 +1,4 @@
-import { arrayOf, getId, getDatasetFromUri } from '@semapps/ldp';
+import { arrayOf, getId, getType, getDatasetFromUri } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema } from 'moleculer';
 import { getScopeOfGrant } from './access-grants.ts';
@@ -62,29 +62,11 @@ const RoleAccessSchema = {
       async handler(ctx) {
         const { grant, podOwner } = ctx.params;
 
-        if (grant['interop:delegationAllowed'] !== true) return;
+        const roleUri = await this.getRoleForReceivedGrant(ctx, grant, podOwner);
+        if (!roleUri) return;
 
-        const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
-        if (!account?.group) return;
-
-        const roleUri = await ctx.call('role-registrations.getUri', { groupWebId: podOwner, role: 'member' });
-        const scope = grant['interop:scopeOfGrant'];
-
-        const container = await ctx.call('access-authorizations.list', {
-          filters: {
-            [`${INTEROP}dataOwner`]: grant['interop:dataOwner'],
-            [`${INTEROP}grantee`]: roleUri,
-            [`${INTEROP}hasDataRegistration`]: grant['interop:hasDataRegistration']
-          },
-          webId: podOwner
-        });
-        const exists = arrayOf(container['ldp:contains']).some(
-          (authorization: any) =>
-            authorization['interop:scopeOfAuthorization'] === scope &&
-            sameItems(authorization['interop:accessMode'], grant['interop:accessMode']) &&
-            sameItems(authorization['interop:hasDataInstance'], grant['interop:hasDataInstance'])
-        );
-        if (exists) return;
+        const authorizations = await this.listFromReceivedGrant(ctx, grant, roleUri, podOwner);
+        if (authorizations.length > 0) return;
 
         await ctx.call('access-authorizations.post', {
           resource: {
@@ -97,11 +79,32 @@ const RoleAccessSchema = {
             'interop:hasDataRegistration': grant['interop:hasDataRegistration'],
             'interop:hasDataInstance': grant['interop:hasDataInstance'],
             'interop:accessMode': grant['interop:accessMode'],
-            'interop:scopeOfAuthorization': scope
+            'interop:scopeOfAuthorization': grant['interop:scopeOfGrant']
           },
           contentType: MIME_TYPES.JSON,
           webId: podOwner
         });
+      }
+    },
+
+    removeFromReceivedGrant: {
+      // Called when a received grant is deleted or replaced, before its local copy is deleted
+      async handler(ctx) {
+        const { grantUri, podOwner } = ctx.params;
+
+        let grant;
+        try {
+          grant = await ctx.call('ldp.remote.get', { resourceUri: grantUri, strategy: 'cacheOnly', webId: podOwner });
+        } catch (e) {
+          return;
+        }
+
+        const roleUri = await this.getRoleForReceivedGrant(ctx, grant, podOwner);
+        if (!roleUri) return;
+
+        for (const authorization of await this.listFromReceivedGrant(ctx, grant, roleUri, podOwner)) {
+          await ctx.call('access-authorizations.delete', { resourceUri: getId(authorization), webId: podOwner });
+        }
       }
     },
 
@@ -126,6 +129,30 @@ const RoleAccessSchema = {
     }
   },
   methods: {
+    async getRoleForReceivedGrant(ctx, grant, podOwner) {
+      if (getType(grant) !== 'interop:AccessGrant' || grant['interop:delegationAllowed'] !== true) return;
+
+      const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
+      if (!account?.group) return;
+
+      return await ctx.call('role-registrations.getUri', { groupWebId: podOwner, role: 'member' });
+    },
+    async listFromReceivedGrant(ctx, grant, roleUri: string, podOwner: string) {
+      const container = await ctx.call('access-authorizations.list', {
+        filters: {
+          [`${INTEROP}dataOwner`]: grant['interop:dataOwner'],
+          [`${INTEROP}grantee`]: roleUri,
+          [`${INTEROP}hasDataRegistration`]: grant['interop:hasDataRegistration']
+        },
+        webId: podOwner
+      });
+      return arrayOf(container['ldp:contains']).filter(
+        (authorization: any) =>
+          authorization['interop:scopeOfAuthorization'] === grant['interop:scopeOfGrant'] &&
+          sameItems(authorization['interop:accessMode'], grant['interop:accessMode']) &&
+          sameItems(authorization['interop:hasDataInstance'], grant['interop:hasDataInstance'])
+      );
+    },
     isOwnData(authorization) {
       return authorization['interop:dataOwner'] === authorization['interop:grantedBy'];
     },

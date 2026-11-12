@@ -156,6 +156,11 @@ const AccessGrantsMixin = {
 
         // Delete from cache the old grant
         if (grant['interop:replaces']) {
+          await ctx.call('role-access.removeFromReceivedGrant', {
+            grantUri: grant['interop:replaces'],
+            podOwner: recipientUri
+          });
+
           try {
             await ctx.call('ldp.remote.delete', {
               resourceUri: grant['interop:replaces'],
@@ -196,6 +201,11 @@ const AccessGrantsMixin = {
         );
       },
       async onReceive(ctx: any, activity: any, recipientUri: any) {
+        await ctx.call('role-access.removeFromReceivedGrant', {
+          grantUri: getId(activity.object),
+          podOwner: recipientUri
+        });
+
         // Delete all delegated access grants linked with this grant
         await ctx.call('delegated-access-grants.deleteByGrant', { grant: activity.object, webId: recipientUri });
       }

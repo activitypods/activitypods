@@ -19,7 +19,8 @@ describe('Test private data of members shared with a group', () => {
     groupWebId: string,
     memberRoleUri: string,
     eventUri: string,
-    privateEventUri: string;
+    privateEventUri: string,
+    picnicUri: string;
 
   const call = (actor: any, actionName: string, params: any) =>
     podProvider.call(actionName, params, { meta: { webId: actor.id, dataset: actor.preferredUsername } });
@@ -46,6 +47,14 @@ describe('Test private data of members shared with a group', () => {
 
   const getGrantees = async () =>
     (await getDelegatedGrants()).map((grant: any) => grant['interop:grantee']).sort();
+
+  const getGrantsByInstances = async () =>
+    Object.fromEntries(
+      (await getDelegatedGrants()).map((grant: any) => [
+        grant['interop:grantee'],
+        { instances: arrayOf(grant['interop:hasDataInstance']).sort(), modes: arrayOf(grant['interop:accessMode']).sort() }
+      ])
+    );
 
   const createEvent = async (name: string) => {
     const containerUri = await call(craig, 'data-registrations.generateFromShapeTree', {
@@ -92,6 +101,7 @@ describe('Test private data of members shared with a group', () => {
 
     eventUri = await createEvent('General assembly');
     privateEventUri = await createEvent('Birthday party');
+    picnicUri = await createEvent('Picnic');
   }, 100000);
 
   afterAll(async () => {
@@ -194,5 +204,99 @@ describe('Test private data of members shared with a group', () => {
     for (const actor of [alice, daisy]) {
       await expect(hasRights(actor, eventUri, { read: true })).resolves.toMatchObject({ read: true });
     }
+  });
+
+  test('If the member shares another resource with the same rights, the grants of the members are replaced', async () => {
+    await call(craig, 'access-authorizations.addForSingleResource', {
+      resourceUri: picnicUri,
+      grantee: groupWebId,
+      accessModes: ['acl:Read'],
+      delegationAllowed: true,
+      delegationLimit: 1
+    });
+
+    await waitForExpect(async () => {
+      const authorizations = await getGroupAuthorizations();
+      expect(authorizations).toHaveLength(1);
+      expect(arrayOf(authorizations[0]['interop:hasDataInstance']).sort()).toEqual([eventUri, picnicUri].sort());
+    });
+
+    await waitForExpect(async () => {
+      const expected = { instances: [eventUri, picnicUri].sort(), modes: ['acl:Read'] };
+      await expect(getGrantsByInstances()).resolves.toEqual({ [alice.id]: expected, [daisy.id]: expected });
+    });
+
+    await waitForExpect(async () => {
+      for (const actor of [alice, daisy]) {
+        await expect(hasRights(actor, picnicUri, { read: true })).resolves.toMatchObject({ read: true });
+        await expect(hasRights(actor, eventUri, { read: true })).resolves.toMatchObject({ read: true });
+      }
+    });
+  });
+
+  test('If the member changes the rights on a resource, the grants of the members are changed', async () => {
+    await call(craig, 'access-authorizations.addForSingleResource', {
+      resourceUri: eventUri,
+      grantee: groupWebId,
+      accessModes: ['acl:Read', 'acl:Write'],
+      delegationAllowed: true,
+      delegationLimit: 1
+    });
+
+    await waitForExpect(async () => {
+      const authorizations = await getGroupAuthorizations();
+      expect(
+        authorizations.map((a: any) => [arrayOf(a['interop:hasDataInstance']), arrayOf(a['interop:accessMode']).sort()])
+      ).toEqual(
+        expect.arrayContaining([
+          [[picnicUri], ['acl:Read']],
+          [[eventUri], ['acl:Read', 'acl:Write']]
+        ])
+      );
+      expect(authorizations).toHaveLength(2);
+    });
+
+    await waitForExpect(async () => {
+      const delegatedGrants = await getDelegatedGrants();
+      expect(delegatedGrants).toHaveLength(4);
+    });
+
+    await waitForExpect(async () => {
+      for (const actor of [alice, daisy]) {
+        await expect(hasRights(actor, eventUri, { read: true, write: true })).resolves.toMatchObject({
+          read: true,
+          write: true
+        });
+        await expect(hasRights(actor, picnicUri, { read: true, write: true })).resolves.toMatchObject({
+          read: true,
+          write: false
+        });
+      }
+    });
+  });
+
+  test('If the member stops sharing a resource, the members lose access to it', async () => {
+    await call(craig, 'access-authorizations.removeForSingleResource', {
+      resourceUri: eventUri,
+      grantee: groupWebId
+    });
+
+    await waitForExpect(async () => {
+      const authorizations = await getGroupAuthorizations();
+      expect(authorizations).toHaveLength(1);
+      expect(authorizations[0]['interop:hasDataInstance']).toBe(picnicUri);
+    });
+
+    await waitForExpect(async () => {
+      const expected = { instances: [picnicUri], modes: ['acl:Read'] };
+      await expect(getGrantsByInstances()).resolves.toEqual({ [alice.id]: expected, [daisy.id]: expected });
+    });
+
+    await waitForExpect(async () => {
+      for (const actor of [alice, daisy]) {
+        await expect(hasRights(actor, eventUri, { read: true })).resolves.toMatchObject({ read: false });
+        await expect(hasRights(actor, picnicUri, { read: true })).resolves.toMatchObject({ read: true });
+      }
+    });
   });
 });

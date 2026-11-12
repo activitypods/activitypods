@@ -92,7 +92,7 @@ When a contact request with a `context` is accepted, the emitter is not notified
 
 ### Contact links
 
-Users can also create a contact link from the Pod provider frontend. Anyone who opens this link can see the user's profile and, after logging in with their own Pod, send a contact request which will be accepted automatically. This is based on a [capability](/architecture/authorization/#capabilities-with-verifiable-credentials) and doesn't require anything from applications.
+Users can also create a contact link from the Pod provider frontend. Anyone who opens this link can see the user's profile and, after logging in with their own Pod, send a contact request which will be accepted automatically. This is based on a [capability](/architecture/verifiable-credentials/#capabilities) and doesn't require anything from applications.
 
 ## Sharing resources
 

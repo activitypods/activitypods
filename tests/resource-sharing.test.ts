@@ -357,6 +357,61 @@ describe('Test resource sharing features', () => {
     });
   });
 
+  test('Alice shares two other events with other rights, and un-share the second event, without mixing grants', async () => {
+    const createEvent = (name: string) =>
+      alice.call('ldp.container.post', {
+        containerUri: eventContainerUri,
+        resource: { type: OBJECT_TYPES.EVENT, name },
+        contentType: MIME_TYPES.JSON
+      });
+    const event3Uri = await createEvent('Hackathon');
+    const event4Uri = await createEvent('Concert');
+
+    // The authorization for the third event is replaced while an older grant exists for Bob
+    for (const resourceUri of [event3Uri, event4Uri]) {
+      await alice.call('access-authorizations.addForSingleResource', {
+        resourceUri,
+        grantee: bob.id,
+        accessModes: ['acl:Read', 'acl:Write']
+      });
+    }
+
+    await alice.call('access-authorizations.removeForSingleResource', {
+      resourceUri: event2Uri,
+      grantee: bob.id
+    });
+
+    const getGrantsInstances = async () => {
+      const registration = await alice.call('social-agent-registrations.getForAgent', {
+        agentUri: bob.id,
+        podOwner: alice.id
+      });
+      const grants = await alice.call('social-agent-registrations.getGrants', {
+        agentRegistration: registration,
+        podOwner: alice.id
+      });
+      return grants.map((grant: any) => arrayOf(grant['interop:hasDataInstance']).sort()).sort();
+    };
+
+    await waitForExpect(async () => {
+      await expect(getGrantsInstances()).resolves.toEqual([[eventUri], [event3Uri, event4Uri].sort()].sort());
+    });
+
+    const hasRights = (resourceUri: string) =>
+      podProvider.call('webacl.resource.hasRights', {
+        resourceUri,
+        rights: { read: true, write: true },
+        webId: bob.id
+      });
+
+    await waitForExpect(async () => {
+      await expect(hasRights(eventUri)).resolves.toMatchObject({ read: true, write: false });
+      await expect(hasRights(event2Uri)).resolves.toMatchObject({ read: false, write: false });
+      await expect(hasRights(event3Uri)).resolves.toMatchObject({ read: true, write: true });
+      await expect(hasRights(event4Uri)).resolves.toMatchObject({ read: true, write: true });
+    });
+  });
+
   test('Bob remove the app and all delegated grants are deleted', async () => {
     await bob.call('registration-endpoint.remove', {
       appUri: APP_URI

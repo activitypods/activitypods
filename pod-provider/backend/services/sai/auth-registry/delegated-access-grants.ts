@@ -373,7 +373,14 @@ const DelegatedAccessGrantsSchema = {
           },
           webId
         });
-        const grant = grantsContainer['ldp:contains']?.[0];
+        // Several grants may have been received for the same registration
+        const grants = arrayOf(grantsContainer['ldp:contains']);
+        const grant =
+          grants.find((g: any) =>
+            arrayOf(authorization['interop:hasDataInstance']).every(uri =>
+              arrayOf(g['interop:hasDataInstance']).includes(uri)
+            )
+          ) || grants[0];
         if (!grant) throw new Error(`Could not find grant generated from authorization ${getId(authorization)}`);
 
         const delegationAllowed =
@@ -395,6 +402,7 @@ const DelegatedAccessGrantsSchema = {
                 'interop:hasDataInstance': authorization['interop:hasDataInstance']
               }),
               'interop:accessMode': authorization['interop:accessMode'],
+              'interop:derivedFromRoleRegistration': authorization['interop:derivedFromRoleRegistration'],
               'interop:delegationAllowed': delegationAllowed ? true : undefined,
               'interop:delegationLimit':
                 delegationAllowed && grant['interop:delegationLimit'] ? grant['interop:delegationLimit'] - 1 : undefined

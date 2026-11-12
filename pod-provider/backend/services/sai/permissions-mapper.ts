@@ -1,4 +1,4 @@
-import { getId, arrayOf } from '@semapps/ldp';
+import { getId, getType, arrayOf } from '@semapps/ldp';
 import { ServiceSchema } from 'moleculer';
 
 // Service that maps access grants and special rights to WAC permissions
@@ -9,8 +9,9 @@ const PermissionsMapperSchema = {
     addPermissionsFromGrant: {
       async handler(ctx) {
         const { grant, groupUri } = ctx.params;
-        // The rights of the grants derived from a role are given to the WAC group of the role
-        if (!groupUri && grant['interop:derivedFromRoleRegistration']) return;
+        // The rights of the access grants derived from a role are given to the WAC group of the role
+        if (!groupUri && getType(grant) === 'interop:AccessGrant' && grant['interop:derivedFromRoleRegistration'])
+          return;
         const agentKey = groupUri ? 'group' : 'user';
         const agentUri = groupUri || grant['interop:grantee'];
         const accessMode = arrayOf(grant['interop:accessMode']);
@@ -66,8 +67,9 @@ const PermissionsMapperSchema = {
     removePermissionsFromGrant: {
       async handler(ctx) {
         const { grant, groupUri } = ctx.params;
-        // The rights of the grants derived from a role are given to the WAC group of the role
-        if (!groupUri && grant['interop:derivedFromRoleRegistration']) return;
+        // The rights of the access grants derived from a role are given to the WAC group of the role
+        if (!groupUri && getType(grant) === 'interop:AccessGrant' && grant['interop:derivedFromRoleRegistration'])
+          return;
         const agentKey = groupUri ? 'group' : 'user';
         const agentUri = groupUri || grant['interop:grantee'];
         const accessMode = arrayOf(grant['interop:accessMode']);

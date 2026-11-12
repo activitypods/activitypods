@@ -174,6 +174,10 @@ const AccessGrantsMixin = {
           grant,
           podOwner: recipientUri
         });
+
+        if (getType(grant) === 'interop:AccessGrant') {
+          await ctx.call('role-access.addFromReceivedGrant', { grant, podOwner: recipientUri });
+        }
       }
     },
     deleteDataGrant: {

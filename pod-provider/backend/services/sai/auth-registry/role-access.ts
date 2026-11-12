@@ -1,4 +1,4 @@
-import { arrayOf, getId } from '@semapps/ldp';
+import { arrayOf, getId, getDatasetFromUri } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema } from 'moleculer';
 import { getScopeOfGrant } from './access-grants.ts';
@@ -11,8 +11,9 @@ const sameItems = (a: any, b: any) => {
   return itemsA.length === itemsB.length && itemsA.every(item => itemsB.includes(item));
 };
 
-// Authorizations with a role as grantee give rights through the WAC group of the role,
-// and generate one access grant per effective member of the role
+// Authorizations with a role as grantee generate one grant per effective member of the role
+// For the data of the pod, the rights are given through the WAC group of the role
+// For the data shared with the pod, a delegated grant is issued on the data owner's storage for each member
 const RoleAccessSchema = {
   name: 'role-access' as const,
   dependencies: ['role-registrations', 'access-authorizations', 'access-grants', 'permissions-mapper'],
@@ -20,17 +21,19 @@ const RoleAccessSchema = {
     addFromAuthorization: {
       async handler(ctx) {
         const { authorization } = ctx.params;
-        const groupWebId = authorization['interop:dataOwner'];
+        const groupWebId = authorization['interop:grantedBy'];
 
         let replacedAuthorization;
-        if (authorization['interop:replaces']) {
-          replacedAuthorization = await ctx.call('access-authorizations.get', {
-            resourceUri: authorization['interop:replaces'],
-            webId: groupWebId
-          });
-          await this.setPermissions(ctx, replacedAuthorization, false);
+        if (this.isOwnData(authorization)) {
+          if (authorization['interop:replaces']) {
+            replacedAuthorization = await ctx.call('access-authorizations.get', {
+              resourceUri: authorization['interop:replaces'],
+              webId: groupWebId
+            });
+            await this.setPermissions(ctx, replacedAuthorization, false);
+          }
+          await this.setPermissions(ctx, authorization, true);
         }
-        await this.setPermissions(ctx, authorization, true);
 
         const members = await ctx.call('role-registrations.getEffectiveMembers', { groupWebId });
         await this.syncGrants(
@@ -46,11 +49,59 @@ const RoleAccessSchema = {
       async handler(ctx) {
         const { authorization, isReplacing } = ctx.params;
 
-        if (!isReplacing) await this.setPermissions(ctx, authorization, false);
+        if (this.isOwnData(authorization) && !isReplacing) await this.setPermissions(ctx, authorization, false);
 
         for (const grant of await this.listGrants(ctx, authorization)) {
-          await ctx.call('access-grants.delete', { resourceUri: getId(grant), webId: 'system', isReplacing });
+          await this.deleteGrant(ctx, authorization, grant, isReplacing);
         }
+      }
+    },
+
+    addFromReceivedGrant: {
+      // Data shared with a group with the right to delegate it is shared with the members of its default role
+      async handler(ctx) {
+        const { grant, podOwner } = ctx.params;
+
+        if (grant['interop:delegationAllowed'] !== true) return;
+
+        const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
+        if (!account?.group) return;
+
+        const roleUri = await ctx.call('role-registrations.getUri', { groupWebId: podOwner, role: 'member' });
+        const scope = grant['interop:scopeOfGrant'];
+
+        const container = await ctx.call('access-authorizations.list', {
+          filters: {
+            [`${INTEROP}dataOwner`]: grant['interop:dataOwner'],
+            [`${INTEROP}grantee`]: roleUri,
+            [`${INTEROP}hasDataRegistration`]: grant['interop:hasDataRegistration']
+          },
+          webId: podOwner
+        });
+        const exists = arrayOf(container['ldp:contains']).some(
+          (authorization: any) =>
+            authorization['interop:scopeOfAuthorization'] === scope &&
+            sameItems(authorization['interop:accessMode'], grant['interop:accessMode']) &&
+            sameItems(authorization['interop:hasDataInstance'], grant['interop:hasDataInstance'])
+        );
+        if (exists) return;
+
+        await ctx.call('access-authorizations.post', {
+          resource: {
+            type: 'interop:AccessAuthorization',
+            'interop:dataOwner': grant['interop:dataOwner'],
+            'interop:grantedBy': podOwner,
+            'interop:grantee': roleUri,
+            'interop:granteeType': 'interop:SocialAgent',
+            'interop:registeredShapeTree': grant['interop:registeredShapeTree'],
+            'interop:hasDataRegistration': grant['interop:hasDataRegistration'],
+            'interop:hasDataInstance': grant['interop:hasDataInstance'],
+            'interop:accessMode': grant['interop:accessMode'],
+            'interop:scopeOfAuthorization': scope
+          },
+          contentType: MIME_TYPES.JSON,
+          webId: podOwner
+        });
       }
     },
 
@@ -75,16 +126,30 @@ const RoleAccessSchema = {
     }
   },
   methods: {
+    isOwnData(authorization) {
+      return authorization['interop:dataOwner'] === authorization['interop:grantedBy'];
+    },
+    // The delegated grants are issued and deleted by the group, in a context of their own
+    callAsGroup(authorization, actionName: string, params: any) {
+      const groupWebId = authorization['interop:grantedBy'];
+      return this.broker.call(actionName, params, {
+        meta: { webId: groupWebId, dataset: getDatasetFromUri(groupWebId) }
+      });
+    },
     async listGrants(ctx, authorization) {
       // The grants are not linked to the authorization: they are found by their content,
       // which is unique for a role, as authorizations with the same access modes are merged
-      const container = await ctx.call('access-grants.list', {
-        filters: {
-          [`${INTEROP}derivedFromRoleRegistration`]: authorization['interop:grantee'],
-          [`${INTEROP}hasDataRegistration`]: authorization['interop:hasDataRegistration']
-        },
-        webId: authorization['interop:dataOwner']
-      });
+      const container = await ctx.call(
+        this.isOwnData(authorization) ? 'access-grants.list' : 'delegated-access-grants.list',
+        {
+          filters: {
+            [`${INTEROP}derivedFromRoleRegistration`]: authorization['interop:grantee'],
+            [`${INTEROP}dataOwner`]: authorization['interop:dataOwner'],
+            [`${INTEROP}hasDataRegistration`]: authorization['interop:hasDataRegistration']
+          },
+          webId: authorization['interop:grantedBy']
+        }
+      );
       return arrayOf(container['ldp:contains']).filter(
         (grant: any) =>
           grant['interop:scopeOfGrant'] === getScopeOfGrant(authorization) &&
@@ -92,37 +157,54 @@ const RoleAccessSchema = {
           sameItems(grant['interop:hasDataInstance'], authorization['interop:hasDataInstance'])
       );
     },
+    async deleteGrant(ctx, authorization, grant, isReplacing?: boolean) {
+      if (this.isOwnData(authorization)) {
+        await ctx.call('access-grants.delete', { resourceUri: getId(grant), webId: 'system', isReplacing });
+      } else {
+        await this.callAsGroup(authorization, 'delegated-access-grants.remoteDelete', { delegatedGrant: grant });
+      }
+    },
     async syncGrants(ctx, authorization, membersUris: string[], replacedAuthorization?: any) {
       const dataOwner = authorization['interop:dataOwner'];
-      const members = membersUris.filter(uri => uri !== dataOwner);
+      const groupWebId = authorization['interop:grantedBy'];
+      const members = membersUris.filter(uri => uri !== dataOwner && uri !== groupWebId);
       const grants = await this.listGrants(ctx, authorization);
       const replacedGrants = replacedAuthorization ? await this.listGrants(ctx, replacedAuthorization) : [];
 
       for (const memberUri of members) {
         if (grants.some((grant: any) => grant['interop:grantee'] === memberUri)) continue;
-        const replacedGrant = replacedGrants.find((grant: any) => grant['interop:grantee'] === memberUri);
 
-        await ctx.call('access-grants.post', {
-          resource: {
-            ...authorization,
-            id: undefined,
-            type: 'interop:AccessGrant',
-            'interop:grantee': memberUri,
-            'interop:grantedBy': dataOwner,
-            'interop:scopeOfGrant': getScopeOfGrant(authorization),
-            'interop:scopeOfAuthorization': undefined,
-            'interop:replaces': replacedGrant && getId(replacedGrant),
-            'interop:derivedFromRoleRegistration': authorization['interop:grantee']
-          },
-          contentType: MIME_TYPES.JSON,
-          webId: dataOwner
-        });
+        if (this.isOwnData(authorization)) {
+          const replacedGrant = replacedGrants.find((grant: any) => grant['interop:grantee'] === memberUri);
+
+          await ctx.call('access-grants.post', {
+            resource: {
+              ...authorization,
+              id: undefined,
+              type: 'interop:AccessGrant',
+              'interop:grantee': memberUri,
+              'interop:grantedBy': dataOwner,
+              'interop:scopeOfGrant': getScopeOfGrant(authorization),
+              'interop:scopeOfAuthorization': undefined,
+              'interop:replaces': replacedGrant && getId(replacedGrant),
+              'interop:derivedFromRoleRegistration': authorization['interop:grantee']
+            },
+            contentType: MIME_TYPES.JSON,
+            webId: dataOwner
+          });
+        } else {
+          await this.callAsGroup(authorization, 'delegated-access-grants.generateFromAuthorization', {
+            authorization: {
+              ...authorization,
+              'interop:grantee': memberUri,
+              'interop:derivedFromRoleRegistration': authorization['interop:grantee']
+            }
+          });
+        }
       }
 
       for (const grant of grants) {
-        if (!members.includes(grant['interop:grantee'])) {
-          await ctx.call('access-grants.delete', { resourceUri: getId(grant), webId: 'system' });
-        }
+        if (!members.includes(grant['interop:grantee'])) await this.deleteGrant(ctx, authorization, grant);
       }
     },
     async setPermissions(ctx, authorization, granted: boolean) {

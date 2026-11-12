@@ -460,11 +460,8 @@ const AccessAuthorizationsSchema = {
     }
   },
   methods: {
-    async isRole(ctx, authorization) {
-      return await ctx.call('role-registrations.isRole', {
-        agentUri: authorization['interop:grantee'],
-        podOwner: authorization['interop:dataOwner']
-      });
+    async isRole(ctx, authorization, podOwner) {
+      return await ctx.call('role-registrations.isRole', { agentUri: authorization['interop:grantee'], podOwner });
     }
   },
   hooks: {
@@ -484,7 +481,7 @@ const AccessAuthorizationsSchema = {
           authorizationUri: getId(authorization)
         });
 
-        const isRole = dataOwner === webId && (await this.isRole(ctx, authorization));
+        const isRole = await this.isRole(ctx, authorization, webId);
 
         // Check if we need to generate a grant or a delegated grant
         if (isRole) {
@@ -509,7 +506,7 @@ const AccessAuthorizationsSchema = {
         const scope = authorization['interop:scopeOfAuthorization'];
         const webId = ctx.params.webId || ctx.meta.webId;
 
-        const isRole = dataOwner === webId && (await this.isRole(ctx, authorization));
+        const isRole = await this.isRole(ctx, authorization, webId);
 
         if (isRole) {
           await ctx.call('role-access.removeFromAuthorization', {

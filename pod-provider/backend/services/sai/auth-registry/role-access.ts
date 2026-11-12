@@ -2,14 +2,9 @@ import { arrayOf, getId, getType, getDatasetFromUri } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema } from 'moleculer';
 import { getScopeOfGrant } from './access-grants.ts';
+import { arraysEqual } from '../../../utils.ts';
 
 const INTEROP = 'http://www.w3.org/ns/solid/interop#';
-
-const sameItems = (a: any, b: any) => {
-  const itemsA = arrayOf(a);
-  const itemsB = arrayOf(b);
-  return itemsA.length === itemsB.length && itemsA.every(item => itemsB.includes(item));
-};
 
 // Authorizations with a role as grantee generate one grant per effective member of the role
 // For the data of the pod, the rights are given through the WAC group of the role
@@ -149,8 +144,8 @@ const RoleAccessSchema = {
       return arrayOf(container['ldp:contains']).filter(
         (authorization: any) =>
           authorization['interop:scopeOfAuthorization'] === grant['interop:scopeOfGrant'] &&
-          sameItems(authorization['interop:accessMode'], grant['interop:accessMode']) &&
-          sameItems(authorization['interop:hasDataInstance'], grant['interop:hasDataInstance'])
+          arraysEqual(authorization['interop:accessMode'], grant['interop:accessMode']) &&
+          arraysEqual(authorization['interop:hasDataInstance'], grant['interop:hasDataInstance'])
       );
     },
     isOwnData(authorization) {
@@ -180,8 +175,8 @@ const RoleAccessSchema = {
       return arrayOf(container['ldp:contains']).filter(
         (grant: any) =>
           grant['interop:scopeOfGrant'] === getScopeOfGrant(authorization) &&
-          sameItems(grant['interop:accessMode'], authorization['interop:accessMode']) &&
-          sameItems(grant['interop:hasDataInstance'], authorization['interop:hasDataInstance'])
+          arraysEqual(grant['interop:accessMode'], authorization['interop:accessMode']) &&
+          arraysEqual(grant['interop:hasDataInstance'], authorization['interop:hasDataInstance'])
       );
     },
     async deleteGrant(ctx, authorization, grant, isReplacing?: boolean) {

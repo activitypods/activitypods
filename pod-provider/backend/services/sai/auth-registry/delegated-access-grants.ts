@@ -6,6 +6,7 @@ import AccessGrantsMixin from '../../../mixins/access-grants.ts';
 import QueueService from 'moleculer-bull';
 import { ServiceSchema } from 'moleculer';
 import * as CONFIG from '../../../config/config.ts';
+import { arraysEqual } from '../../../utils.ts';
 
 const scopeAllJobOptions = {
   attempts: 3,
@@ -375,11 +376,12 @@ const DelegatedAccessGrantsSchema = {
         });
         // Several grants may have been received for the same registration
         const grants = arrayOf(grantsContainer['ldp:contains']);
+        const includes = (a: any, b: any) => arrayOf(b).every(item => arrayOf(a).includes(item));
         const grant =
-          grants.find((g: any) =>
-            arrayOf(authorization['interop:hasDataInstance']).every(uri =>
-              arrayOf(g['interop:hasDataInstance']).includes(uri)
-            )
+          grants.find(
+            (g: any) =>
+              includes(g['interop:hasDataInstance'], authorization['interop:hasDataInstance']) &&
+              includes(g['interop:accessMode'], authorization['interop:accessMode'])
           ) || grants[0];
         if (!grant) throw new Error(`Could not find grant generated from authorization ${getId(authorization)}`);
 
@@ -492,7 +494,13 @@ const DelegatedAccessGrantsSchema = {
           { parentCtx: ctx }
         );
 
-        return filteredContainer['ldp:contains']?.[0];
+        // The delegated grant has the instances of the original grant, unless the authorization selects them
+        return arrayOf(filteredContainer['ldp:contains']).find(
+          (delegatedGrant: any) =>
+            arraysEqual(delegatedGrant['interop:accessMode'], authorization['interop:accessMode']) &&
+            (authorization['interop:scopeOfAuthorization'] !== 'interop:SelectedFromRegistry' ||
+              arraysEqual(delegatedGrant['interop:hasDataInstance'], authorization['interop:hasDataInstance']))
+        );
       }
     },
 

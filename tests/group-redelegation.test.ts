@@ -15,6 +15,7 @@ describe('Test private data of members shared with a group', () => {
     alice: any,
     bob: any,
     craig: any,
+    daisy: any,
     groupWebId: string,
     memberRoleUri: string,
     eventUri: string,
@@ -43,6 +44,9 @@ describe('Test private data of members shared with a group', () => {
     return arrayOf(container['ldp:contains']);
   };
 
+  const getGrantees = async () =>
+    (await getDelegatedGrants()).map((grant: any) => grant['interop:grantee']).sort();
+
   const createEvent = async (name: string) => {
     const containerUri = await call(craig, 'data-registrations.generateFromShapeTree', {
       shapeTreeUri: EVENT_SHAPE_TREE,
@@ -62,7 +66,7 @@ describe('Test private data of members shared with a group', () => {
     podProvider = await connectPodProvider();
 
     const actors = [];
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 4; i++) {
       const actorData = require(`./data/actor${i}.json`);
       const { webId } = await podProvider.call('auth.signup', actorData);
       actors.push(
@@ -73,7 +77,7 @@ describe('Test private data of members shared with a group', () => {
         )
       );
     }
-    [alice, bob, craig] = actors;
+    [alice, bob, craig, daisy] = actors;
 
     await call(alice, 'groups.create', { id: 'acme', type: 'foaf:Organization' });
     groupWebId = urlJoin(new URL(alice.id).origin, 'acme');
@@ -153,6 +157,42 @@ describe('Test private data of members shared with a group', () => {
     await expect(getGroupAuthorizations()).resolves.toHaveLength(1);
     for (const actor of [alice, bob]) {
       await expect(hasRights(actor, privateEventUri, { read: true })).resolves.toMatchObject({ read: false });
+    }
+  });
+
+  test('A new member of the role gets access to the data shared with the group', async () => {
+    await podProvider.call('role-registrations.addMember', {
+      roleRegistrationUri: memberRoleUri,
+      agentUri: daisy.id
+    });
+
+    await waitForExpect(async () => {
+      await expect(getGrantees()).resolves.toEqual([alice.id, bob.id, daisy.id].sort());
+    });
+
+    await waitForExpect(async () => {
+      await expect(hasRights(daisy, eventUri, { read: true })).resolves.toMatchObject({ read: true });
+    });
+
+    await expect(hasRights(daisy, privateEventUri, { read: true })).resolves.toMatchObject({ read: false });
+  });
+
+  test('A member removed from the role loses access to the data shared with the group', async () => {
+    await podProvider.call('role-registrations.removeMember', {
+      roleRegistrationUri: memberRoleUri,
+      agentUri: bob.id
+    });
+
+    await waitForExpect(async () => {
+      await expect(getGrantees()).resolves.toEqual([alice.id, daisy.id].sort());
+    });
+
+    await waitForExpect(async () => {
+      await expect(hasRights(bob, eventUri, { read: true })).resolves.toMatchObject({ read: false });
+    });
+
+    for (const actor of [alice, daisy]) {
+      await expect(hasRights(actor, eventUri, { read: true })).resolves.toMatchObject({ read: true });
     }
   });
 });

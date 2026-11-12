@@ -118,7 +118,7 @@ const RoleAccessSchema = {
 
         for (const authorization of arrayOf(container['ldp:contains'])) {
           const roleMembers = members[authorization['interop:grantee']];
-          if (roleMembers && authorization['interop:dataOwner'] === groupWebId) {
+          if (roleMembers) {
             await this.syncGrants(ctx, authorization, roleMembers);
           }
         }

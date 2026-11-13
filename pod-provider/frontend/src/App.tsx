@@ -114,10 +114,15 @@ const App = () => (
           <Route path="/group/:groupId">
             <Route index element={<Navigate to="members" replace />} />
             <Route path="members" element={<GroupMembersPage />} />
+            <Route path="data">
+              <Route index element={<DataPage />} />
+              <Route path=":resourceUri" element={<DataResourcePage />} />
+            </Route>
             <Route path="settings">
               <Route index element={<GroupSettingsPage />} />
               <Route path="profile" element={<PublicProfilePage />} />
               <Route path="roles" element={<GroupRolesPage />} />
+              <Route path="advanced" element={<AdvancedSettingsPage />} />
               <Route path="export" element={<SettingsExportPage />} />
               <Route path="delete" element={<SettingsDeletePage />} />
             </Route>

@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslate, useGetIdentity, useLocaleState } from 'react-admin';
+import { useTranslate, useLocaleState } from 'react-admin';
 import {
   Box,
   Badge,
@@ -16,10 +16,13 @@ import {
 import { makeStyles } from 'tss-react/mui';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import CachedIcon from '@mui/icons-material/Cached';
-import { useContainerByUri, useCompactPredicate } from '@semapps/semantic-data-provider';
+import { useCompactPredicate } from '@semapps/semantic-data-provider';
 import ListView from '../../layout/ListView';
 import ResourceCard from '../../common/cards/ResourceCard';
 import BackButton from '../../common/buttons/BackButton';
+import useRealmContext from '../../hooks/useRealmContext';
+import usePodContainers from '../../hooks/usePodContainers';
+import useDataPagePath from '../../hooks/useDataPagePath';
 import { arrayOf } from '../../utils';
 
 const useStyles = makeStyles()(() => ({
@@ -38,7 +41,8 @@ const useStyles = makeStyles()(() => ({
 }));
 
 const DataContainerScreen = ({ containerData }: any) => {
-  const { data: identity } = useGetIdentity();
+  const { data: pod } = useRealmContext() as any;
+  const getPath = useDataPagePath();
   const { classes } = useStyles();
   const navigate = useNavigate();
   const translate = useTranslate();
@@ -46,19 +50,19 @@ const DataContainerScreen = ({ containerData }: any) => {
   const [locale] = useLocaleState();
   const developerMode = !!localStorage.getItem('developer_mode');
   const xs = useMediaQuery(theme => theme.breakpoints.down('sm'), { noSsr: true });
-  const container = useContainerByUri(containerData.id || containerData['@id']);
+  const container = usePodContainers()?.find(c => c.uri === (containerData.id || containerData['@id']));
   // @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message
   const labelPredicate = useCompactPredicate(container?.labelPredicate, containerData['@context']);
 
   const onSelect = useCallback(
     (resource: any) => {
       if (developerMode) {
-        navigate(`/data/${encodeURIComponent(resource.id || resource['@id'])}`);
+        navigate(getPath(resource.id || resource['@id']));
       } else {
         setSelected(resource);
       }
     },
-    [developerMode, navigate, setSelected]
+    [developerMode, navigate, getPath, setSelected]
   );
 
   const resources = arrayOf(containerData['ldp:contains']);
@@ -71,7 +75,7 @@ const DataContainerScreen = ({ containerData }: any) => {
     <ListView
       title={resourceName}
       actions={[
-        <BackButton to="/data" /> /*<SetDefaultAppButton typeRegistration={typeRegistration} refetch={refetch} />*/
+        <BackButton to={getPath()} /> /*<SetDefaultAppButton typeRegistration={typeRegistration} refetch={refetch} />*/
       ]}
       asides={selected && !xs ? [<ResourceCard resource={selected} labelPredicate={labelPredicate} />] : null}
     >
@@ -80,7 +84,7 @@ const DataContainerScreen = ({ containerData }: any) => {
           {resources.length === 0 && translate('ra.navigation.no_results', { name: resourceName })}
           {resources.map(resource => {
             const resourceUri = resource.id || resource['@id'];
-            const isLocal = resourceUri.startsWith(identity?.id);
+            const isLocal = resourceUri.startsWith(pod?.id);
             const label = labelPredicate && resource[labelPredicate];
             return (
               <ListItem className={classes.listItem} key={resourceUri}>

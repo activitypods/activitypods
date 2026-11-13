@@ -1,27 +1,28 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@mui/material';
-import { useGetIdentity } from 'react-admin';
 import ShowView from '../../layout/ShowView';
 import JsonView from '@uiw/react-json-view';
 import BackButton from '../../common/buttons/BackButton';
 import ResourceCard from '../../common/cards/ResourceCard';
-import { useContainersByTypes, useCompactPredicate } from '@semapps/semantic-data-provider';
+import { useCompactPredicate } from '@semapps/semantic-data-provider';
+import useRealmContext from '../../hooks/useRealmContext';
+import usePodContainers from '../../hooks/usePodContainers';
+import useDataPagePath from '../../hooks/useDataPagePath';
 import { isStorageUri } from '../../utils';
 
 const DataResourceScreen = ({ resourceData }: any) => {
-  const { data: identity } = useGetIdentity();
-  const [container] = useContainersByTypes(resourceData.type || resourceData['@type']);
+  const { data: pod } = useRealmContext() as any;
+  const getPath = useDataPagePath();
+  const resourceUri = resourceData.id || resourceData['@id'];
+  const container = usePodContainers()?.find(c => resourceUri.startsWith(`${c.uri}/`));
   // @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message
   const labelPredicate = useCompactPredicate(container?.labelPredicate, resourceData['@context']);
 
   return (
     <ShowView
       title={(labelPredicate && resourceData[labelPredicate]) || resourceData.id || resourceData['@id']}
-      actions={[
-        // @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message
-        container ? <BackButton to={`/data/${encodeURIComponent(container.uri)}`} /> : <BackButton to="/data" />
-      ]}
+      actions={[<BackButton to={getPath(container?.uri)} />]}
       asides={[<ResourceCard resource={resourceData} labelPredicate={labelPredicate} />]}
     >
       <Card sx={{ p: 2, overflowX: 'auto' }}>
@@ -37,10 +38,10 @@ const DataResourceScreen = ({ resourceData }: any) => {
           <JsonView.String
             render={({ children, style, ...rest }, { value, keyName }) => {
               // @ts-expect-error TS(2345): Argument of type 'unknown' is not assignable to pa... Remove this comment to see the full error message
-              if (isStorageUri(value, identity?.id) && value !== (resourceData.id || resourceData['@id'])) {
+              if (isStorageUri(value, pod?.id) && value !== resourceUri) {
                 return (
                   // @ts-expect-error TS(2345): Argument of type 'unknown' is not assignable to pa... Remove this comment to see the full error message
-                  <Link to={`/data/${encodeURIComponent(value)}`} style={{ ...style, cursor: 'pointer' }} {...rest}>
+                  <Link to={getPath(value)} style={{ ...style, cursor: 'pointer' }} {...rest}>
                     {children}
                   </Link>
                 );

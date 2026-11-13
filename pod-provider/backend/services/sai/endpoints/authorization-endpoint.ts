@@ -1,5 +1,5 @@
 import path from 'path';
-import { arrayOf, getDatasetFromUri } from '@semapps/ldp';
+import { arrayOf, getId, getDatasetFromUri, getSlugFromUri } from '@semapps/ldp';
 import { throw400, throw403 } from '@semapps/middlewares';
 import { ServiceSchema } from 'moleculer';
 
@@ -33,7 +33,7 @@ const AuthorizationEndpointSchema = {
         const { resource: resourceUri, shapeTree: shapeTreeUri } = ctx.params;
 
         const podOwner = await this.getPodOwner(ctx, resourceUri, shapeTreeUri);
-        await this.checkAccess(ctx, podOwner);
+        const isGroup = await this.checkAccess(ctx, podOwner);
 
         const authorizations = resourceUri
           ? await ctx.call('access-authorizations.listForSingleResource', { resourceUri, webId: podOwner })
@@ -41,6 +41,7 @@ const AuthorizationEndpointSchema = {
 
         return {
           ...(resourceUri ? { resourceUri } : { shapeTreeUri }),
+          ...(isGroup && (await this.getGrantees(ctx, podOwner))),
           authorizations: authorizations.map((authorization: any) => ({
             grantee: authorization['interop:grantee'],
             accessModes: arrayOf(authorization['interop:accessMode'])
@@ -57,11 +58,15 @@ const AuthorizationEndpointSchema = {
         const { resourceUri, shapeTreeUri, authorizations } = ctx.params;
 
         const podOwner = await this.getPodOwner(ctx, resourceUri, shapeTreeUri);
-        const allowedGrantees = await this.checkAccess(ctx, podOwner);
+        const isGroup = await this.checkAccess(ctx, podOwner);
 
-        for (const { grantee } of authorizations) {
-          if (allowedGrantees && !allowedGrantees.includes(grantee))
-            throw403(`${grantee} is neither a role nor a member of the group`);
+        // The data of a group can only be shared with its roles and its members
+        if (isGroup) {
+          const { roles, members } = await this.getGrantees(ctx, podOwner);
+          const allowedGrantees = [...roles.map((role: any) => role.uri), ...members];
+          for (const { grantee } of authorizations) {
+            if (!allowedGrantees.includes(grantee)) throw403(`${grantee} is neither a role nor a member of the group`);
+          }
         }
 
         for (const { grantee, accessModes } of authorizations) {
@@ -96,7 +101,7 @@ const AuthorizationEndpointSchema = {
 
       return ctx.params.podOwner || ctx.meta.webId;
     },
-    // Return the agents which can be grantees, or undefined if there is no restriction
+    // Return true if the pod is a group
     async checkAccess(ctx, podOwner) {
       const { webId } = ctx.meta;
 
@@ -104,10 +109,8 @@ const AuthorizationEndpointSchema = {
       if (!account) throw403('Only the pod owner can manage its authorizations');
       ctx.meta.dataset = account.username;
 
-      if (webId === podOwner) return undefined;
-      if (!account.group) {
-        throw403('Only the pod owner can manage its authorizations');
-      }
+      if (webId === podOwner) return !!account.group;
+      if (!account.group) throw403('Only the pod owner can manage its authorizations');
 
       const hasRight = await ctx.call('role-registrations.hasSpecialRight', {
         groupWebId: podOwner,
@@ -116,9 +119,19 @@ const AuthorizationEndpointSchema = {
       });
       if (!hasRight) throw403('You need the interop:ManageAccess right on this group');
 
-      // The data of a group can only be shared with its roles and its members
-      const members = await ctx.call('role-registrations.getEffectiveMembers', { groupWebId: podOwner });
-      return [...Object.keys(members), ...Object.values(members).flat()];
+      return true;
+    },
+    async getGrantees(ctx, groupWebId) {
+      const roles = await ctx.call('role-registrations.listForGroup', { groupWebId });
+      const members = await ctx.call('role-registrations.getEffectiveMembers', { groupWebId });
+      return {
+        roles: roles.map((role: any) => ({
+          uri: getId(role),
+          id: getSlugFromUri(getId(role)),
+          label: role['skos:prefLabel']
+        })),
+        members: [...new Set(Object.values(members).flat())].filter(uri => uri !== groupWebId)
+      };
     }
   }
 } satisfies ServiceSchema;

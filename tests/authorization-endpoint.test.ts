@@ -122,10 +122,13 @@ describe('Test the authorization endpoint', () => {
       authorizations: [{ grantee: memberRoleUri, accessModes: ['acl:Read'] }]
     });
 
-    await expect(getAuthorizations(alice, { resource: groupEventUri })).resolves.toEqual({
+    const result = await getAuthorizations(alice, { resource: groupEventUri });
+    expect(result).toMatchObject({
       resourceUri: groupEventUri,
       authorizations: [{ grantee: memberRoleUri, accessModes: ['acl:Read'] }]
     });
+    expect(result.roles).toContainEqual({ uri: memberRoleUri, id: 'member', label: 'Member' });
+    expect(result.members.sort()).toEqual([alice.id, bob.id].sort());
     await expect(hasRights(bob, groupEventUri, { read: true })).resolves.toMatchObject({ read: true });
   });
 

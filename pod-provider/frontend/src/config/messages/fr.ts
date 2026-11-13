@@ -160,6 +160,8 @@ export default {
       append: 'Enrichir',
       write: 'Écrire',
       control: 'Administrer',
+      none: 'Aucun accès',
+      read_write: 'Lire et écrire',
       read_inbox: 'Lire ma boîte de réception',
       read_outbox: "Lire ma boîte d'envoi",
       post_outbox: "Poster dans ma boîte d'envoi",
@@ -231,6 +233,7 @@ export default {
       authorize_upgrade:
         "L'application a été mise à jour et requiert maintenant les nouvelles autorisations ci-dessous",
       share: 'Sélectionner les contacts avec lesquels vous souhaitez partager la resource %{resourceName}',
+      share_group: 'Choisissez les droits des rôles et des membres du groupe sur la ressource %{resourceName}',
       invite_text_logged_out:
         "Un espace personnel est l'endroit où vous stockez vos données. Tout comme les comptes email, il est décentralisé, ce qui vous permet de choisir un fournisseur de confiance. Au lieu de créer un nouveau compte pour chaque nouvelle application, vous pourrez utiliser le même compte. Les applications compatibles stockeront les données dans votre espace.",
       invite_text_logged_in:

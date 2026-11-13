@@ -1,4 +1,5 @@
 import urlJoin from 'url-join';
+import waitForExpect from 'wait-for-expect';
 import { OBJECT_TYPES } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { connectPodProvider, clearAllData } from './initialize.ts';
@@ -174,5 +175,25 @@ describe('Test the authorization endpoint', () => {
     await expect(hasRights(bob, groupEvent2Uri, { read: true })).resolves.toMatchObject({ read: false });
     // The resource shared on its own is still readable
     await expect(hasRights(bob, groupEventUri, { read: true })).resolves.toMatchObject({ read: true });
+  });
+
+  test('A resource shared with a group can be shared with its members', async () => {
+    const craigEventUri = await createEvent(craig.id, 'craig', 'Concert');
+
+    await updateAuthorizations(craig, {
+      resourceUri: craigEventUri,
+      authorizations: [{ grantee: groupWebId, accessModes: ['acl:Read'] }]
+    });
+
+    const [authorization] = await podProvider.call(
+      'access-authorizations.listForSingleResource',
+      { resourceUri: craigEventUri, webId: craig.id },
+      { meta: { webId: craig.id, dataset: 'craig' } }
+    );
+    expect(authorization).toMatchObject({ 'interop:delegationAllowed': true, 'interop:delegationLimit': 1 });
+
+    await waitForExpect(async () => {
+      await expect(hasRights(bob, craigEventUri, { read: true })).resolves.toMatchObject({ read: true });
+    });
   });
 });

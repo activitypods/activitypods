@@ -3,6 +3,8 @@ import { arrayOf, getId, getDatasetFromUri, getSlugFromUri } from '@semapps/ldp'
 import { throw400, throw403 } from '@semapps/middlewares';
 import { ServiceSchema } from 'moleculer';
 
+const GROUP_TYPES = ['foaf:Group', 'foaf:Organization', 'as:Group', 'as:Organization', 'Group', 'Organization'];
+
 const AuthorizationEndpointSchema = {
   name: 'authorization-endpoint' as const,
   dependencies: ['api', 'ldp'],
@@ -70,8 +72,13 @@ const AuthorizationEndpointSchema = {
         }
 
         for (const { grantee, accessModes } of authorizations) {
-          const params = { resourceUri, shapeTreeUri, grantee, accessModes, webId: podOwner };
+          const params: any = { resourceUri, shapeTreeUri, grantee, accessModes, webId: podOwner };
           if (accessModes.length > 0) {
+            // A group may share personal data with its members, but they can't share it further
+            if (!isGroup && (await this.isGroup(ctx, grantee))) {
+              params.delegationAllowed = true;
+              params.delegationLimit = 1;
+            }
             await ctx.call(
               resourceUri ? 'access-authorizations.addForSingleResource' : 'access-authorizations.addForShapeTree',
               params
@@ -120,6 +127,14 @@ const AuthorizationEndpointSchema = {
       if (!hasRight) throw403('You need the interop:ManageAccess right on this group');
 
       return true;
+    },
+    async isGroup(ctx, agentUri) {
+      if (await ctx.call('ldp.remote.isRemote', { resourceUri: agentUri })) {
+        const actor = await ctx.call('activitypub.actor.get', { actorUri: agentUri });
+        return arrayOf(actor?.type || actor?.['@type']).some(type => GROUP_TYPES.includes(type));
+      }
+      const account = await ctx.call('auth.account.findByWebId', { webId: agentUri });
+      return !!account?.group;
     },
     async getGrantees(ctx, groupWebId) {
       const roles = await ctx.call('role-registrations.listForGroup', { groupWebId });

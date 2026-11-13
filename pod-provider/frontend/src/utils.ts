@@ -38,6 +38,10 @@ export const arrayOf = (value: any | any[]) => {
   return [value];
 };
 
+const GROUP_TYPES = ['foaf:Group', 'foaf:Organization', 'Group', 'Organization', 'as:Group', 'as:Organization'];
+
+export const isGroupActor = (actor: any) => arrayOf(actor?.type).some(type => GROUP_TYPES.includes(type));
+
 /**
  * Generate a random color using a string as seed.
  * @param {string} value The string to seed from.

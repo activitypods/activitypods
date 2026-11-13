@@ -45,14 +45,16 @@ describe('Test private data of members shared with a group', () => {
     return arrayOf(container['ldp:contains']);
   };
 
-  const getGrantees = async () =>
-    (await getDelegatedGrants()).map((grant: any) => grant['interop:grantee']).sort();
+  const getGrantees = async () => (await getDelegatedGrants()).map((grant: any) => grant['interop:grantee']).sort();
 
   const getGrantsByInstances = async () =>
     Object.fromEntries(
       (await getDelegatedGrants()).map((grant: any) => [
         grant['interop:grantee'],
-        { instances: arrayOf(grant['interop:hasDataInstance']).sort(), modes: arrayOf(grant['interop:accessMode']).sort() }
+        {
+          instances: arrayOf(grant['interop:hasDataInstance']).sort(),
+          modes: arrayOf(grant['interop:accessMode']).sort()
+        }
       ])
     );
 
@@ -295,6 +297,61 @@ describe('Test private data of members shared with a group', () => {
     await waitForExpect(async () => {
       for (const actor of [alice, daisy]) {
         await expect(hasRights(actor, eventUri, { read: true })).resolves.toMatchObject({ read: false });
+        await expect(hasRights(actor, picnicUri, { read: true })).resolves.toMatchObject({ read: true });
+      }
+    });
+  });
+
+  test('If the member shares all its events with the group, the members can read them, including new ones', async () => {
+    await call(craig, 'access-authorizations.addForShapeTree', {
+      shapeTreeUri: EVENT_SHAPE_TREE,
+      grantee: groupWebId,
+      accessModes: ['acl:Read'],
+      delegationAllowed: true,
+      delegationLimit: 1,
+      webId: craig.id
+    });
+
+    await waitForExpect(async () => {
+      const authorizations = await getGroupAuthorizations();
+      expect(
+        authorizations.find(auth => auth['interop:scopeOfAuthorization'] === 'interop:AllFromRegistry')
+      ).toBeDefined();
+    });
+
+    await waitForExpect(async () => {
+      const grants = (await getDelegatedGrants()).filter(
+        (grant: any) => grant['interop:scopeOfGrant'] === 'interop:AllFromRegistry'
+      );
+      expect(grants.map((grant: any) => grant['interop:grantee']).sort()).toEqual([alice.id, daisy.id].sort());
+    });
+
+    const concertUri = await createEvent('Concert');
+
+    await waitForExpect(async () => {
+      for (const actor of [alice, daisy]) {
+        await expect(hasRights(actor, privateEventUri, { read: true })).resolves.toMatchObject({ read: true });
+        await expect(hasRights(actor, concertUri, { read: true })).resolves.toMatchObject({ read: true });
+      }
+    });
+  });
+
+  test('If the member stops sharing all its events, the members only keep the resources shared one by one', async () => {
+    await call(craig, 'access-authorizations.removeForShapeTree', {
+      shapeTreeUri: EVENT_SHAPE_TREE,
+      grantee: groupWebId,
+      webId: craig.id
+    });
+
+    await waitForExpect(async () => {
+      const authorizations = await getGroupAuthorizations();
+      expect(authorizations).toHaveLength(1);
+      expect(authorizations[0]['interop:hasDataInstance']).toBe(picnicUri);
+    });
+
+    await waitForExpect(async () => {
+      for (const actor of [alice, daisy]) {
+        await expect(hasRights(actor, privateEventUri, { read: true })).resolves.toMatchObject({ read: false });
         await expect(hasRights(actor, picnicUri, { read: true })).resolves.toMatchObject({ read: true });
       }
     });

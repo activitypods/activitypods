@@ -7,6 +7,7 @@ import QueueService from 'moleculer-bull';
 import { ServiceSchema } from 'moleculer';
 import * as CONFIG from '../../../config/config.ts';
 import { arraysEqual } from '../../../utils.ts';
+import { getScopeOfGrant } from './access-grants.ts';
 
 const scopeAllJobOptions = {
   attempts: 3,
@@ -380,7 +381,9 @@ const DelegatedAccessGrantsSchema = {
         const grant =
           grants.find(
             (g: any) =>
-              includes(g['interop:hasDataInstance'], authorization['interop:hasDataInstance']) &&
+              (authorization['interop:scopeOfAuthorization'] === 'interop:SelectedFromRegistry'
+                ? includes(g['interop:hasDataInstance'], authorization['interop:hasDataInstance'])
+                : g['interop:scopeOfGrant'] === getScopeOfGrant(authorization)) &&
               includes(g['interop:accessMode'], authorization['interop:accessMode'])
           ) || grants[0];
         if (!grant) throw new Error(`Could not find grant generated from authorization ${getId(authorization)}`);

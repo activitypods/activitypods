@@ -230,7 +230,7 @@ const AccessAuthorizationsSchema = {
     addForShapeTree: {
       // Add an authorization for all the data of same shape tree
       async handler(ctx) {
-        const { shapeTreeUri, grantee, accessModes } = ctx.params;
+        const { shapeTreeUri, grantee, accessModes, delegationAllowed, delegationLimit } = ctx.params;
         const webId = ctx.params.webId || ctx.meta.webId;
 
         const dataRegistrationUri = await ctx.call('data-registrations.generateFromShapeTree', {
@@ -244,12 +244,21 @@ const AccessAuthorizationsSchema = {
         );
 
         if (authorization) {
-          if (arraysEqual(arrayOf(authorization['interop:accessMode']), arrayOf(accessModes))) {
+          if (
+            arraysEqual(arrayOf(authorization['interop:accessMode']), arrayOf(accessModes)) &&
+            delegationAllowed === authorization['interop:delegationAllowed'] &&
+            delegationLimit === authorization['interop:delegationLimit']
+          ) {
             return getId(authorization);
           }
           const { resourceUri } = await this.actions.put(
             {
-              resource: { ...authorization, 'interop:accessMode': accessModes },
+              resource: {
+                ...authorization,
+                'interop:accessMode': accessModes,
+                'interop:delegationAllowed': delegationAllowed,
+                'interop:delegationLimit': delegationLimit
+              },
               contentType: MIME_TYPES.JSON,
               webId
             },
@@ -269,7 +278,9 @@ const AccessAuthorizationsSchema = {
               'interop:registeredShapeTree': shapeTreeUri,
               'interop:hasDataRegistration': dataRegistrationUri,
               'interop:accessMode': accessModes,
-              'interop:scopeOfAuthorization': 'interop:All'
+              'interop:scopeOfAuthorization': 'interop:All',
+              'interop:delegationAllowed': delegationAllowed,
+              'interop:delegationLimit': delegationLimit
             },
             contentType: MIME_TYPES.JSON,
             webId

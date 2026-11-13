@@ -212,6 +212,8 @@ export default {
       share_contact: 'To connect with someone you know, send them the link below.',
       share: 'Select the contacts with whom you want to share the resource %{resourceName}',
       share_group: 'Choose the rights of the roles and members of the group on the resource %{resourceName}',
+      share_type: 'Select the contacts with whom you want to share all data of type "%{typeName}"',
+      share_type_group: 'Choose the rights of the roles and members of the group on all data of type "%{typeName}"',
       add_member: 'Choose one of your contacts, or enter the ID of a user (format: @bob@server.com).',
       remove_member: 'Do you really want to remove %{name} from the group?',
       no_special_rights: 'No special rights',

@@ -1,7 +1,7 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import urlJoin from 'url-join';
 import LinkHeader from 'http-link-header';
-import { useTranslate, useGetList, useDataProvider, useGetIdentity } from 'react-admin';
+import { useTranslate, useGetList, useDataProvider, useGetIdentity, useLocaleState } from 'react-admin';
 import {
   Box,
   Button,
@@ -22,6 +22,7 @@ import SimpleBox from '../../layout/SimpleBox';
 import useResource from '../../hooks/useResource';
 import useActor from '../../hooks/useActor';
 import useRoleLabel from '../../hooks/useRoleLabel';
+import useFetchShapeTree from '../../hooks/useFetchShapeTree';
 import { arrayOf, formatUsername } from '../../utils';
 
 const ACCESS_MODES = {
@@ -87,8 +88,11 @@ const SocialAgent = ({ socialAgentRegistration, onSelect, selected }) => {
   );
 };
 
-const ShareScreen = ({ resourceUri, application, accessApp }) => {
+const ShareScreen = ({ resourceUri, shapeTreeUri, podOwner, accessApp }) => {
   const translate = useTranslate();
+  const [locale] = useLocaleState();
+  const fetchShapeTree = useFetchShapeTree();
+  const [shapeTree, setShapeTree] = useState();
   const dataProvider = useDataProvider();
   const { data: identity } = useGetIdentity();
   const [selected, setSelected] = useState([]);
@@ -101,6 +105,10 @@ const ShareScreen = ({ resourceUri, application, accessApp }) => {
     perPage: Infinity
   });
   const { data: resource, headers } = useResource(resourceUri);
+
+  useEffect(() => {
+    if (shapeTreeUri) fetchShapeTree(shapeTreeUri).then(setShapeTree);
+  }, [shapeTreeUri, fetchShapeTree, setShapeTree]);
 
   const toggle = useCallback(
     agentUri => {
@@ -135,7 +143,12 @@ const ShareScreen = ({ resourceUri, application, accessApp }) => {
       setAuthorizationsLoading(true);
 
       const authorizationsUrl = new URL(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/authorizations'));
-      authorizationsUrl.searchParams.append('resource', resourceUri);
+      if (resourceUri) {
+        authorizationsUrl.searchParams.append('resource', resourceUri);
+      } else {
+        authorizationsUrl.searchParams.append('shapeTree', shapeTreeUri);
+        if (podOwner) authorizationsUrl.searchParams.append('podOwner', podOwner);
+      }
 
       dataProvider
         .fetch(authorizationsUrl.toString(), {
@@ -145,7 +158,9 @@ const ShareScreen = ({ resourceUri, application, accessApp }) => {
         })
         .then(({ json }) => {
           setAuthorizations(json);
-          setAccess(Object.fromEntries(json?.authorizations.map(auth => [auth.grantee, getAccess(arrayOf(auth.accessModes))])));
+          setAccess(
+            Object.fromEntries(json?.authorizations.map(auth => [auth.grantee, getAccess(arrayOf(auth.accessModes))]))
+          );
           setSelected(
             json?.authorizations
               .filter(auth => arrayOf(auth.accessModes).includes('acl:Read'))
@@ -156,6 +171,8 @@ const ShareScreen = ({ resourceUri, application, accessApp }) => {
     }
   }, [
     resourceUri,
+    shapeTreeUri,
+    podOwner,
     dataProvider,
     setSelected,
     authorizations,
@@ -173,7 +190,7 @@ const ShareScreen = ({ resourceUri, application, accessApp }) => {
         'Content-Type': 'application/json'
       }),
       body: JSON.stringify({
-        resourceUri,
+        ...(resourceUri ? { resourceUri } : { shapeTreeUri, podOwner }),
         authorizations: isGroup
           ? [...authorizations.roles.map(role => role.uri), ...authorizations.members].map(grantee => ({
               grantee,
@@ -187,7 +204,18 @@ const ShareScreen = ({ resourceUri, application, accessApp }) => {
     });
 
     accessApp();
-  }, [resourceUri, isGroup, authorizations, access, socialAgentRegistrations, selected, accessApp, dataProvider]);
+  }, [
+    resourceUri,
+    shapeTreeUri,
+    podOwner,
+    isGroup,
+    authorizations,
+    access,
+    socialAgentRegistrations,
+    selected,
+    accessApp,
+    dataProvider
+  ]);
 
   const changeAccess = grantee => value => setAccess(cur => ({ ...cur, [grantee]: value }));
 
@@ -195,10 +223,16 @@ const ShareScreen = ({ resourceUri, application, accessApp }) => {
     <SimpleBox
       title={translate('app.page.share')}
       icon={<ShareIcon />}
-      text={translate(isGroup ? 'app.helper.share_group' : 'app.helper.share', {
-        // The containers of a group are not in the user's data servers
-        resourceName: resource?.[labelPredicate] || resource?.name
-      })}
+      text={
+        shapeTreeUri
+          ? translate(isGroup ? 'app.helper.share_type_group' : 'app.helper.share_type', {
+              typeName: shapeTree?.label?.[locale] || shapeTree?.types?.join(', ') || ''
+            })
+          : translate(isGroup ? 'app.helper.share_group' : 'app.helper.share', {
+              // The containers of a group are not in the user's data servers
+              resourceName: resource?.[labelPredicate] || resource?.name
+            })
+      }
     >
       {isGroup ? (
         <List sx={{ width: '100%' }}>

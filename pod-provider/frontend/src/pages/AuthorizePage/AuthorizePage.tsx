@@ -21,6 +21,8 @@ const AuthorizePage = () => {
 
   const appUri = searchParams.get('client_id');
   const resourceUri = searchParams.get('resource');
+  const shapeTreeUri = searchParams.get('shapeTree');
+  const podOwner = searchParams.get('podOwner');
   const isTrustedApp = trustedApps?.some(trustedApp => trustedApp.id === appUri) || false;
 
   const { data: application } = useGetOne('App', { id: appUri });
@@ -51,14 +53,14 @@ const AuthorizePage = () => {
         } else if (appStatus.upgradeNeeded) {
           // @ts-expect-error TS(2345): Argument of type '"upgrade"' is not assignable to ... Remove this comment to see the full error message
           setScreen('upgrade');
-        } else if (resourceUri) {
+        } else if (resourceUri || shapeTreeUri) {
           setScreen('share');
         } else {
           accessApp();
         }
       });
     }
-  }, [resourceUri, application, accessApp, getAppStatus, setScreen, identity]);
+  }, [resourceUri, shapeTreeUri, application, accessApp, getAppStatus, setScreen, identity]);
 
   switch (screen) {
     // @ts-expect-error TS(2678): Type '"register"' is not comparable to type 'undef... Remove this comment to see the full error message
@@ -70,7 +72,9 @@ const AuthorizePage = () => {
       return <UpgradeScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
 
     case 'share':
-      return <ShareScreen resourceUri={resourceUri} application={application} accessApp={accessApp} />;
+      return (
+        <ShareScreen resourceUri={resourceUri} shapeTreeUri={shapeTreeUri} podOwner={podOwner} accessApp={accessApp} />
+      );
 
     default:
       return null;

@@ -234,6 +234,7 @@ export default {
         "L'application a été mise à jour et requiert maintenant les nouvelles autorisations ci-dessous",
       share: 'Sélectionner les contacts avec lesquels vous souhaitez partager la resource %{resourceName}',
       share_group: 'Choisissez les droits des rôles et des membres du groupe sur la ressource %{resourceName}',
+      share_with_group_members: 'Les membres du groupe y auront accès en lecture',
       share_type:
         'Sélectionner les contacts avec lesquels vous souhaitez partager toutes les données de type « %{typeName} »',
       share_type_group:

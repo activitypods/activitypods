@@ -23,7 +23,7 @@ import useResource from '../../hooks/useResource';
 import useActor from '../../hooks/useActor';
 import useRoleLabel from '../../hooks/useRoleLabel';
 import useFetchShapeTree from '../../hooks/useFetchShapeTree';
-import { arrayOf, formatUsername } from '../../utils';
+import { arrayOf, formatUsername, isGroupActor } from '../../utils';
 
 const ACCESS_MODES = {
   none: [],
@@ -74,6 +74,8 @@ const MemberGrantee = ({ memberUri, value, onChange }) => {
 };
 
 const SocialAgent = ({ socialAgentRegistration, onSelect, selected }) => {
+  const translate = useTranslate();
+  const actor = useActor(socialAgentRegistration['interop:registeredAgent'], { loadPrivateProfile: false });
   return (
     <ListItem sx={{ px: 0 }}>
       <ListItemAvatar>
@@ -81,7 +83,11 @@ const SocialAgent = ({ socialAgentRegistration, onSelect, selected }) => {
       </ListItemAvatar>
       <ListItemText
         primary={socialAgentRegistration['skos:prefLabel'] || socialAgentRegistration['interop:registeredAgent']}
-        secondary={socialAgentRegistration['skos:prefLabel'] && socialAgentRegistration['interop:registeredAgent']}
+        secondary={
+          isGroupActor(actor)
+            ? translate('app.helper.share_with_group_members')
+            : socialAgentRegistration['skos:prefLabel'] && socialAgentRegistration['interop:registeredAgent']
+        }
       />
       <Switch edge="end" onChange={onSelect} checked={selected} />
     </ListItem>

@@ -3,6 +3,10 @@ import { useTranslate } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, List } from '@mui/material';
 import Header from '../../common/Header';
+import StorageIcon from '@mui/icons-material/Storage';
+import DownloadIcon from '@mui/icons-material/Download';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import DeleteIcon from '@mui/icons-material/Delete';
 import TuneIcon from '@mui/icons-material/Tune';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import GroupIcon from '@mui/icons-material/PeopleAlt';
@@ -60,6 +64,22 @@ const GroupSettingsPage = () => {
               onClick={() => navigate(`/group/${data.webfingerId}/settings/roles`)}
               icon={<BadgeIcon />}
               label="app.setting.roles"
+            />
+          )}
+          {isOwner && (
+            <SettingsItem
+              onClick={() => navigate(`/group/${data.webfingerId}/settings/export`)}
+              icon={<StorageIcon />}
+              label="app.setting.export"
+              actionIcon={<DownloadIcon />}
+            />
+          )}
+          {isOwner && (
+            <SettingsItem
+              onClick={() => navigate(`/group/${data.webfingerId}/settings/delete`)}
+              icon={<DeleteIcon color="error" />}
+              label="app.setting.delete"
+              actionIcon={<HighlightOffIcon color="error" />}
             />
           )}
           <SettingsItem

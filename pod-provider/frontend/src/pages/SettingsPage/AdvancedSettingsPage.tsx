@@ -9,15 +9,13 @@ import CodeIcon from '@mui/icons-material/Code';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SettingsItem from './SettingsItem';
 import useRealmContext from '../../hooks/useRealmContext';
-import useGroupRights from '../../hooks/useGroupRights';
 
 const AdvancedSettingsPage = () => {
   const translate = useTranslate();
   const navigate = useNavigate();
   const [developerMode, setDeveloperMode] = useState(!!localStorage.getItem('developer_mode'));
-  const { isGroup, data } = useRealmContext() as any;
-  const { isOwner } = useGroupRights();
-  const settingsPath = isGroup ? `/group/${data?.webfingerId}/settings` : '/settings';
+  // The export and the deletion of a group are in its main settings
+  const { isGroup } = useRealmContext();
 
   const switchDeveloperMode = () => {
     if (developerMode) {
@@ -42,17 +40,17 @@ const AdvancedSettingsPage = () => {
             label="app.setting.developer_mode"
             value={developerMode}
           />
-          {(!isGroup || isOwner) && (
+          {!isGroup && (
             <SettingsItem
-              onClick={() => navigate(`${settingsPath}/export`)}
+              onClick={() => navigate('/settings/export')}
               icon={<StorageIcon />}
               label="app.setting.export"
               actionIcon={<DownloadIcon />}
             />
           )}
-          {(!isGroup || isOwner) && (
+          {!isGroup && (
             <SettingsItem
-              onClick={() => navigate(`${settingsPath}/delete`)}
+              onClick={() => navigate('/settings/delete')}
               icon={<DeleteIcon color="error" />}
               label="app.setting.delete"
               actionIcon={<HighlightOffIcon color="error" />}

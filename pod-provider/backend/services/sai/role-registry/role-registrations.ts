@@ -101,6 +101,7 @@ const RoleRegistrationsSchema = {
 
         await ctx.call('role-registry.add', { podOwner: groupWebId, roleRegistrationUri });
         await this.syncAccess(ctx, groupWebId);
+        if (this.canManageAccess(role)) await this.setAdminRights(ctx, groupWebId, roleRegistrationUri, true);
 
         return roleRegistrationUri;
       }
@@ -120,8 +121,31 @@ const RoleRegistrationsSchema = {
           { parentCtx: ctx }
         );
 
+        const groupWebId = roleRegistration['interop:registeredBy'];
         if (role['interop:extendsRole'] !== undefined) {
-          await this.syncAccess(ctx, roleRegistration['interop:registeredBy']);
+          await this.syncAccess(ctx, groupWebId);
+        }
+        if (role['interop:hasSpecialRight'] !== undefined) {
+          const canManageAccess = this.canManageAccess(role);
+          if (canManageAccess !== this.canManageAccess(roleRegistration)) {
+            await this.setAdminRights(ctx, groupWebId, resourceUri, canManageAccess);
+          }
+        }
+      }
+    },
+
+    addAdminRights: {
+      // Give read access to a new resource to the roles with the ManageAccess right
+      async handler(ctx) {
+        const { groupWebId, resourceUri } = ctx.params;
+        const roles = await this.actions.listForGroup({ groupWebId }, { parentCtx: ctx });
+        for (const role of roles.filter((r: any) => this.canManageAccess(r))) {
+          const groupUri = await this.getWacGroupUri(ctx, groupWebId, getId(role));
+          await ctx.call('webacl.resource.addRights', {
+            resourceUri,
+            additionalRights: this.getAdminRights(groupUri, true),
+            webId: 'system'
+          });
         }
       }
     },
@@ -149,6 +173,9 @@ const RoleRegistrationsSchema = {
             );
           }
         }
+
+        const roleRegistration = await this.actions.get({ resourceUri, webId: 'system' }, { parentCtx: ctx });
+        if (this.canManageAccess(roleRegistration)) await this.setAdminRights(ctx, groupWebId, resourceUri, false);
 
         await ctx.call('role-registry.remove', { podOwner: groupWebId, roleRegistrationUri: resourceUri });
         await this.actions.delete({ resourceUri, webId: 'system' }, { parentCtx: ctx });
@@ -302,6 +329,38 @@ const RoleRegistrationsSchema = {
     async syncAccess(ctx, groupWebId) {
       await this.actions.syncWacGroups({ groupWebId }, { parentCtx: ctx });
       await ctx.call('role-access.syncGrants', { groupWebId });
+    },
+    canManageAccess(role) {
+      return arrayOf(role['interop:hasSpecialRight']).includes('interop:ManageAccess');
+    },
+    getAdminRights(groupUri: string, withDefault: boolean) {
+      const rights = { group: { uri: groupUri, read: true } };
+      return withDefault ? { ...rights, default: rights } : rights;
+    },
+    // The roles with the ManageAccess right can read the registries and the data of the group
+    async setAdminRights(ctx, groupWebId: string, roleRegistrationUri: string, granted: boolean) {
+      const groupUri = await this.getWacGroupUri(ctx, groupWebId, roleRegistrationUri);
+
+      const registriesUris = [];
+      for (const service of ['registry-set', 'data-registry', 'auth-registry'] as const) {
+        registriesUris.push(await ctx.call(`${service}.waitForResourceCreation`, { webId: groupWebId }));
+      }
+      const authorizationsUri = await ctx.call('access-authorizations.getContainerUri', { webId: groupWebId });
+      await ctx.call('access-authorizations.waitForContainerCreation', { containerUri: authorizationsUri });
+      const dataRegistry = await ctx.call('data-registry.get', { resourceUri: registriesUris[1], webId: 'system' });
+
+      const resources = [
+        ...registriesUris.map(uri => [uri, false]),
+        ...[authorizationsUri, ...arrayOf(dataRegistry['interop:hasDataRegistration'])].map(uri => [uri, true])
+      ];
+      for (const [resourceUri, withDefault] of resources) {
+        const rights = this.getAdminRights(groupUri, withDefault);
+        await ctx.call(granted ? 'webacl.resource.addRights' : 'webacl.resource.removeRights', {
+          resourceUri,
+          [granted ? 'additionalRights' : 'rights']: rights,
+          webId: 'system'
+        });
+      }
     },
     async getWacGroupUri(ctx, groupWebId, roleRegistrationUri) {
       return await ctx.call('webacl.group.getUri', {

@@ -272,8 +272,9 @@ describe('Test access to groups data through roles', () => {
       webId: groupWebId
     });
 
-    await expect(hasRights(craig, { read: true })).resolves.toMatchObject({ read: false });
-    await expect(hasRights(craig, { read: true }, event2Uri)).resolves.toMatchObject({ read: true });
+    // Craig is an owner, so he keeps the read right of the admins
+    await expect(hasRights(craig, { write: true })).resolves.toMatchObject({ write: false });
+    await expect(hasRights(craig, { write: true }, event2Uri)).resolves.toMatchObject({ write: true });
     await expect(getGrantees()).resolves.toEqual([alice.id, craig.id].sort());
 
     await callAsGroup('access-authorizations.removeForSingleResource', {
@@ -282,7 +283,7 @@ describe('Test access to groups data through roles', () => {
       webId: groupWebId
     });
 
-    await expect(hasRights(craig, { read: true }, event2Uri)).resolves.toMatchObject({ read: false });
+    await expect(hasRights(craig, { write: true }, event2Uri)).resolves.toMatchObject({ write: false });
     await expect(getRoleGrants()).resolves.toHaveLength(0);
 
     await waitForExpect(async () => {
@@ -361,5 +362,54 @@ describe('Test access to groups data through roles', () => {
       webId: groupWebId
     });
     await expect(getRoleGrants()).resolves.toHaveLength(0);
+  });
+
+  test('The admins can read the registries and the data of the group', async () => {
+    const resourcesUris = [containerUri, eventUri];
+    for (const service of ['registry-set', 'data-registry', 'auth-registry']) {
+      resourcesUris.push(await callAsGroup(`${service}.waitForResourceCreation`, { webId: groupWebId }));
+    }
+    const authorizationsUri = await callAsGroup('access-authorizations.getContainerUri', { webId: groupWebId });
+    resourcesUris.push(authorizationsUri);
+
+    // Shared with the admins, to get an authorization
+    await callAsGroup('access-authorizations.addForSingleResource', {
+      resourceUri: eventUri,
+      grantee: await getRoleUri('admin'),
+      accessModes: ['acl:Read'],
+      webId: groupWebId
+    });
+    const authorizations = await callAsGroup('access-authorizations.list', { webId: groupWebId });
+    resourcesUris.push(arrayOf(authorizations['ldp:contains'])[0].id);
+
+    const canRead = async (actor: any) =>
+      Promise.all(resourcesUris.map(async uri => (await hasRights(actor, { read: true }, uri)).read));
+
+    await expect(canRead(bob)).resolves.not.toContain(true);
+
+    await addToRole(bob, 'admin');
+    await expect(canRead(bob)).resolves.not.toContain(false);
+    await expect(canRead(craig)).resolves.not.toContain(true);
+
+    await removeFromRole(bob, 'admin');
+    await expect(canRead(bob)).resolves.not.toContain(true);
+
+    // A custom role may get or lose the ManageAccess right
+    await podProvider.call('role-registrations.createRole', {
+      groupWebId,
+      slug: 'auditor',
+      role: { 'skos:prefLabel': 'Auditor', 'interop:hasMember': bob.id }
+    });
+    await expect(canRead(bob)).resolves.not.toContain(true);
+
+    const auditorUri = await getRoleUri('auditor');
+    await podProvider.call('role-registrations.updateRole', {
+      resourceUri: auditorUri,
+      role: { 'interop:hasSpecialRight': ['interop:ManageAccess'] }
+    });
+    await expect(canRead(bob)).resolves.not.toContain(false);
+
+    await podProvider.call('role-registrations.deleteRole', { groupWebId, resourceUri: auditorUri });
+    await expect(canRead(bob)).resolves.not.toContain(true);
   });
 });

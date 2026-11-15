@@ -5,6 +5,7 @@ import ShowView from '../../layout/ShowView';
 import JsonView from '@uiw/react-json-view';
 import BackButton from '../../common/buttons/BackButton';
 import ResourceCard from '../../common/cards/ResourceCard';
+import AccessCard from './AccessCard';
 import { useCompactPredicate } from '@semapps/semantic-data-provider';
 import useRealmContext from '../../hooks/useRealmContext';
 import usePodContainers from '../../hooks/usePodContainers';
@@ -23,7 +24,10 @@ const DataResourceScreen = ({ resourceData }: any) => {
     <ShowView
       title={(labelPredicate && resourceData[labelPredicate]) || resourceData.id || resourceData['@id']}
       actions={[<BackButton to={getPath(container?.uri)} />]}
-      asides={[<ResourceCard resource={resourceData} labelPredicate={labelPredicate} />]}
+      asides={[
+        <ResourceCard resource={resourceData} labelPredicate={labelPredicate} />,
+        <AccessCard container={container} resourceUri={resourceUri} />
+      ]}
     >
       <Card sx={{ p: 2, overflowX: 'auto' }}>
         <JsonView

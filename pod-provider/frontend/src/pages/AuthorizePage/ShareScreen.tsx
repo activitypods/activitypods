@@ -1,7 +1,7 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import urlJoin from 'url-join';
 import LinkHeader from 'http-link-header';
-import { useTranslate, useGetList, useDataProvider, useGetIdentity, useLocaleState } from 'react-admin';
+import { useTranslate, useGetList, useGetMany, useDataProvider, useGetIdentity, useLocaleState } from 'react-admin';
 import {
   Box,
   Button,
@@ -9,18 +9,21 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
-  ListSubheader,
-  Switch,
   Avatar,
   Select,
-  MenuItem
+  MenuItem,
+  Autocomplete,
+  TextField,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent
 } from '@mui/material';
 import { useContainerByUri, useCompactPredicate } from '@semapps/semantic-data-provider';
 import ShareIcon from '@mui/icons-material/Share';
 import GroupsIcon from '@mui/icons-material/Groups';
 import SimpleBox from '../../layout/SimpleBox';
 import useResource from '../../hooks/useResource';
-import useActor from '../../hooks/useActor';
 import useRoleLabel from '../../hooks/useRoleLabel';
 import useFetchShapeTree from '../../hooks/useFetchShapeTree';
 import { arrayOf, formatUsername, isGroupActor } from '../../utils';
@@ -31,262 +34,271 @@ const ACCESS_MODES = {
   read_write: ['acl:Read', 'acl:Write']
 };
 
-const getAccess = accessModes =>
+const getAccess = (accessModes: string[]) =>
   accessModes.includes('acl:Write') ? 'read_write' : accessModes.includes('acl:Read') ? 'read' : 'none';
 
-const AccessSelect = ({ value, onChange }) => {
-  const translate = useTranslate();
-  return (
-    <Select size="small" value={value} onChange={e => onChange(e.target.value)} sx={{ minWidth: 150 }}>
-      {Object.keys(ACCESS_MODES).map(access => (
-        <MenuItem key={access} value={access}>
-          {translate(`app.authorization.${access}`)}
-        </MenuItem>
-      ))}
-    </Select>
-  );
-};
+type Grantee = { uri: string; label: string; secondary?: string; image?: string; isRole?: boolean; isGroup?: boolean };
 
-const RoleGrantee = ({ role, value, onChange }) => {
+const GranteeAvatar = ({ grantee }: { grantee: Grantee }) => (
+  <Avatar src={grantee.image}>{grantee.isRole ? <GroupsIcon /> : grantee.label?.toUpperCase()?.[0]}</Avatar>
+);
+
+// The people and roles with whom the data may be shared
+const useGrantees = (authorizations: any): Grantee[] => {
+  const translate = useTranslate();
   const roleLabel = useRoleLabel();
-  return (
-    <ListItem sx={{ px: 0 }} secondaryAction={<AccessSelect value={value} onChange={onChange} />}>
-      <ListItemAvatar>
-        <Avatar>
-          <GroupsIcon />
-        </Avatar>
-      </ListItemAvatar>
-      <ListItemText primary={roleLabel(role)} />
-    </ListItem>
+  const { data: identity } = useGetIdentity();
+  const isGroup = !!authorizations?.roles;
+
+  const { data: socialAgentRegistrations } = useGetList(
+    'SocialAgentRegistration',
+    { pagination: { page: 1, perPage: Infinity } },
+    { enabled: !!authorizations && !isGroup }
+  );
+
+  const agentsUris: string[] = useMemo(
+    () =>
+      (isGroup
+        ? authorizations.members
+        : (socialAgentRegistrations || []).map((reg: any) => reg['interop:registeredAgent'])
+      ).filter((uri: string) => uri !== identity?.id),
+    [isGroup, authorizations, socialAgentRegistrations, identity]
+  );
+
+  const { data: actors } = useGetMany('Actor', { ids: agentsUris }, { enabled: agentsUris.length > 0 });
+
+  return useMemo(
+    () => [
+      ...(authorizations?.roles || []).map((role: any) => ({
+        uri: role.uri,
+        label: roleLabel(role),
+        secondary: translate('app.group.role'),
+        isRole: true
+      })),
+      ...agentsUris.map(uri => {
+        const actor = actors?.find((a: any) => a.id === uri);
+        const isGroupGrantee = isGroupActor(actor);
+        return {
+          uri,
+          label: actor?.name || actor?.['foaf:nick'] || actor?.preferredUsername || uri,
+          secondary: isGroupGrantee ? translate('app.helper.share_with_group_members') : formatUsername(uri),
+          image: actor?.icon?.url,
+          isGroup: isGroupGrantee
+        };
+      })
+    ],
+    [authorizations, agentsUris, actors, roleLabel, translate]
   );
 };
 
-const MemberGrantee = ({ memberUri, value, onChange }) => {
-  const actor = useActor(memberUri);
-  return (
-    <ListItem sx={{ px: 0 }} secondaryAction={<AccessSelect value={value} onChange={onChange} />}>
-      <ListItemAvatar>
-        <Avatar src={actor.image}>{actor.name?.toUpperCase()?.[0]}</Avatar>
-      </ListItemAvatar>
-      <ListItemText primary={actor.name} secondary={formatUsername(memberUri)} />
-    </ListItem>
-  );
+type ShareFormProps = {
+  resourceUri?: string | null;
+  shapeTreeUri?: string | null;
+  podOwner?: string | null;
+  onDone: () => void;
 };
 
-const SocialAgent = ({ socialAgentRegistration, onSelect, selected }) => {
+const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareFormProps) => {
   const translate = useTranslate();
-  const actor = useActor(socialAgentRegistration['interop:registeredAgent'], { loadPrivateProfile: false });
-  return (
-    <ListItem sx={{ px: 0 }}>
-      <ListItemAvatar>
-        <Avatar /*src={record?.['vcard:photo']}*/>{socialAgentRegistration['skos:prefLabel']?.[0]}</Avatar>
-      </ListItemAvatar>
-      <ListItemText
-        primary={socialAgentRegistration['skos:prefLabel'] || socialAgentRegistration['interop:registeredAgent']}
-        secondary={
-          isGroupActor(actor)
-            ? translate('app.helper.share_with_group_members')
-            : socialAgentRegistration['skos:prefLabel'] && socialAgentRegistration['interop:registeredAgent']
-        }
-      />
-      <Switch edge="end" onChange={onSelect} checked={selected} />
-    </ListItem>
-  );
-};
-
-const ShareScreen = ({ resourceUri, shapeTreeUri, podOwner, accessApp }) => {
-  const translate = useTranslate();
+  const dataProvider = useDataProvider();
   const [locale] = useLocaleState();
   const fetchShapeTree = useFetchShapeTree();
-  const [shapeTree, setShapeTree] = useState();
-  const dataProvider = useDataProvider();
-  const { data: identity } = useGetIdentity();
-  const [selected, setSelected] = useState([]);
-  const [access, setAccess] = useState({});
-  const [dataRegistrationUri, setDataRegistrationUri] = useState();
-  const [authorizations, setAuthorizations] = useState();
-  const [authorizationsLoading, setAuthorizationsLoading] = useState(false);
-  const { data: socialAgentRegistrations } = useGetList('SocialAgentRegistration', {
-    page: 1,
-    perPage: Infinity
-  });
-  const { data: resource, headers } = useResource(resourceUri);
+  const [shapeTree, setShapeTree] = useState<any>();
+  const [dataRegistrationUri, setDataRegistrationUri] = useState<string>();
+  const [authorizations, setAuthorizations] = useState<any>();
+  const [initialAccess, setInitialAccess] = useState<Record<string, string>>({});
+  const [access, setAccess] = useState<Record<string, string>>({});
+  const { data: resource, headers } = useResource(resourceUri) as any;
+  const grantees = useGrantees(authorizations);
+  const isGroup = !!authorizations?.roles;
 
   useEffect(() => {
     if (shapeTreeUri) fetchShapeTree(shapeTreeUri).then(setShapeTree);
   }, [shapeTreeUri, fetchShapeTree, setShapeTree]);
-
-  const toggle = useCallback(
-    agentUri => {
-      setSelected(cur => {
-        if (cur.includes(agentUri)) {
-          return cur.filter(uri => uri !== agentUri);
-        } else {
-          return [...cur, agentUri];
-        }
-      });
-    },
-    [setSelected]
-  );
 
   // Find data registration (container) URI based on the resource header
   useEffect(() => {
     if (headers) {
       const linkHeader = LinkHeader.parse(headers.get('Link'));
       const dataRegistrationLinkHeader = linkHeader.rel('http://www.w3.org/ns/solid/interop#hasDataRegistration');
-      if (dataRegistrationLinkHeader.length > 0) {
-        const dataRegistrationUri = dataRegistrationLinkHeader[0].uri;
-        setDataRegistrationUri(dataRegistrationUri);
-      }
+      if (dataRegistrationLinkHeader.length > 0) setDataRegistrationUri(dataRegistrationLinkHeader[0].uri);
     }
   }, [headers, setDataRegistrationUri]);
 
-  const container = useContainerByUri(dataRegistrationUri);
-  const labelPredicate = useCompactPredicate(container?.labelPredicate, resource?.['@context']);
+  const container = useContainerByUri(dataRegistrationUri!);
+  const labelPredicate = useCompactPredicate(container?.labelPredicate!, resource?.['@context']);
 
   useEffect(() => {
-    if (!authorizations && !authorizationsLoading) {
-      setAuthorizationsLoading(true);
-
-      const authorizationsUrl = new URL(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/authorizations'));
-      if (resourceUri) {
-        authorizationsUrl.searchParams.append('resource', resourceUri);
-      } else {
-        authorizationsUrl.searchParams.append('shapeTree', shapeTreeUri);
-        if (podOwner) authorizationsUrl.searchParams.append('podOwner', podOwner);
-      }
-
-      dataProvider
-        .fetch(authorizationsUrl.toString(), {
-          headers: new Headers({
-            Accept: 'application/json'
-          })
-        })
-        .then(({ json }) => {
-          setAuthorizations(json);
-          setAccess(
-            Object.fromEntries(json?.authorizations.map(auth => [auth.grantee, getAccess(arrayOf(auth.accessModes))]))
-          );
-          setSelected(
-            json?.authorizations
-              .filter(auth => arrayOf(auth.accessModes).includes('acl:Read'))
-              .map(auth => auth.grantee)
-          );
-          setAuthorizationsLoading(false);
-        });
+    const authorizationsUrl = new URL(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/authorizations'));
+    if (resourceUri) {
+      authorizationsUrl.searchParams.append('resource', resourceUri);
+    } else if (shapeTreeUri) {
+      authorizationsUrl.searchParams.append('shapeTree', shapeTreeUri);
+      if (podOwner) authorizationsUrl.searchParams.append('podOwner', podOwner);
     }
-  }, [
-    resourceUri,
-    shapeTreeUri,
-    podOwner,
-    dataProvider,
-    setSelected,
-    authorizations,
-    setAuthorizations,
-    authorizationsLoading,
-    setAuthorizationsLoading
-  ]);
 
-  const isGroup = !!authorizations?.roles;
+    dataProvider
+      .fetch(authorizationsUrl.toString(), { headers: new Headers({ Accept: 'application/json' }) })
+      .then(({ json }) => {
+        const currentAccess = Object.fromEntries(
+          json.authorizations.map((auth: any) => [auth.grantee, getAccess(arrayOf(auth.accessModes))])
+        );
+        setAuthorizations(json);
+        setInitialAccess(currentAccess);
+        setAccess(currentAccess);
+      });
+  }, [resourceUri, shapeTreeUri, podOwner, dataProvider]);
 
   const onShare = useCallback(async () => {
-    await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/authorizations'), {
-      method: 'PUT',
-      headers: new Headers({
-        'Content-Type': 'application/json'
-      }),
-      body: JSON.stringify({
-        ...(resourceUri ? { resourceUri } : { shapeTreeUri, podOwner }),
-        authorizations: isGroup
-          ? [...authorizations.roles.map(role => role.uri), ...authorizations.members].map(grantee => ({
-              grantee,
-              accessModes: ACCESS_MODES[access[grantee] || 'none']
-            }))
-          : socialAgentRegistrations.map(reg => {
-              const grantee = reg['interop:registeredAgent'];
-              return { grantee, accessModes: selected.includes(grantee) ? ['acl:Read'] : [] };
-            })
+    const changed = Object.keys(access).filter(grantee => access[grantee] !== (initialAccess[grantee] || 'none'));
+    if (changed.length > 0) {
+      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/authorizations'), {
+        method: 'PUT',
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          ...(resourceUri ? { resourceUri } : { shapeTreeUri, podOwner }),
+          authorizations: changed.map(grantee => ({ grantee, accessModes: ACCESS_MODES[access[grantee]] }))
+        })
+      });
+    }
+    onDone();
+  }, [resourceUri, shapeTreeUri, podOwner, access, initialAccess, dataProvider, onDone]);
+
+  const text = shapeTreeUri
+    ? translate(isGroup ? 'app.helper.share_type_group' : 'app.helper.share_type', {
+        typeName: shapeTree?.label?.[locale] || shapeTree?.types?.join(', ') || ''
       })
-    });
+    : translate(isGroup ? 'app.helper.share_group' : 'app.helper.share', {
+        // The containers of a group are not in the user's data servers
+        resourceName: resource?.[labelPredicate] || resource?.name || ''
+      });
 
-    accessApp();
-  }, [
-    resourceUri,
-    shapeTreeUri,
-    podOwner,
-    isGroup,
-    authorizations,
-    access,
-    socialAgentRegistrations,
-    selected,
-    accessApp,
-    dataProvider
-  ]);
+  return { authorizations, grantees, access, setAccess, onShare, text, isGroup };
+};
 
-  const changeAccess = grantee => value => setAccess(cur => ({ ...cur, [grantee]: value }));
+const ShareFormContent = ({ form, inDialog }: { form: ReturnType<typeof useShareForm>; inDialog?: boolean }) => {
+  const translate = useTranslate();
+  const { authorizations, grantees, access, setAccess, isGroup } = form;
+
+  const withAccess = grantees.filter(grantee => access[grantee.uri] && access[grantee.uri] !== 'none');
+  const options = grantees.filter(grantee => !withAccess.includes(grantee));
+
+  if (!authorizations) return null;
 
   return (
-    <SimpleBox
-      title={translate('app.page.share')}
-      icon={<ShareIcon />}
-      text={
-        shapeTreeUri
-          ? translate(isGroup ? 'app.helper.share_type_group' : 'app.helper.share_type', {
-              typeName: shapeTree?.label?.[locale] || shapeTree?.types?.join(', ') || ''
-            })
-          : translate(isGroup ? 'app.helper.share_group' : 'app.helper.share', {
-              // The containers of a group are not in the user's data servers
-              resourceName: resource?.[labelPredicate] || resource?.name
-            })
-      }
-    >
-      {isGroup ? (
-        <List sx={{ width: '100%' }}>
-          <ListSubheader sx={{ px: 0 }}>{translate('app.page.roles')}</ListSubheader>
-          {authorizations.roles.map(role => (
-            <RoleGrantee
-              key={role.uri}
-              role={role}
-              value={access[role.uri] || 'none'}
-              onChange={changeAccess(role.uri)}
-            />
-          ))}
-          <ListSubheader sx={{ px: 0 }}>{translate('app.page.members')}</ListSubheader>
-          {authorizations.members
-            .filter(memberUri => memberUri !== identity?.id)
-            .map(memberUri => (
-              <MemberGrantee
-                key={memberUri}
-                memberUri={memberUri}
-                value={access[memberUri] || 'none'}
-                onChange={changeAccess(memberUri)}
-              />
-            ))}
-        </List>
-      ) : (
-        <List sx={{ width: '100%' }}>
-          {socialAgentRegistrations
-            ?.filter(reg => reg['interop:registeredAgent'] !== identity?.id)
-            .map(socialAgentRegistration => (
-              <SocialAgent
-                key={socialAgentRegistration.id}
-                socialAgentRegistration={socialAgentRegistration}
-                onSelect={() => toggle(socialAgentRegistration['interop:registeredAgent'])}
-                selected={selected.includes(socialAgentRegistration['interop:registeredAgent'])}
-              />
-            ))}
-        </List>
+    <>
+      <Autocomplete
+        options={options}
+        value={null}
+        blurOnSelect
+        getOptionLabel={(option: Grantee) => option.label}
+        filterOptions={(opts, { inputValue }) =>
+          opts.filter(o => `${o.label} ${o.secondary || ''}`.toLowerCase().includes(inputValue.toLowerCase()))
+        }
+        onChange={(e, grantee: Grantee | null) => {
+          if (grantee) setAccess(cur => ({ ...cur, [grantee.uri]: 'read' }));
+        }}
+        renderOption={(props, option) => (
+          <ListItem {...props} key={option.uri}>
+            <ListItemAvatar>
+              <GranteeAvatar grantee={option} />
+            </ListItemAvatar>
+            <ListItemText primary={option.label} secondary={option.secondary} />
+          </ListItem>
+        )}
+        renderInput={params => (
+          <TextField
+            {...params}
+            size="small"
+            label={translate(isGroup ? 'app.input.share_search_group' : 'app.input.share_search')}
+          />
+        )}
+        sx={{ mt: inDialog ? 0 : 2 }}
+      />
+      {withAccess.length === 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          {translate('app.helper.no_access')}
+        </Typography>
       )}
-      <Box display="flex" justifyContent="end">
-        <Button color="secondary" onClick={accessApp} sx={{ ml: 1 }}>
-          {translate('ra.action.cancel')}
-        </Button>
-        <Button variant="contained" color="secondary" onClick={onShare} sx={{ ml: 1 }}>
-          {translate('app.action.share')}
-        </Button>
-      </Box>
+      <List sx={{ width: '100%' }}>
+        {withAccess.map(grantee => (
+          <ListItem
+            key={grantee.uri}
+            sx={{ px: 0 }}
+            secondaryAction={
+              <Select
+                size="small"
+                value={access[grantee.uri]}
+                onChange={e => setAccess(cur => ({ ...cur, [grantee.uri]: e.target.value }))}
+                sx={{ minWidth: 150 }}
+              >
+                <MenuItem value="read">{translate('app.authorization.read')}</MenuItem>
+                <MenuItem value="read_write">{translate('app.authorization.read_write')}</MenuItem>
+                <MenuItem value="none">{translate('app.authorization.remove')}</MenuItem>
+              </Select>
+            }
+          >
+            <ListItemAvatar>
+              <GranteeAvatar grantee={grantee} />
+            </ListItemAvatar>
+            <ListItemText primary={grantee.label} secondary={grantee.secondary} sx={{ pr: 18 }} />
+          </ListItem>
+        ))}
+      </List>
+    </>
+  );
+};
+
+const ShareButtons = ({ onShare, onCancel }: { onShare: () => void; onCancel: () => void }) => {
+  const translate = useTranslate();
+  return (
+    <Box display="flex" justifyContent="end">
+      <Button color="secondary" onClick={onCancel} sx={{ ml: 1 }}>
+        {translate('ra.action.cancel')}
+      </Button>
+      <Button variant="contained" color="secondary" onClick={onShare} sx={{ ml: 1 }}>
+        {translate('app.action.share')}
+      </Button>
+    </Box>
+  );
+};
+
+// Share screen opened by an application
+const ShareScreen = ({ resourceUri, shapeTreeUri, podOwner, accessApp }: any) => {
+  const translate = useTranslate();
+  const form = useShareForm({ resourceUri, shapeTreeUri, podOwner, onDone: accessApp });
+
+  return (
+    <SimpleBox title={translate('app.page.share')} icon={<ShareIcon />} text={form.text}>
+      <ShareFormContent form={form} />
+      <ShareButtons onShare={form.onShare} onCancel={accessApp} />
     </SimpleBox>
   );
 };
+
+const ShareDialogContent = ({ onClose, ...props }: Omit<ShareFormProps, 'onDone'> & { onClose: () => void }) => {
+  const translate = useTranslate();
+  const form = useShareForm({ ...props, onDone: onClose });
+
+  return (
+    <>
+      <DialogTitle sx={{ pb: 1 }}>{translate('app.action.manage_access')}</DialogTitle>
+      <DialogContent>
+        <ShareFormContent form={form} inDialog />
+        <ShareButtons onShare={form.onShare} onCancel={onClose} />
+      </DialogContent>
+    </>
+  );
+};
+
+export const ShareDialog = ({
+  open,
+  onClose,
+  ...props
+}: Omit<ShareFormProps, 'onDone'> & { open: boolean; onClose: () => void }) => (
+  <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    {open && <ShareDialogContent onClose={onClose} {...props} />}
+  </Dialog>
+);
 
 export default ShareScreen;

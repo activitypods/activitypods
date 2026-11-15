@@ -19,6 +19,7 @@ import CachedIcon from '@mui/icons-material/Cached';
 import { useCompactPredicate } from '@semapps/semantic-data-provider';
 import ListView from '../../layout/ListView';
 import ResourceCard from '../../common/cards/ResourceCard';
+import AccessCard from './AccessCard';
 import BackButton from '../../common/buttons/BackButton';
 import useRealmContext from '../../hooks/useRealmContext';
 import usePodContainers from '../../hooks/usePodContainers';
@@ -77,7 +78,15 @@ const DataContainerScreen = ({ containerData }: any) => {
       actions={[
         <BackButton to={getPath()} /> /*<SetDefaultAppButton typeRegistration={typeRegistration} refetch={refetch} />*/
       ]}
-      asides={selected && !xs ? [<ResourceCard resource={selected} labelPredicate={labelPredicate} />] : null}
+      asides={
+        selected && !xs
+          ? [
+              <ResourceCard resource={selected} labelPredicate={labelPredicate} />,
+              // @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'.
+              <AccessCard container={container} resourceUri={selected.id || selected['@id']} />
+            ]
+          : [<AccessCard container={container} />]
+      }
     >
       <Box>
         <List>
@@ -120,7 +129,13 @@ const DataContainerScreen = ({ containerData }: any) => {
       {xs && (
         // @ts-expect-error TS(2345): Argument of type 'null' is not assignable to param... Remove this comment to see the full error message
         <Dialog fullWidth open={!!selected} onClose={() => setSelected(null)}>
-          {selected && <ResourceCard resource={selected} /*typeRegistration={typeRegistration}*/ />}
+          {selected && (
+            <>
+              <ResourceCard resource={selected} labelPredicate={labelPredicate} />
+              {/* @ts-expect-error TS(2339): Property 'id' does not exist on type 'never'. */}
+              <AccessCard container={container} resourceUri={selected.id || selected['@id']} />
+            </>
+          )}
         </Dialog>
       )}
     </ListView>

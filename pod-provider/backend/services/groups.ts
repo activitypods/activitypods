@@ -240,6 +240,7 @@ const GroupsService = {
         const roles = await ctx.call('role-registrations.listForGroup', { groupWebId });
         return roles.map((role: any) => ({
           id: getSlugFromUri(getId(role)),
+          uri: getId(role),
           label: role['skos:prefLabel'],
           isDefaultRole: role['interop:isDefaultRole'] === true,
           isSystemRole: role['interop:isSystemRole'] === true,

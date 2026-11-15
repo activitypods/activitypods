@@ -29,6 +29,7 @@ export default {
       signup: 'Signup',
       sign_in: 'Log in',
       share: 'Share',
+      manage_access: 'Manage access',
       reset_password: 'Reset password',
       revoke_access: 'Revoke access',
       set_new_password: 'Set new password',
@@ -163,6 +164,7 @@ export default {
       control: 'Control',
       none: 'No access',
       read_write: 'Read and write',
+      remove: 'Remove access',
       read_inbox: 'Read my inbox',
       read_outbox: 'Read my outbox',
       post_outbox: 'Post in my outbox',
@@ -184,6 +186,8 @@ export default {
       actions: 'Actions'
     },
     input: {
+      share_search: 'Add a contact',
+      share_search_group: 'Add a member or a role',
       about_you: 'A few words about you',
       message: 'Message',
       user_id: 'User ID',
@@ -212,6 +216,10 @@ export default {
       share_contact: 'To connect with someone you know, send them the link below.',
       share: 'Select the contacts with whom you want to share the resource %{resourceName}',
       share_group: 'Choose the rights of the roles and members of the group on the resource %{resourceName}',
+      type_access: 'Access to these data',
+      resource_access: 'Access to this data',
+      via_type: 'via "%{typeName}"',
+      no_access: 'Nobody has access yet',
       share_with_group_members: 'The members of the group will be able to read it',
       share_type: 'Select the contacts with whom you want to share all data of type "%{typeName}"',
       share_type_group: 'Choose the rights of the roles and members of the group on all data of type "%{typeName}"',
@@ -330,6 +338,7 @@ export default {
       profile_picture: 'Profile picture'
     },
     group: {
+      role: 'Role',
       id: 'Unique ID',
       type: 'Type',
       type_organization: 'Organization',

@@ -28,6 +28,7 @@ export default {
       signup: "S'inscrire",
       sign_in: 'Connexion',
       share: 'Partager',
+      manage_access: "Gérer l'accès",
       reset_password: 'Mot de passe oublié ?',
       revoke_access: "Révoquer l'accès",
       set_new_password: 'Definir un nouveau mot de passe',
@@ -162,6 +163,7 @@ export default {
       control: 'Administrer',
       none: 'Aucun accès',
       read_write: 'Lire et écrire',
+      remove: "Retirer l'accès",
       read_inbox: 'Lire ma boîte de réception',
       read_outbox: "Lire ma boîte d'envoi",
       post_outbox: "Poster dans ma boîte d'envoi",
@@ -183,6 +185,8 @@ export default {
       actions: 'Actions'
     },
     input: {
+      share_search: 'Ajouter un contact',
+      share_search_group: 'Ajouter un membre ou un rôle',
       about_you: 'Quelques mots sur vous',
       message: 'Message',
       user_id: 'Identifiant utilisateur',
@@ -234,6 +238,10 @@ export default {
         "L'application a été mise à jour et requiert maintenant les nouvelles autorisations ci-dessous",
       share: 'Sélectionner les contacts avec lesquels vous souhaitez partager la resource %{resourceName}',
       share_group: 'Choisissez les droits des rôles et des membres du groupe sur la ressource %{resourceName}',
+      type_access: 'Accès à ces données',
+      resource_access: 'Accès à cette donnée',
+      via_type: 'via « %{typeName} »',
+      no_access: "Personne n'y a accès pour l'instant",
       share_with_group_members: 'Les membres du groupe y auront accès en lecture',
       share_type:
         'Sélectionner les contacts avec lesquels vous souhaitez partager toutes les données de type « %{typeName} »',
@@ -339,6 +347,7 @@ export default {
       profile_picture: 'Photo de profil'
     },
     group: {
+      role: 'Rôle',
       id: 'Identifiant unique',
       type: 'Type',
       type_organization: 'Organisation',

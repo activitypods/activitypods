@@ -7,6 +7,7 @@ export type GroupMember = { webId: string; roles: string[]; invited?: boolean; r
 
 export type GroupRole = {
   id: string;
+  uri: string;
   label: string;
   isDefaultRole: boolean;
   isSystemRole: boolean;

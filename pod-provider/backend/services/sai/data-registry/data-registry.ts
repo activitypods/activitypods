@@ -35,10 +35,7 @@ const DataRegistrySchema = {
 
         const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
         if (account?.group) {
-          await ctx.call('role-registrations.addAdminRights', {
-            groupWebId: podOwner,
-            resourceUri: dataRegistrationUri
-          });
+          await ctx.call('role-registrations.addAdminAccess', { groupWebId: podOwner, dataRegistrationUri });
         }
       }
     },

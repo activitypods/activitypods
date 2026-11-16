@@ -134,18 +134,13 @@ const RoleRegistrationsSchema = {
       }
     },
 
-    addAdminRights: {
-      // Give read access to a new resource to the roles with the ManageAccess right
+    addAdminAccess: {
+      // Give full access to a new data registration to the roles with the ManageAccess right
       async handler(ctx) {
-        const { groupWebId, resourceUri } = ctx.params;
+        const { groupWebId, dataRegistrationUri } = ctx.params;
         const roles = await this.actions.listForGroup({ groupWebId }, { parentCtx: ctx });
         for (const role of roles.filter((r: any) => this.canManageAccess(r))) {
-          const groupUri = await this.getWacGroupUri(ctx, groupWebId, getId(role));
-          await ctx.call('webacl.resource.addRights', {
-            resourceUri,
-            additionalRights: this.getAdminRights(groupUri, true),
-            webId: 'system'
-          });
+          await this.setAdminAccess(ctx, groupWebId, getId(role), dataRegistrationUri, true);
         }
       }
     },
@@ -337,7 +332,7 @@ const RoleRegistrationsSchema = {
       const rights = { group: { uri: groupUri, read: true } };
       return withDefault ? { ...rights, default: rights } : rights;
     },
-    // The roles with the ManageAccess right can read the registries and the data of the group
+    // The roles with the ManageAccess right can read the registries and have full access to the data of the group
     async setAdminRights(ctx, groupWebId: string, roleRegistrationUri: string, granted: boolean) {
       const groupUri = await this.getWacGroupUri(ctx, groupWebId, roleRegistrationUri);
 
@@ -349,10 +344,7 @@ const RoleRegistrationsSchema = {
       await ctx.call('access-authorizations.waitForContainerCreation', { containerUri: authorizationsUri });
       const dataRegistry = await ctx.call('data-registry.get', { resourceUri: registriesUris[1], webId: 'system' });
 
-      const resources = [
-        ...registriesUris.map(uri => [uri, false]),
-        ...[authorizationsUri, ...arrayOf(dataRegistry['interop:hasDataRegistration'])].map(uri => [uri, true])
-      ];
+      const resources = [...registriesUris.map(uri => [uri, false]), [authorizationsUri, true]];
       for (const [resourceUri, withDefault] of resources) {
         const rights = this.getAdminRights(groupUri, withDefault);
         await ctx.call(granted ? 'webacl.resource.addRights' : 'webacl.resource.removeRights', {
@@ -360,6 +352,28 @@ const RoleRegistrationsSchema = {
           [granted ? 'additionalRights' : 'rights']: rights,
           webId: 'system'
         });
+      }
+
+      for (const dataRegistrationUri of arrayOf(dataRegistry['interop:hasDataRegistration'])) {
+        await this.setAdminAccess(ctx, groupWebId, roleRegistrationUri, dataRegistrationUri, granted);
+      }
+    },
+    async setAdminAccess(ctx, groupWebId: string, roleRegistrationUri: string, dataRegistrationUri: string, granted) {
+      const dataRegistration = await ctx.call('data-registrations.get', { dataRegistrationUri });
+      const params = {
+        shapeTreeUri: dataRegistration['interop:registeredShapeTree'],
+        grantee: roleRegistrationUri,
+        webId: groupWebId
+      };
+      const opts = { meta: { webId: groupWebId, dataset: getDatasetFromUri(groupWebId) } };
+      if (granted) {
+        await ctx.call(
+          'access-authorizations.addForShapeTree',
+          { ...params, accessModes: ['acl:Read', 'acl:Write'] },
+          opts
+        );
+      } else {
+        await ctx.call('access-authorizations.removeForShapeTree', params, opts);
       }
     },
     async getWacGroupUri(ctx, groupWebId, roleRegistrationUri) {

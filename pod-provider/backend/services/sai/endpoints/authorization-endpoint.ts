@@ -143,7 +143,9 @@ const AuthorizationEndpointSchema = {
         roles: roles.map((role: any) => ({
           uri: getId(role),
           id: getSlugFromUri(getId(role)),
-          label: role['skos:prefLabel']
+          label: role['skos:prefLabel'],
+          // The admins have full access to the data of the group
+          isAdmin: arrayOf(role['interop:hasSpecialRight']).includes('interop:ManageAccess')
         })),
         members: [...new Set(Object.values(members).flat())].filter(uri => uri !== groupWebId)
       };

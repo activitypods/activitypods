@@ -42,6 +42,13 @@ const getAllowedTypes = async (ctx: any, appUri: any, podOwner: any, accessMode:
   return await ctx.call('jsonld.parser.expandTypes', { types });
 };
 
+// Return the application acting on the Pod, if any
+// Without clientId, the application is identified by its webId
+const getAppUri = (ctx: any, podOwner: string) => {
+  if (ctx.meta.clientId) return ctx.meta.webId === podOwner ? ctx.meta.clientId : undefined;
+  return ctx.meta.webId === podOwner ? undefined : ctx.meta.webId;
+};
+
 const AppControlMiddleware = ({ baseUrl }: any) => ({
   name: 'AppControlMiddleware',
   async started() {
@@ -54,11 +61,10 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
         const url = ctx.params.id;
 
         // Bypass checks if user is querying his own pod
-        if (ctx.meta.webId === podOwner) {
-          return next(ctx);
-        }
+        const appUri = getAppUri(ctx, podOwner);
+        if (!appUri) return next(ctx);
 
-        const appUri = ctx.meta.webId;
+        const webId = ctx.meta.webId;
         const { origin: appBaseUrl } = new URL(appUri);
 
         // Bypass checks if user is querying the app backend
@@ -125,7 +131,7 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
 
         const result = await next(ctx);
 
-        ctx.meta.webId = appUri;
+        ctx.meta.webId = webId;
 
         // Check if the application has the right to read this type of data
         if (result && ctx.params.method === 'GET') {
@@ -156,11 +162,9 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
         const podOwner = getParentContainerUri(collectionUri);
 
         // Bypass checks if user is posting to their outbox
-        if (ctx.meta.webId === podOwner) {
-          return next(ctx);
-        }
+        const appUri = getAppUri(ctx, podOwner);
+        if (!appUri) return next(ctx);
 
-        const appUri = ctx.meta.webId;
         const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner });
 
         // Ensure the webId is a registered application
@@ -202,8 +206,9 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
           }
         }
 
-        // Impersonate the user so that signature.proxy.api_query can be called
+        // The side effects of the activity are handled with the rights of the user
         ctx.meta.webId = podOwner;
+        delete ctx.meta.clientId;
 
         ctx.params.generator = appUri;
 
@@ -215,11 +220,12 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
         const podOwner = urlJoin(baseUrl, username);
 
         // Bypass checks if user is acting on their own pod
-        if (ctx.meta.webId === podOwner) {
+        const appUri = getAppUri(ctx, podOwner);
+        if (!appUri) {
+          if (ctx.meta.webId !== podOwner) throw new E.ForbiddenError(`Only the Pod owner may handle ACL groups`);
           return next(ctx);
         }
 
-        const appUri = ctx.meta.webId;
         const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner });
 
         // Ensure the webId is a registered application
@@ -239,11 +245,10 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
         const podOwner = urlJoin(baseUrl, username);
 
         // Bypass checks if user is acting on their own Pod
-        if (ctx.meta.webId === podOwner) {
-          return next(ctx);
-        }
+        const appUri = getAppUri(ctx, podOwner);
+        if (!appUri) return next(ctx);
 
-        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: ctx.meta.webId, podOwner });
+        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner });
 
         // If the webId is a registered application, use the system webId to bypass WAC checks
         if (appRegistration) {
@@ -251,12 +256,12 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
             throw new E.ForbiddenError(`The application has no permission to handle ACL groups (apods:CreateWacGroup)`);
           }
 
-          const appUri = ctx.meta.webId;
+          const webId = ctx.meta.webId;
           ctx.meta.webId = 'system';
 
           const result = await next(ctx);
 
-          ctx.meta.webId = appUri;
+          ctx.meta.webId = webId;
 
           return result;
         } else {
@@ -269,14 +274,13 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
         const podOwner = urlJoin(baseUrl, username);
 
         // Bypass checks if user is acting on their own
-        if (ctx.meta.webId === podOwner) {
-          return next(ctx);
-        }
+        const appUri = getAppUri(ctx, podOwner);
+        if (!appUri) return next(ctx);
 
-        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: ctx.meta.webId, podOwner });
+        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner });
 
         // If the webId is a registered application, check it has the special right
-        if (ctx.meta.webId !== 'anon' && ctx.meta.webId !== 'system' && appRegistration) {
+        if (appUri !== 'anon' && appUri !== 'system' && appRegistration) {
           if (!arrayOf(appRegistration['apods:hasSpecialRights']).includes('apods:QuerySparqlEndpoint')) {
             throw new E.ForbiddenError(
               `The application has no permission to query the SPARQL endpoint (apods:QuerySparqlEndpoint)`
@@ -296,11 +300,10 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
         const podOwner = getWebIdFromUri(collectionUri);
 
         // Bypass checks if user is acting on their own
-        if (ctx.meta.webId === podOwner) {
-          return next(ctx);
-        }
+        const appUri = getAppUri(ctx, podOwner);
+        if (!appUri) return next(ctx);
 
-        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: ctx.meta.webId, podOwner });
+        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner });
 
         // If the webId is a registered application
         if (appRegistration) {

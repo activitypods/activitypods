@@ -6,7 +6,7 @@ const useRegisterApp = () => {
   const dataProvider = useDataProvider();
 
   const registerApp = useCallback(
-    async ({ appUri, grantedAccessNeeds }: any) => {
+    async ({ appUri, grantedAccessNeeds, podOwner }: any) => {
       await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/app-registrations/register'), {
         method: 'POST',
         headers: new Headers({
@@ -14,6 +14,7 @@ const useRegisterApp = () => {
         }),
         body: JSON.stringify({
           appUri,
+          podOwner,
           acceptedAccessNeeds: grantedAccessNeeds.filter((a: any) => !a.startsWith('apods:')),
           acceptedSpecialRights: grantedAccessNeeds.filter((a: any) => a.startsWith('apods:'))
         })

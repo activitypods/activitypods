@@ -34,9 +34,7 @@ const RegistrationEndpointSchema = {
       async handler(ctx) {
         let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
 
-        const webId = ctx.meta.webId;
-        const account = await ctx.call('auth.account.findByWebId', { webId });
-        ctx.meta.dataset = account.username;
+        const webId = await this.actAsPodOwner(ctx);
 
         // Force to get through network
         const app = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri });
@@ -105,9 +103,7 @@ const RegistrationEndpointSchema = {
       async handler(ctx) {
         let { appUri, acceptedAccessNeeds, acceptedSpecialRights, acceptAllRequirements = false } = ctx.params;
 
-        const webId = ctx.meta.webId;
-        const account = await ctx.call('auth.account.findByWebId', { webId });
-        ctx.meta.dataset = account.username;
+        const webId = await this.actAsPodOwner(ctx);
 
         const oldAppRegistration = await ctx.call('app-registrations.getForAgent', {
           agentUri: appUri,
@@ -188,9 +184,7 @@ const RegistrationEndpointSchema = {
       async handler(ctx) {
         const { appUri } = ctx.params;
 
-        const webId = ctx.meta.webId;
-        const account = await ctx.call('auth.account.findByWebId', { webId });
-        ctx.meta.dataset = account.username;
+        const webId = await this.actAsPodOwner(ctx);
 
         const app = await ctx.call('applications.get', { appUri, webId });
         const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner: webId });
@@ -229,9 +223,32 @@ const RegistrationEndpointSchema = {
     getForAgent: {
       async handler(ctx) {
         const { agent } = ctx.params;
-        const webId = ctx.meta.webId;
+        const webId = await this.actAsPodOwner(ctx);
         return await ctx.call('app-registrations.getForAgent', { agentUri: agent, podOwner: webId });
       }
+    }
+  },
+  methods: {
+    // Members of a group with the ManageAccess right may manage its apps, on behalf of the group
+    async actAsPodOwner(ctx) {
+      const { podOwner = ctx.meta.webId } = ctx.params;
+      const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
+      if (!account) throw new MoleculerError('Unknown pod owner', 404, 'NOT_FOUND');
+
+      if (podOwner !== ctx.meta.webId) {
+        const hasRight =
+          account.group &&
+          (await ctx.call('role-registrations.hasSpecialRight', {
+            groupWebId: podOwner,
+            agentUri: ctx.meta.webId,
+            right: 'interop:ManageAccess'
+          }));
+        if (!hasRight) throw new MoleculerError('You need the interop:ManageAccess right on this group', 403, 'FORBIDDEN');
+        ctx.meta.webId = podOwner;
+      }
+
+      ctx.meta.dataset = account.username;
+      return podOwner;
     }
   }
 } satisfies ServiceSchema;

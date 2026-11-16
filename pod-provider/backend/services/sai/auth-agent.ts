@@ -32,10 +32,12 @@ const AuthAgentSchema = {
           const podOwner = ctx.meta.impersonatedUser;
           agentRegistration = await ctx.call('app-registrations.getForAgent', { agentUri, podOwner });
         } else {
-          // The fetch is made by a social agent
+          // The fetch is made by a social agent, or by the backend of an app with a HTTP signature
           const agentUri = ctx.meta.webId;
           const podOwner = getWebIdFromUri(ctx.params.uri);
-          agentRegistration = await ctx.call('social-agent-registrations.getForAgent', { agentUri, podOwner });
+          agentRegistration =
+            (await ctx.call('app-registrations.getForAgent', { agentUri, podOwner })) ||
+            (await ctx.call('social-agent-registrations.getForAgent', { agentUri, podOwner }));
         }
 
         if (agentRegistration) {

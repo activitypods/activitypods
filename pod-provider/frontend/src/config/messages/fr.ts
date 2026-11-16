@@ -234,6 +234,8 @@ export default {
       create_profile:
         'Maintenant que votre compte est créé, veuillez créer votre profil. Celui-ci ne sera visible par défaut que des personnes que vous acceptez dans votre réseau.',
       authorize_register: "Pour être utilisée, l'application requiert les autorisations suivantes",
+      authorize_register_group:
+        "Pour être utilisée, l'application requiert les autorisations suivantes sur le porte-données de %{name}",
       authorize_upgrade:
         "L'application a été mise à jour et requiert maintenant les nouvelles autorisations ci-dessous",
       share: 'Sélectionner les contacts avec lesquels vous souhaitez partager la resource %{resourceName}',

@@ -240,6 +240,7 @@ export default {
       create_profile:
         'Now that your account is created, please create your profile. By default, your profile will only be visible to the people you accept into your network.',
       authorize_register: 'To be registered, the app requires the following authorizations',
+      authorize_register_group: 'To be registered, the app requires the following authorizations on the data space of %{name}',
       authorize_upgrade: 'The app has been updated and now requires the following additional authorizations',
       invite_text_logged_out:
         "A personal data space is in some way similar to an email account; It's decentralized, so you can choose where your personal data is stored. Instead of creating a new account for every new app, you can login to compatible apps using your data space account. Apps then store your data in your data space.",

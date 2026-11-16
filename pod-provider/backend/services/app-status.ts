@@ -31,7 +31,22 @@ const AppStatusService = {
         }
 
         const appUri = ctx.meta.impersonatedUser ? ctx.meta.webId : ctx.params.appUri;
-        const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+        let webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+
+        // Status of the app on a group, for its members with the ManageAccess right
+        const { podOwner } = ctx.params;
+        if (!ctx.meta.impersonatedUser && podOwner && podOwner !== webId) {
+          const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
+          const hasRight =
+            account?.group &&
+            (await ctx.call('role-registrations.hasSpecialRight', {
+              groupWebId: podOwner,
+              agentUri: webId,
+              right: 'interop:ManageAccess'
+            }));
+          if (!hasRight) throw new MoleculerError('You need the interop:ManageAccess right on this group', 403, 'FORBIDDEN');
+          webId = podOwner;
+        }
 
         ctx.meta.dataset = getDatasetFromUri(webId);
 

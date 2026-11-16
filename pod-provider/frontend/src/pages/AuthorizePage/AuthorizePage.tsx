@@ -23,6 +23,9 @@ const AuthorizePage = () => {
   const resourceUri = searchParams.get('resource');
   const shapeTreeUri = searchParams.get('shapeTree');
   const podOwner = searchParams.get('podOwner');
+  // When sharing, podOwner is the owner of the shared data. Otherwise, it is the pod on which the app is registered.
+  const isSharing = !!(resourceUri || shapeTreeUri);
+  const registrationPod = isSharing ? null : podOwner;
   const isTrustedApp = trustedApps?.some(trustedApp => trustedApp.id === appUri) || false;
 
   const { data: application } = useGetOne('App', { id: appUri });
@@ -46,26 +49,35 @@ const AuthorizePage = () => {
 
   useEffect(() => {
     if (application?.id && identity?.id) {
-      getAppStatus(application.id, identity).then(appStatus => {
+      getAppStatus(application.id, identity, registrationPod).then(appStatus => {
         if (!appStatus.installed) {
           // @ts-expect-error TS(2345): Argument of type '"register"' is not assignable to... Remove this comment to see the full error message
           setScreen('register');
+        } else if (appStatus.upgradeNeeded && registrationPod) {
+          notify('The upgrade of an app registered on a group is not supported yet', { type: 'error' });
         } else if (appStatus.upgradeNeeded) {
           // @ts-expect-error TS(2345): Argument of type '"upgrade"' is not assignable to ... Remove this comment to see the full error message
           setScreen('upgrade');
-        } else if (resourceUri || shapeTreeUri) {
+        } else if (isSharing) {
           setScreen('share');
         } else {
           accessApp();
         }
       });
     }
-  }, [resourceUri, shapeTreeUri, application, accessApp, getAppStatus, setScreen, identity]);
+  }, [isSharing, registrationPod, application, accessApp, getAppStatus, setScreen, identity, notify]);
 
   switch (screen) {
     // @ts-expect-error TS(2678): Type '"register"' is not comparable to type 'undef... Remove this comment to see the full error message
     case 'register':
-      return <RegistrationScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
+      return (
+        <RegistrationScreen
+          application={application}
+          accessApp={accessApp}
+          isTrustedApp={isTrustedApp}
+          podOwner={registrationPod}
+        />
+      );
 
     // @ts-expect-error TS(2678): Type '"upgrade"' is not comparable to type 'undefi... Remove this comment to see the full error message
     case 'upgrade':

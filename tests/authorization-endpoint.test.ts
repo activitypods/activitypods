@@ -128,7 +128,7 @@ describe('Test the authorization endpoint', () => {
       resourceUri: groupEventUri,
       authorizations: [{ grantee: memberRoleUri, accessModes: ['acl:Read'] }]
     });
-    expect(result.roles).toContainEqual({ uri: memberRoleUri, id: 'member', label: 'Member' });
+    expect(result.roles).toContainEqual({ uri: memberRoleUri, id: 'member', label: 'Member', isAdmin: false });
     expect(result.members.sort()).toEqual([alice.id, bob.id].sort());
     await expect(hasRights(bob, groupEventUri, { read: true })).resolves.toMatchObject({ read: true });
   });
@@ -151,15 +151,27 @@ describe('Test the authorization endpoint', () => {
     });
 
     const { authorizations } = await getAuthorizations(alice, { shapeTree: EVENT_SHAPE_TREE, podOwner: groupWebId });
-    expect(authorizations).toHaveLength(1);
-    expect(authorizations[0].grantee).toBe(memberRoleUri);
-    expect(authorizations[0].accessModes).toEqual(expect.arrayContaining(['acl:Read', 'acl:Write']));
+    const membersAuthorization = authorizations.find((a: any) => a.grantee === memberRoleUri);
+    expect(membersAuthorization.accessModes).toEqual(expect.arrayContaining(['acl:Read', 'acl:Write']));
 
     groupEvent2Uri = await createEvent(groupWebId, 'acme', 'Picnic');
     await expect(hasRights(bob, groupEvent2Uri, { read: true, write: true })).resolves.toMatchObject({
       read: true,
       write: true
     });
+  });
+
+  test('The admins have full access to each type of data of the group', async () => {
+    const { authorizations, roles } = await getAuthorizations(alice, {
+      shapeTree: EVENT_SHAPE_TREE,
+      podOwner: groupWebId
+    });
+    const adminRoles = roles.filter((role: any) => role.isAdmin).map((role: any) => role.uri);
+    expect(adminRoles).toHaveLength(2);
+    for (const roleUri of adminRoles) {
+      const authorization = authorizations.find((a: any) => a.grantee === roleUri);
+      expect(authorization.accessModes).toEqual(expect.arrayContaining(['acl:Read', 'acl:Write']));
+    }
   });
 
   test('Empty access modes remove the authorization', async () => {
@@ -169,9 +181,8 @@ describe('Test the authorization endpoint', () => {
       authorizations: [{ grantee: memberRoleUri, accessModes: [] }]
     });
 
-    await expect(
-      getAuthorizations(alice, { shapeTree: EVENT_SHAPE_TREE, podOwner: groupWebId })
-    ).resolves.toMatchObject({ authorizations: [] });
+    const { authorizations } = await getAuthorizations(alice, { shapeTree: EVENT_SHAPE_TREE, podOwner: groupWebId });
+    expect(authorizations.find((a: any) => a.grantee === memberRoleUri)).toBeUndefined();
     await expect(hasRights(bob, groupEvent2Uri, { read: true })).resolves.toMatchObject({ read: false });
     // The resource shared on its own is still readable
     await expect(hasRights(bob, groupEventUri, { read: true })).resolves.toMatchObject({ read: true });

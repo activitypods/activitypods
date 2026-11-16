@@ -435,9 +435,11 @@ describe('Test groups members handling', () => {
       const member = await getRole('member');
       expect(arrayOf(member['interop:hasMember'])).not.toContain(alice.id);
     });
-    await expect(
-      podProvider.call('social-agent-registrations.getForAgent', { agentUri: alice.id, podOwner: groupWebId })
-    ).resolves.toBeFalsy();
+    await waitForExpect(async () => {
+      await expect(
+        podProvider.call('social-agent-registrations.getForAgent', { agentUri: alice.id, podOwner: groupWebId })
+      ).resolves.toBeFalsy();
+    });
     await waitForExpect(async () => {
       await expect(getInbox(alice)).resolves.toContainEqual(
         expect.objectContaining({ type: 'Accept', actor: groupWebId, object: expect.stringContaining(alice.id) })

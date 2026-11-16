@@ -17,7 +17,7 @@ const GranteeItem = ({ authorization, roles, via }: { authorization: any; roles?
   const roleLabel = useRoleLabel();
   const grantee = authorization['interop:grantee'];
   const role = roles?.find(r => r.uri === grantee);
-  const actor = useActor(role ? undefined : grantee, { loadPrivateProfile: false });
+  const actor = useActor(role ? undefined : grantee);
   const access = arrayOf(authorization['interop:accessMode']).includes('acl:Write') ? 'read_write' : 'read';
 
   return (

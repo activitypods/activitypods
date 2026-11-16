@@ -75,6 +75,14 @@ const useGrantees = (authorizations: any): Grantee[] => {
 
   const { data: actors } = useGetMany('Actor', { ids: agentsUris }, { enabled: agentsUris.length > 0 });
 
+  // The private profiles are only readable for contacts
+  const profilesUris: string[] = useMemo(() => (actors || []).map((a: any) => a?.url).filter(Boolean), [actors]);
+  const { data: profiles } = useGetMany(
+    'Profile',
+    { ids: profilesUris },
+    { enabled: profilesUris.length > 0, retry: false }
+  );
+
   return useMemo(
     () => [
       ...withoutOwnerRole(authorizations?.roles || []).map((role: any) => ({
@@ -86,17 +94,19 @@ const useGrantees = (authorizations: any): Grantee[] => {
       })),
       ...agentsUris.map(uri => {
         const actor = actors?.find((a: any) => a.id === uri);
+        const profile = profiles?.find((p: any) => p.id === actor?.url);
         const isGroupGrantee = isGroupActor(actor);
         return {
           uri,
-          label: actor?.name || actor?.['foaf:nick'] || actor?.preferredUsername || uri,
+          label:
+            profile?.['vcard:given-name'] || actor?.name || actor?.['foaf:nick'] || actor?.preferredUsername || uri,
           secondary: isGroupGrantee ? translate('app.helper.share_with_group_members') : formatUsername(uri),
-          image: actor?.icon?.url,
+          image: profile?.['vcard:photo'] || actor?.icon?.url,
           isGroup: isGroupGrantee
         };
       })
     ],
-    [authorizations, agentsUris, actors, roleLabel, translate]
+    [authorizations, agentsUris, actors, profiles, roleLabel, translate]
   );
 };
 

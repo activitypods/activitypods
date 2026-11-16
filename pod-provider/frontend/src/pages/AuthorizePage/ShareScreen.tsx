@@ -26,7 +26,7 @@ import SimpleBox from '../../layout/SimpleBox';
 import useResource from '../../hooks/useResource';
 import useRoleLabel from '../../hooks/useRoleLabel';
 import useFetchShapeTree from '../../hooks/useFetchShapeTree';
-import { arrayOf, formatUsername, isGroupActor } from '../../utils';
+import { arrayOf, formatUsername, isGroupActor, withoutOwnerRole } from '../../utils';
 
 const ACCESS_MODES = {
   none: [],
@@ -37,7 +37,15 @@ const ACCESS_MODES = {
 const getAccess = (accessModes: string[]) =>
   accessModes.includes('acl:Write') ? 'read_write' : accessModes.includes('acl:Read') ? 'read' : 'none';
 
-type Grantee = { uri: string; label: string; secondary?: string; image?: string; isRole?: boolean; isGroup?: boolean };
+type Grantee = {
+  uri: string;
+  label: string;
+  secondary?: string;
+  image?: string;
+  isRole?: boolean;
+  isAdmin?: boolean;
+  isGroup?: boolean;
+};
 
 const GranteeAvatar = ({ grantee }: { grantee: Grantee }) => (
   <Avatar src={grantee.image}>{grantee.isRole ? <GroupsIcon /> : grantee.label?.toUpperCase()?.[0]}</Avatar>
@@ -69,11 +77,12 @@ const useGrantees = (authorizations: any): Grantee[] => {
 
   return useMemo(
     () => [
-      ...(authorizations?.roles || []).map((role: any) => ({
+      ...withoutOwnerRole(authorizations?.roles || []).map((role: any) => ({
         uri: role.uri,
         label: roleLabel(role),
         secondary: translate('app.group.role'),
-        isRole: true
+        isRole: true,
+        isAdmin: role.isAdmin
       })),
       ...agentsUris.map(uri => {
         const actor = actors?.find((a: any) => a.id === uri);
@@ -139,10 +148,12 @@ const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareForm
 
     dataProvider
       .fetch(authorizationsUrl.toString(), { headers: new Headers({ Accept: 'application/json' }) })
-      .then(({ json }) => {
-        const currentAccess = Object.fromEntries(
-          json.authorizations.map((auth: any) => [auth.grantee, getAccess(arrayOf(auth.accessModes))])
-        );
+      .then(({ json }: any) => {
+        const currentAccess = Object.fromEntries([
+          ...json.authorizations.map((auth: any) => [auth.grantee, getAccess(arrayOf(auth.accessModes))]),
+          // The admins have full access to all the data of the group, which can't be changed
+          ...(json.roles || []).filter((role: any) => role.isAdmin).map((role: any) => [role.uri, 'read_write'])
+        ]);
         setAuthorizations(json);
         setInitialAccess(currentAccess);
         setAccess(currentAccess);
@@ -157,7 +168,10 @@ const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareForm
         headers: new Headers({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           ...(resourceUri ? { resourceUri } : { shapeTreeUri, podOwner }),
-          authorizations: changed.map(grantee => ({ grantee, accessModes: ACCESS_MODES[access[grantee]] }))
+          authorizations: changed.map(grantee => ({
+            grantee,
+            accessModes: ACCESS_MODES[access[grantee] as keyof typeof ACCESS_MODES]
+          }))
         })
       });
     }
@@ -170,7 +184,7 @@ const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareForm
       })
     : translate(isGroup ? 'app.helper.share_group' : 'app.helper.share', {
         // The containers of a group are not in the user's data servers
-        resourceName: resource?.[labelPredicate] || resource?.name || ''
+        resourceName: (labelPredicate && resource?.[labelPredicate]) || resource?.name || ''
       });
 
   return { authorizations, grantees, access, setAccess, onShare, text, isGroup };
@@ -229,6 +243,7 @@ const ShareFormContent = ({ form, inDialog }: { form: ReturnType<typeof useShare
               <Select
                 size="small"
                 value={access[grantee.uri]}
+                disabled={grantee.isAdmin}
                 onChange={e => setAccess(cur => ({ ...cur, [grantee.uri]: e.target.value }))}
                 sx={{ minWidth: 150 }}
               >

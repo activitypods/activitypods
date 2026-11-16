@@ -10,7 +10,7 @@ import useGroupMembers, { GroupRole } from '../../hooks/useGroupMembers';
 import usePodAuthorizations from '../../hooks/usePodAuthorizations';
 import useRealmContext from '../../hooks/useRealmContext';
 import { ShareDialog } from '../AuthorizePage/ShareScreen';
-import { arrayOf } from '../../utils';
+import { arrayOf, withoutOwnerRole } from '../../utils';
 
 const GranteeItem = ({ authorization, roles, via }: { authorization: any; roles?: GroupRole[]; via?: string }) => {
   const translate = useTranslate();
@@ -43,8 +43,13 @@ const AccessCard = ({ container, resourceUri }: { container: any; resourceUri?: 
   const [locale] = useLocaleState();
   const queryClient = useQueryClient();
   const { data: pod } = useRealmContext() as any;
-  const authorizations = usePodAuthorizations() || [];
   const { roles } = useGroupMembers();
+  const hiddenRolesUris = (roles || [])
+    .filter(role => !withoutOwnerRole(roles || []).includes(role))
+    .map(role => role.uri);
+  const authorizations = (usePodAuthorizations() || []).filter(
+    (a: any) => !hiddenRolesUris.includes(a['interop:grantee'])
+  );
   const [open, setOpen] = useState(false);
 
   if (!container) return null;

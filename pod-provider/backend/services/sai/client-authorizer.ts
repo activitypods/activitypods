@@ -9,6 +9,8 @@ const ClientAuthorizerSchema = {
   },
   actions: {
     authorize: {
+      // Cleaned by app-registrations when a registration is created or deleted
+      cache: { keys: ['clientId', 'webId'] },
       async handler(ctx) {
         const { webId, clientId } = ctx.params;
         if (webId === 'anon') return false;
@@ -16,7 +18,18 @@ const ClientAuthorizerSchema = {
         const account = await ctx.call('auth.account.findByWebId', { webId });
         if (!account) return false;
 
-        return await ctx.call('app-registrations.isRegistered', { agentUri: clientId, podOwner: webId });
+        // The request may be on another Pod than the user's one
+        // Moleculer copies the meta of sub-calls back to the parent, so it must be restored
+        const { dataset } = ctx.meta;
+        try {
+          return await ctx.call(
+            'app-registrations.isRegistered',
+            { agentUri: clientId, podOwner: webId },
+            { meta: { dataset: account.username } }
+          );
+        } finally {
+          ctx.meta.dataset = dataset;
+        }
       }
     }
   }

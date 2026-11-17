@@ -30,12 +30,12 @@ const AppStatusService = {
           throw new MoleculerError(`Invalid application URL`, 400, 'BAD_REQUEST');
         }
 
-        const appUri = ctx.meta.impersonatedUser ? ctx.meta.webId : ctx.params.appUri;
-        let webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+        const appUri = ctx.meta.clientId || ctx.params.appUri;
+        let webId = ctx.meta.webId;
 
         // Status of the app on a group, for its members with the ManageAccess right
         const { podOwner } = ctx.params;
-        if (!ctx.meta.impersonatedUser && podOwner && podOwner !== webId) {
+        if (!ctx.meta.clientId && podOwner && podOwner !== webId) {
           const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
           const hasRight =
             account?.group &&

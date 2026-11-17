@@ -116,7 +116,7 @@ const GroupsService = {
        */
       async handler(ctx) {
         const { id, type } = ctx.params;
-        const ownerWebId = ctx.meta.impersonatedUser || ctx.meta.webId;
+        const ownerWebId = ctx.meta.webId;
         const groupWebId = urlJoin(CONFIG.BASE_URL, id);
 
         if (!['foaf:Organization', 'foaf:Group'].includes(type))
@@ -158,7 +158,7 @@ const GroupsService = {
 
     list: {
       async handler(ctx) {
-        const ownerWebId = ctx.meta.impersonatedUser || ctx.meta.webId;
+        const ownerWebId = ctx.meta.webId;
         const ownerAccount = await ctx.call('auth.account.findByWebId', { webId: ownerWebId });
         if (!ownerAccount) return [];
         return arrayOf(ownerAccount.owns);
@@ -168,7 +168,7 @@ const GroupsService = {
     getOwnRoles: {
       async handler(ctx) {
         const groupWebId = await this.getGroupWebId(ctx, ctx.params.username);
-        const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+        const webId = ctx.meta.webId;
 
         const roles = await ctx.call('role-registrations.listForAgent', { groupWebId, agentUri: webId });
         const { join } = roles.length === 0 ? await this.findJoinRequest(ctx, groupWebId, webId) : {};
@@ -394,7 +394,7 @@ const GroupsService = {
     claim: {
       async handler(ctx) {
         const { username, groupWebId } = ctx.params;
-        const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+        const webId = ctx.meta.webId;
 
         const account = await ctx.call('auth.account.findByUsername', { username });
         if (!account) throw404('Actor not found');
@@ -414,7 +414,7 @@ const GroupsService = {
     undoClaim: {
       async handler(ctx) {
         const { username, groupWebId } = ctx.params;
-        const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+        const webId = ctx.meta.webId;
 
         const account = await ctx.call('auth.account.findByUsername', { username });
         if (!account) throw404('Actor not found');
@@ -629,13 +629,13 @@ const GroupsService = {
       return account.webId;
     },
     async checkSpecialRight(ctx, groupWebId, right) {
-      const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+      const webId = ctx.meta.webId;
       if (webId === 'system') return;
       const hasRight = await ctx.call('role-registrations.hasSpecialRight', { groupWebId, agentUri: webId, right });
       if (!hasRight) throw403(`You need the ${right} right on this group`);
     },
     async checkOwner(ctx, groupWebId) {
-      const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+      const webId = ctx.meta.webId;
       if (webId === 'system') return;
       const isOwner = await ctx.call('role-registrations.hasRole', { groupWebId, agentUri: webId, role: 'owner' });
       if (!isOwner) throw403('Only owners can manage the Owner role');
@@ -668,7 +668,7 @@ const GroupsService = {
         }
       }
 
-      const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+      const webId = ctx.meta.webId;
       if (webId !== 'system') {
         const agentRoles = await ctx.call('role-registrations.listForAgent', { groupWebId, agentUri: webId });
         const agentRights = agentRoles.flatMap((role: any) => arrayOf(role['interop:hasSpecialRight']));
@@ -907,7 +907,7 @@ const GroupsService = {
         await ctx.call(
           granted ? 'groups.claim' : 'groups.undoClaim',
           { username: account.username, groupWebId },
-          { meta: { webId: 'system', impersonatedUser: undefined } }
+          { meta: { webId: 'system', clientId: undefined } }
         );
       }
     },

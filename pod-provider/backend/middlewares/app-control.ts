@@ -24,22 +24,29 @@ const DEFAULT_ALLOWED_TYPES = [
 
 // TODO use cache to improve performances
 const getAllowedTypes = async (ctx: any, appUri: any, podOwner: any, accessMode: any) => {
-  const authorizations = await ctx.call('access-authorizations.listByGrantee', { grantee: appUri, webId: podOwner });
+  // This is server logic, which must not be limited to the rights of the app
+  const { clientId } = ctx.meta;
+  delete ctx.meta.clientId;
+  try {
+    const authorizations = await ctx.call('access-authorizations.listByGrantee', { grantee: appUri, webId: podOwner });
 
-  let types = [...DEFAULT_ALLOWED_TYPES];
-  for (const authorization of authorizations) {
-    if (arrayOf(authorization['interop:accessMode']).includes(accessMode)) {
-      const shapeUri = await ctx.call('shape-trees.getShapeUri', {
-        resourceUri: authorization['interop:registeredShapeTree']
-      });
-      // Binary resources don't have a shape
-      if (shapeUri) {
-        types.push(...(await ctx.call('shacl.getTypes', { resourceUri: shapeUri })));
+    let types = [...DEFAULT_ALLOWED_TYPES];
+    for (const authorization of authorizations) {
+      if (arrayOf(authorization['interop:accessMode']).includes(accessMode)) {
+        const shapeUri = await ctx.call('shape-trees.getShapeUri', {
+          resourceUri: authorization['interop:registeredShapeTree']
+        });
+        // Binary resources don't have a shape
+        if (shapeUri) {
+          types.push(...(await ctx.call('shacl.getTypes', { resourceUri: shapeUri })));
+        }
       }
     }
-  }
 
-  return await ctx.call('jsonld.parser.expandTypes', { types });
+    return await ctx.call('jsonld.parser.expandTypes', { types });
+  } finally {
+    if (clientId) ctx.meta.clientId = clientId;
+  }
 };
 
 // Return the application acting on the Pod, if any

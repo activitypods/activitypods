@@ -26,10 +26,10 @@ const AuthAgentSchema = {
       async handler(ctx) {
         let agentRegistration;
 
-        if (ctx.meta.impersonatedUser) {
+        if (ctx.meta.clientId) {
           // The fetch is made by a registered app
-          const agentUri = ctx.meta.webId;
-          const podOwner = ctx.meta.impersonatedUser;
+          const agentUri = ctx.meta.clientId;
+          const podOwner = ctx.meta.webId;
           agentRegistration = await ctx.call('app-registrations.getForAgent', { agentUri, podOwner });
         } else {
           // The fetch is made by a social agent, or by the backend of an app with a HTTP signature

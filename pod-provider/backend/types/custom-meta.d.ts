@@ -11,8 +11,8 @@ declare global {
       webId?: string;
       /** Name of the dataset the call operates on. */
       dataset?: string;
-      /** WebID the caller acts on behalf of. */
-      impersonatedUser?: string;
+      /** Client ID of the application acting on behalf of the webId. */
+      clientId?: string;
       /** Payload of the verified JWT. */
       tokenPayload?: { webId?: string; [key: string]: any };
       /** True when the call originates from the server itself rather than from the API. */

@@ -194,6 +194,11 @@ describe('Requests made by an app with an OIDC token', () => {
     expect(res.status).toBe(403);
   });
 
+  test('The app backend cannot act on behalf of an unknown user', async () => {
+    const res = await fetchOnBehalfOf({ id: 'http://localhost:3000/nobody' }, eventUri);
+    expect(res.status).toBe(403);
+  });
+
   test('The On-Behalf-Of header must be signed', async () => {
     const res = await fetchOnBehalfOf(undefined, eventUri, { 'On-Behalf-Of': alice.id });
     expect(res.status).toBe(401);

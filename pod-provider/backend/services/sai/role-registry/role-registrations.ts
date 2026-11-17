@@ -188,7 +188,16 @@ const RoleRegistrationsSchema = {
       async handler(ctx) {
         const { agentUri, podOwner } = ctx.params;
         const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
-        return agentUri.startsWith(urlJoin(containerUri, '/'));
+        const { dataset } = ctx.meta;
+        try {
+          return await ctx.call(
+            'ldp.container.includes',
+            { containerUri, resourceUri: agentUri, webId: 'system' },
+            { meta: { dataset: getDatasetFromUri(podOwner) } }
+          );
+        } finally {
+          ctx.meta.dataset = dataset;
+        }
       }
     },
 

@@ -17,13 +17,12 @@ const usePodAuthorizations = () => {
       const authorizationsUris = arrayOf(registry['interop:hasAccessAuthorization']);
       if (authorizationsUris.length === 0) return [];
 
-      // The authorizations are all in the same container, so it is quicker to fetch it than each of them
-      const containerUri = authorizationsUris[0].substring(0, authorizationsUris[0].lastIndexOf('/'));
-      const { json: container } = await dataProvider.fetch(containerUri);
-      return arrayOf(container['ldp:contains']).filter(
-        (authorization: any) =>
-          authorizationsUris.includes(authorization.id || authorization['@id']) &&
-          authorization['interop:granteeType'] === 'interop:SocialAgent'
+      // The URI of a resource doesn't give its container, so each authorization is fetched
+      const authorizations = await Promise.all(
+        authorizationsUris.map(async (uri: string) => (await dataProvider.fetch(uri)).json)
+      );
+      return authorizations.filter(
+        (authorization: any) => authorization['interop:granteeType'] === 'interop:SocialAgent'
       );
     },
     enabled: !!pod?.id

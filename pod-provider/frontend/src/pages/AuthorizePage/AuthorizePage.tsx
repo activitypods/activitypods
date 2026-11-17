@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { useGetIdentity, useGetOne, useNotify } from 'react-admin';
+import urlJoin from 'url-join';
+import { useDataProvider, useGetIdentity, useGetOne, useNotify } from 'react-admin';
 import { useSearchParams } from 'react-router-dom';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import useTrustedApps from '../../hooks/useTrustedApps';
@@ -18,11 +19,14 @@ const AuthorizePage = () => {
   const getAppStatus = useGetAppStatus();
   const { data: identity } = useGetIdentity();
   const notify = useNotify();
+  const dataProvider = useDataProvider();
 
   const appUri = searchParams.get('client_id');
   const resourceUri = searchParams.get('resource');
   const shapeTreeUri = searchParams.get('shapeTree');
   const podOwner = searchParams.get('podOwner');
+  // The data spaces of groups on which the app is registered. Their members register the app without being asked.
+  const storages = searchParams.getAll('storage');
   // When sharing, podOwner is the owner of the shared data. Otherwise, it is the pod on which the app is registered.
   const isSharing = !!(resourceUri || shapeTreeUri);
   const registrationPod = isSharing ? null : podOwner;
@@ -50,7 +54,16 @@ const AuthorizePage = () => {
   useEffect(() => {
     if (application?.id && identity?.id) {
       getAppStatus(application.id, identity, registrationPod).then(appStatus => {
-        if (!appStatus.installed) {
+        if (!appStatus.installed && storages.length > 0 && !registrationPod && !isSharing) {
+          dataProvider
+            .fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/app-registrations/register'), {
+              method: 'POST',
+              headers: new Headers({ 'Content-Type': 'application/json' }),
+              body: JSON.stringify({ appUri: application.id, storages })
+            })
+            .then(() => accessApp())
+            .catch((e: any) => notify(e.body?.message || e.message, { type: 'error' }));
+        } else if (!appStatus.installed) {
           // @ts-expect-error TS(2345): Argument of type '"register"' is not assignable to... Remove this comment to see the full error message
           setScreen('register');
         } else if (appStatus.upgradeNeeded && registrationPod) {
@@ -65,7 +78,18 @@ const AuthorizePage = () => {
         }
       });
     }
-  }, [isSharing, registrationPod, application, accessApp, getAppStatus, setScreen, identity, notify]);
+  }, [
+    isSharing,
+    registrationPod,
+    storages.join(),
+    application,
+    accessApp,
+    getAppStatus,
+    setScreen,
+    identity,
+    notify,
+    dataProvider
+  ]);
 
   switch (screen) {
     // @ts-expect-error TS(2678): Type '"register"' is not comparable to type 'undef... Remove this comment to see the full error message

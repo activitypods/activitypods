@@ -442,6 +442,27 @@ const AccessAuthorizationsSchema = {
       }
     },
 
+    listScopeAllFromRegistry: {
+      // List the access authorizations given to applications for a data registration of another agent (e.g. a group)
+      async handler(ctx) {
+        const { podOwner, dataRegistrationUri } = ctx.params;
+
+        const filteredContainer = await this.actions.list(
+          {
+            filters: {
+              'http://www.w3.org/ns/solid/interop#scopeOfAuthorization':
+                'http://www.w3.org/ns/solid/interop#AllFromRegistry',
+              'http://www.w3.org/ns/solid/interop#hasDataRegistration': dataRegistrationUri
+            },
+            webId: podOwner
+          },
+          { parentCtx: ctx }
+        );
+
+        return arrayOf(filteredContainer['ldp:contains']);
+      }
+    },
+
     deleteOrphans: {
       // Delete authorizations which are not linked anymore to an access need (may happen on app upgrade)
       async handler(ctx) {

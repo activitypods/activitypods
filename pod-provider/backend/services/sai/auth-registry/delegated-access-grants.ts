@@ -201,6 +201,21 @@ const DelegatedAccessGrantsSchema = {
             grant
           });
         }
+
+        // Applications registered by a member for the data registration of a group
+        const registryAuthorizations = await ctx.call('access-authorizations.listScopeAllFromRegistry', {
+          podOwner,
+          dataRegistrationUri: grant['interop:hasDataRegistration']
+        });
+        for (const authorization of registryAuthorizations) {
+          const delegatedGrant = await this.actions.getByGrant(
+            { grantUri: getId(grant), grantee: authorization['interop:grantee'], podOwner },
+            { parentCtx: ctx }
+          );
+          if (!delegatedGrant) {
+            await this.actions.generateFromAuthorization({ authorization, webId: podOwner }, { parentCtx: ctx });
+          }
+        }
       }
     },
 
@@ -365,11 +380,16 @@ const DelegatedAccessGrantsSchema = {
       async handler(ctx) {
         const { authorization } = ctx.params;
         const webId = ctx.params.webId || ctx.meta.webId;
+        // Authorization given by a member to an application, for the data registration of a group
+        // The grant received through the member's roles doesn't satisfy the application's access need
+        const isFromRegistry = authorization['interop:scopeOfAuthorization'] === 'interop:AllFromRegistry';
 
         // Find original grant (it should be stored in the user's local cache)
         const grantsContainer = await ctx.call('access-grants.list', {
           filters: {
-            'http://www.w3.org/ns/solid/interop#satisfiesAccessNeed': authorization['interop:satisfiesAccessNeed'],
+            ...(!isFromRegistry && {
+              'http://www.w3.org/ns/solid/interop#satisfiesAccessNeed': authorization['interop:satisfiesAccessNeed']
+            }),
             'http://www.w3.org/ns/solid/interop#dataOwner': authorization['interop:dataOwner'],
             'http://www.w3.org/ns/solid/interop#hasDataRegistration': authorization['interop:hasDataRegistration']
           },
@@ -386,7 +406,11 @@ const DelegatedAccessGrantsSchema = {
                 : g['interop:scopeOfGrant'] === getScopeOfGrant(authorization)) &&
               includes(g['interop:accessMode'], authorization['interop:accessMode'])
           ) || grants[0];
-        if (!grant) throw new Error(`Could not find grant generated from authorization ${getId(authorization)}`);
+        if (!grant) {
+          // The member may receive the grant later, when a role is given access to this data
+          if (isFromRegistry) return undefined;
+          throw new Error(`Could not find grant generated from authorization ${getId(authorization)}`);
+        }
 
         const delegationAllowed =
           grant['interop:delegationAllowed'] &&
@@ -406,7 +430,11 @@ const DelegatedAccessGrantsSchema = {
                 'interop:scopeOfGrant': 'interop:SelectedFromRegistry',
                 'interop:hasDataInstance': authorization['interop:hasDataInstance']
               }),
-              'interop:accessMode': authorization['interop:accessMode'],
+              'interop:accessMode': isFromRegistry
+                ? arrayOf(authorization['interop:accessMode']).filter(mode =>
+                    arrayOf(grant['interop:accessMode']).includes(mode)
+                  )
+                : authorization['interop:accessMode'],
               'interop:derivedFromRoleRegistration': authorization['interop:derivedFromRoleRegistration'],
               'interop:delegationAllowed': delegationAllowed ? true : undefined,
               'interop:delegationLimit':

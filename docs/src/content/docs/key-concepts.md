@@ -108,7 +108,7 @@ With the right permissions, an application backend can:
 
 Users can send contact requests to each other, from any Pod provider. When the request is accepted, both users add each other to their contacts collection and can read each other's profile. Applications can use this list to suggest people to share resources with.
 
-To connect with someone who doesn't know their identifier, or who doesn't have a Pod yet, a user can share a **contact link**. This link contains a capability, issued as a [Verifiable Credential](/architecture/authorization/#capabilities-with-verifiable-credentials), which allows its holder to read the user's profile and to send them a contact request. The person who opens the link sees the profile, logs in with their own Pod provider (or creates an account), and the contact request is accepted automatically.
+To connect with someone who doesn't know their identifier, or who doesn't have a Pod yet, a user can share a **contact link**. This link contains a capability, issued as a [Verifiable Credential](/architecture/verifiable-credentials/#capabilities), which allows its holder to read the user's profile and to send them a contact request. The person who opens the link sees the profile, logs in with their own Pod provider (or creates an account), and the contact request is accepted automatically.
 
 ## Sharing resources
 

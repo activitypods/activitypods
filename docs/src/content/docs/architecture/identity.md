@@ -62,7 +62,7 @@ The WebID is public and acts as a public profile. The `url` predicate links to t
 Every actor has two key pairs:
 
 - A RSA key (`publicKey`), used for [HTTP signatures](/architecture/authentication/#http-signature), as most Fediverse softwares expect.
-- An Ed25519 key (`assertionMethod`), in the [Multikey](https://www.w3.org/TR/cid-1.0/#Multikey) format, used to sign [Verifiable Credentials](/architecture/authorization/#capabilities-with-verifiable-credentials).
+- An Ed25519 key (`assertionMethod`), in the [Multikey](https://www.w3.org/TR/cid-1.0/#Multikey) format, used to sign [Verifiable Credentials](/architecture/verifiable-credentials/).
 
 ## Webfinger
 

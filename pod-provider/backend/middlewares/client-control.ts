@@ -1,7 +1,7 @@
 import urlJoin from 'url-join';
 // @ts-expect-error TS(2614): Module '"moleculer-web"' has no exported member 'E... Remove this comment to see the full error message
 import { Errors as E } from 'moleculer-web';
-import { arrayOf, hasType, getWebIdFromUri, getParentContainerUri } from '@semapps/ldp';
+import { arrayOf, hasType, getWebIdFromUri, getDatasetFromUri } from '@semapps/ldp';
 import { FULL_ACTIVITY_TYPES, FULL_ACTOR_TYPES } from '@semapps/activitypub';
 import { MIME_TYPES } from '@semapps/mime-types';
 
@@ -24,30 +24,75 @@ const DEFAULT_ALLOWED_TYPES = [
 
 // TODO use cache to improve performances
 const getAllowedTypes = async (ctx: any, appUri: any, podOwner: any, accessMode: any) => {
-  // This is server logic, which must not be limited to the rights of the app
-  const { clientId } = ctx.meta;
-  delete ctx.meta.clientId;
-  try {
-    const authorizations = await ctx.call('access-authorizations.listByGrantee', { grantee: appUri, webId: podOwner });
+  const authorizations = await ctx.call('access-authorizations.listByGrantee', { grantee: appUri, webId: podOwner });
 
-    let types = [...DEFAULT_ALLOWED_TYPES];
-    for (const authorization of authorizations) {
-      if (arrayOf(authorization['interop:accessMode']).includes(accessMode)) {
-        const shapeUri = await ctx.call('shape-trees.getShapeUri', {
-          resourceUri: authorization['interop:registeredShapeTree']
-        });
-        // Binary resources don't have a shape
-        if (shapeUri) {
-          types.push(...(await ctx.call('shacl.getTypes', { resourceUri: shapeUri })));
-        }
+  let types = [...DEFAULT_ALLOWED_TYPES];
+  for (const authorization of authorizations) {
+    if (arrayOf(authorization['interop:accessMode']).includes(accessMode)) {
+      const shapeUri = await ctx.call('shape-trees.getShapeUri', {
+        resourceUri: authorization['interop:registeredShapeTree']
+      });
+      // Binary resources don't have a shape
+      if (shapeUri) {
+        types.push(...(await ctx.call('shacl.getTypes', { resourceUri: shapeUri })));
       }
     }
+  }
 
-    return await ctx.call('jsonld.parser.expandTypes', { types });
+  return await ctx.call('jsonld.parser.expandTypes', { types });
+};
+
+// The registration may be on another Pod than the one of the request
+// The meta is shared with the caller, so the dataset must be restored
+const getRegistration = async (ctx: any, appUri: string, podOwner: string) => {
+  const { dataset } = ctx.meta;
+  try {
+    return await ctx.call(
+      'app-registrations.getForAgent',
+      { agentUri: appUri, podOwner },
+      { meta: { dataset: getDatasetFromUri(podOwner) } }
+    );
   } finally {
-    if (clientId) ctx.meta.clientId = clientId;
+    ctx.meta.dataset = dataset;
   }
 };
+
+const hasSpecialRight = (registration: any, right: string) =>
+  arrayOf(registration?.['apods:hasSpecialRights']).includes(right);
+
+// Actions called by the API gateway to authenticate the request
+const isAuthAction = (actionName: string) =>
+  /\.(authenticate|authorize)$/.test(actionName) ||
+  ['auth.jwt.decodeToken', 'signature.verifyHttpSignature'].includes(actionName);
+
+// API actions which applications with a clientId may call without being registered
+// Either they are public, or they are about the calling application itself
+const FREE_ACTIONS = [
+  'api.favicon',
+  'api.redirectToFront',
+  'api.onWsConnection',
+  'auth.redirectToForm',
+  'frontend-config.get',
+  'jsonld.api.getContext',
+  'nodeinfo.getLinks',
+  'nodeinfo.getSchema',
+  'solid-endpoint.endpointGet',
+  'solid-oidc.proxyConfig',
+  'webfinger.get',
+  'solid-notifications.provider.webhook.endpointGet',
+  'solid-notifications.provider.websocket.endpointGet',
+  'app-status.get',
+  'registration-endpoint.getForAgent'
+];
+
+// API actions controlled by the wrappers below, which also handle applications acting in their own name
+const WRAPPED_ACTIONS = [
+  'signature.proxy.api_query',
+  'activitypub.api.outbox',
+  'webacl.group.api_create',
+  'webacl.group.api_addMember',
+  'sparqlEndpoint.query'
+];
 
 // Return the application acting on the Pod, if any
 // Without clientId, the application is identified by its webId
@@ -56,12 +101,105 @@ const getAppUri = (ctx: any, podOwner: string) => {
   return ctx.meta.webId === podOwner ? undefined : ctx.meta.webId;
 };
 
-const AppControlMiddleware = ({ baseUrl }: any) => ({
-  name: 'AppControlMiddleware',
-  async started() {
-    if (!baseUrl) throw new Error('The baseUrl config is missing for the AppControlMiddleware');
-  },
-  localAction: (next: any, action: any) => {
+const ClientControlMiddleware = ({ baseUrl }: any) => {
+  // Same as getUriFromSlugParts of the LdpApiService (the pods route puts the username in the slugParts)
+  const getLdpUri = ({ username, slugParts }: any) =>
+    username ? urlJoin(baseUrl, username, ...(slugParts || [])) : urlJoin(baseUrl, ...(slugParts || []));
+  const getAclUri = ({ slugParts }: any) => urlJoin(baseUrl, ...(slugParts?.length ? slugParts : ['/']));
+
+  const checkRight = async (ctx: any, uri: string, mode: string) => {
+    if (!(await ctx.call('permissions.has', { uri, mode, webId: ctx.meta.clientId }))) {
+      throw new E.ForbiddenError('FORBIDDEN', `The application has no ${mode} right on ${uri}`);
+    }
+  };
+
+  const checkSpecialRight = async (ctx: any, podOwner: string, right: string) => {
+    if (!hasSpecialRight(await getRegistration(ctx, ctx.meta.clientId, podOwner), right)) {
+      throw new E.ForbiddenError('FORBIDDEN', `The application has no permission ${right} on ${podOwner}`);
+    }
+  };
+
+  const checkLdpRead = async (ctx: any) => {
+    const uri = getLdpUri(ctx.params);
+    const podOwner = getWebIdFromUri(uri);
+    if (uri === urlJoin(podOwner, 'inbox')) return checkSpecialRight(ctx, podOwner, 'apods:ReadInbox');
+    if (uri === urlJoin(podOwner, 'outbox')) return checkSpecialRight(ctx, podOwner, 'apods:ReadOutbox');
+    return checkRight(ctx, uri, 'acl:Read');
+  };
+
+  const checkWacGroups = async (ctx: any) => {
+    const podOwner = urlJoin(baseUrl, ctx.params.username);
+    if (podOwner !== ctx.meta.webId)
+      throw new E.ForbiddenError('FORBIDDEN', 'Only the Pod owner may handle ACL groups');
+    return checkSpecialRight(ctx, podOwner, 'apods:CreateWacGroup');
+  };
+
+  const checkNotificationTopic = (ctx: any) =>
+    checkRight(ctx, ctx.params.topic || ctx.params['notify:topic'], 'acl:Read');
+
+  // Controls of the API actions called by applications with a clientId, once their registration is checked
+  const CONTROLS: Record<string, (ctx: any) => Promise<any>> = {
+    'ldp.api.get': checkLdpRead,
+    'ldp.api.head': checkLdpRead,
+    'ldp.api.post': ctx => checkRight(ctx, getLdpUri(ctx.params), 'acl:Append'),
+    'ldp.api.put': ctx => checkRight(ctx, getLdpUri(ctx.params), 'acl:Write'),
+    'ldp.api.patch': ctx => checkRight(ctx, getLdpUri(ctx.params), 'acl:Write'),
+    'ldp.api.delete': ctx => checkRight(ctx, getLdpUri(ctx.params), 'acl:Write'),
+    'webacl.resource.api_addRights': ctx => checkRight(ctx, getAclUri(ctx.params), 'acl:Control'),
+    'webacl.resource.api_setRights': ctx => checkRight(ctx, getAclUri(ctx.params), 'acl:Control'),
+    'webacl.resource.api_getRights': ctx => checkRight(ctx, getAclUri(ctx.params), 'acl:Read'),
+    'webacl.resource.api_hasRights': ctx => checkRight(ctx, getAclUri(ctx.params), 'acl:Read'),
+    'webacl.group.api_delete': checkWacGroups,
+    'webacl.group.api_getGroups': checkWacGroups,
+    'webacl.group.api_getMembers': checkWacGroups,
+    'webacl.group.api_removeMember': checkWacGroups,
+    'solid-notifications.provider.webhook.endpointPost': checkNotificationTopic,
+    'solid-notifications.provider.websocket.endpointPost': checkNotificationTopic,
+    // TODO Add a special right to sign and issue credentials in the name of the user
+    'crypto.vc.data-integrity.signObject': async () => {},
+    'crypto.vc.data-integrity.verifyObject': async () => {},
+    'crypto.vc.holder.createPresentation': async () => {},
+    'crypto.vc.issuer.createVC': async () => {},
+    'crypto.vc.presentation.challenge.create': async () => {},
+    'crypto.vc.verifier.verifyCapabilityPresentation': async () => {},
+    'crypto.vc.verifier.verifyPresentation': async () => {},
+    'crypto.vc.verifier.verifyVC': async () => {}
+  };
+
+  // Applications acting on behalf of a user are checked once, when the request enters the API
+  // The clientId is kept in the meta, but it has no effect on the permissions of the following calls
+  const controlClient = (next: any, action: any) => async (ctx: any) => {
+    if (ctx.meta.clientId && ctx.caller === 'api' && !isAuthAction(action.name)) {
+      if (FREE_ACTIONS.includes(action.name)) return next(ctx);
+
+      const control = CONTROLS[action.name];
+      if (!control && !WRAPPED_ACTIONS.includes(action.name)) {
+        throw new E.ForbiddenError('FORBIDDEN', `Applications cannot call ${action.name}`);
+      }
+
+      // With On-Behalf-Of, the user may not exist on this server
+      const account = await ctx.call('auth.account.findByWebId', { webId: ctx.meta.webId });
+      if (!account || !(await getRegistration(ctx, ctx.meta.clientId, ctx.meta.webId))) {
+        throw new E.ForbiddenError(
+          'FORBIDDEN',
+          `The application ${ctx.meta.clientId} is not registered by ${ctx.meta.webId}`
+        );
+      }
+
+      if (control) await control(ctx);
+    }
+    return next(ctx);
+  };
+
+  return {
+    name: 'ClientControlMiddleware',
+    async started() {
+      if (!baseUrl) throw new Error('The baseUrl config is missing for the ClientControlMiddleware');
+    },
+    localAction: (next: any, action: any) => controlClient(wrapAction(next, action), action)
+  };
+
+  function wrapAction(next: any, action: any) {
     if (action.name === 'signature.proxy.api_query') {
       return async (ctx: any) => {
         const podOwner = urlJoin(baseUrl, ctx.params.username);
@@ -163,16 +301,16 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
 
         return result;
       };
-    } else if (action.name === 'activitypub.outbox.post') {
+    } else if (action.name === 'activitypub.api.outbox') {
       return async (ctx: any) => {
-        const { collectionUri, ...activity } = ctx.params;
-        const podOwner = getParentContainerUri(collectionUri);
+        const { username, ...activity } = ctx.params;
+        const podOwner = urlJoin(baseUrl, username);
 
         // Bypass checks if user is posting to their outbox
         const appUri = getAppUri(ctx, podOwner);
         if (!appUri) return next(ctx);
 
-        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner });
+        const appRegistration = await getRegistration(ctx, appUri, podOwner);
 
         // Ensure the webId is a registered application
         if (!appRegistration)
@@ -213,9 +351,8 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
           }
         }
 
-        // The side effects of the activity are handled with the rights of the user
+        // Impersonate the user so that the activity can be posted to their outbox
         ctx.meta.webId = podOwner;
-        delete ctx.meta.clientId;
 
         ctx.params.generator = appUri;
 
@@ -233,7 +370,7 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
           return next(ctx);
         }
 
-        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner });
+        const appRegistration = await getRegistration(ctx, appUri, podOwner);
 
         // Ensure the webId is a registered application
         if (!appRegistration) {
@@ -255,7 +392,7 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
         const appUri = getAppUri(ctx, podOwner);
         if (!appUri) return next(ctx);
 
-        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner });
+        const appRegistration = await getRegistration(ctx, appUri, podOwner);
 
         // If the webId is a registered application, use the system webId to bypass WAC checks
         if (appRegistration) {
@@ -284,7 +421,7 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
         const appUri = getAppUri(ctx, podOwner);
         if (!appUri) return next(ctx);
 
-        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner });
+        const appRegistration = await getRegistration(ctx, appUri, podOwner);
 
         // If the webId is a registered application, check it has the special right
         if (appUri !== 'anon' && appUri !== 'system' && appRegistration) {
@@ -310,7 +447,7 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
         const appUri = getAppUri(ctx, podOwner);
         if (!appUri) return next(ctx);
 
-        const appRegistration = await ctx.call('app-registrations.getForAgent', { agentUri: appUri, podOwner });
+        const appRegistration = await getRegistration(ctx, appUri, podOwner);
 
         // If the webId is a registered application
         if (appRegistration) {
@@ -333,6 +470,6 @@ const AppControlMiddleware = ({ baseUrl }: any) => ({
     // Do not use the middleware for this action
     return next;
   }
-});
+};
 
-export default AppControlMiddleware;
+export default ClientControlMiddleware;

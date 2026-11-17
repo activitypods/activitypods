@@ -159,4 +159,43 @@ describe('Requests made by an app with an OIDC token', () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ installed: true });
   });
+
+  test('The app cannot call the API actions which are not open to applications', async () => {
+    let res = await fetchAs(alice, 'http://localhost:3000/auth/account');
+    expect(res.status).toBe(403);
+
+    res = await fetchAs(alice, 'http://localhost:3000/.account/groups');
+    expect(res.status).toBe(403);
+  });
+
+  const fetchOnBehalfOf = (actor: any, url: string, headers = {}) =>
+    appServer.call('signature.proxy.query', {
+      url,
+      method: 'GET',
+      headers: { Accept: MIME_TYPES.JSON, ...headers },
+      actorUri: APP_URI,
+      onBehalfOf: actor?.id
+    });
+
+  test('The app backend acts on behalf of the user', async () => {
+    let res = await fetchOnBehalfOf(alice, eventUri);
+    expect(res.status).toBe(200);
+
+    res = await fetchOnBehalfOf(alice, noteUri);
+    expect(res.status).toBe(403);
+
+    // Bob and Craig were given the right to read the event in the tests above
+    res = await fetchOnBehalfOf(bob, eventUri);
+    expect(res.status).toBe(200);
+  });
+
+  test('The app backend cannot act on behalf of a user who did not register it', async () => {
+    const res = await fetchOnBehalfOf(craig, eventUri);
+    expect(res.status).toBe(403);
+  });
+
+  test('The On-Behalf-Of header must be signed', async () => {
+    const res = await fetchOnBehalfOf(undefined, eventUri, { 'On-Behalf-Of': alice.id });
+    expect(res.status).toBe(401);
+  });
 });

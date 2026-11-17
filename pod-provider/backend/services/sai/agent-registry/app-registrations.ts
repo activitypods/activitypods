@@ -75,7 +75,6 @@ const AppRegistrationsSchema = {
         // - Known when the app must be upgraded by comparing the dc:modified predicate
         await ctx.call('ldp.remote.store', { resourceUri: appUri, webId });
         await ctx.call('applications.attach', { resourceUri: appUri, webId });
-        await this.broker.cacher?.cleanByUri('client-authorizer.authorize', appUri);
 
         return res;
       },
@@ -102,7 +101,6 @@ const AppRegistrationsSchema = {
         // Delete Application resource kept in cache
         const appUri = res.oldData['interop:registeredAgent'];
         await ctx.call('applications.delete', { resourceUri: appUri });
-        await this.broker.cacher?.cleanByUri('client-authorizer.authorize', appUri);
 
         return res;
       }

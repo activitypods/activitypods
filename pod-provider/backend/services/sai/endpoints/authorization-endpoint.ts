@@ -2,6 +2,7 @@ import path from 'path';
 import { arrayOf, getId, getDatasetFromUri, getSlugFromUri } from '@semapps/ldp';
 import { throw400, throw403 } from '@semapps/middlewares';
 import { ServiceSchema } from 'moleculer';
+import { expandPublicGrantee, getPublicAgentClass } from '../../../utils.ts';
 
 const GROUP_TYPES = ['foaf:Group', 'foaf:Organization', 'as:Group', 'as:Organization', 'Group', 'Organization'];
 
@@ -45,7 +46,7 @@ const AuthorizationEndpointSchema = {
           ...(resourceUri ? { resourceUri } : { shapeTreeUri }),
           ...(isGroup && (await this.getGrantees(ctx, podOwner))),
           authorizations: authorizations.map((authorization: any) => ({
-            grantee: authorization['interop:grantee'],
+            grantee: expandPublicGrantee(authorization['interop:grantee']),
             accessModes: arrayOf(authorization['interop:accessMode'])
           }))
         };
@@ -57,7 +58,11 @@ const AuthorizationEndpointSchema = {
        * Mass-update access authorizations for a single resource, or for all the data matching a shape tree
        */
       async handler(ctx) {
-        const { resourceUri, shapeTreeUri, authorizations } = ctx.params;
+        const { resourceUri, shapeTreeUri } = ctx.params;
+        const authorizations = arrayOf(ctx.params.authorizations).map((authorization: any) => ({
+          ...authorization,
+          grantee: expandPublicGrantee(authorization.grantee)
+        }));
 
         const podOwner = await this.getPodOwner(ctx, resourceUri, shapeTreeUri);
         const isGroup = await this.checkAccess(ctx, podOwner);
@@ -67,7 +72,8 @@ const AuthorizationEndpointSchema = {
           const { roles, members } = await this.getGrantees(ctx, podOwner);
           const allowedGrantees = [...roles.map((role: any) => role.uri), ...members];
           for (const { grantee } of authorizations) {
-            if (!allowedGrantees.includes(grantee)) throw403(`${grantee} is neither a role nor a member of the group`);
+            if (!allowedGrantees.includes(grantee) && !getPublicAgentClass(grantee))
+              throw403(`${grantee} is neither a role nor a member of the group`);
           }
         }
 
@@ -75,7 +81,7 @@ const AuthorizationEndpointSchema = {
           const params: any = { resourceUri, shapeTreeUri, grantee, accessModes, webId: podOwner };
           if (accessModes.length > 0) {
             // A group may share personal data with its members, but they can't share it further
-            if (!isGroup && (await this.isGroup(ctx, grantee))) {
+            if (!isGroup && !getPublicAgentClass(grantee) && (await this.isGroup(ctx, grantee))) {
               params.delegationAllowed = true;
               params.delegationLimit = 1;
             }

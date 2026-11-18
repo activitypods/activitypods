@@ -1,6 +1,7 @@
 import { arrayOf, getId, getType } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } from '@semapps/activitypub';
 import { ServiceSchema } from 'moleculer';
+import { getPublicAgentClass } from '../utils.ts';
 
 /**
  * Mixin used by the AccessGrantsService and DelegatedAccessGrantsService
@@ -14,14 +15,12 @@ const AccessGrantsMixin = {
         const grant = res.newData;
 
         // The grantee must be able to read the grant
+        const publicAgentClass = getPublicAgentClass(grant['interop:grantee']);
         await ctx.call('webacl.resource.addRights', {
           resourceUri: getId(grant),
-          additionalRights: {
-            user: {
-              uri: grant['interop:grantee'],
-              read: true
-            }
-          },
+          additionalRights: publicAgentClass
+            ? { [publicAgentClass]: { read: true } }
+            : { user: { uri: grant['interop:grantee'], read: true } },
           webId: 'system'
         });
 

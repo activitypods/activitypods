@@ -1,12 +1,16 @@
 import urlJoin from 'url-join';
 import waitForExpect from 'wait-for-expect';
 import { OBJECT_TYPES } from '@semapps/activitypub';
+import fetch from 'node-fetch';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { connectPodProvider, clearAllData } from './initialize.ts';
+import { arrayOf } from './utils.ts';
 import * as CONFIG from './config.ts';
 jest.setTimeout(100000);
 
 const EVENT_SHAPE_TREE = urlJoin(CONFIG.SHAPE_REPOSITORY_URL!, 'shapetrees/as/Event');
+const FOAF_AGENT = 'http://xmlns.com/foaf/0.1/Agent';
+const AUTHENTICATED_AGENT = 'http://www.w3.org/ns/auth/acl#AuthenticatedAgent';
 
 describe('Test the authorization endpoint', () => {
   let podProvider: any,
@@ -27,6 +31,8 @@ describe('Test the authorization endpoint', () => {
 
   const updateAuthorizations = (actor: any, params: any) =>
     call(actor, 'authorization-endpoint.updateAuthorizations', params);
+
+  const fetchAnonymously = async (uri: string) => (await fetch(uri, { headers: { Accept: MIME_TYPES.JSON } })).json();
 
   const hasRights = async (actor: any, resourceUri: string, rights: any) =>
     podProvider.call('webacl.resource.hasRights', { resourceUri, rights, webId: actor.id });
@@ -206,5 +212,117 @@ describe('Test the authorization endpoint', () => {
     await waitForExpect(async () => {
       await expect(hasRights(bob, craigEventUri, { read: true })).resolves.toMatchObject({ read: true });
     });
+  });
+
+  test('The owner of a personal pod makes a resource public', async () => {
+    await updateAuthorizations(alice, {
+      resourceUri: aliceEventUri,
+      authorizations: [{ grantee: 'foaf:Agent', accessModes: ['acl:Read'] }]
+    });
+
+    const { authorizations } = await getAuthorizations(alice, { resource: aliceEventUri });
+    expect(authorizations).toContainEqual({ grantee: FOAF_AGENT, accessModes: ['acl:Read'] });
+    await expect(hasRights({ id: 'anon' }, aliceEventUri, { read: true })).resolves.toMatchObject({ read: true });
+    await expect(hasRights(craig, aliceEventUri, { read: true, write: true })).resolves.toMatchObject({
+      read: true,
+      write: false
+    });
+
+    // Visitors find the grant from the WebID
+    const webId: any = await fetchAnonymously(alice.id);
+    const registration: any = await fetchAnonymously(webId['interop:hasPublicAgentRegistration']);
+    expect(registration).toMatchObject({ 'interop:registeredAgent': 'foaf:Agent' });
+    const grants = await Promise.all(arrayOf(registration['interop:hasAccessGrant']).map(fetchAnonymously));
+    expect(grants).toContainEqual(
+      expect.objectContaining({
+        'interop:scopeOfGrant': 'interop:SelectedFromRegistry',
+        'interop:hasDataInstance': aliceEventUri
+      })
+    );
+  });
+
+  test('The owner of a personal pod makes a resource private again', async () => {
+    await updateAuthorizations(alice, {
+      resourceUri: aliceEventUri,
+      authorizations: [{ grantee: FOAF_AGENT, accessModes: [] }]
+    });
+
+    const { authorizations } = await getAuthorizations(alice, { resource: aliceEventUri });
+    expect(authorizations.find((a: any) => a.grantee === FOAF_AGENT)).toBeUndefined();
+    await expect(hasRights({ id: 'anon' }, aliceEventUri, { read: true })).resolves.toMatchObject({ read: false });
+    await expect(hasRights(craig, aliceEventUri, { read: true })).resolves.toMatchObject({ read: false });
+    // The authorization given to Bob is kept
+    await expect(hasRights(bob, aliceEventUri, { read: true })).resolves.toMatchObject({ read: true });
+
+    const webId: any = await fetchAnonymously(alice.id);
+    const registration: any = await fetchAnonymously(webId['interop:hasPublicAgentRegistration']);
+    expect(arrayOf(registration['interop:hasAccessGrant'])).toHaveLength(0);
+  });
+
+  test('An owner of the group shares all events of the group with authenticated agents', async () => {
+    await updateAuthorizations(alice, {
+      shapeTreeUri: EVENT_SHAPE_TREE,
+      podOwner: groupWebId,
+      authorizations: [{ grantee: AUTHENTICATED_AGENT, accessModes: ['acl:Read'] }]
+    });
+
+    const { authorizations } = await getAuthorizations(alice, { shapeTree: EVENT_SHAPE_TREE, podOwner: groupWebId });
+    expect(authorizations).toContainEqual({ grantee: AUTHENTICATED_AGENT, accessModes: ['acl:Read'] });
+    await expect(hasRights(craig, groupEvent2Uri, { read: true, write: true })).resolves.toMatchObject({
+      read: true,
+      write: false
+    });
+    await expect(hasRights({ id: 'anon' }, groupEvent2Uri, { read: true })).resolves.toMatchObject({ read: false });
+
+    const group: any = await fetchAnonymously(groupWebId);
+    const registration: any = await fetchAnonymously(group['interop:hasConnectedAgentRegistration']);
+    const [grantUri] = arrayOf(registration['interop:hasAccessGrant']);
+    await expect(hasRights(craig, grantUri, { read: true })).resolves.toMatchObject({ read: true });
+    await expect(hasRights({ id: 'anon' }, grantUri, { read: true })).resolves.toMatchObject({ read: false });
+
+    // Also for new events
+    const groupEvent3Uri = await createEvent(groupWebId, 'acme', 'Hackathon');
+    await expect(hasRights(craig, groupEvent3Uri, { read: true })).resolves.toMatchObject({ read: true });
+  });
+
+  test('An owner of the group changes the access modes of authenticated agents', async () => {
+    await updateAuthorizations(alice, {
+      shapeTreeUri: EVENT_SHAPE_TREE,
+      podOwner: groupWebId,
+      authorizations: [{ grantee: AUTHENTICATED_AGENT, accessModes: ['acl:Read', 'acl:Write'] }]
+    });
+    await expect(hasRights(craig, groupEvent2Uri, { read: true, write: true })).resolves.toMatchObject({
+      read: true,
+      write: true
+    });
+
+    await updateAuthorizations(alice, {
+      shapeTreeUri: EVENT_SHAPE_TREE,
+      podOwner: groupWebId,
+      authorizations: [{ grantee: AUTHENTICATED_AGENT, accessModes: [] }]
+    });
+    await expect(hasRights(craig, groupEvent2Uri, { read: true, write: true })).resolves.toMatchObject({
+      read: false,
+      write: false
+    });
+  });
+
+  test('Data shared by someone else cannot be made public', async () => {
+    const [authorization] = await podProvider.call(
+      'access-authorizations.listByGrantee',
+      { grantee: groupWebId, webId: craig.id },
+      { meta: { webId: craig.id, dataset: 'craig' } }
+    );
+    const craigEventUri = arrayOf(authorization['interop:hasDataInstance'])[0];
+
+    // The group may share it with its members, but not with everyone
+    await expect(
+      podProvider.call(
+        'access-authorizations.addForSingleResource',
+        { resourceUri: craigEventUri, grantee: FOAF_AGENT, accessModes: ['acl:Read'], webId: groupWebId },
+        { meta: { webId: groupWebId, dataset: 'acme' } }
+      )
+    ).rejects.toMatchObject({ code: 403 });
+    await expect(hasRights({ id: 'anon' }, craigEventUri, { read: true })).resolves.toMatchObject({ read: false });
   });
 });

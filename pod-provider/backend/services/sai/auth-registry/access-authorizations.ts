@@ -1,7 +1,7 @@
 const { MoleculerError } = require('moleculer').Errors;
 import { ControlledContainerMixin, arrayOf, getId, getWebIdFromUri } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { arraysEqual } from '../../../utils.ts';
+import { arraysEqual, getPublicAgentClass } from '../../../utils.ts';
 import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
 import { ServiceSchema } from 'moleculer';
 
@@ -77,6 +77,10 @@ const AccessAuthorizationsSchema = {
 
         // If the user is sharing a resource they don't own, ensure they have delegation right
         if (dataOwner !== webId) {
+          if (getPublicAgentClass(grantee)) {
+            throw new MoleculerError('Only the owner of a resource can make it public', 403, 'FORBIDDEN');
+          }
+
           const grant = await ctx.call('access-grants.getByResourceUri', { resourceUri, webId });
 
           if (
@@ -161,7 +165,8 @@ const AccessAuthorizationsSchema = {
                 'interop:dataOwner': dataOwner,
                 'interop:grantedBy': webId,
                 'interop:grantee': grantee,
-                'interop:granteeType': 'interop:SocialAgent',
+                // Public grantees are not social agents
+                'interop:granteeType': getPublicAgentClass(grantee) ? undefined : 'interop:SocialAgent',
                 'interop:registeredShapeTree': dataRegistration['interop:registeredShapeTree'],
                 'interop:hasDataRegistration': getId(dataRegistration),
                 'interop:hasDataInstance': resourceUri,
@@ -274,7 +279,7 @@ const AccessAuthorizationsSchema = {
               'interop:dataOwner': webId,
               'interop:grantedBy': webId,
               'interop:grantee': grantee,
-              'interop:granteeType': 'interop:SocialAgent',
+              'interop:granteeType': getPublicAgentClass(grantee) ? undefined : 'interop:SocialAgent',
               'interop:registeredShapeTree': shapeTreeUri,
               'interop:hasDataRegistration': dataRegistrationUri,
               'interop:accessMode': accessModes,
@@ -348,7 +353,6 @@ const AccessAuthorizationsSchema = {
             filters: {
               'http://www.w3.org/ns/solid/interop#dataOwner': webId,
               'http://www.w3.org/ns/solid/interop#hasDataRegistration': dataRegistrationUri,
-              'http://www.w3.org/ns/solid/interop#granteeType': 'http://www.w3.org/ns/solid/interop#SocialAgent',
               'http://www.w3.org/ns/solid/interop#scopeOfAuthorization': 'http://www.w3.org/ns/solid/interop#All'
             },
             webId
@@ -356,7 +360,9 @@ const AccessAuthorizationsSchema = {
           { parentCtx: ctx }
         );
 
-        return arrayOf(filteredContainer['ldp:contains']);
+        return arrayOf(filteredContainer['ldp:contains']).filter(
+          (authorization: any) => authorization['interop:granteeType'] !== 'interop:Application'
+        );
       }
     },
 

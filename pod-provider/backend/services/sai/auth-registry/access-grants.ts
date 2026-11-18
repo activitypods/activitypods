@@ -1,6 +1,6 @@
 import { ControlledContainerMixin, arrayOf, getId } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { arraysEqual } from '../../../utils.ts';
+import { arraysEqual, expandPublicGrantee } from '../../../utils.ts';
 import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
 import AccessGrantsMixin from '../../../mixins/access-grants.ts';
 import { ServiceSchema } from 'moleculer';
@@ -73,7 +73,7 @@ const AccessGrantsSchema = {
             filters: {
               'http://www.w3.org/ns/solid/interop#satisfiesAccessNeed': authorization['interop:satisfiesAccessNeed'],
               'http://www.w3.org/ns/solid/interop#dataOwner': authorization['interop:dataOwner'],
-              'http://www.w3.org/ns/solid/interop#grantee': authorization['interop:grantee'],
+              'http://www.w3.org/ns/solid/interop#grantee': expandPublicGrantee(authorization['interop:grantee']),
               'http://www.w3.org/ns/solid/interop#hasDataRegistration': authorization['interop:hasDataRegistration'],
               'http://www.w3.org/ns/solid/interop#scopeOfGrant': getScopeOfGrant(authorization).replace(
                 'interop:',

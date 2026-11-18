@@ -8,6 +8,7 @@ import { ACTIVITY_TYPES } from '@semapps/activitypub';
 import { ServiceSchema } from 'moleculer';
 import urlJoin from 'url-join';
 import * as CONFIG from '../../../config/config.ts';
+import { expandPublicGrantee, getPublicAgentClass, PUBLIC_REGISTRATION_PREDICATES } from '../../../utils.ts';
 
 const SocialAgentRegistrationsSchema = {
   name: 'social-agent-registrations' as const,
@@ -27,10 +28,13 @@ const SocialAgentRegistrationsSchema = {
     createOrUpdate: {
       async handler(ctx) {
         let { agentUri, podOwner, reciprocalRegistrationUri, label, note } = ctx.params;
+        agentUri = expandPublicGrantee(agentUri);
 
         const agentRegistration = await this.actions.getForAgent({ agentUri, podOwner }, { parentCtx: ctx });
+        const publicAgentClass = getPublicAgentClass(agentUri);
 
-        if (!label) label = await this.actions.getAgentName({ agentUri, podOwner }, { parentCtx: ctx });
+        if (!label && !publicAgentClass)
+          label = await this.actions.getAgentName({ agentUri, podOwner }, { parentCtx: ctx });
 
         if (agentRegistration) {
           // Patch rather than put, as grants may be attached or detached at the same time
@@ -82,6 +86,22 @@ const SocialAgentRegistrationsSchema = {
             },
             { parentCtx: ctx }
           );
+
+          // Visitors find the data shared with them from the WebID
+          if (publicAgentClass) {
+            await ctx.call('ldp.resource.patch', {
+              resourceUri: podOwner,
+              triplesToAdd: [
+                rdf.quad(
+                  rdf.namedNode(podOwner),
+                  rdf.namedNode(PUBLIC_REGISTRATION_PREDICATES[publicAgentClass]),
+                  rdf.namedNode(agentRegistrationUri)
+                )
+              ],
+              webId: 'system'
+            });
+            return agentRegistrationUri;
+          }
 
           // This shouldn't be necessary if we set excludeFromMirror to false
           // The 2.3.0 migration sets skipNotifications for local agents, as it creates the reciprocal registration itself

@@ -1,5 +1,6 @@
 import { getId, getType, arrayOf } from '@semapps/ldp';
 import { ServiceSchema } from 'moleculer';
+import { getPublicAgentClass } from '../../utils.ts';
 
 // Service that maps access grants and special rights to WAC permissions
 // For mapping details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
@@ -12,7 +13,7 @@ const PermissionsMapperSchema = {
         // The rights of the access grants derived from a role are given to the WAC group of the role
         if (!groupUri && getType(grant) === 'interop:AccessGrant' && grant['interop:derivedFromRoleRegistration'])
           return;
-        const agentKey = groupUri ? 'group' : 'user';
+        const agentKey = groupUri ? 'group' : getPublicAgentClass(grant['interop:grantee']) || 'user';
         const agentUri = groupUri || grant['interop:grantee'];
         const accessMode = arrayOf(grant['interop:accessMode']);
         const scope = grant['interop:scopeOfGrant'];
@@ -70,7 +71,7 @@ const PermissionsMapperSchema = {
         // The rights of the access grants derived from a role are given to the WAC group of the role
         if (!groupUri && getType(grant) === 'interop:AccessGrant' && grant['interop:derivedFromRoleRegistration'])
           return;
-        const agentKey = groupUri ? 'group' : 'user';
+        const agentKey = groupUri ? 'group' : getPublicAgentClass(grant['interop:grantee']) || 'user';
         const agentUri = groupUri || grant['interop:grantee'];
         const accessMode = arrayOf(grant['interop:accessMode']);
         const scope = grant['interop:scopeOfGrant'];

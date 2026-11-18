@@ -1,6 +1,7 @@
 import { arrayOf, getId } from '@semapps/ldp';
 import rdf from '@rdfjs/data-model';
 import { ServiceSchema } from 'moleculer';
+import { expandPublicGrantee } from '../utils.ts';
 
 const UPDATED_AT = rdf.namedNode('http://www.w3.org/ns/solid/interop#updatedAt');
 const DATE_TIME = rdf.namedNode('http://www.w3.org/2001/XMLSchema#dateTime');
@@ -24,7 +25,9 @@ const AgentRegistrationsMixin = {
   actions: {
     getForAgent: {
       async handler(ctx) {
-        const { agentUri, podOwner } = ctx.params;
+        const { podOwner } = ctx.params;
+        // Compacted when read from the triplestore
+        const agentUri = expandPublicGrantee(ctx.params.agentUri);
 
         const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
 

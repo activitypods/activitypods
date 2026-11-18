@@ -1,4 +1,4 @@
-import { arrayOf, discoverSharedSources, findContainerUri, resolveResourceTypes } from './utils';
+import { arrayOf, discoverSharedSources, findContainerUri, findPublicResources, resolveResourceTypes } from './utils';
 import { AuthSession, JsonContext, ResourceConfig, ResourcesConfig, StorageKey, StoragesConfig } from './types';
 
 export type ListSources = {
@@ -67,6 +67,15 @@ export const storagesResolver = ({
         errors.push(result.reason);
       } else if (result.value) {
         sources.containers.push({ uri: result.value, storage: uris[i] });
+      }
+    });
+
+    const publicResources = await Promise.allSettled(
+      uris.map(uri => findPublicResources(uri, resourceConfig, types, session))
+    );
+    publicResources.forEach((result, i) => {
+      if (result.status === 'fulfilled') {
+        sources.resources.push(...result.value.map(uri => ({ uri, storage: uris[i] })));
       }
     });
 

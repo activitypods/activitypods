@@ -227,8 +227,6 @@ const dataRegistry: DiscoveryStrategy = async (storageUri, storage, session) => 
   return registrations;
 };
 
-const DISCOVERY_STRATEGIES = [publicTypeIndex, privateTypeIndex, dataRegistry];
-
 // Registrations rarely change while an app is open. Failures are not cached, so they can be retried.
 const discoveryCache = new Map<string, Promise<any>>();
 
@@ -244,6 +242,44 @@ const cached = <T>(key: string, fn: () => Promise<T>): Promise<T> => {
   }
   return discoveryCache.get(key)!;
 };
+
+/**
+ * The grants given to everyone (`interop:hasPublicAgentRegistration`) and, for logged-in users, to all
+ * authenticated agents (`interop:hasConnectedAgentRegistration`). Proposed extension of SAI.
+ */
+const getPublicGrants = (storageUri: string, storage: Record<string, any>, session?: AuthSession) =>
+  cached(`${session?.webId ?? ''}|${storageUri}|public`, async () => {
+    const registrations = [
+      { uri: storage['interop:hasPublicAgentRegistration'], session: undefined },
+      { uri: session && storage['interop:hasConnectedAgentRegistration'], session }
+    ].filter(({ uri }) => uri);
+    const grants: Record<string, any>[] = [];
+    for (const { uri, session: registrationSession } of registrations) {
+      try {
+        const registration = await fetchAsSession(uri, registrationSession);
+        for (const grantUri of arrayOf<string>(registration['interop:hasAccessGrant'])) {
+          const grant = await fetchGrant(grantUri, registrationSession);
+          if (grant) grants.push(grant);
+        }
+      } catch {
+        // Not readable (e.g. an application not registered by the user)
+      }
+    }
+    return grants;
+  });
+
+const isScope = (grant: Record<string, any>, scope: string) => `${grant['interop:scopeOfGrant']}`.endsWith(scope);
+
+const publicGrants: DiscoveryStrategy = async (storageUri, storage, session) =>
+  (await getPublicGrants(storageUri, storage, session))
+    .filter(grant => isScope(grant, 'AllFromRegistry'))
+    .map(grant => ({
+      containerUri: grant['interop:hasDataRegistration'],
+      shapeTreeUri: grant['interop:registeredShapeTree']
+    }));
+
+// Public grants first: they only point to what can really be read
+const DISCOVERY_STRATEGIES = [publicGrants, publicTypeIndex, privateTypeIndex, dataRegistry];
 
 const registrationMatches = async (
   registration: ContainerRegistration,
@@ -263,6 +299,28 @@ const registrationMatches = async (
  * Its public type index is tried first, then its private type index (for the logged-in user only),
  * then its SAI data registry (usually only readable by its owner). Works without session for public data.
  */
+/** Find the resources of a storage which are public one by one (not their whole container) */
+export const findPublicResources = async (
+  storageUri: string,
+  resourceConfig: ResourceConfig,
+  wantedTypes: string[],
+  session?: AuthSession
+): Promise<string[]> => {
+  const storage = await cached(`${session?.webId ?? ''}|${storageUri}`, () => fetchAsSession(storageUri, session));
+  const resourceUris: string[] = [];
+  for (const grant of await getPublicGrants(storageUri, storage, session)) {
+    const matches = await registrationMatches(
+      { containerUri: grant['interop:hasDataRegistration'], shapeTreeUri: grant['interop:registeredShapeTree'] },
+      resourceConfig,
+      wantedTypes
+    );
+    if (matches && isScope(grant, 'SelectedFromRegistry')) {
+      resourceUris.push(...arrayOf<string>(grant['interop:hasDataInstance']));
+    }
+  }
+  return resourceUris;
+};
+
 export const findContainerUri = async (
   storageUri: string,
   resourceConfig: ResourceConfig,
@@ -350,7 +408,7 @@ const appRegistrationUris = new Map<string, Promise<string | undefined>>();
 // Grants are replaced (new URI) rather than modified
 const grantsCache = new Map<string, Promise<Record<string, any> | undefined>>();
 
-const fetchGrant = (uri: string, session: AuthSession) => {
+const fetchGrant = (uri: string, session?: AuthSession) => {
   if (!grantsCache.has(uri)) {
     grantsCache.set(
       uri,

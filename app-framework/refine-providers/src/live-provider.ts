@@ -1,5 +1,6 @@
 import type { LiveEvent, LiveProvider } from '@refinedev/core';
-import { arrayOf, DEFAULT_CONTEXT, fetchJson, fetchWithSession, resolveContainerUri } from './utils';
+import { arrayOf, DEFAULT_CONTEXT, fetchJson, fetchWithSession } from './utils';
+import { storagesResolver } from './storages';
 import { AuthSession, LiveProviderConfig, NotificationActivity, ResourceConfig, UnwatchFn } from './types';
 
 const ACTIVITY_TYPE_MAP: Record<string, LiveEvent['type']> = {
@@ -91,56 +92,74 @@ const subscribeToTopic = async (
  *
  * - Watching specific record(s) (`params.id`/`params.ids`) opens one channel per record,
  *   listening for `Update`/`Delete` activities on that resource.
- * - Watching a whole list opens a single channel on the resource's container, listening for
+ * - Watching a whole list opens a channel on each container of the resource, listening for
  *   `Add`/`Remove` activities (container membership changes) — a container doesn't notify
  *   about an existing member's own fields changing, so list views won't see `updated` events
  *   this way; open the record itself (e.g. via `useShow`/`useOne`) to catch those.
+ *
+ * Nothing is watched if the user is not logged in.
  */
 const liveProvider = ({
   resources,
   authProvider,
-  jsonContext = DEFAULT_CONTEXT
-}: LiveProviderConfig): LiveProvider => ({
-  subscribe: async ({ channel, params, callback }) => {
-    const session = authProvider.getSession();
-    if (!session) throw new Error('Not authenticated');
-    const { token, webId } = session;
+  storages,
+  jsonContext = DEFAULT_CONTEXT,
+  readAccessGrants
+}: LiveProviderConfig): LiveProvider => {
+  const { resolveListSources } = storagesResolver({ resources, storages, jsonContext, readAccessGrants });
 
-    const resourceId = (params as any)?.resource || channel.split('/')[1];
-    const resourceConfig: ResourceConfig | undefined = resources[resourceId];
-    if (!resourceId || !resourceConfig) return (() => undefined) as UnwatchFn;
+  return {
+    subscribe: async ({ channel, params, callback }) => {
+      const session = authProvider.getSession();
+      if (!session) return (() => undefined) as UnwatchFn;
 
-    const ids = arrayOf<any>((params as any)?.ids ?? (params as any)?.id).map(id => `${id}`);
+      const resourceId = (params as any)?.resource || channel.split('/')[1];
+      const resourceConfig: ResourceConfig | undefined = resources[resourceId];
+      if (!resourceId || !resourceConfig) return (() => undefined) as UnwatchFn;
 
-    const emit = (type: LiveEvent['type'], ids2: string[], date: Date) => {
-      if (ids2.length === 0) return;
-      callback({ channel, type, payload: { ids: ids2 }, date });
-    };
+      const ids = arrayOf<any>((params as any)?.ids ?? (params as any)?.id).map(id => `${id}`);
 
-    if (ids.length > 0) {
-      const unwatchFns = await Promise.all(
-        ids.map(id =>
-          subscribeToTopic(id, session, activity => {
+      const emit = (type: LiveEvent['type'], ids2: string[], date: Date) => {
+        if (ids2.length === 0) return;
+        callback({ channel, type, payload: { ids: ids2 }, date });
+      };
+
+      if (ids.length > 0) {
+        const unwatchFns = await Promise.all(
+          ids.map(id =>
+            subscribeToTopic(id, session, activity => {
+              const type = ACTIVITY_TYPE_MAP[activity.type];
+              if (type) emit(type, [id], new Date(activity.published ?? Date.now()));
+            })
+          )
+        );
+        return () => unwatchFns.forEach(fn => fn());
+      }
+
+      const { containers } = await resolveListSources(resourceId, session);
+      const results = await Promise.allSettled(
+        containers.map(({ uri }) =>
+          subscribeToTopic(uri, session, activity => {
             const type = ACTIVITY_TYPE_MAP[activity.type];
-            if (type) emit(type, [id], new Date(activity.published ?? Date.now()));
+            const id = objectId(activity.object);
+            if (type && id) emit(type, [id], new Date(activity.published ?? Date.now()));
           })
         )
       );
+      const unwatchFns: UnwatchFn[] = [];
+      results.forEach((result, i) => {
+        if (result.status === 'fulfilled') unwatchFns.push(result.value);
+        else console.warn(`Could not watch ${containers[i].uri}`, result.reason);
+      });
+      if (unwatchFns.length === 0 && results.length > 0) throw (results[0] as PromiseRejectedResult).reason;
       return () => unwatchFns.forEach(fn => fn());
+    },
+
+    unsubscribe: async (unsubscribeFn: UnwatchFn | Promise<UnwatchFn>) => {
+      const fn = await Promise.resolve(unsubscribeFn);
+      if (typeof fn === 'function') fn();
     }
-
-    const containerUri = await resolveContainerUri(resourceId, resourceConfig, webId, token, jsonContext);
-    return subscribeToTopic(containerUri, session, activity => {
-      const type = ACTIVITY_TYPE_MAP[activity.type];
-      const id = objectId(activity.object);
-      if (type && id) emit(type, [id], new Date(activity.published ?? Date.now()));
-    });
-  },
-
-  unsubscribe: async (unsubscribeFn: UnwatchFn | Promise<UnwatchFn>) => {
-    const fn = await Promise.resolve(unsubscribeFn);
-    if (typeof fn === 'function') fn();
-  }
-});
+  };
+};
 
 export default liveProvider;

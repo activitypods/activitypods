@@ -145,79 +145,145 @@ export const getTypesFromShapeTree = (shapeTreeUri: string): Promise<string[]> =
   return shapeTreeCache.get(shapeTreeUri)!;
 };
 
-export type TypeRegistration = {
-  forClass: string[];
-  instanceContainer?: string;
+export type ContainerRegistration = {
+  containerUri: string;
+  /** Classes of the type registration. Not set for data registrations, whose types come from the shape tree */
+  types?: string[];
+  shapeTreeUri?: string;
 };
 
+const fetchAsSession = async (url: string, session?: AuthSession, headers?: HeadersInit) =>
+  (await fetchWithSession(url, { headers }, session)).json;
+
 /**
- * A `solid:hasTypeRegistration` entry is usually a full TypeRegistration object already —
- * the Pod's TypeIndex dereferences it server-side — but fall back to fetching it ourselves
- * in case the Pod left it as a plain URI (e.g. a registration we aren't allowed to read).
- *
- * `solid:forClass` comes back compacted (e.g. `as:Event`, not the full URI), and dereferenced
- * entries don't carry their own `@context` (the Pod strips it), so `fallbackContext` — the
- * *outer* TypeIndex document's own `@context` — is what's used to expand it back out.
+ * A `solid:hasTypeRegistration` entry is usually dereferenced by the Pod, but may be left as a
+ * plain URI. `solid:forClass` comes back compacted and dereferenced entries don't carry their
+ * own `@context`, so the type index's context is used to expand it.
  */
 const resolveTypeRegistration = async (
   entry: any,
   fallbackContext: JsonContext,
-  token: string
-): Promise<TypeRegistration> => {
-  const registration = typeof entry === 'string' ? (await fetchJson(entry, {}, token)).json : entry;
+  session?: AuthSession
+): Promise<ContainerRegistration | undefined> => {
+  const registration = typeof entry === 'string' ? await fetchAsSession(entry, session) : entry;
   const forClass = arrayOf<string>(registration?.['solid:forClass']);
+  if (!registration?.['solid:instanceContainer']) return undefined;
   return {
-    forClass: forClass.length > 0 ? await expandTypes(forClass, registration?.['@context'] ?? fallbackContext) : [],
-    instanceContainer: registration?.['solid:instanceContainer']
+    containerUri: registration['solid:instanceContainer'],
+    types: forClass.length > 0 ? await expandTypes(forClass, registration['@context'] ?? fallbackContext) : []
   };
 };
 
-const fetchTypeRegistrations = async (typeIndexUri: string, token: string): Promise<TypeRegistration[]> => {
-  const { json: typeIndex } = await fetchJson(typeIndexUri, {}, token);
+const fetchTypeIndex = async (typeIndexUri: string, session?: AuthSession): Promise<ContainerRegistration[]> => {
+  const typeIndex = await fetchAsSession(typeIndexUri, session);
   const context: JsonContext = typeIndex['@context'] ?? DEFAULT_CONTEXT;
-  return Promise.all(
-    arrayOf<any>(typeIndex['solid:hasTypeRegistration']).map(entry => resolveTypeRegistration(entry, context, token))
+  const registrations = await Promise.all(
+    arrayOf<any>(typeIndex['solid:hasTypeRegistration']).map(entry => resolveTypeRegistration(entry, context, session))
   );
+  return registrations.filter((r): r is ContainerRegistration => !!r);
 };
 
-// Type registrations rarely change while an app is open: cache them per WebID.
-const typeRegistrationsCache = new Map<string, Promise<TypeRegistration[]>>();
+type DiscoveryStrategy = (
+  storageUri: string,
+  storage: Record<string, any>,
+  session?: AuthSession
+) => Promise<ContainerRegistration[]>;
 
-/**
- * Discover the containers registered for each resource class, via the WebID's public (and,
- * best-effort, private) Solid TypeIndex — this is readable without any special grant, unlike
- * the SAI RegistrySet/DataRegistry, which are restricted to the Pod owner.
- */
-export const discoverTypeRegistrations = (webId: string, token: string): Promise<TypeRegistration[]> => {
-  if (!typeRegistrationsCache.has(webId)) {
-    typeRegistrationsCache.set(
-      webId,
-      (async () => {
-        const { json: user } = await fetchJson(webId, {}, token);
-        const registrations: TypeRegistration[] = [];
+const publicTypeIndex: DiscoveryStrategy = async (storageUri, storage, session) =>
+  storage['solid:publicTypeIndex'] ? fetchTypeIndex(storage['solid:publicTypeIndex'], session) : [];
 
-        if (user['solid:publicTypeIndex']) {
-          registrations.push(...(await fetchTypeRegistrations(user['solid:publicTypeIndex'], token)));
-        }
+// Only the owner of the storage can read its private type index
+const privateTypeIndex: DiscoveryStrategy = async (storageUri, storage, session) => {
+  if (storageUri !== session?.webId || !storage['pim:preferencesFile']) return [];
+  const preferencesFile = await fetchAsSession(storage['pim:preferencesFile'], session);
+  return preferencesFile['solid:privateTypeIndex']
+    ? fetchTypeIndex(preferencesFile['solid:privateTypeIndex'], session)
+    : [];
+};
 
-        // Best-effort: the private index requires being logged in as the Pod owner, so a
-        // public-only lookup (e.g. for an app with only public access) still works if this fails.
-        if (user['pim:preferencesFile']) {
-          try {
-            const { json: preferencesFile } = await fetchJson(user['pim:preferencesFile'], {}, token);
-            if (preferencesFile['solid:privateTypeIndex']) {
-              registrations.push(...(await fetchTypeRegistrations(preferencesFile['solid:privateTypeIndex'], token)));
-            }
-          } catch {
-            // No access to the preferences file or private index: ignore
-          }
-        }
+const dataRegistry: DiscoveryStrategy = async (storageUri, storage, session) => {
+  if (!storage['interop:hasRegistrySet']) return [];
+  const registrySet = await fetchAsSession(storage['interop:hasRegistrySet'], session);
+  const registrations: ContainerRegistration[] = [];
+  for (const dataRegistryUri of arrayOf<string>(registrySet['interop:hasDataRegistry'])) {
+    const dataRegistry = await fetchAsSession(dataRegistryUri, session);
+    const dataRegistrations = await Promise.all(
+      arrayOf<any>(dataRegistry['interop:hasDataRegistration']).map(entry =>
+        typeof entry === 'string'
+          ? fetchAsSession(entry, session, {
+              Accept: 'application/ld+json',
+              Prefer: 'return=representation; include="http://www.w3.org/ns/ldp#PreferMinimalContainer"'
+            })
+          : entry
+      )
+    );
+    for (const dataRegistration of dataRegistrations) {
+      registrations.push({
+        containerUri: dataRegistration.id ?? dataRegistration['@id'],
+        shapeTreeUri: dataRegistration['interop:registeredShapeTree']
+      });
+    }
+  }
+  return registrations;
+};
 
-        return registrations;
-      })()
+const DISCOVERY_STRATEGIES = [publicTypeIndex, privateTypeIndex, dataRegistry];
+
+// Registrations rarely change while an app is open. Failures are not cached, so they can be retried.
+const discoveryCache = new Map<string, Promise<any>>();
+
+const cached = <T>(key: string, fn: () => Promise<T>): Promise<T> => {
+  if (!discoveryCache.has(key)) {
+    discoveryCache.set(
+      key,
+      fn().catch(e => {
+        discoveryCache.delete(key);
+        throw e;
+      })
     );
   }
-  return typeRegistrationsCache.get(webId)!;
+  return discoveryCache.get(key)!;
+};
+
+const registrationMatches = async (
+  registration: ContainerRegistration,
+  resourceConfig: ResourceConfig,
+  wantedTypes: string[]
+) => {
+  if (resourceConfig.shapeTreeUri && registration.shapeTreeUri) {
+    return registration.shapeTreeUri === resourceConfig.shapeTreeUri;
+  }
+  const types =
+    registration.types ?? (registration.shapeTreeUri ? await getTypesFromShapeTree(registration.shapeTreeUri) : []);
+  return types.some(type => wantedTypes.includes(type));
+};
+
+/**
+ * Find the container of a resource in a storage (in ActivityPods, the WebID of a user, a group or an app).
+ * Its public type index is tried first, then its private type index (for the logged-in user only),
+ * then its SAI data registry (usually only readable by its owner). Works without session for public data.
+ */
+export const findContainerUri = async (
+  storageUri: string,
+  resourceConfig: ResourceConfig,
+  wantedTypes: string[],
+  session?: AuthSession
+): Promise<string | undefined> => {
+  const sessionKey = session?.webId ?? '';
+  const storage = await cached(`${sessionKey}|${storageUri}`, () => fetchAsSession(storageUri, session));
+
+  for (const [i, strategy] of DISCOVERY_STRATEGIES.entries()) {
+    let registrations: ContainerRegistration[];
+    try {
+      registrations = await cached(`${sessionKey}|${storageUri}|${i}`, () => strategy(storageUri, storage, session));
+    } catch {
+      continue;
+    }
+    for (const registration of registrations) {
+      if (await registrationMatches(registration, resourceConfig, wantedTypes)) return registration.containerUri;
+    }
+  }
+  return undefined;
 };
 
 /** Resolve the type URI(s) a resource should be created/matched with, from its config. */
@@ -230,7 +296,7 @@ export const resolveResourceTypes = async (
   return [];
 };
 
-/** Find the container registered for a resource's shape tree or type(s) in the user's type index. */
+/** Find the container of a resource in the Pod of the logged-in user. */
 export const resolveContainerUri = async (
   resourceId: string,
   resourceConfig: ResourceConfig,
@@ -243,9 +309,8 @@ export const resolveContainerUri = async (
     throw new Error(`Resource "${resourceId}" must define either \`shapeTreeUri\` or \`types\``);
   }
 
-  const registrations = await discoverTypeRegistrations(webId, token);
-  const match = registrations.find(r => r.instanceContainer && r.forClass.some(type => wantedTypes.includes(type)));
-  if (match?.instanceContainer) return match.instanceContainer;
+  const containerUri = await findContainerUri(webId, resourceConfig, wantedTypes, { webId, token });
+  if (containerUri) return containerUri;
 
   throw new Error(
     `No container found in ${webId}'s type index for resource "${resourceId}" (type(s): ${wantedTypes.join(', ')}). ` +
@@ -279,7 +344,7 @@ export const resolveAuthAgent = async (webId: string, token?: string): Promise<A
   return { authAgent, appRegistrationUri: registeredAgentLinks[0]?.anchor };
 };
 
-export type SharedSource = { containerUri: string } | { resourceUris: string[] };
+export type SharedSource = { dataOwner: string } & ({ containerUri: string } | { resourceUris: string[] });
 
 const appRegistrationUris = new Map<string, Promise<string | undefined>>();
 // Grants are replaced (new URI) rather than modified
@@ -333,9 +398,12 @@ export const discoverSharedSources = async (
     if (!matches) continue;
 
     if (`${grant['interop:scopeOfGrant']}`.endsWith('AllFromRegistry')) {
-      sources.push({ containerUri: grant['interop:hasDataRegistration'] });
+      sources.push({ dataOwner: grant['interop:dataOwner'], containerUri: grant['interop:hasDataRegistration'] });
     } else {
-      sources.push({ resourceUris: arrayOf<string>(grant['interop:hasDataInstance']) });
+      sources.push({
+        dataOwner: grant['interop:dataOwner'],
+        resourceUris: arrayOf<string>(grant['interop:hasDataInstance'])
+      });
     }
   }
   return sources;

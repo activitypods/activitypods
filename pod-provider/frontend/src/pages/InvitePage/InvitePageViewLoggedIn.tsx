@@ -10,12 +10,14 @@ const InvitePageViewLoggedIn = ({
   ownProfile,
   onConnectClick,
   onCancelClick,
+  connecting,
   capabilityUri
 }: {
   inviterProfile: any;
   ownProfile: any;
   onConnectClick: () => void;
   onCancelClick: () => void;
+  connecting: boolean;
   capabilityUri: string;
 }) => {
   const notify = useNotify();
@@ -72,7 +74,14 @@ const InvitePageViewLoggedIn = ({
             lg: 6
           }}
         >
-          <Button fullWidth variant="contained" color="primary" size="large" onClick={onConnectClick}>
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={onConnectClick}
+            disabled={connecting}
+          >
             {translate('app.action.connect')}
           </Button>
         </Grid>

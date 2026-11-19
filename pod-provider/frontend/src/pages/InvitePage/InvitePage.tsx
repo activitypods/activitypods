@@ -31,6 +31,7 @@ const InvitePage = () => {
   const { fetch: fetchFn, getConfig } = useDataProvider<SemanticDataProvider>();
 
   const [showSuccess, setShowSuccess] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [showProviderSelect, setShowProviderSelect] = useState(false as false | 'login' | 'signup');
   const [inviterProfile, setInviterProfile] = useState(null as null | Record<string, unknown>);
   const notify = useNotify();
@@ -112,14 +113,16 @@ const InvitePage = () => {
   // Logged in and inviter profile fetched.
   if (identity?.id && inviterProfile && ownProfile && !isOwnLink) {
     const onConnectClick = async () => {
-      const capability = await createPresentation({
-        fetchFn,
-        holder: identity.id as string,
-        verifier: inviterProfile.describes as string,
-        verifiableCredential: capabilityUri
-      });
-      outbox
-        .post({
+      if (connecting) return;
+      setConnecting(true);
+      try {
+        const capability = await createPresentation({
+          fetchFn,
+          holder: identity.id as string,
+          verifier: inviterProfile.describes as string,
+          verifiableCredential: capabilityUri
+        });
+        await outbox.post({
           '@context': (await getConfig()).jsonContext,
           type: ACTIVITY_TYPES.OFFER,
           actor: identity.id,
@@ -130,14 +133,13 @@ const InvitePage = () => {
             object: ownProfile.id
           },
           capability: capability
-        })
-        .then(() => {
-          notify('app.notification.connection_accepted');
-          setShowSuccess(true);
-        })
-        .catch((err: Error) => {
-          notify('app.notification.send_request_error', { error: err.message });
         });
+        notify('app.notification.connection_accepted');
+        setShowSuccess(true);
+      } catch (err: any) {
+        notify('app.notification.send_request_error', { error: err.message });
+        setConnecting(false);
+      }
     };
 
     return (
@@ -147,6 +149,7 @@ const InvitePage = () => {
         onConnectClick={() => {
           onConnectClick();
         }}
+        connecting={connecting}
         onCancelClick={() => {
           navigate('/');
         }}

@@ -1,6 +1,5 @@
 export { default as useAuthProvider } from './useAuthProvider';
 export { default as useBackgroundChecks } from './useBackgroundChecks';
-export { default as useCanEdit } from './useCanEdit';
 export { default as useCollection } from './useCollection';
 export { default as useLoginFlow } from './useLoginFlow';
 export { default as useOutbox } from './useOutbox';

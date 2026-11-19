@@ -502,6 +502,17 @@ export const canWriteResource = async (resourceUri: string, session?: AuthSessio
   );
 };
 
+/** Whether the app may create resources in a container on behalf of the logged-in user (see `canWriteResource`) */
+export const canWriteContainer = async (containerUri: string, session?: AuthSession): Promise<boolean> => {
+  if (!session) return false;
+  return (await fetchAppGrants(session)).some(
+    grant =>
+      (hasAccessMode(grant, 'Write') || hasAccessMode(grant, 'Append')) &&
+      isScope(grant, 'AllFromRegistry') &&
+      grant['interop:hasDataRegistration'] === containerUri
+  );
+};
+
 /**
  * Fetch this app's status from the Pod provider hosting `webId`: whether it's registered, and
  * whether the access needs it was granted are stale (`upgradeNeeded`). The Pod identifies the

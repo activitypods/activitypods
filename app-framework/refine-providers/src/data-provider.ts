@@ -1,37 +1,46 @@
 import type { DataProvider } from '@refinedev/core';
 import LinkHeader from 'http-link-header';
+import { storagesResolver } from './storages';
 import {
   applyFilters,
   applySorters,
   arrayOf,
   buildServerListQuery,
   DEFAULT_CONTEXT,
-  discoverSharedSources,
-  fetchJson,
   fetchWithSession,
+  findContainerUri,
   normalizeRecord,
-  resolveContainerUri,
   resolveResourceTypes
 } from './utils';
 import { DataProviderConfig, ResourceConfig } from './types';
 
 /**
- * Refine data provider for ActivityPods. Resources are mapped to LDP containers, discovered
- * at runtime from the logged-in user's public Solid TypeIndex (linked from their WebID as
- * `solid:publicTypeIndex`) — the same mechanism the Pod uses to register a container the
- * first time a shape tree's access is granted.
+ * Refine data provider for ActivityPods. Resources are mapped to LDP containers, discovered at
+ * runtime in each storage: the Pod of the logged-in user (`@user`), the storages given in the
+ * config (e.g. owned by the app or a group), and the storages shared with the app (`@shared`).
+ * Public data can be read without being logged in.
  *
  * With `pagination: { mode: "server" }`, `getList` asks the Pod for a single page of the container,
  * filtered and sorted by the Pod (see `buildServerListQuery` for the supported filters). If some
- * filters or sorters can't be applied by the Pod, or if the Pod doesn't support paging, the full
- * container is fetched and Refine's filters, sorters and pagination are applied in memory.
+ * filters or sorters can't be applied by the Pod, if the resource is read from several containers,
+ * or if the Pod doesn't support paging, the containers are fully fetched and Refine's filters,
+ * sorters and pagination are applied in memory. Records read with `getList` get the URI of their
+ * storage in `_storage`.
  */
 const dataProvider = ({
   resources,
+  storages = {},
   authProvider,
   jsonContext = DEFAULT_CONTEXT,
   readAccessGrants = false
 }: DataProviderConfig): DataProvider => {
+  const { getStorageUri, resolveListSources } = storagesResolver({
+    resources,
+    storages,
+    jsonContext,
+    readAccessGrants
+  });
+
   const requireSession = () => {
     const session = authProvider.getSession();
     if (!session) throw new Error('Not authenticated');
@@ -44,51 +53,29 @@ const dataProvider = ({
     return resourceConfig;
   };
 
-  const resolveContainer = async (resource: string) => {
-    const { token, webId } = requireSession();
-    return resolveContainerUri(resource, requireResourceConfig(resource), webId, token, jsonContext);
-  };
-
   const fetchOne = async (id: string) => {
-    const { json } = await fetchWithSession(id, {}, requireSession());
+    const { json } = await fetchWithSession(id, {}, authProvider.getSession());
     return normalizeRecord(json, json['@context']);
   };
 
-  const fetchSharedRecords = async (resource: string) => {
-    if (!readAccessGrants) return [];
-    const session = requireSession();
-    const resourceConfig = requireResourceConfig(resource);
-    const types = await resolveResourceTypes(resourceConfig, jsonContext);
-    const sources = await discoverSharedSources(resourceConfig, types, session).catch(() => []);
-    const results = await Promise.allSettled(
-      sources.flatMap(source =>
-        'containerUri' in source
-          ? [
-              fetchWithSession(source.containerUri, {}, session).then(({ json }) =>
-                arrayOf(json['ldp:contains']).map(item => normalizeRecord(item, json['@context']))
-              )
-            ]
-          : source.resourceUris.map(uri => fetchOne(uri).then(record => [record]))
-      )
-    );
-    return results.flatMap(result => (result.status === 'fulfilled' ? result.value : []));
-  };
-
   const list: DataProvider['getList'] = async ({ resource, pagination, sorters, filters }) => {
-    const { token } = requireSession();
-    const [containerUri, sharedRecords] = await Promise.all([resolveContainer(resource), fetchSharedRecords(resource)]);
+    const session = authProvider.getSession();
+    const sources = await resolveListSources(resource, session);
 
     const serverQuery = await buildServerListQuery(filters, sorters, jsonContext);
-    // The Pod can't page the shared resources along with the user's own
-    const serverPaging = pagination?.mode === 'server' && !!serverQuery && sharedRecords.length === 0;
+    // The Pod can only page the results of a single container
+    const serverPaging =
+      pagination?.mode === 'server' &&
+      !!serverQuery &&
+      sources.containers.length === 1 &&
+      sources.resources.length === 0;
     const currentPage = pagination?.currentPage ?? 1;
     const pageSize = pagination?.pageSize ?? 10;
 
-    let url = containerUri;
+    const params = new URLSearchParams(serverQuery?.params);
     const headers = new Headers();
     if (serverQuery) {
       // Filters are always sent: they are applied again in memory below, unless the Pod paged the results
-      const params = new URLSearchParams(serverQuery.params);
       if (serverPaging) {
         params.set('page', `${currentPage}`);
         // Sorting is only delegated to the Pod with paging, as it may differ from the in-memory sorting
@@ -104,13 +91,34 @@ const dataProvider = ({
           ].join('; ')
         );
       }
-      if (params.size > 0) url = `${containerUri}?${params.toString()}`;
     }
+    const withParams = (uri: string) => (params.size > 0 ? `${uri}?${params.toString()}` : uri);
+    const tag = (record: Record<string, any>, storage: string): Record<string, any> => ({
+      ...record,
+      _storage: storage
+    });
 
-    const { json: container, headers: responseHeaders } = await fetchJson(url, { headers }, token);
-    let records = arrayOf(container['ldp:contains']).map(item => normalizeRecord(item, container['@context']));
+    const inMemory = (records: Record<string, any>[]) => {
+      records = applySorters(applyFilters(records, filters), sorters);
+      const total = records.length;
+      if (pagination && pagination.mode !== 'off') {
+        records = records.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+      }
+      return { data: records as any, total };
+    };
 
-    if (serverPaging && responseHeaders.get('Preference-Applied')?.includes('max-member-count')) {
+    if (serverPaging) {
+      const [{ uri, storage }] = sources.containers;
+      const { json: container, headers: responseHeaders } = await fetchWithSession(
+        withParams(uri),
+        { headers },
+        session
+      );
+      const records = arrayOf(container['ldp:contains']).map(item =>
+        tag(normalizeRecord(item, container['@context']), storage)
+      );
+      if (!responseHeaders.get('Preference-Applied')?.includes('max-member-count')) return inMemory(records);
+
       const links = LinkHeader.parse(responseHeaders.get('Link') || '');
       const hasNextPage = links.has('rel', 'next');
       const lastPageUri = links.get('rel', 'last')[0]?.uri;
@@ -128,19 +136,25 @@ const dataProvider = ({
       };
     }
 
-    const ownIds = new Set(records.map(record => record.id));
-    records = [...records, ...sharedRecords.filter(record => !ownIds.has(record.id))];
+    const results = await Promise.allSettled([
+      ...sources.containers.map(({ uri, storage }) =>
+        fetchWithSession(withParams(uri), {}, session).then(({ json }) =>
+          arrayOf(json['ldp:contains']).map(item => tag(normalizeRecord(item, json['@context']), storage))
+        )
+      ),
+      ...sources.resources.map(({ uri, storage }) => fetchOne(uri).then(record => [tag(record, storage)]))
+    ]);
+    const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+    failures.forEach(failure => console.warn(`Could not list resources of "${resource}"`, failure.reason));
+    if (failures.length > 0 && failures.length === results.length) throw failures[0].reason;
 
-    records = applyFilters(records, filters);
-    records = applySorters(records, sorters);
-
-    const total = records.length;
-
-    if (pagination && pagination.mode !== 'off') {
-      records = records.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    const recordsById = new Map<string, Record<string, any>>();
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        for (const record of result.value) if (!recordsById.has(record.id)) recordsById.set(record.id, record);
+      }
     }
-
-    return { data: records as any, total };
+    return inMemory([...recordsById.values()]);
   };
 
   return {
@@ -161,18 +175,26 @@ const dataProvider = ({
     },
 
     create: async ({ resource, variables }) => {
-      const { token } = requireSession();
+      const session = requireSession();
       const resourceConfig = requireResourceConfig(resource);
-      const containerUri = await resolveContainer(resource);
+      const storageKey = resourceConfig.create?.storage ?? '@user';
+      if (storageKey === '@all' || storageKey === '@shared') {
+        throw new Error(`Resource "${resource}" must be created in a single storage, not ${storageKey}`);
+      }
+      const storageUri = getStorageUri(storageKey, session)!;
       const types = await resolveResourceTypes(resourceConfig, jsonContext);
+      const containerUri = await findContainerUri(storageUri, resourceConfig, types, session);
+      if (!containerUri) {
+        throw new Error(`No container found in ${storageUri} to create a resource "${resource}"`);
+      }
 
-      const { headers } = await fetchJson(
+      const { headers } = await fetchWithSession(
         containerUri,
         {
           method: 'POST',
           body: JSON.stringify({ '@context': jsonContext, '@type': types, ...variables })
         },
-        token
+        session
       );
 
       const location = headers.get('Location');
@@ -200,7 +222,8 @@ const dataProvider = ({
           body: JSON.stringify({
             '@context': [...arrayOf(jsonContext), ...arrayOf(currentContext)],
             ...current,
-            ...variables
+            ...variables,
+            _storage: undefined
           })
         },
         session

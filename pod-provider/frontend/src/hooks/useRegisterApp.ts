@@ -14,7 +14,7 @@ const useRegisterApp = () => {
         }),
         body: JSON.stringify({
           appUri,
-          podOwner,
+          podOwner: podOwner || undefined,
           acceptedAccessNeeds: grantedAccessNeeds.filter((a: any) => !a.startsWith('apods:')),
           acceptedSpecialRights: grantedAccessNeeds.filter((a: any) => a.startsWith('apods:'))
         })

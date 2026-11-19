@@ -17,7 +17,7 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp, podOwner }: 
   const registerApp = useRegisterApp();
   const { data: group } = useGetOne('Actor', { id: podOwner }, { enabled: !!podOwner });
 
-  const { requiredAccessNeeds, optionalAccessNeeds, loaded } = useAccessNeeds(application);
+  const { requiredAccessNeeds, optionalAccessNeeds, loaded } = useAccessNeeds(application, podOwner);
 
   useEffect(() => {
     if (loaded) {
@@ -45,7 +45,13 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp, podOwner }: 
     }
   }, [registerApp, notify, application, grantedAccessNeedsUris, podOwner, accessApp, setIsRegistering]);
 
-  if (isRegistering) return <ProgressMessage message="app.notification.app_registration_progress" />;
+  // Nothing to ask, e.g. the app only needs the data of a group whose access is given by its admins
+  const nothingToAsk = loaded && requiredAccessNeeds.length + optionalAccessNeeds.length === 0;
+  useEffect(() => {
+    if (nothingToAsk && grantedAccessNeedsUris && !isRegistering) onRegister();
+  }, [nothingToAsk, grantedAccessNeedsUris, isRegistering, onRegister]);
+
+  if (isRegistering || nothingToAsk) return <ProgressMessage message="app.notification.app_registration_progress" />;
 
   return (
     <SimpleBox

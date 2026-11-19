@@ -66,8 +66,6 @@ const AuthorizePage = () => {
         } else if (!appStatus.installed) {
           // @ts-expect-error TS(2345): Argument of type '"register"' is not assignable to... Remove this comment to see the full error message
           setScreen('register');
-        } else if (appStatus.upgradeNeeded && registrationPod) {
-          notify('The upgrade of an app registered on a group is not supported yet', { type: 'error' });
         } else if (appStatus.upgradeNeeded) {
           // @ts-expect-error TS(2345): Argument of type '"upgrade"' is not assignable to ... Remove this comment to see the full error message
           setScreen('upgrade');
@@ -105,7 +103,14 @@ const AuthorizePage = () => {
 
     // @ts-expect-error TS(2678): Type '"upgrade"' is not comparable to type 'undefi... Remove this comment to see the full error message
     case 'upgrade':
-      return <UpgradeScreen application={application} accessApp={accessApp} isTrustedApp={isTrustedApp} />;
+      return (
+        <UpgradeScreen
+          application={application}
+          accessApp={accessApp}
+          isTrustedApp={isTrustedApp}
+          podOwner={registrationPod}
+        />
+      );
 
     case 'share':
       return (

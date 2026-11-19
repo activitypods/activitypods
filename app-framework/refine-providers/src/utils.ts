@@ -294,11 +294,9 @@ const registrationMatches = async (
   return types.some(type => wantedTypes.includes(type));
 };
 
-/**
- * Find the container of a resource in a storage (in ActivityPods, the WebID of a user, a group or an app).
- * Its public type index is tried first, then its private type index (for the logged-in user only),
- * then its SAI data registry (usually only readable by its owner). Works without session for public data.
- */
+const fetchStorage = (storageUri: string, session?: AuthSession): Promise<Record<string, any>> =>
+  cached(`${session?.webId ?? ''}|${storageUri}`, () => fetchAsSession(storageUri, session));
+
 /** Find the resources of a storage which are public one by one (not their whole container) */
 export const findPublicResources = async (
   storageUri: string,
@@ -306,7 +304,7 @@ export const findPublicResources = async (
   wantedTypes: string[],
   session?: AuthSession
 ): Promise<string[]> => {
-  const storage = await cached(`${session?.webId ?? ''}|${storageUri}`, () => fetchAsSession(storageUri, session));
+  const storage = await fetchStorage(storageUri, session);
   const resourceUris: string[] = [];
   for (const grant of await getPublicGrants(storageUri, storage, session)) {
     const matches = await registrationMatches(
@@ -321,6 +319,11 @@ export const findPublicResources = async (
   return resourceUris;
 };
 
+/**
+ * Find the container of a resource in a storage (in ActivityPods, the WebID of a user, a group or an app).
+ * Its public type index is tried first, then its private type index (for the logged-in user only),
+ * then its SAI data registry (usually only readable by its owner). Works without session for public data.
+ */
 export const findContainerUri = async (
   storageUri: string,
   resourceConfig: ResourceConfig,
@@ -328,7 +331,7 @@ export const findContainerUri = async (
   session?: AuthSession
 ): Promise<string | undefined> => {
   const sessionKey = session?.webId ?? '';
-  const storage = await cached(`${sessionKey}|${storageUri}`, () => fetchAsSession(storageUri, session));
+  const storage = await fetchStorage(storageUri, session);
 
   for (const [i, strategy] of DISCOVERY_STRATEGIES.entries()) {
     let registrations: ContainerRegistration[];
@@ -421,12 +424,8 @@ const fetchGrant = (uri: string, session?: AuthSession) => {
   return grantsCache.get(uri)!;
 };
 
-/** Find the data of other users shared with the app through its access grants, matching the given resource */
-export const discoverSharedSources = async (
-  resourceConfig: ResourceConfig,
-  wantedTypes: string[],
-  session: AuthSession
-): Promise<SharedSource[]> => {
+/** The access grants of the app, given by the logged-in user, including the data shared with them */
+export const fetchAppGrants = async (session: AuthSession): Promise<Record<string, any>[]> => {
   if (!appRegistrationUris.has(session.webId)) {
     appRegistrationUris.set(
       session.webId,
@@ -444,10 +443,18 @@ export const discoverSharedSources = async (
   const grants = await Promise.all(
     arrayOf<string>(appRegistration['interop:hasAccessGrant']).map(uri => fetchGrant(uri, session))
   );
+  return grants.filter(grant => !!grant);
+};
 
+/** Find the data of other users shared with the app through its access grants, matching the given resource */
+export const discoverSharedSources = async (
+  resourceConfig: ResourceConfig,
+  wantedTypes: string[],
+  session: AuthSession
+): Promise<SharedSource[]> => {
   const sources: SharedSource[] = [];
-  for (const grant of grants) {
-    if (!grant || grant['interop:dataOwner'] === session.webId) continue;
+  for (const grant of await fetchAppGrants(session)) {
+    if (grant['interop:dataOwner'] === session.webId) continue;
 
     const shapeTreeUri = grant['interop:registeredShapeTree'];
     const matches = resourceConfig.shapeTreeUri
@@ -465,6 +472,34 @@ export const discoverSharedSources = async (
     }
   }
   return sources;
+};
+
+const hasAccessMode = (grant: Record<string, any>, mode: string) =>
+  arrayOf<string>(grant['interop:accessMode']).some(
+    m => m === `acl:${mode}` || m === `http://www.w3.org/ns/auth/acl#${mode}`
+  );
+
+/**
+ * Whether the app may modify a resource on behalf of the logged-in user. The Pod only allows the app what
+ * both the user and the app's access grants allow, and the grants are derived from the user's own rights.
+ */
+export const canWriteResource = async (resourceUri: string, session?: AuthSession): Promise<boolean> => {
+  if (!session) return false;
+  const [grants, { headers }] = await Promise.all([
+    fetchAppGrants(session),
+    fetchWithSession(resourceUri, {}, session)
+  ]);
+  const dataRegistrationUri = LinkHeader.parse(headers.get('Link') || '').rel(
+    'http://www.w3.org/ns/solid/interop#hasDataRegistration'
+  )[0]?.uri;
+
+  return grants.some(
+    grant =>
+      hasAccessMode(grant, 'Write') &&
+      (isScope(grant, 'AllFromRegistry')
+        ? !!dataRegistrationUri && grant['interop:hasDataRegistration'] === dataRegistrationUri
+        : arrayOf<string>(grant['interop:hasDataInstance']).includes(resourceUri))
+  );
 };
 
 /**

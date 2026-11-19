@@ -258,7 +258,9 @@ export default {
       contact_link_creation_failed: 'La création du lien de contact a échoué: %{error}',
       contact_link_copying_failed: 'La copie du lien de contact a échoué. Veuillez le copier manuellement : \n%{link}',
       contact_link_copied: 'Lien de contact copié avec succès',
-      already_connected: "Tu es déjà connecté avec la personne qui t'a invité."
+      already_connected: "Tu es déjà connecté avec la personne qui t'a invité.",
+      own_invite_link:
+        "Ceci est votre propre lien d'invitation. Partagez-le aux personnes que vous souhaitez inviter dans votre réseau."
     },
     user: {
       unknown: 'Inconnu',

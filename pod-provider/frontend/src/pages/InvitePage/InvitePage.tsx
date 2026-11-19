@@ -79,6 +79,15 @@ const InvitePage = () => {
       });
   }, []);
 
+  const isOwnLink = !!identity?.id && inviterProfile?.describes === identity.id;
+
+  useEffect(() => {
+    if (isOwnLink) {
+      notify('app.notification.own_invite_link', { type: 'warning', multiLine: true, autoHideDuration: 10000 });
+      navigate('/network');
+    }
+  }, [isOwnLink]);
+
   // There are multiple page options depending on the current state:
   // 1. Logged out => show invite page
   // 1.2 clicked on signup / login => show Provider select
@@ -101,7 +110,7 @@ const InvitePage = () => {
   }
 
   // Logged in and inviter profile fetched.
-  if (identity?.id && inviterProfile && ownProfile) {
+  if (identity?.id && inviterProfile && ownProfile && !isOwnLink) {
     const onConnectClick = async () => {
       const capability = await createPresentation({
         fetchFn,

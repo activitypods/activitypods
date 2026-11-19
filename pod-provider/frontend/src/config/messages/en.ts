@@ -250,6 +250,7 @@ export default {
       contact_link_copied: 'Contact link copied successfully',
       contact_link_copying_failed: 'Copying contact link failed. Please manually copy it: \n%{link}',
       already_connected: 'You are already connected with the person who invited you.',
+      own_invite_link: 'This is your own invite link. Share it with the people you want to invite to your network.',
       export_failed: 'The export failed: %{error}'
     },
     user: {

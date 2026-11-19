@@ -208,6 +208,20 @@ const DelegatedAccessGrantsSchema = {
           dataRegistrationUri: grant['interop:hasDataRegistration']
         });
         for (const authorization of registryAuthorizations) {
+          // Otherwise the app would keep the access modes of the replaced grant
+          if (grant['interop:replaces']) {
+            const replacedDelegatedGrant = await this.actions.getByGrant(
+              { grantUri: grant['interop:replaces'], grantee: authorization['interop:grantee'], podOwner },
+              { parentCtx: ctx }
+            );
+            if (replacedDelegatedGrant) {
+              await this.actions.remoteDelete(
+                { delegatedGrant: replacedDelegatedGrant, webId: podOwner },
+                { parentCtx: ctx }
+              );
+            }
+          }
+
           const delegatedGrant = await this.actions.getByGrant(
             { grantUri: getId(grant), grantee: authorization['interop:grantee'], podOwner },
             { parentCtx: ctx }

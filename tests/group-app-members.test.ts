@@ -156,6 +156,28 @@ describe('Applications registered on a group, used by its members', () => {
     expect(res.status).toBe(200);
   });
 
+  test('The app loses the write access when the role is given read access only', async () => {
+    await podProvider.call(
+      'access-authorizations.addForShapeTree',
+      {
+        shapeTreeUri: EVENT_SHAPE_TREE,
+        grantee: await getRoleUri('member'),
+        accessModes: ['acl:Read'],
+        webId: groupWebId
+      },
+      { meta: { webId: groupWebId, dataset: 'acme' } }
+    );
+
+    await waitForExpect(async () => {
+      const grants = await getAppGrants(bob);
+      expect(grants).toHaveLength(1);
+      expect(arrayOf(grants[0]['interop:accessMode'])).toEqual(['acl:Read']);
+    });
+
+    const res = await fetchWithApp(bob, eventUri);
+    expect(res.status).toBe(200);
+  });
+
   test('A non-member cannot register the app for the group', async () => {
     await expect(
       call(craig, 'registration-endpoint.register', { appUri: APP_URI, storages: [groupWebId] })

@@ -76,6 +76,23 @@ const ContactsRequestSchema = {
       }
     }
   },
+  methods: {
+    async isContact(ctx: any, recipient: any, actorUri: string) {
+      return await ctx.call('activitypub.collection.includes', {
+        collectionUri: recipient['apods:contacts'],
+        itemUri: actorUri
+      });
+    },
+    async accept(ctx: any, recipient: any, activity: any) {
+      await ctx.call('activitypub.outbox.post', {
+        collectionUri: recipient.outbox,
+        type: ACTIVITY_TYPES.ACCEPT,
+        actor: recipient.id,
+        object: activity.id,
+        to: activity.actor
+      });
+    }
+  },
   activities: {
     contactRequest: {
       match: CONTACT_REQUEST,
@@ -107,13 +124,9 @@ const ContactsRequestSchema = {
 
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
-        // If the actor is already in my contacts, ignore this request (may happen for automatic post-event requests)
-        if (
-          await ctx.call('activitypub.collection.includes', {
-            collectionUri: recipient['apods:contacts'],
-            itemUri: activity.actor
-          })
-        ) {
+        // The actor may not have me in his contacts (e.g. I added him without request), so accept it again
+        if (await this.isContact(ctx, recipient, activity.actor)) {
+          await this.accept(ctx, recipient, activity);
           return;
         }
 
@@ -190,13 +203,8 @@ const ContactsRequestSchema = {
       async onReceive(ctx: any, activity: any, recipientUri: any) {
         const recipient = await ctx.call('activitypub.actor.get', { actorUri: recipientUri });
 
-        // If the actor is already in my contacts, ignore this request (may happen for automatic post-event requests)
-        if (
-          await ctx.call('activitypub.collection.includes', {
-            collectionUri: recipient['apods:contacts'],
-            itemUri: activity.actor
-          })
-        ) {
+        if (await this.isContact(ctx, recipient, activity.actor)) {
+          await this.accept(ctx, recipient, activity);
           return;
         }
 
@@ -217,14 +225,7 @@ const ContactsRequestSchema = {
           return;
         }
 
-        // Send the accept.
-        await ctx.call('activitypub.outbox.post', {
-          collectionUri: recipient.outbox,
-          type: ACTIVITY_TYPES.ACCEPT,
-          actor: recipient.id,
-          object: activity.id,
-          to: activity.actor
-        });
+        await this.accept(ctx, recipient, activity);
 
         // Notify about auto-accept.
         await ctx.call('mail-notifications.notify', {

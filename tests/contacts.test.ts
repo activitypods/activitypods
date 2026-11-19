@@ -263,6 +263,44 @@ describe('Test contacts features', () => {
     });
   });
 
+  test('Alice automatically accepts the request of Bob, who is already in her contacts', async () => {
+    const contactRequestToAlice = await bob.call('activitypub.outbox.post', {
+      collectionUri: bob.outbox,
+      type: ACTIVITY_TYPES.OFFER,
+      actor: bob.id,
+      object: {
+        type: ACTIVITY_TYPES.ADD,
+        object: bob.url
+      },
+      content: 'Hey Alice, sorry I removed you',
+      target: alice.id,
+      to: alice.id
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        bob.call('activitypub.collection.includes', { collectionUri: bob['apods:contacts'], itemUri: alice.id })
+      ).resolves.toBeTruthy();
+    });
+
+    await waitForExpect(async () => {
+      await expect(
+        bob.call('ldp.container.includes', {
+          containerUri: urlJoin(bob.id, 'data', 'vcard', 'individual'),
+          resourceUri: alice.url,
+          webId: bob.id
+        })
+      ).resolves.toBeTruthy();
+    });
+
+    await expect(
+      alice.call('activitypub.collection.includes', {
+        collectionUri: alice['apods:contactRequests'],
+        itemUri: contactRequestToAlice.id
+      })
+    ).resolves.toBeFalsy();
+  });
+
   test('Bob requests Alice to remove all his data from her Pod', async () => {
     const activity = await bob.call(
       'activitypub.outbox.post',

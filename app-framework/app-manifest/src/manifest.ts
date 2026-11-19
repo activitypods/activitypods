@@ -29,6 +29,11 @@ export type AccessNeed = ShapeTreeNeed | SpecialRight;
 
 export type Necessity = 'required' | 'optional';
 
+export type AccessNeeds = Partial<Record<Necessity, AccessNeed[]>>;
+
+/** Key of the needs on the storage of the user. Other keys are storages whose URIs are given when generating the documents */
+export const USER_STORAGE = '@user';
+
 export interface AppManifest {
   $schema?: string;
   name: string;
@@ -37,8 +42,14 @@ export interface AppManifest {
   thumbnail?: string;
   tosUri?: string;
   supportedLocales?: string[];
-  accessNeeds: Partial<Record<Necessity, AccessNeed[]>>;
+  accessNeeds: Record<string, AccessNeeds>;
 }
+
+// Before storages were introduced, the needs were directly in `accessNeeds`
+const isLegacy = (accessNeeds: any) => Array.isArray(accessNeeds?.required) || Array.isArray(accessNeeds?.optional);
+
+export const normalizeAccessNeeds = (accessNeeds: any): Record<string, AccessNeeds> =>
+  isLegacy(accessNeeds) ? { [USER_STORAGE]: accessNeeds } : (accessNeeds ?? {});
 
 export const isSpecialRight = (need: AccessNeed): need is SpecialRight => typeof need === 'string';
 
@@ -48,19 +59,20 @@ const validate = (manifest: any): string[] => {
   const errors = [];
   if (typeof manifest?.name !== 'string' || !manifest.name) errors.push('"name" must be a non-empty string');
   if (!manifest?.description) errors.push('"description" is missing');
-  for (const necessity of ['required', 'optional']) {
-    for (const need of manifest?.accessNeeds?.[necessity] ?? []) {
-      if (typeof need === 'string') {
-        if (!(need in SPECIAL_RIGHTS)) errors.push(`Unknown special right ${need}`);
-      } else {
-        if (!URL.canParse(need?.shapeTreeUri)) errors.push(`Invalid shapeTreeUri: ${need?.shapeTreeUri}`);
-        const modes = [need?.accessMode].flat();
-        if (!modes.length || !modes.every(mode => ACCESS_MODES.includes(mode))) {
-          errors.push(`Invalid accessMode for ${need?.shapeTreeUri}`);
+  for (const accessNeeds of Object.values(normalizeAccessNeeds(manifest?.accessNeeds)))
+    for (const necessity of ['required', 'optional']) {
+      for (const need of (accessNeeds as any)?.[necessity] ?? []) {
+        if (typeof need === 'string') {
+          if (!(need in SPECIAL_RIGHTS)) errors.push(`Unknown special right ${need}`);
+        } else {
+          if (!URL.canParse(need?.shapeTreeUri)) errors.push(`Invalid shapeTreeUri: ${need?.shapeTreeUri}`);
+          const modes = [need?.accessMode].flat();
+          if (!modes.length || !modes.every(mode => ACCESS_MODES.includes(mode))) {
+            errors.push(`Invalid accessMode for ${need?.shapeTreeUri}`);
+          }
         }
       }
     }
-  }
   return errors;
 };
 
@@ -68,7 +80,7 @@ export const parseManifest = (json: string): AppManifest => {
   const manifest = JSON.parse(json);
   const errors = validate(manifest);
   if (errors.length) throw new Error(`Invalid ${MANIFEST_FILE}:\n- ${errors.join('\n- ')}`);
-  return { ...manifest, accessNeeds: manifest.accessNeeds ?? {} };
+  return { ...manifest, accessNeeds: normalizeAccessNeeds(manifest.accessNeeds) };
 };
 
 export const readManifest = async (path: string = MANIFEST_FILE) => {
@@ -86,20 +98,28 @@ export const writeManifest = async (manifest: AppManifest, path: string = MANIFE
   await writeFile(path, `${JSON.stringify(manifest, null, 2)}\n`);
 };
 
+// The needs added or removed with the CLI are on the storage of the user
 export const addNeed = (manifest: AppManifest, need: AccessNeed, necessity: Necessity) => {
   const cleaned = removeNeed(manifest, needKey(need));
+  const userNeeds = cleaned.accessNeeds[USER_STORAGE] ?? {};
   return {
     ...cleaned,
-    accessNeeds: { ...cleaned.accessNeeds, [necessity]: [...(cleaned.accessNeeds[necessity] ?? []), need] }
+    accessNeeds: {
+      ...cleaned.accessNeeds,
+      [USER_STORAGE]: { ...userNeeds, [necessity]: [...(userNeeds[necessity] ?? []), need] }
+    }
   };
 };
 
 export const removeNeed = (manifest: AppManifest, key: string): AppManifest => ({
   ...manifest,
-  accessNeeds: Object.fromEntries(
-    Object.entries(manifest.accessNeeds).map(([necessity, needs]) => [
-      necessity,
-      needs.filter(need => needKey(need) !== key)
-    ])
-  )
+  accessNeeds: {
+    ...manifest.accessNeeds,
+    [USER_STORAGE]: Object.fromEntries(
+      Object.entries(manifest.accessNeeds[USER_STORAGE] ?? {}).map(([necessity, needs]) => [
+        necessity,
+        needs.filter(need => needKey(need) !== key)
+      ])
+    )
+  }
 });

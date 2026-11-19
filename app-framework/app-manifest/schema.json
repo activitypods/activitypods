@@ -19,15 +19,22 @@
     "tosUri": { "type": "string", "description": "URL of the terms of service" },
     "supportedLocales": { "type": "array", "items": { "type": "string" } },
     "accessNeeds": {
+      "description": "The needs by storage: \"@user\" for the storage of the user, other keys for storages whose URIs are given by the app when it generates its documents",
+      "anyOf": [
+        { "type": "object", "additionalProperties": { "$ref": "#/definitions/storageNeeds" } },
+        { "$ref": "#/definitions/storageNeeds", "description": "Deprecated: needs on the storage of the user" }
+      ]
+    }
+  },
+  "definitions": {
+    "storageNeeds": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "required": { "$ref": "#/definitions/accessNeeds" },
         "optional": { "$ref": "#/definitions/accessNeeds" }
       }
-    }
-  },
-  "definitions": {
+    },
     "accessNeeds": {
       "type": "array",
       "items": {

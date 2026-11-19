@@ -154,6 +154,10 @@ export default {
       join_policy: "Politique d'adhésion",
       roles: 'Rôles'
     },
+    share: {
+      everyone: 'Tout le monde',
+      authenticated: 'Utilisateurs connectés'
+    },
     authorization: {
       required: 'Accès requis',
       optional: 'Accès optionnel',
@@ -401,7 +405,8 @@ export default {
       group_settings: 'Paramètres du groupe %{groupName} - %{appName}',
       group_members: 'Membres du groupe %{groupName} - %{appName}',
       group_roles: 'Rôles du groupe %{groupName} - %{appName}',
-      my_groups: 'Mes groupes - %{appName}'
+      my_groups: 'Mes groupes - %{appName}',
+      share: 'Partager - %{appName}'
     },
     placeholder: {
       user_id: '@utilisateur@serveur.com',

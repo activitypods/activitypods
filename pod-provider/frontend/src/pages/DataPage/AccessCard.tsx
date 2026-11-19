@@ -9,7 +9,7 @@ import useRoleLabel from '../../hooks/useRoleLabel';
 import useGroupMembers, { GroupRole } from '../../hooks/useGroupMembers';
 import usePodAuthorizations from '../../hooks/usePodAuthorizations';
 import useRealmContext from '../../hooks/useRealmContext';
-import { ShareDialog } from '../AuthorizePage/ShareScreen';
+import { ShareDialog, getPublicGrantee } from '../AuthorizePage/ShareScreen';
 import { arrayOf, withoutOwnerRole } from '../../utils';
 
 const GranteeItem = ({ authorization, roles, via }: { authorization: any; roles?: GroupRole[]; via?: string }) => {
@@ -17,18 +17,21 @@ const GranteeItem = ({ authorization, roles, via }: { authorization: any; roles?
   const roleLabel = useRoleLabel();
   const grantee = authorization['interop:grantee'];
   const role = roles?.find(r => r.uri === grantee);
-  const actor = useActor(role ? undefined : grantee);
+  const publicGrantee = getPublicGrantee(grantee);
+  const actor = useActor(role || publicGrantee ? undefined : grantee);
   const access = arrayOf(authorization['interop:accessMode']).includes('acl:Write') ? 'read_write' : 'read';
 
   return (
     <ListItem sx={{ px: 0, opacity: via ? 0.6 : 1 }}>
       <ListItemAvatar>
-        <Avatar src={role ? undefined : actor.image}>
-          {role ? <GroupsIcon /> : (actor.name || grantee).toUpperCase()[0]}
+        <Avatar src={role || publicGrantee ? undefined : actor.image}>
+          {publicGrantee ? publicGrantee.icon : role ? <GroupsIcon /> : (actor.name || grantee).toUpperCase()[0]}
         </Avatar>
       </ListItemAvatar>
       <ListItemText
-        primary={role ? roleLabel(role) : actor.name || grantee}
+        primary={
+          publicGrantee ? translate(`app.share.${publicGrantee.key}`) : role ? roleLabel(role) : actor.name || grantee
+        }
         secondary={
           via ? `${translate(`app.authorization.${access}`)} (${via})` : translate(`app.authorization.${access}`)
         }

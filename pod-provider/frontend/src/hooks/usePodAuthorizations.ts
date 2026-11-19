@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import useRealmContext from './useRealmContext';
 import { arrayOf } from '../utils';
 
-// The access authorizations given to people and roles, found through the registry set of the pod
+// The access authorizations given to people, roles and the public, found through the registry set of the pod
 const usePodAuthorizations = () => {
   const { data: pod } = useRealmContext() as any;
   const dataProvider = useDataProvider();
@@ -21,8 +21,9 @@ const usePodAuthorizations = () => {
       const authorizations = await Promise.all(
         authorizationsUris.map(async (uri: string) => (await dataProvider.fetch(uri)).json)
       );
+      // Shared with everyone or with all authenticated agents, there is no grantee type
       return authorizations.filter(
-        (authorization: any) => authorization['interop:granteeType'] === 'interop:SocialAgent'
+        (authorization: any) => authorization['interop:granteeType'] !== 'interop:Application'
       );
     },
     enabled: !!pod?.id

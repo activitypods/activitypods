@@ -1,7 +1,15 @@
 import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import urlJoin from 'url-join';
 import LinkHeader from 'http-link-header';
-import { useTranslate, useGetList, useGetMany, useDataProvider, useGetIdentity, useLocaleState } from 'react-admin';
+import {
+  useTranslate,
+  useGetList,
+  useGetMany,
+  useDataProvider,
+  useGetIdentity,
+  useLocaleState,
+  useNotify
+} from 'react-admin';
 import {
   Box,
   Button,
@@ -14,7 +22,6 @@ import {
   MenuItem,
   Autocomplete,
   TextField,
-  Typography,
   Dialog,
   DialogTitle,
   DialogContent
@@ -22,7 +29,10 @@ import {
 import { useContainerByUri, useCompactPredicate } from '@semapps/semantic-data-provider';
 import ShareIcon from '@mui/icons-material/Share';
 import GroupsIcon from '@mui/icons-material/Groups';
+import PublicIcon from '@mui/icons-material/Public';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import SimpleBox from '../../layout/SimpleBox';
+import Header from '../../common/Header';
 import useResource from '../../hooks/useResource';
 import useRoleLabel from '../../hooks/useRoleLabel';
 import useFetchShapeTree from '../../hooks/useFetchShapeTree';
@@ -33,6 +43,20 @@ const ACCESS_MODES = {
   read: ['acl:Read'],
   read_write: ['acl:Read', 'acl:Write']
 };
+
+export const PUBLIC_GRANTEES = [
+  { uri: 'http://xmlns.com/foaf/0.1/Agent', curie: 'foaf:Agent', key: 'everyone', icon: <PublicIcon /> },
+  {
+    uri: 'http://www.w3.org/ns/auth/acl#AuthenticatedAgent',
+    curie: 'acl:AuthenticatedAgent',
+    key: 'authenticated',
+    icon: <VerifiedUserIcon />
+  }
+];
+
+// The grantee may be compacted when read from the authorization
+export const getPublicGrantee = (grantee: string) =>
+  PUBLIC_GRANTEES.find(({ uri, curie }) => grantee === uri || grantee === curie);
 
 const getAccess = (accessModes: string[]) =>
   accessModes.includes('acl:Write') ? 'read_write' : accessModes.includes('acl:Read') ? 'read' : 'none';
@@ -48,7 +72,9 @@ type Grantee = {
 };
 
 const GranteeAvatar = ({ grantee }: { grantee: Grantee }) => (
-  <Avatar src={grantee.image}>{grantee.isRole ? <GroupsIcon /> : grantee.label?.toUpperCase()?.[0]}</Avatar>
+  <Avatar src={grantee.image} sx={{ width: 32, height: 32 }}>
+    {grantee.isRole ? <GroupsIcon /> : grantee.label?.toUpperCase()?.[0]}
+  </Avatar>
 );
 
 // The people and roles with whom the data may be shared
@@ -120,6 +146,7 @@ type ShareFormProps = {
 const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareFormProps) => {
   const translate = useTranslate();
   const dataProvider = useDataProvider();
+  const notify = useNotify();
   const [locale] = useLocaleState();
   const fetchShapeTree = useFetchShapeTree();
   const [shapeTree, setShapeTree] = useState<any>();
@@ -167,8 +194,10 @@ const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareForm
         setAuthorizations(json);
         setInitialAccess(currentAccess);
         setAccess(currentAccess);
-      });
-  }, [resourceUri, shapeTreeUri, podOwner, dataProvider]);
+      })
+      // For example, a member of a group without the right to manage its access
+      .catch((e: any) => notify(e.body?.message || e.message, { type: 'error' }));
+  }, [resourceUri, shapeTreeUri, podOwner, dataProvider, notify]);
 
   const onShare = useCallback(async () => {
     const changed = Object.keys(access).filter(grantee => access[grantee] !== (initialAccess[grantee] || 'none'));
@@ -200,7 +229,7 @@ const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareForm
   return { authorizations, grantees, access, setAccess, onShare, text, isGroup };
 };
 
-const ShareFormContent = ({ form, inDialog }: { form: ReturnType<typeof useShareForm>; inDialog?: boolean }) => {
+const ShareFormContent = ({ form }: { form: ReturnType<typeof useShareForm> }) => {
   const translate = useTranslate();
   const { authorizations, grantees, access, setAccess, isGroup } = form;
 
@@ -237,18 +266,35 @@ const ShareFormContent = ({ form, inDialog }: { form: ReturnType<typeof useShare
             label={translate(isGroup ? 'app.input.share_search_group' : 'app.input.share_search')}
           />
         )}
-        sx={{ mt: inDialog ? 0 : 2 }}
       />
-      {withAccess.length === 0 && (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          {translate('app.helper.no_access')}
-        </Typography>
-      )}
       <List sx={{ width: '100%' }}>
+        {PUBLIC_GRANTEES.map(({ uri, key, icon }) => (
+          <ListItem
+            key={uri}
+            sx={{ px: 0, py: 0.5, minHeight: 56, '& .MuiListItemSecondaryAction-root': { right: 0 } }}
+            secondaryAction={
+              <Select
+                size="small"
+                value={access[uri] || 'none'}
+                onChange={e => setAccess(cur => ({ ...cur, [uri]: e.target.value }))}
+                sx={{ minWidth: 150 }}
+              >
+                <MenuItem value="none">{translate('app.authorization.none')}</MenuItem>
+                <MenuItem value="read">{translate('app.authorization.read')}</MenuItem>
+                <MenuItem value="read_write">{translate('app.authorization.read_write')}</MenuItem>
+              </Select>
+            }
+          >
+            <ListItemAvatar>
+              <Avatar sx={{ width: 32, height: 32 }}>{icon}</Avatar>
+            </ListItemAvatar>
+            <ListItemText primary={translate(`app.share.${key}`)} sx={{ pr: 18 }} />
+          </ListItem>
+        ))}
         {withAccess.map(grantee => (
           <ListItem
             key={grantee.uri}
-            sx={{ px: 0 }}
+            sx={{ px: 0, py: 0.5, minHeight: 56, '& .MuiListItemSecondaryAction-root': { right: 0 } }}
             secondaryAction={
               <Select
                 size="small"
@@ -294,7 +340,8 @@ const ShareScreen = ({ resourceUri, shapeTreeUri, podOwner, accessApp }: any) =>
   const form = useShareForm({ resourceUri, shapeTreeUri, podOwner, onDone: accessApp });
 
   return (
-    <SimpleBox title={translate('app.page.share')} icon={<ShareIcon />} text={form.text}>
+    <SimpleBox title={translate('app.page.share')} icon={<ShareIcon />} text={form.text} maxWidth={650}>
+      <Header title="app.titles.share" />
       <ShareFormContent form={form} />
       <ShareButtons onShare={form.onShare} onCancel={accessApp} />
     </SimpleBox>
@@ -309,7 +356,7 @@ const ShareDialogContent = ({ onClose, ...props }: Omit<ShareFormProps, 'onDone'
     <>
       <DialogTitle sx={{ pb: 1 }}>{translate('app.action.manage_access')}</DialogTitle>
       <DialogContent>
-        <ShareFormContent form={form} inDialog />
+        <ShareFormContent form={form} />
         <ShareButtons onShare={form.onShare} onCancel={onClose} />
       </DialogContent>
     </>

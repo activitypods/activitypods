@@ -247,7 +247,7 @@ const cached = <T>(key: string, fn: () => Promise<T>): Promise<T> => {
  * The grants given to everyone (`interop:hasPublicAgentRegistration`) and, for logged-in users, to all
  * authenticated agents (`interop:hasConnectedAgentRegistration`). Proposed extension of SAI.
  */
-const getPublicGrants = (storageUri: string, storage: Record<string, any>, session?: AuthSession) =>
+export const getPublicGrants = (storageUri: string, storage: Record<string, any>, session?: AuthSession) =>
   cached(`${session?.webId ?? ''}|${storageUri}|public`, async () => {
     const registrations = [
       { uri: storage['interop:hasPublicAgentRegistration'], session: undefined },
@@ -268,7 +268,8 @@ const getPublicGrants = (storageUri: string, storage: Record<string, any>, sessi
     return grants;
   });
 
-const isScope = (grant: Record<string, any>, scope: string) => `${grant['interop:scopeOfGrant']}`.endsWith(scope);
+export const isScope = (grant: Record<string, any>, scope: string) =>
+  `${grant['interop:scopeOfGrant']}`.endsWith(scope);
 
 const publicGrants: DiscoveryStrategy = async (storageUri, storage, session) =>
   (await getPublicGrants(storageUri, storage, session))
@@ -294,7 +295,14 @@ const registrationMatches = async (
   return types.some(type => wantedTypes.includes(type));
 };
 
-const fetchStorage = (storageUri: string, session?: AuthSession): Promise<Record<string, any>> =>
+/** Discover the containers and public grants of a storage again on next use */
+export const invalidateStorage = (storageUri: string) => {
+  for (const key of discoveryCache.keys()) {
+    if (key.split('|')[1] === storageUri) discoveryCache.delete(key);
+  }
+};
+
+export const fetchStorage = (storageUri: string, session?: AuthSession): Promise<Record<string, any>> =>
   cached(`${session?.webId ?? ''}|${storageUri}`, () => fetchAsSession(storageUri, session));
 
 /** Find the resources of a storage which are public one by one (not their whole container) */
@@ -405,13 +413,10 @@ export const resolveAuthAgent = async (webId: string, token?: string): Promise<A
   return { authAgent, appRegistrationUri: registeredAgentLinks[0]?.anchor };
 };
 
-export type SharedSource = { dataOwner: string } & ({ containerUri: string } | { resourceUris: string[] });
-
-const appRegistrationUris = new Map<string, Promise<string | undefined>>();
 // Grants are replaced (new URI) rather than modified
 const grantsCache = new Map<string, Promise<Record<string, any> | undefined>>();
 
-const fetchGrant = (uri: string, session?: AuthSession) => {
+export const fetchGrant = (uri: string, session?: AuthSession) => {
   if (!grantsCache.has(uri)) {
     grantsCache.set(
       uri,
@@ -422,95 +427,6 @@ const fetchGrant = (uri: string, session?: AuthSession) => {
     );
   }
   return grantsCache.get(uri)!;
-};
-
-/** The access grants of the app, given by the logged-in user, including the data shared with them */
-export const fetchAppGrants = async (session: AuthSession): Promise<Record<string, any>[]> => {
-  if (!appRegistrationUris.has(session.webId)) {
-    appRegistrationUris.set(
-      session.webId,
-      resolveAuthAgent(session.webId, session.token).then(
-        ({ appRegistrationUri }) => appRegistrationUri,
-        () => undefined
-      )
-    );
-  }
-  const appRegistrationUri = await appRegistrationUris.get(session.webId);
-  if (!appRegistrationUri) return [];
-
-  // Fetched on every call, as new grants may be added at any time
-  const { json: appRegistration } = await fetchJson(appRegistrationUri, {}, session.token);
-  const grants = await Promise.all(
-    arrayOf<string>(appRegistration['interop:hasAccessGrant']).map(uri => fetchGrant(uri, session))
-  );
-  return grants.filter(grant => !!grant);
-};
-
-/** Find the data of other users shared with the app through its access grants, matching the given resource */
-export const discoverSharedSources = async (
-  resourceConfig: ResourceConfig,
-  wantedTypes: string[],
-  session: AuthSession
-): Promise<SharedSource[]> => {
-  const sources: SharedSource[] = [];
-  for (const grant of await fetchAppGrants(session)) {
-    if (grant['interop:dataOwner'] === session.webId) continue;
-
-    const shapeTreeUri = grant['interop:registeredShapeTree'];
-    const matches = resourceConfig.shapeTreeUri
-      ? shapeTreeUri === resourceConfig.shapeTreeUri
-      : !!shapeTreeUri && (await getTypesFromShapeTree(shapeTreeUri)).some(type => wantedTypes.includes(type));
-    if (!matches) continue;
-
-    if (`${grant['interop:scopeOfGrant']}`.endsWith('AllFromRegistry')) {
-      sources.push({ dataOwner: grant['interop:dataOwner'], containerUri: grant['interop:hasDataRegistration'] });
-    } else {
-      sources.push({
-        dataOwner: grant['interop:dataOwner'],
-        resourceUris: arrayOf<string>(grant['interop:hasDataInstance'])
-      });
-    }
-  }
-  return sources;
-};
-
-const hasAccessMode = (grant: Record<string, any>, mode: string) =>
-  arrayOf<string>(grant['interop:accessMode']).some(
-    m => m === `acl:${mode}` || m === `http://www.w3.org/ns/auth/acl#${mode}`
-  );
-
-/**
- * Whether the app may modify a resource on behalf of the logged-in user. The Pod only allows the app what
- * both the user and the app's access grants allow, and the grants are derived from the user's own rights.
- */
-export const canWriteResource = async (resourceUri: string, session?: AuthSession): Promise<boolean> => {
-  if (!session) return false;
-  const [grants, { headers }] = await Promise.all([
-    fetchAppGrants(session),
-    fetchWithSession(resourceUri, {}, session)
-  ]);
-  const dataRegistrationUri = LinkHeader.parse(headers.get('Link') || '').rel(
-    'http://www.w3.org/ns/solid/interop#hasDataRegistration'
-  )[0]?.uri;
-
-  return grants.some(
-    grant =>
-      hasAccessMode(grant, 'Write') &&
-      (isScope(grant, 'AllFromRegistry')
-        ? !!dataRegistrationUri && grant['interop:hasDataRegistration'] === dataRegistrationUri
-        : arrayOf<string>(grant['interop:hasDataInstance']).includes(resourceUri))
-  );
-};
-
-/** Whether the app may create resources in a container on behalf of the logged-in user (see `canWriteResource`) */
-export const canWriteContainer = async (containerUri: string, session?: AuthSession): Promise<boolean> => {
-  if (!session) return false;
-  return (await fetchAppGrants(session)).some(
-    grant =>
-      (hasAccessMode(grant, 'Write') || hasAccessMode(grant, 'Append')) &&
-      isScope(grant, 'AllFromRegistry') &&
-      grant['interop:hasDataRegistration'] === containerUri
-  );
 };
 
 /**

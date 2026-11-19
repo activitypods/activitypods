@@ -1,6 +1,7 @@
 import type { AccessControlProvider } from '@refinedev/core';
 import { storagesResolver } from './storages';
-import { canWriteContainer, canWriteResource, DEFAULT_CONTEXT, findContainerUri, resolveResourceTypes } from './utils';
+import { DEFAULT_CONTEXT, findContainerUri, resolveResourceTypes } from './utils';
+import { canWriteContainer, canWriteResource } from './grants';
 import { DataProviderConfig } from './types';
 
 const WRITE_ACTIONS = ['create', 'edit', 'delete', 'clone'];
@@ -26,7 +27,8 @@ const accessControlProvider = ({
       if (!session) return { can: false, reason: 'Not authenticated' };
 
       if (action === 'edit' || action === 'delete') {
-        return { can: !!params?.id && (await canWriteResource(`${params.id}`, session)) };
+        const storageUris = [session.webId, ...Object.values(storages).map(({ uri }) => uri)];
+        return { can: !!params?.id && (await canWriteResource(`${params.id}`, session, storageUris)) };
       }
 
       const resourceConfig = resource ? resources[resource] : undefined;
@@ -35,7 +37,7 @@ const accessControlProvider = ({
       const storageUri = getStorageUri(storageKey, session)!;
       const types = await resolveResourceTypes(resourceConfig, jsonContext);
       const containerUri = await findContainerUri(storageUri, resourceConfig, types, session);
-      return { can: !!containerUri && (await canWriteContainer(containerUri, session)) };
+      return { can: !!containerUri && (await canWriteContainer(containerUri, session, [storageUri])) };
     },
     options: {
       buttons: { enableAccessControl: true, hideIfUnauthorized: true }

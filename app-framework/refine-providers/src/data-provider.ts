@@ -1,6 +1,7 @@
 import type { DataProvider } from '@refinedev/core';
 import LinkHeader from 'http-link-header';
 import { storagesResolver } from './storages';
+import { getDataRegistrationFromHeaders, invalidateAppGrants, rememberDataRegistration } from './grants';
 import {
   applyFilters,
   applySorters,
@@ -54,8 +55,19 @@ const dataProvider = ({
   };
 
   const fetchOne = async (id: string) => {
-    const { json } = await fetchWithSession(id, {}, authProvider.getSession());
+    const { json, headers } = await fetchWithSession(id, {}, authProvider.getSession());
+    rememberDataRegistration(id, getDataRegistrationFromHeaders(headers));
     return normalizeRecord(json, json['@context']);
+  };
+
+  // The rights of the app may have been reduced since its grants were loaded
+  const write = async <T>(fn: () => Promise<T>) => {
+    try {
+      return await fn();
+    } catch (e: any) {
+      if (e?.status === 403) invalidateAppGrants(authProvider.getSession()?.webId);
+      throw e;
+    }
   };
 
   const list: DataProvider['getList'] = async ({ resource, pagination, sorters, filters }) => {
@@ -93,10 +105,11 @@ const dataProvider = ({
       }
     }
     const withParams = (uri: string) => (params.size > 0 ? `${uri}?${params.toString()}` : uri);
-    const tag = (record: Record<string, any>, storage: string): Record<string, any> => ({
-      ...record,
-      _storage: storage
-    });
+    // In ActivityPods, the containers are the data registrations
+    const tag = (record: Record<string, any>, storage: string, containerUri?: string): Record<string, any> => {
+      rememberDataRegistration(record.id, containerUri);
+      return { ...record, _storage: storage };
+    };
 
     const inMemory = (records: Record<string, any>[]) => {
       records = applySorters(applyFilters(records, filters), sorters);
@@ -115,7 +128,7 @@ const dataProvider = ({
         session
       );
       const records = arrayOf(container['ldp:contains']).map(item =>
-        tag(normalizeRecord(item, container['@context']), storage)
+        tag(normalizeRecord(item, container['@context']), storage, uri)
       );
       if (!responseHeaders.get('Preference-Applied')?.includes('max-member-count')) return inMemory(records);
 
@@ -139,14 +152,16 @@ const dataProvider = ({
     const results = await Promise.allSettled([
       ...sources.containers.map(({ uri, storage }) =>
         fetchWithSession(withParams(uri), {}, session).then(({ json }) =>
-          arrayOf(json['ldp:contains']).map(item => tag(normalizeRecord(item, json['@context']), storage))
+          arrayOf(json['ldp:contains']).map(item => tag(normalizeRecord(item, json['@context']), storage, uri))
         )
       ),
       ...sources.resources.map(({ uri, storage }) => fetchOne(uri).then(record => [tag(record, storage)]))
     ]);
     const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
     failures.forEach(failure => console.warn(`Could not list resources of "${resource}"`, failure.reason));
-    if (failures.length > 0 && failures.length === results.length) throw failures[0].reason;
+    // No access (anymore) is not an error: the data is just not visible
+    const errors = failures.filter(failure => failure.reason?.status !== 403);
+    if (errors.length > 0 && failures.length === results.length) throw errors[0].reason;
 
     const recordsById = new Map<string, Record<string, any>>();
     for (const result of results) {
@@ -188,13 +203,15 @@ const dataProvider = ({
         throw new Error(`No container found in ${storageUri} to create a resource "${resource}"`);
       }
 
-      const { headers } = await fetchWithSession(
-        containerUri,
-        {
-          method: 'POST',
-          body: JSON.stringify({ '@context': jsonContext, '@type': types, ...variables })
-        },
-        session
+      const { headers } = await write(() =>
+        fetchWithSession(
+          containerUri,
+          {
+            method: 'POST',
+            body: JSON.stringify({ '@context': jsonContext, '@type': types, ...variables })
+          },
+          session
+        )
       );
 
       const location = headers.get('Location');
@@ -215,18 +232,20 @@ const dataProvider = ({
       // `current`'s keys were compacted with the resource's own context (e.g. the Pod's
       // `dc:created`), which jsonContext doesn't necessarily define: sending it alone stored them
       // as bogus absolute IRIs like <dc:created>. Listed last, so it wins for `current`'s keys.
-      await fetchWithSession(
-        `${id}`,
-        {
-          method: 'PUT',
-          body: JSON.stringify({
-            '@context': [...arrayOf(jsonContext), ...arrayOf(currentContext)],
-            ...current,
-            ...variables,
-            _storage: undefined
-          })
-        },
-        session
+      await write(() =>
+        fetchWithSession(
+          `${id}`,
+          {
+            method: 'PUT',
+            body: JSON.stringify({
+              '@context': [...arrayOf(jsonContext), ...arrayOf(currentContext)],
+              ...current,
+              ...variables,
+              _storage: undefined
+            })
+          },
+          session
+        )
       );
 
       return { data: (await fetchOne(`${id}`)) as any };
@@ -235,7 +254,7 @@ const dataProvider = ({
     deleteOne: async ({ resource, id }) => {
       const session = requireSession();
       requireResourceConfig(resource);
-      await fetchWithSession(`${id}`, { method: 'DELETE' }, session);
+      await write(() => fetchWithSession(`${id}`, { method: 'DELETE' }, session));
       return { data: { id } as any };
     }
   };

@@ -1,4 +1,5 @@
-import { arrayOf, discoverSharedSources, findContainerUri, findPublicResources, resolveResourceTypes } from './utils';
+import { arrayOf, findContainerUri, findPublicResources, resolveResourceTypes } from './utils';
+import { discoverSharedSources } from './grants';
 import { AuthSession, JsonContext, ResourceConfig, ResourcesConfig, StorageKey, StoragesConfig } from './types';
 
 export type ListSources = {

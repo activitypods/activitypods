@@ -9,6 +9,9 @@ const INTEROP = 'http://www.w3.org/ns/solid/interop#';
 // Authorizations with a role as grantee generate one grant per effective member of the role
 // For the data of the pod, the rights are given through the WAC group of the role
 // For the data shared with the pod, a delegated grant is issued on the data owner's storage for each member
+// May be returned as a string by the triplestore
+const isDelegationAllowed = (resource: any) => `${resource['interop:delegationAllowed']}` === 'true';
+
 const RoleAccessSchema = {
   name: 'role-access' as const,
   dependencies: ['role-registrations', 'access-authorizations', 'access-grants', 'permissions-mapper'],
@@ -176,7 +179,9 @@ const RoleAccessSchema = {
         (grant: any) =>
           grant['interop:scopeOfGrant'] === getScopeOfGrant(authorization) &&
           arraysEqual(grant['interop:accessMode'], authorization['interop:accessMode']) &&
-          arraysEqual(grant['interop:hasDataInstance'], authorization['interop:hasDataInstance'])
+          arraysEqual(grant['interop:hasDataInstance'], authorization['interop:hasDataInstance']) &&
+          isDelegationAllowed(grant) === isDelegationAllowed(authorization) &&
+          `${grant['interop:delegationLimit'] ?? ''}` === `${authorization['interop:delegationLimit'] ?? ''}`
       );
     },
     async deleteGrant(ctx, authorization, grant, isReplacing?: boolean) {

@@ -246,6 +246,31 @@ describe('Test access to groups data through roles', () => {
     }
   });
 
+  test('Allowing the role to delegate recreates the grants', async () => {
+    const oldGrants = await getRoleGrants();
+
+    await callAsGroup('access-authorizations.addForSingleResource', {
+      resourceUri: eventUri,
+      grantee: await getRoleUri('member'),
+      accessModes: ['acl:Read', 'acl:Write'],
+      delegationAllowed: true,
+      webId: groupWebId
+    });
+
+    const grants = await getRoleGrants();
+    expect(grants).toHaveLength(2);
+    for (const grant of grants) {
+      expect(`${grant['interop:delegationAllowed']}`).toBe('true');
+      expect(oldGrants.map((g: any) => g.id)).not.toContain(grant.id);
+    }
+
+    // Back to the previous state, for the next tests
+    await shareWithMembers(['acl:Read', 'acl:Write']);
+    for (const grant of await getRoleGrants()) {
+      expect(grant['interop:delegationAllowed']).toBeUndefined();
+    }
+  });
+
   test('Sharing another resource with the same access modes replaces the grants', async () => {
     event2Uri = await callAsGroup('ldp.container.post', {
       containerUri,

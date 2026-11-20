@@ -378,7 +378,8 @@ const RoleRegistrationsSchema = {
       if (granted) {
         await ctx.call(
           'access-authorizations.addForShapeTree',
-          { ...params, accessModes: ['acl:Read', 'acl:Write'] },
+          // The admins may also share the data, e.g. from an application
+          { ...params, accessModes: ['acl:Read', 'acl:Write'], delegationAllowed: true },
           opts
         );
       } else {

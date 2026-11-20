@@ -195,3 +195,36 @@ export const canWriteContainer = async (
       grant['interop:hasDataRegistration'] === containerUri
   );
 };
+
+// The owner of the data, or a grantee allowed to delegate it, may change who can access it
+const canShare = (grant: Record<string, any>, session: AuthSession) =>
+  grant['interop:dataOwner'] === session.webId || `${grant['interop:delegationAllowed']}` === 'true';
+
+/** Whether the logged-in user may manage the access to a resource (see `canWriteResource`) */
+export const canShareResource = async (resourceUri: string, session?: AuthSession): Promise<boolean> => {
+  if (!session) return false;
+  if (!dataRegistrations.has(resourceUri)) {
+    const { headers } = await fetchWithSession(resourceUri, {}, session);
+    rememberDataRegistration(resourceUri, getDataRegistrationFromHeaders(headers));
+  }
+  const dataRegistrationUri = dataRegistrations.get(resourceUri);
+
+  return (await getAppGrants(session)).some(
+    grant =>
+      canShare(grant, session) &&
+      (isScope(grant, 'AllFromRegistry')
+        ? !!dataRegistrationUri && grant['interop:hasDataRegistration'] === dataRegistrationUri
+        : arrayOf<string>(grant['interop:hasDataInstance']).includes(resourceUri))
+  );
+};
+
+/** Whether the logged-in user may manage the access to all the resources of a container */
+export const canShareContainer = async (containerUri: string, session?: AuthSession): Promise<boolean> => {
+  if (!session) return false;
+  return (await getAppGrants(session)).some(
+    grant =>
+      canShare(grant, session) &&
+      isScope(grant, 'AllFromRegistry') &&
+      grant['interop:hasDataRegistration'] === containerUri
+  );
+};

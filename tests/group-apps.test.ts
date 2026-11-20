@@ -142,6 +142,9 @@ describe('Test the access of the applications of the members to the data of a gr
         'acl:Read',
         'acl:Write'
       ]);
+      // A single grant, from the role giving the most rights, so that the app may let the admin manage the access
+      expect(grants).toHaveLength(1);
+      expect(`${grants[0]['interop:delegationAllowed']}`).toBe('true');
     });
 
     await waitForExpect(async () => {

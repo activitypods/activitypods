@@ -8,11 +8,14 @@ import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import CodeIcon from '@mui/icons-material/Code';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SettingsItem from './SettingsItem';
+import useRealmContext from '../../hooks/useRealmContext';
 
 const AdvancedSettingsPage = () => {
   const translate = useTranslate();
   const navigate = useNavigate();
   const [developerMode, setDeveloperMode] = useState(!!localStorage.getItem('developer_mode'));
+  // The export and the deletion of a group are in its main settings
+  const { isGroup } = useRealmContext();
 
   const switchDeveloperMode = () => {
     if (developerMode) {
@@ -37,18 +40,22 @@ const AdvancedSettingsPage = () => {
             label="app.setting.developer_mode"
             value={developerMode}
           />
-          <SettingsItem
-            onClick={() => navigate('/settings/export')}
-            icon={<StorageIcon />}
-            label="app.setting.export"
-            actionIcon={<DownloadIcon />}
-          />
-          <SettingsItem
-            onClick={() => navigate('/settings/delete')}
-            icon={<DeleteIcon color="error" />}
-            label="app.setting.delete"
-            actionIcon={<HighlightOffIcon color="error" />}
-          />
+          {!isGroup && (
+            <SettingsItem
+              onClick={() => navigate('/settings/export')}
+              icon={<StorageIcon />}
+              label="app.setting.export"
+              actionIcon={<DownloadIcon />}
+            />
+          )}
+          {!isGroup && (
+            <SettingsItem
+              onClick={() => navigate('/settings/delete')}
+              icon={<DeleteIcon color="error" />}
+              label="app.setting.delete"
+              actionIcon={<HighlightOffIcon color="error" />}
+            />
+          )}
         </List>
       </Box>
     </>

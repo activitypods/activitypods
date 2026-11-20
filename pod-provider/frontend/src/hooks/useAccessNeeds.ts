@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
-import { fetchUtils } from 'react-admin';
+import { fetchUtils, useGetIdentity } from 'react-admin';
 import { arrayOf } from '../utils';
 
-const useAccessNeeds = (application: any) => {
+/**
+ * The access needs of the app on the Pod of the user, or of the group they manage (podOwner).
+ * The groups targeting another storage are accepted by its owner, not by the user.
+ */
+const useAccessNeeds = (application: any, podOwner?: string | null) => {
+  const { data: identity } = useGetIdentity();
   const [requiredAccessNeeds, setRequiredAccessNeeds] = useState([]);
   const [optionalAccessNeeds, setOptionalAccessNeeds] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -12,10 +17,22 @@ const useAccessNeeds = (application: any) => {
   useEffect(() => {
     (async () => {
       try {
-        if (application && !loading && !loaded && !error) {
+        if (application && identity && !loading && !loaded && !error) {
           setLoading(true);
-          for (const accessNeedGroupUri of arrayOf(application['interop:hasAccessNeedGroup'])) {
-            const { json: accessNeedGroup } = await fetchUtils.fetchJson(accessNeedGroupUri);
+          const accessNeedGroups = await Promise.all(
+            arrayOf(application['interop:hasAccessNeedGroup']).map(async uri => (await fetchUtils.fetchJson(uri)).json)
+          );
+          const ownerWebId = podOwner || identity.id;
+          const { json: owner } = await fetchUtils.fetchJson(ownerWebId as string);
+          const targeted = accessNeedGroups.some(group => group['interop:targetStorage']);
+          for (const accessNeedGroup of accessNeedGroups) {
+            if (
+              targeted &&
+              (accessNeedGroup['interop:targetStorage']
+                ? accessNeedGroup['interop:targetStorage'] !== owner['pim:storage']
+                : !!podOwner)
+            )
+              continue;
             for (const accessNeedUri of arrayOf(accessNeedGroup['interop:hasAccessNeed'])) {
               const { json: accessNeed } = await fetchUtils.fetchJson(accessNeedUri);
               if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
@@ -48,6 +65,8 @@ const useAccessNeeds = (application: any) => {
     })();
   }, [
     application,
+    podOwner,
+    identity,
     setRequiredAccessNeeds,
     setOptionalAccessNeeds,
     loading,

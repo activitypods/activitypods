@@ -12,11 +12,13 @@ const manifest: AppManifest = {
   name: 'Example',
   description: { en: 'An example', fr: 'Un exemple' },
   accessNeeds: {
-    required: [
-      { shapeTreeUri: NOTE, accessMode: ['acl:Read', 'acl:Write'] },
-      { shapeTreeUri: PROFILE, accessMode: 'acl:Read' },
-      'apods:ReadInbox'
-    ]
+    '@user': {
+      required: [
+        { shapeTreeUri: NOTE, accessMode: ['acl:Read', 'acl:Write'] },
+        { shapeTreeUri: PROFILE, accessMode: 'acl:Read' },
+        'apods:ReadInbox'
+      ]
+    }
   }
 };
 
@@ -44,7 +46,10 @@ test('the groups link to documents that are generated', () => {
 });
 
 test('no group is generated for an empty necessity', () => {
-  const documents = generateDocuments({ ...manifest, accessNeeds: { required: [], optional: [] } }, BASE_URL);
+  const documents = generateDocuments(
+    { ...manifest, accessNeeds: { '@user': { required: [], optional: [] } } },
+    BASE_URL
+  );
   assert.deepEqual(Object.keys(documents), ['app.json']);
 });
 
@@ -67,7 +72,7 @@ test('an unchanged access need keeps its URI when another one is removed', () =>
 test('the order of the access needs does not change the URIs', () => {
   const reordered = {
     ...manifest,
-    accessNeeds: { required: [...manifest.accessNeeds.required!].reverse() }
+    accessNeeds: { '@user': { required: [...manifest.accessNeeds['@user'].required!].reverse() } }
   };
   assert.deepEqual(groups(generateDocuments(reordered, BASE_URL)), groups(generateDocuments(manifest, BASE_URL)));
 });
@@ -81,8 +86,8 @@ test('the file names do not depend on the URL of the app', () => {
 
 test('adding an existing access need replaces it', () => {
   const updated = addNeed(manifest, { shapeTreeUri: NOTE, accessMode: 'acl:Read' }, 'optional');
-  assert.equal(updated.accessNeeds.required!.length, 2);
-  assert.deepEqual(updated.accessNeeds.optional, [{ shapeTreeUri: NOTE, accessMode: 'acl:Read' }]);
+  assert.equal(updated.accessNeeds['@user'].required!.length, 2);
+  assert.deepEqual(updated.accessNeeds['@user'].optional, [{ shapeTreeUri: NOTE, accessMode: 'acl:Read' }]);
 });
 
 test('invalid manifests are rejected', () => {
@@ -103,4 +108,28 @@ test('invalid manifests are rejected', () => {
 test('the JSON schema lists the same special rights', () => {
   const schema = JSON.parse(readFileSync(new URL('../schema.json', import.meta.url), 'utf8'));
   assert.deepEqual(schema.definitions.accessNeeds.items.oneOf[0].enum, Object.keys(SPECIAL_RIGHTS));
+});
+
+test('the needs of a storage are in their own groups, once its URI is known', () => {
+  const STORAGE = 'https://pod.example/group/data';
+  const withStorage: AppManifest = {
+    ...manifest,
+    accessNeeds: {
+      ...manifest.accessNeeds,
+      app: { required: [{ shapeTreeUri: NOTE, accessMode: 'acl:Read' }] }
+    }
+  };
+  assert.equal(groups(generateDocuments(withStorage, BASE_URL)).length, 1);
+
+  const documents: Record<string, any> = generateDocuments(withStorage, BASE_URL, { storages: { app: STORAGE } });
+  const [personal, targeted] = groups(documents).map((uri: string) => documents[uri.replace(BASE_URL, '')]);
+  assert.equal(personal['interop:targetStorage'], undefined);
+  assert.equal(targeted['interop:targetStorage'], STORAGE);
+  assert.equal(targeted['interop:hasAccessNeed'].length, 1);
+});
+
+test('a manifest without storages is read as the needs of the user', () => {
+  const parsed = parseManifest(JSON.stringify({ ...manifest, accessNeeds: manifest.accessNeeds['@user'] }));
+  assert.deepEqual(Object.keys(parsed.accessNeeds), ['@user']);
+  assert.deepEqual(generateDocuments(parsed, BASE_URL), generateDocuments(manifest, BASE_URL));
 });

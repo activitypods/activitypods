@@ -54,7 +54,7 @@ const Schema = {
   methods: {
     async authenticate(ctx, route, req, res) {
       if (req.headers.signature) {
-        return ctx.call('signature.authenticate', { route, req, res });
+        return this.authenticateSignature(ctx, req);
       }
       const token = req.headers.authorization?.split(' ')[1];
       if (token) {
@@ -72,7 +72,7 @@ const Schema = {
     },
     async authorize(ctx, route, req, res) {
       if (req.headers.signature) {
-        return ctx.call('signature.authorize', { route, req, res });
+        return this.authenticateSignature(ctx, req);
       }
       const token = req.headers.authorization?.split(' ')[1];
       if (token) {
@@ -86,6 +86,32 @@ const Schema = {
       }
       ctx.meta.webId = 'anon';
       throw new E.UnAuthorizedError(E.ERR_NO_TOKEN);
+    },
+    // The signer may act on behalf of a user with the On-Behalf-Of header
+    // The ClientControlMiddleware then checks that the user registered the application
+    async authenticateSignature(ctx, req) {
+      const { isValid, actorUri, signedHeaders } = await ctx.call('signature.verifyHttpSignature', {
+        path: req.originalUrl,
+        method: req.method,
+        headers: req.headers
+      });
+      if (!isValid) {
+        ctx.meta.webId = 'anon';
+        throw new E.UnAuthorizedError(E.ERR_INVALID_TOKEN);
+      }
+
+      const onBehalfOf = req.headers['on-behalf-of'];
+      if (onBehalfOf) {
+        // Otherwise the header could have been added by anyone
+        if (!signedHeaders.includes('on-behalf-of')) {
+          ctx.meta.webId = 'anon';
+          throw new E.UnAuthorizedError(E.ERR_INVALID_TOKEN, 'The On-Behalf-Of header must be signed');
+        }
+        ctx.meta.webId = onBehalfOf;
+        ctx.meta.clientId = actorUri;
+      } else {
+        ctx.meta.webId = actorUri;
+      }
     },
     // Overwrite optimization method to put catchAll routes at the end
     // See https://github.com/moleculerjs/moleculer-web/issues/335

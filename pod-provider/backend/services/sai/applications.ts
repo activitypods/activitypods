@@ -17,23 +17,36 @@ const ApplicationsSchema = {
       }
     },
 
-    getRequirements: {
-      /**
-       * Return the required access needs and special rights of the given application
-       */
+    getAccessNeedGroups: {
       async handler(ctx) {
         const { appUri } = ctx.params;
 
         // Force to get through network, so that we have the latest Access Need Group
         const app = await ctx.call('ldp.remote.getNetwork', { resourceUri: appUri });
 
+        const accessNeedGroups = [];
+        for (const accessNeedGroupUri of arrayOf(app['interop:hasAccessNeedGroup'])) {
+          accessNeedGroups.push(
+            await ctx.call('ldp.resource.get', { resourceUri: accessNeedGroupUri, accept: MIME_TYPES.JSON })
+          );
+        }
+        return accessNeedGroups;
+      }
+    },
+
+    getRequirements: {
+      /**
+       * Return the required access needs and special rights of the given application
+       * Pass accessNeedGroups to only consider some of them
+       */
+      async handler(ctx) {
+        const { appUri } = ctx.params;
+        const accessNeedGroups =
+          ctx.params.accessNeedGroups || (await this.actions.getAccessNeedGroups({ appUri }, { parentCtx: ctx }));
+
         let accessNeeds = [],
           specialRights = [];
-        for (const accessNeedGroupUri of arrayOf(app['interop:hasAccessNeedGroup'])) {
-          const accessNeedGroup = await ctx.call('ldp.resource.get', {
-            resourceUri: accessNeedGroupUri,
-            accept: MIME_TYPES.JSON
-          });
+        for (const accessNeedGroup of accessNeedGroups) {
           if (accessNeedGroup['interop:accessNecessity'] === 'interop:AccessRequired') {
             accessNeeds.push(...arrayOf(accessNeedGroup['interop:hasAccessNeed']));
             specialRights.push(...arrayOf(accessNeedGroup['apods:hasSpecialRights']));

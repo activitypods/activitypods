@@ -13,7 +13,7 @@ import { arrayOf } from '../../utils';
 import useRemoveApp from '../../hooks/useRemoveApp';
 import useUpgradeApp from '../../hooks/useUpgradeApp';
 
-const UpgradeScreen = ({ application, accessApp, isTrustedApp }: any) => {
+const UpgradeScreen = ({ application, accessApp, isTrustedApp, podOwner }: any) => {
   const [step, setStep] = useState();
   const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
   const [allowedAccessNeeds, setAllowedAccessNeeds] = useState([]);
@@ -24,7 +24,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }: any) => {
   const removeApp = useRemoveApp();
   const upgradeApp = useUpgradeApp();
 
-  const { requiredAccessNeeds, optionalAccessNeeds, loaded: accessNeedsLoaded } = useAccessNeeds(application);
+  const { requiredAccessNeeds, optionalAccessNeeds, loaded: accessNeedsLoaded } = useAccessNeeds(application, podOwner);
   const { accessGrants, loaded: accessGrantsLoaded } = useAccessGrants(application.id);
   const { agentRegistration, loaded: agentRegistrationLoaded } = useAgentRegistration(application.id);
 
@@ -37,7 +37,8 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }: any) => {
 
           await upgradeApp({
             appUri: application.id,
-            grantedAccessNeeds: [...grantedAccessNeeds, ...allowedAccessNeeds]
+            grantedAccessNeeds: [...grantedAccessNeeds, ...allowedAccessNeeds],
+            podOwner
           });
 
           await accessApp();
@@ -49,7 +50,7 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }: any) => {
         }
       }
     })();
-  }, [application, upgradeApp, allowedAccessNeeds, grantedAccessNeeds, accessApp, step, setStep]);
+  }, [application, upgradeApp, allowedAccessNeeds, grantedAccessNeeds, accessApp, step, setStep, podOwner]);
 
   useEffect(() => {
     if (accessNeedsLoaded && accessGrantsLoaded && agentRegistrationLoaded && !step) {
@@ -64,8 +65,9 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }: any) => {
         optional: optionalAccessNeeds
       })) {
         for (const accessNeed of accessNeeds) {
+          // The grants and registration of a group are not read: everything is asked again
           const matchingGrant =
-            typeof accessNeed === 'string'
+            !podOwner && typeof accessNeed === 'string'
               ? arrayOf(agentRegistration['apods:hasSpecialRights']).find(specialRight => specialRight === accessNeed)
               : accessGrants.find(
                   g =>
@@ -120,7 +122,8 @@ const UpgradeScreen = ({ application, accessApp, isTrustedApp }: any) => {
     setGrantedAccessNeeds,
     setMissingAccessNeeds,
     step,
-    setStep
+    setStep,
+    podOwner
   ]);
 
   const onRemove = useCallback(() => {

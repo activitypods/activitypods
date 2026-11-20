@@ -4,21 +4,23 @@ import { useTranslate } from 'react-admin';
 import { Alert, CircularProgress } from '@mui/material';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
 import useResource from '../../hooks/useResource';
+import useRealmContext from '../../hooks/useRealmContext';
 import { arrayOf, isStorageUri } from '../../utils';
 import DataContainerScreen from './DataContainerScreen';
 import DataResourceScreen from './DataResourceScreen';
 
 const DataShowPage = () => {
   // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
-  const { identity } = useCheckAuthenticated();
+  useCheckAuthenticated();
+  const { data: pod } = useRealmContext() as any;
   const translate = useTranslate();
   const { resourceUri } = useParams();
   // @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message
-  const canDisplayResource = isStorageUri(resourceUri, identity?.id);
+  const canDisplayResource = isStorageUri(resourceUri, pod?.id);
   // @ts-expect-error TS(2322): Type 'string | boolean' is not assignable to type ... Remove this comment to see the full error message
   const { data: resourceData, isLoaded } = useResource(resourceUri, { enabled: canDisplayResource });
 
-  if (identity?.id && !canDisplayResource) {
+  if (pod?.id && !canDisplayResource) {
     return (
       <Alert severity="error" sx={{ mt: 3 }}>
         {translate('app.message.cannot_display_resource')}

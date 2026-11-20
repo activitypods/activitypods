@@ -17,9 +17,32 @@ export type ResourceConfig = {
    * will look for a Data Registration whose shape tree targets one of these types.
    */
   types?: string | string[];
+  list?: {
+    /** Storages to read from. Defaults to `@all` */
+    storages?: StorageKey | StorageKey[];
+  };
+  create?: {
+    /** Storage where new resources are created. Defaults to `@user` */
+    storage?: StorageKey;
+  };
 };
 
 export type ResourcesConfig = Record<string, ResourceConfig>;
+
+export type StorageConfig = {
+  /** URI from which the containers of the storage are discovered (in ActivityPods, the WebID of its owner) */
+  uri: string;
+};
+
+export type StoragesConfig = Record<string, StorageConfig>;
+
+/**
+ * A key of `StoragesConfig`, or a special key:
+ * - `@user`: the Pod of the logged-in user
+ * - `@shared`: the storages the user gave the app access to, found through its access grants
+ * - `@all`: `@user`, the configured storages, and `@shared` if `readAccessGrants` is true
+ */
+export type StorageKey = '@user' | '@shared' | '@all' | (string & {});
 
 export type AuthSession = {
   /** The Solid-OIDC ID token, used as a bearer token for authenticated requests to the Pod */
@@ -122,6 +145,8 @@ export type AuthProviderConfig = {
 
 export type DataProviderConfig = {
   resources: ResourcesConfig;
+  /** Storages besides the Pod of the logged-in user, for example a storage owned by the app or a group */
+  storages?: StoragesConfig;
   authProvider: AuthProvider;
   /**
    * JSON-LD context sent along with every resource created or updated, and used to resolve
@@ -129,8 +154,8 @@ export type DataProviderConfig = {
    */
   jsonContext?: JsonContext;
   /**
-   * Also list the resources found through the access grants of the app registration. Slow, and
-   * usually not needed: resources shared with the user are cached in their containers.
+   * Include `@shared` in `@all`. Slow, and usually not needed: resources shared with the user
+   * are cached in their containers.
    */
   readAccessGrants?: boolean;
 };
@@ -138,8 +163,12 @@ export type DataProviderConfig = {
 export type LiveProviderConfig = {
   resources: ResourcesConfig;
   authProvider: AuthProvider;
+  /** Same as in `DataProviderConfig` */
+  storages?: StoragesConfig;
   /** Same role as in `DataProviderConfig`: used to resolve `types` into full URIs. */
   jsonContext?: JsonContext;
+  /** Same as in `DataProviderConfig` */
+  readAccessGrants?: boolean;
 };
 
 /** A Solid Notifications activity, as delivered over a WebSocketChannel2023 connection. */

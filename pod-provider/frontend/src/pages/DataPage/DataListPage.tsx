@@ -16,7 +16,10 @@ import { makeStyles } from 'tss-react/mui';
 import FolderIcon from '@mui/icons-material/Folder';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import { useContainers, useGetPrefixFromUri } from '@semapps/semantic-data-provider';
+import { useGetPrefixFromUri } from '@semapps/semantic-data-provider';
+import usePodContainers from '../../hooks/usePodContainers';
+import useRealmContext from '../../hooks/useRealmContext';
+import useDataPagePath from '../../hooks/useDataPagePath';
 
 const useStyles = makeStyles()(() => ({
   listItem: {
@@ -42,12 +45,14 @@ const DataListPage = () => {
   const [locale] = useLocaleState();
   const getPrefixFromUri = useGetPrefixFromUri();
   const developerMode = !!localStorage.getItem('developer_mode');
-  const containers = useContainers(undefined, '@default');
+  const { isGroup } = useRealmContext();
+  const containers = usePodContainers();
+  const getPath = useDataPagePath();
 
   return (
     <>
       <Typography variant="h2" component="h1" noWrap sx={{ mt: 2 }}>
-        {translate('app.page.data')}
+        {translate(isGroup ? 'app.page.data_short' : 'app.page.data')}
       </Typography>
       <Box>
         <List>
@@ -55,10 +60,7 @@ const DataListPage = () => {
             ?.filter(container => !container.private || developerMode)
             ?.map(container => (
               <ListItem className={classes.listItem} key={container.uri}>
-                <ListItemButton
-                  // @ts-expect-error TS(2345): Argument of type 'string | undefined' is not assig... Remove this comment to see the full error message
-                  onClick={() => navigate(`/data/${encodeURIComponent(container.uri)}`)}
-                >
+                <ListItemButton onClick={() => navigate(getPath(container.uri))}>
                   <ListItemAvatar>
                     {container.private === true ? (
                       <Badge

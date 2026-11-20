@@ -18,7 +18,8 @@ const Schema = {
             method,
             headers,
             body,
-            actorUri: app.id || app['@id']
+            actorUri: app.id || app['@id'],
+            onBehalfOf: actorUri
           });
           if (res.status >= 400) {
             this.logger.warn(
@@ -56,7 +57,8 @@ const Schema = {
             method: 'POST',
             headers: encoder.headers,
             body: await stream2buffer(Readable.from(encoder)),
-            actorUri: app.id || app['@id']
+            actorUri: app.id || app['@id'],
+            onBehalfOf: actorUri
           });
           if (res.status >= 400) {
             this.logger.warn(

@@ -15,19 +15,26 @@ import {
   useNotify
 } from 'react-admin';
 import ChoosePodProviderPage from './ChoosePodProviderPage/ChoosePodProviderPage';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useCheckAuthenticated } from '@semapps/auth-provider';
 import SimpleBox from '../layout/SimpleBox';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import { Box } from '@mui/material';
 import Header from '../common/Header';
+import { isURL } from '../utils';
 
 const CreateGroupPage = () => {
   const translate = useTranslate();
   const navigate = useNavigate();
   const notify = useNotify();
   const dataProvider = useDataProvider();
+  // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
+  useCheckAuthenticated();
   const { data: identity } = useGetIdentity();
-  const [podProviderUrl, setPodProviderUrl] = useState();
+  const [searchParams] = useSearchParams();
+  // An app may ask to come back with the WebID of the new group
+  const redirect = searchParams.get('redirect');
+  const [podProviderUrl, setPodProviderUrl] = useState(isURL(redirect) ? CONFIG.BACKEND_URL : undefined);
 
   const onSubmit = useCallback(
     async ({ id, type, name, image }: any) => {
@@ -90,14 +97,21 @@ const CreateGroupPage = () => {
 
         notify(`Group successfully created`, { type: 'success' });
 
+        if (isURL(redirect)) {
+          const redirectUrl = new URL(redirect!);
+          redirectUrl.searchParams.set('group', groupWebId!);
+          window.location.href = redirectUrl.toString();
+          return;
+        }
+
         // @ts-expect-error TS(2345): Argument of type 'undefined' is not assignable to ... Remove this comment to see the full error message
-        navigate(`/group/@${id}@${new URL(podProviderUrl).host}/settings`);
+        navigate(`/group/@${id}@${new URL(podProviderUrl).host}`);
       } catch (e) {
         // @ts-expect-error TS(2571): Object is of type 'unknown'.
         notify(`Could not create group. Error: ${e.message}`, { type: 'error' });
       }
     },
-    [podProviderUrl, identity, notify, dataProvider, navigate]
+    [podProviderUrl, identity, redirect, notify, dataProvider, navigate]
   );
 
   return !podProviderUrl ? (
@@ -114,7 +128,10 @@ const CreateGroupPage = () => {
     <>
       <Header title="app.titles.create_group" />
       <SimpleBox title={translate('app.action.create_group')} icon={<GroupAddIcon />}>
-        <Form onSubmit={onSubmit} defaultValues={{ type: 'foaf:Group' }}>
+        <Form
+          onSubmit={onSubmit}
+          defaultValues={{ type: 'foaf:Group', id: searchParams.get('id') || '', name: searchParams.get('name') || '' }}
+        >
           <TextInput source="id" label={translate('app.group.id')} fullWidth />
           <SelectInput
             source="type"

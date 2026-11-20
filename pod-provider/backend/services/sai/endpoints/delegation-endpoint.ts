@@ -1,6 +1,6 @@
 import path from 'path';
 const { MoleculerError } = require('moleculer').Errors;
-import { arrayOf, getDatasetFromUri, getId } from '@semapps/ldp';
+import { arrayOf, getDatasetFromUri, getId, getParentContainerUri } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { parseHeader, negotiateContentType, parseJson, parseTurtle } from '@semapps/middlewares';
 import { ServiceSchema } from 'moleculer';
@@ -55,28 +55,42 @@ const DelegationEndpointSchema = {
           webId: dataOwner
         });
 
-        if (delegatedGrant['interop:grantedBy'] !== webId) {
-          throw new MoleculerError('You cannot grant access for someone else', 401, 'FORBIDDEN');
+        if (delegatedGrant['interop:grantedBy'] !== webId || originalGrant['interop:grantee'] !== webId) {
+          throw new MoleculerError('You can only delegate the grants you received', 403, 'FORBIDDEN');
         }
 
         // Check delegation is allowed, except for applications
         if (
+          delegatedGrant['interop:granteeType'] !== 'interop:Application' &&
           (originalGrant['interop:delegationAllowed'] !== true ||
-            (originalGrant['interop:delegationLimit'] && originalGrant['interop:delegationLimit'] < 1)) &&
-          // @ts-expect-error TS(2367): This comparison appears to be unintentional becaus... Remove this comment to see the full error message
-          !delegatedGrant['interop:granteeType'] === 'interop:Application'
+            (originalGrant['interop:delegationLimit'] && originalGrant['interop:delegationLimit'] < 1))
         ) {
-          throw new MoleculerError('Delegation not allowed', 401, 'FORBIDDEN');
+          throw new MoleculerError('Delegation not allowed', 403, 'FORBIDDEN');
         }
+
+        const originalLimit = originalGrant['interop:delegationLimit'];
+        const delegatedLimit = delegatedGrant['interop:delegationLimit'];
+        if (
+          delegatedGrant['interop:delegationAllowed'] === true &&
+          (originalGrant['interop:delegationAllowed'] !== true || (originalLimit && !(delegatedLimit < originalLimit)))
+        ) {
+          throw new MoleculerError('The delegation limit of the original grant is exceeded', 403, 'FORBIDDEN');
+        }
+
+        // A grant on all the data of a registration may be delegated for some resources only
+        const isNarrowed =
+          originalGrant['interop:scopeOfGrant'] === 'interop:AllFromRegistry' &&
+          delegatedGrant['interop:scopeOfGrant'] === 'interop:SelectedFromRegistry';
 
         if (
           originalGrant['interop:dataOwner'] !== delegatedGrant['interop:dataOwner'] ||
-          originalGrant['interop:scopeOfGrant'] !== delegatedGrant['interop:scopeOfGrant'] ||
+          (originalGrant['interop:scopeOfGrant'] !== delegatedGrant['interop:scopeOfGrant'] && !isNarrowed) ||
           originalGrant['interop:hasDataRegistration'] !== delegatedGrant['interop:hasDataRegistration'] ||
           originalGrant['interop:registeredShapeTree'] !== delegatedGrant['interop:registeredShapeTree'] ||
-          originalGrant['interop:scopeOfGrant'] !== delegatedGrant['interop:scopeOfGrant'] ||
-          !arrayOf(delegatedGrant['interop:hasDataInstance']).every(uri =>
-            arrayOf(originalGrant['interop:hasDataInstance']).includes(uri)
+          !arrayOf(delegatedGrant['interop:hasDataInstance']).every((uri: string) =>
+            isNarrowed
+              ? getParentContainerUri(uri) === originalGrant['interop:hasDataRegistration']
+              : arrayOf(originalGrant['interop:hasDataInstance']).includes(uri)
           ) ||
           !arrayOf(delegatedGrant['interop:accessMode']).every(mode =>
             arrayOf(originalGrant['interop:accessMode']).includes(mode)

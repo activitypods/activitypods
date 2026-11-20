@@ -5,7 +5,6 @@ import { makeStyles } from 'tss-react/mui';
 const useStyles = makeStyles()(theme => ({
   card: {
     minWidth: 300,
-    maxWidth: 500,
     margin: '1em'
   },
   icon: {
@@ -27,9 +26,11 @@ const SimpleBox = ({
   icon,
   text,
   children,
-  infoText
+  infoText,
+  maxWidth = 500
 }: {
   title: string;
+  maxWidth?: number;
   icon?: React.ReactElement;
   text?: string;
   infoText?: string | React.ReactElement;
@@ -53,7 +54,10 @@ const SimpleBox = ({
         minHeight="100vh"
         sx={{ pb: { xs: 0, sm: 10 } }}
       >
-        <Card className={classes.card} sx={{ padding: 2, display: 'flex', flexDirection: 'column', rowGap: 1 }}>
+        <Card
+          className={classes.card}
+          sx={{ maxWidth, padding: 2, display: 'flex', flexDirection: 'column', rowGap: 1 }}
+        >
           <Box pb={text ? 2 : 0} display="flex" justifyContent="start">
             {icon && React.cloneElement(icon, { fontSize: 'large', className: classes.icon })}
             <Typography variant="h4" className={classes.title}>

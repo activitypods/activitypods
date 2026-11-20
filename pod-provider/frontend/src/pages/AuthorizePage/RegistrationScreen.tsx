@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { Link, useTranslate, useNotify } from 'react-admin';
+import { Link, useTranslate, useNotify, useGetOne } from 'react-admin';
 import { Box, Button } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
 import SimpleBox from '../../layout/SimpleBox';
@@ -9,14 +9,15 @@ import ProgressMessage from '../../common/ProgressMessage';
 import AppHeader from './AppHeader';
 import useRegisterApp from '../../hooks/useRegisterApp';
 
-const RegistrationScreen = ({ application, accessApp, isTrustedApp }: any) => {
+const RegistrationScreen = ({ application, accessApp, isTrustedApp, podOwner }: any) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [grantedAccessNeedsUris, setGrantedAccessNeedsUris] = useState();
   const translate = useTranslate();
   const notify = useNotify();
   const registerApp = useRegisterApp();
+  const { data: group } = useGetOne('Actor', { id: podOwner }, { enabled: !!podOwner });
 
-  const { requiredAccessNeeds, optionalAccessNeeds, loaded } = useAccessNeeds(application);
+  const { requiredAccessNeeds, optionalAccessNeeds, loaded } = useAccessNeeds(application, podOwner);
 
   useEffect(() => {
     if (loaded) {
@@ -34,7 +35,7 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp }: any) => {
     try {
       setIsRegistering(true);
 
-      await registerApp({ appUri: application.id, grantedAccessNeeds: grantedAccessNeedsUris });
+      await registerApp({ appUri: application.id, grantedAccessNeeds: grantedAccessNeedsUris, podOwner });
 
       await accessApp();
     } catch (e) {
@@ -42,15 +43,27 @@ const RegistrationScreen = ({ application, accessApp, isTrustedApp }: any) => {
       // @ts-expect-error TS(2571): Object is of type 'unknown'.
       notify(`Error on app registration: ${e.message}`, { type: 'error' });
     }
-  }, [registerApp, notify, application, grantedAccessNeedsUris, accessApp, setIsRegistering]);
+  }, [registerApp, notify, application, grantedAccessNeedsUris, podOwner, accessApp, setIsRegistering]);
 
-  if (isRegistering) return <ProgressMessage message="app.notification.app_registration_progress" />;
+  // Nothing to ask, e.g. the app only needs the data of a group whose access is given by its admins
+  const nothingToAsk = loaded && requiredAccessNeeds.length + optionalAccessNeeds.length === 0;
+  useEffect(() => {
+    if (nothingToAsk && grantedAccessNeedsUris && !isRegistering) onRegister();
+  }, [nothingToAsk, grantedAccessNeedsUris, isRegistering, onRegister]);
+
+  if (isRegistering || nothingToAsk) return <ProgressMessage message="app.notification.app_registration_progress" />;
 
   return (
     <SimpleBox
       title={translate('app.page.authorize')}
       icon={<WarningIcon />}
-      text={translate('app.helper.authorize_register')}
+      text={
+        podOwner
+          ? translate('app.helper.authorize_register_group', {
+              name: group?.['foaf:name'] || group?.name || group?.preferredUsername || podOwner
+            })
+          : translate('app.helper.authorize_register')
+      }
     >
       {application && (
         <>

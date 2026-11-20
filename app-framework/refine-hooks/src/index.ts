@@ -1,3 +1,4 @@
+export { default as useAccessControlRefresh } from './useAccessControlRefresh';
 export { default as useAuthProvider } from './useAuthProvider';
 export { default as useBackgroundChecks } from './useBackgroundChecks';
 export { default as useCollection } from './useCollection';

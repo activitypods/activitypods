@@ -154,4 +154,22 @@ describe('Access needs targeting the storage of a group', () => {
     expect(authorizations.map((a: any) => a['interop:registeredShapeTree'])).toEqual([PROFILE_SHAPE_TREE]);
     expect(await getSpecialRights(craig.id, craig.preferredUsername)).toEqual(['apods:PostOutbox']);
   });
+
+  test('An upgrade is needed when the user becomes member of the group', async () => {
+    await expect(call(craig, 'app-status.get', { appUri: APP_URI })).resolves.toMatchObject({ upgradeNeeded: false });
+
+    await podProvider.call('role-registrations.addMember', {
+      roleRegistrationUri: await podProvider.call('role-registrations.getUri', { groupWebId, role: 'member' }),
+      agentUri: craig.id
+    });
+    await expect(call(craig, 'app-status.get', { appUri: APP_URI })).resolves.toMatchObject({ upgradeNeeded: true });
+
+    await call(craig, 'registration-endpoint.upgrade', { appUri: APP_URI, acceptAllRequirements: true });
+
+    const authorizations = await getAuthorizations(craig.id, craig.preferredUsername);
+    expect(authorizations).toContainEqual(
+      expect.objectContaining({ 'interop:dataOwner': groupWebId, 'interop:registeredShapeTree': EVENT_SHAPE_TREE })
+    );
+    await expect(call(craig, 'app-status.get', { appUri: APP_URI })).resolves.toMatchObject({ upgradeNeeded: false });
+  });
 });

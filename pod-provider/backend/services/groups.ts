@@ -172,11 +172,13 @@ const GroupsService = {
 
         const roles = await ctx.call('role-registrations.listForAgent', { groupWebId, agentUri: webId });
         const { join } = roles.length === 0 ? await this.findJoinRequest(ctx, groupWebId, webId) : {};
+        const invitation = roles.length === 0 ? (await this.findInvitations(ctx, groupWebId, webId)).invites[0] : null;
 
         return {
           roles: roles.map((role: any) => ({ id: getSlugFromUri(getId(role)), label: role['skos:prefLabel'] })),
           specialRights: [...new Set(roles.flatMap((role: any) => arrayOf(role['interop:hasSpecialRight'])))],
-          ...(join && { joinRequest: join.id })
+          ...(join && { joinRequest: join.id }),
+          ...(invitation && { invitation: invitation.id })
         };
       }
     },
@@ -718,23 +720,25 @@ const GroupsService = {
       });
       await ctx.call('activitypub.collection.add', { collectionUri, item: invite.id }, { meta });
     },
-    async cancelInvitation(ctx, groupWebId, memberUri, undo = true) {
+    async findInvitations(ctx, groupWebId, memberUri) {
       const { collectionUri, meta } = await this.getCollection(
         ctx,
         groupWebId,
         this.settings.pendingInvitationsCollectionOptions
       );
       const pending = await ctx.call('activitypub.collection.get', { resourceUri: collectionUri }, { meta });
-      let found = false;
-      for (const invite of arrayOf(pending?.items)) {
-        if (!arrayOf(invite.target).includes(memberUri)) continue;
-        found = true;
+      const invites = arrayOf(pending?.items).filter((invite: any) => arrayOf(invite.target).includes(memberUri));
+      return { collectionUri, meta, invites };
+    },
+    async cancelInvitation(ctx, groupWebId, memberUri, undo = true) {
+      const { collectionUri, meta, invites } = await this.findInvitations(ctx, groupWebId, memberUri);
+      for (const invite of invites) {
         await ctx.call('activitypub.collection.remove', { collectionUri, item: invite.id }, { meta });
         if (undo) {
           await this.postAsGroup(ctx, groupWebId, { type: ACTIVITY_TYPES.UNDO, object: invite.id, to: memberUri });
         }
       }
-      return found;
+      return invites.length > 0;
     },
     async getJoinPolicy(ctx, groupWebId) {
       const group = await ctx.call('webid.get', { resourceUri: groupWebId });

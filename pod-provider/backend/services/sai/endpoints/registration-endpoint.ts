@@ -273,6 +273,23 @@ const RegistrationEndpointSchema = {
         const webId = await this.actAsPodOwner(ctx);
         return await ctx.call('app-registrations.getForAgent', { agentUri: agent, podOwner: webId });
       }
+    },
+
+    // True if the user became member of a group targeted by the app, which has not been given access yet
+    hasMissingGroupAccess: {
+      params: {
+        appUri: { type: 'string' },
+        webId: { type: 'string' }
+      },
+      async handler(ctx) {
+        const { appUri, webId } = ctx.params;
+        const { groupStorages } = await this.getApplicableGroups(ctx, appUri, webId, [webId], webId);
+        for (const { storage, accessNeedGroups } of groupStorages) {
+          const { accessNeeds } = await ctx.call('applications.getRequirements', { appUri, accessNeedGroups });
+          if ((await this.findMissingGroupNeeds(ctx, appUri, webId, storage, accessNeeds)).length > 0) return true;
+        }
+        return false;
+      }
     }
   },
   methods: {
@@ -410,9 +427,9 @@ const RegistrationEndpointSchema = {
       if (roles.length === 0) throw new MoleculerError(`You are not a member of ${storage}`, 403, 'FORBIDDEN');
     },
 
-    // Authorize the app to access the data registrations of the group, with the rights of the user
-    async authorizeGroupStorage(ctx, appUri, webId, storage, accessNeeds) {
+    async findMissingGroupNeeds(ctx, appUri, webId, storage, accessNeeds) {
       const existing = await ctx.call('access-authorizations.listByGrantee', { grantee: appUri, webId });
+      const missing = [];
       for (const accessNeedUri of accessNeeds) {
         if (
           existing.some(
@@ -427,7 +444,15 @@ const RegistrationEndpointSchema = {
         });
         // The group doesn't have this type of data
         if (!dataRegistrationUri) continue;
+        missing.push({ accessNeedUri, accessNeed, dataRegistrationUri });
+      }
+      return missing;
+    },
 
+    // Authorize the app to access the data registrations of the group, with the rights of the user
+    async authorizeGroupStorage(ctx, appUri, webId, storage, accessNeeds) {
+      const missing = await this.findMissingGroupNeeds(ctx, appUri, webId, storage, accessNeeds);
+      for (const { accessNeedUri, accessNeed, dataRegistrationUri } of missing) {
         await ctx.call('access-authorizations.post', {
           resource: {
             type: 'interop:AccessAuthorization',

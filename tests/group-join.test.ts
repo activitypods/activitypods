@@ -193,6 +193,10 @@ describe('Test joining groups', () => {
         expect.objectContaining({ webId: craig.id, invited: true })
       );
     });
+    await expect((await fetchAs(craig, 'me')).json()).resolves.toMatchObject({
+      roles: [],
+      invitation: expect.any(String)
+    });
 
     const joinActivity = await join(craig);
     await waitForAnswer(craig, 'Accept', joinActivity);

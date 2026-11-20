@@ -64,11 +64,13 @@ const AppStatusService = {
           ? await ctx.call('solid-notifications.provider.webhook.getAppChannels', { appUri, webId })
           : undefined;
 
-        // A upgrade is needed if the access need group(s) have changed
+        // A upgrade is needed if the access need group(s) have changed, or if the user joined a group used by the app
         const upgradeNeeded =
           onlineBackend &&
           installed &&
-          !arraysEqual(localAppData['interop:hasAccessNeedGroup'], remoteAppData['interop:hasAccessNeedGroup']);
+          (!arraysEqual(localAppData['interop:hasAccessNeedGroup'], remoteAppData['interop:hasAccessNeedGroup']) ||
+            (webId === ctx.meta.webId &&
+              (await ctx.call('registration-endpoint.hasMissingGroupAccess', { appUri, webId }))));
 
         return {
           onlineBackend,

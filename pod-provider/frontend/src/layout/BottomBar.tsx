@@ -8,6 +8,7 @@ import StorageIcon from '@mui/icons-material/Storage';
 import AppsIcon from '@mui/icons-material/Apps';
 import SettingsIcon from '@mui/icons-material/Settings';
 import useRealmContext from '../hooks/useRealmContext';
+import useGroupRights from '../hooks/useGroupRights';
 
 const useStyles = makeStyles()(theme => ({
   box: {
@@ -40,6 +41,7 @@ const BottomBar = () => {
   const translate = useTranslate();
   const location = useLocation();
   const { isGroup, data: group } = useRealmContext() as any;
+  const { rights } = useGroupRights();
 
   useEffect(() => {
     if (isGroup && location.pathname.endsWith('/members')) {
@@ -51,7 +53,7 @@ const BottomBar = () => {
     } else if (location.pathname.startsWith('/apps')) {
       // @ts-expect-error TS(2345): Argument of type '"apps"' is not assignable to par... Remove this comment to see the full error message
       setValue('apps');
-    } else if (location.pathname.startsWith('/data')) {
+    } else if (location.pathname.startsWith('/data') || (isGroup && location.pathname.includes('/data'))) {
       // @ts-expect-error TS(2345): Argument of type '"data"' is not assignable to par... Remove this comment to see the full error message
       setValue('data');
     } else {
@@ -107,13 +109,13 @@ const BottomBar = () => {
               aria-description={translate('app.accessibility.apps_link_description')}
             />
           )}
-          {!isGroup && (
+          {(!isGroup || rights.includes('interop:ManageAccess')) && (
             <BottomNavigationAction
               label={translate('app.page.data_short')}
               value="data"
               icon={<StorageIcon />}
               component={Link}
-              to="/data"
+              to={isGroup ? `/group/${group?.webfingerId}/data` : '/data'}
               classes={{ selected: classes.selected }}
               aria-label={translate('app.page.data')}
               aria-description={translate('app.accessibility.data_link_description')}

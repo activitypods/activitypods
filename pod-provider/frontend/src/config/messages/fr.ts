@@ -28,6 +28,7 @@ export default {
       signup: "S'inscrire",
       sign_in: 'Connexion',
       share: 'Partager',
+      manage_access: "Gérer l'accès",
       reset_password: 'Mot de passe oublié ?',
       revoke_access: "Révoquer l'accès",
       set_new_password: 'Definir un nouveau mot de passe',
@@ -70,6 +71,7 @@ export default {
       ReadMembers: 'Voir les membres',
       ManageMembers: 'Ajouter et retirer des membres',
       ManageRoles: 'Gérer les rôles',
+      ManageAccess: 'Partager les données du groupe',
       ChangeJoinPolicy: "Modifier la politique d'adhésion"
     },
     join_policy: {
@@ -152,6 +154,14 @@ export default {
       join_policy: "Politique d'adhésion",
       roles: 'Rôles'
     },
+    share: {
+      everyone: 'Tout le monde',
+      authenticated: 'Utilisateurs connectés',
+      read: 'Lire',
+      write: 'Modifier',
+      share: 'Partager',
+      edit: 'Modifier les droits'
+    },
     authorization: {
       required: 'Accès requis',
       optional: 'Accès optionnel',
@@ -159,6 +169,9 @@ export default {
       append: 'Enrichir',
       write: 'Écrire',
       control: 'Administrer',
+      none: 'Aucun accès',
+      read_write: 'Lire et écrire',
+      remove: "Retirer l'accès",
       read_inbox: 'Lire ma boîte de réception',
       read_outbox: "Lire ma boîte d'envoi",
       post_outbox: "Poster dans ma boîte d'envoi",
@@ -180,6 +193,8 @@ export default {
       actions: 'Actions'
     },
     input: {
+      share_search: 'Ajouter un contact',
+      share_search_group: 'Ajouter un membre ou un rôle',
       about_you: 'Quelques mots sur vous',
       message: 'Message',
       user_id: 'Identifiant utilisateur',
@@ -227,9 +242,21 @@ export default {
       create_profile:
         'Maintenant que votre compte est créé, veuillez créer votre profil. Celui-ci ne sera visible par défaut que des personnes que vous acceptez dans votre réseau.',
       authorize_register: "Pour être utilisée, l'application requiert les autorisations suivantes",
+      authorize_register_group:
+        "Pour être utilisée, l'application requiert les autorisations suivantes sur le porte-données de %{name}",
       authorize_upgrade:
         "L'application a été mise à jour et requiert maintenant les nouvelles autorisations ci-dessous",
       share: 'Sélectionner les contacts avec lesquels vous souhaitez partager la resource %{resourceName}',
+      share_group: 'Choisissez les droits des rôles et des membres du groupe sur la ressource %{resourceName}',
+      type_access: 'Accès à ces données',
+      resource_access: 'Accès à cette donnée',
+      via_type: 'via « %{typeName} »',
+      no_access: "Personne n'y a accès pour l'instant",
+      share_with_group_members: 'Les membres du groupe y auront accès en lecture',
+      share_type:
+        'Sélectionner les contacts avec lesquels vous souhaitez partager toutes les données de type « %{typeName} »',
+      share_type_group:
+        'Choisissez les droits des rôles et des membres du groupe sur toutes les données de type « %{typeName} »',
       invite_text_logged_out:
         "Un espace personnel est l'endroit où vous stockez vos données. Tout comme les comptes email, il est décentralisé, ce qui vous permet de choisir un fournisseur de confiance. Au lieu de créer un nouveau compte pour chaque nouvelle application, vous pourrez utiliser le même compte. Les applications compatibles stockeront les données dans votre espace.",
       invite_text_logged_in:
@@ -330,6 +357,7 @@ export default {
       profile_picture: 'Photo de profil'
     },
     group: {
+      role: 'Rôle',
       id: 'Identifiant unique',
       type: 'Type',
       type_organization: 'Organisation',
@@ -381,7 +409,8 @@ export default {
       group_settings: 'Paramètres du groupe %{groupName} - %{appName}',
       group_members: 'Membres du groupe %{groupName} - %{appName}',
       group_roles: 'Rôles du groupe %{groupName} - %{appName}',
-      my_groups: 'Mes groupes - %{appName}'
+      my_groups: 'Mes groupes - %{appName}',
+      share: 'Partager - %{appName}'
     },
     placeholder: {
       user_id: '@utilisateur@serveur.com',

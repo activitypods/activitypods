@@ -134,7 +134,12 @@ describe('Test groups members handling', () => {
     expect(admin['interop:isSystemRole']).toBeUndefined();
     expect(admin['interop:hasMember']).toBeUndefined();
     expect(arrayOf(admin['interop:hasSpecialRight'])).toEqual(
-      expect.arrayContaining(['interop:ReadMembers', 'interop:ManageMembers', 'interop:ManageRoles'])
+      expect.arrayContaining([
+        'interop:ReadMembers',
+        'interop:ManageMembers',
+        'interop:ManageRoles',
+        'interop:ManageAccess'
+      ])
     );
 
     await expect(getRole('member')).resolves.toMatchObject({
@@ -215,7 +220,7 @@ describe('Test groups members handling', () => {
     res = await fetchAs(alice, 'me');
     const aliceRoles = await res.json();
     expect(aliceRoles.roles.map((role: any) => role.id)).toEqual(expect.arrayContaining(['member', 'admin', 'owner']));
-    expect(aliceRoles.specialRights).toHaveLength(4);
+    expect(aliceRoles.specialRights).toHaveLength(5);
     expect(aliceRoles.specialRights).toContain('interop:ChangeJoinPolicy');
 
     await expect((await fetchAs(craig, 'me')).json()).resolves.toEqual({ roles: [], specialRights: [] });
@@ -430,9 +435,11 @@ describe('Test groups members handling', () => {
       const member = await getRole('member');
       expect(arrayOf(member['interop:hasMember'])).not.toContain(alice.id);
     });
-    await expect(
-      podProvider.call('social-agent-registrations.getForAgent', { agentUri: alice.id, podOwner: groupWebId })
-    ).resolves.toBeFalsy();
+    await waitForExpect(async () => {
+      await expect(
+        podProvider.call('social-agent-registrations.getForAgent', { agentUri: alice.id, podOwner: groupWebId })
+      ).resolves.toBeFalsy();
+    });
     await waitForExpect(async () => {
       await expect(getInbox(alice)).resolves.toContainEqual(
         expect.objectContaining({ type: 'Accept', actor: groupWebId, object: expect.stringContaining(alice.id) })

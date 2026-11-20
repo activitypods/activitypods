@@ -1,5 +1,6 @@
 import rdf from '@rdfjs/data-model';
-import { ControlledContainerMixin, arrayOf, getId, getSlugFromUri } from '@semapps/ldp';
+import { ControlledContainerMixin, arrayOf, getDatasetFromUri, getId, getSlugFromUri } from '@semapps/ldp';
+import urlJoin from 'url-join';
 import { MIME_TYPES } from '@semapps/mime-types';
 import { ServiceSchema } from 'moleculer';
 
@@ -24,7 +25,12 @@ const RoleRegistrationsSchema = {
         const containerUri = await this.actions.getContainerUri({ webId: groupWebId }, { parentCtx: ctx });
         await this.actions.waitForContainerCreation({ containerUri }, { parentCtx: ctx });
 
-        const specialRights = ['interop:ReadMembers', 'interop:ManageMembers', 'interop:ManageRoles'];
+        const specialRights = [
+          'interop:ReadMembers',
+          'interop:ManageMembers',
+          'interop:ManageRoles',
+          'interop:ManageAccess'
+        ];
 
         await this.actions.createRole(
           {
@@ -94,6 +100,8 @@ const RoleRegistrationsSchema = {
         );
 
         await ctx.call('role-registry.add', { podOwner: groupWebId, roleRegistrationUri });
+        await this.syncAccess(ctx, groupWebId);
+        if (this.canManageAccess(role)) await this.setAdminRights(ctx, groupWebId, roleRegistrationUri, true);
 
         return roleRegistrationUri;
       }
@@ -112,6 +120,28 @@ const RoleRegistrationsSchema = {
           },
           { parentCtx: ctx }
         );
+
+        const groupWebId = roleRegistration['interop:registeredBy'];
+        if (role['interop:extendsRole'] !== undefined) {
+          await this.syncAccess(ctx, groupWebId);
+        }
+        if (role['interop:hasSpecialRight'] !== undefined) {
+          const canManageAccess = this.canManageAccess(role);
+          if (canManageAccess !== this.canManageAccess(roleRegistration)) {
+            await this.setAdminRights(ctx, groupWebId, resourceUri, canManageAccess);
+          }
+        }
+      }
+    },
+
+    addAdminAccess: {
+      // Give full access to a new data registration to the roles with the ManageAccess right
+      async handler(ctx) {
+        const { groupWebId, dataRegistrationUri } = ctx.params;
+        const roles = await this.actions.listForGroup({ groupWebId }, { parentCtx: ctx });
+        for (const role of roles.filter((r: any) => this.canManageAccess(r))) {
+          await this.setAdminAccess(ctx, groupWebId, getId(role), dataRegistrationUri, true);
+        }
       }
     },
 
@@ -139,8 +169,84 @@ const RoleRegistrationsSchema = {
           }
         }
 
+        const roleRegistration = await this.actions.get({ resourceUri, webId: 'system' }, { parentCtx: ctx });
+        if (this.canManageAccess(roleRegistration)) await this.setAdminRights(ctx, groupWebId, resourceUri, false);
+
         await ctx.call('role-registry.remove', { podOwner: groupWebId, roleRegistrationUri: resourceUri });
         await this.actions.delete({ resourceUri, webId: 'system' }, { parentCtx: ctx });
+
+        await ctx.call(
+          'webacl.group.delete',
+          { groupUri: await this.getWacGroupUri(ctx, groupWebId, resourceUri), webId: 'system' },
+          { meta: { dataset: getDatasetFromUri(groupWebId) } }
+        );
+        await this.syncAccess(ctx, groupWebId);
+      }
+    },
+
+    isRole: {
+      async handler(ctx) {
+        const { agentUri, podOwner } = ctx.params;
+        const containerUri = await this.actions.getContainerUri({ webId: podOwner }, { parentCtx: ctx });
+        const { dataset } = ctx.meta;
+        try {
+          return await ctx.call(
+            'ldp.container.includes',
+            { containerUri, resourceUri: agentUri, webId: 'system' },
+            { meta: { dataset: getDatasetFromUri(podOwner) } }
+          );
+        } finally {
+          ctx.meta.dataset = dataset;
+        }
+      }
+    },
+
+    getEffectiveMembers: {
+      async handler(ctx) {
+        const { groupWebId } = ctx.params;
+        const roles = await this.actions.listForGroup({ groupWebId }, { parentCtx: ctx });
+        const effectiveMembers = this.getEffectiveMembers(roles);
+        return Object.fromEntries([...effectiveMembers].map(([roleUri, members]) => [roleUri, [...members]]));
+      }
+    },
+
+    getWacGroupUri: {
+      async handler(ctx) {
+        const { groupWebId, roleRegistrationUri } = ctx.params;
+        return this.getWacGroupUri(ctx, groupWebId, roleRegistrationUri);
+      }
+    },
+
+    syncWacGroups: {
+      // Each role has a WAC group with its effective members, used to give rights to the role
+      async handler(ctx) {
+        const { groupWebId } = ctx.params;
+        const meta = { dataset: getDatasetFromUri(groupWebId) };
+        const roles = await this.actions.listForGroup({ groupWebId }, { parentCtx: ctx });
+        const effectiveMembers = this.getEffectiveMembers(roles);
+
+        for (const role of roles) {
+          const groupUri = await this.getWacGroupUri(ctx, groupWebId, getId(role));
+          let currentMembers: string[] = [];
+
+          if (await ctx.call('webacl.group.exist', { groupUri, webId: 'system' }, { meta })) {
+            currentMembers = await ctx.call('webacl.group.getMembers', { groupUri, webId: 'system' }, { meta });
+          } else {
+            await ctx.call('webacl.group.create', { groupUri, webId: groupWebId }, { meta });
+          }
+
+          const members = effectiveMembers.get(getId(role))!;
+          for (const memberUri of members) {
+            if (!currentMembers.includes(memberUri)) {
+              await ctx.call('webacl.group.addMember', { groupUri, memberUri, webId: 'system' }, { meta });
+            }
+          }
+          for (const memberUri of currentMembers) {
+            if (!members.has(memberUri)) {
+              await ctx.call('webacl.group.removeMember', { groupUri, memberUri, webId: 'system' }, { meta });
+            }
+          }
+        }
       }
     },
 
@@ -224,6 +330,67 @@ const RoleRegistrationsSchema = {
     }
   },
   methods: {
+    async syncAccess(ctx, groupWebId) {
+      await this.actions.syncWacGroups({ groupWebId }, { parentCtx: ctx });
+      await ctx.call('role-access.syncGrants', { groupWebId });
+    },
+    canManageAccess(role) {
+      return arrayOf(role['interop:hasSpecialRight']).includes('interop:ManageAccess');
+    },
+    getAdminRights(groupUri: string, withDefault: boolean) {
+      const rights = { group: { uri: groupUri, read: true } };
+      return withDefault ? { ...rights, default: rights } : rights;
+    },
+    // The roles with the ManageAccess right can read the registries and have full access to the data of the group
+    async setAdminRights(ctx, groupWebId: string, roleRegistrationUri: string, granted: boolean) {
+      const groupUri = await this.getWacGroupUri(ctx, groupWebId, roleRegistrationUri);
+
+      const registriesUris = [];
+      for (const service of ['registry-set', 'data-registry', 'auth-registry'] as const) {
+        registriesUris.push(await ctx.call(`${service}.waitForResourceCreation`, { webId: groupWebId }));
+      }
+      const authorizationsUri = await ctx.call('access-authorizations.getContainerUri', { webId: groupWebId });
+      await ctx.call('access-authorizations.waitForContainerCreation', { containerUri: authorizationsUri });
+      const dataRegistry = await ctx.call('data-registry.get', { resourceUri: registriesUris[1], webId: 'system' });
+
+      const resources = [...registriesUris.map(uri => [uri, false]), [authorizationsUri, true]];
+      for (const [resourceUri, withDefault] of resources) {
+        const rights = this.getAdminRights(groupUri, withDefault);
+        await ctx.call(granted ? 'webacl.resource.addRights' : 'webacl.resource.removeRights', {
+          resourceUri,
+          [granted ? 'additionalRights' : 'rights']: rights,
+          webId: 'system'
+        });
+      }
+
+      for (const dataRegistrationUri of arrayOf(dataRegistry['interop:hasDataRegistration'])) {
+        await this.setAdminAccess(ctx, groupWebId, roleRegistrationUri, dataRegistrationUri, granted);
+      }
+    },
+    async setAdminAccess(ctx, groupWebId: string, roleRegistrationUri: string, dataRegistrationUri: string, granted) {
+      const dataRegistration = await ctx.call('data-registrations.get', { dataRegistrationUri });
+      const params = {
+        shapeTreeUri: dataRegistration['interop:registeredShapeTree'],
+        grantee: roleRegistrationUri,
+        webId: groupWebId
+      };
+      const opts = { meta: { webId: groupWebId, dataset: getDatasetFromUri(groupWebId) } };
+      if (granted) {
+        await ctx.call(
+          'access-authorizations.addForShapeTree',
+          // The admins may also share the data, e.g. from an application
+          { ...params, accessModes: ['acl:Read', 'acl:Write'], delegationAllowed: true },
+          opts
+        );
+      } else {
+        await ctx.call('access-authorizations.removeForShapeTree', params, opts);
+      }
+    },
+    async getWacGroupUri(ctx, groupWebId, roleRegistrationUri) {
+      return await ctx.call('webacl.group.getUri', {
+        groupSlug: `${new URL(groupWebId).pathname}/roles/${getSlugFromUri(roleRegistrationUri)}`
+      });
+    },
     getEffectiveMembers(roles: any[]) {
       const members = new Map<string, Set<string>>(
         roles.map(role => [getId(role), new Set(arrayOf(role['interop:hasMember']))])
@@ -288,6 +455,8 @@ const RoleRegistrationsSchema = {
         },
         { parentCtx: ctx }
       );
+
+      await this.syncAccess(ctx, roleRegistration['interop:registeredBy']);
     }
   }
 } satisfies ServiceSchema;

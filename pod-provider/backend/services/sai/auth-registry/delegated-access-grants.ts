@@ -6,6 +6,8 @@ import AccessGrantsMixin from '../../../mixins/access-grants.ts';
 import QueueService from 'moleculer-bull';
 import { ServiceSchema } from 'moleculer';
 import * as CONFIG from '../../../config/config.ts';
+import { arraysEqual } from '../../../utils.ts';
+import { getScopeOfGrant } from './access-grants.ts';
 
 const scopeAllJobOptions = {
   attempts: 3,
@@ -16,10 +18,17 @@ const scopeAllJobOptions = {
 };
 
 // The replaced grant of the original grant must not be kept: it may not exist anymore
+// The links to the role must not be kept either, or the delegated grant would give no WAC rights
+// The grants giving the most rights first
+const byRights = (a: any, b: any) =>
+  Number(`${b['interop:delegationAllowed']}` === 'true') - Number(`${a['interop:delegationAllowed']}` === 'true') ||
+  arrayOf(b['interop:accessMode']).length - arrayOf(a['interop:accessMode']).length;
+
 const copyGrant = (grant: any) => {
   const {
     id,
     'interop:replaces': replaces,
+    'interop:derivedFromRoleRegistration': derivedFromRoleRegistration,
     'dc:created': created,
     'dc:modified': modified,
     'dc:creator': creator,
@@ -127,11 +136,7 @@ const DelegatedAccessGrantsSchema = {
           ctx.meta.dataset = getDatasetFromUri(dataOwnerUri);
 
           try {
-            await ctx.call(
-              'ldp.resource.delete',
-              { resourceUri: delegatedGrantUri, webId: dataOwnerUri },
-              { parentCtx: ctx }
-            );
+            await this.actions.delete({ resourceUri: delegatedGrantUri, webId: dataOwnerUri }, { parentCtx: ctx });
           } catch (e) {
             this.logger.warn(`Could not delete delegated grant ${delegatedGrantUri}. Deleting local cache anyway.`);
           }
@@ -161,6 +166,25 @@ const DelegatedAccessGrantsSchema = {
             await ctx.call('social-agent-registrations.removeGrant', { grant: delegatedGrant });
           }
         }
+
+        if (delegatedGrant['interop:granteeType'] === 'interop:SocialAgent') {
+          const grantedBy = delegatedGrant['interop:grantedBy'];
+          const outboxUri = await ctx.call('activitypub.actor.getCollectionUri', {
+            actorUri: grantedBy,
+            predicate: 'outbox'
+          });
+          await ctx.call(
+            'activitypub.outbox.post',
+            {
+              collectionUri: outboxUri,
+              type: ACTIVITY_TYPES.DELETE,
+              object: delegatedGrantUri,
+              to: delegatedGrant['interop:grantee'],
+              transient: true
+            },
+            { meta: { webId: grantedBy } }
+          );
+        }
       }
     },
 
@@ -174,11 +198,24 @@ const DelegatedAccessGrantsSchema = {
           shapeTreeUri: grant['interop:registeredShapeTree']
         });
 
+        const bestGrant = authorizations.length > 0 ? await this.getBestGrant(ctx, grant, podOwner) : grant;
         for (const authorization of authorizations) {
+          // Data shared with the pod owner is only delegated to applications, not to the social agents with whom we shared this type
+          if (authorization['interop:granteeType'] !== 'interop:Application') continue;
           await ctx.call('delegated-access-grants.generateFromSingleScopeAllAuthorization', {
             authorization,
-            grant
+            grant: bestGrant
           });
+        }
+
+        // Applications registered by a member for the data registration of a group
+        const registryAuthorizations = await ctx.call('access-authorizations.listScopeAllFromRegistry', {
+          podOwner,
+          dataRegistrationUri: grant['interop:hasDataRegistration']
+        });
+        // The delegated grant is regenerated if another grant of the member is now better
+        for (const authorization of registryAuthorizations) {
+          await this.actions.generateFromAuthorization({ authorization, webId: podOwner }, { parentCtx: ctx });
         }
       }
     },
@@ -344,18 +381,62 @@ const DelegatedAccessGrantsSchema = {
       async handler(ctx) {
         const { authorization } = ctx.params;
         const webId = ctx.params.webId || ctx.meta.webId;
+        // Authorization given by a member to an application, for the data registration of a group
+        // The grant received through the member's roles doesn't satisfy the application's access need
+        const isFromRegistry = authorization['interop:scopeOfAuthorization'] === 'interop:AllFromRegistry';
 
         // Find original grant (it should be stored in the user's local cache)
         const grantsContainer = await ctx.call('access-grants.list', {
           filters: {
-            'http://www.w3.org/ns/solid/interop#satisfiesAccessNeed': authorization['interop:satisfiesAccessNeed'],
+            ...(!isFromRegistry && {
+              'http://www.w3.org/ns/solid/interop#satisfiesAccessNeed': authorization['interop:satisfiesAccessNeed']
+            }),
             'http://www.w3.org/ns/solid/interop#dataOwner': authorization['interop:dataOwner'],
             'http://www.w3.org/ns/solid/interop#hasDataRegistration': authorization['interop:hasDataRegistration']
           },
           webId
         });
-        const grant = grantsContainer['ldp:contains']?.[0];
-        if (!grant) throw new Error(`Could not find grant generated from authorization ${getId(authorization)}`);
+        // Several grants may have been received for the same registration
+        const grants = arrayOf(grantsContainer['ldp:contains']);
+        const includes = (a: any, b: any) => arrayOf(b).every(item => arrayOf(a).includes(item));
+        // With several roles, a member gets several grants: the app gets the one giving the most rights
+        if (isFromRegistry) grants.sort(byRights);
+        const grant =
+          grants.find(
+            (g: any) =>
+              (authorization['interop:scopeOfAuthorization'] === 'interop:SelectedFromRegistry'
+                ? includes(g['interop:hasDataInstance'], authorization['interop:hasDataInstance'])
+                : g['interop:scopeOfGrant'] === getScopeOfGrant(authorization)) &&
+              includes(g['interop:accessMode'], authorization['interop:accessMode'])
+          ) || grants[0];
+        if (!grant) {
+          // The member may receive the grant later, when a role is given access to this data
+          if (isFromRegistry) return undefined;
+          throw new Error(`Could not find grant generated from authorization ${getId(authorization)}`);
+        }
+
+        if (isFromRegistry) {
+          const container = await this.actions.list(
+            {
+              filters: {
+                'http://www.w3.org/ns/solid/interop#grantee': authorization['interop:grantee'],
+                'http://www.w3.org/ns/solid/interop#dataOwner': authorization['interop:dataOwner'],
+                'http://www.w3.org/ns/solid/interop#hasDataRegistration': authorization['interop:hasDataRegistration']
+              },
+              webId
+            },
+            { parentCtx: ctx }
+          );
+          const existing = arrayOf(container['ldp:contains']).filter(
+            (delegatedGrant: any) => delegatedGrant['interop:scopeOfGrant'] === 'interop:AllFromRegistry'
+          );
+          if (existing.length === 1 && existing[0]['interop:delegationOfGrant'] === getId(grant)) {
+            return getId(existing[0]);
+          }
+          for (const delegatedGrant of existing) {
+            await this.actions.remoteDelete({ delegatedGrant, webId }, { parentCtx: ctx });
+          }
+        }
 
         const delegationAllowed =
           grant['interop:delegationAllowed'] &&
@@ -370,6 +451,17 @@ const DelegatedAccessGrantsSchema = {
               'interop:granteeType': authorization['interop:granteeType'],
               'interop:grantedBy': webId,
               'interop:delegationOfGrant': getId(grant),
+              // Only delegate what is authorized, which may be less than what the original grant gives
+              ...(authorization['interop:scopeOfAuthorization'] === 'interop:SelectedFromRegistry' && {
+                'interop:scopeOfGrant': 'interop:SelectedFromRegistry',
+                'interop:hasDataInstance': authorization['interop:hasDataInstance']
+              }),
+              'interop:accessMode': isFromRegistry
+                ? arrayOf(authorization['interop:accessMode']).filter(mode =>
+                    arrayOf(grant['interop:accessMode']).includes(mode)
+                  )
+                : authorization['interop:accessMode'],
+              'interop:derivedFromRoleRegistration': authorization['interop:derivedFromRoleRegistration'],
               'interop:delegationAllowed': delegationAllowed ? true : undefined,
               'interop:delegationLimit':
                 delegationAllowed && grant['interop:delegationLimit'] ? grant['interop:delegationLimit'] - 1 : undefined
@@ -459,7 +551,13 @@ const DelegatedAccessGrantsSchema = {
           { parentCtx: ctx }
         );
 
-        return filteredContainer['ldp:contains']?.[0];
+        // The delegated grant has the instances of the original grant, unless the authorization selects them
+        return arrayOf(filteredContainer['ldp:contains']).find(
+          (delegatedGrant: any) =>
+            arraysEqual(delegatedGrant['interop:accessMode'], authorization['interop:accessMode']) &&
+            (authorization['interop:scopeOfAuthorization'] !== 'interop:SelectedFromRegistry' ||
+              arraysEqual(delegatedGrant['interop:hasDataInstance'], authorization['interop:hasDataInstance']))
+        );
       }
     },
 
@@ -492,6 +590,22 @@ const DelegatedAccessGrantsSchema = {
     }
   },
   methods: {
+    // Among the grants received for the same data (e.g. through several roles), the one giving the most rights
+    async getBestGrant(ctx, grant, podOwner) {
+      const container = await ctx.call('access-grants.list', {
+        filters: {
+          'http://www.w3.org/ns/solid/interop#dataOwner': grant['interop:dataOwner'],
+          'http://www.w3.org/ns/solid/interop#hasDataRegistration': grant['interop:hasDataRegistration']
+        },
+        webId: podOwner
+      });
+      const grants = arrayOf(container['ldp:contains']).filter(
+        (g: any) =>
+          g['interop:scopeOfGrant'] === grant['interop:scopeOfGrant'] &&
+          arraysEqual(g['interop:hasDataInstance'], grant['interop:hasDataInstance'])
+      );
+      return grants.sort(byRights)[0] || grant;
+    },
     async updateAgentRegistration(ctx, authorization, issuedUris, deletedGrants) {
       // The delegated grants generated from an authorization all have the same grantee and grantor
       const toGrant = (uri: string) => ({

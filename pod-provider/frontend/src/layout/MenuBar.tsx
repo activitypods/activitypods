@@ -3,6 +3,7 @@ import { useTranslate, Link } from 'react-admin';
 import { Box, Container, Breadcrumbs } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import useRealmContext from '../hooks/useRealmContext';
+import useGroupRights from '../hooks/useGroupRights';
 
 const useStyles = makeStyles()(theme => ({
   menuBar: {
@@ -26,6 +27,7 @@ const MenuBar = () => {
   const { classes } = useStyles();
   const translate = useTranslate();
   const { isGroup, data } = useRealmContext();
+  const { rights } = useGroupRights();
   return (
     <Box className={classes.menuBar}>
       <Container>
@@ -50,16 +52,6 @@ const MenuBar = () => {
               {translate('app.page.apps')}
             </Link>
           )}
-          {!isGroup && (
-            <Link
-              to="/data"
-              className={classes.link}
-              aria-label={translate('app.page.data')}
-              aria-description={translate('app.accessibility.data_link_description')}
-            >
-              {translate('app.page.data')}
-            </Link>
-          )}
           {isGroup && (
             <Link
               to={`/group/${data?.webfingerId}/members`}
@@ -67,6 +59,16 @@ const MenuBar = () => {
               aria-label={translate('app.page.members')}
             >
               {translate('app.page.members')}
+            </Link>
+          )}
+          {(!isGroup || rights.includes('interop:ManageAccess')) && (
+            <Link
+              to={isGroup ? `/group/${data?.webfingerId}/data` : '/data'}
+              className={classes.link}
+              aria-label={translate(isGroup ? 'app.page.data_short' : 'app.page.data')}
+              aria-description={translate('app.accessibility.data_link_description')}
+            >
+              {translate(isGroup ? 'app.page.data_short' : 'app.page.data')}
             </Link>
           )}
           <Link

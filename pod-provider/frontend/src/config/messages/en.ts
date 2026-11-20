@@ -28,6 +28,8 @@ export default {
       send_request: 'Send request',
       signup: 'Signup',
       sign_in: 'Log in',
+      share: 'Share',
+      manage_access: 'Manage access',
       reset_password: 'Reset password',
       revoke_access: 'Revoke access',
       set_new_password: 'Set new password',
@@ -70,6 +72,7 @@ export default {
       ReadMembers: 'See the members',
       ManageMembers: 'Add and remove members',
       ManageRoles: 'Manage roles',
+      ManageAccess: 'Share the group data',
       ChangeJoinPolicy: 'Change the join policy'
     },
     join_policy: {
@@ -109,6 +112,7 @@ export default {
       add_contact: 'Send a connection request',
       create_profile: 'Create your profile',
       authorize: 'Authorization required',
+      share: 'Share',
       groups: 'Tags',
       groups_short: 'Tags',
       invite: '%{username} invited you to their network',
@@ -151,6 +155,14 @@ export default {
       join_policy: 'Join policy',
       roles: 'Roles'
     },
+    share: {
+      everyone: 'Everyone',
+      authenticated: 'Logged-in users',
+      read: 'Read',
+      write: 'Edit',
+      share: 'Share',
+      edit: 'Edit the rights'
+    },
     authorization: {
       required: 'Required access',
       optional: 'Optional access',
@@ -158,6 +170,9 @@ export default {
       append: 'Append',
       write: 'Write',
       control: 'Control',
+      none: 'No access',
+      read_write: 'Read and write',
+      remove: 'Remove access',
       read_inbox: 'Read my inbox',
       read_outbox: 'Read my outbox',
       post_outbox: 'Post in my outbox',
@@ -179,6 +194,8 @@ export default {
       actions: 'Actions'
     },
     input: {
+      share_search: 'Add a contact',
+      share_search_group: 'Add a member or a role',
       about_you: 'A few words about you',
       message: 'Message',
       user_id: 'User ID',
@@ -205,6 +222,15 @@ export default {
         'Sending a message to %{username} will give him/her the right to see your profile, in order to be able to respond.',
       profile_visibility: 'Your profile is visible only by users you have accepted in your network',
       share_contact: 'To connect with someone you know, send them the link below.',
+      share: 'Select the contacts with whom you want to share the resource %{resourceName}',
+      share_group: 'Choose the rights of the roles and members of the group on the resource %{resourceName}',
+      type_access: 'Access to these data',
+      resource_access: 'Access to this data',
+      via_type: 'via "%{typeName}"',
+      no_access: 'Nobody has access yet',
+      share_with_group_members: 'The members of the group will be able to read it',
+      share_type: 'Select the contacts with whom you want to share all data of type "%{typeName}"',
+      share_type_group: 'Choose the rights of the roles and members of the group on all data of type "%{typeName}"',
       add_member: 'Choose one of your contacts, or enter the ID of a user (format: @bob@server.com).',
       remove_member: 'Do you really want to remove %{name} from the group?',
       no_special_rights: 'No special rights',
@@ -222,6 +248,8 @@ export default {
       create_profile:
         'Now that your account is created, please create your profile. By default, your profile will only be visible to the people you accept into your network.',
       authorize_register: 'To be registered, the app requires the following authorizations',
+      authorize_register_group:
+        'To be registered, the app requires the following authorizations on the data space of %{name}',
       authorize_upgrade: 'The app has been updated and now requires the following additional authorizations',
       invite_text_logged_out:
         "A personal data space is in some way similar to an email account; It's decentralized, so you can choose where your personal data is stored. Instead of creating a new account for every new app, you can login to compatible apps using your data space account. Apps then store your data in your data space.",
@@ -320,6 +348,7 @@ export default {
       profile_picture: 'Profile picture'
     },
     group: {
+      role: 'Role',
       id: 'Unique ID',
       type: 'Type',
       type_organization: 'Organization',
@@ -371,7 +400,8 @@ export default {
       group_settings: 'Group settings of %{groupName} - %{appName}',
       group_members: 'Members of %{groupName} - %{appName}',
       group_roles: 'Roles of %{groupName} - %{appName}',
-      my_groups: 'My groups - %{appName}'
+      my_groups: 'My groups - %{appName}',
+      share: 'Share - %{appName}'
     },
     placeholder: {
       user_id: '@user@server.com',

@@ -38,6 +38,14 @@ export const arrayOf = (value: any | any[]) => {
   return [value];
 };
 
+const GROUP_TYPES = ['foaf:Group', 'foaf:Organization', 'Group', 'Organization', 'as:Group', 'as:Organization'];
+
+// The owners are also admins, so the Owner role is only shown when there is no Admin role
+export const withoutOwnerRole = <T extends { id: string }>(roles: T[]) =>
+  roles.some(role => role.id === 'admin') ? roles.filter(role => role.id !== 'owner') : roles;
+
+export const isGroupActor = (actor: any) => arrayOf(actor?.type).some(type => GROUP_TYPES.includes(type));
+
 /**
  * Generate a random color using a string as seed.
  * @param {string} value The string to seed from.

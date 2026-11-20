@@ -24,6 +24,7 @@ export const SPECIAL_RIGHTS = [
   'interop:ReadMembers',
   'interop:ManageMembers',
   'interop:ManageRoles',
+  'interop:ManageAccess',
   'interop:ChangeJoinPolicy'
 ];
 

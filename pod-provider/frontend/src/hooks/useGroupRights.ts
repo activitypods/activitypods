@@ -13,11 +13,11 @@ export const getGroupEndpoint = (groupActor: any) => {
 
 const useGroupRights = () => {
   const dataProvider = useDataProvider();
-  const { data: group } = useRealmContext() as any;
+  const { isGroup, data: group } = useRealmContext() as any;
   const [rights, setRights] = useState<GroupRights>();
   const [isLoading, setIsLoading] = useState(true);
 
-  const endpoint = group?.webIdData && getGroupEndpoint(group.webIdData);
+  const endpoint = isGroup && group?.webIdData ? getGroupEndpoint(group.webIdData) : undefined;
 
   const refetch = useCallback(async () => {
     try {

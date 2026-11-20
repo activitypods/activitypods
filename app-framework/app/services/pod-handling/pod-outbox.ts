@@ -27,7 +27,8 @@ const PodOutboxSchema = {
             'Content-Type': 'application/ld+json'
           },
           body: JSON.stringify(activity),
-          actorUri: appUri
+          actorUri: appUri,
+          onBehalfOf: actorUri
         });
 
         if (response.ok) {

@@ -24,7 +24,7 @@ import ShowView from '../../layout/ShowView';
 import ValueField from '../../common/fields/ValueField';
 import useActor from '../../hooks/useActor';
 import GroupPage from '../GroupsPage/GroupPage';
-import { arrayOf } from '../../utils';
+import { isGroupActor } from '../../utils';
 
 const EditPrivateProfileButton = (props: any) => {
   const record = useRecordContext();
@@ -55,8 +55,6 @@ const ProfileWarning = ({ publicProfileOnly }: any) => {
   );
 };
 
-const GROUP_TYPES = ['foaf:Group', 'foaf:Organization', 'Group', 'Organization', 'as:Group', 'as:Organization'];
-
 const NetworkActorPage = () => {
   const translate = useTranslate();
   const { webfingerId } = useParams();
@@ -79,7 +77,7 @@ const NetworkActorPage = () => {
 
   if (actor.isLoading) return null;
 
-  if (arrayOf(actor.type).some(type => GROUP_TYPES.includes(type))) return <GroupPage groupUri={actorUri!} />;
+  if (isGroupActor(actor)) return <GroupPage groupUri={actorUri!} />;
 
   return (
     <BlockAnonymous>

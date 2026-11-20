@@ -1,6 +1,6 @@
 import { WebAclMiddleware, CacherMiddleware } from '@semapps/webacl';
 import { ObjectsWatcherMiddleware } from '@semapps/sync';
-import AppControlMiddleware from './middlewares/app-control.ts';
+import ClientControlMiddleware from './middlewares/client-control.ts';
 import SanitizeStatusMessageMiddleware from './middlewares/sanitize-status-message.ts';
 import * as CONFIG from './config/config.ts';
 import errorHandler from './config/errorHandler.ts';
@@ -28,7 +28,7 @@ export const middlewares = [
   CacherMiddleware(cacherConfig), // Set the cacher before the WebAcl middleware
   WebAclMiddleware({ baseUrl: CONFIG.BASE_URL, podProvider: true }),
   ObjectsWatcherMiddleware({ baseUrl: CONFIG.BASE_URL, podProvider: true, postWithoutRecipients: true }),
-  AppControlMiddleware({ baseUrl: CONFIG.BASE_URL }),
+  ClientControlMiddleware({ baseUrl: CONFIG.BASE_URL }),
   SanitizeStatusMessageMiddleware()
 ];
 

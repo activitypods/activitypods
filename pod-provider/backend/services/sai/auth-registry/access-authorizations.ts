@@ -1,7 +1,7 @@
 const { MoleculerError } = require('moleculer').Errors;
 import { ControlledContainerMixin, arrayOf, getId, getWebIdFromUri } from '@semapps/ldp';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { arraysEqual } from '../../../utils.ts';
+import { arraysEqual, getPublicAgentClass } from '../../../utils.ts';
 import ImmutableContainerMixin from '../../../mixins/immutable-container-mixin.ts';
 import { ServiceSchema } from 'moleculer';
 
@@ -77,6 +77,10 @@ const AccessAuthorizationsSchema = {
 
         // If the user is sharing a resource they don't own, ensure they have delegation right
         if (dataOwner !== webId) {
+          if (getPublicAgentClass(grantee)) {
+            throw new MoleculerError('Only the owner of a resource can make it public', 403, 'FORBIDDEN');
+          }
+
           const grant = await ctx.call('access-grants.getByResourceUri', { resourceUri, webId });
 
           if (
@@ -147,7 +151,8 @@ const AccessAuthorizationsSchema = {
                   resourceUri
                 ]
               },
-              contentType: MIME_TYPES.JSON
+              contentType: MIME_TYPES.JSON,
+              webId
             },
             { parentCtx: ctx }
           );
@@ -160,7 +165,8 @@ const AccessAuthorizationsSchema = {
                 'interop:dataOwner': dataOwner,
                 'interop:grantedBy': webId,
                 'interop:grantee': grantee,
-                'interop:granteeType': 'interop:SocialAgent',
+                // Public grantees are not social agents
+                'interop:granteeType': getPublicAgentClass(grantee) ? undefined : 'interop:SocialAgent',
                 'interop:registeredShapeTree': dataRegistration['interop:registeredShapeTree'],
                 'interop:hasDataRegistration': getId(dataRegistration),
                 'interop:hasDataInstance': resourceUri,
@@ -169,7 +175,8 @@ const AccessAuthorizationsSchema = {
                 'interop:delegationAllowed': delegationAllowed,
                 'interop:delegationLimit': delegationLimit
               },
-              contentType: MIME_TYPES.JSON
+              contentType: MIME_TYPES.JSON,
+              webId
             },
             { parentCtx: ctx }
           );
@@ -222,6 +229,140 @@ const AccessAuthorizationsSchema = {
             );
           }
         }
+      }
+    },
+
+    addForShapeTree: {
+      // Add an authorization for all the data of same shape tree
+      async handler(ctx) {
+        const { shapeTreeUri, grantee, accessModes, delegationAllowed, delegationLimit } = ctx.params;
+        const webId = ctx.params.webId || ctx.meta.webId;
+
+        const dataRegistrationUri = await ctx.call('data-registrations.generateFromShapeTree', {
+          shapeTreeUri,
+          podOwner: webId
+        });
+
+        const authorization = await this.actions.getForShapeTree(
+          { dataRegistrationUri, grantee, webId },
+          { parentCtx: ctx }
+        );
+
+        if (authorization) {
+          if (
+            arraysEqual(arrayOf(authorization['interop:accessMode']), arrayOf(accessModes)) &&
+            delegationAllowed === authorization['interop:delegationAllowed'] &&
+            delegationLimit === authorization['interop:delegationLimit']
+          ) {
+            return getId(authorization);
+          }
+          const { resourceUri } = await this.actions.put(
+            {
+              resource: {
+                ...authorization,
+                'interop:accessMode': accessModes,
+                'interop:delegationAllowed': delegationAllowed,
+                'interop:delegationLimit': delegationLimit
+              },
+              contentType: MIME_TYPES.JSON,
+              webId
+            },
+            { parentCtx: ctx }
+          );
+          return resourceUri;
+        }
+
+        return await this.actions.post(
+          {
+            resource: {
+              type: 'interop:AccessAuthorization',
+              'interop:dataOwner': webId,
+              'interop:grantedBy': webId,
+              'interop:grantee': grantee,
+              'interop:granteeType': getPublicAgentClass(grantee) ? undefined : 'interop:SocialAgent',
+              'interop:registeredShapeTree': shapeTreeUri,
+              'interop:hasDataRegistration': dataRegistrationUri,
+              'interop:accessMode': accessModes,
+              'interop:scopeOfAuthorization': 'interop:All',
+              'interop:delegationAllowed': delegationAllowed,
+              'interop:delegationLimit': delegationLimit
+            },
+            contentType: MIME_TYPES.JSON,
+            webId
+          },
+          { parentCtx: ctx }
+        );
+      }
+    },
+
+    removeForShapeTree: {
+      async handler(ctx) {
+        const { shapeTreeUri, grantee } = ctx.params;
+        const webId = ctx.params.webId || ctx.meta.webId;
+
+        const dataRegistrationUri = await ctx.call('data-registrations.getByShapeTree', {
+          shapeTreeUri,
+          podOwner: webId
+        });
+        if (!dataRegistrationUri) return;
+
+        const authorization = await this.actions.getForShapeTree(
+          { dataRegistrationUri, grantee, webId },
+          { parentCtx: ctx }
+        );
+        if (authorization) {
+          await this.actions.delete({ resourceUri: getId(authorization), webId }, { parentCtx: ctx });
+        }
+      }
+    },
+
+    getForShapeTree: {
+      async handler(ctx) {
+        const { dataRegistrationUri, grantee, webId } = ctx.params;
+
+        const filteredContainer = await this.actions.list(
+          {
+            filters: {
+              'http://www.w3.org/ns/solid/interop#dataOwner': webId,
+              'http://www.w3.org/ns/solid/interop#grantee': grantee,
+              'http://www.w3.org/ns/solid/interop#hasDataRegistration': dataRegistrationUri,
+              'http://www.w3.org/ns/solid/interop#scopeOfAuthorization': 'http://www.w3.org/ns/solid/interop#All'
+            },
+            webId
+          },
+          { parentCtx: ctx }
+        );
+
+        return arrayOf(filteredContainer['ldp:contains'])[0];
+      }
+    },
+
+    listForShapeTree: {
+      async handler(ctx) {
+        const { shapeTreeUri } = ctx.params;
+        const webId = ctx.params.webId || ctx.meta.webId;
+
+        const dataRegistrationUri = await ctx.call('data-registrations.getByShapeTree', {
+          shapeTreeUri,
+          podOwner: webId
+        });
+        if (!dataRegistrationUri) return [];
+
+        const filteredContainer = await this.actions.list(
+          {
+            filters: {
+              'http://www.w3.org/ns/solid/interop#dataOwner': webId,
+              'http://www.w3.org/ns/solid/interop#hasDataRegistration': dataRegistrationUri,
+              'http://www.w3.org/ns/solid/interop#scopeOfAuthorization': 'http://www.w3.org/ns/solid/interop#All'
+            },
+            webId
+          },
+          { parentCtx: ctx }
+        );
+
+        return arrayOf(filteredContainer['ldp:contains']).filter(
+          (authorization: any) => authorization['interop:granteeType'] !== 'interop:Application'
+        );
       }
     },
 
@@ -307,6 +448,27 @@ const AccessAuthorizationsSchema = {
       }
     },
 
+    listScopeAllFromRegistry: {
+      // List the access authorizations given to applications for a data registration of another agent (e.g. a group)
+      async handler(ctx) {
+        const { podOwner, dataRegistrationUri } = ctx.params;
+
+        const filteredContainer = await this.actions.list(
+          {
+            filters: {
+              'http://www.w3.org/ns/solid/interop#scopeOfAuthorization':
+                'http://www.w3.org/ns/solid/interop#AllFromRegistry',
+              'http://www.w3.org/ns/solid/interop#hasDataRegistration': dataRegistrationUri
+            },
+            webId: podOwner
+          },
+          { parentCtx: ctx }
+        );
+
+        return arrayOf(filteredContainer['ldp:contains']);
+      }
+    },
+
     deleteOrphans: {
       // Delete authorizations which are not linked anymore to an access need (may happen on app upgrade)
       async handler(ctx) {
@@ -335,6 +497,11 @@ const AccessAuthorizationsSchema = {
       }
     }
   },
+  methods: {
+    async isRole(ctx, authorization, podOwner) {
+      return await ctx.call('role-registrations.isRole', { agentUri: authorization['interop:grantee'], podOwner });
+    }
+  },
   hooks: {
     after: {
       async create(ctx, res) {
@@ -352,14 +519,18 @@ const AccessAuthorizationsSchema = {
           authorizationUri: getId(authorization)
         });
 
+        const isRole = await this.isRole(ctx, authorization, webId);
+
         // Check if we need to generate a grant or a delegated grant
-        if (dataOwner === webId) {
+        if (isRole) {
+          await ctx.call('role-access.addFromAuthorization', { authorization });
+        } else if (dataOwner === webId) {
           await ctx.call('access-grants.generateFromAuthorization', { authorization });
         } else {
           await ctx.call('delegated-access-grants.generateFromAuthorization', { authorization });
         }
 
-        if (scope === 'interop:All') {
+        if (scope === 'interop:All' && authorization['interop:granteeType'] === 'interop:Application') {
           // Generate delegated grants for all shared resources with the same shape tree
           // This is done in a background job, as there is one delegated grant per contact
           await ctx.call('delegated-access-grants.queueScopeAllAuthorization', { authorization, operation: 'create' });
@@ -373,27 +544,36 @@ const AccessAuthorizationsSchema = {
         const scope = authorization['interop:scopeOfAuthorization'];
         const webId = ctx.params.webId || ctx.meta.webId;
 
-        // Find grant that match the authorization
-        const grant =
-          dataOwner === webId
-            ? await ctx.call('access-grants.getByAuthorization', { authorization })
-            : await ctx.call('delegated-access-grants.getByAuthorization', { authorization });
+        const isRole = await this.isRole(ctx, authorization, webId);
 
-        if (grant) {
-          if (dataOwner === webId) {
-            await ctx.call('access-grants.delete', {
-              resourceUri: getId(grant),
-              webId: 'system',
-              isReplacing: ctx.params.isReplacing // Forward the param
-            });
-          } else {
-            await ctx.call('delegated-access-grants.remoteDelete', {
-              delegatedGrant: grant
-            });
+        if (isRole) {
+          await ctx.call('role-access.removeFromAuthorization', {
+            authorization,
+            isReplacing: ctx.params.isReplacing
+          });
+        } else {
+          // Find grant that match the authorization
+          const grant =
+            dataOwner === webId
+              ? await ctx.call('access-grants.getByAuthorization', { authorization })
+              : await ctx.call('delegated-access-grants.getByAuthorization', { authorization });
+
+          if (grant) {
+            if (dataOwner === webId) {
+              await ctx.call('access-grants.delete', {
+                resourceUri: getId(grant),
+                webId: 'system',
+                isReplacing: ctx.params.isReplacing // Forward the param
+              });
+            } else {
+              await ctx.call('delegated-access-grants.remoteDelete', {
+                delegatedGrant: grant
+              });
+            }
           }
         }
 
-        if (scope === 'interop:All') {
+        if (scope === 'interop:All' && authorization['interop:granteeType'] === 'interop:Application') {
           // Delete delegated data grants automatically generated by "interop:All" scope authorizations
           // This is done in a background job, as there is one delegated grant per contact
           await ctx.call('delegated-access-grants.queueScopeAllAuthorization', { authorization, operation: 'delete' });

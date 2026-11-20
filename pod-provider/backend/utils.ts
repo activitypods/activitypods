@@ -87,4 +87,34 @@ const geoDistance = (geo1: any, geo2: any) => {
   return 2 * 6371000 * Math.asin(Math.sqrt(a));
 };
 
-export { arraysEqual, hasActivityGrant, fuzzGeo, geoDistance };
+// Data may be shared with everyone or with any authenticated agent. These are WebACL agent classes, not agents.
+const PUBLIC_GRANTEES: Record<string, 'anon' | 'anyUser'> = {
+  'http://xmlns.com/foaf/0.1/Agent': 'anon',
+  'http://www.w3.org/ns/auth/acl#AuthenticatedAgent': 'anyUser'
+};
+
+const expandPublicGrantee = (grantee: string) =>
+  grantee === 'foaf:Agent'
+    ? 'http://xmlns.com/foaf/0.1/Agent'
+    : grantee === 'acl:AuthenticatedAgent'
+      ? 'http://www.w3.org/ns/auth/acl#AuthenticatedAgent'
+      : grantee;
+
+// Returns the key used by the WebACL services, or undefined if the grantee is an agent
+const getPublicAgentClass = (grantee: string) => PUBLIC_GRANTEES[expandPublicGrantee(grantee)];
+
+// The predicates linking a WebID to the agent registrations of these grantees (proposed extension of SAI)
+const PUBLIC_REGISTRATION_PREDICATES = {
+  anon: 'http://www.w3.org/ns/solid/interop#hasPublicAgentRegistration',
+  anyUser: 'http://www.w3.org/ns/solid/interop#hasConnectedAgentRegistration'
+};
+
+export {
+  arraysEqual,
+  hasActivityGrant,
+  fuzzGeo,
+  geoDistance,
+  expandPublicGrantee,
+  getPublicAgentClass,
+  PUBLIC_REGISTRATION_PREDICATES
+};

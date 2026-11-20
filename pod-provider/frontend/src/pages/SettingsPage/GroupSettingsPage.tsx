@@ -7,6 +7,8 @@ import StorageIcon from '@mui/icons-material/Storage';
 import DownloadIcon from '@mui/icons-material/Download';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import DeleteIcon from '@mui/icons-material/Delete';
+import TuneIcon from '@mui/icons-material/Tune';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import GroupIcon from '@mui/icons-material/PeopleAlt';
 import BadgeIcon from '@mui/icons-material/Badge';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
@@ -80,6 +82,12 @@ const GroupSettingsPage = () => {
               actionIcon={<HighlightOffIcon color="error" />}
             />
           )}
+          <SettingsItem
+            onClick={() => navigate(`/group/${data.webfingerId}/settings/advanced`)}
+            icon={<TuneIcon />}
+            label="app.page.settings_advanced"
+            actionIcon={<ArrowForwardIosIcon />}
+          />
         </List>
       </Box>
       <JoinPolicyDialog open={joinPolicyOpen} group={data} onClose={() => setJoinPolicyOpen(false)} onSaved={refetch} />

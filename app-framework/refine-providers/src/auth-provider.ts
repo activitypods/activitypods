@@ -1,6 +1,7 @@
 import jwtDecode from 'jwt-decode';
 import * as oauth from 'oauth4webapi';
 import { fetchAppStatus, fetchJson, resolveAuthAgent } from './utils';
+import { clearAppGrants } from './grants';
 import { AuthProvider, AuthProviderConfig, AuthSession, LoginParams } from './types';
 
 const STORAGE_KEY_TOKEN = 'activitypods.token';
@@ -106,7 +107,20 @@ const authProvider = ({
     register: (params: LoginParams) => startLogin({ ...params, isSignup: true }),
 
     logout: async () => {
+      const token = localStorage.getItem(STORAGE_KEY_TOKEN);
+      const session = readSession();
       clearSession();
+      if (session) await clearAppGrants(session.webId);
+
+      // Back to the Pod provider, where the user may also log out (otherwise the next login reuses the same account)
+      if (token) {
+        try {
+          window.location.href = jwtDecode<SolidOidcIdTokenPayload>(token).iss;
+          return { success: true };
+        } catch {
+          // Invalid token
+        }
+      }
       return { success: true, redirectTo: '/login' };
     },
 

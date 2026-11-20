@@ -180,6 +180,54 @@ describe('Test the authorization endpoint', () => {
     }
   });
 
+  test('A member allowed to share a type of data shares its resources one by one', async () => {
+    await updateAuthorizations(alice, {
+      shapeTreeUri: EVENT_SHAPE_TREE,
+      podOwner: groupWebId,
+      authorizations: [{ grantee: memberRoleUri, accessModes: ['acl:Read', 'acl:Write'], delegationAllowed: true }]
+    });
+
+    // The access to the type cannot be managed
+    await expect(getAuthorizations(bob, { shapeTree: EVENT_SHAPE_TREE, podOwner: groupWebId })).rejects.toMatchObject({
+      code: 403
+    });
+    await expect(
+      updateAuthorizations(bob, {
+        shapeTreeUri: EVENT_SHAPE_TREE,
+        podOwner: groupWebId,
+        authorizations: [{ grantee: alice.id, accessModes: ['acl:Read'] }]
+      })
+    ).rejects.toMatchObject({ code: 403 });
+
+    // A resource can be shared, and its own authorizations removed
+    const { roles, delegateModes } = await getAuthorizations(bob, { resource: groupEvent2Uri });
+    expect(delegateModes).toEqual(expect.arrayContaining(['acl:Read', 'acl:Write']));
+    const update = (authorization: any) =>
+      updateAuthorizations(bob, { resourceUri: groupEvent2Uri, authorizations: [authorization] });
+    await update({ grantee: alice.id, accessModes: ['acl:Read'] });
+    await expect(getAuthorizations(alice, { resource: groupEvent2Uri })).resolves.toMatchObject({
+      authorizations: [{ grantee: alice.id, accessModes: ['acl:Read'] }]
+    });
+    await update({ grantee: alice.id, accessModes: [] });
+    await expect(getAuthorizations(alice, { resource: groupEvent2Uri })).resolves.toMatchObject({ authorizations: [] });
+
+    // Within the limits of their own rights
+    await expect(update({ grantee: alice.id, accessModes: ['acl:Read', 'acl:Control'] })).rejects.toMatchObject({
+      code: 403
+    });
+    await expect(update({ grantee: FOAF_AGENT, accessModes: ['acl:Read'] })).rejects.toMatchObject({ code: 403 });
+    const adminRole = roles.find((role: any) => role.isAdmin);
+    await expect(update({ grantee: adminRole.uri, accessModes: ['acl:Read'] })).rejects.toMatchObject({ code: 403 });
+
+    // Without the right to share, the member is refused again
+    await updateAuthorizations(alice, {
+      shapeTreeUri: EVENT_SHAPE_TREE,
+      podOwner: groupWebId,
+      authorizations: [{ grantee: memberRoleUri, accessModes: ['acl:Read', 'acl:Write'] }]
+    });
+    await expect(getAuthorizations(bob, { resource: groupEvent2Uri })).rejects.toMatchObject({ code: 403 });
+  });
+
   test('Empty access modes remove the authorization', async () => {
     await updateAuthorizations(alice, {
       shapeTreeUri: EVENT_SHAPE_TREE,

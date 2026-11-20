@@ -178,6 +178,12 @@ describe('Applications registered on a group, used by its members', () => {
     expect(res.status).toBe(200);
   });
 
+  test('The app may know the roles of the member in the group', async () => {
+    const res = await fetchWithApp(bob, urlJoin(new URL(groupWebId).origin, '.account/acme/me'));
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({ roles: [expect.objectContaining({ id: 'member' })] });
+  });
+
   test('A non-member cannot register the app for the group', async () => {
     await expect(
       call(craig, 'registration-endpoint.register', { appUri: APP_URI, storages: [groupWebId] })

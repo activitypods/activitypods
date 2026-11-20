@@ -157,7 +157,11 @@ export default {
     },
     share: {
       everyone: 'Everyone',
-      authenticated: 'Logged-in users'
+      authenticated: 'Logged-in users',
+      read: 'Read',
+      write: 'Edit',
+      share: 'Share',
+      edit: 'Edit the rights'
     },
     authorization: {
       required: 'Required access',

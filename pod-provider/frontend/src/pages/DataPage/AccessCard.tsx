@@ -19,7 +19,13 @@ const GranteeItem = ({ authorization, roles, via }: { authorization: any; roles?
   const role = roles?.find(r => r.uri === grantee);
   const publicGrantee = getPublicGrantee(grantee);
   const actor = useActor(role || publicGrantee ? undefined : grantee);
-  const access = arrayOf(authorization['interop:accessMode']).includes('acl:Write') ? 'read_write' : 'read';
+  const modes = arrayOf(authorization['interop:accessMode']);
+  const access = [
+    translate('app.share.read'),
+    ...(modes.includes('acl:Write') ? [translate('app.share.write')] : []),
+    // May be returned as a string
+    ...(`${authorization['interop:delegationAllowed']}` === 'true' ? [translate('app.share.share')] : [])
+  ].join(', ');
 
   return (
     <ListItem sx={{ px: 0, opacity: via ? 0.6 : 1 }}>
@@ -32,9 +38,7 @@ const GranteeItem = ({ authorization, roles, via }: { authorization: any; roles?
         primary={
           publicGrantee ? translate(`app.share.${publicGrantee.key}`) : role ? roleLabel(role) : actor.name || grantee
         }
-        secondary={
-          via ? `${translate(`app.authorization.${access}`)} (${via})` : translate(`app.authorization.${access}`)
-        }
+        secondary={via ? `${access} (${via})` : access}
       />
     </ListItem>
   );

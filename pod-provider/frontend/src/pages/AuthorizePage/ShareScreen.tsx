@@ -18,8 +18,11 @@ import {
   ListItemAvatar,
   ListItemText,
   Avatar,
-  Select,
+  IconButton,
+  Menu,
   MenuItem,
+  ListItemIcon,
+  Divider,
   Autocomplete,
   TextField,
   Dialog,
@@ -31,6 +34,8 @@ import ShareIcon from '@mui/icons-material/Share';
 import GroupsIcon from '@mui/icons-material/Groups';
 import PublicIcon from '@mui/icons-material/Public';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import EditIcon from '@mui/icons-material/Edit';
+import CheckIcon from '@mui/icons-material/Check';
 import SimpleBox from '../../layout/SimpleBox';
 import Header from '../../common/Header';
 import useResource from '../../hooks/useResource';
@@ -38,11 +43,24 @@ import useRoleLabel from '../../hooks/useRoleLabel';
 import useFetchShapeTree from '../../hooks/useFetchShapeTree';
 import { arrayOf, formatUsername, isGroupActor, withoutOwnerRole } from '../../utils';
 
-const ACCESS_MODES = {
-  none: [],
-  read: ['acl:Read'],
-  read_write: ['acl:Read', 'acl:Write']
+// Writing and sharing imply reading
+type Access = { read?: boolean; write?: boolean; share?: boolean };
+type Right = keyof Access;
+const RIGHTS: Right[] = ['read', 'write', 'share'];
+
+const toAccess = (accessModes: string[], delegationAllowed?: boolean): Access => ({
+  read: accessModes.length > 0,
+  write: accessModes.includes('acl:Write'),
+  share: !!delegationAllowed && accessModes.length > 0
+});
+
+const toggleRight = (access: Access = {}, right: Right): Access => {
+  const value = !access[right];
+  if (right === 'read' && !value) return {};
+  return { ...access, [right]: value, read: true };
 };
+
+const sameAccess = (a: Access = {}, b: Access = {}) => RIGHTS.every(right => !!a[right] === !!b[right]);
 
 export const PUBLIC_GRANTEES = [
   { uri: 'http://xmlns.com/foaf/0.1/Agent', curie: 'foaf:Agent', key: 'everyone', icon: <PublicIcon /> },
@@ -57,9 +75,6 @@ export const PUBLIC_GRANTEES = [
 // The grantee may be compacted when read from the authorization
 export const getPublicGrantee = (grantee: string) =>
   PUBLIC_GRANTEES.find(({ uri, curie }) => grantee === uri || grantee === curie);
-
-const getAccess = (accessModes: string[]) =>
-  accessModes.includes('acl:Write') ? 'read_write' : accessModes.includes('acl:Read') ? 'read' : 'none';
 
 type Grantee = {
   uri: string;
@@ -152,8 +167,8 @@ const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareForm
   const [shapeTree, setShapeTree] = useState<any>();
   const [dataRegistrationUri, setDataRegistrationUri] = useState<string>();
   const [authorizations, setAuthorizations] = useState<any>();
-  const [initialAccess, setInitialAccess] = useState<Record<string, string>>({});
-  const [access, setAccess] = useState<Record<string, string>>({});
+  const [initialAccess, setInitialAccess] = useState<Record<string, Access>>({});
+  const [access, setAccess] = useState<Record<string, Access>>({});
   const { data: resource, headers } = useResource(resourceUri) as any;
   const grantees = useGrantees(authorizations);
   const isGroup = !!authorizations?.roles;
@@ -187,9 +202,14 @@ const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareForm
       .fetch(authorizationsUrl.toString(), { headers: new Headers({ Accept: 'application/json' }) })
       .then(({ json }: any) => {
         const currentAccess = Object.fromEntries([
-          ...json.authorizations.map((auth: any) => [auth.grantee, getAccess(arrayOf(auth.accessModes))]),
+          ...json.authorizations.map((auth: any) => [
+            auth.grantee,
+            toAccess(arrayOf(auth.accessModes), auth.delegationAllowed)
+          ]),
           // The admins have full access to all the data of the group, which can't be changed
-          ...(json.roles || []).filter((role: any) => role.isAdmin).map((role: any) => [role.uri, 'read_write'])
+          ...(json.roles || [])
+            .filter((role: any) => role.isAdmin)
+            .map((role: any) => [role.uri, { read: true, write: true, share: true }])
         ]);
         setAuthorizations(json);
         setInitialAccess(currentAccess);
@@ -200,7 +220,7 @@ const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareForm
   }, [resourceUri, shapeTreeUri, podOwner, dataProvider, notify]);
 
   const onShare = useCallback(async () => {
-    const changed = Object.keys(access).filter(grantee => access[grantee] !== (initialAccess[grantee] || 'none'));
+    const changed = Object.keys(access).filter(grantee => !sameAccess(access[grantee], initialAccess[grantee]));
     if (changed.length > 0) {
       await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/authorizations'), {
         method: 'PUT',
@@ -209,7 +229,8 @@ const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareForm
           ...(resourceUri ? { resourceUri } : { shapeTreeUri, podOwner }),
           authorizations: changed.map(grantee => ({
             grantee,
-            accessModes: ACCESS_MODES[access[grantee] as keyof typeof ACCESS_MODES]
+            accessModes: access[grantee]?.read ? ['acl:Read', ...(access[grantee].write ? ['acl:Write'] : [])] : [],
+            delegationAllowed: !!access[grantee]?.share
           }))
         })
       });
@@ -229,14 +250,69 @@ const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareForm
   return { authorizations, grantees, access, setAccess, onShare, text, isGroup };
 };
 
+// The rights of a grantee, changed through a menu
+const AccessMenu = ({
+  access,
+  rights,
+  onChange
+}: {
+  access?: Access;
+  rights: Right[];
+  onChange: (access: Access) => void;
+}) => {
+  const translate = useTranslate();
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  return (
+    <>
+      <IconButton aria-label={translate('app.share.edit')} onClick={e => setAnchor(e.currentTarget)} edge="end">
+        <EditIcon />
+      </IconButton>
+      <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
+        {rights.map(right => (
+          <MenuItem key={right} onClick={() => onChange(toggleRight(access, right))} sx={{ minHeight: 44 }}>
+            <ListItemIcon>{access?.[right] && <CheckIcon fontSize="small" />}</ListItemIcon>
+            {translate(`app.share.${right}`)}
+          </MenuItem>
+        ))}
+        {access?.read && <Divider />}
+        {access?.read && (
+          <MenuItem
+            onClick={() => {
+              onChange({});
+              setAnchor(null);
+            }}
+            sx={{ minHeight: 44 }}
+          >
+            <ListItemIcon />
+            {translate('app.authorization.remove')}
+          </MenuItem>
+        )}
+      </Menu>
+    </>
+  );
+};
+
 const ShareFormContent = ({ form }: { form: ReturnType<typeof useShareForm> }) => {
   const translate = useTranslate();
   const { authorizations, grantees, access, setAccess, isGroup } = form;
 
-  const withAccess = grantees.filter(grantee => access[grantee.uri] && access[grantee.uri] !== 'none');
-  const options = grantees.filter(grantee => !withAccess.includes(grantee));
-
   if (!authorizations) return null;
+
+  // A member allowed to share the data cannot give more than their own rights, nor make it public
+  const delegateModes: string[] | undefined = authorizations.delegateModes;
+  const rights = RIGHTS.filter(right => right !== 'write' || !delegateModes || delegateModes.includes('acl:Write'));
+  const summary = (granteeAccess?: Access) =>
+    granteeAccess?.read
+      ? RIGHTS.filter(right => granteeAccess[right])
+          .map(right => translate(`app.share.${right}`))
+          .join(', ')
+      : translate('app.authorization.none');
+  const setGranteeAccess = (uri: string) => (granteeAccess: Access) =>
+    setAccess(cur => ({ ...cur, [uri]: granteeAccess }));
+
+  const withAccess = grantees.filter(grantee => access[grantee.uri]?.read);
+  const options = grantees.filter(grantee => !withAccess.includes(grantee));
+  const rowSx = { px: 0, py: 0.5, minHeight: 56, '& .MuiListItemSecondaryAction-root': { right: 8 } };
 
   return (
     <>
@@ -249,7 +325,7 @@ const ShareFormContent = ({ form }: { form: ReturnType<typeof useShareForm> }) =
           opts.filter(o => `${o.label} ${o.secondary || ''}`.toLowerCase().includes(inputValue.toLowerCase()))
         }
         onChange={(e, grantee: Grantee | null) => {
-          if (grantee) setAccess(cur => ({ ...cur, [grantee.uri]: 'read' }));
+          if (grantee) setAccess(cur => ({ ...cur, [grantee.uri]: { read: true } }));
         }}
         renderOption={(props, option) => (
           <ListItem {...props} key={option.uri}>
@@ -268,51 +344,44 @@ const ShareFormContent = ({ form }: { form: ReturnType<typeof useShareForm> }) =
         )}
       />
       <List sx={{ width: '100%' }}>
-        {PUBLIC_GRANTEES.map(({ uri, key, icon }) => (
-          <ListItem
-            key={uri}
-            sx={{ px: 0, py: 0.5, minHeight: 56, '& .MuiListItemSecondaryAction-root': { right: 0 } }}
-            secondaryAction={
-              <Select
-                size="small"
-                value={access[uri] || 'none'}
-                onChange={e => setAccess(cur => ({ ...cur, [uri]: e.target.value }))}
-                sx={{ minWidth: 150 }}
-              >
-                <MenuItem value="none">{translate('app.authorization.none')}</MenuItem>
-                <MenuItem value="read">{translate('app.authorization.read')}</MenuItem>
-                <MenuItem value="read_write">{translate('app.authorization.read_write')}</MenuItem>
-              </Select>
-            }
-          >
-            <ListItemAvatar>
-              <Avatar sx={{ width: 32, height: 32 }}>{icon}</Avatar>
-            </ListItemAvatar>
-            <ListItemText primary={translate(`app.share.${key}`)} sx={{ pr: 18 }} />
-          </ListItem>
-        ))}
+        {!delegateModes &&
+          PUBLIC_GRANTEES.map(({ uri, key, icon }) => (
+            <ListItem
+              key={uri}
+              sx={rowSx}
+              secondaryAction={
+                <AccessMenu
+                  access={access[uri]}
+                  rights={rights.filter(right => right !== 'share')}
+                  onChange={setGranteeAccess(uri)}
+                />
+              }
+            >
+              <ListItemAvatar>
+                <Avatar sx={{ width: 32, height: 32 }}>{icon}</Avatar>
+              </ListItemAvatar>
+              <ListItemText primary={translate(`app.share.${key}`)} secondary={summary(access[uri])} sx={{ pr: 5 }} />
+            </ListItem>
+          ))}
         {withAccess.map(grantee => (
           <ListItem
             key={grantee.uri}
-            sx={{ px: 0, py: 0.5, minHeight: 56, '& .MuiListItemSecondaryAction-root': { right: 0 } }}
+            sx={rowSx}
             secondaryAction={
-              <Select
-                size="small"
-                value={access[grantee.uri]}
-                disabled={grantee.isAdmin}
-                onChange={e => setAccess(cur => ({ ...cur, [grantee.uri]: e.target.value }))}
-                sx={{ minWidth: 150 }}
-              >
-                <MenuItem value="read">{translate('app.authorization.read')}</MenuItem>
-                <MenuItem value="read_write">{translate('app.authorization.read_write')}</MenuItem>
-                <MenuItem value="none">{translate('app.authorization.remove')}</MenuItem>
-              </Select>
+              // The access of the admins cannot be changed
+              !grantee.isAdmin && (
+                <AccessMenu access={access[grantee.uri]} rights={rights} onChange={setGranteeAccess(grantee.uri)} />
+              )
             }
           >
             <ListItemAvatar>
               <GranteeAvatar grantee={grantee} />
             </ListItemAvatar>
-            <ListItemText primary={grantee.label} secondary={grantee.secondary} sx={{ pr: 18 }} />
+            <ListItemText
+              primary={grantee.label}
+              secondary={[grantee.secondary, summary(access[grantee.uri])].filter(Boolean).join(' · ')}
+              sx={{ pr: 5 }}
+            />
           </ListItem>
         ))}
       </List>

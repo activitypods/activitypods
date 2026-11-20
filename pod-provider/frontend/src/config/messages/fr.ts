@@ -156,7 +156,11 @@ export default {
     },
     share: {
       everyone: 'Tout le monde',
-      authenticated: 'Utilisateurs connectés'
+      authenticated: 'Utilisateurs connectés',
+      read: 'Lire',
+      write: 'Modifier',
+      share: 'Partager',
+      edit: 'Modifier les droits'
     },
     authorization: {
       required: 'Accès requis',

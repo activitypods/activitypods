@@ -22,6 +22,7 @@ const appRegistrationUris = new Map<string, Promise<string | undefined>>();
 const appGrantsCache = new Map<string, { grants: Promise<Record<string, any>[]>; loadedAt: number }>();
 const appRegistrationWatchers = new Map<string, Promise<UnwatchFn | undefined>>();
 const listeners = new Set<(webId: string) => void>();
+const groupRightsCache = new Map<string, Promise<string[]>>();
 
 const getAppRegistrationUri = (session: AuthSession) => {
   if (!appRegistrationUris.has(session.webId)) {
@@ -79,6 +80,8 @@ export const getAppGrants = (session: AuthSession): Promise<Record<string, any>[
 export const invalidateAppGrants = (webId?: string) => {
   const webIds = webId ? [webId] : [...appGrantsCache.keys()];
   webIds.forEach(id => appGrantsCache.delete(id));
+  // The roles usually change with the grants
+  for (const key of groupRightsCache.keys()) if (!webId || key.startsWith(`${webId}|`)) groupRightsCache.delete(key);
   webIds.forEach(notifyAccessChange);
 };
 
@@ -96,6 +99,7 @@ export const onAppGrantsChange = (listener: (webId: string) => void) => {
 /** Forget everything about the user (on logout) */
 export const clearAppGrants = async (webId: string) => {
   appGrantsCache.delete(webId);
+  for (const key of groupRightsCache.keys()) if (key.startsWith(`${webId}|`)) groupRightsCache.delete(key);
   appRegistrationUris.delete(webId);
   const unwatch = await appRegistrationWatchers.get(webId);
   appRegistrationWatchers.delete(webId);
@@ -227,4 +231,22 @@ export const canShareContainer = async (containerUri: string, session?: AuthSess
       isScope(grant, 'AllFromRegistry') &&
       grant['interop:hasDataRegistration'] === containerUri
   );
+};
+
+/** The special rights of the logged-in user in a group of an ActivityPods Pod provider (e.g. `interop:ManageAccess`) */
+export const getGroupSpecialRights = (groupWebId: string, session: AuthSession): Promise<string[]> => {
+  const key = `${session.webId}|${groupWebId}`;
+  if (!groupRightsCache.has(key)) {
+    const rights = (async () => {
+      const group = await fetchStorage(groupWebId, session);
+      const username = group['foaf:nick'] || group.preferredUsername;
+      if (!username) return [];
+      const endpoint = new URL(`/.account/${username}/me`, new URL(groupWebId).origin).toString();
+      const { json } = await fetchWithSession(endpoint, { headers: { Accept: 'application/json' } }, session);
+      return arrayOf<string>(json?.specialRights);
+    })();
+    rights.catch(() => groupRightsCache.delete(key));
+    groupRightsCache.set(key, rights);
+  }
+  return groupRightsCache.get(key)!.catch(() => []);
 };

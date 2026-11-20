@@ -1,7 +1,13 @@
 import type { AccessControlProvider } from '@refinedev/core';
 import { storagesResolver } from './storages';
 import { DEFAULT_CONTEXT, findContainerUri, resolveResourceTypes } from './utils';
-import { canShareContainer, canShareResource, canWriteContainer, canWriteResource } from './grants';
+import {
+  canShareContainer,
+  canShareResource,
+  canWriteContainer,
+  canWriteResource,
+  getGroupSpecialRights
+} from './grants';
 import { DataProviderConfig } from './types';
 
 const CONTROLLED_ACTIONS = ['create', 'edit', 'delete', 'clone', 'share'];
@@ -44,7 +50,13 @@ const accessControlProvider = ({
       const types = await resolveResourceTypes(resourceConfig, jsonContext);
       const containerUri = await findContainerUri(storageUri, resourceConfig, types, session);
       if (!containerUri) return { can: false };
-      if (action === 'share') return { can: await canShareContainer(containerUri, session) };
+      if (action === 'share') {
+        // Only the admins of a group may change the access to all the data of a type, the others share them one by one
+        if (storageUri !== session.webId) {
+          return { can: (await getGroupSpecialRights(storageUri, session)).includes('interop:ManageAccess') };
+        }
+        return { can: await canShareContainer(containerUri, session) };
+      }
       return { can: await canWriteContainer(containerUri, session, [storageUri]) };
     },
     options: {

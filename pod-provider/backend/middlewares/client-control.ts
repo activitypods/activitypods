@@ -153,6 +153,7 @@ const ClientControlMiddleware = ({ baseUrl }: any) => {
     'webacl.group.api_getGroups': checkWacGroups,
     'webacl.group.api_getMembers': checkWacGroups,
     'webacl.group.api_removeMember': checkWacGroups,
+    'groups.getOwnRoles': async () => {},
     'solid-notifications.provider.webhook.endpointPost': checkNotificationTopic,
     'solid-notifications.provider.websocket.endpointPost': checkNotificationTopic,
     // TODO Add a special right to sign and issue credentials in the name of the user

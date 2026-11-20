@@ -22,7 +22,7 @@ const appRegistrationUris = new Map<string, Promise<string | undefined>>();
 const appGrantsCache = new Map<string, { grants: Promise<Record<string, any>[]>; loadedAt: number }>();
 const appRegistrationWatchers = new Map<string, Promise<UnwatchFn | undefined>>();
 const listeners = new Set<(webId: string) => void>();
-const groupRightsCache = new Map<string, Promise<string[]>>();
+const groupRightsCache = new Map<string, Promise<GroupMembership>>();
 
 const getAppRegistrationUri = (session: AuthSession) => {
   if (!appRegistrationUris.has(session.webId)) {
@@ -233,20 +233,48 @@ export const canShareContainer = async (containerUri: string, session?: AuthSess
   );
 };
 
-/** The special rights of the logged-in user in a group of an ActivityPods Pod provider (e.g. `interop:ManageAccess`) */
-export const getGroupSpecialRights = (groupWebId: string, session: AuthSession): Promise<string[]> => {
+export type GroupMembership = {
+  joinPolicy: 'interop:OpenJoin' | 'interop:ModeratedJoin' | 'interop:InviteOnly';
+  roles: { id: string; label?: string }[];
+  specialRights: string[];
+  /** The pending Join activity of the user */
+  joinRequest?: string;
+  /** The pending Invite activity of the group */
+  invitation?: string;
+};
+
+/** The roles, special rights and join status of the logged-in user in a group of an ActivityPods Pod provider */
+export const getGroupMembership = (groupWebId: string, session: AuthSession): Promise<GroupMembership> => {
   const key = `${session.webId}|${groupWebId}`;
   if (!groupRightsCache.has(key)) {
-    const rights = (async () => {
+    const membership = (async () => {
       const group = await fetchStorage(groupWebId, session);
+      const joinPolicy = group['interop:joinPolicy'] || 'interop:InviteOnly';
       const username = group['foaf:nick'] || group.preferredUsername;
-      if (!username) return [];
+      if (!username) return { joinPolicy, roles: [], specialRights: [] };
       const endpoint = new URL(`/.account/${username}/me`, new URL(groupWebId).origin).toString();
       const { json } = await fetchWithSession(endpoint, { headers: { Accept: 'application/json' } }, session);
-      return arrayOf<string>(json?.specialRights);
+      return {
+        joinPolicy,
+        roles: arrayOf<any>(json?.roles),
+        specialRights: arrayOf<string>(json?.specialRights),
+        joinRequest: json?.joinRequest,
+        invitation: json?.invitation
+      };
     })();
-    rights.catch(() => groupRightsCache.delete(key));
-    groupRightsCache.set(key, rights);
+    membership.catch(() => groupRightsCache.delete(key));
+    groupRightsCache.set(key, membership);
   }
-  return groupRightsCache.get(key)!.catch(() => []);
+  return groupRightsCache.get(key)!;
 };
+
+/** Read the membership again on next call, e.g. after a Join activity */
+export const forgetGroupMembership = (groupWebId: string, session: AuthSession) =>
+  groupRightsCache.delete(`${session.webId}|${groupWebId}`);
+
+/** The special rights of the logged-in user in a group (e.g. `interop:ManageAccess`) */
+export const getGroupSpecialRights = (groupWebId: string, session: AuthSession): Promise<string[]> =>
+  getGroupMembership(groupWebId, session).then(
+    ({ specialRights }) => specialRights,
+    () => []
+  );

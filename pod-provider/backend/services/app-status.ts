@@ -44,7 +44,8 @@ const AppStatusService = {
               agentUri: webId,
               right: 'interop:ManageAccess'
             }));
-          if (!hasRight) throw new MoleculerError('You need the interop:ManageAccess right on this group', 403, 'FORBIDDEN');
+          if (!hasRight)
+            throw new MoleculerError('You need the interop:ManageAccess right on this group', 403, 'FORBIDDEN');
           webId = podOwner;
         }
 

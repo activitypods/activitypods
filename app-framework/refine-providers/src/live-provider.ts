@@ -1,6 +1,6 @@
 import type { LiveEvent, LiveProvider } from '@refinedev/core';
 import { arrayOf, DEFAULT_CONTEXT, fetchStorage, invalidateStorage } from './utils';
-import { notifyAccessChange } from './grants';
+import { notifyAccessChange, onAppGrantsChange } from './grants';
 import { objectId, subscribeToTopic } from './notifications';
 import { storagesResolver } from './storages';
 import { AuthSession, LiveProviderConfig, ResourceConfig, UnwatchFn } from './types';
@@ -92,34 +92,58 @@ const liveProvider = ({
         return () => unwatchFns.forEach(fn => fn());
       }
 
-      const { containers, resources: resourcesSources } = await resolveListSources(resourceId, session);
+      let unwatchFns: UnwatchFn[] = [];
+      let watchedContainers = '';
 
-      const refreshList = (storageUri: string) => {
-        invalidateStorage(storageUri);
-        notifyAccessChange(session.webId);
-        callback({ channel, type: '*', payload: {}, date: new Date() });
+      const refreshList = () => callback({ channel, type: '*', payload: {}, date: new Date() });
+
+      const watch = async () => {
+        const { containers, resources: resourcesSources } = await resolveListSources(resourceId, session);
+        watchedContainers = containers.map(({ uri }) => uri).join(' ');
+
+        const results = await Promise.allSettled([
+          ...containers.map(({ uri }) =>
+            subscribeToTopic(uri, session, activity => {
+              const type = ACTIVITY_TYPE_MAP[activity.type];
+              const id = objectId(activity.object);
+              if (type && id) emit(type, [id], new Date(activity.published ?? Date.now()));
+            })
+          ),
+          // The grants given to everyone or to connected users change when data is made public or private
+          ...[...new Set([...containers, ...resourcesSources].map(({ storage }) => storage))].map(storageUri =>
+            watchPublicRegistrations(storageUri, session, () => {
+              invalidateStorage(storageUri);
+              // The list is refreshed by the listener below
+              notifyAccessChange(session.webId);
+            })
+          )
+        ]);
+        unwatchFns = [];
+        results.forEach(result => {
+          if (result.status === 'fulfilled') unwatchFns.push(result.value);
+          else console.warn(`Could not watch the resources of "${resourceId}"`, result.reason);
+        });
+        return results;
       };
 
-      const results = await Promise.allSettled([
-        ...containers.map(({ uri }) =>
-          subscribeToTopic(uri, session, activity => {
-            const type = ACTIVITY_TYPE_MAP[activity.type];
-            const id = objectId(activity.object);
-            if (type && id) emit(type, [id], new Date(activity.published ?? Date.now()));
-          })
-        ),
-        // The grants given to everyone or to connected users change when data is made public or private
-        ...[...new Set([...containers, ...resourcesSources].map(({ storage }) => storage))].map(storageUri =>
-          watchPublicRegistrations(storageUri, session, () => refreshList(storageUri))
-        )
-      ]);
-      const unwatchFns: UnwatchFn[] = [];
-      results.forEach((result, i) => {
-        if (result.status === 'fulfilled') unwatchFns.push(result.value);
-        else console.warn(`Could not watch the resources of "${resourceId}"`, result.reason);
-      });
+      const results = await watch();
       if (unwatchFns.length === 0 && results.length > 0) throw (results[0] as PromiseRejectedResult).reason;
-      return () => unwatchFns.forEach(fn => fn());
+
+      // When the grants change (e.g. the user joined a group), other containers may be readable
+      const stopListening = onAppGrantsChange(async webId => {
+        if (webId !== session.webId) return;
+        refreshList();
+        const { containers } = await resolveListSources(resourceId, session);
+        if (containers.map(({ uri }) => uri).join(' ') === watchedContainers) return;
+        const previous = unwatchFns;
+        await watch();
+        previous.forEach(fn => fn());
+      });
+
+      return () => {
+        stopListening();
+        unwatchFns.forEach(fn => fn());
+      };
     },
 
     unsubscribe: async (unsubscribeFn: UnwatchFn | Promise<UnwatchFn>) => {

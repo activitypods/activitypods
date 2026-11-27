@@ -2,7 +2,7 @@ import urlJoin from 'url-join';
 import fetch from 'node-fetch';
 import { SignJWT, importJWK } from 'jose';
 import { MIME_TYPES } from '@semapps/mime-types';
-import { OBJECT_TYPES, ACTIVITY_TYPES } from '@semapps/activitypub';
+import { OBJECT_TYPES, ACTIVITY_TYPES, PUBLIC_URI } from '@semapps/activitypub';
 import { connectPodProvider, clearAllData, installApp, initializeAppServer } from './initialize.ts';
 import ExampleAppService from './apps/example.app.ts';
 jest.setTimeout(120000);
@@ -140,6 +140,34 @@ describe('Requests made by an app with an OIDC token', () => {
     // Craig can read the event, and the app too, but Craig did not register the app
     const res = await fetchAs(craig, eventUri);
     expect(res.status).toBe(403);
+  });
+
+  test('Any app reads the public data', async () => {
+    const activity = await bob.call('activitypub.outbox.post', {
+      collectionUri: bob.outbox,
+      type: ACTIVITY_TYPES.CREATE,
+      object: { type: OBJECT_TYPES.NOTE, content: 'Public note' },
+      to: PUBLIC_URI
+    });
+    const publicNoteUri = getObjectUri(activity);
+
+    // Craig did not register the app
+    let res = await fetchAs(craig, craig.id);
+    expect(res.status).toBe(200);
+
+    res = await fetchAs(craig, craig['interop:hasAuthorizationAgent']);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('link') || '').not.toContain('registeredAgent');
+
+    res = await fetchAs(craig, publicNoteUri);
+    expect(res.status).toBe(200);
+
+    res = await fetchAs(craig, bob.outbox);
+    expect(res.status).toBe(200);
+
+    // Alice did not grant the app access to notes
+    res = await fetchAs(alice, publicNoteUri);
+    expect(res.status).toBe(200);
   });
 
   test('The app reads the inbox of the user', async () => {

@@ -85,6 +85,8 @@ const FREE_ACTIONS = [
   'registration-endpoint.getForAgent'
 ];
 
+const READ_ACTIONS = ['ldp.api.get', 'ldp.api.head'];
+
 // API actions controlled by the wrappers below, which also handle applications acting in their own name
 const WRAPPED_ACTIONS = [
   'signature.proxy.api_query',
@@ -178,17 +180,32 @@ const ClientControlMiddleware = ({ baseUrl }: any) => {
         throw new E.ForbiddenError('FORBIDDEN', `Applications cannot call ${action.name}`);
       }
 
-      // With On-Behalf-Of, the user may not exist on this server
-      const account = await ctx.call('auth.account.findByWebId', { webId: ctx.meta.webId });
-      if (!account || !(await getRegistration(ctx, ctx.meta.clientId, ctx.meta.webId))) {
-        throw new E.ForbiddenError(
-          'FORBIDDEN',
-          `The application ${ctx.meta.clientId} is not registered by ${ctx.meta.webId}`
-        );
-      }
+      try {
+        // With On-Behalf-Of, the user may not exist on this server
+        const account = await ctx.call('auth.account.findByWebId', { webId: ctx.meta.webId });
+        if (!account || !(await getRegistration(ctx, ctx.meta.clientId, ctx.meta.webId))) {
+          throw new E.ForbiddenError(
+            'FORBIDDEN',
+            `The application ${ctx.meta.clientId} is not registered by ${ctx.meta.webId}`
+          );
+        }
 
-      if (control) await control(ctx);
+        if (control) await control(ctx);
+      } catch (e) {
+        if (READ_ACTIONS.includes(action.name) && e instanceof E.ForbiddenError) return readPublicData(ctx, next, e);
+        throw e;
+      }
     }
+    return next(ctx);
+  };
+
+  // Public data can be read by any application, even if the user gave it no access
+  const readPublicData = async (ctx: any, next: any, error: unknown) => {
+    if (!(await ctx.call('permissions.has', { uri: getLdpUri(ctx.params), mode: 'acl:Read', webId: 'anon' }))) {
+      throw error;
+    }
+    ctx.meta.webId = 'anon';
+    ctx.meta.clientId = undefined;
     return next(ctx);
   };
 

@@ -192,30 +192,28 @@ Contact groups are available in the same way with the `groups` resource.
 
 #### On the Pod provider
 
-You can also redirect the user to the Pod provider, where they will choose the recipients. This way, your application doesn't need to have access to the user's contacts. This is only available to the creator of the resource.
+You can also send the user to the share screen of their Pod provider, where they choose who can access the resource and with which rights (read, edit, share). This way, your application doesn't need to have access to the user's contacts. The [`ShareButton`](/reference/frontend/refine-antd/#sharebutton) component does it, and comes back to the current page afterwards:
 
 ```tsx
-import { STORAGE_KEY_REDIRECT, resolveAuthAgent } from '@activitypods/refine-providers';
-import { useAuthProvider } from '@activitypods/refine-hooks';
+import { ShareButton } from '@activitypods/refine-antd';
 
-export const RemoteShareButton = ({ record, clientId }) => {
-  const session = useAuthProvider().getSession();
-
-  if (!session || record['dc:creator'] !== session.webId) return null;
-
-  const share = async () => {
-    const { authAgent } = await resolveAuthAgent(session.webId, session.token);
-    const url = new URL(authAgent['interop:hasAuthorizationRedirectEndpoint']);
-    url.searchParams.set('client_id', clientId);
-    url.searchParams.set('resource', record.id);
-    // The BackgroundChecks component comes back to this page
-    localStorage.setItem(STORAGE_KEY_REDIRECT, window.location.pathname);
-    window.location.href = url.toString();
-  };
-
-  return <button onClick={share}>Share</button>;
-};
+<ShareButton clientId={clientId} resource="events" recordItemId={record.id} />;
 ```
+
+If you don't pass `recordItemId`, the user will have the opportunity to share all data of this type.
+
+```tsx
+<ShareButton clientId={clientId} resource="events" />
+```
+
+The button is only shown if the [`accessControlProvider`](/reference/frontend/refine-providers/#accesscontrolprovider) allows the `share` action.
+
+The `share` action is allowed:
+
+- For a resource: if it is in the user's Pod, or if the access grant of the application allows to delegate it (`interop:delegationAllowed`). This is the case when it was shared with the user with the "share" right.
+- For all the resources of a type: in the user's Pod, or in the Pod of a group if the user has the `interop:ManageAccess` right on it (usually owners and admins).
+
+For the data of a group store, the share screen shows the roles and the members of the group. Members who were given the "share" right on a type of data can share its resources one by one.
 
 ### Reacting to shared resources
 

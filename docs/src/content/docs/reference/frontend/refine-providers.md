@@ -89,6 +89,8 @@ The keys of `resources` are the names of the Refine resources. Each value must h
 | `update`    | Fetch the current version of the resource, apply the given variables and replace it. The properties which are not in the variables, such as those added by a backend, are kept |
 | `deleteOne` | Delete the resource                                                                                                                                                            |
 
+It also has a `getConfig` method, which returns the options given to the data provider. In a component, use [`useDataProviderConfig`](/reference/frontend/refine-hooks/#usedataproviderconfig).
+
 The `custom` method is not implemented. To call other endpoints, use [`fetchWithSession`](#fetchwithsession).
 
 ## `liveProvider`
@@ -111,6 +113,23 @@ Create a Refine live provider using [WebSocket channels](https://solid.github.io
 | A list          | One channel on the resource's container | `created` and `deleted` of its items |
 
 Lists are not notified when one of their items is updated. Nothing happens for the resources which are not in `resources`.
+
+## `accessControlProvider`
+
+Create a Refine [access control provider](https://refine.dev/core/docs/4.xx.xx/authorization/access-control-provider/), to hide the actions which the logged-in user cannot do. It takes the same options as the [data provider](#options-1).
+
+```ts
+const apAccessControlProvider = accessControlProvider({ authProvider: apAuthProvider, resources, jsonContext });
+```
+
+Reading is always allowed, as the Pod decides what it returns. The other actions depend on the access grants given to the app:
+
+| Action             | Allowed if                                                                                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `create`, `clone`  | The app can write in the container of the resource                                                                                                                  |
+| `edit`, `delete`   | The app can write the resource (`params.id`)                                                                                                                        |
+| `share` with an ID | The resource is in the user's Pod, or the grant of the app allows to delegate it (`interop:delegationAllowed`)                                                      |
+| `share` without ID | All the resources of the type, which must have a `shapeTreeUri`: in the user's Pod, or in the Pod of a group if the user has the `interop:ManageAccess` right on it |
 
 ## Utilities
 

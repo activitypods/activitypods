@@ -44,6 +44,26 @@ When you use this component, pass `appStatusCheckInterval: false` to the auth pr
 | `listeningTo`   | `Array`           | `[]`     | URIs on which the app backend must have a webhook channel               |
 | `checkInterval` | `Number \| false` | `120000` | Interval in ms between checks. With `false`, there is no periodic check |
 
+## `ShareButton`
+
+Open the share screen of the user's Pod provider, to choose who can access a resource, or all the resources of a type. The user then comes back to the current page. See [Sharing resources](/app-framework/contacts-and-sharing/#on-the-pod-provider).
+
+```tsx
+<ShareButton clientId={clientId} resource="events" recordItemId={record.id} />
+```
+
+The button is shown only if the [`accessControlProvider`](/reference/frontend/refine-providers/#accesscontrolprovider) allows the `share` action.
+
+### Props
+
+| Prop           | Type     | Default      | Description                                                                                                                                               |
+| -------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `clientId`     | `String` | **required** | Client ID of the app, shown on the share screen                                                                                                           |
+| `resource`     | `String` |              | Resource of the data provider                                                                                                                             |
+| `recordItemId` | `String` |              | URI of the resource to share. Without it, all the resources are shared: those with the `shapeTreeUri` of the resource, in the storage where it is created |
+
+The other props are passed to the Ant Design `Button`.
+
 ## Translations
 
 The components translate their texts with the `i18nProvider` given to Refine, using these keys and default texts. They also display the texts of the [hooks](/reference/frontend/refine-hooks/#translations).
@@ -54,3 +74,4 @@ The components translate their texts with the `i18nProvider` given to Refine, us
 | `pages.login.backToLogin`       | Back to login                                                |
 | `buttons.refresh`               | Refresh                                                      |
 | `buttons.logout`                | Logout                                                       |
+| `buttons.share`                 | Share                                                        |

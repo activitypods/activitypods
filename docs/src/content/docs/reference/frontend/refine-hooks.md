@@ -14,6 +14,14 @@ Return the auth provider given to Refine, with its [additional methods](/referen
 const session = useAuthProvider().getSession();
 ```
 
+## `useDataProviderConfig`
+
+Return the options given to the data provider (`resources`, `storages`, `jsonContext`...).
+
+```ts
+const { resources, storages } = useDataProviderConfig();
+```
+
 ## `useCollection`
 
 Fetch an ActivityPub collection. See [Inbox & outbox](/app-framework/frontend/inbox-and-outbox/#reading-collections) for an example.

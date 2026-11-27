@@ -85,8 +85,6 @@ const FREE_ACTIONS = [
   'registration-endpoint.getForAgent'
 ];
 
-const READ_ACTIONS = ['ldp.api.get', 'ldp.api.head'];
-
 // API actions controlled by the wrappers below, which also handle applications acting in their own name
 const WRAPPED_ACTIONS = [
   'signature.proxy.api_query',
@@ -136,8 +134,17 @@ const ClientControlMiddleware = ({ baseUrl }: any) => {
     return checkSpecialRight(ctx, podOwner, 'apods:CreateWacGroup');
   };
 
-  const checkNotificationTopic = (ctx: any) =>
-    checkRight(ctx, ctx.params.topic || ctx.params['notify:topic'], 'acl:Read');
+  const getTopic = (ctx: any) => ctx.params.topic || ctx.params['notify:topic'];
+
+  const checkNotificationTopic = (ctx: any) => checkRight(ctx, getTopic(ctx), 'acl:Read');
+
+  // API actions reading the data at the returned URI
+  const READ_ACTIONS: Record<string, (ctx: any) => string> = {
+    'ldp.api.get': ctx => getLdpUri(ctx.params),
+    'ldp.api.head': ctx => getLdpUri(ctx.params),
+    'solid-notifications.provider.webhook.endpointPost': getTopic,
+    'solid-notifications.provider.websocket.endpointPost': getTopic
+  };
 
   // Controls of the API actions called by applications with a clientId, once their registration is checked
   const CONTROLS: Record<string, (ctx: any) => Promise<any>> = {
@@ -192,7 +199,7 @@ const ClientControlMiddleware = ({ baseUrl }: any) => {
 
         if (control) await control(ctx);
       } catch (e) {
-        if (READ_ACTIONS.includes(action.name) && e instanceof E.ForbiddenError) return readPublicData(ctx, next, e);
+        if (READ_ACTIONS[action.name] && e instanceof E.ForbiddenError) return readPublicData(ctx, next, action, e);
         throw e;
       }
     }
@@ -200,8 +207,9 @@ const ClientControlMiddleware = ({ baseUrl }: any) => {
   };
 
   // Public data can be read by any application, even if the user gave it no access
-  const readPublicData = async (ctx: any, next: any, error: unknown) => {
-    if (!(await ctx.call('permissions.has', { uri: getLdpUri(ctx.params), mode: 'acl:Read', webId: 'anon' }))) {
+  const readPublicData = async (ctx: any, next: any, action: any, error: unknown) => {
+    const uri = READ_ACTIONS[action.name](ctx);
+    if (!uri || !(await ctx.call('permissions.has', { uri, mode: 'acl:Read', webId: 'anon' }))) {
       throw error;
     }
     ctx.meta.webId = 'anon';

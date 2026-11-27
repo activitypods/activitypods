@@ -365,6 +365,7 @@ export default {
       type: 'Type',
       type_organization: 'Organisation',
       type_group: 'Groupe',
+      type_application: 'Application',
       name: 'Nom',
       image: 'Logo',
       my_roles: 'Mes rôles',

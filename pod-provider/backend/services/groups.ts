@@ -32,6 +32,13 @@ import { ServiceSchema } from 'moleculer';
 const INTEROP = 'http://www.w3.org/ns/solid/interop#';
 const JOIN_POLICIES = ['interop:OpenJoin', 'interop:ModeratedJoin', 'interop:InviteOnly'];
 
+// interop:Application is reserved to the apps themselves
+const GROUP_TYPES: Record<string, string[]> = {
+  'foaf:Group': ['foaf:Group', 'as:Group'],
+  'foaf:Organization': ['foaf:Organization', 'as:Organization'],
+  'as:Application': ['foaf:Group', 'as:Application']
+};
+
 const getUri = (value: any) => (typeof value === 'string' ? value : value?.id);
 
 const GroupsService = {
@@ -119,8 +126,8 @@ const GroupsService = {
         const ownerWebId = ctx.meta.webId;
         const groupWebId = urlJoin(CONFIG.BASE_URL, id);
 
-        if (!['foaf:Organization', 'foaf:Group'].includes(type))
-          throw new E.BadRequestError('Type must be foaf:Organization or foaf:Group');
+        if (!type || !GROUP_TYPES[type])
+          throw new E.BadRequestError(`Type must be one of ${Object.keys(GROUP_TYPES).join(', ')}`);
 
         // Ensure the owner is a valid WebID
         const owner = await ctx.call('activitypub.actor.get', { actorUri: ownerWebId });
@@ -136,7 +143,7 @@ const GroupsService = {
         // Create WebID and storage
         await ctx.call('webid.createWebId', {
           nick: id,
-          '@type': type === 'foaf:Organization' ? ['foaf:Organization', 'as:Organization'] : ['foaf:Group', 'as:Group']
+          '@type': GROUP_TYPES[type]
         });
 
         await this.setOwnerRights(ctx, groupWebId, ownerWebId, true);

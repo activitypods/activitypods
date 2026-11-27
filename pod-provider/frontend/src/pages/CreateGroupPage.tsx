@@ -23,6 +23,8 @@ import { Box } from '@mui/material';
 import Header from '../common/Header';
 import { compressImage, isURL } from '../utils';
 
+const GROUP_TYPES = ['foaf:Group', 'foaf:Organization', 'as:Application'];
+
 const CreateGroupPage = () => {
   const translate = useTranslate();
   const navigate = useNavigate();
@@ -131,7 +133,11 @@ const CreateGroupPage = () => {
       <SimpleBox title={translate('app.action.create_group')} icon={<GroupAddIcon />}>
         <Form
           onSubmit={onSubmit}
-          defaultValues={{ type: 'foaf:Group', id: searchParams.get('id') || '', name: searchParams.get('name') || '' }}
+          defaultValues={{
+            type: GROUP_TYPES.includes(searchParams.get('type')!) ? searchParams.get('type') : 'foaf:Group',
+            id: searchParams.get('id') || '',
+            name: searchParams.get('name') || ''
+          }}
         >
           <TextInput source="id" label={translate('app.group.id')} fullWidth />
           <SelectInput
@@ -139,7 +145,8 @@ const CreateGroupPage = () => {
             label={translate('app.group.type')}
             choices={[
               { id: 'foaf:Group', name: translate('app.group.type_group') },
-              { id: 'foaf:Organization', name: translate('app.group.type_organization') }
+              { id: 'foaf:Organization', name: translate('app.group.type_organization') },
+              { id: 'as:Application', name: translate('app.group.type_application') }
             ]}
             fullWidth
           />

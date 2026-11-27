@@ -273,8 +273,7 @@ export default {
       username_cannot_be_modified: 'Votre identifiant ne peut être modifié',
       public_profile_view: 'Vous visualisez votre profil public, visible de tout le monde.',
       private_profile_view: 'Vous visualisez votre profil privé, visible seulement de vos contacts.',
-      select_group:
-        "Choisissez le groupe sur lequel enregistrer l'application, parmi ceux que vous gérez, ou créez-en un nouveau.",
+      select_group: 'Choisissez un groupe existant ou créez-en un nouveau.',
       create_group:
         'Veuillez sélectionner dans la liste ci-dessous le fournisseur que vous souhaitez utiliser pour créer votre groupe',
       cannot_show_permissions_of_offline_app:

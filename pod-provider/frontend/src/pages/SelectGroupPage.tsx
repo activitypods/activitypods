@@ -2,24 +2,15 @@ import React, { useEffect } from 'react';
 import { useTranslate } from 'react-admin';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
-import {
-  Avatar,
-  Box,
-  Button,
-  CircularProgress,
-  List,
-  ListItemAvatar,
-  ListItemButton,
-  ListItemText
-} from '@mui/material';
-import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import { Avatar, Box, CircularProgress, List, ListItemAvatar, ListItemButton, ListItemText } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import GroupIcon from '@mui/icons-material/PeopleAlt';
 import Header from '../common/Header';
 import SimpleBox from '../layout/SimpleBox';
 import useGroups, { Group } from '../hooks/useGroups';
 import { isURL } from '../utils';
 
-// Let an app choose a group in which the user may register it, or create a new one
+// Choose a group managed by the user, or create a new one
 const SelectGroupPage = () => {
   const translate = useTranslate();
   const navigate = useNavigate();
@@ -63,29 +54,33 @@ const SelectGroupPage = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <>
-            <List>
-              {managedGroups.map(group => (
-                <ListItemButton
-                  key={group.id}
-                  onClick={() => selectGroup(group)}
-                  sx={{ backgroundColor: 'white', mb: 1, boxShadow: 1 }}
-                >
-                  <ListItemAvatar>
-                    <Avatar src={group.avatar}>
-                      <GroupIcon />
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText primary={group.name} secondary={group.webfingerId} />
-                </ListItemButton>
-              ))}
-            </List>
-            <Box display="flex" justifyContent="end" sx={{ pt: 1 }}>
-              <Button variant="outlined" startIcon={<GroupAddIcon />} onClick={() => navigate(createGroupUrl)}>
-                {translate('app.action.create_new_group')}
-              </Button>
-            </Box>
-          </>
+          <List>
+            {managedGroups.map(group => (
+              <ListItemButton
+                key={group.id}
+                onClick={() => selectGroup(group)}
+                sx={{ backgroundColor: 'white', mb: 1, boxShadow: 1 }}
+              >
+                <ListItemAvatar>
+                  <Avatar src={group.avatar}>
+                    <GroupIcon />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText primary={group.name} secondary={group.webfingerId} />
+              </ListItemButton>
+            ))}
+            <ListItemButton
+              onClick={() => navigate(createGroupUrl)}
+              sx={{ backgroundColor: 'white', mb: 1, boxShadow: 1 }}
+            >
+              <ListItemAvatar>
+                <Avatar>
+                  <AddIcon />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText primary={translate('app.action.create_new_group')} />
+            </ListItemButton>
+          </List>
         )}
       </SimpleBox>
     </>

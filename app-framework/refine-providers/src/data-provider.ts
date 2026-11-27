@@ -13,7 +13,7 @@ import {
   normalizeRecord,
   resolveResourceTypes
 } from './utils';
-import { DataProviderConfig, ResourceConfig } from './types';
+import { ActivityPodsDataProvider, DataProviderConfig, ResourceConfig } from './types';
 
 /**
  * Refine data provider for ActivityPods. Resources are mapped to LDP containers, discovered at
@@ -34,7 +34,7 @@ const dataProvider = ({
   authProvider,
   jsonContext = DEFAULT_CONTEXT,
   readAccessGrants = false
-}: DataProviderConfig): DataProvider => {
+}: DataProviderConfig): ActivityPodsDataProvider => {
   const { getStorageUri, resolveListSources } = storagesResolver({
     resources,
     storages,
@@ -173,6 +173,8 @@ const dataProvider = ({
   };
 
   return {
+    getConfig: () => ({ resources, storages, authProvider, jsonContext, readAccessGrants }),
+
     getApiUrl: () => '',
 
     getList: list,

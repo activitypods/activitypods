@@ -1,4 +1,4 @@
-import type { AuthProvider as CoreAuthProvider } from '@refinedev/core';
+import type { AuthProvider as CoreAuthProvider, DataProvider } from '@refinedev/core';
 
 /** A JSON-LD context: a URL, an inline object, or an array mixing both. */
 export type JsonContext = string | string[] | Record<string, any>;
@@ -158,6 +158,11 @@ export type DataProviderConfig = {
    * are cached in their containers.
    */
   readAccessGrants?: boolean;
+};
+
+/** The Refine data provider, with the config it was created with */
+export type ActivityPodsDataProvider = DataProvider & {
+  getConfig: () => DataProviderConfig;
 };
 
 export type LiveProviderConfig = {

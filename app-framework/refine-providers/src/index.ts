@@ -8,3 +8,4 @@ export { default as accessControlProvider } from './access-control-provider';
 export * from './types';
 export * from './utils';
 export * from './grants';
+export * from './storages';

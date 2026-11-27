@@ -46,6 +46,8 @@ const accessControlProvider = ({
       const resourceConfig = resource ? resources[resource] : undefined;
       const storageKey = resourceConfig?.create?.storage ?? '@user';
       if (!resourceConfig || storageKey === '@all' || storageKey === '@shared') return { can: false };
+      // The share screen of the Pod provider finds the data of a type by its shape tree
+      if (action === 'share' && !resourceConfig.shapeTreeUri) return { can: false };
       const storageUri = getStorageUri(storageKey, session)!;
       const types = await resolveResourceTypes(resourceConfig, jsonContext);
       const containerUri = await findContainerUri(storageUri, resourceConfig, types, session);

@@ -485,6 +485,10 @@ export const createPresentation = async ({
   return presentation;
 };
 
+// An IRI is compacted as a node reference if the predicate is not typed as @id in our context
+export const getUri = (value: any): string | undefined =>
+  typeof value === 'string' ? value : value?.['@id'] || value?.id;
+
 // Check the value is a string starting with http and without any white space
 export const isURL = (value: any) => typeof value === 'string' && value.startsWith('http') && !/\s/g.test(value);
 

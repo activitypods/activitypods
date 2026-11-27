@@ -5,7 +5,6 @@ import {
   Form,
   useTranslate,
   TextInput,
-  ImageInput,
   ImageField,
   Button,
   SelectInput,
@@ -14,6 +13,7 @@ import {
   useGetIdentity,
   useNotify
 } from 'react-admin';
+import { ImageInput } from '@semapps/input-components';
 import ChoosePodProviderPage from './ChoosePodProviderPage/ChoosePodProviderPage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCheckAuthenticated } from '@semapps/auth-provider';
@@ -21,7 +21,7 @@ import SimpleBox from '../layout/SimpleBox';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import { Box } from '@mui/material';
 import Header from '../common/Header';
-import { isURL } from '../utils';
+import { compressImage, isURL } from '../utils';
 
 const CreateGroupPage = () => {
   const translate = useTranslate();
@@ -62,24 +62,25 @@ const CreateGroupPage = () => {
           }
         );
 
-        // Upload the logo and get the URL
-        // TODO find the upload containers based on a `podStorage` metadata and the DataRegistry
-        // const uploadImageResponse = await dataProvider.fetch(urlJoin(groupWebId, 'data', 'semapps', 'file'), {
-        //   method: 'POST',
-        //   body: image,
-        //   headers: new Headers({
-        //     'Content-Type': image.type
-        //   })
-        // });
-
-        // if (!uploadImageResponse.ok) {
-        //   notify(`Could not upload image`, { type: 'error' });
-        //   return;
-        // }
-
-        // const imageUri = uploadImageResponse.headers.get('Location');
-
-        if (name) {
+        if (image?.rawFile) {
+          // Upload the logo on the group's storage, as in the public profile page
+          const { data: group } = await dataProvider.getOne('Actor', { id: groupWebId });
+          const file = await compressImage(image.rawFile);
+          const { headers } = await dataProvider.fetch(urlJoin(group['pim:storage'], 'semapps/file'), {
+            method: 'POST',
+            body: file,
+            headers: new Headers({ 'Content-Type': file.type })
+          });
+          await dataProvider.update('Actor', {
+            id: groupWebId,
+            data: {
+              ...group,
+              ...(name && { name, 'foaf:name': name }),
+              icon: { type: 'Image', mediaType: file.type, url: headers.get('Location') }
+            },
+            previousData: group
+          });
+        } else if (name) {
           // Update the group profile (name and logo URL)
           await dataProvider.patch('Actor', {
             id: groupWebId,
@@ -143,9 +144,9 @@ const CreateGroupPage = () => {
             fullWidth
           />
           <TextInput source="name" label={translate('app.group.name')} fullWidth />
-          {/* <ImageInput source="image" label={translate('app.group.image')} accept="image/*">
+          <ImageInput source="image" label={translate('app.group.image')} accept={{ 'image/*': [] }}>
             <ImageField source="src" />
-          </ImageInput> */}
+          </ImageInput>
           <Box display="flex" justifyContent="end" sx={{ pt: 2 }}>
             <>{/* @ts-ignore */}</>
             <Button

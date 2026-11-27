@@ -43,6 +43,8 @@ export default {
       view_private_profile: 'Voir votre profil privé',
       view_public_profile: 'Voir votre profil public',
       create_group: 'Créer un groupe',
+      create_new_group: 'Créer un nouveau groupe',
+      select_group: 'Choisir un groupe',
       skip_to_main: 'Passer au contenu principal',
       view_contact_profile: 'Voir le profil de %{name}',
       add_member: 'Inviter',
@@ -271,6 +273,8 @@ export default {
       username_cannot_be_modified: 'Votre identifiant ne peut être modifié',
       public_profile_view: 'Vous visualisez votre profil public, visible de tout le monde.',
       private_profile_view: 'Vous visualisez votre profil privé, visible seulement de vos contacts.',
+      select_group:
+        "Choisissez le groupe sur lequel enregistrer l'application, parmi ceux que vous gérez, ou créez-en un nouveau.",
       create_group:
         'Veuillez sélectionner dans la liste ci-dessous le fournisseur que vous souhaitez utiliser pour créer votre groupe',
       cannot_show_permissions_of_offline_app:
@@ -406,6 +410,7 @@ export default {
       settings: 'Paramètres - %{appName}',
       network: 'Mon réseau - %{appName}',
       create_group: 'Créer un groupe - %{appName}',
+      select_group: 'Choisir un groupe - %{appName}',
       group_settings: 'Paramètres du groupe %{groupName} - %{appName}',
       group_members: 'Membres du groupe %{groupName} - %{appName}',
       group_roles: 'Rôles du groupe %{groupName} - %{appName}',

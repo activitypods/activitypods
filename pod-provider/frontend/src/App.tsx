@@ -35,6 +35,7 @@ import NetworkRequestPage from './pages/NetworkPage/NetworkRequestPage';
 import SettingsLocalePage from './pages/SettingsPage/SettingsLocalePage';
 import SettingsProfilesPage from './pages/SettingsPage/ProfilesPage/SettingsProfilesPage';
 import CreateGroupPage from './pages/CreateGroupPage';
+import SelectGroupPage from './pages/SelectGroupPage';
 import GroupSettingsPage from './pages/SettingsPage/GroupSettingsPage';
 import GroupMembersPage from './pages/GroupMembersPage/GroupMembersPage';
 import GroupRolesPage from './pages/GroupRolesPage/GroupRolesPage';
@@ -83,6 +84,7 @@ const App = () => (
           <Route path="/invite/:capability" element={<InvitePage />} />
           <Route path="/groups">
             <Route path="create" element={<CreateGroupPage />} />
+            <Route path="select" element={<SelectGroupPage />} />
           </Route>
         </CustomRoutes>
         <CustomRoutes>

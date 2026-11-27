@@ -44,6 +44,8 @@ export default {
       view_private_profile: 'View your private profile',
       view_public_profile: 'View your public profile',
       create_group: 'Create group',
+      create_new_group: 'Create a new group',
+      select_group: 'Choose a group',
       skip_to_main: 'Skip to main content',
       view_contact_profile: "View %{name}'s profile",
       add_member: 'Invite',
@@ -265,6 +267,8 @@ export default {
       username_cannot_be_modified: 'The user ID cannot be modified',
       public_profile_view: 'You are viewing your public profile, visible by everyone',
       private_profile_view: 'You are viewing your private profile, visible only by your contacts',
+      select_group:
+        'Choose the group on which to register the application, among those you manage, or create a new one.',
       create_group: 'Please select on the list below the provider that you wish to use to create your group',
       cannot_show_permissions_of_offline_app:
         'The application is offline so we cannot show you the permissions you granted it in a human-readable way. You may still revoke all permissions by clicking on the button below.',
@@ -397,6 +401,7 @@ export default {
       settings: 'Settings - %{appName}',
       network: 'My network - %{appName}',
       create_group: 'Create group - %{appName}',
+      select_group: 'Choose a group - %{appName}',
       group_settings: 'Group settings of %{groupName} - %{appName}',
       group_members: 'Members of %{groupName} - %{appName}',
       group_roles: 'Roles of %{groupName} - %{appName}',

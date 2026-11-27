@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import urlJoin from 'url-join';
-import { DataProvider, useDataProvider } from 'react-admin';
+import { DataProvider, useDataProvider, useGetIdentity } from 'react-admin';
 import { useCollection, useWebfinger } from '@semapps/activitypub-components';
 import { getGroupEndpoint, GroupRights } from './useGroupRights';
 
@@ -40,19 +40,21 @@ const fetchGroup = async (dataProvider: DataProvider, groupUri: string): Promise
 // Groups listed in the user's interop:groups collection, which confirm the membership
 const useGroups = () => {
   const dataProvider = useDataProvider();
+  const { data: identity } = useGetIdentity();
   const { items, isLoading: isCollectionLoading, refetch } = useCollection('interop:groups');
   const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const groupsKey = (items || []).join(' ');
 
   useEffect(() => {
-    if (isCollectionLoading) return;
+    // The collection is not fetched (and not loading) until the identity is known
+    if (!identity?.webIdData || isCollectionLoading) return;
     const uris = groupsKey ? groupsKey.split(' ') : [];
     Promise.all(uris.map(groupUri => fetchGroup(dataProvider, groupUri).catch(() => undefined))).then(results => {
       setGroups(results.filter((group): group is Group => !!group?.isMember));
       setIsLoading(false);
     });
-  }, [dataProvider, groupsKey, isCollectionLoading]);
+  }, [dataProvider, groupsKey, isCollectionLoading, identity?.webIdData]);
 
   return { groups, isLoading, refetch };
 };

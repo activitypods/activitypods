@@ -165,11 +165,9 @@ const AuthorizationEndpointSchema = {
       if (!grant) throw403('You need the interop:ManageAccess right on this group, or the right to share this data');
       return { isGroup: true, delegateModes: arrayOf(grant['interop:accessMode']) };
     },
-    // A grant received by the user, allowing to share this data
+    // A grant given by the group to the user, allowing to share this data.
+    // It is found in the pod of the group, as the user may be on another server.
     async findDelegationGrant(ctx, webId, podOwner, resourceUri, shapeTreeUri) {
-      const userAccount = await ctx.call('auth.account.findByWebId', { webId });
-      if (!userAccount) return undefined;
-
       const dataRegistrationUri = resourceUri
         ? getId(await ctx.call('data-registrations.getByResourceUri', { resourceUri, webId: podOwner }))
         : await ctx.call('data-registrations.getByShapeTree', { shapeTreeUri, podOwner });
@@ -179,12 +177,13 @@ const AuthorizationEndpointSchema = {
         'access-grants.list',
         {
           filters: {
+            'http://www.w3.org/ns/solid/interop#grantee': webId,
             'http://www.w3.org/ns/solid/interop#dataOwner': podOwner,
             'http://www.w3.org/ns/solid/interop#hasDataRegistration': dataRegistrationUri
           },
-          webId
+          webId: podOwner
         },
-        { meta: { dataset: userAccount.username } }
+        { meta: { dataset: getDatasetFromUri(podOwner) } }
       );
       return arrayOf(container['ldp:contains'])
         .filter(

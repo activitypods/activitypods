@@ -18,3 +18,8 @@ export const SMTP_PORT = parseInt(process.env.SEMAPPS_SMTP_PORT, 10);
 export const SMTP_SECURE = process.env.SEMAPPS_SMTP_SECURE === 'true';
 export const SMTP_USER = process.env.SEMAPPS_SMTP_USER;
 export const SMTP_PASS = process.env.SEMAPPS_SMTP_PASS;
+
+export const AUTH_ACCOUNTS_DATASET_2 = process.env.SEMAPPS_AUTH_ACCOUNTS_DATASET_2;
+export const QUEUE_SERVICE_URL_2 = process.env.SEMAPPS_QUEUE_SERVICE_URL_2;
+export const MOLECULER_NAMESPACE_2 = process.env.SEMAPPS_MOLECULER_NAMESPACE_2;
+export const REDIS_OIDC_PROVIDER_URL_2 = process.env.SEMAPPS_REDIS_OIDC_PROVIDER_URL_2;

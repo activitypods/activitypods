@@ -62,6 +62,13 @@ const toggleRight = (access: Access = {}, right: Right): Access => {
 
 const sameAccess = (a: Access = {}, b: Access = {}) => RIGHTS.every(right => !!a[right] === !!b[right]);
 
+// The authorizations are managed by the server of the data owner, which may be another one (e.g. a remote group).
+// The data provider reaches it through the proxy of the user's Pod.
+const getAuthorizationsEndpoint = (ownerUri?: string | null) => {
+  const serverUrl = !ownerUri || ownerUri.startsWith(CONFIG.BACKEND_URL) ? CONFIG.BACKEND_URL : new URL(ownerUri).origin;
+  return urlJoin(serverUrl, '.auth-agent/authorizations');
+};
+
 export const PUBLIC_GRANTEES = [
   { uri: 'http://xmlns.com/foaf/0.1/Agent', curie: 'foaf:Agent', key: 'everyone', icon: <PublicIcon /> },
   {
@@ -190,7 +197,7 @@ const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareForm
   const labelPredicate = useCompactPredicate(container?.labelPredicate!, resource?.['@context']);
 
   useEffect(() => {
-    const authorizationsUrl = new URL(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/authorizations'));
+    const authorizationsUrl = new URL(getAuthorizationsEndpoint(resourceUri || podOwner));
     if (resourceUri) {
       authorizationsUrl.searchParams.append('resource', resourceUri);
     } else if (shapeTreeUri) {
@@ -222,7 +229,7 @@ const useShareForm = ({ resourceUri, shapeTreeUri, podOwner, onDone }: ShareForm
   const onShare = useCallback(async () => {
     const changed = Object.keys(access).filter(grantee => !sameAccess(access[grantee], initialAccess[grantee]));
     if (changed.length > 0) {
-      await dataProvider.fetch(urlJoin(CONFIG.BACKEND_URL, '.auth-agent/authorizations'), {
+      await dataProvider.fetch(getAuthorizationsEndpoint(resourceUri || podOwner), {
         method: 'PUT',
         headers: new Headers({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({

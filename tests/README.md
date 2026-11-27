@@ -14,6 +14,8 @@ Call `make start-test` from the `/pod-provider` directory to start all Docker co
 
 Call `yarn run test` from the `/pod-provider/backend` directory. This will use the `.env.test` file to start the Pod provider with the Jena Fuseki and Redis dataset (it is not the same one as if you run `yarn run dev`)
 
+It also starts a second Pod provider on port 3010 (logs prefixed with `[server2]`), needed by multi-server tests. It uses the same Jena Fuseki and Redis, with its own settings dataset, Redis databases and Moleculer namespace. Usernames must be different on both servers, as datasets are named after them.
+
 Advantages:
 
 - You can keep the symlinks created by `yarn link` if you modify SemApps packages
@@ -39,6 +41,8 @@ Disadvantages:
 - You must restart the container when you do changes to the Pod provider code
 - Keeping symlinks is not possible, so you won't be able to modify SemApps packages and link them.
   - It may be possible with Yalc (which is already used on the SemApps frontend components)
+
+> Multi-servers tests are currently not available with this method.
 
 ## Install packages
 

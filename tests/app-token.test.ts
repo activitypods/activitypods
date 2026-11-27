@@ -168,6 +168,22 @@ describe('Requests made by an app with an OIDC token', () => {
     // Alice did not grant the app access to notes
     res = await fetchAs(alice, publicNoteUri);
     expect(res.status).toBe(200);
+
+    const subscribe = (topic: string) =>
+      fetchAs(craig, 'http://localhost:3000/.notifications/WebhookChannel2023', 'POST', {
+        '@context': { notify: 'http://www.w3.org/ns/solid/notifications#' },
+        '@type': 'notify:WebhookChannel2023',
+        'notify:topic': topic,
+        'notify:sendTo': urlJoin(APP_URI, 'fake-webhook')
+      });
+
+    res = await subscribe(publicNoteUri);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ 'notify:topic': publicNoteUri });
+
+    // Craig can read the event, but it is not public
+    res = await subscribe(eventUri);
+    expect(res.status).toBe(403);
   });
 
   test('The app reads the inbox of the user', async () => {

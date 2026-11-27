@@ -23,6 +23,8 @@ import TagsListEdit from '../../common/tags/TagsListEdit';
 import ShowView from '../../layout/ShowView';
 import ValueField from '../../common/fields/ValueField';
 import useActor from '../../hooks/useActor';
+import GroupPage from '../GroupsPage/GroupPage';
+import { isGroupActor } from '../../utils';
 
 const EditPrivateProfileButton = (props: any) => {
   const record = useRecordContext();
@@ -74,6 +76,8 @@ const NetworkActorPage = () => {
   const actor = useActor(actorUri, { loadPrivateProfile: !publicProfileOnly });
 
   if (actor.isLoading) return null;
+
+  if (isGroupActor(actor)) return <GroupPage groupUri={actorUri!} />;
 
   return (
     <BlockAnonymous>

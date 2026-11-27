@@ -71,7 +71,14 @@ const ManagementService = {
           if (!webId) {
             throw403('You are not allowed to delete this actor.');
           }
-          if (account.group && !arrayOf(account.owner).includes(webId)) {
+          if (
+            account.group &&
+            !(await ctx.call('role-registrations.hasRole', {
+              groupWebId: account.webId,
+              agentUri: webId,
+              role: 'owner'
+            }))
+          ) {
             throw403('You are not allowed to delete this group.');
           }
           if (!account.group && webId !== account.webId) {
@@ -100,8 +107,8 @@ const ManagementService = {
         // TODO In the future, it would be good to send the activity to as many servers as possible
         // This is in order to delete cached versions of the account.
         if (account.group) {
-          // TODO get the whole list of members and add them as recipients
-          recipients = [actor.followers, ...arrayOf(account.owner), PUBLIC_URI];
+          const members = await ctx.call('role-registrations.getMembers', { groupWebId: account.webId });
+          recipients = [actor.followers, ...Object.keys(members), PUBLIC_URI];
         } else {
           const contactsCollection = await ctx.call('activitypub.collection.get', {
             resourceUri: actor['apods:contacts'],
@@ -169,7 +176,14 @@ const ManagementService = {
           if (!webId) {
             throw403('You are not allowed to delete this actor.');
           }
-          if (account.group && !arrayOf(account.owner).includes(webId)) {
+          if (
+            account.group &&
+            !(await ctx.call('role-registrations.hasRole', {
+              groupWebId: account.webId,
+              agentUri: webId,
+              role: 'owner'
+            }))
+          ) {
             throw403('You are not allowed to delete this group.');
           }
           if (!account.group && webId !== account.webId) {

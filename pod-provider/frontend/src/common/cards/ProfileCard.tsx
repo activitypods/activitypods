@@ -1,10 +1,12 @@
 import React from 'react';
-import { Box, Card, Typography, Avatar } from '@mui/material';
+import { Box, Card, Typography, Avatar, Button } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
-import { useGetIdentity } from 'react-admin';
 import { formatUsername } from '../../utils';
-import EditProfileButton from '../buttons/EditProfileButton';
+import { Link } from 'react-router-dom';
 import { useTranslate } from 'react-admin';
+import EditIcon from '@mui/icons-material/Edit';
+import EditProfileButton from '../buttons/EditProfileButton';
+import useRealmContext from '../../hooks/useRealmContext';
 
 const useStyles = makeStyles()(theme => ({
   root: {
@@ -67,7 +69,7 @@ const useStyles = makeStyles()(theme => ({
 
 const ProfileCard = () => {
   const { classes } = useStyles();
-  const { data: identity } = useGetIdentity();
+  const { isGroup, data: identity } = useRealmContext() as any;
   const translate = useTranslate();
   if (!identity) return null;
   return (
@@ -86,15 +88,23 @@ const ProfileCard = () => {
           {identity.fullName}
         </Typography>
 
-        <Typography align="center">
-          {
-            // @ts-expect-error TS(2345): Argument of type 'Identifier' is not assignable to... Remove this comment to see the full error message
-            formatUsername(identity.id)
-          }
-        </Typography>
+        <Typography align="center">{formatUsername(identity.id)}</Typography>
       </Box>
       <Box className={classes.button} pb={3} pr={3} pl={3}>
-        <EditProfileButton color="secondary" />
+        {isGroup ? (
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={<EditIcon />}
+            component={Link}
+            to={`/group/${identity.webfingerId}/settings/profile`}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 'medium', px: 2, py: 1 }}
+          >
+            {translate('app.action.edit_public_profile')}
+          </Button>
+        ) : (
+          <EditProfileButton color="secondary" />
+        )}
       </Box>
     </Card>
   );

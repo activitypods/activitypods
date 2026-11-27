@@ -15,6 +15,7 @@ import {
   readManifest,
   removeNeed,
   SPECIAL_RIGHTS,
+  USER_STORAGE,
   writeManifest,
   type AccessNeed,
   type AppManifest,
@@ -168,7 +169,7 @@ const describe = (need: AccessNeed) =>
 
 const allNeeds = (manifest: AppManifest) =>
   (['required', 'optional'] as Necessity[]).flatMap(necessity =>
-    (manifest.accessNeeds[necessity] ?? []).map(need => ({ need, necessity }))
+    (manifest.accessNeeds[USER_STORAGE]?.[necessity] ?? []).map(need => ({ need, necessity }))
   );
 
 const remove = async (search?: string) => {
@@ -241,7 +242,7 @@ const init = async () => {
     $schema: `./node_modules/${PACKAGE}/schema.json`,
     name,
     description,
-    accessNeeds: { required: [], optional: [] }
+    accessNeeds: { [USER_STORAGE]: { required: [], optional: [] } }
   });
   install();
   console.log(`Created ${MANIFEST_FILE}

@@ -42,7 +42,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@activitypods/refine-hooks": "2.3.2"
+    "@activitypods/refine-hooks": "2.3.2",
+    "@activitypods/refine-providers": "2.3.2"
   },
   "peerDependencies": {
     "@ant-design/icons": "^5.5.1",

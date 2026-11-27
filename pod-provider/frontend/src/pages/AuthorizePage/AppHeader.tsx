@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocaleState } from 'react-admin';
 import { Typography, Box, Chip } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
-import { getLangString } from '../../utils';
+import { getLangString, getUri } from '../../utils';
 
 const useStyles = makeStyles()(() => ({
   app: {
@@ -44,7 +44,7 @@ const AppHeader = ({ application, isTrustedApp }: any) => {
     <Box pt={1} pb={0}>
       <div className={classes.app}>
         <img
-          src={application['interop:applicationThumbnail']}
+          src={getUri(application['interop:applicationThumbnail'])}
           alt={application['interop:applicationName']}
           className={classes.appIcon}
         />

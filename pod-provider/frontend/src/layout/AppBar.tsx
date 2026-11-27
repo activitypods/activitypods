@@ -17,8 +17,8 @@ const useStyles = makeStyles()(theme => ({
 
     [theme.breakpoints.down('sm')]: {
       fontSize: 24,
-      paddingTop: '1.3rem',
-      lineHeight: 0.8
+      paddingTop: 0,
+      lineHeight: 1
     },
     '& a': {
       textDecoration: 'none !important'
@@ -32,14 +32,20 @@ const AppBar = () => {
   return (
     <Box className={classes.topBar}>
       <Container>
-        <Grid container>
+        <Grid container sx={{ alignItems: { xs: 'center', sm: 'flex-start' }, minHeight: { xs: 56, sm: 'auto' } }}>
           <Grid size={{ xs: 8, sm: 6 }}>
             <Typography variant="h1" className={classes.title}>
               <Link to="/network">{translate('app.page.my_pod')}</Link>
             </Typography>
           </Grid>
           <Grid size={{ xs: 4, sm: 6 }}>
-            <Box display="flex" alignItems="start" justifyContent="right" pt={{ xs: 1, sm: 2 }} sx={{ width: '100%' }}>
+            <Box
+              display="flex"
+              alignItems={{ xs: 'center', sm: 'start' }}
+              justifyContent="right"
+              pt={{ xs: 0, sm: 2 }}
+              sx={{ width: '100%' }}
+            >
               <UserMenu />
             </Box>
           </Grid>

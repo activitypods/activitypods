@@ -47,7 +47,7 @@ describe('Test delegation features', () => {
   test('Alice creates an event and gives delegation right to Bob', async () => {
     // Create container manually so that we don't need to install the app
     eventContainerUri = await alice.call('data-registrations.generateFromShapeTree', {
-      shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Event'),
+      shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL!, 'shapetrees/as/Event'),
       podOwner: alice.id
     });
 
@@ -235,6 +235,52 @@ describe('Test delegation features', () => {
     ).resolves.not.toThrow();
   });
 
+  test('Only the grantee of a grant can delegate it, if allowed', async () => {
+    const issueAsCraig = (grant: any, grantee: any, delegation = {}) => {
+      const { id, 'dc:created': c, 'dc:modified': m, 'dc:creator': cr, ...properties } = grant;
+      return podProvider.call(
+        'delegation-endpoint.issue',
+        {
+          delegatedGrant: {
+            ...properties,
+            type: 'interop:DelegatedAccessGrant',
+            'interop:grantee': grantee.id,
+            'interop:granteeType': 'interop:SocialAgent',
+            'interop:grantedBy': craig.id,
+            'interop:delegationOfGrant': id,
+            ...delegation
+          }
+        },
+        { meta: { webId: craig.id, dataset: 'alice' } }
+      );
+    };
+
+    // Craig delegates the grant received by Bob
+    const bobGrant = await bob.call('access-grants.getByResourceUri', { resourceUri: eventUri });
+    await expect(issueAsCraig(bobGrant, alice)).rejects.toMatchObject({ code: 403 });
+
+    // Craig delegates his own grant, which doesn't allow delegation
+    const craigRegistration = await bob.call('social-agent-registrations.getForAgent', {
+      agentUri: craig.id,
+      podOwner: bob.id
+    });
+    const [craigGrant] = await bob.call('social-agent-registrations.getGrants', {
+      agentRegistration: craigRegistration,
+      podOwner: bob.id
+    });
+    expect(craigGrant['interop:delegationAllowed']).toBeUndefined();
+    await expect(issueAsCraig(craigGrant, alice)).rejects.toMatchObject({ code: 403 });
+
+    // Craig's app cannot get more delegation rights than Craig
+    await expect(
+      issueAsCraig(
+        craigGrant,
+        { id: APP_URI },
+        { 'interop:granteeType': 'interop:Application', 'interop:delegationAllowed': true }
+      )
+    ).rejects.toMatchObject({ code: 403 });
+  });
+
   test('Craig remove the app and the delegated grant is deleted', async () => {
     await craig.call('registration-endpoint.remove', {
       appUri: APP_URI
@@ -404,5 +450,52 @@ describe('Test delegation features', () => {
 
     const inboxAfter = await craig.call('activitypub.collection.get', { resourceUri: craig.inbox, webId: craig.id });
     expect(inboxAfter.totalItems).toBe(inboxBefore.totalItems);
+  });
+
+  test('Bob stops sharing one of Alice events with Craig, who keeps access to the other one', async () => {
+    await bob.call('access-authorizations.removeForSingleResource', { resourceUri: eventUri, grantee: craig.id });
+
+    await waitForExpect(async () => {
+      const container = await alice.call('delegated-access-grants.list', {
+        filters: { 'http://www.w3.org/ns/solid/interop#grantee': craig.id }
+      });
+      const delegatedGrants = arrayOf(container['ldp:contains']);
+      expect(delegatedGrants).toHaveLength(1);
+      expect(arrayOf(delegatedGrants[0]['interop:hasDataInstance'])).toEqual([secondEventUri]);
+    });
+
+    for (const [resourceUri, read] of [
+      [eventUri, false],
+      [secondEventUri, true]
+    ]) {
+      await expect(
+        podProvider.call('webacl.resource.hasRights', { resourceUri, rights: { read: true }, webId: craig.id })
+      ).resolves.toMatchObject({ read });
+    }
+  });
+
+  test('Bob stops sharing the other event with Craig, whose delegated grants are deleted', async () => {
+    const getCraigDelegatedGrants = async () =>
+      arrayOf((await craig.call('delegated-access-grants.list'))['ldp:contains']);
+
+    await installApp(craig, APP_URI);
+
+    await waitForExpect(async () => {
+      const appGrants = (await getCraigDelegatedGrants()).filter((grant: any) => grant['interop:grantee'] === APP_URI);
+      expect(appGrants).not.toHaveLength(0);
+    });
+
+    await bob.call('access-authorizations.removeForSingleResource', { resourceUri: secondEventUri, grantee: craig.id });
+
+    // Craig received a Delete activity: his copies and the grants delegated to his app are deleted
+    await waitForExpect(async () => {
+      await expect(getCraigDelegatedGrants()).resolves.toHaveLength(0);
+    });
+
+    for (const webId of [craig.id, APP_URI]) {
+      await expect(
+        podProvider.call('webacl.resource.hasRights', { resourceUri: secondEventUri, rights: { read: true }, webId })
+      ).resolves.toMatchObject({ read: false });
+    }
   });
 });

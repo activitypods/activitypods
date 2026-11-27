@@ -30,8 +30,24 @@ const AppStatusService = {
           throw new MoleculerError(`Invalid application URL`, 400, 'BAD_REQUEST');
         }
 
-        const appUri = ctx.meta.impersonatedUser ? ctx.meta.webId : ctx.params.appUri;
-        const webId = ctx.meta.impersonatedUser || ctx.meta.webId;
+        const appUri = ctx.meta.clientId || ctx.params.appUri;
+        let webId = ctx.meta.webId;
+
+        // Status of the app on a group, for its members with the ManageAccess right
+        const { podOwner } = ctx.params;
+        if (!ctx.meta.clientId && podOwner && podOwner !== webId) {
+          const account = await ctx.call('auth.account.findByWebId', { webId: podOwner });
+          const hasRight =
+            account?.group &&
+            (await ctx.call('role-registrations.hasSpecialRight', {
+              groupWebId: podOwner,
+              agentUri: webId,
+              right: 'interop:ManageAccess'
+            }));
+          if (!hasRight)
+            throw new MoleculerError('You need the interop:ManageAccess right on this group', 403, 'FORBIDDEN');
+          webId = podOwner;
+        }
 
         ctx.meta.dataset = getDatasetFromUri(webId);
 
@@ -49,11 +65,13 @@ const AppStatusService = {
           ? await ctx.call('solid-notifications.provider.webhook.getAppChannels', { appUri, webId })
           : undefined;
 
-        // A upgrade is needed if the access need group(s) have changed
+        // A upgrade is needed if the access need group(s) have changed, or if the user joined a group used by the app
         const upgradeNeeded =
           onlineBackend &&
           installed &&
-          !arraysEqual(localAppData['interop:hasAccessNeedGroup'], remoteAppData['interop:hasAccessNeedGroup']);
+          (!arraysEqual(localAppData['interop:hasAccessNeedGroup'], remoteAppData['interop:hasAccessNeedGroup']) ||
+            (webId === ctx.meta.webId &&
+              (await ctx.call('registration-endpoint.hasMissingGroupAccess', { appUri, webId }))));
 
         return {
           onlineBackend,

@@ -15,30 +15,35 @@ const RealmContextProvider = ({ children }: any) => {
   const isGroup = location.pathname.startsWith('/group/');
   const webfingerId = isGroup ? location.pathname.split('/')[2] : undefined;
 
+  const loadGroup = useCallback(
+    async (groupUri: string) => {
+      const { data } = await dataProvider.getOne('Actor', { id: groupUri });
+      setGroupData({
+        // @ts-expect-error TS(2345): Argument of type '{ id: any; fullName: any; avatar... Remove this comment to see the full error message
+        id: data.id,
+        fullName: data['foaf:name'] || data.name || data['pair:label'],
+        avatar: data.image?.url || data.image || data.icon?.url || data.icon,
+        webfingerId,
+        webIdData: data
+      });
+    },
+    [dataProvider, webfingerId, setGroupData]
+  );
+
   useEffect(() => {
     if (isGroup) {
       setIsGroupLoading(true);
       webfinger
         .fetch(webfingerId)
-        .then(groupUri => dataProvider.getOne('Actor', { id: groupUri }))
-        .then(({ data }) => {
-          setGroupData({
-            // @ts-expect-error TS(2345): Argument of type '{ id: any; fullName: any; avatar... Remove this comment to see the full error message
-            id: data.id,
-            fullName: data['foaf:name'] || data['pair:label'],
-            avatar: data.image || data.icon,
-            webfingerId,
-            webIdData: data
-          });
-          setIsGroupLoading(false);
-        });
+        .then(groupUri => loadGroup(groupUri))
+        .then(() => setIsGroupLoading(false));
     }
-  }, [isGroup, webfingerId, webfinger.fetch, dataProvider, setGroupData]);
+  }, [isGroup, webfingerId, webfinger.fetch, loadGroup]);
 
   const refetchGroup = useCallback(async () => {
     // @ts-expect-error TS(2532): Object is possibly 'undefined'.
-    await dataProvider.getOne('Actor', { id: groupData.id });
-  }, [groupData]);
+    await loadGroup(groupData.id);
+  }, [groupData, loadGroup]);
 
   return (
     <RealmContext.Provider

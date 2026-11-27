@@ -6,7 +6,7 @@ import DoneIcon from '@mui/icons-material/Done';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import LoopIcon from '@mui/icons-material/Loop';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { arraysEqual, getLangString } from '../../utils';
+import { arraysEqual, getLangString, getUri } from '../../utils';
 import AppSettingsDialog from './AppSettingsDialog';
 
 const useStyles = makeStyles()(theme => ({
@@ -89,7 +89,11 @@ const ApplicationCard = ({ app, isTrustedApp, isRegistered }: any) => {
 
   return (
     <Card className={classes.card}>
-      <img src={app['interop:applicationThumbnail']} alt={app['interop:applicationName']} className={classes.logo} />
+      <img
+        src={getUri(app['interop:applicationThumbnail'])}
+        alt={app['interop:applicationName']}
+        className={classes.logo}
+      />
       <Typography variant="h4" className={classes.title}>
         {app['interop:applicationName']}
       </Typography>

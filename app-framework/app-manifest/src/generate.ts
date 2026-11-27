@@ -1,5 +1,12 @@
 import { createHash } from 'node:crypto';
-import { isSpecialRight, type AppManifest, type Necessity, type ShapeTreeNeed } from './manifest.ts';
+import {
+  isSpecialRight,
+  normalizeAccessNeeds,
+  USER_STORAGE,
+  type AppManifest,
+  type Necessity,
+  type ShapeTreeNeed
+} from './manifest.ts';
 
 export const CLIENT_DOCUMENT = 'app.json';
 
@@ -26,6 +33,7 @@ const GROUP_CONTEXT = {
   'interop:accessScenario': { '@type': '@id' },
   'interop:authenticatedAs': { '@type': '@id' },
   'interop:hasAccessNeed': { '@type': '@id' },
+  'interop:targetStorage': { '@type': '@id' },
   'apods:hasSpecialRights': { '@type': '@id' }
 };
 
@@ -59,13 +67,35 @@ const translated = (description: AppManifest['description']) =>
  * Access needs and groups are named after their content, because the Pod provider
  * detects an upgrade when the URIs of the groups change.
  */
-export const generateDocuments = (manifest: AppManifest, baseUrl: string) => {
+export const generateDocuments = (
+  manifest: AppManifest,
+  baseUrl: string,
+  options: {
+    /** URIs of the storages, by key of `accessNeeds`. The needs of a storage without URI are left out */
+    storages?: Record<string, string>;
+  } = {}
+) => {
   const url = (path: string) => new URL(path, baseUrl).href;
   const documents: Record<string, object> = {};
   const groupUris = [];
 
-  for (const necessity of Object.keys(NECESSITIES) as Necessity[]) {
-    const needs = manifest.accessNeeds[necessity] ?? [];
+  // The needs without target storage are for the storage of the user
+  const sections = Object.entries(normalizeAccessNeeds(manifest.accessNeeds))
+    .filter(([key]) => key === USER_STORAGE || options.storages?.[key])
+    .map(([key, accessNeeds]) => ({
+      accessNeeds,
+      targetStorage: key === USER_STORAGE ? undefined : options.storages![key]
+    }));
+
+  const groups = sections.flatMap(({ accessNeeds, targetStorage }) =>
+    (Object.keys(NECESSITIES) as Necessity[]).map(necessity => ({
+      necessity,
+      targetStorage,
+      needs: accessNeeds[necessity] ?? []
+    }))
+  );
+
+  for (const { necessity, targetStorage, needs } of groups) {
     if (!needs.length) continue;
 
     const needUris = needs
@@ -90,7 +120,7 @@ export const generateDocuments = (manifest: AppManifest, baseUrl: string) => {
     const specialRights = needs.filter(isSpecialRight).sort();
 
     const relativeNeeds = needUris.map(uri => uri.slice(url('').length));
-    const path = `access-needs/group-${hash([necessity, relativeNeeds, specialRights])}.json`;
+    const path = `access-needs/group-${hash([necessity, relativeNeeds, specialRights, ...(targetStorage ? [targetStorage] : [])])}.json`;
     documents[path] = {
       '@context': GROUP_CONTEXT,
       '@id': url(path),
@@ -100,6 +130,7 @@ export const generateDocuments = (manifest: AppManifest, baseUrl: string) => {
       'interop:accessScenario': 'interop:PersonalAccess',
       'interop:authenticatedAs': 'interop:SocialAgent',
       'interop:hasAccessNeed': needUris,
+      'interop:targetStorage': targetStorage,
       'apods:hasSpecialRights': specialRights.length ? specialRights : undefined
     };
     groupUris.push(url(path));

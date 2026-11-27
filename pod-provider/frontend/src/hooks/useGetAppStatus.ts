@@ -2,11 +2,12 @@ import { useCallback } from 'react';
 import urlJoin from 'url-join';
 
 const useGetAppStatus = () => {
-  return useCallback(async (appUri: any, identity: any) => {
+  return useCallback(async (appUri: any, identity: any, podOwner?: string | null) => {
     if (!identity.id) throw new Error('Identity must be loaded before calling getAppStatus');
     const oidcIssuer = identity?.webIdData?.['solid:oidcIssuer'] || new URL(identity?.id).origin;
     const endpointUrl = new URL(urlJoin(oidcIssuer, '.well-known/app-status'));
     endpointUrl.searchParams.append('appUri', appUri);
+    if (podOwner) endpointUrl.searchParams.append('podOwner', podOwner);
     const token = localStorage.getItem('token');
 
     // Don't use dataProvider.fetch as it would try to go through the proxy

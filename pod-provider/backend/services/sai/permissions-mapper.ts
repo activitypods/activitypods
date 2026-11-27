@@ -1,5 +1,6 @@
-import { getId, arrayOf } from '@semapps/ldp';
+import { getId, getType, arrayOf } from '@semapps/ldp';
 import { ServiceSchema } from 'moleculer';
+import { getPublicAgentClass } from '../../utils.ts';
 
 // Service that maps access grants and special rights to WAC permissions
 // For mapping details, see https://github.com/assemblee-virtuelle/activitypods/issues/116
@@ -8,9 +9,12 @@ const PermissionsMapperSchema = {
   actions: {
     addPermissionsFromGrant: {
       async handler(ctx) {
-        const { grant } = ctx.params;
-
-        const grantee = grant['interop:grantee'];
+        const { grant, groupUri } = ctx.params;
+        // The rights of the access grants derived from a role are given to the WAC group of the role
+        if (!groupUri && getType(grant) === 'interop:AccessGrant' && grant['interop:derivedFromRoleRegistration'])
+          return;
+        const agentKey = groupUri ? 'group' : getPublicAgentClass(grant['interop:grantee']) || 'user';
+        const agentUri = groupUri || grant['interop:grantee'];
         const accessMode = arrayOf(grant['interop:accessMode']);
         const scope = grant['interop:scopeOfGrant'];
 
@@ -20,15 +24,15 @@ const PermissionsMapperSchema = {
             resourceUri: grant['interop:hasDataRegistration'],
             additionalRights: {
               // Container rights
-              user: {
-                uri: grantee,
+              [agentKey]: {
+                uri: agentUri,
                 read: accessMode.includes('acl:Read'),
                 write: accessMode.includes('acl:Write')
               },
               // Resources default rights
               default: {
-                user: {
-                  uri: grantee,
+                [agentKey]: {
+                  uri: agentUri,
                   read: accessMode.includes('acl:Read'),
                   append: accessMode.includes('acl:Append'),
                   write: accessMode.includes('acl:Write'),
@@ -44,8 +48,8 @@ const PermissionsMapperSchema = {
             await ctx.call('webacl.resource.addRights', {
               resourceUri,
               additionalRights: {
-                user: {
-                  uri: grantee,
+                [agentKey]: {
+                  uri: agentUri,
                   read: accessMode.includes('acl:Read'),
                   append: accessMode.includes('acl:Append'),
                   write: accessMode.includes('acl:Write'),
@@ -63,8 +67,12 @@ const PermissionsMapperSchema = {
 
     removePermissionsFromGrant: {
       async handler(ctx) {
-        const { grant } = ctx.params;
-        const grantee = grant['interop:grantee'];
+        const { grant, groupUri } = ctx.params;
+        // The rights of the access grants derived from a role are given to the WAC group of the role
+        if (!groupUri && getType(grant) === 'interop:AccessGrant' && grant['interop:derivedFromRoleRegistration'])
+          return;
+        const agentKey = groupUri ? 'group' : getPublicAgentClass(grant['interop:grantee']) || 'user';
+        const agentUri = groupUri || grant['interop:grantee'];
         const accessMode = arrayOf(grant['interop:accessMode']);
         const scope = grant['interop:scopeOfGrant'];
 
@@ -72,14 +80,14 @@ const PermissionsMapperSchema = {
           await ctx.call('webacl.resource.removeRights', {
             resourceUri: grant['interop:hasDataRegistration'],
             rights: {
-              user: {
-                uri: grantee,
+              [agentKey]: {
+                uri: agentUri,
                 read: accessMode.includes('acl:Read'),
                 write: accessMode.includes('acl:Write')
               },
               default: {
-                user: {
-                  uri: grantee,
+                [agentKey]: {
+                  uri: agentUri,
                   read: accessMode.includes('acl:Read'),
                   append: accessMode.includes('acl:Append'),
                   write: accessMode.includes('acl:Write'),
@@ -94,8 +102,8 @@ const PermissionsMapperSchema = {
             await ctx.call('webacl.resource.removeRights', {
               resourceUri,
               rights: {
-                user: {
-                  uri: grantee,
+                [agentKey]: {
+                  uri: agentUri,
                   read: accessMode.includes('acl:Read'),
                   append: accessMode.includes('acl:Append'),
                   write: accessMode.includes('acl:Write'),

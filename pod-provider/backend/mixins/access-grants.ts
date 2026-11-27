@@ -1,6 +1,7 @@
 import { arrayOf, getId, getType } from '@semapps/ldp';
 import { ACTIVITY_TYPES, ActivitiesHandlerMixin, matchActivity } from '@semapps/activitypub';
 import { ServiceSchema } from 'moleculer';
+import { getPublicAgentClass } from '../utils.ts';
 
 /**
  * Mixin used by the AccessGrantsService and DelegatedAccessGrantsService
@@ -14,14 +15,12 @@ const AccessGrantsMixin = {
         const grant = res.newData;
 
         // The grantee must be able to read the grant
+        const publicAgentClass = getPublicAgentClass(grant['interop:grantee']);
         await ctx.call('webacl.resource.addRights', {
           resourceUri: getId(grant),
-          additionalRights: {
-            user: {
-              uri: grant['interop:grantee'],
-              read: true
-            }
-          },
+          additionalRights: publicAgentClass
+            ? { [publicAgentClass]: { read: true } }
+            : { user: { uri: grant['interop:grantee'], read: true } },
           webId: 'system'
         });
 
@@ -96,6 +95,7 @@ const AccessGrantsMixin = {
         // Don't remove permissions when we are replacing
         if (!ctx.params.isReplacing) {
           await ctx.call('permissions-mapper.removePermissionsFromGrant', { grant });
+          await ctx.call('announcer.removeFromAnnounces', { grant });
         }
 
         // Detach grant from agent registrations, unless it is a delegated grant (will be done by the issuer)
@@ -108,7 +108,6 @@ const AccessGrantsMixin = {
         }
 
         // Only send Delete activity for access grants, when the grantee is a social agent and when this is not a replacement
-        // TODO: Warn grantees when delegated grants are deleted by the granter
         if (
           getType(grant) === 'interop:AccessGrant' &&
           grant['interop:granteeType'] === 'interop:SocialAgent' &&
@@ -156,6 +155,11 @@ const AccessGrantsMixin = {
 
         // Delete from cache the old grant
         if (grant['interop:replaces']) {
+          await ctx.call('role-access.removeFromReceivedGrant', {
+            grantUri: grant['interop:replaces'],
+            podOwner: recipientUri
+          });
+
           try {
             await ctx.call('ldp.remote.delete', {
               resourceUri: grant['interop:replaces'],
@@ -174,6 +178,10 @@ const AccessGrantsMixin = {
           grant,
           podOwner: recipientUri
         });
+
+        if (getType(grant) === 'interop:AccessGrant') {
+          await ctx.call('role-access.addFromReceivedGrant', { grant, podOwner: recipientUri });
+        }
       }
     },
     deleteDataGrant: {
@@ -192,12 +200,13 @@ const AccessGrantsMixin = {
         );
       },
       async onReceive(ctx: any, activity: any, recipientUri: any) {
-        const grant = activity.object;
+        await ctx.call('role-access.removeFromReceivedGrant', {
+          grantUri: getId(activity.object),
+          podOwner: recipientUri
+        });
 
-        if (getType(grant) === 'interop:AccessGrant') {
-          // Delete all delegated access grants linked with this access grant
-          await ctx.call('delegated-access-grants.deleteByGrant', { grant, webId: recipientUri });
-        }
+        // Delete all delegated access grants linked with this grant
+        await ctx.call('delegated-access-grants.deleteByGrant', { grant: activity.object, webId: recipientUri });
       }
     }
   }

@@ -5,7 +5,6 @@ import {
   Form,
   useTranslate,
   TextInput,
-  ImageInput,
   ImageField,
   Button,
   SelectInput,
@@ -14,20 +13,30 @@ import {
   useGetIdentity,
   useNotify
 } from 'react-admin';
+import { ImageInput } from '@semapps/input-components';
 import ChoosePodProviderPage from './ChoosePodProviderPage/ChoosePodProviderPage';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useCheckAuthenticated } from '@semapps/auth-provider';
 import SimpleBox from '../layout/SimpleBox';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import { Box } from '@mui/material';
 import Header from '../common/Header';
+import { compressImage, isURL } from '../utils';
+
+const GROUP_TYPES = ['foaf:Group', 'foaf:Organization', 'as:Application'];
 
 const CreateGroupPage = () => {
   const translate = useTranslate();
   const navigate = useNavigate();
   const notify = useNotify();
   const dataProvider = useDataProvider();
+  // @ts-expect-error TS(2554): Expected 1 arguments, but got 0.
+  useCheckAuthenticated();
   const { data: identity } = useGetIdentity();
-  const [podProviderUrl, setPodProviderUrl] = useState();
+  const [searchParams] = useSearchParams();
+  // An app may ask to come back with the WebID of the new group
+  const redirect = searchParams.get('redirect');
+  const [podProviderUrl, setPodProviderUrl] = useState(isURL(redirect) ? CONFIG.BACKEND_URL : undefined);
 
   const onSubmit = useCallback(
     async ({ id, type, name, image }: any) => {
@@ -55,24 +64,25 @@ const CreateGroupPage = () => {
           }
         );
 
-        // Upload the logo and get the URL
-        // TODO find the upload containers based on a `podStorage` metadata and the DataRegistry
-        // const uploadImageResponse = await dataProvider.fetch(urlJoin(groupWebId, 'data', 'semapps', 'file'), {
-        //   method: 'POST',
-        //   body: image,
-        //   headers: new Headers({
-        //     'Content-Type': image.type
-        //   })
-        // });
-
-        // if (!uploadImageResponse.ok) {
-        //   notify(`Could not upload image`, { type: 'error' });
-        //   return;
-        // }
-
-        // const imageUri = uploadImageResponse.headers.get('Location');
-
-        if (name) {
+        if (image?.rawFile) {
+          // Upload the logo on the group's storage, as in the public profile page
+          const { data: group } = await dataProvider.getOne('Actor', { id: groupWebId });
+          const file = await compressImage(image.rawFile);
+          const { headers } = await dataProvider.fetch(urlJoin(group['pim:storage'], 'semapps/file'), {
+            method: 'POST',
+            body: file,
+            headers: new Headers({ 'Content-Type': file.type })
+          });
+          await dataProvider.update('Actor', {
+            id: groupWebId,
+            data: {
+              ...group,
+              ...(name && { name, 'foaf:name': name }),
+              icon: { type: 'Image', mediaType: file.type, url: headers.get('Location') }
+            },
+            previousData: group
+          });
+        } else if (name) {
           // Update the group profile (name and logo URL)
           await dataProvider.patch('Actor', {
             id: groupWebId,
@@ -90,14 +100,21 @@ const CreateGroupPage = () => {
 
         notify(`Group successfully created`, { type: 'success' });
 
+        if (isURL(redirect)) {
+          const redirectUrl = new URL(redirect!);
+          redirectUrl.searchParams.set('group', groupWebId!);
+          window.location.href = redirectUrl.toString();
+          return;
+        }
+
         // @ts-expect-error TS(2345): Argument of type 'undefined' is not assignable to ... Remove this comment to see the full error message
-        navigate(`/group/@${id}@${new URL(podProviderUrl).host}/settings`);
+        navigate(`/group/@${id}@${new URL(podProviderUrl).host}`);
       } catch (e) {
         // @ts-expect-error TS(2571): Object is of type 'unknown'.
         notify(`Could not create group. Error: ${e.message}`, { type: 'error' });
       }
     },
-    [podProviderUrl, identity, notify, dataProvider, navigate]
+    [podProviderUrl, identity, redirect, notify, dataProvider, navigate]
   );
 
   return !podProviderUrl ? (
@@ -114,21 +131,29 @@ const CreateGroupPage = () => {
     <>
       <Header title="app.titles.create_group" />
       <SimpleBox title={translate('app.action.create_group')} icon={<GroupAddIcon />}>
-        <Form onSubmit={onSubmit} defaultValues={{ type: 'foaf:Group' }}>
+        <Form
+          onSubmit={onSubmit}
+          defaultValues={{
+            type: GROUP_TYPES.includes(searchParams.get('type')!) ? searchParams.get('type') : 'foaf:Group',
+            id: searchParams.get('id') || '',
+            name: searchParams.get('name') || ''
+          }}
+        >
           <TextInput source="id" label={translate('app.group.id')} fullWidth />
           <SelectInput
             source="type"
             label={translate('app.group.type')}
             choices={[
               { id: 'foaf:Group', name: translate('app.group.type_group') },
-              { id: 'foaf:Organization', name: translate('app.group.type_organization') }
+              { id: 'foaf:Organization', name: translate('app.group.type_organization') },
+              { id: 'as:Application', name: translate('app.group.type_application') }
             ]}
             fullWidth
           />
           <TextInput source="name" label={translate('app.group.name')} fullWidth />
-          {/* <ImageInput source="image" label={translate('app.group.image')} accept="image/*">
+          <ImageInput source="image" label={translate('app.group.image')} accept={{ 'image/*': [] }}>
             <ImageField source="src" />
-          </ImageInput> */}
+          </ImageInput>
           <Box display="flex" justifyContent="end" sx={{ pt: 2 }}>
             <>{/* @ts-ignore */}</>
             <Button

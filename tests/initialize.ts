@@ -25,11 +25,11 @@ const logger = {
   }
 };
 
+const jenaAuthorization = `Basic ${Buffer.from(`${CONFIG.JENA_USER}:${CONFIG.JENA_PASSWORD}`).toString('base64')}`;
+
 const listDatasets = async () => {
   const response = await fetch(`${CONFIG.SPARQL_ENDPOINT}$/datasets`, {
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${CONFIG.JENA_USER}:${CONFIG.JENA_PASSWORD}`).toString('base64')}`
-    }
+    headers: { Authorization: jenaAuthorization }
   });
 
   if (response.ok) {
@@ -45,13 +45,13 @@ const clearDataset = (dataset: any) =>
     body: 'update=CLEAR+ALL', // DROP+ALL is not working with WebACL datasets !
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${Buffer.from(`${CONFIG.JENA_USER}:${CONFIG.JENA_PASSWORD}`).toString('base64')}`
+      Authorization: jenaAuthorization
     }
   });
 
 // Delete all data except special endpoints
-const clearSettingsDataset = () =>
-  fetch(`${CONFIG.SPARQL_ENDPOINT}settings/update`, {
+const clearSettingsDataset = (dataset: any) =>
+  fetch(`${CONFIG.SPARQL_ENDPOINT + dataset}/update`, {
     method: 'POST',
     body: `
       DELETE {
@@ -64,7 +64,7 @@ const clearSettingsDataset = () =>
     headers: {
       'Content-Type': 'application/sparql-update',
       'X-SemappsUser': 'system',
-      Authorization: `Basic ${Buffer.from(`${CONFIG.JENA_USER}:${CONFIG.JENA_PASSWORD}`).toString('base64')}`
+      Authorization: jenaAuthorization
     }
   });
 
@@ -74,24 +74,51 @@ const clearRedisDb = async (redisUrl: any) => {
   redisClient.disconnect();
 };
 
+// The second Pod provider, used by multi-server tests, shares the same Fuseki and Redis with other datasets and databases.
+// The usernames must be different on both servers, as the datasets are named after them.
+// Redis pub/sub ignores the database number, so the brokers are separated by their namespace.
+const POD_PROVIDERS = [
+  {
+    settingsDataset: 'settings',
+    queueServiceUrl: CONFIG.QUEUE_SERVICE_URL,
+    oidcProviderUrl: CONFIG.REDIS_OIDC_PROVIDER_URL,
+    namespace: undefined
+  },
+  {
+    settingsDataset: CONFIG.AUTH_ACCOUNTS_DATASET_2,
+    queueServiceUrl: CONFIG.QUEUE_SERVICE_URL_2,
+    oidcProviderUrl: CONFIG.REDIS_OIDC_PROVIDER_URL_2,
+    namespace: CONFIG.MOLECULER_NAMESPACE_2
+  }
+];
+
 const clearAllData = async () => {
   const datasets = await listDatasets();
-  for (let dataset of datasets.filter((d: any) => d != 'settings')) {
-    await clearDataset(dataset);
+  const settingsDatasets = POD_PROVIDERS.map(p => p.settingsDataset);
+  for (let dataset of datasets) {
+    if (settingsDatasets.includes(dataset)) {
+      await clearSettingsDataset(dataset);
+    } else {
+      await clearDataset(dataset);
+    }
   }
 
-  await clearSettingsDataset();
-
-  await clearRedisDb(CONFIG.QUEUE_SERVICE_URL);
-  await clearRedisDb(CONFIG.REDIS_OIDC_PROVIDER_URL);
+  for (const { queueServiceUrl, oidcProviderUrl } of POD_PROVIDERS) {
+    await clearRedisDb(queueServiceUrl);
+    await clearRedisDb(oidcProviderUrl);
+  }
 
   await clearMails();
 };
 
-const connectPodProvider = async () => {
-  // Connect to the Pod provider broker with a Redis transporter
+/**
+ * Connect to the Pod provider broker with a Redis transporter
+ * @param server 1, or 2 for the second Pod provider of multi-server tests
+ */
+const connectPodProvider = async (server = 1) => {
   const broker = new ServiceBroker({
     nodeID: `test-node`,
+    namespace: POD_PROVIDERS[server - 1].namespace,
     logger: false,
     transporter: CONFIG.REDIS_TRANSPORTER_URL,
     serializer: new RdfJSONSerializer()
@@ -100,7 +127,12 @@ const connectPodProvider = async () => {
   await broker.start();
 
   // If the service is available, it means we are connected to the Pod provider broker
-  await broker.waitForServices(['ldp']);
+  try {
+    await broker.waitForServices(['ldp'], server > 1 ? 30000 : undefined);
+  } catch (e) {
+    await broker.stop();
+    throw new Error(`Pod provider ${server} not running (start both with "yarn run test" in pod-provider/backend)`);
+  }
 
   // Reset internal cache (the channels have been deleted, but they are still in a this.channels array)
   await broker.waitForServices(['solid-notifications.provider.webhook']);

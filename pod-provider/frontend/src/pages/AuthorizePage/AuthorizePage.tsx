@@ -89,13 +89,16 @@ const AuthorizePage = () => {
     dataProvider
   ]);
 
+  // When sharing, the app must be registered or upgraded first
+  const onRegistered = isSharing ? () => setScreen('share') : accessApp;
+
   switch (screen) {
     // @ts-expect-error TS(2678): Type '"register"' is not comparable to type 'undef... Remove this comment to see the full error message
     case 'register':
       return (
         <RegistrationScreen
           application={application}
-          accessApp={accessApp}
+          accessApp={onRegistered}
           isTrustedApp={isTrustedApp}
           podOwner={registrationPod}
         />
@@ -106,7 +109,7 @@ const AuthorizePage = () => {
       return (
         <UpgradeScreen
           application={application}
-          accessApp={accessApp}
+          accessApp={onRegistered}
           isTrustedApp={isTrustedApp}
           podOwner={registrationPod}
         />
